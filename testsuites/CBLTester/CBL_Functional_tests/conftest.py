@@ -165,10 +165,8 @@ def params_from_base_suite_setup(request):
         testserver.install()
 
     base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
-    cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, mode)
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_travel_sample", mode)
-    cluster_utils = ClusterKeywords(cluster_config)
-    cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
+
 
     sg_db = "db"
     suite_cbl_db = None
@@ -183,6 +181,8 @@ def params_from_base_suite_setup(request):
         if sg_lb:
             cluster_config = "{}/base_lb_{}".format(CLUSTER_CONFIGS_DIR, mode)
 
+    cluster_utils = ClusterKeywords(cluster_config)
+    cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
 
     sg_url = cluster_topology["sync_gateways"][0]["public"]
