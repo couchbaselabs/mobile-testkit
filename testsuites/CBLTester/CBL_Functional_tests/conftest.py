@@ -167,7 +167,6 @@ def params_from_base_suite_setup(request):
     base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_travel_sample", mode)
 
-
     sg_db = "db"
     suite_cbl_db = None
 
