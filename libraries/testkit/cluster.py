@@ -143,7 +143,6 @@ class Cluster:
             "sg_cert_path": sg_cert_path,
             "server_port": server_port,
             "server_scheme": server_scheme,
-            "logging": "",
             "autoimport": "",
             "xattrs": "",
             "no_conflicts": "",
@@ -152,7 +151,6 @@ class Cluster:
             "sslkey": "",
             "num_index_replicas": "",
             "sg_use_views": "",
-            "logging": "",
             "couchbase_server_primary_node": couchbase_server_primary_node
         }
 

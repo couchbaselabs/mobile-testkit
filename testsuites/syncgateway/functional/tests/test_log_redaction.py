@@ -140,9 +140,9 @@ def test_sgCollect1(params_from_base_test_setup, remove_tmp_sg_redaction_logs, s
 @pytest.mark.logredaction
 @pytest.mark.parametrize("sg_conf_name, redaction_level, redaction_salt, output_dir", [
     ("log_redaction", "partial", False, False),
-    # ("log_redaction", None, False, False),
-    # ("log_redaction", "partial", True, False),
-    # ("log_redaction", "partial", True, True)
+    ("log_redaction", None, False, False),
+    ("log_redaction", "partial", True, False),
+    ("log_redaction", "partial", True, True)
 ])
 def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_logs, sg_conf_name, redaction_level, redaction_salt, output_dir):
     """

@@ -120,7 +120,6 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False, sg_pl
         "sg_cert_path": sg_cert_path,
         "server_port": server_port,
         "server_scheme": server_scheme,
-        "logging": "",
         "autoimport": "",
         "xattrs": "",
         "no_conflicts": "",
@@ -128,7 +127,6 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False, sg_pl
         "sslkey": "",
         "num_index_replicas": "",
         "sg_use_views": "",
-        "logging": "",
         "couchbase_server_primary_node": couchbase_server_primary_node
     }
 

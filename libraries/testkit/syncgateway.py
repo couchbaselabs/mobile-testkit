@@ -66,7 +66,6 @@ class SyncGateway:
             "sync_gateway_config_filepath": conf_path,
             "server_port": self.server_port,
             "server_scheme": self.server_scheme,
-            "logging": "",
             "autoimport": "",
             "xattrs": "",
             "no_conflicts": "",
@@ -75,7 +74,6 @@ class SyncGateway:
             "sg_cert_path": sg_cert_path,
             "num_index_replicas": "",
             "sg_use_views": "",
-            "logging": "",
             "couchbase_server_primary_node": self.couchbase_server_primary_node
         }
 
@@ -131,7 +129,6 @@ class SyncGateway:
             "sync_gateway_config_filepath": conf_path,
             "server_port": self.server_port,
             "server_scheme": self.server_scheme,
-            "logging": "",
             "autoimport": "",
             "xattrs": "",
             "no_conflicts": "",
@@ -141,7 +138,6 @@ class SyncGateway:
             "sg_cert_path": sg_cert_path,
             "num_index_replicas": "",
             "sg_use_views": "",
-            "logging": "",
             "couchbase_server_primary_node": self.couchbase_server_primary_node
         }
 

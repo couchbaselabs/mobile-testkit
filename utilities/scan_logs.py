@@ -83,12 +83,11 @@ def scan_for_pattern(logfile_path, pattern_list):
 
     # Scan each line in the log file for the words to search for
     flag = False
-    with open(logfile_path) as f:
-        for line in f:
-            for word in pattern_list:
-                # convert the word to lowercase and the line to all lower case
-                if word.lower() in line.lower():
-                    flag = True
+    for line in open(logfile_path):
+        for word in pattern_list:
+            # convert the word to lowercase and the line to all lower case
+            if word.lower() in line.lower():
+                flag = True
     if flag is False:
             raise LogScanningError('{} Did not find the words !! Please review: {} '.format(pattern_list, logfile_path))
 

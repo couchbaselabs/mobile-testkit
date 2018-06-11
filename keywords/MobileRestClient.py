@@ -2294,7 +2294,6 @@ class MobileRestClient:
         Get sgCollect info using rest Api call by passing params
         """
         resp = self.sgCollect_restCall(sg_host, redact_level=redact_level, redact_salt=redact_salt, output_directory=output_directory, upload=upload, upload_host=upload_host, customer=customer, ticket=ticket)
-        print "response of sgcollect info is ", resp.content
         resp.raise_for_status()
         resp_obj = resp.json()
         return resp_obj
