@@ -13,8 +13,7 @@ from libraries.testkit.admin import Admin
 from libraries.testkit.config import Config
 from libraries.testkit.sgaccel import SgAccel
 from libraries.testkit.syncgateway import SyncGateway
-from utilities.cluster_config_utils import is_load_balancer_enabled,\
-    get_revs_limit, is_ipv6
+from utilities.cluster_config_utils import is_load_balancer_enabled, get_revs_limit, is_ipv6
 from utilities.cluster_config_utils import get_load_balancer_ip, no_conflicts_enabled
 from keywords.constants import SYNC_GATEWAY_CERT
 from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version
@@ -54,20 +53,17 @@ class Cluster:
 
             for sg in cluster["sync_gateways"]:
                 if cluster["environment"]["ipv6_enabled"]:
-                    # sg["name"] = "[{}]".format(sg["name"])
                     lb_ip = "[{}]".format(lb_ip)
                 sgs.append({"name": sg["name"], "ip": lb_ip})
             log_info("Using load balancer IP as the SG IP: {}".format(sgs))
         else:
             for sg in cluster["sync_gateways"]:
                 if cluster["environment"]["ipv6_enabled"]:
-                    # sg["name"] = "[{}]".format(sg["name"])
                     sg["ip"] = "[{}]".format(sg["ip"])
                 sgs.append({"name": sg["name"], "ip": sg["ip"]})
 
         for ac in cluster["sg_accels"]:
             if cluster["environment"]["ipv6_enabled"]:
-                    # ac["name"] = "[{}]".format(ac["name"])
                     ac["ip"] = "[{}]".format(ac["ip"])
             acs.append({"name": ac["name"], "ip": ac["ip"]})
 

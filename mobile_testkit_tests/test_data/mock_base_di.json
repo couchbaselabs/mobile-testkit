@@ -14,11 +14,11 @@
     ], 
     "environment": {
         "sg_lb_enabled": false, 
-        "sync_gateway_ssl": false,
-        "xattrs_enabled": false,
-        "sync_gateway_version": "1.5.0-571",
-        "ipv6_enabled": false,
-        "cbs_ssl_enabled": false,
+        "sync_gateway_ssl": false, 
+        "xattrs_enabled": false, 
+        "sync_gateway_version": "1.5.0-571", 
+        "ipv6_enabled": false, 
+        "cbs_ssl_enabled": false, 
         "server_version": "5.0.0-3519"
     }, 
     "hosts": [

@@ -81,10 +81,6 @@ class ClusterKeywords:
 
         # Get load balancer IP
         lb_ip = None
-        sg_scheme = "http"
-
-        if sg_ssl_enabled(cluster_config):
-            sg_scheme = "https"
 
         if is_load_balancer_enabled(cluster_config) and lb_enable:
             # If load balancer is defined,
@@ -106,14 +102,14 @@ class ClusterKeywords:
             for sg in cluster["sync_gateways"]:
                 if cluster["environment"]["ipv6_enabled"]:
                     sg["ip"] = "[{}]".format(sg["ip"])
-                public = "{}://{}:4984".format(sg_scheme, sg["ip"])
-                admin = "{}://{}:4985".format(sg_scheme, sg["ip"])
+                public = "{}://{}:4984".format(self.sg_scheme, sg["ip"])
+                admin = "{}://{}:4985".format(self.sg_scheme, sg["ip"])
                 sg_urls.append({"public": public, "admin": admin})
 
         for sga in cluster["sg_accels"]:
             if cluster["environment"]["ipv6_enabled"]:
                 sga["ip"] = "[{}]".format(sga["ip"])
-            ac_urls.append("{}://{}:4985".format(sg_scheme, sga["ip"]))
+            ac_urls.append("{}://{}:4985".format(self.sg_scheme, sga["ip"]))
         for lb in cluster["load_balancers"]:
             if cluster["environment"]["ipv6_enabled"]:
                 lb["ip"] = "[{}]".format(lb["ip"])
@@ -155,11 +151,6 @@ class ClusterKeywords:
             server_port = 18091
             server_scheme = "https"
 
-        sg_scheme = "http"
-
-        if sg_ssl_enabled(cluster_config):
-            sg_scheme = "https"
-
         running_services = []
         for host in cluster_obj["hosts"]:
 
@@ -175,7 +166,7 @@ class ClusterKeywords:
 
             # Sync Gateway
             try:
-                resp = requests.get("{}://{}:4984".format(sg_scheme, host["ip"]))
+                resp = requests.get("{}://{}:4984".format(self.sg_scheme, host["ip"]))
                 log_r(resp)
                 running_services.append(resp.url)
             except ConnectionError as he:
@@ -183,7 +174,7 @@ class ClusterKeywords:
 
             # Sg Accel
             try:
-                resp = requests.get("{}://{}:4985".format(sg_scheme, host["ip"]))
+                resp = requests.get("{}://{}:4985".format(self.sg_scheme, host["ip"]))
                 log_r(resp)
                 running_services.append(resp.url)
             except ConnectionError as he:

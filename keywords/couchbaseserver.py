@@ -327,7 +327,7 @@ class CouchbaseServer:
         ram_per_bucket_mb = int(effective_ram_mb / num_buckets)
         return ram_per_bucket_mb
 
-    def create_buckets(self, bucket_names, ipv6):
+    def create_buckets(self, bucket_names, ipv6=False):
         """
         # Figure out what total ram available is
         # Divide by number of buckets

@@ -82,10 +82,8 @@ class SyncGateway:
             playbook_vars["sslcert"] = '"SSLCert": "sg_cert.pem",'
             playbook_vars["sslkey"] = '"SSLKey": "sg_privkey.pem",'
 
-
         if get_sg_version(self.cluster_config) >= "2.1.0":
             playbook_vars["logging"] = '"logging": {"debug": {"enabled": true}},'
-            num_replicas = get_sg_replicas(self.cluster_config)
             if get_sg_use_views(self.cluster_config):
                 playbook_vars["sg_use_views"] = '"use_views": true,'
             else:
@@ -148,7 +146,6 @@ class SyncGateway:
 
         if get_sg_version(self.cluster_config) >= "2.1.0":
             playbook_vars["logging"] = '"logging": {"debug": {"enabled": true}},'
-            num_replicas = get_sg_replicas(self.cluster_config)
             if get_sg_use_views(self.cluster_config):
                 playbook_vars["sg_use_views"] = '"use_views": true,'
             else:

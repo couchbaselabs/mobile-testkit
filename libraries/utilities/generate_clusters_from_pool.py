@@ -10,7 +10,7 @@ from optparse import OptionParser
 
 
 class ClusterDef:
-    def __init__(self, name, num_sgs, num_acs, num_cbs, num_lgs, num_lbs, ipv6):
+    def __init__(self, name, num_sgs, num_acs, num_cbs, num_lgs, num_lbs, ipv6=False):
         self.name = name
         self.num_sgs = num_sgs
         self.num_acs = num_acs
@@ -29,7 +29,7 @@ class ClusterDef:
         )
 
 
-def write_config(config, pool_file, use_docker, sg_windows, sg_accel_windows, ipv6):
+def write_config(config, pool_file, use_docker, sg_windows, sg_accel_windows, ipv6=False):
 
     connection_string = ""
     if use_docker:
