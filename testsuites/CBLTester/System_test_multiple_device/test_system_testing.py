@@ -16,8 +16,8 @@ from datetime import datetime, timedelta
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("num_of_docs, num_of_updates, num_of_docs_to_update, num_of_docs_in_itr, num_of_doc_to_delete, num_of_docs_to_add, up_time", [
-#     (1000000, 100, 100, 1000, 1000, 2000, 4 * 24 * 60),
-    (500, 5, 10, 5, 10, 10, 1 * 20),
+    (1000000, 100, 100, 1000, 1000, 2000, 4 * 24 * 60),
+    # (500, 5, 10, 5, 10, 10, 1 * 20),
 ])
 def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_of_docs_to_update, num_of_docs_in_itr, num_of_doc_to_delete, num_of_docs_to_add, up_time):
     sg_db = "db"
@@ -230,7 +230,7 @@ def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_o
         doc_ids = doc_ids - docs_to_delete
         # Adding the node back to the cluster
         print "Adding Server back {}".format(server.host)
-        primary_server.add_node(server,services="kv,index,n1ql")
+        primary_server.add_node(server, services="kv,index,n1ql")
         print "Rebalance in server: {}".format(server.host)
         primary_server.rebalance_in(server_urls, server)
 

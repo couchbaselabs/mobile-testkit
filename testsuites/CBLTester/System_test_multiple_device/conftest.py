@@ -6,7 +6,7 @@ from keywords.utils import log_info
 from keywords.utils import host_for_url
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.constants import CLUSTER_CONFIGS_DIR
-# from keywords.TestServerFactory import TestServerFactory
+from keywords.TestServerFactory import TestServerFactory
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.exceptions import ProvisioningError
 from keywords.tklogging import Logging
@@ -100,6 +100,7 @@ def pytest_addoption(parser):
                      help="Provide cluster config to use. Default is base config",
                      default="base")
 
+
 # This will get called once before the first test that
 # runs with this as input parameters in this file
 # This setup will be called once for all tests in the
@@ -135,29 +136,29 @@ def params_from_base_suite_setup(request):
     number_replicas = request.config.getoption("--number-replicas")
     cluster_config_prefix = request.config.getoption("--cluster-config")
 
-#     community_enabled = request.config.getoption("--community")
-#
-#     testserver_list = []
-#     for platform, version, host, port in zip(platform_list,
-#                                              version_list,
-#                                              host_list,
-#                                              port_list):
-#         testserver = TestServerFactory.create(platform=platform,
-#                                               version_build=version,
-#                                               host=host,
-#                                               port=port,
-#                                               community_enabled=community_enabled)
-#
-#         log_info("Downloading TestServer ...")
-#         # Download TestServer app
-#         testserver.download()
-#
-#         # Install TestServer app
-#         if device_enabled and platform == "ios":
-#             testserver.install_device()
-#         else:
-#             testserver.install()
-#         testserver_list.append(testserver)
+    community_enabled = request.config.getoption("--community")
+
+    testserver_list = []
+    for platform, version, host, port in zip(platform_list,
+                                             version_list,
+                                             host_list,
+                                             port_list):
+        testserver = TestServerFactory.create(platform=platform,
+                                              version_build=version,
+                                              host=host,
+                                              port=port,
+                                              community_enabled=community_enabled)
+
+        log_info("Downloading TestServer ...")
+        # Download TestServer app
+        testserver.download()
+
+        # Install TestServer app
+        if device_enabled and platform == "ios":
+            testserver.install_device()
+        else:
+            testserver.install()
+        testserver_list.append(testserver)
 
     base_url_list = []
     for host, port in zip(host_list, port_list):
@@ -300,10 +301,9 @@ def params_from_base_suite_setup(request):
     }
 
     # Delete CBL database
-#     for db_name, testserver, base_url in zip(db_name_list,
-#                                              testserver_list,
-#                                              base_url_list):
-    for cbl_db, db_obj, base_url in zip(cbl_db_list, db_obj_list, base_url_list):
+    for db_obj, testserver, base_url in zip(db_obj_list,
+                                            testserver_list,
+                                            base_url_list):
         if not no_db_delete:
             log_info("Deleting the database {} at the suite teardown".format(db_obj.getName(cbl_db)))
             time.sleep(2)
@@ -315,4 +315,4 @@ def params_from_base_suite_setup(request):
         utils_obj = Utils(base_url)
         utils_obj.flushMemory()
         log_info("Stopping the test server")
-        # testserver.stop()
+        testserver.stop()
