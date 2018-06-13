@@ -1,7 +1,9 @@
 {
   "interface":":4984",
   "adminInterface": "0.0.0.0:4985",
-  "log": ["*"],
+  {{ sslcert }}
+  {{ sslkey }}
+  {{ logging }}
   "databases": {
     "todo": {
       {{ autoimport }}
@@ -23,7 +25,8 @@
         "seth": {"password": "pass", "admin_channels": ["seth"]},
         "raghu": {"password": "pass", "admin_channels": ["raghu"]},
         "mod": {"password": "pass", "admin_roles": ["moderator"]},
-        "admin": {"password": "pass", "admin_roles": ["admin"]}
+        "admin": {"password": "pass", "admin_roles": ["admin"]},
+        "hemant": {"password": "pass", "admin_roles": ["admin"]}
       },
       "roles": {
         "moderator": {},

@@ -34,6 +34,7 @@ def setup_client_syncgateway_suite(request):
     sync_gateway_mode = request.config.getoption("--sync-gateway-mode")
     server_version = request.config.getoption("--server-version")
     xattrs_enabled = request.config.getoption("--xattrs")
+    sg_ssl = request.config.getoption("--sg-ssl")
     use_views = request.config.getoption("--use-views")
     number_replicas = request.config.getoption("--number-replicas")
 
@@ -73,6 +74,12 @@ def setup_client_syncgateway_suite(request):
         log_info("Running test with sync_gateway version {}".format(sync_gateway_version))
         persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_version', sync_gateway_version)
 
+    if sg_ssl:
+        log_info("Enabling SSL on sync gateway")
+        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', True)
+    else:
+        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', False)
+
     if use_views:
         log_info("Running SG tests using views")
         # Enable sg views in cluster configs
@@ -96,7 +103,7 @@ def setup_client_syncgateway_suite(request):
 
     if not skip_provisioning:
         log_info("Installing Sync Gateway + Couchbase Server + Accels ('di' only)")
-        cluster_utils = ClusterKeywords()
+        cluster_utils = ClusterKeywords(cluster_config)
         cluster_utils.provision_cluster(
             cluster_config=cluster_config,
             server_version=server_version,
@@ -137,7 +144,7 @@ def setup_client_syncgateway_test(request, setup_client_syncgateway_suite):
     ls_url = liteserv.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, test_name, datetime.datetime.now()))
     client.delete_databases(ls_url)
 
-    cluster_helper = ClusterKeywords()
+    cluster_helper = ClusterKeywords(cluster_config)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config=cluster_config)
 
     sg_url = cluster_hosts["sync_gateways"][0]["public"]

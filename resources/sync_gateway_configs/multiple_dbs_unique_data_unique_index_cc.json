@@ -6,8 +6,10 @@
     "maxFileDescriptors": 90000,
     "slowServerCallWarningThreshold": 500,
     "compressResponses": false,
-    "log": ["CRUD+", "Cache+", "HTTP+", "Changes+"],
+    {{ logging }}
     "verbose":"true",
+    {{ sslcert }}
+    {{ sslkey }}
     "databases": {
         "db":{
             {{ autoimport }}

@@ -97,6 +97,10 @@ def pytest_addoption(parser):
                      action="store",
                      help="changes-limit: Amount of docs to return per changes request")
 
+    parser.addoption("--sg-ssl",
+                     action="store_true",
+                     help="If set, will enable SSL communication between Sync Gateway and CBL")
+
     parser.addoption("--use-views",
                      action="store_true",
                      help="If set, uses views instead of GSI - SG 2.1 and above only")
@@ -135,6 +139,7 @@ def params_from_base_suite_setup(request):
     update_delay = request.config.getoption("--update-delay")
     changes_delay = request.config.getoption("--changes-delay")
     changes_limit = request.config.getoption("--changes-limit")
+    sg_ssl = request.config.getoption("--sg-ssl")
     use_views = request.config.getoption("--use-views")
     number_replicas = request.config.getoption("--number-replicas")
 
@@ -147,6 +152,7 @@ def params_from_base_suite_setup(request):
     log_info("skip_provisioning: {}".format(skip_provisioning))
     log_info("cbs_ssl: {}".format(cbs_ssl))
     log_info("xattrs_enabled: {}".format(xattrs_enabled))
+    log_info("sg_ssl: {}".format(sg_ssl))
     log_info("use_views: {}".format(use_views))
     log_info("number_replicas: {}".format(number_replicas))
 
@@ -156,6 +162,7 @@ def params_from_base_suite_setup(request):
     # use ci_lb_cc cluster config if mode is "cc" or ci_lb_di cluster config if more is "di"
     log_info("Using 'ci_lb_{}' config!".format(mode))
     cluster_config = "{}/ci_lb_{}".format(CLUSTER_CONFIGS_DIR, mode)
+    cluster_utils = ClusterKeywords(cluster_config)
 
     try:
         server_version
@@ -177,6 +184,12 @@ def params_from_base_suite_setup(request):
 
     # Only works with load balancer configs
     persist_cluster_config_environment_prop(cluster_config, 'sg_lb_enabled', True)
+
+    if sg_ssl:
+        log_info("Enabling SSL on sync gateway")
+        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', True)
+    else:
+        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', False)
 
     if use_views:
         log_info("Running SG tests using views")
@@ -213,7 +226,7 @@ def params_from_base_suite_setup(request):
     if skip_provisioning or use_sequoia:
         should_provision = False
 
-    cluster_utils = ClusterKeywords()
+    cluster_utils = ClusterKeywords(cluster_config)
     if should_provision:
         try:
             cluster_utils.provision_cluster(

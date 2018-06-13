@@ -46,7 +46,7 @@ def test_attachment_revpos_when_ancestor_unavailable(params_from_base_test_setup
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
-    cluster_helper = ClusterKeywords()
+    cluster_helper = ClusterKeywords(cluster_config)
     cluster_helper.reset_cluster(cluster_config, sg_conf)
 
     topology = cluster_helper.get_cluster_topology(cluster_config)
@@ -123,7 +123,7 @@ def test_attachment_revpos_when_ancestor_unavailable_active_revision_doesnt_shar
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
-    cluster_helper = ClusterKeywords()
+    cluster_helper = ClusterKeywords(cluster_config)
     cluster_helper.reset_cluster(cluster_config, sg_conf)
 
     topology = cluster_helper.get_cluster_topology(cluster_config)
@@ -196,7 +196,7 @@ def test_writing_attachment_to_couchbase_server(params_from_base_test_setup, sg_
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
-    cluster_helper = ClusterKeywords()
+    cluster_helper = ClusterKeywords(cluster_config)
     cluster_helper.reset_cluster(cluster_config, sg_conf)
 
     topology = cluster_helper.get_cluster_topology(cluster_config)

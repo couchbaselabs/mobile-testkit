@@ -6,7 +6,9 @@
     "maxFileDescriptors": 90000,
     "slowServerCallWarningThreshold": 500,
     "compressResponses": false,
-    "log": ["CRUD+", "Cache+", "HTTP+", "Changes+", "Replicate"],
+    {{ sslcert }}
+    {{ sslkey }}
+    {{ logging }}
     "databases":{
         "db1":{
             {{ autoimport }}

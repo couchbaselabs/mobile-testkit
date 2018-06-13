@@ -1,7 +1,9 @@
 {
     "interface":":4984",
     "adminInterface": "0.0.0.0:4985",
-    "log": ["CRUD+", "Cache+", "HTTP+", "Changes+", "Events+", "Import+"],
+    {{ sslcert }}
+    {{ sslkey }}
+    {{ logging }}
     "databases":{
         "db":{
             {{ autoimport }}

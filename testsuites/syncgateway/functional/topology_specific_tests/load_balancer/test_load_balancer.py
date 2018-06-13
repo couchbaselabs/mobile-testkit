@@ -24,7 +24,7 @@ def test_load_balance_sanity(params_from_base_test_setup):
     sg_conf_name = "sync_gateway_default_functional_tests"
     sg_conf_path = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
-    cluster_util = ClusterKeywords()
+    cluster_util = ClusterKeywords(cluster_config)
     cluster_util.reset_cluster(
         cluster_config=cluster_config,
         sync_gateway_config=sg_conf_path

@@ -1,7 +1,7 @@
 {
     "interface":":4984",
     "adminInterface": "0.0.0.0:4985",
-    "log": ["*"],
+    {{ logging }}
     "cluster_config": {
         "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
         "data_dir":".",
@@ -9,6 +9,8 @@
         "username":"data-bucket",
         "password": "password"
     },
+    {{ sslcert }}
+    {{ sslkey }}
     "databases":{
         "db":{
             {{ no_conflicts }}

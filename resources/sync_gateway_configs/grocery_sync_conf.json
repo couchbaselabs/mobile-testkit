@@ -1,5 +1,5 @@
 {
-	"log": ["CRUD+", "REST+", "Changes+", "Attach+"],
+	{{ logging }}
 	"databases": {
 		"grocery-sync": {
 			"server": "walrus:",

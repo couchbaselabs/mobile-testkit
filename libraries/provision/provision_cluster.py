@@ -72,7 +72,7 @@ def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_conf
     log_info(">>> Provisioning cluster...")
 
     # Get server base url and package name
-    cluster_keywords = ClusterKeywords()
+    cluster_keywords = ClusterKeywords(cluster_config)
     cluster_topology = cluster_keywords.get_cluster_topology(cluster_config)
     server_url = cluster_topology["couchbase_servers"][0]
     cb_server = CouchbaseServer(server_url)

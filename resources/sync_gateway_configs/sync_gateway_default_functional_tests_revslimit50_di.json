@@ -6,7 +6,7 @@
     "maxFileDescriptors": 90000,
     "slowServerCallWarningThreshold": 500,
     "compressResponses": false,
-    "log": ["CRUD+", "Cache+", "HTTP+", "Changes+"],
+    {{ logging }}
     "cluster_config": {
         "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
         "data_dir":".",
@@ -14,6 +14,8 @@
         "username":"data-bucket",
         "password": "password"
     },
+    {{ sslcert }}
+    {{ sslkey }}
     "databases":{
         "db":{
             {{ xattrs }}

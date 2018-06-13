@@ -57,7 +57,7 @@ def install_couchbase_server(cluster_config, couchbase_server_config, cbs_platfo
     log_info(couchbase_server_config)
 
     ansible_runner = AnsibleRunner(cluster_config)
-    cluster_keywords = ClusterKeywords()
+    cluster_keywords = ClusterKeywords(cluster_config)
     cluster_topology = cluster_keywords.get_cluster_topology(cluster_config)
     server_url = cluster_topology["couchbase_servers"][0]
     cb_server = CouchbaseServer(server_url)

@@ -69,7 +69,6 @@ class Config:
 
             # strip out sync functions `function ... }`
             data = convert_to_valid_json(data)
-
             # Find all bucket names in config's databases: {}
             conf_obj = json.loads(data)
 

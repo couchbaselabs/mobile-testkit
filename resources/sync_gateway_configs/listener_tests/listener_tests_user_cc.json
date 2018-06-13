@@ -1,7 +1,9 @@
 {
   "interface": ":4984",
   "adminInterface": "0.0.0.0:4985",
-  "log": ["CRUD+", "Cache+", "HTTP+", "Changes+"],
+  {{ sslcert }}
+  {{ sslkey }}
+  {{ logging }}
   "databases": {
     "db": {
       {{ autoimport }}
@@ -13,6 +15,7 @@
       "bucket": "data-bucket",
       "username":"data-bucket",
       "password": "password",
+      "unsupported": { "allow_conflicts": false },
       "users": {
         "user_1": {
           "admin_channels": [

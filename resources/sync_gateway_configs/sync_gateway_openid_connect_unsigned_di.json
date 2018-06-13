@@ -1,7 +1,5 @@
 {
-   "log":[
-      "*"
-   ],
+    {{ logging }}
    "compressResponses": false,
    "AdminInterface":"0.0.0.0:4985",
    "cluster_config": {
@@ -11,6 +9,8 @@
       "username":"data-bucket",
       "password": "password"
    },
+   {{ sslcert }}
+   {{ sslkey }}
    "databases":{
       "db":{
          "oidc":{
