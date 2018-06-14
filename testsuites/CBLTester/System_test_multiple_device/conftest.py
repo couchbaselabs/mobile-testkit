@@ -294,7 +294,6 @@ def params_from_base_suite_setup(request):
         "query_obj_list": query_obj_list,
         "sg_config": sg_config,
         "db_obj_list": db_obj_list,
-        # "testserver_list": testserver_list,
         "device_enabled": device_enabled,
         "generator": generator,
         "resume_cluster": resume_cluster
