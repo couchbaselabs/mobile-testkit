@@ -101,10 +101,7 @@ def pytest_addoption(parser):
                      default="base")
 
 
-# This will get called once before the first test that
-# runs with this as input parameters in this file
-# This setup will be called once for all tests in the
-# testsuites/CBLTester/CBL_Functional_tests/ directory
+# This will get called to provision and initialise variables for system test
 @pytest.fixture(scope="session")
 def params_from_base_suite_setup(request):
     liteserv_platforms = request.config.getoption("--liteserv-platforms")

@@ -228,7 +228,6 @@ class TestDocument(object):
         @summary: Testing Get and Set Double method of Document API
         '''
         doc = self.doc_obj.create()
-        # double_obj = self.datatype.setDouble(value)
         self.doc_obj.setDouble(doc, key, value)
         assert float(value) == float(self.doc_obj.getDouble(doc, key))
 

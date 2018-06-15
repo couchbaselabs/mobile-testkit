@@ -1,5 +1,5 @@
 import pytest
-from keywords.utils import random_string
+from keywords.utils import random_string, log_info
 
 
 @pytest.mark.usefixtures("class_init")
@@ -213,7 +213,7 @@ class TestDatabase(object):
 
         db = self.db_obj.create(db_name)
         path = self.db_obj.getPath(db)
-        print "path for db is ", path
+        log_info("path for db is ", path)
         if self.liteserv_platform == "ios" or self.liteserv_platform == "android":
             directory = "/".join(path.split("/")[:-2])
         else:
