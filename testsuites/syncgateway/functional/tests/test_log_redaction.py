@@ -60,19 +60,19 @@ def test_log_redaction_config(params_from_base_test_setup, remove_tmp_sg_redacti
     cluster = Cluster(config=temp_cluster_config)
     cluster.reset(sg_config_path=sg_conf)
 
-    # 3. Create user in sync_gateway
+    # Create user in sync_gateway
     sg_client = MobileRestClient()
     channels = ["log-redaction"]
     sg_client.create_user(url=sg_admin_url, db=sg_db, name='autotest', password='validkey', channels=channels)
     autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest', password='validkey')
 
-    # 4. Create docs with xattrs
+    # Create docs with xattrs
     sgdoc_bodies = document.create_docs(doc_id_prefix='sg_docs', number=num_of_docs,
                                         attachments_generator=attachment.generate_2_png_10_10, channels=channels)
     sg_docs = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sgdoc_bodies, auth=autouser_session)
     assert len(sg_docs) == num_of_docs
 
-    # 5. Verify log_redaction in the logs
+    # Verify log_redaction in the logs
     verify_log_redaction(temp_cluster_config, redaction_level, mode)
 
 
@@ -116,19 +116,19 @@ def test_sgCollect1(params_from_base_test_setup, remove_tmp_sg_redaction_logs, s
     cluster = Cluster(config=temp_cluster_config)
     cluster.reset(sg_config_path=sg_conf)
 
-    # 3. Create user in sync_gateway
+    # Create user in sync_gateway
     sg_client = MobileRestClient()
     channels = ["log-redaction"]
     sg_client.create_user(url=sg_admin_url, db=sg_db, name=user_name, password=password, channels=channels)
     autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=user_name, password=password)
 
-    # 4. Create docs with xattrs
+    # Create docs with xattrs
     sgdoc_bodies = document.create_docs(doc_id_prefix='sg_docs', number=num_of_docs,
                                         attachments_generator=attachment.generate_2_png_10_10, channels=channels)
     sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sgdoc_bodies, auth=autouser_session)
     assert len(sgdoc_bodies) == num_of_docs
 
-    # 5. Verify redacted files are hashed for partial , but not for None
+    # Verify redacted files are hashed for partial , but not for None
     zip_file_name = sgcollect_redact(temp_cluster_config, redaction_level, redaction_salt)
     # verify redacted zip file exists for partial and non redacted file for none
     log_verification_withsgCollect(redaction_level, user_name, password, zip_file_name)
