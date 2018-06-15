@@ -11,7 +11,7 @@ from libraries.provision.ansible_runner import AnsibleRunner
 from libraries.testkit.config import Config
 
 from keywords.constants import SYNC_GATEWAY_CERT
-from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_revs_limit, sg_ssl_enabled, get_sg_version, get_sg_replicas, get_sg_use_views, get_logging
+from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_revs_limit, sg_ssl_enabled, get_sg_version, get_sg_replicas, get_sg_use_views, get_redact_level
 
 
 class SyncGatewayConfig:
@@ -133,7 +133,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False, sg_pl
     if get_sg_version(cluster_config) >= "2.1.0":
         logging_config = '"logging": {"debug": {"enabled": true}'
         try:
-            redact_level = get_logging(cluster_config)
+            redact_level = get_redact_level(cluster_config)
             playbook_vars["logging"] = '{}, "redaction_level": "{}" {},'.format(logging_config, redact_level, "}")
         except KeyError as ex:
             log_info("Keyerror in getting logging{}".format(ex.message))

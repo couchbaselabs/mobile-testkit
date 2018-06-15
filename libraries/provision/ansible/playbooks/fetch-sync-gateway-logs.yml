@@ -5,6 +5,9 @@
   - include: tasks/fetch-sync-gateway-logs.yml
     when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon" or ansible_distribution == "Ubuntu"
 
+  - include: tasks/stop-sync-gateway-windows.yml
+    when: ansible_os_family == "Windows"
+
   - include: tasks/fetch-sync-gateway-logs-windows.yml
     when: ansible_os_family == "Windows"
 

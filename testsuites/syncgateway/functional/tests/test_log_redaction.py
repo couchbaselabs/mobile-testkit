@@ -56,7 +56,6 @@ def test_log_redaction_config(params_from_base_test_setup, remove_tmp_sg_redacti
 
     # Modifying log redaction level to partial
     temp_cluster_config = copy_to_temp_conf(cluster_config, mode)
-    print "added redact level in config .... "
     persist_cluster_config_environment_prop(temp_cluster_config, 'redactlevel', redaction_level, property_name_check=False)
     cluster = Cluster(config=temp_cluster_config)
     cluster.reset(sg_config_path=sg_conf)
@@ -302,7 +301,7 @@ def verify_log_redaction(cluster_config, log_redaction_level, mode):
 
     log_info("Pulling sync_gateway / sg_accel logs")
     # fetch logs from sync_gateway instances
-    status = ansible_runner.run_ansible_playbook("fetch-sync-gateway-all-logs.yml")
+    status = ansible_runner.run_ansible_playbook("fetch-sync-gateway-logs.yml")
     if status != 0:
         raise CollectionError("Could not pull logs")
     temp_log_path = ""
@@ -360,11 +359,11 @@ def pull_redacted_zip_file(cluster_config, sg_platform, output_dir=None):
     ansible_runner = AnsibleRunner(cluster_config)
     if output_dir is None:
         if sg_platform == "centos":
-            sg_logs_dir = "/home/sync_gateway"
-            sa_logs_dir = "/home/sg_accel"
+            sg_logs_dir = "/home/sync_gateway/logs"
+            sa_logs_dir = "/home/sg_accel/logs"
         if sg_platform == "windows":
-            sg_logs_dir = "C:{}".format("\PROGRA~2\Couchbase\\var\\")
-            sa_logs_dir = "C:{}".format("\PROGRA~2\Couchbase\\var\\")
+            sg_logs_dir = "C:{}".format("\PROGRA~1\Couchbase\\var\\logs")
+            sa_logs_dir = "C:{}".format("\PROGRA~1\Couchbase\\var\\logs")
     else:
         sg_logs_dir = output_dir
         sa_logs_dir = output_dir

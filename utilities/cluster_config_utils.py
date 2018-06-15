@@ -159,7 +159,7 @@ def get_revs_limit(cluster_config):
     return cluster["environment"]["revs_limit"]
 
 
-def get_logging(cluster_config):
+def get_redact_level(cluster_config):
     cluster = load_cluster_config_json(cluster_config)
     return cluster["environment"]["redactlevel"]
 
