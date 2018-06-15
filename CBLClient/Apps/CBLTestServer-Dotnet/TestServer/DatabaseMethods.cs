@@ -207,7 +207,7 @@ namespace Couchbase.Lite.Testing
             });
             response.WriteEmptyBody();
         }
-        // TODO
+
         internal static void DatabaseDeleteByName([NotNull] NameValueCollection args,
                                                   [NotNull] IReadOnlyDictionary<string, object> postBody,
                                                   [NotNull] HttpListenerResponse response)
