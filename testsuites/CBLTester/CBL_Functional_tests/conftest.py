@@ -416,6 +416,10 @@ def params_from_base_suite_setup(request):
     utils_obj = Utils(base_url)
     utils_obj.flushMemory()
 
+    if create_db_per_suite:
+        log_info("Stopping the test server per suite")
+        testserver.stop()
+
 
 @pytest.fixture(scope="function")
 def params_from_base_test_setup(request, params_from_base_suite_setup):
@@ -444,15 +448,17 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     device_enabled = params_from_base_suite_setup["device_enabled"]
     flush_memory_per_test = params_from_base_suite_setup["flush_memory_per_test"]
     enable_sample_bucket = params_from_base_suite_setup["enable_sample_bucket"]
+    liteserv_version = params_from_base_suite_setup["liteserv_version"]
     source_db = None
     cbl_db = None
 
     # Start LiteServ and delete any databases
-
+    test_name_cp = test_name.replace("/", "-")
+    log_filename = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now())
     if create_db_per_test:
         log_info("Starting TestServer...")
-        test_name_cp = test_name.replace("/", "-")
-        log_filename = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now())
+        # test_name_cp = test_name.replace("/", "-")
+        # log_filename = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now())
         if device_enabled:
             testserver.start_device(log_filename)
         else:
@@ -511,7 +517,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "testserver": testserver,
         "db_config": db_config,
         "enable_sample_bucket": enable_sample_bucket,
-        "log_filename": log_filename
+        "log_filename": log_filename,
+        "liteserv_version": liteserv_version
     }
 
     log_info("Tearing down test")
@@ -526,8 +533,9 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         utils_obj = Utils(base_url)
         utils_obj.flushMemory()
 
-    log_info("Stopping the test server")
-    testserver.stop()
+    if create_db_per_test:
+        log_info("Stopping the test server per test")
+        testserver.stop()
 
 
 @pytest.fixture(scope="class")

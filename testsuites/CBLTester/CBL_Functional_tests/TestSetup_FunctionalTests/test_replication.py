@@ -2843,6 +2843,10 @@ def test_resetCheckpointWithPurge(params_from_base_test_setup, replication_type,
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
     db_config = params_from_base_test_setup["db_config"]
+    liteserv_version = params_from_base_test_setup["liteserv_version"]
+
+    if liteserv_version < "2.1":
+        pytest.skip('database encryption feature not available with version < 2.1')
 
     # Reset cluster to ensure no data in system
     c = cluster.Cluster(config=cluster_config)
@@ -2933,6 +2937,10 @@ def test_resetCheckpointFailure(params_from_base_test_setup):
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
     liteserv_platform = params_from_base_test_setup["liteserv_platform"]
+    liteserv_version = params_from_base_test_setup["liteserv_version"]
+
+    if liteserv_version < "2.1":
+        pytest.skip('database encryption feature not available with version < 2.1')
 
     if(liteserv_platform.lower() == "ios"):
         pytest.skip('ResetCheckPoint API does not throw exception in iOS if replicator is not stopped, so skipping test')
@@ -3001,6 +3009,10 @@ def test_resetCheckpointWithUpdate(params_from_base_test_setup, replication_type
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
     db_config = params_from_base_test_setup["db_config"]
+    liteserv_version = params_from_base_test_setup["liteserv_version"]
+
+    if liteserv_version < "2.1":
+        pytest.skip('database encryption feature not available with version < 2.1')
 
     # Reset cluster to ensure no data in system
     c = cluster.Cluster(config=cluster_config)

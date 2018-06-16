@@ -30,6 +30,10 @@ def test_databaseEncryption(params_from_base_test_setup, password):
 
     base_url = params_from_base_test_setup["base_url"]
     liteserv_platform = params_from_base_test_setup["liteserv_platform"]
+    liteserv_version = params_from_base_test_setup["liteserv_version"]
+    print "Liteserver version is ", liteserv_version
+    if liteserv_version < "2.1":
+        pytest.skip('database encryption feature not available with version < 2.1')
 
     db = Database(base_url)
     cbl_db_name = "cbl_db_name" + str(time.time())
@@ -92,6 +96,10 @@ def test_invalidEncryption(params_from_base_test_setup, password):
 
     base_url = params_from_base_test_setup["base_url"]
     liteserv_platform = params_from_base_test_setup["liteserv_platform"]
+    liteserv_version = params_from_base_test_setup["liteserv_version"]
+
+    if liteserv_version < "2.1":
+        pytest.skip('database encryption feature not available with version < 2.1')
 
     db = Database(base_url)
     db_configure = DatabaseConfiguration(base_url)
@@ -141,6 +149,11 @@ def test_updateDBEncryptionKey(params_from_base_test_setup):
 
     base_url = params_from_base_test_setup["base_url"]
     liteserv_platform = params_from_base_test_setup["liteserv_platform"]
+    liteserv_version = params_from_base_test_setup["liteserv_version"]
+
+    if liteserv_version < "2.1":
+        pytest.skip('database encryption feature not available with version < 2.1')
+
     db = Database(base_url)
 
     # 1. Create database with password
@@ -187,6 +200,11 @@ def test_DBEncryptionKey_withCompact(params_from_base_test_setup):
     '''
 
     base_url = params_from_base_test_setup["base_url"]
+    liteserv_version = params_from_base_test_setup["liteserv_version"]
+
+    if liteserv_version < "2.1":
+        pytest.skip('database encryption feature not available with version < 2.1')
+
     db = Database(base_url)
 
     # 1. Create database with password
@@ -232,6 +250,11 @@ def test_removeDBEncryptionKey(params_from_base_test_setup):
 
     base_url = params_from_base_test_setup["base_url"]
     liteserv_platform = params_from_base_test_setup["liteserv_platform"]
+    liteserv_version = params_from_base_test_setup["liteserv_version"]
+
+    if liteserv_version < "2.1":
+        pytest.skip('database encryption feature not available with version < 2.1')
+
     password = "encryption"
     db = Database(base_url)
     dbConfiguration = DatabaseConfiguration(base_url)

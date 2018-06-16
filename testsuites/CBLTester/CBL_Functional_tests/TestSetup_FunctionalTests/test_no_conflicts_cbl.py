@@ -931,17 +931,17 @@ def test_multiple_cbls_updates_concurrently_with_pull(params_from_base_test_setu
     replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
     repl_config = replicator.configure(cbl_db1, target_url=sg_blip_url, continuous=True, channels=channels, replicator_authenticator=replicator_authenticator)
     repl1 = replicator.create(repl_config)
-    replicate_update_cbl_docs(replicator, db, cbl_db1, repl1)
+    replicate_update_cbl_docs(replicator, db, cbl_db1, repl1, number_of_updates)
 
     repl_config = replicator.configure(cbl_db2, target_url=sg_blip_url, continuous=True,
                                        channels=channels, replicator_authenticator=replicator_authenticator)
     repl2 = replicator.create(repl_config)
-    replicate_update_cbl_docs(replicator, db, cbl_db2, repl2)
+    replicate_update_cbl_docs(replicator, db, cbl_db2, repl2, number_of_updates)
 
     repl_config = replicator.configure(cbl_db3, target_url=sg_blip_url, continuous=True,
                                        channels=channels, replicator_authenticator=replicator_authenticator)
     repl3 = replicator.create(repl_config)
-    replicate_update_cbl_docs(replicator, db, cbl_db3, repl3)
+    replicate_update_cbl_docs(replicator, db, cbl_db3, repl3, number_of_updates)
 
 
 @pytest.mark.sanity
