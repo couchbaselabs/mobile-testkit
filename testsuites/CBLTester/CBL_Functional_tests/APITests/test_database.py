@@ -117,6 +117,7 @@ class TestDatabase(object):
         db = self.db_obj.create(db_name)
         assert self.db_obj.close(db) == -1
 
+    """
     @pytest.mark.parametrize("db_name", [
         random_string(1),
         random_string(6),
@@ -127,6 +128,7 @@ class TestDatabase(object):
         random_string(6, digit=True),
         random_string(6).upper(),
     ])
+
     def test_deleteDB(self, db_name):
         '''
         @summary: Testing delete(DB) method of Database API
@@ -138,7 +140,7 @@ class TestDatabase(object):
         path = self.db_obj.getPath(db)
         assert self.db_obj.deleteDB(db) == -1
         assert self.db_obj.exists(db_name, path) is False
-
+    """
     @pytest.mark.parametrize("db_name, doc_id", [
         (random_string(1), random_string(6)),
         (random_string(6), random_string(6)),
