@@ -290,7 +290,6 @@ class SyncGateway(object):
         }
 
         if get_sg_version(cluster_config) >= "2.1.0":
-            num_replicas = get_sg_replicas(cluster_config)
             if get_sg_use_views(cluster_config):
                 playbook_vars["sg_use_views"] = '"use_views": true,'
             else:
@@ -432,7 +431,6 @@ class SyncGateway(object):
             "server_port": server_port,
             "server_scheme": server_scheme,
             "autoimport": "",
-            "xattrs": "",
             "sslkey": "",
             "sslcert": "",
             "num_index_replicas": "",

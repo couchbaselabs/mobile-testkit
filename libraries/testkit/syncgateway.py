@@ -154,10 +154,6 @@ class SyncGateway:
         else:
             playbook_vars["logging"] = '"log": ["*"],'
 
-        if sg_ssl_enabled(self.cluster_config):
-            playbook_vars["sslcert"] = '"SSLCert": "sg_cert.pem",'
-            playbook_vars["sslkey"] = '"SSLKey": "sg_privkey.pem",'
-
         if is_xattrs_enabled(self.cluster_config):
             playbook_vars["autoimport"] = '"import_docs": "continuous",'
             playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'

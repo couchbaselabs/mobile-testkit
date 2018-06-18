@@ -64,8 +64,6 @@ class SgAccel:
             "sslcert": "",
             "sslkey": "",
             "logging": "",
-            "sslcert": "",
-            "sslkey": "",
             "couchbase_server_primary_node": couchbase_server_primary_node
         }
 

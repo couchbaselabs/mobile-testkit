@@ -67,7 +67,7 @@ class SyncGatewayConfig:
             if sg_ce:
                 sg_type = "community"
 
-            if (sg_platform == "windows" or sa_platform == "windows") and\
+            if (sg_platform == "windows" or sa_platform == "windows") and \
                     (sg_installer_type != "msi" or sa_installer_type != "msi"):
                 platform_extension["windows"] = "exe"
 
@@ -134,7 +134,6 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
         "sslcert": "",
         "sslkey": "",
         "num_index_replicas": "",
-        "num_index_replicas_housekeeping": "",
         "sg_use_views": "",
         "logging": "",
         "couchbase_server_primary_node": couchbase_server_primary_node
@@ -146,9 +145,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
             playbook_vars["sg_use_views"] = '"use_views": true,'
         else:
             num_replicas = get_sg_replicas(cluster_config)
-            playbook_vars[
-                "num_index_replicas"] = '"num_index_replicas": {},'.format(
-                num_replicas)
+            playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
     else:
         playbook_vars["logging"] = '"log": ["*"],'
 
