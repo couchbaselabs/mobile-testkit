@@ -11,7 +11,7 @@ from libraries.provision.ansible_runner import AnsibleRunner
 from libraries.testkit.config import Config
 
 from keywords.constants import SYNC_GATEWAY_CERT
-from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_revs_limit, sg_ssl_enabled, get_sg_version, get_sg_replicas, get_sg_use_views
+from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_revs_limit, sg_ssl_enabled, get_sg_version, get_sg_replicas, get_sg_use_views, get_redact_level
 
 
 class SyncGatewayConfig:
@@ -127,12 +127,18 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False, sg_pl
         "sslkey": "",
         "num_index_replicas": "",
         "sg_use_views": "",
-        "logging": "",
         "couchbase_server_primary_node": couchbase_server_primary_node
     }
 
     if get_sg_version(cluster_config) >= "2.1.0":
-        playbook_vars["logging"] = '"logging": {"debug": {"enabled": true}},'
+        logging_config = '"logging": {"debug": {"enabled": true}'
+        try:
+            redact_level = get_redact_level(cluster_config)
+            playbook_vars["logging"] = '{}, "redaction_level": "{}" {},'.format(logging_config, redact_level, "}")
+        except KeyError as ex:
+            log_info("Keyerror in getting logging{}".format(ex.message))
+            playbook_vars["logging"] = '{} {},'.format(logging_config, "}")
+
         if get_sg_use_views(cluster_config):
             playbook_vars["sg_use_views"] = '"use_views": true,'
         else:

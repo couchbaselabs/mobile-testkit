@@ -1,22 +1,38 @@
 ---
 - hosts: sync_gateways
   any_errors_fatal: true
+
+  vars:
+    redact_level:
+    zip_file_name:
+    salt_value:
+
   tasks:
-  - include: tasks/fetch-sync-gateway-logs.yml
+  - include: tasks/sg-sgcollect-info.yml
     when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon" or ansible_distribution == "Ubuntu"
 
-  - include: tasks/stop-sync-gateway-windows.yml
+  - include: tasks/sg-sgcollect-info-windows.yml
     when: ansible_os_family == "Windows"
 
-  - include: tasks/fetch-sync-gateway-logs-windows.yml
+  - include: tasks/sg-pullRedacted-zip-windows.yml
     when: ansible_os_family == "Windows"
+
 
 - hosts: sg_accels
   become: yes
   any_errors_fatal: true
+
+  vars:
+    redact_level:
+    zip_file_name:
+    salt_value:
+
   tasks:
-  - include: tasks/fetch-sg-accel-logs.yml
+  - include: tasks/sa-sgcollect-info.yml
     when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon" or ansible_distribution == "Ubuntu"
 
-  - include: tasks/fetch-sg-accel-logs-windows.yml
+  - include: tasks/sa-sgcollect-info-windows.yml
+    when: ansible_os_family == "Windows"
+
+  - include: tasks/sa-pullRedacted-zip-windows.yml
     when: ansible_os_family == "Windows"

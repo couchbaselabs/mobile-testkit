@@ -1,0 +1,19 @@
+
+  # Copy machine stat collection script to sync_gateways
+  - name: SG ACCEL COLLECT START | sg accel collect started
+    shell: /opt/couchbase-sg-accel/tools/sgcollect_info --log-redaction-level={{ redact_level }} {{ salt_value }} {{ zip_file_name }}
+    args:
+      chdir: /home/sg_accel/
+
+  - name: SYNC ACCEL | Check if sg_accel redacted zip file exists
+    become: yes
+    stat:
+      path: '/home/sg_accel/{{ zip_file_name }}-redacted.zip'
+    register: saz
+
+  - name: SG COLLECT FETCH | sg accel collect redacted fetching zip file to {{ inventory_hostname }}
+    fetch: src=/home/sg_accel/{{ zip_file_name }}-redacted.zip dest=/tmp/sg_redaction_logs/{{ inventory_hostname }}/ fail_on_missing=yes flat=yes validate_checksum=no
+    when: saz.stat.exists
+
+  - name: SG COLLECT FETCH | sg accel collect non redacted fetching zip file to {{ inventory_hostname }}
+    fetch: src=/home/sg_accel/{{ zip_file_name }}.zip dest=/tmp/sg_redaction_logs/{{ inventory_hostname }}/ fail_on_missing=yes flat=yes validate_checksum=no

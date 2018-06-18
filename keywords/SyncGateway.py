@@ -15,7 +15,7 @@ from keywords.utils import log_info
 from utilities.cluster_config_utils import get_revs_limit
 from keywords.exceptions import ProvisioningError, Error
 from libraries.provision.ansible_runner import AnsibleRunner
-from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled
+from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_redact_level
 from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version, sg_ssl_enabled
 
 
@@ -288,11 +288,21 @@ class SyncGateway(object):
         }
 
         if get_sg_version(cluster_config) >= "2.1.0":
+            logging_config = '"logging": {"debug": {"enabled": true}'
+            try:
+                redact_level = get_redact_level(cluster_config)
+                playbook_vars["logging"] = '{}, "redaction_level": "{}" {},'.format(logging_config, redact_level, "}")
+            except KeyError as ex:
+                log_info("Keyerror in getting logging{}".format(ex.message))
+                playbook_vars["logging"] = '{} {},'.format(logging_config, "}")
+
             if get_sg_use_views(cluster_config):
                 playbook_vars["sg_use_views"] = '"use_views": true,'
             else:
                 num_replicas = get_sg_replicas(cluster_config)
                 playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
+        else:
+            playbook_vars["logging"] = '"log": ["*"],'
 
         if is_xattrs_enabled(cluster_config):
             playbook_vars["autoimport"] = '"import_docs": "continuous",'
@@ -435,11 +445,20 @@ class SyncGateway(object):
         }
 
         if get_sg_version(cluster_config) >= "2.1.0":
+            logging_config = '"logging": {"debug": {"enabled": true}'
+            try:
+                redact_level = get_redact_level(cluster_config)
+                playbook_vars["logging"] = '{}, "redaction_level": "{}" {},'.format(logging_config, redact_level, "}")
+            except KeyError as ex:
+                log_info("Keyerror in getting logging{}".format(ex.message))
+                playbook_vars["logging"] = '{} {},'.format(logging_config, "}")
             if get_sg_use_views(cluster_config):
                 playbook_vars["sg_use_views"] = '"use_views": true,'
             else:
                 num_replicas = get_sg_replicas(cluster_config)
                 playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
+        else:
+            playbook_vars["logging"] = '"log": ["*"],'
 
         if is_xattrs_enabled(cluster_config):
             playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'

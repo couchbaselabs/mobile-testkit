@@ -72,6 +72,26 @@ def scan_for_errors(log_file_path, error_strings):
                     raise LogScanningError('{} found!! Please review: {} '.format(word, log_file_path))
 
 
+def scan_for_pattern(logfile_path, pattern_list):
+    """
+    Scans a log file line by line for a provided array of words.
+
+    'pattern_list' should be a list. Example ['panic', 'error', 'data race']
+    """
+    if type(pattern_list) != list:
+        raise ValueError('error_strings must be a list')
+
+    # Scan each line in the log file for the words to search for
+    flag = False
+    for line in open(logfile_path):
+        for word in pattern_list:
+            # convert the word to lowercase and the line to all lower case
+            if word.lower() in line.lower():
+                flag = True
+    if flag is False:
+            raise LogScanningError('{} Did not find the words !! Please review: {} '.format(pattern_list, logfile_path))
+
+
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()

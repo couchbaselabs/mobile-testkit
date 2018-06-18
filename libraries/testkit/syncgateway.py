@@ -11,7 +11,7 @@ from libraries.provision.ansible_runner import AnsibleRunner
 from libraries.testkit.admin import Admin
 from libraries.testkit.debug import log_request, log_response
 from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, sg_ssl_enabled
-from utilities.cluster_config_utils import get_revs_limit
+from utilities.cluster_config_utils import get_revs_limit, get_redact_level
 from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version
 from keywords.utils import add_cbs_to_sg_config_server_field, log_info
 from keywords.constants import SYNC_GATEWAY_CERT
@@ -74,7 +74,6 @@ class SyncGateway:
             "sg_cert_path": sg_cert_path,
             "num_index_replicas": "",
             "sg_use_views": "",
-            "logging": "",
             "couchbase_server_primary_node": self.couchbase_server_primary_node
         }
 
@@ -83,7 +82,14 @@ class SyncGateway:
             playbook_vars["sslkey"] = '"SSLKey": "sg_privkey.pem",'
 
         if get_sg_version(self.cluster_config) >= "2.1.0":
-            playbook_vars["logging"] = '"logging": {"debug": {"enabled": true}},'
+            logging_config = '"logging": {"debug": {"enabled": true}'
+            try:
+                redact_level = get_redact_level(self.cluster_config)
+                playbook_vars["logging"] = '{}, "redaction_level": "{}" {},'.format(logging_config, redact_level, "}")
+            except KeyError as ex:
+                log_info("Keyerror in getting logging{}".format(ex.message))
+                playbook_vars["logging"] = '{} {},'.format(logging_config, "}")
+
             if get_sg_use_views(self.cluster_config):
                 playbook_vars["sg_use_views"] = '"use_views": true,'
             else:
@@ -132,7 +138,6 @@ class SyncGateway:
             "sg_cert_path": sg_cert_path,
             "num_index_replicas": "",
             "sg_use_views": "",
-            "logging": "",
             "couchbase_server_primary_node": self.couchbase_server_primary_node
         }
 
@@ -141,7 +146,13 @@ class SyncGateway:
             playbook_vars["sslkey"] = '"SSLKey": "sg_privkey.pem",'
 
         if get_sg_version(self.cluster_config) >= "2.1.0":
-            playbook_vars["logging"] = '"logging": {"debug": {"enabled": true}},'
+            logging_config = '"logging": {"debug": {"enabled": true}'
+            try:
+                redact_level = get_redact_level(self.cluster_config)
+                playbook_vars["logging"] = '{}, "redaction_level": "{}" {},'.format(logging_config, redact_level, "}")
+            except KeyError as ex:
+                log_info("Keyerror in getting logging{}".format(ex.message))
+                playbook_vars["logging"] = '{} {},'.format(logging_config, "}")
             if get_sg_use_views(self.cluster_config):
                 playbook_vars["sg_use_views"] = '"use_views": true,'
             else:
