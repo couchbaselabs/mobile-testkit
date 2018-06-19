@@ -10,9 +10,8 @@ from keywords.utils import log_info, log_warn, add_cbs_to_sg_config_server_field
 from libraries.provision.ansible_runner import AnsibleRunner
 from libraries.testkit.config import Config
 from libraries.testkit.cluster import Cluster
-from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_revs_limit, get_sg_version, get_sg_replicas, get_sg_use_views, sg_ssl_enabled, is_ipv6
 from keywords.constants import SYNC_GATEWAY_CERT
-from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_revs_limit, sg_ssl_enabled, get_sg_version, get_sg_replicas, get_sg_use_views, get_redact_level
+from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_revs_limit, sg_ssl_enabled, get_sg_version, get_sg_replicas, get_sg_use_views, get_redact_level, is_ipv6
 
 
 class SyncGatewayConfig:
