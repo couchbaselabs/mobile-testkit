@@ -1,6 +1,6 @@
 {
   "interface":":4984",
-  "log": ["*"],
+  {{ logging }}
   {{ sslcert }}
   {{ sslkey }}
   "databases": {

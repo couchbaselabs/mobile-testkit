@@ -152,7 +152,7 @@ class Cluster:
         server_port = 8091
         server_scheme = "http"
         couchbase_server_primary_node = add_cbs_to_sg_config_server_field(self._cluster_config)
-        if is_ipv6:
+        if is_ipv6(self._cluster_config):
             couchbase_server_primary_node = "[{}]".format(couchbase_server_primary_node)
         if self.cbs_ssl:
             server_port = 18091

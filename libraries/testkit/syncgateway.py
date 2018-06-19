@@ -167,7 +167,7 @@ class SyncGateway:
             log_info("revs_limit no found in {}, Ignoring".format(self.cluster_config))
             playbook_vars["revs_limit"] = ''
 
-        if is_ipv6:
+        if is_ipv6(self.cluster_config):
             playbook_vars["couchbase_server_primary_node"] = "[{}]".format(playbook_vars["couchbase_server_primary_node"])
         status = self.ansible_runner.run_ansible_playbook(
             "reset-sync-gateway.yml",

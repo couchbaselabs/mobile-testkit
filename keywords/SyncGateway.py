@@ -273,7 +273,7 @@ class SyncGateway(object):
             self.server_port = 18091
             self.server_scheme = "https"
 
-        if is_ipv6:
+        if is_ipv6(cluster_config):
             couchbase_server_primary_node = "[{}]".format(couchbase_server_primary_node)
         playbook_vars = {
             "sync_gateway_config_filepath": config_path,

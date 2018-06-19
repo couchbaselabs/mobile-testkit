@@ -207,8 +207,7 @@ def params_from_base_suite_setup(request):
             cluster_config = "{}/base_lb_{}".format(CLUSTER_CONFIGS_DIR, mode)
 
     log_info("Using '{}' config!".format(cluster_config))
-    cluster_utils = ClusterKeywords()
-    cluster_utils.set_cluster_config(cluster_config.split("/")[-1])
+    cluster_utils = ClusterKeywords(cluster_config)
 
     if sg_ssl:
         log_info("Enabling SSL on sync gateway")
