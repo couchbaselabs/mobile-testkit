@@ -9,7 +9,6 @@ from keywords.exceptions import ProvisioningError
 from keywords.utils import log_info, log_warn, add_cbs_to_sg_config_server_field
 from libraries.provision.ansible_runner import AnsibleRunner
 from libraries.testkit.config import Config
-
 from keywords.constants import SYNC_GATEWAY_CERT
 from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_revs_limit, sg_ssl_enabled, get_sg_version, get_sg_replicas, get_sg_use_views, get_redact_level
 
