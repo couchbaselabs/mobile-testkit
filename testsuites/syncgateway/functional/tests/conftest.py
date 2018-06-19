@@ -321,7 +321,8 @@ def params_from_base_suite_setup(request):
         "mode": mode,
         "xattrs_enabled": xattrs_enabled,
         "sg_lb": sg_lb,
-        "no_conflicts_enabled": no_conflicts_enabled
+        "no_conflicts_enabled": no_conflicts_enabled,
+        "sg_platform": sg_platform
     }
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
@@ -350,6 +351,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     sg_lb = params_from_base_suite_setup["sg_lb"]
     no_conflicts_enabled = params_from_base_suite_setup["no_conflicts_enabled"]
     sync_gateway_version = params_from_base_suite_setup["sync_gateway_version"]
+    sg_platform = params_from_base_suite_setup["sg_platform"]
 
     test_name = request.node.name
 
@@ -382,7 +384,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "mode": mode,
         "xattrs_enabled": xattrs_enabled,
         "no_conflicts_enabled": no_conflicts_enabled,
-        "sync_gateway_version": sync_gateway_version
+        "sync_gateway_version": sync_gateway_version,
+        "sg_platform": sg_platform
     }
 
     # Code after the yield will execute when each test finishes

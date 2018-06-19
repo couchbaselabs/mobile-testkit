@@ -13,7 +13,7 @@ from libraries.testkit.admin import Admin
 from libraries.testkit.config import Config
 from libraries.testkit.sgaccel import SgAccel
 from libraries.testkit.syncgateway import SyncGateway
-from utilities.cluster_config_utils import is_load_balancer_enabled, get_revs_limit, is_ipv6
+from utilities.cluster_config_utils import is_load_balancer_enabled, get_revs_limit, get_redact_level, is_ipv6
 from utilities.cluster_config_utils import get_load_balancer_ip, no_conflicts_enabled
 from keywords.constants import SYNC_GATEWAY_CERT
 from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version
@@ -172,12 +172,17 @@ class Cluster:
             "sslkey": "",
             "num_index_replicas": "",
             "sg_use_views": "",
-            "logging": "",
             "couchbase_server_primary_node": couchbase_server_primary_node
         }
 
         if get_sg_version(self._cluster_config) >= "2.1.0":
-            playbook_vars["logging"] = '"logging": {"debug": {"enabled": true}},'
+            logging_config = '"logging": {"debug": {"enabled": true}'
+            try:
+                redact_level = get_redact_level(self._cluster_config)
+                playbook_vars["logging"] = '{}, "redaction_level": "{}" {},'.format(logging_config, redact_level, "}")
+            except KeyError as ex:
+                log_info("Keyerror in getting logging{}".format(ex.message))
+                playbook_vars["logging"] = '{} {},'.format(logging_config, "}")
             if get_sg_use_views(self._cluster_config):
                 playbook_vars["sg_use_views"] = '"use_views": true,'
             else:

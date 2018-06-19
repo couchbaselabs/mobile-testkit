@@ -18,7 +18,6 @@
       "users": {
         "traun": {"password": "pass", "admin_channels": ["traun"]},
         "james": {"password": "pass", "admin_channels": ["james"]},
-        "hideki": {"password": "pass", "admin_channels": ["hideki"]},
         "pasin": {"password": "pass", "admin_channels": ["pasin"]},
         "jens": {"password": "pass", "admin_channels": ["jens"]},
         "jim": {"password": "pass", "admin_channels": ["jim"]},
