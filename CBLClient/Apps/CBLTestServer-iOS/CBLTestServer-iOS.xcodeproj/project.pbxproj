@@ -55,6 +55,9 @@
 		4173ED8E206CC62600978148 /* CouchbaseLiteSwift.framework.dSYM in Resources */ = {isa = PBXBuildFile; fileRef = 4173ED8C206CC62600978148 /* CouchbaseLiteSwift.framework.dSYM */; };
 		FB5A86762017E672008127FC /* DatabaseConfigurationRequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB5A86752017E672008127FC /* DatabaseConfigurationRequestHandler.swift */; };
 		FB7B1E731FDB60ED00A912BF /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB7B1E721FDB60ED00A912BF /* Extensions.swift */; };
+		FB7CDBEC20CF959D00BF7BDE /* PeerToPeerRequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB7CDBEB20CF959D00BF7BDE /* PeerToPeerRequestHandler.swift */; };
+		FBED39B420DB140C00A9F029 /* SwiftSocket.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FBED39B320DB140B00A9F029 /* SwiftSocket.framework */; };
+		FBED39B520DB140C00A9F029 /* SwiftSocket.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = FBED39B320DB140B00A9F029 /* SwiftSocket.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -82,6 +85,7 @@
 			dstSubfolderSpec = 10;
 			files = (
 				2986ED56206EBC27009B8020 /* CouchbaseLiteSwift.framework in Embed Frameworks */,
+				FBED39B520DB140C00A9F029 /* SwiftSocket.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -158,6 +162,8 @@
 		4173ED8D206CC62600978148 /* CouchbaseLiteSwift.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CouchbaseLiteSwift.framework; path = Frameworks/CouchbaseLiteSwift.framework; sourceTree = "<group>"; };
 		FB5A86752017E672008127FC /* DatabaseConfigurationRequestHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseConfigurationRequestHandler.swift; sourceTree = "<group>"; };
 		FB7B1E721FDB60ED00A912BF /* Extensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
+		FB7CDBEB20CF959D00BF7BDE /* PeerToPeerRequestHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerToPeerRequestHandler.swift; sourceTree = "<group>"; };
+		FBED39B320DB140B00A9F029 /* SwiftSocket.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftSocket.framework; path = Frameworks/SwiftSocket.framework; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -166,6 +172,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				2986ED55206EBC27009B8020 /* CouchbaseLiteSwift.framework in Frameworks */,
+				FBED39B420DB140C00A9F029 /* SwiftSocket.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -213,6 +220,7 @@
 				2907D173200E7FCE00CE56EB /* ResultRequestHandler.swift */,
 				2907D175200E860A00CE56EB /* BasicAuthenticatorRequestHandler.swift */,
 				FB5A86752017E672008127FC /* DatabaseConfigurationRequestHandler.swift */,
+				FB7CDBEB20CF959D00BF7BDE /* PeerToPeerRequestHandler.swift */,
 			);
 			path = Server;
 			sourceTree = "<group>";
@@ -220,6 +228,7 @@
 		29F77F1A1F9FC18D0035178F = {
 			isa = PBXGroup;
 			children = (
+				FBED39B320DB140B00A9F029 /* SwiftSocket.framework */,
 				29F77F251F9FC18D0035178F /* CBLTestServer-iOS */,
 				29F77F3A1F9FC18D0035178F /* CBLTestServer-iOSTests */,
 				29F77F451F9FC18D0035178F /* CBLTestServer-iOSUITests */,
@@ -507,6 +516,7 @@
 				294FB2081FEAF51F00DD0C23 /* QueryRequestHandler.swift in Sources */,
 				FB5A86762017E672008127FC /* DatabaseConfigurationRequestHandler.swift in Sources */,
 				2907D176200E860A00CE56EB /* BasicAuthenticatorRequestHandler.swift in Sources */,
+				FB7CDBEC20CF959D00BF7BDE /* PeerToPeerRequestHandler.swift in Sources */,
 				29F77F271F9FC18D0035178F /* AppDelegate.swift in Sources */,
 				29917D981FA92F82006C7675 /* DictionaryRequestHandler.swift in Sources */,
 				2907D174200E7FCE00CE56EB /* ResultRequestHandler.swift in Sources */,

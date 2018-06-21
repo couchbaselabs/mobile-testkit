@@ -41,6 +41,7 @@ public class Server {
     let resultRequestHandler: ResultRequestHandler!
     let basicAuthenticatorRequestHandler: BasicAuthenticatorRequestHandler!
     let databaseConfigurationRequestHandler: DatabaseConfigurationRequestHandler!
+    let peerToPeerRequestHandler: PeerToPeerRequestHandler!
     let memory = Memory()
     
     public init() {
@@ -64,6 +65,7 @@ public class Server {
         resultRequestHandler = ResultRequestHandler()
         basicAuthenticatorRequestHandler = BasicAuthenticatorRequestHandler()
         databaseConfigurationRequestHandler = DatabaseConfigurationRequestHandler()
+        peerToPeerRequestHandler = PeerToPeerRequestHandler()
         server = GCDWebServer()
         server.addDefaultHandler(forMethod: "POST", request: GCDWebServerDataRequest.self) {
             (request) -> GCDWebServerResponse? in
@@ -148,6 +150,8 @@ public class Server {
                         result = try self.resultRequestHandler.handleRequest(method: method, args: args)
                     } else if method.hasPrefix("basicAuthenticator") {
                         result = try self.basicAuthenticatorRequestHandler.handleRequest(method: method, args: args)
+                    } else if method.hasPrefix("peerToPeer") {
+                        result = try self.peerToPeerRequestHandler.handleRequest(method: method, args: args)
                     } else {
                         throw ServerError.MethodNotImplemented(method)
                     }
