@@ -58,12 +58,13 @@ def test_peer_to_peer_iosAndroid(params_from_base_suite_setup):
     base_url_ios = base_url_list[1]
     # base_url_android = base_url_list[0]
     base_url_ios2 = base_url_list[0]
-    
+
     peerToPeer_ios = PeerToPeer(base_url_ios)
-    peerToPeer_android = PeerToPeer(base_url_android)
+    # peerToPeer_android = PeerToPeer(base_url_ios2)
+    peerToPeer_ios2 = PeerToPeer(base_url_ios2)
     # for base_url in zip(base_url_list):
-    cbl_db_android = cbl_db_list[0]
-    db_obj_android = db_obj_list[0]
+    cbl_db_ios2 = cbl_db_list[0]
+    db_obj_ios2 = db_obj_list[0]
     cbl_db_ios = cbl_db_list[1]
     db_obj_ios = db_obj_list[1]
     
@@ -76,9 +77,10 @@ def test_peer_to_peer_iosAndroid(params_from_base_suite_setup):
     base_url_ios2 = base_url_list[0]
 
     db_obj_ios.create_bulk_docs(num_of_docs, "cbl-peerToPeer", db=cbl_db_ios, channels=channel)
-    android_port_re = int(ios_port)
-    server = peerToPeer_android.socket_connection(android_port1)
-    peerToPeerObj = peerToPeer_ios.peer_intialize(cbl_db_ios, False, android_host, android_port1)
+    ios_port_re = int(ios_port)
+    # server = peerToPeer_android.socket_connection(ios_port_re)
+    server = peerToPeer_ios2.socket_connection(ios_port_re)
+    peerToPeerObj = peerToPeer_ios.peer_intialize(cbl_db_ios, False, ios_host, ios_port)
     """with ThreadPoolExecutor(max_workers=1) as tpe:
         android_connection = tpe.submit(
             peerToPeer_android.socket_connection,
@@ -96,12 +98,12 @@ def test_peer_to_peer_iosAndroid(params_from_base_suite_setup):
         ios_connection.result()
     """
 
-    peerToPeer_android.accept_client(server)
+    # peerToPeer_android.accept_client(server)
     print " going to start ios peer to peer"
     peerToPeer_ios.start(peerToPeerObj)
     print " going to read data fraom client by android"
     peerToPeer_ios.stop(peerToPeerObj)
-    count = db_obj_android.getCount(cbl_db_android)
+    count = db_obj_ios2.getCount(cbl_db_ios2)
     print "count for android is ", count
     count1 = db_obj_ios.getCount(cbl_db_ios)
     print "count for ios is ", count1

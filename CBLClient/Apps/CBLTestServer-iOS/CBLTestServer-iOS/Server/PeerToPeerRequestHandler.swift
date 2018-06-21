@@ -48,9 +48,10 @@ public class PeerToPeerRequestHandler {
             let peerToPeerImplementation: PeerToPeerImplementation = args.get(name:"PeerToPeerImplementation")!
             peerToPeerImplementation.stop()
             
-        case "peerToPeer_connectTCPServer":
+        case "peerToPeer_socketConnection":
             let tcpConnection = TCPConnection.init()
-            tcpConnection.connectTCPServer()
+            let port:Int = args.get(name:"port")!
+            tcpConnection.connectTCPServer(port: port)
         default:
             throw RequestHandlerError.MethodNotFound(method)
         }
@@ -66,8 +67,8 @@ class TCPConnection {
         client.close()
     }
     
-    func connectTCPServer() {
-        let server = TCPServer(address: "127.0.0.1", port: 7070)
+    func connectTCPServer(port: Int) {
+        let server = TCPServer(address: "127.0.0.1", port: Int32(port))
         switch server.listen() {
         case .success:
             while true {
