@@ -101,19 +101,34 @@ def pytest_addoption(parser):
                      help="Provide cluster config to use. Default is base config",
                      default="base")
 
+    parser.addoption("--socket-hosts",
+                     action="store",
+                     help="socket-hosts: the hosts to start socket on")
 
-# This will get called to provision and initialise variables for system test
+    parser.addoption("--socket-ports",
+                     action="store",
+                     help="socket-ports: the ports to assign to socket")
+
+
+# This will get called once before the first test that
+# runs with this as input parameters in this file
+# This setup will be called once for all tests in the
+# testsuites/CBLTester/CBL_Functional_tests/ directory
 @pytest.fixture(scope="session")
 def params_from_base_suite_setup(request):
     liteserv_platforms = request.config.getoption("--liteserv-platforms")
     liteserv_versions = request.config.getoption("--liteserv-versions")
     liteserv_hosts = request.config.getoption("--liteserv-hosts")
     liteserv_ports = request.config.getoption("--liteserv-ports")
+    socket_hosts = request.config.getoption("--socket-hosts")
+    socket_ports = request.config.getoption("--socket-ports")
 
     platform_list = liteserv_platforms.split(',')
     version_list = liteserv_versions.split(',')
     host_list = liteserv_hosts.split(',')
     port_list = liteserv_ports.split(',')
+    socket_host_list = socket_hosts.split(',')
+    socket_port_list = socket_ports.split(',')
 
     if len(platform_list) != len(version_list) != len(host_list) != len(port_list):
         raise Exception("Provide equal no. of Parameters for host, port, version and platforms")
@@ -293,7 +308,9 @@ def params_from_base_suite_setup(request):
         "db_obj_list": db_obj_list,
         "device_enabled": device_enabled,
         "generator": generator,
-        "resume_cluster": resume_cluster
+        "resume_cluster": resume_cluster,
+        "socket_host_list": socket_host_list,
+        "socket_port_list": socket_port_list
     }
 
     # Delete CBL database
