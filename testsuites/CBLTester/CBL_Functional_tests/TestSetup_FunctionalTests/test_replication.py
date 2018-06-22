@@ -2975,7 +2975,6 @@ def test_resetCheckpointWithUpdate(params_from_base_test_setup, replication_type
     if liteserv_version < "2.1":
         pytest.skip('database encryption feature not available with version < 2.1')
 
-
     # Reset cluster to ensure no data in system
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
