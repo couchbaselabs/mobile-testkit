@@ -115,6 +115,14 @@ def pytest_addoption(parser):
     parser.addoption("--debug-mode", action="store_true",
                      help="Enable debug mode for the app ", default=False)
 
+    parser.addoption("--use-views",
+                     action="store_true",
+                     help="If set, uses views instead of GSI - SG 2.1 and above only")
+
+    parser.addoption("--number-replicas",
+                     action="store",
+                     help="Number of replicas for the indexer node - SG 2.1 and above only",
+                     default=0)
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -144,6 +152,8 @@ def params_from_base_suite_setup(request):
     ci = request.config.getoption("--ci")
     debug_mode = request.config.getoption("--debug-mode")
     no_conflicts_enabled = request.config.getoption("--no-conflicts")
+    use_views = request.config.getoption("--use-views")
+    number_replicas = request.config.getoption("--number-replicas")
 
     test_name = request.node.name
 
@@ -239,6 +249,17 @@ def params_from_base_suite_setup(request):
         log_info("Running with allow conflicts")
         persist_cluster_config_environment_prop(cluster_config, 'no_conflicts_enabled', False)
 
+    if use_views:
+        log_info("Running SG tests using views")
+        # Enable sg views in cluster configs
+        persist_cluster_config_environment_prop(cluster_config, 'sg_use_views', True)
+    else:
+        log_info("Running tests with cbs <-> sg ssl disabled")
+        # Disable sg views in cluster configs
+        persist_cluster_config_environment_prop(cluster_config, 'sg_use_views', False)
+
+    # Write the number of replicas to cluster config
+    persist_cluster_config_environment_prop(cluster_config, 'number_replicas', number_replicas)
     cluster_utils = ClusterKeywords(cluster_config)
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
     cbs_url = cluster_topology['couchbase_servers'][0]

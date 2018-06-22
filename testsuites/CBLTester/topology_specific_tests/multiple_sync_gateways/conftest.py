@@ -95,6 +95,14 @@ def pytest_addoption(parser):
     parser.addoption("--debug-mode", action="store_true",
                      help="Enable debug mode for the app ", default=False)
 
+    parser.addoption("--use-views",
+                     action="store_true",
+                     help="If set, uses views instead of GSI - SG 2.1 and above only")
+
+    parser.addoption("--number-replicas",
+                     action="store",
+                     help="Number of replicas for the indexer node - SG 2.1 and above only",
+                     default=0)
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -121,6 +129,8 @@ def params_from_base_suite_setup(request):
     sg_ssl = request.config.getoption("--sg-ssl")
     flush_memory_per_test = request.config.getoption("--flush-memory-per-test")
     debug_mode = request.config.getoption("--debug-mode")
+    use_views = request.config.getoption("--use-views")
+    number_replicas = request.config.getoption("--number-replicas")
 
     testserver = TestServerFactory.create(platform=liteserv_platform,
                                           version_build=liteserv_version,
@@ -194,6 +204,18 @@ def params_from_base_suite_setup(request):
     else:
         log_info("Running with allow conflicts")
         persist_cluster_config_environment_prop(cluster_config, 'no_conflicts_enabled', False)
+
+    if use_views:
+        log_info("Running SG tests using views")
+        # Enable sg views in cluster configs
+        persist_cluster_config_environment_prop(cluster_config, 'sg_use_views', True)
+    else:
+        log_info("Running tests with cbs <-> sg ssl disabled")
+        # Disable sg views in cluster configs
+        persist_cluster_config_environment_prop(cluster_config, 'sg_use_views', False)
+
+    # Write the number of replicas to cluster config
+    persist_cluster_config_environment_prop(cluster_config, 'number_replicas', number_replicas)
 
     sg_config = sync_gateway_config_path_for_mode("listener_tests/multiple_sync_gateways", mode)
     cluster_utils = ClusterKeywords(cluster_config)
