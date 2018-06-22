@@ -389,7 +389,9 @@ def params_from_base_suite_setup(request):
     log_info("Flushing server memory")
     utils_obj = Utils(base_url)
     utils_obj.flushMemory()
-
+    if create_db_per_suite:
+        log_info("Stopping the test server per suite")
+        testserver.stop()
     # Delete png files under resources/data
     clear_resources_pngs()
 
@@ -420,6 +422,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     device_enabled = params_from_base_suite_setup["device_enabled"]
     flush_memory_per_test = params_from_base_suite_setup["flush_memory_per_test"]
     enable_sample_bucket = params_from_base_suite_setup["enable_sample_bucket"]
+    liteserv_version = params_from_base_suite_setup["liteserv_version"]
     source_db = None
     cbl_db = None
 
@@ -485,7 +488,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "testserver": testserver,
         "db_config": db_config,
         "enable_sample_bucket": enable_sample_bucket,
-        "log_filename": log_filename
+        "log_filename": log_filename,
+        "liteserv_version": liteserv_version
     }
 
     log_info("Tearing down test")
@@ -500,9 +504,9 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         utils_obj = Utils(base_url)
         utils_obj.flushMemory()
 
-    log_info("Stopping the test server")
-    testserver.stop()
-
+    if create_db_per_test:
+        log_info("Stopping the test server per test")
+        testserver.stop()
 
 @pytest.fixture(scope="class")
 def class_init(request, params_from_base_suite_setup):
