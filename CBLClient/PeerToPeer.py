@@ -53,6 +53,12 @@ class PeerToPeer(object):
         args = Args()
         args.setInt("port", port)
         return self._client.invokeMethod("peerToPeer_socketConnection", args)
+
+    def socket_clientConnection(self, host, port):
+        args = Args()
+        args.setString("host", host)
+        args.setInt("port", port)
+        return self._client.invokeMethod("peerToPeer_socketClientConnection", args)
     
     def accept_client(self, server):
         args = Args()

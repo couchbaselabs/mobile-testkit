@@ -55,56 +55,61 @@ def test_peer_to_peer_iosAndroid(params_from_base_suite_setup):
     cluster.reset(sg_config_path=sg_config)
     sg_client = MobileRestClient()
     sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channel)
-    base_url_ios = base_url_list[1]
+    base_url_client = base_url_list[1]
     # base_url_android = base_url_list[0]
-    base_url_ios2 = base_url_list[0]
+    base_url_server = base_url_list[0]
 
-    peerToPeer_ios = PeerToPeer(base_url_ios)
+    peerToPeer_client = PeerToPeer(base_url_client)
     # peerToPeer_android = PeerToPeer(base_url_ios2)
-    peerToPeer_ios2 = PeerToPeer(base_url_ios2)
+    peerToPeer_server = PeerToPeer(base_url_server)
     # for base_url in zip(base_url_list):
-    cbl_db_ios2 = cbl_db_list[0]
-    db_obj_ios2 = db_obj_list[0]
-    cbl_db_ios = cbl_db_list[1]
-    db_obj_ios = db_obj_list[1]
+    cbl_db_server = cbl_db_list[0]
+    db_obj_server = db_obj_list[0]
+    cbl_db_client = cbl_db_list[1]
+    db_obj_client = db_obj_list[1]
     
-    ios_host = socket_host_list[0]
-    ios_port = socket_port_list[0]
+    server_host = socket_host_list[0]
+    server_port = socket_port_list[0]
+    client_host = socket_host_list[1]
+    client_port = socket_port_list[1]
     # android_host = socket_host_list[0]
     # android_port = socket_port_list[0]
     print "base url list ", base_url_list
     # base_url_android = base_url_list[0]
-    base_url_ios2 = base_url_list[0]
 
-    db_obj_ios.create_bulk_docs(num_of_docs, "cbl-peerToPeer", db=cbl_db_ios, channels=channel)
-    ios_port_re = int(ios_port)
+    db_obj_client.create_bulk_docs(num_of_docs, "cbl-peerToPeer", db=cbl_db_client, channels=channel)
+    server_port_re = int(server_port)
+    client_port_re = int(client_port)
     # server = peerToPeer_android.socket_connection(ios_port_re)
-    server = peerToPeer_ios2.socket_connection(ios_port_re)
-    peerToPeerObj = peerToPeer_ios.peer_intialize(cbl_db_ios, False, ios_host, ios_port)
-    """with ThreadPoolExecutor(max_workers=1) as tpe:
-        android_connection = tpe.submit(
-            peerToPeer_android.socket_connection,
-            android_port1
+    print "server starting ....."
+    # server = peerToPeer_server.socket_connection(server_port_re)
+    print "client connecting ....."
+    # peerToPeer_client.socket_clientConnection(ios_host, server_port_re)
+
+    with ThreadPoolExecutor(max_workers=1) as tpe:
+        server_connection = tpe.submit(
+            peerToPeer_server.socket_connection,
+            server_port_re
         )
-        ios_connection = tpe.submit(
-            peerToPeer_ios.peer_intialize,
-            cbl_db_android,
-            False,
-            android_host,
-            android_port
+        client_connection = tpe.submit(
+            peerToPeer_client.socket_clientConnection,
+            server_host,
+            server_port_re
         )
 
-        android_connection.result()
-        ios_connection.result()
-    """
+        server_connection.result()
+        client_connection.result()
 
+    print "socket connection started, now calling initialize"
+    peerToPeerObj = peerToPeer_client.peer_intialize(cbl_db_client, False, server_host, server_port_re)
     # peerToPeer_android.accept_client(server)
     print " going to start ios peer to peer"
-    peerToPeer_ios.start(peerToPeerObj)
+    peerToPeer_client.start(peerToPeerObj)
     print " going to read data fraom client by android"
-    peerToPeer_ios.stop(peerToPeerObj)
-    count = db_obj_ios2.getCount(cbl_db_ios2)
+    time.sleep(15)
+    peerToPeer_client.stop(peerToPeerObj)
+    count = db_obj_server.getCount(cbl_db_server)
     print "count for android is ", count
-    count1 = db_obj_ios.getCount(cbl_db_ios)
+    count1 = db_obj_client.getCount(cbl_db_client)
     print "count for ios is ", count1
     # peerToPeer_android.read_data_fromClient(socket)
