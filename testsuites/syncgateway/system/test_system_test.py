@@ -127,7 +127,7 @@ def test_system_test(params_from_base_test_setup):
     c = Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_conf)
 
-    cluster_helper = ClusterKeywords()
+    cluster_helper = ClusterKeywords(cluster_config)
     topology = cluster_helper.get_cluster_topology(cluster_config)
 
     cbs_url = topology['couchbase_servers'][0]

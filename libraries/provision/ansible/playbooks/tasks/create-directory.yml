@@ -1,4 +1,4 @@
-# Delete the provided directory
+# Create the provided directory
 - name: SYNC GATEWAY | Create sync_gateway directory {{ directory }}
   become: yes
   shell: mkdir -p {{ directory }}

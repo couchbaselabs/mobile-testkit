@@ -43,7 +43,8 @@ def persist_cluster_config_environment_prop(cluster_config, property_name, value
     """
 
     if property_name_check is True:
-        valid_props = ["cbs_ssl_enabled", "xattrs_enabled", "sg_lb_enabled", "sync_gateway_version", "server_version", "no_conflicts_enabled", "sg_use_views", "number_replicas", "sync_gateway_upgraded_version"]
+        valid_props = ["cbs_ssl_enabled", "xattrs_enabled", "sg_lb_enabled", "sync_gateway_version", "server_version", "no_conflicts_enabled", "sync_gateway_ssl", "sg_use_views", "number_replicas", "sync_gateway_upgraded_version"]
+
         if property_name not in valid_props:
             raise ProvisioningError("Make sure the property you are trying to change is one of: {}".format(valid_props))
 
@@ -149,10 +150,24 @@ def no_conflicts_enabled(cluster_config):
         return False
 
 
+def sg_ssl_enabled(cluster_config):
+    "Get SG SSL value from cluster config"
+    cluster = load_cluster_config_json(cluster_config)
+    try:
+        return cluster["environment"]["sync_gateway_ssl"]
+    except KeyError:
+        return False
+
+
 def get_revs_limit(cluster_config):
     "Get revs limit"
     cluster = load_cluster_config_json(cluster_config)
     return cluster["environment"]["revs_limit"]
+
+
+def get_redact_level(cluster_config):
+    cluster = load_cluster_config_json(cluster_config)
+    return cluster["environment"]["redactlevel"]
 
 
 def copy_to_temp_conf(cluster_config, mode):

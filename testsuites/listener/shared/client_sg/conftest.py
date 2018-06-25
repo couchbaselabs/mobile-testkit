@@ -25,6 +25,7 @@ def pytest_addoption(parser):
     parser.addoption("--server-version", action="store", help="server-version: version of Couchbase Server to install and run tests against")
     parser.addoption("--xattrs", action="store_true", help="Use xattrs for sync meta storage. Sync Gateway 1.5.0+ and Couchbase Server 5.0+")
     parser.addoption("--device", action="store_true", help="Enable device if you want to run it on device", default=False)
+    parser.addoption("--sg-ssl", action="store_true", help="If set, will enable SSL communication between Sync Gateway and CBL")
     parser.addoption("--use-views", action="store_true", help="If set, uses views instead of GSI - SG 2.1 and above only")
     parser.addoption("--number-replicas", action="store", help="Number of replicas for the indexer node - SG 2.1 and above only", default=0)
 
@@ -53,6 +54,7 @@ def setup_client_syncgateway_suite(request):
     server_version = request.config.getoption("--server-version")
     xattrs_enabled = request.config.getoption("--xattrs")
     device_enabled = request.config.getoption("--device")
+    sg_ssl = request.config.getoption("--sg-ssl")
     use_views = request.config.getoption("--use-views")
     number_replicas = request.config.getoption("--number-replicas")
 
@@ -104,6 +106,12 @@ def setup_client_syncgateway_suite(request):
         # Disable sg views in cluster configs
         persist_cluster_config_environment_prop(cluster_config, 'sg_use_views', False)
 
+    if sg_ssl:
+        log_info("Enabling SSL on sync gateway")
+        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', True)
+    else:
+        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', False)
+
     # Write the number of replicas to cluster config
     persist_cluster_config_environment_prop(cluster_config, 'number_replicas', number_replicas)
 
@@ -118,7 +126,7 @@ def setup_client_syncgateway_suite(request):
 
     if not skip_provisioning:
         log_info("Installing Sync Gateway + Couchbase Server + Accels ('di' only)")
-        cluster_utils = ClusterKeywords()
+        cluster_utils = ClusterKeywords(cluster_config)
         cluster_utils.provision_cluster(
             cluster_config=cluster_config,
             server_version=server_version,
@@ -173,7 +181,7 @@ def setup_client_syncgateway_test(request, setup_client_syncgateway_suite):
         ls_url = liteserv.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, test_name, datetime.datetime.now()))
     client.delete_databases(ls_url)
 
-    cluster_helper = ClusterKeywords()
+    cluster_helper = ClusterKeywords(cluster_config)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config=cluster_config)
 
     sg_url = cluster_hosts["sync_gateways"][0]["public"]

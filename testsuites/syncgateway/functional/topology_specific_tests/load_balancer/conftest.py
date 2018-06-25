@@ -6,7 +6,7 @@ from keywords.exceptions import ProvisioningError, FeatureSupportedError
 from keywords.SyncGateway import (sync_gateway_config_path_for_mode,
                                   validate_sync_gateway_mode)
 from keywords.tklogging import Logging
-from keywords.utils import check_xattr_support, log_info, version_is_binary
+from keywords.utils import check_xattr_support, log_info, version_is_binary, clear_resources_pngs
 from libraries.NetworkUtils import NetworkUtils
 from libraries.testkit import cluster
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop
@@ -31,6 +31,7 @@ def params_from_base_suite_setup(request):
     sg_ce = request.config.getoption("--sg-ce")
     use_sequoia = request.config.getoption("--sequoia")
     no_conflicts_enabled = request.config.getoption("--no-conflicts")
+    sg_ssl = request.config.getoption("--sg-ssl")
     use_views = request.config.getoption("--use-views")
     number_replicas = request.config.getoption("--number-replicas")
     sg_installer_type = request.config.getoption("--sg-installer-type")
@@ -48,6 +49,7 @@ def params_from_base_suite_setup(request):
     log_info("xattrs_enabled: {}".format(xattrs_enabled))
     log_info("sg_lb: {}".format(sg_lb))
     log_info("sg_ce: {}".format(sg_ce))
+    log_info("sg_ssl: {}".format(sg_ssl))
     log_info("no conflicts enabled {}".format(no_conflicts_enabled))
     log_info("use_views: {}".format(use_views))
     log_info("number_replicas: {}".format(number_replicas))
@@ -66,7 +68,14 @@ def params_from_base_suite_setup(request):
 
     # use load_balancer_cc cluster config if mode is "cc" or load_balancer_di cluster config if mode is "di"
     cluster_config = "{}/load_balancer_{}".format(keywords.constants.CLUSTER_CONFIGS_DIR, mode)
+    cluster_utils = ClusterKeywords(cluster_config)
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
+
+    if sg_ssl:
+        log_info("Enabling SSL on sync gateway")
+        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', True)
+    else:
+        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', False)
 
     # Add load balancer prop and check if load balancer IP is available
     if sg_lb:
@@ -137,7 +146,7 @@ def params_from_base_suite_setup(request):
     if skip_provisioning or use_sequoia:
         should_provision = False
 
-    cluster_utils = ClusterKeywords()
+    cluster_utils = ClusterKeywords(cluster_config)
     if should_provision:
         try:
             cluster_utils.provision_cluster(
@@ -169,6 +178,9 @@ def params_from_base_suite_setup(request):
     # Stop all sync_gateway and sg_accels as test finished
     c = cluster.Cluster(cluster_config)
     c.stop_sg_and_accel()
+
+    # Delete png files under resources/data
+    clear_resources_pngs()
 
 
 # This is called before each test and will yield the cluster_config to each test in the file

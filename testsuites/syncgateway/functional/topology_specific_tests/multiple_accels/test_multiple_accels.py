@@ -272,7 +272,7 @@ def test_take_down_bring_up_sg_accel_validate_cbgt(params_from_base_test_setup, 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
 
-    cluster_util = ClusterKeywords()
+    cluster_util = ClusterKeywords(cluster_conf)
     topology = cluster_util.get_cluster_topology(cluster_conf)
 
     sg_url = topology["sync_gateways"][0]["public"]
@@ -377,7 +377,7 @@ def test_take_all_sgaccels_down(params_from_base_test_setup, sg_conf):
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
 
-    cluster_util = ClusterKeywords()
+    cluster_util = ClusterKeywords(cluster_conf)
     topology = cluster_util.get_cluster_topology(cluster_conf)
 
     sg_url = topology["sync_gateways"][0]["public"]
@@ -546,7 +546,7 @@ def test_detect_stale_channel_index(params_from_base_test_setup, sg_conf):
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
 
-    cluster_util = ClusterKeywords()
+    cluster_util = ClusterKeywords(cluster_conf)
     topology = cluster_util.get_cluster_topology(cluster_conf)
 
     sg_url = topology["sync_gateways"][0]["public"]

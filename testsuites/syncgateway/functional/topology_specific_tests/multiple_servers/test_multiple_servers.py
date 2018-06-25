@@ -32,7 +32,7 @@ def test_rebalance_sanity(params_from_base_test_setup):
     if compare_versions(sg_version, '1.5') < 0:
         pytest.skip("This test needs multiple URLs in the SG config, not supported by SG < 1.5")
 
-    cluster_helper = ClusterKeywords()
+    cluster_helper = ClusterKeywords(cluster_config)
 
     sg_conf_name = "sync_gateway_default_functional_tests"
     sg_conf_path = sync_gateway_config_path_for_mode(sg_conf_name, mode)
@@ -122,7 +122,7 @@ def test_server_goes_down_sanity(params_from_base_test_setup):
     if compare_versions(sg_version, '1.5') < 0:
         pytest.skip("This test needs multiple URLs in the SG config, not supported by SG < 1.5")
 
-    cluster_helper = ClusterKeywords()
+    cluster_helper = ClusterKeywords(cluster_config)
 
     sg_conf_name = "sync_gateway_default_functional_tests"
     sg_conf_path = sync_gateway_config_path_for_mode(sg_conf_name, mode)
@@ -237,7 +237,7 @@ def test_server_goes_down_rebuild_channels(params_from_base_test_setup):
     if compare_versions(sg_version, '1.5') < 0:
         pytest.skip("This test needs multiple URLs in the SG config, not supported by SG < 1.5")
 
-    cluster_helper = ClusterKeywords()
+    cluster_helper = ClusterKeywords(cluster_config)
 
     sg_conf_name = "sync_gateway_default_functional_tests"
     sg_conf_path = sync_gateway_config_path_for_mode(sg_conf_name, mode)

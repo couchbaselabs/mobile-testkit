@@ -6,6 +6,8 @@
     "maxFileDescriptors": 90000,
      "slowServerCallWarningThreshold": 500,
     "compressResponses": false,
+    {{ sslcert }}
+    {{ sslkey }}
     {{ logging }}
     "databases":{
         "db":{

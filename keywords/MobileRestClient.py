@@ -231,6 +231,8 @@ class MobileRestClient:
 
             cookie_name = cookie_parts[0]
             session_id = cookie_parts[1]
+
+        log_info("cookie name {}, session id {}".format(cookie_name, session_id))
         return cookie_name, session_id
 
     def create_session_header(self, url, db, name, password=None, ttl=86400):
@@ -2264,3 +2266,52 @@ class MobileRestClient:
         doc = self.get_doc(url, db, doc_id, auth)
         logging.debug(doc)
         return doc["_revisions"]["ids"]
+
+    def sgCollect_restCall(self, sg_host, redact_level=None, redact_salt=None, output_directory=None, upload=False, upload_host=None, customer=None, ticket=None):
+        """
+        set all parameters to the dictionary and do post
+        """
+        body = {}
+        body["upload"] = upload
+        if redact_level is not None:
+            body["redact_level"] = redact_level
+        if redact_salt is not None:
+            body["redact_salt"] = redact_salt
+        if output_directory is not None:
+            body["output_dir"] = output_directory
+        if upload_host is not None:
+            body["upload_host"] = upload_host
+        if customer is not None:
+            body["customer"] = customer
+        if ticket is not None:
+            body["ticket"] = ticket
+        resp = self._session.post("http://{}:4985/_sgcollect_info".format(sg_host), data=json.dumps(body))
+        log_r(resp)
+        return resp
+
+    def sgCollect_info(self, sg_host, redact_level=None, redact_salt=None, output_directory=None, upload=False, upload_host=None, customer=None, ticket=None):
+        """
+        Get sgCollect info using rest Api call by passing params
+        """
+        resp = self.sgCollect_restCall(sg_host, redact_level=redact_level, redact_salt=redact_salt, output_directory=output_directory, upload=upload, upload_host=upload_host, customer=customer, ticket=ticket)
+        resp.raise_for_status()
+        resp_obj = resp.json()
+        return resp_obj
+
+    def get_sgCollect_status(self, sg_host):
+        """
+        Get sg collect status with rest API call
+        """
+        resp = self._session.get("http://{}:4985/_sgcollect_info".format(sg_host))
+        log_r(resp)
+        resp.raise_for_status()
+        resp_obj = resp.json()
+        return resp_obj["status"]
+
+    def stop_sgCollect(self, sg_host):
+        """
+        Stop sg collect with rest API call
+        """
+        resp = self._session.delete("http://{}:4985/_sgcollect_info".format(sg_host))
+        log_r(resp)
+        resp.raise_for_status()

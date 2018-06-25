@@ -5,7 +5,7 @@ import datetime
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop
 from keywords.constants import SDK_TIMEOUT
 from keywords.utils import log_info
-from keywords.utils import host_for_url
+from keywords.utils import host_for_url, clear_resources_pngs
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.couchbaseserver import CouchbaseServer
 from keywords.constants import CLUSTER_CONFIGS_DIR
@@ -26,6 +26,7 @@ from CBLClient.Dictionary import Dictionary
 from CBLClient.DataTypeInitiator import DataTypeInitiator
 from CBLClient.SessionAuthenticator import SessionAuthenticator
 from CBLClient.Utils import Utils
+
 from utilities.cluster_config_utils import get_load_balancer_ip
 from CBLClient.ReplicatorConfiguration import ReplicatorConfiguration
 # from libraries.testkit import cluster
@@ -142,6 +143,8 @@ def params_from_base_suite_setup(request):
     sg_lb = request.config.getoption("--sg-lb")
     ci = request.config.getoption("--ci")
     debug_mode = request.config.getoption("--debug-mode")
+    no_conflicts_enabled = request.config.getoption("--no-conflicts")
+
     test_name = request.node.name
 
     testserver = TestServerFactory.create(platform=liteserv_platform,
@@ -162,10 +165,8 @@ def params_from_base_suite_setup(request):
         testserver.install()
 
     base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
-    # cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, mode)
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_travel_sample", mode)
-    no_conflicts_enabled = request.config.getoption("--no-conflicts")
-    cluster_utils = ClusterKeywords()
+
     sg_db = "db"
     suite_cbl_db = None
 
@@ -179,8 +180,9 @@ def params_from_base_suite_setup(request):
         if sg_lb:
             cluster_config = "{}/base_lb_{}".format(CLUSTER_CONFIGS_DIR, mode)
 
+    cluster_utils = ClusterKeywords(cluster_config)
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
-    cluster_utils.set_cluster_config(cluster_config.split("/")[-1])
+    cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
 
     sg_url = cluster_topology["sync_gateways"][0]["public"]
     sg_ip = host_for_url(sg_url)
@@ -237,7 +239,7 @@ def params_from_base_suite_setup(request):
         log_info("Running with allow conflicts")
         persist_cluster_config_environment_prop(cluster_config, 'no_conflicts_enabled', False)
 
-    cluster_utils = ClusterKeywords()
+    cluster_utils = ClusterKeywords(cluster_config)
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
     cbs_url = cluster_topology['couchbase_servers'][0]
     cbs_ip = host_for_url(cbs_url)
@@ -370,7 +372,6 @@ def params_from_base_suite_setup(request):
         "create_db_per_test": create_db_per_test,
         "suite_source_db": suite_source_db,
         "suite_cbl_db": suite_cbl_db,
-        "base_url": base_url,
         "sg_config": sg_config,
         "testserver": testserver,
         "device_enabled": device_enabled,
@@ -388,8 +389,9 @@ def params_from_base_suite_setup(request):
     log_info("Flushing server memory")
     utils_obj = Utils(base_url)
     utils_obj.flushMemory()
-    log_info("Stopping the test server")
-    testserver.stop()
+
+    # Delete png files under resources/data
+    clear_resources_pngs()
 
 
 @pytest.fixture(scope="function")
@@ -412,7 +414,6 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     sg_ip = params_from_base_suite_setup["sg_ip"]
     sg_db = params_from_base_suite_setup["sg_db"]
     sync_gateway_version = params_from_base_suite_setup["sync_gateway_version"]
-    target_admin_url = params_from_base_suite_setup["target_admin_url"]
     sg_config = params_from_base_suite_setup["sg_config"]
     liteserv_platform = params_from_base_suite_setup["liteserv_platform"]
     testserver = params_from_base_suite_setup["testserver"]
@@ -422,17 +423,16 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     source_db = None
     cbl_db = None
 
-    # Start LiteServ and delete any databases
-
     if create_db_per_test:
         log_info("Starting TestServer...")
         test_name_cp = test_name.replace("/", "-")
+        log_filename = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now())
         if device_enabled:
-            testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now()))
+            testserver.start_device(log_filename)
         else:
-            testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now()))
+            testserver.start(log_filename)
 
-    cluster_helper = ClusterKeywords()
+    cluster_helper = ClusterKeywords(cluster_config)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config=cluster_config)
     sg_url = cluster_hosts["sync_gateways"][0]["public"]
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
@@ -484,7 +484,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "device_enabled": device_enabled,
         "testserver": testserver,
         "db_config": db_config,
-        "enable_sample_bucket": enable_sample_bucket
+        "enable_sample_bucket": enable_sample_bucket,
+        "log_filename": log_filename
     }
 
     log_info("Tearing down test")
@@ -499,6 +500,9 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         utils_obj = Utils(base_url)
         utils_obj.flushMemory()
 
+    log_info("Stopping the test server")
+    testserver.stop()
+
 
 @pytest.fixture(scope="class")
 def class_init(request, params_from_base_suite_setup):
@@ -507,12 +511,13 @@ def class_init(request, params_from_base_suite_setup):
 
     db_obj = Database(base_url)
     doc_obj = Document(base_url)
-    array_obj = Array(base_url)
     dict_obj = Dictionary(base_url)
-    array_obj = Array(base_url)
     datatype = DataTypeInitiator(base_url)
     repl_obj = Replication(base_url)
+    array_obj = Array(base_url)
+    dict_obj = Dictionary(base_url)
     repl_config_obj = ReplicatorConfiguration(base_url)
+
     base_auth_obj = BasicAuthenticator(base_url)
     session_auth_obj = SessionAuthenticator(base_url)
     sg_client = MobileRestClient()
@@ -521,12 +526,15 @@ def class_init(request, params_from_base_suite_setup):
 
     request.cls.db_obj = db_obj
     request.cls.doc_obj = doc_obj
+    request.cls.dict_obj = dict_obj
+    request.cls.datatype = datatype
+    request.cls.repl_obj = repl_obj
+    request.cls.repl_config_obj = repl_config_obj
     request.cls.array_obj = array_obj
     request.cls.dict_obj = dict_obj
     request.cls.array_obj = array_obj
     request.cls.datatype = datatype
     request.cls.repl_obj = repl_obj
-    request.cls.repl_config_obj = repl_config_obj
     request.cls.base_auth_obj = base_auth_obj
     request.cls.session_auth_obj = session_auth_obj
     request.cls.sg_client = sg_client

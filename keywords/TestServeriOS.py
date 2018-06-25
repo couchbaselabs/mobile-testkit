@@ -18,8 +18,7 @@ from requests.exceptions import ConnectionError
 
 class TestServeriOS(TestServerBase):
 
-    def __init__(self, version_build, host, port, community_enabled=None, debug_mode=False):
-
+    def __init__(self, version_build, host, port, community_enabled=None, debug_mode=False, platform="ios"):
         super(TestServeriOS, self).__init__(version_build, host, port)
         self.liteserv_admin_url = "http://{}:59850".format(self.host)
         self.logfile_name = None
@@ -28,16 +27,29 @@ class TestServeriOS(TestServerBase):
         self.debug_mode = False
         self.app_path = ""
         self.app_name = ""
+        self.platform = platform
+        self.bundle_id = ""
+
         if debug_mode:
             self.debug_mode = True
-        if community_enabled:
-            self.app_dir = "CBLTestServer-iOS-community-{}".format(version_build)
-            self.package_name = "CBLTestServer-iOS-community-{}.zip".format(version_build)
-            self.app = "CBLTestServer-iOS"
+
+        if self.platform == "ios":
+            if community_enabled:
+                self.app_dir = "CBLTestServer-iOS-community-{}".format(version_build)
+                self.package_name = "CBLTestServer-iOS-community-{}.zip".format(version_build)
+                self.app = "CBLTestServer-iOS"
+            else:
+                self.app_dir = "CBLTestServer-iOS-enterprise-{}".format(version_build)
+                self.package_name = "CBLTestServer-iOS-enterprise-{}.zip".format(version_build)
+                self.app = "CBLTestServer-iOS-EE"
+
+            self.bundle_id = "com.couchbase.CBLTestServer-iOS"
         else:
-            self.app_dir = "CBLTestServer-iOS-enterprise-{}".format(version_build)
-            self.package_name = "CBLTestServer-iOS-enterprise-{}.zip".format(version_build)
-            self.app = "CBLTestServer-iOS-EE"
+            # Xamarin-ios
+            self.app_dir = "TestServer.iOS"
+            self.package_name = "TestServer.iOS.zip"
+            self.app = "TestServer.iOS"
+            self.bundle_id = "com.couchbase.TestServer-iOS"
 
     def download(self, version_build=None):
         """
@@ -48,7 +60,10 @@ class TestServeriOS(TestServerBase):
         if version_build is not None:
             self.version_build = version_build
         version, build = version_and_build(self.version_build)
-        app_name = "{}-{}.app".format(self.app, version_build)
+        if self.platform == "ios":
+            app_name = "{}-{}.app".format(self.app, version_build)
+        else:
+            app_name = self.app
 
         expected_binary_path = "{}/{}/{}".format(BINARY_DIR, self.app_dir, app_name)
         if os.path.isfile(expected_binary_path):
@@ -57,7 +72,10 @@ class TestServeriOS(TestServerBase):
 
         # Package not downloaded, proceed to download from latest builds
         downloaded_package_zip_name = "{}/{}".format(BINARY_DIR, self.package_name)
-        url = "{}/couchbase-lite-ios/{}/{}/{}".format(LATEST_BUILDS, version, build, self.package_name)
+        if self.platform == "ios":
+            url = "{}/couchbase-lite-ios/{}/{}/{}".format(LATEST_BUILDS, version, build, self.package_name)
+        else:
+            url = "{}/couchbase-lite-net/{}/{}/{}".format(LATEST_BUILDS, version, build, self.package_name)
 
         log_info("Downloading {} -> {}/{}".format(url, BINARY_DIR, self.package_name))
         resp = requests.get(url)
@@ -90,11 +108,10 @@ class TestServeriOS(TestServerBase):
         ])
         log_info(output)
 
-        bundle_id = "com.couchbase.CBLTestServer-iOS"
         output = subprocess.check_output(["ios-deploy", "--list_bundle_id"])
         log_info(output)
 
-        if bundle_id not in output:
+        if self.bundle_id not in output:
             raise LiteServError("Could not install CBLTestServer-iOS")
 
         self.stop()
@@ -102,14 +119,15 @@ class TestServeriOS(TestServerBase):
     def install(self):
         """Installs / launches CBLTestServer on iOS simulator
         """
-        if self.debug_mode:
-            self.app_name = "{}-{}-debug.app".format(self.app, self.version_build)
+        if self.platform == "ios":
+            if self.debug_mode:
+                self.app_name = "{}-{}-debug.app".format(self.app, self.version_build)
+            else:
+                self.app_name = "{}-{}.app".format(self.app, self.version_build)
         else:
-            self.app_name = "{}-{}.app".format(self.app, self.version_build)
+            self.app_name = "{}.app".format(self.app)
+
         self.app_path = "{}/{}/{}".format(BINARY_DIR, self.app_dir, self.app_name)
-        output = subprocess.check_output([
-            "ios-sim", "--devicetypeid", self.device, "start"
-        ])
 
         log_info("Installing: {}".format(self.app_path))
         # Launch the simulator and install the app
@@ -166,10 +184,8 @@ class TestServeriOS(TestServerBase):
         """
         Remove the iOS app from the connected device
         """
-        bundle_id = "com.couchbase.CBLTestServer-iOS"
-
         output = subprocess.check_output([
-            "ios-deploy", "--uninstall_only", "--bundle_id", bundle_id
+            "ios-deploy", "--uninstall_only", "--bundle_id", self.bundle_id
         ])
         log_info(output)
 
@@ -177,14 +193,13 @@ class TestServeriOS(TestServerBase):
         output = subprocess.check_output(["ios-deploy", "--list_bundle_id"])
         log_info(output)
 
-        if bundle_id in output:
+        if self.bundle_id in output:
             raise LiteServError("CBLTestServer-iOS is still present after uninstall")
 
     def remove(self):
         """
         Remove the iOS app from the simulator
         """
-        bundle_id = "com.couchbase.CBLTestServer-iOS"
         log_info("Removing CBLTestServer")
 
         self.stop()
@@ -200,8 +215,8 @@ class TestServeriOS(TestServerBase):
             "xcrun", "simctl", "erase", self.device_id
         ])
 
-        if bundle_id in output:
-            raise LiteServError("{} is still present after uninstall".format(bundle_id))
+        if self.bundle_id in output:
+            raise LiteServError("{} is still present after uninstall".format(self.bundle_id))
 
     def start(self, logfile_name):
         """
@@ -295,10 +310,9 @@ class TestServeriOS(TestServerBase):
         subprocess.check_output(["osascript", "{}/../utilities/sim_close_app.scpt".format(cur_dir)])
 
     def open_app(self):
-        bundle_id = "com.couchbase.CBLTestServer-iOS"
-        if(self.host == "localhost"):
+        if self.host == "localhost":
             # xcrun simctl launch booted com.couchbase.CBLTestServer-iOS
-            output = subprocess.check_output(["xcrun", "simctl", "launch", "booted", bundle_id])
+            output = subprocess.check_output(["xcrun", "simctl", "launch", "booted", self.bundle_id])
         else:
             output = subprocess.check_output(["ios-deploy", "--justlaunch", "--bundle", self.app_path])
         log_info("output of open app is {}".format(output))

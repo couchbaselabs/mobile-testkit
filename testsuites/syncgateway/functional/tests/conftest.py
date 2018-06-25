@@ -8,7 +8,7 @@ from keywords.exceptions import ProvisioningError, FeatureSupportedError
 from keywords.SyncGateway import (sync_gateway_config_path_for_mode,
                                   validate_sync_gateway_mode)
 from keywords.tklogging import Logging
-from keywords.utils import check_xattr_support, log_info, version_is_binary, compare_versions
+from keywords.utils import check_xattr_support, log_info, version_is_binary, compare_versions, clear_resources_pngs
 from libraries.NetworkUtils import NetworkUtils
 from libraries.testkit import cluster
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop
@@ -121,6 +121,10 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="If set, allow_conflicts is set to false in sync-gateway config")
 
+    parser.addoption("--sg-ssl",
+                     action="store_true",
+                     help="If set, will enable SSL communication between Sync Gateway and CBL")
+
     parser.addoption("--use-views",
                      action="store_true",
                      help="If set, uses views instead of GSI - SG 2.1 and above only")
@@ -157,6 +161,7 @@ def params_from_base_suite_setup(request):
     sg_ce = request.config.getoption("--sg-ce")
     use_sequoia = request.config.getoption("--sequoia")
     no_conflicts_enabled = request.config.getoption("--no-conflicts")
+    sg_ssl = request.config.getoption("--sg-ssl")
     use_views = request.config.getoption("--use-views")
     number_replicas = request.config.getoption("--number-replicas")
 
@@ -178,6 +183,7 @@ def params_from_base_suite_setup(request):
     log_info("sa_platform: {}".format(sa_platform))
     log_info("sg_lb: {}".format(sg_lb))
     log_info("sg_ce: {}".format(sg_ce))
+    log_info("sg_ssl: {}".format(sg_ssl))
     log_info("no_conflicts_enabled: {}".format(no_conflicts_enabled))
     log_info("use_views: {}".format(use_views))
     log_info("number_replicas: {}".format(number_replicas))
@@ -200,6 +206,13 @@ def params_from_base_suite_setup(request):
             cluster_config = "{}/base_lb_{}".format(CLUSTER_CONFIGS_DIR, mode)
 
     log_info("Using '{}' config!".format(cluster_config))
+    cluster_utils = ClusterKeywords(cluster_config)
+
+    if sg_ssl:
+        log_info("Enabling SSL on sync gateway")
+        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', True)
+    else:
+        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', False)
 
     # Add load balancer prop and check if load balancer IP is available
     if sg_lb:
@@ -269,7 +282,7 @@ def params_from_base_suite_setup(request):
     if skip_provisioning or use_sequoia:
         should_provision = False
 
-    cluster_utils = ClusterKeywords()
+    cluster_utils = ClusterKeywords(cluster_config)
     if should_provision:
         try:
             cluster_utils.provision_cluster(
@@ -297,7 +310,7 @@ def params_from_base_suite_setup(request):
     )
 
     # Load topology as a dictionary
-    cluster_utils = ClusterKeywords()
+    cluster_utils = ClusterKeywords(cluster_config)
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
 
     yield {
@@ -307,7 +320,8 @@ def params_from_base_suite_setup(request):
         "mode": mode,
         "xattrs_enabled": xattrs_enabled,
         "sg_lb": sg_lb,
-        "no_conflicts_enabled": no_conflicts_enabled
+        "no_conflicts_enabled": no_conflicts_enabled,
+        "sg_platform": sg_platform
     }
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
@@ -315,6 +329,9 @@ def params_from_base_suite_setup(request):
     # Stop all sync_gateway and sg_accels as test finished
     c = cluster.Cluster(cluster_config)
     c.stop_sg_and_accel()
+
+    # Delete png files under resources/data
+    clear_resources_pngs()
 
 
 # This is called before each test and will yield the dictionary to each test that references the method
@@ -333,6 +350,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     sg_lb = params_from_base_suite_setup["sg_lb"]
     no_conflicts_enabled = params_from_base_suite_setup["no_conflicts_enabled"]
     sync_gateway_version = params_from_base_suite_setup["sync_gateway_version"]
+    sg_platform = params_from_base_suite_setup["sg_platform"]
 
     test_name = request.node.name
 
@@ -365,7 +383,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "mode": mode,
         "xattrs_enabled": xattrs_enabled,
         "no_conflicts_enabled": no_conflicts_enabled,
-        "sync_gateway_version": sync_gateway_version
+        "sync_gateway_version": sync_gateway_version,
+        "sg_platform": sg_platform
     }
 
     # Code after the yield will execute when each test finishes
