@@ -257,7 +257,6 @@ def params_from_base_suite_setup(request):
     else:
         persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', False)
 
-
     if use_views:
         log_info("Running SG tests using views")
         # Enable sg views in cluster configs
