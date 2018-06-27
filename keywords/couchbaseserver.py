@@ -73,6 +73,7 @@ class CouchbaseServer:
         self.cbs_ssl = False
 
         # Strip http prefix and port to store host
+
         if "https" in self.url:
             host = self.url.replace("https://", "")
             host = host.replace(":18091", "")
@@ -326,7 +327,7 @@ class CouchbaseServer:
         ram_per_bucket_mb = int(effective_ram_mb / num_buckets)
         return ram_per_bucket_mb
 
-    def create_buckets(self, bucket_names):
+    def create_buckets(self, bucket_names, ipv6=False):
         """
         # Figure out what total ram available is
         # Divide by number of buckets
@@ -341,9 +342,9 @@ class CouchbaseServer:
         per_bucket_ram_mb = self.get_ram_per_bucket(len(bucket_names))
 
         for bucket_name in bucket_names:
-            self.create_bucket(bucket_name, per_bucket_ram_mb)
+            self.create_bucket(bucket_name, per_bucket_ram_mb, ipv6)
 
-    def create_bucket(self, name, ram_quota_mb=1024):
+    def create_bucket(self, name, ram_quota_mb=1024, ipv6=False):
         """
         1. Create CBS bucket via REST
         2. Create client connection and poll until bucket is available
@@ -388,12 +389,16 @@ class CouchbaseServer:
 
         # Create client an retry until KeyNotFound error is thrown
         start = time.time()
+        time.sleep(5)
         while True:
-
             if time.time() - start > keywords.constants.CLIENT_REQUEST_TIMEOUT:
                 raise Exception("TIMEOUT while trying to create server buckets.")
             try:
-                bucket = Bucket("couchbase://{}/{}".format(self.host, name), password='password')
+                if ipv6:
+                    connection_url = "couchbase://{}/{}?ipv6=allow".format(self.host, name)
+                else:
+                    connection_url = "couchbase://{}/{}".format(self.host, name)
+                bucket = Bucket(connection_url, password='password')
                 bucket.get('foo')
             except NotFoundError:
                 log_info("Key not found error: Bucket is ready!")
@@ -402,18 +407,20 @@ class CouchbaseServer:
                 log_info("Error from server: {}, Retrying ...". format(e))
                 time.sleep(1)
                 continue
-
         self.wait_for_ready_state()
-
         return name
 
-    def delete_couchbase_server_cached_rev_bodies(self, bucket):
+    def delete_couchbase_server_cached_rev_bodies(self, bucket, ipv6=False):
         """
         Deletes docs that follow the below format
         _sync:rev:att_doc:34:1-e7fa9a5e6bb25f7a40f36297247ca93e
         """
-
-        b = Bucket("couchbase://{}/{}".format(self.host, bucket), password='password')
+        if ipv6:
+            b = Bucket("couchbase://{}/{}?ipv6=allow".format(self.host, bucket),
+                       password='password')
+        else:
+            b = Bucket("couchbase://{}/{}".format(self.host, bucket),
+                       password='password')
         b_manager = b.bucket_manager()
         b_manager.n1ql_index_create_primary(ignore_exists=True)
         cached_rev_doc_ids = []
@@ -426,12 +433,16 @@ class CouchbaseServer:
             log_debug("Removing: {}".format(doc_id))
             b.remove(doc_id)
 
-    def get_server_docs_with_prefix(self, bucket, prefix):
+    def get_server_docs_with_prefix(self, bucket, prefix, ipv6=False):
         """
         Returns server doc ids matching a prefix (ex. '_sync:rev:')
         """
 
-        b = Bucket("couchbase://{}/{}".format(self.host, bucket), password='password')
+        if ipv6:
+            conn_url = "couchbase://{}/{}?ipv6=allow".format(self.host, bucket)
+        else:
+            conn_url = "couchbase://{}/{}".format(self.host, bucket)
+        b = Bucket(conn_url, password='password')
         b_manager = b.bucket_manager()
         b_manager.n1ql_index_create_primary(ignore_exists=True)
         found_ids = []

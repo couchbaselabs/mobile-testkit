@@ -24,7 +24,7 @@ def check_network_options(private_network, public_network, public_network_ethern
         raise ProvisioningError("Invalid private_network, public_network and public_network_ethernet flags")
 
 
-def generate_cluster_configs_from_vagrant(private_network, public_network, public_network_ethernet):
+def generate_cluster_configs_from_vagrant(private_network, public_network, public_network_ethernet, ipv6):
     """
     1. Gets the status for a running vagrant vm set.
     2. Uses the host name to look up the ip allocated to each vagrant vm instance
@@ -74,7 +74,7 @@ def generate_cluster_configs_from_vagrant(private_network, public_network, publi
 
     # Generate cluster configs
     print("Generating cluster_configs ...")
-    generate_clusters_from_pool(pool_file)
+    generate_clusters_from_pool(pool_file, ipv6=ipv6)
 
 
 if __name__ == "__main__":
@@ -106,8 +106,10 @@ if __name__ == "__main__":
                       action="store_true", dest="public_network_ethernet", default=False,
                       help="Use Vagrant public ethernet network (Bridged)")
 
+    parser.add_option("--ipv6", action="store_true", default=False, help="Generate configs for IPv6")
+
     arg_parameters = sys.argv[1:]
 
     (opts, args) = parser.parse_args(arg_parameters)
 
-    generate_cluster_configs_from_vagrant(opts.private_network, opts.public_network, opts.public_network_ethernet)
+    generate_cluster_configs_from_vagrant(opts.private_network, opts.public_network, opts.public_network_ethernet, opts.ipv6)

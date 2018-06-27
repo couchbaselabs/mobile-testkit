@@ -9,8 +9,9 @@ from keywords.exceptions import ProvisioningError
 from keywords.utils import log_info, log_warn, add_cbs_to_sg_config_server_field
 from libraries.provision.ansible_runner import AnsibleRunner
 from libraries.testkit.config import Config
+from libraries.testkit.cluster import Cluster
 from keywords.constants import SYNC_GATEWAY_CERT
-from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_revs_limit, sg_ssl_enabled, get_sg_version, get_sg_replicas, get_sg_use_views, get_redact_level
+from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_revs_limit, sg_ssl_enabled, get_sg_version, get_sg_replicas, get_sg_use_views, get_redact_level, is_ipv6
 
 
 class SyncGatewayConfig:
@@ -40,7 +41,11 @@ class SyncGatewayConfig:
         output += "  skip bucketcreation: {}\n".format(self.skip_bucketcreation)
         return output
 
-    def sync_gateway_base_url_and_package(self, sg_ce=False, sg_platform="centos", sg_installer_type="msi", sa_platform="centos", sa_installer_type="msi"):
+    def sync_gateway_base_url_and_package(self, sg_ce=False,
+                                          sg_platform="centos",
+                                          sg_installer_type="msi",
+                                          sa_platform="centos",
+                                          sa_installer_type="msi"):
         platform_extension = {
             "centos": "rpm",
             "ubuntu": "deb",
@@ -62,7 +67,8 @@ class SyncGatewayConfig:
             if sg_ce:
                 sg_type = "community"
 
-            if (sg_platform == "windows" or sa_platform == "windows") and (sg_installer_type != "msi" or sa_installer_type != "msi"):
+            if (sg_platform == "windows" or sa_platform == "windows") and \
+                    (sg_installer_type != "msi" or sa_installer_type != "msi"):
                 platform_extension["windows"] = "exe"
 
             sg_package_name = "couchbase-sync-gateway-{0}_{1}-{2}_x86_64.{3}".format(sg_type, self._version_number, self._build_number, platform_extension[sg_platform])
@@ -91,7 +97,10 @@ class SyncGatewayConfig:
         return True
 
 
-def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False, sg_platform="centos", sg_installer_type="msi", sa_platform="centos", sa_installer_type="msi"):
+def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
+                         sg_platform="centos", sg_installer_type="msi",
+                         sa_platform="centos", sa_installer_type="msi",
+                         ipv6=False):
 
     log_info(sync_gateway_config)
 
@@ -178,12 +187,17 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False, sg_pl
 
     else:
         # Install from Package
-        sync_gateway_base_url, sync_gateway_package_name, sg_accel_package_name = sync_gateway_config.sync_gateway_base_url_and_package(sg_ce=sg_ce, sg_platform=sg_platform, sg_installer_type=sg_installer_type, sa_platform=sa_platform, sa_installer_type=sa_installer_type)
+        sync_gateway_base_url, sync_gateway_package_name, sg_accel_package_name = sync_gateway_config.sync_gateway_base_url_and_package(
+            sg_ce=sg_ce, sg_platform=sg_platform,
+            sg_installer_type=sg_installer_type, sa_platform=sa_platform,
+            sa_installer_type=sa_installer_type)
 
         playbook_vars["couchbase_sync_gateway_package_base_url"] = sync_gateway_base_url
         playbook_vars["couchbase_sync_gateway_package"] = sync_gateway_package_name
         playbook_vars["couchbase_sg_accel_package"] = sg_accel_package_name
 
+        if is_ipv6(cluster_config):
+            playbook_vars["couchbase_server_primary_node"] = "[{}]".format(couchbase_server_primary_node)
         if sg_platform == "windows":
             status = ansible_runner.run_ansible_playbook(
                 "install-sync-gateway-package-windows.yml",
@@ -223,6 +237,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False, sg_pl
 def create_server_buckets(cluster_config, sync_gateway_config):
 
     # get the couchbase server url
+    cluster = Cluster(cluster_config)
     cluster_helper = ClusterKeywords(cluster_config)
     cluster_topology = cluster_helper.get_cluster_topology(cluster_config)
 
@@ -242,7 +257,7 @@ def create_server_buckets(cluster_config, sync_gateway_config):
     bucket_names = get_buckets_from_sync_gateway_config(sync_gateway_config.config_path)
 
     # create couchbase server buckets
-    cb_server.create_buckets(bucket_names)
+    cb_server.create_buckets(bucket_names, cluster.ipv6)
 
 
 def get_buckets_from_sync_gateway_config(sync_gateway_config_path):

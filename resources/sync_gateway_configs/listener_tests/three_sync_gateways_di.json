@@ -7,49 +7,60 @@
     "slowServerCallWarningThreshold": 500,
     "compressResponses": false,
     {{ logging }}
-    "verbose":"true",
     "cluster_config": {
         "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
         "data_dir":".",
-        "bucket":"data-bucket",
-        "username":"data-bucket",
+        "bucket":"data-bucket-1",
+        "username":"data-bucket-1",
         "password": "password"
     },
     {{ sslcert }}
     {{ sslkey }}
-    "databases": {
-        "db":{
+    "databases":{
+        "sg_db1":{
             {{ xattrs }}
-            {{ sg_use_views }}
-            {{ num_index_replicas }}
+            {{ no_conflicts }}
+            {{ revs_limit }}
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
-            "bucket":"data-bucket",
-            "username":"data-bucket",
+            "bucket":"data-bucket-1",
+            "username":"data-bucket-1",
             "password": "password",
             "channel_index":{
-                "num_shards":16,
                 "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
-                "bucket":"index-bucket",
-                "username":"index-bucket",
+                "bucket":"index-bucket-1",
+                "username":"index-bucket-1",
                 "password": "password",
                 "writer":{{ is_index_writer }}
             }
         },
-        "db2":{
+        "sg_db2":{
             {{ xattrs }}
-            {{ no_conflicts }}
-            {{ sg_use_views }}
-            {{ num_index_replicas }}
-
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
-            "bucket":"data-bucket",
-            "username":"data-bucket",
+            "bucket":"data-bucket-2",
+            "username":"data-bucket-2",
             "password": "password",
+            {{ no_conflicts }}
+            {{ revs_limit }}
             "channel_index":{
-                "num_shards":16,
                 "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
-                "bucket":"index-bucket",
-                "username":"index-bucket",
+                "bucket":"index-bucket-2",
+                "username":"index-bucket-2",
+                "password": "password",
+                "writer":{{ is_index_writer }}
+            }
+        },
+        "sg_db3":{
+            {{ xattrs }}
+            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
+            "bucket":"data-bucket-3",
+            "username":"data-bucket-3",
+            "password": "password",
+            {{ no_conflicts }}
+            {{ revs_limit }}
+            "channel_index":{
+                "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
+                "bucket":"index-bucket-3",
+                "username":"index-bucket-3",
                 "password": "password",
                 "writer":{{ is_index_writer }}
             }

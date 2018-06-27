@@ -6,9 +6,10 @@ import requests
 import libraries.testkit.settings
 from libraries.provision.ansible_runner import AnsibleRunner
 from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_revs_limit
-from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version, sg_ssl_enabled, get_redact_level
+from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version, get_redact_level
 from keywords.utils import add_cbs_to_sg_config_server_field, log_info
 from keywords.constants import SYNC_GATEWAY_CERT
+from utilities.cluster_config_utils import sg_ssl_enabled
 
 
 log = logging.getLogger(libraries.testkit.settings.LOGGER)
@@ -62,6 +63,7 @@ class SgAccel:
             "sg_use_views": "",
             "sslcert": "",
             "sslkey": "",
+            "logging": "",
             "couchbase_server_primary_node": couchbase_server_primary_node
         }
 
@@ -96,6 +98,7 @@ class SgAccel:
             playbook_vars["revs_limit"] = '"revs_limit": {},'.format(revs_limit)
         except KeyError:
             log.info("revs_limit no found in {}, Ignoring".format(self.cluster_config))
+            playbook_vars["revs_limit"] = ''
 
         status = self.ansible_runner.run_ansible_playbook(
             "start-sg-accel.yml",

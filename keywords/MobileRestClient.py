@@ -808,7 +808,11 @@ class MobileRestClient:
             if use_post:
                 resp = self._session.post("{}/{}/".format(url, db), data=json.dumps(doc))
             else:
-                resp = self._session.put("{}/{}/{}".format(url, db, doc["_id"]), data=json.dumps(doc))
+                try:
+                    resp = self._session.put("{}/{}/{}".format(url, db, doc["_id"]), data=json.dumps(doc))
+                except Exception, err:
+                    print err
+                    raise
 
         log_r(resp)
         resp.raise_for_status()

@@ -25,7 +25,6 @@ from libraries.testkit.cluster import Cluster
 from keywords.ChangesTracker import ChangesTracker
 from utilities.cluster_config_utils import get_sg_use_views, get_sg_version
 
-
 # Since sdk is quicker to update docs we need to have it sleep longer
 # between ops to avoid ops heavily weighted to SDK. These gives us more balanced
 # concurrency for each client.
@@ -91,7 +90,10 @@ def test_olddoc_nil(params_from_base_test_setup, sg_conf_name):
     # Create clients
     sg_client = MobileRestClient()
     cbs_ip = host_for_url(cbs_url)
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+    if cluster.ipv6:
+        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+    else:
+        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
 
     # Create user / session
     user_one_info = UserInfo(name='user1', password='pass', channels=['ABC'], roles=[])
@@ -205,7 +207,10 @@ def test_on_demand_doc_processing(params_from_base_test_setup, sg_conf_name, num
     # Initialize clients
     sg_client = MobileRestClient()
     # TODO : Add support for ssl enabled once ssl enabled support is merged to master
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_host, bucket_name), password='password')
+    if cluster.ipv6:
+        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_host, bucket_name), password='password')
+    else:
+        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_host, bucket_name), password='password')
     sdk_client.timeout = 600
 
     # Create Sync Gateway user
@@ -338,7 +343,10 @@ def test_on_demand_import_of_external_updates(params_from_base_test_setup, sg_co
     sg_client = MobileRestClient()
     cbs_ip = host_for_url(cbs_url)
     # TODO : Add support for ssl enabled once ssl enabled support is merged to master
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+    if cluster.ipv6:
+        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+    else:
+        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
 
     # Create user / session
     seth_user_info = UserInfo(name='seth', password='pass', channels=['NASA'], roles=[])
@@ -433,7 +441,10 @@ def test_offline_processing_of_external_updates(params_from_base_test_setup, sg_
     # Create clients
     sg_client = MobileRestClient()
     cbs_ip = host_for_url(cbs_url)
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+    if cluster.ipv6:
+        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+    else:
+        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
 
     # Create user / session
     seth_user_info = UserInfo(name='seth', password='pass', channels=['SG', 'SDK'], roles=[])
@@ -559,7 +570,10 @@ def test_large_initial_import(params_from_base_test_setup, sg_conf_name):
 
     # Connect to server via SDK
     cbs_ip = host_for_url(cbs_url)
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+    if cluster.ipv6:
+        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+    else:
+        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
 
     # Generate array for each doc doc to give it a larger size
     def prop_gen():
@@ -685,7 +699,10 @@ def test_purge(params_from_base_test_setup, sg_conf_name, use_multiple_channels)
 
     # Connect to server via SDK
     cbs_ip = host_for_url(cbs_url)
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+    if cluster.ipv6:
+        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+    else:
+        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
 
     # Create 'number_docs_per_client' docs from SDK
     sdk_doc_bodies = document.create_docs('sdk', number_docs_per_client, channels=seth_user_info.channels)
@@ -856,7 +873,10 @@ def test_sdk_does_not_see_sync_meta(params_from_base_test_setup, sg_conf_name):
 
     # Connect to server via SDK
     cbs_ip = host_for_url(cbs_url)
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+    if cluster.ipv6:
+        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+    else:
+        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
 
     # Add 'number_of_sg_docs' to Sync Gateway
     sg_doc_bodies = document.create_docs(
@@ -964,7 +984,10 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
     # Connect to server via SDK
     log_info('Connecting to bucket ...')
     cbs_ip = host_for_url(cbs_url)
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+    if cluster.ipv6:
+        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+    else:
+        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
 
     # Create docs and add them via sdk
     log_info('Adding docs via sdk ...')
@@ -1192,7 +1215,10 @@ def test_sg_sdk_interop_shared_docs(params_from_base_test_setup,
 
     # Connect to server via SDK
     cbs_ip = host_for_url(cbs_url)
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+    if cluster.ipv6:
+        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+    else:
+        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
 
     # Inject custom properties into doc template
     def update_props():
@@ -1436,7 +1462,10 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
     cbs_ip = host_for_url(cbs_url)
 
     # Connect to server via SDK
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+    if cluster.ipv6:
+        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+    else:
+        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
 
     # Inject custom properties into doc template
     def update_props():
@@ -2064,7 +2093,10 @@ def test_sg_sdk_interop_shared_updates_from_sg(params_from_base_test_setup,
 
     # Connect to server via SDK
     cbs_ip = host_for_url(cbs_url)
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+    if cluster.ipv6:
+        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+    else:
+        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
 
     # Inject custom properties into doc template
     def update_props():
@@ -2228,7 +2260,6 @@ def test_purge_and_view_compaction(params_from_base_test_setup, sg_conf_name):
 
     if get_sg_version(cluster_conf) > "2.0.0" and not get_sg_use_views(cluster_conf):
         pytest.skip("This test uses view queries")
-
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
     sg_url = cluster_topology['sync_gateways'][0]['public']

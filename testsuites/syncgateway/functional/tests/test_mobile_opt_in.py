@@ -74,7 +74,10 @@ def test_mobile_opt_in(params_from_base_test_setup, sg_conf_name):
     # Create clients
     sg_client = MobileRestClient()
     cbs_ip = host_for_url(cbs_url)
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+    if cluster.ipv6:
+        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+    else:
+        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
 
     # Create user / session
     auto_user_info = UserInfo(name='autotest', password='pass', channels=['mobileOptIn'], roles=[])

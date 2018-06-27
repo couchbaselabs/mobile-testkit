@@ -1,3 +1,4 @@
+import json
 import os
 import sys
 from optparse import OptionParser
@@ -55,6 +56,8 @@ def install_couchbase_server(cluster_config, couchbase_server_config, cbs_platfo
 
     log_info(cluster_config)
     log_info(couchbase_server_config)
+    with open("{}.json".format(cluster_config)) as f:
+            cluster = json.loads(f.read())
 
     ansible_runner = AnsibleRunner(cluster_config)
     cluster_keywords = ClusterKeywords(cluster_config)
@@ -69,7 +72,8 @@ def install_couchbase_server(cluster_config, couchbase_server_config, cbs_platfo
         "install-couchbase-server-package.yml",
         extra_vars={
             "couchbase_server_package_base_url": server_baseurl,
-            "couchbase_server_package_name": server_package_name
+            "couchbase_server_package_name": server_package_name,
+            "ipv6_enabled": cluster["environment"]["ipv6_enabled"]
         }
     )
     if status != 0:

@@ -159,7 +159,10 @@ def test_webhooks_crud(params_from_base_test_setup, sg_conf_name, filtered):
 
     sg_client = MobileRestClient()
     cbs_ip = host_for_url(cbs_url)
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
+    if cluster.ipv6:
+        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_ip, bucket_name), password='password')
+    else:
+        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
 
     sg_info = UserInfo('sg_user', 'pass', channels=['shared'], roles=[])
     sdk_info = UserInfo('sdk_user', 'pass', channels=['shared'], roles=[])

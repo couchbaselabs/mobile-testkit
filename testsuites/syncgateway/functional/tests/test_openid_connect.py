@@ -11,6 +11,7 @@ from keywords.ClusterKeywords import ClusterKeywords
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.utils import log_r
 from keywords.utils import log_info
+from libraries.testkit.cluster import Cluster
 
 
 DEFAULT_PROVIDER = "test"
@@ -48,7 +49,7 @@ def extract_cookie(set_cookie_response):
     return cookies
 
 
-def discover_authenticate_url(sg_url, sg_db, provider):
+def discover_authenticate_url(sg_url, sg_db, provider, ipv6):
 
     """
     Discover the full url to the authenticate endpoint:
@@ -57,7 +58,7 @@ def discover_authenticate_url(sg_url, sg_db, provider):
 
     """
 
-    authenticate_endpoint = discover_authenticate_endpoint(sg_url, sg_db, provider)
+    authenticate_endpoint = discover_authenticate_endpoint(sg_url, sg_db, provider, ipv6)
 
     # build the full url
     url = "{}/{}/_oidc_testing/{}".format(
@@ -69,7 +70,7 @@ def discover_authenticate_url(sg_url, sg_db, provider):
     return url
 
 
-def discover_authenticate_endpoint(sg_url, sg_db, provider):
+def discover_authenticate_endpoint(sg_url, sg_db, provider, ipv6):
     """
     Discover the authenticate endpoint and parameters.
 
@@ -99,6 +100,8 @@ def discover_authenticate_endpoint(sg_url, sg_db, provider):
     # needed until https://github.com/couchbase/sync_gateway/issues/1849 is fixed
     sg_url_parsed = urlparse(sg_url)
     sg_hostname = sg_url_parsed.hostname
+    if ipv6:
+        sg_hostname = "[{}]".format(sg_hostname)
     oidc_login_url = oidc_login_url.replace("localhost", sg_hostname)
 
     # Fetch the oidc_login_url
@@ -127,6 +130,7 @@ def test_openidconnect_basic_test(params_from_base_test_setup, sg_conf_name, is_
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     cluster_helper = ClusterKeywords(cluster_config)
+    cluster = Cluster(cluster_config)
     topology = cluster_helper.get_cluster_topology(cluster_config)
     sg_url = topology["sync_gateways"][0]["public"]
     sg_db = "db"
@@ -152,7 +156,7 @@ def test_openidconnect_basic_test(params_from_base_test_setup, sg_conf_name, is_
 
     # get the authenticate endpoint and query params, should look something like:
     #     authenticate?client_id=sync_gateway&redirect_uri= ...
-    authenticate_endpoint = discover_authenticate_endpoint(sg_url, sg_db, DEFAULT_PROVIDER)
+    authenticate_endpoint = discover_authenticate_endpoint(sg_url, sg_db, DEFAULT_PROVIDER, cluster.ipv6)
 
     # build the full url
     authenticate_endpoint_url = "{}/{}/_oidc_testing/{}".format(
@@ -241,6 +245,7 @@ def test_openidconnect_notauthenticated(params_from_base_test_setup, sg_conf_nam
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     cluster_helper = ClusterKeywords(cluster_config)
+    cluster = Cluster(cluster_config)
     topology = cluster_helper.get_cluster_topology(cluster_config)
     sg_url = topology["sync_gateways"][0]["public"]
     sg_db = "db"
@@ -257,7 +262,7 @@ def test_openidconnect_notauthenticated(params_from_base_test_setup, sg_conf_nam
 
     # get the authenticate endpoint and query params, should look something like:
     #     authenticate?client_id=sync_gateway&redirect_uri= ...
-    authenticate_endpoint = discover_authenticate_endpoint(sg_url, sg_db, DEFAULT_PROVIDER)
+    authenticate_endpoint = discover_authenticate_endpoint(sg_url, sg_db, DEFAULT_PROVIDER, cluster.ipv6)
 
     # build the full url
     authenticate_endpoint_url = "{}/{}/_oidc_testing/{}".format(
@@ -326,6 +331,7 @@ def test_openidconnect_no_session(params_from_base_test_setup, sg_conf_name):
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     cluster_helper = ClusterKeywords(cluster_config)
+    cluster = Cluster(cluster_config)
     topology = cluster_helper.get_cluster_topology(cluster_config)
     sg_url = topology["sync_gateways"][0]["public"]
     sg_db = "db"
@@ -346,7 +352,7 @@ def test_openidconnect_no_session(params_from_base_test_setup, sg_conf_name):
         'authenticated': ('', 'Return a valid authorization code for this user')
     }
 
-    authenticate_url = discover_authenticate_url(sg_url, sg_db, "testnosessions")
+    authenticate_url = discover_authenticate_url(sg_url, sg_db, "testnosessions", cluster.ipv6)
 
     # Make the request to _oidc_testing
     response = requests.post(authenticate_url, files=formdata)
@@ -369,6 +375,7 @@ def test_openidconnect_expired_token(params_from_base_test_setup, sg_conf_name):
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     cluster_helper = ClusterKeywords(cluster_config)
+    cluster = Cluster(cluster_config)
     topology = cluster_helper.get_cluster_topology(cluster_config)
     sg_url = topology["sync_gateways"][0]["public"]
     sg_db = "db"
@@ -394,7 +401,7 @@ def test_openidconnect_expired_token(params_from_base_test_setup, sg_conf_name):
 
     # get the authenticate endpoint and query params, should look something like:
     #     authenticate?client_id=sync_gateway&redirect_uri= ...
-    authenticate_endpoint = discover_authenticate_endpoint(sg_url, sg_db, DEFAULT_PROVIDER)
+    authenticate_endpoint = discover_authenticate_endpoint(sg_url, sg_db, DEFAULT_PROVIDER, cluster.ipv6)
 
     # build the full url
     url = "{}/{}/_oidc_testing/{}".format(
@@ -436,6 +443,7 @@ def test_openidconnect_negative_token_expiry(params_from_base_test_setup, sg_con
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     cluster_helper = ClusterKeywords(cluster_config)
+    cluster = Cluster(cluster_config)
     topology = cluster_helper.get_cluster_topology(cluster_config)
     sg_url = topology["sync_gateways"][0]["public"]
     sg_db = "db"
@@ -461,7 +469,7 @@ def test_openidconnect_negative_token_expiry(params_from_base_test_setup, sg_con
 
     # get the authenticate endpoint and query params, should look something like:
     #     authenticate?client_id=sync_gateway&redirect_uri= ...
-    authenticate_endpoint = discover_authenticate_endpoint(sg_url, sg_db, DEFAULT_PROVIDER)
+    authenticate_endpoint = discover_authenticate_endpoint(sg_url, sg_db, DEFAULT_PROVIDER, cluster.ipv6)
 
     # build the full url
     url = "{}/{}/_oidc_testing/{}".format(
@@ -487,6 +495,7 @@ def test_openidconnect_garbage_token(params_from_base_test_setup, sg_conf_name):
     cluster_config = params_from_base_test_setup["cluster_config"]
 
     cluster_helper = ClusterKeywords(cluster_config)
+    cluster = Cluster(cluster_config)
     topology = cluster_helper.get_cluster_topology(cluster_config)
     sg_url = topology["sync_gateways"][0]["public"]
     sg_db = "db"
@@ -507,7 +516,7 @@ def test_openidconnect_garbage_token(params_from_base_test_setup, sg_conf_name):
 
     # get the authenticate endpoint and query params, should look something like:
     #     authenticate?client_id=sync_gateway&redirect_uri= ...
-    authenticate_endpoint = discover_authenticate_endpoint(sg_url, sg_db, DEFAULT_PROVIDER)
+    authenticate_endpoint = discover_authenticate_endpoint(sg_url, sg_db, DEFAULT_PROVIDER, cluster.ipv6)
 
     # build the full url
     url = "{}/{}/_oidc_testing/{}".format(
@@ -567,6 +576,7 @@ def test_openidconnect_invalid_scope(params_from_base_test_setup, sg_conf_name):
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     cluster_helper = ClusterKeywords(cluster_config)
+    cluster = Cluster(cluster_config)
     topology = cluster_helper.get_cluster_topology(cluster_config)
     sg_url = topology["sync_gateways"][0]["public"]
     sg_db = "db"
@@ -582,7 +592,7 @@ def test_openidconnect_invalid_scope(params_from_base_test_setup, sg_conf_name):
     )
 
     try:
-        discover_authenticate_endpoint(sg_url, sg_db, "testinvalidscope")
+        discover_authenticate_endpoint(sg_url, sg_db, "testinvalidscope", cluster.ipv6)
     except HTTPError:
         log_info("got expected HTTPError trying to get the authenticate endpoint")
         # ok we got an exception, which is expected since we are using an invalid scope
@@ -605,6 +615,7 @@ def test_openidconnect_small_scope(params_from_base_test_setup, sg_conf_name):
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     cluster_helper = ClusterKeywords(cluster_config)
+    cluster = Cluster(cluster_config)
     topology = cluster_helper.get_cluster_topology(cluster_config)
     sg_url = topology["sync_gateways"][0]["public"]
     sg_db = "db"
@@ -627,7 +638,7 @@ def test_openidconnect_small_scope(params_from_base_test_setup, sg_conf_name):
 
     # get the authenticate endpoint and query params, should look something like:
     #     authenticate?client_id=sync_gateway&redirect_uri= ...
-    authenticate_endpoint = discover_authenticate_endpoint(sg_url, sg_db, "testsmallscope")
+    authenticate_endpoint = discover_authenticate_endpoint(sg_url, sg_db, "testsmallscope", cluster.ipv6)
 
     # build the full url
     url = "{}/{}/_oidc_testing/{}".format(
@@ -664,6 +675,7 @@ def test_openidconnect_large_scope(params_from_base_test_setup, sg_conf_name):
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     cluster_helper = ClusterKeywords(cluster_config)
+    cluster = Cluster(cluster_config)
     topology = cluster_helper.get_cluster_topology(cluster_config)
     sg_url = topology["sync_gateways"][0]["public"]
     sg_db = "db"
@@ -686,7 +698,7 @@ def test_openidconnect_large_scope(params_from_base_test_setup, sg_conf_name):
 
     # get the authenticate endpoint and query params, should look something like:
     #     authenticate?client_id=sync_gateway&redirect_uri= ...
-    authenticate_endpoint = discover_authenticate_endpoint(sg_url, sg_db, "testlargescope")
+    authenticate_endpoint = discover_authenticate_endpoint(sg_url, sg_db, "testlargescope", cluster.ipv6)
 
     # build the full url
     url = "{}/{}/_oidc_testing/{}".format(
@@ -725,6 +737,7 @@ def test_openidconnect_public_session_endpoint(params_from_base_test_setup, sg_c
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     cluster_helper = ClusterKeywords(cluster_config)
+    cluster = Cluster(cluster_config)
     topology = cluster_helper.get_cluster_topology(cluster_config)
     sg_url = topology["sync_gateways"][0]["public"]
     sg_db = "db"
@@ -747,7 +760,7 @@ def test_openidconnect_public_session_endpoint(params_from_base_test_setup, sg_c
 
     # get the authenticate endpoint and query params, should look something like:
     #     authenticate?client_id=sync_gateway&redirect_uri= ...
-    authenticate_endpoint = discover_authenticate_endpoint(sg_url, sg_db, DEFAULT_PROVIDER)
+    authenticate_endpoint = discover_authenticate_endpoint(sg_url, sg_db, DEFAULT_PROVIDER, cluster.ipv6)
 
     # build the full url
     url = "{}/{}/_oidc_testing/{}".format(
