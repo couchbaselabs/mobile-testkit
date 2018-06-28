@@ -183,7 +183,7 @@ def get_sg_use_views(cluster_config):
 def is_ipv6(cluster_config):
     """ Loads cluster config to get IPv6 status"""
     cluster = load_cluster_config_json(cluster_config)
-    return cluster["environment"]["sg_use_views"]
+    return cluster["environment"]["ipv6_enabled"]
 
 
 def get_sg_version(cluster_config):

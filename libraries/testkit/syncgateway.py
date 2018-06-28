@@ -9,9 +9,8 @@ from requests import HTTPError
 
 import libraries.testkit.settings
 from libraries.provision.ansible_runner import AnsibleRunner
-from libraries.provision.install_sync_gateway import \
-    get_buckets_from_sync_gateway_config
 from libraries.testkit.admin import Admin
+from libraries.testkit.config import Config
 from libraries.testkit.debug import log_request, log_response
 from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, sg_ssl_enabled, is_ipv6
 from utilities.cluster_config_utils import get_revs_limit, get_redact_level
@@ -206,7 +205,7 @@ class SyncGateway:
                 num_replicas = get_sg_replicas(self.cluster_config)
                 playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
 
-            if is_x509_auth(conf_path):
+            if is_x509_auth(cluster_config):
                 playbook_vars[
                     "certpath"] = '"certpath": "/home/sync_gateway/certs/chain.pem",'
                 playbook_vars[
@@ -216,7 +215,7 @@ class SyncGateway:
                 playbook_vars["server_scheme"] = "couchbases"
                 playbook_vars["server_port"] = ""
                 playbook_vars["x509_auth"] = True
-                generate_x509_certs(conf_path, bucket_names)
+                generate_x509_certs(cluster_config, bucket_names)
             else:
                 playbook_vars["username"] = '"username": "{}",'.format(
                     bucket_names[0])
@@ -409,6 +408,45 @@ class SyncGateway:
 
     def __repr__(self):
         return "SyncGateway: {}:{}\n".format(self.hostname, self.ip)
+
+
+def get_buckets_from_sync_gateway_config(sync_gateway_config_path):
+    # Remove the sync function before trying to extract the bucket names
+
+    with open(sync_gateway_config_path) as fp:
+        conf_data = fp.read()
+
+    fp.close()
+    temp_config_path = ""
+    temp_config = ""
+
+    # Check if a sync function id defined between ` `
+    if re.search('`', conf_data):
+        log_info("Ignoring the sync function to extract bucket names")
+        conf = re.split('`', conf_data)
+        split_len = len(conf)
+
+        # Replace the sync function with a string "function"
+        for i in range(0, split_len, 2):
+            if i == split_len - 1:
+                temp_config += conf[i]
+            else:
+                temp_config += conf[i] + " \"function\" "
+
+        temp_config_path = "/".join(sync_gateway_config_path.split('/')[:-2]) + '/temp_conf.json'
+
+        with open(temp_config_path, 'w') as fp:
+            fp.write(temp_config)
+
+        config_path_full = os.path.abspath(temp_config_path)
+    else:
+        config_path_full = os.path.abspath(sync_gateway_config_path)
+
+    config = Config(config_path_full)
+    bucket_name_set = config.get_bucket_name_set()
+    if os.path.exists(temp_config_path):
+        os.remove(temp_config_path)
+    return bucket_name_set
 
 
 def wait_until_doc_in_changes_feed(sg, db, doc_id):
