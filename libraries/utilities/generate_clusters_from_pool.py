@@ -365,8 +365,7 @@ def write_config(config, pool_file, use_docker, sg_windows, sg_accel_windows,
         f.write("xattrs_enabled=False\n")
         f.write("sg_lb_enabled=False\n")
         f.write("ipv6_enabled={}\n".format(ipv6))
-        if x509_certs:
-            f.write("x509_certs=True\n")
+        f.write("x509_certs={}\n".format(x509_certs))
 
         if sg_windows:
             f.write("\n\n[sync_gateways:vars]\n")
@@ -394,12 +393,12 @@ def write_config(config, pool_file, use_docker, sg_windows, sg_accel_windows,
             "sg_accels": accels,
             "load_generators": load_generators,
             "load_balancers": load_balancers,
-            "x509_certs": x509_certs,
             "environment": {
                 "cbs_ssl_enabled": False,
                 "xattrs_enabled": False,
                 "sg_lb_enabled": False,
-                "ipv6_enabled": ipv6
+                "ipv6_enabled": ipv6,
+                "x509_certs": x509_certs,
             }
         }
 

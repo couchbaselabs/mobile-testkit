@@ -202,21 +202,21 @@ class Cluster:
                 num_replicas = get_sg_replicas(self._cluster_config)
                 playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
 
-                if is_x509_auth(self._cluster_config):
-                    playbook_vars[
-                        "certpath"] = '"certpath": "/home/sync_gateway/certs/chain.pem",'
-                    playbook_vars[
-                        "keypath"] = '"keypath": "/home/sync_gateway/certs/pkey.key",'
-                    playbook_vars[
-                        "cacertpath"] = '"cacertpath": "/home/sync_gateway/certs/ca.pem",'
-                    playbook_vars["server_scheme"] = "couchbases"
-                    playbook_vars["server_port"] = ""
-                    playbook_vars["x509_auth"] = True
-                    generate_x509_certs(self._cluster_config, bucket_names)
-                else:
-                    playbook_vars["username"] = '"username": "{}",'.format(
-                        bucket_names[0])
-                    playbook_vars["password"] = '"password": "password",'
+            if is_x509_auth(self._cluster_config):
+                playbook_vars[
+                    "certpath"] = '"certpath": "/home/sync_gateway/certs/chain.pem",'
+                playbook_vars[
+                    "keypath"] = '"keypath": "/home/sync_gateway/certs/pkey.key",'
+                playbook_vars[
+                    "cacertpath"] = '"cacertpath": "/home/sync_gateway/certs/ca.pem",'
+                playbook_vars["server_scheme"] = "couchbases"
+                playbook_vars["server_port"] = ""
+                playbook_vars["x509_auth"] = True
+                generate_x509_certs(self._cluster_config, bucket_names)
+            else:
+                playbook_vars["username"] = '"username": "{}",'.format(
+                    bucket_names[0])
+                playbook_vars["password"] = '"password": "password",'
         else:
             playbook_vars["logging"] = '"log": ["*"],'
             playbook_vars["username"] = '"username": "{}",'.format(
