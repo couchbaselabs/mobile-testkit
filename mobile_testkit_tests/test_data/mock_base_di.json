@@ -13,6 +13,7 @@
         }
     ], 
     "environment": {
+        "x509_certs": false, 
         "sg_lb_enabled": false, 
         "sync_gateway_ssl": false, 
         "xattrs_enabled": false, 

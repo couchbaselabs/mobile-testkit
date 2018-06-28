@@ -119,10 +119,10 @@ if __name__ == "__main__":
     parser.add_option("--ipv6", action="store_true", default=False, help="Generate configs for IPv6")
 
     parser.add_option("--x509-certs",
-                      action = "store_true",
-                      dest = "x509_certs",
-                      default = False,
-                      help = "Enable x509_certs authentication")
+                      action="store_true",
+                      dest="x509_certs",
+                      default=False,
+                      help="Enable x509_certs authentication")
 
     arg_parameters = sys.argv[1:]
 

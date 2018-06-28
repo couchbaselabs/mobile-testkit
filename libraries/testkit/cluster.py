@@ -223,7 +223,6 @@ class Cluster:
                 bucket_names[0])
             playbook_vars["password"] = '"password": "password",'
 
-
         # Add configuration to run with xattrs
         if self.xattrs:
             playbook_vars["autoimport"] = '"import_docs": "continuous",'
@@ -438,6 +437,7 @@ def validate_cluster(sync_gateways, sg_accels, config):
         return False, "INVALID CONFIG: Running in Distributed Index mode but no sg_accels are defined."
 
     return True, ""
+
 
 def get_buckets_from_sync_gateway_config(sync_gateway_config_path):
     # Remove the sync function before trying to extract the bucket names
