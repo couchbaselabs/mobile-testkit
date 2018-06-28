@@ -2,17 +2,20 @@ import json
 import logging
 import os
 import time
+import re
 
 import requests
 from requests import HTTPError
 
 import libraries.testkit.settings
 from libraries.provision.ansible_runner import AnsibleRunner
+from libraries.provision.install_sync_gateway import \
+    get_buckets_from_sync_gateway_config
 from libraries.testkit.admin import Admin
 from libraries.testkit.debug import log_request, log_response
 from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, sg_ssl_enabled, is_ipv6
 from utilities.cluster_config_utils import get_revs_limit, get_redact_level
-from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version
+from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version, is_x509_auth, generate_x509_certs
 from keywords.utils import add_cbs_to_sg_config_server_field, log_info
 from keywords.constants import SYNC_GATEWAY_CERT
 
@@ -33,6 +36,7 @@ class SyncGateway:
         self.url = "{}://{}:4984".format(sg_scheme, target["ip"])
         self.hostname = target["name"]
         self._headers = {'Content-Type': 'application/json'}
+        self.cbs_cert_path = os.path.join(os.getcwd(), "certs")
         self.admin = Admin(self)
 
         self.cluster_config = cluster_config
@@ -42,6 +46,10 @@ class SyncGateway:
         if is_cbs_ssl_enabled(self.cluster_config):
             self.server_port = 18091
             self.server_scheme = "https"
+
+        if is_x509_auth(cluster_config):
+            self.server_port = ""
+            self.server_scheme = "couchbases"
 
         self.couchbase_server_primary_node = add_cbs_to_sg_config_server_field(self.cluster_config)
 
@@ -61,9 +69,18 @@ class SyncGateway:
         conf_path = os.path.abspath(config)
         log.info(">>> Starting sync_gateway with configuration: {}".format(conf_path))
         sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
+        bucket_names = get_buckets_from_sync_gateway_config(conf_path)
 
         playbook_vars = {
             "sync_gateway_config_filepath": conf_path,
+            "username": "",
+            "password": "",
+            "certpath": "",
+            "keypath": "",
+            "cacertpath": "",
+            "sg_cert_path": sg_cert_path,
+            "x509_certs_dir": self.cbs_cert_path,
+            "x509_auth": False,
             "server_port": self.server_port,
             "server_scheme": self.server_scheme,
             "autoimport": "",
@@ -71,7 +88,6 @@ class SyncGateway:
             "no_conflicts": "",
             "sslcert": "",
             "sslkey": "",
-            "sg_cert_path": sg_cert_path,
             "num_index_replicas": "",
             "sg_use_views": "",
             "couchbase_server_primary_node": self.couchbase_server_primary_node
@@ -95,8 +111,27 @@ class SyncGateway:
             else:
                 num_replicas = get_sg_replicas(self.cluster_config)
                 playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
+
+            if is_x509_auth(conf_path):
+                playbook_vars[
+                    "certpath"] = '"certpath": "/home/sync_gateway/certs/chain.pem",'
+                playbook_vars[
+                    "keypath"] = '"keypath": "/home/sync_gateway/certs/pkey.key",'
+                playbook_vars[
+                    "cacertpath"] = '"cacertpath": "/home/sync_gateway/certs/ca.pem",'
+                playbook_vars["server_scheme"] = "couchbases"
+                playbook_vars["server_port"] = ""
+                playbook_vars["x509_auth"] = True
+                generate_x509_certs(conf_path, bucket_names)
+            else:
+                playbook_vars["username"] = '"username": "{}",'.format(
+                    bucket_names[0])
+                playbook_vars["password"] = '"password": "password",'
         else:
             playbook_vars["logging"] = '"log": ["*"],'
+            playbook_vars["username"] = '"username": "{}",'.format(
+                bucket_names[0])
+            playbook_vars["password"] = '"password": "password",'
 
         if sg_ssl_enabled(self.cluster_config):
             playbook_vars["sslcert"] = '"SSLCert": "sg_cert.pem",'
@@ -128,6 +163,7 @@ class SyncGateway:
         conf_path = os.path.abspath(config)
         log.info(">>> Restarting sync_gateway with configuration: {}".format(conf_path))
         sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
+        bucket_names = get_buckets_from_sync_gateway_config(conf_path)
 
         playbook_vars = {
             "sync_gateway_config_filepath": conf_path,
@@ -139,7 +175,14 @@ class SyncGateway:
             "revs_limit": "",
             "sslcert": "",
             "sslkey": "",
+            "username": "",
+            "password": "",
+            "certpath": "",
+            "keypath": "",
+            "cacertpath": "",
             "sg_cert_path": sg_cert_path,
+            "x509_certs_dir": self.cbs_cert_path,
+            "x509_auth": False,
             "num_index_replicas": "",
             "sg_use_views": "",
             "couchbase_server_primary_node": self.couchbase_server_primary_node
@@ -162,8 +205,27 @@ class SyncGateway:
             else:
                 num_replicas = get_sg_replicas(self.cluster_config)
                 playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
+
+            if is_x509_auth(conf_path):
+                playbook_vars[
+                    "certpath"] = '"certpath": "/home/sync_gateway/certs/chain.pem",'
+                playbook_vars[
+                    "keypath"] = '"keypath": "/home/sync_gateway/certs/pkey.key",'
+                playbook_vars[
+                    "cacertpath"] = '"cacertpath": "/home/sync_gateway/certs/ca.pem",'
+                playbook_vars["server_scheme"] = "couchbases"
+                playbook_vars["server_port"] = ""
+                playbook_vars["x509_auth"] = True
+                generate_x509_certs(conf_path, bucket_names)
+            else:
+                playbook_vars["username"] = '"username": "{}",'.format(
+                    bucket_names[0])
+                playbook_vars["password"] = '"password": "password",'
         else:
             playbook_vars["logging"] = '"log": ["*"],'
+            playbook_vars["username"] = '"username": "{}",'.format(
+                bucket_names[0])
+            playbook_vars["password"] = '"password": "password",'
 
         if is_xattrs_enabled(self.cluster_config):
             playbook_vars["autoimport"] = '"import_docs": "continuous",'
