@@ -92,6 +92,14 @@ if __name__ == "__main__":
 
        usage: python generate_cluster_configs_from_vagrant_hosts.py
        --public-network-ethernet
+
+       or
+       usage: python generate_cluster_configs_from_vagrant_hosts.py
+       --public-network --ipv6
+
+       or
+       python generate_cluster_configs_from_vagrant_hosts.py
+       --public-network --x509-certs
        """
 
     parser = OptionParser(usage=usage)
@@ -110,7 +118,7 @@ if __name__ == "__main__":
 
     parser.add_option("--ipv6", action="store_true", default=False, help="Generate configs for IPv6")
 
-    parser.add_option("", "--x509-certs",
+    parser.add_option("--x509-certs",
                       action = "store_true",
                       dest = "x509_certs",
                       default = False,
