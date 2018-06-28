@@ -11,7 +11,7 @@ from libraries.provision.ansible_runner import AnsibleRunner
 from libraries.testkit.config import Config
 from libraries.testkit.cluster import Cluster
 from keywords.constants import SYNC_GATEWAY_CERT
-from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_revs_limit, sg_ssl_enabled, get_sg_version, get_sg_replicas, get_sg_use_views, get_redact_level, is_ipv6
+from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_revs_limit, sg_ssl_enabled, get_sg_version, get_sg_replicas, get_sg_use_views, get_redact_level, is_ipv6, is_x509_auth, generate_x509_certs
 
 
 class SyncGatewayConfig:
@@ -107,6 +107,9 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
     if sync_gateway_config.build_flags != "":
         log_warn("\n\n!!! WARNING: You are building with flags: {} !!!\n\n".format(sync_gateway_config.build_flags))
 
+    bucket_names = get_buckets_from_sync_gateway_config(
+        sync_gateway_config.config_path)
+    cbs_cert_path = os.path.join(os.getcwd(), "certs")
     ansible_runner = AnsibleRunner(cluster_config)
     config_path = os.path.abspath(sync_gateway_config.config_path)
     sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
@@ -125,6 +128,13 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
     # Shared vars
     playbook_vars = {
         "sync_gateway_config_filepath": config_path,
+        "username": "",
+        "password": "",
+        "certpath": "",
+        "keypath": "",
+        "cacertpath": "",
+        "x509_certs_dir": cbs_cert_path,
+        "x509_auth": False,
         "sg_cert_path": sg_cert_path,
         "server_port": server_port,
         "server_scheme": server_scheme,
@@ -152,8 +162,27 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
         else:
             num_replicas = get_sg_replicas(cluster_config)
             playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
+
+        if is_x509_auth(cluster_config):
+            playbook_vars[
+                "certpath"] = '"certpath": "/home/sync_gateway/certs/chain.pem",'
+            playbook_vars[
+                "keypath"] = '"keypath": "/home/sync_gateway/certs/pkey.key",'
+            playbook_vars[
+                "cacertpath"] = '"cacertpath": "/home/sync_gateway/certs/ca.pem",'
+            playbook_vars["server_scheme"] = "couchbases"
+            playbook_vars["server_port"] = ""
+            playbook_vars["x509_auth"] = True
+            generate_x509_certs(cluster_config, bucket_names)
+        else:
+            playbook_vars["username"] = '"username": "{}",'.format(
+                bucket_names[0])
+            playbook_vars["password"] = '"password": "password",'
     else:
         playbook_vars["logging"] = '"log": ["*"],'
+        playbook_vars["username"] = '"username": "{}",'.format(
+            bucket_names[0])
+        playbook_vars["password"] = '"password": "password",'
 
     if is_xattrs_enabled(cluster_config):
         playbook_vars["autoimport"] = '"import_docs": "continuous",'
@@ -257,7 +286,9 @@ def create_server_buckets(cluster_config, sync_gateway_config):
     bucket_names = get_buckets_from_sync_gateway_config(sync_gateway_config.config_path)
 
     # create couchbase server buckets
-    cb_server.create_buckets(bucket_names, cluster.ipv6)
+    cb_server.create_buckets(bucket_names=bucket_names,
+                             cluster_config=cluster_config,
+                             ipv6=cluster.ipv6)
 
 
 def get_buckets_from_sync_gateway_config(sync_gateway_config_path):
