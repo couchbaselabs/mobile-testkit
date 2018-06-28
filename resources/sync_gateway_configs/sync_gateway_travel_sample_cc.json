@@ -14,10 +14,13 @@
             {{ autoimport }}
             {{ xattrs }}
             {{ no_conflicts }}
+            {{ username }}
+            {{ password }}
+            {{ cacertpath }}
+            {{ certpath }}
+            {{ keypath }}
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
-            "bucket":"travel-sample",
-            "username":"travel-sample",
-            "password": "password"
+            "bucket":"travel-sample"
         }
     }
 }

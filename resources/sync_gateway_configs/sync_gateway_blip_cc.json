@@ -13,13 +13,16 @@
         "db":{
             {{ autoimport }}
             {{ xattrs }}
+            {{ username }}
+            {{ password }}
+            {{ cacertpath }}
+            {{ certpath }}
+            {{ keypath }}
             "unsupported": {
                 "replicator_2": true
             },
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
-            "bucket":"travel-sample",
-            "username":"travel-sample",
-            "password": "password"
+            "bucket":"travel-sample"
         }
     }
 }
