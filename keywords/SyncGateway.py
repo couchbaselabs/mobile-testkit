@@ -428,6 +428,7 @@ class SyncGateway(object):
         ansible_runner = AnsibleRunner(cluster_config)
         server_port = 8091
         server_scheme = "http"
+        sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
 
         if is_cbs_ssl_enabled(cluster_config):
             server_port = 18091
@@ -443,7 +444,8 @@ class SyncGateway(object):
             "sg_use_views": "",
             "xattrs": "",
             "no_conflicts": "",
-            "logging": ""
+            "logging": "",
+            "sg_cert_path": sg_cert_path
         }
 
         if no_conflicts_enabled(cluster_config):
