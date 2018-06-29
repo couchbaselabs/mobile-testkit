@@ -93,8 +93,6 @@ def test_upgrade(params_from_base_test_setup):
     initial_added_doc_ids = []
     for i in range(len(added_docs)):
         initial_added_doc_ids.append(added_docs[i]["id"])
-    log_info("Checking for docs present on the server after initial add")
-    check_docs_on_server(initial_added_doc_ids, cluster_config)
 
     # start updating docs
     terminator_doc_id = 'terminator'
