@@ -456,17 +456,17 @@ def send_changes_termination_doc(auth, terminator_doc_id, terminator_channel, ls
 
 
 def update_docs(client, ls_url, ls_db, added_docs, auth, terminator_doc_id, disable_doc_updates=False):
+    docs_per_update = 3
+    doc_revs = {}
+    deleted_docs = []
+
     if disable_doc_updates:
-        return []
+        return doc_revs, deleted_docs
 
     log_info("Starting doc updates")
     current_user_doc_ids = []
     for doc in added_docs:
         current_user_doc_ids.append(doc["id"])
-
-    docs_per_update = 3
-    doc_revs = {}
-    deleted_docs = []
 
     user_docs_to_delete = len(current_user_doc_ids) // 10
     if user_docs_to_delete <= 0:
