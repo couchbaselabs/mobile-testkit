@@ -43,6 +43,7 @@ def test_upgrade(params_from_base_test_setup):
     server_upgrade_only = params_from_base_test_setup["server_upgrade_only"]
     sg_upgrade_only = params_from_base_test_setup["sg_upgrade_only"]
     use_views = params_from_base_test_setup['use_views']
+    disable_doc_updates = params_from_base_test_setup['disable_doc_updates']
     sg_conf = "{}/resources/sync_gateway_configs/sync_gateway_default_functional_tests_{}.json".format(os.getcwd(), mode)
 
     # Add data to liteserv
@@ -105,7 +106,8 @@ def test_upgrade(params_from_base_test_setup):
             ls_db,
             added_docs,
             sg_session,
-            terminator_doc_id
+            terminator_doc_id,
+            disable_doc_updates
         )
 
         # Supported upgrade process
@@ -453,7 +455,10 @@ def send_changes_termination_doc(auth, terminator_doc_id, terminator_channel, ls
     ls_client.add_doc(ls_url, ls_db, doc_body, auth=auth, use_post=False)
 
 
-def update_docs(client, ls_url, ls_db, added_docs, auth, terminator_doc_id):
+def update_docs(client, ls_url, ls_db, added_docs, auth, terminator_doc_id, disable_doc_updates=False):
+    if disable_doc_updates:
+        return []
+
     log_info("Starting doc updates")
     current_user_doc_ids = []
     for doc in added_docs:

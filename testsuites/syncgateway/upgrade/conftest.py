@@ -145,6 +145,11 @@ def pytest_addoption(parser):
                      help="Only upgrade the SG cluster, do not upgrade CBS cluster",
                      default=False)
 
+    parser.addoption("--disable-doc-updates",
+                     action="store_true",
+                     help="Only upgrade the SG cluster, do not upgrade CBS cluster",
+                     default=False)
+
 
 # This will be called once for the at the beggining of the execution in the 'tests/' directory
 # and will be torn down, (code after the yeild) when all the test session has completed.
@@ -181,6 +186,7 @@ def params_from_base_suite_setup(request):
     number_replicas = request.config.getoption("--number-replicas")
     server_upgrade_only = request.config.getoption("--server-upgrade-only")
     sg_upgrade_only = request.config.getoption("--sg-upgrade-only")
+    disable_doc_updates = request.config.getoption("--disable-doc-updates")
 
     if xattrs_post_upgrade and version_is_binary(sync_gateway_version):
         check_xattr_support(server_upgraded_version, sync_gateway_upgraded_version)
@@ -207,6 +213,7 @@ def params_from_base_suite_setup(request):
     log_info("number_replicas: {}".format(number_replicas))
     log_info("server_upgrade_only: {}".format(server_upgrade_only))
     log_info("sg_upgrade_only: {}".format(sg_upgrade_only))
+    log_info("disable_doc_updates: {}".format(disable_doc_updates))
 
     # Make sure mode for sync_gateway is supported ('cc' or 'di')
     validate_sync_gateway_mode(mode)
@@ -343,7 +350,8 @@ def params_from_base_suite_setup(request):
         "cbs_toy_build": cbs_toy_build,
         "use_views": use_views,
         "server_upgrade_only": server_upgrade_only,
-        "sg_upgrade_only": sg_upgrade_only
+        "sg_upgrade_only": sg_upgrade_only,
+        "disable_doc_updates": disable_doc_updates
     }
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
@@ -378,6 +386,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     use_views = params_from_base_suite_setup["use_views"]
     server_upgrade_only = params_from_base_suite_setup["server_upgrade_only"]
     sg_upgrade_only = params_from_base_suite_setup["sg_upgrade_only"]
+    disable_doc_updates = params_from_base_suite_setup["disable_doc_updates"]
 
     test_name = request.node.name
     log_info("Running test '{}'".format(test_name))
@@ -435,7 +444,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "cbs_toy_build": cbs_toy_build,
         "use_views": use_views,
         "server_upgrade_only": server_upgrade_only,
-        "sg_upgrade_only": sg_upgrade_only
+        "sg_upgrade_only": sg_upgrade_only,
+        "disable_doc_updates": disable_doc_updates
     }
 
     client.delete_databases(ls_url)
