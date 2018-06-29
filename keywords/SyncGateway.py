@@ -459,8 +459,7 @@ class SyncGateway(object):
             except KeyError as ex:
                 log_info("Keyerror in getting logging{}".format(ex.message))
                 playbook_vars["logging"] = '{} {},'.format(logging_config, "}")
-            if get_sg_use_views(cluster_config):
-
+            if get_sg_use_views(cluster_config) or enable_views:
                 playbook_vars["sg_use_views"] = '"use_views": true,'
             else:
                 num_replicas = get_sg_replicas(cluster_config)
