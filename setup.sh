@@ -28,6 +28,9 @@ export PATH=$PATH:/usr/local/bin
 virtualenv -p python venv
 source venv/bin/activate
 
+which pip
+pip --version
+
 # Install python dependencies
 pip install -r requirements.txt
 
