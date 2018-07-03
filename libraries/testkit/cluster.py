@@ -151,7 +151,6 @@ class Cluster:
             "sslkey": "",
             "num_index_replicas": "",
             "sg_use_views": "",
-            "logging": "",
             "couchbase_server_primary_node": couchbase_server_primary_node
         }
 

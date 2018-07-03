@@ -60,7 +60,6 @@ class SgAccel:
             "revs_limit": "",
             "num_index_replicas": "",
             "sg_use_views": "",
-            "logging": "",
             "sslcert": "",
             "sslkey": "",
             "couchbase_server_primary_node": couchbase_server_primary_node
