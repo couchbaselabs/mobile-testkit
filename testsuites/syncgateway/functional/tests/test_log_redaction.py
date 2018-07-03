@@ -179,6 +179,8 @@ def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_
     # Get sync_gateway host
     cluster = load_cluster_config_json(cluster_config)
     sg_host = cluster["sync_gateways"][0]["ip"]
+    if cluster["environment"]["ipv6_enabled"]:
+        sg_host = "[{}]".format(sg_host)
 
     # 3. Create user in sync_gateway
     sg_client = MobileRestClient()
@@ -257,6 +259,8 @@ def test_sgCollectRestApi_errorMessages(params_from_base_test_setup, remove_tmp_
     # Get sync_gateway host
     cluster = load_cluster_config_json(cluster_config)
     sg_host = cluster["sync_gateways"][0]["ip"]
+    if cluster["environment"]["ipv6_enabled"]:
+        sg_host = "[{}]".format(sg_host)
 
     # 3. Create user in sync_gateway
     sg_client = MobileRestClient()
