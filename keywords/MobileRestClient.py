@@ -756,6 +756,7 @@ class MobileRestClient:
         if rev:
             params["rev"] = rev
 
+        log_info("Getting doc: {}".format(doc_id))
         if auth_type == AuthType.session:
             resp = self._session.get("{}/{}/{}".format(url, db, doc_id), params=params, cookies=dict(SyncGatewaySession=auth[1]))
         elif auth_type == AuthType.http_basic:
@@ -763,6 +764,7 @@ class MobileRestClient:
         else:
             resp = self._session.get("{}/{}/{}".format(url, db, doc_id), params=params)
 
+        log_info("Got doc: {}".format(doc_id))
         log_r(resp)
         resp.raise_for_status()
         resp_obj = resp.json()
