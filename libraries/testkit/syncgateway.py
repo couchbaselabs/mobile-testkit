@@ -74,7 +74,6 @@ class SyncGateway:
             "sg_cert_path": sg_cert_path,
             "num_index_replicas": "",
             "sg_use_views": "",
-            "logging": "",
             "couchbase_server_primary_node": self.couchbase_server_primary_node
         }
 
@@ -139,7 +138,6 @@ class SyncGateway:
             "sg_cert_path": sg_cert_path,
             "num_index_replicas": "",
             "sg_use_views": "",
-            "logging": "",
             "couchbase_server_primary_node": self.couchbase_server_primary_node
         }
 

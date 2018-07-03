@@ -853,8 +853,3 @@ class CouchbaseServer:
         """ Loads a given sample bucket """
         log_info("Enabling sample bucket {}".format(sample_bucket))
         self.remote_executor.must_execute('sudo /opt/couchbase/bin/cbdocloader -c localhost:8091 -u Administrator -p password -b {} -m 100 -d /opt/couchbase/samples/{}.zip'.format(sample_bucket, sample_bucket))
-
-    def stop_compaction(self, bucket_name):
-        resp = self._session.post("{}/pools/default/buckets/{}/controller/cancelBucketCompaction".format(self.url, bucket_name))
-        log_r(resp)
-        resp.raise_for_status()
