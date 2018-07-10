@@ -189,7 +189,7 @@ def test_upgrade(params_from_base_test_setup):
             persist_cluster_config_environment_prop(cluster_config, 'sg_use_views', False)
 
         if xattrs_post_upgrade:
-            log_info("Enabling xattrs for sync gateway version {}".format(server_upgraded_version))
+            log_info("Enabling xattrs for sync gateway version {}".format(sync_gateway_upgraded_version))
             persist_cluster_config_environment_prop(cluster_config, 'xattrs_enabled', True)
         else:
             persist_cluster_config_environment_prop(cluster_config, 'xattrs_enabled', False)
