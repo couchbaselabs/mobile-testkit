@@ -406,21 +406,6 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     sg_url = cluster_hosts["sync_gateways"][0]["public"]
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
 
-    if use_views:
-        log_info("Upgrading SG to use views")
-        # Enable sg views in cluster configs
-        persist_cluster_config_environment_prop(cluster_config, 'sg_use_views', True)
-    else:
-        log_info("Upgrading SG to use GSI")
-        # Disable sg views in cluster configs
-        persist_cluster_config_environment_prop(cluster_config, 'sg_use_views', False)
-
-    if xattrs_post_upgrade:
-        log_info("Enabling xattrs for sync gateway version {}".format(server_upgraded_version))
-        persist_cluster_config_environment_prop(cluster_config, 'xattrs_enabled', True)
-    else:
-        persist_cluster_config_environment_prop(cluster_config, 'xattrs_enabled', False)
-
     # This dictionary is passed to each test
     yield {
         "cluster_config": cluster_config,
