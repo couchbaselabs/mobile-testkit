@@ -263,6 +263,7 @@ def test_multiple_sgs_with_CBLs(params_from_base_test_setup, setup_customized_te
         assert doc in cblDB1_doc_ids, "cbl_db1 doc does not exist in combined replication cbl_db1"
     for doc in cbl_doc_ids2:
         assert doc in cblDB1_doc_ids, "cbl_db2 doc does not exist in combined replication cbl_db1"
+    replicator.stop(repl1)
     replicator.stop(repl2)
 
 

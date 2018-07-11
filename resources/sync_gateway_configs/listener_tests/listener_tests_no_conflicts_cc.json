@@ -6,7 +6,7 @@
     "maxFileDescriptors": 90000,
     "slowServerCallWarningThreshold": 500,
     "compressResponses": false,
-    "log": ["CRUD+", "Cache+", "HTTP+", "Changes+", "Import+"],
+    {{ logging }}
     {{ sslcert }}
     {{ sslkey }}
     "databases":{
@@ -15,7 +15,6 @@
             {{ xattrs }}
             {{ sg_use_views }}
             {{ num_index_replicas }}
-            {{ num_index_replicas_housekeeping }}
             "allow_conflicts": false,
             "revs_limit": 5,
             "rev_cache_size": 1000,

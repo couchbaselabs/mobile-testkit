@@ -184,6 +184,7 @@ def params_from_base_suite_setup(request):
     log_info("sg_lb: {}".format(sg_lb))
     log_info("sg_ce: {}".format(sg_ce))
     log_info("sg_ssl: {}".format(sg_ssl))
+    log_info("no conflicts enabled {}".format(no_conflicts_enabled))
     log_info("no_conflicts_enabled: {}".format(no_conflicts_enabled))
     log_info("use_views: {}".format(use_views))
     log_info("number_replicas: {}".format(number_replicas))

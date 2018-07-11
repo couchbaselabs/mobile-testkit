@@ -1,8 +1,8 @@
 import logging
 import json
+import os
 import random
 import string
-import os
 
 from keywords.exceptions import FeatureSupportedError
 from keywords.constants import DATA_DIR
@@ -88,7 +88,7 @@ def host_for_url(url):
     else:
         host = url.replace("http://", "")
 
-    host = host.split(":")[0]
+    host = host.rsplit(":", 1)[0]
     log_info("Extracted host ({}) from url ({})".format(host, url))
 
     return host
@@ -109,6 +109,8 @@ def hostname_for_url(cluster_config, url):
     url = url.replace(":4984", "")
     url = url.replace(":4985", "")
     url = url.replace(":8091", "")
+    url = url.replace("[", "")
+    url = url.replace("]", "")
 
     endpoints = cluster["sg_accels"]
     endpoints.extend(cluster["sync_gateways"])

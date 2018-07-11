@@ -6,6 +6,7 @@ from keywords.utils import log_info
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.MobileRestClient import MobileRestClient
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
+from libraries.testkit.cluster import Cluster
 
 from keywords import couchbaseserver
 from keywords import document
@@ -35,6 +36,7 @@ def test_attachments_on_docs_rejected_by_sync_function(params_from_base_test_set
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
+    cluster = Cluster(config=cluster_config)
     cluster_helper = ClusterKeywords(cluster_config)
     cluster_helper.reset_cluster(cluster_config, sg_conf)
 
@@ -79,6 +81,6 @@ def test_attachments_on_docs_rejected_by_sync_function(params_from_base_test_set
 
     cb_server = couchbaseserver.CouchbaseServer(cbs_url)
 
-    server_att_docs = cb_server.get_server_docs_with_prefix(bucket=bucket, prefix="_sync:att:")
+    server_att_docs = cb_server.get_server_docs_with_prefix(bucket=bucket, prefix="_sync:att:", ipv6=cluster.ipv6)
     num_att_docs = len(server_att_docs)
     assert num_att_docs == 0

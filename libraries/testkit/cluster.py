@@ -13,7 +13,7 @@ from libraries.testkit.admin import Admin
 from libraries.testkit.config import Config
 from libraries.testkit.sgaccel import SgAccel
 from libraries.testkit.syncgateway import SyncGateway
-from utilities.cluster_config_utils import is_load_balancer_enabled, get_revs_limit, get_redact_level
+from utilities.cluster_config_utils import is_load_balancer_enabled, get_revs_limit, get_redact_level, is_ipv6
 from utilities.cluster_config_utils import get_load_balancer_ip, no_conflicts_enabled
 from keywords.constants import SYNC_GATEWAY_CERT
 from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version
@@ -30,6 +30,9 @@ class Cluster:
     def __init__(self, config):
 
         self._cluster_config = config
+        sgs = []
+        cbs_urls = []
+        acs = []
 
         if not os.path.isfile(self._cluster_config):
             log_info("Cluster config not found in 'resources/cluster_configs/'")
@@ -48,21 +51,37 @@ class Cluster:
             # Switch all SG URLs to that of load balancer
             lb_ip = get_load_balancer_ip(self._cluster_config)
 
-            sgs = [{"name": sg["name"], "ip": lb_ip} for sg in cluster["sync_gateways"]]
+            for sg in cluster["sync_gateways"]:
+                if cluster["environment"]["ipv6_enabled"]:
+                    lb_ip = "[{}]".format(lb_ip)
+                sgs.append({"name": sg["name"], "ip": lb_ip})
             log_info("Using load balancer IP as the SG IP: {}".format(sgs))
         else:
-            sgs = [{"name": sg["name"], "ip": sg["ip"]} for sg in cluster["sync_gateways"]]
+            for sg in cluster["sync_gateways"]:
+                if cluster["environment"]["ipv6_enabled"]:
+                    sg["ip"] = "[{}]".format(sg["ip"])
+                sgs.append({"name": sg["name"], "ip": sg["ip"]})
 
-        acs = [{"name": ac["name"], "ip": ac["ip"]} for ac in cluster["sg_accels"]]
+        for ac in cluster["sg_accels"]:
+            if cluster["environment"]["ipv6_enabled"]:
+                    ac["ip"] = "[{}]".format(ac["ip"])
+            acs.append({"name": ac["name"], "ip": ac["ip"]})
 
         self.cbs_ssl = cluster["environment"]["cbs_ssl_enabled"]
         self.xattrs = cluster["environment"]["xattrs_enabled"]
         self.sync_gateway_ssl = cluster["environment"]["sync_gateway_ssl"]
+        self.ipv6 = cluster["environment"]["ipv6_enabled"]
 
         if self.cbs_ssl:
-            cbs_urls = ["https://{}:18091".format(cbs["ip"]) for cbs in cluster["couchbase_servers"]]
+            for cbs in cluster["couchbase_servers"]:
+                if cluster["environment"]["ipv6_enabled"]:
+                    cbs["ip"] = "[{}]".format(cbs["ip"])
+                cbs_urls.append("https://{}:18091".format(cbs["ip"]))
         else:
-            cbs_urls = ["http://{}:8091".format(cbs["ip"]) for cbs in cluster["couchbase_servers"]]
+            for cbs in cluster["couchbase_servers"]:
+                if cluster["environment"]["ipv6_enabled"]:
+                    cbs["ip"] = "[{}]".format(cbs["ip"])
+                cbs_urls.append("http://{}:8091".format(cbs["ip"]))
 
         log_info("cbs: {}".format(cbs_urls))
         log_info("sgs: {}".format(sgs))
@@ -121,7 +140,7 @@ class Cluster:
 
         log_info(">>> Creating buckets on: {}".format(self.servers[0].url))
         log_info(">>> Creating buckets {}".format(bucket_name_set))
-        self.servers[0].create_buckets(bucket_name_set)
+        self.servers[0].create_buckets(bucket_name_set, self.ipv6)
 
         # Wait for server to be in a warmup state to work around
         # https://github.com/couchbase/sync_gateway/issues/1745
@@ -133,6 +152,8 @@ class Cluster:
         server_port = 8091
         server_scheme = "http"
         couchbase_server_primary_node = add_cbs_to_sg_config_server_field(self._cluster_config)
+        if is_ipv6(self._cluster_config):
+            couchbase_server_primary_node = "[{}]".format(couchbase_server_primary_node)
         if self.cbs_ssl:
             server_port = 18091
             server_scheme = "https"
@@ -186,9 +207,9 @@ class Cluster:
             playbook_vars["revs_limit"] = '"revs_limit": {},'.format(revs_limit)
         except KeyError:
             log_info("revs_limit not found in {}, Ignoring".format(self._cluster_config))
+            playbook_vars["revs_limit"] = ''
 
         # Sleep for a few seconds for the indexes to teardown
-        # TODO Find a better way to figure out index teardown
         time.sleep(5)
 
         status = ansible_runner.run_ansible_playbook(

@@ -179,6 +179,8 @@ def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_
     # Get sync_gateway host
     cluster = load_cluster_config_json(cluster_config)
     sg_host = cluster["sync_gateways"][0]["ip"]
+    if cluster["environment"]["ipv6_enabled"]:
+        sg_host = "[{}]".format(sg_host)
 
     # 3. Create user in sync_gateway
     sg_client = MobileRestClient()
@@ -208,8 +210,10 @@ def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_
 
     count = 0
     log_info("sg collect is running ........")
-    while sg_client.get_sgCollect_status(sg_host) == "running" and count < 50:
-        time.sleep(1)
+    # Minimum of 5 minute sleep time is recommended
+    # Refer https://github.com/couchbase/sync_gateway/issues/3669
+    while sg_client.get_sgCollect_status(sg_host) == "running" and count < 60:
+        time.sleep(5)
         count += 1
     time.sleep(5)  # sleep until zip files created with sg collect rest end point
 
@@ -257,6 +261,8 @@ def test_sgCollectRestApi_errorMessages(params_from_base_test_setup, remove_tmp_
     # Get sync_gateway host
     cluster = load_cluster_config_json(cluster_config)
     sg_host = cluster["sync_gateways"][0]["ip"]
+    if cluster["environment"]["ipv6_enabled"]:
+        sg_host = "[{}]".format(sg_host)
 
     # 3. Create user in sync_gateway
     sg_client = MobileRestClient()

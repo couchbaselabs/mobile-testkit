@@ -12,7 +12,7 @@ from keywords.utils import log_r
 from keywords.utils import version_and_build
 from keywords.utils import hostname_for_url
 from keywords.utils import log_info
-from utilities.cluster_config_utils import get_revs_limit
+from utilities.cluster_config_utils import get_revs_limit, is_ipv6
 from keywords.exceptions import ProvisioningError, Error
 from libraries.provision.ansible_runner import AnsibleRunner
 from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_redact_level
@@ -273,6 +273,8 @@ class SyncGateway(object):
             self.server_port = 18091
             self.server_scheme = "https"
 
+        if is_ipv6(cluster_config):
+            couchbase_server_primary_node = "[{}]".format(couchbase_server_primary_node)
         playbook_vars = {
             "sync_gateway_config_filepath": config_path,
             "sg_cert_path": sg_cert_path,
@@ -439,6 +441,8 @@ class SyncGateway(object):
             "server_port": server_port,
             "server_scheme": server_scheme,
             "autoimport": "",
+            "sslkey": "",
+            "sslcert": "",
             "num_index_replicas": "",
             "sg_use_views": "",
             "xattrs": ""

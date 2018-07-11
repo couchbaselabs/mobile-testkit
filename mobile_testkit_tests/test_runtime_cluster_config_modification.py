@@ -11,11 +11,13 @@ from utilities.cluster_config_utils import (is_cbs_ssl_enabled,
 from libraries.testkit.cluster import Cluster
 
 MOCK_CLUSTER_CONFIG = os.getcwd() + "/mobile_testkit_tests/test_data/mock_base_di"
+os.environ["CLUSTER_CONFIG"] = MOCK_CLUSTER_CONFIG + ".json"
 
 
 def test_enable_cbs_ssl_in_cluster_config():
     os.environ["CLUSTER_CONFIG"] = MOCK_CLUSTER_CONFIG
 
+    persist_cluster_config_environment_prop(MOCK_CLUSTER_CONFIG, 'sync_gateway_ssl', False)
     c = Cluster(MOCK_CLUSTER_CONFIG)
     assert not c.cbs_ssl
 

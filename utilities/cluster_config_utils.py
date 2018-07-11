@@ -44,7 +44,6 @@ def persist_cluster_config_environment_prop(cluster_config, property_name, value
 
     if property_name_check is True:
         valid_props = ["cbs_ssl_enabled", "xattrs_enabled", "sg_lb_enabled", "sync_gateway_version", "server_version", "no_conflicts_enabled", "sync_gateway_ssl", "sg_use_views", "number_replicas"]
-
         if property_name not in valid_props:
             raise ProvisioningError("Make sure the property you are trying to change is one of: {}".format(valid_props))
 
@@ -127,6 +126,12 @@ def get_sg_use_views(cluster_config):
     """ Loads cluster config to get sync gateway views/GSI"""
     cluster = load_cluster_config_json(cluster_config)
     return cluster["environment"]["sg_use_views"]
+
+
+def is_ipv6(cluster_config):
+    """ Loads cluster config to get IPv6 status"""
+    cluster = load_cluster_config_json(cluster_config)
+    return cluster["environment"]["ipv6_enabled"]
 
 
 def get_sg_version(cluster_config):

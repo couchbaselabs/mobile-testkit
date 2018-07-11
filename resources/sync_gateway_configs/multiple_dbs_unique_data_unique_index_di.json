@@ -18,18 +18,19 @@
     {{ sslcert }}
     {{ sslkey }}
     "databases": {
-        "db":{
+        "db1":{
             {{ xattrs }}
             {{ sg_use_views }}
             {{ num_index_replicas }}
+
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
-            "bucket":"data-bucket",
-            "username":"data-bucket",
+            "bucket":"data-bucket-1",
+            "username":"data-bucket-1",
             "password": "password",
             "channel_index":{
                 "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
-                "bucket":"index-bucket",
-                "username":"index-bucket",
+                "bucket":"index-bucket-1",
+                "username":"index-bucket-1",
                 "password": "password",
                 "writer":{{ is_index_writer }}
             }
@@ -39,6 +40,7 @@
             {{ no_conflicts }}
             {{ sg_use_views }}
             {{ num_index_replicas }}
+
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket-2",
             "username":"data-bucket-2",

@@ -162,9 +162,9 @@ def params_from_base_suite_setup(request):
         base_url_list.append("http://{}:{}".format(host, port))
 
     cluster_config = "{}/{}_{}".format(CLUSTER_CONFIGS_DIR, cluster_config_prefix, mode)
-    sg_config = sync_gateway_config_path_for_mode("sync_gateway_travel_sample", mode)
+    sg_config = sync_gateway_config_path_for_mode("sync_gateway_default", mode)
     no_conflicts_enabled = request.config.getoption("--no-conflicts")
-    cluster_utils = ClusterKeywords()
+    cluster_utils = ClusterKeywords(cluster_config)
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
 
     sg_db = "db"
@@ -173,8 +173,6 @@ def params_from_base_suite_setup(request):
     sg_ip = host_for_url(sg_url)
     target_url = "ws://{}:4984/{}".format(sg_ip, sg_db)
     target_admin_url = "ws://{}:4985/{}".format(sg_ip, sg_db)
-    cluster_utils = ClusterKeywords()
-    cluster_utils.set_cluster_config(cluster_config.split("/")[-1])
     persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', False)
 
     try:

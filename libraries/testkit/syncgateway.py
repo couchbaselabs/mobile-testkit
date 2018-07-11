@@ -10,7 +10,7 @@ import libraries.testkit.settings
 from libraries.provision.ansible_runner import AnsibleRunner
 from libraries.testkit.admin import Admin
 from libraries.testkit.debug import log_request, log_response
-from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, sg_ssl_enabled
+from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, sg_ssl_enabled, is_ipv6
 from utilities.cluster_config_utils import get_revs_limit, get_redact_level
 from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version
 from keywords.utils import add_cbs_to_sg_config_server_field, log_info
@@ -98,6 +98,10 @@ class SyncGateway:
         else:
             playbook_vars["logging"] = '"log": ["*"],'
 
+        if sg_ssl_enabled(self.cluster_config):
+            playbook_vars["sslcert"] = '"SSLCert": "sg_cert.pem",'
+            playbook_vars["sslkey"] = '"SSLKey": "sg_privkey.pem",'
+
         if is_xattrs_enabled(self.cluster_config):
             playbook_vars["autoimport"] = '"import_docs": "continuous",'
             playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
@@ -172,7 +176,10 @@ class SyncGateway:
             playbook_vars["revs_limit"] = '"revs_limit": {},'.format(revs_limit)
         except KeyError:
             log_info("revs_limit no found in {}, Ignoring".format(self.cluster_config))
+            playbook_vars["revs_limit"] = ''
 
+        if is_ipv6(self.cluster_config):
+            playbook_vars["couchbase_server_primary_node"] = "[{}]".format(playbook_vars["couchbase_server_primary_node"])
         status = self.ansible_runner.run_ansible_playbook(
             "reset-sync-gateway.yml",
             extra_vars=playbook_vars,
