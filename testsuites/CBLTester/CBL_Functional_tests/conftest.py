@@ -446,11 +446,11 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     liteserv_version = params_from_base_suite_setup["liteserv_version"]
     source_db = None
     cbl_db = None
+    test_name_cp = test_name.replace("/", "-")
+    log_filename = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now())
 
     if create_db_per_test:
         log_info("Starting TestServer...")
-        test_name_cp = test_name.replace("/", "-")
-        log_filename = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now())
         if device_enabled:
             testserver.start_device(log_filename)
         else:
