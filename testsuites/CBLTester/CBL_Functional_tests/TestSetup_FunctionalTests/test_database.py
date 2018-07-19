@@ -70,6 +70,7 @@ def test_databaseEncryption(params_from_base_test_setup, password):
     assert len(cbl_doc_ids) == len(cbl_doc_ids3), "docs ids did not match"
     for doc_id in cbl_doc_ids:
         assert doc_id in cbl_doc_ids3, "cbl doc is in first list does not exist in second list"
+    db.deleteDB(cbl_db3)
 
 
 @pytest.mark.sanity
