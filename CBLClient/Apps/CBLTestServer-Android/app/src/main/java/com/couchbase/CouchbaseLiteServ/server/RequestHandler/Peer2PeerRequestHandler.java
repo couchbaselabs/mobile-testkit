@@ -1,141 +1,88 @@
 package com.couchbase.CouchbaseLiteServ.server.RequestHandler;
 
 /**
- * Created by sridevi.saragadam on 6/6/18.
+ * Created by sridevi.saragadam on 7/9/18.
  */
-// A Java program for a Server
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
 import com.couchbase.CouchbaseLiteServ.server.Args;
+import com.couchbase.lite.BasicAuthenticator;
+import com.couchbase.lite.Database;
+import com.couchbase.lite.MessageEndpointListener;
+import com.couchbase.lite.MessageEndpointListenerConfiguration;
+import com.couchbase.lite.ProtocolType;
+import com.couchbase.lite.Replicator;
+import com.couchbase.lite.ReplicatorChange;
+import com.couchbase.lite.ReplicatorChangeListener;
+import com.couchbase.lite.ReplicatorConfiguration;
+import com.couchbase.lite.URLEndpoint;
 
-import java.net.*;
-import java.io.*;
+public class Peer2PeerRequestHandler {
 
-import com.couchbase.lite.MessageEndpointDelegate;
-import com.couchbase.lite.MessageEndpoint;
-import com.couchbase.lite.MessageEndpointConnection;
+  public Peer2PeerTcpListener initialize(Args args){
+    Peer2PeerTcpListener p2pListener;
 
-
-public class Peer2PeerRequestHandler{
-
-  //initialize socket and input stream
-  // private Socket          socket   = null;
-  // private ServerSocket    server   = null;
-  // private DataInputStream in       =  null;
-
-  // constructor with port
-  public ServerSocket socketConnection(Args args)
-  {
-    ServerSocket    server   = null;
+    Database database = args.get("database");
+    String host = args.get("host");
     int port = args.get("port");
-    // int port = 5000;
-    // starts server and waits for a connection
-    System.out.println("Server started with some port "+port);
-    try {
-      server = new ServerSocket(port);
-      System.out.println("Server started");
-    }catch(IOException i)
-      {
-        System.out.println(i);
-      }
-      return server;
-    }
-    /*try
-    {
-      server = new ServerSocket(port);
-      System.out.println("Server started");
-
-      System.out.println("Waiting for a client ...");
-
-      socket = server.accept();
-      System.out.println("Client accepted");
-
-      // takes input from the client socket
-      in = new DataInputStream(
-          new BufferedInputStream(socket.getInputStream()));
-
-      String line = "";
-
-      // reads message from client until "Over" is sent
-      while (!line.equals("Over"))
-      {
-        try
-        {
-          line = in.readUTF();
-          System.out.println(line);
-
-        }
-        catch(IOException i)
-        {
-          System.out.println(i);
-        }
-      }
-      System.out.println("Closing connection");
-
-      // close connection
-      socket.close();
-      in.close();
-    }
-    catch(IOException i)
-    {
-      System.out.println(i);
-    }
-  }
-  /*
-  public void serverConnection(){
-    socketConnection(5000);
-  } */
-
-  public Socket acceptClient(Args args){
-    Socket          socket   = null;
-    ServerSocket server = args.get("server");
-    System.out.println("Waiting for a client ...");
-    try {
-      socket = server.accept();
-      System.out.println("Client accepted");
-    }
-    catch(IOException i)
-    {
-      System.out.println(i);
-    }
-    return socket;
+    boolean continuous = args.get("continuous");
+    MessageEndpointListenerConfiguration mListenerConfig = new MessageEndpointListenerConfiguration(database, ProtocolType.BYTE_STREAM);
+    MessageEndpointListener listener = new MessageEndpointListener(mListenerConfig);
+    p2pListener = new Peer2PeerTcpListener(listener);
+    return p2pListener;
   }
 
-  @Override
-  public MessageEndpointConnection createConnection(MessageEndpoint endpoint) {
-    MockServerConnection server = (MockServerConnection) endpoint.getTarget();
-    return new MockClientConnection(server);
+  public void clientStart(Args args) throws Exception{
+    String ipaddress = args.get("host");
+    int port = args.get("port");
+    // String dbName = args.get("dbName");
+    // Database sourceDb = new Database(dbName, null);
+    Database sourceDb = args.get("database");
+    String serverDBName = args.get("serverDbName");
+    Replicator replicator;
+    URI uri = new URI("ws://" + ipaddress + ":" + port + "/" + serverDBName);
+    BasicAuthenticator authenticator = new BasicAuthenticator("p2pTest", "password");
+
+    URLEndpoint urlEndPoint= new URLEndpoint(uri);
+    ReplicatorConfiguration config = new ReplicatorConfiguration(sourceDb, urlEndPoint);
+    config.setReplicatorType(ReplicatorConfiguration.ReplicatorType.PUSH_AND_PULL);
+    config.setContinuous(true);
+    config.setAuthenticator(authenticator);
+    replicator = new Replicator(config);
+    replicator.start();
+    System.out.println("Replication started .... ");
+    MyReplicatorListener changeListener = new MyReplicatorListener();
+    replicator.addChangeListener(changeListener);
+    changeListener.getChanges().size();
+    TimeUnit.SECONDS.sleep(180);
+    long completed = replicator.getStatus().getProgress().getCompleted();
+    long total = replicator.getStatus().getProgress().getCompleted();
+    System.out.println("completed and total is "+ completed + " and total is " + total);
   }
 
-  public void readDataFromClient(Args args){
-    DataInputStream in       =  null;
-    Socket socket = args.get("socket");
-    // takes input from the client socket
-    try {
-    in = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
+  class MyReplicatorListener implements ReplicatorChangeListener {
+    private List<ReplicatorChange> changes = new ArrayList<>();
+    public List<ReplicatorChange> getChanges(){
+      return changes;
     }
-    catch(IOException i)
-    {
-      System.out.println("Exception in Data input stream "+i);
+    @Override
+    public void changed(ReplicatorChange change) {
+      changes.add(change);
     }
-    String line = "";
+  }
 
-    // reads message from client until "Over" is sent
-    while (!line.equals("Over"))
-    {
-      try
-      {
-        line = in.readUTF();
-        System.out.println(line);
-
-      }
-      catch(IOException i)
-      {
-        System.out.println(i);
-      }
-    }
+  public void serverStart(Args args){
+    Database sourceDb = args.get("database");
+    MessageEndpointListener messageEndpointListener = new MessageEndpointListener(new MessageEndpointListenerConfiguration(sourceDb, ProtocolType.BYTE_STREAM));
+    Peer2PeerTcpListener p2ptcpListener = new Peer2PeerTcpListener(messageEndpointListener);
+    p2ptcpListener.start();
+    System.out.println("server is getting started");
   }
 
 }
 
-public class PeerToPeerImplementation implements MessageEndpointDelegate{
-  
-}
+

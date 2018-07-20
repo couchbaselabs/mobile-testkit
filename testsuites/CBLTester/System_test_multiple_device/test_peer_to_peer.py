@@ -81,8 +81,10 @@ def test_peer_to_peer_iosAndroid(params_from_base_suite_setup):
     server_port_re = int(server_port)
     client_port_re = int(client_port)
     # server = peerToPeer_android.socket_connection(ios_port_re)
+    peerToPeer_server.server_start(cbl_db_server)
     print "server starting ....."
     # server = peerToPeer_server.socket_connection(server_port_re)
+    peerToPeer_client.client_start(server_host, server_port_re, cbl_db_server)
     print "client connecting ....."
     # peerToPeer_client.socket_clientConnection(ios_host, server_port_re)
 
