@@ -69,3 +69,15 @@ class PeerToPeer(object):
         args = Args()
         args.setInt("socket", socket)
         return self._client.invokeMethod("peerToPeer_readDataFromClient", args)
+
+    def server_start(self, database):
+        args = Args()
+        args.setMemoryPointer("database", database)
+        return self._client.invokeMethod("peerToPeer_serverStart", args)
+
+    def client_start(self, host, port, database):
+        args = Args()
+        args.setString("host", host)
+        args.setInt("port", port)
+        args.setMemoryPointer("database", database)
+        return self._client.invokeMethod("peerToPeer_clientStart", args)
