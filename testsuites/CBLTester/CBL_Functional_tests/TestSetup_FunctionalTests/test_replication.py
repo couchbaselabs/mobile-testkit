@@ -1489,7 +1489,7 @@ def test_default_conflict_scenario_highRevGeneration_wins(params_from_base_test_
     # Di mode has delay for one shot replication, so need another replication only for DI mode
     repl = None
     if sg_mode == "di":
-        repl = replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator, target_url=sg_blip_url, continuous=True,
+        repl = replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator, target_url=sg_blip_url, continuous=False,
                                                   channels=channels)
     cbl_doc_ids = db.getDocIds(cbl_db)
     cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
@@ -2870,10 +2870,6 @@ def test_resetCheckpointWithPurge(params_from_base_test_setup, replication_type,
     # Reset checkpoint and do replication again from sg to cbl
     # Verify all docs are back
     replicator.resetCheckPoint(repl)
-    if replication_type == "one_way":
-        replicator.setReplicatorType(repl_config, "pull")
-        repl = replicator.create(repl_config)
-
     print "replicator after checkpoint...."
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
