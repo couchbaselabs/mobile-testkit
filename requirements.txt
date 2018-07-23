@@ -30,7 +30,7 @@ mccabe==0.6.1
 netifaces==0.10.4
 olefile==0.44
 packaging==16.8
-paramiko==2.1.2
+paramiko==2.1.5
 Pillow==4.0.0
 py==1.4.31
 pyasn1==0.2.3
