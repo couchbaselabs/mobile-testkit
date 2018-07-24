@@ -45,6 +45,7 @@ def test_peer_to_peer_iosAndroid(params_from_base_suite_setup):
     socket_port_list = params_from_base_suite_setup["socket_port_list"]
     cbl_db_list = params_from_base_suite_setup["cbl_db_list"]
     db_obj_list = params_from_base_suite_setup["db_obj_list"]
+    db_name_list = params_from_base_suite_setup["db_name_list"]
     sg_config = params_from_base_suite_setup["sg_config"]
     username = "autotest"
     password = "password"
@@ -67,6 +68,7 @@ def test_peer_to_peer_iosAndroid(params_from_base_suite_setup):
     db_obj_server = db_obj_list[0]
     cbl_db_client = cbl_db_list[1]
     db_obj_client = db_obj_list[1]
+    db_name_server = db_name_list[0]
     
     server_host = socket_host_list[0]
     server_port = socket_port_list[0]
@@ -84,10 +86,10 @@ def test_peer_to_peer_iosAndroid(params_from_base_suite_setup):
     peerToPeer_server.server_start(cbl_db_server)
     print "server starting ....."
     # server = peerToPeer_server.socket_connection(server_port_re)
-    peerToPeer_client.client_start(server_host, server_port_re, cbl_db_server)
+    peerToPeer_client.client_start(host=server_host, port=server_port_re, server_db_name=db_name_server, client_database=cbl_db_client)
     print "client connecting ....."
     # peerToPeer_client.socket_clientConnection(ios_host, server_port_re)
-
+    """
     with ThreadPoolExecutor(max_workers=1) as tpe:
         server_connection = tpe.submit(
             peerToPeer_server.socket_connection,
@@ -115,3 +117,4 @@ def test_peer_to_peer_iosAndroid(params_from_base_suite_setup):
     count1 = db_obj_client.getCount(cbl_db_client)
     print "count for ios is ", count1
     # peerToPeer_android.read_data_fromClient(socket)
+    """
