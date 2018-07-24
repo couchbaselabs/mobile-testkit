@@ -82,3 +82,11 @@ class PeerToPeer(object):
         args.setString("serverDBName", server_db_name)
         args.setMemoryPointer("database", client_database)
         return self._client.invokeMethod("peerToPeer_clientStart", args)
+
+    def client_start_mep(self, host, port, server_db_name, client_database):
+        args = Args()
+        args.setString("host", host)
+        args.setInt("port", port)
+        args.setString("serverDBName", server_db_name)
+        args.setMemoryPointer("database", client_database)
+        return self._client.invokeMethod("peerToPeer_clientStart_mep", args)

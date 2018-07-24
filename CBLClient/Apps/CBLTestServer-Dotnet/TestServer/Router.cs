@@ -217,6 +217,9 @@ namespace Couchbase.Lite.Testing
             ["datatype_compareDouble"] = DataTypeMethods.DataTypeCompareDouble,
             ["datatype_setDate"] = DataTypeMethods.DataTypeSetDate,
             ["datatype_compareDate"] = DataTypeMethods.DataTypeCompareDate,
+            ["peerToPeer_serverStart"] = P2PMethods.Start_Server,
+            ["peerToPeer_clientStart"] = P2PMethods.Start_Client_UEP,
+            ["peerToPeer_clientStart_mep"] = P2PMethods.Start_Client_MEP,
             ["release"] = ReleaseObject,
             ["flushMemory"] = flushMemory
             };
