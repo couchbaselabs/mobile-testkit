@@ -7,3 +7,5 @@
 #import "GCDWebServerDataRequest.h"
 #import "GCDWebServerDataResponse.h"
 #include<ifaddrs.h>
+#import <CommonCrypto/CommonHMAC.h>
+

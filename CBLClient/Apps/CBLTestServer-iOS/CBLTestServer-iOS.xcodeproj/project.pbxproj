@@ -54,10 +54,10 @@
 		29F7869D1F9FC4180035178F /* GCDWebServerStreamedResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 29F786901F9FC4180035178F /* GCDWebServerStreamedResponse.m */; };
 		4173ED8E206CC62600978148 /* CouchbaseLiteSwift.framework.dSYM in Resources */ = {isa = PBXBuildFile; fileRef = 4173ED8C206CC62600978148 /* CouchbaseLiteSwift.framework.dSYM */; };
 		FB5A86762017E672008127FC /* DatabaseConfigurationRequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB5A86752017E672008127FC /* DatabaseConfigurationRequestHandler.swift */; };
+		FB60EBD421069D5A005052B6 /* PeerToPeerRequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB60EBD321069D5A005052B6 /* PeerToPeerRequestHandler.swift */; };
+		FB60EBD621069D8D005052B6 /* ReplicatorTcpListener.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB60EBD521069D8D005052B6 /* ReplicatorTcpListener.swift */; };
+		FB60EBD821069DB9005052B6 /* ReplicatorTcpConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB60EBD721069DB9005052B6 /* ReplicatorTcpConnection.swift */; };
 		FB7B1E731FDB60ED00A912BF /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB7B1E721FDB60ED00A912BF /* Extensions.swift */; };
-		FB7CDBEC20CF959D00BF7BDE /* PeerToPeerRequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB7CDBEB20CF959D00BF7BDE /* PeerToPeerRequestHandler.swift */; };
-		FBED39B420DB140C00A9F029 /* SwiftSocket.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FBED39B320DB140B00A9F029 /* SwiftSocket.framework */; };
-		FBED39B520DB140C00A9F029 /* SwiftSocket.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = FBED39B320DB140B00A9F029 /* SwiftSocket.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -85,7 +85,6 @@
 			dstSubfolderSpec = 10;
 			files = (
 				2986ED56206EBC27009B8020 /* CouchbaseLiteSwift.framework in Embed Frameworks */,
-				FBED39B520DB140C00A9F029 /* SwiftSocket.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -161,9 +160,10 @@
 		4173ED8C206CC62600978148 /* CouchbaseLiteSwift.framework.dSYM */ = {isa = PBXFileReference; lastKnownFileType = wrapper.dsym; name = CouchbaseLiteSwift.framework.dSYM; path = Frameworks/CouchbaseLiteSwift.framework.dSYM; sourceTree = "<group>"; };
 		4173ED8D206CC62600978148 /* CouchbaseLiteSwift.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CouchbaseLiteSwift.framework; path = Frameworks/CouchbaseLiteSwift.framework; sourceTree = "<group>"; };
 		FB5A86752017E672008127FC /* DatabaseConfigurationRequestHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseConfigurationRequestHandler.swift; sourceTree = "<group>"; };
+		FB60EBD321069D5A005052B6 /* PeerToPeerRequestHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerToPeerRequestHandler.swift; sourceTree = "<group>"; };
+		FB60EBD521069D8D005052B6 /* ReplicatorTcpListener.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReplicatorTcpListener.swift; sourceTree = "<group>"; };
+		FB60EBD721069DB9005052B6 /* ReplicatorTcpConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReplicatorTcpConnection.swift; sourceTree = "<group>"; };
 		FB7B1E721FDB60ED00A912BF /* Extensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
-		FB7CDBEB20CF959D00BF7BDE /* PeerToPeerRequestHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerToPeerRequestHandler.swift; sourceTree = "<group>"; };
-		FBED39B320DB140B00A9F029 /* SwiftSocket.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftSocket.framework; path = Frameworks/SwiftSocket.framework; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -172,7 +172,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				2986ED55206EBC27009B8020 /* CouchbaseLiteSwift.framework in Frameworks */,
-				FBED39B420DB140C00A9F029 /* SwiftSocket.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -220,7 +219,9 @@
 				2907D173200E7FCE00CE56EB /* ResultRequestHandler.swift */,
 				2907D175200E860A00CE56EB /* BasicAuthenticatorRequestHandler.swift */,
 				FB5A86752017E672008127FC /* DatabaseConfigurationRequestHandler.swift */,
-				FB7CDBEB20CF959D00BF7BDE /* PeerToPeerRequestHandler.swift */,
+				FB60EBD321069D5A005052B6 /* PeerToPeerRequestHandler.swift */,
+				FB60EBD521069D8D005052B6 /* ReplicatorTcpListener.swift */,
+				FB60EBD721069DB9005052B6 /* ReplicatorTcpConnection.swift */,
 			);
 			path = Server;
 			sourceTree = "<group>";
@@ -228,7 +229,6 @@
 		29F77F1A1F9FC18D0035178F = {
 			isa = PBXGroup;
 			children = (
-				FBED39B320DB140B00A9F029 /* SwiftSocket.framework */,
 				29F77F251F9FC18D0035178F /* CBLTestServer-iOS */,
 				29F77F3A1F9FC18D0035178F /* CBLTestServer-iOSTests */,
 				29F77F451F9FC18D0035178F /* CBLTestServer-iOSUITests */,
@@ -513,10 +513,10 @@
 				299692B11FF35B630040CC32 /* BlobRequestHandler.swift in Sources */,
 				294FB20A1FEAF9E800DD0C23 /* ReplicatorRequestHandler.swift in Sources */,
 				29F7869C1F9FC4180035178F /* GCDWebServerFileResponse.m in Sources */,
+				FB60EBD421069D5A005052B6 /* PeerToPeerRequestHandler.swift in Sources */,
 				294FB2081FEAF51F00DD0C23 /* QueryRequestHandler.swift in Sources */,
 				FB5A86762017E672008127FC /* DatabaseConfigurationRequestHandler.swift in Sources */,
 				2907D176200E860A00CE56EB /* BasicAuthenticatorRequestHandler.swift in Sources */,
-				FB7CDBEC20CF959D00BF7BDE /* PeerToPeerRequestHandler.swift in Sources */,
 				29F77F271F9FC18D0035178F /* AppDelegate.swift in Sources */,
 				29917D981FA92F82006C7675 /* DictionaryRequestHandler.swift in Sources */,
 				2907D174200E7FCE00CE56EB /* ResultRequestHandler.swift in Sources */,
@@ -542,6 +542,8 @@
 				2909B0731F9FFA8900B4E0E4 /* Server.swift in Sources */,
 				2909B0761FA3B7B400B4E0E4 /* Args.swift in Sources */,
 				29F786981F9FC4180035178F /* GCDWebServerMultiPartFormRequest.m in Sources */,
+				FB60EBD821069DB9005052B6 /* ReplicatorTcpConnection.swift in Sources */,
+				FB60EBD621069D8D005052B6 /* ReplicatorTcpListener.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
