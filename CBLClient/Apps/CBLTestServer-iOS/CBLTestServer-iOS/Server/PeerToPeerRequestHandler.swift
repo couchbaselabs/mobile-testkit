@@ -34,25 +34,35 @@ public class PeerToPeerRequestHandler {
             let port: Int = args.get(name:"port")!
             let serverDBName: String = args.get(name:"serverDBName")!
             let database: Database = args.get(name:"database")!
-            let basicAuthenticator: BasicAuthenticator = BasicAuthenticator(username: "p2pTest", password: "password")
+            let continuous: Bool? = args.get(name:"continuous")!
+            let authValue: AnyObject? = args.get(name: "authenticator")
+            let authenticator: Authenticator? = authValue as? Authenticator
+            let replication_type: String? = args.get(name: "replication_type")!
+            var replicatorType = ReplicatorType.pushAndPull
             
+            if let type = replication_type {
+                if type == "push" {
+                    replicatorType = .push
+                } else if type == "pull" {
+                    replicatorType = .pull
+                } else {
+                    replicatorType = .pushAndPull
+                }
+            }
             let url: String = "ws://\(host):\(port)/\(serverDBName)"
             let urlEndPoint: URLEndpoint = URLEndpoint(url: URL(string: url)!)
             let replicatorConfig: ReplicatorConfiguration = ReplicatorConfiguration(database: database, target: urlEndPoint)
-            replicatorConfig.continuous = true
-            replicatorConfig.replicatorType = ReplicatorType.pushAndPull
-            replicatorConfig.authenticator = basicAuthenticator
+            if continuous != nil {
+                replicatorConfig.continuous = continuous!
+            } else {
+                replicatorConfig.continuous = false
+            }
+            replicatorConfig.replicatorType = replicatorType
+            replicatorConfig.authenticator = authenticator
             let replicator: Replicator = Replicator(config: replicatorConfig)
             replicator.start()
             print("Replicator has started")
-            let changeListener = MyReplicationChangeListener()
-            let listenerToken = replicator.addChangeListener(changeListener.listener)
-            changeListener.listenerToken = listenerToken
-            sleep(60)
-            print("Completed ones are :\(replicator.status.progress.completed)")
-            print("Total ones are :\(replicator.status.progress.total)")
-            print("Error is :\(String(describing: replicator.status.error))")
-            
+            return replicator
             
         default:
             throw RequestHandlerError.MethodNotFound(method)
