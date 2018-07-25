@@ -1,3 +1,4 @@
+import os
 import time
 import pytest
 
@@ -263,7 +264,7 @@ def params_from_base_suite_setup(request):
         assert db.getName(cbl_db) == db_name
         if resume_cluster:
             path = db.getPath(cbl_db).rstrip('/')
-            path = os.dirname(path)
+            path = os.path.dirname(path)
             assert db.exists(db_name, path)
 
     yield {
