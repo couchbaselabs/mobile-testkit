@@ -17,7 +17,13 @@ from utilities.cluster_config_utils import persist_cluster_config_environment_pr
 
 @pytest.mark.sanity
 @pytest.mark.listener
-def test_peer_to_peer_iosAndroid(params_from_base_suite_setup):
+@pytest.mark.parametrize("num_of_docs, continuous, replicator_type, authenticator_type", [
+    (10, True, "push_pull", "basic"),
+    (10, False, "push_pull", "session"),
+    (100, True, "push", "basic"),
+    # (100, False, "pull", "session"),
+])
+def test_peer_to_peer_iosAndroid(params_from_base_suite_setup, num_of_docs, continuous, replicator_type, authenticator_type):
     """
         @summary:
         1. Enable allow_conflicts = true in SG config or do not set allow_conflicts
@@ -38,8 +44,6 @@ def test_peer_to_peer_iosAndroid(params_from_base_suite_setup):
     sync_gateway_version = params_from_base_suite_setup["sync_gateway_version"]
     num_of_docs = 10
     channels = ["ABC"]
-    # db = params_from_base_suite_setup["db"]
-    # cbl_db = params_from_base_suite_setup["source_db"]   
     base_url_list = params_from_base_suite_setup["base_url_list"]
     socket_host_list = params_from_base_suite_setup["socket_host_list"]
     socket_port_list = params_from_base_suite_setup["socket_port_list"]
@@ -50,18 +54,23 @@ def test_peer_to_peer_iosAndroid(params_from_base_suite_setup):
     username = "autotest"
     password = "password"
     channel = ["peerToPeer"]
+    # continuous = True
+    # replication_type = "push_pull"
 
     # Reset cluster to ensure no data in system
     cluster = Cluster(config=cluster_config)
     cluster.reset(sg_config_path=sg_config)
     sg_client = MobileRestClient()
     sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channel)
+    cookie, session = sg_client.create_session(sg_admin_url, sg_db, username)
+    
     base_url_client = base_url_list[1]
-    # base_url_android = base_url_list[0]
     base_url_server = base_url_list[0]
+    replicator = Replication(base_url_client)
+    authenticator = Authenticator(base_url_client)
+    replicator_authenticator = authenticator.authentication(session, cookie, authentication_type=authenticator_type)
 
     peerToPeer_client = PeerToPeer(base_url_client)
-    # peerToPeer_android = PeerToPeer(base_url_ios2)
     peerToPeer_server = PeerToPeer(base_url_server)
     # for base_url in zip(base_url_list):
     cbl_db_server = cbl_db_list[0]
@@ -74,47 +83,21 @@ def test_peer_to_peer_iosAndroid(params_from_base_suite_setup):
     server_port = socket_port_list[0]
     client_host = socket_host_list[1]
     client_port = socket_port_list[1]
-    # android_host = socket_host_list[0]
-    # android_port = socket_port_list[0]
-    print "base url list ", base_url_list
-    # base_url_android = base_url_list[0]
 
     db_obj_client.create_bulk_docs(num_of_docs, "cbl-peerToPeer", db=cbl_db_client, channels=channel)
     server_port_re = int(server_port)
     client_port_re = int(client_port)
-    # server = peerToPeer_android.socket_connection(ios_port_re)
     peerToPeer_server.server_start(cbl_db_server)
     print "server starting ....."
-    # server = peerToPeer_server.socket_connection(server_port_re)
-    peerToPeer_client.client_start(host=server_host, port=server_port_re, server_db_name=db_name_server, client_database=cbl_db_client)
-    print "client connecting ....."
-    # peerToPeer_client.socket_clientConnection(ios_host, server_port_re)
-    """
-    with ThreadPoolExecutor(max_workers=1) as tpe:
-        server_connection = tpe.submit(
-            peerToPeer_server.socket_connection,
-            server_port_re
-        )
-        client_connection = tpe.submit(
-            peerToPeer_client.socket_clientConnection,
-            server_host,
-            server_port_re
-        )
 
-        server_connection.result()
-        client_connection.result()
+    ## Now set up client
 
-    print "socket connection started, now calling initialize"
-    peerToPeerObj = peerToPeer_client.peer_intialize(cbl_db_client, False, server_host, server_port_re)
-    # peerToPeer_android.accept_client(server)
-    print " going to start ios peer to peer"
-    peerToPeer_client.start(peerToPeerObj)
-    print " going to read data fraom client by android"
-    time.sleep(15)
-    peerToPeer_client.stop(peerToPeerObj)
-    count = db_obj_server.getCount(cbl_db_server)
-    print "count for android is ", count
-    count1 = db_obj_client.getCount(cbl_db_client)
-    print "count for ios is ", count1
-    # peerToPeer_android.read_data_fromClient(socket)
-    """
+    repl = peerToPeer_client.client_start(host=server_host, port=server_port_re, server_db_name=db_name_server, client_database=cbl_db_client, continuous=continuous, authenticator=replicator_authenticator, replication_type=replicator_type)
+    time.sleep(10)
+    replicator.wait_until_replicator_idle(repl)
+    total = replicator.getTotal(repl)
+    completed = replicator.getCompleted(repl)
+    assert total == completed, "replication from client to server did not completed "+ total + " not equal to "+ completed
+    server_docs_count = db_obj_server.getCount(cbl_db_server)
+    assert server_docs_count == num_of_docs, "Number of docs is not equivalent to number of docs in server "
+    
