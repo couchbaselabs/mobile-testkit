@@ -19,7 +19,8 @@ namespace Couchbase.Lite.Testing
     public class P2PMethods
     {
         static private MessageEndpointListener _messageEndpointListener;
-        static private ReplicatorTcpListener _broadcaster;        
+        static private ReplicatorTcpListenerUrl _broadcasterUrl;
+        static private ReplicatorTcpListenerMsg _broadcasterMsg;
 
         public static void Start_Client_UEP([NotNull] NameValueCollection args,
                                  [NotNull] IReadOnlyDictionary<string, object> postBody,
@@ -27,12 +28,12 @@ namespace Couchbase.Lite.Testing
         {
             ResetStatus();
             Database db = MemoryMap.Get<Database>(postBody["database"].ToString());
-            string targetIP = postBody["target"].ToString();
+            string targetIP = postBody["host"].ToString();
             string port = postBody["port"].ToString();
-            string remote_DBName = postBody["remotedb"].ToString();
+            string remote_DBName = postBody["serverDBName"].ToString();
 
-            string username = postBody["username"].ToString();
-            string password = postBody["password"].ToString();
+            ///string username = postBody["username"].ToString();
+            //string password = postBody["password"].ToString();
 
             Uri host = new Uri("ws://" + targetIP + ":" + port); //sgPort = "4984";
             var dbUrl = new Uri(host, remote_DBName);
@@ -40,7 +41,7 @@ namespace Couchbase.Lite.Testing
             var config = new ReplicatorConfiguration(db, new URLEndpoint(dbUrl))
             {
                 ReplicatorType = ReplicatorType.PushAndPull,
-                Continuous = true,
+                Continuous = true //,
                // Authenticator = new BasicAuthenticator(username, password)
             };
             Replicator _replicator = new Replicator(config);
@@ -49,16 +50,30 @@ namespace Couchbase.Lite.Testing
             //_replicator.AddChangeListener(ReplicationStatusUpdate);
         }
 
-        public static void Start_Server([NotNull] NameValueCollection args,
+        public static void Start_Server_UEP([NotNull] NameValueCollection args,
                                 [NotNull] IReadOnlyDictionary<string, object> postBody,
                                 [NotNull] HttpListenerResponse response)
         {
             ResetStatus();
             Database db = MemoryMap.Get<Database>(postBody["database"].ToString());
             _messageEndpointListener = new MessageEndpointListener(new MessageEndpointListenerConfiguration(db, ProtocolType.ByteStream));
-            _broadcaster = new ReplicatorTcpListener(_messageEndpointListener);
-            _broadcaster.Start();
+            _broadcasterUrl = new ReplicatorTcpListenerUrl(_messageEndpointListener);
+            _broadcasterUrl.Start();
             AddStatus("Start waiting for connection..");
+            response.WriteEmptyBody();
+        }
+
+        public static void Start_Server_MEP([NotNull] NameValueCollection args,
+                                [NotNull] IReadOnlyDictionary<string, object> postBody,
+                                [NotNull] HttpListenerResponse response)
+        {
+            ResetStatus();
+            Database db = MemoryMap.Get<Database>(postBody["database"].ToString());
+            _messageEndpointListener = new MessageEndpointListener(new MessageEndpointListenerConfiguration(db, ProtocolType.ByteStream));
+            _broadcasterMsg = new ReplicatorTcpListenerMsg(_messageEndpointListener);
+            _broadcasterMsg.Start();
+            AddStatus("Start waiting for connection..");
+            response.WriteEmptyBody();
         }
 
         public static void Start_Client_MEP([NotNull] NameValueCollection args,
@@ -68,11 +83,11 @@ namespace Couchbase.Lite.Testing
             ResetStatus();
             Database db = MemoryMap.Get<Database>(postBody["database"].ToString());
             string port = postBody["port"].ToString();
-            string targetIP = postBody["target"].ToString();
-            string remote_DBName = postBody["remotedb"].ToString();
+            string targetIP = postBody["host"].ToString();
+            string remote_DBName = postBody["serverDBName"].ToString();
 
-            string username = postBody["username"].ToString();
-            string password = postBody["password"].ToString();
+            //string username = postBody["username"].ToString();
+            //string password = postBody["password"].ToString();
 
             Uri host = new Uri("ws://" + targetIP + ":" + port); //sgPort = "4984";
             var dbUrl = new Uri(host, remote_DBName);

@@ -22,11 +22,12 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Couchbase.Lite.P2P;
 
-namespace Couchbase.Lite.P2P
+namespace Couchbase.Lite.Testing
 {
 
-    public sealed class ReplicatorTcpListener
+    public sealed class ReplicatorTcpListenerMsg
     {
         private TcpClient _connectedTcpClient;
         private TcpListener _listener;
@@ -37,7 +38,7 @@ namespace Couchbase.Lite.P2P
         /// Constructs a new replicator Passive Peer Tcp listener
         /// </summary>
         /// <param name="endpointListener">used to accept any incoming peer tcp client connection</param>
-        public ReplicatorTcpListener(MessageEndpointListener endpointListener)
+        public ReplicatorTcpListenerMsg(MessageEndpointListener endpointListener)
         {
             _endpointListener = endpointListener;
         }
@@ -88,7 +89,7 @@ namespace Couchbase.Lite.P2P
             while (_opened)
             {
                 _connectedTcpClient = await _listener?.AcceptTcpClientAsync();
-                var socketConnection = new ReplicatorTcpConnection(_connectedTcpClient);
+                var socketConnection = new TcpMessageEndpointConnection(_connectedTcpClient);
                 _endpointListener.Accept(socketConnection);
             }
         }
