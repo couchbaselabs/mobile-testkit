@@ -51,9 +51,9 @@ public class PeerToPeerRequestHandler {
                 }
             }
             if endPointType == "MessageEndPoint"{
-                //let url = URL(string: "ws://\(host):\(port)/\(serverDBName)")!
-                //let endpoint = MessageEndpoint(uid: "p2p", target: url, protocolType: ProtocolType.byteStream, delegate: self)
-                //replicatorConfig = ReplicatorConfiguration(database: database, target: endpoint)
+                let url = URL(string: "ws://\(host):5000/\(serverDBName)")!
+                let endpoint = MessageEndpoint(uid: "p2p", target: url, protocolType: ProtocolType.byteStream, delegate: self)
+                replicatorConfig = ReplicatorConfiguration(database: database, target: endpoint)
             }
             else{
             let url: String = "ws://\(host):5000/\(serverDBName)"
