@@ -22,11 +22,11 @@ using System.Threading.Tasks;
 
 using System.Threading;
 using System.Net.Sockets;
-using System.Net;
 using System.IO;
 using System.Security.Cryptography;
+using Couchbase.Lite.P2P;
 
-namespace Couchbase.Lite.P2P
+namespace Couchbase.Lite.Testing
 {
     /// <summary>
     /// This class is P2P Replicator Tcp communication implementing IMessageEndpointConnection
@@ -145,7 +145,7 @@ namespace Couchbase.Lite.P2P
         #endregion
     }
 
-    internal static class StreamExt
+    /*internal static class StreamExt
     {
         internal static bool PerformServerWebSocketHandshake(this Stream stream)
         {
@@ -183,12 +183,12 @@ namespace Couchbase.Lite.P2P
             return false;
         }
 
-        private static string AcceptKey(string key)
+         private static string AcceptKey(string key)
         {
             string longKey = key + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
             SHA1 sha1 = SHA1CryptoServiceProvider.Create();
             byte[] hashBytes = sha1.ComputeHash(System.Text.Encoding.ASCII.GetBytes(longKey));
             return Convert.ToBase64String(hashBytes);
-        }
-    }
+        } 
+    } */
 }

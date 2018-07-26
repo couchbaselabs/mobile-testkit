@@ -88,7 +88,6 @@ class PeerToPeer(object):
         if continuous is not None:
             args.setBoolean("continuous", continuous)
         return self._client.invokeMethod("peerToPeer_clientStart", args)
-        return self._client.invokeMethod("peerToPeer_clientStart", args)
 
     def client_start_mep(self, host, port, server_db_name, client_database):
         args = Args()
