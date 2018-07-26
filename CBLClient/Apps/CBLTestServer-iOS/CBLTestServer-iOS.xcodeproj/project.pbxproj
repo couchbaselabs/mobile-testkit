@@ -57,6 +57,7 @@
 		FB60EBD421069D5A005052B6 /* PeerToPeerRequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB60EBD321069D5A005052B6 /* PeerToPeerRequestHandler.swift */; };
 		FB60EBD621069D8D005052B6 /* ReplicatorTcpListener.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB60EBD521069D8D005052B6 /* ReplicatorTcpListener.swift */; };
 		FB60EBD821069DB9005052B6 /* ReplicatorTcpConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB60EBD721069DB9005052B6 /* ReplicatorTcpConnection.swift */; };
+		FB60EBDA21093383005052B6 /* ReplicatorTcpClientConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB60EBD921093383005052B6 /* ReplicatorTcpClientConnection.swift */; };
 		FB7B1E731FDB60ED00A912BF /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB7B1E721FDB60ED00A912BF /* Extensions.swift */; };
 /* End PBXBuildFile section */
 
@@ -163,6 +164,7 @@
 		FB60EBD321069D5A005052B6 /* PeerToPeerRequestHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerToPeerRequestHandler.swift; sourceTree = "<group>"; };
 		FB60EBD521069D8D005052B6 /* ReplicatorTcpListener.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReplicatorTcpListener.swift; sourceTree = "<group>"; };
 		FB60EBD721069DB9005052B6 /* ReplicatorTcpConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReplicatorTcpConnection.swift; sourceTree = "<group>"; };
+		FB60EBD921093383005052B6 /* ReplicatorTcpClientConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReplicatorTcpClientConnection.swift; sourceTree = "<group>"; };
 		FB7B1E721FDB60ED00A912BF /* Extensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -222,6 +224,7 @@
 				FB60EBD321069D5A005052B6 /* PeerToPeerRequestHandler.swift */,
 				FB60EBD521069D8D005052B6 /* ReplicatorTcpListener.swift */,
 				FB60EBD721069DB9005052B6 /* ReplicatorTcpConnection.swift */,
+				FB60EBD921093383005052B6 /* ReplicatorTcpClientConnection.swift */,
 			);
 			path = Server;
 			sourceTree = "<group>";
@@ -531,6 +534,7 @@
 				29F786971F9FC4180035178F /* GCDWebServerFileRequest.m in Sources */,
 				294FB20C1FEAFD9000DD0C23 /* DatabaseRequestHandler.swift in Sources */,
 				2907D16E200E7C7F00CE56EB /* DataSourceRequestHandler.swift in Sources */,
+				FB60EBDA21093383005052B6 /* ReplicatorTcpClientConnection.swift in Sources */,
 				29F786951F9FC4180035178F /* GCDWebServerResponse.m in Sources */,
 				29F786941F9FC4180035178F /* GCDWebServerRequest.m in Sources */,
 				2907D172200E7F4100CE56EB /* SelectResultRequestHandler.swift in Sources */,
