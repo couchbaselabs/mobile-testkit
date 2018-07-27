@@ -42,6 +42,7 @@ WORKDIR /opt/mobile-testkit
 
 # Install dependencies
 RUN pip install --ignore-installed -U ipaddress
+RUN pip install --ignore-installed -U requests
 RUN pip install -r requirements.txt
 
 # Create ansible config for sample
