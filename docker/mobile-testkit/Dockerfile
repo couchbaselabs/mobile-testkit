@@ -41,8 +41,8 @@ RUN git clone https://github.com/couchbaselabs/mobile-testkit.git
 WORKDIR /opt/mobile-testkit
 
 # Install dependencies
-RUN pip uninstall ipaddress
-RUN pip install -r requirements.txt --ignore-installed ipaddress
+RUN pip install --ignore-installed -U ipaddress
+RUN pip install -r requirements.txt
 
 # Create ansible config for sample
 RUN cp ansible.cfg.example ansible.cfg
