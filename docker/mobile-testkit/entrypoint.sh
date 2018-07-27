@@ -25,7 +25,11 @@ git checkout $1
 pip install -r requirements.txt
 
 # Generate cluster configs
-python libraries/utilities/generate_config_from_sequoia.py --host-file=hosts.json --topology=$2
+if [ -f hosts.json ]; then
+  python libraries/utilities/generate_config_from_sequoia.py --host-file=hosts.json --topology=$2
+else
+  python libraries/utilities/generate_clusters_from_pool.py --use-docker
+fi
 
 # pytest command
 $3
