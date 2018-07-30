@@ -45,6 +45,7 @@ namespace Couchbase.Lite.Testing
             };
             Replicator _replicator = new Replicator(config);
             _replicator.Start();
+            response.WriteBody(MemoryMap.Store(_replicator));
             //AddStatus("Replicator started...");
             //_replicator.AddChangeListener(ReplicationStatusUpdate);
         }
@@ -68,7 +69,7 @@ namespace Couchbase.Lite.Testing
         {
             ResetStatus();
             Database db = MemoryMap.Get<Database>(postBody["database"].ToString());
-            string port = postBody["port"].ToString();
+            string port = "5000";
             string targetIP = postBody["host"].ToString();
             string remote_DBName = postBody["serverDBName"].ToString();
 
@@ -88,6 +89,7 @@ namespace Couchbase.Lite.Testing
             };
             Replicator _replicator = new Replicator(config);
             _replicator.Start();
+            response.WriteBody(MemoryMap.Store(_replicator));
             //AddStatus("Replicator started...");
             //_replicator.AddChangeListener(ReplicationStatusUpdate);
 

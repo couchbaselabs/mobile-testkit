@@ -35,7 +35,7 @@ namespace Couchbase.Lite.Testing
     {
         #region Constants
 
-        internal const int Port = 59840;
+        internal const int Port = 5000;
         private const int ReceiveBufferSize = 8192;
 
         #endregion
