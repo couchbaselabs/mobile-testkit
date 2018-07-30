@@ -70,7 +70,7 @@ namespace Couchbase.Lite.Testing
             while (_opened)
             {
                 _connectedTcpClient = await _listener?.AcceptTcpClientAsync();
-                var socketConnection = new TcpMessageEndpointConnection(_connectedTcpClient);
+                var socketConnection = new ReplicatorTcpConnection(_connectedTcpClient);
                 _endpointListener.Accept(socketConnection);
             }
         }
