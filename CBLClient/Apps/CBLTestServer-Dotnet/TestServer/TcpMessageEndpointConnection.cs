@@ -1,5 +1,6 @@
 using Couchbase.Lite.P2P;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
@@ -15,7 +16,7 @@ namespace Couchbase.Lite.Testing
     {
         #region Constants
 
-        internal const int Port = 59840;
+        internal const int Port = 5000;
         private const int ReceiveBufferSize = 8192;
 
         public enum STATUS
