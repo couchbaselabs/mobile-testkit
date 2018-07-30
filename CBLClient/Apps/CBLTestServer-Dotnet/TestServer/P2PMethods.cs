@@ -19,8 +19,7 @@ namespace Couchbase.Lite.Testing
     public class P2PMethods
     {
         static private MessageEndpointListener _messageEndpointListener;
-        static private ReplicatorTcpListenerUrl _broadcasterUrl;
-        static private ReplicatorTcpListenerMsg _broadcasterMsg;
+        static private ReplicatorTcpListener _broadcaster;
 
         public static void Start_Client_UEP([NotNull] NameValueCollection args,
                                  [NotNull] IReadOnlyDictionary<string, object> postBody,
@@ -29,7 +28,7 @@ namespace Couchbase.Lite.Testing
             ResetStatus();
             Database db = MemoryMap.Get<Database>(postBody["database"].ToString());
             string targetIP = postBody["host"].ToString();
-            string port = postBody["port"].ToString();
+            string port = "5000";
             string remote_DBName = postBody["serverDBName"].ToString();
 
             ///string username = postBody["username"].ToString();
@@ -42,7 +41,7 @@ namespace Couchbase.Lite.Testing
             {
                 ReplicatorType = ReplicatorType.PushAndPull,
                 Continuous = true //,
-               // Authenticator = new BasicAuthenticator(username, password)
+                                  // Authenticator = new BasicAuthenticator(username, password)
             };
             Replicator _replicator = new Replicator(config);
             _replicator.Start();
@@ -50,28 +49,15 @@ namespace Couchbase.Lite.Testing
             //_replicator.AddChangeListener(ReplicationStatusUpdate);
         }
 
-        public static void Start_Server_UEP([NotNull] NameValueCollection args,
+        public static void Start_Server([NotNull] NameValueCollection args,
                                 [NotNull] IReadOnlyDictionary<string, object> postBody,
                                 [NotNull] HttpListenerResponse response)
         {
             ResetStatus();
             Database db = MemoryMap.Get<Database>(postBody["database"].ToString());
             _messageEndpointListener = new MessageEndpointListener(new MessageEndpointListenerConfiguration(db, ProtocolType.ByteStream));
-            _broadcasterUrl = new ReplicatorTcpListenerUrl(_messageEndpointListener);
-            _broadcasterUrl.Start();
-            AddStatus("Start waiting for connection..");
-            response.WriteEmptyBody();
-        }
-
-        public static void Start_Server_MEP([NotNull] NameValueCollection args,
-                                [NotNull] IReadOnlyDictionary<string, object> postBody,
-                                [NotNull] HttpListenerResponse response)
-        {
-            ResetStatus();
-            Database db = MemoryMap.Get<Database>(postBody["database"].ToString());
-            _messageEndpointListener = new MessageEndpointListener(new MessageEndpointListenerConfiguration(db, ProtocolType.ByteStream));
-            _broadcasterMsg = new ReplicatorTcpListenerMsg(_messageEndpointListener);
-            _broadcasterMsg.Start();
+            _broadcaster = new ReplicatorTcpListener(_messageEndpointListener);
+            _broadcaster.Start();
             AddStatus("Start waiting for connection..");
             response.WriteEmptyBody();
         }
@@ -104,7 +90,7 @@ namespace Couchbase.Lite.Testing
             _replicator.Start();
             //AddStatus("Replicator started...");
             //_replicator.AddChangeListener(ReplicationStatusUpdate);
-            
+
         }
 
         /*static private void ReplicationStatusUpdate(object sender, ReplicatorStatusChangedEventArgs args)
