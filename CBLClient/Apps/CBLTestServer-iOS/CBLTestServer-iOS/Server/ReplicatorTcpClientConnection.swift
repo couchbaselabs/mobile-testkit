@@ -19,14 +19,14 @@
 import Foundation
 import CouchbaseLiteSwift
 
-private typealias ClientCompletionHandler = (Bool, Error?) -> Void
+private typealias CompletionHandler = (Bool, Error?) -> Void
 
 private class PendingWrite {
     let data: Data
-    let completion: ClientCompletionHandler?
+    let completion: CompletionHandler?
     var bytesWritten = 0
     
-    init(data: Data, completion: ClientCompletionHandler?) {
+    init(data: Data, completion: CompletionHandler?) {
         self.data = data
         self.completion = completion
     }
@@ -36,13 +36,13 @@ private class PendingWrite {
 class ReplicatorTcpClientConnection : NSObject {
     fileprivate let kReadBufferSize = 1024
     
-    fileprivate let queue = DispatchQueue(label: "ReplicatorTcpServerConnection")
+    fileprivate let queue = DispatchQueue(label: "ReplicatorTcpClientConnection")
     
     fileprivate var url: URL!
     
     fileprivate var expectedAcceptHeader: String?
     
-    fileprivate var response = CFHTTPMessageCreateEmpty(kCFAllocatorDefault, true).takeRetainedValue()
+    fileprivate var response = CFHTTPMessageCreateEmpty(kCFAllocatorDefault, false).takeRetainedValue()
     
     fileprivate var openCompletion: ((Bool, MessagingError?) -> Void)?
     
@@ -83,6 +83,9 @@ class ReplicatorTcpClientConnection : NSObject {
     }
     
     fileprivate func closeStreams() {
+        inputStream.delegate = nil
+        outputStream.delegate = nil
+        
         inputStream.close()
         outputStream.close()
     }
@@ -102,19 +105,39 @@ extension ReplicatorTcpClientConnection: MessageEndpointConnection {
         _ = SecRandomCopyBytes(kSecRandomDefault, 16, &keyBytes)
         let key = Data(bytes: keyBytes).base64EncodedString()
         expectedAcceptHeader = key.appending("258EAFA5-E914-47DA-95CA-C5AB0DC85B11").sha1Base64()
-        let request = CFHTTPMessageCreateRequest(kCFAllocatorDefault, "GET" as CFString, url as CFURL, kCFHTTPVersion1_1).takeRetainedValue()
-        CFHTTPMessageSetHeaderFieldValue(request, "Connection" as CFString, "Upgrade" as CFString)
-        CFHTTPMessageSetHeaderFieldValue(request, "Upgrade" as CFString, "websocket" as CFString)
+        
+        var urlComp = URLComponents.init()
+        urlComp.scheme = "http"
+        urlComp.host = url.host
+        urlComp.port = url.port
+        urlComp.path = "\(url.path)/_blipsync"
+        let syncURL = urlComp.url!
+        
+        var host = syncURL.host!
+        if let port = syncURL.port {
+            host = "\(host):\(port)"
+        }
+        
+        let request = CFHTTPMessageCreateRequest(kCFAllocatorDefault, "GET" as CFString, syncURL as CFURL, kCFHTTPVersion1_1).takeRetainedValue()
         CFHTTPMessageSetHeaderFieldValue(request, "Sec-WebSocket-Version" as CFString, "13" as CFString)
         CFHTTPMessageSetHeaderFieldValue(request, "Sec-WebSocket-Key" as CFString, key as CFString)
         CFHTTPMessageSetHeaderFieldValue(request, "Sec-WebSocket-Protocol" as CFString, "BLIP_3+CBMobile_2" as CFString)
+        CFHTTPMessageSetHeaderFieldValue(request, "Upgrade" as CFString, "websocket" as CFString)
+        CFHTTPMessageSetHeaderFieldValue(request, "Connection" as CFString, "Upgrade" as CFString)
+        CFHTTPMessageSetHeaderFieldValue(request, "User-Agent" as CFString, "CouchbaseLite/2.1 ReplicatorTcpClientConnection" as CFString)
+        CFHTTPMessageSetHeaderFieldValue(request, "Host" as CFString, host as CFString)
+        
         let data = CFHTTPMessageCopySerializedMessage(request)!.takeRetainedValue() as Data
         write(data: data, completion: nil)
     }
     
     public func close(error: Error?, completion: @escaping () -> Void) {
         closeStreams()
-        completion()
+        // Workaround:
+        DispatchQueue.main.async {
+            completion()
+        }
+        
     }
     
     public func send(message: Message, completion: @escaping (Bool, MessagingError?) -> Void) {
@@ -152,7 +175,7 @@ extension ReplicatorTcpClientConnection: StreamDelegate {
         }
     }
     
-    fileprivate func write(data: Data, completion: ClientCompletionHandler?) {
+    fileprivate func write(data: Data, completion: CompletionHandler?) {
         queue.async {
             self.pendingWrites.append(PendingWrite.init(data: data, completion: completion))
             self.doWrite()
@@ -222,6 +245,7 @@ extension ReplicatorTcpClientConnection: StreamDelegate {
             closeConnection(error: NSError(domain: NSURLErrorDomain, code: NSURLErrorBadServerResponse, userInfo: nil))
             return
         }
+        
         guard let header: NSDictionary = CFHTTPMessageCopyAllHeaderFields(response)?.takeRetainedValue() else {
             closeConnection(error: NSError(domain: NSURLErrorDomain, code: NSURLErrorBadServerResponse, userInfo: nil))
             return
@@ -257,4 +281,3 @@ private extension Error {
         return MessagingError.init(error: self, isRecoverable: isRecoverable)
     }
 }
-

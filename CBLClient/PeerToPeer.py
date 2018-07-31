@@ -75,6 +75,11 @@ class PeerToPeer(object):
         args.setMemoryPointer("database", database)
         return self._client.invokeMethod("peerToPeer_serverStart", args)
 
+    def server_stop(self, replicatorTcpListener):
+        args = Args()
+        args.setMemoryPointer("replicatorTcpListener", replicatorTcpListener)
+        return self._client.invokeMethod("peerToPeer_serverStop", args)
+
     def client_start(self, host, server_db_name, client_database, continuous=None, authenticator=None, replication_type=None):
         args = Args()
         args.setString("host", host)
