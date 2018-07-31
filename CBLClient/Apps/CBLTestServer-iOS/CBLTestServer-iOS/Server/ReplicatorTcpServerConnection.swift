@@ -1,5 +1,5 @@
 //
-//  ReplicatorTcpConnection.swift
+//  ReplicatorTcpServerConnection.swift
 //  CouchbaseLite
 //
 //  Copyright (c) 2018 Couchbase, Inc. All rights reserved.
@@ -19,7 +19,7 @@
 import Foundation
 import CouchbaseLiteSwift
 
-typealias CompletionHandler = (Bool, Error?) -> Void
+private typealias CompletionHandler = (Bool, Error?) -> Void
 
 private class PendingWrite {
     let data: Data
@@ -33,10 +33,10 @@ private class PendingWrite {
 }
 
 /// MessageEndpointConnection implemenation used by the ReplicatorTcpListener.
-class ReplicatorTcpConnection : NSObject {
+class ReplicatorTcpServerConnection : NSObject {
     fileprivate let kReadBufferSize = 1024
     
-    fileprivate let queue = DispatchQueue(label: "ReplicatorTcpConnection")
+    fileprivate let queue = DispatchQueue(label: "ReplicatorTcpServerConnection")
     
     fileprivate var request = CFHTTPMessageCreateEmpty(kCFAllocatorDefault, true).takeRetainedValue()
     
@@ -74,13 +74,16 @@ class ReplicatorTcpConnection : NSObject {
     }
     
     fileprivate func closeStreams() {
+        inputStream.delegate = nil
+        outputStream.delegate = nil
+        
         inputStream.close()
         outputStream.close()
     }
 }
 
 /// MessageEndpointConnection
-extension ReplicatorTcpConnection: MessageEndpointConnection {
+extension ReplicatorTcpServerConnection: MessageEndpointConnection {
     public func open(connection: ReplicatorConnection, completion: @escaping (Bool, MessagingError?) -> Void) {
         opened = true
         replConnection = connection
@@ -110,7 +113,7 @@ extension ReplicatorTcpConnection: MessageEndpointConnection {
 }
 
 /// StreamDelegate and Read/Write stream
-extension ReplicatorTcpConnection: StreamDelegate {
+extension ReplicatorTcpServerConnection: StreamDelegate {
     public func stream(_ aStream: Stream, handle eventCode: Stream.Event) {
         switch eventCode {
         case Stream.Event.hasBytesAvailable:
@@ -211,10 +214,9 @@ extension ReplicatorTcpConnection: StreamDelegate {
             return
         }
         
-        // Prepare response for successly acceptance; the response will be sent
-        // in
+        // Prepare response for successly acceptance; the response will be sent in
         let acceptHeader = key.appending("258EAFA5-E914-47DA-95CA-C5AB0DC85B11").sha1Base64()
-        response = CFHTTPMessageCreateResponse(kCFAllocatorDefault, 101, "Upgrade" as CFString, kCFHTTPVersion1_1).takeRetainedValue()
+        response = CFHTTPMessageCreateResponse(kCFAllocatorDefault, 101, "Switching Protocols" as CFString, kCFHTTPVersion1_1).takeRetainedValue()
         CFHTTPMessageSetHeaderFieldValue(response!, "Connection" as CFString, "Upgrade" as CFString)
         CFHTTPMessageSetHeaderFieldValue(response!, "Upgrade" as CFString, "websocket" as CFString)
         CFHTTPMessageSetHeaderFieldValue(response!, "Sec-WebSocket-Accept" as CFString, acceptHeader as CFString)
@@ -251,4 +253,3 @@ private extension Error {
         return MessagingError.init(error: self, isRecoverable: isRecoverable)
     }
 }
-
