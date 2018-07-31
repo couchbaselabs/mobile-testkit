@@ -16,6 +16,7 @@
 //  limitations under the License.
 //
 
+import Foundation
 import CouchbaseLiteSwift
 
 enum ListenerState {
@@ -148,7 +149,7 @@ public final class ReplicatorTcpListener: NSObject {
     @objc fileprivate func acceptConnection(streams: [Any]) {
         let i = streams[0] as! InputStream
         let o = streams[1] as! OutputStream
-        let connection = ReplicatorTcpConnection(inputStream: i, outputStream: o, listener: self)
+        let connection = ReplicatorTcpServerConnection(inputStream: i, outputStream: o, listener: self)
         connections.append(connection)
         connection.open()
     }
@@ -170,4 +171,3 @@ extension ReplicatorTcpListener: NetServiceDelegate {
         perform(#selector(acceptConnection(streams:)), on: thread!, with: [inputStream, outputStream], waitUntilDone: false)
     }
 }
-

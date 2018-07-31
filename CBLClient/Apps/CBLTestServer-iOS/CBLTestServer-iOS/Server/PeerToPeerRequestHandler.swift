@@ -28,16 +28,19 @@ public class PeerToPeerRequestHandler {
             let peerToPeerListener: ReplicatorTcpListener = ReplicatorTcpListener(databases: [database])
             peerToPeerListener.start()
             print("Server is getting started")
+            return peerToPeerListener
+            
+        case "peerToPeer_serverStop":
+            let peerToPeerListener: ReplicatorTcpListener = args.get(name:"replicatorTcpListener")!
+            peerToPeerListener.stop()
             
         case "peerToPeer_clientStart":
             let host: String = args.get(name:"host")!
             let serverDBName: String = args.get(name:"serverDBName")!
             let database: Database = args.get(name:"database")!
             let continuous: Bool? = args.get(name:"continuous")!
-            let authValue: AnyObject? = args.get(name: "authenticator")
-            let authenticator: Authenticator? = authValue as? Authenticator
             let replication_type: String? = args.get(name: "replication_type")!
-            let endPointType: String = "UrlEndPoint"
+            let endPointType: String = "MessageEndPoint"
             var replicatorConfig: ReplicatorConfiguration? = nil
             var replicatorType = ReplicatorType.pushAndPull
             
@@ -66,7 +69,6 @@ public class PeerToPeerRequestHandler {
                 replicatorConfig?.continuous = false
             }
             replicatorConfig?.replicatorType = replicatorType
-            replicatorConfig?.authenticator = authenticator
             let replicator: Replicator = Replicator(config: replicatorConfig!)
             replicator.start()
             print("Replicator has started")
