@@ -56,7 +56,7 @@ def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_o
     cluster = Cluster(config=cluster_config)
     if len(cluster.servers) < 2:
         raise Exception("Please provide at least 3 servers")
-
+ 
     server_urls = []
     for server in cluster.servers:
         server_urls.append(server.url)
@@ -134,8 +134,9 @@ def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_o
         # Checking for docs update on SG side #
         ######################################
         docs_to_update = random.sample(doc_ids, num_of_docs_to_update)
-        sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)["rows"]
-        sg_docs = [doc for doc in sg_docs if doc["id"] in docs_to_update]
+        sg_docs = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=list(docs_to_update), auth=session)[0]
+        for sg_doc in sg_docs:
+            sg_doc["id"] = sg_doc["_id"] 
         log_info("Updating {} docs on SG - {}".format(len(docs_to_update),
                                                       docs_to_update))
         sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs,

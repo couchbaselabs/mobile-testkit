@@ -21,6 +21,8 @@
             {{ xattrs }}
             {{ no_conflicts }}
             {{ revs_limit }}
+            {{ sg_use_views }}
+            {{ num_index_replicas }}
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket-1",
             "username":"data-bucket-1",
@@ -41,6 +43,8 @@
             "password": "password",
             {{ no_conflicts }}
             {{ revs_limit }}
+            {{ sg_use_views }}
+            {{ num_index_replicas }}
             "channel_index":{
                 "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
                 "bucket":"index-bucket-2",
@@ -57,6 +61,8 @@
             "password": "password",
             {{ no_conflicts }}
             {{ revs_limit }}
+            {{ sg_use_views }}
+            {{ num_index_replicas }}
             "channel_index":{
                 "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
                 "bucket":"index-bucket-3",

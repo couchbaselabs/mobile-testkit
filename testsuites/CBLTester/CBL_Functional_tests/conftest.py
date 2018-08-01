@@ -115,6 +115,14 @@ def pytest_addoption(parser):
     parser.addoption("--debug-mode", action="store_true",
                      help="Enable debug mode for the app ", default=False)
 
+    parser.addoption("--use-views",
+                     action="store_true",
+                     help="If set, uses views instead of GSI - SG 2.1 and above only")
+
+    parser.addoption("--number-replicas",
+                     action="store",
+                     help="Number of replicas for the indexer node - SG 2.1 and above only",
+                     default=0)
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -144,6 +152,8 @@ def params_from_base_suite_setup(request):
     ci = request.config.getoption("--ci")
     debug_mode = request.config.getoption("--debug-mode")
     no_conflicts_enabled = request.config.getoption("--no-conflicts")
+    use_views = request.config.getoption("--use-views")
+    number_replicas = request.config.getoption("--number-replicas")
 
     test_name = request.node.name
 
@@ -239,6 +249,17 @@ def params_from_base_suite_setup(request):
         log_info("Running with allow conflicts")
         persist_cluster_config_environment_prop(cluster_config, 'no_conflicts_enabled', False)
 
+    if use_views:
+        log_info("Running SG tests using views")
+        # Enable sg views in cluster configs
+        persist_cluster_config_environment_prop(cluster_config, 'sg_use_views', True)
+    else:
+        log_info("Running tests with cbs <-> sg ssl disabled")
+        # Disable sg views in cluster configs
+        persist_cluster_config_environment_prop(cluster_config, 'sg_use_views', False)
+
+    # Write the number of replicas to cluster config
+    persist_cluster_config_environment_prop(cluster_config, 'number_replicas', number_replicas)
     cluster_utils = ClusterKeywords(cluster_config)
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
     cbs_url = cluster_topology['couchbase_servers'][0]
@@ -389,7 +410,9 @@ def params_from_base_suite_setup(request):
     log_info("Flushing server memory")
     utils_obj = Utils(base_url)
     utils_obj.flushMemory()
-
+    if create_db_per_suite:
+        log_info("Stopping the test server per suite")
+        testserver.stop()
     # Delete png files under resources/data
     clear_resources_pngs()
 
@@ -420,13 +443,14 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     device_enabled = params_from_base_suite_setup["device_enabled"]
     flush_memory_per_test = params_from_base_suite_setup["flush_memory_per_test"]
     enable_sample_bucket = params_from_base_suite_setup["enable_sample_bucket"]
+    liteserv_version = params_from_base_suite_setup["liteserv_version"]
     source_db = None
     cbl_db = None
+    test_name_cp = test_name.replace("/", "-")
+    log_filename = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now())
 
     if create_db_per_test:
         log_info("Starting TestServer...")
-        test_name_cp = test_name.replace("/", "-")
-        log_filename = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now())
         if device_enabled:
             testserver.start_device(log_filename)
         else:
@@ -485,7 +509,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "testserver": testserver,
         "db_config": db_config,
         "enable_sample_bucket": enable_sample_bucket,
-        "log_filename": log_filename
+        "log_filename": log_filename,
+        "liteserv_version": liteserv_version
     }
 
     log_info("Tearing down test")
@@ -500,9 +525,9 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         utils_obj = Utils(base_url)
         utils_obj.flushMemory()
 
-    log_info("Stopping the test server")
-    testserver.stop()
-
+    if create_db_per_test:
+        log_info("Stopping the test server per test")
+        testserver.stop()
 
 @pytest.fixture(scope="class")
 def class_init(request, params_from_base_suite_setup):

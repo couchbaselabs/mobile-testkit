@@ -1095,8 +1095,8 @@ def test_initial_pull_replication_background_apprun(params_from_base_test_setup,
     c.reset(sg_config_path=sg_config)
 
     # No command to push the app to background on device, so avoid test to run on ios device and no app for .net
-    if(liteserv_platform.lower() == "net-msft" and device_enabled):
-        pytest.skip('This test cannot run on .net')
+    if liteserv_platform.lower() == "net-msft" or ((liteserv_platform.lower() != "ios" or liteserv_platform.lower() != "xamarin-ios") and device_enabled):
+        pytest.skip('This test cannot run either it is .Net or ios with device enabled ')
 
     client = MobileRestClient()
     client.create_user(sg_admin_url, sg_db, "testuser", password="password", channels=["ABC", "NBC"])
@@ -1188,8 +1188,8 @@ def test_push_replication_with_backgroundApp(params_from_base_test_setup, num_do
     c.reset(sg_config_path=sg_config)
 
     # No command to push the app to background on device, so avoid test to run on ios device and no app for .net
-    if(liteserv_platform.lower() == "net-msft" or device_enabled):
-        pytest.skip('This test cannot run on .net')
+    if liteserv_platform.lower() == "net-msft" or ((liteserv_platform.lower() != "ios" or liteserv_platform.lower() != "xamarin-ios") and device_enabled):
+        pytest.skip('This test cannot run either it is .Net or ios with device enabled ')
 
     client = MobileRestClient()
     client.create_user(sg_admin_url, sg_db, "testuser", password="password", channels=channels)
@@ -1489,7 +1489,7 @@ def test_default_conflict_scenario_highRevGeneration_wins(params_from_base_test_
     # Di mode has delay for one shot replication, so need another replication only for DI mode
     repl = None
     if sg_mode == "di":
-        repl = replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator, target_url=sg_blip_url, continuous=True,
+        repl = replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator, target_url=sg_blip_url, continuous=False,
                                                   channels=channels)
     cbl_doc_ids = db.getDocIds(cbl_db)
     cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
@@ -2807,6 +2807,9 @@ def test_resetCheckpointWithPurge(params_from_base_test_setup, replication_type,
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
     db_config = params_from_base_test_setup["db_config"]
+    liteserv_version = params_from_base_test_setup["liteserv_version"]
+    if liteserv_version < "2.1":
+        pytest.skip('database encryption feature not available with version < 2.1')
 
     # Reset cluster to ensure no data in system
     c = cluster.Cluster(config=cluster_config)
@@ -2867,10 +2870,6 @@ def test_resetCheckpointWithPurge(params_from_base_test_setup, replication_type,
     # Reset checkpoint and do replication again from sg to cbl
     # Verify all docs are back
     replicator.resetCheckPoint(repl)
-    if replication_type == "one_way":
-        replicator.setReplicatorType(repl_config, "pull")
-        repl = replicator.create(repl_config)
-
     print "replicator after checkpoint...."
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
@@ -2897,6 +2896,9 @@ def test_resetCheckpointFailure(params_from_base_test_setup):
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
     liteserv_platform = params_from_base_test_setup["liteserv_platform"]
+    liteserv_version = params_from_base_test_setup["liteserv_version"]
+    if liteserv_version < "2.1":
+        pytest.skip('database encryption feature not available with version < 2.1')
 
     if(liteserv_platform.lower() == "ios"):
         pytest.skip('ResetCheckPoint API does not throw exception in iOS if replicator is not stopped, so skipping test')
@@ -2965,6 +2967,9 @@ def test_resetCheckpointWithUpdate(params_from_base_test_setup, replication_type
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
     db_config = params_from_base_test_setup["db_config"]
+    liteserv_version = params_from_base_test_setup["liteserv_version"]
+    if liteserv_version < "2.1":
+        pytest.skip('database encryption feature not available with version < 2.1')
 
     # Reset cluster to ensure no data in system
     c = cluster.Cluster(config=cluster_config)
