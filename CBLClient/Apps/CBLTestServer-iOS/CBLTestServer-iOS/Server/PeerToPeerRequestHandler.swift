@@ -39,7 +39,8 @@ public class PeerToPeerRequestHandler {
             let serverDBName: String = args.get(name:"serverDBName")!
             let database: Database = args.get(name:"database")!
             let continuous: Bool? = args.get(name:"continuous")!
-            let replication_type: String? = args.get(name: "replication_type")!
+            let replication_type: String? = args.get(name: "replicationType")!
+            let documentIDs: [String]? = args.get(name: "documentIDs")
             let endPointType: String = "MessageEndPoint"
             var replicatorConfig: ReplicatorConfiguration? = nil
             var replicatorType = ReplicatorType.pushAndPull
@@ -53,20 +54,24 @@ public class PeerToPeerRequestHandler {
                     replicatorType = .pushAndPull
                 }
             }
-            if endPointType == "MessageEndPoint"{
-                let url = URL(string: "ws://\(host):5000/\(serverDBName)")!
-                let endpoint = MessageEndpoint(uid: "p2p", target: url, protocolType: ProtocolType.byteStream, delegate: self)
-                replicatorConfig = ReplicatorConfiguration(database: database, target: endpoint)
+            
+            let url = URL(string: "ws://\(host):5000/\(serverDBName)")!
+            if endPointType == "URLEndPoint"{
+                let urlEndPoint: URLEndpoint = URLEndpoint(url: url)
+                replicatorConfig = ReplicatorConfiguration(database: database, target: urlEndPoint)
             }
             else{
-            let url: String = "ws://\(host):5000/\(serverDBName)"
-            let urlEndPoint: URLEndpoint = URLEndpoint(url: URL(string: url)!)
-            replicatorConfig = ReplicatorConfiguration(database: database, target: urlEndPoint)
+                let endpoint = MessageEndpoint(uid: url.absoluteString, target: url, protocolType: ProtocolType.byteStream, delegate: self)
+                replicatorConfig = ReplicatorConfiguration(database: database, target: endpoint)
             }
+            
             if continuous != nil {
                 replicatorConfig?.continuous = continuous!
             } else {
                 replicatorConfig?.continuous = false
+            }
+            if documentIDs != nil {
+                replicatorConfig?.documentIDs = documentIDs
             }
             replicatorConfig?.replicatorType = replicatorType
             let replicator: Replicator = Replicator(config: replicatorConfig!)
