@@ -1344,7 +1344,8 @@ def test_default_conflict_scenario_delete_wins(params_from_base_test_setup, dele
         2. Replicate docs to SG with push_pull and continous False
         3. Wait until replication is done and stop replication
         4. update doc in Sg and delete doc in CBL/ delete doc in Sg and update doc in CBL
-        5. Verify delete wins
+        5. Start the replication with same configuration as step 2 
+        6. Verify delete wins
     """
     sg_db = "db"
     sg_url = params_from_base_test_setup["sg_url"]

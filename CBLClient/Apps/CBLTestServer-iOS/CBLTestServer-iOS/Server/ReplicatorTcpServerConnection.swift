@@ -19,172 +19,41 @@
 import Foundation
 import CouchbaseLiteSwift
 
-private typealias CompletionHandler = (Bool, Error?) -> Void
-
-private class PendingWrite {
-    let data: Data
-    let completion: CompletionHandler?
-    var bytesWritten = 0
-    
-    init(data: Data, completion: CompletionHandler?) {
-        self.data = data
-        self.completion = completion
-    }
-}
-
 /// MessageEndpointConnection implemenation used by the ReplicatorTcpListener.
-class ReplicatorTcpServerConnection : NSObject {
-    fileprivate let kReadBufferSize = 1024
-    
-    fileprivate let queue = DispatchQueue(label: "ReplicatorTcpServerConnection")
-    
+public class ReplicatorTcpServerConnection : ReplicatorTcpConnection {
     fileprivate var request = CFHTTPMessageCreateEmpty(kCFAllocatorDefault, true).takeRetainedValue()
     
     fileprivate var response: CFHTTPMessage?
     
-    fileprivate let inputStream: InputStream
-    
-    fileprivate let outputStream: OutputStream
+    fileprivate var connected = false
     
     fileprivate weak var listener: ReplicatorTcpListener?
     
-    fileprivate var replConnection: ReplicatorConnection!
-    
-    fileprivate var pendingWrites: [PendingWrite] = []
-    
-    fileprivate var hasSpace = false
-    
-    fileprivate var opened = false
-    
-    init(inputStream: InputStream, outputStream: OutputStream, listener: ReplicatorTcpListener) {
-        self.inputStream = inputStream
-        self.outputStream = outputStream
+    public init(inputStream: InputStream, outputStream: OutputStream, listener: ReplicatorTcpListener) {
+        super.init(inputStream: inputStream, outputStream: outputStream)
         self.listener = listener
     }
     
-    func open() {
-        inputStream.delegate = self
-        outputStream.delegate = self
+    public override func openConnection(completion: @escaping (Bool, MessagingError?) -> Void) {
+        connected = true
         
-        CFReadStreamSetDispatchQueue(inputStream, queue)
-        CFWriteStreamSetDispatchQueue(outputStream, queue)
-        
-        inputStream.open()
-        outputStream.open()
-    }
-    
-    fileprivate func closeStreams() {
-        inputStream.delegate = nil
-        outputStream.delegate = nil
-        
-        inputStream.close()
-        outputStream.close()
-    }
-}
-
-/// MessageEndpointConnection
-extension ReplicatorTcpServerConnection: MessageEndpointConnection {
-    public func open(connection: ReplicatorConnection, completion: @escaping (Bool, MessagingError?) -> Void) {
-        opened = true
-        replConnection = connection
-        
-        // Write the websocket upgrade request response:
+        // Write the websocket upgrade response:
         let data = CFHTTPMessageCopySerializedMessage(response!)!.takeRetainedValue() as Data
         write(data: data) { (success, error) in
             completion(success, error?.toMessagingError(isRecoverable: false))
         }
     }
     
-    public func close(error: Error?, completion: @escaping () -> Void) {
-        closeStreams()
-        completion()
-    }
-    
-    public func send(message: Message, completion: @escaping (Bool, MessagingError?) -> Void) {
-        write(data: message.toData()) { (success, error) in
-            completion(success, error?.toMessagingError(isRecoverable: false))
+    public override func receive(bytes: UnsafeMutablePointer<UInt8>, count: Int) {
+        if connected {
+            super.receive(bytes: bytes, count: count)
+        } else {
+            receivedHTTPRequest(bytes: bytes, count: count)
         }
     }
     
-    fileprivate func closeConnection(error: Error?) {
-        closeStreams()
-        replConnection.close(error: error?.toMessagingError(isRecoverable: false))
-    }
-}
-
-/// StreamDelegate and Read/Write stream
-extension ReplicatorTcpServerConnection: StreamDelegate {
-    public func stream(_ aStream: Stream, handle eventCode: Stream.Event) {
-        switch eventCode {
-        case Stream.Event.hasBytesAvailable:
-            doRead()
-        case Stream.Event.endEncountered:
-            closeConnection(error: nil)
-        case Stream.Event.errorOccurred:
-            closeConnection(error: aStream.streamError)
-        case Stream.Event.hasSpaceAvailable:
-            hasSpace = true
-            doWrite()
-        default:
-            break
-        }
-    }
-    
-    fileprivate func write(data: Data, completion: CompletionHandler?) {
-        queue.async {
-            self.pendingWrites.append(PendingWrite.init(data: data, completion: completion))
-            self.doWrite()
-        }
-    }
-    
-    private func doWrite() {
-        if !hasSpace {
-            return
-        }
-        
-        while !pendingWrites.isEmpty {
-            let w = pendingWrites[0]
-            let nBytes = w.data.withUnsafeBytes { outputStream.write(
-                $0 + w.bytesWritten, maxLength: w.data.count - w.bytesWritten) }
-            if nBytes <= 0 {
-                hasSpace = false
-                return
-            }
-            w.bytesWritten = w.bytesWritten + nBytes
-            if w.bytesWritten < w.data.count {
-                hasSpace = false
-                return;
-            }
-            if let completion = w.completion {
-                completion(true, nil)
-            }
-            pendingWrites.remove(at: 0)
-        }
-    }
-    
-    private func doRead() {
-        let buffer = UnsafeMutablePointer<UInt8>.allocate(capacity: kReadBufferSize)
-        while inputStream.hasBytesAvailable {
-            let length = inputStream.read(buffer, maxLength: kReadBufferSize)
-            if length <= 0 {
-                break
-            }
-            if opened {
-                receiveBytes(buffer: buffer, length: length)
-            } else {
-                receivedHTTPRequestBytes(buffer: buffer, length: length)
-            }
-        }
-        buffer.deallocate()
-    }
-    
-    private func receiveBytes(buffer: UnsafeMutablePointer<UInt8>, length: Int) {
-        let data = Data(bytes: buffer, count: length)
-        replConnection.receive(messge: Message.fromData(data))
-    }
-    
-    private func receivedHTTPRequestBytes(buffer: UnsafeMutablePointer<UInt8>, length: Int) {
-        if !CFHTTPMessageAppendBytes(request, buffer, length) {
+    private func receivedHTTPRequest(bytes: UnsafeMutablePointer<UInt8>, count: Int) {
+        if !CFHTTPMessageAppendBytes(request, bytes, count) {
             sendFailureResponse(code: 400, message: "Bad Request")
             return
         }
@@ -197,12 +66,14 @@ extension ReplicatorTcpServerConnection: StreamDelegate {
     private func performWebSocketHandshake() {
         // Validate WebSocket request:
         guard let method: String = CFHTTPMessageCopyRequestMethod(request)?.takeRetainedValue() as String?,
-            let header: NSDictionary = CFHTTPMessageCopyAllHeaderFields(request)?.takeRetainedValue(),
+            method == "GET" else {
+                sendFailureResponse(code: 400, message: "Bad Request")
+                return
+        }
+        
+        guard let header: NSDictionary = CFHTTPMessageCopyAllHeaderFields(request)?.takeRetainedValue(),
             let key = header["Sec-WebSocket-Key"] as? String,
-            let prc = header["Sec-WebSocket-Protocol"] as? String,
-            let version = header["Sec-WebSocket-Version"] as? String,
-            method == "GET", prc == "BLIP_3+CBMobile_2", version == "13"
-            else {
+            let prc = header["Sec-WebSocket-Protocol"] as? String else {
                 sendFailureResponse(code: 400, message: "Bad Request")
                 return
         }
@@ -235,21 +106,6 @@ extension ReplicatorTcpServerConnection: StreamDelegate {
     private func sendFailureResponse(code: Int, message: String) {
         let response = CFHTTPMessageCreateResponse(kCFAllocatorDefault, code, message as CFString, kCFHTTPVersion1_1).takeRetainedValue()
         let data = CFHTTPMessageCopySerializedMessage(response)!.takeRetainedValue() as Data
-        write(data: data) { (success, error) in self.closeStreams() }
-    }
-}
-
-private extension String {
-    func sha1Base64() -> String {
-        let data = self.data(using: String.Encoding.ascii)!
-        var digest = [UInt8](repeating: 0, count:Int(CC_SHA1_DIGEST_LENGTH))
-        data.withUnsafeBytes { _ = CC_SHA1($0, CC_LONG(data.count), &digest) }
-        return Data(bytes: digest).base64EncodedString()
-    }
-}
-
-private extension Error {
-    func toMessagingError(isRecoverable: Bool) -> MessagingError {
-        return MessagingError.init(error: self, isRecoverable: isRecoverable)
+        write(data: data) { (success, error) in self.closeStream() }
     }
 }

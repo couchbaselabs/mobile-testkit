@@ -1,5 +1,6 @@
 import time
 import pytest
+import time
 
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop
 from keywords.utils import log_info
@@ -254,7 +255,8 @@ def params_from_base_suite_setup(request):
     db_obj_list = []
     query_obj_list = []
     for base_url, i in zip(base_url_list, range(len(base_url_list))):
-        db_name = "{}_{}".format(create_db_per_suite, i + 1)
+        db_name = "{}_{}_{}".format(create_db_per_suite, time.time()*1000, i + 1)
+        log_info("db name for {} is {}".format(base_url, db_name))
         db_name_list.append(db_name)
         db = Database(base_url)
         query_obj_list.append(Query(base_url))
@@ -306,10 +308,11 @@ def params_from_base_suite_setup(request):
 #                                              base_url_list):
     for cbl_db, db_obj, base_url in zip(cbl_db_list, db_obj_list, base_url_list):
         if not no_db_delete:
+            print "The base url is ", base_url
             log_info("Deleting the database {} at the suite teardown".format(db_obj.getName(cbl_db)))
-            time.sleep(2)
+            time.sleep(5)
             db_obj.deleteDB(cbl_db)
-            time.sleep(1)
+            
 
         # Flush all the memory contents on the server app
         log_info("Flushing server memory")
