@@ -19,7 +19,7 @@
 import Foundation
 import CouchbaseLiteSwift
 
-enum ListenerState {
+private enum ListenerState {
     case stopped
     case starting
     case ready
@@ -91,7 +91,6 @@ public final class ReplicatorTcpListener: NSObject {
         return urlc.url!
     }
     
-    
     @available(iOS 10.0, *)
     /// Starts the listener.
     public func start() {
@@ -151,7 +150,7 @@ public final class ReplicatorTcpListener: NSObject {
         let o = streams[1] as! OutputStream
         let connection = ReplicatorTcpServerConnection(inputStream: i, outputStream: o, listener: self)
         connections.append(connection)
-        connection.open()
+        connection.openStream()
     }
 }
 
