@@ -611,7 +611,7 @@ def test_default_conflict_scenario_delete_wins(params_from_base_suite_setup, del
     """
     sg_config = params_from_base_suite_setup["sg_config"]
     cluster_config = params_from_base_suite_setup["cluster_config"]
-    db = params_from_base_suite_setup["db"]
+    # db = params_from_base_suite_setup["db"]
     cbl_db_list = params_from_base_suite_setup["cbl_db_list"]
     base_url_list = params_from_base_suite_setup["base_url_list"]
     host_list = params_from_base_suite_setup["host_list"]
@@ -668,12 +668,11 @@ def test_default_conflict_scenario_delete_wins(params_from_base_suite_setup, del
                 number_updates=number_of_updates, doc_ids=server_doc_ids
             )
             cbl2_delete_task = tpe.submit(
-                db_obj_client.delete_bulk_docs, cbl_db=cbl_db_server
+                db_obj_client.delete_bulk_docs, cbl_db=cbl_db_client
             )
             cbl1_updateDocs_task.result()
             cbl2_delete_task.result()
-
-    if delete_source == 'cbl1':
+    else:
         with ThreadPoolExecutor(max_workers=4) as tpe:
             cbl1_delete_task = tpe.submit(
                 db_obj_server.delete_bulk_docs, database=cbl_db_server, doc_ids=server_doc_ids
@@ -902,5 +901,3 @@ def updata_bulk_docs_custom(db_obj, database, number_of_updates=1, param="none",
             doc_body[param] = doc_body[param] + 1
             updated_docs[doc] = doc_body
         db_obj.updateDocuments(database, updated_docs)
-
-
