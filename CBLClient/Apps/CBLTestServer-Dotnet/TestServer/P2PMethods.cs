@@ -60,6 +60,16 @@ namespace Couchbase.Lite.Testing
             _broadcaster = new ReplicatorTcpListener(_messageEndpointListener);
             _broadcaster.Start();
             AddStatus("Start waiting for connection..");
+            response.WriteBody(MemoryMap.Store(_broadcaster));
+        }
+
+        public static void Stop_Server([NotNull] NameValueCollection args,
+                                [NotNull] IReadOnlyDictionary<string, object> postBody,
+                                [NotNull] HttpListenerResponse response)
+        {
+            ReplicatorTcpListener _broadcaster = MemoryMap.Get<ReplicatorTcpListener>(postBody["replicatorTcpListener"].ToString());
+            _broadcaster.Stop();
+            AddStatus("Stopping the server..");
             response.WriteEmptyBody();
         }
 
