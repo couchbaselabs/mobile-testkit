@@ -611,7 +611,6 @@ def test_default_conflict_scenario_delete_wins(params_from_base_suite_setup, del
     """
     sg_config = params_from_base_suite_setup["sg_config"]
     cluster_config = params_from_base_suite_setup["cluster_config"]
-    # db = params_from_base_suite_setup["db"]
     cbl_db_list = params_from_base_suite_setup["cbl_db_list"]
     base_url_list = params_from_base_suite_setup["base_url_list"]
     host_list = params_from_base_suite_setup["host_list"]
@@ -640,11 +639,10 @@ def test_default_conflict_scenario_delete_wins(params_from_base_suite_setup, del
         db_obj_client.create_bulk_docs(num_of_docs, "replication", db=cbl_db_client, channels=channels, attachments_generator=attachment.generate_2_png_10_10)
     else:
         db_obj_client.create_bulk_docs(num_of_docs, "replication", db=cbl_db_client, channels=channels)
-    # sg_client = MobileRestClient()
 
     server_host = host_list[0]
-    peerToPeer_server.server_start(cbl_db_server)
-    log_info("server started .....")
+    serv = peerToPeer_server.server_start(cbl_db_server)
+    log_info("p2p server started .....")
 
     # Now set up client
     replicator = Replication(base_url_client)
@@ -652,27 +650,22 @@ def test_default_conflict_scenario_delete_wins(params_from_base_suite_setup, del
     replicator.wait_until_replicator_idle(repl)
     replicator.stop(repl)
 
-    # Start and stop continuous replication
-    # replicator = Replication(base_url)
-    # sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels)
-    # session, replicator_authenticator, repl = replicator.create_session_configure_replicate(baseUrl=base_url, sg_admin_url=sg_admin_url, sg_db=sg_db, username=username, password=password,
-                                                                                            # channels=channels, sg_client=sg_client, cbl_db=cbl_db, sg_blip_url=sg_blip_url, replication_type="push_pull", continuous=False)
     server_docs = db_obj_server.getBulkDocs(cbl_db_server)
     server_doc_ids = server_docs.keys()
-    # sg_docs = sg_docs["rows"]
 
     if delete_source == 'cbl2':
         with ThreadPoolExecutor(max_workers=4) as tpe:
             cbl1_updateDocs_task = tpe.submit(
                 db_obj_server.update_bulk_docs, database=cbl_db_server,
-                number_updates=number_of_updates, doc_ids=server_doc_ids
+                number_of_updates=number_of_updates, doc_ids=server_doc_ids
             )
             cbl2_delete_task = tpe.submit(
-                db_obj_client.delete_bulk_docs, cbl_db=cbl_db_client
+                db_obj_client.delete_bulk_docs, database=cbl_db_client
             )
             cbl1_updateDocs_task.result()
             cbl2_delete_task.result()
-    else:
+
+    if delete_source == 'cbl1':
         with ThreadPoolExecutor(max_workers=4) as tpe:
             cbl1_delete_task = tpe.submit(
                 db_obj_server.delete_bulk_docs, database=cbl_db_server, doc_ids=server_doc_ids
@@ -683,15 +676,9 @@ def test_default_conflict_scenario_delete_wins(params_from_base_suite_setup, del
             cbl1_delete_task.result()
             cbl2_update_task.result()
 
-    # replicator.configure_and_replicate(source_db=cbl_db_client, target_url=sg_blip_url, continuous=False,
-    #                                    channels=channels)
     repl = peerToPeer_client.client_start(host=server_host, server_db_name=db_name_server, client_database=cbl_db_client, continuous=False, replication_type="push_pull")  # , authenticator=replicator_authenticator)
     replicator.wait_until_replicator_idle(repl)
     replicator.stop(repl)
-
-    # if sg_mode == "di":
-    #     replicator.configure_and_replicate(source_db=cbl_db_client, target_url=sg_blip_url, continuous=False,
-    #                                        channels=channels)
 
     cbl2_doc_ids = db_obj_client.getDocIds(cbl_db_client)
     cbl2_docs = db_obj_client.getDocuments(cbl_db_client, cbl2_doc_ids)
@@ -700,19 +687,11 @@ def test_default_conflict_scenario_delete_wins(params_from_base_suite_setup, del
     repl = peerToPeer_client.client_start(host=server_host, server_db_name=db_name_server, client_database=cbl_db_client, continuous=False, replication_type="push_pull")  # , authenticator=replicator_authenticator)
     replicator.wait_until_replicator_idle(repl)
     replicator.stop(repl)
-    # replicator.configure_and_replicate(source_db=cbl_db_client, target_url=sg_blip_url, continuous=False,
-    #                                    channels=channels)
-    # Di mode has delay for one shot replication, so need another replication only for DI mode
-    # if sg_mode == "di":
-    #     replicator.configure_and_replicate(source_db=cbl_db_client, target_url=sg_blip_url, continuous=False,
-    #                                        channels=channels)
 
-    cbl2_doc_ids = db.getDocIds(cbl_db_client)
-    cbl2_docs = db.getDocuments(cbl_db_client, cbl2_doc_ids)
+    cbl2_doc_ids = db_obj_client.getDocIds(cbl_db_client)
+    cbl2_docs = db_obj_client.getDocuments(cbl_db_client, cbl2_doc_ids)
     assert len(cbl2_docs) == 0, "did not delete docs after delete operation"
     server_docs = db_obj_server.getBulkDocs(cbl_db_server)
-    # sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db)
-    # sg_docs = sg_docs["rows"]
     assert len(server_docs) == 0, "did not delete docs in sg after delete operation in CBL"
 
     # create docs with deleted docs id and verify replication happens without any issues.
@@ -721,18 +700,17 @@ def test_default_conflict_scenario_delete_wins(params_from_base_suite_setup, del
     else:
         db_obj_client.create_bulk_docs(num_of_docs, "replication", db=cbl_db_client, channels=channels)
 
-    # replicator.configure_and_replicate(source_db=cbl_db_client, target_url=sg_blip_url, continuous=False,
-    #                                    channels=channels)
     repl = peerToPeer_client.client_start(host=server_host, server_db_name=db_name_server, client_database=cbl_db_client, continuous=False, replication_type="push_pull")  # , authenticator=replicator_authenticator)
     replicator.wait_until_replicator_idle(repl)
     replicator.stop(repl)
 
-    cbl2_doc_ids = db.getDocIds(cbl_db_client)
-    cbl2_docs = db.getDocuments(cbl_db_client, cbl2_doc_ids)
+    cbl2_doc_ids = db_obj_client.getDocIds(cbl_db_client)
+    cbl2_docs = db_obj_client.getDocuments(cbl_db_client, cbl2_doc_ids)
+    # This assert is also commented in the test_replication.py SG <-> CBL
     # assert len(cbl_docs) == le "did not delete docs after delete operation"
     server_docs = db_obj_server.getBulkDocs(cbl_db_server)
-    # sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db)
-    # sg_docs = sg_docs["rows"]
+    peerToPeer_server.server_stop(serv)
+    log_info("p2p server stopped .....")
     assert len(cbl2_docs) == num_of_docs
     assert len(server_docs) == len(cbl2_docs), "new doc created with same doc id as deleted docs are not created and replicated"
 
@@ -812,13 +790,13 @@ def test_default_conflict_scenario_highRevGeneration_wins(params_from_base_suite
     # sg_docs = sg_docs["rows"]
 
     if highrev_source == 'cbl2':
-        db_obj_server.update_bulk_docs(database=cbl_db_server, number_updates=1, doc_ids=server_doc_ids)
+        db_obj_server.update_bulk_docs(database=cbl_db_server, number_of_updates=1, doc_ids=server_doc_ids)
 
         # sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs, number_updates=1)
         db_obj_client.update_bulk_docs(cbl_db_client, number_of_updates=2)
 
     if highrev_source == 'cbl1':
-        db_obj_server.update_bulk_docs(database=cbl_db_server, number_updates=2, doc_ids=server_doc_ids)
+        db_obj_server.update_bulk_docs(database=cbl_db_server, number_of_updates=2, doc_ids=server_doc_ids)
         # sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs, number_updates=2)
         db_obj_client.update_bulk_docs(cbl_db_client)
 
@@ -848,7 +826,7 @@ def test_default_conflict_scenario_highRevGeneration_wins(params_from_base_suite
         for i in xrange(len(server_docs)):
             assert server_docs[i]["updates"] == 2, "sg with high rev id is not updated"
 
-    db_obj_server.update_bulk_docs(database=cbl_db_server, number_updates=3, doc_ids=server_doc_ids)
+    db_obj_server.update_bulk_docs(database=cbl_db_server, number_of_updates=3, doc_ids=server_doc_ids)
     # sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs, number_updates=3, auth=session)
     # replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator, target_url=sg_blip_url, continuous=False,
     #                                    channels=channels)
