@@ -740,13 +740,11 @@ def test_default_conflict_scenario_highRevGeneration_wins(params_from_base_suite
     """
     sg_config = params_from_base_suite_setup["sg_config"]
     cluster_config = params_from_base_suite_setup["cluster_config"]
-    base_url = params_from_base_suite_setup["base_url"]
     cbl_db_list = params_from_base_suite_setup["cbl_db_list"]
     base_url_list = params_from_base_suite_setup["base_url_list"]
     host_list = params_from_base_suite_setup["host_list"]
     db_obj_list = params_from_base_suite_setup["db_obj_list"]
     db_name_list = params_from_base_suite_setup["db_name_list"]
-    db = params_from_base_suite_setup["db"]
     channels = ["replication-channel"]
     num_of_docs = 10
 
@@ -770,96 +768,71 @@ def test_default_conflict_scenario_highRevGeneration_wins(params_from_base_suite
         db_obj_client.create_bulk_docs(num_of_docs, "replication", db=cbl_db_client, channels=channels, attachments_generator=attachment.generate_2_png_10_10)
     else:
         db_obj_client.create_bulk_docs(num_of_docs, "replication", db=cbl_db_client, channels=channels)
-    # sg_client = MobileRestClient()
 
     server_host = host_list[0]
-    peerToPeer_server.server_start(cbl_db_server)
+    serv = peerToPeer_server.server_start(cbl_db_server)
     log_info("server started .....")
 
     # Start and stop continuous replication
-    replicator = Replication(base_url)
+    replicator = Replication(base_url_client)
     repl = peerToPeer_client.client_start(host=server_host, server_db_name=db_name_server, client_database=cbl_db_client, continuous=False, replication_type="push_pull")  # , authenticator=replicator_authenticator)
     replicator.wait_until_replicator_idle(repl)
     replicator.stop(repl)
-    # sg_client.create_user(sg_admin_url, sg_db, name="autotest", password="password", channels=channels)
-    # session, replicator_authenticator, repl = replicator.create_session_configure_replicate(
-    #     baseUrl=base_url, sg_admin_url=sg_admin_url, sg_db=sg_db, channels=channels, sg_client=sg_client, cbl_db=cbl_db, sg_blip_url=sg_blip_url, username="autotest", password="password", replication_type="push_pull", continuous=False)
+
     server_docs = db_obj_server.getBulkDocs(cbl_db_server)
     server_doc_ids = server_docs.keys()
-    # sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)
-    # sg_docs = sg_docs["rows"]
 
     if highrev_source == 'cbl2':
         db_obj_server.update_bulk_docs(database=cbl_db_server, number_of_updates=1, doc_ids=server_doc_ids)
 
-        # sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs, number_updates=1)
         db_obj_client.update_bulk_docs(cbl_db_client, number_of_updates=2)
 
     if highrev_source == 'cbl1':
         db_obj_server.update_bulk_docs(database=cbl_db_server, number_of_updates=2, doc_ids=server_doc_ids)
-        # sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs, number_updates=2)
         db_obj_client.update_bulk_docs(cbl_db_client)
 
-    # replicator.configure_and_replicate(source_db=cbl_db, target_url=sg_blip_url, continuous=False,
-    #                                    channels=channels)
     repl = peerToPeer_client.client_start(host=server_host, server_db_name=db_name_server, client_database=cbl_db_client, continuous=False, replication_type="push_pull")  # , authenticator=replicator_authenticator)
     replicator.wait_until_replicator_idle(repl)
     replicator.stop(repl)
 
-    # if sg_mode == "di":
-    #     replicator.configure_and_replicate(source_db=cbl_db, target_url=sg_blip_url, continuous=False,
-    #                                        channels=channels)
     cbl2_doc_ids = db_obj_client.getDocIds(cbl_db_client)
     cbl2_docs = db_obj_client.getDocuments(cbl_db_client, cbl2_doc_ids)
 
     server_docs = db_obj_server.getBulkDocs(cbl_db_server)
-    # sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, include_docs=True)
-    # sg_docs = sg_docs["rows"]
-    # sg_docs_values = [doc['doc'] for doc in sg_docs]
 
     if highrev_source == 'cbl2':
         for doc in cbl2_docs:
-            assert cbl2_docs[doc]["updates-cbl"] == 2, "cbl with high rev id is not updated "
+            assert cbl2_docs[doc]["updates-cbl"] == 2, "cbl2 with high rev id is not updated "
+
     if highrev_source == 'cbl1':
         for doc in cbl2_docs:
-            assert cbl2_docs[doc]["updates"] == 2, "cbl with high rev id is not updated "
-        for i in xrange(len(server_docs)):
-            assert server_docs[i]["updates"] == 2, "sg with high rev id is not updated"
+            assert cbl2_docs[doc]["updates-cbl"] == 2, "cbl2 with high rev id is not updated "
+        for sdoc in server_docs:
+            assert server_docs[sdoc]["updates-cbl"] == 2, "cbl1 with high rev id is not updated"
 
     db_obj_server.update_bulk_docs(database=cbl_db_server, number_of_updates=3, doc_ids=server_doc_ids)
-    # sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs, number_updates=3, auth=session)
-    # replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator, target_url=sg_blip_url, continuous=False,
-    #                                    channels=channels)
     repl = peerToPeer_client.client_start(host=server_host, server_db_name=db_name_server, client_database=cbl_db_client, continuous=False, replication_type="push_pull")  # , authenticator=replicator_authenticator)
     replicator.wait_until_replicator_idle(repl)
     replicator.stop(repl)
 
-    # Di mode has delay for one shot replication, so need another replication only for DI mode
-    repl = None
-    # if sg_mode == "di":
-    #     repl = replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator, target_url=sg_blip_url, continuous=True,
-    #                                               channels=channels)
-    cbl2_doc_ids = db.getDocIds(cbl_db_client)
-    cbl2_docs = db.getDocuments(cbl_db_client, cbl2_doc_ids)
+    cbl2_doc_ids = db_obj_client.getDocIds(cbl_db_client)
+    cbl2_docs = db_obj_client.getDocuments(cbl_db_client, cbl2_doc_ids)
     for doc in cbl2_docs:
-        if highrev_source == 'cbl2':
-            verify_updates = 4
-        if highrev_source == 'cbl1':
-            verify_updates = 5
+        verify_updates = 5
         count = 0
-        while count < 30 and cbl2_docs[doc]["updates"] != verify_updates:
+        while count < 30 and cbl2_docs[doc]["updates-cbl"] != verify_updates:
             time.sleep(1)
-            cbl2_docs = db.getDocuments(cbl_db_client, cbl2_doc_ids)
+            cbl2_docs = db_obj_client.getDocuments(cbl_db_client, cbl2_doc_ids)
             count += 1
-        assert cbl2_docs[doc]["updates"] == verify_updates, "cbl with high rev id is not updated "
+
+        assert cbl2_docs[doc]["updates-cbl"] == verify_updates, "cbl with high rev id is not updated "
     server_docs = db_obj_server.getBulkDocs(cbl_db_server)
-    # sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session, include_docs=True)
-    # sg_docs = sg_docs["rows"]
-    # sg_docs_values = [doc['doc'] for doc in sg_docs]
-    for i in xrange(len(server_docs)):
-        assert server_docs[i]["updates"] == verify_updates, "sg with high rev id is not updated"
-    # if sg_mode == "di":
-    #     replicator.stop(repl)
+
+    for sdoc in server_docs:
+        assert server_docs[sdoc]["updates-cbl"] == verify_updates, "sg with high rev id is not updated"
+
+    peerToPeer_server.server_stop(serv)
+    log_info("p2p server stopped .....")
 
 
 def updata_bulk_docs_custom(db_obj, database, number_of_updates=1, param="none", doc_ids=[]):
