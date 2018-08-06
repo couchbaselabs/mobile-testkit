@@ -124,6 +124,7 @@ def pytest_addoption(parser):
                      help="Number of replicas for the indexer node - SG 2.1 and above only",
                      default=0)
 
+
 # This will get called once before the first test that
 # runs with this as input parameters in this file
 # This setup will be called once for all tests in the
@@ -528,6 +529,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     if create_db_per_test:
         log_info("Stopping the test server per test")
         testserver.stop()
+
 
 @pytest.fixture(scope="class")
 def class_init(request, params_from_base_suite_setup):
