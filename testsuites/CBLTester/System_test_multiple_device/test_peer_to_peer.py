@@ -19,13 +19,14 @@ from utilities.cluster_config_utils import persist_cluster_config_environment_pr
 
 @pytest.mark.sanity
 @pytest.mark.listener
-@pytest.mark.parametrize("num_of_docs, continuous, replicator_type", [
-    (10, True, "push_pull"),
-    (10, False, "push_pull"),
-    (100, True, "push"),
-    (100, False, "push"),
+@pytest.mark.parametrize("num_of_docs, continuous, replicator_type, attachments, endPointType", [
+    # (5000, True, "push_pull", False, "MessageEndPoint"),
+    (10, False, "push_pull", False, "URLEndPoint"),
+    (1000, True, "push_pull", True, "URLEndPoint"),
+    (100, True, "push", False, "MessageEndPoint"),
+    (100, False, "push", False, "URLEndPoint"),
 ])
-def test_peer_to_peer_1to1_valid_values(params_from_base_suite_setup, num_of_docs, continuous, replicator_type):
+def test_peer_to_peer_1to1_valid_values(params_from_base_test_setup, server_setup, num_of_docs, continuous, replicator_type, attachments, endPointType):
     """
         @summary:
         1. Create docs on client.
@@ -34,53 +35,48 @@ def test_peer_to_peer_1to1_valid_values(params_from_base_suite_setup, num_of_doc
         4. Verify replication is completed.
         5. Verify all docs got replicated on server
     """
-    sg_db = "db"
-    sg_admin_url = params_from_base_suite_setup["sg_admin_url"]
-    cluster_config = params_from_base_suite_setup["cluster_config"]
-    num_of_docs = 10
-    base_url_list = params_from_base_suite_setup["base_url_list"]
-    host_list = params_from_base_suite_setup["host_list"]
-    cbl_db_list = params_from_base_suite_setup["cbl_db_list"]
-    db_obj_list = params_from_base_suite_setup["db_obj_list"]
-    db_name_list = params_from_base_suite_setup["db_name_list"]
-    sg_config = params_from_base_suite_setup["sg_config"]
-    username = "autotest"
-    password = "password"
-    channel = ["peerToPeer"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    host_list = params_from_base_test_setup["host_list"]
+    db_obj_list = params_from_base_test_setup["db_obj_list"]
+    db_name_list = params_from_base_test_setup["db_name_list"]
+    sg_config = params_from_base_test_setup["sg_config"]
+    base_url_list = server_setup["base_url_list"]
+    cbl_db_server = server_setup["cbl_db_server"]
+    cbl_db_list = server_setup["cbl_db_list"]
+    channels = ["peerToPeer"]
 
     # Reset cluster to ensure no data in system
     cluster = Cluster(config=cluster_config)
     cluster.reset(sg_config_path=sg_config)
-    
 
     base_url_client = base_url_list[1]
     base_url_server = base_url_list[0]
     replicator = Replication(base_url_client)
-    
 
     peerToPeer_client = PeerToPeer(base_url_client)
-    peerToPeer_server = PeerToPeer(base_url_server)
-    cbl_db_server = cbl_db_list[0]
     db_obj_server = db_obj_list[0]
     cbl_db_client = cbl_db_list[1]
     db_obj_client = db_obj_list[1]
     db_name_server = db_name_list[0]
 
     server_host = host_list[0]
-    db_obj_client.create_bulk_docs(num_of_docs, "cbl-peerToPeer", db=cbl_db_client, channels=channel)
-    replicatorTcpListener = peerToPeer_server.server_start(cbl_db_server)
-    log_info("server starting .....")
+    if attachments:
+        db_obj_client.create_bulk_docs(num_of_docs, "replication", db=cbl_db_client, channels=channels, attachments_generator=attachment.generate_png_100_100)
+    else:
+        db_obj_client.create_bulk_docs(num_of_docs, "replication", db=cbl_db_client, channels=channels)
 
     # Now set up client
-    repl = peerToPeer_client.client_start(host=server_host, server_db_name=db_name_server, client_database=cbl_db_client, continuous=continuous, replication_type=replicator_type)
+    repl = peerToPeer_client.client_start(host=server_host, server_db_name=db_name_server, client_database=cbl_db_client, continuous=continuous, replication_type=replicator_type, endPointType=endPointType)
+    print "replication is going on ....."
     replicator.wait_until_replicator_idle(repl)
+    # time.sleep(60)
+    print "replication is done  ....."
     total = replicator.getTotal(repl)
     completed = replicator.getCompleted(repl)
-    assert total == completed, "replication from client to server did not completed " + total + " not equal to " + completed
+    assert total == completed, "replication from client to server did not completed " + str(total) + " not equal to " + str(completed)
     server_docs_count = db_obj_server.getCount(cbl_db_server)
     assert server_docs_count == num_of_docs, "Number of docs is not equivalent to number of docs in server "
     replicator.stop(repl)
-    peerToPeer_server.server_stop(replicatorTcpListener)
 
 
 @pytest.mark.sanity
@@ -91,7 +87,7 @@ def test_peer_to_peer_1to1_valid_values(params_from_base_suite_setup, num_of_doc
     (100, True),
     (100, False),
 ])
-def test_peer_to_peer2_1to1_pull_replication(params_from_base_suite_setup, num_of_docs, continuous):
+def test_peer_to_peer2_1to1_pull_replication(params_from_base_test_setup, num_of_docs, continuous):
     """
         @summary:
         1. Create docs on server.
@@ -101,15 +97,15 @@ def test_peer_to_peer2_1to1_pull_replication(params_from_base_suite_setup, num_o
         5. Verify all docs got replicated on client.
     """
     sg_db = "db"
-    sg_admin_url = params_from_base_suite_setup["sg_admin_url"]
-    cluster_config = params_from_base_suite_setup["cluster_config"]
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
     num_of_docs = 10
-    base_url_list = params_from_base_suite_setup["base_url_list"]
-    host_list = params_from_base_suite_setup["host_list"]
-    cbl_db_list = params_from_base_suite_setup["cbl_db_list"]
-    db_obj_list = params_from_base_suite_setup["db_obj_list"]
-    db_name_list = params_from_base_suite_setup["db_name_list"]
-    sg_config = params_from_base_suite_setup["sg_config"]
+    base_url_list = params_from_base_test_setup["base_url_list"]
+    host_list = params_from_base_test_setup["host_list"]
+    cbl_db_list = params_from_base_test_setup["cbl_db_list"]
+    db_obj_list = params_from_base_test_setup["db_obj_list"]
+    db_name_list = params_from_base_test_setup["db_name_list"]
+    sg_config = params_from_base_test_setup["sg_config"]
     username = "autotest"
     password = "password"
     channel = ["peerToPeer"]
@@ -157,7 +153,7 @@ def test_peer_to_peer2_1to1_pull_replication(params_from_base_suite_setup, num_o
     (100, True, "push"),
     (100, False, "pull"),
 ])
-def test_peer_to_peer_concurrent_replication(params_from_base_suite_setup, num_of_docs, continuous, replicator_type):
+def test_peer_to_peer_concurrent_replication(params_from_base_test_setup, num_of_docs, continuous, replicator_type):
     """
         @summary:
         1. Create docs on server.
@@ -167,14 +163,14 @@ def test_peer_to_peer_concurrent_replication(params_from_base_suite_setup, num_o
         5. Verify all docs got replicated on client.
     """
 
-    cluster_config = params_from_base_suite_setup["cluster_config"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
     num_of_docs = 10
-    base_url_list = params_from_base_suite_setup["base_url_list"]
-    host_list = params_from_base_suite_setup["host_list"]
-    cbl_db_list = params_from_base_suite_setup["cbl_db_list"]
-    db_obj_list = params_from_base_suite_setup["db_obj_list"]
-    db_name_list = params_from_base_suite_setup["db_name_list"]
-    sg_config = params_from_base_suite_setup["sg_config"]
+    base_url_list = params_from_base_test_setup["base_url_list"]
+    host_list = params_from_base_test_setup["host_list"]
+    cbl_db_list = params_from_base_test_setup["cbl_db_list"]
+    db_obj_list = params_from_base_test_setup["db_obj_list"]
+    db_name_list = params_from_base_test_setup["db_name_list"]
+    sg_config = params_from_base_test_setup["sg_config"]
     channel = ["peerToPeer"]
 
     # Reset cluster to ensure no data in system
@@ -246,7 +242,7 @@ def test_peer_to_peer_concurrent_replication(params_from_base_suite_setup, num_o
     (100, True, "push"),
     (100, False, "push"),
 ])
-def test_peer_to_peer_oneClient_toManyServers(params_from_base_suite_setup, num_of_docs, continuous, replicator_type):
+def test_peer_to_peer_oneClient_toManyServers(params_from_base_test_setup, num_of_docs, continuous, replicator_type):
     """
         @summary:
         1. Create docs on client.
@@ -255,14 +251,14 @@ def test_peer_to_peer_oneClient_toManyServers(params_from_base_suite_setup, num_
         4. Verify replication is completed on both servers
         5. Verify all docs got replicated on both servers
     """
-    cluster_config = params_from_base_suite_setup["cluster_config"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
     num_of_docs = 10
-    base_url_list = params_from_base_suite_setup["base_url_list"]
-    host_list = params_from_base_suite_setup["host_list"]
-    cbl_db_list = params_from_base_suite_setup["cbl_db_list"]
-    db_obj_list = params_from_base_suite_setup["db_obj_list"]
-    db_name_list = params_from_base_suite_setup["db_name_list"]
-    sg_config = params_from_base_suite_setup["sg_config"]
+    base_url_list = params_from_base_test_setup["base_url_list"]
+    host_list = params_from_base_test_setup["host_list"]
+    cbl_db_list = params_from_base_test_setup["cbl_db_list"]
+    db_obj_list = params_from_base_test_setup["db_obj_list"]
+    db_name_list = params_from_base_test_setup["db_name_list"]
+    sg_config = params_from_base_test_setup["sg_config"]
     channel = ["peerToPeer"]
 
     # Reset cluster to ensure no data in system
@@ -320,7 +316,7 @@ def test_peer_to_peer_oneClient_toManyServers(params_from_base_suite_setup, num_
     (10, True, "pull"),
     (100, False, "pull"),
 ])
-def test_peer_to_peer_oneServer_toManyClients(params_from_base_suite_setup, num_of_docs, continuous, replicator_type):
+def test_peer_to_peer_oneServer_toManyClients(params_from_base_test_setup, num_of_docs, continuous, replicator_type):
     """
         @summary:
         1. Create docs on server.
@@ -328,14 +324,14 @@ def test_peer_to_peer_oneServer_toManyClients(params_from_base_suite_setup, num_
         3. Start replication from clients.
         4. Verify docs got replicated on clients from server
     """
-    cluster_config = params_from_base_suite_setup["cluster_config"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
     num_of_docs = 10
-    base_url_list = params_from_base_suite_setup["base_url_list"]
-    host_list = params_from_base_suite_setup["host_list"]
-    cbl_db_list = params_from_base_suite_setup["cbl_db_list"]
-    db_obj_list = params_from_base_suite_setup["db_obj_list"]
-    db_name_list = params_from_base_suite_setup["db_name_list"]
-    sg_config = params_from_base_suite_setup["sg_config"]
+    base_url_list = params_from_base_test_setup["base_url_list"]
+    host_list = params_from_base_test_setup["host_list"]
+    cbl_db_list = params_from_base_test_setup["cbl_db_list"]
+    db_obj_list = params_from_base_test_setup["db_obj_list"]
+    db_name_list = params_from_base_test_setup["db_name_list"]
+    sg_config = params_from_base_test_setup["sg_config"]
     channel = ["peerToPeer"]
 
     # Reset cluster to ensure no data in system
@@ -384,32 +380,31 @@ def test_peer_to_peer_oneServer_toManyClients(params_from_base_suite_setup, num_
 
 @pytest.mark.sanity
 @pytest.mark.listener
-@pytest.mark.parametrize("num_of_docs, replicator_type", [
-    (10, "push_pull"),
-    (100, "push")
+@pytest.mark.parametrize("num_of_docs, replicator_type, endPointType", [
+    (10, "push_pull", "MessageEndPoint"),
+    (100, "push", "MessageEndPoint"),
+    (10, "push_pull", "URLEndPoint"),
+    (100, "push", "URLEndPoint")
 ])
-def test_peer_to_peer_filter_docs_ids(params_from_base_suite_setup, num_of_docs, replicator_type):
+def test_peer_to_peer_filter_docs_ids(params_from_base_test_setup, server_setup, num_of_docs, replicator_type, endPointType):
     """
         @summary: 
         1. Create docs on client.
         2. Start the server.
-        3. Start replication from client.
+        3. Start replication from client with doc ids list with one shot and push_pull/push
         4. Verify replication is completed.
-        5. Verify all docs got replicated on server
+        5. Verify docs which are filtered got replicated on server
     """
-    sg_db = "db"
-    sg_admin_url = params_from_base_suite_setup["sg_admin_url"]
-    cluster_config = params_from_base_suite_setup["cluster_config"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
     num_of_docs = 10
-    base_url_list = params_from_base_suite_setup["base_url_list"]
-    host_list = params_from_base_suite_setup["host_list"]
-    cbl_db_list = params_from_base_suite_setup["cbl_db_list"]
-    db_obj_list = params_from_base_suite_setup["db_obj_list"]
-    db_name_list = params_from_base_suite_setup["db_name_list"]
-    sg_config = params_from_base_suite_setup["sg_config"]
-    mode = params_from_base_suite_setup["mode"]
-    username = "autotest"
-    password = "password"
+    host_list = params_from_base_test_setup["host_list"]
+    db_obj_list = params_from_base_test_setup["db_obj_list"]
+    db_name_list = params_from_base_test_setup["db_name_list"]
+    sg_config = params_from_base_test_setup["sg_config"]
+    mode = params_from_base_test_setup["mode"]
+    base_url_list = server_setup["base_url_list"]
+    cbl_db_server = server_setup["cbl_db_server"]
+    cbl_db_list = server_setup["cbl_db_list"]
     channel = ["peerToPeer"]
 
     if mode == "di":
@@ -426,16 +421,18 @@ def test_peer_to_peer_filter_docs_ids(params_from_base_suite_setup, num_of_docs,
 
     peerToPeer_client = PeerToPeer(base_url_client)
     peerToPeer_server = PeerToPeer(base_url_server)
-    cbl_db_server = cbl_db_list[0]
+    # cbl_db_server = cbl_db_list[0]
     db_obj_server = db_obj_list[0]
     cbl_db_client = cbl_db_list[1]
     db_obj_client = db_obj_list[1]
     db_name_server = db_name_list[0]
+    db_name_client = db_name_list[1]
 
     server_host = host_list[0]
+    print "client db name is ", db_name_client
     db_obj_client.create_bulk_docs(num_of_docs, "cbl-peerToPeer", db=cbl_db_client, channels=channel)
-    replicatorTcpListener = peerToPeer_server.server_start(cbl_db_server)
-    log_info("server starting .....")
+    # replicatorTcpListener = peerToPeer_server.server_start(cbl_db_server)
+    # log_info("server starting .....")
 
     # Now set up client
     num_of_filtered_ids = 5
@@ -452,16 +449,15 @@ def test_peer_to_peer_filter_docs_ids(params_from_base_suite_setup, num_of_docs,
     for id in list_of_filtered_ids:
         assert id in server_cbl_doc_ids
     replicator.stop(repl)
-    peerToPeer_server.server_stop(replicatorTcpListener)
 
 
 @pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.parametrize("num_of_docs, replicator_type", [
     (10, "push_pull"),
-    # (100, "push")
+    (100, "push")
 ])
-def test_peer_to_peer_delete_docs(params_from_base_suite_setup, num_of_docs, replicator_type):
+def test_peer_to_peer_delete_docs(params_from_base_test_setup, num_of_docs, replicator_type):
     """
         @summary:
         1. Create docs on client
@@ -470,14 +466,14 @@ def test_peer_to_peer_delete_docs(params_from_base_suite_setup, num_of_docs, rep
         4. Now delete doc on client
         5. verify docs got deleted on server
     """
-    cluster_config = params_from_base_suite_setup["cluster_config"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
     num_of_docs = 10
-    base_url_list = params_from_base_suite_setup["base_url_list"]
-    host_list = params_from_base_suite_setup["host_list"]
-    cbl_db_list = params_from_base_suite_setup["cbl_db_list"]
-    db_obj_list = params_from_base_suite_setup["db_obj_list"]
-    db_name_list = params_from_base_suite_setup["db_name_list"]
-    sg_config = params_from_base_suite_setup["sg_config"]
+    base_url_list = params_from_base_test_setup["base_url_list"]
+    host_list = params_from_base_test_setup["host_list"]
+    cbl_db_list = params_from_base_test_setup["cbl_db_list"]
+    db_obj_list = params_from_base_test_setup["db_obj_list"]
+    db_name_list = params_from_base_test_setup["db_name_list"]
+    sg_config = params_from_base_test_setup["sg_config"]
     channel = ["peerToPeer"]
 
     # Reset cluster to ensure no data in system
@@ -529,13 +525,13 @@ def test_peer_to_peer_delete_docs(params_from_base_suite_setup, num_of_docs, rep
 
 @pytest.mark.sanity
 @pytest.mark.listener
-@pytest.mark.parametrize("num_of_docs, continuous, replicator_type", [
-    (10, True, "push_pull"),
-    # (10, False, "push_pull"),
-    # (100, True, "push"),
-    # (100, False, "push"),
+@pytest.mark.parametrize("num_of_docs, continuous, replicator_type, endPointType", [
+    (10, True, "push_pull", "MessageEndPoint"),
+    (10, False, "push_pull", "URLEndPoint"),
+    (100, True, "push", "MessageEndPoint"),
+    (100, False, "push", "URLEndPoint"),
 ])
-def test_peer_to_peer_with_server_down(params_from_base_suite_setup, num_of_docs, continuous, replicator_type):
+def test_peer_to_peer_with_server_down(params_from_base_test_setup, server_setup, num_of_docs, continuous, replicator_type, endPointType):
     """
         @summary:
         1. Create docs on client
@@ -546,20 +542,24 @@ def test_peer_to_peer_with_server_down(params_from_base_suite_setup, num_of_docs
         6. restart server While replication is happening
         7. verify all docs got replicated on server 
     """
-    cluster_config = params_from_base_suite_setup["cluster_config"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
     num_of_docs = 10
-    base_url_list = params_from_base_suite_setup["base_url_list"]
-    host_list = params_from_base_suite_setup["host_list"]
-    cbl_db_list = params_from_base_suite_setup["cbl_db_list"]
-    db_obj_list = params_from_base_suite_setup["db_obj_list"]
-    db_name_list = params_from_base_suite_setup["db_name_list"]
-    sg_config = params_from_base_suite_setup["sg_config"]
+    # base_url_list = params_from_base_test_setup["base_url_list"]
+    host_list = params_from_base_test_setup["host_list"]
+    # cbl_db_list = params_from_base_test_setup["cbl_db_list"]
+    db_obj_list = params_from_base_test_setup["db_obj_list"]
+    db_name_list = params_from_base_test_setup["db_name_list"]
+    sg_config = params_from_base_test_setup["sg_config"]
+    base_url_list = server_setup["base_url_list"]
+    cbl_db_server = server_setup["cbl_db_server"]
+    cbl_db_list = server_setup["cbl_db_list"]
+    replicatorTcpListener = server_setup["replicatorTcpListener"]
+    peerToPeer_server = server_setup["peerToPeer_server"]
     channel = ["peerToPeer"]
 
     # Reset cluster to ensure no data in system
     cluster = Cluster(config=cluster_config)
     cluster.reset(sg_config_path=sg_config)
-    
 
     base_url_client = base_url_list[1]
     base_url_server = base_url_list[0]
@@ -572,22 +572,324 @@ def test_peer_to_peer_with_server_down(params_from_base_suite_setup, num_of_docs
     cbl_db_client = cbl_db_list[1]
     db_obj_client = db_obj_list[1]
     db_name_server = db_name_list[0]
+    client_param = "client"
 
     server_host = host_list[0]
     db_obj_client.create_bulk_docs(num_of_docs, "cbl-peerToPeer", db=cbl_db_client, channels=channel)
-    replicatorTcpListener = peerToPeer_server.server_start(cbl_db_server)
-    log_info("server starting .....")
+    # replicatorTcpListener = peerToPeer_server.server_start(cbl_db_server)
+    # log_info("server starting .....")
 
-    # Now set up client
-    repl = peerToPeer_client.client_start(host=server_host, server_db_name=db_name_server, client_database=cbl_db_client, continuous=continuous, replication_type=replicator_type)
+    # Bring down server when replication happens
+    with ThreadPoolExecutor(max_workers=4) as tpe:
+        wait_until_replicator_completes = tpe.submit(
+            client_start_replicate,
+            peerToPeer_client, db_obj_client, client_param, server_host,
+            db_name_server, cbl_db_client, continuous, replicator_type, endPointType
+        )
+        restart_server = tpe.submit(
+            restart_passive_peer,
+            peerToPeer_server,
+            replicatorTcpListener,
+            cbl_db_server
+        )
+        repl = wait_until_replicator_completes.result()
+        replicatorTcpListener = restart_server.result()
+    time.sleep(2)
     replicator.wait_until_replicator_idle(repl)
+    replicator.stop(repl)
+    peerToPeer_server.server_stop(replicatorTcpListener)
     total = replicator.getTotal(repl)
     completed = replicator.getCompleted(repl)
-    assert total == completed, "replication from client to server did not completed " + total + " not equal to " + completed
+    assert total == completed, "replication from client to server did not completed  when server restarted " + total + " not equal to " + completed
     server_docs_count = db_obj_server.getCount(cbl_db_server)
     assert server_docs_count == num_of_docs, "Number of docs is not equivalent to number of docs in server "
 
+    
+    cbl_doc_ids = db_obj_client.getDocIds(cbl_db_client)
+    cbl_db_docs = db_obj_client.getDocuments(cbl_db_client, cbl_doc_ids)
+    for doc in cbl_doc_ids:
+        assert cbl_db_docs[doc][client_param] == 1, "latest update did not updated on client"
     replicator.stop(repl)
+
+@pytest.mark.sanity
+@pytest.mark.listener
+@pytest.mark.parametrize("num_of_docs, continuous, replicator_type, endPointType", [
+    (10, True, "push_pull", "URLEndPoint"),
+    (100, True, "push_pull", "MessageEndPoint")
+])
+def test_peer_to_peer_resetCheckPoint(params_from_base_test_setup, server_setup, num_of_docs, continuous, replicator_type, endPointType):
+    """
+        @summary:
+        1. create docs on client
+        2. start the server.
+        3. replicate docs to server
+        4. purge docs on client
+        5. replicate again
+        6. Verify  purged docs on client should not get deleted on server
+        7. stop replicator
+        8. call reset api
+        9. restart the replication
+        10. Verify all purged docs should not exist in client, but should exist in server
+
+    """
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    num_of_docs = 10
+    host_list = params_from_base_test_setup["host_list"]
+    db_obj_list = params_from_base_test_setup["db_obj_list"]
+    db_name_list = params_from_base_test_setup["db_name_list"]
+    sg_config = params_from_base_test_setup["sg_config"]
+    base_url_list = server_setup["base_url_list"]
+    cbl_db_server = server_setup["cbl_db_server"]
+    cbl_db_list = server_setup["cbl_db_list"]
+    channel = ["peerToPeer"]
+
+    # Reset cluster to ensure no data in system
+    cluster = Cluster(config=cluster_config)
+    cluster.reset(sg_config_path=sg_config)
+
+    base_url_client = base_url_list[1]
+    replicator = Replication(base_url_client)
+
+    peerToPeer_client = PeerToPeer(base_url_client)
+    db_obj_server = db_obj_list[0]
+    cbl_db_client = cbl_db_list[1]
+    db_obj_client = db_obj_list[1]
+    db_name_server = db_name_list[0]
+    doc_obj = Document(base_url_client)
+
+    server_host = host_list[0]
+    db_obj_client.create_bulk_docs(num_of_docs, "cbl-peerToPeer", db=cbl_db_client, channels=channel)
+    log_info("server starting .....")
+
+    # Now set up client and replicate docs to server
+    repl = peerToPeer_client.client_start(host=server_host, server_db_name=db_name_server, client_database=cbl_db_client, continuous=continuous, replication_type=replicator_type, endPointType=endPointType)
+    replicator.wait_until_replicator_idle(repl)
+ 
+    # purge docs on client
+    client_cbl_doc_ids = db_obj_client.getDocIds(cbl_db_client)
+    for i in client_cbl_doc_ids:
+        doc = db_obj_client.getDocument(cbl_db_client, doc_id=i)
+        mutable_doc = doc_obj.toMutable(doc)
+        db_obj_client.purge(cbl_db_client, mutable_doc)
+    assert db_obj_client.getCount(cbl_db_client) == 0, "Docs that got purged in client did not get deleted"
+    replicator.wait_until_replicator_idle(repl)
+
+    # Verify  purged docs on client should also get deleted on server
+    assert db_obj_client.getCount(cbl_db_client) == 0, "Docs that got purged in client did not get purged on server"
+    assert db_obj_server.getCount(cbl_db_server) == num_of_docs, "docs got purged in server after purging on client"
+    replicator.stop(repl)
+
+    # call reset api and restart client request and replication
+    replicator.resetCheckPoint(repl)
+    replicator.start(repl)
+    replicator.wait_until_replicator_idle(repl)
+    assert db_obj_client.getCount(cbl_db_client) == num_of_docs, "Docs that got purged in client did not got it back from server after resetcheckpoint api"
+    assert db_obj_server.getCount(cbl_db_server) == num_of_docs, "docs got purged in server after resetcheckpoint"
+    replicator.stop(repl)
+
+@pytest.mark.sanity
+@pytest.mark.listener
+@pytest.mark.parametrize("num_of_docs, continuous, replicator_type, endPointType", [
+    (10, True, "push_pull", "URLEndPoint"),
+    # (100, True, "push_pull", "MessageEndPoint"),
+    (10, True, "push", "URLEndPoint"),
+    # (100, True, "push", "MessageEndPoint")
+])
+def test_peer_to_peer_replication_with_multiple_dbs(params_from_base_test_setup, server_setup, num_of_docs, continuous, replicator_type, endPointType):
+    """
+        @summary:
+        1. Create 3 dbs in client.
+        2. Create 3 dbs in server.
+        3. Create docs in all 3 dbs in client.
+        3. start the server.
+        4. replicate all docs of all 3 dbs of client to all 3 dbs of server
+        5. Verify each db got docs from each db of client.
+
+    """
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    num_of_docs = 10
+    host_list = params_from_base_test_setup["host_list"]
+    db_obj_list = params_from_base_test_setup["db_obj_list"]
+    db_name_list = params_from_base_test_setup["db_name_list"]
+    sg_config = params_from_base_test_setup["sg_config"]
+    base_url_list = server_setup["base_url_list"]
+    cbl_db_server = server_setup["cbl_db_server"]
+    cbl_db_list = server_setup["cbl_db_list"]
+    peerToPeer_server = server_setup["peerToPeer_server"]
+    channel = ["peerToPeer"]
+
+    # Reset cluster to ensure no data in system
+    cluster = Cluster(config=cluster_config)
+    cluster.reset(sg_config_path=sg_config)
+
+    base_url_client = base_url_list[1]
+    replicator = Replication(base_url_client)
+
+    peerToPeer_client = PeerToPeer(base_url_client)
+    db_obj_server = db_obj_list[0]
+    cbl_db_client = cbl_db_list[1]
+    db_obj_client = db_obj_list[1]
+    db_name_server = db_name_list[0]
+
+    # Create 2 more dbs on client and servers
+    cbl_dbs_client = []
+    cbl_dbs_server = []
+    # db_names_client = []
+    db_names_server = []
+    cbl_dbs_client.append(cbl_db_client)
+    cbl_dbs_server.append(cbl_db_server)
+    db_names_server.append(db_name_server)
+    db_config_client = db_obj_client.configure()
+    db_name2_client = "cbl_db2_client{}".format(time.time()*1000)
+    cbl_db2_client = db_obj_client.create(db_name2_client, db_config_client)
+    cbl_dbs_client.append(cbl_db2_client)
+    db_name3_client = "cbl_db3_client{}".format(time.time()*1000)
+    cbl_db3_client = db_obj_client.create(db_name3_client, db_config_client)
+    cbl_dbs_client.append(cbl_db3_client)
+    db_config_server = db_obj_server.configure()
+    db_name2_server = "cbl_db2_server{}".format(time.time()*1000)
+    cbl_db2_server = db_obj_server.create(db_name2_server, db_config_server)
+    db_names_server.append(db_name2_server)
+    cbl_dbs_server.append(cbl_db2_server)
+    db_name3_server = "cbl_db3_server{}".format(time.time()*1000)
+    cbl_db3_server = db_obj_server.create(db_name3_server, db_config_server)
+    db_names_server.append(db_name3_server)
+    cbl_dbs_server.append(cbl_db3_server)
+    ports = [5000, 6000, 7000]
+
+    server_host = host_list[0]
+
+    # Start server for remaining 2 more dbs of server with differrent ports
+    replicatorTcpListener2 = peerToPeer_server.server_start(cbl_db2_server, 6000)
+    replicatorTcpListener3 = peerToPeer_server.server_start(cbl_db3_server, 7000)
+
+    # Create docs in all 3 dbs in client.
+    for i in xrange(3):
+        db_obj_client.create_bulk_docs(num_of_docs, "cbl-peerToPeer{}".format(i), db=cbl_dbs_client[i], channels=channel)
+        print "client num of docs are {} ".format(i), db_obj_client.getCount(cbl_dbs_client[i])
+
+    # replicate all docs of all 3 dbs of client to all 3 dbs of server
+    repls = []
+    for i in xrange(3):
+        repl = peerToPeer_client.client_start(host=server_host, port=ports[i], server_db_name=db_names_server[i], client_database=cbl_dbs_client[i], continuous=continuous, replication_type=replicator_type)
+        repls.append(repl)
+
+    repl = peerToPeer_client.client_start(host=server_host, port=5000, server_db_name=db_name_server, client_database=cbl_dbs_client[0], continuous=continuous, replication_type=replicator_type)
+    repls.append(repl)
+    repl = peerToPeer_client.client_start(host=server_host, port=6000, server_db_name=db_name2_server, client_database=cbl_dbs_client[1], continuous=continuous, replication_type=replicator_type)
+    repls.append(repl)
+    repl = peerToPeer_client.client_start(host=server_host, port=7000, server_db_name=db_name3_server, client_database=cbl_dbs_client[2], continuous=continuous, replication_type=replicator_type)
+    repls.append(repl)
+    for i in xrange(3):
+        replicator.wait_until_replicator_idle(repls[i])
+
+    # Verify each db got docs from each db of client.
+    for i in xrange(3):
+        client_cbl_doc_ids = db_obj_client.getDocIds(cbl_dbs_client[i])
+        server_cbl_doc_ids = db_obj_server.getDocIds(cbl_dbs_server[i])
+        for id in client_cbl_doc_ids:
+            assert id in server_cbl_doc_ids, "client docs did not replicate to server for db {}".format(i)
+    for i in xrange(3):
+        replicator.stop(repls[i])
+    peerToPeer_server.server_stop(replicatorTcpListener2)
+    peerToPeer_server.server_stop(replicatorTcpListener3)
+
+
+@pytest.mark.sanity
+@pytest.mark.listener
+@pytest.mark.parametrize("num_of_docs, continuous, replicator_type, endPointType", [
+    (10, True, "push_pull", "MessageEndPoint"),
+    (10, True, "push_pull", "URLEndPoint"),
+    (100, False, "push", "MessageEndPoint"),
+    (100, False, "push", "URLEndPoint")
+])
+def test_peer_to_peer_replication_with_databaseEncryption(params_from_base_test_setup, server_setup, num_of_docs, continuous, replicator_type, endPointType):
+    """
+        @summary:
+        1. create docs on client which has database encryption.
+        2. start the server
+        3. start replication
+        4. Verify replcation happens successfully with database encryption
+    """
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    num_of_docs = 10
+    host_list = params_from_base_test_setup["host_list"]
+    db_obj_list = params_from_base_test_setup["db_obj_list"]
+    sg_config = params_from_base_test_setup["sg_config"]
+    base_url_list = server_setup["base_url_list"]
+    replicatorTcpListener = server_setup["replicatorTcpListener"]
+    peerToPeer_server = server_setup["peerToPeer_server"]
+    channel = ["peerToPeer"]
+    password = "encryption"
+
+    # Reset cluster to ensure no data in system
+    cluster = Cluster(config=cluster_config)
+    cluster.reset(sg_config_path=sg_config)
+
+    base_url_client = base_url_list[1]
+    replicator = Replication(base_url_client)
+
+    peerToPeer_client = PeerToPeer(base_url_client)
+    db_obj_server = db_obj_list[0]
+    db_obj_client = db_obj_list[1]
+
+    # set up database encryption on both server and client
+    db_config = db_obj_client.configure()
+    cbl_db_name1 = "cbl_db_client" + str(time.time())
+    cbl_db = db_obj_client.create(cbl_db_name1, db_config)
+    db_obj_client.changeEncryptionKey(cbl_db, password)
+    db_obj_client.close(cbl_db)
+    db_config1 = db_obj_client.configure(password=password)
+    cbl_db_client2 = db_obj_client.create(cbl_db_name1, db_config1)
+
+    db_config_server = db_obj_server.configure()
+    cbl_db_name2 = "cbl_db_server" + str(time.time())
+    cbl_db2 = db_obj_server.create(cbl_db_name2, db_config_server)
+    db_obj_server.changeEncryptionKey(cbl_db2, password)
+    db_obj_server.close(cbl_db2)
+    db_config2 = db_obj_server.configure(password=password)
+    cbl_db_client2_server = db_obj_server.create(cbl_db_name2, db_config2)
+    
+
+    # ReStart server with new server encrypted server database
+    peerToPeer_server.server_stop(replicatorTcpListener)
+    replicatorTcpListener1 = peerToPeer_server.server_start(cbl_db_client2_server, port=5001)
+    server_host = host_list[0]
+    db_obj_client.create_bulk_docs(num_of_docs, "cbl-peerToPeer", db=cbl_db_client2, channels=channel)
+
+    print "numb of docs of client is ", db_obj_client.getCount(cbl_db_client2)
+
+    # Now set up client and replicate docs to server
+    repl = peerToPeer_client.client_start(host=server_host, port=5001, server_db_name=cbl_db_name2, client_database=cbl_db_client2, continuous=continuous, replication_type=replicator_type, endPointType=endPointType)
+    replicator.wait_until_replicator_idle(repl)
+
+    # Verify replication happened on server
+    total = replicator.getTotal(repl)
+    completed = replicator.getCompleted(repl)
+    assert total == completed, "replication from client to server did not completed " + total + " not equal to " + completed
+    server_docs_count = db_obj_server.getCount(cbl_db_client2_server)
+    assert server_docs_count == num_of_docs, "Number of docs is not equivalent to number of docs in server "
+    replicator.stop(repl)
+    peerToPeer_server.server_stop(replicatorTcpListener1)
+
+
+@pytest.fixture(scope="function")
+def server_setup(params_from_base_test_setup):
+    base_url_list = params_from_base_test_setup["base_url_list"]
+    cbl_db_list = params_from_base_test_setup["cbl_db_list"]
+    base_url_server = base_url_list[0]
+    peerToPeer_server = PeerToPeer(base_url_server)
+    cbl_db_server = cbl_db_list[0]
+    replicatorTcpListener = peerToPeer_server.server_start(cbl_db_server)
+    log_info("server starting .....")
+    yield{
+        "replicatorTcpListener": replicatorTcpListener,
+        "peerToPeer_server": peerToPeer_server,
+        "base_url_list": base_url_list,
+        "base_url_server": base_url_server,
+        "cbl_db_server": cbl_db_server,
+        "cbl_db_list": cbl_db_list
+    }
     peerToPeer_server.server_stop(replicatorTcpListener)
 
 
@@ -600,7 +902,7 @@ def test_peer_to_peer_with_server_down(params_from_base_suite_setup, num_of_docs
     ('cbl1', False, 5),
     ('cbl2', False, 5),
 ])
-def test_default_conflict_scenario_delete_wins(params_from_base_suite_setup, delete_source, attachments, number_of_updates):
+def test_default_conflict_scenario_delete_wins(params_from_base_suite_setup, server_setup, delete_source, attachments, number_of_updates):
     """
         @summary:
         1. Create docs in cbl 1.
@@ -833,6 +1135,18 @@ def test_default_conflict_scenario_highRevGeneration_wins(params_from_base_suite
 
     peerToPeer_server.server_stop(serv)
     log_info("p2p server stopped .....")
+def client_start_replicate(peerToPeer_client, db_obj_client, param, server_host, db_name_server, cbl_db_client,
+                           continuous, replicator_type, endPointType):
+    repl = peerToPeer_client.client_start(host=server_host, server_db_name=db_name_server, client_database=cbl_db_client,
+                                          continuous=continuous, replication_type=replicator_type, endPointType=endPointType)
+    updata_bulk_docs_custom(db_obj_client, database=cbl_db_client, number_of_updates=1, param=param)
+    return repl
+
+
+def restart_passive_peer(peerToPeer_server, replicatorTcpListener, cbl_db_server):
+    peerToPeer_server.server_stop(replicatorTcpListener)
+    replicatorTcpListener = peerToPeer_server.server_start(cbl_db_server)
+    return replicatorTcpListener
 
 
 def updata_bulk_docs_custom(db_obj, database, number_of_updates=1, param="none", doc_ids=[]):

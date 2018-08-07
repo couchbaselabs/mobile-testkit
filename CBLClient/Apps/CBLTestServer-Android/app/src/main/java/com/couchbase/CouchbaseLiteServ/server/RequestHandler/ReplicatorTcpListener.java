@@ -1,3 +1,4 @@
+package com.couchbase.CouchbaseLiteServ.server.RequestHandler;
 //
 // ReplicatorTcpListener.java
 //
@@ -15,8 +16,6 @@
 // limitations under the License.
 //
 
-package com.couchbase.CouchbaseLiteServ.server.RequestHandler;
-
 import com.couchbase.lite.Database;
 import com.couchbase.lite.MessageEndpointListener;
 import com.couchbase.lite.MessageEndpointListenerConfiguration;
@@ -32,18 +31,20 @@ import java.net.SocketException;
 import java.util.Collections;
 import java.util.List;
 
+// WebSocket based listener
 public final class ReplicatorTcpListener {
-  private static final int PORT = 5000;
+  private int PORT = 5000;
   private ServerSocket server;
   private MessageEndpointListener endpointListener;
   private Thread loopThread;
   private Database database;
 
-  public ReplicatorTcpListener(Database database) {
+  public ReplicatorTcpListener(Database database, int port) {
     this.database = database;
     MessageEndpointListenerConfiguration config =
         new MessageEndpointListenerConfiguration(database, ProtocolType.BYTE_STREAM);
     this.endpointListener = new MessageEndpointListener(config);
+    this.PORT = port;
   }
 
   public synchronized void start() throws IOException {
@@ -93,13 +94,17 @@ public final class ReplicatorTcpListener {
 
   private void acceptLoop() {
     while(true) {
+      if (server == null)
+        break;
+
       Socket socket = null;
       try {
         socket = server.accept();
-        ReplicatorTcpServerConnection connection = new ReplicatorTcpServerConnection(socket);
+        ReplicatorTcpServerConnection connection =
+            new ReplicatorTcpServerConnection(socket);
         endpointListener.accept(connection);
       } catch (IOException e) {
-        break;
+        e.printStackTrace();
       }
     }
   }
