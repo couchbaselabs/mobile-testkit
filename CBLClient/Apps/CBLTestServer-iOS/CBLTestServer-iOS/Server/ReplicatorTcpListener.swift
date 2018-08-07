@@ -64,12 +64,13 @@ public final class ReplicatorTcpListener: NSObject {
     /// Initializes an instances.
     ///
     /// - Parameter databases: The databases to be served for replication.
-    public init(databases: [Database]) {
+    public init(databases: [Database], port: UInt32) {
         for db in databases {
             let config = MessageEndpointListenerConfiguration(
                 database: db, protocolType: .byteStream)
             listeners[db.name] = MessageEndpointListener(config: config)
         }
+        self.port = port
     }
     
     /// The URL at which the listener can be reached from another device.

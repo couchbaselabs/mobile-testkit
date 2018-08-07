@@ -23,9 +23,8 @@ public class PeerToPeerRequestHandler {
             
         case "peerToPeer_serverStart":
             let database: Database = args.get(name:"database")!
-            // let config = MessageEndpointListenerConfiguration(database: database, protocolType: .byteStream)
-            // let messageEndPointListener: MessageEndpointListener = MessageEndpointListener(config)
-            let peerToPeerListener: ReplicatorTcpListener = ReplicatorTcpListener(databases: [database])
+            let port: Int = args.get(name:"port")!
+            let peerToPeerListener: ReplicatorTcpListener = ReplicatorTcpListener(databases: [database], port: UInt32(port))
             peerToPeerListener.start()
             print("Server is getting started")
             return peerToPeerListener
@@ -36,12 +35,13 @@ public class PeerToPeerRequestHandler {
             
         case "peerToPeer_clientStart":
             let host: String = args.get(name:"host")!
+            let port: Int = args.get(name:"port")!
             let serverDBName: String = args.get(name:"serverDBName")!
             let database: Database = args.get(name:"database")!
             let continuous: Bool? = args.get(name:"continuous")!
             let replication_type: String? = args.get(name: "replicationType")!
             let documentIDs: [String]? = args.get(name: "documentIDs")
-            let endPointType: String = "MessageEndPoint"
+            let endPointType: String = args.get(name: "endPointType")!
             var replicatorConfig: ReplicatorConfiguration? = nil
             var replicatorType = ReplicatorType.pushAndPull
             
@@ -55,7 +55,7 @@ public class PeerToPeerRequestHandler {
                 }
             }
             
-            let url = URL(string: "ws://\(host):5000/\(serverDBName)")!
+            let url = URL(string: "ws://\(host):\(port)/\(serverDBName)")!
             if endPointType == "URLEndPoint"{
                 let urlEndPoint: URLEndpoint = URLEndpoint(url: url)
                 replicatorConfig = ReplicatorConfiguration(database: database, target: urlEndPoint)
