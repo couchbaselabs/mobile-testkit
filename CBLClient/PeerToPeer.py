@@ -70,9 +70,10 @@ class PeerToPeer(object):
         args.setInt("socket", socket)
         return self._client.invokeMethod("peerToPeer_readDataFromClient", args)
 
-    def server_start(self, database):
+    def server_start(self, database, port=5000):
         args = Args()
         args.setMemoryPointer("database", database)
+        args.setInt("port", port)
         return self._client.invokeMethod("peerToPeer_serverStart", args)
 
     def server_stop(self, replicatorTcpListener):
@@ -80,9 +81,10 @@ class PeerToPeer(object):
         args.setMemoryPointer("replicatorTcpListener", replicatorTcpListener)
         return self._client.invokeMethod("peerToPeer_serverStop", args)
 
-    def client_start(self, host, server_db_name, client_database, continuous=None, authenticator=None, replication_type=None, documentIDs=None,):
+    def client_start(self, host, server_db_name, client_database, port=5000, continuous=None, authenticator=None, replication_type=None, documentIDs=None, endPointType="MessageEndPoint"):
         args = Args()
         args.setString("host", host)
+        args.setInt("port", port)
         args.setString("serverDBName", server_db_name)
         args.setMemoryPointer("database", client_database)
         if authenticator is not None:
@@ -93,6 +95,7 @@ class PeerToPeer(object):
             args.setBoolean("continuous", continuous)
         if documentIDs is not None:
             args.setArray("documentIDs", documentIDs)
+        args.setArray("endPointType", endPointType)
         return self._client.invokeMethod("peerToPeer_clientStart", args)
 
     def client_start_mep(self, host, server_db_name, client_database, continuous=None, authenticator=None, replication_type=None):

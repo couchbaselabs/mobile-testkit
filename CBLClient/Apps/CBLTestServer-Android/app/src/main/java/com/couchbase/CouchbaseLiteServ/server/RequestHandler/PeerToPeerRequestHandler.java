@@ -23,18 +23,18 @@ import com.couchbase.lite.ReplicatorChangeListener;
 import com.couchbase.lite.ReplicatorConfiguration;
 import com.couchbase.lite.URLEndpoint;
 
-public class PeerToPeerRequestHandler{
+public class PeerToPeerRequestHandler implements MessageEndpointDelegate{
 
 
   public Replicator clientStart(Args args) throws Exception{
     String ipaddress = args.get("host");
-    // String dbName = args.get("dbName");
-    // Database sourceDb = new Database(dbName, null);
+    int port = args.get("port");
     Database sourceDb = args.get("database");
     String serverDBName = args.get("serverDBName");
     String replicationType = args.get("replicationType");
     Boolean continuous = args.get("continuous");
-    String endPointType = "URLEndPoint";
+    String endPointType = args.get("endPointType");
+    //String endPointType = "URLEndPoint";
     ReplicatorConfiguration config;
     Replicator replicator;
 
@@ -52,18 +52,18 @@ public class PeerToPeerRequestHandler{
       replType = ReplicatorConfiguration.ReplicatorType.PUSH_AND_PULL;
     }
     System.out.println("serverDBName is "+ serverDBName);
-    URI uri = new URI("ws://" + ipaddress + ":5000/" + serverDBName);
-    URLEndpoint urlEndPoint= new URLEndpoint(uri);
-    config = new ReplicatorConfiguration(sourceDb, urlEndPoint);
-    /* if (endPointType.toLowerCase() == "URLEndPoint"){
+    URI uri = new URI("ws://" + ipaddress + ":"+port+"/" + serverDBName);
+    // URLEndpoint urlEndPoint= new URLEndpoint(uri);
+    // config = new ReplicatorConfiguration(sourceDb, urlEndPoint);
+    if (endPointType.toLowerCase() == "URLEndPoint"){
 
       URLEndpoint urlEndPoint= new URLEndpoint(uri);
       config = new ReplicatorConfiguration(sourceDb, urlEndPoint);
     }
     else{
-      //MessageEndpoint messageEndPoint = new MessageEndpoint("p2p", uri, ProtocolType.BYTE_STREAM, this);
-      // config = new ReplicatorConfiguration(sourceDb, messageEndPoint);
-    }*/
+      MessageEndpoint messageEndPoint = new MessageEndpoint("p2p", uri, ProtocolType.BYTE_STREAM, this);
+      config = new ReplicatorConfiguration(sourceDb, messageEndPoint);
+    }
     config.setReplicatorType(replType);
     if (continuous != null) {
       config.setContinuous(continuous);
@@ -76,13 +76,6 @@ public class PeerToPeerRequestHandler{
     replicator = new Replicator(config);
     replicator.start();
     System.out.println("Replication started .... ");
-    /*MyReplicatorListener changeListener = new MyReplicatorListener();
-    replicator.addChangeListener(changeListener);
-    changeListener.getChanges().size();
-    TimeUnit.SECONDS.sleep(180);
-    long completed = replicator.getStatus().getProgress().getCompleted();
-    long total = replicator.getStatus().getProgress().getCompleted();
-    System.out.println("completed and total is "+ completed + " and total is " + total);*/
     return replicator;
   }
 
@@ -99,8 +92,9 @@ public class PeerToPeerRequestHandler{
 
   public ReplicatorTcpListener serverStart(Args args) throws IOException{
     Database sourceDb = args.get("database");
-    // MessageEndpointListener messageEndpointListener = new MessageEndpointListener(new MessageEndpointListenerConfiguration(sourceDb, ProtocolType.BYTE_STREAM));
-    ReplicatorTcpListener p2ptcpListener = new ReplicatorTcpListener(sourceDb);
+    int port = args.get("port");
+    MessageEndpointListener messageEndpointListener = new MessageEndpointListener(new MessageEndpointListenerConfiguration(sourceDb, ProtocolType.BYTE_STREAM));
+    ReplicatorTcpListener p2ptcpListener = new ReplicatorTcpListener(sourceDb, port);
     p2ptcpListener.start();
     return p2ptcpListener;
   }
@@ -109,13 +103,13 @@ public class PeerToPeerRequestHandler{
     ReplicatorTcpListener p2ptcpListener = args.get("replicatorTcpListener");
     p2ptcpListener.stop();
   }
- /*
+
   public MessageEndpointConnection createConnection(MessageEndpoint endpoint){
     URI url = (URI)endpoint.getTarget();
-    // return new ReplicatorTcpClientConnection(url);
-    return new MessageEndpointConnection(url);
+    return new ReplicatorTcpClientConnection(url);
+    //return new MessageEndpointConnection(url);
   }
-*/
+
 }
 
 
