@@ -14,14 +14,18 @@ namespace Couchbase.Lite.Testing
         private TcpListener _listener;
         private MessageEndpointListener _endpointListener;
         private bool _opened;
+        private int port;
+
 
         /// <summary>
         /// Constructs a new replicator Passive Peer Tcp listener
         /// </summary>
         /// <param name="endpointListener">used to accept any incoming peer tcp client connection</param>
-        public ReplicatorTcpListener(MessageEndpointListener endpointListener)
+        public ReplicatorTcpListener(MessageEndpointListener endpointListener, int port)
         {
             _endpointListener = endpointListener;
+            // TcpMessageEndpointConnection.Port = port;
+            this.port = port;
         }
 
         /// <summary>
@@ -33,7 +37,8 @@ namespace Couchbase.Lite.Testing
             {
                 try
                 {
-                    _listener = new TcpListener(IPAddress.Any, TcpMessageEndpointConnection.Port);
+                   // _listener = new TcpListener(IPAddress.Any, TcpMessageEndpointConnection.Port);
+                    _listener = new TcpListener(IPAddress.Any, this.port);
                     _listener.Start();
                     _opened = true;
                     AcceptLoop();

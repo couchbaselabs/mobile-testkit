@@ -34,6 +34,7 @@ public class PeerToPeerRequestHandler implements MessageEndpointDelegate{
     String replicationType = args.get("replicationType");
     Boolean continuous = args.get("continuous");
     String endPointType = args.get("endPointType");
+    List<String> documentIds = args.get("documentIDs");
     //String endPointType = "URLEndPoint";
     ReplicatorConfiguration config;
     Replicator replicator;
@@ -71,7 +72,9 @@ public class PeerToPeerRequestHandler implements MessageEndpointDelegate{
     else {
       config.setContinuous(false);
     }
-
+    if (documentIds != null) {
+      config.setDocumentIDs(documentIds);
+    }
 
     replicator = new Replicator(config);
     replicator.start();

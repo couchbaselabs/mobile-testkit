@@ -56,8 +56,9 @@ namespace Couchbase.Lite.Testing
         {
             ResetStatus();
             Database db = MemoryMap.Get<Database>(postBody["database"].ToString());
+            int port = (int)postBody["port"];
             _messageEndpointListener = new MessageEndpointListener(new MessageEndpointListenerConfiguration(db, ProtocolType.ByteStream));
-            _broadcaster = new ReplicatorTcpListener(_messageEndpointListener);
+            _broadcaster = new ReplicatorTcpListener(_messageEndpointListener, port);
             _broadcaster.Start();
             AddStatus("Start waiting for connection..");
             response.WriteBody(MemoryMap.Store(_broadcaster));
@@ -73,30 +74,68 @@ namespace Couchbase.Lite.Testing
             response.WriteEmptyBody();
         }
 
-        public static void Start_Client_MEP([NotNull] NameValueCollection args,
+        public static void Start_Client([NotNull] NameValueCollection args,
                                  [NotNull] IReadOnlyDictionary<string, object> postBody,
                                  [NotNull] HttpListenerResponse response)
         {
             ResetStatus();
             Database db = MemoryMap.Get<Database>(postBody["database"].ToString());
-            string port = "5000";
+            // string port = "5000";
+            int port = (int)postBody["port"];
             string targetIP = postBody["host"].ToString();
             string remote_DBName = postBody["serverDBName"].ToString();
-
-            //string username = postBody["username"].ToString();
-            //string password = postBody["password"].ToString();
+            //Boolean continuous = Convert.ToBoolean(postBody["continuous"]);
+            string replicationType = postBody["replicationType"].ToString();
+            string endPointType = postBody["endPointType"].ToString();
+            // List<object> documentIDs = (List<object>)postBody["documentIDs"];
+            // var _endpoint = null;
+            ReplicatorConfiguration config = null;
 
             Uri host = new Uri("ws://" + targetIP + ":" + port); //sgPort = "4984";
             var dbUrl = new Uri(host, remote_DBName);
             AddStatus("Connecting " + host + "...");
-            TcpMessageEndpointDelegate endpointDelegate = new TcpMessageEndpointDelegate();
-            var _messageEndpoint = new MessageEndpoint("something", host, ProtocolType.ByteStream, endpointDelegate);
-            var config = new ReplicatorConfiguration(db, _messageEndpoint)
+            if (endPointType == "URLEndPoint")
             {
-                ReplicatorType = ReplicatorType.PushAndPull,
-                Continuous = true//,
+                var _endpoint = new URLEndpoint(dbUrl);
+                config = new ReplicatorConfiguration(db, _endpoint);
+                
+            }
+            else{
+                TcpMessageEndpointDelegate endpointDelegate = new TcpMessageEndpointDelegate();
+                var _endpoint = new MessageEndpoint("something", host, ProtocolType.ByteStream, endpointDelegate);
+                config = new ReplicatorConfiguration(db, _endpoint);
+            }
+
+
+            // config = new ReplicatorConfiguration(db, _endpoint);
+
+                //ReplicatorType = ReplicatorType.PushAndPull,
+                //Continuous = true//,
                 //Authenticator = new BasicAuthenticator(userName, userPw)
-            };
+                var replicatorType = replicationType.ToLower();
+                if (replicatorType == "push")
+                {
+                      config.ReplicatorType = ReplicatorType.Push;
+                }
+                else if (replicatorType == "pull")
+                {
+                        config.ReplicatorType = ReplicatorType.Pull;
+                }
+                else
+                {
+                        config.ReplicatorType = ReplicatorType.PushAndPull;
+                }
+                if (postBody.ContainsKey("continuous"))
+                {
+                    config.Continuous = Convert.ToBoolean(postBody["continuous"]);
+                }
+                if (postBody.ContainsKey("documentIDs"))
+                {
+                    List<object> documentIDs = (List<object>)postBody["documentIDs"];
+                    config.DocumentIDs = documentIDs.Cast<string>().ToList();
+                }
+
+
             Replicator _replicator = new Replicator(config);
             _replicator.Start();
             response.WriteBody(MemoryMap.Store(_replicator));
