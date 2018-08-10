@@ -22,7 +22,7 @@ import java.nio.charset.StandardCharsets;
 
 // Websocket based server connection
 public final class ReplicatorTcpServerConnection extends ReplicatorTcpConnection {
-  protected static final int RECEIVE_BUFFER_SIZE = 38192;
+  protected static final int RECEIVE_BUFFER_SIZE = 8192;
 
   private Socket client;
 

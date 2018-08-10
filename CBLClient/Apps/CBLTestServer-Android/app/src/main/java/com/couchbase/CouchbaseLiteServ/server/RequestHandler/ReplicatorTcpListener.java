@@ -104,7 +104,7 @@ public final class ReplicatorTcpListener {
             new ReplicatorTcpServerConnection(socket);
         endpointListener.accept(connection);
       } catch (IOException e) {
-        e.printStackTrace();
+
       }
     }
   }

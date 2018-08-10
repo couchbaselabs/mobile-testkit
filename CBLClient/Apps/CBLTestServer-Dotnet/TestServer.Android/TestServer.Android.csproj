@@ -80,7 +80,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Couchbase.Lite.Enterprise.Support.Android">
-      <Version>2.0.0-b0705</Version>
+      <Version>2.1.0-b0223</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
