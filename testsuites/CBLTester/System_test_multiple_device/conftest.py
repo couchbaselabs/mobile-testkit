@@ -15,6 +15,8 @@ from keywords.tklogging import Logging
 from CBLClient.Database import Database
 from CBLClient.Query import Query
 from CBLClient.Utils import Utils
+from keywords.constants import RESULTS_DIR
+
 
 
 def pytest_addoption(parser):
@@ -168,7 +170,6 @@ def params_from_base_suite_setup(request):
         else:
             testserver.install()
         testserver_list.append(testserver)
-
     base_url_list = []
     for host, port in zip(host_list, port_list):
         base_url_list.append("http://{}:{}".format(host, port))
@@ -360,12 +361,22 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     resume_cluster = params_from_base_suite_setup["resume_cluster"]
     create_db_per_test = params_from_base_suite_setup["create_db_per_test"]
     cluster_topology = params_from_base_suite_setup["cluster_topology"]
+    ## testserver_list = params_from_base_suite_setup["testserver_list"]
+    # test_name = request.node.name
 
     if create_db_per_test:
         db_name_list = []
         cbl_db_list = []
         db_obj_list = []
         for base_url, i in zip(base_url_list, range(len(base_url_list))):
+            """log_info("Starting TestServer...")
+            test_name_cp = test_name.replace("/", "-")
+            log_filename = "{}-{}/logs/{}-{}-{}.txt".format("testserver-",RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now())
+            if device_enabled:
+                testserver.start_device(log_filename)
+            else:
+                testserver.start(log_filename)
+            """
             db_name = "{}_{}_{}".format(create_db_per_test, str(time.time()), i + 1)
             log_info("db name for {} is {}".format(base_url, db_name))
             db_name_list.append(db_name)
