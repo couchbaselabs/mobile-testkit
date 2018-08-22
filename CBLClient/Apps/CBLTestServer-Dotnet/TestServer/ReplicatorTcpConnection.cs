@@ -77,7 +77,7 @@ namespace Couchbase.Lite.Testing
                 {
                     //read from _networkStream 				
                     int length;
-                    while ((length = _networkStream.Read(buffer, 0, buffer.Length)) != 0)
+                    while ((length = await _networkStream.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(false)) != 0)
                     {
                         _replicatorConnection.Receive(
                                 Message.FromBytes(buffer.Take(length).ToArray()));
@@ -128,7 +128,8 @@ namespace Couchbase.Lite.Testing
             _networkStream.PerformServerWebSocketHandshake();
             _connected = true;
             _replicatorConnection = connection;
-            var ignore = Task.Factory.StartNew(ReceiveLoop, TaskCreationOptions.LongRunning);
+            await Task.Factory.StartNew(ReceiveLoop, TaskCreationOptions.LongRunning).ConfigureAwait(false);
+            Console.Write("Finished open");
         }
 
         /// <summary>

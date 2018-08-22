@@ -180,7 +180,7 @@ namespace Couchbase.Lite.Testing
 
         static private void ResetStatus()
         {
-            Console.Clear();
+            // Console.Clear();
             Console.WriteLine("Status");
         }
 
