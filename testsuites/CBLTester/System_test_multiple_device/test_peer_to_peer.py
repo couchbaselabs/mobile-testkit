@@ -292,8 +292,6 @@ def test_peer_to_peer_oneServer_toManyClients(params_from_base_test_setup, serve
         3. Start replication from clients.
         4. Verify docs got replicated on clients from server
     """
-    cluster_config = params_from_base_test_setup["cluster_config"]
-    num_of_docs = 10
     base_url_list = params_from_base_test_setup["base_url_list"]
     host_list = params_from_base_test_setup["host_list"]
     cbl_db_list = params_from_base_test_setup["cbl_db_list"]
@@ -301,8 +299,6 @@ def test_peer_to_peer_oneServer_toManyClients(params_from_base_test_setup, serve
     db_name_list = params_from_base_test_setup["db_name_list"]
     sg_config = params_from_base_test_setup["sg_config"]
     channel = ["peerToPeer"]
-
-
 
     base_url_client2 = base_url_list[2]
     base_url_server = base_url_list[0]
@@ -312,8 +308,7 @@ def test_peer_to_peer_oneServer_toManyClients(params_from_base_test_setup, serve
     
     peerToPeer_client1 = PeerToPeer(base_url_client1)
     peerToPeer_client2 = PeerToPeer(base_url_client2)
-    # peerToPeer_server = PeerToPeer(base_url_server)
-    
+
     cbl_db_server = cbl_db_list[0]
     cbl_db_client1 = cbl_db_list[1]
     cbl_db_client2 = cbl_db_list[2]
@@ -609,10 +604,10 @@ def test_peer_to_peer_resetCheckPoint(params_from_base_test_setup, server_setup,
 @pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.parametrize("num_of_docs, continuous, replicator_type, endPointType", [
-    # (10, True, "push_pull", "URLEndPoint"),
-    # (10, True, "push_pull", "MessageEndPoint"),
+    (10, True, "push_pull", "URLEndPoint"),
+    (10, True, "push_pull", "MessageEndPoint"),
     (100, True, "push", "URLEndPoint"),
-    # (100, True, "push", "MessageEndPoint")
+    (100, True, "push", "MessageEndPoint")
 ])
 def test_peer_to_peer_replication_with_multiple_dbs(params_from_base_test_setup, server_setup, num_of_docs, continuous, replicator_type, endPointType):
     """
@@ -629,7 +624,6 @@ def test_peer_to_peer_replication_with_multiple_dbs(params_from_base_test_setup,
     db_obj_list = params_from_base_test_setup["db_obj_list"]
     db_name_list = params_from_base_test_setup["db_name_list"]
     base_url_list = server_setup["base_url_list"]
-    cbl_db_server = server_setup["cbl_db_server"]
     cbl_db_list = server_setup["cbl_db_list"]
     peerToPeer_server = server_setup["peerToPeer_server"]
     channel = ["peerToPeer"]
@@ -640,6 +634,7 @@ def test_peer_to_peer_replication_with_multiple_dbs(params_from_base_test_setup,
     peerToPeer_client = PeerToPeer(base_url_client)
     db_obj_server = db_obj_list[0]
     cbl_db_client = cbl_db_list[1]
+    cbl_db_server = cbl_db_list[0]
     db_obj_client = db_obj_list[1]
     db_name_server = db_name_list[0]
 
@@ -685,12 +680,6 @@ def test_peer_to_peer_replication_with_multiple_dbs(params_from_base_test_setup,
         repl = peerToPeer_client.client_start(host=server_host, port=ports[i], server_db_name=db_names_server[i], client_database=cbl_dbs_client[i], continuous=continuous, replication_type=replicator_type, endPointType=endPointType)
         repls.append(repl)
 
-    repl = peerToPeer_client.client_start(host=server_host, port=5000, server_db_name=db_name_server, client_database=cbl_dbs_client[0], continuous=continuous, replication_type=replicator_type, endPointType=endPointType)
-    repls.append(repl)
-    repl = peerToPeer_client.client_start(host=server_host, port=6000, server_db_name=db_name2_server, client_database=cbl_dbs_client[1], continuous=continuous, replication_type=replicator_type, endPointType=endPointType)
-    repls.append(repl)
-    repl = peerToPeer_client.client_start(host=server_host, port=7000, server_db_name=db_name3_server, client_database=cbl_dbs_client[2], continuous=continuous, replication_type=replicator_type, endPointType=endPointType)
-    repls.append(repl)
     for i in xrange(3):
         replicator.wait_until_replicator_idle(repls[i])
 
