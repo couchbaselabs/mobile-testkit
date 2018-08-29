@@ -225,9 +225,7 @@ namespace Couchbase.Lite.Testing
         {
             var name = postBody["name"].ToString();
             var directory = postBody["directory"].ToString();
-            DirectoryInfo dir = new DirectoryInfo(directory);
-            var tmp = dir.Parent.FullName.ToString();
-            response.WriteBody(Database.Exists(name, tmp));
+            response.WriteBody(Database.Exists(name, directory));
         }
 
         internal static void DatabaseGetCount([NotNull] NameValueCollection args,
@@ -270,8 +268,13 @@ namespace Couchbase.Lite.Testing
             With<Database>(postBody, "database", db =>
             {
                 var doc = db.GetDocument(docId);
+                if (doc != null){
+                    response.WriteBody(MemoryMap.Store(doc));
+                }
+                else {
+                    response.WriteEmptyBody();
+                }
 
-                response.WriteBody(MemoryMap.Store(doc));
             });
         }
 
