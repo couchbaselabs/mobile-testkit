@@ -1141,6 +1141,7 @@ def test_initial_pull_replication_background_apprun(params_from_base_test_setup,
     testserver.close_app()
     time.sleep(10)  # wait until all replication is done
     testserver.open_app()
+    replicator.wait_until_replicator_idle(repl)
     # Verify docs replicated to client
     cbl_doc_ids = db.getDocIds(cbl_db)
     assert len(cbl_doc_ids) == len(bulk_docs_resp)
