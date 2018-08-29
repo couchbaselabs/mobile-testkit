@@ -429,7 +429,7 @@ def test_migrate_conflicts_to_noConflicts_CBL(params_from_base_test_setup, sg_co
     for doc in sg_docs:
         num_of_revs = sg_client.get_revs_num_in_history(url=sg_url, db=sg_db, doc_id=doc["id"], auth=session)
         assert len(num_of_revs) == revs_limit, "Number of revisions in history is more than revs_limit set in sg config"
-
+    replicator.wait_until_replicator_idle(repl)
     replicator.stop(repl)
 
 
