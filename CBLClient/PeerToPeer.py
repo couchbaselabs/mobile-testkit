@@ -1,11 +1,5 @@
-import time
-import os
-
 from CBLClient.Client import Client
 from CBLClient.Args import Args
-from CBLClient.Authenticator import Authenticator
-from keywords.utils import log_info
-from utilities.cluster_config_utils import sg_ssl_enabled
 
 
 class PeerToPeer(object):
@@ -32,7 +26,7 @@ class PeerToPeer(object):
         args.setInt("port", port)
         args.setString("host", host)
         return self._client.invokeMethod("peerToPeer_initialize", args)
-    
+
     def start(self, peerToPeerObj):
         args = Args()
         args.setMemoryPointer("PeerToPeerImplementation", peerToPeerObj)
@@ -59,7 +53,7 @@ class PeerToPeer(object):
         args.setString("host", host)
         args.setInt("port", port)
         return self._client.invokeMethod("peerToPeer_socketClientConnection", args)
-    
+
     def accept_client(self, server):
         args = Args()
         args.setMemoryPointer("server", server)

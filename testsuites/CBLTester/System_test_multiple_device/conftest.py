@@ -1,7 +1,5 @@
-import os
 import time
 import pytest
-import time
 
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop
 from keywords.utils import log_info
@@ -15,8 +13,6 @@ from keywords.tklogging import Logging
 from CBLClient.Database import Database
 from CBLClient.Query import Query
 from CBLClient.Utils import Utils
-from keywords.constants import RESULTS_DIR
-
 
 
 def pytest_addoption(parser):
@@ -108,7 +104,6 @@ def pytest_addoption(parser):
                      action="store",
                      help="create-db-per-test: Creates/deletes client DB for every test",
                      default="test")
-
 
 
 # This will get called once before the first test that
@@ -321,7 +316,6 @@ def params_from_base_suite_setup(request):
                 log_info("Deleting the database {} at the suite teardown".format(db_obj.getName(cbl_db)))
                 time.sleep(5)
                 db_obj.deleteDB(cbl_db)
-            
 
         # Flush all the memory contents on the server app
         log_info("Flushing server memory")
@@ -361,7 +355,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     resume_cluster = params_from_base_suite_setup["resume_cluster"]
     create_db_per_test = params_from_base_suite_setup["create_db_per_test"]
     cluster_topology = params_from_base_suite_setup["cluster_topology"]
-    ## testserver_list = params_from_base_suite_setup["testserver_list"]
+    # testserver_list = params_from_base_suite_setup["testserver_list"]
     # test_name = request.node.name
 
     if create_db_per_test:
