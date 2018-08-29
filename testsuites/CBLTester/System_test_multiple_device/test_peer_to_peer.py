@@ -3,19 +3,12 @@ import time
 import random
 
 from concurrent.futures import ThreadPoolExecutor
-from keywords.MobileRestClient import MobileRestClient
 from keywords.utils import log_info
-from keywords import document, attachment
-from CBLClient.Database import Database
+from keywords import attachment
 from CBLClient.Document import Document
 from CBLClient.Replication import Replication
-from CBLClient.Authenticator import Authenticator
 from CBLClient.PeerToPeer import PeerToPeer
-from requests.exceptions import HTTPError
 
-from keywords.SyncGateway import sync_gateway_config_path_for_mode
-from libraries.testkit.cluster import Cluster
-from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
 
 @pytest.mark.sanity
 @pytest.mark.listener
@@ -42,9 +35,7 @@ def test_peer_to_peer_1to1_valid_values(params_from_base_test_setup, server_setu
     cbl_db_server = server_setup["cbl_db_server"]
     cbl_db_list = server_setup["cbl_db_list"]
     channels = ["peerToPeer"]
-
-
-
+    base_url_client = base_url_list[1]
     replicator = Replication(base_url_client)
 
     peerToPeer_client = PeerToPeer(base_url_client)
@@ -97,10 +88,9 @@ def test_peer_to_peer2_1to1_pull_replication(params_from_base_test_setup, server
     db_obj_list = params_from_base_test_setup["db_obj_list"]
     db_name_list = params_from_base_test_setup["db_name_list"]
     channel = ["peerToPeer"]
-
     base_url_client = base_url_list[1]
     replicator = Replication(base_url_client)
-    
+
     peerToPeer_client = PeerToPeer(base_url_client)
     cbl_db_server = cbl_db_list[0]
     db_obj_server = db_obj_list[0]
@@ -146,10 +136,9 @@ def test_peer_to_peer_concurrent_replication(params_from_base_test_setup, server
     db_obj_list = params_from_base_test_setup["db_obj_list"]
     db_name_list = params_from_base_test_setup["db_name_list"]
     channel = ["peerToPeer"]
-
     base_url_client = base_url_list[1]
     replicator = Replication(base_url_client)
-    
+
     peerToPeer_client = PeerToPeer(base_url_client)
     cbl_db_server = cbl_db_list[0]
     db_obj_server = db_obj_list[0]
@@ -232,12 +221,11 @@ def test_peer_to_peer_oneClient_toManyServers(params_from_base_test_setup, num_o
     db_obj_list = params_from_base_test_setup["db_obj_list"]
     db_name_list = params_from_base_test_setup["db_name_list"]
     channel = ["peerToPeer"]
-
     base_url_client = base_url_list[2]
     base_url_server1 = base_url_list[0]
     base_url_server2 = base_url_list[1]
     client_replicator = Replication(base_url_client)
-    
+
     peerToPeer_client = PeerToPeer(base_url_client)
     peerToPeer_server1 = PeerToPeer(base_url_server1)
     peerToPeer_server2 = PeerToPeer(base_url_server2)
@@ -297,15 +285,12 @@ def test_peer_to_peer_oneServer_toManyClients(params_from_base_test_setup, serve
     cbl_db_list = params_from_base_test_setup["cbl_db_list"]
     db_obj_list = params_from_base_test_setup["db_obj_list"]
     db_name_list = params_from_base_test_setup["db_name_list"]
-    sg_config = params_from_base_test_setup["sg_config"]
     channel = ["peerToPeer"]
-
     base_url_client2 = base_url_list[2]
-    base_url_server = base_url_list[0]
     base_url_client1 = base_url_list[1]
     client_replicator1 = Replication(base_url_client1)
     client_replicator2 = Replication(base_url_client2)
-    
+
     peerToPeer_client1 = PeerToPeer(base_url_client1)
     peerToPeer_client2 = PeerToPeer(base_url_client2)
 
@@ -319,7 +304,6 @@ def test_peer_to_peer_oneServer_toManyClients(params_from_base_test_setup, serve
 
     server_host = host_list[0]
     db_obj_server.create_bulk_docs(num_of_docs, "cbl-peerToPeer", db=cbl_db_server, channels=channel)
-
 
     # Now set up client
     repl1 = peerToPeer_client1.client_start(host=server_host, server_db_name=db_name_server, client_database=cbl_db_client1, continuous=continuous, replication_type=replicator_type, endPointType=endPointType)
@@ -348,7 +332,7 @@ def test_peer_to_peer_oneServer_toManyClients(params_from_base_test_setup, serve
 ])
 def test_peer_to_peer_filter_docs_ids(params_from_base_test_setup, server_setup, num_of_docs, replicator_type, endPointType):
     """
-        @summary: 
+        @summary:
         1. Create docs on client.
         2. Start the server.
         3. Start replication from client with doc ids list with one shot and push_pull/push
@@ -358,7 +342,6 @@ def test_peer_to_peer_filter_docs_ids(params_from_base_test_setup, server_setup,
     host_list = params_from_base_test_setup["host_list"]
     db_obj_list = params_from_base_test_setup["db_obj_list"]
     db_name_list = params_from_base_test_setup["db_name_list"]
-    mode = params_from_base_test_setup["mode"]
     base_url_list = server_setup["base_url_list"]
     cbl_db_server = server_setup["cbl_db_server"]
     cbl_db_list = server_setup["cbl_db_list"]
@@ -416,7 +399,6 @@ def test_peer_to_peer_delete_docs(params_from_base_test_setup, server_setup, num
     db_obj_list = params_from_base_test_setup["db_obj_list"]
     db_name_list = params_from_base_test_setup["db_name_list"]
     channel = ["peerToPeer"]
-
     base_url_client = base_url_list[1]
     replicator = Replication(base_url_client)
 
@@ -427,7 +409,6 @@ def test_peer_to_peer_delete_docs(params_from_base_test_setup, server_setup, num
     db_obj_client = db_obj_list[1]
     db_name_server = db_name_list[0]
     doc_obj_client = Document(base_url_client)
-
     server_host = host_list[0]
     db_obj_client.create_bulk_docs(num_of_docs, "cbl-peerToPeer", db=cbl_db_client, channels=channel)
 
@@ -439,7 +420,7 @@ def test_peer_to_peer_delete_docs(params_from_base_test_setup, server_setup, num
     assert total == completed, "replication from client to server did not completed " + total + " not equal to " + completed
     server_docs_count = db_obj_server.getCount(cbl_db_server)
     assert server_docs_count == num_of_docs, "Number of docs is not equivalent to number of docs in server "
-    
+
     # Now delete doc on client
     client_cbl_doc_ids = db_obj_client.getDocIds(cbl_db_client)
     random_cbl_id = random.choice(client_cbl_doc_ids)
@@ -578,7 +559,7 @@ def test_peer_to_peer_resetCheckPoint(params_from_base_test_setup, server_setup,
     # Now set up client and replicate docs to server
     repl = peerToPeer_client.client_start(host=server_host, server_db_name=db_name_server, client_database=cbl_db_client, continuous=continuous, replication_type=replicator_type, endPointType=endPointType)
     replicator.wait_until_replicator_idle(repl)
- 
+
     # purge docs on client
     client_cbl_doc_ids = db_obj_client.getDocIds(cbl_db_client)
     for i in client_cbl_doc_ids:
@@ -600,6 +581,7 @@ def test_peer_to_peer_resetCheckPoint(params_from_base_test_setup, server_setup,
     assert db_obj_client.getCount(cbl_db_client) == num_of_docs, "Docs that got purged in client did not got it back from server after resetcheckpoint api"
     assert db_obj_server.getCount(cbl_db_server) == num_of_docs, "docs got purged in server after resetcheckpoint"
     replicator.stop(repl)
+
 
 @pytest.mark.sanity
 @pytest.mark.listener
@@ -787,9 +769,7 @@ def server_setup(params_from_base_test_setup):
 @pytest.mark.parametrize("delete_source, attachments, number_of_updates, endPointType", [
     ('cbl1', True, 1, "MessageEndPoint"),
     ('cbl2', True, 1, "MessageEndPoint"),
-    # ('cbl1', False, 1, "MessageEndPoint"),
     ('cbl2', False, 1, "MessageEndPoint"),
-    #('cbl1', False, 5, "URLEndPoint"),
     ('cbl2', False, 5, "URLEndPoint"),
 ])
 def test_default_conflict_scenario_delete_wins(params_from_base_test_setup, server_setup, delete_source, attachments, number_of_updates, endPointType):
