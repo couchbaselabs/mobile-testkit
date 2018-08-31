@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
+import android.util.Log;
 
 import com.couchbase.CouchbaseLiteServ.server.Args;
 import com.couchbase.lite.Database;
@@ -35,7 +35,6 @@ public class PeerToPeerRequestHandler implements MessageEndpointDelegate{
     Boolean continuous = args.get("continuous");
     String endPointType = args.get("endPointType");
     List<String> documentIds = args.get("documentIDs");
-    //String endPointType = "URLEndPoint";
     ReplicatorConfiguration config;
     Replicator replicator;
 
@@ -52,11 +51,9 @@ public class PeerToPeerRequestHandler implements MessageEndpointDelegate{
     } else {
       replType = ReplicatorConfiguration.ReplicatorType.PUSH_AND_PULL;
     }
-    System.out.println("serverDBName is "+ serverDBName);
+    Log.i("DB name", "serverDBName is "+ serverDBName);
     URI uri = new URI("ws://" + ipaddress + ":"+port+"/" + serverDBName);
-    // URLEndpoint urlEndPoint= new URLEndpoint(uri);
-    // config = new ReplicatorConfiguration(sourceDb, urlEndPoint);
-    if (endPointType.toLowerCase() == "URLEndPoint"){
+    if (endPointType.toLowerCase() == "urlendpoint"){
 
       URLEndpoint urlEndPoint= new URLEndpoint(uri);
       config = new ReplicatorConfiguration(sourceDb, urlEndPoint);
@@ -78,7 +75,7 @@ public class PeerToPeerRequestHandler implements MessageEndpointDelegate{
 
     replicator = new Replicator(config);
     replicator.start();
-    System.out.println("Replication started .... ");
+    Log.i("Replication status", "Replication started .... ");
     return replicator;
   }
 
@@ -110,7 +107,6 @@ public class PeerToPeerRequestHandler implements MessageEndpointDelegate{
   public MessageEndpointConnection createConnection(MessageEndpoint endpoint){
     URI url = (URI)endpoint.getTarget();
     return new ReplicatorTcpClientConnection(url);
-    //return new MessageEndpointConnection(url);
   }
 
 }

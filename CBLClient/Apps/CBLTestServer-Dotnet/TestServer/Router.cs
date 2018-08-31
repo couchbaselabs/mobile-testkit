@@ -175,7 +175,6 @@ namespace Couchbase.Lite.Testing
                 ["expression_createEqualTo"] = ExpressionMethods.ExpressionCreateEqualTo,
                 ["expression_createAnd"] = ExpressionMethods.ExpressionCreateAnd,
                 ["expression_createOr"] = ExpressionMethods.ExpressionCreateOr,
-                ["datasource_database"] = DataSourceMethods.Database,
                 ["query_create"] = QueryMethods.QueryCreate,
                 ["query_getDoc"] = QueryMethods.QueryGetDoc,
                 ["query_like"] = QueryMethods.QueryLike,
@@ -221,7 +220,6 @@ namespace Couchbase.Lite.Testing
                 ["peerToPeer_serverStart"] = P2PMethods.Start_Server,
                 ["peerToPeer_serverStop"] = P2PMethods.Stop_Server,
                 ["peerToPeer_clientStart"] = P2PMethods.Start_Client,
-                ["peerToPeer_clientStart_mep"] = P2PMethods.Start_Client_UEP,
                 ["release"] = ReleaseObject,
                 ["flushMemory"] = flushMemory
             };

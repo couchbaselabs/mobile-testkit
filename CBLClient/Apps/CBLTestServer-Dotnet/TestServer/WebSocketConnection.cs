@@ -132,11 +132,11 @@ namespace Couchbase.Lite.Testing
             ResetConnections();
             if (_closed)
             {
-                //Log.To.Sync.W(Tag, "Double close detected, ignoring...");
+                Console.WriteLine("Double close detected, ignoring...");
                 return;
             }
 
-            //Log.To.Sync.I(Tag, "Closing socket normally due to request from LiteCore");
+            Console.WriteLine("Closing socket normally due to request from LiteCore");
             _closed = true;
         }
 
@@ -146,7 +146,7 @@ namespace Couchbase.Lite.Testing
         {
             if (Client != null)
             {
-                //Log.To.Sync.W(Tag, "Ignoring duplicate call to Start...");
+                Console.WriteLine("Ignoring duplicate call to Start...");
                 return;
             }
 
@@ -177,7 +177,7 @@ namespace Couchbase.Lite.Testing
             }
             catch (ArgumentException)
             {
-                //Log.To.Sync.I(Tag, "IPv4/IPv6 dual mode not supported on this device, falling back to IPv4");
+                Console.WriteLine("IPv4/IPv6 dual mode not supported on this device, falling back to IPv4");
                 Client = new TcpClient(AddressFamily.InterNetwork)
                 {
                     SendTimeout = (int)IdleTimeout.TotalMilliseconds,
@@ -254,10 +254,9 @@ namespace Couchbase.Lite.Testing
 
             ResetConnections();
 
-            //Log.To.Sync.I(Tag, $"WebSocket CLOSED WITH STATUS {closeCode} \"{reason}\"");
             if (_closed)
             {
-                //Log.To.Sync.W(Tag, "Double close detected, ignoring...");
+                Console.WriteLine("Double close detected, ignoring...");
                 return;
             }
 
@@ -269,11 +268,13 @@ namespace Couchbase.Lite.Testing
             ResetConnections();
             if (e != null && !(e is ObjectDisposedException) && !(e.InnerException is ObjectDisposedException))
             {
-                //Log.To.Sync.I(Tag, $"WebSocket CLOSED WITH ERROR: {e}");
+                Console.WriteLine("web socket closed with error :{e.Message}");
+                // Log.To.Sync.I(Tag, $"WebSocket CLOSED WITH ERROR: {e}");
             }
             else
             {
-                //Log.To.Sync.I(Tag, "WebSocket CLOSED");
+                Console.WriteLine("WebSocket CLOSED}"); 
+                // Log.To.Sync.I(Tag, "WebSocket CLOSED");
             }
 
             if (_closed)
@@ -287,7 +288,6 @@ namespace Couchbase.Lite.Testing
         private async Task HandleHTTPResponse()
         {
             // STEP 6: Read and parse the HTTP response
-            //Log.To.Sync.V(Tag, "WebSocket sent HTTP request...");
             try
             {
                 using (var streamReader = new StreamReader(NetworkStream, Encoding.ASCII, false, 5, true))

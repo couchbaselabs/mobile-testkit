@@ -24,7 +24,6 @@ namespace Couchbase.Lite.Testing
         public ReplicatorTcpListener(MessageEndpointListener endpointListener, int port)
         {
             _endpointListener = endpointListener;
-            // TcpMessageEndpointConnection.Port = port;
             this.port = port;
         }
 
@@ -37,7 +36,6 @@ namespace Couchbase.Lite.Testing
             {
                 try
                 {
-                   // _listener = new TcpListener(IPAddress.Any, TcpMessageEndpointConnection.Port);
                     _listener = new TcpListener(IPAddress.Any, this.port);
                     _listener.Start();
                     _opened = true;

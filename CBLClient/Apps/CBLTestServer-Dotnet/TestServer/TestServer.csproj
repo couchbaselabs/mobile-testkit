@@ -15,7 +15,8 @@
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" Version="11.1.0" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.1" />
-    <PackageReference Include="Couchbase.Lite.Enterprise" Version="2.1.0-b0207" />
+    <PackageReference Include="Couchbase.Lite.Enterprise" Version="2.1.0-b0232" />
+    <PackageReference Include="Couchbase.Lite.Enterprise.Support.NetDesktop" Version="2.1.0-b0232" />
   </ItemGroup>
 
 </Project>
