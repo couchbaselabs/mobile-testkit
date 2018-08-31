@@ -13,7 +13,6 @@ from CBLClient.PeerToPeer import PeerToPeer
 @pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.parametrize("num_of_docs, continuous, replicator_type, attachments, endPointType", [
-    # (5000, True, "push_pull", False, "MessageEndPoint"),
     (10, True, "push_pull", False, "URLEndPoint"),
     (100, True, "push_pull", True, "MessageEndPoint"),
     (10, True, "push_pull", False, "MessageEndPoint"),
@@ -52,7 +51,6 @@ def test_peer_to_peer_1to1_valid_values(params_from_base_test_setup, server_setu
 
     # Now set up client
     repl = peerToPeer_client.client_start(host=server_host, server_db_name=db_name_server, client_database=cbl_db_client, continuous=continuous, replication_type=replicator_type, endPointType=endPointType)
-    print "replication is going on ....."
     replicator.wait_until_replicator_idle(repl)
     # time.sleep(60)
     # print "replication is done  ....."
@@ -70,8 +68,8 @@ def test_peer_to_peer_1to1_valid_values(params_from_base_test_setup, server_setu
 @pytest.mark.parametrize("num_of_docs, continuous, endPointType", [
     (10, True, "MessageEndPoint"),
     (10, False, "URLEndPoint"),
-    (100, True, "MessageEndPoint"),
-    (100, False, "URLEndPoint"),
+    (100, False, "MessageEndPoint"),
+    (100, True, "URLEndPoint"),
 ])
 def test_peer_to_peer2_1to1_pull_replication(params_from_base_test_setup, server_setup, num_of_docs, continuous, endPointType):
     """
@@ -173,15 +171,8 @@ def test_peer_to_peer_concurrent_replication(params_from_base_test_setup, server
 
     cbl_doc_ids = db_obj_server.getDocIds(cbl_db_server)
     cbl_db_docs_server = db_obj_server.getDocuments(cbl_db_server, cbl_doc_ids)
-    """
+
     for doc in cbl_db_docs_client:
-        print "doc in cbl db docs are  in client ", cbl_db_docs_client[doc], " for doc ", doc
-    print "----------------------------------------------------------------------------------"
-    for doc in cbl_db_docs_server:
-        print "doc in cbl db docs are in server ", cbl_db_docs_server[doc], " for doc ", doc
-    """
-    for doc in cbl_db_docs_client:
-        # print " Current serving is of doc is --- ", doc
         if replicator_type == "push":
             assert cbl_db_docs_client[doc][client_param] == 3, "latest update did not updated on client"
         else:
@@ -203,8 +194,8 @@ def test_peer_to_peer_concurrent_replication(params_from_base_test_setup, server
 @pytest.mark.parametrize("num_of_docs, continuous, replicator_type, endPointType", [
     (10, True, "push_pull", "URLEndPoint"),
     (10, False, "push_pull", "MessageEndPoint"),
-    (100, True, "push", "URLEndPoint"),
-    (100, False, "push", "MessageEndPoint"),
+    (100, False, "push", "URLEndPoint"),
+    (100, True, "push", "MessageEndPoint"),
 ])
 def test_peer_to_peer_oneClient_toManyServers(params_from_base_test_setup, num_of_docs, continuous, replicator_type, endPointType):
     """
@@ -269,8 +260,8 @@ def test_peer_to_peer_oneClient_toManyServers(params_from_base_test_setup, num_o
 @pytest.mark.parametrize("num_of_docs, continuous, replicator_type, endPointType", [
     (10, True, "push_pull", "MessageEndPoint"),
     (10, False, "push_pull", "URLEndPoint"),
-    (100, True, "pull", "MessageEndPoint"),
-    (100, False, "pull", "URLEndPoint"),
+    (100, False, "pull", "MessageEndPoint"),
+    (100, True, "pull", "URLEndPoint"),
 ])
 def test_peer_to_peer_oneServer_toManyClients(params_from_base_test_setup, server_setup, num_of_docs, continuous, replicator_type, endPointType):
     """
@@ -456,7 +447,6 @@ def test_peer_to_peer_with_server_down(params_from_base_test_setup, server_setup
         7. verify all docs got replicated on server
     """
     host_list = params_from_base_test_setup["host_list"]
-    # cbl_db_list = params_from_base_test_setup["cbl_db_list"]
     db_obj_list = params_from_base_test_setup["db_obj_list"]
     db_name_list = params_from_base_test_setup["db_name_list"]
     base_url_list = server_setup["base_url_list"]
@@ -530,7 +520,7 @@ def test_peer_to_peer_resetCheckPoint(params_from_base_test_setup, server_setup,
         5. replicate again
         6. Verify  purged docs on client should not get deleted on server
         7. stop replicator
-        8. call reset api
+        8. call resetcheck point  api
         9. restart the replication
         10. Verify all purged docs should not exist in client, but should exist in server
 
@@ -768,7 +758,7 @@ def server_setup(params_from_base_test_setup):
 @pytest.mark.listener
 @pytest.mark.parametrize("delete_source, attachments, number_of_updates, endPointType", [
     ('cbl1', True, 1, "MessageEndPoint"),
-    ('cbl2', True, 1, "MessageEndPoint"),
+    ('cbl2', True, 1, "URLEndPoint"),
     ('cbl2', False, 1, "MessageEndPoint"),
     ('cbl2', False, 5, "URLEndPoint"),
 ])
@@ -875,9 +865,7 @@ def test_default_conflict_scenario_delete_wins(params_from_base_test_setup, serv
 @pytest.mark.listener
 @pytest.mark.parametrize("highrev_source, attachments, endPointType", [
     ('cbl1', True, "MessageEndPoint"),
-    # ('cbl2', True, "MessageEndPoint"),
-    ('cbl1', False, "MessageEndPoint"),
-    # ('cbl2', False, "URLEndPoint"),
+    ('cbl1', False, "MessageEndPoint")
 ])
 def test_default_conflict_scenario_highRevGeneration_wins(params_from_base_test_setup, server_setup, highrev_source, attachments, endPointType):
 
@@ -893,7 +881,7 @@ def test_default_conflict_scenario_highRevGeneration_wins(params_from_base_test_
         8. Now update docs in CBL1 3 times.
         9. Start replication with push pull and continous False.
         10. Wait until replication is done
-        11. As CBL1 revision id is higher, docs from
+        11. As CBL1 revision id is higher, docs from cbl1 should get updated
     """
     cbl_db_list = params_from_base_test_setup["cbl_db_list"]
     base_url_list = server_setup["base_url_list"]

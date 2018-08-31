@@ -44,7 +44,6 @@ namespace Couchbase.Lite.Testing
 
         private readonly CancellationTokenSource _cancelSource = new CancellationTokenSource();
         private bool _connected;
-        //sprivate LogHelper _log = new LogHelper(nameof(ReplicatorTcpConnection));
         private IReplicatorConnection _replicatorConnection;
         TcpClient _client;
         Stream _networkStream; //NetworkStream, SslStream

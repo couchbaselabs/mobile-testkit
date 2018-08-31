@@ -20,7 +20,6 @@ class PeerToPeer(object):
 
     def peer_intialize(self, database, continuous, host, port):
         args = Args()
-        print "The port in peer initialize ", port
         args.setMemoryPointer("database", database)
         args.setBoolean("continuous", continuous)
         args.setInt("port", port)

@@ -13,8 +13,7 @@ import SwiftSocket
 public class PeerToPeerRequestHandler {
     public static let VOID: String? = nil
     fileprivate var _pushPullReplListener:NSObjectProtocol?
-    // fileprivate var _peerToPeerImplementation:PeerToPeerImplementation?
-    
+
     public func handleRequest(method: String, args: Args) throws -> Any? {
         
         switch method {
@@ -30,16 +29,12 @@ public class PeerToPeerRequestHandler {
             let port: Int = args.get(name:"port")!
             let continuous: Bool = args.get(name:"continuous")!
             let peerToPeerImplementation = PeerToPeerImplementation.init(database: database, host: host, port: port, continuous: continuous)
-            //_peerToPeerImplementation?.peerIntialize(database: database, host: host, port: port, continuous: continuous)
             return peerToPeerImplementation
             
         case "peerToPeer_start":
             let peerToPeerImplementation: PeerToPeerImplementation = args.get(name:"PeerToPeerImplementation")!
             peerToPeerImplementation.start()
             
-        /*case "peerToPeer_createConnection":
-            _peerToPeerImplementation?.createConnection(endpoint: <#MessageEndpoint#>)
-           */
         case "peerToPeer_stopSession":
             let peerToPeerImplementation: PeerToPeerImplementation = args.get(name:"PeerToPeerImplementation")!
             peerToPeerImplementation.stopSession()
