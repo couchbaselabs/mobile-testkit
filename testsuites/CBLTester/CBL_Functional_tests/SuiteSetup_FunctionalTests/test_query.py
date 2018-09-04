@@ -1449,3 +1449,97 @@ def test_fts_with_ranking(params_from_base_test_setup, prop, val, doc_type):
             docs_from_cbl.append(result)
             log_info(result)
     assert 0 < len(docs_from_cbl) <= limit
+
+
+@pytest.mark.parametrize("doc_id_prefix", [
+    ("doc_with_double_1")
+])
+def test_getDoc_withValueTypeDouble(params_from_base_test_setup, doc_id_prefix):
+    """ @summary
+    1. update the doc with double value
+    2. Fetch the doc
+    Fetches a doc
+    Tests the below query
+    let searchQuery = Query
+                    .select(SelectResult.all())
+                    .from(DataSource.database(database))
+                    .where((Expression.meta().id).equalTo(doc_id))
+
+    Verifies with n1ql - select * from `bucket_name` where meta().id="doc_id"
+    """
+    base_url = params_from_base_test_setup["base_url"]
+    database = Database(base_url)
+    db_name = "db_name"
+
+    # Create docs with double and retrieve
+    doc_id_prefix = doc_id_prefix
+    num_of_docs = 5
+    db = database.create(db_name)
+    documents = dict()
+    ids = []
+    for i in range(num_of_docs):
+        data = {}
+        doc_id = "{}_{}".format(doc_id_prefix, i)
+        ids.append(doc_id)
+        data["item"] = i
+        data["item_price"] = i + 0.754
+        documents[doc_id] = data
+    database.saveDocuments(db, documents)
+    qy = Query(base_url)
+
+    # Query cblite database with key value type 'double'
+    select_property1 = "item"
+    select_property2 = "item_price"
+    whr_key = "item_price"
+    whr_val = 2.754
+    result_set = qy.query_multiple_selects_forDoubleValue(db, select_property1, select_property2, whr_key, whr_val)
+    docs_from_cbl = []
+    for docs in result_set:
+        docs_from_cbl.append(docs)
+    assert len(docs_from_cbl) == 1, "did not get the write result after querying with float value"
+
+
+@pytest.mark.parametrize("doc_id_prefix", [
+    ("doc_with_double_1")
+])
+def test_getDoc_withLocale(params_from_base_test_setup, doc_id_prefix):
+    """ @summary
+    1. Add docs with locale name having '-'
+    2. Fetch the doc
+    3.
+    Tests the below query
+    let searchQuery = Query
+                    .select(SelectResult.expression(Meta.id),
+                    SelectResult.expression(Expression.property(select_property1)),
+                    SelectResult.expression(Expression.property(select_property2)))
+                .from(DataSource.database(database))
+                .orderBy(Ordering.expression(locale_key.collate(with_locale_value)))
+
+    """
+    base_url = params_from_base_test_setup["base_url"]
+    database = Database(base_url)
+    qy = Query(base_url)
+
+    # Create docs with double and retrieve
+    num_of_docs = 5
+    db = database.create("db_name")
+    documents = dict()
+    ids = []
+    for i in range(num_of_docs):
+        data = {}
+        doc_id = "{}_{}".format(doc_id_prefix, i)
+        ids.append(doc_id)
+        data["locale"] = "ko-Kore_US"
+        data["credit"] = "credict-{}".format(i+10)
+        documents[doc_id] = data
+    database.saveDocuments(db, documents)
+
+    select_property1 = "locale"
+    select_property2 = "credit"
+    whr_key = "locale"
+    locale = "ko-Kore_US"
+    result_set = qy.query_multiple_selects_OrderByLocaleValue(db, select_property1, select_property2, whr_key, locale)
+    docs_from_cbl = []
+    for docs in result_set:
+        docs_from_cbl.append(docs)
+    assert len(docs_from_cbl) == 5, "Results for locale with - did not return 5 records"
