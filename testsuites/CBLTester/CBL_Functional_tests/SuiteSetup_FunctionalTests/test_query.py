@@ -1530,7 +1530,7 @@ def test_getDoc_withLocale(params_from_base_test_setup, doc_id_prefix):
         doc_id = "{}_{}".format(doc_id_prefix, i)
         ids.append(doc_id)
         data["locale"] = "ko-Kore_US"
-        data["credit"] = "credict-{}".format(i+10)
+        data["credit"] = "credict-{}".format(i + 10)
         documents[doc_id] = data
     database.saveDocuments(db, documents)
 

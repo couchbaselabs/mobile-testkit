@@ -137,8 +137,8 @@ class Query(object):
         args.setString("whr_key", whr_key)
         args.setFloat("whr_val", whr_val)
         return self._client.invokeMethod("query_multipleSelectsDoubleValue", args)
- 
-    def query_multiple_selects_OrderByLocaleValue(self, database, select_property1, select_property2, whr_key,locale):
+
+    def query_multiple_selects_OrderByLocaleValue(self, database, select_property1, select_property2, whr_key, locale):
         args = Args()
         args.setMemoryPointer("database", database)
         args.setString("select_property1", select_property1)
