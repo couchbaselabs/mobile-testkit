@@ -92,13 +92,54 @@ public class QueryRequestHandler {
         String select_property2 = args.get("select_property2");
         String whr_key = args.get("whr_key");
         Expression whr_val = Expression.value(args.get("whr_val"));
-
         Query search_query = QueryBuilder
                 .select(SelectResult.expression(Meta.id),
                         SelectResult.expression(Expression.property(select_property1)),
                         SelectResult.expression(Expression.property(select_property2)))
                 .from(DataSource.database(database))
                 .where(Expression.property(whr_key).equalTo(whr_val));
+        List<Object> resultArray = new ArrayList<>();
+        ResultSet rows = search_query.execute();
+        for (Result row : rows){
+            resultArray.add(row.toMap());
+        }
+        return resultArray;
+    }
+
+    public List<Object> multipleSelectsDoubleValue(Args args) throws CouchbaseLiteException{
+        Database database = args.get("database");
+        String select_property1 = args.get("select_property1");
+        String select_property2 = args.get("select_property2");
+        String whr_key = args.get("whr_key");
+        Float whr_val = args.get("whr_val");
+        Expression exp_val = Expression.floatValue(whr_val);
+        Query search_query = QueryBuilder
+            .select(SelectResult.expression(Meta.id),
+                SelectResult.expression(Expression.property(select_property1)),
+                SelectResult.expression(Expression.property(select_property2)))
+            .from(DataSource.database(database))
+            .where(Expression.property(whr_key).equalTo(exp_val));
+        List<Object> resultArray = new ArrayList<>();
+        ResultSet rows = search_query.execute();
+        for (Result row : rows){
+            resultArray.add(row.toMap());
+        }
+        return resultArray;
+    }
+
+    public List<Object> multipleSelectsOrderByLocaleValue(Args args) throws CouchbaseLiteException{
+        Database database = args.get("database");
+        String select_property1 = args.get("select_property1");
+        String select_property2 = args.get("select_property2");
+        String whr_key = args.get("whr_key");
+        String  locale= args.get("locale");
+        Collation with_locale = Collation.unicode().locale(locale);
+        Query search_query = QueryBuilder
+            .select(SelectResult.expression(Meta.id),
+                SelectResult.expression(Expression.property(select_property1)),
+                SelectResult.expression(Expression.property(select_property2)))
+            .from(DataSource.database(database))
+            .orderBy(Ordering.expression(Expression.property(whr_key).collate(with_locale)));
         List<Object> resultArray = new ArrayList<>();
         ResultSet rows = search_query.execute();
         for (Result row : rows){

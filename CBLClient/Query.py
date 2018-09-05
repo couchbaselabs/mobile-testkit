@@ -127,8 +127,25 @@ class Query(object):
         args.setString("select_property2", select_property2)
         args.setString("whr_key", whr_key)
         args.setString("whr_val", whr_val)
-
         return self._client.invokeMethod("query_multipleSelects", args)
+
+    def query_multiple_selects_forDoubleValue(self, database, select_property1, select_property2, whr_key, whr_val):
+        args = Args()
+        args.setMemoryPointer("database", database)
+        args.setString("select_property1", select_property1)
+        args.setString("select_property2", select_property2)
+        args.setString("whr_key", whr_key)
+        args.setFloat("whr_val", whr_val)
+        return self._client.invokeMethod("query_multipleSelectsDoubleValue", args)
+
+    def query_multiple_selects_OrderByLocaleValue(self, database, select_property1, select_property2, whr_key, locale):
+        args = Args()
+        args.setMemoryPointer("database", database)
+        args.setString("select_property1", select_property1)
+        args.setString("select_property2", select_property2)
+        args.setString("whr_key", whr_key)
+        args.setString("locale", locale)
+        return self._client.invokeMethod("query_multipleSelectsOrderByLocaleValue", args)
 
     def query_where_and_or(self, database, whr_key1, whr_val1, whr_key2, whr_val2, whr_key3, whr_val3, whr_key4, whr_val4):
         args = Args()

@@ -182,6 +182,8 @@ namespace Couchbase.Lite.Testing
             ["query_nextResult"] = QueryMethods.QueryNextResult,
             ["query_docsLimitOffset"] = QueryMethods.QueryDocsLimitOffset,
             ["query_multipleSelects"] = QueryMethods.QueryMultipleSelects,
+            ["query_multipleSelectsDoubleValue"] = QueryMethods.MultipleSelectsDoubleValue,
+            ["query_multipleSelectsOrderByLocaleValue"] = QueryMethods.MultipleSelectsOrderByLocaleValue,
             ["query_whereAndOr"] = QueryMethods.QueryWhereAndOr,
             ["query_regex"] = QueryMethods.QueryRegex,
             ["query_isNullOrMissing"] = QueryMethods.QueryIsNullOrMissing,

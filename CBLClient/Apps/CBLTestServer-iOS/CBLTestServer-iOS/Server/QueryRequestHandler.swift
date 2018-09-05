@@ -143,7 +143,6 @@ public class QueryRequestHandler {
             let select_property2: String = args.get(name: "select_property2")!
             let whr_key: String = args.get(name: "whr_key")!
             let whr_val: String = args.get(name: "whr_val")!
-
             let searchQuery = QueryBuilder
                 .select(SelectResult.expression(Meta.id),
                         SelectResult.expression(Expression.property(select_property1)),
@@ -152,13 +151,54 @@ public class QueryRequestHandler {
                 .where((Expression.property(whr_key)).equalTo(Expression.string(whr_val)))
 
             var resultArray = [Any]()
-
             for row in try searchQuery.execute() {
                 resultArray.append(row.toDictionary())
             }
 
             return resultArray
 
+        case "query_multipleSelectsDoubleValue":
+            let database: Database = args.get(name: "database")!
+            let select_property1: String = args.get(name: "select_property1")!
+            let select_property2: String = args.get(name: "select_property2")!
+            let whr_key: String = args.get(name: "whr_key")!
+            let whr_val: Float = args.get(name: "whr_val")!
+            let searchQuery = QueryBuilder
+                .select(SelectResult.expression(Meta.id),
+                        SelectResult.expression(Expression.property(select_property1)),
+                        SelectResult.expression(Expression.property(select_property2)))
+                .from(DataSource.database(database))
+                .where((Expression.property(whr_key)).equalTo(Expression.float(whr_val)))
+            
+            var resultArray = [Any]()
+            for row in try searchQuery.execute() {
+                resultArray.append(row.toDictionary())
+            }
+            
+            return resultArray
+            
+        case "query_multipleSelectsOrderByLocaleValue":
+            let database: Database = args.get(name: "database")!
+            let select_property1: String = args.get(name: "select_property1")!
+            let select_property2: String = args.get(name: "select_property2")!
+            let whr_key: String = args.get(name: "whr_key")!
+            let locale: String = args.get(name: "locale")!
+            let with_locale = Collation.unicode().locale(locale)
+            let key = Expression.property(whr_key)
+            let searchQuery = QueryBuilder
+                .select(SelectResult.expression(Meta.id),
+                        SelectResult.expression(Expression.property(select_property1)),
+                        SelectResult.expression(Expression.property(select_property2)))
+                .from(DataSource.database(database))
+                .orderBy(Ordering.expression(key.collate(with_locale)))
+            
+            var resultArray = [Any]()
+            for row in try searchQuery.execute() {
+                resultArray.append(row.toDictionary())
+            }
+            
+            return resultArray
+            
         case "query_whereAndOr":
             let database: Database = args.get(name: "database")!
             let whr_key1: String = args.get(name: "whr_key1")!

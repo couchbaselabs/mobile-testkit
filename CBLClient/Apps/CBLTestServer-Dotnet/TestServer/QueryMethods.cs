@@ -149,6 +149,61 @@ namespace Couchbase.Lite.Testing
             });
         }
 
+        internal static void MultipleSelectsDoubleValue([NotNull] NameValueCollection args,
+            [NotNull] IReadOnlyDictionary<string, object> postBody,
+            [NotNull] HttpListenerResponse response)
+        {
+            With<Database>(postBody, "database", db =>
+            {
+                var prop1 = postBody["select_property1"].ToString();
+                var prop2 = postBody["select_property2"].ToString();
+                var whrKey = postBody["whr_key"].ToString();
+                var whrval = postBody["whr_val"];
+                IExpression whrVal = Expression.Double((float)whrval);
+                List<object> resultArray = new List<object>();
+                using (IQuery query = QueryBuilder
+                                .Select(SelectResult.Expression(Meta.ID),
+                                        SelectResult.Expression(Expression.Property(prop1)),
+                                        SelectResult.Expression(Expression.Property(prop2)))
+                                .From(DataSource.Database(db))
+                                .Where(Expression.Property(whrKey).EqualTo(whrVal)))
+
+                    foreach (Result row in query.Execute())
+                    {
+                        resultArray.Add(row.ToDictionary());
+                    }
+                response.WriteBody(resultArray);
+            });
+        }
+
+        internal static void MultipleSelectsOrderByLocaleValue([NotNull] NameValueCollection args,
+            [NotNull] IReadOnlyDictionary<string, object> postBody,
+            [NotNull] HttpListenerResponse response)
+        {
+            With<Database>(postBody, "database", db =>
+            {
+                var prop1 = postBody["select_property1"].ToString();
+                var prop2 = postBody["select_property2"].ToString();
+                var whrKey = postBody["whr_key"].ToString();
+                var locale = postBody["locale"].ToString();
+                ICollation localeCollation = Collation.Unicode().Locale(locale);
+                var key = Expression.Property(whrKey);
+                List<object> resultArray = new List<object>();
+                using (IQuery query = QueryBuilder
+                                .Select(SelectResult.Expression(Meta.ID),
+                                        SelectResult.Expression(Expression.Property(prop1)),
+                                        SelectResult.Expression(Expression.Property(prop2)))
+                                .From(DataSource.Database(db))
+                       .OrderBy(Ordering.Expression(key.Collate(localeCollation))))
+
+                    foreach (Result row in query.Execute())
+                    {
+                        resultArray.Add(row.ToDictionary());
+                    }
+                response.WriteBody(resultArray);
+            });
+        }
+
         internal static void QueryWhereAndOr([NotNull] NameValueCollection args,
             [NotNull] IReadOnlyDictionary<string, object> postBody,
             [NotNull] HttpListenerResponse response)
