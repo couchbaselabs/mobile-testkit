@@ -85,6 +85,7 @@ namespace Couchbase.Lite.Testing
             }
             catch (Exception)
             {
+                // TODO:
                 //placerholder for customized logging or error handling
             }
         }
