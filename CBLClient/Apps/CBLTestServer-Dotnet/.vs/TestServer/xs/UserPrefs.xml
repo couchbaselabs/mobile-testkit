@@ -2,10 +2,10 @@
   <MonoDevelop.Ide.ItemProperties.TestServer.NetCore PreferredExecutionTarget="MonoDevelop.Default" />
   <MonoDevelop.Ide.Workbench ActiveDocument="TestServer/WebSocketConnection.cs">
     <Files>
-      <File FileName="TestServer/EncryptionKeyMethods.cs" Line="14" Column="11" />
+      <File FileName="TestServer/EncryptionKeyMethods.cs" Line="1" Column="1" />
       <File FileName="TestServer/P2PMethods.cs" Line="114" Column="42" />
-      <File FileName="TestServer/Router.cs" Line="222" Column="17" />
-      <File FileName="TestServer/WebSocketConnection.cs" Line="1" Column="1" />
+      <File FileName="TestServer/Router.cs" Line="178" Column="17" />
+      <File FileName="TestServer/WebSocketConnection.cs" Line="447" Column="31" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />

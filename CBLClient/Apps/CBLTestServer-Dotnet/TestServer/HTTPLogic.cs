@@ -140,11 +140,13 @@ namespace Couchbase.Lite.Testing
                     }
 
                     if (++_redirectCount > MaxRedirects)
-                    {
+                    {   
+                        //TODO:
                         //Error = new CouchbaseNetworkException(C4NetworkErrorCode.TooManyRedirects);
                     }
                     else if (!Redirect(parser))
                     {
+                        //TODO:
                         //Error = new CouchbaseNetworkException(C4NetworkErrorCode.InvalidRedirect);
                     }
                     else
@@ -154,6 +156,7 @@ namespace Couchbase.Lite.Testing
 
                     break;
                 case HttpStatusCode.Unauthorized:
+                    //TODO:
                     //case HttpStatusCode.ProxyAuthenticationRequired:
                     //    var authResponse = parser.Headers.Get("WWW-Authenticate");
                     //    if (authResponse == null) {
@@ -231,6 +234,7 @@ namespace Couchbase.Lite.Testing
             }
             catch (Exception e)
             {
+                // TODO:
                 //Log.To.Couchbase.W(Tag, "Error getting commit information", e);
             }
 

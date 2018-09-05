@@ -169,6 +169,7 @@ namespace Couchbase.Lite.Testing
             }
             catch (Exception)
             {
+                // TODO: 
                 //placerholder for customized logging or error handling
             }
         }
@@ -216,6 +217,7 @@ namespace Couchbase.Lite.Testing
                 }
                 catch (Exception)
                 {
+                    // TODO:
                     // failed to get regex matched value or any other exception
                     // placerholder for customized logging or error handling
                     return false;

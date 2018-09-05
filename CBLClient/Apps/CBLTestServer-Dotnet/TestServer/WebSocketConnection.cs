@@ -273,12 +273,13 @@ namespace Couchbase.Lite.Testing
             }
             else
             {
-                Console.WriteLine("WebSocket CLOSED}"); 
+                Console.WriteLine("WebSocket CLOSED"); 
                 // Log.To.Sync.I(Tag, "WebSocket CLOSED");
             }
 
             if (_closed)
             {
+                Console.WriteLine("Double close detected, ignoring..."); 
                 //Log.To.Sync.W(Tag, "Double close detected, ignoring...");
                 return;
             }
@@ -311,6 +312,7 @@ namespace Couchbase.Lite.Testing
             }
             catch (Exception e)
             {
+                Console.WriteLine("Error reading HTTP response of websocket handshake"); 
                 //Log.To.Sync.I(Tag, "Error reading HTTP response of websocket handshake", e);
                 DidClose(e);
             }
@@ -341,6 +343,7 @@ namespace Couchbase.Lite.Testing
             cts.CancelAfter(IdleTimeout);
             if (NetworkStream == null)
             {
+                Console.WriteLine("Socket reported ready, but no network stream available!");
                 //Log.To.Sync.E(Tag, "Socket reported ready, but no network stream available!");
                 DidClose(C4WebSocketCloseCode.WebSocketCloseAbnormal, "Unexpected error in client logic");
                 return;
@@ -428,6 +431,7 @@ namespace Couchbase.Lite.Testing
 
             if (_writeQueue != null && !_writeQueue.IsCompleted)
             {
+                Console.WriteLine("Timed out waiting for _writeQueue to finish, forcing Dispose..."); 
                 //Log.To.Sync.W(Tag, "Timed out waiting for _writeQueue to finish, forcing Dispose...");
             }
 
