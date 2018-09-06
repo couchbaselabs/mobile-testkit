@@ -46,6 +46,12 @@ def gen_template(config):
                 ToPort="8091",
                 CidrIp="0.0.0.0/0",
             ),
+            ec2.SecurityGroupRule(
+                IpProtocol="tcp",
+                FromPort="8093",
+                ToPort="8093",
+                CidrIp="0.0.0.0/0",
+            ),
             ec2.SecurityGroupRule(   # sync gw user port
                 IpProtocol="tcp",
                 FromPort="4984",
