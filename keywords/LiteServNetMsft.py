@@ -3,6 +3,7 @@ import re
 
 from keywords.LiteServBase import LiteServBase
 from keywords.constants import LATEST_BUILDS
+from keywords.constants import RELEASED_BUILDS
 from keywords.constants import REGISTERED_CLIENT_DBS
 from keywords.exceptions import LiteServError
 from keywords.utils import version_and_build
@@ -55,6 +56,17 @@ class LiteServNetMsft(LiteServBase):
         if version_build is not None:
             self.version_build = version_build
         version, build = version_and_build(self.version_build)
+        if not build:
+            if build < "2.0":
+                if version == "1.4.0.1":
+                    url = "{}/{}/couchbase-lite-net/LiteServ.zip".format(RELEASED_BUILDS, version)
+                else:
+                    url = "{}/{}/couchbase-lite/net/LiteServ.zip".format(RELEASED_BUILDS, version)
+            else:
+                # TODO Fix this
+                url = "{}/couchbase-lite-net/{}/{}/LiteServ.zip".format(LATEST_BUILDS, version, build)
+        else:
+            url = "{}/couchbase-lite-net/{}/{}/LiteServ.zip".format(LATEST_BUILDS, version, build)
         download_url = "{}/couchbase-lite-net/{}/{}/LiteServ.zip".format(LATEST_BUILDS, version, build)
         package_name = "couchbase-lite-net-msft-{}-liteserv".format(self.version_build)
 

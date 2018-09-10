@@ -7,6 +7,7 @@ from keywords.LiteServBase import LiteServBase
 from keywords.constants import LATEST_BUILDS
 from keywords.constants import BINARY_DIR
 from keywords.constants import REGISTERED_CLIENT_DBS
+from keywords.constants import RELEASED_BUILDS
 from keywords.exceptions import LiteServError
 from keywords.utils import version_and_build
 from keywords.utils import log_info
@@ -40,10 +41,17 @@ class LiteServAndroid(LiteServBase):
         if version == "1.2.1":
             url = "{}/couchbase-lite-android/release/{}/{}/{}".format(LATEST_BUILDS, version, self.version_build, package_name)
         else:
-            url = "{}/couchbase-lite-android/{}/{}/{}".format(LATEST_BUILDS, version, build, package_name)
+            if not build:
+                if build < "2.0":
+                    url = "{}/{}/couchbase-lite/android/{}".format(RELEASED_BUILDS, version, package_name)
+                else:
+                    # TODO Fix this
+                    url = "{}/couchbase-lite-android/{}/{}/{}".format(LATEST_BUILDS, version, build, package_name)
+            else:
+                url = "{}/couchbase-lite-android/{}/{}/{}".format(LATEST_BUILDS, version, build, package_name)
 
         log_info("Downloading {} -> {}/{}".format(url, BINARY_DIR, package_name))
-        resp = requests.get(url)
+        resp = requests.get(url, verify=False)# Need to resolve the certificate verification issue for release branch
         resp.raise_for_status()
         with open("{}/{}".format(BINARY_DIR, package_name), "wb") as f:
             f.write(resp.content)
