@@ -22,7 +22,6 @@ class SyncGatewayConfig:
                  config_path,
                  build_flags,
                  skip_bucketcreation):
-
         self._version_number = version_number
         self._build_number = build_number
         self.commit = commit
@@ -40,6 +39,25 @@ class SyncGatewayConfig:
         output += "  build flags:      {}\n".format(self.build_flags)
         output += "  skip bucketcreation: {}\n".format(self.skip_bucketcreation)
         return output
+
+    def resolve_sg_sa_mobile_url(self, installer="sync-gateway",
+                                 sg_type="enterprise",
+                                 platform_extension="rpm"):
+        if self._build_number:
+            base_url = "http://latestbuilds.service.couchbase.com/builds/latestbuilds/sync_gateway/{}/{}".format(self._version_number,
+                                                                                                                 self._build_number)
+            package_name = "couchbase-{}-{}_{}-{}_x86_64.{}".format(installer,
+                                                                    sg_type,
+                                                                    self._version_number,
+                                                                    self._build_number,
+                                                                    platform_extension)
+        else:
+            base_url = "https://latestbuilds.service.couchbase.com/builds/releases/mobile/couchbase-sync-gateway/{}".format(self._version_number)
+            package_name = "couchbase-{}-{}_{}_x86_64.{}".format(installer,
+                                                                 sg_type,
+                                                                 self._version_number,
+                                                                 platform_extension)
+        return base_url, package_name
 
     def sync_gateway_base_url_and_package(self, sg_ce=False,
                                           sg_platform="centos",
@@ -60,8 +78,6 @@ class SyncGatewayConfig:
             # sg_package_name  = "couchbase-sync-gateway-enterprise_{0}-{1}_x86_64.rpm".format(version, build)
         else:
             # http://latestbuilds.service.couchbase.com/builds/latestbuilds/sync_gateway/1.3.1.5/2/couchbase-sync-gateway-enterprise_1.2.0-6_x86_64.rpm
-            base_url = "http://latestbuilds.service.couchbase.com/builds/latestbuilds/sync_gateway/{0}/{1}".format(self._version_number, self._build_number)
-
             sg_type = "enterprise"
 
             if sg_ce:
@@ -71,13 +87,13 @@ class SyncGatewayConfig:
                     (sg_installer_type != "msi" or sa_installer_type != "msi"):
                 platform_extension["windows"] = "exe"
 
-            sg_package_name = "couchbase-sync-gateway-{0}_{1}-{2}_x86_64.{3}".format(sg_type, self._version_number, self._build_number, platform_extension[sg_platform])
-            accel_package_name = "couchbase-sg-accel-enterprise_{0}-{1}_x86_64.{2}".format(self._version_number, self._build_number, platform_extension[sa_platform])
+            base_url, sg_package_name = self.resolve_sg_sa_mobile_url("sync-gateway", sg_type, platform_extension[sg_platform])
+            base_url, accel_package_name = self.resolve_sg_sa_mobile_url("sg-accel", sg_type, platform_extension[sa_platform])
 
         return base_url, sg_package_name, accel_package_name
 
     def is_valid(self):
-        if self._version_number is not None and self._build_number is not None:
+        if self._version_number is not None:
             if self.commit is not None:
                 raise ProvisioningError("Commit should be empty when provisioning with a binary")
         elif self.commit is not None:
