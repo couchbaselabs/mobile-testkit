@@ -2042,6 +2042,20 @@ class MobileRestClient:
             resp_obj = resp.json()
             return resp_obj["id"]
 
+    def delete_design_doc(self, url, db, name, rev_id):
+        """
+        Keyword that delets a Design Doc to the database
+        """
+        resp = self._session.delete("{}/{}/_design/{}?rev={}".format(url, db, name, rev_id))
+        log_r(resp)
+        resp.raise_for_status()
+
+        # Only return a response if adding to the listener
+        # Sync Gateway does not return a response
+        if self.get_server_type(url) == ServerType.listener:
+            resp_obj = resp.json()
+            return resp_obj["id"]
+
     def get_design_doc_rev(self, url, db, name):
         """
         Keyword that gets a Design Doc revision
