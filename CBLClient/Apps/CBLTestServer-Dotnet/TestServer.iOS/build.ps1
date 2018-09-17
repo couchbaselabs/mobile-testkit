@@ -97,6 +97,7 @@ try {
     "NUGET_VERSION=$env:NUGET_VERSION" | Set-Content $env:WORKSPACE\env.properties
     security unlock-keychain -p Passw0rd /Users/mobile/Library/Keychains/login.keychain-db
     & msbuild /p:Configuration=Release /p:Platform=iPhoneSimulator /t:Rebuild
+    Remove-Item -Recurse -Force obj
     & msbuild /p:Configuration=Release /p:Platform=iPhone /p:BuildIpa=true /t:Rebuild
     if($LASTEXITCODE -ne 0) {
         Write-Error "Build failed for TestServer.iOS"
