@@ -53,6 +53,7 @@ class TestServeriOS(TestServerBase):
         if self.platform == "xamarin-ios":
             self.app_dir = "TestServer.iOS/Payload"
             self.package_name = "TestServer.iOS.ipa"
+            self.bundle_id = "com.couchbase.TestServer.iOS"
 
     def download(self, version_build=None):
         """
