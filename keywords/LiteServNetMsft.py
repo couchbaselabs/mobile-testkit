@@ -67,12 +67,11 @@ class LiteServNetMsft(LiteServBase):
                 url = "{}/couchbase-lite-net/{}/{}/LiteServ.zip".format(LATEST_BUILDS, version, build)
         else:
             url = "{}/couchbase-lite-net/{}/{}/LiteServ.zip".format(LATEST_BUILDS, version, build)
-        download_url = "{}/couchbase-lite-net/{}/{}/LiteServ.zip".format(LATEST_BUILDS, version, build)
         package_name = "couchbase-lite-net-msft-{}-liteserv".format(self.version_build)
 
         # Download LiteServ via Ansible on remote machine
         status = self.ansible_runner.run_ansible_playbook("download-liteserv-msft.yml", extra_vars={
-            "download_url": download_url,
+            "download_url": url,
             "package_name": package_name
         })
 

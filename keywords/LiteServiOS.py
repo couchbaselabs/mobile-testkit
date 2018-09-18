@@ -30,7 +30,7 @@ class LiteServiOS(LiteServBase):
         self.device_id = None
         self.released_version = {
             "1.4.0": "3",
-            }
+        }
 
     def download(self, version_build=None):
         """
@@ -68,7 +68,7 @@ class LiteServiOS(LiteServBase):
             url = "{}/couchbase-lite-ios/{}/ios/{}/{}".format(LATEST_BUILDS, version, build, package_name)
 
         log_info("Downloading {} -> {}/{}".format(url, BINARY_DIR, package_name))
-        resp = requests.get(url, verify=False)# Need to resolve the certificate verification issue for release branch
+        resp = requests.get(url, verify=False)  # Need to resolve the certificate verification issue for release branch
         resp.raise_for_status()
         with open("{}/{}".format(BINARY_DIR, package_name), "wb") as f:
             f.write(resp.content)
