@@ -64,3 +64,7 @@ class DockerError(Error):
 
 class FeatureSupportedError(Error):
     pass
+
+
+class ConnectionError(Error):
+    pass
