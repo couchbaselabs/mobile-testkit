@@ -1139,7 +1139,7 @@ def test_initial_pull_replication_background_apprun(params_from_base_test_setup,
     c.reset(sg_config_path=sg_config)
 
     # No command to push the app to background on device, so avoid test to run on ios device
-    if liteserv_platform.lower() != "ios" or liteserv_platform.lower() != "xamarin-ios" or device_enabled:
+    if (liteserv_platform.lower() != "ios" and liteserv_platform.lower() != "xamarin-ios") or device_enabled:
         pytest.skip('This test only valid for ios')
 
     client = MobileRestClient()
@@ -1185,6 +1185,7 @@ def test_initial_pull_replication_background_apprun(params_from_base_test_setup,
     testserver.close_app()
     time.sleep(10)  # wait until all replication is done
     testserver.open_app()
+    replicator.wait_until_replicator_idle(repl)
     # Verify docs replicated to client
     cbl_doc_ids = db.getDocIds(cbl_db)
     assert len(cbl_doc_ids) == len(bulk_docs_resp)
@@ -1344,7 +1345,8 @@ def test_default_conflict_scenario_delete_wins(params_from_base_test_setup, dele
         2. Replicate docs to SG with push_pull and continous False
         3. Wait until replication is done and stop replication
         4. update doc in Sg and delete doc in CBL/ delete doc in Sg and update doc in CBL
-        5. Verify delete wins
+        5. Start the replication with same configuration as step 2 
+        6. Verify delete wins
     """
     sg_db = "db"
     sg_url = params_from_base_test_setup["sg_url"]

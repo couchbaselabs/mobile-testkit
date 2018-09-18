@@ -290,7 +290,7 @@ class Replication(object):
         return repl
 
     def wait_until_replicator_idle(self, repl, err_check=True):
-        max_times = 10
+        max_times = 50
         count = 0
         # Sleep until replicator completely processed
         activity_level = self.getActivitylevel(repl)

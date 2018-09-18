@@ -13,7 +13,7 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>MinimumOSVersion</key>
-	<string>11.1</string>
+	<string>10.3</string>
 	<key>UIDeviceFamily</key>
 	<array>
 		<integer>1</integer>
@@ -40,5 +40,7 @@
 	</array>
 	<key>NSMainNibFile</key>
 	<string>LaunchScreen</string>
+	<key>CFBundleName</key>
+	<string>TestServer.iOS</string>
 </dict>
 </plist>
