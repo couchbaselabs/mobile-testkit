@@ -66,15 +66,26 @@ public class ReplicatorConfigurationRequestHandler {
                     replicatorType = .pushAndPull
                 }
             }
-            var config: ReplicatorConfiguration!
-            
+            var config: ReplicatorConfiguration
             if (source_db == nil){
                 throw RequestHandlerError.InvalidArgument("No source db provided")
             }
-            
+
             var target: Endpoint?
             if (target_url != nil) {
-                target = URLEndpoint(url: URL(string: target_url!)!)
+                do {
+                    try tryCatch {
+                        target = URLEndpoint(url: URL(string: target_url!)!)
+                    }
+                } catch let error as NSError {
+                    if let exception = error.userInfo["exception"] as? NSException {
+                        if let reason = exception.reason {
+                            throw RequestHandlerError.InvalidArgument("\(reason)")
+                        } else {
+                            throw RequestHandlerError.InvalidArgument("Unknown CBL Exception")
+                        }
+                    }
+                }
             }
             
             #if COUCHBASE_ENTERPRISE
@@ -88,7 +99,6 @@ public class ReplicatorConfigurationRequestHandler {
             if (target == nil) {
                 throw RequestHandlerError.InvalidArgument("target url or database should be provided.")
             }
-            
             config = ReplicatorConfiguration(database: source_db!, target: target!)
             config.replicatorType = replicatorType
             if continuous != nil {

@@ -171,11 +171,24 @@ public class Server {
                     // Send 200 code and close
                     return GCDWebServerDataResponse(text: "I-1")
                 }
+            } catch let error as RequestHandlerError {
+                var reason = "Unknown Request Handler Error"
+                switch error {
+                case .InvalidArgument(let r):
+                    reason = r
+                case .IOException(let r):
+                    reason = r
+                case .MethodNotFound(let r):
+                    reason = r
+                }
+                let response = GCDWebServerDataResponse(text: reason)!
+                response.statusCode = 432
+                response.contentType = "text/plain"
+                return response
             } catch let error as NSError {
-                // Send 400 error code
                 let response = GCDWebServerDataResponse(text: error.localizedDescription)!
                 response.statusCode = error.code as Int
-                response.contentType = error.localizedDescription
+                response.contentType = "text/plain"
                 return response
             }
         }
