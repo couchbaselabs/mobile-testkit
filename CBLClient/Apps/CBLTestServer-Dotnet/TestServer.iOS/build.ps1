@@ -97,8 +97,6 @@ try {
     "NUGET_VERSION=$env:NUGET_VERSION" | Set-Content $env:WORKSPACE\env.properties
     security unlock-keychain -p Passw0rd /Users/mobile/Library/Keychains/login.keychain-db
     & msbuild /p:Configuration=Release /p:Platform=iPhoneSimulator /t:Rebuild
-    Remove-Item -Recurse -Force obj
-    & msbuild /p:Configuration=Release /p:Platform=iPhone /p:BuildIpa=true /t:Rebuild
     if($LASTEXITCODE -ne 0) {
         Write-Error "Build failed for TestServer.iOS"
         exit 1
@@ -120,6 +118,23 @@ try {
         Copy-Item TestServer.iOS.zip $ZipPath/TestServer.iOS.zip
     } finally {
         Pop-Location
+    }
+    
+    Remove-Item -Recurse -Force bin
+    Remove-Item -Recurse -Force obj
+    Push-Location ../TestServer
+     dotnet restore
+     if($LASTEXITCODE -ne 0) {
+         Write-Error "Restore failed for TestServer"
+         exit 1
+     }
+
+    Pop-Location
+    & msbuild /t:Restore
+    & msbuild /p:Configuration=Release /p:Platform=iPhone /p:BuildIpa=true /t:Rebuild
+    if($LASTEXITCODE -ne 0) {
+        Write-Error "Build failed for TestServer.iOS"
+        exit 1
     }
 
     Push-Location "bin/iPhone/Release"
