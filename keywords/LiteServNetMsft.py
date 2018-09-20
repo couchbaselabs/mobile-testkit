@@ -57,7 +57,7 @@ class LiteServNetMsft(LiteServBase):
             self.version_build = version_build
         version, build = version_and_build(self.version_build)
         if not build:
-            if build < "2.0":
+            if version < "2.0":
                 if version == "1.4.0.1":
                     url = "{}/{}/couchbase-lite-net/LiteServ.zip".format(RELEASED_BUILDS, version)
                 else:
