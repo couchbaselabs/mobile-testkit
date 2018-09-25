@@ -177,6 +177,7 @@ def test_multiple_sgs_with_CBLs(params_from_base_test_setup, setup_customized_te
     cluster_config = params_from_base_test_setup["cluster_config"]
     base_url = params_from_base_test_setup["base_url"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    liteserv_platform = params_from_base_test_setup["liteserv_platform"]
 
     channels1 = ["Replication1"]
     channels2 = ["Replication2"]
@@ -256,7 +257,10 @@ def test_multiple_sgs_with_CBLs(params_from_base_test_setup, setup_customized_te
 
     replicator.stop(repl1)
     repl2_error = replicator.getError(repl2)
-    assert "POSIXErrorDomain" in repl2_error
+    if liteserv_platform == "xamarin-ios":
+        assert "POSIXDomain" in repl2_error
+    else:
+        assert "POSIXErrorDomain" in repl2_error
     # 6. Verify one CBL DB should be successful as other CBL DB should fail as associated Sg is down
     cblDB1_doc_ids = db.getDocIds(cbl_db1)
     for doc in cbl_doc_ids1:
