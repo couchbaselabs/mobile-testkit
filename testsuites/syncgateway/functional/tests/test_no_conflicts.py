@@ -610,7 +610,7 @@ def test_migrate_conflicts_delete_last_rev(params_from_base_test_setup, sg_conf_
 
     # 3. Update the docs few times
     prev_revs = []
-    for i in xrange(5):
+    for i in xrange(25):
         update_sg_docs = sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs, number_updates=1, delay=None, auth=autouser_session, channels=channels)
         rev = update_sg_docs[0]['rev'].split('-')[1]
         prev_revs.append(rev)
@@ -628,7 +628,7 @@ def test_migrate_conflicts_delete_last_rev(params_from_base_test_setup, sg_conf_
     time.sleep(5)
 
     # 5. Enable allow_conflicts = false in SG config and 6. restart sg
-    revs_limit = 2
+    revs_limit = 21
     temp_cluster_config = copy_to_temp_conf(cluster_config, mode)
     persist_cluster_config_environment_prop(temp_cluster_config, 'no_conflicts_enabled', "True", property_name_check=False)
     persist_cluster_config_environment_prop(temp_cluster_config, 'revs_limit', revs_limit, property_name_check=False)
