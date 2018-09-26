@@ -66,8 +66,7 @@ class LiteServiOS(LiteServBase):
             if build < "2.0":
                 url = "{}/{}/couchbase-lite/ios/{}".format(RELEASED_BUILDS, version, package_name)
             else:
-                # TODO
-                url = "{}/couchbase-lite-ios/{}/ios/{}/{}".format(LATEST_BUILDS, version, build, package_name)
+                raise Exception("Test not valid for Mobile 2.0 onwards")
         else:
             url = "{}/couchbase-lite-ios/{}/ios/{}/{}".format(LATEST_BUILDS, version, build, package_name)
 

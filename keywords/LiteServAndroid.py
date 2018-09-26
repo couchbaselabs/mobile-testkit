@@ -45,8 +45,7 @@ class LiteServAndroid(LiteServBase):
                 if build < "2.0":
                     url = "{}/{}/couchbase-lite/android/{}".format(RELEASED_BUILDS, version, package_name)
                 else:
-                    # TODO Fix this
-                    url = "{}/couchbase-lite-android/{}/{}/{}".format(LATEST_BUILDS, version, build, package_name)
+                    raise Exception("Test not valid for Mobile 2.0 onwards")
             else:
                 url = "{}/couchbase-lite-android/{}/{}/{}".format(LATEST_BUILDS, version, build, package_name)
 

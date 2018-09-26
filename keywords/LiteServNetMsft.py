@@ -63,8 +63,7 @@ class LiteServNetMsft(LiteServBase):
                 else:
                     url = "{}/{}/couchbase-lite/net/LiteServ.zip".format(RELEASED_BUILDS, version)
             else:
-                # TODO Fix this
-                url = "{}/couchbase-lite-net/{}/{}/LiteServ.zip".format(LATEST_BUILDS, version, build)
+                raise Exception("Test not valid for Mobile 2.0 onwards")
         else:
             url = "{}/couchbase-lite-net/{}/{}/LiteServ.zip".format(LATEST_BUILDS, version, build)
         package_name = "couchbase-lite-net-msft-{}-liteserv".format(self.version_build)

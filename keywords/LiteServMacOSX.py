@@ -45,7 +45,10 @@ class LiteServMacOSX(LiteServBase):
             return
 
         if build is None:
-            package_url = "{}/{}/couchbase-lite/macosx/{}".format(RELEASED_BUILDS, version, package_name)
+            if build < "2.0":
+                package_url = "{}/{}/couchbase-lite/macosx/{}".format(RELEASED_BUILDS, version, package_name)
+            else:
+                raise Exception("Test not valid for Mobile 2.0 onwards")
         else:
             package_url = "{}/couchbase-lite-ios/{}/ios/{}/{}".format(LATEST_BUILDS, version, build, package_name)
         # Download package to deps/binaries
