@@ -19,7 +19,6 @@ from libraries.data import doc_generators
 from requests.exceptions import ConnectionError, HTTPError
 
 
-
 @pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.syncgateway
@@ -1585,6 +1584,7 @@ def test_replication_with_10_attachments(setup_client_syncgateway_test):
     # Verify docs show up in sync_gateway's changes feed
     client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=cbl_docs, auth=session)
 
+
 @pytest.mark.listener
 @pytest.mark.syncgateway
 @pytest.mark.attachments
@@ -1625,7 +1625,7 @@ def test_replication_with_10_attachments_forsequence(setup_client_syncgateway_te
     client.create_user(sg_url_admin, sg_db, "autotest", password="password", channels=channels)
     session = client.create_session(sg_url_admin, sg_db, "autotest")
 
-    # add dosc to mobile rest client
+    # add docs to mobile rest client
     abc_docs = document.create_docs(doc_id_prefix="abc_docs", number=num_docs, channels=channels)
 
     user_one_docs = client.add_bulk_docs(url=sg_url, db=sg_db, docs=abc_docs, auth=session)
@@ -1642,12 +1642,12 @@ def test_replication_with_10_attachments_forsequence(setup_client_syncgateway_te
         from_url=sg_url_admin, from_db=sg_db,
         to_db=ls_db
     )
-    time.sleep(180)
     # Verify all docs got replicated successfully to sg
     client.wait_for_replication_status_idle(ls_url, repl_id)
 
     # Verify docs replicated to sync_gateway
     client.verify_docs_present(url=ls_url, db=ls_db, expected_docs=sg_docs)
+
 
 @pytest.mark.sanity
 @pytest.mark.listener
@@ -1832,7 +1832,7 @@ def test_doc_expiry_exceeded_200days(setup_client_syncgateway_test):
 
     # Create 'num_docs' docs on LiteServ
     t = time.time()
-    t = t + 19008000
+    t = t + (60 * 60 * 24 * 200)  # Added current timestamp with 55 days to add expiry
     bulk_docs_content = document.create_docs("doc_content_", num_docs, expiry=t)
     client.add_bulk_docs(url=ls_url, db=ls_db, docs=bulk_docs_content)
     time.sleep(5)
@@ -1842,4 +1842,3 @@ def test_doc_expiry_exceeded_200days(setup_client_syncgateway_test):
         assert False, "Adding expiration date more than 50 days is not successful"
     expiration_date = client.get_expiration_value(url=ls_url, db=ls_db, doc_id="doc_content__0")
     assert expiration_date is not None, "Did not get the expiration date"
-
