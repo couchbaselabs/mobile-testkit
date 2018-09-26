@@ -29,6 +29,10 @@ class LiteServiOS(LiteServBase):
         self.logfile_name = None
         self.device_id = None
         self.released_version = {
+            "1.2.0": "112",
+            "1.2.1": "13",
+            "1.3.0": "61",
+            "1.3.1": "6",
             "1.4.0": "3",
         }
 
