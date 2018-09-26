@@ -3,6 +3,7 @@ import re
 
 from keywords.LiteServBase import LiteServBase
 from keywords.constants import LATEST_BUILDS
+from keywords.constants import RELEASED_BUILDS
 from keywords.constants import REGISTERED_CLIENT_DBS
 from keywords.exceptions import LiteServError
 from keywords.utils import version_and_build
@@ -55,12 +56,21 @@ class LiteServNetMsft(LiteServBase):
         if version_build is not None:
             self.version_build = version_build
         version, build = version_and_build(self.version_build)
-        download_url = "{}/couchbase-lite-net/{}/{}/LiteServ.zip".format(LATEST_BUILDS, version, build)
+        if not build:
+            if version < "2.0":
+                if version == "1.4.0.1":
+                    url = "{}/{}/couchbase-lite-net/LiteServ.zip".format(RELEASED_BUILDS, version)
+                else:
+                    url = "{}/{}/couchbase-lite/net/LiteServ.zip".format(RELEASED_BUILDS, version)
+            else:
+                raise Exception("Test not valid for Mobile 2.0 onwards")
+        else:
+            url = "{}/couchbase-lite-net/{}/{}/LiteServ.zip".format(LATEST_BUILDS, version, build)
         package_name = "couchbase-lite-net-msft-{}-liteserv".format(self.version_build)
 
         # Download LiteServ via Ansible on remote machine
         status = self.ansible_runner.run_ansible_playbook("download-liteserv-msft.yml", extra_vars={
-            "download_url": download_url,
+            "download_url": url,
             "package_name": package_name
         })
 

@@ -10,6 +10,7 @@ import requests
 from keywords.LiteServBase import LiteServBase
 from keywords.constants import BINARY_DIR
 from keywords.constants import LATEST_BUILDS
+from keywords.constants import RELEASED_BUILDS
 from keywords.exceptions import LiteServError
 from keywords.utils import version_and_build
 from keywords.utils import log_info
@@ -27,6 +28,13 @@ class LiteServiOS(LiteServBase):
         self.liteserv_admin_url = "http://{}:59850".format(self.host)
         self.logfile_name = None
         self.device_id = None
+        self.released_version = {
+            "1.2.0": "112",
+            "1.2.1": "13",
+            "1.3.0": "61",
+            "1.3.1": "6",
+            "1.4.0": "3",
+        }
 
     def download(self, version_build=None):
         """
@@ -54,10 +62,16 @@ class LiteServiOS(LiteServBase):
 
         # Package not downloaded, proceed to download from latest builds
         downloaded_package_zip_name = "{}/{}".format(BINARY_DIR, package_name)
-        url = "{}/couchbase-lite-ios/{}/ios/{}/{}".format(LATEST_BUILDS, version, build, package_name)
+        if build is None:
+            if build < "2.0":
+                url = "{}/{}/couchbase-lite/ios/{}".format(RELEASED_BUILDS, version, package_name)
+            else:
+                raise Exception("Test not valid for Mobile 2.0 onwards")
+        else:
+            url = "{}/couchbase-lite-ios/{}/ios/{}/{}".format(LATEST_BUILDS, version, build, package_name)
 
         log_info("Downloading {} -> {}/{}".format(url, BINARY_DIR, package_name))
-        resp = requests.get(url)
+        resp = requests.get(url, verify=False)  # Need to resolve the certificate verification issue for release branch
         resp.raise_for_status()
         with open("{}/{}".format(BINARY_DIR, package_name), "wb") as f:
             f.write(resp.content)
@@ -352,6 +366,8 @@ class LiteServiOS(LiteServBase):
             raise LiteServError("Unexpected LiteServ platform running!")
 
         version, build = version_and_build(self.version_build)
+        if not build:
+            build = self.released_version[version]
         expected_version = "{} (build {})".format(version, build)
         running_version = resp_obj["vendor"]["version"]
 

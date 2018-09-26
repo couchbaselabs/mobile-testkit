@@ -12,9 +12,6 @@ class LiteServFactory:
         if version_build is None:
             raise ValueError("Make sure you provide a version / build!")
 
-        if len(version_build.split("-")) != 2:
-            raise ValueError("Make sure your version_build follows the format: 1.3.1-13")
-
     @staticmethod
     def validate_platform(platform):
         valid_platforms = ["android", "ios", "macosx", "net-mono", "net-msft"]

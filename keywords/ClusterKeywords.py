@@ -200,6 +200,17 @@ class ClusterKeywords:
             couchbaseserver.verify_server_version(server["ip"], expected_server_version, cbs_ssl=cbs_ssl)
 
         # Verify sync_gateway versions
+        sg_version, sg_build = version_and_build(expected_sync_gateway_version)
+        sg_released_version = {
+            "1.4.1.3": "1",
+            "1.5.0": "594",
+            "1.5.1": "4",
+            "2.0.0": "832",
+            "2.1.0": "121"
+        }
+        if sg_build is None:
+            expected_sync_gateway_version = "{}-{}".format(expected_sync_gateway_version,
+                                                           sg_released_version[sg_version])
         for sg in cluster_obj["sync_gateways"]:
             if cluster_obj["environment"]["ipv6_enabled"]:
                 sg["ip"] = "[{}]".format(sg["ip"])
