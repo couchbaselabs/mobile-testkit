@@ -43,13 +43,6 @@ def sync_gateway_config_path_for_mode(config_prefix, mode):
 
 
 def get_sync_gateway_version(host):
-    sg_released_version = {
-        "1.4.1.3": "1",
-        "1.5.0": "594",
-        "1.5.1": "4",
-        "2.0.0": "832",
-        "2.1.0": "121"
-    }
     sg_scheme = "http"
     cluster_config = os.environ["CLUSTER_CONFIG"]
     if sg_ssl_enabled(cluster_config):
