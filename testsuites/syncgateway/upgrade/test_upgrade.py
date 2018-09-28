@@ -351,7 +351,9 @@ def update_docs(client, ls_url, ls_db, added_docs, auth, terminator_doc_id):
     docs_per_update = 3
     doc_revs = {}
 
-    while True:
+    count = 0
+    # Running doc updates for 10 mins
+    while count < (10 * 60 / 5):
         try:
             client.get_doc(url=ls_url, db=ls_db, doc_id=terminator_doc_id, auth=auth)
             log_info("update_docs: Found termination doc")
@@ -375,6 +377,7 @@ def update_docs(client, ls_url, ls_db, added_docs, auth, terminator_doc_id):
             time.sleep(2)
 
         time.sleep(5)
+        count += 1
 
 
 def upgrade_server_cluster(servers, primary_server, secondary_server, server_version, server_upgraded_version, server_urls, cluster_config, cbs_platform, toy_build=None):
