@@ -9,8 +9,6 @@ from keywords import attachment
 from concurrent.futures import as_completed
 from concurrent.futures import ThreadPoolExecutor
 
-from requests.exceptions import HTTPError
-
 from keywords.utils import log_info
 from keywords.MobileRestClient import MobileRestClient
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
@@ -18,6 +16,7 @@ from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from libraries.testkit import cluster
 from keywords import types
 from libraries.data import doc_generators
+from requests.exceptions import ConnectionError, HTTPError
 
 
 @pytest.mark.sanity
@@ -821,6 +820,7 @@ def test_replication_with_session_cookie(setup_client_syncgateway_test):
     all_docs = client.merge(ls_docs, sg_docs)
     log_info(all_docs)
 
+    time.sleep(10)
     client.verify_docs_present(url=sg_admin_url, db=sg_db, expected_docs=all_docs)
     client.verify_docs_present(url=ls_url, db=ls_db, expected_docs=all_docs)
 
@@ -1585,6 +1585,70 @@ def test_replication_with_10_attachments(setup_client_syncgateway_test):
     client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=cbl_docs, auth=session)
 
 
+@pytest.mark.listener
+@pytest.mark.syncgateway
+@pytest.mark.attachments
+def test_replication_with_10_attachments_forsequence(setup_client_syncgateway_test):
+    """
+    1.  Start LiteServ and Sync Gateway
+    2.  Create database
+    3.  Create 10 docs with 10 attachments with 2MB each for attachment.
+    4.  Start continuous push replication from ls_db to sg_db
+    5.  Verify replication is completed and all docs pushed to sg.
+    """
+
+    log_info("Running 'test_replication_with_10_attachments' ...")
+
+    cluster_config = setup_client_syncgateway_test["cluster_config"]
+    sg_mode = setup_client_syncgateway_test["sg_mode"]
+    sg_url = setup_client_syncgateway_test["sg_url"]
+    sg_url_admin = setup_client_syncgateway_test["sg_admin_url"]
+
+    ls_url = setup_client_syncgateway_test["ls_url"]
+
+    log_info("ls_url: {}".format(ls_url))
+    log_info("sg_url: {}".format(sg_url))
+    log_info("sg_url_admin: {}".format(sg_url_admin))
+
+    ls_db = "ls_db"
+    sg_db = "db"
+    num_docs = 25
+    channels = ["ABC"]
+
+    # Reset cluster to ensure no data in system
+    sg_config = sync_gateway_config_path_for_mode("listener_tests/listener_tests", sg_mode)
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
+
+    client = MobileRestClient()
+    client.create_database(ls_url, ls_db)
+    client.create_user(sg_url_admin, sg_db, "autotest", password="password", channels=channels)
+    session = client.create_session(sg_url_admin, sg_db, "autotest")
+
+    # add docs to mobile rest client
+    abc_docs = document.create_docs(doc_id_prefix="abc_docs", number=num_docs, channels=channels)
+
+    user_one_docs = client.add_bulk_docs(url=sg_url, db=sg_db, docs=abc_docs, auth=session)
+    assert len(user_one_docs) == num_docs
+
+    # doc with 2.36 PNG attachment
+    sg_docs = add_2MB_docs(url=sg_url, db=sg_db, number=num_docs, id_prefix="2MB_attachment_k", auth=session, channels=channels, attachment_name="golden_gate_large.jpg", num_of_attachments=20)
+    assert len(sg_docs) == num_docs
+
+    # Start continuous push replication from ls_db -> sg_db
+    repl_id = client.start_replication(
+        url=ls_url,
+        continuous=True,
+        from_url=sg_url_admin, from_db=sg_db,
+        to_db=ls_db
+    )
+    # Verify all docs got replicated successfully to sg
+    client.wait_for_replication_status_idle(ls_url, repl_id)
+
+    # Verify docs replicated to sync_gateway
+    client.verify_docs_present(url=ls_url, db=ls_db, expected_docs=sg_docs)
+
+
 @pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.syncgateway
@@ -1743,3 +1807,38 @@ def add_2MB_docs(url, db, number, id_prefix, auth=None, channels=None, attachmen
 
     log_info("Added: {} docs".format(len(added_docs)))
     return added_docs
+
+
+@pytest.mark.listener
+@pytest.mark.syncgateway
+@pytest.mark.replication
+def test_doc_expiry_exceeded_200days(setup_client_syncgateway_test):
+    """
+    1. Get a document from the database
+    2. Call ExpireAfter with TimeSpan.Days(60) or thereabouts
+    3. verify no exceptions
+    Reference https://github.com/couchbase/couchbase-lite-net/issues/1029
+    """
+
+    ls_db = "ls_db"
+    num_docs = 10
+    ls_url = setup_client_syncgateway_test["ls_url"]
+
+    log_info("Running 'test_initial_push_replication'")
+    log_info("ls_url: {}".format(ls_url))
+
+    client = MobileRestClient()
+    client.create_database(url=ls_url, name=ls_db)
+
+    # Create 'num_docs' docs on LiteServ
+    t = time.time()
+    t = t + (60 * 60 * 24 * 200)  # Added current timestamp with 55 days to add expiry
+    bulk_docs_content = document.create_docs("doc_content_", num_docs, expiry=t)
+    client.add_bulk_docs(url=ls_url, db=ls_db, docs=bulk_docs_content)
+    time.sleep(5)
+    try:
+        client.get_all_docs(url=ls_url, db=ls_db)
+    except ConnectionError:
+        assert False, "Adding expiration date more than 50 days is not successful"
+    expiration_date = client.get_expiration_value(url=ls_url, db=ls_db, doc_id="doc_content__0")
+    assert expiration_date is not None, "Did not get the expiration date"

@@ -756,6 +756,8 @@ class MobileRestClient:
         if rev:
             params["rev"] = rev
 
+        params["show_exp"] = "true"
+
         if auth_type == AuthType.session:
             resp = self._session.get("{}/{}/{}".format(url, db, doc_id), params=params, cookies=dict(SyncGatewaySession=auth[1]))
         elif auth_type == AuthType.http_basic:
@@ -2319,3 +2321,13 @@ class MobileRestClient:
         resp = self._session.delete("http://{}:4985/_sgcollect_info".format(sg_host))
         log_r(resp)
         resp.raise_for_status()
+
+    def get_expiration_value(self, url, db, doc_id):
+        """
+        Get the expiration value
+        """
+        resp = self._session.get("{}/{}/{}?show_exp=true".format(url, db, doc_id))
+        log_r(resp)
+        resp.raise_for_status()
+        resp_obj = resp.json()
+        return resp_obj["_exp"]
