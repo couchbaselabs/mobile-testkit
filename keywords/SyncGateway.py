@@ -97,6 +97,17 @@ def verify_sync_gateway_product_info(host):
 
 
 def verify_sync_gateway_version(host, expected_sync_gateway_version):
+    sg_released_version = {
+        "1.4.1.3": "1",
+        "1.5.0": "594",
+        "1.5.1": "4",
+        "2.0.0": "832",
+        "2.1.0": "121"
+    }
+    version, build = version_and_build(expected_sync_gateway_version)
+    if build is None:
+        expected_sync_gateway_version = "{}-{}".format(version,
+                                                       sg_released_version[version])
     running_sg_version, running_sg_vendor_version = get_sync_gateway_version(host)
 
     log_info("Expected sync_gateway Version: {}".format(expected_sync_gateway_version))
