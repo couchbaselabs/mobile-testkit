@@ -108,10 +108,7 @@ class TestServeriOS(TestServerBase):
         elif self.platform == "xamarin-ios":
             self.app_name = "{}.app".format(self.app)
 
-        if self.platform == "ios":
-            self.app_path = "{}/{}/{}".format(BINARY_DIR, self.app_dir, self.app_name)
-        elif self.platform == "xamarin-ios":
-            self.app_path = "{}/{}/{}".format(BINARY_DIR, self.app_dir, self.app_name)
+        self.app_path = "{}/{}/{}".format(BINARY_DIR, self.app_dir, self.app_name)
         log_info("Installing: {}".format(self.app_path))
 
         # install app / launch app to connected device
