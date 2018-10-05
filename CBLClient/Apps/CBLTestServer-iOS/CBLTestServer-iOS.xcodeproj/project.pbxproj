@@ -59,6 +59,8 @@
 		FB60EBD621069D8D005052B6 /* ReplicatorTcpListener.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB60EBD521069D8D005052B6 /* ReplicatorTcpListener.swift */; };
 		FB60EBD821069DB9005052B6 /* ReplicatorTcpServerConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB60EBD721069DB9005052B6 /* ReplicatorTcpServerConnection.swift */; };
 		FB60EBDA21093383005052B6 /* ReplicatorTcpClientConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB60EBD921093383005052B6 /* ReplicatorTcpClientConnection.swift */; };
+		FB72EEA321504FC800B306DF /* TryCatch.m in Sources */ = {isa = PBXBuildFile; fileRef = FB72EEA221504FC800B306DF /* TryCatch.m */; };
+		FB72EEA52150513100B306DF /* TryCatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB72EEA42150513100B306DF /* TryCatch.swift */; };
 		FB7B1E731FDB60ED00A912BF /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB7B1E721FDB60ED00A912BF /* Extensions.swift */; };
 /* End PBXBuildFile section */
 
@@ -167,6 +169,9 @@
 		FB60EBD521069D8D005052B6 /* ReplicatorTcpListener.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReplicatorTcpListener.swift; sourceTree = "<group>"; };
 		FB60EBD721069DB9005052B6 /* ReplicatorTcpServerConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReplicatorTcpServerConnection.swift; sourceTree = "<group>"; };
 		FB60EBD921093383005052B6 /* ReplicatorTcpClientConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReplicatorTcpClientConnection.swift; sourceTree = "<group>"; };
+		FB72EEA121504FC800B306DF /* TryCatch.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TryCatch.h; sourceTree = "<group>"; };
+		FB72EEA221504FC800B306DF /* TryCatch.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TryCatch.m; sourceTree = "<group>"; };
+		FB72EEA42150513100B306DF /* TryCatch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TryCatch.swift; sourceTree = "<group>"; };
 		FB7B1E721FDB60ED00A912BF /* Extensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -228,6 +233,9 @@
 				FB60EBD721069DB9005052B6 /* ReplicatorTcpServerConnection.swift */,
 				FB60EBD921093383005052B6 /* ReplicatorTcpClientConnection.swift */,
 				FB5A6A5421123A9A00937927 /* ReplicatorTcpConnection.swift */,
+				FB72EEA121504FC800B306DF /* TryCatch.h */,
+				FB72EEA221504FC800B306DF /* TryCatch.m */,
+				FB72EEA42150513100B306DF /* TryCatch.swift */,
 			);
 			path = Server;
 			sourceTree = "<group>";
@@ -529,6 +537,7 @@
 				29F786991F9FC4180035178F /* GCDWebServerURLEncodedFormRequest.m in Sources */,
 				FB7B1E731FDB60ED00A912BF /* Extensions.swift in Sources */,
 				2907D16C200E7BE400CE56EB /* CollationRequestHandler.swift in Sources */,
+				FB72EEA52150513100B306DF /* TryCatch.swift in Sources */,
 				2907D16A200E79C800CE56EB /* ExpressionRequestHandler.swift in Sources */,
 				294FB20E1FEB0E1800DD0C23 /* DocumentRequestHandler.swift in Sources */,
 				29D15BA11FA7DCFA005DAAA3 /* ValueSerializer.swift in Sources */,
@@ -548,6 +557,7 @@
 				29F7869A1F9FC4180035178F /* GCDWebServerDataResponse.m in Sources */,
 				29F786911F9FC4180035178F /* GCDWebServer.m in Sources */,
 				2909B0731F9FFA8900B4E0E4 /* Server.swift in Sources */,
+				FB72EEA321504FC800B306DF /* TryCatch.m in Sources */,
 				2909B0761FA3B7B400B4E0E4 /* Args.swift in Sources */,
 				29F786981F9FC4180035178F /* GCDWebServerMultiPartFormRequest.m in Sources */,
 				FB60EBD821069DB9005052B6 /* ReplicatorTcpServerConnection.swift in Sources */,

@@ -151,6 +151,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
         "sslkey": "",
         "num_index_replicas": "",
         "sg_use_views": "",
+        "revs_limit": "",
         "couchbase_server_primary_node": couchbase_server_primary_node
     }
 

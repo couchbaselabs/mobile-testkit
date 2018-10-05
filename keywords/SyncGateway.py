@@ -321,6 +321,10 @@ class SyncGateway(object):
             playbook_vars["autoimport"] = '"import_docs": "continuous",'
             playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
 
+        if sg_ssl_enabled(cluster_config):
+            playbook_vars["sslcert"] = '"SSLCert": "sg_cert.pem",'
+            playbook_vars["sslkey"] = '"SSLKey": "sg_privkey.pem",'
+
         if no_conflicts_enabled(cluster_config):
             playbook_vars["no_conflicts"] = '"allow_conflicts": false,'
         try:
@@ -456,6 +460,7 @@ class SyncGateway(object):
             "sslcert": "",
             "num_index_replicas": "",
             "sg_use_views": "",
+            "revs_limit": "",
             "xattrs": ""
         }
 
@@ -480,6 +485,19 @@ class SyncGateway(object):
 
         if is_xattrs_enabled(cluster_config) and enable_import:
             playbook_vars["autoimport"] = '"import_docs": "continuous",'
+
+        if no_conflicts_enabled(cluster_config):
+            playbook_vars["no_conflicts"] = '"allow_conflicts": false,'
+
+        if sg_ssl_enabled(cluster_config):
+            playbook_vars["sslcert"] = '"SSLCert": "sg_cert.pem",'
+            playbook_vars["sslkey"] = '"SSLKey": "sg_privkey.pem",'
+
+        try:
+            revs_limit = get_revs_limit(cluster_config)
+            playbook_vars["revs_limit"] = '"revs_limit": {},'.format(revs_limit)
+        except KeyError:
+            log_info("revs_limit not found in {}, Ignoring".format(cluster_config))
 
         # Deploy config
         if url is not None:
