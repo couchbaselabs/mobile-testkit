@@ -113,6 +113,8 @@ def test_server_goes_down_sanity(params_from_base_test_setup):
     4. Stop adding docs
     5. Verify that that the expected docs are present and in the changes feed.
     6. Start server again and add to cluster
+    7. Add more docs
+    8. Verify that the expected docs are present and in the changes feed
     """
 
     cluster_config = params_from_base_test_setup["cluster_config"]
@@ -209,6 +211,12 @@ def test_server_goes_down_sanity(params_from_base_test_setup):
     flakey_server.start()
     main_server.recover(flakey_server)
     main_server.rebalance_in(coucbase_servers, flakey_server)
+
+    # Add more docs after rebalance and verify that the docs show up in the DB and the changes feed
+    more_docs = client.add_docs(url=sg_url, db=sg_db, number=num_docs, id_prefix=None, auth=session, channels=channels)
+    assert len(more_docs) == 100
+    client.verify_docs_present(url=sg_url, db=sg_db, expected_docs=more_docs + docs, auth=session)
+    client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=more_docs + docs, auth=session, polling_interval=5)
 
     # Make sure all docs were not added before server was
     log_info("test_server_goes_down_sanity complete!")
