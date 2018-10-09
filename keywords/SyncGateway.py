@@ -17,7 +17,7 @@ from keywords.exceptions import ProvisioningError, Error
 from libraries.provision.ansible_runner import AnsibleRunner
 from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_redact_level
 from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version, sg_ssl_enabled
-from libraries.testkit.cluster import get_buckets_from_sync_gateway_config
+from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
 
 
 def validate_sync_gateway_mode(mode):
