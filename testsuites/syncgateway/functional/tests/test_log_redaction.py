@@ -178,7 +178,7 @@ def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_
     cluster = Cluster(config=temp_cluster_config)
     cluster.reset(sg_config_path=sg_conf)
 
-    # Get sync_gateway host and sa accel host 
+    # Get sync_gateway host and sa accel host
     cluster = load_cluster_config_json(cluster_config)
     sg_host = cluster["sync_gateways"][0]["ip"]
     if cluster["environment"]["ipv6_enabled"]:
