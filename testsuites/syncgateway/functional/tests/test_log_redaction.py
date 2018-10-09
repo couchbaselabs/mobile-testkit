@@ -165,6 +165,8 @@ def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_
     num_of_docs = 10
     user_name = 'autotest'
     password = 'validkey'
+    sa_directory = None
+    sa_host = None
     if get_sync_gateway_version(sg_ip)[0] < "2.1":
         pytest.skip("log redaction feature not available for version < 2.1 ")
 
@@ -176,11 +178,16 @@ def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_
     cluster = Cluster(config=temp_cluster_config)
     cluster.reset(sg_config_path=sg_conf)
 
-    # Get sync_gateway host
+    # Get sync_gateway host and sa accel host 
     cluster = load_cluster_config_json(cluster_config)
     sg_host = cluster["sync_gateways"][0]["ip"]
     if cluster["environment"]["ipv6_enabled"]:
         sg_host = "[{}]".format(sg_host)
+
+    if mode == "di":
+        sa_host = cluster["sg_accels"][0]["ip"]
+        if cluster["environment"]["ipv6_enabled"]:
+            sa_host = "[{}]".format(sa_host)
 
     # 3. Create user in sync_gateway
     sg_client = MobileRestClient()
@@ -198,15 +205,24 @@ def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_
             directory = "c{}\\test".format(":")
         else:
             directory = "/home/sync_gateway/data"
+            if mode == "di":
+                sa_directory = "/home/sg_accel/data"
     else:
         directory = None
     if redaction_salt:
         salt_value = "customized-redaction-salt-value"
         resp = sg_client.sgCollect_info(sg_host, redact_level=redaction_level, redact_salt=salt_value, output_directory=directory)
+        if mode == "di":
+            sa_resp = sg_client.sgCollect_info(sa_host, redact_level=redaction_level, redact_salt=salt_value, output_directory=sa_directory)
     else:
         resp = sg_client.sgCollect_info(sg_host, redact_level=redaction_level, output_directory=directory)
+        if mode == "di":
+            sa_resp = sg_client.sgCollect_info(sa_host, redact_level=redaction_level, output_directory=sa_directory)
     if resp["status"] != "started":
         assert False, "sg collect did not started"
+    if mode == "di":
+        if sa_resp["status"] != "started":
+            assert False, "sga collect did not started"
 
     count = 0
     log_info("sg collect is running ........")
@@ -217,7 +233,7 @@ def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_
         count += 1
     time.sleep(5)  # sleep until zip files created with sg collect rest end point
 
-    pull_redacted_zip_file(temp_cluster_config, sg_platform, directory)
+    pull_redacted_zip_file(temp_cluster_config, sg_platform, directory, sa_directory)
     # Verify files got redacted in sg collected files
     log_verification_withsgCollect(redaction_level, user_name, password)
 
@@ -361,7 +377,7 @@ def sgcollect_redact(cluster_config, log_redaction_level, redaction_salt):
     return zip_file_name
 
 
-def pull_redacted_zip_file(cluster_config, sg_platform, output_dir=None):
+def pull_redacted_zip_file(cluster_config, sg_platform, output_dir=None, sa_output_dir=None):
     ansible_runner = AnsibleRunner(cluster_config)
     if output_dir is None:
         if sg_platform == "centos":
@@ -372,7 +388,7 @@ def pull_redacted_zip_file(cluster_config, sg_platform, output_dir=None):
             sa_logs_dir = "C:{}".format("\PROGRA~1\Couchbase\\var\\logs")
     else:
         sg_logs_dir = output_dir
-        sa_logs_dir = output_dir
+        sa_logs_dir = sa_output_dir
 
     status = ansible_runner.run_ansible_playbook(
         "pull-sgcollect-zip.yml",
