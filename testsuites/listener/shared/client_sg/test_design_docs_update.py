@@ -84,12 +84,12 @@ def test_design_doc_update(setup_client_syncgateway_test):
     client.verify_view_row_num(view_response=content_view_rows_2, expected_num_rows=5)
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.syncgateway
 @pytest.mark.attachments
 def test_design_doc_delete(setup_client_syncgateway_test):
     """
+    @summary:
     Ref: https://issues.couchbase.com/browse/CBSE-4650
     https://github.com/couchbase/couchbase-lite-java-core/issues/1413
     1. Add 10 docs to the client with content
@@ -130,13 +130,13 @@ def test_design_doc_delete(setup_client_syncgateway_test):
 
     # Design doc to to fetch doc._id, doc._rev for docs with content
     view = """{
-    "language" : "javascript",
-    "views" : {
-        "content_view" : {
-            "map" : "function(doc, meta) { if (doc.content) { emit(doc._id, doc._rev); } }"
-        }
-    }
-}"""
+                "language" : "javascript",
+                "views" : {
+                    "content_view" : {
+                        "map" : "function(doc, meta) { if (doc.content) { emit(doc._id, doc._rev); } }"
+                    }
+                }
+            }"""
 
     # querying docs with newly created design doc
     client.add_design_doc(url=ls_url, db=ls_db, name=d_doc_name, doc=view)
@@ -160,19 +160,18 @@ def test_design_doc_delete(setup_client_syncgateway_test):
 
     # Design doc to to fetch doc._id, doc._rev for docs with no content
     view = """{
-    "language" : "javascript",
-    "views" : {
-        "content_view" : {
-            "map" : "function(doc, meta) { if (!(doc.content)) { emit(doc._id, doc._rev); } }"
-        }
-    }
-}"""
+                "language" : "javascript",
+                "views" : {
+                    "content_view" : {
+                        "map" : "function(doc, meta) { if (!(doc.content)) { emit(doc._id, doc._rev); } }"
+                    }
+                }
+            }"""
 
     # creating a new Desing doc  with same name as previous design doc
     log_info("Creating a new design doc to query docs with no content with same name as previous one")
     client.add_design_doc(url=ls_url, db=ls_db, name=d_doc_name, doc=view)
     dd_rev_new = client.get_design_doc_rev(url=ls_url, db=ls_db, name=d_doc_name)
-#     assert dd_rev_new != dd_rev and dd_rev_new.startswith("1-")
     log_info("dd_rev_new: {}".format(dd_rev_new))
 
     content_view_rows_2 = client.get_view(url=ls_url, db=ls_db, design_doc_name=d_doc_name, view_name="content_view")
