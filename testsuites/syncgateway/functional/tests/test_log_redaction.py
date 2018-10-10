@@ -183,11 +183,15 @@ def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_
     sg_host = cluster["sync_gateways"][0]["ip"]
     if cluster["environment"]["ipv6_enabled"]:
         sg_host = "[{}]".format(sg_host)
-
     if mode == "di":
+        sa_host_list = []
         sa_host = cluster["sg_accels"][0]["ip"]
         if cluster["environment"]["ipv6_enabled"]:
-            sa_host = "[{}]".format(sa_host)
+            for accel in cluster["sg_accels"]:
+                sa_host_list.append("[{}]".format(accel["ip"]))
+        else:
+            for accel in cluster["sg_accels"]:
+                sa_host_list.append(accel["ip"])
 
     # 3. Create user in sync_gateway
     sg_client = MobileRestClient()
@@ -213,11 +217,13 @@ def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_
         salt_value = "customized-redaction-salt-value"
         resp = sg_client.sgCollect_info(sg_host, redact_level=redaction_level, redact_salt=salt_value, output_directory=directory)
         if mode == "di":
-            sa_resp = sg_client.sgCollect_info(sa_host, redact_level=redaction_level, redact_salt=salt_value, output_directory=sa_directory)
+            for sa_host in sa_host_list:
+                sa_resp = sg_client.sgCollect_info(sa_host, redact_level=redaction_level, redact_salt=salt_value, output_directory=sa_directory)
     else:
         resp = sg_client.sgCollect_info(sg_host, redact_level=redaction_level, output_directory=directory)
         if mode == "di":
-            sa_resp = sg_client.sgCollect_info(sa_host, redact_level=redaction_level, output_directory=sa_directory)
+            for sa_host in sa_host_list:
+                sa_resp = sg_client.sgCollect_info(sa_host, redact_level=redaction_level, output_directory=sa_directory)
     if resp["status"] != "started":
         assert False, "sg collect did not started"
     if mode == "di":
