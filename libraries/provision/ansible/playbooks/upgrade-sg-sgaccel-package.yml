@@ -4,6 +4,7 @@
   any_errors_fatal: true
 
   vars:
+    sync_gateway_config_filepath:
     couchbase_sync_gateway_package_base_url:
     couchbase_sync_gateway_package:
     couchbase_sync_gateway_package_url: "{{ couchbase_sync_gateway_package_base_url }}/{{ couchbase_sync_gateway_package }}"
@@ -35,6 +36,22 @@
   become: yes
   tasks:
   - include: tasks/stop-sync-gateway.yml
+
+# Deploy non writer sync_gateway configs
+- hosts: sync_gateways
+  any_errors_fatal: true
+  become: yes
+  vars:
+    sync_gateway_config_filepath:
+    couchbase_server_primary_node:
+    # hack until mobile-testkit/issues/406 allows any sync gateway to be referenced
+    sync_gateway_node: "{{ hostvars[groups.sync_gateways[0]].ansible_host }}"
+    is_index_writer: "false"
+    sslcert:
+    sslkey:
+
+  tasks:
+  - include: tasks/deploy-sync-gateway-config.yml
 
   # Install and start service
   - name: SYNC GATEWAY | Install sync_gateway rpm
