@@ -44,7 +44,6 @@
   vars:
     sync_gateway_config_filepath:
     couchbase_server_primary_node:
-    # hack until mobile-testkit/issues/406 allows any sync gateway to be referenced
     sync_gateway_node: "{{ hostvars[groups.sync_gateways[0]].ansible_host }}"
     is_index_writer: "false"
     sslcert:
