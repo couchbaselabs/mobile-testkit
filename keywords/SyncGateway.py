@@ -409,15 +409,65 @@ class SyncGateway(object):
             skip_bucketcreation=False
         )
         sg_conf = os.path.abspath(sg_config.config_path)
+        sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
+        couchbase_server_primary_node = add_cbs_to_sg_config_server_field(cluster_config)
+
+        if is_ipv6(cluster_config):
+            couchbase_server_primary_node = "[{}]".format(couchbase_server_primary_node)
 
         # Shared vars
-        playbook_vars = {}
+        playbook_vars = {
+            "sync_gateway_config_filepath": sg_conf,
+            "sg_cert_path": sg_cert_path,
+            "server_port": self.server_port,
+            "server_scheme": self.server_scheme,
+            "autoimport": "",
+            "xattrs": "",
+            "no_conflicts": "",
+            "revs_limit": "",
+            "sg_use_views": "",
+            "num_index_replicas": "",
+            "couchbase_server_primary_node": couchbase_server_primary_node
+        }
 
         sync_gateway_base_url, sync_gateway_package_name, sg_accel_package_name = sg_config.sync_gateway_base_url_and_package()
 
         playbook_vars["couchbase_sync_gateway_package_base_url"] = sync_gateway_base_url
         playbook_vars["couchbase_sync_gateway_package"] = sync_gateway_package_name
         playbook_vars["couchbase_sg_accel_package"] = sg_accel_package_name
+
+        if version >= "2.1.0":
+            logging_config = '"logging": {"debug": {"enabled": true}'
+            try:
+                redact_level = get_redact_level(cluster_config)
+                playbook_vars["logging"] = '{}, "redaction_level": "{}" {},'.format(logging_config, redact_level, "}")
+            except KeyError as ex:
+                log_info("Keyerror in getting logging{}".format(ex.message))
+                playbook_vars["logging"] = '{} {},'.format(logging_config, "}")
+
+            if get_sg_use_views(cluster_config):
+                playbook_vars["sg_use_views"] = '"use_views": true,'
+            else:
+                num_replicas = get_sg_replicas(cluster_config)
+                playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
+        else:
+            playbook_vars["logging"] = '"log": ["*"],'
+
+        if is_xattrs_enabled(cluster_config):
+            playbook_vars["autoimport"] = '"import_docs": "continuous",'
+            playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
+
+        if sg_ssl_enabled(cluster_config):
+            playbook_vars["sslcert"] = '"SSLCert": "sg_cert.pem",'
+            playbook_vars["sslkey"] = '"SSLKey": "sg_privkey.pem",'
+
+        if no_conflicts_enabled(cluster_config):
+            playbook_vars["no_conflicts"] = '"allow_conflicts": false,'
+        try:
+            revs_limit = get_revs_limit(cluster_config)
+            playbook_vars["revs_limit"] = '"revs_limit": {},'.format(revs_limit)
+        except KeyError:
+            log_info("revs_limit not found in {}, Ignoring".format(cluster_config))
 
         if url is not None:
             target = hostname_for_url(cluster_config, url)
