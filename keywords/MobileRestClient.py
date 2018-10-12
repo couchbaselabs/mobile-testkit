@@ -265,6 +265,13 @@ class MobileRestClient:
             log_r(resp)
             resp.raise_for_status()
 
+    def db_resync(self, url, db):
+        """Get SG db to resync"""
+        headers = {"Accept": "application/json"}
+        resp = self._session.post("{}/{}/_resync".format(url, db), headers=headers)
+        log_r(resp)
+        return resp.raise_for_status()
+
     def get_role(self, url, db, name):
         """ Gets a roles for a db """
 
