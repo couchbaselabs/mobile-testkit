@@ -8,6 +8,7 @@ import requests
 
 from keywords.TestServerBase import TestServerBase
 from keywords.constants import BINARY_DIR
+from keywords.constants import RELEASED_BUILDS
 from keywords.constants import LATEST_BUILDS
 from keywords.exceptions import LiteServError
 from keywords.utils import version_and_build
@@ -65,7 +66,10 @@ class TestServeriOS(TestServerBase):
             self.version_build = version_build
         version, build = version_and_build(self.version_build)
         if self.platform == "ios":
-            app_name = "{}-{}.app".format(self.app, version_build)
+            if build is None:
+                app_name = "{}-{}.app".format(self.app, version)
+            else:
+                app_name = "{}-{}.app".format(self.app, self.version_build)
         else:
             app_name = self.app
 
@@ -77,12 +81,18 @@ class TestServeriOS(TestServerBase):
         # Package not downloaded, proceed to download from latest builds
         downloaded_package_zip_name = "{}/{}".format(BINARY_DIR, self.package_name)
         if self.platform == "ios":
-            url = "{}/couchbase-lite-ios/{}/{}/{}".format(LATEST_BUILDS, version, build, self.package_name)
+            if build is None:
+                if version < "2.0.2":
+                    url = "{}/couchbase-lite/ios/{}/{}".format(RELEASED_BUILDS, version, self.package_name)
+                else:
+                    url = "{}/couchbase-lite-ios/{}/{}".format(RELEASED_BUILDS, version, self.package_name)
+            else:
+                url = "{}/couchbase-lite-ios/{}/{}/{}".format(LATEST_BUILDS, version, build, self.package_name)
         else:
             url = "{}/couchbase-lite-net/{}/{}/{}".format(LATEST_BUILDS, version, build, self.package_name)
 
         log_info("Downloading {} -> {}/{}".format(url, BINARY_DIR, self.package_name))
-        resp = requests.get(url)
+        resp = requests.get(url, verify=False)
         resp.raise_for_status()
         with open("{}/{}".format(BINARY_DIR, self.package_name), "wb") as f:
             f.write(resp.content)
