@@ -328,4 +328,3 @@ def test_invalid_revs_limit_with_allow_conflicts(params_from_base_test_setup, sg
     persist_cluster_config_environment_prop(temp_cluster_config, 'revs_limit', revs_limit, property_name_check=False)
     status = clust.sync_gateways[0].restart(config=sg_conf, cluster_config=temp_cluster_config)
     assert status == 0, "Syncgateway did not start after revs_limit changed to 20"
-    
