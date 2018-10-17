@@ -1,3 +1,4 @@
+
 from libraries.testkit.cluster import Cluster
 from libraries.testkit.admin import Admin
 from libraries.testkit.syncgateway import wait_until_doc_sync
@@ -7,7 +8,12 @@ from libraries.testkit.syncgateway import wait_until_doc_in_changes_feed
 from libraries.testkit.syncgateway import wait_until_docs_sync
 from libraries.testkit.syncgateway import assert_does_not_have_doc
 from libraries.testkit.syncgateway import assert_has_doc
+from keywords.ClusterKeywords import ClusterKeywords
 from requests import HTTPError
+from keywords import document
+from keywords.utils import host_for_url
+from couchbase.bucket import Bucket
+from keywords.MobileRestClient import MobileRestClient
 
 import pytest
 
@@ -459,6 +465,116 @@ def test_replication_config(params_from_base_test_setup):
     wait_until_active_tasks_non_empty(sg1)
 
     pass
+
+
+@pytest.mark.topospecific
+@pytest.mark.syncgateway
+def test_sdk_update_with_changes_request(params_from_base_test_setup):
+
+    """
+      @summary
+      1.Run two Sync Gateway nodes
+      2.Both with enable_shared_bucket_access
+      3.Node A with import_docs:continuous
+      4.Write a document to the bucket via SDK
+      5.Read document via SG from node A to get rev-id for revision 1
+      6.Update the document via SDK
+      7.Read the update of the document from node A
+      8.Request revision 1 of the document from node B
+
+    """
+
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+    xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
+
+    channel = ['ABC']
+    bucket_name = 'data-bucket-1'
+    cluster_utils = ClusterKeywords(cluster_config)
+    cluster = Cluster(config=cluster_config)
+    cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
+    cbs_url = cluster_topology['couchbase_servers'][0]
+    sg_client = MobileRestClient()
+
+    log_info("Running 'test_sdk_update_with_changes_request'")
+    log_info("Using cluster_config: {}".format(cluster_config))
+    # This test should only run when using xattr meta storage
+    if not xattrs_enabled:
+        pytest.skip('XATTR tests require --xattrs flag')
+
+    config = sync_gateway_config_path_for_mode("sync_gateway_sg_replicate", mode)
+    cluster = Cluster(config=cluster_config)
+    sg1 = cluster.sync_gateways[0]
+    sg2 = cluster.sync_gateways[1]
+
+    cluster.reset(sg_config_path=config)
+    status = sg1.restart(config=config, cluster_config=cluster_config)
+    assert status == 0, "Syncgateway1 did not start "
+    config = sync_gateway_config_path_for_mode("sync_gateways_one_with_import_docs", mode)
+    status = sg2.restart(config=config, cluster_config=cluster_config)
+    assert status == 0, "Syncgateway2 did not start "
+    admin1 = Admin(sg1)
+    admin2 = Admin(sg2)
+    # admin.admin_url = sg1.url
+
+    sg1_user, sg2_user = create_sg_users(sg1, sg2, DB1, DB2)
+    # 4.Write a document to the bucket via SDK
+    log_info('Connecting to bucket ...')
+    cbs_ip = host_for_url(cbs_url)
+    if cluster.ipv6:
+        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_ip, bucket_name), password='password')
+    else:
+        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
+    sdk_doc_body = document.create_docs(doc_id_prefix='sdk_doc', number=1, content={'foo': 'bar'},
+                                        channels=channel)
+    sdk_doc = {doc['_id']: doc for doc in sdk_doc_body}
+    sdk_doc_id_list = [doc for doc in sdk_doc]
+    sdk_doc_id = sdk_doc_id_list[0]
+    sdk_client.upsert_multi(sdk_doc)
+
+    # 5.Read document via SG from node A to get rev-id for revision 1
+    doc = sg_client.get_doc(url=admin1.admin_url, db=DB1, doc_id=sdk_doc_id)
+    print "doc is ", doc
+    revid_1 = doc["_rev"]
+
+    # 6.Update the document via SDK
+    sdk_tracking_prop = 'sdk_one_updates'
+    update_docs_via_sdk(client=sdk_client, docs_to_update=sdk_doc_id_list, prop_to_update=sdk_tracking_prop, number_updates=1)
+
+    # 7.Read the update of the document from node A
+    doc = sg_client.get_doc(url=admin1.admin_url, db=DB1, doc_id=sdk_doc_id)
+
+    # 8.Request revision 1 of the document from node B
+    doc = sg_client.get_doc(url=admin2.admin_url, db=DB1, doc_id=sdk_doc_id, rev=revid_1)
+    assert doc["_rev"] == revid_1, "Failed to get the doc of right revision"
+
+
+def update_docs_via_sdk(client, docs_to_update, prop_to_update, number_updates):
+    """ This will update a set of docs (docs_to_update)
+    by updating a property (prop_to_update) using CAS safe writes.
+    It will update all the docs for n times where n is number_updates.
+    """
+
+    log_info("Client: {}".format(id(client)))
+    num_of_docs = len(docs_to_update)
+    print "docs to update is ", docs_to_update
+    for i in xrange(num_of_docs):
+
+        doc_value_result = client.get(docs_to_update[i])
+        doc = doc_value_result.value
+        print "doc is ", doc
+        doc_id = docs_to_update[i]
+        for i in xrange(number_updates):
+            try:
+                doc[prop_to_update]
+            except KeyError:
+                doc[prop_to_update] = 0
+            if doc[prop_to_update] is None:
+                doc[prop_to_update] = 0
+
+            doc[prop_to_update] += 1
+            cur_cas = doc_value_result.cas
+            client.upsert(doc_id, doc, cas=cur_cas)
 
 
 def create_sync_gateways(cluster_config, sg_config_path):

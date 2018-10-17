@@ -18,7 +18,7 @@
     {{ sslkey }}
     "databases":{
         "db1":{
-            {{ xattrs }}
+            "enable_shared_bucket_access": true,
             {{ no_conflicts }}
             {{ sg_use_views }}
             {{ num_index_replicas }}
@@ -37,7 +37,7 @@
             }
         },
         "db2":{
-            {{ xattrs }}
+            "enable_shared_bucket_access": true,
             {{ no_conflicts }}
             {{ sg_use_views }}
             {{ num_index_replicas }}

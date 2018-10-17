@@ -682,7 +682,7 @@ class MobileRestClient:
 
         return resp_obj
 
-    def get_open_revs_ids(self, url, db, doc_id, auth=None, rev=None):
+    def get_open_revs_ids(self, url, db, doc_id, auth=None):
         """
         Gets the open_revs=all for a specified doc_id.
         Returns a parsed multipart reponse in the below format
@@ -705,11 +705,43 @@ class MobileRestClient:
         log_r(resp)
         resp.raise_for_status()
         resp_obj = resp.json()
-        if rev is not None:
-            for obj in resp_obj:
-                if rev in obj['ok']['_rev']:
-                    return obj['ok']['_revisions']['ids']
-        return resp_obj[0]['ok']['_revisions']['ids']
+        rev_ids = []
+        for obj in resp_obj:
+            rev_ids.append(obj['ok']['_rev'])
+        return rev_ids
+
+    def get_deleted_open_rev_ids(self, url, db, doc_id, auth=None):
+        """
+        Gets the open_revs=all for a specified doc_id.
+        Returns deleted rev ids which are in open rev ids in a
+        a parsed multipart reponse in the below format
+        {"rows" : docs}
+        """
+        # Returns multipart by default, specify json for cleaner code
+        headers = {"Accept": "application/json"}
+
+        auth_type = get_auth_type(auth)
+
+        params = {"open_revs": "all"}
+
+        if auth_type == AuthType.session:
+            resp = self._session.get("{}/{}/{}".format(url, db, doc_id), headers=headers, params=params, cookies=dict(SyncGatewaySession=auth[1]))
+        elif auth_type == AuthType.http_basic:
+            resp = self._session.get("{}/{}/{}".format(url, db, doc_id), headers=headers, params=params, auth=auth)
+        else:
+            resp = self._session.get("{}/{}/{}".format(url, db, doc_id), headers=headers, params=params)
+
+        log_r(resp)
+        resp.raise_for_status()
+        resp_obj = resp.json()
+        rev_ids = []
+        for obj in resp_obj:
+            try:
+                obj['ok']['_deleted']
+                rev_ids.append(obj['ok']['_rev'])
+            except KeyError:
+                log_info("ignoring rev as it is not deleted one")
+        return rev_ids
 
     def get_doc(self, url, db, doc_id, auth=None, rev=None, revs_info=False):
         """
@@ -1158,7 +1190,7 @@ class MobileRestClient:
 
         return resp.json()
 
-    def update_doc(self, url, db, doc_id, number_updates=1, attachment_name=None, expiry=None, delay=None, auth=None, channels=None, property_updater=None):
+    def update_doc(self, url, db, doc_id, number_updates=1, attachment_name=None, expiry=None, delay=None, auth=None, channels=None, property_updater=None, remove_expiry=False):
         """
         Updates a doc on a db a number of times.
             1. GETs the doc
@@ -1176,9 +1208,9 @@ class MobileRestClient:
         if doc["updates"] is None:
             doc["updates"] = 0
         current_update_number = doc["updates"] + 1
-
         log_info("Updating {}/{}/{}: {} times".format(url, db, doc_id, number_updates))
-
+        if remove_expiry:
+            del doc["_exp"]
         for i in xrange(number_updates):
 
             # Add "random" this to make each update unique. This will
@@ -1205,7 +1237,6 @@ class MobileRestClient:
             if property_updater is not None:
                 types.verify_is_callable(property_updater)
                 doc = property_updater(doc)
-
             if auth_type == AuthType.session:
                 resp = self._session.put("{}/{}/{}".format(url, db, doc_id), data=json.dumps(doc), cookies=dict(SyncGatewaySession=auth[1]))
             elif auth_type == AuthType.http_basic:
@@ -2331,3 +2362,10 @@ class MobileRestClient:
         resp.raise_for_status()
         resp_obj = resp.json()
         return resp_obj["_exp"]
+
+    def delete_json_element(self, url, db, doc_id):
+        resp = self._session.get("{}/{}/{}?show_exp=true".format(url, db, doc_id))
+        log_r(resp)
+        resp.raise_for_status()
+        resp_obj = resp.json()
+        del resp_obj["_exp"]

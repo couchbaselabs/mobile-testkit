@@ -10,30 +10,20 @@
     {{ sslkey }}
     {{ logging }}
     "databases":{
-        "db1":{
+        "db":{
             {{ autoimport }}
             {{ xattrs }}
             {{ no_conflicts }}
+            {{ revs_limit }}
             {{ sg_use_views }}
             {{ num_index_replicas }}
-            "import_backup_old_rev": true,
+            "rev_cache_size": 5,
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
-            "bucket":"data-bucket-1",
-            "username":"data-bucket-1",
+            "bucket":"data-bucket",
+            "username":"data-bucket",
             "password": "password"
-        },
-        "db2":{
-            {{ autoimport }}
-            {{ xattrs }}
-            {{ no_conflicts }}
-            {{ sg_use_views }}
-            {{ num_index_replicas }}
-            "import_backup_old_rev": true,
-            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
-            "bucket":"data-bucket-2",
-            "username":"data-bucket-2",
-            "password": "password"
-        }
+        
+        
+            }
     }
 }
-

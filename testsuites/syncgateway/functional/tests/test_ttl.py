@@ -568,11 +568,11 @@ def test_removing_expiry(params_from_base_test_setup, sg_conf_name):
 
     doc_exp_3_body = document.create_doc(doc_id="exp_3", expiry=3, channels=sg_user_channels)
     doc_exp_10_body = document.create_doc(doc_id="exp_10", expiry=10, channels=sg_user_channels)
-
     doc_exp_3 = client.add_doc(url=sg_url, db=sg_db, doc=doc_exp_3_body, auth=sg_user_session)
     doc_exp_10 = client.add_doc(url=sg_url, db=sg_db, doc=doc_exp_10_body, auth=sg_user_session)
 
-    doc_exp_3_updated = client.update_doc(url=sg_url, db=sg_db, doc_id=doc_exp_3["id"], number_updates=10, auth=sg_user_session)
+    doc_exp_3_updated = client.update_doc(url=sg_url, db=sg_db, doc_id=doc_exp_3["id"], number_updates=10, auth=sg_user_session, remove_expiry=True)
+    doc_exp_3_updated_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_3_updated["id"], auth=sg_user_session)
 
     # Sleep should allow an expiry to happen on doc_exp_3 if it had not been removed.
     # Expected behavior is that the doc_exp_3 will still be around due to the removal of the expiry
