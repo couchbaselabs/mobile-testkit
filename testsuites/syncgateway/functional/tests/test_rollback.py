@@ -23,7 +23,7 @@ import time
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_default"
 ])
-def test_rollback_server_reset(params_from_base_test_setup, sg_conf_name):
+def ignoringtest_rollback_server_reset(params_from_base_test_setup, sg_conf_name):
     """
     Test for sync gateway resiliency under Couchbase Server rollback
 

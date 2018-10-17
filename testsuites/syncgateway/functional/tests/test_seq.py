@@ -19,7 +19,7 @@ from keywords.utils import log_info
 @pytest.mark.parametrize("sg_conf_name, num_users, num_docs, num_revisions", [
     ("sync_gateway_default_functional_tests", 10, 500, 1),
 ])
-def teseqst_seq(params_from_base_test_setup, sg_conf_name, num_users, num_docs, num_revisions):
+def ignoringtest_seq(params_from_base_test_setup, sg_conf_name, num_users, num_docs, num_revisions):
 
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
