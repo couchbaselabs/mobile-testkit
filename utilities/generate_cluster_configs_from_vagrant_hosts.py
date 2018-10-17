@@ -24,7 +24,9 @@ def check_network_options(private_network, public_network, public_network_ethern
         raise ProvisioningError("Invalid private_network, public_network and public_network_ethernet flags")
 
 
-def generate_cluster_configs_from_vagrant(private_network, public_network, public_network_ethernet, ipv6):
+def generate_cluster_configs_from_vagrant(private_network, public_network,
+                                          public_network_ethernet, ipv6,
+                                          x509_certs):
     """
     1. Gets the status for a running vagrant vm set.
     2. Uses the host name to look up the ip allocated to each vagrant vm instance
@@ -74,7 +76,7 @@ def generate_cluster_configs_from_vagrant(private_network, public_network, publi
 
     # Generate cluster configs
     print("Generating cluster_configs ...")
-    generate_clusters_from_pool(pool_file, ipv6=ipv6)
+    generate_clusters_from_pool(pool_file, ipv6=ipv6, x509_certs=x509_certs)
 
 
 if __name__ == "__main__":
@@ -90,6 +92,14 @@ if __name__ == "__main__":
 
        usage: python generate_cluster_configs_from_vagrant_hosts.py
        --public-network-ethernet
+
+       or
+       usage: python generate_cluster_configs_from_vagrant_hosts.py
+       --public-network --ipv6
+
+       or
+       python generate_cluster_configs_from_vagrant_hosts.py
+       --public-network --x509-certs
        """
 
     parser = OptionParser(usage=usage)
@@ -108,8 +118,17 @@ if __name__ == "__main__":
 
     parser.add_option("--ipv6", action="store_true", default=False, help="Generate configs for IPv6")
 
+    parser.add_option("--x509-certs",
+                      action="store_true",
+                      dest="x509_certs",
+                      default=False,
+                      help="Enable x509_certs authentication")
+
     arg_parameters = sys.argv[1:]
 
     (opts, args) = parser.parse_args(arg_parameters)
 
-    generate_cluster_configs_from_vagrant(opts.private_network, opts.public_network, opts.public_network_ethernet, opts.ipv6)
+    generate_cluster_configs_from_vagrant(opts.private_network,
+                                          opts.public_network,
+                                          opts.public_network_ethernet,
+                                          opts.ipv6, opts.x509_certs)

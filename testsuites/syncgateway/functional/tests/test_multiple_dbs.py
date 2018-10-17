@@ -8,6 +8,7 @@ from libraries.testkit.verify import verify_changes
 
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.utils import log_info
+from utilities.cluster_config_utils import is_x509_auth
 
 
 @pytest.mark.syncgateway
@@ -23,6 +24,8 @@ def test_multiple_db_unique_data_bucket_unique_index_bucket(params_from_base_tes
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
 
+    if is_x509_auth:
+        sg_conf_name += "_x509"
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     log_info("Running 'multiple_db_unique_data_bucket_unique_index_bucket'")

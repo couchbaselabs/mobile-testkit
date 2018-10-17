@@ -1,7 +1,11 @@
 import ConfigParser
 import json
+import os
+import re
 from keywords.exceptions import ProvisioningError
-from shutil import copyfile
+from shutil import copyfile, rmtree, make_archive
+from subprocess import Popen, PIPE
+from distutils.dir_util import copy_tree
 
 
 class CustomConfigParser(ConfigParser.RawConfigParser):
@@ -65,6 +69,48 @@ def persist_cluster_config_environment_prop(cluster_config, property_name, value
         config.write(f)
 
 
+def generate_x509_certs(cluster_config, bucket_name):
+    ''' Generate and insert x509 certs for CBS and SG TLS Handshake'''
+    cluster = load_cluster_config_json(cluster_config)
+    for line in open("ansible.cfg"):
+        match = re.match('remote_user\s*=\s*(\w*)$', line)
+        if match:
+            username = match.groups()[0].strip()
+            break
+
+    curr_dir = os.getcwd()
+    certs_dir = os.path.join(curr_dir, "certs")
+    if os.path.exists(certs_dir):
+        rmtree(certs_dir)
+    os.mkdir(certs_dir)
+
+    # Copying files to generate certs
+    src = os.path.join(curr_dir, "resources/x509_cert_gen")
+    copy_tree(src, certs_dir)
+    os.chdir(certs_dir)
+    cbs_nodes = [node["ip"] for node in cluster["couchbase_servers"]]
+    with open("openssl-san.cnf", "a+") as f:
+        for item in range(len(cbs_nodes)):
+            f.write("IP.{} = {}\n".format(item + 1, cbs_nodes[item]))
+    cmd = ["./gen_keystore.sh", cbs_nodes[0], bucket_name[0]]
+    print " ".join(cmd)
+    proc = Popen(cmd, stdout=PIPE, stderr=PIPE)
+    stdout, stderr = proc.communicate()
+    print stdout, stderr
+
+    # zipping the certificates
+    os.chdir(curr_dir)
+    make_archive("certs", "zip", certs_dir)
+
+    for node in cluster["sync_gateways"]:
+        cmd = ["scp", "certs.zip", "{}@{}:/tmp".format(username, node["ip"])]
+        print " ".join(cmd)
+        proc = Popen(cmd, stdout=PIPE, stderr=PIPE)
+        stdout, stderr = proc.communicate()
+        if stdout or stderr:
+            print stdout, stderr
+
+
 def load_cluster_config_json(cluster_config):
     """ Load json version of cluster config """
 
@@ -82,6 +128,12 @@ def is_cbs_ssl_enabled(cluster_config):
 
     cluster = load_cluster_config_json(cluster_config)
     return cluster["environment"]["cbs_ssl_enabled"]
+
+
+def is_x509_auth(cluster_config):
+    ''' Load cluster config to see if auth should be done using x509 certs '''
+    cluster = load_cluster_config_json(cluster_config)
+    return cluster["environment"]["x509_certs"]
 
 
 def get_cbs_servers(cluster_config):
