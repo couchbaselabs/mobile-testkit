@@ -23,7 +23,9 @@ import time
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_default"
 ])
-def ignoringtest_rollback_server_reset(params_from_base_test_setup, sg_conf_name):
+def ignoretest_rollback_server_reset(params_from_base_test_setup, sg_conf_name):
+    #### Ignorning this test for now until we have a fix. Tests which runs after this in Jenkins machine or local machine, 
+    ###  fails all the tests which runs after this. looks it needs reset of server or make the test to run at the end.
     """
     Test for sync gateway resiliency under Couchbase Server rollback
 
