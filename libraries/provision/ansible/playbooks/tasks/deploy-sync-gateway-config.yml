@@ -25,7 +25,9 @@
     dest: /home/sync_gateway/
     remote_src: yes
     force: yes
+  when: x509_auth
   become: yes
+
 
 # unzip certs.zip
 - name: Unzipping certs.zip
