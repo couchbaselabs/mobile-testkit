@@ -15,11 +15,14 @@
             {{ xattrs }}
             {{ sg_use_views }}
             {{ num_index_replicas }}
+            {{ username }}
+            {{ password }}
+            {{ cacertpath }}
+            {{ certpath }}
+            {{ keypath }}
             "allow_conflicts": true,
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
-            "bucket":"data-bucket",
-            "username":"data-bucket",
-            "password": "password"
+            "bucket":"data-bucket"
         }
     }
 }

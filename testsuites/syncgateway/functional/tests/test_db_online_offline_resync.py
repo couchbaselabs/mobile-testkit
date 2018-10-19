@@ -116,7 +116,8 @@ def test_bucket_online_offline_resync_sanity(params_from_base_test_setup, sg_con
     assert status == 0
 
     sg_restart_config = sync_gateway_config_path_for_mode("bucket_online_offline/db_online_offline_access_restricted", test_mode)
-    restart_status = cluster.sync_gateways[0].restart(sg_restart_config)
+    restart_status = cluster.sync_gateways[0].restart(sg_restart_config,
+                                                      cluster_config=cluster_conf)
     assert restart_status == 0
 
     time.sleep(10)
@@ -251,7 +252,8 @@ def test_bucket_online_offline_resync_with_online(params_from_base_test_setup, s
     assert status == 0
 
     sg_restart_config = sync_gateway_config_path_for_mode("bucket_online_offline/db_online_offline_access_restricted", test_mode)
-    restart_status = cluster.sync_gateways[0].restart(sg_restart_config)
+    restart_status = cluster.sync_gateways[0].restart(sg_restart_config,
+                                                      cluster_config=cluster_conf)
     assert restart_status == 0
 
     log_info("Sleeping....")
@@ -434,7 +436,8 @@ def test_bucket_online_offline_resync_with_offline(params_from_base_test_setup, 
     assert status == 0
 
     sg_restart_config = sync_gateway_config_path_for_mode("bucket_online_offline/db_online_offline_access_restricted", test_mode)
-    restart_status = cluster.sync_gateways[0].restart(sg_restart_config)
+    restart_status = cluster.sync_gateways[0].restart(sg_restart_config,
+                                                      cluster_config=cluster_conf)
     assert restart_status == 0
 
     log_info("Sleeping....")
