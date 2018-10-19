@@ -743,7 +743,7 @@ def test_rolling_ttl_remove_expirary(params_from_base_test_setup, sg_conf_name):
     doc_exp_10 = client.add_doc(url=sg_url, db=sg_db, doc=doc_exp_10_body, auth=sg_user_session)
 
     client.update_doc(url=sg_url, db=sg_db, doc_id=doc_exp_3["id"], number_updates=10, expiry=3, delay=1, auth=sg_user_session)
-    client.update_doc(url=sg_url, db=sg_db, doc_id=doc_exp_3["id"], number_updates=1, auth=sg_user_session)
+    client.update_doc(url=sg_url, db=sg_db, doc_id=doc_exp_3["id"], number_updates=1, auth=sg_user_session, remove_expiry=True)
 
     # If expiry was not removed in the last update, this would expire doc_exp_3
     time.sleep(5)
