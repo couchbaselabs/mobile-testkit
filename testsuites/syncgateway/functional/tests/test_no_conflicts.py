@@ -578,7 +578,7 @@ def test_migrate_conflicts_delete_last_rev(params_from_base_test_setup, sg_conf_
     5. Modify sg config by enabling allow_conflicts to false
     6. restart sg.
     7. Delete doc by revision of current active open revision
-    8. Verify all revisions in history exists in open revisions which got at step 4.
+    8. Verify tombstoned doc is identified as deleted in open revision ids
     """
 
     # Setup
@@ -620,11 +620,6 @@ def test_migrate_conflicts_delete_last_rev(params_from_base_test_setup, sg_conf_
         conflicted_rev = sg_client.add_conflict(url=sg_url, db=sg_db, doc_id=doc["id"], parent_revisions=doc["rev"], new_revision="2-foo",
                                                 auth=autouser_session)
         assert conflicted_rev["rev"] == "2-foo"
-    for doc in sg_docs:
-        num_of_open_revs = sg_client.get_open_revs_ids(url=sg_url, db=sg_db,
-                                                       doc_id=doc["id"],
-                                                       rev="2-foo",
-                                                       auth=autouser_session)
     time.sleep(5)
 
     # 5. Enable allow_conflicts = false in SG config and 6. restart sg
@@ -637,15 +632,14 @@ def test_migrate_conflicts_delete_last_rev(params_from_base_test_setup, sg_conf_
     sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs, number_updates=1, auth=autouser_session, channels=channels)
 
     # 6. Delete doc by revision of current active open revision
+    # 7.Verify tombstoned doc is identified as deleted in open revision ids
     for doc in sg_docs:
         num_of_revs = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc["id"], auth=autouser_session)
-        sg_client.delete_doc(url=sg_url, db=sg_db, doc_id=doc["id"], rev=num_of_revs["_rev"], auth=autouser_session)
-
-    # 7.Verify all revisions in history exists in open revisions which got at step 4.
-    for doc in sg_docs:
+        deleted_doc = sg_client.delete_doc(url=sg_url, db=sg_db, doc_id=doc["id"], rev=num_of_revs["_rev"], auth=autouser_session)
         num_of_revs_history = sg_client.get_revs_num_in_history(url=sg_url, db=sg_db, doc_id=doc["id"], auth=autouser_session)
-        for rev in num_of_revs_history:
-            assert rev in num_of_open_revs, "Expected revision does not exist in revision history "
+        assert "foo" in num_of_revs_history, "conflicted revision does not exist in revision history"
+        deleted_open_rev_ids = sg_client.get_deleted_open_rev_ids(url=sg_url, db=sg_db, doc_id=doc["id"], auth=autouser_session)
+        assert deleted_doc["rev"] in deleted_open_rev_ids, "open rev ids list is not identified as deleted for tombstoned doc "
 
 
 @pytest.mark.syncgateway

@@ -3024,6 +3024,102 @@ def test_resetCheckpointWithUpdate(params_from_base_test_setup, replication_type
     update_and_resetCheckPoint(db, cbl_db, replicator, repl, replication_type, repl_config, 2)
 
 
+@pytest.mark.listener
+@pytest.mark.replication
+@pytest.mark.parametrize("sg_conf_name, delete_doc_type", [
+    ('sync_gateway_rev_cache_size5', "purge")
+])
+def test_CBL_SG_replication_with_rev_messages(params_from_base_test_setup, sg_conf_name, delete_doc_type):
+    """
+        @summary:
+        reference : https://github.com/couchbase/sync_gateway/issues/3738#issuecomment-422107759
+        1. Set up SGW with xattrs enabled.
+        2. Create doc in CBL
+        3. push replication to SG with continuous
+        4. Purge doc in SGW.
+        5. Create 1000 docs in CBL and push to SGW. This will flush doc-1's rev out of the SG's revision cache (size = 1000) which set up sg config.
+        6. Delete database and create same database again and pull replication from SGW.
+        7. wait for replication to finish.
+        8. Verify total and completed are same once replication is completed.
+        9. Verify all docs from SGW replicated successfully.
+
+    """
+    sg_db = "db"
+    sg_url = params_from_base_test_setup["sg_url"]
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    sg_mode = params_from_base_test_setup["mode"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_blip_url = params_from_base_test_setup["target_url"]
+    base_url = params_from_base_test_setup["base_url"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    sg_config = params_from_base_test_setup["sg_config"]
+    db = params_from_base_test_setup["db"]
+    xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
+    num_of_docs = 5
+    username = "autotest"
+    password = "password"
+
+    if sync_gateway_version < "2.0":
+        pytest.skip('--no-conflicts is enabled and does not work with sg < 2.0 , so skipping the test')
+
+    if not xattrs_enabled:
+        pytest.skip('--xattrs is not enabled , so skipping the test')
+    channels = ["Replication"]
+    sg_client = MobileRestClient()
+
+    # Reset sg config with config which is required
+    # 1. Set up SGW with xattrs enabled.
+    sg_config = sync_gateway_config_path_for_mode(sg_conf_name, sg_mode)
+    cl = cluster.Cluster(config=cluster_config)
+    cl.reset(sg_config_path=sg_config)
+
+    # 2. Create doc in CBL
+    cbl_db_name = "cbl_db1"
+    db_config = db.configure()
+    cbl_db1 = db.create(cbl_db_name, db_config)
+    db.create_bulk_docs(number=1, id_prefix="rev_messages_prev", db=cbl_db1, channels=channels)
+    cbl_added_doc_ids = db.getDocIds(cbl_db1)
+
+    # 3. push replication to SG with continuous
+    # Start and stop continuous replication
+    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channels)
+    auth_session = sg_client.create_session(sg_admin_url, sg_db, username)
+
+    replicator = Replication(base_url)
+    authenticator = Authenticator(base_url)
+    replicator_authenticator = authenticator.authentication(username=username, password=password, authentication_type="basic")
+    repl_config = replicator.configure(cbl_db1, target_url=sg_blip_url, replication_type="push", continuous=True,
+                                       channels=channels, replicator_authenticator=replicator_authenticator)
+    repl = replicator.create(repl_config)
+    replicator.start(repl)
+    replicator.wait_until_replicator_idle(repl)
+
+    sg_docs, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=cbl_added_doc_ids, auth=auth_session)
+    for doc in sg_docs:
+        sg_client.purge_doc(url=sg_admin_url, db=sg_db, doc=doc)
+
+    # 5. Create 1000 docs in CBL and push to SGW. This will flush doc-1's rev out of the SG's revision cache (size = 1000) which set up sg config.
+    db.create_bulk_docs(number=num_of_docs, id_prefix="rev_messages", db=cbl_db1, channels=channels)
+    replicator.wait_until_replicator_idle(repl)
+    replicator.stop(repl)
+
+    # 6. Delete database and create same database again and pull replication from SGW.
+    db.deleteDB(cbl_db1)
+    db_config1 = db.configure()
+    cbl_db2 = db.create(cbl_db_name, db_config1)
+
+    repl_config = replicator.configure(cbl_db2, target_url=sg_blip_url, replication_type="pull", continuous=True,
+                                       channels=channels, replicator_authenticator=replicator_authenticator)
+    repl = replicator.create(repl_config)
+    replicator.start(repl)
+    replicator.wait_until_replicator_idle(repl)
+    replicator.stop(repl)
+
+    cbl_doc_ids = db.getDocIds(cbl_db2)
+    assert len(cbl_doc_ids) == num_of_docs, "number of doc ids which got replicated for SGW"
+    assert replicator.getCompleted(repl) == replicator.getTotal(repl), "Replication total and completed are not same"
+
+
 def update_and_resetCheckPoint(db, cbl_db, replicator, repl, replication_type, repl_config, num_of_updates):
     # update docs in CBL
     db.update_bulk_docs(cbl_db)

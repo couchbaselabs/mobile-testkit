@@ -10,6 +10,8 @@ from keywords.MobileRestClient import MobileRestClient
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.utils import host_for_url, log_info
 from libraries.testkit.cluster import Cluster
+from keywords.userinfo import UserInfo
+from keywords.exceptions import TimeoutException
 
 
 @pytest.mark.sanity
@@ -279,6 +281,78 @@ def test_document_resurrection(params_from_base_test_setup, sg_conf_name, deleti
 
     # Make sure all docs were found
     assert len(doc_ids_to_get_scratch) == 0
+
+
+@pytest.mark.syncgateway
+@pytest.mark.xattrs
+@pytest.mark.parametrize('sg_conf_name', [
+    'sync_gateway_default_functional_tests'
+])
+def test_verify_changes_purge(params_from_base_test_setup, sg_conf_name):
+    """
+    @summary
+    1. Write a document
+    2. Issue a changes request, verify that document appears
+    3. Purge document via SG's _purge API
+    4. Issue a changes request against SG, verify that document doesn't appear
+    """
+
+    sg_db = 'db'
+    cluster_conf = params_from_base_test_setup['cluster_config']
+    cluster_topology = params_from_base_test_setup['cluster_topology']
+    mode = params_from_base_test_setup['mode']
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
+    sg_url = cluster_topology['sync_gateways'][0]['public']
+    cbs_url = cluster_topology['couchbase_servers'][0]
+
+    log_info('sg_conf: {}'.format(sg_conf))
+    log_info('sg_admin_url: {}'.format(sg_admin_url))
+    log_info('sg_url: {}'.format(sg_url))
+    log_info('cbs_url: {}'.format(cbs_url))
+
+    cluster = Cluster(config=cluster_conf)
+    cluster.reset(sg_config_path=sg_conf)
+    # Create clients
+    sg_client = MobileRestClient()
+    channels = ['tombstone_test']
+
+    # Create user / session
+    auto_user_info = UserInfo(name='autotest', password='pass', channels=channels, roles=[])
+    sg_client.create_user(
+        url=sg_admin_url,
+        db=sg_db,
+        name=auto_user_info.name,
+        password=auto_user_info.password,
+        channels=auto_user_info.channels
+    )
+
+    test_auth_session = sg_client.create_session(
+        url=sg_admin_url,
+        db=sg_db,
+        name=auto_user_info.name,
+        password=auto_user_info.password
+    )
+
+    def update_prop():
+        return {
+            'updates': 0,
+            'tombstone': 'true',
+        }
+
+    doc_id = 'purge_doc'
+    doc_body = document.create_doc(doc_id=doc_id, channels=['tombstone_test'], prop_generator=update_prop)
+    sg_client.add_doc(url=sg_url, db=sg_db, doc=doc_body, auth=test_auth_session)
+    doc = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=test_auth_session)
+    sg_doc_get_formatted = [{"id": doc["_id"], "rev": doc["_rev"]}]
+    sg_client.purge_doc(url=sg_admin_url, db=sg_db, doc=doc)
+
+    try:
+        sg_client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=sg_doc_get_formatted, auth=test_auth_session, polling_interval=30)
+        assert False, "Found doc in changes after purging the doc"
+    except TimeoutException:
+        log_info("Found changes")
 
 
 def verify_sg_deletes(sg_client, sg_url, sg_db, expected_deleted_ids, sg_auth):
