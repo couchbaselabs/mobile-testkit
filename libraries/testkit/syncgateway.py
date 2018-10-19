@@ -111,7 +111,7 @@ class SyncGateway:
                 num_replicas = get_sg_replicas(self.cluster_config)
                 playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
 
-            if is_x509_auth(conf_path):
+            if is_x509_auth(self.cluster_config):
                 playbook_vars[
                     "certpath"] = '"certpath": "/home/sync_gateway/certs/chain.pem",'
                 playbook_vars[
