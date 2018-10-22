@@ -62,6 +62,12 @@
 # Install sync_gateway
 - hosts: sync_gateways
   any_errors_fatal: true
+
+  vars:
+    couchbase_sync_gateway_package_base_url:
+    couchbase_sg_accel_package:
+    couchbase_sg_accel_package_url: "{{ couchbase_sync_gateway_package_base_url }}/{{ couchbase_sg_accel_package }}"
+    couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
   become: yes
 
   vars:

@@ -430,7 +430,7 @@ class CouchbaseServer:
             connection_url = "couchbase://{}/{}?ipv6=allow".format(self.host, bucket)
         else:
             connection_url = "couchbase://{}/{}".format(self.host, bucket)
-        bucket = Bucket(connection_url, password='password')
+        b = Bucket(connection_url, password='password')
         b_manager = b.bucket_manager()
         b_manager.n1ql_index_create_primary(ignore_exists=True)
         cached_rev_doc_ids = []
@@ -456,7 +456,7 @@ class CouchbaseServer:
             connection_url = "couchbase://{}/{}?ipv6=allow".format(self.host, bucket)
         else:
             connection_url = "couchbase://{}/{}".format(self.host, bucket)
-        bucket = Bucket(connection_url, password='password')
+        b = Bucket(connection_url, password='password')
         b_manager = b.bucket_manager()
         b_manager.n1ql_index_create_primary(ignore_exists=True)
         found_ids = []

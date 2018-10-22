@@ -41,6 +41,9 @@ def load_sync_gateway_config(sync_gateway_config, mode, server_url, xattrs_enabl
                 num_index_replicas_prop = '"num_index_replicas": {},'.format(num_replicas)
         else:
             logging_prop = '"logging": {"debug": {"enabled": true}},'
+        if is_cbs_ssl_enabled(cluster_config) and get_sg_version(cluster_config) >= "1.5.0":
+            server_scheme = "couchbases"
+            server_port = 11207
 
         couchbase_server_primary_node = add_cbs_to_sg_config_server_field(cluster_config)
         if is_cbs_ssl_enabled(cluster_conf) and get_sg_version(cluster_conf) >= "1.5.0":

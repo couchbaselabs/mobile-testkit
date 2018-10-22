@@ -46,6 +46,7 @@ class SgAccel:
     def start(self, config):
         conf_path = os.path.abspath(config)
         log.info(">>> Starting sg_accel with configuration: {}".format(conf_path))
+
         couchbase_server_primary_node = add_cbs_to_sg_config_server_field(self.cluster_config)
         sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
 
