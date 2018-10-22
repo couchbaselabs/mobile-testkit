@@ -322,7 +322,7 @@ def params_from_base_suite_setup(request):
         "xattrs_enabled": xattrs_enabled,
         "sg_lb": sg_lb,
         "no_conflicts_enabled": no_conflicts_enabled,
-        "sg_platform": sg_platform
+        "sg_platform": sg_platform,
         "ssl_enabled": cbs_ssl
     }
 
@@ -351,8 +351,6 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     xattrs_enabled = params_from_base_suite_setup["xattrs_enabled"]
     sg_lb = params_from_base_suite_setup["sg_lb"]
     no_conflicts_enabled = params_from_base_suite_setup["no_conflicts_enabled"]
-    sync_gateway_version = params_from_base_suite_setup["sync_gateway_version"]
-    sg_platform = params_from_base_suite_setup["sg_platform"]
     cbs_ssl = params_from_base_suite_setup["ssl_enabled"]
 
     test_name = request.node.name

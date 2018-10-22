@@ -15,7 +15,7 @@ from requests.exceptions import HTTPError
 from keywords.exceptions import ChangesError
 
 from keywords import attachment, document
-from keywords.constants import DATA_DIR, SDK_TIMEOUT
+from keywords.constants import DATA_DIR
 from keywords.MobileRestClient import MobileRestClient
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.SyncGateway import SyncGateway
@@ -619,6 +619,7 @@ def test_large_initial_import(params_from_base_test_setup, sg_conf_name):
         connection_url = 'couchbase://{}/{}'.format(cbs_ip, bucket_name)
     sdk_client = Bucket(connection_url, password='password')
     # Generate array for each doc doc to give it a larger size
+
     def prop_gen():
         return {'sample_array': ["test_item_{}".format(i) for i in range(20)]}
 
