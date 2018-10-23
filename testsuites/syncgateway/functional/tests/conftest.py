@@ -352,6 +352,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     sg_lb = params_from_base_suite_setup["sg_lb"]
     no_conflicts_enabled = params_from_base_suite_setup["no_conflicts_enabled"]
     cbs_ssl = params_from_base_suite_setup["ssl_enabled"]
+    sync_gateway_version = params_from_base_suite_setup["sync_gateway_version"]
+    sg_platform = params_from_base_suite_setup["sg_platform"]
 
     test_name = request.node.name
 
@@ -385,6 +387,9 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "cluster_topology": cluster_topology,
         "mode": mode,
         "xattrs_enabled": xattrs_enabled,
+        "no_conflicts_enabled": no_conflicts_enabled,
+        "sync_gateway_version": sync_gateway_version,
+        "sg_platform": sg_platform,
         "ssl_enabled": cbs_ssl
     }
 
