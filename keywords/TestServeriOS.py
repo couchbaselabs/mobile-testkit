@@ -30,6 +30,11 @@ class TestServeriOS(TestServerBase):
         self.app_name = ""
         self.platform = platform
         self.bundle_id = ""
+        self.released_version = {
+            "2.0.0": 806,
+            "2.1.0": None,
+            "2.1.1": None,
+        }
 
         if debug_mode:
             self.debug_mode = True
@@ -68,6 +73,7 @@ class TestServeriOS(TestServerBase):
         if self.platform == "ios":
             if build is None:
                 app_name = "{}-{}.app".format(self.app, version)
+                self.version_build = self.released_version[version]
             else:
                 app_name = "{}-{}.app".format(self.app, self.version_build)
         else:
