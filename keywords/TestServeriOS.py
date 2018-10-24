@@ -178,11 +178,10 @@ class TestServeriOS(TestServerBase):
         # Get the device ID
         list_output = subprocess.Popen(["xcrun", "simctl", "list"], stdout=subprocess.PIPE)
         output = subprocess.check_output(('grep', 'Booted'), stdin=list_output.stdout)
-
         for line in output.splitlines():
             if "Phone" in line:
                 self.device_id = re.sub(' +', ' ', line).strip()
-                self.device_id = self.device_id.split(" ")[4]
+                self.device_id = self.device_id.split(" ")[3]
                 self.device_id = self.device_id.strip('(')
                 self.device_id = self.device_id.strip(')')
 
