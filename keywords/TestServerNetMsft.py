@@ -1,7 +1,7 @@
 import os
 
 from keywords.TestServerBase import TestServerBase
-from keywords.constants import LATEST_BUILDS
+from keywords.constants import LATEST_BUILDS, RELEASED_BUILDS
 from keywords.exceptions import LiteServError
 from keywords.utils import version_and_build
 from keywords.utils import log_info
@@ -50,7 +50,10 @@ class TestServerNetMsft(TestServerBase):
 
         if self.platform == "net-msft":
             self.binary_path = "TestServer-Net-{}\\TestServer.NetCore.dll".format(self.version_build)
-            self.download_url = "{}/couchbase-lite-net/{}/{}/TestServer.NetCore.zip".format(LATEST_BUILDS, self.version, self.build)
+            if self.build is None:
+                self.download_url = "{}/couchbase-lite-net/{}/TestServer.NetCore.zip".format(RELEASED_BUILDS, self.version)
+            else:
+                self.download_url = "{}/couchbase-lite-net/{}/{}/TestServer.NetCore.zip".format(LATEST_BUILDS, self.version, self.build)
             self.package_name = "TestServer.NetCore.zip"
             self.build_name = "TestServer-Net-{}".format(self.version_build)
         else:
