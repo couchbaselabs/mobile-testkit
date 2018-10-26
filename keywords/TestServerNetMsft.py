@@ -135,7 +135,7 @@ class TestServerNetMsft(TestServerBase):
             log_full_path = "{}/{}".format(os.getcwd(), self.logfile)
             log_info("Pulling logs to {} ...".format(log_full_path))
             status = self.ansible_runner.run_ansible_playbook(
-                "stop-TestServer-windows.yml",
+                "stop-testserver-windows.yml",
                 extra_vars={
                     "log_full_path": log_full_path
                 }

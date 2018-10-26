@@ -6,38 +6,31 @@
     "maxFileDescriptors": 90000,
     "slowServerCallWarningThreshold": 500,
     "compressResponses": false,
-    {{ logging }}
-    "verbose":"true",
     {{ sslcert }}
     {{ sslkey }}
-    "databases": {
-        "db":{
-            {{ autoimport }}
-            {{ xattrs }}
+    {{ logging }}
+    "databases":{
+        "db1":{
+            "enable_shared_bucket_access": true,
             {{ no_conflicts }}
             {{ sg_use_views }}
             {{ num_index_replicas }}
-            {{ username }}
-            {{ password }}
-            {{ cacertpath }}
-            {{ certpath }}
-            {{ keypath }}
+            "import_backup_old_rev": true,
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
-            "bucket":"data-bucket"
+            "bucket":"data-bucket-1",
+            "username":"data-bucket-1",
+            "password": "password"
         },
         "db2":{
-            {{ autoimport }}
-            {{ xattrs }}
+            "enable_shared_bucket_access": true,
             {{ no_conflicts }}
             {{ sg_use_views }}
             {{ num_index_replicas }}
-            {{ username }}
-            {{ password }}
-            {{ cacertpath }}
-            {{ certpath }}
-            {{ keypath }}
+            "import_backup_old_rev": true,
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
-            "bucket":"data-bucket"
+            "bucket":"data-bucket-2",
+            "username":"data-bucket-2",
+            "password": "password"
         }
     }
 }

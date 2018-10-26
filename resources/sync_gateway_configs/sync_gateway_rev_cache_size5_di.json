@@ -17,39 +17,22 @@
     {{ sslcert }}
     {{ sslkey }}
     "databases":{
-        "db1":{
+        "db":{
             {{ xattrs }}
             {{ no_conflicts }}
+            {{ revs_limit }}
             {{ sg_use_views }}
             {{ num_index_replicas }}
-            "import_backup_old_rev": true,
+            "rev_cache_size": 5,
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
-            "bucket":"data-bucket-1",
-            "username":"data-bucket-1",
+            "bucket":"data-bucket",
+            "username":"data-bucket",
             "password": "password",
             "channel_index":{
                 "num_shards":16,
                 "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
-                "bucket":"index-bucket-1",
-                "username":"index-bucket-1",
-                "password": "password",
-                "writer":{{ is_index_writer }}
-            }
-        },
-        "db2":{
-            {{ xattrs }}
-            {{ no_conflicts }}
-            {{ sg_use_views }}
-            {{ num_index_replicas }}
-            "import_backup_old_rev": true,
-            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
-            "bucket":"data-bucket-2",
-            "username":"data-bucket-2",
-            "password": "password",
-            "channel_index":{
-                "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
-                "bucket":"index-bucket-2",
-                "username":"index-bucket-2",
+                "bucket":"index-bucket",
+                "username": "index-bucket",
                 "password": "password",
                 "writer":{{ is_index_writer }}
             }

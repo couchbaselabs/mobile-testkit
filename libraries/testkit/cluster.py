@@ -13,8 +13,10 @@ from libraries.testkit.admin import Admin
 from libraries.testkit.config import Config
 from libraries.testkit.sgaccel import SgAccel
 from libraries.testkit.syncgateway import SyncGateway
+from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
 from utilities.cluster_config_utils import is_load_balancer_enabled, get_revs_limit, get_redact_level, is_ipv6
 from utilities.cluster_config_utils import get_load_balancer_ip, no_conflicts_enabled
+from utilities.cluster_config_utils import generate_x509_certs, is_x509_auth
 from keywords.constants import SYNC_GATEWAY_CERT
 from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version
 
@@ -131,6 +133,8 @@ class Cluster:
         mode = config.get_mode()
         bucket_name_set = config.get_bucket_name_set()
         sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
+        cbs_cert_path = os.path.join(os.getcwd(), "certs")
+        bucket_names = get_buckets_from_sync_gateway_config(sg_config_path)
 
         self.sync_gateway_config = config
 
@@ -140,7 +144,9 @@ class Cluster:
 
         log_info(">>> Creating buckets on: {}".format(self.servers[0].url))
         log_info(">>> Creating buckets {}".format(bucket_name_set))
-        self.servers[0].create_buckets(bucket_name_set, self.ipv6)
+        self.servers[0].create_buckets(bucket_names=bucket_name_set,
+                                       cluster_config=self._cluster_config,
+                                       ipv6=self.ipv6)
 
         # Wait for server to be in a warmup state to work around
         # https://github.com/couchbase/sync_gateway/issues/1745
@@ -161,6 +167,13 @@ class Cluster:
         # Start sync-gateway
         playbook_vars = {
             "sync_gateway_config_filepath": config_path_full,
+            "username": "",
+            "password": "",
+            "certpath": "",
+            "keypath": "",
+            "cacertpath": "",
+            "x509_certs_dir": cbs_cert_path,
+            "x509_auth": False,
             "sg_cert_path": sg_cert_path,
             "server_port": server_port,
             "server_scheme": server_scheme,
@@ -188,8 +201,27 @@ class Cluster:
             else:
                 num_replicas = get_sg_replicas(self._cluster_config)
                 playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
+
+            if is_x509_auth(self._cluster_config):
+                playbook_vars[
+                    "certpath"] = '"certpath": "/home/sync_gateway/certs/chain.pem",'
+                playbook_vars[
+                    "keypath"] = '"keypath": "/home/sync_gateway/certs/pkey.key",'
+                playbook_vars[
+                    "cacertpath"] = '"cacertpath": "/home/sync_gateway/certs/ca.pem",'
+                playbook_vars["server_scheme"] = "couchbases"
+                playbook_vars["server_port"] = ""
+                playbook_vars["x509_auth"] = True
+                generate_x509_certs(self._cluster_config, bucket_names)
+            else:
+                playbook_vars["username"] = '"username": "{}",'.format(
+                    bucket_names[0])
+                playbook_vars["password"] = '"password": "password",'
         else:
             playbook_vars["logging"] = '"log": ["*"],'
+            playbook_vars["username"] = '"username": "{}",'.format(
+                bucket_names[0])
+            playbook_vars["password"] = '"password": "password",'
 
         # Add configuration to run with xattrs
         if self.xattrs:

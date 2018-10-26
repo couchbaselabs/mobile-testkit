@@ -62,6 +62,11 @@
         {{ no_conflicts }}
         {{ sg_use_views }}
         {{ num_index_replicas }}
+        {{ username }}
+        {{ password }}
+        {{ cacertpath }}
+        {{ certpath }}
+        {{ keypath }}
         "unsupported": {
             "oidc_test_provider":{
                 "enabled":true,
@@ -69,9 +74,7 @@
             }
         },
          "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
-         "bucket":"data-bucket",
-         "username":"data-bucket",
-         "password": "password"
+         "bucket":"data-bucket"
       }
    }
 }

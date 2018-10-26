@@ -19,10 +19,13 @@
     {{ sslkey }}
     "databases":{
         "db":{
+            {{ username }}
+            {{ password }}
+            {{ cacertpath }}
+            {{ certpath }}
+            {{ keypath }}
             "server":"http://127.0.0.1:8091",
             "bucket":"data-bucket",
-            "username":"data-bucket",
-            "password": "password",
             "channel_index":{
                 "num_shards":16,
                 "server":"http://127.0.0.1:8091",

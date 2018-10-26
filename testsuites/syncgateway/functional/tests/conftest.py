@@ -11,7 +11,7 @@ from keywords.tklogging import Logging
 from keywords.utils import check_xattr_support, log_info, version_is_binary, compare_versions, clear_resources_pngs
 from libraries.NetworkUtils import NetworkUtils
 from libraries.testkit import cluster
-from utilities.cluster_config_utils import persist_cluster_config_environment_prop
+from utilities.cluster_config_utils import persist_cluster_config_environment_prop, is_x509_auth
 from utilities.cluster_config_utils import get_load_balancer_ip
 
 UNSUPPORTED_1_5_0_CC = {
@@ -361,6 +361,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         for test in skip_tests:
             if test in test_name:
                 pytest.skip("Skipping online/offline tests with load balancer")
+    if is_x509_auth and mode == "di":
+        pytest.skip("x509 certificate authentication is not supoorted in DI mode")
 
     # Certain test are diabled for certain modes
     # Given the run conditions, check if the test needs to be skipped
