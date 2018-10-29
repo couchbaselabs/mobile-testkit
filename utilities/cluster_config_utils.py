@@ -133,7 +133,10 @@ def is_cbs_ssl_enabled(cluster_config):
 def is_x509_auth(cluster_config):
     ''' Load cluster config to see if auth should be done using x509 certs '''
     cluster = load_cluster_config_json(cluster_config)
-    return cluster["environment"]["x509_certs"]
+    val = cluster["environment"]["x509_certs"]
+    if val == "True" or val == "true":
+        return True
+    return False
 
 
 def get_cbs_servers(cluster_config):
