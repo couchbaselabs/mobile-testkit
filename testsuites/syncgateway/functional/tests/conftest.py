@@ -361,7 +361,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         for test in skip_tests:
             if test in test_name:
                 pytest.skip("Skipping online/offline tests with load balancer")
-    if is_x509_auth and mode == "di":
+    if is_x509_auth(cluster_config) and mode == "di":
         pytest.skip("x509 certificate authentication is not supoorted in DI mode")
 
     # Certain test are diabled for certain modes
