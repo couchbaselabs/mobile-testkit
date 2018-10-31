@@ -1,5 +1,6 @@
 import time
 import pytest
+import datetime
 
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop
 from keywords.utils import log_info
@@ -13,6 +14,7 @@ from keywords.tklogging import Logging
 from CBLClient.Database import Database
 from CBLClient.Query import Query
 from CBLClient.Utils import Utils
+from keywords.constants import RESULTS_DIR
 
 
 def pytest_addoption(parser):
@@ -144,6 +146,7 @@ def params_from_base_suite_setup(request):
 
     community_enabled = request.config.getoption("--community")
 
+    test_name = request.node.name
     testserver_list = []
     for platform, version, host, port in zip(platform_list,
                                              version_list,
@@ -257,6 +260,14 @@ def params_from_base_suite_setup(request):
     db_obj_list = []
     query_obj_list = []
     if create_db_per_suite:
+        # Start Test server which needed for suite level set up like query tests
+        for testserver in testserver_list:
+            log_info("Starting TestServer...")
+            test_name_cp = test_name.replace("/", "-")
+            if device_enabled:
+                testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now()))
+            else:
+                testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now()))
         for base_url, i in zip(base_url_list, range(len(base_url_list))):
             db_name = "{}_{}_{}".format(create_db_per_suite, str(time.time()), i + 1)
             log_info("db name for {} is {}".format(base_url, db_name))
