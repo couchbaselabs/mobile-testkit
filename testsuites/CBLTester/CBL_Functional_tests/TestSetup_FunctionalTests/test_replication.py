@@ -1280,7 +1280,8 @@ def test_replication_wrong_blip(params_from_base_test_setup):
     with pytest.raises(Exception) as ex:
         replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channels, replicator_authenticator=replicator_authenticator)
     if liteserv_platform == "ios":
-        assert "Invalid scheme for URLEndpoint url (ht2tp); must be either ws or wss" in ex.value.message
+        assert "Invalid scheme for URLEndpoint url (ht2tp" in ex.value.message
+        assert "must be either ws or wss" in ex.value.message
     else:
         assert ex.value.message.startswith('400 Client Error: Bad Request for url:')
         assert "unsupported" in ex.value.message or "Invalid" in ex.value.message
@@ -3037,7 +3038,7 @@ def test_CBL_SG_replication_with_rev_messages(params_from_base_test_setup, sg_co
         2. Create doc in CBL
         3. push replication to SG with continuous
         4. Purge doc in SGW.
-        5. Create 1000 docs in CBL and push to SGW. This will flush doc-1's rev out of the SG's revision cache (size = 1000) which set up sg config.
+        5. Create 5 docs in CBL and push to SGW. This will flush doc-1's rev out of the SG's revision cache (size = 5) which set up sg config.
         6. Delete database and create same database again and pull replication from SGW.
         7. wait for replication to finish.
         8. Verify total and completed are same once replication is completed.
@@ -3074,7 +3075,7 @@ def test_CBL_SG_replication_with_rev_messages(params_from_base_test_setup, sg_co
     cl.reset(sg_config_path=sg_config)
 
     # 2. Create doc in CBL
-    cbl_db_name = "cbl_db1"
+    cbl_db_name = "cbl_db1" + str(time.time())
     db_config = db.configure()
     cbl_db1 = db.create(cbl_db_name, db_config)
     db.create_bulk_docs(number=1, id_prefix="rev_messages_prev", db=cbl_db1, channels=channels)
@@ -3098,7 +3099,7 @@ def test_CBL_SG_replication_with_rev_messages(params_from_base_test_setup, sg_co
     for doc in sg_docs:
         sg_client.purge_doc(url=sg_admin_url, db=sg_db, doc=doc)
 
-    # 5. Create 1000 docs in CBL and push to SGW. This will flush doc-1's rev out of the SG's revision cache (size = 1000) which set up sg config.
+    # 5. Create docs in CBL and push to SGW. This will flush doc-1's rev out of the SG's revision cache (size = 1000) which set up sg config.
     db.create_bulk_docs(number=num_of_docs, id_prefix="rev_messages", db=cbl_db1, channels=channels)
     replicator.wait_until_replicator_idle(repl)
     replicator.stop(repl)

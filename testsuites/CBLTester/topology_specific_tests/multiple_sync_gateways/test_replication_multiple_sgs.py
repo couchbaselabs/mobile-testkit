@@ -36,10 +36,12 @@ def test_multiple_sgs_with_differrent_revs_limit(params_from_base_test_setup, se
     """
     sg_db1 = "sg_db1"
     sg_db2 = "sg_db2"
+    protocol = "ws"
     sg_mode = params_from_base_test_setup["mode"]
     cluster_config = params_from_base_test_setup["cluster_config"]
     base_url = params_from_base_test_setup["base_url"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    sg_ssl = params_from_base_test_setup["sg_ssl"]
     db = Database(base_url)
 
     channels1 = ["Replication1"]
@@ -80,8 +82,10 @@ def test_multiple_sgs_with_differrent_revs_limit(params_from_base_test_setup, se
     sg1_admin_url = sg1.admin.admin_url
     sg2_url = sg2.url
     sg2_admin_url = sg2.admin.admin_url
-    sg1_blip_url = "ws://{}:4984/{}".format(sg1_ip, sg_db1)
-    sg2_blip_url = "ws://{}:4984/{}".format(sg2_ip, sg_db2)
+    if sg_ssl:
+        protocol = "wss"
+    sg1_blip_url = "{}://{}:4984/{}".format(protocol, sg1_ip, sg_db1)
+    sg2_blip_url = "{}://{}:4984/{}".format(protocol, sg2_ip, sg_db2)
 
     sg_client.create_user(sg1_admin_url, sg_db1, name1, password="password", channels=channels1)
     sg_client.create_user(sg2_admin_url, sg_db2, name2, password="password", channels=channels2)
@@ -173,11 +177,13 @@ def test_multiple_sgs_with_CBLs(params_from_base_test_setup, setup_customized_te
     """
     sg_db1 = "sg_db1"
     sg_db2 = "sg_db2"
+    protocol = "ws"
     sg_mode = params_from_base_test_setup["mode"]
     cluster_config = params_from_base_test_setup["cluster_config"]
     base_url = params_from_base_test_setup["base_url"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     liteserv_platform = params_from_base_test_setup["liteserv_platform"]
+    sg_ssl = params_from_base_test_setup["sg_ssl"]
 
     channels1 = ["Replication1"]
     channels2 = ["Replication2"]
@@ -207,8 +213,10 @@ def test_multiple_sgs_with_CBLs(params_from_base_test_setup, setup_customized_te
     sg2_ip = sg2.ip
     sg1_admin_url = sg1.admin.admin_url
     sg2_admin_url = sg2.admin.admin_url
-    sg1_blip_url = "ws://{}:4984/{}".format(sg1_ip, sg_db1)
-    sg2_blip_url = "ws://{}:4984/{}".format(sg2_ip, sg_db2)
+    if sg_ssl:
+        protocol = "wss"
+    sg1_blip_url = "{}://{}:4984/{}".format(protocol, sg1_ip, sg_db1)
+    sg2_blip_url = "{}://{}:4984/{}".format(protocol, sg2_ip, sg_db2)
 
     sg_client.create_user(sg1_admin_url, sg_db1, "autotest1", password="password", channels=channels1)
     sg_client.create_user(sg2_admin_url, sg_db2, "autotest2", password="password", channels=channels2)
@@ -235,7 +243,7 @@ def test_multiple_sgs_with_CBLs(params_from_base_test_setup, setup_customized_te
         source_db=cbl_db2, replicator_authenticator=replicator_authenticator2, target_url=sg2_blip_url, replication_type="push")
     replicator.stop(repl1)
     replicator.stop(repl2)
-
+    
     # 3. exchange DBs of SG and do pull replication.
     repl1 = replicator.configure_and_replicate(
         source_db=cbl_db1, replicator_authenticator=replicator_authenticator2, target_url=sg2_blip_url, replication_type="pull")
@@ -248,13 +256,12 @@ def test_multiple_sgs_with_CBLs(params_from_base_test_setup, setup_customized_te
     # 4. stop one of the sg.
     sg1.stop()
     # Add docs on cbl_db2
-    db.create_bulk_docs(1, "Replication2", db=cbl_db2, channels=channels2)
+    db.create_bulk_docs(1, "Replication2-2", db=cbl_db2, channels=channels2)
     # 5. Pull again
     repl1 = replicator.configure_and_replicate(
         source_db=cbl_db1, replicator_authenticator=replicator_authenticator2, target_url=sg2_blip_url, replication_type="pull")
     repl2 = replicator.configure_and_replicate(
         source_db=cbl_db2, replicator_authenticator=replicator_authenticator1, target_url=sg1_blip_url, replication_type="pull", err_check=False)
-
     replicator.stop(repl1)
     repl2_error = replicator.getError(repl2)
     if liteserv_platform == "xamarin-ios":
@@ -262,7 +269,7 @@ def test_multiple_sgs_with_CBLs(params_from_base_test_setup, setup_customized_te
     else:
         assert "POSIXErrorDomain" in repl2_error
     # 6. Verify one CBL DB should be successful as other CBL DB should fail as associated Sg is down
-    cblDB1_doc_ids = db.getDocIds(cbl_db1)
+    cblDB1_doc_ids = db.getDocIds(cbl_db1, limit=2000)
     for doc in cbl_doc_ids1:
         assert doc in cblDB1_doc_ids, "cbl_db1 doc does not exist in combined replication cbl_db1"
     for doc in cbl_doc_ids2:
