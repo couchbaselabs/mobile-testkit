@@ -332,7 +332,8 @@ def params_from_base_suite_setup(request):
         "sg_config": sg_config,
         "testserver": testserver,
         "device_enabled": device_enabled,
-        "flush_memory_per_test": flush_memory_per_test
+        "flush_memory_per_test": flush_memory_per_test,
+        "sg_ssl": sg_ssl
     }
     if create_db_per_suite:
         # Delete CBL database
@@ -376,6 +377,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     testserver = params_from_base_suite_setup["testserver"]
     device_enabled = params_from_base_suite_setup["device_enabled"]
     flush_memory_per_test = params_from_base_suite_setup["flush_memory_per_test"]
+    sg_ssl = params_from_base_suite_setup["sg_ssl"]
     source_db = None
     cbl_db = None
     db_config = None
@@ -441,7 +443,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "db": db,
         "device_enabled": device_enabled,
         "testserver": testserver,
-        "db_config": db_config
+        "db_config": db_config,
+        "sg_ssl": sg_ssl
     }
 
     log_info("Tearing down test")
