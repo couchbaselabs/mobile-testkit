@@ -243,7 +243,7 @@ def test_multiple_sgs_with_CBLs(params_from_base_test_setup, setup_customized_te
         source_db=cbl_db2, replicator_authenticator=replicator_authenticator2, target_url=sg2_blip_url, replication_type="push")
     replicator.stop(repl1)
     replicator.stop(repl2)
-    
+
     # 3. exchange DBs of SG and do pull replication.
     repl1 = replicator.configure_and_replicate(
         source_db=cbl_db1, replicator_authenticator=replicator_authenticator2, target_url=sg2_blip_url, replication_type="pull")
