@@ -262,16 +262,22 @@ class Replication(object):
         self.wait_until_replicator_idle(repl, err_check)
         return repl
 
-    def wait_until_replicator_idle(self, repl, err_check=True):
-        max_times = 50
+    def wait_until_replicator_idle(self, repl, err_check=True, max_times=50):
         count = 0
         # Sleep until replicator completely processed
         activity_level = self.getActivitylevel(repl)
-        while activity_level != "idle" and count < max_times:
+        while count < max_times:
             log_info("Activity level: {}".format(activity_level))
-            time.sleep(2)
-            if activity_level == "idle" or activity_level == "offline" or activity_level == "connecting":
+            time.sleep(1)
+            if activity_level == "offline" or activity_level == "connecting" or activity_level == "busy":
                 count += 1
+            else:
+                if activity_level == "idle":
+                    if self.getCompleted(repl) < self.getTotal(repl) and self.getTotal(repl) != 0:
+                        count += 1
+                    else:
+                        time.sleep(3)
+                        break
             if activity_level == "stopped":
                 break
             if err_check:

@@ -1456,16 +1456,17 @@ def test_fts_with_ranking(params_from_base_test_setup, prop, val, doc_type):
 ])
 def test_getDoc_withValueTypeDouble(params_from_base_test_setup, doc_id_prefix):
     """ @summary
-    1. update the doc with double value
-    2. Fetch the doc
+    1. Create docs with one of the column having double value
+    2. Fetch the doc using where value as double value
     Fetches a doc
     Tests the below query
     let searchQuery = Query
-                    .select(SelectResult.all())
-                    .from(DataSource.database(database))
-                    .where((Expression.meta().id).equalTo(doc_id))
+                    .select(SelectResult.expression(Meta.id),
+                SelectResult.expression(Expression.property(item)),
+                SelectResult.expression(Expression.property(item_price)))
+            .from(DataSource.database(database))
+            .where(Expression.property(item_price).equalTo(2.754));
 
-    Verifies with n1ql - select * from `bucket_name` where meta().id="doc_id"
     """
     base_url = params_from_base_test_setup["base_url"]
     database = Database(base_url)
