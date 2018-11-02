@@ -97,7 +97,7 @@ class TestServeriOS(TestServerBase):
             self.app_name = "{}-{}-Device-debug.app".format(self.app, self.version_build)
         else:
             self.app_name = "{}-{}-Device.app".format(self.app, self.version_build)
-        
+
         self.app_path = "{}/{}/{}".format(BINARY_DIR, self.app_dir, self.app_name)
         log_info("Installing: {}".format(self.app_path))
 
