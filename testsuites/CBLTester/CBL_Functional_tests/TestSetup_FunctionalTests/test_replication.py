@@ -3060,8 +3060,8 @@ def test_CBL_SG_replication_with_rev_messages(params_from_base_test_setup, sg_co
     username = "autotest"
     password = "password"
 
-    if sync_gateway_version < "2.0":
-        pytest.skip('--no-conflicts is enabled and does not work with sg < 2.0 , so skipping the test')
+    if sync_gateway_version < "2.1.1":
+        pytest.skip('--no-conflicts is enabled and does not work with sg < 2.1.1 , so skipping the test')
 
     if not xattrs_enabled:
         pytest.skip('--xattrs is not enabled , so skipping the test')
