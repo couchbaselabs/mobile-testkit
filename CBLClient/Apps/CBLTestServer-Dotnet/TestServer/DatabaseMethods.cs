@@ -497,6 +497,18 @@ namespace Couchbase.Lite.Testing
             });
             response.WriteEmptyBody();           
         }
+        internal static void DatabaseCopy([NotNull] NameValueCollection args,
+                                                  [NotNull] IReadOnlyDictionary<string, object> postBody,
+                                                  [NotNull] HttpListenerResponse response)
+        {
+            string dbName = postBody["dbName"].ToString();
+            string dbPath = postBody["dbPath"].ToString();
+            //  DatabaseConfiguration dbConfig = (DatabaseConfiguration)postBody["dbConfig"];
+            DatabaseConfiguration dbConfig = MemoryMap.Get<DatabaseConfiguration>(postBody["dbConfig"].ToString());
+            Database.Copy(dbPath, dbName, dbConfig);
+            response.WriteEmptyBody();
+        }
+
 
         #endregion
     }
