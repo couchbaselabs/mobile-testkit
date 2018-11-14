@@ -43,8 +43,17 @@
     - name: COUCHBASE SERVER | Download couchbase server
       get_url: url={{ couchbase_server_package_url }} dest=/tmp/{{ couchbase_server_package_name }}
 
-    - name: Install Couchbase Server
+    - name: Install Couchbase Server on CentOS
       yum: name=/tmp/{{ couchbase_server_package_name }} state=present
+      when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat"
+
+    - name: Install Couchbase Server on Ubuntu
+      apt: deb=/tmp/{{ couchbase_server_package_name }} state=present
+      when: ansible_distribution == "Ubuntu"
+
+    - name: Starting CBS for Ubuntu
+      service: name=couchbase-server state=started
+      when: ansible_distribution == "Ubuntu"
 
     - name: Enabling CBS on IPV6 | Stopping CBS
       service: name=couchbase-server state=stopped

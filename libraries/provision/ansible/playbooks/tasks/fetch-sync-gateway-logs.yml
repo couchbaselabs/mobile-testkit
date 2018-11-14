@@ -23,6 +23,18 @@
   fetch: src=/home/sync_gateway/logs/sync_gateway_error.log dest=/tmp/sg_logs/{{ inventory_hostname }}/ fail_on_missing=yes flat=yes validate_checksum=no
   when: pe.stat.exists
 
+- name: SYNC GATEWAY | Check if sync_gateway log is present under /tmp/sg_logs
+  become: yes
+  stat:
+    path: '/tmp/sg_logs/sg_log_rotation.log'
+  register: lr
+
+- name: SYNC GATEWAY | Fetch sync_gateway log from /tmp/sg_logs
+  become: yes
+  # Do not validate checksum as this is just a passive grab of the logs. Since they are continuously being appended to, the checksum may fail
+  fetch: src=/tmp/sg_logs/sg_log_rotation.log dest=/tmp/sg_logs/{{ inventory_hostname }}/ fail_on_missing=yes flat=yes validate_checksum=no
+  when: pe.stat.exists
+
 - name: SYNC GATEWAY | Check if sg_error.log is present
   become: yes
   stat:

@@ -10,15 +10,41 @@
   when: ansible_distribution == 'CentOS' and ansible_distribution_version == '7.2.1511'
   ignore_errors: yes
 
-- name: COUCHBASE SERVER | Uninstall couchbase server
+- name: COUCHBASE SERVER | Uninstall couchbase server on CentOS
   become: yes
   shell: rpm -e couchbase-server
   ignore_errors: yes
+  when: ansible_distribution == 'CentOS' and ansible_distribution_version == '7.2.1511'
 
-- name: COUCHBASE SERVER | Uninstall couchbase server community
+- name: COUCHBASE SERVER | Uninstall couchbase server on Ubuntu
+  become: yes
+  shell: dpkg -r couchbase-server
+  ignore_errors: yes
+  when: ansible_distribution == 'Ubuntu'
+
+- name: COUCHBASE SERVER | Purge couchbase server on Ubuntu
+  become: yes
+  shell: dpkg --purge couchbase-server
+  ignore_errors: yes
+  when: ansible_distribution == 'Ubuntu'
+
+- name: COUCHBASE SERVER | Uninstall couchbase server community on CentOS
   become: yes
   shell: rpm -e couchbase-server-community
   ignore_errors: yes
+  when: ansible_distribution == 'CentOS'
+
+- name: COUCHBASE SERVER | Uninstall couchbase server community on Ubuntu
+  become: yes
+  shell: dpkg -r couchbase-server-community
+  ignore_errors: yes
+  when: ansible_distribution == 'Ubuntu'
+
+- name: COUCHBASE SERVER | Purge couchbase server community on Ubuntu
+  become: yes
+  shell: dpkg --purge couchbase-server-community
+  ignore_errors: yes
+  when: ansible_distribution == 'Ubuntu'
 
 # Kill any processes that may be hanging around
 - name: COUCHBASE SERVER | Kill epmd

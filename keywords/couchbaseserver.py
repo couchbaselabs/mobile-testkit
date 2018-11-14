@@ -739,17 +739,25 @@ class CouchbaseServer:
 
     def get_package_name(self, version, build_number, cbs_platform="centos7"):
         """
-         Given:
-         version - the version without any build number information, eg 4.5.0
-         build_number - the build number associated with this major version release, eg, 2601 (or None)
-         Return the filename portion of the package download URL
-         """
-        if version.startswith("3.1.6"):
-            return "couchbase-server-enterprise-{}-{}.x86_64.rpm".format(version, cbs_platform)
-        elif version.startswith("3.1"):
-            return "couchbase-server-enterprise_{}_x86_64_{}-{}-rel.rpm".format(cbs_platform, version, build_number)
-        else:
-            return "couchbase-server-enterprise-{}-{}-{}.x86_64.rpm".format(version, build_number, cbs_platform)
+        Given:
+        version - the version without any build number information, eg 4.5.0
+        build_number - the build number associated with this major version release, eg, 2601 (or None)
+        Return the filename portion of the package download URL
+        """
+        if "ubuntu" in cbs_platform:
+            if version.startswith("3.1.6"):
+                return "couchbase-server-enterprise-{}-{}.x86_64.deb".format(version, cbs_platform)
+            elif version.startswith("3.1"):
+                return "couchbase-server-enterprise_{}_x86_64_{}-{}-rel.deb".format(cbs_platform, version, build_number)
+            else:
+                return "couchbase-server-enterprise_{}-{}-{}_amd64.deb".format(version, build_number, cbs_platform)
+        elif "centos" in cbs_platform:
+            if version.startswith("3.1.6"):
+                return "couchbase-server-enterprise-{}-{}.x86_64.rpm".format(version, cbs_platform)
+            elif version.startswith("3.1"):
+                return "couchbase-server-enterprise_{}_x86_64_{}-{}-rel.rpm".format(cbs_platform, version, build_number)
+            else:
+                return "couchbase-server-enterprise-{}-{}-{}.x86_64.rpm".format(version, build_number, cbs_platform)
 
     def resolve_cb_nas_url(self, version, build_number, cbs_platform="centos7"):
         """
