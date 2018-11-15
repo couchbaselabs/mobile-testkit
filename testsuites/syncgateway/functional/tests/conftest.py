@@ -88,7 +88,7 @@ def pytest_addoption(parser):
     parser.addoption("--cbs-platform",
                      action="store",
                      help="Couchbase Server Platform binary to install (ex. centos or windows)",
-                     default="centos")
+                     default="centos7")
 
     parser.addoption("--sg-platform",
                      action="store",

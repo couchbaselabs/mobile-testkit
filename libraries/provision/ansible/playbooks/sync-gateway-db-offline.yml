@@ -21,4 +21,4 @@
       method: POST
       headers:
         Content-Type: "application/json"
-    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat"
+    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Ubuntu"
