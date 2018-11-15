@@ -53,6 +53,7 @@ namespace Couchbase.Lite.Testing.NetCore
             Couchbase.Lite.Support.NetDesktop.EnableTextLogging("TextLogging");
             Database.SetLogLevel(Logging.LogDomain.All, Logging.LogLevel.Info);
 
+            TestServer.FilePathResolver = path => path;
             var listener = new TestServer();
             listener.Start();
 

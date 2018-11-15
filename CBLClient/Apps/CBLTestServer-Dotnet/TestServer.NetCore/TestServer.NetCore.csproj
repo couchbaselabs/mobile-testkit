@@ -22,4 +22,15 @@
     <ProjectReference Include="..\TestServer\TestServer.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Databases\PrebuiltDB.cblite2\db.sqlite3">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Databases\PrebuiltDB.cblite2\db.sqlite3-shm">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Databases\PrebuiltDB.cblite2\db.sqlite3-wal">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>

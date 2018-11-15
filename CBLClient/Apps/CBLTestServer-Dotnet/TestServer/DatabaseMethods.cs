@@ -27,7 +27,7 @@ using System.Net;
 using System.Threading.Tasks;
 using static Couchbase.Lite.DatabaseChangedEventArgs;
 
-using  Couchbase.Lite.Query;
+using Couchbase.Lite.Query;
 using static Couchbase.Lite.Query.QueryBuilder;
 using static Couchbase.Lite.EncryptionKey;
 
@@ -193,7 +193,7 @@ namespace Couchbase.Lite.Testing
             [NotNull] IReadOnlyDictionary<string, object> postBody,
             [NotNull] HttpListenerResponse response)
         {
-            var docIds = ((List<object>) postBody["doc_ids"]).OfType<string>();
+            var docIds = ((List<object>)postBody["doc_ids"]).OfType<string>();
             With<Database>(postBody, "database", db =>
             {
                 db.InBatch(() =>
@@ -268,10 +268,12 @@ namespace Couchbase.Lite.Testing
             With<Database>(postBody, "database", db =>
             {
                 var doc = db.GetDocument(docId);
-                if (doc != null){
+                if (doc != null)
+                {
                     response.WriteBody(MemoryMap.Store(doc));
                 }
-                else {
+                else
+                {
                     response.WriteEmptyBody();
                 }
 
@@ -348,10 +350,13 @@ namespace Couchbase.Lite.Testing
                     var concurrencyControlType = postBody["concurrencyControlType"].ToString();
                     var concurrencyType = ConcurrencyControl.LastWriteWins;
 
-                    if (concurrencyControlType != null) {
-                        if (concurrencyControlType == "failOnConflict") {
+                    if (concurrencyControlType != null)
+                    {
+                        if (concurrencyControlType == "failOnConflict")
+                        {
                             concurrencyType = ConcurrencyControl.FailOnConflict;
-                        } else
+                        }
+                        else
                         {
                             concurrencyType = ConcurrencyControl.LastWriteWins;
                         }
@@ -398,7 +403,8 @@ namespace Couchbase.Lite.Testing
                     {
                         db.Delete(document, concurrencyType);
                         response.WriteEmptyBody();
-                    } catch (InvalidOperationException e)
+                    }
+                    catch (InvalidOperationException e)
                     {
                         Console.WriteLine("Error deleting DB" + e.Message);
                         response.WriteBody(e.Message);
@@ -438,20 +444,20 @@ namespace Couchbase.Lite.Testing
                                                    [NotNull] IReadOnlyDictionary<string, object> postBody,
                                                    [NotNull] HttpListenerResponse response)
         {
-            var docDict = (Dictionary<string, object>) postBody["documents"];
+            var docDict = (Dictionary<string, object>)postBody["documents"];
             With<Database>(postBody, "database", db =>
             {
                 db.InBatch(() =>
                {
-                    foreach (var body in docDict)
-                    {
-                        string id = body.Key;
-                        var docBody = (Dictionary<string, object>)body.Value;
-                        docBody.Remove("_id");
-                        MutableDocument doc = new MutableDocument(id, docBody);
-                        db.Save(doc);
+                   foreach (var body in docDict)
+                   {
+                       string id = body.Key;
+                       var docBody = (Dictionary<string, object>)body.Value;
+                       docBody.Remove("_id");
+                       MutableDocument doc = new MutableDocument(id, docBody);
+                       db.Save(doc);
 
-                    }
+                   }
                });
             });
             response.WriteEmptyBody();
@@ -467,7 +473,7 @@ namespace Couchbase.Lite.Testing
                 With<MutableDocument>(postBody, "document", doc =>
                 {
                     string id = doc.Id;
-                    Dictionary<string, Object> data = (Dictionary < string, Object>) doc.GetValue(id);
+                    Dictionary<string, Object> data = (Dictionary<string, Object>)doc.GetValue(id);
                     MutableDocument UpdateDoc = db.GetDocument(id).ToMutable();
                     UpdateDoc.SetData(data);
                     db.Save(UpdateDoc);
@@ -488,21 +494,21 @@ namespace Couchbase.Lite.Testing
                     foreach (var body in docDict)
                     {
                         string id = body.Key;
-                        Dictionary<string, Object> docVal = (Dictionary<string, object>) body.Value;
+                        Dictionary<string, Object> docVal = (Dictionary<string, object>)body.Value;
                         MutableDocument UpdateDoc = db.GetDocument(id).ToMutable();
                         UpdateDoc.SetData(docVal);
                         db.Save(UpdateDoc);
                     }
                 });
             });
-            response.WriteEmptyBody();           
+            response.WriteEmptyBody();
         }
         internal static void DatabaseCopy([NotNull] NameValueCollection args,
                                                   [NotNull] IReadOnlyDictionary<string, object> postBody,
                                                   [NotNull] HttpListenerResponse response)
         {
             string dbName = postBody["dbName"].ToString();
-            string dbPath = postBody["dbPath"].ToString();
+            string dbPath = TestServer.FilePathResolver(postBody["dbPath"].ToString());
             //  DatabaseConfiguration dbConfig = (DatabaseConfiguration)postBody["dbConfig"];
             DatabaseConfiguration dbConfig = MemoryMap.Get<DatabaseConfiguration>(postBody["dbConfig"].ToString());
             Database.Copy(dbPath, dbName, dbConfig);
@@ -510,33 +516,33 @@ namespace Couchbase.Lite.Testing
         }
 
 
-        #endregion
+#endregion
     }
 
     internal sealed class DatabaseChangeListenerProxy
     {
-        #region Variables
+#region Variables
 
         [NotNull]
         private readonly List<DatabaseChangedEventArgs> _changes = new List<DatabaseChangedEventArgs>();
 
-        #endregion
+#endregion
 
-        #region Properties
+#region Properties
 
         [NotNull]
         public IReadOnlyList<DatabaseChangedEventArgs> Changes => _changes;
 
-        #endregion
+#endregion
 
-        #region Public Methods
+#region Public Methods
 
         public void HandleChange(object sender, DatabaseChangedEventArgs args)
         {
             _changes.Add(args);
         }
 
-        #endregion
+#endregion
     }
 
 }

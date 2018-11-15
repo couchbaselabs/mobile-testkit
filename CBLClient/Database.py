@@ -310,3 +310,10 @@ class Database(object):
         cbl_doc_ids = self.getDocIds(cbl_db)
         docs = self.getDocuments(cbl_db, cbl_doc_ids)
         return docs
+
+    def copyDatabase(self, db_path, db_name, db_config):
+        args = Args()
+        args.setString("dbName", db_name)
+        args.setString("dbPath", db_path)
+        args.setMemoryPointer("dbConfig", db_config)
+        return self._client.invokeMethod("database_copy", args)
