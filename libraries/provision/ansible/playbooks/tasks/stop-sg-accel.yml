@@ -1,7 +1,7 @@
 # Stop service
 - name: SG ACCEL | stop sg_accel service
   service: name=sg_accel state=stopped
-  when: (ansible_distribution == "CentOS" and ansible_distribution_major_version == "7") or (ansible_distribution == "Ubuntu")
+  when: (ansible_distribution == "CentOS" and ansible_distribution_major_version == "7") or (ansible_distribution == "Ubuntu") or (ansible_distribution == "Debian")
 
 - name: SG ACCEL | stop sg_accel for CentOS 6
   shell: /sbin/initctl stop sg_accel

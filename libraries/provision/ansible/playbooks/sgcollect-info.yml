@@ -9,7 +9,7 @@
 
   tasks:
   - include: tasks/sg-sgcollect-info.yml
-    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon" or ansible_distribution == "Ubuntu"
+    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
 
   - include: tasks/sg-sgcollect-info-windows.yml
     when: ansible_os_family == "Windows"
@@ -29,7 +29,7 @@
 
   tasks:
   - include: tasks/sa-sgcollect-info.yml
-    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon" or ansible_distribution == "Ubuntu"
+    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
 
   - include: tasks/sa-sgcollect-info-windows.yml
     when: ansible_os_family == "Windows"

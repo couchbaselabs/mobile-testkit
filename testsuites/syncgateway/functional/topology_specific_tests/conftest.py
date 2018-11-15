@@ -72,3 +72,8 @@ def pytest_addoption(parser):
                      action="store",
                      help="Sync Gateway Accelerator Installer type (ex. exe or msi)",
                      default="msi")
+                     
+    parser.addoption("--sg-platform",
+                     action="store",
+                     help="Sync Gateway Platform binary to install (ex. centos or windows)",
+                     default="centos")
