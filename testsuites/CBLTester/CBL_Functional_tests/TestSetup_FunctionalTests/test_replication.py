@@ -3156,7 +3156,6 @@ def test_replication_push_replication_guest_enabled(params_from_base_test_setup,
     invalid_username = "invalid_username"
     invalid_password = "invalid_password"
     invalid_session = "invalid_session"
-    invalid_cookie = "invalid_cookie"
     valid_username = "autotest"
     valid_password = "password"
     num_docs = 5

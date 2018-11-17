@@ -174,7 +174,7 @@ class Database(object):
     def exists(self, name, directory=None):
         args = Args()
         args.setString("name", name)
-        args.setMemoryPointer("directory", directory)
+        args.setString("directory", name)
         return self._client.invokeMethod("database_exists", args)
 
     def deleteDBbyName(self, name):
