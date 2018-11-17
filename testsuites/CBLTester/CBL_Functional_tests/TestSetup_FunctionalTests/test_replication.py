@@ -3121,6 +3121,93 @@ def test_CBL_SG_replication_with_rev_messages(params_from_base_test_setup, sg_co
     assert replicator.getCompleted(repl) == replicator.getTotal(repl), "Replication total and completed are not same"
 
 
+@pytest.mark.listener
+@pytest.mark.replication
+@pytest.mark.parametrize(
+    'replicator_authenticator',
+    [
+        ('basic'),
+        ('session')
+    ]
+)
+def test_replication_push_replication_guest_enabled(params_from_base_test_setup, replicator_authenticator):
+    """
+        @summary:
+        1.Enable guest user in sync-gateway
+        2. login as invalid login on cbl
+        3. verify user can login successfully in cbl
+        4. Also verify user with valid credentials should be able to login successfully
+
+    """
+    sg_db = "db"
+    sg_url = params_from_base_test_setup["sg_url"]
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    sg_blip_url = params_from_base_test_setup["target_url"]
+    base_url = params_from_base_test_setup["base_url"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_config = params_from_base_test_setup["sg_config"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_config = params_from_base_test_setup["sg_config"]
+    db = params_from_base_test_setup["db"]
+    cbl_db = params_from_base_test_setup["source_db"]
+    mode = params_from_base_test_setup["mode"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+
+    invalid_username = "invalid_username"
+    invalid_password = "invalid_password"
+    invalid_session = "invalid_session"
+    invalid_cookie = "invalid_cookie"
+    valid_username = "autotest"
+    valid_password = "password"
+    num_docs = 5
+
+    if sync_gateway_version < "2.0.0":
+        pytest.skip('This test cannnot run with sg version below 2.0')
+
+    sg_config = sync_gateway_config_path_for_mode("sync_gateway_guest_enabled", mode)
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
+
+    channels = ["ABC"]
+    sg_client = MobileRestClient()
+    authenticator = Authenticator(base_url)
+
+    db.create_bulk_docs(num_docs, "cbl", db=cbl_db, channels=channels)
+    sg_client.create_user(sg_admin_url, sg_db, valid_username, password=valid_password, channels=channels)
+    cookie, session = sg_client.create_session(sg_admin_url, sg_db, valid_username)
+
+    # login as invalid user on cbl and verify user can login successfully and docs got replicated successfully
+    replicator = Replication(base_url)
+    if replicator_authenticator == "session":
+        replicator_authenticator = authenticator.authentication(invalid_session, cookie, authentication_type="session")
+    elif replicator_authenticator == "basic":
+        replicator_authenticator = authenticator.authentication(username=invalid_username, password=invalid_password, authentication_type="basic")
+    repl_config = replicator.configure(cbl_db, target_url=sg_blip_url, continuous=True, replication_type="push", replicator_authenticator=replicator_authenticator)
+
+    repl = replicator.create(repl_config)
+    replicator.start(repl)
+    replicator.wait_until_replicator_idle(repl)
+    error = replicator.getError(repl)
+    assert "401" in error, "did not throw 401 error for invalid authentication"
+
+    replicator.stop(repl)
+
+    # Also verify user with valid credentials should be able to login successfully
+    db.create_bulk_docs(num_docs, "cbl2", db=cbl_db, channels=channels)
+    if replicator_authenticator == "session":
+        replicator_authenticator = authenticator.authentication(session, cookie, authentication_type=replicator_authenticator)
+    elif replicator_authenticator == "basic":
+        replicator_authenticator = authenticator.authentication(username=valid_username, password=valid_password, authentication_type=replicator_authenticator)
+    repl_config = replicator.configure(cbl_db, target_url=sg_blip_url, continuous=True, replication_type="push", replicator_authenticator=replicator_authenticator)
+
+    repl = replicator.create(repl_config)
+    replicator.start(repl)
+    replicator.wait_until_replicator_idle(repl)
+    sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db)
+    assert len(sg_docs["rows"]) == num_docs * 2, "Number of sg docs is not equal to total number of cbl docs and sg docs"
+    replicator.stop(repl)
+
+
 def update_and_resetCheckPoint(db, cbl_db, replicator, repl, replication_type, repl_config, num_of_updates):
     # update docs in CBL
     db.update_bulk_docs(cbl_db)

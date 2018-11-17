@@ -37,7 +37,7 @@ namespace Couchbase.Lite.Testing.UWP
 
 		private string ResolvePath(string path)
 		{
-			return Path.Combine(Windows.ApplicationModel.Package.Current.InstalledLocation.Path, path);
+			return Path.Combine(Windows.ApplicationModel.Package.Current.InstalledLocation.Path, "Assets", path);
 		}
     }
 }

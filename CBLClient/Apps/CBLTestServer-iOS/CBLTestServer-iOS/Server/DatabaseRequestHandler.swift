@@ -287,6 +287,13 @@ public class DatabaseRequestHandler {
                 print("Got error setting encryption key \(error)")
                 return error.localizedDescription
             }
+            
+        case "database_copy":
+            let dbName: String! = args.get(name: "dbName")
+            let dbConfig: DatabaseConfiguration? = args.get(name: "dbConfig")
+            let dbPath: NSString! = args.get(name: "dbPath")
+            let path: String! = Bundle(for: type(of:self)).path(forResource: dbPath.deletingPathExtension, ofType: dbPath.pathExtension)
+            try! Database.copy(fromPath: path, toDatabase: dbName, withConfig: dbConfig)
 
         case "database_queryAllDocuments":
             let database: Database = args.get(name:"database")!
