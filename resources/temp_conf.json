@@ -1,0 +1,35 @@
+{
+    "interface": ":4984", 
+    "logging": {
+        "info": {
+            "enabled": true
+        }, 
+        "console": {
+            "log_level": "debug", 
+            "log_keys": [
+                "*"
+            ]
+        }, 
+        "log_file_path": "/tmp/sg_logs", 
+        "warn": {
+            "enabled": true
+        }, 
+        "error": {
+            "enabled": true
+        }, 
+        "debug": {
+            "enabled": true
+        }
+    }, 
+    "adminInterface": "0.0.0.0:4985", 
+    "databases": {
+        "db": {
+            "bucket": "data-bucket", 
+            "server": "http://192.168.0.189:8091", 
+            "import_docs": "continuous", 
+            "use_views": true, 
+            "num_index_replicas": 0, 
+            "enable_shared_bucket_access": true
+        }
+    }
+}
