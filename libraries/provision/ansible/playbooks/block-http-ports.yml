@@ -7,24 +7,24 @@
   tasks:
   - name: BLOCKPORTS | Verify that port is blocked in iptables
     shell: iptables-save | grep -- "INPUT -p tcp -m tcp --dport 9889 -j DROP" | wc -l
-    register: iptables-rules
+    register: iptablesrules
 
   - name: BLOCKPORTS | drop tcp {{ port }}
     shell: iptables -I INPUT -p tcp --dport {{ port }} -j DROP
-    when: iptables-rules >= 1
+    when: iptablesrules >= 1
 
   - name: BLOCKPORTS | drop udp {{ port }}
     shell: iptables -I INPUT -p udp --dport {{ port }} -j DROP
-    when: iptables-rules >= 1
+    when: iptablesrules >= 1
 
   - name: BLOCKPORTS | install iptables-services
     shell: yum -y install iptables-services
-    when: iptables-rules >= 1
+    when: iptablesrules >= 1
 
   - name: BLOCKPORTS | save iptables after dropping
     shell: service iptables save
-    when: iptables-rules >= 1
+    when: iptablesrules >= 1
 
   - name: BLOCKPORTS | restart iptables after dropping
     shell: service iptables restart
-    when: iptables-rules >= 1
+    when: iptablesrules >= 1
