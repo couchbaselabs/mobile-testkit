@@ -17,7 +17,7 @@ from utilities.cluster_config_utils import get_revs_limit, get_redact_level
 from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version, is_x509_auth, generate_x509_certs
 from keywords.utils import add_cbs_to_sg_config_server_field, log_info
 from keywords.constants import SYNC_GATEWAY_CERT
-from keywords.exceptions import ProvisioningError
+# from keywords.exceptions import ProvisioningError
 
 log = logging.getLogger(libraries.testkit.settings.LOGGER)
 

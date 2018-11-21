@@ -10,7 +10,7 @@ from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, ge
 from keywords.utils import add_cbs_to_sg_config_server_field, log_info
 from keywords.constants import SYNC_GATEWAY_CERT
 from utilities.cluster_config_utils import sg_ssl_enabled
-from keywords.exceptions import ProvisioningError
+# from keywords.exceptions import ProvisioningError
 
 log = logging.getLogger(libraries.testkit.settings.LOGGER)
 
