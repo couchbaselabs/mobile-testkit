@@ -6,7 +6,7 @@
     port :
   tasks:
   - name: BLOCKPORTS | Verify that port is blocked in iptables
-    shell: iptables-save | grep -- "INPUT -p tcp -m tcp --dport 9889 -j DROP" | wc -l
+    shell: iptables-save | grep -- "INPUT -p tcp -m tcp --dport 8091 -j DROP" | wc -l
     register: iptablesrules
 
   - name: BLOCKPORTS | drop tcp {{ port }}

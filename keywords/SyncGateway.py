@@ -371,12 +371,13 @@ class SyncGateway(object):
             playbook_vars["server_port"] = 11207
             block_http_vars = {}
             block_http_vars["port"] = 8091
+            """
             status = ansible_runner.run_ansible_playbook(
                 "block-http-ports.yml",
                 extra_vars=block_http_vars
             )
             if status != 0:
-                raise ProvisioningError("Failed to block CBS http port")
+                raise ProvisioningError("Failed to block CBS http port")"""
 
         if url is not None:
             target = hostname_for_url(cluster_config, url)

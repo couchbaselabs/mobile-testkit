@@ -209,12 +209,13 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
         playbook_vars["server_port"] = 11207
         block_http_vars = {}
         block_http_vars["port"] = 8091
+        """
         status = ansible_runner.run_ansible_playbook(
             "block-http-ports.yml",
             extra_vars=block_http_vars
         )
         if status != 0:
-            raise ProvisioningError("Failed to block CBS http port")
+            raise ProvisioningError("Failed to block CBS http port")"""
 
     if is_xattrs_enabled(cluster_config):
         playbook_vars["autoimport"] = '"import_docs": "continuous",'
