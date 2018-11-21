@@ -270,7 +270,7 @@ class MobileRestClient:
         headers = {"Accept": "application/json"}
         resp = self._session.post("{}/{}/_resync".format(url, db), headers=headers)
         log_r(resp)
-        return resp.raise_for_status()
+        return resp.status_code
 
     def get_role(self, url, db, name):
         """ Gets a roles for a db """

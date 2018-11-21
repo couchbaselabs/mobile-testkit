@@ -53,12 +53,13 @@ def test_resync(params_from_base_test_setup, sg_conf_name):
 
     # Taking DB offline
     client.take_db_offline(cluster_conf=cluster_config, db=sg_db)
-    client.db_resync(url=sg_admin_url, db=sg_db)
-    verify_rsync_error(cluster_config=cluster_config, mode=mode)
+    status = client.db_resync(url=sg_admin_url, db=sg_db)
+    assert status == 200, "re-sync failed"
+    verify_rsync_error(cluster_config=cluster_config)
     client.bring_db_online(cluster_conf=cluster_config, db=sg_db)
 
 
-def verify_rsync_error(cluster_config, mode):
+def verify_rsync_error(cluster_config):
     ansible_runner = AnsibleRunner(cluster_config)
 
     log_info("Pulling sync_gateway / sg_accel logs")
@@ -67,7 +68,7 @@ def verify_rsync_error(cluster_config, mode):
     if status != 0:
         raise CollectionError("Could not pull logs")
     temp_log_path = ""
-    # zip logs and timestamp
+
     if os.path.isdir("/tmp/sg_logs"):
         date_time = time.strftime("%Y-%m-%d-%H-%M-%S")
         temp_log_path = "/tmp/{}-{}-sglogs".format("log-resync", date_time)
