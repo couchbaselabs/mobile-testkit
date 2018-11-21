@@ -293,10 +293,10 @@ def test_removeDBEncryptionKey(params_from_base_test_setup):
 def test_copy_prebuilt_database(params_from_base_test_setup):
     """
         @summary:
-        1.Enable guest user in sync-gateway
-        2. login as invalid login on cbl
-        3. verify user can login successfully in cbl
-        4. Also verify user with valid credentials should be able to login successfully
+        1. Clean up the database/ Remove any existing database.
+        2. Copy the prebuilt database
+        3. Verify database is created successfully
+        4. Verify docs in prebuilt database are copied over and exits in current app 
 
     """
 
