@@ -9,7 +9,6 @@
     {{ sslcert }}
     {{ sslkey }}
     {{ logging }}
-    "log": ["*"],
     "databases":{
         "db":{
             {{ autoimport }}
@@ -22,7 +21,7 @@
             {{ cacertpath }}
             {{ certpath }}
             {{ keypath }}
-            "server":"couchbase://{{ couchbase_server_primary_node }}",
+            "server":"couchbase://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket",
             "username":"data-bucket",
             "password": "password"

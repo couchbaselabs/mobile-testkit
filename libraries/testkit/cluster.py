@@ -227,14 +227,15 @@ class Cluster:
             playbook_vars["server_scheme"] = "couchbases"
             playbook_vars["server_port"] = 11207
             block_http_vars = {}
-            block_http_vars["port"] = 8091
-            """
-            status = ansible_runner.run_ansible_playbook(
-                "block-http-ports.yml",
-                extra_vars=block_http_vars
-            )
-            if status != 0:
-                raise ProvisioningError("Failed to block CBS http port")"""
+            port_list = [8091, 8092, 8093, 8094, 8095, 8096, 11210, 11211]
+            for port in port_list:
+                block_http_vars["port"] = port
+                status = ansible_runner.run_ansible_playbook(
+                    "block-http-ports.yml",
+                    extra_vars=block_http_vars
+                )
+                if status != 0:
+                    raise ProvisioningError("Failed to block port on SGW")
         # Add configuration to run with xattrs
         if self.xattrs:
             playbook_vars["autoimport"] = '"import_docs": "continuous",'
