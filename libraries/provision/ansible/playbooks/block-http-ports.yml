@@ -6,15 +6,15 @@
     port :
   tasks:
   - name: BLOCKPORTS | Verify that port is blocked in iptables
-    shell: iptables-save | grep -- "INPUT -p tcp -m tcp --dport {{ port }} -j DROP" | wc -l
+    shell: iptables-save | grep -- "OUTPUT -p tcp -m tcp --dport {{ port }} -j DROP" | wc -l
     register: iptablesrules
 
   - name: BLOCKPORTS | drop tcp {{ port }}
-    shell: iptables -I INPUT -p tcp --dport {{ port }} -j DROP
+    shell: iptables -I OUTPUT -p tcp --dport {{ port }} -j DROP
     when: iptablesrules >= 1
 
   - name: BLOCKPORTS | drop udp {{ port }}
-    shell: iptables -I INPUT -p udp --dport {{ port }} -j DROP
+    shell: iptables -I OUTPUT -p udp --dport {{ port }} -j DROP
     when: iptablesrules >= 1
 
   - name: BLOCKPORTS | install iptables-services
