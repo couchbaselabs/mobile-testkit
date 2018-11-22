@@ -32,10 +32,13 @@ class TestServeriOS(TestServerBase):
         self.bundle_id = ""
         self.released_version = {
             "2.0.0": 806,
-            "2.1.0": None,
-            "2.1.1": None,
+            "2.1.0": 263,
+            "2.1.1": 10,
+            "2.1.2": 11,
         }
 
+        if self.version_build == "2.1.0":
+            raise Exception("No iOS app available to download for 2.1.0 at latestbuild. Use xcode to create app.")
         if debug_mode:
             self.debug_mode = True
 
@@ -45,8 +48,12 @@ class TestServeriOS(TestServerBase):
                 self.package_name = "CBLTestServer-iOS-community-{}.zip".format(version_build)
                 self.app = "CBLTestServer-iOS"
             else:
-                self.app_dir = "CBLTestServer-iOS-enterprise-{}".format(version_build)
-                self.package_name = "CBLTestServer-iOS-enterprise-{}.zip".format(version_build)
+                if version_build == "2.1.1":
+                    self.package_name = "CBLTestServer-iOS-enterprise-{}-{}.zip".format(version_build, self.released_version[version_build])
+                    self.app_dir = "CBLTestServer-iOS-enterprise-{}-{}".format(version_build, self.released_version[version_build])
+                else:
+                    self.package_name = "CBLTestServer-iOS-enterprise-{}.zip".format(version_build)
+                    self.app_dir = "CBLTestServer-iOS-enterprise-{}".format(version_build)
                 self.app = "CBLTestServer-iOS-EE"
 
             self.bundle_id = "com.couchbase.CBLTestServer-iOS"
@@ -69,11 +76,12 @@ class TestServeriOS(TestServerBase):
         """
         if version_build is not None:
             self.version_build = version_build
-        version, build = version_and_build(self.version_build)
+        self.version, self.build = version_and_build(self.version_build)
         if self.platform == "ios":
-            if build is None:
-                app_name = "{}-{}.app".format(self.app, version)
-                self.version_build = self.released_version[version]
+            if self.build is None:
+                app_name = "{}-{}-{}.app".format(self.app, self.version,
+                                                 self.released_version[self.version])
+                self.version_build = self.released_version[self.version]
             else:
                 app_name = "{}-{}.app".format(self.app, self.version_build)
         else:
@@ -87,15 +95,15 @@ class TestServeriOS(TestServerBase):
         # Package not downloaded, proceed to download from latest builds
         downloaded_package_zip_name = "{}/{}".format(BINARY_DIR, self.package_name)
         if self.platform == "ios":
-            if build is None:
-                if version < "2.0.2":
-                    url = "{}/couchbase-lite/ios/{}/{}".format(RELEASED_BUILDS, version, self.package_name)
+            if self.build is None:
+                if self.version < "2.0.2":
+                    url = "{}/couchbase-lite/ios/{}/{}".format(RELEASED_BUILDS, self.version, self.package_name)
                 else:
-                    url = "{}/couchbase-lite-ios/{}/{}".format(RELEASED_BUILDS, version, self.package_name)
+                    url = "{}/couchbase-lite-ios/{}/{}".format(RELEASED_BUILDS, self.version, self.package_name)
             else:
-                url = "{}/couchbase-lite-ios/{}/{}/{}".format(LATEST_BUILDS, version, build, self.package_name)
+                url = "{}/couchbase-lite-ios/{}/{}/{}".format(LATEST_BUILDS, self.version, self.build, self.package_name)
         else:
-            url = "{}/couchbase-lite-net/{}/{}/{}".format(LATEST_BUILDS, version, build, self.package_name)
+            url = "{}/couchbase-lite-net/{}/{}/{}".format(LATEST_BUILDS, self.version, self.build, self.package_name)
 
         log_info("Downloading {} -> {}/{}".format(url, BINARY_DIR, self.package_name))
         resp = requests.get(url, verify=False)
@@ -148,7 +156,14 @@ class TestServeriOS(TestServerBase):
             if self.debug_mode:
                 self.app_name = "{}-{}-debug.app".format(self.app, self.version_build)
             else:
-                self.app_name = "{}-{}.app".format(self.app, self.version_build)
+                if self.build is None:
+                    self.app_name = "{}-{}-{}.app".format(self.app,
+                                                          self.version,
+                                                          self.version_build)
+
+                else:
+                    self.app_name = "{}-{}.app".format(self.app,
+                                                       self.version_build)
         else:
             self.app_name = "{}.app".format(self.app)
 

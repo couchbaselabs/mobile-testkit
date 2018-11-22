@@ -4,7 +4,7 @@ import subprocess
 import requests
 
 from keywords.TestServerBase import TestServerBase
-from keywords.constants import LATEST_BUILDS
+from keywords.constants import LATEST_BUILDS, RELEASED_BUILDS
 from keywords.constants import BINARY_DIR
 from keywords.exceptions import LiteServError
 from keywords.utils import version_and_build
@@ -49,6 +49,8 @@ class TestServerAndroid(TestServerBase):
             self.version_build = version_build
         version, build = version_and_build(self.version_build)
 
+        if version < "2.1.2":
+            raise Exception("No Android app available to download for version below 2.1.2 at latestbuild. Use maven to create app.")
         expected_binary_path = "{}/{}".format(BINARY_DIR, self.package_name)
         if os.path.isfile(expected_binary_path):
             log_info("Package is already downloaded. Skipping.")
@@ -56,12 +58,15 @@ class TestServerAndroid(TestServerBase):
 
         # Package not downloaded, proceed to download from latest builds
         if self.platform == "android":
-            url = "{}/{}/{}/{}/{}".format(LATEST_BUILDS, self.download_source, version, build, self.package_name)
+            if build is None:
+                url = "{}/{}/{}/{}".format(RELEASED_BUILDS, self.download_source, version, self.package_name)
+            else:
+                url = "{}/{}/{}/{}/{}".format(LATEST_BUILDS, self.download_source, version, build, self.package_name)
         else:
             url = "{}/couchbase-lite-net/{}/{}/{}".format(LATEST_BUILDS, version, build, self.package_name)
 
         log_info("Downloading {} -> {}/{}".format(url, BINARY_DIR, self.package_name))
-        resp = requests.get(url)
+        resp = requests.get(url, verify=False)
         resp.raise_for_status()
         with open("{}/{}".format(BINARY_DIR, self.package_name), "wb") as f:
             f.write(resp.content)
