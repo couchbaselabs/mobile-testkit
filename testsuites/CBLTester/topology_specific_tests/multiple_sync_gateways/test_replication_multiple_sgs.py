@@ -264,7 +264,7 @@ def test_multiple_sgs_with_CBLs(params_from_base_test_setup, setup_customized_te
         source_db=cbl_db2, replicator_authenticator=replicator_authenticator1, target_url=sg1_blip_url, replication_type="pull", err_check=False)
     replicator.stop(repl1)
     repl2_error = replicator.getError(repl2)
-    if liteserv_platform == "xamarin-ios" or liteserv_platform == "xamarin-android":
+    if liteserv_platform == "xamarin-ios" or liteserv_platform == "xamarin-android" or liteserv_platform == "net-msft" or liteserv_platform == "net-uwp":
         assert "POSIXDomain" in repl2_error
     else:
         assert "POSIXErrorDomain" in repl2_error
