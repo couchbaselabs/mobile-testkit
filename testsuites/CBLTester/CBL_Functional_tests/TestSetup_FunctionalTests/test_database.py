@@ -296,7 +296,7 @@ def test_copy_prebuilt_database(params_from_base_test_setup):
         1. Clean up the database/ Remove any existing database.
         2. Copy the prebuilt database
         3. Verify database is created successfully
-        4. Verify docs in prebuilt database are copied over and exits in current app 
+        4. Verify docs in prebuilt database are copied over and exits in current app
 
     """
 
