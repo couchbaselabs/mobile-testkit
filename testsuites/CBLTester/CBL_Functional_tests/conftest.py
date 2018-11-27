@@ -470,6 +470,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     db_config = None
 
     db = None
+    cbl_db = None
     if create_db_per_test:
         cbl_db = create_db_per_test + str(time.time())
         # Create CBL database
@@ -519,7 +520,9 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         # Delete CBL database
         log_info("Deleting the database {} at test teardown".format(create_db_per_test))
         time.sleep(1)
-        db.deleteDB(source_db)
+        path = db.getPath(source_db)
+        if db.exists(cbl_db, path):
+            db.deleteDB(source_db)
 
     if flush_memory_per_test:
         log_info("Flushing server memory")

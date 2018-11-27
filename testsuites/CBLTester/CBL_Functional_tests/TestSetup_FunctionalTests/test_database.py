@@ -286,3 +286,47 @@ def test_removeDBEncryptionKey(params_from_base_test_setup):
     cbl_doc_ids4 = db.getDocIds(cbl_db4)
     assert cbl_doc_ids == cbl_doc_ids4, "docs ids did not match when compared with and without password"
     db.close(cbl_db4)
+
+
+@pytest.mark.listener
+@pytest.mark.replication
+def test_copy_prebuilt_database(params_from_base_test_setup):
+    """
+        @summary:
+        1. Clean up the database/ Remove any existing database.
+        2. Copy the prebuilt database
+        3. Verify database is created successfully
+        4. Verify docs in prebuilt database are copied over and exits in current app 
+
+    """
+
+    db = params_from_base_test_setup["db"]
+    cbl_db = params_from_base_test_setup["source_db"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    liteserv_platform = params_from_base_test_setup["liteserv_platform"]
+
+    prebuilt_doc_ids = ['cbl_2', 'cbl_1', 'cbl_3', 'cbl_4', 'cbl_0', 'cbl2_3', 'cbl2_0', 'cbl2_2', 'cbl2_4', 'cbl2_1']
+
+    if sync_gateway_version < "2.0.0":
+        pytest.skip('This test cannnot run with sg version below 2.0')
+
+    db_name = db.getName(cbl_db)
+    db.deleteDB(cbl_db, db_name)
+    cbl_db_name = "copiedDB" + str(time.time())
+    db_config = db.configure()
+    if liteserv_platform == "android":
+        prebuilt_db_path = "/assets/PrebuiltDB.cblite2.zip"
+    elif liteserv_platform == "xamarin-android":
+        prebuilt_db_path = "PrebuiltDB.cblite2.zip"
+    else:
+        prebuilt_db_path = "Databases/PrebuiltDB.cblite2"
+
+    db.copyDatabase(prebuilt_db_path, cbl_db_name, db_config)
+    cbl_db1 = db.create(cbl_db_name, db_config)
+    cbl_doc_ids = db.getDocIds(cbl_db1)
+    assert len(cbl_doc_ids) == 10
+    for doc_id in prebuilt_doc_ids:
+        assert doc_id in cbl_doc_ids
+
+    # Cleaning the database , tearing down
+    db.deleteDB(cbl_db1)

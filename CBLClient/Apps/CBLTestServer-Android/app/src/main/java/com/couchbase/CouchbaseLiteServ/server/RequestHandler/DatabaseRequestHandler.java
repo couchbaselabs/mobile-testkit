@@ -4,6 +4,7 @@ import android.content.Context;
 import android.util.Log;
 
 import com.couchbase.CouchbaseLiteServ.server.Args;
+import com.couchbase.CouchbaseLiteServ.server.util.ZipUtils;
 import com.couchbase.lite.ConcurrencyControl;
 import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.DataSource;
@@ -25,6 +26,8 @@ import com.couchbase.lite.SelectResult;
 import com.couchbase.lite.EncryptionKey;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -308,6 +311,24 @@ public class DatabaseRequestHandler {
     public List<String> changeGetDocumentId(Args args) {
         DatabaseChange change = args.get("change");
         return change.getDocumentIDs();
+    }
+
+    public void copy(Args args) throws CouchbaseLiteException, IOException {
+      String dbName = args.get("dbName");
+      String dbPath = args.get("dbPath");
+
+      Context context = MainActivity.getAppContext();
+      ZipUtils.unzip(getAsset(dbPath), context.getFilesDir());
+      String dbFileName = new File(dbPath).getName();
+      dbFileName = dbFileName.substring(0, dbFileName.lastIndexOf("."));
+
+      DatabaseConfiguration dbConfig = args.get("dbConfig");
+      File file = new File(context.getFilesDir().getAbsolutePath() + "/" + dbFileName);
+      Database.copy(file, dbName, dbConfig);
+    }
+
+    private InputStream getAsset(String name) {
+      return this.getClass().getResourceAsStream(name);
     }
 
 }
