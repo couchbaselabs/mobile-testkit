@@ -85,6 +85,11 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="If set, will enable SSL communication between server and Sync Gateway")
 
+    parser.addoption("--cbs-platform",
+                     action="store",
+                     help="Couchbase Server Platform binary to install (ex. centos or windows)",
+                     default="centos7")
+
     parser.addoption("--sg-platform",
                      action="store",
                      help="Sync Gateway Platform binary to install (ex. centos or windows)",
@@ -153,6 +158,7 @@ def params_from_base_suite_setup(request):
     race_enabled = request.config.getoption("--race")
     cbs_ssl = request.config.getoption("--server-ssl")
     xattrs_enabled = request.config.getoption("--xattrs")
+    cbs_platform = request.config.getoption("--cbs-platform")
     sg_platform = request.config.getoption("--sg-platform")
     sg_installer_type = request.config.getoption("--sg-installer-type")
     sa_platform = request.config.getoption("--sa-platform")
@@ -292,6 +298,7 @@ def params_from_base_suite_setup(request):
                 sync_gateway_version=sync_gateway_version,
                 sync_gateway_config=sg_config,
                 race_enabled=race_enabled,
+                cbs_platform=cbs_platform,
                 sg_platform=sg_platform,
                 sg_installer_type=sg_installer_type,
                 sa_platform=sa_platform,
