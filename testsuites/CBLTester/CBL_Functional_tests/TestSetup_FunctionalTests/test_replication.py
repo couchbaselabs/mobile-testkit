@@ -3170,13 +3170,17 @@ def test_replication_push_replication_guest_enabled(params_from_base_test_setup,
     channels = ["ABC"]
     sg_client = MobileRestClient()
     authenticator = Authenticator(base_url)
+    replicator = Replication(base_url)
 
     db.create_bulk_docs(num_docs, "cbl", db=cbl_db, channels=channels)
     sg_client.create_user(sg_admin_url, sg_db, valid_username, password=valid_password, channels=channels)
     cookie, session = sg_client.create_session(sg_admin_url, sg_db, valid_username)
 
+    """
+    TODO : https://github.com/couchbase/sync_gateway/issues/3830
+    # Enable this commented code once 3830 is fixed.It should be fixed by june 2019
     # login as invalid user on cbl and verify user can login successfully and docs got replicated successfully
-    replicator = Replication(base_url)
+
     if replicator_authenticator == "session":
         replicator_authenticator = authenticator.authentication(invalid_session, cookie, authentication_type="session")
     elif replicator_authenticator == "basic":
@@ -3190,7 +3194,7 @@ def test_replication_push_replication_guest_enabled(params_from_base_test_setup,
     assert "401" in error, "did not throw 401 error for invalid authentication"
 
     replicator.stop(repl)
-
+    """
     # Also verify user with valid credentials should be able to login successfully
     db.create_bulk_docs(num_docs, "cbl2", db=cbl_db, channels=channels)
     if replicator_authenticator == "session":
