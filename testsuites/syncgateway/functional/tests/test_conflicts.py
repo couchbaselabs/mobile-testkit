@@ -67,7 +67,6 @@ def test_non_winning_revisions(params_from_base_test_setup, sg_conf_name):
     # Skip the test if ssl enabled as it cannot couchbase protocol
     if "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210" in sg_conf_name and ssl_enabled:
         pytest.skip('ssl enabled so cannot run with couchbase protocol')
-    
 
     c = cluster.Cluster(cluster_config)
     c.reset(sg_conf)

@@ -79,7 +79,7 @@ def test_document_resurrection(params_from_base_test_setup, sg_conf_name, deleti
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
 
     # Skip the test if ssl disabled as it cannot run without port using http protocol
-    if ("sync_gateway_default_functional_tests_no_port" in sg_conf_name ) and get_sg_version(cluster_conf) < "1.5.0":
+    if ("sync_gateway_default_functional_tests_no_port" in sg_conf_name) and get_sg_version(cluster_conf) < "1.5.0":
         pytest.skip('couchbase/couchbases ports do not support for versions below 1.5')
     if "sync_gateway_default_functional_tests_no_port" in sg_conf_name and not ssl_enabled:
         pytest.skip('ssl disabled so cannot run without port')
