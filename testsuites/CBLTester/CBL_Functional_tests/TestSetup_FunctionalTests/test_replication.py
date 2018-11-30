@@ -3153,9 +3153,13 @@ def test_replication_push_replication_guest_enabled(params_from_base_test_setup,
     mode = params_from_base_test_setup["mode"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
 
+    """
+    TODO : https://github.com/couchbase/sync_gateway/issues/3830
+    # Enable this commented code once 3830 is fixed.It should be fixed by june 2019
     invalid_username = "invalid_username"
     invalid_password = "invalid_password"
     invalid_session = "invalid_session"
+    """
     valid_username = "autotest"
     valid_password = "password"
     num_docs = 5
