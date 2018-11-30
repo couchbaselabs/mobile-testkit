@@ -19,7 +19,7 @@ from utilities.cluster_config_utils import get_sg_version
 @pytest.mark.channel
 @pytest.mark.parametrize("sg_conf_name, num_users, num_docs, num_revisions", [
     ("sync_gateway_default_functional_tests_no_port", 1, 5000, 1),
-    ("sync_gateway_default_functional_tests_couchbase_protocol_using_port", 1, 5000, 1),
+    ("sync_gateway_default_functional_tests_couchbase_protocol_withport_11210", 1, 5000, 1),
     ("sync_gateway_default_functional_tests", 1, 5000, 1),
     ("sync_gateway_default_functional_tests", 50, 5000, 1),
     ("sync_gateway_default_functional_tests", 50, 10, 10),
@@ -34,13 +34,13 @@ def test_continuous_changes_parametrized(params_from_base_test_setup, sg_conf_na
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     # Skip the test if ssl disabled as it cannot run without port using http protocol
-    if ("sync_gateway_default_functional_tests_no_port" in sg_conf_name or "sync_gateway_default_functional_tests_couchbase_protocol_using_port" in sg_conf_name) and get_sg_version(cluster_conf) < "1.5.0":
+    if ("sync_gateway_default_functional_tests_no_port" in sg_conf_name) and get_sg_version(cluster_conf) < "1.5.0":
         pytest.skip('couchbase/couchbases ports do not support for versions below 1.5')
     if "sync_gateway_default_functional_tests_no_port" in sg_conf_name and not ssl_enabled:
         pytest.skip('ssl disabled so cannot run without port')
 
-    # Skip the test if ssl enabled as it cannot run without port using couchbases protocol
-    if "sync_gateway_default_functional_tests_couchbase_protocol_using_port" in sg_conf_name and ssl_enabled:
+    # Skip the test if ssl enabled as it cannot couchbase protocol
+    if "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210" in sg_conf_name and ssl_enabled:
         pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
     log_info("Running 'continuous_changes_parametrized'")
@@ -94,7 +94,7 @@ def test_continuous_changes_parametrized(params_from_base_test_setup, sg_conf_na
 @pytest.mark.parametrize("sg_conf_name, num_docs, num_revisions", [
     ("sync_gateway_default_functional_tests", 10, 10),
     ("sync_gateway_default_functional_tests_no_port", 10, 10),
-    ("sync_gateway_default_functional_tests_couchbase_protocol_using_port", 10, 10)
+    ("sync_gateway_default_functional_tests_couchbase_protocol_withport_11210", 10, 10)
 ])
 def test_continuous_changes_sanity(params_from_base_test_setup, sg_conf_name, num_docs, num_revisions):
 
@@ -105,13 +105,13 @@ def test_continuous_changes_sanity(params_from_base_test_setup, sg_conf_name, nu
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     # Skip the test if ssl disabled as it cannot run without port using http protocol
-    if ("sync_gateway_default_functional_tests_no_port" in sg_conf_name or "sync_gateway_default_functional_tests_couchbase_protocol_using_port" in sg_conf_name) and get_sg_version(cluster_conf) < "1.5.0":
+    if ("sync_gateway_default_functional_tests_no_port" in sg_conf_name) and get_sg_version(cluster_conf) < "1.5.0":
         pytest.skip('couchbase/couchbases ports do not support for versions below 1.5')
     if "sync_gateway_default_functional_tests_no_port" in sg_conf_name and not ssl_enabled:
         pytest.skip('ssl disabled so cannot run without port')
 
-    # Skip the test if ssl enabled as it cannot run without port using couchbases protocol
-    if "sync_gateway_default_functional_tests_couchbase_protocol_using_port" in sg_conf_name and ssl_enabled:
+    # Skip the test if ssl enabled as it cannot run with couchbase protocol
+    if "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210" in sg_conf_name and ssl_enabled:
         pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
     log_info("Running 'continuous_changes_sanity'")
