@@ -64,11 +64,21 @@ class SyncGatewayConfig:
                                           sg_installer_type="msi",
                                           sa_platform="centos",
                                           sa_installer_type="msi"):
-        platform_extension = {
-            "centos": "rpm",
-            "ubuntu": "deb",
-            "windows": "msi"
-        }
+        # Setting SG platform extension
+        if "windows" in sg_platform:
+            sg_platform_extension = "msi"
+        elif "centos" in sg_platform:
+            sg_platform_extension = "rpm"
+        elif "ubuntu" in sg_platform:
+            sg_platform_extension = "deb"
+
+        # Setting SG Accel platform extension
+        if "windows" in sa_platform:
+            sa_platform_extension = "msi"
+        elif "centos" in sa_platform:
+            sa_platform_extension = "rpm"
+        elif "ubuntu" in sa_platform:
+            sa_platform_extension = "deb"
 
         if self._version_number == "1.1.0" or self._build_number == "1.1.1":
             log_info("Version unsupported in provisioning.")
@@ -85,10 +95,11 @@ class SyncGatewayConfig:
 
             if (sg_platform == "windows" or sa_platform == "windows") and \
                     (sg_installer_type != "msi" or sa_installer_type != "msi"):
-                platform_extension["windows"] = "exe"
+                sg_platform_extension = "exe"
+                sa_platform_extension = "exe"
 
-            base_url, sg_package_name = self.resolve_sg_sa_mobile_url("sync-gateway", sg_type, platform_extension[sg_platform])
-            base_url, accel_package_name = self.resolve_sg_sa_mobile_url("sg-accel", sg_type, platform_extension[sa_platform])
+            base_url, sg_package_name = self.resolve_sg_sa_mobile_url("sync-gateway", sg_type, sg_platform_extension)
+            base_url, accel_package_name = self.resolve_sg_sa_mobile_url("sg-accel", sg_type, sa_platform_extension)
 
         return base_url, sg_package_name, accel_package_name
 

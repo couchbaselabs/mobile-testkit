@@ -386,7 +386,7 @@ def sgcollect_redact(cluster_config, log_redaction_level, redaction_salt):
 def pull_redacted_zip_file(cluster_config, sg_platform, output_dir=None, sa_output_dir=None):
     ansible_runner = AnsibleRunner(cluster_config)
     if output_dir is None:
-        if sg_platform == "centos":
+        if sg_platform == "centos" or sg_platform == "ubuntu":
             sg_logs_dir = "/home/sync_gateway/logs"
             sa_logs_dir = "/home/sg_accel/logs"
         if sg_platform == "windows":
