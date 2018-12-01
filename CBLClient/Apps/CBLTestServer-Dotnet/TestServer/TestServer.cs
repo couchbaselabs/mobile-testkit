@@ -48,6 +48,12 @@ namespace Couchbase.Lite.Testing
 
         #endregion
 
+        #region Properties
+
+        public static Func<string, string> FilePathResolver { get; set; }
+
+        #endregion
+
         #region Public Methods
 
         public async Task Start()

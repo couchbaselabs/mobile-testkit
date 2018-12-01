@@ -29,9 +29,15 @@ namespace Couchbase.Lite.Testing.UWP
             Couchbase.Lite.Support.UWP.EnableTextLogging();
             Database.SetLogLevel(Logging.LogDomain.All, Logging.LogLevel.Debug);
 
+			TestServer.FilePathResolver = ResolvePath;
             var listener = new TestServer();
             listener.Start();
             Label.Text = "CBLTestServer-NetUWP - listening!";
         }
+
+		private string ResolvePath(string path)
+		{
+			return Path.Combine(Windows.ApplicationModel.Package.Current.InstalledLocation.Path, "Assets", path);
+		}
     }
 }
