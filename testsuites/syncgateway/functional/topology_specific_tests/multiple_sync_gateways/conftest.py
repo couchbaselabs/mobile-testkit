@@ -177,11 +177,11 @@ def params_from_base_suite_setup(request):
         expected_sync_gateway_version=sync_gateway_version
     )
 
-    yield {"cluster_config": cluster_config, 
-           "mode": mode, 
+    yield {"cluster_config": cluster_config,
+           "mode": mode,
            "xattrs_enabled": xattrs_enabled,
            "sg_platform": sg_platform
-    }
+           }
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
 
@@ -211,11 +211,11 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     log_info("Setting up test '{}'".format(test_name))
 
     # This dictionary is passed to each test
-    yield {"cluster_config": cluster_config, 
-           "mode": mode, 
+    yield {"cluster_config": cluster_config,
+           "mode": mode,
            "xattrs_enabled": xattrs_enabled,
            "sg_platform": sg_platform
-    }
+           }
 
     # Code after the yeild will execute when each test finishes
     log_info("Tearing down test '{}'".format(test_name))
