@@ -243,7 +243,10 @@ class TestServerAndroid(TestServerBase):
         self.process.wait()
 
     def close_app(self):
-        output = subprocess.check_output(["adb", "shell", "input", "keyevent ", "3"])
+        if self.device_enabled:
+            output = subprocess.check_output(["adb", "-d", "shell", "input", "keyevent ", "3"])
+        else:
+            output = subprocess.check_output(["adb", "-e", "shell", "input", "keyevent ", "3"])
         log_info(output)
 
     def open_app(self):
