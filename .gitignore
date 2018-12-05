@@ -6,8 +6,6 @@
 .cache/
 
 *.class
-*.pydevproject
-*.project
 .idea
 *.iml
 *.pyc
