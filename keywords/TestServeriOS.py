@@ -62,10 +62,6 @@ class TestServeriOS(TestServerBase):
             self.app_dir = "TestServer.iOS"
             self.package_name = "TestServer.iOS.zip"
             self.app = "TestServer.iOS"
-            self.bundle_id = "com.couchbase.TestServer-iOS"
-        if self.platform == "xamarin-ios":
-            self.app_dir = "TestServer.iOS/Payload"
-            self.package_name = "TestServer.iOS.ipa"
             self.bundle_id = "com.couchbase.TestServer.iOS"
 
     def download(self, version_build=None):
@@ -110,10 +106,7 @@ class TestServeriOS(TestServerBase):
         resp.raise_for_status()
         with open("{}/{}".format(BINARY_DIR, self.package_name), "wb") as f:
             f.write(resp.content)
-        if self.platform == "xamarin-ios":
-            extracted_directory_name = downloaded_package_zip_name.replace(".ipa", "")
-        else:
-            extracted_directory_name = downloaded_package_zip_name.replace(".zip", "")
+        extracted_directory_name = downloaded_package_zip_name.replace(".zip", "")
         with ZipFile("{}".format(downloaded_package_zip_name)) as zip_f:
             zip_f.extractall("{}".format(extracted_directory_name))
 
@@ -124,13 +117,10 @@ class TestServeriOS(TestServerBase):
         """Installs / launches CBLTestServer on iOS device
         Warning: Only works with a single device at the moment
         """
-        if self.platform == "ios":
-            if self.debug_mode:
-                self.app_name = "{}-{}-Device-debug.app".format(self.app, self.version_build)
-            else:
-                self.app_name = "{}-{}-Device.app".format(self.app, self.version_build)
-        elif self.platform == "xamarin-ios":
-            self.app_name = "{}.app".format(self.app)
+        if self.debug_mode:
+            self.app_name = "{}-{}-Device-debug.app".format(self.app, self.version_build)
+        else:
+            self.app_name = "{}-{}-Device.app".format(self.app, self.version_build)
 
         self.app_path = "{}/{}/{}".format(BINARY_DIR, self.app_dir, self.app_name)
         log_info("Installing: {}".format(self.app_path))
@@ -209,11 +199,10 @@ class TestServeriOS(TestServerBase):
         # Get the device ID
         list_output = subprocess.Popen(["xcrun", "simctl", "list"], stdout=subprocess.PIPE)
         output = subprocess.check_output(('grep', 'Booted'), stdin=list_output.stdout)
-
         for line in output.splitlines():
             if "Phone" in line:
                 self.device_id = re.sub(' +', ' ', line).strip()
-                self.device_id = self.device_id.split(" ")[4]
+                self.device_id = self.device_id.split(" ")[3]
                 self.device_id = self.device_id.strip('(')
                 self.device_id = self.device_id.strip(')')
 

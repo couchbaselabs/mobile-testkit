@@ -6,7 +6,7 @@
   tasks:
   - include: tasks/stop-sync-gateway.yml
     become: yes
-    when: ansible_distribution == "CentOS"
+    when: ansible_distribution == "CentOS" or ansible_distribution == "Ubuntu"
 
   - include: tasks/stop-sync-gateway-windows.yml
     when: ansible_os_family == "Windows"
@@ -14,7 +14,7 @@
   # Delete logs and .pindex files
   - include: tasks/delete-sync-gateway-artifacts.yml
     become: yes
-    when: ansible_distribution == "CentOS"
+    when: ansible_distribution == "CentOS" or ansible_distribution == "Ubuntu"
 
   - include: tasks/delete-sync-gateway-artifacts-windows.yml
     when: ansible_os_family == "Windows"
@@ -39,7 +39,7 @@
   tasks:
   - include: tasks/deploy-sync-gateway-config.yml
     become: yes
-    when: ansible_distribution == "CentOS"
+    when: ansible_distribution == "CentOS" or ansible_distribution == "Ubuntu"
 
   - include: tasks/deploy-sync-gateway-config-windows.yml
     when: ansible_os_family == "Windows"
@@ -64,7 +64,7 @@
   tasks:
   - include: tasks/deploy-sync-gateway-config.yml
     become: yes
-    when: ansible_distribution == "CentOS"
+    when: ansible_distribution == "CentOS" or ansible_distribution == "Ubuntu"
 
   - include: tasks/deploy-sync-gateway-config-windows.yml
     when: ansible_os_family == "Windows"
@@ -79,7 +79,7 @@
   tasks:
   - include: tasks/start-sync-gateway.yml
     become: yes
-    when: ansible_distribution == "CentOS"
+    when: ansible_distribution == "CentOS" or ansible_distribution == "Ubuntu"
 
   - include: tasks/start-sync-gateway-windows.yml
     when: ansible_os_family == "Windows"

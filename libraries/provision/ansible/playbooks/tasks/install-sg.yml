@@ -2,5 +2,11 @@
 - name: SYNC GATEWAY | Install sync_gateway rpm
   become: yes
   shell: rpm -i /tmp/{{ couchbase_sync_gateway_package }}
+  when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat"
+
+- name: SYNC GATEWAY | Install sync_gateway deb
+  become: yes
+  shell: dpkg -i /tmp/{{ couchbase_sync_gateway_package }}
+  when: ansible_distribution == "Ubuntu"
 
 - include: stop-sync-gateway.yml

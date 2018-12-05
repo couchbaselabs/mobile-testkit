@@ -37,7 +37,7 @@ testsuites/syncgateway/performance/results/*
 !performance_results/README.txt
 
 # appium ignore
-*.png
+
 log.html
 output.xml
 report.html

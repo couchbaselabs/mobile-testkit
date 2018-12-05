@@ -381,4 +381,43 @@ Global
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5B232B53-72DC-4203-897F-60EE721687EA}
 	EndGlobalSection
+	GlobalSection(MonoDevelopProperties) = preSolution
+		Policies = $0
+		$0.DotNetNamingPolicy = $1
+		$1.DirectoryNamespaceAssociation = PrefixedHierarchical
+		$0.StandardHeader = $2
+		$0.VersionControlPolicy = $3
+		$0.TextStylePolicy = $4
+		$4.inheritsSet = null
+		$4.scope = text/x-csharp
+		$0.CSharpFormattingPolicy = $5
+		$5.scope = text/x-csharp
+		$0.TextStylePolicy = $6
+		$6.FileWidth = 80
+		$6.TabsToSpaces = True
+		$6.scope = text/plain
+		$0.TextStylePolicy = $7
+		$7.inheritsSet = null
+		$7.scope = application/xml
+		$0.XmlFormattingPolicy = $8
+		$8.scope = application/xml
+		$0.TextStylePolicy = $9
+		$9.inheritsSet = null
+		$9.scope = application/android+xml
+		$0.XmlFormattingPolicy = $10
+		$10.inheritsSet = null
+		$10.scope = application/android+xml
+		$0.TextStylePolicy = $11
+		$11.inheritsSet = null
+		$11.scope = application/xaml+xml
+		$0.XmlFormattingPolicy = $12
+		$12.inheritsSet = null
+		$12.scope = application/xaml+xml
+		$0.TextStylePolicy = $13
+		$13.inheritsSet = null
+		$13.scope = application/vnd.apple-interface-builder
+		$0.XmlFormattingPolicy = $14
+		$14.inheritsSet = null
+		$14.scope = application/vnd.apple-interface-builder
+	EndGlobalSection
 EndGlobal
