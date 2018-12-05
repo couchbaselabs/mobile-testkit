@@ -530,12 +530,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         log_info("Flushing server memory")
         utils_obj = Utils(base_url)
         utils_obj.flushMemory()
-    """
-    if flush_memory_per_test:
-        log_info("Flushing server memory")
-        utils_obj = Utils(base_url)
-        utils_obj.flushMemory()
-    """
+
     if create_db_per_test:
         log_info("Stopping the test server per test")
         testserver.stop()

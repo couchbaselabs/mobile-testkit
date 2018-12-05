@@ -250,7 +250,6 @@ class TestServerAndroid(TestServerBase):
         log_info(output)
 
     def open_app(self):
-        # package_name = "com.couchbase.TestServerApp"
         if self.device_enabled:
             output = subprocess.check_output([
                 "adb", "-d", "shell", "am", "start", "-n", self.activity_name,
@@ -259,7 +258,6 @@ class TestServerAndroid(TestServerBase):
                 str(self.port)
             ])
         else:
-            # output = subprocess.check_output(["adb", "-e", "shell", "monkey", "-p", package_name, "1"])
             output = subprocess.check_output([
                 "adb", "-e", "shell", "am", "start", "-n", self.activity_name,
                 "--es", "username", "none", "--es", "password", "none", "--ei",
