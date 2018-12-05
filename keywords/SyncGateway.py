@@ -200,24 +200,80 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config):
 
     with open(sg_conf) as default_conf:
         template = Template(default_conf.read())
-
+        config_path = os.path.abspath(sg_conf)
+        bucket_names = get_buckets_from_sync_gateway_config(config_path)
+        sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
+        cbs_cert_path = os.path.join(os.getcwd(), "certs")
         if is_xattrs_enabled(cluster_config):
             autoimport_prop = '"import_docs": "continuous",'
             xattrs_prop = '"enable_shared_bucket_access": true,'
         else:
             autoimport_prop = ""
             xattrs_prop = ""
+        if is_cbs_ssl_enabled(cluster_config):
+            server_port = 18091
+            server_scheme = "https"
+
+        if is_x509_auth(cluster_config):
+            server_port = ""
+            server_scheme = "couchbases"
 
         sg_use_views_prop = ""
         num_index_replicas_prop = ""
+        logging_prop = ""
+        certpath_prop = ""
+        x509_auth_prop = ""
+        keypath_prop = ""
+        cacertpath_prop = ""
+        no_conflicts_prop = ""
+        revs_limit_prop = ""
+        sslcert_prop = ""
+        sslkey_prop = ""
+
 
         if get_sg_version(cluster_config) >= "2.1.0":
+            logging_config = '"logging": {"debug": {"enabled": true}'
+            try:
+                redact_level = get_redact_level(cluster_config)
+                logging_prop = '{}, "redaction_level": "{}" {},'.format(logging_config, redact_level, "}")
+            except KeyError as ex:
+                log_info("Keyerror in getting logging{}".format(ex.message))
+                logging_prop = '{} {},'.format(logging_config, "}")
+
             num_replicas = get_sg_replicas(cluster_config)
             num_index_replicas_prop = '"num_index_replicas": {},'.format(num_replicas)
             if get_sg_use_views(cluster_config):
                 sg_use_views_prop = '"use_views": true,'
 
+            if is_x509_auth(cluster_config):
+                certpath_prop = '"certpath": "/home/sync_gateway/certs/chain.pem",'
+                keypath_prop = '"keypath": "/home/sync_gateway/certs/pkey.key",'
+                cacertpath_prop = '"cacertpath": "/home/sync_gateway/certs/ca.pem",'
+                server_scheme = "couchbases"
+                server_port = ""
+                x509_auth_prop = True
+                generate_x509_certs(cluster_config, bucket_names)
+            else:
+                logging_prop = '"log": ["*"],'
+            username = '"username": "{}",'.format(bucket_names[0])
+            password = '"password": "password",'
+
         couchbase_server_primary_node = add_cbs_to_sg_config_server_field(cluster_config)
+        if is_ipv6(cluster_config):
+            couchbase_server_primary_node = "[{}]".format(couchbase_server_primary_node)
+
+        if sg_ssl_enabled(cluster_config):
+            sslcert_prop = '"SSLCert": "sg_cert.pem",'
+            sslkey_prop = '"SSLKey": "sg_privkey.pem",'
+
+        if no_conflicts_enabled(cluster_config):
+            no_conflicts_prop = '"allow_conflicts": false,'
+        try:
+            revs_limit = get_revs_limit(cluster_config)
+            revs_limit_prop = '"revs_limit": {},'.format(revs_limit)
+        except KeyError:
+            log_info("revs_limit not found in {}, Ignoring".format(cluster_config))
+
         temp = template.render(
             couchbase_server_primary_node=couchbase_server_primary_node,
             is_index_writer="false",
@@ -226,7 +282,21 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config):
             autoimport=autoimport_prop,
             xattrs=xattrs_prop,
             sg_use_views=sg_use_views_prop,
-            num_index_replicas=num_index_replicas_prop
+            num_index_replicas=num_index_replicas_prop,
+            logging=logging_prop,
+            certpath=certpath_prop,
+            keypath=keypath_prop,
+            cacertpath=cacertpath_prop,
+            x509_auth=x509_auth_prop,
+            username=username,
+            password=password,
+            x509_certs_dir=cbs_cert_path,
+            sg_cert_path=sg_cert_path,
+            sslcert=sslcert_prop,
+            sslkey=sslkey_prop,
+            no_conflicts=no_conflicts_prop,
+            revs_limit=revs_limit_prop
+
         )
         data = json.loads(temp)
 
