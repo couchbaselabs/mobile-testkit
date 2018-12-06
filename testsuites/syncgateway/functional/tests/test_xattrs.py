@@ -15,7 +15,7 @@ from requests.exceptions import HTTPError
 from keywords.exceptions import ChangesError
 
 from keywords import attachment, document
-from keywords.constants import DATA_DIR, SDK_TIMEOUT
+from keywords.constants import DATA_DIR
 from keywords.MobileRestClient import MobileRestClient
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.SyncGateway import SyncGateway
@@ -24,6 +24,7 @@ from keywords.utils import host_for_url, log_info
 from libraries.testkit.cluster import Cluster
 from keywords.ChangesTracker import ChangesTracker
 from utilities.cluster_config_utils import get_sg_use_views, get_sg_version
+from keywords.constants import SDK_TIMEOUT
 
 # Since sdk is quicker to update docs we need to have it sleep longer
 # between ops to avoid ops heavily weighted to SDK. These gives us more balanced
@@ -78,6 +79,7 @@ def test_olddoc_nil(params_from_base_test_setup, sg_conf_name):
     sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
     sg_url = cluster_topology['sync_gateways'][0]['public']
     cbs_url = cluster_topology['couchbase_servers'][0]
+    ssl_enabled = params_from_base_test_setup["ssl_enabled"]
 
     log_info('sg_conf: {}'.format(sg_conf))
     log_info('sg_admin_url: {}'.format(sg_admin_url))
@@ -90,11 +92,15 @@ def test_olddoc_nil(params_from_base_test_setup, sg_conf_name):
     # Create clients
     sg_client = MobileRestClient()
     cbs_ip = host_for_url(cbs_url)
-    if cluster.ipv6:
-        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+    if ssl_enabled and cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(cbs_ip, bucket_name)
+    elif ssl_enabled and not cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify".format(cbs_ip, bucket_name)
+    elif not ssl_enabled and cluster.ipv6:
+        connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, bucket_name)
     else:
-        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
-
+        connection_url = 'couchbase://{}/{}'.format(cbs_ip, bucket_name)
+    sdk_client = Bucket(connection_url, password='password', timeout=SDK_TIMEOUT)
     # Create user / session
     user_one_info = UserInfo(name='user1', password='pass', channels=['ABC'], roles=[])
     user_two_info = UserInfo(name='user2', password='pass', channels=['CBS'], roles=[])
@@ -330,6 +336,7 @@ def test_on_demand_import_of_external_updates(params_from_base_test_setup, sg_co
     sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
     sg_url = cluster_topology['sync_gateways'][0]['public']
     cbs_url = cluster_topology['couchbase_servers'][0]
+    ssl_enabled = params_from_base_test_setup["ssl_enabled"]
 
     log_info('sg_conf: {}'.format(sg_conf))
     log_info('sg_admin_url: {}'.format(sg_admin_url))
@@ -342,12 +349,15 @@ def test_on_demand_import_of_external_updates(params_from_base_test_setup, sg_co
     # Create clients
     sg_client = MobileRestClient()
     cbs_ip = host_for_url(cbs_url)
-    # TODO : Add support for ssl enabled once ssl enabled support is merged to master
-    if cluster.ipv6:
-        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+    if ssl_enabled and cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(cbs_ip, bucket_name)
+    elif ssl_enabled and not cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify".format(cbs_ip, bucket_name)
+    elif not ssl_enabled and cluster.ipv6:
+        connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, bucket_name)
     else:
-        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
-
+        connection_url = 'couchbase://{}/{}'.format(cbs_ip, bucket_name)
+    sdk_client = Bucket(connection_url, password='password')
     # Create user / session
     seth_user_info = UserInfo(name='seth', password='pass', channels=['NASA'], roles=[])
     sg_client.create_user(
@@ -401,6 +411,8 @@ def test_on_demand_import_of_external_updates(params_from_base_test_setup, sg_co
 @pytest.mark.session
 @pytest.mark.parametrize('sg_conf_name', [
     'sync_gateway_default_functional_tests',
+    'sync_gateway_default_functional_tests_no_port',
+    "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210"
 ])
 def test_offline_processing_of_external_updates(params_from_base_test_setup, sg_conf_name):
     """
@@ -420,6 +432,17 @@ def test_offline_processing_of_external_updates(params_from_base_test_setup, sg_
     cluster_topology = params_from_base_test_setup['cluster_topology']
     mode = params_from_base_test_setup['mode']
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+    ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+
+    # Skip the test if ssl disabled as it cannot run without port using http protocol
+    if ("sync_gateway_default_functional_tests_no_port" in sg_conf_name) and get_sg_version(cluster_conf) < "1.5.0":
+        pytest.skip('couchbase/couchbases ports do not support for versions below 1.5')
+    if "sync_gateway_default_functional_tests_no_port" in sg_conf_name and not ssl_enabled:
+        pytest.skip('ssl disabled so cannot run without port')
+
+    # Skip the test if ssl enabled as it cannot run using couchbase protocol
+    if "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210" in sg_conf_name and ssl_enabled:
+        pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
     # This test should only run when using xattr meta storage
     if not xattrs_enabled:
@@ -441,11 +464,15 @@ def test_offline_processing_of_external_updates(params_from_base_test_setup, sg_
     # Create clients
     sg_client = MobileRestClient()
     cbs_ip = host_for_url(cbs_url)
-    if cluster.ipv6:
-        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+    if ssl_enabled and cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(cbs_ip, bucket_name)
+    elif ssl_enabled and not cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify".format(cbs_ip, bucket_name)
+    elif not ssl_enabled and cluster.ipv6:
+        connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, bucket_name)
     else:
-        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
-
+        connection_url = 'couchbase://{}/{}'.format(cbs_ip, bucket_name)
+    sdk_client = Bucket(connection_url, password='password')
     # Create user / session
     seth_user_info = UserInfo(name='seth', password='pass', channels=['SG', 'SDK'], roles=[])
     sg_client.create_user(
@@ -528,6 +555,8 @@ def test_offline_processing_of_external_updates(params_from_base_test_setup, sg_
 @pytest.mark.session
 @pytest.mark.parametrize('sg_conf_name', [
     'sync_gateway_default_functional_tests',
+    'sync_gateway_default_functional_tests_no_port',
+    "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210"
 ])
 def test_large_initial_import(params_from_base_test_setup, sg_conf_name):
     """ Regression test for https://github.com/couchbase/sync_gateway/issues/2537
@@ -546,6 +575,17 @@ def test_large_initial_import(params_from_base_test_setup, sg_conf_name):
     cluster_topology = params_from_base_test_setup['cluster_topology']
     mode = params_from_base_test_setup['mode']
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+    ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+
+    # Skip the test if ssl disabled as it cannot run without port using http protocol
+    if ("sync_gateway_default_functional_tests_no_port" in sg_conf_name) and get_sg_version(cluster_conf) < "1.5.0":
+        pytest.skip('couchbase/couchbases ports do not support for versions below 1.5')
+    if "sync_gateway_default_functional_tests_no_port" in sg_conf_name and not ssl_enabled:
+        pytest.skip('ssl disabled so cannot run without port')
+
+    # Skip the test if ssl enabled as it cannot run using couchbase protocol
+    if "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210" in sg_conf_name and ssl_enabled:
+        pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
     # This test should only run when using xattr meta storage
     if not xattrs_enabled:
@@ -570,12 +610,17 @@ def test_large_initial_import(params_from_base_test_setup, sg_conf_name):
 
     # Connect to server via SDK
     cbs_ip = host_for_url(cbs_url)
-    if cluster.ipv6:
-        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+    if ssl_enabled and cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(cbs_ip, bucket_name)
+    elif ssl_enabled and not cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify".format(cbs_ip, bucket_name)
+    elif not ssl_enabled and cluster.ipv6:
+        connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, bucket_name)
     else:
-        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
-
+        connection_url = 'couchbase://{}/{}'.format(cbs_ip, bucket_name)
+    sdk_client = Bucket(connection_url, password='password')
     # Generate array for each doc doc to give it a larger size
+
     def prop_gen():
         return {'sample_array': ["test_item_{}".format(i) for i in range(20)]}
 
@@ -621,7 +666,9 @@ def test_large_initial_import(params_from_base_test_setup, sg_conf_name):
 @pytest.mark.session
 @pytest.mark.parametrize('sg_conf_name, use_multiple_channels', [
     ('sync_gateway_default_functional_tests', False),
-    ('sync_gateway_default_functional_tests', True)
+    ('sync_gateway_default_functional_tests', True),
+    ('sync_gateway_default_functional_tests_no_port', False),
+    ('sync_gateway_default_functional_tests_no_port', True)
 ])
 def test_purge(params_from_base_test_setup, sg_conf_name, use_multiple_channels):
     """
@@ -641,6 +688,12 @@ def test_purge(params_from_base_test_setup, sg_conf_name, use_multiple_channels)
     cluster_topology = params_from_base_test_setup['cluster_topology']
     mode = params_from_base_test_setup['mode']
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+    ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+
+    if ("sync_gateway_default_functional_tests_no_port" in sg_conf_name) and get_sg_version(cluster_conf) < "1.5.0":
+        pytest.skip('couchbase/couchbases ports do not support for versions below 1.5')
+    if "sync_gateway_default_functional_tests_no_port" in sg_conf_name and not ssl_enabled:
+        pytest.skip('ssl disabled so cannot run without port')
 
     # This test should only run when using xattr meta storage
     if not xattrs_enabled:
@@ -699,11 +752,15 @@ def test_purge(params_from_base_test_setup, sg_conf_name, use_multiple_channels)
 
     # Connect to server via SDK
     cbs_ip = host_for_url(cbs_url)
-    if cluster.ipv6:
-        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+    if ssl_enabled and cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(cbs_ip, bucket_name)
+    elif ssl_enabled and not cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify".format(cbs_ip, bucket_name)
+    elif not ssl_enabled and cluster.ipv6:
+        connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, bucket_name)
     else:
-        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
-
+        connection_url = 'couchbase://{}/{}'.format(cbs_ip, bucket_name)
+    sdk_client = Bucket(connection_url, password='password')
     # Create 'number_docs_per_client' docs from SDK
     sdk_doc_bodies = document.create_docs('sdk', number_docs_per_client, channels=seth_user_info.channels)
     sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
@@ -830,7 +887,9 @@ def test_purge(params_from_base_test_setup, sg_conf_name, use_multiple_channels)
 @pytest.mark.changes
 @pytest.mark.session
 @pytest.mark.parametrize('sg_conf_name', [
-    'sync_gateway_default_functional_tests'
+    'sync_gateway_default_functional_tests',
+    'sync_gateway_default_functional_tests_no_port',
+    'sync_gateway_default_functional_tests_couchbase_protocol_withport_11210'
 ])
 def test_sdk_does_not_see_sync_meta(params_from_base_test_setup, sg_conf_name):
     """
@@ -844,6 +903,17 @@ def test_sdk_does_not_see_sync_meta(params_from_base_test_setup, sg_conf_name):
     cluster_topology = params_from_base_test_setup['cluster_topology']
     mode = params_from_base_test_setup['mode']
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+    ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+
+    # Skip the test if ssl disabled as it cannot run without port using http protocol
+    if ("sync_gateway_default_functional_tests_no_port" in sg_conf_name) and get_sg_version(cluster_conf) < "1.5.0":
+        pytest.skip('couchbase/couchbases ports do not support for versions below 1.5')
+    if "sync_gateway_default_functional_tests_no_port" in sg_conf_name and not ssl_enabled:
+        pytest.skip('ssl disabled so cannot run without port')
+
+    # Skip the test if ssl enabled as it cannot run using couchbase protocol
+    if "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210" in sg_conf_name and ssl_enabled:
+        pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
     # This test should only run when using xattr meta storage
     if not xattrs_enabled:
@@ -873,11 +943,15 @@ def test_sdk_does_not_see_sync_meta(params_from_base_test_setup, sg_conf_name):
 
     # Connect to server via SDK
     cbs_ip = host_for_url(cbs_url)
-    if cluster.ipv6:
-        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+    if ssl_enabled and cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(cbs_ip, bucket_name)
+    elif ssl_enabled and not cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify".format(cbs_ip, bucket_name)
+    elif not ssl_enabled and cluster.ipv6:
+        connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, bucket_name)
     else:
-        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
-
+        connection_url = 'couchbase://{}/{}'.format(cbs_ip, bucket_name)
+    sdk_client = Bucket(connection_url, password='password')
     # Add 'number_of_sg_docs' to Sync Gateway
     sg_doc_bodies = document.create_docs(
         doc_id_prefix='sg_docs',
@@ -931,7 +1005,9 @@ def test_sdk_does_not_see_sync_meta(params_from_base_test_setup, sg_conf_name):
 @pytest.mark.changes
 @pytest.mark.session
 @pytest.mark.parametrize('sg_conf_name', [
-    'sync_gateway_default_functional_tests'
+    'sync_gateway_default_functional_tests',
+    'sync_gateway_default_functional_tests_no_port',
+    'sync_gateway_default_functional_tests_couchbase_protocol_withport_11210'
 ])
 def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
 
@@ -959,6 +1035,17 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
     cluster_topology = params_from_base_test_setup['cluster_topology']
     mode = params_from_base_test_setup['mode']
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+    ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+
+    # Skip the test if ssl disabled as it cannot run without port using http protocol
+    if ("sync_gateway_default_functional_tests_no_port" in sg_conf_name) and get_sg_version(cluster_conf) < "1.5.0":
+        pytest.skip('couchbase/couchbases ports do not support for versions below 1.5')
+    if "sync_gateway_default_functional_tests_no_port" in sg_conf_name and not ssl_enabled:
+        pytest.skip('ssl disabled so cannot run without port')
+
+    # Skip the test if ssl enabled as it cannot run using couchbase protocol
+    if "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210" in sg_conf_name and ssl_enabled:
+        pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
     # This test should only run when using xattr meta storage
     if not xattrs_enabled:
@@ -984,10 +1071,15 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
     # Connect to server via SDK
     log_info('Connecting to bucket ...')
     cbs_ip = host_for_url(cbs_url)
-    if cluster.ipv6:
-        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+    if ssl_enabled and cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(cbs_ip, bucket_name)
+    elif ssl_enabled and not cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify".format(cbs_ip, bucket_name)
+    elif not ssl_enabled and cluster.ipv6:
+        connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, bucket_name)
     else:
-        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+        connection_url = 'couchbase://{}/{}'.format(cbs_ip, bucket_name)
+    sdk_client = Bucket(connection_url, password='password')
 
     # Create docs and add them via sdk
     log_info('Adding docs via sdk ...')
@@ -1144,7 +1236,9 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
     [
         ('sync_gateway_default_functional_tests', 10, 10),
         ('sync_gateway_default_functional_tests', 100, 10),
+        ('sync_gateway_default_functional_tests_no_port', 100, 10),
         ('sync_gateway_default_functional_tests', 10, 100),
+        ('sync_gateway_default_functional_tests_no_port', 10, 100),
         ('sync_gateway_default_functional_tests', 1, 1000)
     ]
 )
@@ -1182,6 +1276,12 @@ def test_sg_sdk_interop_shared_docs(params_from_base_test_setup,
     cluster_topology = params_from_base_test_setup['cluster_topology']
     mode = params_from_base_test_setup['mode']
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+    ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+
+    if ("sync_gateway_default_functional_tests_no_port" in sg_conf_name) and get_sg_version(cluster_conf) < "1.5.0":
+        pytest.skip('couchbase/couchbases ports do not support for versions below 1.5')
+    if "sync_gateway_default_functional_tests_no_port" in sg_conf_name and not ssl_enabled:
+        pytest.skip('ssl disabled so cannot run without port')
 
     # This test should only run when using xattr meta storage
     if not xattrs_enabled:
@@ -1215,10 +1315,15 @@ def test_sg_sdk_interop_shared_docs(params_from_base_test_setup,
 
     # Connect to server via SDK
     cbs_ip = host_for_url(cbs_url)
-    if cluster.ipv6:
-        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+    if ssl_enabled and cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(cbs_ip, bucket_name)
+    elif ssl_enabled and not cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify".format(cbs_ip, bucket_name)
+    elif not ssl_enabled and cluster.ipv6:
+        connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, bucket_name)
     else:
-        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+        connection_url = 'couchbase://{}/{}'.format(cbs_ip, bucket_name)
+    sdk_client = Bucket(connection_url, password='password')
 
     # Inject custom properties into doc template
     def update_props():
@@ -1393,7 +1498,10 @@ def test_sg_sdk_interop_shared_docs(params_from_base_test_setup,
     [
         ('sync_gateway_default_functional_tests', 10, 10),
         ('sync_gateway_default_functional_tests', 100, 10),
+        ('sync_gateway_default_functional_tests_no_port', 100, 10),
+        ('sync_gateway_default_functional_tests_couchbase_protocol_withport_11210', 100, 10),
         ('sync_gateway_default_functional_tests', 10, 100),
+        ('sync_gateway_default_functional_tests_no_port', 10, 100),
         ('sync_gateway_default_functional_tests', 1, 1000)
     ]
 )
@@ -1422,6 +1530,17 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
     cluster_topology = params_from_base_test_setup['cluster_topology']
     mode = params_from_base_test_setup['mode']
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+    ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+
+    # Skip the test if ssl disabled as it cannot run without port using http protocol
+    if ("sync_gateway_default_functional_tests_no_port" in sg_conf_name) and get_sg_version(cluster_conf) < "1.5.0":
+        pytest.skip('couchbase/couchbases ports do not support for versions below 1.5')
+    if "sync_gateway_default_functional_tests_no_port" in sg_conf_name and not ssl_enabled:
+        pytest.skip('ssl disabled so cannot run without port')
+
+    # Skip the test if ssl enabled as it cannot run using couchbase protocol
+    if "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210" in sg_conf_name and ssl_enabled:
+        pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
     # This test should only run when using xattr meta storage
     if not xattrs_enabled:
@@ -1462,10 +1581,15 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
     cbs_ip = host_for_url(cbs_url)
 
     # Connect to server via SDK
-    if cluster.ipv6:
-        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+    if ssl_enabled and cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(cbs_ip, bucket_name)
+    elif ssl_enabled and not cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify".format(cbs_ip, bucket_name)
+    elif not ssl_enabled and cluster.ipv6:
+        connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, bucket_name)
     else:
-        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+        connection_url = 'couchbase://{}/{}'.format(cbs_ip, bucket_name)
+    sdk_client = Bucket(connection_url, password='password')
 
     # Inject custom properties into doc template
     def update_props():
@@ -2029,7 +2153,11 @@ def verify_doc_ids_in_sdk_get_multi(response, expected_number_docs, expected_ids
     [
         ('sync_gateway_default_functional_tests', 10, 10),
         ('sync_gateway_default_functional_tests', 100, 10),
+        ('sync_gateway_default_functional_tests_no_port', 100, 10),
+        ('sync_gateway_default_functional_tests_couchbase_protocol_withport_11210', 100, 10),
+        ('sync_gateway_default_functional_tests_couchbase_protocol_withport_11210', 100, 10),
         ('sync_gateway_default_functional_tests', 10, 100),
+        ('sync_gateway_default_functional_tests_no_port', 10, 100),
         ('sync_gateway_default_functional_tests', 1, 1000)
     ]
 )
@@ -2058,6 +2186,17 @@ def test_sg_sdk_interop_shared_updates_from_sg(params_from_base_test_setup,
     mode = params_from_base_test_setup['mode']
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
     no_conflicts_enabled = params_from_base_test_setup["no_conflicts_enabled"]
+    ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+    log_info("sg version is this -------{}".format(get_sg_version(cluster_conf)))
+    # Skip the test if ssl disabled as it cannot run without port using http protocol
+    if ("sync_gateway_default_functional_tests_no_port" in sg_conf_name) and get_sg_version(cluster_conf) < "1.5.0":
+        pytest.skip('couchbase/couchbases ports do not support for versions below 1.5')
+    if "sync_gateway_default_functional_tests_no_port" in sg_conf_name and not ssl_enabled:
+        pytest.skip('ssl disabled so cannot run without port')
+
+    # Skip the test if ssl enabled as it cannot run using couchbase protocol
+    if "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210" in sg_conf_name and ssl_enabled:
+        pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
     # This test should only run when using xattr meta storage
     if not xattrs_enabled:
@@ -2093,10 +2232,15 @@ def test_sg_sdk_interop_shared_updates_from_sg(params_from_base_test_setup,
 
     # Connect to server via SDK
     cbs_ip = host_for_url(cbs_url)
-    if cluster.ipv6:
-        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+    if ssl_enabled and cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(cbs_ip, bucket_name)
+    elif ssl_enabled and not cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify".format(cbs_ip, bucket_name)
+    elif not ssl_enabled and cluster.ipv6:
+        connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, bucket_name)
     else:
-        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+        connection_url = 'couchbase://{}/{}'.format(cbs_ip, bucket_name)
+    sdk_client = Bucket(connection_url, password='password')
 
     # Inject custom properties into doc template
     def update_props():
@@ -2176,7 +2320,7 @@ def test_sg_sdk_interop_shared_updates_from_sg(params_from_base_test_setup,
     sdk_update_doc2 = sdk_update_docs2[0]["_rev"]
     log_info("sdk 2nd update doc revision is : {}".format(sdk_update_doc2))
     assert(sdk_update_doc2.startswith("3-"))
-    time.sleep(1)  # Need some delay to have _changes to update with latest branched revisions
+    time.sleep(2)  # Need some delay to have _changes to update with latest branched revisions
     # Get branched revision tree via _changes with include docs
     docs_changes = sg_client.get_changes_style_all_docs(url=sg_url, db=sg_db, auth=autouser_session, include_docs=True)
     doc_changes_in_changes = [change["changes"] for change in docs_changes["results"]]

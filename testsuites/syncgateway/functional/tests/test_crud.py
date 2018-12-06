@@ -12,6 +12,7 @@ from keywords.utils import host_for_url, log_info
 from libraries.testkit.cluster import Cluster
 from keywords.userinfo import UserInfo
 from keywords.exceptions import TimeoutException
+from utilities.cluster_config_utils import get_sg_version
 
 
 @pytest.mark.sanity
@@ -21,7 +22,10 @@ from keywords.exceptions import TimeoutException
 @pytest.mark.session
 @pytest.mark.parametrize('sg_conf_name, deletion_type', [
     ('sync_gateway_default_functional_tests', 'tombstone'),
-    ('sync_gateway_default_functional_tests', 'purge')
+    ('sync_gateway_default_functional_tests', 'purge'),
+    ('sync_gateway_default_functional_tests_no_port', 'tombstone'),
+    ('sync_gateway_default_functional_tests_no_port', 'purge'),
+    ('sync_gateway_default_functional_tests_couchbase_protocol_withport_11210', 'purge')
 ])
 def test_document_resurrection(params_from_base_test_setup, sg_conf_name, deletion_type):
     """
@@ -72,6 +76,17 @@ def test_document_resurrection(params_from_base_test_setup, sg_conf_name, deleti
     cluster_topology = params_from_base_test_setup['cluster_topology']
     mode = params_from_base_test_setup['mode']
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+    ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+
+    # Skip the test if ssl disabled as it cannot run without port using http protocol
+    if ("sync_gateway_default_functional_tests_no_port" in sg_conf_name) and get_sg_version(cluster_conf) < "1.5.0":
+        pytest.skip('couchbase/couchbases ports do not support for versions below 1.5')
+    if "sync_gateway_default_functional_tests_no_port" in sg_conf_name and not ssl_enabled:
+        pytest.skip('ssl disabled so cannot run without port')
+
+    # Skip the test if ssl enabled as it cannot run using couchbase protocol
+    if "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210" in sg_conf_name and ssl_enabled:
+        pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
     cbs_url = cluster_topology['couchbase_servers'][0]
     sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
@@ -90,11 +105,15 @@ def test_document_resurrection(params_from_base_test_setup, sg_conf_name, deleti
 
     # Initialize clients
     sg_client = MobileRestClient()
-    if cluster.ipv6:
-        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_host, bucket_name), password='password')
+    if ssl_enabled and cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(cbs_host, bucket_name)
+    elif ssl_enabled and not cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify".format(cbs_host, bucket_name)
+    elif not ssl_enabled and cluster.ipv6:
+        connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_host, bucket_name)
     else:
-        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_host, bucket_name), password='password')
-
+        connection_url = 'couchbase://{}/{}'.format(cbs_host, bucket_name)
+    sdk_client = Bucket(connection_url, password='password')
     # Create Sync Gateway user
     sg_user_channels = ['NASA', 'NATGEO']
     sg_client.create_user(url=sg_admin_url, db=sg_db, name='seth', password='pass', channels=sg_user_channels)
@@ -360,6 +379,7 @@ def verify_sg_deletes(sg_client, sg_url, sg_db, expected_deleted_ids, sg_auth):
         he = None
         with pytest.raises(HTTPError) as he:
             sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=sg_auth)
+        log_info("HTTP error message is {}".format(he.value.message))
         assert he is not None
         log_info(he.value.message)
         assert he.value.message.startswith('403 Client Error: Forbidden for url:')

@@ -10,7 +10,7 @@ from keywords.remoteexecutor import RemoteExecutor
 from keywords.SyncGateway import SyncGateway, sync_gateway_config_path_for_mode, get_sync_gateway_version
 from keywords.utils import log_info, add_cbs_to_sg_config_server_field, host_for_url
 from libraries.testkit.cluster import Cluster
-from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version
+from utilities.cluster_config_utils import is_cbs_ssl_enabled, get_sg_replicas, get_sg_use_views, get_sg_version
 
 
 def load_sync_gateway_config(sync_gateway_config, mode, server_url, xattrs_enabled, cluster_config):
@@ -41,6 +41,9 @@ def load_sync_gateway_config(sync_gateway_config, mode, server_url, xattrs_enabl
                 num_index_replicas_prop = '"num_index_replicas": {},'.format(num_replicas)
         else:
             logging_prop = '"logging": {"debug": {"enabled": true}},'
+        if is_cbs_ssl_enabled(cluster_config) and get_sg_version(cluster_config) >= "1.5.0":
+            server_scheme = "couchbases"
+            server_port = 11207
 
         couchbase_server_primary_node = add_cbs_to_sg_config_server_field(cluster_config)
         temp = template.render(
@@ -99,7 +102,6 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name):
 
     # read sample sg_conf
     data = load_sync_gateway_config(sg_conf, mode, cluster_hosts["couchbase_servers"][0], xattrs_enabled, cluster_conf)
-
     # delete rotation from sample config
     del data['logging']["default"]["rotation"]
     # create temp config file in the same folder as sg_conf

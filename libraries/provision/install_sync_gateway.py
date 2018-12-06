@@ -123,6 +123,9 @@ class SyncGatewayConfig:
 
         return True
 
+    def get_sg_version_build(self):
+        return self._version_number, self._build_number
+
 
 def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
                          sg_platform="centos", sg_installer_type="msi",
@@ -212,6 +215,20 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
             bucket_names[0])
         playbook_vars["password"] = '"password": "password",'
 
+    if is_cbs_ssl_enabled(cluster_config) and get_sg_version(cluster_config) >= "1.5.0":
+        playbook_vars["server_scheme"] = "couchbases"
+        playbook_vars["server_port"] = 11207
+        block_http_vars = {}
+        port_list = [8091, 8092, 8093, 8094, 8095, 8096, 11210, 11211]
+        for port in port_list:
+            block_http_vars["port"] = port
+            status = ansible_runner.run_ansible_playbook(
+                "block-http-ports.yml",
+                extra_vars=block_http_vars
+            )
+            if status != 0:
+                raise ProvisioningError("Failed to block port on SGW")
+
     if is_xattrs_enabled(cluster_config):
         playbook_vars["autoimport"] = '"import_docs": "continuous",'
         playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
@@ -252,6 +269,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
         playbook_vars["couchbase_sync_gateway_package_base_url"] = sync_gateway_base_url
         playbook_vars["couchbase_sync_gateway_package"] = sync_gateway_package_name
         playbook_vars["couchbase_sg_accel_package"] = sg_accel_package_name
+        playbook_vars["couchbase_server_version"] = sync_gateway_config.get_sg_version_build()
 
         if is_ipv6(cluster_config):
             playbook_vars["couchbase_server_primary_node"] = "[{}]".format(couchbase_server_primary_node)

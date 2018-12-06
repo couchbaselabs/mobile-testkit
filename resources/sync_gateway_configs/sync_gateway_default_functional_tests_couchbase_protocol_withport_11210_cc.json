@@ -21,13 +21,11 @@
             {{ cacertpath }}
             {{ certpath }}
             {{ keypath }}
-            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
+            "server":"couchbase://{{ couchbase_server_primary_node }}:11210",
             "bucket":"data-bucket",
-            "cache": {
-                "channel_cache_max_length": 15000,
-                "channel_cache_min_length": 15000,
-                "channel_cache_expiry": 90
-            }
+            "username":"data-bucket",
+            "password": "password"
         }
     }
 }
+

@@ -10,7 +10,7 @@ from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, ge
 from keywords.utils import add_cbs_to_sg_config_server_field, log_info
 from keywords.constants import SYNC_GATEWAY_CERT
 from utilities.cluster_config_utils import sg_ssl_enabled
-
+from keywords.exceptions import ProvisioningError
 
 log = logging.getLogger(libraries.testkit.settings.LOGGER)
 
@@ -45,8 +45,8 @@ class SgAccel:
 
     def start(self, config):
         conf_path = os.path.abspath(config)
-
         log.info(">>> Starting sg_accel with configuration: {}".format(conf_path))
+
         couchbase_server_primary_node = add_cbs_to_sg_config_server_field(self.cluster_config)
         sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
 
@@ -100,6 +100,24 @@ class SgAccel:
             log.info("revs_limit no found in {}, Ignoring".format(self.cluster_config))
             playbook_vars["revs_limit"] = ''
 
+        playbook_vars = {
+            "sync_gateway_config_filepath": conf_path,
+            "server_port": self.server_port,
+            "server_scheme": self.server_scheme
+        }
+        if is_cbs_ssl_enabled(self.cluster_config) and get_sg_version(self.cluster_config) >= "1.5.0":
+            playbook_vars["server_scheme"] = "couchbases"
+            playbook_vars["server_port"] = 11207
+            block_http_vars = {}
+            port_list = [8091, 8092, 8093, 8094, 8095, 8096, 11210, 11211]
+            for port in port_list:
+                block_http_vars["port"] = port
+                status = self.ansible_runner.run_ansible_playbook(
+                    "block-http-ports.yml",
+                    extra_vars=block_http_vars
+                )
+                if status != 0:
+                    raise ProvisioningError("Failed to block port on SGW")
         status = self.ansible_runner.run_ansible_playbook(
             "start-sg-accel.yml",
             extra_vars=playbook_vars,

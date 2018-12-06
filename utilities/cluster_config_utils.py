@@ -187,7 +187,7 @@ def is_ipv6(cluster_config):
 
 
 def get_sg_version(cluster_config):
-    """ Loads cluster config to gets the number of indexer replicas"""
+    """ Loads cluster config to get sync gateway version"""
     cluster = load_cluster_config_json(cluster_config)
     return cluster["environment"]["sync_gateway_version"]
 

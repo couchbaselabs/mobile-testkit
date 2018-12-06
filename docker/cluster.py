@@ -14,7 +14,7 @@ def setup_port_mapping(current_port):
     """ Expose ports to host for local development """
 
     port_map = {}
-    ports_to_map = ['8091/tcp', '4984/tcp', '4985/tcp']
+    ports_to_map = ['8091/tcp', '4984/tcp', '4985/tcp', '18091/tcp', "18093/tcp"]
     for port in ports_to_map:
         log_info('Setting up port binding: {} -> localhost:{}'.format(port, current_port))
         port_map[port] = current_port
