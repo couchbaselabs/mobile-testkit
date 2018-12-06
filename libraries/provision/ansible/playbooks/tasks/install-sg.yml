@@ -7,6 +7,6 @@
 - name: SYNC GATEWAY | Install sync_gateway deb
   become: yes
   shell: dpkg -i /tmp/{{ couchbase_sync_gateway_package }}
-  when: ansible_distribution == "Ubuntu"
+  when: ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
 
 - include: stop-sync-gateway.yml

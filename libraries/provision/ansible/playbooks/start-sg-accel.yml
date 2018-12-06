@@ -18,7 +18,7 @@
 
   tasks:
   - include: tasks/deploy-sg-accel-config.yml
-    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon" or ansible_distribution == "Ubuntu"
+    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
 
   - include: tasks/deploy-sg-accel-config-windows.yml
     when: ansible_os_family == "Windows"
@@ -31,7 +31,7 @@
     couchbase_server_primary_node:
   tasks:
   - include: tasks/start-sg-accel.yml
-    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon" or ansible_distribution == "Ubuntu"
+    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
 
   - include: tasks/start-sg-accel-windows.yml
     when: ansible_os_family == "Windows"
