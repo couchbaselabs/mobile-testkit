@@ -407,10 +407,6 @@ def params_from_base_suite_setup(request):
         suite_db.deleteDB(suite_source_db)
         time.sleep(1)
 
-    """# Flush all the memory contents on the server app
-    log_info("Flushing server memory")
-    utils_obj = Utils(base_url)
-    utils_obj.flushMemory()"""
     if create_db_per_suite:
         # Flush all the memory contents on the server app
         log_info("Flushing server memory")
@@ -446,7 +442,6 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     liteserv_platform = params_from_base_suite_setup["liteserv_platform"]
     testserver = params_from_base_suite_setup["testserver"]
     device_enabled = params_from_base_suite_setup["device_enabled"]
-    # flush_memory_per_test = params_from_base_suite_setup["flush_memory_per_test"]
     enable_sample_bucket = params_from_base_suite_setup["enable_sample_bucket"]
     liteserv_version = params_from_base_suite_setup["liteserv_version"]
     source_db = None
