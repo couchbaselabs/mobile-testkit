@@ -230,7 +230,6 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config):
         sslcert_prop = ""
         sslkey_prop = ""
 
-
         if get_sg_version(cluster_config) >= "2.1.0":
             logging_config = '"logging": {"debug": {"enabled": true}'
             try:
