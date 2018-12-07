@@ -243,15 +243,28 @@ class TestServerAndroid(TestServerBase):
         self.process.wait()
 
     def close_app(self):
-        output = subprocess.check_output(["adb", "shell", "input", "keyevent ", "3"])
+        if self.device_enabled:
+            output = subprocess.check_output(["adb", "-d", "shell", "input", "keyevent ", "3"])
+        else:
+            output = subprocess.check_output(["adb", "-e", "shell", "input", "keyevent ", "3"])
         log_info(output)
 
     def open_app(self):
-            package_name = "com.couchbase.TestServerApp"
-            if self.device_enabled:
-                output = subprocess.check_output(["adb", "-d", "shell", "monkey", "-p", package_name, "1"])
-            else:
-                output = subprocess.check_output(["adb", "-e", "shell", "monkey", "-p", package_name, "1"])
-            log_info(output)
-            self._wait_until_reachable(port=self.port)
-            self._verify_launched()
+        if self.device_enabled:
+            output = subprocess.check_output([
+                "adb", "-d", "shell", "am", "start", "-n", self.activity_name,
+                "--es", "username", "none", "--es", "password", "none", "--ei",
+                "listen_port",
+                str(self.port)
+            ])
+        else:
+            output = subprocess.check_output([
+                "adb", "-e", "shell", "am", "start", "-n", self.activity_name,
+                "--es", "username", "none", "--es", "password", "none", "--ei",
+                "listen_port",
+                str(self.port)
+            ])
+        log_info(output)
+        log_info(output)
+        self._wait_until_reachable(port=self.port)
+        self._verify_launched()
