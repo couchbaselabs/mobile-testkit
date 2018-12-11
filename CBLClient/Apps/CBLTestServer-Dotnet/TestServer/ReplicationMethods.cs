@@ -138,6 +138,18 @@ namespace Couchbase.Lite.Testing
             With<Replicator>(postBody, "replicator", rep => response.WriteBody(rep.Status.ToString()));
         }
 
+        internal static void AddDocumentReplicationChangeListener([NotNull] NameValueCollection args,
+            [NotNull] IReadOnlyDictionary<string, object> postBody,
+            [NotNull] HttpListenerResponse response)
+        {
+            With<Replicator>(postBody, "replicator", rep =>
+            {
+                var listener = new DocumentReplicationListenerProxy();
+                rep.AddDocumentReplicationListener(listener.HandleChange);
+                response.WriteBody(MemoryMap.Store(listener));
+            });
+        }
+
         internal static void AddChangeListener([NotNull] NameValueCollection args,
             [NotNull] IReadOnlyDictionary<string, object> postBody,
             [NotNull] HttpListenerResponse response)
@@ -219,6 +231,31 @@ namespace Couchbase.Lite.Testing
         #endregion
     }
 
+    internal sealed class DocumentReplicationListenerProxy
+    {
+        #region Variables
+
+        [NotNull]
+        private readonly List<DocumentReplicatedEventArgs> _changes = new List<DocumentReplicatedEventArgs>();
+
+        #endregion
+
+        #region Properties
+
+        [NotNull]
+        public IReadOnlyList<DocumentReplicatedEventArgs> Changes => _changes;
+
+        #endregion
+
+        #region Public Methods
+
+        public void HandleChange(object sender, DocumentReplicatedEventArgs args)
+        {
+            _changes.Add(args);
+        }
+
+        #endregion
+    }
 }
 
 
