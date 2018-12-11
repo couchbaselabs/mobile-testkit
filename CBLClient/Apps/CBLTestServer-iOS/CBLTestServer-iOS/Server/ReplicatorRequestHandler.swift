@@ -56,7 +56,7 @@ public class ReplicatorRequestHandler {
             let replication_obj: Replicator = args.get(name: "replicator")!
             return String(describing: replication_obj.status.error)
 
-        case "replication_documentReplicationChangeListener":
+        case "replicator_addDocumentReplicationChangeListener":
             let replication_obj: Replicator = args.get(name: "replicator")!
             let changeListener = MyDocumentReplicationListener()
             let listenerToken = replication_obj.addDocumentReplicationListener(changeListener.listener)
@@ -69,6 +69,10 @@ public class ReplicatorRequestHandler {
             let listenerToken = replication_obj.addChangeListener(changeListener.listener)
             changeListener.listenerToken = listenerToken
             return changeListener
+
+        case "replicator_changeDocumentReplicationListenerGetChanges":
+            let changeListener: MyDocumentReplicationListener = (args.get(name: "changeListener"))!
+            return changeListener.getChanges().description
 
         case "replicator_removeChangeListener":
             let replication_obj: Replicator = args.get(name: "replicator")!
@@ -121,7 +125,7 @@ class MyDocumentReplicationListener : NSObject {
         self.document_replication_changes.append(change)
     }
     
-    public func getDocumentChanges() -> [DocumentReplication] {
+    public func getChanges() -> [DocumentReplication] {
         return document_replication_changes
     }
 }

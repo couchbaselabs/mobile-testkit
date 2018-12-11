@@ -180,6 +180,11 @@ class Replication(object):
         args.setMemoryPointer("replicator", replicator)
         return self._client.invokeMethod("replicator_config", args)
 
+    def addDocumentReplicationChangeListener(self, replicator):
+        args = Args()
+        args.setMemoryPointer("replicator", replicator)
+        return self._client.invokeMethod("replicator_addDocumentReplicationChangeListener", args)
+
     def addChangeListener(self, replicator):
         args = Args()
         args.setMemoryPointer("replicator", replicator)

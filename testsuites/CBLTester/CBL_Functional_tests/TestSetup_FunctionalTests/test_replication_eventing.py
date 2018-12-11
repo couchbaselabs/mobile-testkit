@@ -102,7 +102,7 @@ def test_replication_eventing_status(params_from_base_test_setup, num_of_docs):
     repl_config = replicator.configure(db=cbl_db, target_url=sg_blip_url,
                                             continuous=True, headers=session_header)
     repl = replicator.create(repl_config)
-    repl_change_listener = replicator.addChangeListener(repl)
+    repl_change_listener = replicator.addDocumentReplicationChangeListener(repl)
 
     with ThreadPoolExecutor(max_workers=4) as tpe:
         replication_start_task = tpe.submit(replicator.start,
