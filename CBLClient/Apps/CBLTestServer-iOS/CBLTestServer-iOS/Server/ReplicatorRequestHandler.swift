@@ -56,6 +56,13 @@ public class ReplicatorRequestHandler {
             let replication_obj: Replicator = args.get(name: "replicator")!
             return String(describing: replication_obj.status.error)
 
+        case "replication_documentReplicationChangeListener":
+            let replication_obj: Replicator = args.get(name: "replicator")!
+            let changeListener = MyDocumentReplicationListener()
+            let listenerToken = replication_obj.addDocumentReplicationListener(changeListener.listener)
+            changeListener.listenerToken = listenerToken
+            return changeListener
+
         case "replicator_addChangeListener":
             let replication_obj: Replicator = args.get(name: "replicator")!
             let changeListener = MyReplicationChangeListener()
@@ -102,5 +109,19 @@ class MyReplicationChangeListener : NSObject  {
     
     public func getChanges() -> [ReplicatorChange] {
         return repl_changes
+    }
+}
+
+class MyDocumentReplicationListener : NSObject {
+    var document_replication_changes: [DocumentReplication] = []
+    
+    var listenerToken: ListenerToken?
+    
+    lazy var listener: (DocumentReplication) -> Void = { (change: DocumentReplication) in
+        self.document_replication_changes.append(change)
+    }
+    
+    public func getDocumentChanges() -> [DocumentReplication] {
+        return document_replication_changes
     }
 }
