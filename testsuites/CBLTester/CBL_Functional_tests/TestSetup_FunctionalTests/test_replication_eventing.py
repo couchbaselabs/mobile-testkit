@@ -104,6 +104,9 @@ def test_replication_eventing_status(params_from_base_test_setup, num_of_docs):
     repl = replicator.create(repl_config)
     repl_change_listener = replicator.addDocumentReplicationChangeListener(repl)
 
+    replicator.start(repl)
+    changes = replicator.getChangeDocumentReplicatorChangeListener(repl_change_listener)
+
     with ThreadPoolExecutor(max_workers=4) as tpe:
         replication_start_task = tpe.submit(replicator.start,
                                             replicator=repl)

@@ -180,10 +180,31 @@ class Replication(object):
         args.setMemoryPointer("replicator", replicator)
         return self._client.invokeMethod("replicator_config", args)
 
-    def addDocumentReplicationChangeListener(self, replicator):
+    def addReplicatorEventChangeListener(self, replicator):
         args = Args()
         args.setMemoryPointer("replicator", replicator)
-        return self._client.invokeMethod("replicator_addDocumentReplicationChangeListener", args)
+        return self._client.invokeMethod("replicator_addReplicatorEventChangeListener", args)
+
+    def removeReplicatorEventListener(self, replicator, change_listener):
+        args = Args()
+        args.setMemoryPointer("replicator", replicator)
+        args.setMemoryPointer("changeListener", change_listener)
+        return self._client.invokeMethod("replicator_removeReplicatorEventListener", args)
+
+    def replicatorEventGetChanges(self, change_listener):
+        args = Args()
+        args.setMemoryPointer("changeListener", change_listener)
+        return self._client.invokeMethod("replicator_replicatorEventGetChanges", args)
+
+    def replicatorEventChangesCount(self, change_listener):
+        args = Args()
+        args.setMemoryPointer("changeListener", change_listener)
+        return self._client.invokeMethod("replicator_replicatorEventChangesCount", args)
+
+    def documentReplicationChangeListenerChangesCount(self, change_listener):
+        args = Args()
+        args.setMemoryPointer("changeListener", change_listener)
+        return self._client.invokeMethod("replicator_documentReplicationChangeListenerChangesCount", args)
 
     def addChangeListener(self, replicator):
         args = Args()
