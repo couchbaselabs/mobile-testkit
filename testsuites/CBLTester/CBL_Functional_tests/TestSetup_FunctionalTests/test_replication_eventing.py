@@ -51,10 +51,14 @@ def test_replication_eventing_status(params_from_base_test_setup, num_of_docs):
     """
     @summary: 
     1. Create docs in CBL, Create docs in SGW
-    2. Add listener for replicator.
-    3. Replicate docs push/pull to SGW
+    2. Add Document Replication Change listener for replicator.
+    3. Replicate docs push/pull to SGW through one shot replication
     4. Get the events of replicator from listener
-    5. Verify the event matches with the expected outcome
+    5. Verify the event matches with the expected outcome. 
+       i. Assert the total event count should be equal to no. of docs replicated
+       ii. Assert no. push event are equal to pushed docs
+       iii. Assert no. push event are equal to pushed docs
+       iv. Assert there is no error in events
     """
 
     sg_db = "db"
@@ -106,6 +110,7 @@ def test_replication_eventing_status(params_from_base_test_setup, num_of_docs):
     # 3. Starting Replication and waiting for it finish
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
+    time.sleep(5)
 
     # 4. Getting changes from the replication event listener
     doc_repl_event_changes = replicator.getReplicatorEventChanges(repl_change_listener).strip('[]')
@@ -117,17 +122,21 @@ def test_replication_eventing_status(params_from_base_test_setup, num_of_docs):
     replicated_event_changes = _get_event_changes(doc_repl_event_changes)
     push_docs = []
     pull_docs = []
-    log_info("Replication Event Changes: {}".format(replicated_event_changes))
+    error_docs = []
     for doc in replicated_event_changes:
         if replicated_event_changes[doc]['push'] == True:
             push_docs.append(doc)
         else:
             pull_docs.append(doc)
+        if replicated_event_changes[doc]['error'] != 'nil':
+            error_docs.append({doc: replicated_event_changes[doc]['error']})
 
     # 5. Validating the event counts and verifying the push and pull event against doc_ids
+    
     assert doc_repl_event_count == len(cbl_docs) + len(sg_docs), "replication event count is not matching with expected doc count"
     assert sorted(push_docs) == sorted(cbl_docs), "Replication event push docs are not equal to expected no. of docs to be pushed"
     assert sorted(pull_docs) == sorted(sg_docs), "Replication event pull docs are not equal to expected no. of docs to be pulled"
+    assert len(error_docs) == 0, "Error found in repliction events {}".format(error_docs)
 
 
 def _get_event_changes(event_changes):
