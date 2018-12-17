@@ -2,6 +2,9 @@ package com.couchbase.CouchbaseLiteServ.server.RequestHandler;
 
 import com.couchbase.CouchbaseLiteServ.server.Args;
 import com.couchbase.lite.CouchbaseLiteException;
+import com.couchbase.lite.DocumentReplication;
+import com.couchbase.lite.DocumentReplicationListener;
+import com.couchbase.lite.ListenerToken;
 import com.couchbase.lite.Replicator;
 import com.couchbase.lite.ReplicatorChange;
 import com.couchbase.lite.ReplicatorChangeListener;
@@ -48,6 +51,29 @@ public class ReplicatorRequestHandler {
         replicator.addChangeListener(changeListener);
     }
 
+    public DocumentReplicationListener addReplicatorEventChangeListener(Args args){
+        Replicator replicator = args.get("replicator");
+        MyDocumentReplicatorListener changeListener = new MyDocumentReplicatorListener();
+        replicator.addDocumentReplicationListener(changeListener);
+        return changeListener;
+    }
+
+    public void removeReplicatorEventListener(Args args){
+        Replicator replicator = args.get("replicator");
+        ListenerToken changeListener = args.get("changeListener");
+        replicator.removeChangeListener(changeListener);
+    }
+
+    public int changeListenerChangesCount(Args args) {
+        MyDocumentReplicatorListener changeListener = args.get("changeListener");
+        return changeListener.getChanges().size();
+    }
+
+    public String replicatorEventGetChanges(Args args){
+        MyDocumentReplicatorListener changeListener = args.get("changeListener");
+        return changeListener.getChanges().toString();
+    }
+
     public String toString(Args args){
         Replicator replicator = args.get("replicator");
         return replicator.toString();
@@ -73,8 +99,8 @@ public class ReplicatorRequestHandler {
         return change.getStatus();
     }
 
-    public int changeListenerChangesCount(Args args) {
-        MyReplicatorListener changeListener = args.get("changeListener");
+    public int replicatorEventChangesCount(Args args) {
+        MyDocumentReplicatorListener changeListener = args.get("changeListener");
         return changeListener.getChanges().size();
     }
 
@@ -82,6 +108,7 @@ public class ReplicatorRequestHandler {
         MyReplicatorListener changeListener = args.get("changeListener");
         return changeListener.getChanges();
     }
+
     public CouchbaseLiteException replicatorGetError(Args args) {
         Replicator replicator = args.get("replicator");
         return replicator.getStatus().getError();
@@ -133,4 +160,18 @@ class MyReplicatorListener implements ReplicatorChangeListener{
         changes.add(change);
     }
 }
+
+class MyDocumentReplicatorListener implements DocumentReplicationListener{
+    private List<DocumentReplication> changes = new ArrayList<>();
+
+    public List<DocumentReplication> getChanges(){
+        return changes;
+    }
+
+    @Override
+    public void replicated(DocumentReplication update) {
+        changes.add(update);
+    }
+}
+
 
