@@ -145,13 +145,20 @@ def test_replication_eventing_status(params_from_base_test_setup, num_of_docs):
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("num_of_docs, conflict_direction", [
-#     [10, "push"],
-    [10, "pull"],
+    [10, "push"],
+#     [10, "pull"],
 #     [1000, "push"],
 #     [1000, "pul"]
 ])
 def test_replication_error_event(params_from_base_test_setup, num_of_docs,
                                  conflict_direction):
+    '''
+    @summary: 
+    1. Create docs in CBL and replicate to SG using push one-shot replication
+    2. Add update to SG and CBL to create conflict
+    3. start push/pull one-shot replication and start replication event listener
+    4. Check the error is thrown in replication event changes
+    '''
     sg_db = "db"
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
@@ -185,8 +192,8 @@ def test_replication_error_event(params_from_base_test_setup, num_of_docs,
     sync_cookie = "{}={}".format(cookie, session)
     session_header = {"Cookie": sync_cookie}
 
-    # 2. Replicating docs to SG so that later we can create conflict
-    #    Adding Listener for replicator
+    # Replicating docs to SG so that later we can create conflict
+    # Adding Listener for replicator
     replicator = Replication(base_url)
     repl_config = replicator.configure(source_db=cbl_db,
                                        target_url=sg_blip_url,
@@ -196,19 +203,19 @@ def test_replication_error_event(params_from_base_test_setup, num_of_docs,
     repl = replicator.create(repl_config)
     repl_change_listener = replicator.addReplicatorEventChangeListener(repl)
 
-    # 3. Starting Replication and waiting for it finish
+    # 2. Starting Replication and waiting for it finish
     time.sleep(2)
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
     time.sleep(5)
 
-    # 4. Getting changes from the replication event listener
+    # Getting changes from the replication event listener
     doc_repl_event_count = replicator.getReplicatorEventChangesCount(repl_change_listener)
     replicator.removeReplicatorEventListener(repl, repl_change_listener)
     replicator.stop(repl)
     assert doc_repl_event_count == len(cbl_docs), "replication event count is not matching with expected doc count"
 
-    # 5. Adding conflicts for docs in SG
+    # 3. Adding conflicts for docs in SG
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=auth_session)
     sg_docs = sg_docs["rows"]
 #     for doc in sg_docs:
@@ -216,13 +223,13 @@ def test_replication_error_event(params_from_base_test_setup, num_of_docs,
 #                                auth=auth_session)
     sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs, number_updates=1, auth=auth_session)
 
-    # 6. Adding conflict for docs in CBL
-    db.update_bulk_docs(database=cbl_db, number_of_updates=2,
+    # Adding conflict for docs in CBL
+    db.update_bulk_docs(database=cbl_db, number_of_updates=1,
                         doc_ids=cbl_docs)
     cbl_docs_with_body = db.getDocuments(database=cbl_db,
                                          ids=cbl_docs)
 
-    # 7. Starting one-shot replication again to create error based on conflict
+    # 4. Starting one-shot replication again to create error based on conflict
     repl_config = replicator.configure(source_db=cbl_db,
                                        target_url=sg_blip_url,
                                        continuous=False,
@@ -230,17 +237,16 @@ def test_replication_error_event(params_from_base_test_setup, num_of_docs,
                                        replication_type=conflict_direction)
     repl_conflict = replicator.create(repl_config)
     repl_error_change_listener = replicator.addReplicatorEventChangeListener(repl_conflict)
-#     time.sleep(2)
+    time.sleep(2)
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
-#     time.sleep(5)
+    time.sleep(2)
     doc_error_repl_event_count = replicator.getReplicatorEventChangesCount(repl_error_change_listener)
     doc_error_repl_event_changes = replicator.getReplicatorEventChanges(repl_error_change_listener).strip('[]')
     replicator.removeReplicatorEventListener(repl, repl_error_change_listener)
     replicator.stop(repl_conflict)
     log_info("Event count: {}".format(doc_error_repl_event_count))
     log_info("Event changes: {}".format(doc_error_repl_event_changes))
-
 
 
 def _get_event_changes(event_changes):
