@@ -60,8 +60,8 @@ public class ReplicatorRequestHandler {
 
     public void removeReplicatorEventListener(Args args){
         Replicator replicator = args.get("replicator");
-        ListenerToken changeListener = args.get("changeListener");
-        replicator.removeChangeListener(changeListener);
+        MyDocumentReplicatorListener changeListener = args.get("changeListener");
+        replicator.removeChangeListener((ListenerToken) changeListener);
     }
 
     public int changeListenerChangesCount(Args args) {

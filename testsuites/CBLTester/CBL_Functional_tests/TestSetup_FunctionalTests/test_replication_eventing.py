@@ -71,6 +71,7 @@ def test_replication_eventing_status(params_from_base_test_setup, num_of_docs):
     sg_config = params_from_base_test_setup["sg_config"]
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
+    liteserv_platform = params_from_base_test_setup["liteserv_platform"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
 
     if sync_gateway_version < "2.5.0":
@@ -121,7 +122,8 @@ def test_replication_eventing_status(params_from_base_test_setup, num_of_docs):
     replicator.stop(repl)
 
     # Processing received events
-    replicated_event_changes = _get_event_changes(doc_repl_event_changes)
+    replicated_event_changes = _get_event_changes(doc_repl_event_changes,
+                                                  liteserv_platform)
     push_docs = []
     pull_docs = []
     error_docs = []
@@ -130,11 +132,10 @@ def test_replication_eventing_status(params_from_base_test_setup, num_of_docs):
             push_docs.append(doc)
         else:
             pull_docs.append(doc)
-        if replicated_event_changes[doc]['error'] != 'nil':
+        if replicated_event_changes[doc]['error'] != None:
             error_docs.append({doc: replicated_event_changes[doc]['error']})
 
     # 5. Validating the event counts and verifying the push and pull event against doc_ids
-    
     assert doc_repl_event_count == len(cbl_docs) + len(sg_docs), "replication event count is not matching with expected doc count"
     assert sorted(push_docs) == sorted(cbl_docs), "Replication event push docs are not equal to expected no. of docs to be pushed"
     assert sorted(pull_docs) == sorted(sg_docs), "Replication event pull docs are not equal to expected no. of docs to be pulled"
@@ -218,9 +219,6 @@ def test_replication_error_event(params_from_base_test_setup, num_of_docs,
     # 3. Adding conflicts for docs in SG
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=auth_session)
     sg_docs = sg_docs["rows"]
-#     for doc in sg_docs:
-#         sg_client.add_conflict(url=sg_url, db=sg_db, doc_id=doc["id"], parent_revisions=doc["value"]["rev"], new_revision="4-foo",
-#                                auth=auth_session)
     sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs, number_updates=1, auth=auth_session)
 
     # Adding conflict for docs in CBL
@@ -249,7 +247,7 @@ def test_replication_error_event(params_from_base_test_setup, num_of_docs,
     log_info("Event changes: {}".format(doc_error_repl_event_changes))
 
 
-def _get_event_changes(event_changes):
+def _get_event_changes(event_changes, cbl_platform):
     """
     @summary:
     A method to filter out the events.
@@ -258,11 +256,18 @@ def _get_event_changes(event_changes):
     for a particular Replication event
     """
     event_dict = {}
-    pattern = 'CouchbaseLiteSwift.DocumentReplication\((replicator: .*?), (isPush: .*?), (documentID: .*?), (error: .*?)\)'
+    if cbl_platform == "ios":
+        pattern = '.*?(isPush: .*?), (documentID: .*?), (error: .*?)\)'
+    elif cbl_platform == "android":
+        pattern = '.*?(is pushing.*?=.*?), (document id.*?=.*?), (error code.*?=.*?), (error domain.*?=.*?), (doc is deleted.*?=.*?)}'
+    else:
+        pattern = ''
     events = re.findall(pattern, string=event_changes)
     for event in events:
-        is_push = True if event[1].split(' ')[1] == "true" else False
-        doc_id = event[2].split(' ')[1].strip('""')
-        error = event[3].split(' ')[1]
+        is_push = True if "true" in event[0].split(' ')[-1] else False
+        doc_id = event[1].split(' ')[-1].strip('=""')
+        error = event[2].split(' ')[-1].strip('=')
+        if error == '0' or error == 'nil':
+            error = None
         event_dict[doc_id] = {"push": is_push, "error": error}
     return event_dict
