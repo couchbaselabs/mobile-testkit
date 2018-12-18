@@ -51,17 +51,18 @@ public class ReplicatorRequestHandler {
         replicator.addChangeListener(changeListener);
     }
 
-    public DocumentReplicationListener addReplicatorEventChangeListener(Args args){
+    public MyDocumentReplicatorListener addReplicatorEventChangeListener(Args args){
         Replicator replicator = args.get("replicator");
         MyDocumentReplicatorListener changeListener = new MyDocumentReplicatorListener();
-        replicator.addDocumentReplicationListener(changeListener);
+        ListenerToken token = replicator.addDocumentReplicationListener(changeListener);
+        changeListener.setToken(token);
         return changeListener;
     }
 
     public void removeReplicatorEventListener(Args args){
         Replicator replicator = args.get("replicator");
         MyDocumentReplicatorListener changeListener = args.get("changeListener");
-        replicator.removeChangeListener((ListenerToken) changeListener);
+        replicator.removeChangeListener(changeListener.getToken());
     }
 
     public int changeListenerChangesCount(Args args) {
@@ -163,9 +164,18 @@ class MyReplicatorListener implements ReplicatorChangeListener{
 
 class MyDocumentReplicatorListener implements DocumentReplicationListener{
     private List<DocumentReplication> changes = new ArrayList<>();
+    private ListenerToken token;
 
     public List<DocumentReplication> getChanges(){
         return changes;
+    }
+
+    public void setToken(ListenerToken token){
+        this.token = token;
+    }
+
+    public ListenerToken getToken() {
+        return token;
     }
 
     @Override
