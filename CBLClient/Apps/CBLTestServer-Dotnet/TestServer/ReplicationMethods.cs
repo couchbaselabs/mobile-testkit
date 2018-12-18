@@ -233,7 +233,12 @@ namespace Couchbase.Lite.Testing
         {
             With<DocumentReplicationListenerProxy>(postBody, "changeListener", changeListener =>
             {
-                response.WriteBody(MemoryMap.Store(changeListener.Changes));
+                List<DocumentReplication> changes_desc = new List<DocumentReplication>();
+                foreach (DocumentReplicationEventArgs change in changeListener.Changes)
+                {
+                    changes_desc.Add(change.Status);
+                }
+                response.WriteBody(changes_desc.ToString());
             });
         }
 
