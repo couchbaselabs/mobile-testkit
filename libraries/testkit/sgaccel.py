@@ -100,11 +100,6 @@ class SgAccel:
             log.info("revs_limit no found in {}, Ignoring".format(self.cluster_config))
             playbook_vars["revs_limit"] = ''
 
-        playbook_vars = {
-            "sync_gateway_config_filepath": conf_path,
-            "server_port": self.server_port,
-            "server_scheme": self.server_scheme
-        }
         if is_cbs_ssl_enabled(self.cluster_config) and get_sg_version(self.cluster_config) >= "1.5.0":
             playbook_vars["server_scheme"] = "couchbases"
             playbook_vars["server_port"] = 11207
