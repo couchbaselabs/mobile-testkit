@@ -328,6 +328,8 @@ def test_verify_changes_purge(params_from_base_test_setup, sg_conf_name):
     sg_url = cluster_topology['sync_gateways'][0]['public']
     cbs_url = cluster_topology['couchbase_servers'][0]
 
+    if mode.lower() == "di":
+            pytest.skip("Test not applicable in DI mode")
     log_info('sg_conf: {}'.format(sg_conf))
     log_info('sg_admin_url: {}'.format(sg_admin_url))
     log_info('sg_url: {}'.format(sg_url))
