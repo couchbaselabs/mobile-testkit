@@ -155,7 +155,7 @@ namespace Couchbase.Lite.Testing
                 ["replicator_getCompleted"] = ReplicationMethods.GetCompleted,
                 ["replicator_addChangeListener"] = ReplicationMethods.AddChangeListener,
                 ["replicator_addReplicatorEventChangeListener"] = ReplicationMethods.AddDocumentReplicationChangeListener,
-                ["replicator_removeReplicatorEventListener"] = ReplicationMethods.RemoveChangeListener,
+                ["replicator_removeReplicatorEventListener"] = ReplicationMethods.RemoveReplicatorEventListener,
                 ["replicator_removeChangeListener"] = ReplicationMethods.RemoveChangeListener,
                 ["replicator_replicatorEventGetChanges"] = ReplicationMethods.ReplicatorEventGetChanges,
                 ["replicator_replicatorEventChangesCount"] = ReplicationMethods.ReplicatorEventChangesCount,

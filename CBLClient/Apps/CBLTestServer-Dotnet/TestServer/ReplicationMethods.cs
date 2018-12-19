@@ -201,7 +201,8 @@ namespace Couchbase.Lite.Testing
             With<Replicator>(postBody, "replicator", rep =>
             {
                 var listener = new DocumentReplicationListenerProxy();
-                rep.AddDocumentReplicationListener(listener.HandleChange);
+                ListenerToken token = rep.AddDocumentReplicationListener(listener.HandleChange);
+                listener.SetToken(token);
                 response.WriteBody(MemoryMap.Store(listener));
             });
         }
@@ -212,8 +213,9 @@ namespace Couchbase.Lite.Testing
         {
             With<Replicator>(postBody, "replicator", rep =>
             {
-                var listener = (ListenerToken)postBody["changeListener"];
-                rep.RemoveChangeListener(listener);
+                DocumentReplicationListenerProxy listener = MemoryMap.Get<DocumentReplicationListenerProxy>(postBody["changeListener"].ToString());
+                ListenerToken token = listener.GetToken();
+                rep.RemoveChangeListener(token);
             });
         }
 
@@ -236,6 +238,7 @@ namespace Couchbase.Lite.Testing
                 List<DocumentReplication> changes_desc = new List<DocumentReplication>();
                 foreach (DocumentReplicationEventArgs change in changeListener.Changes)
                 {
+                    String desc = change.Status.ToString();
                     changes_desc.Add(change.Status);
                 }
                 response.WriteBody(changes_desc.ToString());
@@ -286,6 +289,7 @@ namespace Couchbase.Lite.Testing
 
         [NotNull]
         private readonly List<DocumentReplicationEventArgs> _changes = new List<DocumentReplicationEventArgs>();
+        private ListenerToken token = new ListenerToken();
 
         #endregion
 
@@ -301,6 +305,16 @@ namespace Couchbase.Lite.Testing
         public void HandleChange(object sender, DocumentReplicationEventArgs args)
         {
             _changes.Add(args);
+        }
+
+        public void SetToken(ListenerToken token)
+        {
+            this.token = token;
+        }
+
+        public ListenerToken GetToken()
+        {
+            return this.token;
         }
 
         #endregion
