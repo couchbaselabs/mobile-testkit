@@ -144,13 +144,18 @@ class TestServeriOS(TestServerBase):
         """
         if self.platform == "ios":
             if self.debug_mode:
-                self.app_name = "{}-{}-debug.app".format(self.app, self.version_build)
+                if self.build is None:
+                    self.app_name = "{}-{}-{}-debug.app".format(self.app,
+                                                          self.version,
+                                                          self.version_build)
+                else:
+                    self.app_name = "{}-{}-debug.app".format(self.app,
+                                                       self.version_build)
             else:
                 if self.build is None:
                     self.app_name = "{}-{}-{}.app".format(self.app,
                                                           self.version,
                                                           self.version_build)
-
                 else:
                     self.app_name = "{}-{}.app".format(self.app,
                                                        self.version_build)
