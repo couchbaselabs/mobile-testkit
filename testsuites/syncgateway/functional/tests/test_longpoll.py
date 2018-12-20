@@ -44,7 +44,9 @@ def test_longpoll_changes_parametrized(params_from_base_test_setup, sg_conf_name
         pytest.skip('ssl disabled so cannot run without port')
 
     # Skip the test if ssl enabled as it cannot run using couchbase protocol
-    if "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210" in sg_conf_name and ssl_enabled:
+    # TODO : https://github.com/couchbaselabs/sync-gateway-accel/issues/227
+    # Remove DI condiiton once above bug is fixed
+    if "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210" in sg_conf_name and (ssl_enabled or mode.lower() == "di"):
         pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
     log_info("Running: 'longpoll_changes_parametrized': {}".format(cluster_conf))
@@ -113,7 +115,9 @@ def test_longpoll_changes_sanity(params_from_base_test_setup, sg_conf_name, num_
         pytest.skip('ssl disabled so cannot run without port')
 
     # Skip the test if ssl enabled as it cannot run using couchbase protocol
-    if "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210" in sg_conf_name and ssl_enabled:
+    # TODO : https://github.com/couchbaselabs/sync-gateway-accel/issues/227
+    # Remove DI condiiton once above bug is fixed
+    if "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210" in sg_conf_name and (ssl_enabled or mode.lower() == "di"):
         pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
     log_info("Running: 'longpoll_changes_sanity': {}".format(cluster_conf))
@@ -186,7 +190,9 @@ def test_longpoll_awaken_doc_add_update(params_from_base_test_setup, sg_conf_nam
         pytest.skip('ssl disabled so cannot run witout port')
 
     # Skip the test if ssl enabled as it cannot run using couchbase protocol
-    if "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210" in sg_conf_name and ssl_enabled:
+    # TODO : https://github.com/couchbaselabs/sync-gateway-accel/issues/227
+    # Remove DI condiiton once above bug is fixed
+    if "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210" in sg_conf_name and (ssl_enabled or mode.lower() == "di"):
         pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
     log_info("sg_conf: {}".format(sg_conf))
@@ -436,7 +442,9 @@ def test_longpoll_awaken_channels(params_from_base_test_setup, sg_conf_name):
         pytest.skip('ssl disabled so cannot run witout port')
 
     # Skip the test if ssl enabled as it cannot run using couchbase protocol
-    if "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210" in sg_conf_name and ssl_enabled:
+    # TODO : https://github.com/couchbaselabs/sync-gateway-accel/issues/227
+    # Remove DI condiiton once above bug is fixed
+    if "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210" in sg_conf_name and (ssl_enabled or mode.lower() == "di"):
         pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
     log_info("sg_conf: {}".format(sg_conf))
@@ -677,7 +685,9 @@ def test_longpoll_awaken_roles(params_from_base_test_setup, sg_conf_name):
         pytest.skip('ssl disabled so cannot run witout port')
 
     # Skip the test if ssl enabled as it cannot run using couchbase protocol
-    if "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210" in sg_conf_name and ssl_enabled:
+    # TODO : https://github.com/couchbaselabs/sync-gateway-accel/issues/227
+    # Remove DI condiiton once above bug is fixed
+    if "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210" in sg_conf_name and (ssl_enabled or mode.lower() == "di"):
         pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
     log_info("sg_conf: {}".format(sg_conf))
