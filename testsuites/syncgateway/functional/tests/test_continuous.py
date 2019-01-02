@@ -40,7 +40,9 @@ def test_continuous_changes_parametrized(params_from_base_test_setup, sg_conf_na
         pytest.skip('ssl disabled so cannot run without port')
 
     # Skip the test if ssl enabled as it cannot couchbase protocol
-    if "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210" in sg_conf_name and ssl_enabled:
+    # TODO : https://github.com/couchbaselabs/sync-gateway-accel/issues/227
+    # Remove DI condiiton once above bug is fixed
+    if "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210" in sg_conf_name and (ssl_enabled or mode.lower() == "di"):
         pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
     log_info("Running 'continuous_changes_parametrized'")
@@ -111,7 +113,9 @@ def test_continuous_changes_sanity(params_from_base_test_setup, sg_conf_name, nu
         pytest.skip('ssl disabled so cannot run without port')
 
     # Skip the test if ssl enabled as it cannot run with couchbase protocol
-    if "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210" in sg_conf_name and ssl_enabled:
+    # TODO : https://github.com/couchbaselabs/sync-gateway-accel/issues/227
+    # Remove DI condiiton once above bug is fixed
+    if "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210" in sg_conf_name and (ssl_enabled or mode.lower() == "di"):
         pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
     log_info("Running 'continuous_changes_sanity'")

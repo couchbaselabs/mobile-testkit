@@ -441,7 +441,9 @@ def test_offline_processing_of_external_updates(params_from_base_test_setup, sg_
         pytest.skip('ssl disabled so cannot run without port')
 
     # Skip the test if ssl enabled as it cannot run using couchbase protocol
-    if "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210" in sg_conf_name and ssl_enabled:
+    # TODO : https://github.com/couchbaselabs/sync-gateway-accel/issues/227
+    # Remove DI condiiton once above bug is fixed
+    if "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210" in sg_conf_name and (ssl_enabled or mode.lower() == "di"):
         pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
     # This test should only run when using xattr meta storage
@@ -584,7 +586,9 @@ def test_large_initial_import(params_from_base_test_setup, sg_conf_name):
         pytest.skip('ssl disabled so cannot run without port')
 
     # Skip the test if ssl enabled as it cannot run using couchbase protocol
-    if "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210" in sg_conf_name and ssl_enabled:
+    # TODO : https://github.com/couchbaselabs/sync-gateway-accel/issues/227
+    # Remove DI condiiton once above bug is fixed
+    if "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210" in sg_conf_name and (ssl_enabled or mode.lower() == "di"):
         pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
     # This test should only run when using xattr meta storage
@@ -912,7 +916,9 @@ def test_sdk_does_not_see_sync_meta(params_from_base_test_setup, sg_conf_name):
         pytest.skip('ssl disabled so cannot run without port')
 
     # Skip the test if ssl enabled as it cannot run using couchbase protocol
-    if "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210" in sg_conf_name and ssl_enabled:
+    # TODO : https://github.com/couchbaselabs/sync-gateway-accel/issues/227
+    # Remove DI condiiton once above bug is fixed
+    if "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210" in sg_conf_name and (ssl_enabled or mode.lower() == "di"):
         pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
     # This test should only run when using xattr meta storage
@@ -1044,7 +1050,9 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
         pytest.skip('ssl disabled so cannot run without port')
 
     # Skip the test if ssl enabled as it cannot run using couchbase protocol
-    if "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210" in sg_conf_name and ssl_enabled:
+    # TODO : https://github.com/couchbaselabs/sync-gateway-accel/issues/227
+    # Remove DI condiiton once above bug is fixed
+    if "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210" in sg_conf_name and (ssl_enabled or mode.lower() == "di"):
         pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
     # This test should only run when using xattr meta storage
@@ -1539,7 +1547,9 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
         pytest.skip('ssl disabled so cannot run without port')
 
     # Skip the test if ssl enabled as it cannot run using couchbase protocol
-    if "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210" in sg_conf_name and ssl_enabled:
+    # TODO : https://github.com/couchbaselabs/sync-gateway-accel/issues/227
+    # Remove DI condiiton once above bug is fixed
+    if "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210" in sg_conf_name and (ssl_enabled or mode.lower() == "di"):
         pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
     # This test should only run when using xattr meta storage
@@ -2195,7 +2205,9 @@ def test_sg_sdk_interop_shared_updates_from_sg(params_from_base_test_setup,
         pytest.skip('ssl disabled so cannot run without port')
 
     # Skip the test if ssl enabled as it cannot run using couchbase protocol
-    if "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210" in sg_conf_name and ssl_enabled:
+    # TODO : https://github.com/couchbaselabs/sync-gateway-accel/issues/227
+    # Remove DI condiiton once above bug is fixed
+    if "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210" in sg_conf_name and (ssl_enabled or mode.lower() == "di"):
         pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
     # This test should only run when using xattr meta storage
