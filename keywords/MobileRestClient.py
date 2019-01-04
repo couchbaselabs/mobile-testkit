@@ -1201,7 +1201,7 @@ class MobileRestClient:
         """
         Updates a doc on a db a number of times.
             1. GETs the doc
-            2. It increments the "updates" propery
+            2. It increments the "updates" property
             3. PUTS the doc
         """
 

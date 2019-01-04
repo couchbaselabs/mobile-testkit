@@ -20,6 +20,9 @@ public class ValueSerializer {
         } else if (v is String) {
             let string = v as! String
             return "\"" + string + "\""
+        }  else if (v is Bool) {
+            let bool = v as! Bool
+            return (bool ? "true" : "false")
         } else if (v is Int){
             let number = v as! Int
             return "I" + String(number)
@@ -30,9 +33,6 @@ public class ValueSerializer {
         } else if (v is Float){
             let number = v as! Float
             return "F" + String(number)
-        }  else if (v is Bool) {
-            let bool = v as! Bool
-            return (bool ? "true" : "false")
         } else if (v is NSNumber){
             let number = v as! NSNumber
             return "#" + "\(number)"

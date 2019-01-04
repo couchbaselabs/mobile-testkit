@@ -101,9 +101,8 @@ public class DatabaseRequestHandler {
 
     public void updateDocument(Args args) throws CouchbaseLiteException {
         Database database = args.get("database");
-        MutableDocument document = args.get("document");
-        String id = document.getId();
-        Map<String, Object> data = (Map<String, Object>) document.getValue(id);
+        String id = args.get("id");
+        Map<String, Object> data = (Map<String, Object>) args.get("data");
         MutableDocument updateDoc = database.getDocument(id).toMutable();
         updateDoc.setData(data);
         database.save(updateDoc);

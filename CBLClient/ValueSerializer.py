@@ -74,10 +74,6 @@ class ValueSerializer(object):
                 return float(value[1:])
             else:
                 return int(value[1:])
-        elif value == "true":
-            return True
-        elif value == "false":
-            return False
         elif value.startswith("{"):
             string_map = json.loads(value)
             map = {}

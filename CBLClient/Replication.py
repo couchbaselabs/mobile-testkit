@@ -24,11 +24,16 @@ class Replication(object):
         self._client = Client(base_url)
         self.config = None
 
-    def configure(self, source_db, target_url=None, target_db=None, replication_type="push_pull", continuous=False,
-                  channels=None, documentIDs=None, replicator_authenticator=None, headers=None):
+    def configure(self, source_db, target_url=None, target_db=None,
+                  replication_type="push_pull", continuous=False,
+                  push_filter=False, pull_filter=False,channels=None,
+                  documentIDs=None, replicator_authenticator=None,
+                  headers=None):
         args = Args()
         args.setMemoryPointer("source_db", source_db)
         args.setBoolean("continuous", continuous)
+        args.setBoolean("push_filter", push_filter)
+        args.setBoolean("pull_filter", pull_filter)
         if channels is not None:
             args.setArray("channels", channels)
 

@@ -365,3 +365,29 @@ class TestDatabase(object):
         assert num_of_docs == self.db_obj.getCount(db)
         assert documents == docs_in_db
         assert self.db_obj.deleteDB(db) == -1
+
+    def test_update_document(self):
+        doc_id_prefix = "cbl_doc"
+        num_of_docs = 5
+        db = self.db_obj.create("cbl_db")
+        documents = dict()
+        ids = []
+        for i in range(num_of_docs):
+            data = {}
+            doc_id = "{}_{}".format(doc_id_prefix, i)
+            ids.append(doc_id)
+            data["test_string_{}".format(i)] = "value_{}".format(i)
+            documents[doc_id] = data
+        self.db_obj.saveDocuments(db, documents)
+
+        updated_body = dict()
+        cbl_docs = self.db_obj.getDocuments(database=db, ids=ids)
+        for doc_id in cbl_docs:
+            doc_body = cbl_docs[doc_id]
+            doc_body["new_field"] = random_string(10)
+            updated_body[doc_id] = {"new_field": doc_body["new_field"]}
+            self.db_obj.updateDocument(database=db, data=doc_body, doc_id=doc_id)
+
+        cbl_docs = self.db_obj.getDocuments(database=db, ids=ids)
+        for doc_id in cbl_docs:
+            assert cbl_docs[doc_id]["new_field"] == updated_body[doc_id]["new_field"], "Doc body doesn't match after update" 

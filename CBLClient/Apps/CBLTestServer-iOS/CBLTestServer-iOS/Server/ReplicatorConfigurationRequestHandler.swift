@@ -54,6 +54,8 @@ public class ReplicatorConfigurationRequestHandler {
             let authenticator: Authenticator? = authValue as? Authenticator
             let headers: Dictionary<String, String>? = args.get(name: "headers")!
             let pinnedservercert: String? = args.get(name: "pinnedservercert")!
+            let pull_filter: Bool? = args.get(name: "pull_filter")!
+            let push_filter: Bool? = args.get(name: "push_filter")!
             
             var replicatorType = ReplicatorType.pushAndPull
             
@@ -121,6 +123,12 @@ public class ReplicatorConfigurationRequestHandler {
                 let data = try! NSData(contentsOfFile: path!, options: [])
                 let certificate = SecCertificateCreateWithData(nil, data)
                 config.pinnedServerCertificate = certificate
+            }
+            if pull_filter != false {
+                config.pullFilter = _pullReplicatorFilterCallback;
+            }
+            if push_filter != false {
+                config.pushFilter = _pushReplicatorFilterCallback;
             }
             return config
         
@@ -201,5 +209,18 @@ public class ReplicatorConfigurationRequestHandler {
             throw RequestHandlerError.MethodNotFound(method)
         }
         return ReplicatorConfigurationRequestHandler.VOID
+    }
+
+
+    private func _pushReplicatorFilterCallback(document: Document, isDeleted: Bool) -> Bool {
+        let key:String = "new_field_1"
+        let value:Bool = document.boolean(forKey: key)
+        return value;
+    }
+    
+    private func _pullReplicatorFilterCallback(document: Document, isDeleted: Bool) -> Bool {
+        let key:String = "new_field_1"
+        let value:Bool = document.boolean(forKey: key)
+        return value;
     }
 }
