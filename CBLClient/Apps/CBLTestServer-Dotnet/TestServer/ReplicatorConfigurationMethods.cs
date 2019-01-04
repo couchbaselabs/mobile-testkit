@@ -155,8 +155,31 @@ namespace Couchbase.Lite.Testing
                         config.ReplicatorType = ReplicatorType.PushAndPull;
                     }
                 }
+                if (postBody["push_filter"].Equals(true))
+                {
+                    config.PushFilter = _push_replicator_filter_callback;
+
+                }
+
+                if (postBody["pull_filter"].Equals(true))
+                {
+                    config.PushFilter = _pull_replicator_filter_callback;
+                }
+                response.WriteBody(MemoryMap.Store(config));
                 response.WriteBody(MemoryMap.Store(config));
             });
+        }
+
+        private static bool _push_replicator_filter_callback(Document document, bool isDeleted)
+        {
+            var val = document.GetValue("new_field_1");
+            return true;
+        }
+
+        private static bool _pull_replicator_filter_callback(Document document, bool isDeleted)
+        {
+            var val = document.GetValue("new_field_1");
+            return true;
         }
 
         public static void GetAuthenticator([NotNull] NameValueCollection args,
@@ -280,6 +303,7 @@ namespace Couchbase.Lite.Testing
             {
                 replType = ReplicatorType.PushAndPull;
             }
+
             With<ReplicatorConfiguration>(postBody, "configuration", repConf =>
             {
                 repConf.ReplicatorType = replType;
