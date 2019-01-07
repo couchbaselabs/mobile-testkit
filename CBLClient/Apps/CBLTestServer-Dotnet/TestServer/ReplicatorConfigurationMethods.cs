@@ -77,6 +77,7 @@ namespace Couchbase.Lite.Testing
             Assembly _assembly;
             Stream imageStream;
             StreamReader _textStreamReader;
+            String filter_callback_func = postBody["filter_callback_func"].ToString();
 
             With<Database>(postBody, "source_db", sdb =>
             {
@@ -157,29 +158,54 @@ namespace Couchbase.Lite.Testing
                 }
                 if (postBody["push_filter"].Equals(true))
                 {
-                    config.PushFilter = _push_replicator_filter_callback;
-
+                    if (filter_callback_func == "boolean")
+                    {
+                        config.PushFilter = _replicator_boolean_filter_callback;
+                    }
+                    else if (filter_callback_func == "deleted")
+                    {
+                        config.PushFilter = _replicator_deleted_filter_callback;
+                    }
+                    else
+                    {
+                        config.PushFilter = _default_replicator_filter_callback;
+                    }
                 }
 
                 if (postBody["pull_filter"].Equals(true))
                 {
-                    config.PushFilter = _pull_replicator_filter_callback;
+                    if (filter_callback_func == "boolean")
+                    {
+                        config.PullFilter = _replicator_boolean_filter_callback;
+                    }
+                    else if (filter_callback_func == "deleted")
+                    {
+                        config.PullFilter = _replicator_deleted_filter_callback;
+                    }
+                    else
+                    {
+                        config.PullFilter = _default_replicator_filter_callback;
+                    }
+                    
                 }
-                response.WriteBody(MemoryMap.Store(config));
                 response.WriteBody(MemoryMap.Store(config));
             });
         }
 
-        private static bool _push_replicator_filter_callback(Document document, bool isDeleted)
+        private static bool _replicator_boolean_filter_callback(Document document, bool isDeleted)
         {
-            var val = document.GetValue("new_field_1");
+            Boolean val = document.GetBoolean("new_field_1");
+            return val;
+        }
+
+        private static bool _default_replicator_filter_callback(Document document, bool isDeleted)
+        {
             return true;
         }
 
-        private static bool _pull_replicator_filter_callback(Document document, bool isDeleted)
+        private static bool _replicator_deleted_filter_callback(Document document, bool isDeleted)
         {
-            var val = document.GetValue("new_field_1");
-            return true;
+            return !isDeleted;
         }
 
         public static void GetAuthenticator([NotNull] NameValueCollection args,
