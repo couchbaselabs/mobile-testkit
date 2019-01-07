@@ -28,12 +28,13 @@ class Replication(object):
                   replication_type="push_pull", continuous=False,
                   push_filter=False, pull_filter=False,channels=None,
                   documentIDs=None, replicator_authenticator=None,
-                  headers=None):
+                  headers=None, filter_callback_func=''):
         args = Args()
         args.setMemoryPointer("source_db", source_db)
         args.setBoolean("continuous", continuous)
         args.setBoolean("push_filter", push_filter)
         args.setBoolean("pull_filter", pull_filter)
+        args.setString("filter_callback_func", filter_callback_func)
         if channels is not None:
             args.setArray("channels", channels)
 

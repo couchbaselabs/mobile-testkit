@@ -56,6 +56,7 @@ public class ReplicatorConfigurationRequestHandler {
             let pinnedservercert: String? = args.get(name: "pinnedservercert")!
             let pull_filter: Bool? = args.get(name: "pull_filter")!
             let push_filter: Bool? = args.get(name: "push_filter")!
+            let filter_callback_func: String? = args.get(name: "filter_callback_func")
             
             var replicatorType = ReplicatorType.pushAndPull
             
@@ -125,10 +126,22 @@ public class ReplicatorConfigurationRequestHandler {
                 config.pinnedServerCertificate = certificate
             }
             if pull_filter != false {
-                config.pullFilter = _pullReplicatorFilterCallback;
+                if filter_callback_func == "boolean" {
+                    config.pullFilter = _replicatorBooleanFilterCallback;
+                } else if filter_callback_func == "deleted" {
+                    config.pullFilter = _replicatorDeletedFilterCallback;
+                } else {
+                    config.pullFilter = _defaultReplicatorFilterCallback;
+                }
             }
             if push_filter != false {
-                config.pushFilter = _pushReplicatorFilterCallback;
+                if filter_callback_func == "boolean" {
+                    config.pushFilter = _replicatorBooleanFilterCallback;
+                } else if filter_callback_func == "deleted" {
+                    config.pushFilter = _replicatorDeletedFilterCallback;
+                } else {
+                    config.pushFilter = _defaultReplicatorFilterCallback;
+                }
             }
             return config
         
@@ -212,15 +225,17 @@ public class ReplicatorConfigurationRequestHandler {
     }
 
 
-    private func _pushReplicatorFilterCallback(document: Document, isDeleted: Bool) -> Bool {
+    private func _replicatorBooleanFilterCallback(document: Document, isDeleted: Bool) -> Bool {
         let key:String = "new_field_1"
         let value:Bool = document.boolean(forKey: key)
         return value;
     }
     
-    private func _pullReplicatorFilterCallback(document: Document, isDeleted: Bool) -> Bool {
-        let key:String = "new_field_1"
-        let value:Bool = document.boolean(forKey: key)
-        return value;
+    private func _defaultReplicatorFilterCallback(document: Document, isDeleted: Bool) -> Bool {
+        return true;
+    }
+    
+    private func _replicatorDeletedFilterCallback(document: Document, isDeleted: Bool) -> Bool {
+        return !(isDeleted);
     }
 }
