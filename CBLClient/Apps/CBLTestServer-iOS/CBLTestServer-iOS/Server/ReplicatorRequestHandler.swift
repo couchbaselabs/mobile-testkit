@@ -74,7 +74,18 @@ public class ReplicatorRequestHandler {
 
         case "replicator_replicatorEventGetChanges":
             let changeListener: MyDocumentReplicationListener = (args.get(name: "changeListener"))!
-            return changeListener.getChanges().description
+            let changes: [DocumentReplication] = changeListener.getChanges()
+            var event_list: [String] = []
+            for change in changes {
+                for document in change.documents {
+                    let doc_event:String = "doc_id: " + document.id
+                    let error:String = ", error_code: " + document.error.debugDescription + ", error_domain: nil"
+                    let flags:String = ", flags: " + document.flags.rawValue.description
+                    let push:String = ", push: " + change.isPush.description
+                    event_list.append(doc_event + error + push + flags)
+                }
+            }
+            return event_list
 
         case "replicator_addChangeListener":
             let replication_obj: Replicator = args.get(name: "replicator")!

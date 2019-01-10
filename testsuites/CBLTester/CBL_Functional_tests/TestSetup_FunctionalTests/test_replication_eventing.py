@@ -44,9 +44,8 @@ def setup_teardown_test(params_from_base_test_setup):
 @pytest.mark.replication
 @pytest.mark.parametrize("num_of_docs", [
     10,
-#     100,
-#     1000,
-#     10000,
+    100,
+    1000,
 ])
 def test_replication_eventing_status(params_from_base_test_setup, num_of_docs):
     """
@@ -71,7 +70,6 @@ def test_replication_eventing_status(params_from_base_test_setup, num_of_docs):
     sg_config = params_from_base_test_setup["sg_config"]
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
-    liteserv_platform = params_from_base_test_setup["liteserv_platform"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
 
     if sync_gateway_version < "2.5.0":
@@ -110,20 +108,16 @@ def test_replication_eventing_status(params_from_base_test_setup, num_of_docs):
     repl_change_listener = replicator.addReplicatorEventChangeListener(repl)
 
     # 3. Starting Replication and waiting for it finish
-    time.sleep(2)
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
-    time.sleep(2)
 
     # 4. Getting changes from the replication event listener
-    doc_repl_event_changes = replicator.getReplicatorEventChanges(repl_change_listener).strip('[]')
-    doc_repl_event_count = replicator.getReplicatorEventChangesCount(repl_change_listener)
+    doc_repl_event_changes = replicator.getReplicatorEventChanges(repl_change_listener)
     replicator.removeReplicatorEventListener(repl, repl_change_listener)
     replicator.stop(repl)
 
     # Processing received events
-    replicated_event_changes = _get_event_changes(doc_repl_event_changes,
-                                                  liteserv_platform)
+    replicated_event_changes = _get_event_changes(doc_repl_event_changes)
     push_docs = []
     pull_docs = []
     error_docs = []
@@ -132,11 +126,11 @@ def test_replication_eventing_status(params_from_base_test_setup, num_of_docs):
             push_docs.append(doc)
         else:
             pull_docs.append(doc)
-        if replicated_event_changes[doc]['error'] != None:
-            error_docs.append({doc: replicated_event_changes[doc]['error']})
+        if replicated_event_changes[doc]['error_code'] != None:
+            error_docs.append({doc: "{}, {}".format(replicated_event_changes[doc]['error_code'],
+                                                    replicated_event_changes[doc]['error_domain'])})
 
     # 5. Validating the event counts and verifying the push and pull event against doc_ids
-    assert doc_repl_event_count == len(cbl_docs) + len(sg_docs), "replication event count is not matching with expected doc count"
     assert sorted(push_docs) == sorted(cbl_docs), "Replication event push docs are not equal to expected no. of docs to be pushed"
     assert sorted(pull_docs) == sorted(sg_docs), "Replication event pull docs are not equal to expected no. of docs to be pulled"
     assert len(error_docs) == 0, "Error found in replication events {}".format(error_docs)
@@ -147,9 +141,9 @@ def test_replication_eventing_status(params_from_base_test_setup, num_of_docs):
 @pytest.mark.replication
 @pytest.mark.parametrize("num_of_docs, conflict_direction", [
     [10, "push"],
-#     [10, "pull"],
-#     [1000, "push"],
-#     [1000, "pul"]
+    [10, "pull"],
+    [1000, "push"],
+    [1000, "pull"]
 ])
 def test_replication_error_event(params_from_base_test_setup, num_of_docs,
                                  conflict_direction):
@@ -186,7 +180,7 @@ def test_replication_error_event(params_from_base_test_setup, num_of_docs,
 
     # 1. Creating Docs in CBL
     cbl_docs = db.create_bulk_docs(num_of_docs, "push_cbl_docs", db=cbl_db, channels=channels)
-    
+
     sg_client.create_user(url=sg_admin_url, db=sg_db, name=username, password=password, channels=channels)
     cookie, session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username)
     auth_session = cookie, session
@@ -205,16 +199,10 @@ def test_replication_error_event(params_from_base_test_setup, num_of_docs,
     repl_change_listener = replicator.addReplicatorEventChangeListener(repl)
 
     # 2. Starting Replication and waiting for it finish
-    time.sleep(2)
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
-    time.sleep(5)
-
-    # Getting changes from the replication event listener
-    doc_repl_event_count = replicator.getReplicatorEventChangesCount(repl_change_listener)
     replicator.removeReplicatorEventListener(repl, repl_change_listener)
     replicator.stop(repl)
-    assert doc_repl_event_count == len(cbl_docs), "replication event count is not matching with expected doc count"
 
     # 3. Adding conflicts for docs in SG
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=auth_session)
@@ -224,8 +212,6 @@ def test_replication_error_event(params_from_base_test_setup, num_of_docs,
     # Adding conflict for docs in CBL
     db.update_bulk_docs(database=cbl_db, number_of_updates=1,
                         doc_ids=cbl_docs)
-    cbl_docs_with_body = db.getDocuments(database=cbl_db,
-                                         ids=cbl_docs)
 
     # 4. Starting one-shot replication again to create error based on conflict
     repl_config = replicator.configure(source_db=cbl_db,
@@ -235,19 +221,15 @@ def test_replication_error_event(params_from_base_test_setup, num_of_docs,
                                        replication_type=conflict_direction)
     repl_conflict = replicator.create(repl_config)
     repl_error_change_listener = replicator.addReplicatorEventChangeListener(repl_conflict)
-    time.sleep(2)
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
-    time.sleep(2)
-    doc_error_repl_event_count = replicator.getReplicatorEventChangesCount(repl_error_change_listener)
     doc_error_repl_event_changes = replicator.getReplicatorEventChanges(repl_error_change_listener).strip('[]')
     replicator.removeReplicatorEventListener(repl, repl_error_change_listener)
     replicator.stop(repl_conflict)
-    log_info("Event count: {}".format(doc_error_repl_event_count))
     log_info("Event changes: {}".format(doc_error_repl_event_changes))
 
 
-def _get_event_changes(event_changes, cbl_platform):
+def _get_event_changes(event_changes):
     """
     @summary:
     A method to filter out the events.
@@ -256,18 +238,20 @@ def _get_event_changes(event_changes, cbl_platform):
     for a particular Replication event
     """
     event_dict = {}
-    if cbl_platform == "ios":
-        pattern = '.*?(isPush: .*?), (documentID: .*?), (error: .*?)\)'
-    elif cbl_platform == "android":
-        pattern = '.*?(is pushing.*?=.*?), (document id.*?=.*?), (error code.*?=.*?), (error domain.*?=.*?), (doc is deleted.*?=.*?)}'
-    else:
-        pattern = ''
-    events = re.findall(pattern, string=event_changes)
+    pattern = ".*?doc_id: (\w+), error_code: (\w+), error_domain: (\w+), push: (\w+), flags: (.*?)'.*?"
+    events = re.findall(pattern, string=str(event_changes))
     for event in events:
-        is_push = True if "true" in event[0].split(' ')[-1] else False
-        doc_id = event[1].split(' ')[-1].strip('=""')
-        error = event[2].split(' ')[-1].strip('=')
-        if error == '0' or error == 'nil':
-            error = None
-        event_dict[doc_id] = {"push": is_push, "error": error}
+        doc_id = event[0].strip()
+        error_code = event[1].strip()
+        error_domain = event[2].strip()
+        is_push = True if ("true" in event[3] or "True" in event[3]) else False
+        flags = event[4] if event[4] != '[]' else None
+        if error_code == '0' or error_code == 'nil':
+            error_code = None
+        if error_domain == '0' or error_domain == 'nil':
+            error_domain = None
+        event_dict[doc_id] = {"push": is_push, 
+                              "error_code": error_code,
+                              "error_domain": error_domain,
+                              "flags": flags}
     return event_dict

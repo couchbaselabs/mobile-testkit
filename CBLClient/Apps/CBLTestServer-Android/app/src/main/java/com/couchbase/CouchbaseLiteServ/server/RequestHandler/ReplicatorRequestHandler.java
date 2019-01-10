@@ -5,6 +5,7 @@ import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.DocumentReplication;
 import com.couchbase.lite.DocumentReplicationListener;
 import com.couchbase.lite.ListenerToken;
+import com.couchbase.lite.ReplicatedDocument;
 import com.couchbase.lite.Replicator;
 import com.couchbase.lite.ReplicatorChange;
 import com.couchbase.lite.ReplicatorChangeListener;
@@ -70,9 +71,30 @@ public class ReplicatorRequestHandler {
         return changeListener.getChanges().size();
     }
 
-    public String replicatorEventGetChanges(Args args){
+    public List<String> replicatorEventGetChanges(Args args){
         MyDocumentReplicatorListener changeListener = args.get("changeListener");
-        return changeListener.getChanges().toString();
+        List<DocumentReplication> changes = changeListener.getChanges();
+        List <String> event_list = new ArrayList<>();
+
+        for (DocumentReplication change: changes) {
+            for (ReplicatedDocument document: change.getDocuments()){
+                String event = document.toString();
+                String doc_id = "doc_id: " + document.getID();
+                String error = ", error_code: ";
+                String error_domain = "0";
+                int error_code = 0;
+
+                if (document.getError() != null){
+                    error_code = document.getError().getCode();
+                    error_domain = document.getError().getDomain();
+                }
+                error = error + error_code + ", error_domain: " + error_domain;
+                String flags = ", flags: " + document.flags().toString();
+                String push = ", push: " + Boolean.toString(change.isPush());
+                event_list.add(doc_id + error + push + flags);
+            }
+        }
+        return event_list;
     }
 
     public String toString(Args args){
@@ -179,8 +201,8 @@ class MyDocumentReplicatorListener implements DocumentReplicationListener{
     }
 
     @Override
-    public void replicated(DocumentReplication update) {
-        changes.add(update);
+    public void replication(DocumentReplication replication) {
+        changes.add(replication);
     }
 }
 

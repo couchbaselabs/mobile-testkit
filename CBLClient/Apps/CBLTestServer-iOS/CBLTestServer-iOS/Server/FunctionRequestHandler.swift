@@ -176,6 +176,5 @@ public class FunctionRequestHandler {
         default:
             throw RequestHandlerError.MethodNotFound(method)
         }
-        return FunctionRequestHandler.VOID
     }
 }
