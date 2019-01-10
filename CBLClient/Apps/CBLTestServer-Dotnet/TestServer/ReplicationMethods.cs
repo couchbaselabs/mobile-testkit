@@ -216,6 +216,7 @@ namespace Couchbase.Lite.Testing
                 DocumentReplicationListenerProxy listener = MemoryMap.Get<DocumentReplicationListenerProxy>(postBody["changeListener"].ToString());
                 ListenerToken token = listener.GetToken();
                 rep.RemoveChangeListener(token);
+                response.WriteEmptyBody();
             });
         }
 
@@ -235,13 +236,26 @@ namespace Couchbase.Lite.Testing
         {
             With<DocumentReplicationListenerProxy>(postBody, "changeListener", changeListener =>
             {
-                List<DocumentReplication> changes_desc = new List<DocumentReplication>();
+                List<String> event_list = new List<String>();
                 foreach (DocumentReplicationEventArgs change in changeListener.Changes)
                 {
-                    String desc = change.Status.ToString();
-                    changes_desc.Add(change.Status);
+                    foreach (ReplicatedDocument document in change.Documents)
+                    {
+                        String doc_id = "doc_id: " + document.Id;
+                        int error_code = 0;
+                        String error_domain = "0";
+                        if (document.Error != null)
+                        {
+                            error_code = document.Error.Error;
+                            error_domain = document.Error.Domain.ToString();
+                        }
+                        String error = ", error_code: " + error_code + ", error_domain: " + error_domain;
+                        String flags = ", flags: " + document.Flags.ToString();
+                        String push = ", push: " + change.IsPush.ToString();
+                        event_list.Add(doc_id + error + push + flags);
+                    }
                 }
-                response.WriteBody(changes_desc.ToString());
+                response.WriteBody(event_list);
             });
         }
 

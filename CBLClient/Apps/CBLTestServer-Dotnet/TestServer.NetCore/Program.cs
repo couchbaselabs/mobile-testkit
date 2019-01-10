@@ -20,6 +20,7 @@
 // 
 
 using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Threading;
 
@@ -50,8 +51,16 @@ namespace Couchbase.Lite.Testing.NetCore
             Couchbase.Lite.Support.NetDesktop.Activate();
             Extend();
 
-            Couchbase.Lite.Support.NetDesktop.EnableTextLogging("TextLogging");
-            Database.SetLogLevel(Logging.LogDomain.All, Logging.LogLevel.Info);
+            Database.Log.Console.Level = Logging.LogLevel.Debug;
+            Database.Log.Console.Domains = Logging.LogDomain.All;
+            var logPath = Path.Combine(Directory.GetCurrentDirectory(), "LogTestLogs");
+            Directory.CreateDirectory(logPath);
+            Console.WriteLine("Logs are available at - \"{0}\"", logPath);
+            DatabaseConfiguration config = new DatabaseConfiguration();
+            Console.WriteLine("Default directory for database creation is - \"{0}\"", config.Directory.ToString());
+            Database.Log.File.UsePlaintext = true;
+            Database.Log.File.Directory = logPath;
+            Database.Log.File.MaxRotateCount = 0;
 
             TestServer.FilePathResolver = path => path;
             var listener = new TestServer();
