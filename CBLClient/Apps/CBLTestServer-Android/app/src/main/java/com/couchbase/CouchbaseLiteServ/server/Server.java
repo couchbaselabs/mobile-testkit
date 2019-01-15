@@ -38,7 +38,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -76,10 +76,8 @@ public class Server extends NanoHTTPD {
     public Response handle(IHTTPSession session) {
         String path = session.getUri();
         String method = (path.startsWith("/") ? path.substring(1) : path);
-        ArrayList<LogDomain> domains = new ArrayList<LogDomain>();
-        domains.add(LogDomain.ALL);
         Database.getLog().getConsole().setLevel(LogLevel.DEBUG);
-        Database.getLog().getConsole().setDomains(domains);
+        Database.getLog().getConsole().setDomains(EnumSet.of(LogDomain.ALL));
         // Get args from query string.
         Map<String, String> rawArgs = new HashMap<>();
 

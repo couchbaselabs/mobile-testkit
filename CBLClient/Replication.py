@@ -289,7 +289,7 @@ class Replication(object):
         activity_level = self.getActivitylevel(repl)
         while count < max_times:
             log_info("Activity level: {}".format(activity_level))
-            time.sleep(1)
+            time.sleep(2)
             if activity_level == "offline" or activity_level == "connecting" or activity_level == "busy":
                 count += 1
             else:
