@@ -1,6 +1,7 @@
 import pytest
 import random
 import re
+from time import sleep
 
 from keywords.MobileRestClient import MobileRestClient
 from keywords.utils import log_info
@@ -75,7 +76,7 @@ def test_replication_eventing_status(params_from_base_test_setup, num_of_docs):
     c.reset(sg_config_path=sg_config)
 
     # 1.1 Creating Docs in CBL
-    cbl_docs = db.create_bulk_docs(num_of_docs, "push_cbl_docs", db=cbl_db, channels=channels)
+    cbl_doc_ids = db.create_bulk_docs(num_of_docs, "push_cbl_docs", db=cbl_db, channels=channels)
 
     # 1.2 Creating Docs in SG
     sg_client.create_user(url=sg_admin_url, db=sg_db, name=username, password=password, channels=channels)
@@ -86,7 +87,7 @@ def test_replication_eventing_status(params_from_base_test_setup, num_of_docs):
 
     sg_docs = sg_client.add_docs(url=sg_url, db=sg_db, number=num_of_docs, id_prefix="pull_sg_docs", channels=channels,
                                  auth=auth_session)
-    sg_docs = [doc["id"] for doc in sg_docs]
+    sg_doc_ids = [doc["id"] for doc in sg_docs]
 
     # 2 Adding Listener for replicator
     replicator = Replication(base_url)
@@ -122,23 +123,20 @@ def test_replication_eventing_status(params_from_base_test_setup, num_of_docs):
 
     # 5. Validating the event counts and verifying the push and pull event against doc_ids
     assert sorted(push_docs) == sorted(
-        cbl_docs), "Replication event push docs are not equal to expected no. of docs to be pushed"
+        cbl_doc_ids), "Replication event push docs are not equal to expected no. of docs to be pushed"
     assert sorted(pull_docs) == sorted(
-        sg_docs), "Replication event pull docs are not equal to expected no. of docs to be pulled"
+        sg_doc_ids), "Replication event pull docs are not equal to expected no. of docs to be pulled"
     assert len(error_docs) == 0, "Error found in replication events {}".format(error_docs)
 
 
 @pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.replication
-@pytest.mark.parametrize("num_of_docs, conflict_direction", [
-    [10, "push"],
-    # [10, "pull"], # feature not ready
-    [1000, "push"],
-    # [1000, "pull"] # feature not ready
+@pytest.mark.parametrize("num_of_docs", [
+    10,
+    1000,
 ])
-def test_replication_error_event(params_from_base_test_setup, num_of_docs,
-                                 conflict_direction):
+def test_push_replication_error_event(params_from_base_test_setup, num_of_docs):
     """
     @summary:
     1. Create docs in CBL and replicate to SG using push one-shot replication
@@ -210,7 +208,7 @@ def test_replication_error_event(params_from_base_test_setup, num_of_docs,
                                                 target_url=sg_blip_url,
                                                 continuous=False,
                                                 headers=session_header,
-                                                replication_type=conflict_direction)
+                                                replication_type="push")
     repl_conflict = replicator.create(repl_conflict_config)
     repl_error_change_listener = replicator.addReplicatorEventChangeListener(repl_conflict)
     replicator.start(repl_conflict)
@@ -226,6 +224,85 @@ def test_replication_error_event(params_from_base_test_setup, num_of_docs,
     for doc_id in event_dict:
         assert '10409' in event_dict[doc_id]["error_code"], "Conflict error didn't happen. Error Code: {}".format(
             event_dict[doc_id]["error_code"])
+
+
+# @pytest.mark.sanity
+# @pytest.mark.listener
+# @pytest.mark.replication
+# @pytest.mark.parametrize("num_of_docs", [
+#     1000,
+# ])
+# def test_pull_replication_error_event(params_from_base_test_setup, num_of_docs):
+#     """
+#     @summary:
+#     1. Create docs in SG and replicate to CB using pull one-shot replication
+#     2. Add update to SG and CBL to create conflict
+#     3. start push/pull one-shot replication and start replication event listener
+#     4. Check the error is thrown in replication event changes
+#     """
+#     sg_db = "db"
+#     sg_url = params_from_base_test_setup["sg_url"]
+#     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+#     cluster_config = params_from_base_test_setup["cluster_config"]
+#     sg_blip_url = params_from_base_test_setup["target_url"]
+#     base_url = params_from_base_test_setup["base_url"]
+#     sg_config = params_from_base_test_setup["sg_config"]
+#     db = params_from_base_test_setup["db"]
+#     cbl_db = params_from_base_test_setup["source_db"]
+#     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+#
+#     if sync_gateway_version < "2.5.0":
+#         pytest.skip('This test cannnot run with sg version below 2.5')
+#     channels = ["ABC"]
+#     username = "autotest"
+#     password = "password"
+#
+#     # Create CBL database
+#     sg_client = MobileRestClient()
+#
+#     # Reset cluster to ensure no data in system
+#     c = cluster.Cluster(config=cluster_config)
+#     c.reset(sg_config_path=sg_config)
+#
+#     # 1. Creating Docs in SG
+#
+#     sg_client.create_user(url=sg_admin_url, db=sg_db, name=username, password=password, channels=channels)
+#     cookie, session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username)
+#     auth_session = cookie, session
+#     sync_cookie = "{}={}".format(cookie, session)
+#     session_header = {"Cookie": sync_cookie}
+#     sg_docs = sg_client.add_docs(url=sg_url, db=sg_db, number=num_of_docs, id_prefix="sg_docs", channels=channels,
+#                                  auth=auth_session)
+#     sg_doc_ids = [doc["id"] for doc in sg_docs]
+#
+#     # Replicating docs from SG
+#     # Adding Listener for replicator
+#     replicator = Replication(base_url)
+#     repl_config = replicator.configure(source_db=cbl_db,
+#                                        target_url=sg_blip_url,
+#                                        continuous=False,
+#                                        headers=session_header,
+#                                        replication_type="pull")
+#     repl_conflict = replicator.create(repl_config)
+#     repl_error_change_listener = replicator.addReplicatorEventChangeListener(repl_conflict)
+#
+#     # 2. Starting Replication and disabling user during replication to create pull error
+#     replicator.start(repl_conflict)
+#     sg_client.update_user(url=sg_admin_url, db=sg_db, name=username, disabled=True)
+#     try:
+#         replicator.wait_until_replicator_idle(repl_conflict)
+#     except Exception, err:
+#         log_info("Error occured during replication - {}".format(str(err)))
+#
+#     # 3. verifying the error in the events collected
+#     doc_error_repl_event_changes = replicator.getReplicatorEventChanges(repl_error_change_listener)
+#     replicator.removeReplicatorEventListener(repl_conflict, repl_error_change_listener)
+#     replicator.stop(repl_conflict)
+#     event_dict = _get_event_changes(doc_error_repl_event_changes)
+#     cbl_doc_ids = db.getDocIds(database=cbl_db)
+#     cbl_docs = db.getDocuments(database=cbl_db, ids=cbl_doc_ids)
+#     assert num_of_docs == len(cbl_docs)
+#     assert num_of_docs == len(event_dict)
 
 
 @pytest.mark.sanity
