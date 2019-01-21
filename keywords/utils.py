@@ -3,6 +3,7 @@ import json
 import os
 import random
 import string
+import re
 
 from keywords.exceptions import FeatureSupportedError
 from keywords.constants import DATA_DIR
@@ -240,3 +241,30 @@ def clear_resources_pngs():
                 os.unlink(file_path)
         except Exception as e:
             print(e)
+
+def get_event_changes(event_changes):
+    """
+    @summary:
+    A method to filter out the events.
+    @return:
+    a dict containing doc_id as key and error status and replication as value,
+    for a particular Replication event
+    """
+    event_dict = {}
+    pattern = ".*?doc_id: (\w+), error_code: (.*?), error_domain: (\w+), push: (\w+), flags: (.*?)'.*?"
+    events = re.findall(pattern, string=str(event_changes))
+    for event in events:
+        doc_id = event[0].strip()
+        error_code = event[1].strip()
+        error_domain = event[2].strip()
+        is_push = True if ("true" in event[3] or "True" in event[3]) else False
+        flags = event[4] if event[4] != '[]' else None
+        if error_code == '0' or error_code == 'nil':
+            error_code = None
+        if error_domain == '0' or error_domain == 'nil':
+            error_domain = None
+        event_dict[doc_id] = {"push": is_push,
+                              "error_code": error_code,
+                              "error_domain": error_domain,
+                              "flags": flags}
+    return event_dict

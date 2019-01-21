@@ -148,26 +148,26 @@ def params_from_base_suite_setup(request):
 
     test_name = request.node.name
     testserver_list = []
-    for platform, version, host, port in zip(platform_list,
-                                             version_list,
-                                             host_list,
-                                             port_list):
-        testserver = TestServerFactory.create(platform=platform,
-                                              version_build=version,
-                                              host=host,
-                                              port=port,
-                                              community_enabled=community_enabled)
-
-        log_info("Downloading TestServer ...")
-        # Download TestServer app
-        testserver.download()
-
-        # Install TestServer app
-        if device_enabled and platform == "ios":
-            testserver.install_device()
-        else:
-            testserver.install()
-        testserver_list.append(testserver)
+#     for platform, version, host, port in zip(platform_list,
+#                                              version_list,
+#                                              host_list,
+#                                              port_list):
+#         testserver = TestServerFactory.create(platform=platform,
+#                                               version_build=version,
+#                                               host=host,
+#                                               port=port,
+#                                               community_enabled=community_enabled)
+# 
+#         log_info("Downloading TestServer ...")
+#         # Download TestServer app
+#         testserver.download()
+# 
+#         # Install TestServer app
+#         if device_enabled and platform == "ios":
+#             testserver.install_device()
+#         else:
+#             testserver.install()
+#         testserver_list.append(testserver)
     base_url_list = []
     for host, port in zip(host_list, port_list):
         base_url_list.append("http://{}:{}".format(host, port))
@@ -261,13 +261,13 @@ def params_from_base_suite_setup(request):
     query_obj_list = []
     if create_db_per_suite:
         # Start Test server which needed for suite level set up like query tests
-        for testserver in testserver_list:
-            log_info("Starting TestServer...")
-            test_name_cp = test_name.replace("/", "-")
-            if device_enabled:
-                testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now()))
-            else:
-                testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now()))
+#         for testserver in testserver_list:
+#             log_info("Starting TestServer...")
+#             test_name_cp = test_name.replace("/", "-")
+#             if device_enabled:
+#                 testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now()))
+#             else:
+#                 testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now()))
         for base_url, i in zip(base_url_list, range(len(base_url_list))):
             db_name = "{}_{}_{}".format(create_db_per_suite, str(time.time()), i + 1)
             log_info("db name for {} is {}".format(base_url, db_name))
@@ -313,7 +313,8 @@ def params_from_base_suite_setup(request):
         "device_enabled": device_enabled,
         "generator": generator,
         "resume_cluster": resume_cluster,
-        "create_db_per_test": create_db_per_test
+        "create_db_per_test": create_db_per_test,
+        "liteserv_versions": liteserv_versions,
     }
 
     # Delete CBL database
@@ -328,12 +329,13 @@ def params_from_base_suite_setup(request):
                 time.sleep(5)
                 db_obj.deleteDB(cbl_db)
 
-        # Flush all the memory contents on the server app
+    # Flush all the memory contents on the server app
+    for base_url in base_url_list:
         log_info("Flushing server memory")
         utils_obj = Utils(base_url)
         utils_obj.flushMemory()
-        log_info("Stopping the test server")
-        testserver.stop()
+#         log_info("Stopping the test server")
+#         testserver.stop()
 
 
 @pytest.fixture(scope="function")
@@ -366,6 +368,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     resume_cluster = params_from_base_suite_setup["resume_cluster"]
     create_db_per_test = params_from_base_suite_setup["create_db_per_test"]
     cluster_topology = params_from_base_suite_setup["cluster_topology"]
+    liteserv_versions = params_from_base_suite_setup["liteserv_versions"]
     # testserver_list = params_from_base_suite_setup["testserver_list"]
     # test_name = request.node.name
 
@@ -423,6 +426,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "query_obj_list": query_obj_list,
         "sg_config": sg_config,
         "db_obj_list": db_obj_list,
+        "liteserv_versions": liteserv_versions,
         # "testserver_list": testserver_list,
         "device_enabled": device_enabled,
         "generator": generator,

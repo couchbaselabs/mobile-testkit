@@ -1,4 +1,4 @@
-﻿<Properties StartupConfiguration="{A8E9786C-64F3-46EF-894C-9A7E51AC9210}|Default" NuGet.AddPackagesDialog.IncludePrerelease="True">
+﻿<Properties StartupConfiguration="{C0681E36-FA0E-4CAA-8156-BDD76473FC41}|Default" NuGet.AddPackagesDialog.IncludePrerelease="True">
   <MonoDevelop.Ide.Workbench ActiveDocument="TestServer.UWP/TestServer.UWP.csproj">
     <Files>
       <File FileName="TestServer/EncryptionKeyMethods.cs" Line="1" Column="1" />
@@ -16,8 +16,8 @@
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.ItemProperties.TestServer.NetCore PreferredExecutionTarget="MonoDevelop.Default" />
   <MonoDevelop.Ide.DebuggingService.PinnedWatches />
-  <MonoDevelop.Ide.ItemProperties.TestServer.Android PreferredExecutionTarget="Android.192.168.58.102:5555" />
-  <MonoDevelop.Ide.ItemProperties.TestServer.iOS PreferredExecutionTarget="MonoDevelop.IPhone.IPhoneSimulatorTarget.90C3C33B-3EA7-42CC-9CB9-7D4E47241888" />
+  <MonoDevelop.Ide.ItemProperties.TestServer.Android PreferredExecutionTarget="Android.Pixel_2_XL_API_27" />
+  <MonoDevelop.Ide.ItemProperties.TestServer.iOS PreferredExecutionTarget="MonoDevelop.IPhone.IPhoneSimulatorTarget.409AF0A3-92CE-4148-BF7C-C5F7EAC4C596" />
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore />

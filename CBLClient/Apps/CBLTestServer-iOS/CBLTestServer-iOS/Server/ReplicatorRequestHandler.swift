@@ -9,6 +9,7 @@
 import Foundation
 import CouchbaseLiteSwift
 
+
 public class ReplicatorRequestHandler {
     public static let VOID: String? = nil
     fileprivate var _pushPullReplListener:NSObjectProtocol?
@@ -122,7 +123,7 @@ public class ReplicatorRequestHandler {
     }
 }
 
-class MyReplicationChangeListener : NSObject  {
+public class MyReplicationChangeListener : NSObject  {
     var repl_changes: [ReplicatorChange] = []
     
     var listenerToken: ListenerToken?
@@ -136,7 +137,7 @@ class MyReplicationChangeListener : NSObject  {
     }
 }
 
-class MyDocumentReplicationListener : NSObject {
+public class MyDocumentReplicationListener : NSObject {
     var document_replication_changes: [DocumentReplication] = []
     
     var listenerToken: ListenerToken?

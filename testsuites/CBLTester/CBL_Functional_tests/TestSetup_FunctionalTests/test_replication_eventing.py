@@ -1,10 +1,10 @@
 import pytest
 import random
-import re
-from time import sleep
+
 
 from keywords.MobileRestClient import MobileRestClient
 from keywords.utils import log_info
+from keywords.utils import get_event_changes
 from CBLClient.Database import Database
 from CBLClient.Replication import Replication
 from libraries.testkit import cluster
@@ -108,7 +108,7 @@ def test_replication_eventing_status(params_from_base_test_setup, num_of_docs):
     replicator.stop(repl)
 
     # Processing received events
-    replicated_event_changes = _get_event_changes(doc_repl_event_changes)
+    replicated_event_changes = get_event_changes(doc_repl_event_changes)
     push_docs = []
     pull_docs = []
     error_docs = []
@@ -218,8 +218,7 @@ def test_push_replication_error_event(params_from_base_test_setup, num_of_docs):
     doc_error_repl_event_changes = replicator.getReplicatorEventChanges(repl_error_change_listener)
     replicator.removeReplicatorEventListener(repl_conflict, repl_error_change_listener)
     replicator.stop(repl_conflict)
-    event_dict = _get_event_changes(doc_error_repl_event_changes)
-    log_info("Event changes: {}".format(event_dict))
+    event_dict = get_event_changes(doc_error_repl_event_changes)
     assert len(event_dict) != 0, "No Event captured. Check the logs for detailed info"
     for doc_id in event_dict:
         assert '10409' in event_dict[doc_id]["error_code"], "Conflict error didn't happen. Error Code: {}".format(
@@ -298,7 +297,7 @@ def test_push_replication_error_event(params_from_base_test_setup, num_of_docs):
 #     doc_error_repl_event_changes = replicator.getReplicatorEventChanges(repl_error_change_listener)
 #     replicator.removeReplicatorEventListener(repl_conflict, repl_error_change_listener)
 #     replicator.stop(repl_conflict)
-#     event_dict = _get_event_changes(doc_error_repl_event_changes)
+#     event_dict = get_event_changes(doc_error_repl_event_changes)
 #     cbl_doc_ids = db.getDocIds(database=cbl_db)
 #     cbl_docs = db.getDocuments(database=cbl_db, ids=cbl_doc_ids)
 #     assert num_of_docs == len(cbl_docs)
@@ -394,7 +393,7 @@ def test_replication_access_revoke_event(params_from_base_test_setup, num_of_doc
     doc_revoke_access_event_changes = replicator.getReplicatorEventChanges(repl_access_revoke_change_listener)
     replicator.removeReplicatorEventListener(repl_access_revoke, repl_access_revoke_change_listener)
     replicator.stop(repl_access_revoke)
-    event_dict = _get_event_changes(doc_revoke_access_event_changes)
+    event_dict = get_event_changes(doc_revoke_access_event_changes)
     replicator.removeReplicatorEventListener(repl_access_revoke, repl_access_revoke_change_listener)
     replicator.stop(repl_access_revoke)
     assert len(event_dict) != 0, "Replication listener didn't caught events. Check app logs for detailed info"
@@ -458,7 +457,7 @@ def test_replication_delete_event(params_from_base_test_setup, num_of_docs):
     sync_cookie = "{}={}".format(cookie, session)
     session_header = {"Cookie": sync_cookie}
 
-    # Replicating docs to SG so that later we can create conflict
+    # Replicating docs to SG so that later we can create delete event
     # Adding Listener for replicator
     replicator = Replication(base_url)
     repl_config = replicator.configure(source_db=cbl_db,
@@ -482,7 +481,7 @@ def test_replication_delete_event(params_from_base_test_setup, num_of_docs):
         doc_id = doc["id"]
         sg_client.delete_doc(url=sg_url, db=sg_db, doc_id=doc_id, rev=doc["value"]["rev"], auth=auth_session)
 
-    # 4 Replicating access revoked
+    # 4 Replicating for deleted docs
     repl_delete_config = replicator.configure(source_db=cbl_db,
                                               target_url=sg_blip_url,
                                               continuous=False,
@@ -493,11 +492,11 @@ def test_replication_delete_event(params_from_base_test_setup, num_of_docs):
     replicator.start(repl_delete)
     replicator.wait_until_replicator_idle(repl_delete)
 
-    # 5. Verifying the access revoke in event captures
+    # 5. Verifying the delete event in event captures
     doc_delete_event_changes = replicator.getReplicatorEventChanges(repl_delete_change_listener)
     replicator.removeReplicatorEventListener(repl_delete, repl_delete_change_listener)
     replicator.stop(repl_delete)
-    event_dict = _get_event_changes(doc_delete_event_changes)
+    event_dict = get_event_changes(doc_delete_event_changes)
     replicator.removeReplicatorEventListener(repl_delete, repl_delete_change_listener)
     replicator.stop(repl_delete)
     assert len(event_dict) != 0, "Replication listener didn't caught events. Check app logs for detailed info"
@@ -512,29 +511,3 @@ def test_replication_delete_event(params_from_base_test_setup, num_of_docs):
         assert sg_doc["id"] not in doc_ids, "channel access removal didn't purge the docs from cbl db"
 
 
-def _get_event_changes(event_changes):
-    """
-    @summary:
-    A method to filter out the events.
-    @return:
-    a dict containing doc_id as key and error status and replication as value,
-    for a particular Replication event
-    """
-    event_dict = {}
-    pattern = ".*?doc_id: (\w+), error_code: (.*?), error_domain: (\w+), push: (\w+), flags: (.*?)'.*?"
-    events = re.findall(pattern, string=str(event_changes))
-    for event in events:
-        doc_id = event[0].strip()
-        error_code = event[1].strip()
-        error_domain = event[2].strip()
-        is_push = True if ("true" in event[3] or "True" in event[3]) else False
-        flags = event[4] if event[4] != '[]' else None
-        if error_code == '0' or error_code == 'nil':
-            error_code = None
-        if error_domain == '0' or error_domain == 'nil':
-            error_domain = None
-        event_dict[doc_id] = {"push": is_push,
-                              "error_code": error_code,
-                              "error_domain": error_domain,
-                              "flags": flags}
-    return event_dict
