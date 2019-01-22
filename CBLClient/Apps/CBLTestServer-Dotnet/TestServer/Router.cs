@@ -225,6 +225,11 @@ namespace Couchbase.Lite.Testing
                 ["peerToPeer_serverStart"] = P2PMethods.Start_Server,
                 ["peerToPeer_serverStop"] = P2PMethods.Stop_Server,
                 ["peerToPeer_clientStart"] = P2PMethods.Start_Client,
+                ["peerToPeer_configure"] = P2PMethods.Configure,
+                ["peerToPeer_addReplicatorEventChangeListener"] = ReplicationMethods.AddReplicatorEventChangeListener,
+                ["peerToPeer_removeReplicatorEventListener"] = ReplicationMethods.RemoveReplicatorEventListener,
+                ["peerToPeer_replicatorEventGetChanges"] = ReplicationMethods.ReplicatorEventGetChanges,
+                ["peerToPeer_replicatorEventChangesCount"] = ReplicationMethods.ReplicatorEventChangesCount,
                 ["release"] = ReleaseObject,
                 ["flushMemory"] = flushMemory
             };
