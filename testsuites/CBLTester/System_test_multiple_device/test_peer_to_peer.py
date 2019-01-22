@@ -14,9 +14,9 @@ from CBLClient.PeerToPeer import PeerToPeer
 @pytest.mark.listener
 @pytest.mark.parametrize("num_of_docs, continuous, replicator_type, attachments, endPointType", [
     (10, True, "push_pull", False, "URLEndPoint"),
-#     (100, True, "push_pull", True, "MessageEndPoint"),
-#     (10, True, "push_pull", False, "MessageEndPoint"),
-#     (100, False, "push", False, "URLEndPoint"),
+    (100, True, "push_pull", True, "MessageEndPoint"),
+    (10, True, "push_pull", False, "MessageEndPoint"),
+    (100, False, "push", False, "URLEndPoint"),
 ])
 def test_peer_to_peer_1to1_valid_values(params_from_base_test_setup, server_setup, num_of_docs, continuous, replicator_type, attachments, endPointType):
     """
@@ -439,10 +439,10 @@ def test_peer_to_peer_delete_docs(params_from_base_test_setup, server_setup, num
 @pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.parametrize("num_of_docs, continuous, replicator_type, endPointType", [
-#     (10, True, "push_pull", "MessageEndPoint"),
+    (10, True, "push_pull", "MessageEndPoint"),
     (10, False, "push_pull", "URLEndPoint"),
-#     (100, True, "push", "MessageEndPoint"),
-#     (100, True, "push", "URLEndPoint"),
+    (100, True, "push", "MessageEndPoint"),
+    (100, True, "push", "URLEndPoint"),
 ])
 def test_peer_to_peer_with_server_down(params_from_base_test_setup, server_setup, num_of_docs, continuous, replicator_type, endPointType):
     """
@@ -983,7 +983,7 @@ def test_default_conflict_scenario_highRevGeneration_wins(params_from_base_test_
 def client_start_replicate(peerToPeer_client, db_obj_client, param, server_host, db_name_server, cbl_db_client,
                            continuous, replicator_type, endPointType):
     repl = peerToPeer_client.configure(host=server_host, server_db_name=db_name_server, client_database=cbl_db_client,
-                                          continuous=continuous, replication_type=replicator_type, endPointType=endPointType)
+                                       continuous=continuous, replication_type=replicator_type, endPointType=endPointType)
     peerToPeer_client.client_start(repl)
     updata_bulk_docs_custom(db_obj_client, database=cbl_db_client, number_of_updates=1, param=param)
     return repl

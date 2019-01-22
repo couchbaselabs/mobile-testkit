@@ -237,8 +237,9 @@ def test_peer_to_peer_replication_delete_event(params_from_base_test_setup, serv
     server_doc_ids = db_obj_server.create_bulk_docs(num_of_docs, "server_doc", db=cbl_db_server,
                                                     channels=channels)
     # Now set up client
-    repl = peer_to_peer_client.configure(host=server_host, server_db_name=db_name_server, client_database=cbl_db_client,
-                                         replication_type="push_pull",  endPointType=endpoint_type)
+    repl = peer_to_peer_client.configure(host=server_host, server_db_name=db_name_server,
+                                         client_database=cbl_db_client, replication_type="push_pull",
+                                         endPointType=endpoint_type)
     peer_to_peer_client.client_start(repl)
     replicator.wait_until_replicator_idle(repl)
     replicator.stop(repl)
@@ -262,8 +263,8 @@ def test_peer_to_peer_replication_delete_event(params_from_base_test_setup, serv
     assert len(event_dict) != 0, "Replication listener didn't caught events. Check app logs for detailed info"
     for doc_id in event_dict:
         assert event_dict[doc_id]["flags"] == "1" or event_dict[doc_id]["flags"] == "[DocumentFlagsDeleted]" or \
-               event_dict[doc_id]["flags"] == "Deleted", \
-               'Deleted flag is not tagged for document. Flag value: {}'.format(event_dict[doc_id]["flags"])
+            event_dict[doc_id]["flags"] == "Deleted", \
+            'Deleted flag is not tagged for document. Flag value: {}'.format(event_dict[doc_id]["flags"])
     server_docs_count = db_obj_server.getCount(cbl_db_server)
     client_docs_count = db_obj_client.getCount(cbl_db_client)
     assert server_docs_count == client_docs_count, "Server and Client doesn't have equal no. of docs"

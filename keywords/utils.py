@@ -242,6 +242,7 @@ def clear_resources_pngs():
         except Exception as e:
             print(e)
 
+
 def get_event_changes(event_changes):
     """
     @summary:

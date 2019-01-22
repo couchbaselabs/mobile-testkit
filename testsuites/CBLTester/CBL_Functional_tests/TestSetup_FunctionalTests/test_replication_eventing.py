@@ -509,5 +509,3 @@ def test_replication_delete_event(params_from_base_test_setup, num_of_docs):
     doc_ids = db.getDocIds(cbl_db)
     for sg_doc in docs_to_modify:
         assert sg_doc["id"] not in doc_ids, "channel access removal didn't purge the docs from cbl db"
-
-
