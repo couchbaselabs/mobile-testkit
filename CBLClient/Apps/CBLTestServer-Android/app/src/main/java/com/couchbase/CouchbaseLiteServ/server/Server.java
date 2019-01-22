@@ -76,8 +76,8 @@ public class Server extends NanoHTTPD {
     public Response handle(IHTTPSession session) {
         String path = session.getUri();
         String method = (path.startsWith("/") ? path.substring(1) : path);
-        Database.getLog().getConsole().setLevel(LogLevel.DEBUG);
-        Database.getLog().getConsole().setDomains(EnumSet.of(LogDomain.ALL));
+        Database.log.getConsole().setLevel(LogLevel.DEBUG);
+        Database.log.getConsole().setDomains(EnumSet.of(LogDomain.ALL));
         // Get args from query string.
         Map<String, String> rawArgs = new HashMap<>();
 
