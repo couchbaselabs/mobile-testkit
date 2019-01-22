@@ -12,13 +12,13 @@ from keywords.utils import get_event_changes
 @pytest.mark.listener
 @pytest.mark.parametrize("num_of_docs, continuous, replicator_type, attachments, endpoint_type", [
     (10, True, "push_pull", False, "URLEndPoint"),
-    (10, False, "push_pull", False, "URLEndPoint"),
-    (10, False, "push_pull", True, "URLEndPoint"),
-    (100, False, "push_pull", False, "URLEndPoint"),
-    (10, True, "push_pull", False, "MessageEndPoint"),
-    (10, False, "push_pull", False, "MessageEndPoint"),
-    (10, False, "push_pull", True, "MessageEndPoint"),
-    (100, False, "push_pull", False, "MessageEndPoint"),
+#     (10, False, "push_pull", False, "URLEndPoint"),
+#     (10, False, "push_pull", True, "URLEndPoint"),
+#     (100, False, "push_pull", False, "URLEndPoint"),
+#     (10, True, "push_pull", False, "MessageEndPoint"),
+#     (10, False, "push_pull", False, "MessageEndPoint"),
+#     (10, False, "push_pull", True, "MessageEndPoint"),
+#     (100, False, "push_pull", False, "MessageEndPoint"),
 
 ])
 def test_peer_to_peer_replication_eventing_valid_values(params_from_base_test_setup, server_setup, num_of_docs,

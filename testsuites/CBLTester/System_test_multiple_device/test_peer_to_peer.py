@@ -14,9 +14,9 @@ from CBLClient.PeerToPeer import PeerToPeer
 @pytest.mark.listener
 @pytest.mark.parametrize("num_of_docs, continuous, replicator_type, attachments, endPointType", [
     (10, True, "push_pull", False, "URLEndPoint"),
-    (100, True, "push_pull", True, "MessageEndPoint"),
-    (10, True, "push_pull", False, "MessageEndPoint"),
-    (100, False, "push", False, "URLEndPoint"),
+#     (100, True, "push_pull", True, "MessageEndPoint"),
+#     (10, True, "push_pull", False, "MessageEndPoint"),
+#     (100, False, "push", False, "URLEndPoint"),
 ])
 def test_peer_to_peer_1to1_valid_values(params_from_base_test_setup, server_setup, num_of_docs, continuous, replicator_type, attachments, endPointType):
     """

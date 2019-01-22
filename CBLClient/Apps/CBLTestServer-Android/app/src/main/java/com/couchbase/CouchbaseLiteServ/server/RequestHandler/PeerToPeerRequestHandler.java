@@ -28,6 +28,7 @@ import com.couchbase.lite.ReplicatorConfiguration;
 import com.couchbase.lite.URLEndpoint;
 
 public class PeerToPeerRequestHandler implements MessageEndpointDelegate{
+    ReplicatorRequestHandler obj = new ReplicatorRequestHandler();
 
     public Replicator configure(Args args) throws Exception {
         String ipaddress = args.get("host");
@@ -94,71 +95,55 @@ public class PeerToPeerRequestHandler implements MessageEndpointDelegate{
         }
     }
 
-    class MyDocumentReplicatorListener implements DocumentReplicationListener{
-        private List<DocumentReplication> changes = new ArrayList<>();
-        private ListenerToken token;
-
-        public List<DocumentReplication> getChanges(){
-            return changes;
-        }
-
-        public void setToken(ListenerToken token){
-            this.token = token;
-        }
-
-        public ListenerToken getToken() {
-            return token;
-        }
-
-        @Override
-        public void replication(DocumentReplication replication) {
-            changes.add(replication);
-        }
-    }
-
     public MyDocumentReplicatorListener addReplicatorEventChangeListener(Args args){
-        Replicator replicator = args.get("replicator");
-        MyDocumentReplicatorListener changeListener = new MyDocumentReplicatorListener();
-        ListenerToken token = replicator.addDocumentReplicationListener(changeListener);
-        changeListener.setToken(token);
-        return changeListener;
+//        Replicator replicator = args.get("replicator");
+//        P2PMyDocumentReplicatorListener changeListener = new P2PMyDocumentReplicatorListener();
+//        ListenerToken token = replicator.addDocumentReplicationListener(changeListener);
+//        changeListener.setToken(token);
+        return obj.addReplicatorEventChangeListener(args);
+//        return changeListener;
+
+
     }
 
     public void removeReplicatorEventListener(Args args){
-        Replicator replicator = args.get("replicator");
-        MyDocumentReplicatorListener changeListener = args.get("changeListener");
-        replicator.removeChangeListener(changeListener.getToken());
+//        Replicator replicator = args.get("replicator");
+//        P2PMyDocumentReplicatorListener changeListener = args.get("changeListener");
+//        replicator.removeChangeListener(changeListener.getToken());
+        obj.removeReplicatorEventListener(args);
     }
 
     public int changeListenerChangesCount(Args args) {
-        MyDocumentReplicatorListener changeListener = args.get("changeListener");
-        return changeListener.getChanges().size();
+//        P2PMyDocumentReplicatorListener changeListener = args.get("changeListener");
+//        return changeListener.getChanges().size();
+        return obj.changeListenerChangesCount(args);
     }
 
     public List<String> replicatorEventGetChanges(Args args){
-        MyDocumentReplicatorListener changeListener = args.get("changeListener");
-        List<DocumentReplication> changes = changeListener.getChanges();
-        List <String> event_list = new ArrayList<>();
-
-        for (DocumentReplication change: changes) {
-            for (ReplicatedDocument document: change.getDocuments()){
-                String event = document.toString();
-                String doc_id = "doc_id: " + document.getID();
-                String error = ", error_code: ";
-                String error_domain = "0";
-                int error_code = 0;
-
-                if (document.getError() != null){
-                    error_code = document.getError().getCode();
-                    error_domain = document.getError().getDomain();
-                }
-                error = error + error_code + ", error_domain: " + error_domain;
-                String flags = ", flags: " + document.flags().toString();
-                String push = ", push: " + Boolean.toString(change.isPush());
-                event_list.add(doc_id + error + push + flags);
-            }
-        }
-        return event_list;
+//        P2PMyDocumentReplicatorListener changeListener = args.get("changeListener");
+////        List<DocumentReplication> changes = changeListener.getChanges();
+////        List <String> event_list = new ArrayList<>();
+////
+////        for (DocumentReplication change: changes) {
+////            for (ReplicatedDocument document: change.getDocuments()){
+////                String event = document.toString();
+////                String doc_id = "doc_id: " + document.getID();
+////                String error = ", error_code: ";
+////                String error_domain = "0";
+////                int error_code = 0;
+////
+////                if (document.getError() != null){
+////                    error_code = document.getError().getCode();
+////                    error_domain = document.getError().getDomain();
+////                }
+////                error = error + error_code + ", error_domain: " + error_domain;
+////                String flags = ", flags: " + document.flags().toString();
+////                String push = ", push: " + Boolean.toString(change.isPush());
+////                event_list.add(doc_id + error + push + flags);
+////            }
+////        }
+////        return event_list;
+        return obj.replicatorEventGetChanges(args);
     }
 
     public ReplicatorTcpListener serverStart(Args args) throws IOException {
@@ -180,5 +165,27 @@ public class PeerToPeerRequestHandler implements MessageEndpointDelegate{
         return new ReplicatorTcpClientConnection(url);
     }
 }
+
+//class P2PMyDocumentReplicatorListener implements DocumentReplicationListener{
+//    private List<DocumentReplication> changes = new ArrayList<>();
+//    private ListenerToken token;
+//
+//    public List<DocumentReplication> getChanges(){
+//        return changes;
+//    }
+//
+//    public void setToken(ListenerToken token){
+//        this.token = token;
+//    }
+//
+//    public ListenerToken getToken() {
+//        return token;
+//    }
+//
+//    @Override
+//    public void replication(DocumentReplication replication) {
+//        changes.add(replication);
+//    }
+//}
 
 
