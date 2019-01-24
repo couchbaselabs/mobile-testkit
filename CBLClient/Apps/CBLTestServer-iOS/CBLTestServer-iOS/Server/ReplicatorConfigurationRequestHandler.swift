@@ -130,6 +130,8 @@ public class ReplicatorConfigurationRequestHandler {
                     config.pullFilter = _replicatorBooleanFilterCallback;
                 } else if filter_callback_func == "deleted" {
                     config.pullFilter = _replicatorDeletedFilterCallback;
+                } else if filter_callback_func == "access_revoked" {
+                    config.pullFilter = _replicatorAccessRevokedCallback;
                 } else {
                     config.pullFilter = _defaultReplicatorFilterCallback;
                 }
@@ -139,6 +141,8 @@ public class ReplicatorConfigurationRequestHandler {
                     config.pushFilter = _replicatorBooleanFilterCallback;
                 } else if filter_callback_func == "deleted" {
                     config.pushFilter = _replicatorDeletedFilterCallback;
+                } else if filter_callback_func == "access_revoked" {
+                    config.pushFilter = _replicatorAccessRevokedCallback;
                 } else {
                     config.pushFilter = _defaultReplicatorFilterCallback;
                 }
@@ -225,17 +229,27 @@ public class ReplicatorConfigurationRequestHandler {
     }
 
 
-    private func _replicatorBooleanFilterCallback(document: Document, isDeleted: Bool) -> Bool {
+    private func _replicatorBooleanFilterCallback(document: Document, flags: DocumentFlags) -> Bool {
         let key:String = "new_field_1"
         let value:Bool = document.boolean(forKey: key)
         return value;
     }
     
-    private func _defaultReplicatorFilterCallback(document: Document, isDeleted: Bool) -> Bool {
+    private func _defaultReplicatorFilterCallback(document: Document, flags: DocumentFlags) -> Bool {
         return true;
     }
     
-    private func _replicatorDeletedFilterCallback(document: Document, isDeleted: Bool) -> Bool {
-        return !(isDeleted);
+    private func _replicatorDeletedFilterCallback(document: Document, documentFlags: DocumentFlags) -> Bool {
+        if (documentFlags.rawValue == 1) {
+            return false
+        }
+        return true
+    }
+    
+    private func _replicatorAccessRevokedCallback(document: Document, documentFlags: DocumentFlags) -> Bool {
+        if (documentFlags.rawValue == 2) {
+            return false
+        }
+        return true
     }
 }

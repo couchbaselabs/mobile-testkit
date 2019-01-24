@@ -9,6 +9,9 @@ import com.couchbase.lite.Authenticator;
 // import com.couchbase.lite.ConflictResolver;
 import com.couchbase.lite.Database;
 import com.couchbase.lite.DatabaseEndpoint;
+import com.couchbase.lite.Document;
+import com.couchbase.lite.DocumentFlag;
+import com.couchbase.lite.ReplicationFilter;
 import com.couchbase.lite.ReplicatorConfiguration;
 import com.couchbase.lite.URLEndpoint;
 import com.couchbase.litecore.C4Socket;
@@ -17,6 +20,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Dictionary;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.io.InputStream;
@@ -66,6 +70,9 @@ public class ReplicatorConfigurationRequestHandler {
         List<String> documentIds = args.get("documentIDs");
         String pinnedservercert = args.get("pinnedservercert");
         Authenticator authenticator = args.get("authenticator");
+        Boolean push_filter = args.get("push_filter");
+        Boolean pull_filter = args.get("pull_filter");
+        String filter_callback_func = args.get("filter_callback_func");
         // ConflictResolver conflictResolver = args.get("conflictResolver");
         Map<String, String> headers = args.get("headers");
 
@@ -118,6 +125,28 @@ public class ReplicatorConfigurationRequestHandler {
             byte[] ServerCert = this.getPinnedCertFile(context);
             // Set pinned certificate.
             config.setPinnedServerCertificate(ServerCert);
+        }
+        if (push_filter){
+            if (filter_callback_func.equals("boolean")){
+                config.setPushFilter(new ReplicatorBooleanFiltlerCallback());
+            } else if (filter_callback_func.equals("deleted")){
+                config.setPushFilter(new ReplicatorDeletedFilterCallback());
+            } else if (filter_callback_func.equals("access_revoked")){
+                config.setPushFilter(new ReplicatorAccessRevokedFilterCallback());
+            } else {
+                config.setPushFilter(new DefaultReplicatorFilterCallback());
+            }
+        }
+        if (pull_filter){
+            if (filter_callback_func.equals("boolean")){
+                config.setPullFilter(new ReplicatorBooleanFiltlerCallback());
+            } else if (filter_callback_func.equals("deleted")){
+                config.setPullFilter(new ReplicatorDeletedFilterCallback());
+            } else if (filter_callback_func.equals("access_revoked")){
+                config.setPullFilter(new ReplicatorAccessRevokedFilterCallback());
+            } else {
+                config.setPullFilter(new DefaultReplicatorFilterCallback());
+            }
         }
         return config;
     }
@@ -256,5 +285,38 @@ public class ReplicatorConfigurationRequestHandler {
         byte[] bytes = bos.toByteArray();
         return bytes;
     }
+}
+
+class ReplicatorBooleanFiltlerCallback implements ReplicationFilter {
+    @Override
+    public boolean filtered(Document document, EnumSet<DocumentFlag> flags) {
+        String key = "new_field_1";
+        boolean value = document.getBoolean(key);
+        return value;
+    }
 
 }
+
+class DefaultReplicatorFilterCallback implements ReplicationFilter {
+    @Override
+    public boolean filtered(Document document, EnumSet<DocumentFlag> flags) {
+        return true;
+    }
+
+}
+
+class ReplicatorDeletedFilterCallback implements ReplicationFilter {
+    @Override
+    public boolean filtered(Document document, EnumSet<DocumentFlag> flags) {
+        return !(flags.contains(DocumentFlag.DocumentFlagsDeleted));
+    }
+}
+
+class ReplicatorAccessRevokedFilterCallback implements ReplicationFilter {
+    @Override
+    public boolean filtered(Document document, EnumSet<DocumentFlag> flags) {
+        return !(flags.contains(DocumentFlag.DocumentFlagsAccessRemoved));
+    }
+}
+
+
