@@ -470,18 +470,15 @@ namespace Couchbase.Lite.Testing
         {
             With<Database>(postBody, "database", db =>
             {
-                With<MutableDocument>(postBody, "document", doc =>
-                {
-                    string id = doc.Id;
-                    Dictionary<string, Object> data = (Dictionary<string, Object>)doc.GetValue(id);
-                    MutableDocument UpdateDoc = db.GetDocument(id).ToMutable();
-                    UpdateDoc.SetData(data);
-                    db.Save(UpdateDoc);
-                });
-                response.WriteEmptyBody();
-            });
-        }
 
+                string id = postBody["id"].ToString();
+                Dictionary<string, Object> data = (Dictionary<string, object>)postBody["data"];
+                MutableDocument UpdateDoc = db.GetDocument(id).ToMutable();
+                UpdateDoc.SetData(data);
+                db.Save(UpdateDoc);
+            });
+            response.WriteEmptyBody();
+        }
         internal static void DatabaseUpdateDocuments([NotNull] NameValueCollection args,
                                    [NotNull] IReadOnlyDictionary<string, object> postBody,
                                    [NotNull] HttpListenerResponse response)

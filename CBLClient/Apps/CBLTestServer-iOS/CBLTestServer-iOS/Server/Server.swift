@@ -50,7 +50,7 @@ public class Server {
     let memory = Memory()
     
     public init() {
-        Database.setLogLevel(LogLevel.info, domain: LogDomain.all)
+        Database.log.console.level = .verbose
         dictionaryRequestHandler = DictionaryRequestHandler()
         queryRequestHandler = QueryRequestHandler()
         databaseRequestHandler = DatabaseRequestHandler()

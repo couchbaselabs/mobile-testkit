@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -101,9 +102,8 @@ public class DatabaseRequestHandler {
 
     public void updateDocument(Args args) throws CouchbaseLiteException {
         Database database = args.get("database");
-        MutableDocument document = args.get("document");
-        String id = document.getId();
-        Map<String, Object> data = (Map<String, Object>) document.getValue(id);
+        Map<String, Object> data = args.get("data");
+        String id = args.get("id");
         MutableDocument updateDoc = database.getDocument(id).toMutable();
         updateDoc.setData(data);
         database.save(updateDoc);

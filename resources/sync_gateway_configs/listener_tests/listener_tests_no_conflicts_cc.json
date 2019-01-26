@@ -21,6 +21,7 @@
             {{ cacertpath }}
             {{ certpath }}
             {{ keypath }}
+            {{ delta_sync }}
             "allow_conflicts": false,
             "revs_limit": 5,
             "rev_cache_size": 1000,

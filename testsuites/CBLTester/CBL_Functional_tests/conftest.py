@@ -124,6 +124,10 @@ def pytest_addoption(parser):
                      help="Number of replicas for the indexer node - SG 2.1 and above only",
                      default=0)
 
+    parser.addoption("--delta-sync",
+                     action="store_true",
+                     help="delta-sync: Enable delta-sync for sync gateway")
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -155,6 +159,7 @@ def params_from_base_suite_setup(request):
     no_conflicts_enabled = request.config.getoption("--no-conflicts")
     use_views = request.config.getoption("--use-views")
     number_replicas = request.config.getoption("--number-replicas")
+    delta_sync_enabled = request.config.getoption("--delta-sync")
 
     test_name = request.node.name
 
@@ -164,7 +169,7 @@ def params_from_base_suite_setup(request):
                                           port=liteserv_port,
                                           community_enabled=community_enabled,
                                           debug_mode=debug_mode)
-
+    """
     log_info("Downloading TestServer ...")
     # Download TestServer app
     testserver.download()
@@ -174,7 +179,7 @@ def params_from_base_suite_setup(request):
         testserver.install_device()
     else:
         testserver.install()
-
+    """
     base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_travel_sample", mode)
 
@@ -258,6 +263,13 @@ def params_from_base_suite_setup(request):
         log_info("Running tests with cbs <-> sg ssl disabled")
         # Disable sg views in cluster configs
         persist_cluster_config_environment_prop(cluster_config, 'sg_use_views', False)
+
+    if delta_sync_enabled:
+        log_info("Running with delta sync")
+        persist_cluster_config_environment_prop(cluster_config, 'delta_sync_enabled', True)
+    else:
+        log_info("Running without delta sync")
+        persist_cluster_config_environment_prop(cluster_config, 'delta_sync_enabled', False)
 
     # Write the number of replicas to cluster config
     persist_cluster_config_environment_prop(cluster_config, 'number_replicas', number_replicas)
@@ -448,14 +460,14 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     cbl_db = None
     test_name_cp = test_name.replace("/", "-")
     log_filename = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now())
-
+    """
     if create_db_per_test:
         log_info("Starting TestServer...")
         if device_enabled:
             testserver.start_device(log_filename)
         else:
             testserver.start(log_filename)
-
+    """
     cluster_helper = ClusterKeywords(cluster_config)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config=cluster_config)
     sg_url = cluster_hosts["sync_gateways"][0]["public"]
@@ -528,7 +540,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
 
     if create_db_per_test:
         log_info("Stopping the test server per test")
-        testserver.stop()
+        # testserver.stop()
 
 
 @pytest.fixture(scope="class")

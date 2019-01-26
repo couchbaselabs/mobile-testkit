@@ -16,7 +16,7 @@ from utilities.cluster_config_utils import get_revs_limit, is_ipv6, is_x509_auth
 from keywords.exceptions import ProvisioningError, Error
 from libraries.provision.ansible_runner import AnsibleRunner
 from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_redact_level
-from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version, sg_ssl_enabled
+from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version, sg_ssl_enabled, is_delta_sync_enabled
 from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
 
 
@@ -103,7 +103,8 @@ def verify_sync_gateway_version(host, expected_sync_gateway_version):
         "1.5.0": "594",
         "1.5.1": "4",
         "2.0.0": "832",
-        "2.1.0": "121"
+        "2.1.0": "121",
+        "2.1.2": "86"
     }
     version, build = version_and_build(expected_sync_gateway_version)
     if build is None:
@@ -229,6 +230,7 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config):
         revs_limit_prop = ""
         sslcert_prop = ""
         sslkey_prop = ""
+        delta_sync_prop = ""
 
         if get_sg_version(cluster_config) >= "2.1.0":
             logging_config = '"logging": {"debug": {"enabled": true}'
@@ -273,6 +275,9 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config):
         except KeyError:
             log_info("revs_limit not found in {}, Ignoring".format(cluster_config))
 
+        if is_delta_sync_enabled(cluster_config):
+            delta_sync_prop = '"delta_sync": { "enabled": true},'
+
         temp = template.render(
             couchbase_server_primary_node=couchbase_server_primary_node,
             is_index_writer="false",
@@ -294,8 +299,8 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config):
             sslcert=sslcert_prop,
             sslkey=sslkey_prop,
             no_conflicts=no_conflicts_prop,
-            revs_limit=revs_limit_prop
-
+            revs_limit=revs_limit_prop,
+            delta_sync=delta_sync_prop
         )
         data = json.loads(temp)
 
@@ -380,7 +385,8 @@ class SyncGateway(object):
             "revs_limit": "",
             "sg_use_views": "",
             "num_index_replicas": "",
-            "couchbase_server_primary_node": couchbase_server_primary_node
+            "couchbase_server_primary_node": couchbase_server_primary_node,
+            "delta_sync": ""
         }
 
         if get_sg_version(cluster_config) >= "2.1.0":
@@ -448,6 +454,9 @@ class SyncGateway(object):
                 )
                 if status != 0:
                     raise ProvisioningError("Failed to block port on SGW")
+
+        if is_delta_sync_enabled(cluster_config):
+            playbook_vars["delta_sync"] = '"delta_sync": { "enabled": true},'
 
         if url is not None:
             target = hostname_for_url(cluster_config, url)
@@ -543,7 +552,8 @@ class SyncGateway(object):
             "revs_limit": "",
             "sg_use_views": "",
             "num_index_replicas": "",
-            "couchbase_server_primary_node": couchbase_server_primary_node
+            "couchbase_server_primary_node": couchbase_server_primary_node,
+            "delta_sync": ""
         }
 
         sync_gateway_base_url, sync_gateway_package_name, sg_accel_package_name = sg_config.sync_gateway_base_url_and_package()
@@ -584,6 +594,9 @@ class SyncGateway(object):
             playbook_vars["revs_limit"] = '"revs_limit": {},'.format(revs_limit)
         except KeyError:
             log_info("revs_limit not found in {}, Ignoring".format(cluster_config))
+
+        if is_delta_sync_enabled(cluster_config):
+            playbook_vars["delta_sync"] = '"delta_sync": { "enabled": true},'
 
         if url is not None:
             target = hostname_for_url(cluster_config, url)
@@ -627,7 +640,8 @@ class SyncGateway(object):
             "num_index_replicas": "",
             "sg_use_views": "",
             "revs_limit": "",
-            "xattrs": ""
+            "xattrs": "",
+            "delta_sync": ""
         }
 
         if get_sg_version(cluster_config) >= "2.1.0":
@@ -664,6 +678,9 @@ class SyncGateway(object):
             playbook_vars["revs_limit"] = '"revs_limit": {},'.format(revs_limit)
         except KeyError:
             log_info("revs_limit not found in {}, Ignoring".format(cluster_config))
+
+        if is_delta_sync_enabled(cluster_config):
+            playbook_vars["delta_sync"] = '"delta_sync": { "enabled": true},'
 
         # Deploy config
         if url is not None:

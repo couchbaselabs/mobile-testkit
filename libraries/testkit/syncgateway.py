@@ -13,7 +13,7 @@ from libraries.testkit.admin import Admin
 from libraries.testkit.config import Config
 from libraries.testkit.debug import log_request, log_response
 from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, sg_ssl_enabled, is_ipv6
-from utilities.cluster_config_utils import get_revs_limit, get_redact_level
+from utilities.cluster_config_utils import get_revs_limit, get_redact_level, is_delta_sync_enabled
 from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version, is_x509_auth, generate_x509_certs
 from keywords.utils import add_cbs_to_sg_config_server_field, log_info
 from keywords.constants import SYNC_GATEWAY_CERT
@@ -90,7 +90,8 @@ class SyncGateway:
             "sslkey": "",
             "num_index_replicas": "",
             "sg_use_views": "",
-            "couchbase_server_primary_node": self.couchbase_server_primary_node
+            "couchbase_server_primary_node": self.couchbase_server_primary_node,
+            "delta_sync": ""
         }
 
         if sg_ssl_enabled(self.cluster_config):
@@ -149,6 +150,9 @@ class SyncGateway:
         except KeyError:
             log_info("revs_limit no found in {}, Ignoring".format(self.cluster_config))
 
+        if is_delta_sync_enabled(self.cluster_config):
+            playbook_vars["delta_sync"] = '"delta_sync": { "enabled": true},'
+
         if is_cbs_ssl_enabled(self.cluster_config) and get_sg_version(self.cluster_config) >= "1.5.0":
             playbook_vars["server_scheme"] = "couchbases"
             playbook_vars["server_port"] = 11207
@@ -199,7 +203,8 @@ class SyncGateway:
             "x509_auth": False,
             "num_index_replicas": "",
             "sg_use_views": "",
-            "couchbase_server_primary_node": self.couchbase_server_primary_node
+            "couchbase_server_primary_node": self.couchbase_server_primary_node,
+            "delta_sync": ""
         }
 
         if sg_ssl_enabled(self.cluster_config):
@@ -253,6 +258,9 @@ class SyncGateway:
         except KeyError:
             log_info("revs_limit no found in {}, Ignoring".format(self.cluster_config))
             playbook_vars["revs_limit"] = ''
+
+        if is_delta_sync_enabled(self.cluster_config):
+            playbook_vars["delta_sync"] = '"delta_sync": { "enabled": true},'
 
         if is_ipv6(self.cluster_config):
             playbook_vars["couchbase_server_primary_node"] = "[{}]".format(playbook_vars["couchbase_server_primary_node"])

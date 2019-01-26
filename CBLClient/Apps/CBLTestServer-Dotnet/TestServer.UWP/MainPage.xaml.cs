@@ -26,9 +26,7 @@ namespace Couchbase.Lite.Testing.UWP
         {
             this.InitializeComponent();
 
-            Couchbase.Lite.Support.UWP.EnableTextLogging();
-            Database.SetLogLevel(Logging.LogDomain.All, Logging.LogLevel.Debug);
-
+            Database.Log.Console.Level = Logging.LogLevel.Verbose;
 			TestServer.FilePathResolver = ResolvePath;
             var listener = new TestServer();
             listener.Start();

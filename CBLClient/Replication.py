@@ -285,6 +285,11 @@ class Replication(object):
                 if err is not None and err != 'nil' and err != -1:
                     raise Exception("Error while replicating", err)
             activity_level = self.getActivitylevel(repl)
+            total = self.getTotal(repl)
+            completed = self.getCompleted(repl)
+            print "total = ", total, "completed = ", completed
+            if total < completed and total <= 0:
+                raise Exception("replication progress is not completed")
 
     def create_session_configure_replicate(self, baseUrl, sg_admin_url, sg_db, username, password,
                                            channels, sg_client, cbl_db, sg_blip_url, replication_type=None, continuous=True):

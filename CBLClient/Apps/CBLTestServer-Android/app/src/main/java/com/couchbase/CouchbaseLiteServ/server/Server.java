@@ -65,7 +65,11 @@ public class Server extends NanoHTTPD {
 
     public Server(String ip, int port) throws IOException {
         super(port);
-        Database.setLogLevel(LogDomain.ALL, LogLevel.DEBUG);
+        ///Database.setLogLevel(LogDomain.ALL, LogLevel.DEBUG);
+        Database.getLog().getConsole().setLevel(LogLevel.VERBOSE);
+        Database.getLog().getFile().setDirectory("/tmp");
+        Database.getLog().getFile().setLevel(LogLevel.VERBOSE);
+        Database.getLog().getFile().setUsePlaintext(true);
         System.out.print("Running! Point your Mobile browser to http://" + ip + ":" + port + "/\n");
     }
 
