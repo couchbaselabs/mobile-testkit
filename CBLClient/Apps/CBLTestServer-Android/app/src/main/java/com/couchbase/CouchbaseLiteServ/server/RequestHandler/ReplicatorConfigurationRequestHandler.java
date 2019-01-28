@@ -291,8 +291,11 @@ class ReplicatorBooleanFiltlerCallback implements ReplicationFilter {
     @Override
     public boolean filtered(Document document, EnumSet<DocumentFlag> flags) {
         String key = "new_field_1";
-        boolean value = document.getBoolean(key);
-        return value;
+        if (document.contains(key)) {
+            boolean value = document.getBoolean(key);
+            return value;
+        }
+        return true;
     }
 
 }
