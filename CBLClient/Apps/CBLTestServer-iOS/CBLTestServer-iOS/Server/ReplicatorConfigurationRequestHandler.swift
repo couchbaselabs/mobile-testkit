@@ -231,8 +231,11 @@ public class ReplicatorConfigurationRequestHandler {
 
     private func _replicatorBooleanFilterCallback(document: Document, flags: DocumentFlags) -> Bool {
         let key:String = "new_field_1"
-        let value:Bool = document.boolean(forKey: key)
-        return value;
+        if document.contains(key){
+            let value:Bool = document.boolean(forKey: key)
+            return value;
+        }
+        return true
     }
     
     private func _defaultReplicatorFilterCallback(document: Document, flags: DocumentFlags) -> Bool {

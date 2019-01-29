@@ -10,9 +10,9 @@ class TestDatabase(object):
         (random_string(1028), "File name too long")
     ])
     def test_database_create_exception(self, db_name, err_msg):
-        '''
+        """
         @summary: Checking for the Exception handling in database create API
-        '''
+        """
         if self.liteserv_platform != "android" and db_name == "":
             pytest.skip("Test not applicable for ios")
 
@@ -25,7 +25,7 @@ class TestDatabase(object):
         except Exception, err_resp:
             assert err_msg in str(err_resp)
 
-    def test_getDocument_exception(self):
+    def test_get_document_exception(self):
         if self.liteserv_platform == "ios":
             pytest.skip("Test not applicable for ios")
 
@@ -44,7 +44,7 @@ class TestDatabase(object):
         doc_id = self.db_obj.getDocument(db, "I-do-not-exist")
         assert doc_id == -1
 
-    def test_saveDocument_exception(self):
+    def test_save_document_exception(self):
         if self.liteserv_platform != "android":
             pytest.skip("Test not applicable for ios")
 
@@ -86,9 +86,9 @@ class TestDatabase(object):
         random_string(6).upper(),
     ])
     def test_database_create(self, db_name):
-        '''
+        """
         @summary: Testing Database constructor method of Database API
-        '''
+        """
         if len(db_name) >= 128 and (self.liteserv_platform != "ios" or self.liteserv_platform != "android"):
             pytest.skip("Test not supported on .net platforms or the db name is longer than or equal to 128 characters")
 
@@ -108,9 +108,9 @@ class TestDatabase(object):
         random_string(6).upper(),
     ])
     def test_database_close(self, db_name):
-        '''
+        """
         @summary: Testing close method of Database API
-        '''
+        """
         if len(db_name) >= 128 and (self.liteserv_platform != "ios" or self.liteserv_platform != "android"):
             pytest.skip("Test not supported on .net platforms or the db name is longer than or equal to 128 characters")
 
@@ -127,10 +127,10 @@ class TestDatabase(object):
         random_string(6, digit=True),
         random_string(6).upper(),
     ])
-    def test_deleteDB(self, db_name):
-        '''
+    def test_delete_db(self, db_name):
+        """
         @summary: Testing delete(DB) method of Database API
-        '''
+        """
         if len(db_name) >= 128 and (self.liteserv_platform != "ios" or self.liteserv_platform != "android"):
             pytest.skip("Test not supported on .net platforms or the db name is longer than or equal to 128 characters")
 
@@ -151,9 +151,9 @@ class TestDatabase(object):
         (random_string(6).upper(), random_string(6))
     ])
     def test_delete_doc(self, db_name, doc_id):
-        '''
+        """
         @summary: Testing delete method of Database API
-        '''
+        """
         if len(db_name) >= 128 and (self.liteserv_platform != "ios" or self.liteserv_platform != "android"):
             pytest.skip("Test not supported on .net platforms or the db name is longer than or equal to 128 characters")
 
@@ -170,7 +170,6 @@ class TestDatabase(object):
         assert self.doc_obj.getString(doc_res, "key") == "value"
 
         self.db_obj.delete(document=doc, database=db)
-        doc_res = self.db_obj.getDocument(db, doc_id)
         assert self.db_obj.getCount(db) == 0
         doc_res = self.db_obj.getDocument(db, doc_id)
         assert doc_res == -1
@@ -182,10 +181,10 @@ class TestDatabase(object):
         (random_string(6), random_string(8), 999),
         (random_string(6), random_string(8), 9999)
     ])
-    def test_getCount(self, num_of_docs, db_name, doc_id):
-        '''
+    def test_get_count(self, num_of_docs, db_name, doc_id):
+        """
         @summary: Testing getCount method of Database API
-        '''
+        """
         db = self.db_obj.create(db_name)
         for i in range(num_of_docs):
             doc = self.doc_obj.create(doc_id="{}_{}".format(doc_id, i))
@@ -205,9 +204,9 @@ class TestDatabase(object):
         random_string(6).upper(),
     ])
     def test_exists(self, db_name):
-        '''
+        """
         @summary: Testing exist method of Database API
-        '''
+        """
         if len(db_name) >= 128 and (self.liteserv_platform != "ios" or self.liteserv_platform != "android"):
             pytest.skip("Test not supported on .net platforms or the db name is longer than or equal to 128 characters")
 
@@ -234,10 +233,10 @@ class TestDatabase(object):
         (random_string(6).capitalize(), random_string(6)),
         (random_string(6).upper(), random_string(6))
     ])
-    def test_getDocument(self, db_name, doc_id):
-        '''
+    def test_get_document(self, db_name, doc_id):
+        """
         @summary: Testing getDocument method of Database API
-        '''
+        """
         if len(db_name) >= 128 and (self.liteserv_platform != "ios" or self.liteserv_platform != "android"):
             pytest.skip("Test not supported on .net platforms or the db name is longer than or equal to 128 characters")
 
@@ -259,10 +258,10 @@ class TestDatabase(object):
         random_string(6).capitalize(),
         random_string(6).upper(),
     ])
-    def test_getName(self, db_name):
-        '''
+    def test_get_name(self, db_name):
+        """
         @summary: Testing getName method of Database API
-        '''
+        """
         if len(db_name) >= 128 and (self.liteserv_platform != "ios" or self.liteserv_platform != "android"):
             pytest.skip("Test not supported on .net platforms or the db name is longer than or equal to 128 characters")
 
@@ -281,12 +280,13 @@ class TestDatabase(object):
         random_string(6).capitalize(),
         random_string(6).upper(),
     ])
-    def test_getPath(self, db_name):
-        '''
+    def test_get_path(self, db_name):
+        """
         @summary: Testing getPath method of Database API
-        '''
+        """
         if len(db_name) >= 128 and (self.liteserv_platform != "ios" or self.liteserv_platform != "android"):
-            pytest.skip("Test not supported on .net platforms  or the db name is longer than or equal to 128 characters")
+            pytest.skip("Test not supported on .net platforms  or the db name is longer than or equal"
+                        " to 128 characters")
 
         db = self.db_obj.create(db_name)
         assert self.db_obj.getPath(db)
@@ -304,9 +304,9 @@ class TestDatabase(object):
         (random_string(6).upper(), random_string(6).upper(), random_string(6))
     ])
     def test_purge(self, db1, db2, doc_id):
-        '''
+        """
         @summary: Testing purge method of Database API
-        '''
+        """
         doc_id_prefix = "bar"
         doc1 = self.doc_obj.create(doc_id=doc_id_prefix)
         doc2 = self.doc_obj.create(doc_id=doc_id_prefix)
@@ -330,12 +330,13 @@ class TestDatabase(object):
         (random_string(6).capitalize(), random_string(6)),
         (random_string(6).upper(), random_string(6))
     ])
-    def test_saveDocument(self, db_name, doc_id):
-        '''
+    def test_save_document(self, db_name, doc_id):
+        """
         @summary: Testing save method of Database API
-        '''
+        """
         if len(db_name) >= 128 and (self.liteserv_platform != "ios" or self.liteserv_platform != "android"):
-            pytest.skip("Test not supported on .net platforms  or the db name is longer than or equal to 128 characters")
+            pytest.skip("Test not supported on .net platforms  or the db name is longer than or equal"
+                        " to 128 characters")
 
         doc = self.doc_obj.create(doc_id)
         db = self.db_obj.create(db_name)
@@ -344,11 +345,11 @@ class TestDatabase(object):
         assert doc_id == str(self.doc_obj.getId(doc_res))
         assert self.db_obj.deleteDB(db) == -1
 
-    def test_getDocuments(self):
-        '''
+    def test_get_documents(self):
+        """
         @summary: Testing the bulk add and bulk get docs. This also
         test inbatch API of Database class.
-        '''
+        """
         doc_id_prefix = "bar"
         num_of_docs = 5
         db = self.db_obj.create("db_name")
@@ -390,4 +391,5 @@ class TestDatabase(object):
 
         cbl_docs = self.db_obj.getDocuments(database=db, ids=ids)
         for doc_id in cbl_docs:
-            assert cbl_docs[doc_id]["new_field"] == updated_body[doc_id]["new_field"], "Doc body doesn't match after update" 
+            assert cbl_docs[doc_id]["new_field"] == updated_body[doc_id]["new_field"],\
+                "Doc body doesn't match after update"

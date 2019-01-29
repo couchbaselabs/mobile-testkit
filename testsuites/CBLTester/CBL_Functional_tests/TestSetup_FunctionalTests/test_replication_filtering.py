@@ -1,3 +1,5 @@
+import time
+
 import pytest
 import random
 
@@ -39,6 +41,11 @@ def setup_teardown_test(params_from_base_test_setup):
 def test_replication_push_filtering(params_from_base_test_setup, num_of_docs):
     """
         @summary:
+        1. Create few docs at CBL.
+        2. Replicate using push and pull and verify that all docs are replicated.
+        3. Add new fields to docs and add boolean filter, which allow docs to replicate only if "new_field_1" is set to
+        true.
+        4. Verify SG has new fields added only when "new_field_1" is true
     """
     sg_db = "db"
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
@@ -60,6 +67,7 @@ def test_replication_push_filtering(params_from_base_test_setup, num_of_docs):
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
 
+    # 1. Creating docs in CBL app
     sg_client = MobileRestClient()
     sg_client.create_user(url=sg_admin_url, db=sg_db, name=username, password=password, channels=channels)
     cookie, session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username)
@@ -67,6 +75,7 @@ def test_replication_push_filtering(params_from_base_test_setup, num_of_docs):
     session_header = {"Cookie": sync_cookie}
     db.create_bulk_docs(num_of_docs, "cbl", db=cbl_db, channels=channels)
 
+    # 2. Replicating docs to SG
     # Configure replication with push/pull
     replicator = Replication(base_url)
     repl_config = replicator.configure(source_db=cbl_db,
@@ -87,6 +96,8 @@ def test_replication_push_filtering(params_from_base_test_setup, num_of_docs):
     cbl_doc_count = db.getCount(cbl_db)
     assert len(sg_docs) == cbl_doc_count, "Expected number of docs does not exist in sync-gateway after replication"
 
+    # 3. Modify docs in CBL so that we can do push replication. The replication will have filter for newly added field
+    # Docs with new_field_1 value to true will only be replicated, others will be rejected by filter method
     doc_ids = db.getDocIds(cbl_db)
     cbl_db_docs = db.getDocuments(cbl_db, doc_ids)
     updates_in_doc = {}
@@ -96,7 +107,7 @@ def test_replication_push_filtering(params_from_base_test_setup, num_of_docs):
             "new_field_1": doc_body["new_field_1"],
             "new_field_2": doc_body["new_field_2"],
             "new_field_3": doc_body["new_field_3"],
-            }
+        }
         db.updateDocument(database=cbl_db, data=doc_body, doc_id=doc_id)
     repl_config = replicator.configure(source_db=cbl_db,
                                        target_url=sg_blip_url,
@@ -113,6 +124,7 @@ def test_replication_push_filtering(params_from_base_test_setup, num_of_docs):
     assert total == completed, "total is not equal to completed"
     replicator.stop(repl)
 
+    # 4. Verify SG has new fields added only when "new_field_1" is true
     sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
     doc_ids = db.getDocIds(cbl_db)
     cbl_db_docs = db.getDocuments(cbl_db, doc_ids)
@@ -145,6 +157,11 @@ def test_replication_push_filtering(params_from_base_test_setup, num_of_docs):
 def test_replication_pull_filtering(params_from_base_test_setup, num_of_docs):
     """
         @summary:
+        1. Create few docs at CBL.
+        2. Replicate using push and pull and verify that all docs are replicated.
+        3. Add new fields to docs and add boolean filter, which allow docs to replicate only if "new_field_1" is set to
+        true.
+        4. Verify SG has new fields added only when "new_field_1" is true
     """
     sg_db = "db"
     sg_url = params_from_base_test_setup["sg_url"]
@@ -167,6 +184,7 @@ def test_replication_pull_filtering(params_from_base_test_setup, num_of_docs):
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
 
+    # 1. Creating docs in CBL app
     sg_client = MobileRestClient()
     sg_client.create_user(url=sg_admin_url, db=sg_db, name=username, password=password, channels=channels)
     cookie, session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username)
@@ -175,6 +193,7 @@ def test_replication_pull_filtering(params_from_base_test_setup, num_of_docs):
     auth_session = cookie, session
     db.create_bulk_docs(num_of_docs, "cbl", db=cbl_db, channels=channels)
 
+    # 2. Replicating docs to SG
     # Configure replication with push/pull
     replicator = Replication(base_url)
     repl_config = replicator.configure(source_db=cbl_db,
@@ -195,6 +214,8 @@ def test_replication_pull_filtering(params_from_base_test_setup, num_of_docs):
     cbl_doc_count = db.getCount(cbl_db)
     assert len(sg_docs) == cbl_doc_count, "Expected number of docs does not exist in sync-gateway after replication"
 
+    # 3. Modify docs in SG so that we can do pull replication. The replication will have filter for newly added field
+    # Docs with new_field_1 value to true will only be replicated, others will be rejected by filter method
     for item in sg_docs:
         sg_doc = item["doc"]
         sg_client.update_doc(url=sg_url, db=sg_db, doc_id=sg_doc["_id"],
@@ -212,6 +233,7 @@ def test_replication_pull_filtering(params_from_base_test_setup, num_of_docs):
     replicator.wait_until_replicator_idle(repl)
     replicator.stop(repl)
 
+    # 4. Verify CBL has new fields added only when "new_field_1" is true
     sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
     doc_ids = db.getDocIds(cbl_db)
     cbl_db_docs = db.getDocuments(cbl_db, doc_ids)
@@ -241,6 +263,11 @@ def test_replication_pull_filtering(params_from_base_test_setup, num_of_docs):
 def test_replication_filter_deleted_document(params_from_base_test_setup, num_of_docs):
     """
         @summary:
+        1. Create few docs at CBL.
+        2. Replicate using push and pull and verify that all docs are replicated.
+        3. Delete few docs in both SG and CBL and replicate using delete callback for both push and pull filter.
+        4. Verify that docs deleted in SG are still available in CBL and vice versa, as deleted filter would have
+        rejected those changes
     """
     sg_db = "db"
     sg_url = params_from_base_test_setup["sg_url"]
@@ -264,6 +291,7 @@ def test_replication_filter_deleted_document(params_from_base_test_setup, num_of
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
 
+    # 1. Creating docs in CBL app
     sg_client = MobileRestClient()
     sg_client.create_user(url=sg_admin_url, db=sg_db, name=username, password=password, channels=channels)
     cookie, session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username)
@@ -272,6 +300,7 @@ def test_replication_filter_deleted_document(params_from_base_test_setup, num_of
     auth_session = cookie, session
     db.create_bulk_docs(num_of_docs, "cbl", db=cbl_db, channels=channels)
 
+    # 2. Replicating docs to SG
     # Configure replication with push/pull
     replicator = Replication(base_url)
     repl_config = replicator.configure(source_db=cbl_db,
@@ -294,6 +323,7 @@ def test_replication_filter_deleted_document(params_from_base_test_setup, num_of
 
     doc_ids = db.getDocIds(cbl_db)
 
+    # 3. Delete few docs in both SG and CBL and replicate using delete callback for both push and pull filter.
     docs_to_delete = random.sample(doc_ids, num_of_docs_to_delete)
     sg_docs_to_delete = [sg_doc["doc"] for sg_doc in sg_docs if sg_doc["id"] in docs_to_delete[:len(docs_to_delete) / 2]]
     sg_docs_to_delete_ids = [doc["_id"] for doc in sg_docs_to_delete]
@@ -314,6 +344,8 @@ def test_replication_filter_deleted_document(params_from_base_test_setup, num_of
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
 
+    # 4. Verify that docs deleted in SG are still available in CBL and vice versa, as deleted filter would have
+    # rejected those changes
     cbl_doc_ids = db.getDocIds(cbl_db)
     sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
     sg_doc_ids = [sg_doc["id"] for sg_doc in sg_docs]
@@ -334,6 +366,11 @@ def test_replication_filter_deleted_document(params_from_base_test_setup, num_of
 def test_replication_filter_access_revoke_document(params_from_base_test_setup, num_of_docs):
     """
         @summary:
+        1. Create few docs at CBL.
+        2. Replicate using push and pull and verify that all docs are replicated.
+        3. Set channels for few docs to [] and replicate using access revoke callback
+        4. Verify that docs with channel [] in SG are still available in CBL with their original channel value, as
+        access revoke filter would have rejected those changes
     """
     sg_db = "db"
     sg_url = params_from_base_test_setup["sg_url"]
@@ -357,6 +394,7 @@ def test_replication_filter_access_revoke_document(params_from_base_test_setup, 
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
 
+    # 1. Create few docs at CBL.
     sg_client = MobileRestClient()
     sg_client.create_user(url=sg_admin_url, db=sg_db, name=username, password=password, channels=channels)
     cookie, session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username)
@@ -365,6 +403,7 @@ def test_replication_filter_access_revoke_document(params_from_base_test_setup, 
     auth_session = cookie, session
     db.create_bulk_docs(num_of_docs, "cbl", db=cbl_db, channels=channels)
 
+    # 2. Replicating docs to SG
     # Configure replication with push/pull
     replicator = Replication(base_url)
     repl_config = replicator.configure(source_db=cbl_db,
@@ -385,6 +424,7 @@ def test_replication_filter_access_revoke_document(params_from_base_test_setup, 
     cbl_doc_count = db.getCount(cbl_db)
     assert len(sg_docs) == cbl_doc_count, "Expected number of docs does not exist in sync-gateway after replication"
 
+    # 3. Set channels for few docs to [] and replicate using access revoke callback
     doc_ids = db.getDocIds(cbl_db)
     docs_to_update = random.sample(doc_ids, num_of_docs_to_delete)
     for doc_id in doc_ids:
@@ -409,6 +449,8 @@ def test_replication_filter_access_revoke_document(params_from_base_test_setup, 
     cbl_doc_ids = db.getDocIds(cbl_db)
     cbl_docs = db.getDocuments(database=cbl_db, ids=cbl_doc_ids)
 
+    # 4. Verify that docs with channel [] in SG are still available in CBL with their original channel value, as
+    # access revoke filter would have rejected those changes
     for doc_id in cbl_doc_ids:
         if doc_id in docs_to_update:
             assert cbl_docs[doc_id]["channels"] == channels, "Replication filter was not able to filtered access revoke"
@@ -417,6 +459,130 @@ def test_replication_filter_access_revoke_document(params_from_base_test_setup, 
         else:
             assert "new_field_1" in cbl_docs[doc_id] and "new_field_2" in cbl_docs[doc_id] and\
                    "new_field_3" in cbl_docs[doc_id]
+
+
+@pytest.mark.sanity
+@pytest.mark.listener
+@pytest.mark.replication
+@pytest.mark.parametrize("num_of_docs", [
+    10,
+    100,
+    1000
+])
+def test_filter_retrieval_with_replication_restart(params_from_base_test_setup, num_of_docs):
+    """
+        @summary:
+        1. Create few docs at CBL and SG.
+        2. Replicate using push and pull and verify that all docs are replicated.
+        3. Update docs to have new fields at both SG and CBL and restart replication with the old config, so that it
+        still has same filter callbacks.
+        4. Verify that the filter is still applicable and only allowing replication for "new_field_1" true values
+    """
+    sg_db = "db"
+    sg_url = params_from_base_test_setup["sg_url"]
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_blip_url = params_from_base_test_setup["target_url"]
+    base_url = params_from_base_test_setup["base_url"]
+    sg_config = params_from_base_test_setup["sg_config"]
+    db = params_from_base_test_setup["db"]
+    cbl_db = params_from_base_test_setup["source_db"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+
+    if sync_gateway_version < "2.5.0":
+        pytest.skip('This test cannnot run with sg version below 2.5')
+    channels = ["ABC"]
+    username = "autotest"
+    password = "password"
+
+    # Reset cluster to ensure no data in system
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
+
+    # 1. Create few docs at CBL and SG.
+    sg_client = MobileRestClient()
+    sg_client.create_user(url=sg_admin_url, db=sg_db, name=username, password=password, channels=channels)
+    cookie, session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username)
+    sync_cookie = "{}={}".format(cookie, session)
+    session_header = {"Cookie": sync_cookie}
+    auth_session = cookie, session
+    db.create_bulk_docs(num_of_docs, "cbl_docs", db=cbl_db, channels=channels)
+    sg_client.add_docs(url=sg_url, db=sg_db, number=num_of_docs, id_prefix="sg_docs",
+                       channels=channels, auth=auth_session)
+
+    # 2. Replicate using push and pull with push and pull filter to boolean
+    # Configure replication with push/pull
+    replicator = Replication(base_url)
+    repl_config = replicator.configure(source_db=cbl_db,
+                                       target_url=sg_blip_url,
+                                       continuous=False,
+                                       push_filter=True,
+                                       pull_filter=True,
+                                       filter_callback_func="boolean",
+                                       headers=session_header)
+    repl = replicator.create(repl_config)
+    replicator.start(repl)
+    replicator.wait_until_replicator_idle(repl)
+    total = replicator.getTotal(repl)
+    completed = replicator.getCompleted(repl)
+    assert total == completed, "total is not equal to completed"
+    replicator.stop(repl)
+
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
+
+    # Verify that all docs are replicated.
+    # Verify database doc counts
+    cbl_doc_count = db.getCount(cbl_db)
+    assert len(sg_docs) == 2 * num_of_docs, "Expected number of docs does not exist in sync-gateway after replication"
+    assert cbl_doc_count == 2 * num_of_docs, "Expected number of docs does not exist in CBL app after replication"
+
+    # 3. Update docs to have new fields at both SG and CBL and restart replication with the old config, so that it
+    # still has same filter callbacks.
+    doc_ids = db.getDocIds(cbl_db)
+    docs = db.getDocuments(cbl_db, doc_ids)
+    updates_in_doc = {}
+    for doc_id, doc_body in docs.items():
+        if "cbl_doc" in doc_id:
+            doc_body = add_new_fields_to_doc(doc_body)
+            db.updateDocument(database=cbl_db, data=doc_body, doc_id=doc_id)
+        else:
+            sg_client.update_doc(url=sg_url, db=sg_db, doc_id=doc_id,
+                                 auth=auth_session, property_updater=add_new_fields_to_doc)
+            doc_body = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=auth_session)
+        updates_in_doc[doc_id] = {
+            "new_field_1": doc_body["new_field_1"],
+            "new_field_2": doc_body["new_field_2"],
+            "new_field_3": doc_body["new_field_3"],
+        }
+
+    replicator.start(repl)
+    replicator.wait_until_replicator_idle(repl)
+    time.sleep(2)
+    replicator.stop(repl)
+
+    # 4. Verifying that the filter is still applicable and only allowing replication for "new_field_1" true values
+    doc_ids = db.getDocIds(cbl_db)
+    cbl_docs = db.getDocuments(cbl_db, doc_ids)
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
+
+    # checking only those SG docs got pulled which has "new_field_1" set to true
+    for doc_id in cbl_docs:
+        if "sg_doc" in doc_id:
+            if updates_in_doc[doc_id]["new_field_1"] is False:
+                assert "new_field_1" not in cbl_docs[doc_id] and "new_field_2" not in cbl_docs[doc_id] and\
+                       "new_field_3" not in cbl_docs[doc_id]
+            else:
+                assert cbl_docs[doc_id]["new_field_1"] is True
+
+    # checking only those CB docs got pushed which has "new_field_1" set to true
+    for sg_doc in sg_docs:
+        doc_id = sg_doc["id"]
+        if "cbl_docs" in doc_id:
+            doc_body = sg_doc["doc"]
+            if updates_in_doc[doc_id]["new_field_1"] is False:
+                assert "new_field_1" not in doc_body and "new_field_2" not in doc_body and "new_field_3" not in doc_body
+            else:
+                assert doc_body["new_field_1"] is True
 
 
 def add_new_fields_to_doc(doc_body):
