@@ -3215,6 +3215,260 @@ def test_replication_push_replication_guest_enabled(params_from_base_test_setup,
     replicator.stop(repl)
 
 
+@pytest.mark.listener
+@pytest.mark.replication
+def test_doc_removal_from_channel(params_from_base_test_setup):
+    """
+        @summary:
+        1. Create 2 docs in CBL with channel A, B
+        2. Create user in SGW with channel A, B.
+        3. push_pull replicate to SGW
+        4. remove doc A from channel A
+        5. Remove doc B from channel A , B
+        6. continue push_pull replication
+        7. Verify user can only access doc A, but not doc B
+
+    """
+    sg_db = "db"
+    sg_url = params_from_base_test_setup["sg_url"]
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    sg_blip_url = params_from_base_test_setup["target_url"]
+    base_url = params_from_base_test_setup["base_url"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_config = params_from_base_test_setup["sg_config"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_config = params_from_base_test_setup["sg_config"]
+    db = params_from_base_test_setup["db"]
+    cbl_db = params_from_base_test_setup["source_db"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+
+    username = "autotest"
+    password = "password"
+    documentObj = Document(base_url)
+
+    if sync_gateway_version < "2.5.0":
+        pytest.skip('This test cannnot run with sg version below 2.5.0')
+
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
+
+    channels = ["ABC", "DEF"]
+
+    sg_client = MobileRestClient()
+    authenticator = Authenticator(base_url)
+    replicator = Replication(base_url)
+
+    # 1. Create 2 docs in CBL with channel ABC, DEF
+    cbl_ids = db.create_bulk_docs(2, "cbl", db=cbl_db, channels=channels)
+
+    # 2. Create users in SGW with channel ABC, DEF
+    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channels)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+    session = cookie, session_id
+
+    # 3. push_pull replicate to SGW
+    replicator = Replication(base_url)
+    authenticator = Authenticator(base_url)
+    replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
+    repl = replicator.configure_and_replicate(source_db=cbl_db,
+                                              target_url=sg_blip_url,
+                                              continuous=True,
+                                              replicator_authenticator=replicator_authenticator)
+    # replicator.stop(repl)
+
+    # 4. remove doc A from channel A
+    doc_obj_A = db.getDocument(cbl_db, cbl_ids[0])
+    doc_A_mut = documentObj.toMutable(doc_obj_A)
+    doc_body_A = documentObj.toMap(doc_A_mut)
+    doc_body_A["channels"] = ["DEF"]
+    db.updateDocument(database=cbl_db, data=doc_body_A, doc_id=cbl_ids[0])
+
+    # 5. Remove doc B from channel A , B
+    doc_obj_B = db.getDocument(cbl_db, cbl_ids[1])
+    doc_B_mut = documentObj.toMutable(doc_obj_B)
+    doc_body_B = documentObj.toMap(doc_B_mut)
+    doc_body_B["channels"] = []
+    db.updateDocument(database=cbl_db, data=doc_body_B, doc_id=cbl_ids[1])
+
+    # 6. continue push_pull replication
+    replicator.wait_until_replicator_idle(repl)
+    replicator.stop(repl)
+
+    # 7. Verify user can only access doc A, but not doc B
+    sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, include_docs=True, auth=session)["rows"]
+    assert len(sg_docs) == 1, "did not remove channels appropriately"
+    sg_doc_ids = [doc['id'] for doc in sg_docs]
+    assert cbl_ids[0] in sg_doc_ids, "doc A does not exist for the user"
+    assert cbl_ids[1] not in sg_doc_ids, "doc B exist for the user"
+
+
+@pytest.mark.listener
+@pytest.mark.replication
+def test_doc_removal_with_multipleChannels(params_from_base_test_setup, setup_customized_teardown_test):
+    """
+        @summary:
+        1. Create users in SGW with multiple channels
+            user A -> channelA,channelB, channel C;
+            userB -> channelB,
+            userC-> channelC
+        2. create docs in SGW
+            doc a with channel A, channelB ;
+            docb with channel B ,
+            docc with ChannelA, channelB, channelC
+        3. Verify User A can access docA and docC.
+            docB by UserB, UserA
+            docC by user A, user C
+        4. Remove the channel c from all the docs.
+        5. Verify userA can access only docA and doc B, but not docC
+            UserB can access docB
+            UserC cannot access docC
+    """
+
+    sg_db = "db"
+    sg_url = params_from_base_test_setup["sg_url"]
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    sg_blip_url = params_from_base_test_setup["target_url"]
+    base_url = params_from_base_test_setup["base_url"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_config = params_from_base_test_setup["sg_config"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_config = params_from_base_test_setup["sg_config"]
+    db = params_from_base_test_setup["db"]
+    cbl_db1 = setup_customized_teardown_test["cbl_db1"]
+    cbl_db2 = setup_customized_teardown_test["cbl_db2"]
+    cbl_db3 = setup_customized_teardown_test["cbl_db3"]
+
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+
+    username_A = "autotestA"
+    username_B = "autotestB"
+    username_C = "autotestC"
+    password = "password"
+    num_of_docs = 1
+
+    if sync_gateway_version < "2.5.0":
+        pytest.skip('This test cannnot run with sg version below 2.5.0')
+
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
+
+    channel_A = ["ABC", "DEF", "XYZ"]
+    channel_B = ["DEF"]
+    channel_C = ["XYZ"]
+
+    doc_channel_1 = ["ABC", "DEF"]
+    doc_channel_2 = ["DEF"]
+
+    sg_client = MobileRestClient()
+    authenticator = Authenticator(base_url)
+    replicator = Replication(base_url)
+
+    # 1. Create users in SGW with multiple channels
+    sg_client.create_user(sg_admin_url, sg_db, username_A, password=password, channels=channel_A)
+    cookie_A, session_id_A = sg_client.create_session(sg_admin_url, sg_db, username_A)
+    session_A = cookie_A, session_id_A
+
+    sg_client.create_user(sg_admin_url, sg_db, username_B, password=password, channels=channel_B)
+    cookie_B, session_id_B = sg_client.create_session(sg_admin_url, sg_db, username_B)
+    session_B = cookie_B, session_id_B
+
+    sg_client.create_user(sg_admin_url, sg_db, username_C, password=password, channels=channel_C)
+    cookie_C, session_id_C = sg_client.create_session(sg_admin_url, sg_db, username_C)
+    session_C = cookie_C, session_id_C
+
+    """ 2. create docs in SGW
+         doc a with channel A, channelB ;
+         docb with channel B ,
+         docc with ChannelA, channelB, channelC """
+    sg_docs = document.create_docs(doc_id_prefix='sg_docs-A', number=num_of_docs, channels=doc_channel_1)
+    sg_docs_A = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=session_A)
+
+    sg_docs = document.create_docs(doc_id_prefix='sg_docs-B', number=num_of_docs, channels=doc_channel_2)
+    sg_docs_B = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=session_B)
+
+    sg_docs = document.create_docs(doc_id_prefix='sg_docs-C', number=num_of_docs, channels=channel_C)
+    sg_docs_C = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=session_C)
+
+    """ 3. Verify User A(cbl_db1) can access docA and docC.
+            UserB(cbl_db2), UserA(cbl_db1) can access docB
+            user A(cbl_db1), user C(cbl_db3) can access docC  """
+
+    # 3. Pull replication from SGW
+    replicator = Replication(base_url)
+    authenticator = Authenticator(base_url)
+    replicator_authenticator_A = authenticator.authentication(session_id_A, cookie_A, authentication_type="session")
+    repl1 = replicator.configure_and_replicate(source_db=cbl_db1,
+                                               target_url=sg_blip_url,
+                                               continuous=True,
+                                               replicator_authenticator=replicator_authenticator_A,
+                                               replication_type="pull")
+
+    replicator_authenticator_B = authenticator.authentication(session_id_B, cookie_B, authentication_type="session")
+    repl2 = replicator.configure_and_replicate(source_db=cbl_db2,
+                                               target_url=sg_blip_url,
+                                               continuous=True,
+                                               replicator_authenticator=replicator_authenticator_B,
+                                               replication_type="pull")
+
+    replicator_authenticator_C = authenticator.authentication(session_id_C, cookie_C, authentication_type="session")
+    repl3 = replicator.configure_and_replicate(source_db=cbl_db3,
+                                               target_url=sg_blip_url,
+                                               continuous=True,
+                                               replicator_authenticator=replicator_authenticator_C,
+                                               replication_type="pull")
+
+    doc_ids_A = db.getDocIds(cbl_db1)
+    doc_ids_B = db.getDocIds(cbl_db2)
+    doc_ids_C = db.getDocIds(cbl_db3)
+
+    for doc in sg_docs_A:
+        assert doc["id"] in doc_ids_A, "docs ids of userA does not exist in cbl db1"
+
+    for doc in sg_docs_B:
+        assert doc["id"] in doc_ids_A, "docs ids of userA does not exist in cbl db1"
+        assert doc["id"] in doc_ids_B, "docs ids of userB does not exist in cbl db2"
+
+    for doc in sg_docs_C:
+        assert doc["id"] in doc_ids_A, "docs ids of userA does not exist in cbl db1"
+        assert doc["id"] in doc_ids_C, "docs ids of userB does not exist in cbl db2"
+
+    # 4. Remove the channel c from all the docs
+    for sg_doc in sg_docs_A:
+        sg_client.update_doc(url=sg_url, db=sg_db, doc_id=sg_doc["id"],
+                             number_updates=1, auth=session_A,
+                             channels=["ABC", "DEF"])
+
+    for sg_doc in sg_docs_C:
+        sg_client.update_doc(url=sg_url, db=sg_db, doc_id=sg_doc["id"],
+                             number_updates=1, auth=session_C,
+                             channels=[])
+
+    replicator.wait_until_replicator_idle(repl1)
+    replicator.wait_until_replicator_idle(repl2)
+    replicator.wait_until_replicator_idle(repl3)
+    replicator.stop(repl1)
+    replicator.stop(repl2)
+    replicator.stop(repl3)
+
+    """5. Verify userA can access only docA and doc B, but not docC
+            UserB can access docB
+            UserC cannot access docC """
+    doc_ids_A = db.getDocIds(cbl_db1)
+    doc_ids_B = db.getDocIds(cbl_db2)
+    doc_ids_C = db.getDocIds(cbl_db3)
+
+    for doc in sg_docs_A:
+        assert doc["id"] in doc_ids_A, "docs ids of userA does not exist in cbl db1"
+
+    for doc in sg_docs_B:
+        assert doc["id"] in doc_ids_A, "docs ids of userA does not exist in cbl db1"
+        assert doc["id"] in doc_ids_B, "docs ids of userB does not exist in cbl db2"
+
+    for doc in sg_docs_C:
+        assert doc["id"] not in doc_ids_A, "docs ids of userA does not exist in cbl db1"
+        assert doc["id"] not in doc_ids_C, "docs ids of userB does not exist in cbl db2"
+
+
 def update_and_resetCheckPoint(db, cbl_db, replicator, repl, replication_type, repl_config, num_of_updates):
     # update docs in CBL
     db.update_bulk_docs(cbl_db)
