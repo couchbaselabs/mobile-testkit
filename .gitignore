@@ -10,6 +10,7 @@
 .pydevproject
 .project
 
+*.csproj
 .idea
 *.iml
 *.pyc

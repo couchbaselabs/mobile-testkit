@@ -3,30 +3,9 @@ import random
 
 
 from keywords.MobileRestClient import MobileRestClient
-from keywords.utils import log_info
 from keywords.utils import get_event_changes
-from CBLClient.Database import Database
 from CBLClient.Replication import Replication
 from libraries.testkit import cluster
-
-
-@pytest.fixture(scope="function")
-def setup_teardown_test(params_from_base_test_setup):
-    cbl_db_name = "cbl_db"
-    base_url = params_from_base_test_setup["base_url"]
-    db = Database(base_url)
-    db_config = db.configure()
-    log_info("Creating db")
-    cbl_db = db.create(cbl_db_name, db_config)
-
-    yield {
-        "db": db,
-        "cbl_db": cbl_db,
-        "cbl_db_name": cbl_db_name
-    }
-
-    log_info("Deleting the db")
-    db.deleteDB(cbl_db)
 
 
 @pytest.mark.sanity
@@ -129,7 +108,6 @@ def test_replication_eventing_status(params_from_base_test_setup, num_of_docs):
     assert len(error_docs) == 0, "Error found in replication events {}".format(error_docs)
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("num_of_docs", [
@@ -141,7 +119,7 @@ def test_push_replication_error_event(params_from_base_test_setup, num_of_docs):
     @summary:
     1. Create docs in CBL and replicate to SG using push one-shot replication
     2. Add update to SG and CBL to create conflict
-    3. start push/pull one-shot replication and start replication event listener
+    3. start push one-shot replication and start replication event listener
     4. Check the error is thrown in replication event changes
     """
     sg_db = "db"
@@ -304,12 +282,11 @@ def test_push_replication_error_event(params_from_base_test_setup, num_of_docs):
 #     assert num_of_docs == len(event_dict)
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("num_of_docs", [
     10,
-    100,
+    # 100,
 ])
 def test_replication_access_revoke_event(params_from_base_test_setup, num_of_docs):
     """
@@ -376,7 +353,7 @@ def test_replication_access_revoke_event(params_from_base_test_setup, num_of_doc
     for sg_doc in docs_to_modify:
         sg_client.update_doc(url=sg_url, db=sg_db, doc_id=sg_doc["id"],
                              number_updates=1, auth=auth_session,
-                             channels=[])
+                             channels=["unknown"])
 
     # 4 Replicating access revoked
     repl_access_revoke_config = replicator.configure(source_db=cbl_db,
@@ -408,7 +385,6 @@ def test_replication_access_revoke_event(params_from_base_test_setup, num_of_doc
         assert sg_doc["id"] not in doc_ids, "channel access removal didn't purge the docs from cbl db"
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("num_of_docs", [
@@ -420,8 +396,8 @@ def test_replication_delete_event(params_from_base_test_setup, num_of_docs):
     @summary:
     1. Creating Docs in CBL
     2. Starting one-shot Push Replication and waiting for it finish
-    3. Changing channel of some docs, so that we get access revoked event
-    4. Replicating access revoked and capturing events through listener
+    3. Delete some docs on both SG and CBL and modify rest of docs
+    4. Replicating with delete filter. Filter will prevent deleted document to replicate on other end
     5. Verifying the access revoke in event captures
     """
     sg_db = "db"

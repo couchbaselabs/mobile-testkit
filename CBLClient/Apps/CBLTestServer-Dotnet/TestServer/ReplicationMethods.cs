@@ -144,7 +144,7 @@ namespace Couchbase.Lite.Testing
         {
             With<Replicator>(postBody, "replicator", rep =>
             {
-                var listener = new DocumentReplicationListenerProxy();
+                var listener = new EventReplicationListenerProxy();
                 rep.AddDocumentReplicationListener(listener.HandleChange);
                 response.WriteBody(MemoryMap.Store(listener));
             });
@@ -200,7 +200,7 @@ namespace Couchbase.Lite.Testing
         {
             With<Replicator>(postBody, "replicator", rep =>
             {
-                var listener = new DocumentReplicationListenerProxy();
+                var listener = new EventReplicationListenerProxy();
                 ListenerToken token = rep.AddDocumentReplicationListener(listener.HandleChange);
                 listener.SetToken(token);
                 response.WriteBody(MemoryMap.Store(listener));
@@ -213,7 +213,7 @@ namespace Couchbase.Lite.Testing
         {
             With<Replicator>(postBody, "replicator", rep =>
             {
-                DocumentReplicationListenerProxy listener = MemoryMap.Get<DocumentReplicationListenerProxy>(postBody["changeListener"].ToString());
+                EventReplicationListenerProxy listener = MemoryMap.Get<EventReplicationListenerProxy>(postBody["changeListener"].ToString());
                 ListenerToken token = listener.GetToken();
                 rep.RemoveChangeListener(token);
                 response.WriteEmptyBody();
@@ -224,7 +224,7 @@ namespace Couchbase.Lite.Testing
             [NotNull] IReadOnlyDictionary<string, object> postBody,
             [NotNull] HttpListenerResponse response)
         {
-            With<DocumentReplicationListenerProxy>(postBody, "changeListener", changeListener =>
+            With<EventReplicationListenerProxy>(postBody, "changeListener", changeListener =>
             {
                 response.WriteBody(changeListener.Changes.Count);
             });
@@ -234,7 +234,7 @@ namespace Couchbase.Lite.Testing
             [NotNull] IReadOnlyDictionary<string, object> postBody,
             [NotNull] HttpListenerResponse response)
         {
-            With<DocumentReplicationListenerProxy>(postBody, "changeListener", changeListener =>
+            With<EventReplicationListenerProxy>(postBody, "changeListener", changeListener =>
             {
                 List<String> event_list = new List<String>();
                 foreach (DocumentReplicationEventArgs change in changeListener.Changes)
@@ -297,7 +297,7 @@ namespace Couchbase.Lite.Testing
         #endregion
     }
 
-    internal sealed class DocumentReplicationListenerProxy
+    internal sealed class EventReplicationListenerProxy
     {
         #region Variables
 

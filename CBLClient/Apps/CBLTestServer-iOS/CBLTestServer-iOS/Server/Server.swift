@@ -71,6 +71,7 @@ public class Server {
         databaseConfigurationRequestHandler = DatabaseConfigurationRequestHandler()
         peerToPeerRequestHandler = PeerToPeerRequestHandler()
         server = GCDWebServer()
+        Database.log.console.level = LogLevel.debug
         server.addDefaultHandler(forMethod: "POST", request: GCDWebServerDataRequest.self) {
             (request) -> GCDWebServerResponse? in
             

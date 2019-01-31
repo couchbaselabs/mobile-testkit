@@ -1,0 +1,7 @@
+System.Runtime
+TestServer
+Couchbase.Lite
+Couchbase.Lite.Support.Android
+JetBrains.Annotations
+Newtonsoft.Json
+SimpleInjector
