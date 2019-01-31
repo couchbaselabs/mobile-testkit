@@ -379,10 +379,10 @@ def test_replication_access_revoke_event(params_from_base_test_setup, num_of_doc
             event_dict[doc_id]["flags"] == "AccessRemoved", \
             'Access Revoked flag is not tagged for document. Flag value: {}'.format(event_dict[doc_id]["flags"])
 
-    # Verifying if the docs, for which access has be revoked, are purged
+    # Verifying if the docs, for which access has been revoked, are purged
     doc_ids = db.getDocIds(cbl_db)
     for sg_doc in docs_to_modify:
-        assert sg_doc["id"] not in doc_ids, "channel access removal didn't purge the docs from cbl db"
+        assert sg_doc["id"] not in doc_ids, "Revoked access to channel didn't purge the docs from cbl db"
 
 
 @pytest.mark.listener
