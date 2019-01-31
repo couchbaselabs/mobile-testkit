@@ -106,7 +106,6 @@ def test_peer_to_peer_replication_eventing_valid_values(params_from_base_test_se
     assert len(error_docs) == 0, "Error found in replication events {}".format(error_docs)
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.parametrize("num_of_docs, endpoint_type", [
     (10, "URLEndPoint"),
@@ -192,7 +191,6 @@ def test_peer_to_peer_push_replication_error_event(params_from_base_test_setup, 
                 "Conflict error didn't stop replication of docs properly.\n {}".format(doc)
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.parametrize("num_of_docs, endpoint_type", [
     (10, "URLEndPoint"),
