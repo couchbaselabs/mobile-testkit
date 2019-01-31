@@ -240,3 +240,10 @@ def clear_resources_pngs():
                 os.unlink(file_path)
         except Exception as e:
             print(e)
+
+
+def add_new_fields_to_doc(doc_body):
+    doc_body["new_field_1"] = random.choice([True, False])
+    doc_body["new_field_2"] = random_string(length=60)
+    doc_body["new_field_3"] = random_string(length=90)
+    return doc_body
