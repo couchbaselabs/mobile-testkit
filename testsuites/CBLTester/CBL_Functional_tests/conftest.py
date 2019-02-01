@@ -409,7 +409,8 @@ def params_from_base_suite_setup(request):
         "sg_config": sg_config,
         "testserver": testserver,
         "device_enabled": device_enabled,
-        "flush_memory_per_test": flush_memory_per_test
+        "flush_memory_per_test": flush_memory_per_test,
+        "delta_sync_enabled": delta_sync_enabled
     }
 
     if create_db_per_suite:
@@ -456,6 +457,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     device_enabled = params_from_base_suite_setup["device_enabled"]
     enable_sample_bucket = params_from_base_suite_setup["enable_sample_bucket"]
     liteserv_version = params_from_base_suite_setup["liteserv_version"]
+    delta_sync_enabled = params_from_base_suite_setup["delta_sync_enabled"]
+
     source_db = None
     cbl_db = None
     test_name_cp = test_name.replace("/", "-")
@@ -523,7 +526,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "db_config": db_config,
         "enable_sample_bucket": enable_sample_bucket,
         "log_filename": log_filename,
-        "liteserv_version": liteserv_version
+        "liteserv_version": liteserv_version,
+        "delta_sync_enabled": delta_sync_enabled
     }
 
     log_info("Tearing down test")
