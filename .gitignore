@@ -10,6 +10,8 @@
 .pydevproject
 .project
 
+*.xcscheme
+*..pbxproj
 *.csproj
 .idea
 *.iml
