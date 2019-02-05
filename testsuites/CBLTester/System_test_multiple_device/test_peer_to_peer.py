@@ -735,26 +735,6 @@ def test_peer_to_peer_replication_with_databaseEncryption(params_from_base_test_
     peerToPeer_server.server_stop(replicatorTcpListener1)
 
 
-@pytest.fixture(scope="function")
-def server_setup(params_from_base_test_setup):
-    base_url_list = params_from_base_test_setup["base_url_list"]
-    cbl_db_list = params_from_base_test_setup["cbl_db_list"]
-    base_url_server = base_url_list[0]
-    peerToPeer_server = PeerToPeer(base_url_server)
-    cbl_db_server = cbl_db_list[0]
-    replicatorTcpListener = peerToPeer_server.server_start(cbl_db_server)
-    log_info("server starting .....")
-    yield{
-        "replicatorTcpListener": replicatorTcpListener,
-        "peerToPeer_server": peerToPeer_server,
-        "base_url_list": base_url_list,
-        "base_url_server": base_url_server,
-        "cbl_db_server": cbl_db_server,
-        "cbl_db_list": cbl_db_list
-    }
-    peerToPeer_server.server_stop(replicatorTcpListener)
-
-
 @pytest.mark.listener
 @pytest.mark.parametrize("delete_source, attachments, number_of_updates, endPointType", [
     ('cbl1', True, 1, "MessageEndPoint"),

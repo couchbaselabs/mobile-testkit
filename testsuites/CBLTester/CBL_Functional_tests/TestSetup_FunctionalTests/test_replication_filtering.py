@@ -4,7 +4,7 @@ import pytest
 import random
 
 from keywords.MobileRestClient import MobileRestClient
-from keywords.utils import random_string
+from keywords.utils import add_new_fields_to_doc
 from keywords.utils import log_info
 from CBLClient.Database import Database
 from CBLClient.Replication import Replication
@@ -282,7 +282,7 @@ def test_replication_filter_deleted_document(params_from_base_test_setup, num_of
     num_of_docs_to_delete = (num_of_docs * 2) / 10
 
     if sync_gateway_version < "2.5.0":
-        pytest.skip('This test cannnot run with sg version below 2.5')
+        pytest.skip('This test cannot run with sg version below 2.5')
     channels = ["ABC"]
     username = "autotest"
     password = "password"
@@ -583,10 +583,3 @@ def test_filter_retrieval_with_replication_restart(params_from_base_test_setup, 
                 assert "new_field_1" not in doc_body and "new_field_2" not in doc_body and "new_field_3" not in doc_body
             else:
                 assert doc_body["new_field_1"] is True
-
-
-def add_new_fields_to_doc(doc_body):
-    doc_body["new_field_1"] = random.choice([True, False])
-    doc_body["new_field_2"] = random_string(length=60)
-    doc_body["new_field_3"] = random_string(length=90)
-    return doc_body

@@ -26,7 +26,7 @@ class Replication(object):
 
     def configure(self, source_db, target_url=None, target_db=None,
                   replication_type="push_pull", continuous=False,
-                  push_filter=False, pull_filter=False,channels=None,
+                  push_filter=False, pull_filter=False, channels=None,
                   documentIDs=None, replicator_authenticator=None,
                   headers=None, filter_callback_func=''):
         args = Args()
