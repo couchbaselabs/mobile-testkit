@@ -45,9 +45,9 @@ namespace Couchbase.Lite.Testing
             response.WriteEmptyBody();
         }
 
-        public static void Start_Client([NotNull] NameValueCollection args,
-                                 [NotNull] IReadOnlyDictionary<string, object> postBody,
-                                 [NotNull] HttpListenerResponse response)
+        public static void Configure([NotNull] NameValueCollection args,
+                                [NotNull] IReadOnlyDictionary<string, object> postBody,
+                                [NotNull] HttpListenerResponse response)
         {
             ResetStatus();
             Database db = MemoryMap.Get<Database>(postBody["database"].ToString());
@@ -56,6 +56,9 @@ namespace Couchbase.Lite.Testing
             string remote_DBName = postBody["serverDBName"].ToString();
             string replicationType = postBody["replicationType"].ToString();
             string endPointType = postBody["endPointType"].ToString();
+            string filter_callback_func = postBody["filter_callback_func"].ToString();
+            Boolean push_filter = Convert.ToBoolean(postBody["push_filter"]);
+            Boolean pull_filter = Convert.ToBoolean(postBody["pull_filter"]);
             ReplicatorConfiguration config = null;
 
             Uri host = new Uri("ws://" + targetIP + ":" + port);
@@ -65,42 +68,111 @@ namespace Couchbase.Lite.Testing
             {
                 var _endpoint = new URLEndpoint(dbUrl);
                 config = new ReplicatorConfiguration(db, _endpoint);
-                
+
             }
-            else{
+            else
+            {
                 TcpMessageEndpointDelegate endpointDelegate = new TcpMessageEndpointDelegate();
                 var _endpoint = new MessageEndpoint("something", host, ProtocolType.ByteStream, endpointDelegate);
                 config = new ReplicatorConfiguration(db, _endpoint);
             }
 
-                var replicatorType = replicationType.ToLower();
-                if (replicatorType == "push")
+            var replicatorType = replicationType.ToLower();
+            if (replicatorType == "push")
+            {
+                config.ReplicatorType = ReplicatorType.Push;
+            }
+            else if (replicatorType == "pull")
+            {
+                config.ReplicatorType = ReplicatorType.Pull;
+            }
+            else
+            {
+                config.ReplicatorType = ReplicatorType.PushAndPull;
+            }
+            if (postBody.ContainsKey("continuous"))
+            {
+                config.Continuous = Convert.ToBoolean(postBody["continuous"]);
+            }
+            if (postBody.ContainsKey("documentIDs"))
+            {
+                List<object> documentIDs = (List<object>)postBody["documentIDs"];
+                config.DocumentIDs = documentIDs.Cast<string>().ToList();
+            }
+            if (push_filter)
+            {
+                switch (filter_callback_func)
                 {
-                      config.ReplicatorType = ReplicatorType.Push;
+                    case "boolean":
+                        config.PushFilter = _replicator_boolean_filter_callback;
+                        break;
+                    case "deleted":
+                        config.PushFilter = _replicator_deleted_filter_callback;
+                        break;
+                    case "access_revoked":
+                        config.PushFilter = _replicator_access_revoked_filter_callback;
+                        break;
+                    default:
+                        config.PushFilter = _default_replicator_filter_callback;
+                        break;
                 }
-                else if (replicatorType == "pull")
+            }
+            if (pull_filter)
+            {
+                switch (filter_callback_func)
                 {
-                        config.ReplicatorType = ReplicatorType.Pull;
+                    case "boolean":
+                        config.PullFilter = _replicator_boolean_filter_callback;
+                        break;
+                    case "deleted":
+                        config.PullFilter = _replicator_deleted_filter_callback;
+                        break;
+                    case "access_revoked":
+                        config.PullFilter = _replicator_access_revoked_filter_callback;
+                        break;
+                    default:
+                        config.PullFilter = _default_replicator_filter_callback;
+                        break;
                 }
-                else
-                {
-                        config.ReplicatorType = ReplicatorType.PushAndPull;
-                }
-                if (postBody.ContainsKey("continuous"))
-                {
-                    config.Continuous = Convert.ToBoolean(postBody["continuous"]);
-                }
-                if (postBody.ContainsKey("documentIDs"))
-                {
-                    List<object> documentIDs = (List<object>)postBody["documentIDs"];
-                    config.DocumentIDs = documentIDs.Cast<string>().ToList();
-                }
+            }
 
 
-            Replicator _replicator = new Replicator(config);
-            _replicator.Start();
-            response.WriteBody(MemoryMap.Store(_replicator));
+            Replicator replicator = new Replicator(config);
+            response.WriteBody(MemoryMap.Store(replicator));
 
+        }
+
+        private static bool _replicator_boolean_filter_callback(Document document, DocumentFlags flags)
+        {
+            if (document.Contains("new_field_1"))
+            {
+                return document.GetBoolean("new_field_1");
+            }
+            return true;
+        }
+
+        private static bool _default_replicator_filter_callback(Document document, DocumentFlags flags)
+        {
+            return true;
+        }
+
+        private static bool _replicator_deleted_filter_callback(Document document, DocumentFlags flags)
+        {
+            return !flags.HasFlag(DocumentFlags.Deleted);
+        }
+
+        private static bool _replicator_access_revoked_filter_callback(Document document, DocumentFlags flags)
+        {
+            return !flags.HasFlag(DocumentFlags.AccessRemoved);
+        }
+
+        public static void Start_Client([NotNull] NameValueCollection args,
+                                 [NotNull] IReadOnlyDictionary<string, object> postBody,
+                                 [NotNull] HttpListenerResponse response)
+        {
+            Replicator replicator = MemoryMap.Get<Replicator>(postBody["replicator"].ToString());
+            replicator.Start();
+            response.WriteEmptyBody();
         }
 
         static private void ResetStatus()
