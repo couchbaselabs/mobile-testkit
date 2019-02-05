@@ -326,14 +326,13 @@ def params_from_base_suite_setup(request):
             if not no_db_delete:
                 print "The base url is ", base_url
                 log_info("Deleting the database {} at the suite teardown".format(db_obj.getName(cbl_db)))
-#                 time.sleep(5)
+                time.sleep(5)
                 db_obj.deleteDB(cbl_db)
 
         # Flush all the memory contents on the server app
-    for base_url in base_url_list:
-        log_info("Flushing server memory")
-        utils_obj = Utils(base_url)
-        utils_obj.flushMemory()
+    log_info("Flushing server memory")
+    utils_obj = Utils(base_url)
+    utils_obj.flushMemory()
         # log_info("Stopping the test server")
         # testserver.stop()
 
@@ -434,25 +433,5 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     if create_db_per_test:
         for cbl_db, db_obj, base_url in zip(cbl_db_list, db_obj_list, base_url_list):
             log_info("Deleting the database {} at the test teardown".format(db_obj.getName(cbl_db)))
-#             time.sleep(5)
+            time.sleep(5)
             db_obj.deleteDB(cbl_db)
-
-
-@pytest.fixture(scope="function")
-def server_setup(params_from_base_test_setup):
-    base_url_list = params_from_base_test_setup["base_url_list"]
-    cbl_db_list = params_from_base_test_setup["cbl_db_list"]
-    base_url_server = base_url_list[0]
-    peerToPeer_server = PeerToPeer(base_url_server)
-    cbl_db_server = cbl_db_list[0]
-    replicatorTcpListener = peerToPeer_server.server_start(cbl_db_server)
-    log_info("server starting .....")
-    yield{
-        "replicatorTcpListener": replicatorTcpListener,
-        "peerToPeer_server": peerToPeer_server,
-        "base_url_list": base_url_list,
-        "base_url_server": base_url_server,
-        "cbl_db_server": cbl_db_server,
-        "cbl_db_list": cbl_db_list
-    }
-    peerToPeer_server.server_stop(replicatorTcpListener)

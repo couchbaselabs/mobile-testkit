@@ -221,7 +221,6 @@ namespace Couchbase.Lite.Testing
                 ["peerToPeer_serverStart"] = P2PMethods.Start_Server,
                 ["peerToPeer_serverStop"] = P2PMethods.Stop_Server,
                 ["peerToPeer_clientStart"] = P2PMethods.Start_Client,
-                ["peerToPeer_configure"] = P2PMethods.Configure,
                 ["release"] = ReleaseObject,
                 ["flushMemory"] = flushMemory
             };

@@ -68,6 +68,7 @@ public class DatabaseRequestHandler {
 
         case "database_deleteDB":
             let database: Database = args.get(name:"database")!
+            
             try database.delete()
 
         case "database_exists":
