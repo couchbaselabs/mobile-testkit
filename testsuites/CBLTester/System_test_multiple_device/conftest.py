@@ -2,7 +2,6 @@ import time
 import pytest
 import datetime
 
-from CBLClient.PeerToPeer import PeerToPeer
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop
 from keywords.utils import log_info
 from keywords.utils import host_for_url
@@ -34,7 +33,8 @@ def pytest_addoption(parser):
 
     parser.addoption("--sync-gateway-version",
                      action="store",
-                     help="sync-gateway-version: Sync Gateway version to install (ex. 1.3.1-16 or 590c1c31c7e83503eff304d8c0789bdd268d6291)")
+                     help="sync-gateway-version: Sync Gateway version to install "
+                          "(ex. 1.3.1-16 or 590c1c31c7e83503eff304d8c0789bdd268d6291)")
 
     parser.addoption("--liteserv-platforms",
                      action="store",
@@ -70,7 +70,8 @@ def pytest_addoption(parser):
 
     parser.addoption("--doc-generator",
                      action="store",
-                     help="Provide the doc generator type. Valid values are - simple, four_k, simple_user and complex_doc",
+                     help="Provide the doc generator type. Valid values are - simple, four_k, simple_user and"
+                          " complex_doc",
                      default="simple")
 
     parser.addoption("--resume-cluster", action="store_true",
@@ -148,27 +149,27 @@ def params_from_base_suite_setup(request):
     community_enabled = request.config.getoption("--community")
 
     test_name = request.node.name
-    # testserver_list = []
-    # for platform, version, host, port in zip(platform_list,
-    #                                          version_list,
-    #                                          host_list,
-    #                                          port_list):
-    #     testserver = TestServerFactory.create(platform=platform,
-    #                                           version_build=version,
-    #                                           host=host,
-    #                                           port=port,
-    #                                           community_enabled=community_enabled)
-    #
-    #     log_info("Downloading TestServer ...")
-    #     # Download TestServer app
-    #     testserver.download()
-    #
-    #     # Install TestServer app
-    #     if device_enabled and platform == "ios":
-    #         testserver.install_device()
-    #     else:
-    #         testserver.install()
-    #     testserver_list.append(testserver)
+    testserver_list = []
+    for platform, version, host, port in zip(platform_list,
+                                             version_list,
+                                             host_list,
+                                             port_list):
+        testserver = TestServerFactory.create(platform=platform,
+                                              version_build=version,
+                                              host=host,
+                                              port=port,
+                                              community_enabled=community_enabled)
+
+        log_info("Downloading TestServer ...")
+        # Download TestServer app
+        testserver.download()
+
+        # Install TestServer app
+        if device_enabled and platform == "ios":
+            testserver.install_device()
+        else:
+            testserver.install()
+        testserver_list.append(testserver)
     base_url_list = []
     for host, port in zip(host_list, port_list):
         base_url_list.append("http://{}:{}".format(host, port))
@@ -262,13 +263,15 @@ def params_from_base_suite_setup(request):
     query_obj_list = []
     if create_db_per_suite:
         # Start Test server which needed for suite level set up like query tests
-        # for testserver in testserver_list:
-        #     log_info("Starting TestServer...")
-        #     test_name_cp = test_name.replace("/", "-")
-        #     if device_enabled:
-        #         testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now()))
-        #     else:
-        #         testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now()))
+        for testserver in testserver_list:
+            log_info("Starting TestServer...")
+            test_name_cp = test_name.replace("/", "-")
+            if device_enabled:
+                testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
+                                                                      test_name_cp, datetime.datetime.now()))
+            else:
+                testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp,
+                                                               datetime.datetime.now()))
         for base_url, i in zip(base_url_list, range(len(base_url_list))):
             db_name = "{}_{}_{}".format(create_db_per_suite, str(time.time()), i + 1)
             log_info("db name for {} is {}".format(base_url, db_name))
@@ -317,33 +320,28 @@ def params_from_base_suite_setup(request):
         "create_db_per_test": create_db_per_test
     }
 
-    # Delete CBL database
-#     for db_name, testserver, base_url in zip(db_name_list,
-#                                              testserver_list,
-#                                              base_url_list):
     if create_db_per_suite:
         for cbl_db, db_obj, base_url in zip(cbl_db_list, db_obj_list, base_url_list):
             if not no_db_delete:
-                print "The base url is ", base_url
                 log_info("Deleting the database {} at the suite teardown".format(db_obj.getName(cbl_db)))
                 time.sleep(5)
                 db_obj.deleteDB(cbl_db)
 
-        # Flush all the memory contents on the server app
-    log_info("Flushing server memory")
-    utils_obj = Utils(base_url)
-    utils_obj.flushMemory()
-        # log_info("Stopping the test server")
-        # testserver.stop()
+    # Flush all the memory contents on the server app
+    for base_url, testserver in zip(base_url_list, testserver_list):
+        log_info("Flushing server memory")
+        utils_obj = Utils(base_url)
+        utils_obj.flushMemory()
+        log_info("Stopping the test server")
+        testserver.stop()
 
 
 @pytest.fixture(scope="function")
-def params_from_base_test_setup(request, params_from_base_suite_setup):
+def params_from_base_test_setup(params_from_base_suite_setup):
     cluster_config = params_from_base_suite_setup["cluster_config"]
     mode = params_from_base_suite_setup["mode"]
     xattrs_enabled = params_from_base_suite_setup["xattrs_enabled"]
     platform_list = params_from_base_suite_setup["platform_list"]
-    host_list = params_from_base_suite_setup["host_list"]
     version_list = params_from_base_suite_setup["version_list"]
     host_list = params_from_base_suite_setup["host_list"]
     port_list = params_from_base_suite_setup["port_list"]
@@ -377,7 +375,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         for base_url, i in zip(base_url_list, range(len(base_url_list))):
             """log_info("Starting TestServer...")
             test_name_cp = test_name.replace("/", "-")
-            log_filename = "{}-{}/logs/{}-{}-{}.txt".format("testserver-",RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now())
+            log_filename = "{}-{}/logs/{}-{}-{}.txt".format("testserver-",RESULTS_DIR,
+             type(testserver).__name__, test_name_cp, datetime.datetime.now())
             if device_enabled:
                 testserver.start_device(log_filename)
             else:

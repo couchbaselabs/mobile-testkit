@@ -236,10 +236,11 @@ def test_p2p_filter_retrieval_with_replication_restart(params_from_base_test_set
     """
         @summary:
         1. Create docs on client and server.
-        2. Start the server and start replication from client with push and pull.
+        2. Start the server and start replication from client with push and pull with boolean filter. Nothing will be
+        filtered as docs doesn't contain "new_field_1"
         3. Verify replication is completed.
-        4. Delete few docs on both server and client and replicate them using delete filter
-        5. Verify that deleted docs on server doesn't get deleted on client and vice versa because of delete filter
+        4. Add new fields to docs and restart the replication with the same configuration.
+        5. Verify that docs with "new_field_1" to true only got replicated to other side.
     """
     host_list = params_from_base_test_setup["host_list"]
     db_obj_list = params_from_base_test_setup["db_obj_list"]
@@ -291,6 +292,7 @@ def test_p2p_filter_retrieval_with_replication_restart(params_from_base_test_set
     assert sorted(client_doc_ids) == sorted(server_doc_ids), "Replication failed. Server db doesn't have same docs"
     server_docs = db_obj_server.getDocuments(cbl_db_server, server_doc_ids)
 
+    # 4. Add new fields to docs and restart the replication with the same configuration.
     updated_docs = {}
     for doc_id in server_docs:
         doc_body = add_new_fields_to_doc(server_docs[doc_id])
@@ -307,6 +309,7 @@ def test_p2p_filter_retrieval_with_replication_restart(params_from_base_test_set
 
     client_docs = db_obj_client.getDocuments(cbl_db_client, client_doc_ids)
 
+    # 5. Verify that docs with "new_field_1" to true only got replicated to other side.
     for doc_id in client_docs:
         if updated_docs[doc_id]["new_field_1"]:
             assert client_docs[doc_id]["new_field_1"] == updated_docs[doc_id]["new_field_1"] and\
