@@ -697,7 +697,11 @@ def test_revs_cache_size(params_from_base_test_setup, sg_conf_name, num_of_docs)
 
     # 4. Verify there are number of hits should be same as retrieved docs
     exp_vars = sg_client.get_expvars(url=sg_admin_url)
-    revision_cache_hits = exp_vars["syncGateway_stats"]["revisionCache_hits"]
-    revision_cache_misses = exp_vars["syncGateway_stats"]["revisionCache_misses"]
+    if sync_gateway_version < "2.5":
+        revision_cache_hits = exp_vars["syncGateway_stats"]["revisionCache_hits"]
+        revision_cache_misses = exp_vars["syncGateway_stats"]["revisionCache_misses"]
+    else:
+        revision_cache_hits = exp_vars["syncgateway"]["per_db"][sg_db]["cache"]["rev_cache_hits"]
+        revision_cache_misses = exp_vars["syncgateway"]["per_db"][sg_db]["cache"]["rev_cache_misses"]
     assert revision_cache_hits == retrieved_docs, "Revision Cache hits did not hit with expected number {}".format(num_of_docs)
     assert revision_cache_misses == 0, "Revision Cache misses is not 0"

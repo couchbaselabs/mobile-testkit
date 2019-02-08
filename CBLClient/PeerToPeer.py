@@ -114,3 +114,24 @@ class PeerToPeer(object):
         if continuous is not None:
             args.setBoolean("continuous", continuous)
         return self._client.invokeMethod("peerToPeer_clientStart_mep", args)
+
+    def addReplicatorEventChangeListener(self, replicator):
+        args = Args()
+        args.setMemoryPointer("replicator", replicator)
+        return self._client.invokeMethod("peerToPeer_addReplicatorEventChangeListener", args)
+
+    def removeReplicatorEventListener(self, replicator, change_listener):
+        args = Args()
+        args.setMemoryPointer("replicator", replicator)
+        args.setMemoryPointer("changeListener", change_listener)
+        return self._client.invokeMethod("peerToPeer_removeReplicatorEventListener", args)
+
+    def getReplicatorEventChanges(self, change_listener):
+        args = Args()
+        args.setMemoryPointer("changeListener", change_listener)
+        return self._client.invokeMethod("peerToPeer_replicatorEventGetChanges", args)
+
+    def getReplicatorEventChangesCount(self, change_listener):
+        args = Args()
+        args.setMemoryPointer("changeListener", change_listener)
+        return self._client.invokeMethod("peerToPeer_replicatorEventChangesCount", args)

@@ -297,10 +297,12 @@ def params_from_base_suite_setup(request):
         log_info("Starting TestServer...")
         test_name_cp = test_name.replace("/", "-")
         if device_enabled:
-            testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp,
+            testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
+                                                                  test_name_cp,
                                                                   datetime.datetime.now()))
         else:
-            testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp,
+            testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
+                                                           test_name_cp,
                                                            datetime.datetime.now()))
 
     suite_source_db = None
@@ -353,7 +355,8 @@ def params_from_base_suite_setup(request):
         # Create primary index
         password = "password"
         log_info("Connecting to {}/{} with password {}".format(cbs_ip, enable_sample_bucket, password))
-        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, enable_sample_bucket), password=password,
+        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, enable_sample_bucket),
+                            password=password,
                             timeout=SDK_TIMEOUT)
         log_info("Creating primary index for {}".format(enable_sample_bucket))
         n1ql_query = 'create primary index on {}'.format(enable_sample_bucket)
@@ -446,7 +449,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     liteserv_version = params_from_base_suite_setup["liteserv_version"]
     source_db = None
     test_name_cp = test_name.replace("/", "-")
-    log_filename = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp,
+    log_filename = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
+                                                 test_name_cp,
                                                  datetime.datetime.now())
 
     if create_db_per_test:

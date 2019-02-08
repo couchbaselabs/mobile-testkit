@@ -908,6 +908,7 @@ def test_sdk_does_not_see_sync_meta(params_from_base_test_setup, sg_conf_name):
     mode = params_from_base_test_setup['mode']
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
 
     # Skip the test if ssl disabled as it cannot run without port using http protocol
     if ("sync_gateway_default_functional_tests_no_port" in sg_conf_name) and get_sg_version(cluster_conf) < "1.5.0":
@@ -972,7 +973,7 @@ def test_sdk_does_not_see_sync_meta(params_from_base_test_setup, sg_conf_name):
 
     # Get all of the docs via the SDK
     docs_from_sg = sdk_client.get_multi(doc_ids)
-    assert len(docs_from_sg) == number_of_sg_docs
+    assert len(docs_from_sg) == number_of_sg_docs, "sg docs and docs from sdk has mismatch"
 
     attachment_name_ids = []
     for doc_key, doc_val in docs_from_sg.items():
@@ -982,28 +983,30 @@ def test_sdk_does_not_see_sync_meta(params_from_base_test_setup, sg_conf_name):
         # Get the document body
         doc_body = doc_val.value
 
-        # Build tuple of the filename and server doc id of the attachments
-        for att_key, att_val in doc_body['_attachments'].items():
-            attachment_name_ids.append((att_key, '_sync:att:{}'.format(att_val['digest'])))
-
         # Make sure 'sync' property is not present in the document
         assert '_sync' not in doc_body
+
+        # Build tuple of the filename and server doc id of the attachments
+        if sync_gateway_version < "2.5":
+            for att_key, att_val in doc_body['_attachments'].items():
+                attachment_name_ids.append((att_key, '_sync:att:{}'.format(att_val['digest'])))
 
     assert len(doc_ids) == 0
 
     # Verify attachments stored locally have the same data as those written to the server
-    for att_file_name, att_doc_id in attachment_name_ids:
+    if sync_gateway_version < "2.5":
+        for att_file_name, att_doc_id in attachment_name_ids:
 
-        att_doc = sdk_client.get(att_doc_id, no_format=True)
-        att_bytes = att_doc.value
+            att_doc = sdk_client.get(att_doc_id, no_format=True)
+            att_bytes = att_doc.value
 
-        local_file_path = '{}/{}'.format(DATA_DIR, att_file_name)
-        log_info('Checking that the generated attachment is the same that is store on server: {}'.format(
-            local_file_path
-        ))
-        with open(local_file_path, 'rb') as local_file:
-            local_bytes = local_file.read()
-            assert att_bytes == local_bytes
+            local_file_path = '{}/{}'.format(DATA_DIR, att_file_name)
+            log_info('Checking that the generated attachment is the same that is store on server: {}'.format(
+                local_file_path
+            ))
+            with open(local_file_path, 'rb') as local_file:
+                local_bytes = local_file.read()
+                assert att_bytes == local_bytes
 
 
 @pytest.mark.syncgateway

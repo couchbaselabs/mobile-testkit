@@ -154,7 +154,11 @@ namespace Couchbase.Lite.Testing
                 ["replicator_getConfig"] = ReplicationMethods.GetConfig,
                 ["replicator_getCompleted"] = ReplicationMethods.GetCompleted,
                 ["replicator_addChangeListener"] = ReplicationMethods.AddChangeListener,
+                ["replicator_addReplicatorEventChangeListener"] = ReplicationMethods.AddDocumentReplicationChangeListener,
+                ["replicator_removeReplicatorEventListener"] = ReplicationMethods.RemoveReplicatorEventListener,
                 ["replicator_removeChangeListener"] = ReplicationMethods.RemoveChangeListener,
+                ["replicator_replicatorEventGetChanges"] = ReplicationMethods.ReplicatorEventGetChanges,
+                ["replicator_replicatorEventChangesCount"] = ReplicationMethods.ReplicatorEventChangesCount,
                 ["replicatorConfiguration_setAuthenticator"] = ReplicatorConfigurationMethods.SetAuthenticator,
                 ["replicatorConfiguration_setReplicatorType"] = ReplicatorConfigurationMethods.SetReplicatorType,
                 ["replicator_changeListenerChangesCount"] = ReplicationMethods.ChangeListenerChangesCount,
@@ -222,6 +226,10 @@ namespace Couchbase.Lite.Testing
                 ["peerToPeer_serverStop"] = P2PMethods.Stop_Server,
                 ["peerToPeer_clientStart"] = P2PMethods.Start_Client,
                 ["peerToPeer_configure"] = P2PMethods.Configure,
+                ["peerToPeer_addReplicatorEventChangeListener"] = ReplicationMethods.AddReplicatorEventChangeListener,
+                ["peerToPeer_removeReplicatorEventListener"] = ReplicationMethods.RemoveReplicatorEventListener,
+                ["peerToPeer_replicatorEventGetChanges"] = ReplicationMethods.ReplicatorEventGetChanges,
+                ["peerToPeer_replicatorEventChangesCount"] = ReplicationMethods.ReplicatorEventChangesCount,
                 ["release"] = ReleaseObject,
                 ["flushMemory"] = flushMemory
             };

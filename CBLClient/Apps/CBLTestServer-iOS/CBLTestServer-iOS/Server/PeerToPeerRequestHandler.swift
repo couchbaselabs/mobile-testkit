@@ -20,25 +20,25 @@ public class PeerToPeerRequestHandler {
         }
         return true
     }
-    
+
     private func _defaultReplicatorFilterCallback(document: Document, flags: DocumentFlags) -> Bool {
         return true;
     }
-    
+
     private func _replicatorDeletedFilterCallback(document: Document, documentFlags: DocumentFlags) -> Bool {
         if (documentFlags.rawValue == 1) {
             return false
         }
         return true
     }
-    
+
     private func _replicatorAccessRevokedCallback(document: Document, documentFlags: DocumentFlags) -> Bool {
         if (documentFlags.rawValue == 2) {
             return false
         }
         return true
     }
-    
+
     public func handleRequest(method: String, args: Args) throws -> Any? {
         
         switch method {
@@ -127,12 +127,43 @@ public class PeerToPeerRequestHandler {
             replicatorConfig.replicatorType = replicatorType
             let replicator: Replicator = Replicator(config: replicatorConfig)
             return replicator
-            
+
         case "peerToPeer_clientStart":
             let replicator: Replicator = args.get(name:"replicator")!
             replicator.start()
             print("Replicator has started")
             
+        case "peerToPeer_addReplicatorEventChangeListener":
+            let replication_obj: Replicator = args.get(name: "replicator")!
+            let changeListener = MyDocumentReplicationListener()
+            let listenerToken = replication_obj.addDocumentReplicationListener(changeListener.listener)
+            changeListener.listenerToken = listenerToken
+            return changeListener
+
+        case "peerToPeer_removeReplicatorEventListener":
+            let replication_obj: Replicator = args.get(name: "replicator")!
+            let changeListener : MyDocumentReplicationListener = (args.get(name: "changeListener"))!
+            replication_obj.removeChangeListener(withToken: changeListener.listenerToken!)
+
+        case "peerToPeer_replicatorEventChangesCount":
+            let changeListener: MyDocumentReplicationListener = (args.get(name: "changeListener"))!
+            return changeListener.getChanges().count
+
+        case "peerToPeer_replicatorEventGetChanges":
+            let changeListener: MyDocumentReplicationListener = (args.get(name: "changeListener"))!
+            let changes: [DocumentReplication] = changeListener.getChanges()
+            var event_list: [String] = []
+            for change in changes {
+                for document in change.documents {
+                    let doc_event:String = "doc_id: " + document.id
+                    let error:String = ", error_code: " + document.error.debugDescription + ", error_domain: nil"
+                    let flags:String = ", flags: " + document.flags.rawValue.description
+                    let push:String = ", push: " + change.isPush.description
+                    event_list.append(doc_event + error + push + flags)
+                }
+            }
+            return event_list
+
         default:
             throw RequestHandlerError.MethodNotFound(method)
         }

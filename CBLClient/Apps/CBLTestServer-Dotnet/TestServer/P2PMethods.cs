@@ -45,7 +45,7 @@ namespace Couchbase.Lite.Testing
             response.WriteEmptyBody();
         }
 
-        public static void Start_Client([NotNull] NameValueCollection args,
+        public static void Configure([NotNull] NameValueCollection args,
                                  [NotNull] IReadOnlyDictionary<string, object> postBody,
                                  [NotNull] HttpListenerResponse response)
         {
@@ -177,7 +177,15 @@ namespace Couchbase.Lite.Testing
         }
 
 
-        static private void ResetStatus()
+        public static void Start_Client([NotNull] NameValueCollection args,
+                                 [NotNull] IReadOnlyDictionary<string, object> postBody,
+                                 [NotNull] HttpListenerResponse response)
+        {
+            Replicator replicator = MemoryMap.Get<Replicator>(postBody["replicator"].ToString());
+            replicator.Start();
+            response.WriteEmptyBody();
+        }
+            static private void ResetStatus()
         {
             // Console.Clear();
             Console.WriteLine("Status is getting reset");

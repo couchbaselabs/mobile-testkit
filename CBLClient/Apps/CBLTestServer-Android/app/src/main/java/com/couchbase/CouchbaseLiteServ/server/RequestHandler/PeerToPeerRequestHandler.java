@@ -25,6 +25,7 @@ import com.couchbase.lite.URLEndpoint;
 
 public class PeerToPeerRequestHandler implements MessageEndpointDelegate{
 
+    ReplicatorRequestHandler replicatorRequestHandlerObj = new ReplicatorRequestHandler();
 
     public void clientStart(Args args) throws Exception{
         Replicator replicator = args.get("replicator");
@@ -137,6 +138,19 @@ public class PeerToPeerRequestHandler implements MessageEndpointDelegate{
         URI url = (URI)endpoint.getTarget();
         return new ReplicatorTcpClientConnection(url);
     }
+public MyDocumentReplicatorListener addReplicatorEventChangeListener(Args args){
+        return replicatorRequestHandlerObj.addReplicatorEventChangeListener(args);
+    }
+
+    public void removeReplicatorEventListener(Args args) {
+        replicatorRequestHandlerObj.removeReplicatorEventListener(args);
+    }
+
+    public int changeListenerChangesCount(Args args) {
+        return replicatorRequestHandlerObj.changeListenerChangesCount(args);
+    }
+
+    public List<String> replicatorEventGetChanges(Args args){
+        return replicatorRequestHandlerObj.replicatorEventGetChanges(args);
+    }
 }
-
-

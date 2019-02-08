@@ -72,6 +72,7 @@ class CouchbaseServer:
     def __init__(self, url):
         self.url = url
         self.cbs_ssl = False
+        self.max_retries = 5
 
         # Strip http prefix and port to store host
 
@@ -98,11 +99,9 @@ class CouchbaseServer:
         bucket_names = []
 
         error_count = 0
-        max_retries = 5
-
         # Retry to avoid intermittent Connection issues when getting buckets
         while True:
-            if error_count == max_retries:
+            if error_count == self.max_retries:
                 raise CBServerError("Error! Could not get buckets after retries.")
             try:
                 resp = self._session.get("{}/pools/default/buckets".format(self.url))
@@ -239,13 +238,22 @@ class CouchbaseServer:
         rbac_url = "{}/settings/rbac/users/local/{}".format(self.url, bucketname)
 
         resp = None
-        try:
-            resp = self._session.put(rbac_url, data=data_user_params, auth=('Administrator', 'password'))
-            log_r(resp)
-            resp.raise_for_status()
-        except HTTPError as h:
-            log_info("resp code: {}; error: {}".format(resp, h))
-            raise RBACUserCreationError(h)
+        error_count = 0
+        while True:
+            if error_count == self.max_retries:
+                log_info("Error! Could not create RBAC user after retries. ")
+                raise RBACUserCreationError("Error! Could not create RBAC user after retries. ")
+            try:
+                resp = self._session.put(rbac_url, data=data_user_params, auth=('Administrator', 'password'))
+                log_r(resp)
+                resp.raise_for_status()
+                # If request does not throw, exit retry loop
+                break
+            except HTTPError as h:
+                log_info("Hit a ConnectionError while trying to create RBAC user. Retrying ...")
+                log_info("resp code: {}; error: {}".format(resp, h))
+                error_count += 1
+                time.sleep(1)
 
     def _delete_internal_rbac_bucket_user(self, bucketname):
         # Delete user with username=bucketname
