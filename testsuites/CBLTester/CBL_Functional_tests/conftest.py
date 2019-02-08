@@ -281,7 +281,7 @@ def params_from_base_suite_setup(request):
             logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=request.node.name)
             raise
 
-    # Hit this intalled running services to verify the correct versions are installed
+    # Hit this installed running services to verify the correct versions are installed
     cluster_utils.verify_cluster_versions(
         cluster_config,
         expected_server_version=server_version,
@@ -366,7 +366,7 @@ def params_from_base_suite_setup(request):
         # Start continuous replication
         repl_obj = Replication(base_url)
         auth_obj = BasicAuthenticator(base_url)
-        authenticator = auth_obj.create("traveL-sample", "password")
+        authenticator = auth_obj.create("travel-sample", "password")
         repl_config = repl_obj.configure(source_db=suite_source_db,
                                          target_url=target_admin_url,
                                          replication_type="PUSH_AND_PULL",

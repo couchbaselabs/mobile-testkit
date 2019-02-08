@@ -3,6 +3,7 @@ import json
 import os
 import random
 import string
+import re
 
 from keywords.exceptions import FeatureSupportedError
 from keywords.constants import DATA_DIR
@@ -251,7 +252,8 @@ def get_event_changes(event_changes):
     for a particular Replication event
     """
     event_dict = {}
-    pattern = ".*?doc_id: (\w+), error_code: (.*?), error_domain: (\w+), push: (\w+), flags: (.*?)'.*?"
+    pattern = ".*?doc_id: ([a-zA-Z0-9_]+), error_code: (.*?), error_domain: ([a-zA-Z0-9_]+)," \
+              " push: ([a-zA-Z0-9_]+), flags: (.*?)'.*?"
     events = re.findall(pattern, string=str(event_changes))
     for event in events:
         doc_id = event[0].strip()
