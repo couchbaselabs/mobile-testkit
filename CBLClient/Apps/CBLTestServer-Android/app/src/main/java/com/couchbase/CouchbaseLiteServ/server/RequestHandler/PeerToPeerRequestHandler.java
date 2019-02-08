@@ -112,11 +112,11 @@ public class PeerToPeerRequestHandler implements MessageEndpointDelegate{
     class MyReplicatorListener implements ReplicatorChangeListener {
         private List<ReplicatorChange> changes = new ArrayList<>();
         public List<ReplicatorChange> getChanges(){
-        return changes;
+            return changes;
         }
         @Override
         public void changed(ReplicatorChange change) {
-        changes.add(change);
+            changes.add(change);
         }
     }
 
