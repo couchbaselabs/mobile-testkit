@@ -10,6 +10,9 @@
 .pydevproject
 .project
 
+*.xcscheme
+*..pbxproj
+*.csproj
 .idea
 *.iml
 *.pyc
@@ -93,3 +96,27 @@ apps/testkit.java/Testkit.java.android/Tests/AndroidClient/app/build
 apps/testkit.java/Testkit.java.android/Tests/AndroidClient/app/*.apk
 !apps/testkit.java/Testkit.java.android/Tests/AndroidClient/app/src/main/res
 !apps/testkit.java/Testkit.java.android/Tests/AndroidClient/app/src/main/res/*/*.*
+
+# Xcode
+#
+# gitignore contributors: remember to update Global/Xcode.gitignore, Objective-C.gitignore & Swift.gitignore
+
+## User settings
+xcuserdata/
+
+## compatibility with Xcode 8 and earlier (ignoring not required starting Xcode 9)
+*.xcscmblueprint
+*.xccheckout
+
+## compatibility with Xcode 3 and earlier (ignoring not required starting Xcode 4)
+build/
+DerivedData/
+*.moved-aside
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3

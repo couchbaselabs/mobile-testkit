@@ -138,6 +138,18 @@ namespace Couchbase.Lite.Testing
             With<Replicator>(postBody, "replicator", rep => response.WriteBody(rep.Status.ToString()));
         }
 
+        internal static void AddDocumentReplicationChangeListener([NotNull] NameValueCollection args,
+            [NotNull] IReadOnlyDictionary<string, object> postBody,
+            [NotNull] HttpListenerResponse response)
+        {
+            With<Replicator>(postBody, "replicator", rep =>
+            {
+                var listener = new EventReplicationListenerProxy();
+                rep.AddDocumentReplicationListener(listener.HandleChange);
+                response.WriteBody(MemoryMap.Store(listener));
+            });
+        }
+
         internal static void AddChangeListener([NotNull] NameValueCollection args,
             [NotNull] IReadOnlyDictionary<string, object> postBody,
             [NotNull] HttpListenerResponse response)
@@ -181,6 +193,72 @@ namespace Couchbase.Lite.Testing
             });
         }
 
+
+        internal static void AddReplicatorEventChangeListener([NotNull] NameValueCollection args,
+            [NotNull] IReadOnlyDictionary<string, object> postBody,
+            [NotNull] HttpListenerResponse response)
+        {
+            With<Replicator>(postBody, "replicator", rep =>
+            {
+                var listener = new EventReplicationListenerProxy();
+                ListenerToken token = rep.AddDocumentReplicationListener(listener.HandleChange);
+                listener.SetToken(token);
+                response.WriteBody(MemoryMap.Store(listener));
+            });
+        }
+
+        internal static void RemoveReplicatorEventListener([NotNull] NameValueCollection args,
+            [NotNull] IReadOnlyDictionary<string, object> postBody,
+            [NotNull] HttpListenerResponse response)
+        {
+            With<Replicator>(postBody, "replicator", rep =>
+            {
+                EventReplicationListenerProxy listener = MemoryMap.Get<EventReplicationListenerProxy>(postBody["changeListener"].ToString());
+                ListenerToken token = listener.GetToken();
+                rep.RemoveChangeListener(token);
+                response.WriteEmptyBody();
+            });
+        }
+
+        internal static void ReplicatorEventChangesCount([NotNull] NameValueCollection args,
+            [NotNull] IReadOnlyDictionary<string, object> postBody,
+            [NotNull] HttpListenerResponse response)
+        {
+            With<EventReplicationListenerProxy>(postBody, "changeListener", changeListener =>
+            {
+                response.WriteBody(changeListener.Changes.Count);
+            });
+        }
+
+        internal static void ReplicatorEventGetChanges([NotNull] NameValueCollection args,
+            [NotNull] IReadOnlyDictionary<string, object> postBody,
+            [NotNull] HttpListenerResponse response)
+        {
+            With<EventReplicationListenerProxy>(postBody, "changeListener", changeListener =>
+            {
+                List<String> event_list = new List<String>();
+                foreach (DocumentReplicationEventArgs change in changeListener.Changes)
+                {
+                    foreach (ReplicatedDocument document in change.Documents)
+                    {
+                        String doc_id = "doc_id: " + document.Id;
+                        int error_code = 0;
+                        String error_domain = "0";
+                        if (document.Error != null)
+                        {
+                            error_code = document.Error.Error;
+                            error_domain = document.Error.Domain.ToString();
+                        }
+                        String error = ", error_code: " + error_code + ", error_domain: " + error_domain;
+                        String flags = ", flags: " + document.Flags.ToString();
+                        String push = ", push: " + change.IsPush.ToString();
+                        event_list.Add(doc_id + error + push + flags);
+                    }
+                }
+                response.WriteBody(event_list);
+            });
+        }
+
         public static void ResetCheckpoint([NotNull] NameValueCollection args,
             [NotNull] IReadOnlyDictionary<string, object> postBody,
             [NotNull] HttpListenerResponse response)
@@ -219,6 +297,42 @@ namespace Couchbase.Lite.Testing
         #endregion
     }
 
+    internal sealed class EventReplicationListenerProxy
+    {
+        #region Variables
+
+        [NotNull]
+        private readonly List<DocumentReplicationEventArgs> _changes = new List<DocumentReplicationEventArgs>();
+        private ListenerToken token = new ListenerToken();
+
+        #endregion
+
+        #region Properties
+
+        [NotNull]
+        public IReadOnlyList<DocumentReplicationEventArgs> Changes => _changes;
+
+        #endregion
+
+        #region Public Methods
+
+        public void HandleChange(object sender, DocumentReplicationEventArgs args)
+        {
+            _changes.Add(args);
+        }
+
+        public void SetToken(ListenerToken token)
+        {
+            this.token = token;
+        }
+
+        public ListenerToken GetToken()
+        {
+            return this.token;
+        }
+
+        #endregion
+    }
 }
 
 

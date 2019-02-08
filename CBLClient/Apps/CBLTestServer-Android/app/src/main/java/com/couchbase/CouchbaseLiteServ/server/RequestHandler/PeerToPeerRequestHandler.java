@@ -25,90 +25,108 @@ import com.couchbase.lite.URLEndpoint;
 
 public class PeerToPeerRequestHandler implements MessageEndpointDelegate{
 
+    ReplicatorRequestHandler replicatorRequestHandlerObj = new ReplicatorRequestHandler();
 
-  public Replicator clientStart(Args args) throws Exception{
-    String ipaddress = args.get("host");
-    int port = args.get("port");
-    Database sourceDb = args.get("database");
-    String serverDBName = args.get("serverDBName");
-    String replicationType = args.get("replicationType");
-    Boolean continuous = args.get("continuous");
-    String endPointType = args.get("endPointType");
-    List<String> documentIds = args.get("documentIDs");
-    ReplicatorConfiguration config;
-    Replicator replicator;
-
-    if (replicationType == null)
-    {
-      replicationType = "push_pull";
-    }
-    replicationType = replicationType.toLowerCase();
-    ReplicatorConfiguration.ReplicatorType replType;
-    if (replicationType.equals("push")) {
-      replType = ReplicatorConfiguration.ReplicatorType.PUSH;
-    } else if (replicationType.equals("pull")) {
-      replType = ReplicatorConfiguration.ReplicatorType.PULL;
-    } else {
-      replType = ReplicatorConfiguration.ReplicatorType.PUSH_AND_PULL;
-    }
-    Log.i("DB name", "serverDBName is "+ serverDBName);
-    URI uri = new URI("ws://" + ipaddress + ":"+port+"/" + serverDBName);
-    if (endPointType.toLowerCase() == "urlendpoint"){
-
-      URLEndpoint urlEndPoint= new URLEndpoint(uri);
-      config = new ReplicatorConfiguration(sourceDb, urlEndPoint);
-    }
-    else{
-      MessageEndpoint messageEndPoint = new MessageEndpoint("p2p", uri, ProtocolType.BYTE_STREAM, this);
-      config = new ReplicatorConfiguration(sourceDb, messageEndPoint);
-    }
-    config.setReplicatorType(replType);
-    if (continuous != null) {
-      config.setContinuous(continuous);
-    }
-    else {
-      config.setContinuous(false);
-    }
-    if (documentIds != null) {
-      config.setDocumentIDs(documentIds);
+    public void clientStart(Args args) throws Exception{
+        Replicator replicator = args.get("replicator");
+        replicator.start();
+        Log.i("Replication status", "Replication started .... ");
     }
 
-    replicator = new Replicator(config);
-    replicator.start();
-    Log.i("Replication status", "Replication started .... ");
-    return replicator;
-  }
+    public Replicator configure(Args args) throws Exception{
+        String ipaddress = args.get("host");
+        int port = args.get("port");
+        Database sourceDb = args.get("database");
+        String serverDBName = args.get("serverDBName");
+        String replicationType = args.get("replicationType");
+        Boolean continuous = args.get("continuous");
+        String endPointType = args.get("endPointType");
+        List<String> documentIds = args.get("documentIDs");
+        ReplicatorConfiguration config;
+        Replicator replicator;
 
-  class MyReplicatorListener implements ReplicatorChangeListener {
-    private List<ReplicatorChange> changes = new ArrayList<>();
-    public List<ReplicatorChange> getChanges(){
-      return changes;
+        if (replicationType == null)
+        {
+            replicationType = "push_pull";
+        }
+        replicationType = replicationType.toLowerCase();
+        ReplicatorConfiguration.ReplicatorType replType;
+        if (replicationType.equals("push")) {
+            replType = ReplicatorConfiguration.ReplicatorType.PUSH;
+        } else if (replicationType.equals("pull")) {
+            replType = ReplicatorConfiguration.ReplicatorType.PULL;
+        } else {
+            replType = ReplicatorConfiguration.ReplicatorType.PUSH_AND_PULL;
+        }
+        Log.i("DB name", "serverDBName is "+ serverDBName);
+        URI uri = new URI("ws://" + ipaddress + ":"+port+"/" + serverDBName);
+        if (endPointType.toLowerCase() == "urlendpoint"){
+
+            URLEndpoint urlEndPoint= new URLEndpoint(uri);
+            config = new ReplicatorConfiguration(sourceDb, urlEndPoint);
+        }
+        else{
+            MessageEndpoint messageEndPoint = new MessageEndpoint("p2p", uri, ProtocolType.BYTE_STREAM, this);
+            config = new ReplicatorConfiguration(sourceDb, messageEndPoint);
+        }
+        config.setReplicatorType(replType);
+        if (continuous != null) {
+            config.setContinuous(continuous);
+        }
+        else {
+            config.setContinuous(false);
+        }
+        if (documentIds != null) {
+            config.setDocumentIDs(documentIds);
+        }
+
+        replicator = new Replicator(config);
+        return replicator;
     }
-    @Override
-    public void changed(ReplicatorChange change) {
-      changes.add(change);
+
+    class MyReplicatorListener implements ReplicatorChangeListener {
+        private List<ReplicatorChange> changes = new ArrayList<>();
+        public List<ReplicatorChange> getChanges(){
+            return changes;
+        }
+        @Override
+        public void changed(ReplicatorChange change) {
+            changes.add(change);
+        }
     }
-  }
 
-  public ReplicatorTcpListener serverStart(Args args) throws IOException{
-    Database sourceDb = args.get("database");
-    int port = args.get("port");
-    MessageEndpointListener messageEndpointListener = new MessageEndpointListener(new MessageEndpointListenerConfiguration(sourceDb, ProtocolType.BYTE_STREAM));
-    ReplicatorTcpListener p2ptcpListener = new ReplicatorTcpListener(sourceDb, port);
-    p2ptcpListener.start();
-    return p2ptcpListener;
-  }
+    public ReplicatorTcpListener serverStart(Args args) throws IOException{
+        Database sourceDb = args.get("database");
+        int port = args.get("port");
+        MessageEndpointListener messageEndpointListener = new MessageEndpointListener(new MessageEndpointListenerConfiguration(sourceDb, ProtocolType.BYTE_STREAM));
+        ReplicatorTcpListener p2ptcpListener = new ReplicatorTcpListener(sourceDb, port);
+        p2ptcpListener.start();
+        return p2ptcpListener;
+    }
 
-  public void serverStop(Args args){
-    ReplicatorTcpListener p2ptcpListener = args.get("replicatorTcpListener");
-    p2ptcpListener.stop();
-  }
+    public void serverStop(Args args){
+        ReplicatorTcpListener p2ptcpListener = args.get("replicatorTcpListener");
+        p2ptcpListener.stop();
+    }
 
-  public MessageEndpointConnection createConnection(MessageEndpoint endpoint){
-    URI url = (URI)endpoint.getTarget();
-    return new ReplicatorTcpClientConnection(url);
-  }
+    public MessageEndpointConnection createConnection(MessageEndpoint endpoint){
+        URI url = (URI)endpoint.getTarget();
+        return new ReplicatorTcpClientConnection(url);
+    }
 
+    public MyDocumentReplicatorListener addReplicatorEventChangeListener(Args args){
+        return replicatorRequestHandlerObj.addReplicatorEventChangeListener(args);
+    }
+
+    public void removeReplicatorEventListener(Args args) {
+        replicatorRequestHandlerObj.removeReplicatorEventListener(args);
+    }
+
+    public int changeListenerChangesCount(Args args) {
+        return replicatorRequestHandlerObj.changeListenerChangesCount(args);
+    }
+
+    public List<String> replicatorEventGetChanges(Args args){
+        return replicatorRequestHandlerObj.replicatorEventGetChanges(args);
+    }
 }
-
-

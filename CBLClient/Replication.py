@@ -180,6 +180,27 @@ class Replication(object):
         args.setMemoryPointer("replicator", replicator)
         return self._client.invokeMethod("replicator_config", args)
 
+    def addReplicatorEventChangeListener(self, replicator):
+        args = Args()
+        args.setMemoryPointer("replicator", replicator)
+        return self._client.invokeMethod("replicator_addReplicatorEventChangeListener", args)
+
+    def removeReplicatorEventListener(self, replicator, change_listener):
+        args = Args()
+        args.setMemoryPointer("replicator", replicator)
+        args.setMemoryPointer("changeListener", change_listener)
+        return self._client.invokeMethod("replicator_removeReplicatorEventListener", args)
+
+    def getReplicatorEventChanges(self, change_listener):
+        args = Args()
+        args.setMemoryPointer("changeListener", change_listener)
+        return self._client.invokeMethod("replicator_replicatorEventGetChanges", args)
+
+    def getReplicatorEventChangesCount(self, change_listener):
+        args = Args()
+        args.setMemoryPointer("changeListener", change_listener)
+        return self._client.invokeMethod("replicator_replicatorEventChangesCount", args)
+
     def addChangeListener(self, replicator):
         args = Args()
         args.setMemoryPointer("replicator", replicator)
@@ -268,7 +289,7 @@ class Replication(object):
         activity_level = self.getActivitylevel(repl)
         while count < max_times:
             log_info("Activity level: {}".format(activity_level))
-            time.sleep(1)
+            time.sleep(2)
             if activity_level == "offline" or activity_level == "connecting" or activity_level == "busy":
                 count += 1
             else:

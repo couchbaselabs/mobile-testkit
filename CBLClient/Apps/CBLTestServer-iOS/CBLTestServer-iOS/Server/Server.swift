@@ -50,7 +50,6 @@ public class Server {
     let memory = Memory()
     
     public init() {
-        Database.setLogLevel(LogLevel.info, domain: LogDomain.all)
         dictionaryRequestHandler = DictionaryRequestHandler()
         queryRequestHandler = QueryRequestHandler()
         databaseRequestHandler = DatabaseRequestHandler()
@@ -72,6 +71,7 @@ public class Server {
         databaseConfigurationRequestHandler = DatabaseConfigurationRequestHandler()
         peerToPeerRequestHandler = PeerToPeerRequestHandler()
         server = GCDWebServer()
+        Database.log.console.level = LogLevel.debug
         server.addDefaultHandler(forMethod: "POST", request: GCDWebServerDataRequest.self) {
             (request) -> GCDWebServerResponse? in
             

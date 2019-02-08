@@ -317,18 +317,16 @@ def params_from_base_suite_setup(request):
     }
 
     # Delete CBL database
-#     for db_name, testserver, base_url in zip(db_name_list,
-#                                              testserver_list,
-#                                              base_url_list):
     if create_db_per_suite:
         for cbl_db, db_obj, base_url in zip(cbl_db_list, db_obj_list, base_url_list):
             if not no_db_delete:
                 print "The base url is ", base_url
                 log_info("Deleting the database {} at the suite teardown".format(db_obj.getName(cbl_db)))
-                time.sleep(5)
+                time.sleep(2)
                 db_obj.deleteDB(cbl_db)
 
-        # Flush all the memory contents on the server app
+    # Flush all the memory contents on the server app
+    for testserver in testserver_list:
         log_info("Flushing server memory")
         utils_obj = Utils(base_url)
         utils_obj.flushMemory()
@@ -432,5 +430,5 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     if create_db_per_test:
         for cbl_db, db_obj, base_url in zip(cbl_db_list, db_obj_list, base_url_list):
             log_info("Deleting the database {} at the test teardown".format(db_obj.getName(cbl_db)))
-            time.sleep(5)
+            time.sleep(2)
             db_obj.deleteDB(cbl_db)
