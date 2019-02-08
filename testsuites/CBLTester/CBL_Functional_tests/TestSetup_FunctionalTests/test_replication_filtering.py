@@ -5,29 +5,8 @@ import random
 
 from keywords.MobileRestClient import MobileRestClient
 from keywords.utils import add_new_fields_to_doc
-from keywords.utils import log_info
-from CBLClient.Database import Database
 from CBLClient.Replication import Replication
 from libraries.testkit import cluster
-
-
-@pytest.fixture(scope="function")
-def setup_teardown_test(params_from_base_test_setup):
-    cbl_db_name = "cbl_db"
-    base_url = params_from_base_test_setup["base_url"]
-    db = Database(base_url)
-    db_config = db.configure()
-    log_info("Creating db")
-    cbl_db = db.create(cbl_db_name, db_config)
-
-    yield{
-        "db": db,
-        "cbl_db": cbl_db,
-        "cbl_db_name": cbl_db_name
-    }
-
-    log_info("Deleting the db")
-    db.deleteDB(cbl_db)
 
 
 @pytest.mark.sanity
