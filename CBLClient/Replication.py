@@ -300,7 +300,7 @@ class Replication(object):
                 count += 1
             else:
                 if activity_level == "idle":
-                    if self.getCompleted(repl) < self.getTotal(repl) and self.getTotal(repl) != 0:
+                    if (self.getCompleted(repl) < self.getTotal(repl)) and self.getTotal(repl) != 0:
                         count += 1
                     else:
                         time.sleep(3)
