@@ -1,7 +1,6 @@
 import pytest
 import random
 
-
 from keywords.MobileRestClient import MobileRestClient
 from keywords.utils import get_event_changes
 from CBLClient.Replication import Replication

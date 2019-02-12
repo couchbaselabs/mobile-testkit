@@ -22,6 +22,7 @@
 using System;
 using System.IO;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 
 using HandlerAction = System.Action<System.Collections.Specialized.NameValueCollection, 
@@ -62,7 +63,7 @@ namespace Couchbase.Lite.Testing.NetCore
             logconfig.MaxRotateCount = 0;
             Database.Log.File.Config = logconfig;
             Console.WriteLine("Default directory for database creation is - \"{0}\"", config.Directory.ToString());
-            
+
 
             TestServer.FilePathResolver = path => path;
             var listener = new TestServer();

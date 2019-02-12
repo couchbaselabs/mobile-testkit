@@ -252,7 +252,8 @@ def get_event_changes(event_changes):
     for a particular Replication event
     """
     event_dict = {}
-    pattern = ".*?doc_id: (\w+), error_code: (.*?), error_domain: (\w+), push: (\w+), flags: (.*?)'.*?"
+    pattern = ".*?doc_id: ([a-zA-Z0-9_]+), error_code: (.*?), error_domain: ([a-zA-Z0-9_]+)," \
+              " push: ([a-zA-Z0-9_]+), flags: (.*?)'.*?"
     events = re.findall(pattern, string=str(event_changes))
     for event in events:
         doc_id = event[0].strip()
@@ -269,3 +270,10 @@ def get_event_changes(event_changes):
                               "error_domain": error_domain,
                               "flags": flags}
     return event_dict
+
+
+def add_new_fields_to_doc(doc_body):
+    doc_body["new_field_1"] = random.choice([True, False])
+    doc_body["new_field_2"] = random_string(length=60)
+    doc_body["new_field_3"] = random_string(length=90)
+    return doc_body

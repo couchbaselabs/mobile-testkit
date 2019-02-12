@@ -33,7 +33,8 @@ def pytest_addoption(parser):
 
     parser.addoption("--sync-gateway-version",
                      action="store",
-                     help="sync-gateway-version: Sync Gateway version to install (ex. 1.3.1-16 or 590c1c31c7e83503eff304d8c0789bdd268d6291)")
+                     help="sync-gateway-version: Sync Gateway version to install "
+                          "(ex. 1.3.1-16 or 590c1c31c7e83503eff304d8c0789bdd268d6291)")
 
     parser.addoption("--liteserv-platforms",
                      action="store",
@@ -69,7 +70,8 @@ def pytest_addoption(parser):
 
     parser.addoption("--doc-generator",
                      action="store",
-                     help="Provide the doc generator type. Valid values are - simple, four_k, simple_user and complex_doc",
+                     help="Provide the doc generator type. Valid values are - simple, four_k, simple_user and"
+                          " complex_doc",
                      default="simple")
 
     parser.addoption("--resume-cluster", action="store_true",
@@ -265,9 +267,11 @@ def params_from_base_suite_setup(request):
             log_info("Starting TestServer...")
             test_name_cp = test_name.replace("/", "-")
             if device_enabled:
-                testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now()))
+                testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
+                                                                      test_name_cp, datetime.datetime.now()))
             else:
-                testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now()))
+                testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp,
+                                                               datetime.datetime.now()))
         for base_url, i in zip(base_url_list, range(len(base_url_list))):
             db_name = "{}_{}_{}".format(create_db_per_suite, str(time.time()), i + 1)
             log_info("db name for {} is {}".format(base_url, db_name))
@@ -316,17 +320,15 @@ def params_from_base_suite_setup(request):
         "create_db_per_test": create_db_per_test
     }
 
-    # Delete CBL database
     if create_db_per_suite:
         for cbl_db, db_obj, base_url in zip(cbl_db_list, db_obj_list, base_url_list):
             if not no_db_delete:
-                print "The base url is ", base_url
                 log_info("Deleting the database {} at the suite teardown".format(db_obj.getName(cbl_db)))
                 time.sleep(2)
                 db_obj.deleteDB(cbl_db)
 
     # Flush all the memory contents on the server app
-    for testserver in testserver_list:
+    for base_url, testserver in zip(base_url_list, testserver_list):
         log_info("Flushing server memory")
         utils_obj = Utils(base_url)
         utils_obj.flushMemory()
@@ -335,12 +337,11 @@ def params_from_base_suite_setup(request):
 
 
 @pytest.fixture(scope="function")
-def params_from_base_test_setup(request, params_from_base_suite_setup):
+def params_from_base_test_setup(params_from_base_suite_setup):
     cluster_config = params_from_base_suite_setup["cluster_config"]
     mode = params_from_base_suite_setup["mode"]
     xattrs_enabled = params_from_base_suite_setup["xattrs_enabled"]
     platform_list = params_from_base_suite_setup["platform_list"]
-    host_list = params_from_base_suite_setup["host_list"]
     version_list = params_from_base_suite_setup["version_list"]
     host_list = params_from_base_suite_setup["host_list"]
     port_list = params_from_base_suite_setup["port_list"]
@@ -374,7 +375,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         for base_url, i in zip(base_url_list, range(len(base_url_list))):
             """log_info("Starting TestServer...")
             test_name_cp = test_name.replace("/", "-")
-            log_filename = "{}-{}/logs/{}-{}-{}.txt".format("testserver-",RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now())
+            log_filename = "{}-{}/logs/{}-{}-{}.txt".format("testserver-",RESULTS_DIR,
+             type(testserver).__name__, test_name_cp, datetime.datetime.now())
             if device_enabled:
                 testserver.start_device(log_filename)
             else:

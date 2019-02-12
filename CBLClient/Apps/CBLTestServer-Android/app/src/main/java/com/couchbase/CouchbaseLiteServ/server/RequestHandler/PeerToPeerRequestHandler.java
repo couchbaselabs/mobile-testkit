@@ -42,6 +42,9 @@ public class PeerToPeerRequestHandler implements MessageEndpointDelegate{
         Boolean continuous = args.get("continuous");
         String endPointType = args.get("endPointType");
         List<String> documentIds = args.get("documentIDs");
+        Boolean push_filter = args.get("push_filter");
+        Boolean pull_filter = args.get("pull_filter");
+        String filter_callback_func = args.get("filter_callback_func");
         ReplicatorConfiguration config;
         Replicator replicator;
 
@@ -60,14 +63,15 @@ public class PeerToPeerRequestHandler implements MessageEndpointDelegate{
         }
         Log.i("DB name", "serverDBName is "+ serverDBName);
         URI uri = new URI("ws://" + ipaddress + ":"+port+"/" + serverDBName);
-        if (endPointType.toLowerCase() == "urlendpoint"){
-
+        if (endPointType.equals("URLEndPoint")){
             URLEndpoint urlEndPoint= new URLEndpoint(uri);
             config = new ReplicatorConfiguration(sourceDb, urlEndPoint);
         }
-        else{
+        else if (endPointType.equals("MessageEndPoint")){
             MessageEndpoint messageEndPoint = new MessageEndpoint("p2p", uri, ProtocolType.BYTE_STREAM, this);
             config = new ReplicatorConfiguration(sourceDb, messageEndPoint);
+        } else {
+            throw new IllegalArgumentException("Incorrect EndPoint type");
         }
         config.setReplicatorType(replType);
         if (continuous != null) {
@@ -78,6 +82,27 @@ public class PeerToPeerRequestHandler implements MessageEndpointDelegate{
         }
         if (documentIds != null) {
             config.setDocumentIDs(documentIds);
+        }if (push_filter){
+            if (filter_callback_func.equals("boolean")){
+                config.setPushFilter(new ReplicatorBooleanFiltlerCallback());
+            } else if (filter_callback_func.equals("deleted")){
+                config.setPushFilter(new ReplicatorDeletedFilterCallback());
+            } else if (filter_callback_func.equals("access_revoked")){
+                config.setPushFilter(new ReplicatorAccessRevokedFilterCallback());
+            } else {
+                config.setPushFilter(new DefaultReplicatorFilterCallback());
+            }
+        }
+        if (pull_filter){
+            if (filter_callback_func.equals("boolean")){
+                config.setPullFilter(new ReplicatorBooleanFiltlerCallback());
+            } else if (filter_callback_func.equals("deleted")){
+                config.setPullFilter(new ReplicatorDeletedFilterCallback());
+            } else if (filter_callback_func.equals("access_revoked")){
+                config.setPullFilter(new ReplicatorAccessRevokedFilterCallback());
+            } else {
+                config.setPullFilter(new DefaultReplicatorFilterCallback());
+            }
         }
 
         replicator = new Replicator(config);
@@ -113,8 +138,7 @@ public class PeerToPeerRequestHandler implements MessageEndpointDelegate{
         URI url = (URI)endpoint.getTarget();
         return new ReplicatorTcpClientConnection(url);
     }
-
-    public MyDocumentReplicatorListener addReplicatorEventChangeListener(Args args){
+public MyDocumentReplicatorListener addReplicatorEventChangeListener(Args args){
         return replicatorRequestHandlerObj.addReplicatorEventChangeListener(args);
     }
 
