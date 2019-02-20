@@ -16,7 +16,7 @@ from utilities.cluster_config_utils import get_revs_limit, is_ipv6, is_x509_auth
 from keywords.exceptions import ProvisioningError, Error
 from libraries.provision.ansible_runner import AnsibleRunner
 from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_redact_level
-from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version, sg_ssl_enabled
+from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version, sg_ssl_enabled, get_cbs_version
 from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
 
 
@@ -527,6 +527,15 @@ class SyncGateway(object):
         sg_conf = os.path.abspath(sg_config.config_path)
         sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
         couchbase_server_primary_node = add_cbs_to_sg_config_server_field(cluster_config)
+        bucket_names = get_buckets_from_sync_gateway_config(sg_conf)
+
+        if is_cbs_ssl_enabled(cluster_config):
+            self.server_port = 18091
+            self.server_scheme = "https"
+
+        if is_x509_auth(cluster_config):
+            self.server_port = ""
+            self.server_scheme = "couchbases"
 
         if is_ipv6(cluster_config):
             couchbase_server_primary_node = "[{}]".format(couchbase_server_primary_node)
@@ -534,6 +543,12 @@ class SyncGateway(object):
         # Shared vars
         playbook_vars = {
             "sync_gateway_config_filepath": sg_conf,
+            "username": "",
+            "password": "",
+            "certpath": "",
+            "keypath": "",
+            "cacertpath": "",
+            "x509_auth": False,
             "sg_cert_path": sg_cert_path,
             "server_port": self.server_port,
             "server_scheme": self.server_scheme,
@@ -542,7 +557,7 @@ class SyncGateway(object):
             "no_conflicts": "",
             "revs_limit": "",
             "sg_use_views": "",
-            "num_index_replicas": "",
+            "num_index_replicas": "",           
             "couchbase_server_primary_node": couchbase_server_primary_node
         }
 
@@ -561,11 +576,19 @@ class SyncGateway(object):
                 log_info("Keyerror in getting logging{}".format(ex.message))
                 playbook_vars["logging"] = '{} {},'.format(logging_config, "}")
 
-            if get_sg_use_views(cluster_config):
-                playbook_vars["sg_use_views"] = '"use_views": true,'
+            server_version = get_cbs_version(cluster_config)
+            cbs_version, cbs_build = version_and_build(server_version)
+            if cbs_version >= "5.0.0":
+                if get_sg_use_views(cluster_config):
+                    playbook_vars["sg_use_views"] = '"use_views": true,'
+                else:
+                    num_replicas = get_sg_replicas(cluster_config)
+                    playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
             else:
-                num_replicas = get_sg_replicas(cluster_config)
-                playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
+                playbook_vars["sg_use_views"] = '"use_views": true,'
+                playbook_vars["username"] = '"username": "{}",'.format(
+                    bucket_names[0])
+                playbook_vars["password"] = '"password": "password",'
         else:
             playbook_vars["logging"] = '"log": ["*"],'
 
@@ -601,6 +624,8 @@ class SyncGateway(object):
                 extra_vars=playbook_vars
             )
             log_info("Completed upgrading all sync_gateways/sg_accels")
+        log_info "upgrade status is {}".format(status)
+
         if status != 0:
             raise Exception("Could not upgrade sync_gateway/sg_accel")
 
