@@ -16,10 +16,10 @@ from libraries.testkit import cluster
 @pytest.mark.syncgateway
 @pytest.mark.replication
 @pytest.mark.parametrize("num_of_docs, replication_type, file_attachment, continuous", [
-    # (10, "pull", None, True),
+    (10, "pull", None, True),
     (10, "pull", "sample_text.txt", True),
-    # (10, "push", "sample_text.txt", True),
-    # (10, "push", None, True)
+    (10, "push", "sample_text.txt", True),
+    (10, "push", None, True)
 ])
 def test_delta_sync_replication(params_from_base_test_setup, num_of_docs, replication_type, file_attachment, continuous):
     '''
@@ -89,7 +89,7 @@ def test_delta_sync_replication(params_from_base_test_setup, num_of_docs, replic
     doc_reads_bytes1, doc_writes_bytes1 = get_net_stats(sg_client, sg_admin_url)
     delta_size = doc_reads_bytes1
     assert delta_size < doc_writes_bytes, "did not replicate just delta"
-    """
+
     if replication_type == "push":
         doc_ids = db.getDocIds(cbl_db)
         cbl_db_docs = db.getDocuments(cbl_db, doc_ids)
@@ -127,7 +127,7 @@ def test_delta_sync_replication(params_from_base_test_setup, num_of_docs, replic
 
     if replication_type != "push" and file_attachment is not None:
         assert delta_size < doc_writes_bytes, "did not replicate just delta"
-    """
+
     sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
     compare_docs(cbl_db, db, sg_docs)
 
@@ -201,9 +201,6 @@ def test_delta_sync_enabled_disabled(params_from_base_test_setup, num_of_docs, r
 
     # Get expvars and get original size of document
     doc_reads_bytes, doc_writes_bytes = get_net_stats(sg_client, sg_admin_url)
-    full_doc_size = doc_reads_bytes
-    print "doc read bytes for first time", doc_reads_bytes
-    print "doc writes bytes for first time", doc_writes_bytes
     update_docs(replication_type, cbl_db, db, sg_client, sg_docs, sg_url, sg_db, number_of_updates, session, channels)
 
     repl = replicator.configure_and_replicate(source_db=cbl_db,
@@ -454,7 +451,7 @@ def test_delta_sync_utf8_strings(params_from_base_test_setup, num_of_docs, repli
 @pytest.mark.replication
 @pytest.mark.parametrize("num_of_docs, replication_type", [
     (1, "pull"),
-    # (1, "push")
+    (1, "push")
 ])
 def test_delta_sync_nested_doc(params_from_base_test_setup, num_of_docs, replication_type):
     '''
@@ -673,8 +670,6 @@ def compare_docs(cbl_db, db, sg_docs):
         del sg_doc["doc"]["_rev"]
         key = sg_doc["doc"]["_id"]
         del sg_doc["doc"]["_id"]
-        print "sg doc is ", sg_doc["doc"]
-        print "cbl doc is ", cbl_db_docs[key]
         assert deep_dict_compare(sg_doc["doc"], cbl_db_docs[key]), "mismatch in the dictionary"
 
 
@@ -762,8 +757,6 @@ def verify_delta_stats_counts(sg_client, sg_admin_url, replication_type, sg_db, 
     expvars = sg_client.get_expvars(url=sg_admin_url)
     if replication_type == "push":
         assert expvars['syncgateway']['per_db'][sg_db]['delta_sync']['delta_push_doc_count'] == num_of_docs, "delta push replication count is not right"
-        # assert expvars['syncgateway']['per_db'][sg_db]['delta_sync']['deltas_requested'] == num_of_docs * 3,"delta requested is not equal to 3 times  of number of docs"
-        # assert expvars['syncgateway']['per_db'][sg_db]['delta_sync']['deltas_sent'] == num_of_docs * 3,"delta sent is not equal to 3 times  of number of docs"
     else:
         assert expvars['syncgateway']['per_db'][sg_db]['delta_sync']['delta_pull_replication_count'] == 1, "delta pull replication count is not right"
         assert expvars['syncgateway']['per_db'][sg_db]['delta_sync']['deltas_requested'] == num_of_docs, "delta pull requested is not equal to number of docs"
