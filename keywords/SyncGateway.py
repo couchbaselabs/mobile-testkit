@@ -624,7 +624,7 @@ class SyncGateway(object):
                 extra_vars=playbook_vars
             )
             log_info("Completed upgrading all sync_gateways/sg_accels")
-        log_info "upgrade status is {}".format(status)
+        log_info("upgrade status is {}".format(status))
 
         if status != 0:
             raise Exception("Could not upgrade sync_gateway/sg_accel")
