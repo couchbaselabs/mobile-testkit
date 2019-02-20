@@ -557,7 +557,7 @@ class SyncGateway(object):
             "no_conflicts": "",
             "revs_limit": "",
             "sg_use_views": "",
-            "num_index_replicas": "",           
+            "num_index_replicas": "",
             "couchbase_server_primary_node": couchbase_server_primary_node
         }
 
