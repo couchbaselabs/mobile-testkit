@@ -6,7 +6,7 @@ import requests
 import libraries.testkit.settings
 from libraries.provision.ansible_runner import AnsibleRunner
 from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_revs_limit
-from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version, get_redact_level
+from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version, get_redact_level, is_delta_sync_enabled
 from keywords.utils import add_cbs_to_sg_config_server_field, log_info
 from keywords.constants import SYNC_GATEWAY_CERT
 from utilities.cluster_config_utils import sg_ssl_enabled
@@ -64,7 +64,8 @@ class SgAccel:
             "sslcert": "",
             "sslkey": "",
             "logging": "",
-            "couchbase_server_primary_node": couchbase_server_primary_node
+            "couchbase_server_primary_node": couchbase_server_primary_node,
+            "delta_sync": ""
         }
 
         if get_sg_version(self.cluster_config) >= "2.1.0":
@@ -99,6 +100,9 @@ class SgAccel:
         except KeyError:
             log.info("revs_limit no found in {}, Ignoring".format(self.cluster_config))
             playbook_vars["revs_limit"] = ''
+
+        if is_delta_sync_enabled(self.cluster_config):
+            playbook_vars["delta_sync"] = '"delta_sync": { "enabled": true},'
 
         if is_cbs_ssl_enabled(self.cluster_config) and get_sg_version(self.cluster_config) >= "1.5.0":
             playbook_vars["server_scheme"] = "couchbases"

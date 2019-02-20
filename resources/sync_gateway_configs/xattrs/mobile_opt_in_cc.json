@@ -19,6 +19,7 @@
             {{ cacertpath }}
             {{ certpath }}
             {{ keypath }}
+            {{ delta_sync }}
             "enable_shared_bucket_access": true,
             "import_docs": "continuous",
             "import_filter": `function(doc){ return doc.type == "mobile"}`,

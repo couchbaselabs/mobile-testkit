@@ -477,8 +477,8 @@ namespace Couchbase.Lite.Testing
                 db.Save(UpdateDoc);
                 response.WriteEmptyBody();
             });
+            response.WriteEmptyBody();
         }
-
         internal static void DatabaseUpdateDocuments([NotNull] NameValueCollection args,
                                    [NotNull] IReadOnlyDictionary<string, object> postBody,
                                    [NotNull] HttpListenerResponse response)

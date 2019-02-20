@@ -24,6 +24,7 @@
             {{ cacertpath }}
             {{ certpath }}
             {{ keypath }}
+            {{ delta_sync }}
             "server":"http://127.0.0.1:8091",
             "bucket":"data-bucket",
             "channel_index":{

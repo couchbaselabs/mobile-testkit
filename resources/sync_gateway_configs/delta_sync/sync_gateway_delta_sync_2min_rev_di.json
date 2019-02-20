@@ -7,12 +7,11 @@
     "slowServerCallWarningThreshold": 500,
     "compressResponses": false,
     {{ logging }}
-    "verbose":"true",
     "cluster_config": {
         "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
         "data_dir":".",
-        "bucket":"data-bucket",
-        "username":"data-bucket",
+        "bucket":"travel-sample",
+        "username":"travel-sample",
         "password": "password"
     },
     {{ sslcert }}
@@ -23,31 +22,23 @@
             {{ no_conflicts }}
             {{ sg_use_views }}
             {{ num_index_replicas }}
-            {{ delta_sync }}
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
-            "bucket":"data-bucket",
-            "username":"data-bucket",
+            "bucket":"travel-sample",
+            "username":"travel-sample",
             "password": "password",
             "channel_index":{
                 "num_shards":16,
                 "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
                 "bucket":"index-bucket",
-                "username":"index-bucket",
+                "username": "index-bucket",
                 "password": "password",
                 "writer":{{ is_index_writer }}
             },
-            "sync":
-            `function(doc, oldDoc){
-                if(doc._id == "channel_access") {
-                    access(doc.users, doc.channels);
-                } else if(doc._id == "role_access") {
-                    role(doc.users, doc.roles);
-                } else if(doc._id == "channel_grant_to_role") {
-                    access(doc.roles, doc.channels);
-                } else {
-                    channel(doc.channels);
-                }
-            }`
+            "old_rev_expiry_seconds": 120,
+            "delta_sync": {
+                "enabled": true,
+                "rev_max_age_seconds": 150
+            }
         }
     }
 }

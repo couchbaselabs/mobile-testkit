@@ -271,6 +271,7 @@ public class DatabaseRequestHandler {
 
             return documents
           
+        #if COUCHBASE_ENTERPRISE
         case "database_changeEncryptionKey":
             let database: Database = args.get(name:"database")!
             let password: String? = args.get(name:"password")!
@@ -287,7 +288,7 @@ public class DatabaseRequestHandler {
                 print("Got error setting encryption key \(error)")
                 return error.localizedDescription
             }
-            
+        #endif
         case "database_copy":
             let dbName: String! = args.get(name: "dbName")
             let dbConfig: DatabaseConfiguration? = args.get(name: "dbConfig")
