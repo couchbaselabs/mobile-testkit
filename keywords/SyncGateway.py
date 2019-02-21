@@ -566,6 +566,8 @@ class SyncGateway(object):
         playbook_vars["couchbase_sync_gateway_package_base_url"] = sync_gateway_base_url
         playbook_vars["couchbase_sync_gateway_package"] = sync_gateway_package_name
         playbook_vars["couchbase_sg_accel_package"] = sg_accel_package_name
+        playbook_vars["username"] = '"username": "{}",'.format(bucket_names[0])
+        playbook_vars["password"] = '"password": "password",'
 
         if version >= "2.1.0":
             logging_config = '"logging": {"debug": {"enabled": true}'
@@ -578,7 +580,7 @@ class SyncGateway(object):
 
             server_version = get_cbs_version(cluster_config)
             cbs_version, cbs_build = version_and_build(server_version)
-            if cbs_version >= "5.0.0":
+            if cbs_version >= "5.5.0":
                 if get_sg_use_views(cluster_config):
                     playbook_vars["sg_use_views"] = '"use_views": true,'
                 else:
@@ -586,9 +588,6 @@ class SyncGateway(object):
                     playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
             else:
                 playbook_vars["sg_use_views"] = '"use_views": true,'
-                playbook_vars["username"] = '"username": "{}",'.format(
-                    bucket_names[0])
-                playbook_vars["password"] = '"password": "password",'
         else:
             playbook_vars["logging"] = '"log": ["*"],'
 
