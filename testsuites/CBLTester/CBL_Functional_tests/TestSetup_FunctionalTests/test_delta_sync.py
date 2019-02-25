@@ -2,8 +2,7 @@ import pytest
 import time
 
 from keywords.MobileRestClient import MobileRestClient
-from keywords.utils import log_info
-from keywords.utils import random_string
+from keywords.utils import random_string, compare_sg_cbl_docs
 from CBLClient.Replication import Replication
 from CBLClient.Authenticator import Authenticator
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
@@ -129,7 +128,7 @@ def test_delta_sync_replication(params_from_base_test_setup, num_of_docs, replic
         assert delta_size < doc_writes_bytes, "did not replicate just delta"
 
     sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
-    compare_docs(cbl_db, db, sg_docs)
+    compare_sg_cbl_docs(cbl_db, db, sg_docs)
 
 
 @pytest.mark.listener
@@ -137,7 +136,7 @@ def test_delta_sync_replication(params_from_base_test_setup, num_of_docs, replic
 @pytest.mark.replication
 @pytest.mark.parametrize("num_of_docs, replication_type", [
     (10, "pull"),
-    # (10, "push")
+    (10, "push")
 ])
 def test_delta_sync_enabled_disabled(params_from_base_test_setup, num_of_docs, replication_type):
     '''
@@ -248,7 +247,7 @@ def test_delta_sync_enabled_disabled(params_from_base_test_setup, num_of_docs, r
     else:
         delta_disabled_doc_size = doc_writes_bytes3 - doc_writes_bytes2
 
-    compare_docs(cbl_db, db, sg_docs)
+    compare_sg_cbl_docs(cbl_db, db, sg_docs)
     # assert delta_disabled_doc_size == full_doc_size, "did not get full doc size"
     assert delta_disabled_doc_size > delta_size, "disabled delta doc size is more than enabled delta size"
     try:
@@ -268,7 +267,7 @@ def test_delta_sync_enabled_disabled(params_from_base_test_setup, num_of_docs, r
 def test_delta_sync_within_expiry(params_from_base_test_setup, num_of_docs, replication_type):
     '''
     @summary:
-    1. Have delta sync enabled by default
+    1. Have delta sync enabled
     2. Create docs in CBL
     3. Do push replication to SGW
     4. update docs in SGW/CBL
@@ -301,6 +300,7 @@ def test_delta_sync_within_expiry(params_from_base_test_setup, num_of_docs, repl
     c = cluster.Cluster(config=cluster_config)
     sg_config = sync_gateway_config_path_for_mode("delta_sync/sync_gateway_delta_sync_2min_rev", mode)
     c.reset(sg_config_path=sg_config)
+    enable_delta_sync(c, sg_config, cluster_config, mode, True)
 
     sg_client = MobileRestClient()
     sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channels)
@@ -357,7 +357,7 @@ def test_delta_sync_within_expiry(params_from_base_test_setup, num_of_docs, repl
 
     # compare full body on SGW and CBL and verify whole body matches
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, include_docs=True, auth=session)["rows"]
-    compare_docs(cbl_db, db, sg_docs)
+    compare_sg_cbl_docs(cbl_db, db, sg_docs)
 
 
 @pytest.mark.listener
@@ -441,7 +441,7 @@ def test_delta_sync_utf8_strings(params_from_base_test_setup, num_of_docs, repli
     else:
         delta_size = doc_writes_bytes2 - doc_writes_bytes1
 
-    compare_docs(cbl_db, db, sg_docs)
+    compare_sg_cbl_docs(cbl_db, db, sg_docs)
     verify_delta_stats_counts(sg_client, sg_admin_url, replication_type, sg_db, num_of_docs)
     assert delta_size < full_doc_size, "delta size is not less than full doc size when delta is replicated"
 
@@ -525,7 +525,7 @@ def test_delta_sync_nested_doc(params_from_base_test_setup, num_of_docs, replica
 
     # 7. Verify the body of nested doc matches with sgw and cbl
     sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
-    compare_docs(cbl_db, db, sg_docs)
+    compare_sg_cbl_docs(cbl_db, db, sg_docs)
     verify_delta_stats_counts(sg_client, sg_admin_url, replication_type, sg_db, num_of_docs)
 
 
@@ -590,7 +590,7 @@ def test_delta_sync_larger_than_doc(params_from_base_test_setup, num_of_docs, re
     replicator.stop(repl)
 
     # get stats_send from expvar api
-    doc_reads_bytes1, doc_writes_bytes1 = get_net_stats(sg_client, sg_admin_url)
+    _, doc_writes_bytes1 = get_net_stats(sg_client, sg_admin_url)
     full_doc_size = doc_writes_bytes1
 
     # 4. update docs in SGW/CBL
@@ -613,7 +613,7 @@ def test_delta_sync_larger_than_doc(params_from_base_test_setup, num_of_docs, re
 
     # compare full body on SGW and CBL and verify whole body matches
     sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
-    compare_docs(cbl_db, db, sg_docs)
+    compare_sg_cbl_docs(cbl_db, db, sg_docs)
 
     assert larger_delta_size >= full_doc_size, "did not get full doc size after deltas is expired"
 
@@ -660,90 +660,6 @@ def property_updater(doc_body):
     doc_body["sg_new_update2"] = random_string(length=100)
     doc_body["sg_new_update3"] = random_string(length=100)
     return doc_body
-
-
-def compare_docs(cbl_db, db, sg_docs):
-    doc_ids = db.getDocIds(cbl_db)
-    cbl_db_docs = db.getDocuments(cbl_db, doc_ids)
-    # for sg_doc in zip(sg_docs):
-    for sg_doc in sg_docs:
-        del sg_doc["doc"]["_rev"]
-        key = sg_doc["doc"]["_id"]
-        del sg_doc["doc"]["_id"]
-        assert deep_dict_compare(sg_doc["doc"], cbl_db_docs[key]), "mismatch in the dictionary"
-
-
-def compare_generic_types(object1, object2):
-    if isinstance(object1, str) and isinstance(object2, str):
-        return object1 == object2
-    elif isinstance(object1, unicode) and isinstance(object2, unicode):
-        return object1 == object2
-    elif isinstance(object1, bool) and isinstance(object2, bool):
-        return object1 == object2
-    elif isinstance(object1, int) and isinstance(object2, int):
-        return object1 == object2
-    elif isinstance(object1, float) and isinstance(object2, float):
-        return object1 == object2
-    elif isinstance(object1, float) and isinstance(object2, int):
-        return object1 == float(object2)
-    elif isinstance(object1, int) and isinstance(object2, float):
-        return object1 == int(float(object2))
-
-    return True
-
-
-def deep_list_compare(object1, object2):
-    retval = True
-    count = len(object1)
-    object1 = sorted(object1)
-    object2 = sorted(object2)
-    for x in range(count):
-        if isinstance(object1[x], dict) and isinstance(object2[x], dict):
-            retval = deep_dict_compare(object1[x], object2[x])
-            if retval is False:
-                log_info("Unable to match {} element in dict {} and {}".format(object1, object2))
-                return False
-        elif isinstance(object1[x], list) and isinstance(object2[x], list):
-            retval = deep_list_compare(object1[x], object2[x])
-            if retval is False:
-                log_info("Unable to match {} element in list {} and {}".format(object1[x], object2[x]))
-                return False
-        else:
-            retval = compare_generic_types(object1[x], object2[x])
-            if retval is False:
-                log_info("Unable to match objects in generic {} and {}".format(object1[x], object2[x]))
-                return False
-
-    return retval
-
-
-def deep_dict_compare(object1, object2):
-    retval = True
-    if len(object1) != len(object2):
-        log_info("lengths of sgw object and cbl object are different {} --- {}".format(len(object1), len(object2)))
-        return False
-
-    for k in object1.iterkeys():
-        obj1 = object1[k]
-        obj2 = object2[k]
-        if isinstance(obj1, list) and isinstance(obj2, list):
-            retval = deep_list_compare(obj1, obj2)
-            if retval is False:
-                log_info("mismatch between sgw: {} and cbl lists :{}".format(obj1, obj2))
-                return False
-
-        elif isinstance(obj1, dict) and isinstance(obj2, dict):
-            retval = deep_dict_compare(obj1, obj2)
-            if retval is False:
-                log_info("mismatch between sgw: {} and cbl dict :{}".format(obj1, obj2))
-                return False
-        else:
-            retval = compare_generic_types(obj1, obj2)
-            if retval is False:
-                log_info("mistmatch {} and {}".format(obj1, obj2))
-                return False
-
-    return retval
 
 
 def get_net_stats(sg_client, sg_admin_url):
