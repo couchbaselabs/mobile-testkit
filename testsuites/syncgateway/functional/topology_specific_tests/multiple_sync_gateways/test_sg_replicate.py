@@ -34,10 +34,11 @@ DB2 = "db2"
 @pytest.mark.channel
 @pytest.mark.basicauth
 @pytest.mark.changes
-def test_sg_replicate_basic_test(params_from_base_test_setup):
+def test_sg_replicate_basic_test1(params_from_base_test_setup):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
 
     log_info("Running 'test_sg_replicate_basic_test'")
     log_info("Using cluster_config: {}".format(cluster_config))
@@ -53,6 +54,17 @@ def test_sg_replicate_basic_test(params_from_base_test_setup):
     admin.admin_url = sg1.url
 
     sg1_user, sg2_user = create_sg_users(sg1, sg2, DB1, DB2)
+
+    if sync_gateway_version >= "2.5.0":
+        sg_client = MobileRestClient()
+        expvars = sg_client.get_expvars(sg2.admin.admin_url)
+        process_memory_resident = expvars["syncgateway"]["global"]["resource_utilization"]["process_memory_resident"]
+        system_memory_total = expvars["syncgateway"]["global"]["resource_utilization"]["system_memory_total"]
+        goroutines_high_watermark = expvars["syncgateway"]["global"]["resource_utilization"]["goroutines_high_watermark"]
+        chan_cache_hits = expvars["syncgateway"]["per_db"][DB2]["cache"]["chan_cache_hits"]
+        chan_cache_active_revs = expvars["syncgateway"]["per_db"][DB2]["cache"]["chan_cache_active_revs"]
+        chan_cache_num_channels = expvars["syncgateway"]["per_db"][DB2]["cache"]["chan_cache_num_channels"]
+        chan_cache_max_entries = expvars["syncgateway"]["per_db"][DB2]["cache"]["chan_cache_max_entries"]
 
     # Add docs to sg1 and sg2
     doc_id_sg1 = sg1_user.add_doc()
@@ -110,6 +122,19 @@ def test_sg_replicate_basic_test(params_from_base_test_setup):
 
     # Verify that the doc added to sg2 made it to sg1
     assert_has_doc(sg1_user, doc_id_sg2)
+
+    time.sleep(63)
+    if sync_gateway_version >= "2.5.0":
+        expvars = sg_client.get_expvars(sg2.admin.admin_url)
+        assert process_memory_resident < expvars["syncgateway"]["global"]["resource_utilization"]["process_memory_resident"], "process_memory_resident did not get incremented"
+        assert expvars["syncgateway"]["global"]["resource_utilization"]["process_cpu_percent_utilization"] > 0, "process_cpu_percent_utilization did not get incremented"
+        assert system_memory_total < expvars["syncgateway"]["global"]["resource_utilization"]["system_memory_total"], "system_memory_total did not get incremented"
+        assert goroutines_high_watermark < expvars["syncgateway"]["global"]["resource_utilization"]["goroutines_high_watermark"], "goroutines_high_watermark did not get incremented"
+        assert chan_cache_hits < expvars["syncgateway"]["per_db"][DB2]["cache"]["chan_cache_hits"], "chan_cache_hits did not get incremented"
+        assert chan_cache_active_revs < expvars["syncgateway"]["per_db"][DB2]["cache"]["chan_cache_active_revs"], "chan_cache_active_revs did not get incremented"
+        assert chan_cache_num_channels < expvars["syncgateway"]["per_db"][DB2]["cache"]["chan_cache_num_channels"], "chan_cache_num_channels did not get incremented"
+        assert chan_cache_max_entries < expvars["syncgateway"]["per_db"][DB2]["cache"]["chan_cache_max_entries"], "chan_cache_max_entries did not get incremented"
+        assert expvars["syncgateway"]["per_db"][DB2]["cbl_replication_push"]["write_processing_time"] > 0, "write_processing_time did not get incremented"
 
 
 @pytest.mark.topospecific
@@ -291,6 +316,7 @@ def test_sg_replicate_non_existent_db(params_from_base_test_setup):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
 
     log_info("Running 'test_sg_replicate_non_existent_db'")
     log_info("Using cluster_config: {}".format(cluster_config))
@@ -300,6 +326,12 @@ def test_sg_replicate_non_existent_db(params_from_base_test_setup):
         cluster_config=cluster_config,
         sg_config_path=config
     )
+
+    if sync_gateway_version >= "2.5.0":
+        sg_client = MobileRestClient()
+        expvars = sg_client.get_expvars(sg2.admin.admin_url)
+        warn_count = expvars["syncgateway"]["global"]["resource_utilization"]["warn_count"]
+        error_count = expvars["syncgateway"]["global"]["resource_utilization"]["error_count"]
 
     # delete databases if they exist
     try:
@@ -324,6 +356,12 @@ def test_sg_replicate_non_existent_db(params_from_base_test_setup):
 
     assert got_exception is True, 'Expected an exception trying to create a replication against non-existent db'
 
+    if sync_gateway_version >= "2.5.0":
+        sg_client = MobileRestClient()
+        expvars = sg_client.get_expvars(sg2.admin.admin_url)
+        assert warn_count < expvars["syncgateway"]["global"]["resource_utilization"]["warn_count"], "warn_count did not increment"
+        assert error_count < expvars["syncgateway"]["global"]["resource_utilization"]["error_count"], "error_count did not increment"
+
 
 @pytest.mark.topospecific
 @pytest.mark.sanity
@@ -337,8 +375,6 @@ def test_sg_replicate_non_existent_db(params_from_base_test_setup):
     250
 ])
 def test_sg_replicate_push_async(params_from_base_test_setup, num_docs):
-
-    assert num_docs > 0
 
     # if the async stuff works, we should be able to kick off a large
     # push replication and get a missing doc before the replication has
