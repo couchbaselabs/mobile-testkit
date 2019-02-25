@@ -3236,15 +3236,13 @@ def test_doc_removal_from_channel(params_from_base_test_setup):
     base_url = params_from_base_test_setup["base_url"]
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_config = params_from_base_test_setup["sg_config"]
-    cluster_config = params_from_base_test_setup["cluster_config"]
-    sg_config = params_from_base_test_setup["sg_config"]
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
 
     username = "autotest"
     password = "password"
-    documentObj = Document(base_url)
+    document_obj = Document(base_url)
 
     if sync_gateway_version < "2.5.0":
         pytest.skip('This test cannnot run with sg version below 2.5.0')
@@ -3267,8 +3265,6 @@ def test_doc_removal_from_channel(params_from_base_test_setup):
     session = cookie, session_id
 
     # 3. push_pull replicate to SGW
-    replicator = Replication(base_url)
-    authenticator = Authenticator(base_url)
     replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
     repl = replicator.configure_and_replicate(source_db=cbl_db,
                                               target_url=sg_blip_url,
@@ -3278,15 +3274,15 @@ def test_doc_removal_from_channel(params_from_base_test_setup):
 
     # 4. remove doc A from channel A
     doc_obj_A = db.getDocument(cbl_db, cbl_ids[0])
-    doc_A_mut = documentObj.toMutable(doc_obj_A)
-    doc_body_A = documentObj.toMap(doc_A_mut)
+    doc_A_mut = document_obj.toMutable(doc_obj_A)
+    doc_body_A = document_obj.toMap(doc_A_mut)
     doc_body_A["channels"] = ["DEF"]
     db.updateDocument(database=cbl_db, data=doc_body_A, doc_id=cbl_ids[0])
 
     # 5. Remove doc B from channel A , B
     doc_obj_B = db.getDocument(cbl_db, cbl_ids[1])
-    doc_B_mut = documentObj.toMutable(doc_obj_B)
-    doc_body_B = documentObj.toMap(doc_B_mut)
+    doc_B_mut = document_obj.toMutable(doc_obj_B)
+    doc_body_B = document_obj.toMap(doc_B_mut)
     doc_body_B["channels"] = []
     db.updateDocument(database=cbl_db, data=doc_body_B, doc_id=cbl_ids[1])
 
@@ -3308,13 +3304,13 @@ def test_doc_removal_with_multipleChannels(params_from_base_test_setup, setup_cu
     """
         @summary:
         1. Create users in SGW with multiple channels
-            user A -> channelA,channelB, channel C;
-            userB -> channelB,
-            userC-> channelC
+            user A -> channel_A,channel_B, channel_C;
+            userB -> channel_B,
+            userC-> channel_C
         2. create docs in SGW
-            doc a with channel A, channelB ;
-            docb with channel B ,
-            docc with ChannelA, channelB, channelC
+            doc a with channel_A, channel_B ;
+            docb with channel_B ,
+            docc with Channel_A, channel_B, channel_C
         3. Verify User A can access docA and docC.
             docB by UserB, UserA
             docC by user A, user C
@@ -3329,8 +3325,6 @@ def test_doc_removal_with_multipleChannels(params_from_base_test_setup, setup_cu
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_blip_url = params_from_base_test_setup["target_url"]
     base_url = params_from_base_test_setup["base_url"]
-    cluster_config = params_from_base_test_setup["cluster_config"]
-    sg_config = params_from_base_test_setup["sg_config"]
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_config = params_from_base_test_setup["sg_config"]
     db = params_from_base_test_setup["db"]
@@ -3376,10 +3370,10 @@ def test_doc_removal_with_multipleChannels(params_from_base_test_setup, setup_cu
     cookie_C, session_id_C = sg_client.create_session(sg_admin_url, sg_db, username_C)
     session_C = cookie_C, session_id_C
 
-    """ 2. create docs in SGW
-         doc a with channel A, channelB ;
-         docb with channel B ,
-         docc with ChannelA, channelB, channelC """
+    # 2. create docs in SGW
+    #    doc a with channel_A, channel_B ;
+    #    docb with channel_B ,
+    #    docc with Channel_A, channel_B, channel_C
     sg_docs = document.create_docs(doc_id_prefix='sg_docs-A', number=num_of_docs, channels=doc_channel_1)
     sg_docs_A = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=session_A)
 
@@ -3389,9 +3383,9 @@ def test_doc_removal_with_multipleChannels(params_from_base_test_setup, setup_cu
     sg_docs = document.create_docs(doc_id_prefix='sg_docs-C', number=num_of_docs, channels=channel_C)
     sg_docs_C = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=session_C)
 
-    """ 3. Verify User A(cbl_db1) can access docA and docC.
-            UserB(cbl_db2), UserA(cbl_db1) can access docB
-            user A(cbl_db1), user C(cbl_db3) can access docC  """
+    # 3. Verify User A(cbl_db1) can access docA and docc.
+    #    UserB(cbl_db2), UserA(cbl_db1) can access docB
+    #    user A(cbl_db1), user C(cbl_db3) can access docc
 
     # 3. Pull replication from SGW
     replicator = Replication(base_url)
