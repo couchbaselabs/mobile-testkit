@@ -24,11 +24,17 @@ class Replication(object):
         self._client = Client(base_url)
         self.config = None
 
-    def configure(self, source_db, target_url=None, target_db=None, replication_type="push_pull", continuous=False,
-                  channels=None, documentIDs=None, replicator_authenticator=None, headers=None):
+    def configure(self, source_db, target_url=None, target_db=None,
+                  replication_type="push_pull", continuous=False,
+                  push_filter=False, pull_filter=False, channels=None,
+                  documentIDs=None, replicator_authenticator=None,
+                  headers=None, filter_callback_func=''):
         args = Args()
         args.setMemoryPointer("source_db", source_db)
         args.setBoolean("continuous", continuous)
+        args.setBoolean("push_filter", push_filter)
+        args.setBoolean("pull_filter", pull_filter)
+        args.setString("filter_callback_func", filter_callback_func)
         if channels is not None:
             args.setArray("channels", channels)
 
@@ -180,6 +186,27 @@ class Replication(object):
         args.setMemoryPointer("replicator", replicator)
         return self._client.invokeMethod("replicator_config", args)
 
+    def addReplicatorEventChangeListener(self, replicator):
+        args = Args()
+        args.setMemoryPointer("replicator", replicator)
+        return self._client.invokeMethod("replicator_addReplicatorEventChangeListener", args)
+
+    def removeReplicatorEventListener(self, replicator, change_listener):
+        args = Args()
+        args.setMemoryPointer("replicator", replicator)
+        args.setMemoryPointer("changeListener", change_listener)
+        return self._client.invokeMethod("replicator_removeReplicatorEventListener", args)
+
+    def getReplicatorEventChanges(self, change_listener):
+        args = Args()
+        args.setMemoryPointer("changeListener", change_listener)
+        return self._client.invokeMethod("replicator_replicatorEventGetChanges", args)
+
+    def getReplicatorEventChangesCount(self, change_listener):
+        args = Args()
+        args.setMemoryPointer("changeListener", change_listener)
+        return self._client.invokeMethod("replicator_replicatorEventChangesCount", args)
+
     def addChangeListener(self, replicator):
         args = Args()
         args.setMemoryPointer("replicator", replicator)
@@ -268,12 +295,12 @@ class Replication(object):
         activity_level = self.getActivitylevel(repl)
         while count < max_times:
             log_info("Activity level: {}".format(activity_level))
-            time.sleep(1)
+            time.sleep(2)
             if activity_level == "offline" or activity_level == "connecting" or activity_level == "busy":
                 count += 1
             else:
                 if activity_level == "idle":
-                    if self.getCompleted(repl) < self.getTotal(repl) and self.getTotal(repl) != 0:
+                    if (self.getCompleted(repl) < self.getTotal(repl)) and self.getTotal(repl) != 0:
                         count += 1
                     else:
                         time.sleep(3)

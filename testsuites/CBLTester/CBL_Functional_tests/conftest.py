@@ -52,7 +52,8 @@ def pytest_addoption(parser):
 
     parser.addoption("--sync-gateway-version",
                      action="store",
-                     help="sync-gateway-version: Sync Gateway version to install (ex. 1.3.1-16 or 590c1c31c7e83503eff304d8c0789bdd268d6291)")
+                     help="sync-gateway-version: Sync Gateway version to install "
+                          "(ex. 1.3.1-16 or 590c1c31c7e83503eff304d8c0789bdd268d6291)")
 
     parser.addoption("--liteserv-platform",
                      action="store",
@@ -193,7 +194,6 @@ def params_from_base_suite_setup(request):
 
     cluster_utils = ClusterKeywords(cluster_config)
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
-    cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
 
     sg_url = cluster_topology["sync_gateways"][0]["public"]
     sg_ip = host_for_url(sg_url)
@@ -207,9 +207,6 @@ def params_from_base_suite_setup(request):
         persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', True)
         target_url = "wss://{}:4984/{}".format(sg_ip, sg_db)
         target_admin_url = "wss://{}:4985/{}".format(sg_ip, sg_db)
-
-    cbs_url = cluster_topology['couchbase_servers'][0]
-    cbs_ip = host_for_url(cbs_url)
 
     if sg_lb:
         persist_cluster_config_environment_prop(cluster_config, 'sg_lb_enabled', True)
@@ -284,7 +281,7 @@ def params_from_base_suite_setup(request):
             logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=request.node.name)
             raise
 
-    # Hit this intalled running services to verify the correct versions are installed
+    # Hit this installed running services to verify the correct versions are installed
     cluster_utils.verify_cluster_versions(
         cluster_config,
         expected_server_version=server_version,
@@ -300,11 +297,16 @@ def params_from_base_suite_setup(request):
         log_info("Starting TestServer...")
         test_name_cp = test_name.replace("/", "-")
         if device_enabled:
-            testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now()))
+            testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
+                                                                  test_name_cp,
+                                                                  datetime.datetime.now()))
         else:
-            testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now()))
+            testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
+                                                           test_name_cp,
+                                                           datetime.datetime.now()))
 
     suite_source_db = None
+    suite_db = None
     if create_db_per_suite:
         # Create CBL database
         suite_cbl_db = create_db_per_suite
@@ -353,7 +355,9 @@ def params_from_base_suite_setup(request):
         # Create primary index
         password = "password"
         log_info("Connecting to {}/{} with password {}".format(cbs_ip, enable_sample_bucket, password))
-        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, enable_sample_bucket), password=password, timeout=SDK_TIMEOUT)
+        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, enable_sample_bucket),
+                            password=password,
+                            timeout=SDK_TIMEOUT)
         log_info("Creating primary index for {}".format(enable_sample_bucket))
         n1ql_query = 'create primary index on {}'.format(enable_sample_bucket)
         query = N1QLQuery(n1ql_query)
@@ -362,7 +366,7 @@ def params_from_base_suite_setup(request):
         # Start continuous replication
         repl_obj = Replication(base_url)
         auth_obj = BasicAuthenticator(base_url)
-        authenticator = auth_obj.create("traveL-sample", "password")
+        authenticator = auth_obj.create("travel-sample", "password")
         repl_config = repl_obj.configure(source_db=suite_source_db,
                                          target_url=target_admin_url,
                                          replication_type="PUSH_AND_PULL",
@@ -420,7 +424,6 @@ def params_from_base_suite_setup(request):
 
 @pytest.fixture(scope="function")
 def params_from_base_test_setup(request, params_from_base_suite_setup):
-    base_url = params_from_base_suite_setup["base_url"]
     cluster_config = params_from_base_suite_setup["cluster_config"]
     xattrs_enabled = params_from_base_suite_setup["xattrs_enabled"]
     liteserv_host = params_from_base_suite_setup["liteserv_host"]
@@ -445,9 +448,10 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     enable_sample_bucket = params_from_base_suite_setup["enable_sample_bucket"]
     liteserv_version = params_from_base_suite_setup["liteserv_version"]
     source_db = None
-    cbl_db = None
     test_name_cp = test_name.replace("/", "-")
-    log_filename = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now())
+    log_filename = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
+                                                 test_name_cp,
+                                                 datetime.datetime.now())
 
     if create_db_per_test:
         log_info("Starting TestServer...")
@@ -538,7 +542,6 @@ def class_init(request, params_from_base_suite_setup):
 
     db_obj = Database(base_url)
     doc_obj = Document(base_url)
-    dict_obj = Dictionary(base_url)
     datatype = DataTypeInitiator(base_url)
     repl_obj = Replication(base_url)
     array_obj = Array(base_url)
