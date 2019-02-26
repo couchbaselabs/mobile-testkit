@@ -49,15 +49,6 @@ namespace Couchbase.Lite.Testing
                                  [NotNull] IReadOnlyDictionary<string, object> postBody,
                                  [NotNull] HttpListenerResponse response)
         {
-            Replicator replicator = MemoryMap.Get<Replicator>(postBody["replicator"].ToString());
-            replicator.Start();
-            response.WriteEmptyBody();
-        }
-
-        public static void Configure([NotNull] NameValueCollection args,
-                                 [NotNull] IReadOnlyDictionary<string, object> postBody,
-                                 [NotNull] HttpListenerResponse response)
-        {
             ResetStatus();
             Database db = MemoryMap.Get<Database>(postBody["database"].ToString());
             int port = (int)postBody["port"];
