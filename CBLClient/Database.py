@@ -123,7 +123,7 @@ class Database(object):
 
     def updateDocument(self, database, data, doc_id, attachments_name=None):
         args = Args()
-        if attachments_name is not None:
+        if attachments_name:
             data = self.update_doc_with_attachment(attachments_name, data)
         args.setMemoryPointer("database", database)
         args.setDictionary("data", data)

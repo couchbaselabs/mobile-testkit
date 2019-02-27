@@ -305,7 +305,7 @@ def compare_generic_types(object1, object2):
     elif isinstance(object1, int) and isinstance(object2, float):
         return object1 == int(float(object2))
 
-    return True
+    return False
 
 
 def deep_list_compare(object1, object2):
