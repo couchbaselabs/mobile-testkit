@@ -580,12 +580,10 @@ class SyncGateway(object):
 
             server_version = get_cbs_version(cluster_config)
             cbs_version, cbs_build = version_and_build(server_version)
-            if cbs_version >= "5.5.0":
-                if get_sg_use_views(cluster_config):
-                    playbook_vars["sg_use_views"] = '"use_views": true,'
-                else:
-                    num_replicas = get_sg_replicas(cluster_config)
-                    playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
+
+            if not get_sg_use_views(cluster_config) and cbs_version >= "5.5.0":
+                num_replicas = get_sg_replicas(cluster_config)
+                playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
             else:
                 playbook_vars["sg_use_views"] = '"use_views": true,'
         else:
