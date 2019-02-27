@@ -34,7 +34,7 @@ DB2 = "db2"
 @pytest.mark.channel
 @pytest.mark.basicauth
 @pytest.mark.changes
-def test_sg_replicate_basic_test1(params_from_base_test_setup):
+def test_sg_replicate_basic_test(params_from_base_test_setup):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]

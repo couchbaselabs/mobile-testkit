@@ -181,7 +181,7 @@ def test_replication_configuration_with_pull_replication(params_from_base_test_s
         authenticator = Authenticator(base_url)
         replicator_authenticator = authenticator.authentication(session, cookie, authentication_type="session")
         replicator = Replication(base_url)
-        replicator.configure_and_replicate(cbl_db, replicator_authenticator, target_url=sg_blip_url, continuous=True,
+        replicator.configure_and_replicate(cbl_db, replicator_authenticator, target_url=sg_blip_url, continuous=False,
                                            channels=channels)
 
     cbl_doc_count = db.getCount(cbl_db)
