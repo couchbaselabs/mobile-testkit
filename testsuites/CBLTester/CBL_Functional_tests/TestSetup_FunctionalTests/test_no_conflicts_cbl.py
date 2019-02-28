@@ -577,6 +577,18 @@ def test_sg_CBL_updates_concurrently(params_from_base_test_setup, sg_conf_name, 
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
 
+    if sync_gateway_version >= "2.5.0":
+        sg_client = MobileRestClient()
+        expvars = sg_client.get_expvars(sg_admin_url)
+        num_replications_active = expvars["syncgateway"]["per_db"][sg_db]["database"]["num_replications_active"]
+        num_replications_total = expvars["syncgateway"]["per_db"][sg_db]["database"]["num_replications_total"]
+        """if continuous:
+            # num_pull_repl_active_continuous = expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["num_pull_repl_active_continuous"]
+            num_pull_repl_total_continuous = expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["num_pull_repl_total_continuous"]
+        else:
+            num_pull_repl_active_one_shot = expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["num_pull_repl_active_one_shot"]
+            num_pull_repl_total_one_shot = expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["num_pull_repl_total_one_shot"]
+        """
     # Create bulk doc json
     db.create_bulk_docs(num_of_docs, "no-conflicts", db=cbl_db, channels=channels)
     sg_client = MobileRestClient()
@@ -619,6 +631,10 @@ def test_sg_CBL_updates_concurrently(params_from_base_test_setup, sg_conf_name, 
 
         update_from_sg_task.result()
         update_from_cbl_task.result()
+    if sync_gateway_version >= "2.5.0":
+        expvars = sg_client.get_expvars(sg_admin_url)
+        assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["num_pull_repl_active_continuous"] == 1, "num_pull_repl_active_continuous did not incremented"
+        assert num_replications_active < expvars["syncgateway"]["per_db"][sg_db]["database"]["num_replications_active"], "num_replications_active did not incremented"
 
     replicator.wait_until_replicator_idle(repl)
     replicator.stop(repl)
@@ -642,6 +658,13 @@ def test_sg_CBL_updates_concurrently(params_from_base_test_setup, sg_conf_name, 
     # database gets deleted at teardown
     if num_of_docs >= 1000:
         time.sleep(3)
+
+    if sync_gateway_version >= "2.5.0":
+        expvars = sg_client.get_expvars(sg_admin_url)
+        assert num_replications_total < expvars["syncgateway"]["per_db"][sg_db]["database"]["num_replications_total"], "num_replications_total did not incremented"
+        assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_push"]["write_processing_time"] > 0, "write_processing_time  did not incremented"
+        assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_push"]["propose_change_time"] > 0, "propose_change_time stats did not get incremented"
+        assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["num_pull_repl_total_continuous"] == 1, "num_pull_repl_total_continuous did not get incremented"
 
 
 def sg_updateDocs(sg_client, url, db, docs, number_updates, auth):
