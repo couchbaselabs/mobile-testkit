@@ -68,6 +68,7 @@
         {{ no_conflicts }}
         {{ sg_use_views }}
         {{ num_index_replicas }}
+        {{ delta_sync }}
         "unsupported": {
             "oidc_test_provider":{
                 "enabled":true,
