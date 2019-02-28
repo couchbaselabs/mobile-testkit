@@ -20,6 +20,7 @@
     "databases":{
         "db":{
             {{ xattrs }}
+            {{ delta_sync }}
             "unsupported": {
                 "replicator_2": true
             },

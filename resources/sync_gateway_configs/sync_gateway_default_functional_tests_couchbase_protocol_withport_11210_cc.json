@@ -21,6 +21,7 @@
             {{ cacertpath }}
             {{ certpath }}
             {{ keypath }}
+            {{ delta_sync }}
             "server":"couchbase://{{ couchbase_server_primary_node }}:11210",
             "bucket":"data-bucket",
             "username":"data-bucket",

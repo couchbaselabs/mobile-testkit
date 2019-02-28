@@ -21,6 +21,7 @@
       {{ cacertpath }}
       {{ certpath }}
       {{ keypath }}
+      {{ delta_sync }}
       "unsupported": {
         "user_views": {
           "enabled":true

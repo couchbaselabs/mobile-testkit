@@ -50,6 +50,7 @@ public class Server {
     let memory = Memory()
     
     public init() {
+        Database.log.console.level = .debug
         dictionaryRequestHandler = DictionaryRequestHandler()
         queryRequestHandler = QueryRequestHandler()
         databaseRequestHandler = DatabaseRequestHandler()

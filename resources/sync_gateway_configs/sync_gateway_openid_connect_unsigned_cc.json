@@ -67,6 +67,7 @@
         {{ cacertpath }}
         {{ certpath }}
         {{ keypath }}
+        {{ delta_sync }}
         "unsupported": {
             "oidc_test_provider":{
                 "enabled":true,
