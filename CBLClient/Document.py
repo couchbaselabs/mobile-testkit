@@ -220,3 +220,10 @@ class Document(object):
         args.setMemoryPointer("document", document)
         args.setDictionary("data", data)
         return self._client.invokeMethod("document_setData", args)
+
+    def setValue(self, document, key, value):
+        args = Args()
+        args.setMemoryPointer("document", document)
+        args.setDictionary("key", key)
+        args.setDictionary("value", value)
+        return self._client.invokeMethod("document_setValue", args)

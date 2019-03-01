@@ -143,6 +143,8 @@ namespace Couchbase.Lite.Testing
                 ["document_toMutable"] = DocumentMethods.DocumentToMutable,
                 ["document_removeKey"] = DocumentMethods.DocumentRemoveKey,
                 ["document_contains"] = DocumentMethods.DocumentContains,
+                ["document_getValue"] = DocumentMethods.DocumentGetValue,
+                ["document_setValue"] = DocumentMethods.DocumentSetValue,
                 ["replicatorConfiguration_configure"] = ReplicatorConfigurationMethods.Configure,
                 ["replicator_create"] = ReplicationMethods.Create,
                 ["replicator_start"] = ReplicationMethods.StartReplication,
@@ -230,6 +232,14 @@ namespace Couchbase.Lite.Testing
                 ["peerToPeer_removeReplicatorEventListener"] = ReplicationMethods.RemoveReplicatorEventListener,
                 ["peerToPeer_replicatorEventGetChanges"] = ReplicationMethods.ReplicatorEventGetChanges,
                 ["peerToPeer_replicatorEventChangesCount"] = ReplicationMethods.ReplicatorEventChangesCount,
+                ["predictiveQuery_registerModel"] = PredictiveQueriesMethods.RegisterModel,
+                ["predictiveQuery_unRegisterModel"] = PredictiveQueriesMethods.UnRegisterModel,
+                ["predictiveQuery_getPredictionQueryResult"] = PredictiveQueriesMethods.GetPredictionQueryResult,
+                ["predictiveQuery_nonDictionary"] = PredictiveQueriesMethods.NonDictionary,
+                ["predictiveQuery_euclideanDistance"] = PredictiveQueriesMethods.EuclideanDistance,
+                ["predictiveQuery_squaredEuclideanDistance"] = PredictiveQueriesMethods.SquaredEuclideanDistance,
+                ["predictiveQuery_cosineDistance"] = PredictiveQueriesMethods.CosineDistance,
+                ["predictiveQuery_getNumberOfCalls"] = PredictiveQueriesMethods.GetNumberOfCalls,
                 ["release"] = ReleaseObject,
                 ["flushMemory"] = flushMemory
             };
