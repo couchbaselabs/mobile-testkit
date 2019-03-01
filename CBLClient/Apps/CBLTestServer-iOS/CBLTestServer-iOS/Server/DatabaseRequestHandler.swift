@@ -74,12 +74,7 @@ public class DatabaseRequestHandler {
         case "database_exists":
             let name: String = args.get(name:"name")!
             let directory: String? = args.get(name:"directory")!
-           
-            if let directory = directory {
-                return Database.exists(withName: name, inDirectory: directory)
-            } else {
-                return Database.exists(withName: name)
-            }
+            return Database.exists(withName: name, inDirectory: directory)
 
         case "database_deleteIndex":
             let database: Database = (args.get(name:"database"))!

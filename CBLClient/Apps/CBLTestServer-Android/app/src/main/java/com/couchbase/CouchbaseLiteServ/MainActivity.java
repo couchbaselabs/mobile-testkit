@@ -59,7 +59,8 @@ public class MainActivity extends AppCompatActivity {
                 System.out.println(intf.getName());
                 for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();) {
                     InetAddress inetAddress = enumIpAddr.nextElement();
-                    if (!inetAddress.isLoopbackAddress() && intf.getName().equals("eth1") && (inetAddress instanceof Inet4Address)) {
+                    String name = intf.getName();
+                    if (!inetAddress.isLoopbackAddress() && (intf.getName().equals("eth1") || intf.getName().equals("wlan0")) && (inetAddress instanceof Inet4Address)) {
                         return inetAddress.getHostAddress();
                     }
                 }
