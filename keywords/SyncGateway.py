@@ -646,6 +646,8 @@ class SyncGateway(object):
         ansible_runner = AnsibleRunner(cluster_config)
         server_port = 8091
         server_scheme = "http"
+        sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
+        bucket_names = get_buckets_from_sync_gateway_config(sg_conf)
 
         if is_cbs_ssl_enabled(cluster_config):
             server_port = 18091
@@ -653,6 +655,13 @@ class SyncGateway(object):
 
         # Shared vars
         playbook_vars = {
+            "username": "",
+            "password": "",
+            "certpath": "",
+            "keypath": "",
+            "cacertpath": "",
+            "x509_auth": False,
+            "sg_cert_path": sg_cert_path,
             "sync_gateway_config_filepath": sg_conf,
             "server_port": server_port,
             "server_scheme": server_scheme,
@@ -663,8 +672,12 @@ class SyncGateway(object):
             "sg_use_views": "",
             "revs_limit": "",
             "xattrs": "",
+            "no_conflicts": "",
             "delta_sync": ""
         }
+
+        playbook_vars["username"] = '"username": "{}",'.format(bucket_names[0])
+        playbook_vars["password"] = '"password": "password",'
 
         if get_sg_version(cluster_config) >= "2.1.0":
             logging_config = '"logging": {"debug": {"enabled": true}'
@@ -674,11 +687,14 @@ class SyncGateway(object):
             except KeyError as ex:
                 log_info("Keyerror in getting logging{}".format(ex.message))
                 playbook_vars["logging"] = '{} {},'.format(logging_config, "}")
-            if get_sg_use_views(cluster_config):
-                playbook_vars["sg_use_views"] = '"use_views": true,'
-            else:
+
+            server_version = get_cbs_version(cluster_config)
+            cbs_version, cbs_build = version_and_build(server_version)
+            if not get_sg_use_views(cluster_config) and cbs_version >= "5.5.0":
                 num_replicas = get_sg_replicas(cluster_config)
                 playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
+            else:
+                playbook_vars["sg_use_views"] = '"use_views": true,'
         else:
             playbook_vars["logging"] = '"log": ["*"],'
 
