@@ -523,7 +523,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         # Delete CBL database
         log_info("Deleting the database {} at test teardown".format(create_db_per_test))
         time.sleep(1)
-        path = db.getPath(source_db)
+        path = db.getPath(source_db).rstrip("/\\")
         if '\\' in path:
             path = '\\'.join(path.split('\\')[:-1])
         else:
