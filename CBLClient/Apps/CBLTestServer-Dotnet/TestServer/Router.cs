@@ -230,6 +230,12 @@ namespace Couchbase.Lite.Testing
                 ["peerToPeer_removeReplicatorEventListener"] = ReplicationMethods.RemoveReplicatorEventListener,
                 ["peerToPeer_replicatorEventGetChanges"] = ReplicationMethods.ReplicatorEventGetChanges,
                 ["peerToPeer_replicatorEventChangesCount"] = ReplicationMethods.ReplicatorEventChangesCount,
+                ["logging_configure"] = FileLoggingMehtod.Configure,
+                ["logging_getPlainTextStatus"] = FileLoggingMehtod.GetPlainTextStatus,
+                ["logging_getMaxRotateCount"] = FileLoggingMehtod.GetMaxRotateCount,
+                ["logging_getMaxSize"] = FileLoggingMehtod.GetMaxSize,
+                ["logging_getLogLevel"] = FileLoggingMehtod.GetLogLevel,
+                ["logging_getConfig"] = FileLoggingMehtod.GetConfig,
                 ["release"] = ReleaseObject,
                 ["flushMemory"] = flushMemory
             };
