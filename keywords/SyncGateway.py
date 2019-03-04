@@ -579,6 +579,9 @@ class SyncGateway(object):
         playbook_vars["username"] = '"username": "{}",'.format(bucket_names[0])
         playbook_vars["password"] = '"password": "password",'
 
+        server_version = get_cbs_version(cluster_config)
+        cbs_version, cbs_build = version_and_build(server_version)
+
         if version >= "2.1.0":
             logging_config = '"logging": {"debug": {"enabled": true}'
             try:
@@ -588,9 +591,6 @@ class SyncGateway(object):
                 log_info("Keyerror in getting logging{}".format(ex.message))
                 playbook_vars["logging"] = '{} {},'.format(logging_config, "}")
 
-            server_version = get_cbs_version(cluster_config)
-            cbs_version, cbs_build = version_and_build(server_version)
-
             if not get_sg_use_views(cluster_config) and cbs_version >= "5.5.0":
                 num_replicas = get_sg_replicas(cluster_config)
                 playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
@@ -599,7 +599,7 @@ class SyncGateway(object):
         else:
             playbook_vars["logging"] = '"log": ["*"],'
 
-        if is_xattrs_enabled(cluster_config):
+        if is_xattrs_enabled(cluster_config) and cbs_version >= "5.0.0":
             playbook_vars["autoimport"] = '"import_docs": "continuous",'
             playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
 
@@ -639,13 +639,16 @@ class SyncGateway(object):
         if status != 0:
             raise Exception("Could not upgrade sync_gateway/sg_accel")
 
-    def enable_import_xattrs(self, cluster_config, sg_conf, url, enable_import=False):
+    def enable_import_xattrs(self, cluster_config, sg_conf, url, sync_gateway_version, enable_import=False):
         """Deploy an SG config with xattrs enabled
             Will also enable import if enable_import is set to True
             It is used to enable xattrs and import in the SG config"""
         ansible_runner = AnsibleRunner(cluster_config)
         server_port = 8091
         server_scheme = "http"
+        sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
+        bucket_names = get_buckets_from_sync_gateway_config(sg_conf)
+        version, build = version_and_build(sync_gateway_version)
 
         if is_cbs_ssl_enabled(cluster_config):
             server_port = 18091
@@ -653,6 +656,13 @@ class SyncGateway(object):
 
         # Shared vars
         playbook_vars = {
+            "username": "",
+            "password": "",
+            "certpath": "",
+            "keypath": "",
+            "cacertpath": "",
+            "x509_auth": False,
+            "sg_cert_path": sg_cert_path,
             "sync_gateway_config_filepath": sg_conf,
             "server_port": server_port,
             "server_scheme": server_scheme,
@@ -663,10 +673,14 @@ class SyncGateway(object):
             "sg_use_views": "",
             "revs_limit": "",
             "xattrs": "",
+            "no_conflicts": "",
             "delta_sync": ""
         }
 
-        if get_sg_version(cluster_config) >= "2.1.0":
+        playbook_vars["username"] = '"username": "{}",'.format(bucket_names[0])
+        playbook_vars["password"] = '"password": "password",'
+
+        if version >= "2.1.0":
             logging_config = '"logging": {"debug": {"enabled": true}'
             try:
                 redact_level = get_redact_level(cluster_config)
@@ -674,6 +688,7 @@ class SyncGateway(object):
             except KeyError as ex:
                 log_info("Keyerror in getting logging{}".format(ex.message))
                 playbook_vars["logging"] = '{} {},'.format(logging_config, "}")
+
             if get_sg_use_views(cluster_config):
                 playbook_vars["sg_use_views"] = '"use_views": true,'
             else:
