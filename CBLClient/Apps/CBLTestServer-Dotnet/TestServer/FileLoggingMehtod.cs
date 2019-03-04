@@ -22,7 +22,7 @@ namespace Couchbase.Lite.Testing
 
             if (directory.Equals(""))
             {
-                directory = Directory.GetCurrentDirectory() + "log_" + (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds).ToString();
+                directory = System.IO.Path.GetTempPath() + "log_" + (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds).ToString();
                 Console.WriteLine("File logging configured at: " + directory.ToString());
             }
             LogFileConfiguration config = new LogFileConfiguration(directory);
