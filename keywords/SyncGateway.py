@@ -599,7 +599,7 @@ class SyncGateway(object):
         else:
             playbook_vars["logging"] = '"log": ["*"],'
 
-        if is_xattrs_enabled(cluster_config) and cbs_version >= "5.5.0":
+        if is_xattrs_enabled(cluster_config) and cbs_version >= "5.0.0":
             playbook_vars["autoimport"] = '"import_docs": "continuous",'
             playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
 
