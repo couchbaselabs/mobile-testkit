@@ -32,25 +32,31 @@ public class FileLoggingRequestHandler {
             }
             
             let config: LogFileConfiguration = LogFileConfiguration.init(directory: directory)
-            if (max_rotate_count > 0) {
+            if (max_rotate_count > 1) {
                 config.maxRotateCount = max_rotate_count
             }
-            if (max_size > 0) {
+            if (max_size > 512000) {
                 config.maxSize = max_size
             }
             config.usePlainText = plain_text
             Database.log.file.config = config
-            if (log_level == "debug") {
+            switch log_level {
+            case "debug":
                 Database.log.file.level = LogLevel.debug
-            } else if  (log_level == "verbose") {
+                break
+            case "verbose":
                 Database.log.file.level = LogLevel.verbose
-            } else if  (log_level == "error") {
+                break
+            case "error":
                 Database.log.file.level = LogLevel.error
-            } else if  (log_level == "info") {
+                break
+            case "info":
                 Database.log.file.level = LogLevel.info
-            } else if  (log_level == "warning") {
+                break
+            case "warning":
                 Database.log.file.level = LogLevel.warning
-            } else {
+                break
+            default:
                 Database.log.file.level = LogLevel.none
             }
             return directory

@@ -30,26 +30,33 @@ public class LoggingRequestHandler {
             System.out.println("File logging configured at: " + directory.toString());
         }
         LogFileConfiguration config = new LogFileConfiguration(directory);
-        if (maxRotateCount > 0) {
+        if (maxRotateCount > 1) {
             config.setMaxRotateCount(maxRotateCount);
         }
-        if (maxSize > 0) {
+        if (maxSize > 512000) {
             config.setMaxSize(maxSize);
         }
         config.setUsePlaintext(plainText);
         Database.log.getFile().setConfig(config);
-        if (log_level.equals("debug")) {
-            Database.log.getFile().setLevel(LogLevel.DEBUG);
-        } else if (log_level.equals("verbose")) {
-            Database.log.getFile().setLevel(LogLevel.VERBOSE);
-        } else if (log_level.equals("error")) {
-            Database.log.getFile().setLevel(LogLevel.ERROR);
-        } else if (log_level.equals("info")) {
-            Database.log.getFile().setLevel(LogLevel.INFO);
-        } else if (log_level.equals("warning")) {
-            Database.log.getFile().setLevel(LogLevel.WARNING);
-        } else {
-            Database.log.getFile().setLevel(LogLevel.NONE);
+        switch (log_level) {
+            case "debug":
+                Database.log.getFile().setLevel(LogLevel.DEBUG);
+                break;
+            case "verbose":
+                Database.log.getFile().setLevel(LogLevel.VERBOSE);
+                break;
+            case "info":
+                Database.log.getFile().setLevel(LogLevel.INFO);
+                break;
+            case "error":
+                Database.log.getFile().setLevel(LogLevel.ERROR);
+                break;
+            case "warning":
+                Database.log.getFile().setLevel(LogLevel.WARNING);
+                break;
+            default:
+                Database.log.getFile().setLevel(LogLevel.NONE);
+                break;
         }
         return directory;
     }
@@ -77,5 +84,5 @@ public class LoggingRequestHandler {
     public LogFileConfiguration getConfig(Args args) {
         return Database.log.getFile().getConfig();
     }
-    
+
 }

@@ -524,6 +524,10 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         log_info("Deleting the database {} at test teardown".format(create_db_per_test))
         time.sleep(1)
         path = db.getPath(source_db)
+        if '\\' in path:
+            path = '\\'.join(path.split('\\')[:-1])
+        else:
+            path = '/'.join(path.split('/')[:-1])
         if db.exists(cbl_db, path):
             db.deleteDB(source_db)
         log_info("Flushing server memory")

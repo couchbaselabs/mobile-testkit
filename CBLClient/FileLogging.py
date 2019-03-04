@@ -1,6 +1,6 @@
 from CBLClient.Client import Client
 from CBLClient.Args import Args
-from keywords.utils import log_info
+
 
 class FileLogging(object):
     _db = None
