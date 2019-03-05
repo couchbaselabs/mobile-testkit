@@ -192,6 +192,12 @@ def get_sg_version(cluster_config):
     return cluster["environment"]["sync_gateway_version"]
 
 
+def get_cbs_version(cluster_config):
+    """ Loads cluster config to get the couchbase server version"""
+    cluster = load_cluster_config_json(cluster_config)
+    return cluster["environment"]["server_version"]
+
+
 def no_conflicts_enabled(cluster_config):
     "Get no conflicts value from cluster config"
     cluster = load_cluster_config_json(cluster_config)
