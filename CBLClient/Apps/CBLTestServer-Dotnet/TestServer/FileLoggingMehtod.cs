@@ -19,8 +19,7 @@ namespace Couchbase.Lite.Testing
             int max_rotate_count = (int)postBody["max_rotate_count"];
             long max_size = (long)postBody["max_size"];
             bool plain_text = Convert.ToBoolean(postBody["plain_text"]);
-
-            if (directory.Equals(""))
+            if (String.IsNullOrEmpty(directory))
             {
                 directory = System.IO.Path.GetTempPath() + "log_" + (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds).ToString();
                 Console.WriteLine("File logging configured at: " + directory.ToString());
