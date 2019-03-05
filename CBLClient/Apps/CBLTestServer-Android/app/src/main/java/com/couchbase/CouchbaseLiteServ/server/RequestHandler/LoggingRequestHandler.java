@@ -22,7 +22,7 @@ public class LoggingRequestHandler {
         long maxSize = args.get("max_size");
         boolean plainText = args.get("plain_text");
 
-        if (directory.equals("")) {
+        if (directory.isEmpty()) {
             Context context = MainActivity.getAppContext();
             long ts = System.currentTimeMillis()/1000;
             directory = context.getFilesDir().getAbsolutePath() + "/logs_" + ts ;

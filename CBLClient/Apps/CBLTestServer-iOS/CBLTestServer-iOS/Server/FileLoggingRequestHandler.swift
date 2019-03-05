@@ -26,7 +26,7 @@ public class FileLoggingRequestHandler {
             let log_level: String = args.get(name: "log_level")!
             let plain_text: Bool = args.get(name: "plain_text")!
             var directory: String = args.get(name: "directory")!
-            if (directory == "") {
+            if (directory.isEmpty) {
                 directory = NSHomeDirectory() + "/logs" + String(Date().timeIntervalSince1970)
                 print("File logging configured at : " + directory)
             }
