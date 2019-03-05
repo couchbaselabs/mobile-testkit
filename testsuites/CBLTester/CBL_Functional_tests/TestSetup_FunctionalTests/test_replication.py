@@ -3270,7 +3270,6 @@ def test_doc_removal_from_channel(params_from_base_test_setup):
                                               target_url=sg_blip_url,
                                               continuous=True,
                                               replicator_authenticator=replicator_authenticator)
-    # replicator.stop(repl)
 
     # 4. remove doc A from channel A
     doc_obj_A = db.getDocument(cbl_db, cbl_ids[0])
@@ -3354,7 +3353,6 @@ def test_doc_removal_with_multipleChannels(params_from_base_test_setup, setup_cu
     doc_channel_2 = ["DEF"]
 
     sg_client = MobileRestClient()
-    authenticator = Authenticator(base_url)
     replicator = Replication(base_url)
 
     # 1. Create users in SGW with multiple channels
@@ -3444,9 +3442,9 @@ def test_doc_removal_with_multipleChannels(params_from_base_test_setup, setup_cu
     replicator.stop(repl2)
     replicator.stop(repl3)
 
-    """5. Verify userA can access only docA and doc B, but not docC
-            UserB can access docB
-            UserC cannot access docC """
+    # 5. Verify userA can access only docA and doc B, but not docC
+    #       UserB can access docB
+    #       UserC cannot access docC
     doc_ids_A = db.getDocIds(cbl_db1)
     doc_ids_B = db.getDocIds(cbl_db2)
     doc_ids_C = db.getDocIds(cbl_db3)
@@ -3459,8 +3457,8 @@ def test_doc_removal_with_multipleChannels(params_from_base_test_setup, setup_cu
         assert doc["id"] in doc_ids_B, "docs ids of userB does not exist in cbl db2"
 
     for doc in sg_docs_C:
-        assert doc["id"] not in doc_ids_A, "docs ids of userA does not exist in cbl db1"
-        assert doc["id"] not in doc_ids_C, "docs ids of userB does not exist in cbl db2"
+        assert doc["id"] not in doc_ids_A, "docs ids of userA  exist in cbl db1"
+        assert doc["id"] not in doc_ids_C, "docs ids of userB  exist in cbl db2"
 
 
 def update_and_resetCheckPoint(db, cbl_db, replicator, repl, replication_type, repl_config, num_of_updates):
