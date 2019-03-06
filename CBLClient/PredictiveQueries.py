@@ -65,3 +65,4 @@ class PredictiveQueries(object):
         args.setString("key2", key2)
         return self._client.invokeMethod("predictiveQuery_cosineDistance", args)
 
+

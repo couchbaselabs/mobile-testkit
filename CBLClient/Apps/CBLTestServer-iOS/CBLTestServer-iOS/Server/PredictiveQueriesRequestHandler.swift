@@ -29,9 +29,6 @@ public class PredictiveQueriesRequestHandler {
         
         case "predictiveQuery_getPredictionQueryResult":
             let model: EchoModel = args.get(name: "model")!
-            
-            //let dict: [String: Any] = ["friend_one": Expression.property("friend_one")]
-            
             let dict: [String: Any] = args.get(name: "dictionary")!
             let database: Database = args.get(name: "database")!
             let input = Expression.value(dict)
@@ -50,9 +47,6 @@ public class PredictiveQueriesRequestHandler {
             
         case "predictiveQuery_nonDictionary":
             let model: EchoModel = args.get(name: "model")!
-            
-            //let dict: [String: Any] = ["friend_one": Expression.property("friend_one")]
-            
             let text: String = args.get(name: "dictionary")!
             let database: Database = args.get(name: "database")!
             let input = Expression.value(text)

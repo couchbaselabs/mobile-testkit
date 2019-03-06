@@ -279,14 +279,17 @@ def add_new_fields_to_doc(doc_body):
     return doc_body
 
 
-def compare_sg_cbl_docs(cbl_db, db, sg_docs):
+def compare_docs(cbl_db, db, docs_dict):
     doc_ids = db.getDocIds(cbl_db)
     cbl_db_docs = db.getDocuments(cbl_db, doc_ids)
-    for sg_doc in sg_docs:
-        del sg_doc["doc"]["_rev"]
-        key = sg_doc["doc"]["_id"]
-        del sg_doc["doc"]["_id"]
-        assert deep_dict_compare(sg_doc["doc"], cbl_db_docs[key]), "mismatch in the dictionary"
+    for doc in docs_dict:
+        try:
+            del doc["doc"]["_rev"]
+        except:
+            log_info("no _rev exists in the dict")
+        key = doc["doc"]["_id"]
+        del doc["doc"]["_id"]
+        assert deep_dict_compare(doc["doc"], cbl_db_docs[key]), "mismatch in the dictionary"
 
 
 def compare_generic_types(object1, object2):
