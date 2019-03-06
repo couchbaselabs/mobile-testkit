@@ -6,6 +6,7 @@ from keywords.utils import log_info
 from keywords import types
 from libraries.data import doc_generators
 from Document import Document
+from keywords import attachment
 
 
 class Database(object):
@@ -120,8 +121,10 @@ class Database(object):
         args.setDictionary("documents", documents)
         return self._client.invokeMethod("database_updateDocuments", args)
 
-    def updateDocument(self, database, data, doc_id):
+    def updateDocument(self, database, data, doc_id, attachments_name=None):
         args = Args()
+        if attachments_name:
+            data = self.update_doc_with_attachment(attachments_name, data)
         args.setMemoryPointer("database", database)
         args.setDictionary("data", data)
         args.setString("id", doc_id)
@@ -317,3 +320,8 @@ class Database(object):
         args.setString("dbPath", db_path)
         args.setMemoryPointer("dbConfig", db_config)
         return self._client.invokeMethod("database_copy", args)
+
+    def update_doc_with_attachment(self, attachment_name, doc_body):
+        atts = attachment.load_from_data_dir([attachment_name])
+        doc_body["_attachments"] = {atts[0].name: {"data": atts[0].data}}
+        return doc_body

@@ -139,6 +139,10 @@ def pytest_addoption(parser):
                      help="Number of replicas for the indexer node - SG 2.1 and above only",
                      default=0)
 
+    parser.addoption("--delta-sync",
+                     action="store_true",
+                     help="delta-sync: Enable delta-sync for sync gateway")
+
 
 # This will be called once for the at the beggining of the execution in the 'tests/' directory
 # and will be torn down, (code after the yeild) when all the test session has completed.
@@ -170,6 +174,7 @@ def params_from_base_suite_setup(request):
     sg_ssl = request.config.getoption("--sg-ssl")
     use_views = request.config.getoption("--use-views")
     number_replicas = request.config.getoption("--number-replicas")
+    delta_sync_enabled = request.config.getoption("--delta-sync")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
@@ -283,6 +288,13 @@ def params_from_base_suite_setup(request):
         persist_cluster_config_environment_prop(cluster_config, 'no_conflicts_enabled', False)
 
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
+
+    if delta_sync_enabled:
+        log_info("Running with delta sync")
+        persist_cluster_config_environment_prop(cluster_config, 'delta_sync_enabled', True)
+    else:
+        log_info("Running without delta sync")
+        persist_cluster_config_environment_prop(cluster_config, 'delta_sync_enabled', False)
 
     # Skip provisioning if user specifies '--skip-provisoning' or '--sequoia'
     should_provision = True

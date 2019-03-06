@@ -277,3 +277,86 @@ def add_new_fields_to_doc(doc_body):
     doc_body["new_field_2"] = random_string(length=60)
     doc_body["new_field_3"] = random_string(length=90)
     return doc_body
+
+
+def compare_sg_cbl_docs(cbl_db, db, sg_docs):
+    doc_ids = db.getDocIds(cbl_db)
+    cbl_db_docs = db.getDocuments(cbl_db, doc_ids)
+    for sg_doc in sg_docs:
+        del sg_doc["doc"]["_rev"]
+        key = sg_doc["doc"]["_id"]
+        del sg_doc["doc"]["_id"]
+        assert deep_dict_compare(sg_doc["doc"], cbl_db_docs[key]), "mismatch in the dictionary"
+
+
+def compare_generic_types(object1, object2):
+    if isinstance(object1, str) and isinstance(object2, str):
+        return object1 == object2
+    elif isinstance(object1, unicode) and isinstance(object2, unicode):
+        return object1 == object2
+    elif isinstance(object1, bool) and isinstance(object2, bool):
+        return object1 == object2
+    elif isinstance(object1, int) and isinstance(object2, int):
+        return object1 == object2
+    elif isinstance(object1, float) and isinstance(object2, float):
+        return object1 == object2
+    elif isinstance(object1, float) and isinstance(object2, int):
+        return object1 == float(object2)
+    elif isinstance(object1, int) and isinstance(object2, float):
+        return object1 == int(float(object2))
+
+    return False
+
+
+def deep_list_compare(object1, object2):
+    retval = True
+    count = len(object1)
+    object1 = sorted(object1)
+    object2 = sorted(object2)
+    for x in range(count):
+        if isinstance(object1[x], dict) and isinstance(object2[x], dict):
+            retval = deep_dict_compare(object1[x], object2[x])
+            if retval is False:
+                log_info("Unable to match {} element in dict {} and {}".format(object1, object2))
+                return False
+        elif isinstance(object1[x], list) and isinstance(object2[x], list):
+            retval = deep_list_compare(object1[x], object2[x])
+            if retval is False:
+                log_info("Unable to match {} element in list {} and {}".format(object1[x], object2[x]))
+                return False
+        else:
+            retval = compare_generic_types(object1[x], object2[x])
+            if retval is False:
+                log_info("Unable to match objects in generic {} and {}".format(object1[x], object2[x]))
+                return False
+
+    return retval
+
+
+def deep_dict_compare(object1, object2):
+    retval = True
+    if len(object1) != len(object2):
+        log_info("lengths of sgw object and cbl object are different {} --- {}".format(len(object1), len(object2)))
+        return False
+
+    for k in object1.iterkeys():
+        obj1 = object1[k]
+        obj2 = object2[k]
+        if isinstance(obj1, list) and isinstance(obj2, list):
+            retval = deep_list_compare(obj1, obj2)
+            if retval is False:
+                log_info("mismatch between sgw: {} and cbl lists :{}".format(obj1, obj2))
+                return False
+
+        elif isinstance(obj1, dict) and isinstance(obj2, dict):
+            retval = deep_dict_compare(obj1, obj2)
+            if retval is False:
+                log_info("mismatch between sgw: {} and cbl dict :{}".format(obj1, obj2))
+                return False
+        else:
+            retval = compare_generic_types(obj1, obj2)
+            if retval is False:
+                log_info("mistmatch {} and {}".format(obj1, obj2))
+                return False
+
+    return retval

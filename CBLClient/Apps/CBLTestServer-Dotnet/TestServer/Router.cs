@@ -323,7 +323,7 @@ namespace Couchbase.Lite.Testing
         {
             MemoryMap.Clear();
             response.WriteEmptyBody(HttpStatusCode.OK);
-            // return;
+            return;
         }
 
         #endregion

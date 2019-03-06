@@ -22,6 +22,7 @@
             {{ cacertpath }}
             {{ certpath }}
             {{ keypath }}
+            {{ delta_sync }}
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket-1"
         },
@@ -36,6 +37,7 @@
             {{ cacertpath }}
             {{ certpath }}
             {{ keypath }}
+            {{ delta_sync }}
             "offline":false,
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket-2"
@@ -51,6 +53,7 @@
             {{ cacertpath }}
             {{ certpath }}
             {{ keypath }}
+            {{ delta_sync }}
             "offline":false,
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket-3"
@@ -66,6 +69,7 @@
             {{ cacertpath }}
             {{ certpath }}
             {{ keypath }}
+            {{ delta_sync }}
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket-4"
         }

@@ -433,6 +433,7 @@ def test_offline_processing_of_external_updates(params_from_base_test_setup, sg_
     mode = params_from_base_test_setup['mode']
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
 
     # Skip the test if ssl disabled as it cannot run without port using http protocol
     if ("sync_gateway_default_functional_tests_no_port" in sg_conf_name) and get_sg_version(cluster_conf) < "1.5.0":
@@ -465,6 +466,11 @@ def test_offline_processing_of_external_updates(params_from_base_test_setup, sg_
 
     # Create clients
     sg_client = MobileRestClient()
+    if sync_gateway_version >= "2.5.0":
+        sg_admin_url = cluster_topology["sync_gateways"][0]["admin"]
+        expvars = sg_client.get_expvars(sg_admin_url)
+        chan_cache_misses = expvars["syncgateway"]["per_db"][sg_db]["cache"]["chan_cache_misses"]
+
     cbs_ip = host_for_url(cbs_url)
     if ssl_enabled and cluster.ipv6:
         connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(cbs_ip, bucket_name)
@@ -550,6 +556,9 @@ def test_offline_processing_of_external_updates(params_from_base_test_setup, sg_
     # Verify all of the docs show up in the changes feed
     docs_to_verify_in_changes = [{'id': doc['_id'], 'rev': doc['_rev']} for doc in bulk_resp]
     sg_client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=docs_to_verify_in_changes, auth=seth_auth)
+    if sync_gateway_version >= "2.5.0":
+        expvars = sg_client.get_expvars(sg_admin_url)
+        assert chan_cache_misses < expvars["syncgateway"]["per_db"][sg_db]["cache"]["chan_cache_misses"], "chan_cache_misses did not get incremented"
 
 
 @pytest.mark.syncgateway
@@ -2518,3 +2527,123 @@ def test_purge_and_view_compaction(params_from_base_test_setup, sg_conf_name):
         if(doc_id not in channel_view_query_string or time.time() - start > timeout):
                 break
     assert doc_id not in channel_view_query_string, "doc id exists in chanel view query after compaction"
+
+
+@pytest.mark.syncgateway
+@pytest.mark.xattrs
+@pytest.mark.changes
+@pytest.mark.session
+@pytest.mark.parametrize(
+    'sg_conf_name, number_docs_per_client, number_updates_per_doc_per_client',
+    [
+        ('custom_sync/sync_gateway_custom_sync_require_roles', 10, 10),
+    ]
+)
+def test_stats_logging_import_count(params_from_base_test_setup,
+                                    sg_conf_name,
+                                    number_docs_per_client,
+                                    number_updates_per_doc_per_client):
+    """
+    Scenario:
+      1. Have sync-gateway config to throw require role if user without try to create doc without role,
+         otherwise throw forbidden
+      2. create user without role
+      3. Create docs via SDK with the channels mentioned in the sg config
+      4. Create few more docs via SDK with the channels not mentioend in sg config
+      5. Verify import_count, import_error_count stats incremented
+      6. Create docs via sg with the user which can throw require role
+      7. Verify stats for num_access_errors has incremented
+   """
+    cluster_conf = params_from_base_test_setup['cluster_config']
+    cluster_topology = params_from_base_test_setup['cluster_topology']
+    mode = params_from_base_test_setup['mode']
+    xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+    ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+
+    # This test should only run when using xattr meta storage
+    if not xattrs_enabled:
+        pytest.skip('XATTR tests require --xattrs flag')
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
+    sg_url = cluster_topology['sync_gateways'][0]['public']
+
+    bucket_name = 'data-bucket'
+    cbs_url = cluster_topology['couchbase_servers'][0]
+    sg_db = 'db'
+
+    cluster = Cluster(config=cluster_conf)
+    cluster.reset(sg_config_path=sg_conf)
+
+    sg_client = MobileRestClient()
+    if sync_gateway_version >= "2.5.0":
+        sg_admin_url = cluster_topology["sync_gateways"][0]["admin"]
+        expvars = sg_client.get_expvars(sg_admin_url)
+        import_count = expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"]
+        import_error_count = expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_error_count"]
+        num_access_errors = expvars["syncgateway"]["per_db"][sg_db]["security"]["num_access_errors"]
+
+    sg_client.create_user(url=sg_admin_url, db=sg_db, name='autosdkuser', password='pass', channels=['KMOW'])
+    autosdkuser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autosdkuser', password='pass')
+
+    # TODO : will remove once dev fix the bug, need to verify whether it is required or not
+    # sg_client.create_user(url=sg_admin_url, db=sg_db, name='autosguser', password='pass', channels=['sg-shared'])
+    # autosguser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autosguser', password='pass')
+
+    log_info('sg_conf: {}'.format(sg_conf))
+    log_info('sg_admin_url: {}'.format(sg_admin_url))
+    log_info('sg_url: {}'.format(sg_url))
+
+    cbs_ip = host_for_url(cbs_url)
+
+    # Connect to server via SDK
+    if ssl_enabled and cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(cbs_ip, bucket_name)
+    elif ssl_enabled and not cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify".format(cbs_ip, bucket_name)
+    elif not ssl_enabled and cluster.ipv6:
+        connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, bucket_name)
+    else:
+        connection_url = 'couchbase://{}/{}'.format(cbs_ip, bucket_name)
+    sdk_client = Bucket(connection_url, password='password')
+
+    # Create / add docs via sdk with
+    sdk_doc_bodies = document.create_docs(
+        'doc_sdk_ids',
+        number_docs_per_client,
+        channels=['KMOW'])
+
+    # Add docs via SDK
+    log_info('Started adding {} docs via SDK as first set...'.format(number_docs_per_client))
+    sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
+    doc_set_ids1 = [sdk_doc['_id'] for sdk_doc in sdk_doc_bodies]
+    sdk_docs_resp = sdk_client.upsert_multi(sdk_docs)
+    assert len(sdk_docs_resp) == number_docs_per_client
+    assert len(doc_set_ids1) == number_docs_per_client
+    log_info("Docs creation via SDK done")
+
+    # Create / add docs via sdk with  -> 2nd set
+    sdk_doc_bodies_2 = document.create_docs(
+        'doc_sdk_ids-2',
+        number_docs_per_client,
+        channels=['sg-shared'])
+
+    # Add docs via SDK
+    log_info('Started adding {} docs via SDK as second set...'.format(number_docs_per_client))
+    sdk_docs_2 = {doc['_id']: doc for doc in sdk_doc_bodies_2}
+    doc_set_ids2 = [sdk_doc['_id'] for sdk_doc in sdk_doc_bodies_2]
+    sdk_docs_resp = sdk_client.upsert_multi(sdk_docs_2)
+    assert len(sdk_docs_resp) == number_docs_per_client
+    assert len(doc_set_ids2) == number_docs_per_client
+    log_info("Docs creation 2nd set via SDK done")
+
+    # Write docs via sg
+    doc_body = document.create_doc("new_doc_id", channels=['KMOW'])
+    sg_client.add_doc(url=sg_url, db=sg_db, doc=doc_body, auth=autosdkuser_session)
+
+    if sync_gateway_version >= "2.5.0":
+        expvars = sg_client.get_expvars(sg_admin_url)
+        assert import_count < expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"], "import_count is not incremented"
+        assert import_error_count < expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_error_count"], "import_error count is not incremented"
+        assert num_access_errors < expvars["syncgateway"]["per_db"][sg_db]["security"]["num_access_errors"], "num_access_errors is not incremented"

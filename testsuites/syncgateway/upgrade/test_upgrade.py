@@ -185,6 +185,7 @@ def test_upgrade(params_from_base_test_setup):
                         cluster_config=cluster_config,
                         sg_conf=sg_conf,
                         url=ac_ip,
+                        sync_gateway_version=sync_gateway_upgraded_version,
                         enable_import=False
                     )
 
@@ -195,6 +196,7 @@ def test_upgrade(params_from_base_test_setup):
                     cluster_config=cluster_config,
                     sg_conf=sg_conf,
                     url=sg_ip,
+                    sync_gateway_version=sync_gateway_upgraded_version,
                     enable_import=enable_import
                 )
                 enable_import = False
