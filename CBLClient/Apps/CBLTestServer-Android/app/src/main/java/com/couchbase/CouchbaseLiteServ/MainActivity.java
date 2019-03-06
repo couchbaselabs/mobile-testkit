@@ -60,7 +60,6 @@ public class MainActivity extends AppCompatActivity {
                 System.out.println(intf_name);
                 for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();) {
                     InetAddress inetAddress = enumIpAddr.nextElement();
-                    String name = intf_name;
                     if (!inetAddress.isLoopbackAddress() && (intf_name.equals("eth1") || intf_name.equals("wlan0")) && (inetAddress instanceof Inet4Address)) {
                         return inetAddress.getHostAddress();
                     }

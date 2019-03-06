@@ -73,6 +73,9 @@ public class FileLoggingRequestHandler {
         case "logging_getLogLevel":
             return Database.log.file.level.rawValue
 
+        case "logging_getConfig":
+            return Database.log.file.config
+
         default:
             throw RequestHandlerError.MethodNotFound(method)
         }
