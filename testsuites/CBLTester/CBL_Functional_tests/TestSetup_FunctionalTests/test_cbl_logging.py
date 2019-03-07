@@ -26,6 +26,7 @@ log_level_dict = {
     ("info", True, 5 * 512 * 1000, 5),
     ("warning", True, 6 * 512 * 1000, 6),
     ("error", True, 7 * 512 * 1000, 7),
+    ("verbose", True, 1000 * 512 * 1000, 1000)
 ])
 def test_file_logging(params_from_base_test_setup, log_level, plain_text, max_size, max_rotate_count):
     base_url = params_from_base_test_setup["base_url"]

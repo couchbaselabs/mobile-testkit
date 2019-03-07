@@ -56,7 +56,7 @@ namespace Couchbase.Lite.Testing
                     Database.Log.File.Level = LogLevel.None;
                     break;
             }
-            response.WriteBody(directory);
+            response.WriteBody(config);
         }
 
         public static void GetPlainTextStatus([NotNull] NameValueCollection args,
@@ -104,6 +104,86 @@ namespace Couchbase.Lite.Testing
                                 [NotNull] HttpListenerResponse response)
         {
             response.WriteBody(Database.Log.File.Config.Directory.ToString());
+
+        }
+
+        public static void SetPlainTextStatus([NotNull] NameValueCollection args,
+                                [NotNull] IReadOnlyDictionary<string, object> postBody,
+                                [NotNull] HttpListenerResponse response)
+        {
+            bool plain_text = Convert.ToBoolean(postBody["plain_text"]);
+            LogFileConfiguration config = MemoryMap.Get<LogFileConfiguration>(postBody["config"].ToString());
+            config.UsePlaintext = plain_text;
+            response.WriteBody(Database.Log.File.Config);
+
+        }
+
+        public static void SetMaxRotateCount([NotNull] NameValueCollection args,
+                                [NotNull] IReadOnlyDictionary<string, object> postBody,
+                                [NotNull] HttpListenerResponse response)
+        {
+            int max_rotate_count = (int) postBody["max_rotate_count"];
+            LogFileConfiguration config = MemoryMap.Get<LogFileConfiguration>(postBody["config"].ToString());
+            config.MaxRotateCount = max_rotate_count;
+            response.WriteBody(Database.Log.File.Config);
+
+        }
+
+        public static void SetMaxSize([NotNull] NameValueCollection args,
+                                [NotNull] IReadOnlyDictionary<string, object> postBody,
+                                [NotNull] HttpListenerResponse response)
+        {
+            long max_size = (long)postBody["max_size"];
+            LogFileConfiguration config = MemoryMap.Get<LogFileConfiguration>(postBody["config"].ToString());
+            config.MaxSize = max_size;
+            response.WriteBody(Database.Log.File.Config);
+
+        }
+
+        public static void SetConfig([NotNull] NameValueCollection args,
+                                [NotNull] IReadOnlyDictionary<string, object> postBody,
+                                [NotNull] HttpListenerResponse response)
+        {
+            String directory = postBody["directory"].ToString();
+            if (String.IsNullOrEmpty(directory))
+            {
+                directory = System.IO.Path.GetTempPath() + "log_" + (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds).ToString();
+                Console.WriteLine("File logging configured at: " + directory.ToString());
+            }
+            LogFileConfiguration config = new LogFileConfiguration(directory);
+            Database.Log.File.Config = config;
+            response.WriteBody(Database.Log.File.Config);
+
+        }
+
+        public static void SetLogLevel([NotNull] NameValueCollection args,
+                                [NotNull] IReadOnlyDictionary<string, object> postBody,
+                                [NotNull] HttpListenerResponse response)
+        {
+            String log_level = postBody["log_level"].ToString();
+            LogFileConfiguration config = MemoryMap.Get<LogFileConfiguration>(postBody["config"].ToString());
+            switch (log_level)
+            {
+                case "debug":
+                    Database.Log.File.Level = LogLevel.Debug;
+                    break;
+                case "verbose":
+                    Database.Log.File.Level = LogLevel.Verbose;
+                    break;
+                case "info":
+                    Database.Log.File.Level = LogLevel.Info;
+                    break;
+                case "error":
+                    Database.Log.File.Level = LogLevel.Error;
+                    break;
+                case "warning":
+                    Database.Log.File.Level = LogLevel.Warning;
+                    break;
+                default:
+                    Database.Log.File.Level = LogLevel.None;
+                    break;
+            }
+            response.WriteBody(Database.Log.File.Config);
 
         }
     }

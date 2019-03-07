@@ -15,7 +15,7 @@ class FileLogging(object):
 
         self._client = Client(base_url)
 
-    def configure(self, log_level="debug", directory="", max_rotate_count=0, max_size=0, plain_text=False):
+    def configure(self, log_level="debug", directory="", max_rotate_count=1, max_size=512000, plain_text=False):
         args = Args()
         args.setString("log_level", log_level)
         args.setString("directory", directory)
@@ -44,6 +44,31 @@ class FileLogging(object):
         args = Args()
         return self._client.invokeMethod("logging_getConfig", args)
 
-    def delete_log_files(self):
+    def set_plain_text_status(self, config, plain_text=False):
         args = Args()
-        return self._client.invokeMethod("logging_deleteLogFiles", args)
+        args.setMemoryPointer("config", config)
+        args.setBoolean("plain_text", plain_text)
+        return self._client.invokeMethod("logging_setPlainTextStatus", args)
+
+    def set_max_rotate_count(self, config, max_rotate_count=1):
+        args = Args()
+        args.setMemoryPointer("config", config)
+        args.setInt("max_rotate_count", max_rotate_count)
+        return self._client.invokeMethod("logging_setMaxRotateCount", args)
+
+    def set_max_size(self, config, max_size=512000):
+        args = Args()
+        args.setMemoryPointer("config", config)
+        args.setLong("max_size", max_size)
+        return self._client.invokeMethod("logging_setMaxSize", args)
+
+    def set_config(self, directory=""):
+        args = Args()
+        args.SetString("directory", directory)
+        return self._client.invokeMethod("logging_setConfig", args)
+
+    def set_log_level(self, config, log_level="verbose"):
+        args = Args()
+        args.setMemoryPointer("config", config)
+        args.setString("log_level", log_level)
+        return self._client.invokeMethod("logging_setLogLevel", args)

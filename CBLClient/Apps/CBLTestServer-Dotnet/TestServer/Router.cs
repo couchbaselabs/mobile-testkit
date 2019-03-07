@@ -236,6 +236,11 @@ namespace Couchbase.Lite.Testing
                 ["logging_getMaxSize"] = FileLoggingMehtod.GetMaxSize,
                 ["logging_getLogLevel"] = FileLoggingMehtod.GetLogLevel,
                 ["logging_getConfig"] = FileLoggingMehtod.GetConfig,
+                ["logging_setPlainTextStatus"] = FileLoggingMehtod.SetPlainTextStatus,
+                ["logging_setMaxRotateCount"] = FileLoggingMehtod.SetMaxRotateCount,
+                ["logging_setMaxSize"] = FileLoggingMehtod.SetMaxSize,
+                ["logging_setLogLevel"] = FileLoggingMehtod.SetLogLevel,
+                ["logging_setConfig"] = FileLoggingMehtod.SetConfig,
                 ["release"] = ReleaseObject,
                 ["flushMemory"] = flushMemory
             };
