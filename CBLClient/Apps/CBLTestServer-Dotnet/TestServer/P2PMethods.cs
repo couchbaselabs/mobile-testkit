@@ -45,7 +45,7 @@ namespace Couchbase.Lite.Testing
             response.WriteEmptyBody();
         }
 
-        public static void Configure([NotNull] NameValueCollection args,
+        public static void Start([NotNull] NameValueCollection args,
                                  [NotNull] IReadOnlyDictionary<string, object> postBody,
                                  [NotNull] HttpListenerResponse response)
         {

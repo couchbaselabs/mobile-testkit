@@ -15,6 +15,7 @@ import com.couchbase.CouchbaseLiteServ.server.RequestHandler.DictionaryRequestHa
 import com.couchbase.CouchbaseLiteServ.server.RequestHandler.DocumentRequestHandler;
 import com.couchbase.CouchbaseLiteServ.server.RequestHandler.ExpressionRequestHandler;
 import com.couchbase.CouchbaseLiteServ.server.RequestHandler.FunctionRequestHandler;
+import com.couchbase.CouchbaseLiteServ.server.RequestHandler.LoggingRequestHandler;
 import com.couchbase.CouchbaseLiteServ.server.RequestHandler.QueryRequestHandler;
 import com.couchbase.CouchbaseLiteServ.server.RequestHandler.ReplicatorConfigurationRequestHandler;
 import com.couchbase.CouchbaseLiteServ.server.RequestHandler.ReplicatorRequestHandler;
@@ -181,6 +182,10 @@ public class Server extends NanoHTTPD {
                     case "peerToPeer":
                         target = PeerToPeerRequestHandler.class.getMethod(method_to_call, Args.class);
                         requestHandler = new PeerToPeerRequestHandler();
+                        break;
+                    case "logging":
+                        target = LoggingRequestHandler.class.getMethod(method_to_call, Args.class);
+                        requestHandler = new LoggingRequestHandler();
                         break;
                     default:
                         throw new IllegalArgumentException("Handler not implemented for this call");
