@@ -135,7 +135,11 @@ class TestDatabase(object):
             pytest.skip("Test not supported on .net platforms or the db name is longer than or equal to 128 characters")
 
         db = self.db_obj.create(db_name)
-        path = self.db_obj.getPath(db)
+        path = self.db_obj.getPath(db).rstrip("\//")
+        if '\\' in path:
+            path = '\\'.join(path.split('\\')[:-1])
+        else:
+            path = '/'.join(path.split('/')[:-1])
         assert self.db_obj.deleteDB(db) == -1
         assert self.db_obj.exists(db_name, path) is False
 

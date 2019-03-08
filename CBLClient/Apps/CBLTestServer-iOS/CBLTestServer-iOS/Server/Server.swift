@@ -47,6 +47,7 @@ public class Server {
     let basicAuthenticatorRequestHandler: BasicAuthenticatorRequestHandler!
     let databaseConfigurationRequestHandler: DatabaseConfigurationRequestHandler!
     let peerToPeerRequestHandler: PeerToPeerRequestHandler!
+    let fileLoggingRequestHandler: FileLoggingRequestHandler!
     let memory = Memory()
     
     public init() {
@@ -71,6 +72,7 @@ public class Server {
         basicAuthenticatorRequestHandler = BasicAuthenticatorRequestHandler()
         databaseConfigurationRequestHandler = DatabaseConfigurationRequestHandler()
         peerToPeerRequestHandler = PeerToPeerRequestHandler()
+        fileLoggingRequestHandler = FileLoggingRequestHandler()
         server = GCDWebServer()
         Database.log.console.level = LogLevel.debug
         server.addDefaultHandler(forMethod: "POST", request: GCDWebServerDataRequest.self) {
@@ -158,6 +160,8 @@ public class Server {
                         result = try self.basicAuthenticatorRequestHandler.handleRequest(method: method, args: args)
                     } else if method.hasPrefix("peerToPeer") {
                         result = try self.peerToPeerRequestHandler.handleRequest(method: method, args: args)
+                    } else if method.hasPrefix("logging") {
+                        result = try self.fileLoggingRequestHandler.handleRequest(method: method, args: args)
                     } else {
                         throw ServerError.MethodNotImplemented(method)
                     }

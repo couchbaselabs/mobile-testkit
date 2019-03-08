@@ -56,10 +56,11 @@ public class MainActivity extends AppCompatActivity {
         try {
             for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();) {
                 NetworkInterface intf = en.nextElement();
-                System.out.println(intf.getName());
+                String intf_name = intf.getName();
+                System.out.println(intf_name);
                 for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();) {
                     InetAddress inetAddress = enumIpAddr.nextElement();
-                    if (!inetAddress.isLoopbackAddress() && intf.getName().equals("eth1") && (inetAddress instanceof Inet4Address)) {
+                    if (!inetAddress.isLoopbackAddress() && (intf_name.equals("eth1") || intf_name.equals("wlan0")) && (inetAddress instanceof Inet4Address)) {
                         return inetAddress.getHostAddress();
                     }
                 }
