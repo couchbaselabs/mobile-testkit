@@ -8,20 +8,6 @@ import android.content.Context;
 
 import com.couchbase.CouchbaseLiteServ.MainActivity;
 import com.couchbase.CouchbaseLiteServ.server.Args;
-/*
-import com.couchbase.lite.CouchbaseLiteException;
-import com.couchbase.lite.DataSource;
-import com.couchbase.lite.Expression;
-import com.couchbase.lite.Meta;
-import com.couchbase.lite.PredictiveModel;
-import com.couchbase.lite.Dictionary;
-import com.couchbase.lite.Database;
-import com.couchbase.lite.Query;
-import com.couchbase.lite.QueryBuilder;
-import com.couchbase.lite.Result;
-import com.couchbase.lite.ResultSet;
-import com.couchbase.lite.SelectResult;
-import com.couchbase.lite.PredictionFunction;*/
 import com.couchbase.lite.*;
 
 import java.util.ArrayList;
@@ -50,8 +36,6 @@ public class PredictiveQueriesRequestHandler {
     Map<String, Object> dict = args.get("dictionary");
     Expression input = Expression.value(dict);
     PredictionFunction prediction = Function.prediction(echoModel.getName(), input);
-    //String select_property1 = args.get("select_property1");
-    //String select_property2 = args.get("select_property2");
 
     Query query = QueryBuilder
         .select(SelectResult.expression(prediction))
@@ -68,7 +52,7 @@ public class PredictiveQueriesRequestHandler {
   public String nonDictionary(Args args) throws CouchbaseLiteException {
     EchoModel echoModel = args.get("model");
     Database database = args.get("database");
-    String dict = args.get("dictionary");
+    String dict = args.get("nonDictionary");
     Expression input = Expression.value(dict);
     PredictionFunction prediction = Function.prediction(echoModel.getName(), input);
 
@@ -86,7 +70,7 @@ public class PredictiveQueriesRequestHandler {
     return "success";
   }
 
-  public List<Object> euclideanDistance(Args args) throws CouchbaseLiteException {
+  public List<Object> getEuclideanDistance(Args args) throws CouchbaseLiteException {
     Database database = args.get("database");
 
     String key1 = args.get("key1");
@@ -110,7 +94,7 @@ public class PredictiveQueriesRequestHandler {
     return echoModel.numberOfCalls;
   }
 
-  public List<Object> squaredEuclideanDistance(Args args) throws CouchbaseLiteException {
+  public List<Object> getSquaredEuclideanDistance(Args args) throws CouchbaseLiteException {
     Database database = args.get("database");
 
     String key1 = args.get("key1");
@@ -129,7 +113,7 @@ public class PredictiveQueriesRequestHandler {
     return resultArray;
   }
 
-  public List<Object> cosineDistance(Args args) throws CouchbaseLiteException {
+  public List<Object> getCosineDistance(Args args) throws CouchbaseLiteException {
     Database database = args.get("database");
 
     String key1 = args.get("key1");

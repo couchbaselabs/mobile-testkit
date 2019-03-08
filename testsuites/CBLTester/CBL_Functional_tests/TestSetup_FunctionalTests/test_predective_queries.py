@@ -32,6 +32,10 @@ def test_predictiveQueries_basicInputOutput(params_from_base_test_setup, doc_gen
     cbl_db = params_from_base_test_setup["source_db"]
     sg_config = params_from_base_test_setup["sg_config"]
     cluster_config = params_from_base_test_setup["cluster_config"]
+    liteserv_version = params_from_base_test_setup["liteserv_version"]
+
+    if liteserv_version < "2.5.0":
+        pytest.skip('This test cannnot run with CBL version below 2.5')
 
     # Reset cluster to ensure no data in system
     c = cluster.Cluster(config=cluster_config)
@@ -91,6 +95,10 @@ def test_predictiveQueries_euclideanCosineDistance(params_from_base_test_setup, 
     cbl_db = params_from_base_test_setup["source_db"]
     sg_config = params_from_base_test_setup["sg_config"]
     cluster_config = params_from_base_test_setup["cluster_config"]
+    liteserv_version = params_from_base_test_setup["liteserv_version"]
+
+    if liteserv_version < "2.5.0":
+        pytest.skip('This test cannnot run with CBL version below 2.5')
 
     document = Document(base_url)
 
@@ -107,12 +115,9 @@ def test_predictiveQueries_euclideanCosineDistance(params_from_base_test_setup, 
     for item, key in zip(doc_list, keys):
         document.setValue(mut_doc, key, item)
     db.saveDocument(cbl_db, mut_doc)
-    result_euclidean_dist = predictive_query.euclideanDistance(cbl_db, keys[0], keys[1])
-    result_euclidean_dist = result_euclidean_dist[0]
-    result_square_euclidean_dist = predictive_query.squaredEuclideanDistance(cbl_db, keys[0], keys[1])
-    result_square_euclidean_dist = result_square_euclidean_dist[0]
-    result_consine_distance = predictive_query.cosineDistance(cbl_db, keys[0], keys[1])
-    result_consine_distance = result_consine_distance[0]
+    result_euclidean_dist = predictive_query.getEuclideanDistance(cbl_db, keys[0], keys[1])[0]
+    result_square_euclidean_dist = predictive_query.getSquaredEuclideanDistance(cbl_db, keys[0], keys[1])[0]
+    result_consine_distance = predictive_query.getCosineDistance(cbl_db, keys[0], keys[1])[0]
     if euclidean_result is not None:
         euclidean_value = result_euclidean_dist[result_euclidean_dist.keys()[0]]
         square_euclidean_value = result_square_euclidean_dist[result_square_euclidean_dist.keys()[0]]

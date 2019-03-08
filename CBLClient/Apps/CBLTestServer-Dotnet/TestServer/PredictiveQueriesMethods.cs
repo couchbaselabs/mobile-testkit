@@ -89,7 +89,7 @@ namespace Couchbase.Lite.Testing
             {
                 With<EchoModel>(postBody, "model", model =>
                 {
-                    var dict = postBody["dictionary"];
+                    var dict = postBody["nonDictionary"];
                     var input = Expression.Value(dict);
                     var prediction = Function.Prediction(model.name, input);
                     List<Object> resultArray = new List<Object>();
@@ -118,7 +118,7 @@ namespace Couchbase.Lite.Testing
             });
         }
 
-        internal static void EuclideanDistance([NotNull] NameValueCollection args,
+        internal static void GetEuclideanDistance([NotNull] NameValueCollection args,
             [NotNull] IReadOnlyDictionary<string, object> postBody,
             [NotNull] HttpListenerResponse response)
         {
@@ -139,7 +139,7 @@ namespace Couchbase.Lite.Testing
             });
         }
 
-        internal static void SquaredEuclideanDistance([NotNull] NameValueCollection args,
+        internal static void GetSquaredEuclideanDistance([NotNull] NameValueCollection args,
             [NotNull] IReadOnlyDictionary<string, object> postBody,
             [NotNull] HttpListenerResponse response)
         {
@@ -160,7 +160,7 @@ namespace Couchbase.Lite.Testing
             });
         }
 
-        internal static void CosineDistance([NotNull] NameValueCollection args,
+        internal static void GetCosineDistance([NotNull] NameValueCollection args,
             [NotNull] IReadOnlyDictionary<string, object> postBody,
             [NotNull] HttpListenerResponse response)
         {

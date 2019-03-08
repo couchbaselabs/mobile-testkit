@@ -47,7 +47,7 @@ public class PredictiveQueriesRequestHandler {
             
         case "predictiveQuery_nonDictionary":
             let model: EchoModel = args.get(name: "model")!
-            let text: String = args.get(name: "dictionary")!
+            let text: String = args.get(name: "nonDictionary")!
             let database: Database = args.get(name: "database")!
             let input = Expression.value(text)
             let prediction = Function.prediction(model: model.name, input: input)
@@ -66,7 +66,7 @@ public class PredictiveQueriesRequestHandler {
             let model: EchoModel = args.get(name: "model")!
             return model.numberOfCalls
             
-        case "predictiveQuery_euclideanDistance":
+        case "predictiveQuery_getEuclideanDistance":
             let database: Database = args.get(name: "database")!
             let key1: String = args.get(name: "key1")!
             let key2: String = args.get(name: "key2")!
@@ -83,7 +83,7 @@ public class PredictiveQueriesRequestHandler {
             
             return resultArray
             
-        case "predictiveQuery_squaredEuclideanDistance":
+        case "predictiveQuery_getSquaredEuclideanDistance":
             let database: Database = args.get(name: "database")!
             let key1: String = args.get(name: "key1")!
             let key2: String = args.get(name: "key2")!
@@ -100,7 +100,7 @@ public class PredictiveQueriesRequestHandler {
             
             return resultArray
             
-        case "predictiveQuery_cosineDistance":
+        case "predictiveQuery_getCosineDistance":
             let database: Database = args.get(name: "database")!
             let key1: String = args.get(name: "key1")!
             let key2: String = args.get(name: "key2")!

@@ -32,10 +32,10 @@ class PredictiveQueries(object):
         args.setMemoryPointer("database", database)
         return self._client.invokeMethod("predictiveQuery_getPredictionQueryResult", args)
 
-    def queryNonDictionaryInput(self, model, dictionary, database):
+    def queryNonDictionaryInput(self, model, nonDictionary, database):
         args = Args()
         args.setMemoryPointer("model", model)
-        args.setString("dictionary", dictionary)
+        args.setString("nonDictionary", nonDictionary)
         args.setMemoryPointer("database", database)
         return self._client.invokeMethod("predictiveQuery_nonDictionary", args)
 
@@ -44,25 +44,23 @@ class PredictiveQueries(object):
         args.setMemoryPointer("model", model)
         return self._client.invokeMethod("predictiveQuery_getNumberOfCalls", args)
 
-    def euclideanDistance(self, database, key1, key2):
+    def getEuclideanDistance(self, database, key1, key2):
         args = Args()
         args.setMemoryPointer("database", database)
         args.setString("key1", key1)
         args.setString("key2", key2)
-        return self._client.invokeMethod("predictiveQuery_euclideanDistance", args)
+        return self._client.invokeMethod("predictiveQuery_getEuclideanDistance", args)
 
-    def squaredEuclideanDistance(self, database, key1, key2):
+    def getSquaredEuclideanDistance(self, database, key1, key2):
         args = Args()
         args.setMemoryPointer("database", database)
         args.setString("key1", key1)
         args.setString("key2", key2)
-        return self._client.invokeMethod("predictiveQuery_squaredEuclideanDistance", args)
+        return self._client.invokeMethod("predictiveQuery_getSquaredEuclideanDistance", args)
 
-    def cosineDistance(self, database, key1, key2):
+    def getCosineDistance(self, database, key1, key2):
         args = Args()
         args.setMemoryPointer("database", database)
         args.setString("key1", key1)
         args.setString("key2", key2)
-        return self._client.invokeMethod("predictiveQuery_cosineDistance", args)
-
-
+        return self._client.invokeMethod("predictiveQuery_getCosineDistance", args)

@@ -236,9 +236,9 @@ namespace Couchbase.Lite.Testing
                 ["predictiveQuery_unRegisterModel"] = PredictiveQueriesMethods.UnRegisterModel,
                 ["predictiveQuery_getPredictionQueryResult"] = PredictiveQueriesMethods.GetPredictionQueryResult,
                 ["predictiveQuery_nonDictionary"] = PredictiveQueriesMethods.NonDictionary,
-                ["predictiveQuery_euclideanDistance"] = PredictiveQueriesMethods.EuclideanDistance,
-                ["predictiveQuery_squaredEuclideanDistance"] = PredictiveQueriesMethods.SquaredEuclideanDistance,
-                ["predictiveQuery_cosineDistance"] = PredictiveQueriesMethods.CosineDistance,
+                ["predictiveQuery_getEuclideanDistance"] = PredictiveQueriesMethods.GetEuclideanDistance,
+                ["predictiveQuery_getSquaredEuclideanDistance"] = PredictiveQueriesMethods.GetSquaredEuclideanDistance,
+                ["predictiveQuery_getCosineDistance"] = PredictiveQueriesMethods.GetCosineDistance,
                 ["predictiveQuery_getNumberOfCalls"] = PredictiveQueriesMethods.GetNumberOfCalls,
                 ["release"] = ReleaseObject,
                 ["flushMemory"] = flushMemory
