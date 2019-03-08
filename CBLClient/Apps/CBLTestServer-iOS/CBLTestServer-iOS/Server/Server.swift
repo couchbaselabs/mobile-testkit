@@ -48,6 +48,7 @@ public class Server {
     let databaseConfigurationRequestHandler: DatabaseConfigurationRequestHandler!
     let peerToPeerRequestHandler: PeerToPeerRequestHandler!
     let predictiveQueryRequestHandler: PredictiveQueriesRequestHandler!
+    let fileLoggingRequestHandler: FileLoggingRequestHandler!
     let memory = Memory()
     
     public init() {
@@ -73,6 +74,7 @@ public class Server {
         databaseConfigurationRequestHandler = DatabaseConfigurationRequestHandler()
         peerToPeerRequestHandler = PeerToPeerRequestHandler()
         predictiveQueryRequestHandler = PredictiveQueriesRequestHandler()
+        fileLoggingRequestHandler = FileLoggingRequestHandler()
         server = GCDWebServer()
         Database.log.console.level = LogLevel.verbose
         server.addDefaultHandler(forMethod: "POST", request: GCDWebServerDataRequest.self) {
@@ -163,6 +165,9 @@ public class Server {
                     } else if method.hasPrefix("predictiveQuery") {
                         result = try self.predictiveQueryRequestHandler.handleRequest(method: method, args: args)
                     }else {
+                    } else if method.hasPrefix("logging") {
+                        result = try self.fileLoggingRequestHandler.handleRequest(method: method, args: args)
+                    } else {
                         throw ServerError.MethodNotImplemented(method)
                     }
                     if result != nil {

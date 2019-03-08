@@ -240,6 +240,17 @@ namespace Couchbase.Lite.Testing
                 ["predictiveQuery_getSquaredEuclideanDistance"] = PredictiveQueriesMethods.GetSquaredEuclideanDistance,
                 ["predictiveQuery_getCosineDistance"] = PredictiveQueriesMethods.GetCosineDistance,
                 ["predictiveQuery_getNumberOfCalls"] = PredictiveQueriesMethods.GetNumberOfCalls,
+                ["logging_configure"] = FileLoggingMehtod.Configure,
+                ["logging_getPlainTextStatus"] = FileLoggingMehtod.GetPlainTextStatus,
+                ["logging_getMaxRotateCount"] = FileLoggingMehtod.GetMaxRotateCount,
+                ["logging_getMaxSize"] = FileLoggingMehtod.GetMaxSize,
+                ["logging_getLogLevel"] = FileLoggingMehtod.GetLogLevel,
+                ["logging_getConfig"] = FileLoggingMehtod.GetConfig,
+                ["logging_setPlainTextStatus"] = FileLoggingMehtod.SetPlainTextStatus,
+                ["logging_setMaxRotateCount"] = FileLoggingMehtod.SetMaxRotateCount,
+                ["logging_setMaxSize"] = FileLoggingMehtod.SetMaxSize,
+                ["logging_setLogLevel"] = FileLoggingMehtod.SetLogLevel,
+                ["logging_setConfig"] = FileLoggingMehtod.SetConfig,
                 ["release"] = ReleaseObject,
                 ["flushMemory"] = flushMemory
             };

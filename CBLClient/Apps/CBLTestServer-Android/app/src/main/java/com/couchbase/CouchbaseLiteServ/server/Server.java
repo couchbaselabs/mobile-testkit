@@ -16,6 +16,7 @@ import com.couchbase.CouchbaseLiteServ.server.RequestHandler.DocumentRequestHand
 import com.couchbase.CouchbaseLiteServ.server.RequestHandler.ExpressionRequestHandler;
 import com.couchbase.CouchbaseLiteServ.server.RequestHandler.FunctionRequestHandler;
 import com.couchbase.CouchbaseLiteServ.server.RequestHandler.PredictiveQueriesRequestHandler;
+import com.couchbase.CouchbaseLiteServ.server.RequestHandler.LoggingRequestHandler;
 import com.couchbase.CouchbaseLiteServ.server.RequestHandler.QueryRequestHandler;
 import com.couchbase.CouchbaseLiteServ.server.RequestHandler.ReplicatorConfigurationRequestHandler;
 import com.couchbase.CouchbaseLiteServ.server.RequestHandler.ReplicatorRequestHandler;
@@ -187,6 +188,9 @@ public class Server extends NanoHTTPD {
                     case "predictiveQuery":
                         target = PredictiveQueriesRequestHandler.class.getMethod(method_to_call, Args.class);
                         requestHandler = new PredictiveQueriesRequestHandler();
+                    case "logging":
+                        target = LoggingRequestHandler.class.getMethod(method_to_call, Args.class);
+                        requestHandler = new LoggingRequestHandler();
                         break;
                     default:
                         throw new IllegalArgumentException("Handler not implemented for this call");
