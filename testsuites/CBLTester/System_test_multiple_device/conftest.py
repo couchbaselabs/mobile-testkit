@@ -15,6 +15,7 @@ from CBLClient.Database import Database
 from CBLClient.Query import Query
 from CBLClient.Utils import Utils
 from keywords.constants import RESULTS_DIR
+from CBLClient.FileLogging import FileLogging
 
 
 def pytest_addoption(parser):
@@ -109,6 +110,11 @@ def pytest_addoption(parser):
                      help="create-db-per-test: Creates/deletes client DB for every test",
                      default="test")
 
+    parser.addoption("--enable-rebalance",
+                     action="store_true",
+                     default=False,
+                     help="If set, CBS not would be rebalance in/out of cluster")
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -145,6 +151,7 @@ def params_from_base_suite_setup(request):
     cluster_config_prefix = request.config.getoption("--cluster-config")
     create_db_per_test = request.config.getoption("--create-db-per-test")
     create_db_per_suite = request.config.getoption("--create-db-per-suite")
+    enable_rebalance = request.config.getoption("--enable-rebalance")
 
     community_enabled = request.config.getoption("--community")
 
@@ -273,6 +280,10 @@ def params_from_base_suite_setup(request):
                 testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp,
                                                                datetime.datetime.now()))
         for base_url, i in zip(base_url_list, range(len(base_url_list))):
+            cbllog = FileLogging(base_url)
+            cbllog.configure(log_level="verbose", max_rotate_count=1000,
+                             max_size= 1000 * 1000 * 512, plain_text=True)
+            log_info("Log files available at - {}".format(cbllog.get_directory()))
             db_name = "{}_{}_{}".format(create_db_per_suite, str(time.time()), i + 1)
             log_info("db name for {} is {}".format(base_url, db_name))
             db_name_list.append(db_name)
@@ -317,7 +328,8 @@ def params_from_base_suite_setup(request):
         "device_enabled": device_enabled,
         "generator": generator,
         "resume_cluster": resume_cluster,
-        "create_db_per_test": create_db_per_test
+        "create_db_per_test": create_db_per_test,
+        "enable_rebalance": enable_rebalance
     }
 
     if create_db_per_suite:

@@ -44,6 +44,10 @@ class FileLogging(object):
         args = Args()
         return self._client.invokeMethod("logging_getConfig", args)
 
+    def get_directory(self):
+        args = Args()
+        return self._client.invokeMethod("logging_getDirectory", args)
+
     def set_plain_text_status(self, config, plain_text=False):
         args = Args()
         args.setMemoryPointer("config", config)

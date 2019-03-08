@@ -70,6 +70,9 @@ public class FileLoggingRequestHandler {
         case "logging_getMaxSize":
             return Database.log.file.config?.maxSize
 
+        case "logging_getDirectory":
+            return Database.log.file.config?.directory
+
         case "logging_getLogLevel":
             return Database.log.file.level.rawValue
 

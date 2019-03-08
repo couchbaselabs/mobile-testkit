@@ -16,8 +16,8 @@ from datetime import datetime, timedelta
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("num_of_docs, num_of_updates, num_of_docs_to_update, num_of_docs_in_itr, num_of_doc_to_delete, num_of_docs_to_add, up_time", [
-    (1000000, 100, 100, 1000, 1000, 2000, 4 * 24 * 60),
-    # (500, 5, 10, 5, 10, 10, 1 * 20),
+    # (1000000, 100, 100, 1000, 1000, 2000, 4 * 24 * 60),
+    (500, 5, 10, 50, 10, 10, 1 * 20),
 ])
 def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_of_docs_to_update, num_of_docs_in_itr, num_of_doc_to_delete, num_of_docs_to_add, up_time):
     sg_db = "db"
@@ -34,6 +34,7 @@ def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_o
     sync_gateway_version = params_from_base_suite_setup["sync_gateway_version"]
     resume_cluster = params_from_base_suite_setup["resume_cluster"]
     generator = params_from_base_suite_setup["generator"]
+    enable_rebalance = params_from_base_suite_setup["enable_rebalance"]
     doc_id_for_new_docs = num_of_docs
     query_limit = 1000
     query_offset = 0
@@ -54,14 +55,15 @@ def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_o
     extra_docs_in_itr_per_db = docs_per_db % num_of_docs_in_itr  # iteration required to add docs leftover docs per db
 
     cluster = Cluster(config=cluster_config)
-    if len(cluster.servers) < 2:
-        raise Exception("Please provide at least 3 servers")
-
-    server_urls = []
-    for server in cluster.servers:
-        server_urls.append(server.url)
-    primary_server = cluster.servers[0]
-    servers = cluster.servers[1:]
+    if enable_rebalance:
+        if len(cluster.servers) < 2:
+            raise Exception("Please provide at least 3 servers")
+     
+        server_urls = []
+        for server in cluster.servers:
+            server_urls.append(server.url)
+        primary_server = cluster.servers[0]
+        servers = cluster.servers[1:]
     if not resume_cluster:
         # Reset cluster to ensure no data in system
         cluster.reset(sg_config_path=sg_config)
@@ -129,7 +131,8 @@ def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_o
         log_info("Starting iteration no. {} of system testing".format(x))
         log_info('*' * 20)
         x += 1
-        server = servers[random.randint(0, len(servers) - 1)]
+        if enable_rebalance:
+            server = servers[random.randint(0, len(servers) - 1)]
         ######################################
         # Checking for docs update on SG side #
         ######################################
@@ -195,9 +198,10 @@ def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_o
         _check_doc_count(db_obj_list, cbl_db_list)
         # removing ids of deleted doc from the list
         doc_ids = doc_ids - docs_to_delete
-        # Deleting a node from the cluster
-        log_info("Rebalance out server: {}".format(server.host))
-        primary_server.rebalance_out(server_urls, server)
+        if enable_rebalance:
+            # Deleting a node from the cluster
+            log_info("Rebalance out server: {}".format(server.host))
+            primary_server.rebalance_out(server_urls, server)
         ############################
         # Deleting docs on CBL side #
         ############################
@@ -231,11 +235,12 @@ def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_o
         _check_doc_count(db_obj_list, cbl_db_list)
         # removing ids of deleted doc from the list
         doc_ids = doc_ids - docs_to_delete
-        # Adding the node back to the cluster
-        log_info("Adding Server back {}".format(server.host))
-        primary_server.add_node(server, services="kv,index,n1ql")
-        log_info("Rebalance in server: {}".format(server.host))
-        primary_server.rebalance_in(server_urls, server)
+        if enable_rebalance:
+            # Adding the node back to the cluster
+            log_info("Adding Server back {}".format(server.host))
+            primary_server.add_node(server, services="kv,index,n1ql")
+            log_info("Rebalance in server: {}".format(server.host))
+            primary_server.rebalance_in(server_urls, server)
 
         #############################
         # Creating docs on CBL side #
