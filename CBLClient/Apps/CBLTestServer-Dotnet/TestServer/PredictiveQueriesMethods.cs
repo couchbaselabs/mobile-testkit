@@ -42,8 +42,8 @@ namespace Couchbase.Lite.Testing
                                   [NotNull] IReadOnlyDictionary<string, object> postBody,
                                   [NotNull] HttpListenerResponse response)
         {
-            var modelName = postBody["model_name"].ToString();
-            var echoModel = new EchoModel(modelName);
+            String modelName = postBody["model_name"].ToString();
+            EchoModel echoModel = new EchoModel(modelName);
             Database.Prediction.RegisterModel(modelName, echoModel);
             response.WriteBody(MemoryMap.Store(echoModel));
         }
@@ -52,7 +52,7 @@ namespace Couchbase.Lite.Testing
                                   [NotNull] IReadOnlyDictionary<string, object> postBody,
                                   [NotNull] HttpListenerResponse response)
         {
-            var modelName = postBody["model_name"].ToString();
+            String modelName = postBody["model_name"].ToString();
             Database.Prediction.UnregisterModel(modelName);
             response.WriteEmptyBody();
         }
@@ -65,9 +65,9 @@ namespace Couchbase.Lite.Testing
             {
                 With<EchoModel>(postBody, "model", model =>
                 {
-                    var dict = postBody["dictionary"];
-                    var input = Expression.Value(dict);
-                    var prediction = Function.Prediction(model.name, input);
+                    Dictionary<String, Object> dict = (Dictionary< String, Object>)postBody["dictionary"];
+                    IExpression input = Expression.Value(dict);
+                    IPredictionFunction prediction = Function.Prediction(model.name, input);
                     List<Object> resultArray = new List<Object>();
                     using (IQuery query = QueryBuilder
                            .Select(SelectResult.Expression(prediction))
@@ -90,8 +90,8 @@ namespace Couchbase.Lite.Testing
                 With<EchoModel>(postBody, "model", model =>
                 {
                     var dict = postBody["nonDictionary"];
-                    var input = Expression.Value(dict);
-                    var prediction = Function.Prediction(model.name, input);
+                    IExpression input = Expression.Value(dict);
+                    IPredictionFunction prediction = Function.Prediction(model.name, input);
                     List<Object> resultArray = new List<Object>();
                     using (IQuery query = QueryBuilder
                            .Select(SelectResult.Expression(prediction))
@@ -124,9 +124,9 @@ namespace Couchbase.Lite.Testing
         {
             With<Database>(postBody, "database", db =>
             {
-                var key1 = postBody["key1"].ToString();
-                var key2 = postBody["key2"].ToString();
-                var distance = Function.EuclideanDistance(Expression.Property(key1), Expression.Property(key2));
+                String key1 = postBody["key1"].ToString();
+                String key2 = postBody["key2"].ToString();
+                IExpression distance = Function.EuclideanDistance(Expression.Property(key1), Expression.Property(key2));
                 List<Object> resultArray = new List<Object>();
                 using (IQuery query = QueryBuilder
                        .Select(SelectResult.Expression(distance))
@@ -145,9 +145,9 @@ namespace Couchbase.Lite.Testing
         {
             With<Database>(postBody, "database", db =>
             {
-                var key1 = postBody["key1"].ToString();
-                var key2 = postBody["key2"].ToString();
-                var distance = Function.SquaredEuclideanDistance(Expression.Property(key1), Expression.Property(key2));
+                String key1 = postBody["key1"].ToString();
+                String key2 = postBody["key2"].ToString();
+                IExpression distance = Function.SquaredEuclideanDistance(Expression.Property(key1), Expression.Property(key2));
                 List<Object> resultArray = new List<Object>();
                 using (IQuery query = QueryBuilder
                        .Select(SelectResult.Expression(distance))
@@ -166,9 +166,9 @@ namespace Couchbase.Lite.Testing
         {
             With<Database>(postBody, "database", db =>
             {
-                var key1 = postBody["key1"].ToString();
-                var key2 = postBody["key2"].ToString();
-                var distance = Function.CosineDistance(Expression.Property(key1), Expression.Property(key2));
+                String key1 = postBody["key1"].ToString();
+                String key2 = postBody["key2"].ToString();
+                IExpression distance = Function.CosineDistance(Expression.Property(key1), Expression.Property(key2));
                 List<Object> resultArray = new List<Object>();
                 using (IQuery query = QueryBuilder
                        .Select(SelectResult.Expression(distance))
