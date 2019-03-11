@@ -12,7 +12,6 @@ from libraries.testkit.cluster import Cluster
 from libraries.data.doc_generators import simple, four_k, simple_user,\
     complex_doc
 from datetime import datetime, timedelta
-from botocore.vendored.requests.sessions import session
 
 
 @pytest.mark.sanity
