@@ -248,7 +248,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
     except KeyError:
         log_info("revs_limit not found in {}, Ignoring".format(cluster_config))
 
-    if is_delta_sync_enabled(cluster_config):
+    if is_delta_sync_enabled(cluster_config) and get_sg_version(cluster_config) >= "2.5.0":
         playbook_vars["delta_sync"] = '"delta_sync": { "enabled": true},'
 
     # Install Sync Gateway via Source or Package

@@ -255,7 +255,7 @@ class Cluster:
             log_info("revs_limit not found in {}, Ignoring".format(self._cluster_config))
             playbook_vars["revs_limit"] = ''
 
-        if is_delta_sync_enabled(self._cluster_config):
+        if is_delta_sync_enabled(self._cluster_config) and get_sg_version(self._cluster_config) >= "2.5.0":
             playbook_vars["delta_sync"] = '"delta_sync": { "enabled": true},'
 
         # Sleep for a few seconds for the indexes to teardown

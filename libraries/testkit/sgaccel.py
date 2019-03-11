@@ -101,7 +101,7 @@ class SgAccel:
             log.info("revs_limit no found in {}, Ignoring".format(self.cluster_config))
             playbook_vars["revs_limit"] = ''
 
-        if is_delta_sync_enabled(self.cluster_config):
+        if is_delta_sync_enabled(self.cluster_config) and get_sg_version(self.cluster_config) >= "2.5.0":
             playbook_vars["delta_sync"] = '"delta_sync": { "enabled": true},'
 
         if is_cbs_ssl_enabled(self.cluster_config) and get_sg_version(self.cluster_config) >= "1.5.0":
