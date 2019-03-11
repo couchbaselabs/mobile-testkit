@@ -207,6 +207,9 @@ def test_replication_configuration_with_pull_replication(params_from_base_test_s
         assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["attachment_pull_count"] == 20, "attachment_pull_count did not get incremented"
         assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["attachment_pull_bytes"] > 0, "attachment_pull_bytes did not get incremented"
         if attachments_generator is not None:
+            assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["attachment_pull_count"] == 0, "attachment_pull_count should not get incremented while attachment generator is None"
+            assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["attachment_pull_bytes"] == 0, "attachment_pull_bytes should not get incremented while attachment generator is None"
+        else:
             assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["attachment_pull_count"] == 20, "attachment_pull_count did not get incremented"
             assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["attachment_pull_bytes"] > 0, "attachment_pull_bytes did not get incremented"
 
@@ -400,7 +403,7 @@ def test_replication_push_replication_invalid_authentication(params_from_base_te
     replicator.stop(repl)
     if sync_gateway_version >= "2.5.0":
         expvars = sg_client.get_expvars(sg_admin_url)
-        assert expvars["syncgateway"]["per_db"][sg_db]["security"]["auth_success_count"] > 0, "auth success count is not incremented"
+        assert expvars["syncgateway"]["per_db"][sg_db]["security"]["auth_failed_count"] > 0, "auth failed count is not incremented"
         assert expvars["syncgateway"]["per_db"][sg_db]["security"]["total_auth_time"] > 0, "total_auth_time is not incremented"
         assert expvars["syncgateway"]["per_db"][sg_db]["security"]["num_docs_rejected"] == 39, "num_docs_rejected is not incremented"
         assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_push"]["sync_function_time"] > 0, "sync_function_time is not incremented"
