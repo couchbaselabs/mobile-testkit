@@ -1,7 +1,7 @@
 import os
 
 from keywords.TestServerBase import TestServerBase
-from keywords.constants import LATEST_BUILDS
+from keywords.constants import LATEST_BUILDS, RELEASED_BUILDS
 from keywords.exceptions import LiteServError
 from keywords.utils import version_and_build
 from keywords.utils import log_info
@@ -48,14 +48,22 @@ class TestServerNetMsft(TestServerBase):
         self.version_build = version_build
         self.version, self.build = version_and_build(self.version_build)
 
+        if version_build <= "2.1.0":
+            raise Exception("No .net based app available to download for 2.1.0 or below at latestbuild. Use nuget package to create app.")
         if self.platform == "net-msft":
             self.binary_path = "TestServer-Net-{}\\TestServer.NetCore.dll".format(self.version_build)
-            self.download_url = "{}/couchbase-lite-net/{}/{}/TestServer.NetCore.zip".format(LATEST_BUILDS, self.version, self.build)
+            if self.build is None:
+                self.download_url = "{}/couchbase-lite-net/{}/TestServer.NetCore.zip".format(RELEASED_BUILDS, self.version)
+            else:
+                self.download_url = "{}/couchbase-lite-net/{}/{}/TestServer.NetCore.zip".format(LATEST_BUILDS, self.version, self.build)
             self.package_name = "TestServer.NetCore.zip"
             self.build_name = "TestServer-Net-{}".format(self.version_build)
         else:
             self.binary_path = "TestServer-UWP-{}\\run.ps1".format(self.version_build)
-            self.download_url = "{}/couchbase-lite-net/{}/{}/TestServer.UWP.zip".format(LATEST_BUILDS, self.version, self.build)
+            if self.build is None:
+                self.download_url = "{}/couchbase-lite-net/{}/TestServer.UWP.zip".format(RELEASED_BUILDS, self.version)
+            else:
+                self.download_url = "{}/couchbase-lite-net/{}/{}/TestServer.UWP.zip".format(LATEST_BUILDS, self.version, self.build)
             self.package_name = "TestServer.UWP.zip"
             self.stop_binary_path = "TestServer-UWP-{}\\stop.ps1".format(self.version_build)
             self.build_name = "TestServer-UWP-{}".format(self.version_build)
