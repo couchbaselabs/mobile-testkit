@@ -297,6 +297,8 @@ def compare_docs(cbl_db, db, docs_dict):
 
 
 def compare_generic_types(object1, object2):
+    if object1 is None and object2 is None:
+        return True
     if isinstance(object1, str) and isinstance(object2, str):
         return object1 == object2
     elif isinstance(object1, unicode) and isinstance(object2, unicode):
@@ -373,7 +375,7 @@ def deep_dict_compare(object1, object2):
         else:
             retval = compare_generic_types(obj1, obj2)
             if retval is False:
-                log_info("mistmatch {} and {}".format(obj1, obj2))
+                log_info("mismatch {} and {}".format(obj1, obj2))
                 return False
 
     return retval

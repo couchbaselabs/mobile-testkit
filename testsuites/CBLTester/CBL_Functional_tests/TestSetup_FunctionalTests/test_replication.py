@@ -204,7 +204,7 @@ def test_replication_configuration_with_pull_replication(params_from_base_test_s
         assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["request_changes_count"] == 1, "request_changes_count did not get incremented"
         assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["request_changes_time"] > 0, "request_changes_time did not get incremented"
         assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["num_pull_repl_since_zero"] == 1, "num_pull_repl_since_zero did not get incremented"
-        if attachments_generator is not None:
+        if attachments_generator is None:
             assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["attachment_pull_count"] == 0, "attachment_pull_count should not get incremented while attachment generator is None"
             assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["attachment_pull_bytes"] == 0, "attachment_pull_bytes should not get incremented while attachment generator is None"
         else:
