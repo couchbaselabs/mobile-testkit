@@ -33,6 +33,7 @@ def test_attachments_on_docs_rejected_by_sync_function(params_from_base_test_set
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
@@ -84,3 +85,7 @@ def test_attachments_on_docs_rejected_by_sync_function(params_from_base_test_set
     server_att_docs = cb_server.get_server_docs_with_prefix(bucket=bucket, prefix="_sync:att:", ipv6=cluster.ipv6)
     num_att_docs = len(server_att_docs)
     assert num_att_docs == 0
+
+    if sync_gateway_version >= "2.5.0":
+        expvars = client.get_expvars(sg_url_admin)
+        assert expvars["syncgateway"]["per_db"][sg_db]["security"]["num_docs_rejected"] == 2, "num_docs_rejected is not incremented"

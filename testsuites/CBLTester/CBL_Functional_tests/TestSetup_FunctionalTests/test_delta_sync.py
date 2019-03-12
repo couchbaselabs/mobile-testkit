@@ -135,8 +135,8 @@ def test_delta_sync_replication(params_from_base_test_setup, num_of_docs, replic
 @pytest.mark.syncgateway
 @pytest.mark.replication
 @pytest.mark.parametrize("num_of_docs, replication_type", [
-    (10, "pull"),
-    (10, "push")
+   (10, "pull"),
+   (10, "push")
 ])
 def test_delta_sync_enabled_disabled(params_from_base_test_setup, num_of_docs, replication_type):
     '''
@@ -370,7 +370,7 @@ def test_delta_sync_within_expiry(params_from_base_test_setup, num_of_docs, repl
 def test_delta_sync_utf8_strings(params_from_base_test_setup, num_of_docs, replication_type):
     '''
     @summary:
-    1. Have delta sync enabled by default
+    1. Have delta sync enabled
     2. Create docs in CBL
     3. Do push replication to SGW
     4. update docs in SGW/CBL with utf8 strings
@@ -440,7 +440,7 @@ def test_delta_sync_utf8_strings(params_from_base_test_setup, num_of_docs, repli
         delta_size = doc_reads_bytes2
     else:
         delta_size = doc_writes_bytes2 - doc_writes_bytes1
-
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
     compare_sg_cbl_docs(cbl_db, db, sg_docs)
     verify_delta_stats_counts(sg_client, sg_admin_url, replication_type, sg_db, num_of_docs)
     assert delta_size < full_doc_size, "delta size is not less than full doc size when delta is replicated"
