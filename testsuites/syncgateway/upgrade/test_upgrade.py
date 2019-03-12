@@ -181,7 +181,7 @@ def test_upgrade(params_from_base_test_setup):
                 ac_obj = SyncGateway()
                 for ac in sg_accels:
                     ac_ip = host_for_url(ac)
-                    ac_obj.enable_import_xattrs(
+                    ac_obj.redeploy_sync_gateway_config(
                         cluster_config=cluster_config,
                         sg_conf=sg_conf,
                         url=ac_ip,
@@ -192,7 +192,7 @@ def test_upgrade(params_from_base_test_setup):
             sg_obj = SyncGateway()
             for sg in sync_gateways:
                 sg_ip = host_for_url(sg["admin"])
-                sg_obj.enable_import_xattrs(
+                sg_obj.redeploy_sync_gateway_config(
                     cluster_config=cluster_config,
                     sg_conf=sg_conf,
                     url=sg_ip,

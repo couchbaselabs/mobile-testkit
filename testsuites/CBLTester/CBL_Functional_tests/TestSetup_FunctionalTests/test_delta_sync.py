@@ -2,7 +2,7 @@ import pytest
 import time
 
 from keywords.MobileRestClient import MobileRestClient
-from keywords.utils import random_string, compare_sg_cbl_docs
+from keywords.utils import random_string, compare_docs
 from CBLClient.Replication import Replication
 from CBLClient.Authenticator import Authenticator
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
@@ -128,15 +128,15 @@ def test_delta_sync_replication(params_from_base_test_setup, num_of_docs, replic
         assert delta_size < doc_writes_bytes, "did not replicate just delta"
 
     sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
-    compare_sg_cbl_docs(cbl_db, db, sg_docs)
+    compare_docs(cbl_db, db, sg_docs)
 
 
 @pytest.mark.listener
 @pytest.mark.syncgateway
 @pytest.mark.replication
 @pytest.mark.parametrize("num_of_docs, replication_type", [
-   (10, "pull"),
-   (10, "push")
+    (10, "pull"),
+    (10, "push")
 ])
 def test_delta_sync_enabled_disabled(params_from_base_test_setup, num_of_docs, replication_type):
     '''
@@ -247,7 +247,7 @@ def test_delta_sync_enabled_disabled(params_from_base_test_setup, num_of_docs, r
     else:
         delta_disabled_doc_size = doc_writes_bytes3 - doc_writes_bytes2
 
-    compare_sg_cbl_docs(cbl_db, db, sg_docs)
+    compare_docs(cbl_db, db, sg_docs)
     # assert delta_disabled_doc_size == full_doc_size, "did not get full doc size"
     assert delta_disabled_doc_size > delta_size, "disabled delta doc size is more than enabled delta size"
     try:
@@ -357,7 +357,7 @@ def test_delta_sync_within_expiry(params_from_base_test_setup, num_of_docs, repl
 
     # compare full body on SGW and CBL and verify whole body matches
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, include_docs=True, auth=session)["rows"]
-    compare_sg_cbl_docs(cbl_db, db, sg_docs)
+    compare_docs(cbl_db, db, sg_docs)
 
 
 @pytest.mark.listener
@@ -441,7 +441,7 @@ def test_delta_sync_utf8_strings(params_from_base_test_setup, num_of_docs, repli
     else:
         delta_size = doc_writes_bytes2 - doc_writes_bytes1
     sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
-    compare_sg_cbl_docs(cbl_db, db, sg_docs)
+    compare_docs(cbl_db, db, sg_docs)
     verify_delta_stats_counts(sg_client, sg_admin_url, replication_type, sg_db, num_of_docs)
     assert delta_size < full_doc_size, "delta size is not less than full doc size when delta is replicated"
 
@@ -525,7 +525,7 @@ def test_delta_sync_nested_doc(params_from_base_test_setup, num_of_docs, replica
 
     # 7. Verify the body of nested doc matches with sgw and cbl
     sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
-    compare_sg_cbl_docs(cbl_db, db, sg_docs)
+    compare_docs(cbl_db, db, sg_docs)
     verify_delta_stats_counts(sg_client, sg_admin_url, replication_type, sg_db, num_of_docs)
 
 
@@ -613,7 +613,7 @@ def test_delta_sync_larger_than_doc(params_from_base_test_setup, num_of_docs, re
 
     # compare full body on SGW and CBL and verify whole body matches
     sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
-    compare_sg_cbl_docs(cbl_db, db, sg_docs)
+    compare_docs(cbl_db, db, sg_docs)
 
     assert larger_delta_size >= full_doc_size, "did not get full doc size after deltas is expired"
 

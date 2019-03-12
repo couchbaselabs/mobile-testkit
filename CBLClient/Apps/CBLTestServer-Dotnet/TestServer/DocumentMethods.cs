@@ -307,6 +307,23 @@ namespace Couchbase.Lite.Testing
         {
             With<Document>(postBody, "document", doc => response.WriteBody(doc.Id));
         }
+
+        public static void DocumentGetValue([NotNull] NameValueCollection args,
+                                  [NotNull] IReadOnlyDictionary<string, object> postBody,
+                                  [NotNull] HttpListenerResponse response)
+        {
+            var key = postBody["key"].ToString();
+            With<Document>(postBody, "document", doc => response.WriteBody(doc.GetValue(key)));
+        }
+
+        public static void DocumentSetValue([NotNull] NameValueCollection args,
+                                  [NotNull] IReadOnlyDictionary<string, object> postBody,
+                                  [NotNull] HttpListenerResponse response)
+        {
+            var key = postBody["key"].ToString();
+            var val = postBody["value"];
+            With<MutableDocument>(postBody, "document", doc => response.WriteBody(MemoryMap.Store(doc.SetValue(key, val))));
+        }
         #endregion
     }
 }
