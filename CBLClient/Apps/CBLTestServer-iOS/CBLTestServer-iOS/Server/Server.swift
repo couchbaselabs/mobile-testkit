@@ -47,10 +47,12 @@ public class Server {
     let basicAuthenticatorRequestHandler: BasicAuthenticatorRequestHandler!
     let databaseConfigurationRequestHandler: DatabaseConfigurationRequestHandler!
     let peerToPeerRequestHandler: PeerToPeerRequestHandler!
+    let predictiveQueryRequestHandler: PredictiveQueriesRequestHandler!
+    let fileLoggingRequestHandler: FileLoggingRequestHandler!
     let memory = Memory()
     
     public init() {
-        Database.setLogLevel(LogLevel.info, domain: LogDomain.all)
+        Database.log.console.level = .debug
         dictionaryRequestHandler = DictionaryRequestHandler()
         queryRequestHandler = QueryRequestHandler()
         databaseRequestHandler = DatabaseRequestHandler()
@@ -71,7 +73,10 @@ public class Server {
         basicAuthenticatorRequestHandler = BasicAuthenticatorRequestHandler()
         databaseConfigurationRequestHandler = DatabaseConfigurationRequestHandler()
         peerToPeerRequestHandler = PeerToPeerRequestHandler()
+        predictiveQueryRequestHandler = PredictiveQueriesRequestHandler()
+        fileLoggingRequestHandler = FileLoggingRequestHandler()
         server = GCDWebServer()
+        Database.log.console.level = LogLevel.verbose
         server.addDefaultHandler(forMethod: "POST", request: GCDWebServerDataRequest.self) {
             (request) -> GCDWebServerResponse? in
             
@@ -157,6 +162,11 @@ public class Server {
                         result = try self.basicAuthenticatorRequestHandler.handleRequest(method: method, args: args)
                     } else if method.hasPrefix("peerToPeer") {
                         result = try self.peerToPeerRequestHandler.handleRequest(method: method, args: args)
+                    } else if method.hasPrefix("predictiveQuery") {
+                        result = try self.predictiveQueryRequestHandler.handleRequest(method: method, args: args)
+                    }else {
+                    } else if method.hasPrefix("logging") {
+                        result = try self.fileLoggingRequestHandler.handleRequest(method: method, args: args)
                     } else {
                         throw ServerError.MethodNotImplemented(method)
                     }

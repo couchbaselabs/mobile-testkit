@@ -9,9 +9,12 @@
             {{ no_conflicts }}
             {{ sg_use_views }}
             {{ num_index_replicas }}
+            {{ username }}
+            {{ password }}
             {{ cacertpath }}
             {{ certpath }}
             {{ keypath }}
+            {{ delta_sync }}
             "import_docs": "continuous",
             "enable_shared_bucket_access": true,
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",

@@ -20,7 +20,7 @@ if [ -f $SYS_LOG ]; then
 fi
 
 # Array of error keys we look for in SG/SGAccel logs
-SG_ERRORS=('panic' 'data race' 'SIGSEGV' 'nil pointer dereference')
+SG_ERRORS=('panic:' 'data race' 'SIGSEGV' 'nil pointer dereference')
 if [ -f $SG_LOG_FILE ]; then
 	for ((i = 0; i < ${#SG_ERRORS[@]}; i++));do
 		OUT=$(grep -i "${SG_ERRORS[$i]}" $SG_LOG_FILE)

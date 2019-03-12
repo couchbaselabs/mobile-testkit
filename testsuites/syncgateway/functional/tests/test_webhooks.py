@@ -143,6 +143,7 @@ def test_webhooks_crud(params_from_base_test_setup, sg_conf_name, filtered):
     sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
     sg_url = cluster_topology['sync_gateways'][0]['public']
     cbs_url = cluster_topology['couchbase_servers'][0]
+    ssl_enabled = params_from_base_test_setup["ssl_enabled"]
 
     sg_db = 'db'
     bucket_name = 'data-bucket'
@@ -159,11 +160,15 @@ def test_webhooks_crud(params_from_base_test_setup, sg_conf_name, filtered):
 
     sg_client = MobileRestClient()
     cbs_ip = host_for_url(cbs_url)
-    if cluster.ipv6:
-        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_ip, bucket_name), password='password')
+    if ssl_enabled and cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(cbs_ip, bucket_name)
+    elif ssl_enabled and not cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify".format(cbs_ip, bucket_name)
+    elif not ssl_enabled and cluster.ipv6:
+        connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, bucket_name)
     else:
-        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
-
+        connection_url = 'couchbase://{}/{}'.format(cbs_ip, bucket_name)
+    sdk_client = Bucket(connection_url, password='password')
     sg_info = UserInfo('sg_user', 'pass', channels=['shared'], roles=[])
     sdk_info = UserInfo('sdk_user', 'pass', channels=['shared'], roles=[])
     sg_client.create_user(

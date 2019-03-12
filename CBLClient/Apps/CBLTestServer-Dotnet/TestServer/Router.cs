@@ -143,6 +143,8 @@ namespace Couchbase.Lite.Testing
                 ["document_toMutable"] = DocumentMethods.DocumentToMutable,
                 ["document_removeKey"] = DocumentMethods.DocumentRemoveKey,
                 ["document_contains"] = DocumentMethods.DocumentContains,
+                ["document_getValue"] = DocumentMethods.DocumentGetValue,
+                ["document_setValue"] = DocumentMethods.DocumentSetValue,
                 ["replicatorConfiguration_configure"] = ReplicatorConfigurationMethods.Configure,
                 ["replicator_create"] = ReplicationMethods.Create,
                 ["replicator_start"] = ReplicationMethods.StartReplication,
@@ -154,7 +156,11 @@ namespace Couchbase.Lite.Testing
                 ["replicator_getConfig"] = ReplicationMethods.GetConfig,
                 ["replicator_getCompleted"] = ReplicationMethods.GetCompleted,
                 ["replicator_addChangeListener"] = ReplicationMethods.AddChangeListener,
+                ["replicator_addReplicatorEventChangeListener"] = ReplicationMethods.AddDocumentReplicationChangeListener,
+                ["replicator_removeReplicatorEventListener"] = ReplicationMethods.RemoveReplicatorEventListener,
                 ["replicator_removeChangeListener"] = ReplicationMethods.RemoveChangeListener,
+                ["replicator_replicatorEventGetChanges"] = ReplicationMethods.ReplicatorEventGetChanges,
+                ["replicator_replicatorEventChangesCount"] = ReplicationMethods.ReplicatorEventChangesCount,
                 ["replicatorConfiguration_setAuthenticator"] = ReplicatorConfigurationMethods.SetAuthenticator,
                 ["replicatorConfiguration_setReplicatorType"] = ReplicatorConfigurationMethods.SetReplicatorType,
                 ["replicator_changeListenerChangesCount"] = ReplicationMethods.ChangeListenerChangesCount,
@@ -221,6 +227,30 @@ namespace Couchbase.Lite.Testing
                 ["peerToPeer_serverStart"] = P2PMethods.Start_Server,
                 ["peerToPeer_serverStop"] = P2PMethods.Stop_Server,
                 ["peerToPeer_clientStart"] = P2PMethods.Start_Client,
+                ["peerToPeer_configure"] = P2PMethods.Configure,
+                ["peerToPeer_addReplicatorEventChangeListener"] = ReplicationMethods.AddReplicatorEventChangeListener,
+                ["peerToPeer_removeReplicatorEventListener"] = ReplicationMethods.RemoveReplicatorEventListener,
+                ["peerToPeer_replicatorEventGetChanges"] = ReplicationMethods.ReplicatorEventGetChanges,
+                ["peerToPeer_replicatorEventChangesCount"] = ReplicationMethods.ReplicatorEventChangesCount,
+                ["predictiveQuery_registerModel"] = PredictiveQueriesMethods.RegisterModel,
+                ["predictiveQuery_unRegisterModel"] = PredictiveQueriesMethods.UnRegisterModel,
+                ["predictiveQuery_getPredictionQueryResult"] = PredictiveQueriesMethods.GetPredictionQueryResult,
+                ["predictiveQuery_nonDictionary"] = PredictiveQueriesMethods.NonDictionary,
+                ["predictiveQuery_getEuclideanDistance"] = PredictiveQueriesMethods.GetEuclideanDistance,
+                ["predictiveQuery_getSquaredEuclideanDistance"] = PredictiveQueriesMethods.GetSquaredEuclideanDistance,
+                ["predictiveQuery_getCosineDistance"] = PredictiveQueriesMethods.GetCosineDistance,
+                ["predictiveQuery_getNumberOfCalls"] = PredictiveQueriesMethods.GetNumberOfCalls,
+                ["logging_configure"] = FileLoggingMehtod.Configure,
+                ["logging_getPlainTextStatus"] = FileLoggingMehtod.GetPlainTextStatus,
+                ["logging_getMaxRotateCount"] = FileLoggingMehtod.GetMaxRotateCount,
+                ["logging_getMaxSize"] = FileLoggingMehtod.GetMaxSize,
+                ["logging_getLogLevel"] = FileLoggingMehtod.GetLogLevel,
+                ["logging_getConfig"] = FileLoggingMehtod.GetConfig,
+                ["logging_setPlainTextStatus"] = FileLoggingMehtod.SetPlainTextStatus,
+                ["logging_setMaxRotateCount"] = FileLoggingMehtod.SetMaxRotateCount,
+                ["logging_setMaxSize"] = FileLoggingMehtod.SetMaxSize,
+                ["logging_setLogLevel"] = FileLoggingMehtod.SetLogLevel,
+                ["logging_setConfig"] = FileLoggingMehtod.SetConfig,
                 ["release"] = ReleaseObject,
                 ["flushMemory"] = flushMemory
             };
@@ -304,7 +334,7 @@ namespace Couchbase.Lite.Testing
         {
             MemoryMap.Clear();
             response.WriteEmptyBody(HttpStatusCode.OK);
-            // return;
+            return;
         }
 
         #endregion

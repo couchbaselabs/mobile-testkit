@@ -539,7 +539,7 @@ class User:
                 if doc["id"].startswith("_user/") or "doc" not in doc:
                     continue
 
-                # Close connection if termination doc is recieved in _changes
+                # Close connection if termination doc is received in _changes
                 if termination_doc_id is not None and doc["doc"]["_id"] == termination_doc_id:
                     r.close()
                     return docs

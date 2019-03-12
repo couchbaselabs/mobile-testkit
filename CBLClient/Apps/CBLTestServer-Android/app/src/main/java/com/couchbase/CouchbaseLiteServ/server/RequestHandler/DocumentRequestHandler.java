@@ -242,6 +242,19 @@ public class DocumentRequestHandler{
         DocumentChange change = args.get("change");
         return change.toString();
     }
+
+    public Object getValue(Args args){
+        MutableDocument document = args.get("document");
+        String key = args.get("key");
+        return document.getValue(key);
+    }
+
+    public void setValue(Args args){
+        MutableDocument document = args.get("document");
+        String key = args.get("key");
+        Object value = args.get("value");
+        document.setValue(key, value);
+    }
 }
 
 class MyDocumentChangeListener implements DocumentChangeListener {

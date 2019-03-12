@@ -38,6 +38,7 @@ def params_from_base_suite_setup(request):
     number_replicas = request.config.getoption("--number-replicas")
     sg_installer_type = request.config.getoption("--sg-installer-type")
     sa_installer_type = request.config.getoption("--sa-installer-type")
+    sg_platform = request.config.getoption("--sg-platform")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
@@ -57,6 +58,7 @@ def params_from_base_suite_setup(request):
     log_info("number_replicas: {}".format(number_replicas))
     log_info("sg_installer_type: {}".format(sg_installer_type))
     log_info("sa_installer_type: {}".format(sa_installer_type))
+    log_info("sg_platform: {}".format(sg_platform))
 
     # sg-ce is invalid for di mode
     if mode == "di" and sg_ce:
@@ -159,6 +161,7 @@ def params_from_base_suite_setup(request):
                 sync_gateway_config=sg_config,
                 race_enabled=race_enabled,
                 sg_ce=sg_ce,
+                sg_platform=sg_platform,
                 sg_installer_type=sg_installer_type,
                 sa_installer_type=sa_installer_type,
             )
@@ -174,7 +177,12 @@ def params_from_base_suite_setup(request):
         expected_sync_gateway_version=sync_gateway_version
     )
 
-    yield {"cluster_config": cluster_config, "mode": mode, "xattrs_enabled": xattrs_enabled}
+    yield {"cluster_config": cluster_config,
+           "mode": mode,
+           "xattrs_enabled": xattrs_enabled,
+           "sg_platform": sg_platform,
+           "sync_gateway_version": sync_gateway_version
+           }
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
 
@@ -198,12 +206,19 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     cluster_config = params_from_base_suite_setup["cluster_config"]
     mode = params_from_base_suite_setup["mode"]
     xattrs_enabled = params_from_base_suite_setup["xattrs_enabled"]
+    sg_platform = params_from_base_suite_setup["sg_platform"]
+    sync_gateway_version = params_from_base_suite_setup["sync_gateway_version"]
 
     test_name = request.node.name
     log_info("Setting up test '{}'".format(test_name))
 
     # This dictionary is passed to each test
-    yield {"cluster_config": cluster_config, "mode": mode, "xattrs_enabled": xattrs_enabled}
+    yield {"cluster_config": cluster_config,
+           "mode": mode,
+           "xattrs_enabled": xattrs_enabled,
+           "sg_platform": sg_platform,
+           "sync_gateway_version": sync_gateway_version
+           }
 
     # Code after the yeild will execute when each test finishes
     log_info("Tearing down test '{}'".format(test_name))

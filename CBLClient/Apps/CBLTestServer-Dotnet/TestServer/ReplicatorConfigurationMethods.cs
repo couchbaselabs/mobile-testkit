@@ -77,6 +77,7 @@ namespace Couchbase.Lite.Testing
             Assembly _assembly;
             Stream imageStream;
             StreamReader _textStreamReader;
+            String filter_callback_func = postBody["filter_callback_func"].ToString();
 
             With<Database>(postBody, "source_db", sdb =>
             {
@@ -155,8 +156,72 @@ namespace Couchbase.Lite.Testing
                         config.ReplicatorType = ReplicatorType.PushAndPull;
                     }
                 }
+                if (postBody["push_filter"].Equals(true))
+                {
+                    if (filter_callback_func == "boolean")
+                    {
+                        config.PushFilter = _replicator_boolean_filter_callback;
+                    }
+                    else if (filter_callback_func == "deleted")
+                    {
+                        config.PushFilter = _replicator_deleted_filter_callback;
+                    }
+                    else if (filter_callback_func == "access_revoked")
+                    {
+                        config.PushFilter = _replicator_access_revoked_filter_callback;
+                    }
+                    else
+                    {
+                        config.PushFilter = _default_replicator_filter_callback;
+                    }
+                }
+
+                if (postBody["pull_filter"].Equals(true))
+                {
+                    if (filter_callback_func == "boolean")
+                    {
+                        config.PullFilter = _replicator_boolean_filter_callback;
+                    }
+                    else if (filter_callback_func == "deleted")
+                    {
+                        config.PullFilter = _replicator_deleted_filter_callback;
+                    }
+                    else if (filter_callback_func == "access_revoked")
+                    {
+                        config.PullFilter = _replicator_access_revoked_filter_callback;
+                    }
+                    else
+                    {
+                        config.PullFilter = _default_replicator_filter_callback;
+                    }
+                    
+                }
                 response.WriteBody(MemoryMap.Store(config));
             });
+        }
+
+        private static bool _replicator_boolean_filter_callback(Document document, DocumentFlags flags)
+        {
+            if (document.Contains("new_field_1"))
+            {
+                return document.GetBoolean("new_field_1");
+            }
+            return true;
+        }
+
+        private static bool _default_replicator_filter_callback(Document document, DocumentFlags flags)
+        {
+            return true;
+        }
+
+        private static bool _replicator_deleted_filter_callback(Document document, DocumentFlags flags)
+        {
+            return !flags.HasFlag(DocumentFlags.Deleted);
+        }
+
+        private static bool _replicator_access_revoked_filter_callback(Document document, DocumentFlags flags)
+        {
+            return !flags.HasFlag(DocumentFlags.AccessRemoved);
         }
 
         public static void GetAuthenticator([NotNull] NameValueCollection args,
@@ -280,6 +345,7 @@ namespace Couchbase.Lite.Testing
             {
                 replType = ReplicatorType.PushAndPull;
             }
+
             With<ReplicatorConfiguration>(postBody, "configuration", repConf =>
             {
                 repConf.ReplicatorType = replType;

@@ -74,12 +74,7 @@ public class DatabaseRequestHandler {
         case "database_exists":
             let name: String = args.get(name:"name")!
             let directory: String? = args.get(name:"directory")!
-           
-            if let directory = directory {
-                return Database.exists(withName: name, inDirectory: directory)
-            } else {
-                return Database.exists(withName: name)
-            }
+            return Database.exists(withName: name, inDirectory: directory)
 
         case "database_deleteIndex":
             let database: Database = (args.get(name:"database"))!
@@ -271,6 +266,7 @@ public class DatabaseRequestHandler {
 
             return documents
           
+        #if COUCHBASE_ENTERPRISE
         case "database_changeEncryptionKey":
             let database: Database = args.get(name:"database")!
             let password: String? = args.get(name:"password")!
@@ -287,7 +283,7 @@ public class DatabaseRequestHandler {
                 print("Got error setting encryption key \(error)")
                 return error.localizedDescription
             }
-            
+        #endif
         case "database_copy":
             let dbName: String! = args.get(name: "dbName")
             let dbConfig: DatabaseConfiguration? = args.get(name: "dbConfig")

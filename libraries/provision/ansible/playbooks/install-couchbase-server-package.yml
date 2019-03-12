@@ -119,7 +119,6 @@
       shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli cluster-init -c {{ couchbase_server_node }}:{{ couchbase_server_admin_port }} --cluster-username={{ couchbase_server_admin }} --cluster-password={{ couchbase_server_password }} --cluster-port={{couchbase_server_admin_port}} --cluster-ramsize={{ couchbase_server_cluster_ram }}  --services=data,index,query  --cluster-index-ramsize={{ couchbase_server_index_ram }}  --index-storage-setting=default"
       when:  "not '4.0' in couchbase_server_package_name and not '4.1' in couchbase_server_package_name and not '4.5' in couchbase_server_package_name and not '4.6' in couchbase_server_package_name and not '3.0' in couchbase_server_package_name and not '3.1' in couchbase_server_package_name and not ipv6_enabled"
 
-
     - name: COUCHBASE SERVER | Configure cluster settings (4.7.X and up) | configure IPv6
       shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli cluster-init -c [{{ couchbase_server_node }}]:{{ couchbase_server_admin_port }} --cluster-username={{ couchbase_server_admin }} --cluster-password={{ couchbase_server_password }} --cluster-port={{couchbase_server_admin_port}} --cluster-ramsize={{ couchbase_server_cluster_ram }}  --services=data,index,query  --cluster-index-ramsize={{ couchbase_server_index_ram }}  --index-storage-setting=default"
       when:  "not '4.0' in couchbase_server_package_name and not '4.1' in couchbase_server_package_name and not '4.5' in couchbase_server_package_name and not '4.6' in couchbase_server_package_name and not '3.0' in couchbase_server_package_name and not '3.1' in couchbase_server_package_name and ipv6_enabled"
@@ -128,39 +127,73 @@
       shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli node-init -c {{ couchbase_server_node }}:{{ couchbase_server_admin_port }} --user={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --node-init-hostname={{ couchbase_server_node }}"
       when: "'3.0' in couchbase_server_package_name or '3.1' in couchbase_server_package_name"
 
-    - name: COUCHBASE SERVER | Initialize primary node | configure IPv4
+    - name: COUCHBASE SERVER | Initialize primary node (4.X and 5.X) | configure IPv4
       shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli node-init -c {{ couchbase_server_node }}:{{ couchbase_server_admin_port }} --user={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --node-init-hostname={{ couchbase_server_node }}"
-      when: ("{{ cb_major_version['stdout'] }} != 2 or (not '3.0' in couchbase_server_package_name and not '3.1' in couchbase_server_package_name") and not ipv6_enabled
+      when: "{{ cb_major_version['stdout'] | search('\\b[4-5]\\b') }} and not ipv6_enabled"
 
-    - name: COUCHBASE SERVER | Initialize primary node | configure IPv6
+    - name: COUCHBASE SERVER | Initialize primary node (4.X and 5.X) | configure IPv6
       shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli node-init -c [{{ couchbase_server_node }}]:{{ couchbase_server_admin_port }} --user={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --node-init-hostname={{ couchbase_server_node }}"
-      when: ("{{ cb_major_version['stdout'] }} != 2 or (not '3.0' in couchbase_server_package_name and not '3.1' in couchbase_server_package_name") and ipv6_enabled
+      when: "{{ cb_major_version['stdout'] | search('\\b[4-5]\\b') }} and ipv6_enabled"
+
+    - name: COUCHBASE SERVER | Initialize primary node (6.X and up) | configure IPv4
+      shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli node-init -c {{ couchbase_server_node }}:{{ couchbase_server_admin_port }} -u={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --node-init-hostname={{ couchbase_server_node }}"
+      when: "(not {{ cb_major_version['stdout'] | search('\\b[1-5]\\b') }}) and not ipv6_enabled"
+
+    - name: COUCHBASE SERVER | Initialize primary node (6.X and up)| configure IPv6
+      shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli node-init -c [{{ couchbase_server_node }}]:{{ couchbase_server_admin_port }} -u={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --node-init-hostname={{ couchbase_server_node }}"
+      when: "(not {{ cb_major_version['stdout'] | search('\\b[1-5]\\b') }}) and ipv6_enabled"
 
     - name: COUCHBASE SERVER | Wait for node to be listening on port 8091
       wait_for: port=8091 delay=5 timeout=30
 
     - name: COUCHBASE SERVER | Join additional cluster nodes | configure IPv4
+      shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli server-add -c {{ couchbase_server_primary_node }}:{{ couchbase_server_admin_port }} -u={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --server-add={{ couchbase_server_node }}:{{ couchbase_server_admin_port }} --server-add-username={{ couchbase_server_admin }} --server-add-password={{ couchbase_server_password }}"
+      when: "not (couchbase_server_node == couchbase_server_primary_node ) and (not {{ cb_major_version['stdout'] | search('\\b[1-5]\\b') }}) and not ipv6_enabled"
+
+    - name: COUCHBASE SERVER | Join additional cluster nodes | configure IPv6
+      shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli server-add -c [{{ couchbase_server_primary_node }}]:{{ couchbase_server_admin_port }} -u={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --server-add={{ couchbase_server_node }}:{{ couchbase_server_admin_port }} --server-add-username={{ couchbase_server_admin }} --server-add-password={{ couchbase_server_password }}"
+      when: "not (couchbase_server_node == couchbase_server_primary_node ) and (not {{ cb_major_version['stdout'] | search('\\b[1-5]\\b') }}) and ipv6_enabled"
+
+    - name: COUCHBASE SERVER | Join additional cluster nodes | configure IPv4
       shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli server-add -c {{ couchbase_server_primary_node }}:{{ couchbase_server_admin_port }} --user={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --server-add={{ couchbase_server_node }}:{{ couchbase_server_admin_port }} --server-add-username={{ couchbase_server_admin }} --server-add-password={{ couchbase_server_password }}"
-      when: not (couchbase_server_node == couchbase_server_primary_node ) and not ipv6_enabled
+      when: "not (couchbase_server_node == couchbase_server_primary_node ) and {{ cb_major_version['stdout'] | search('\\b[4-5]\\b') }} and not ipv6_enabled"
 
     - name: COUCHBASE SERVER | Join additional cluster nodes | configure IPv6
       shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli server-add -c [{{ couchbase_server_primary_node }}]:{{ couchbase_server_admin_port }} --user={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --server-add={{ couchbase_server_node }}:{{ couchbase_server_admin_port }} --server-add-username={{ couchbase_server_admin }} --server-add-password={{ couchbase_server_password }}"
-      when: not (couchbase_server_node == couchbase_server_primary_node ) and ipv6_enabled
+      when: "not (couchbase_server_node == couchbase_server_primary_node ) and {{ cb_major_version['stdout'] | search('\\b[4-5]\\b') }} and ipv6_enabled"
 
-    - name: COUCHBASE SERVER | Rebalance cluster | configure IPv4
+    - name: COUCHBASE SERVER | Rebalance cluster (6.X and up) | configure IPv4
+      shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli rebalance -c {{ couchbase_server_primary_node }}:{{ couchbase_server_admin_port }} -u={{ couchbase_server_admin }} --password={{ couchbase_server_password }}"
+      ignore_errors: yes
+      when: "(not {{ cb_major_version['stdout'] | search('\\b[1-5]\\b') }}) and not ipv6_enabled"
+
+    - name: COUCHBASE SERVER | Rebalance cluster (6.X and up) | configure IPv6
+      shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli rebalance -c [{{ couchbase_server_primary_node }}]:{{ couchbase_server_admin_port }} -u={{ couchbase_server_admin }} --password={{ couchbase_server_password }}"
+      ignore_errors: yes
+      when: "(not {{ cb_major_version['stdout'] | search('\\b[1-5]\\b') }}) and ipv6_enabled"
+
+    - name: COUCHBASE SERVER | Rebalance cluster (3.X to 5.X) | configure IPv4
       shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli rebalance -c {{ couchbase_server_primary_node }}:{{ couchbase_server_admin_port }} --user={{ couchbase_server_admin }} --password={{ couchbase_server_password }}"
       ignore_errors: yes
-      when: not ipv6_enabled
+      when: "{{ cb_major_version['stdout'] | search('\\b[3-5]\\b')}} and not ipv6_enabled"
 
-    - name: COUCHBASE SERVER | Rebalance cluster | configure IPv6
+    - name: COUCHBASE SERVER | Rebalance cluster (3.X to 5.X) | configure IPv6
       shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli rebalance -c [{{ couchbase_server_primary_node }}]:{{ couchbase_server_admin_port }} --user={{ couchbase_server_admin }} --password={{ couchbase_server_password }}"
       ignore_errors: yes
-      when: ipv6_enabled
+      when: "{{ cb_major_version['stdout'] | search('\\b[3-5]\\b')}} and ipv6_enabled"
 
-    - name: COUCHBASE SERVER | Enable auto failover | configure IPv4
+    - name: COUCHBASE SERVER | Enable auto failover (6.X and up) | configure IPv4
+      shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli setting-autofailover -c {{ couchbase_server_primary_node }}:{{ couchbase_server_admin_port }} -u={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --enable-auto-failover=1 --auto-failover-timeout=30"
+      when:  "(not {{ cb_major_version['stdout'] | search('\\b[1-5]\\b') }}) and not ipv6_enabled"
+
+    - name: COUCHBASE SERVER | Enable auto failover (6.X and up) | configure IPv6
+      shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli setting-autofailover -c [{{ couchbase_server_primary_node }}]:{{ couchbase_server_admin_port }} -u={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --enable-auto-failover=1 --auto-failover-timeout=30"
+      when:  "(not {{ cb_major_version['stdout'] | search('\\b[1-5]\\b') }}) and ipv6_enabled"
+
+    - name: COUCHBASE SERVER | Enable auto failover (3.X to 5.X) | configure IPv4
       shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli setting-autofailover -c {{ couchbase_server_primary_node }}:{{ couchbase_server_admin_port }} --user={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --enable-auto-failover=1 --auto-failover-timeout=30"
-      when: not ipv6_enabled
+      when: "{{ cb_major_version['stdout'] | search('\\b[3-5]\\b')}} and not ipv6_enabled"
 
-    - name: COUCHBASE SERVER | Enable auto failover | configure IPv6
+    - name: COUCHBASE SERVER | Enable auto failover (3.X to 5.X) | configure IPv6
       shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli setting-autofailover -c [{{ couchbase_server_primary_node }}]:{{ couchbase_server_admin_port }} --user={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --enable-auto-failover=1 --auto-failover-timeout=30"
-      when: ipv6_enabled
+      when: "{{ cb_major_version['stdout'] | search('\\b[3-5]\\b')}} and ipv6_enabled"

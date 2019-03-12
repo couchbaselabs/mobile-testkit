@@ -1,0 +1,32 @@
+{
+    "interface":":4984",
+    "adminInterface": "0.0.0.0:4985",
+    "maxIncomingConnections": 0,
+    "maxCouchbaseConnections": 16,
+    "maxFileDescriptors": 90000,
+    "slowServerCallWarningThreshold": 500,
+    "compressResponses": false,
+    {{ sslcert }}
+    {{ sslkey }}
+    {{ logging }}
+    "databases":{
+        "db":{
+            {{ autoimport }}
+            {{ xattrs }}
+            {{ no_conflicts }}
+            {{ sg_use_views }}
+            {{ num_index_replicas }}
+            {{ username }}
+            {{ password }}
+            {{ cacertpath }}
+            {{ certpath }}
+            {{ keypath }}
+            {{ delta_sync }}
+            "server":"couchbase://{{ couchbase_server_primary_node }}:11210",
+            "bucket":"data-bucket",
+            "username":"data-bucket",
+            "password": "password"
+        }
+    }
+}
+

@@ -117,10 +117,13 @@ class TestServeriOS(TestServerBase):
         """Installs / launches CBLTestServer on iOS device
         Warning: Only works with a single device at the moment
         """
-        if self.debug_mode:
-            self.app_name = "{}-{}-Device-debug.app".format(self.app, self.version_build)
+        if self.platform == "ios":
+            if self.debug_mode:
+                self.app_name = "{}-{}-Device-debug.app".format(self.app, self.version_build)
+            else:
+                self.app_name = "{}-{}-Device.app".format(self.app, self.version_build)
         else:
-            self.app_name = "{}-{}-Device.app".format(self.app, self.version_build)
+            self.app_name = "{}-Device.app".format(self.app)
 
         self.app_path = "{}/{}/{}".format(BINARY_DIR, self.app_dir, self.app_name)
         log_info("Installing: {}".format(self.app_path))

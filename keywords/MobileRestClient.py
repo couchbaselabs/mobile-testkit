@@ -367,7 +367,7 @@ class MobileRestClient:
         resp.raise_for_status()
         return name, password
 
-    def update_user(self, url, db, name, password=None, channels=None, roles=None):
+    def update_user(self, url, db, name, password=None, channels=None, roles=None, disabled=False):
         """ Updates a user via the admin REST api
         Returns a name password tuple that can be used for session creation or basic authentication.
 
@@ -391,6 +391,9 @@ class MobileRestClient:
 
         if password is not None:
             data["password"] = password
+
+        if disabled:
+            data["disabled"] = True
 
         resp = self._session.put("{}/{}/_user/{}".format(url, db, name), data=json.dumps(data))
         log_r(resp)
@@ -1201,7 +1204,7 @@ class MobileRestClient:
         """
         Updates a doc on a db a number of times.
             1. GETs the doc
-            2. It increments the "updates" propery
+            2. It increments the "updates" property
             3. PUTS the doc
         """
 

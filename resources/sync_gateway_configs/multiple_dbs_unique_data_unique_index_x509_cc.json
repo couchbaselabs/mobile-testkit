@@ -17,13 +17,14 @@
             {{ no_conflicts }}
             {{ sg_use_views }}
             {{ num_index_replicas }}
-            {{ username }}
-            {{ password }}
             {{ cacertpath }}
             {{ certpath }}
             {{ keypath }}
+            {{ delta_sync }}
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
-            "bucket":"data-bucket-1"
+            "bucket":"data-bucket-1",
+            "username":"data-bucket-1",
+            "password": "password"
         },
         "db2":{
             {{ autoimport }}
@@ -31,13 +32,14 @@
             {{ no_conflicts }}
             {{ sg_use_views }}
             {{ num_index_replicas }}
-            {{ username }}
-            {{ password }}
             {{ cacertpath }}
             {{ certpath }}
             {{ keypath }}
+            {{ delta_sync }}
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
-            "bucket":"data-bucket-2"
+            "bucket":"data-bucket-2",
+            "username":"data-bucket-2",
+            "password": "password"
         }
     }
 }

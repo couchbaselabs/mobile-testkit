@@ -38,8 +38,9 @@ public class ReplicatorTcpConnection : NSObject {
     
     fileprivate var hasSpace = false
     
+    #if COUCHBASE_ENTERPRISE
     fileprivate var replConnection: ReplicatorConnection?
-    
+    #endif
     /// Initializes with input and output stream.
     public init(inputStream: InputStream, outputStream: OutputStream) {
         self.inputStream = inputStream

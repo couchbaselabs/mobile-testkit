@@ -279,6 +279,8 @@ def test_log_maxage_timestamp_ignored(params_from_base_test_setup, sg_conf_name)
     remote_executor.execute("for ((i=1;i <= 2000;i += 1)); do curl -s -H 'Accept: text/plain' http://localhost:4985/db/ > /dev/null; done")
 
     sg_helper.stop_sync_gateways(cluster_config=cluster_conf, url=sg_one_url)
+    # Get number of logs for each type of log
+    SG_LOGS_FILES_NUM = get_sgLogs_fileNum(SG_LOGS_MAXAGE, remote_executor)
     # Change the timestamps for SG logs when SG stopped (Name is unchanged)
     for log in SG_LOGS_MAXAGE:
         file_name = "/tmp/sg_logs/{}.log".format(log)
@@ -289,7 +291,7 @@ def test_log_maxage_timestamp_ignored(params_from_base_test_setup, sg_conf_name)
     for log in SG_LOGS_MAXAGE:
         _, stdout, _ = remote_executor.execute("ls /tmp/sg_logs/ | grep {} | wc -l".format(log))
         # Verify that new log file was not created
-        assert stdout[0].rstrip() == '2'
+        assert stdout[0].rstrip() == SG_LOGS_FILES_NUM[log]
 
     # Remove generated conf file
     os.remove(temp_conf)
@@ -413,6 +415,7 @@ def test_log_200mb(params_from_base_test_setup, sg_conf_name):
         json.dump(data, fp, indent=4)
 
     sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
+    SG_LOGS_FILES_NUM = get_sgLogs_fileNum(SG_LOGS, remote_executor)
     # ~1M MB will be added to log file after requests
     remote_executor.execute("for ((i=1;i <= 2000;i += 1)); do curl -s http://localhost:4984/ABCD/ > /dev/null; done")
     remote_executor.execute("for ((i=1;i <= 2000;i += 1)); do curl -s -H 'Accept: text/plain' http://localhost:4985/db/ > /dev/null; done")
@@ -420,7 +423,7 @@ def test_log_200mb(params_from_base_test_setup, sg_conf_name):
     for log in SG_LOGS:
         status, stdout, stderr = remote_executor.execute("ls /tmp/sg_logs/ | grep {} | wc -l".format(log))
         # A backup file should be created with 200MB
-        assert stdout[0].rstrip() == '2'
+        assert stdout[0].rstrip() == SG_LOGS_FILES_NUM[log]
 
     # Remove generated conf file
     os.remove(temp_conf)
@@ -625,3 +628,12 @@ def test_log_logLevel_invalid(params_from_base_test_setup, sg_conf_name):
     # Remove generated conf file
     os.remove(temp_conf)
     pytest.fail("SG shouldn't be started!!!!")
+
+
+def get_sgLogs_fileNum(SG_LOGS_MAXAGE, remote_executor):
+    SG_LOGS_FILES_NUM = {}
+    for log in SG_LOGS_MAXAGE:
+        _, stdout, _ = remote_executor.execute("ls /tmp/sg_logs/ | grep {} | wc -l".format(log))
+        SG_LOGS_FILES_NUM[log] = stdout[0].rstrip()
+
+    return SG_LOGS_FILES_NUM

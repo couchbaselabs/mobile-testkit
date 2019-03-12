@@ -132,11 +132,11 @@ def test_replication_configuration_valid_values(params_from_base_test_setup, num
 @pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.replication
-@pytest.mark.parametrize("authenticator_type", [
-    ('session'),
-    ('basic')
+@pytest.mark.parametrize("authenticator_type, attachments_generator", [
+    ('session', attachment.generate_2_png_10_10),
+    ('basic', None)
 ])
-def test_replication_configuration_with_pull_replication(params_from_base_test_setup, authenticator_type):
+def test_replication_configuration_with_pull_replication(params_from_base_test_setup, authenticator_type, attachments_generator):
     """
         @summary:
         1. Create CBL DB and create bulk doc in CBL
@@ -173,7 +173,8 @@ def test_replication_configuration_with_pull_replication(params_from_base_test_s
     # One shot replication
     sg_added_doc_ids, cbl_added_doc_ids, session = setup_sg_cbl_docs(params_from_base_test_setup, sg_db=sg_db, base_url=base_url, db=db,
                                                                      cbl_db=cbl_db, sg_url=sg_url, sg_admin_url=sg_admin_url, sg_blip_url=sg_blip_url,
-                                                                     replication_type="pull", channels=channels, replicator_authenticator_type=authenticator_type)
+                                                                     replication_type="pull", channels=channels, replicator_authenticator_type=authenticator_type,
+                                                                     attachments_generator=attachments_generator)
     sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db)
     if sg_mode == "di":
         cookie, session = sg_client.create_session(sg_admin_url, sg_db, "autotest")
@@ -182,6 +183,7 @@ def test_replication_configuration_with_pull_replication(params_from_base_test_s
         replicator = Replication(base_url)
         replicator.configure_and_replicate(cbl_db, replicator_authenticator, target_url=sg_blip_url, continuous=False,
                                            channels=channels)
+
     cbl_doc_count = db.getCount(cbl_db)
     cbl_doc_ids = db.getDocIds(cbl_db)
 
@@ -197,15 +199,29 @@ def test_replication_configuration_with_pull_replication(params_from_base_test_s
     for id in sg_added_doc_ids:
         assert id in cbl_doc_ids
 
+    if sync_gateway_version >= "2.5.0":
+        expvars = sg_client.get_expvars(sg_admin_url)
+        assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["request_changes_count"] == 1, "request_changes_count did not get incremented"
+        assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["request_changes_time"] > 0, "request_changes_time did not get incremented"
+        assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["num_pull_repl_since_zero"] == 1, "num_pull_repl_since_zero did not get incremented"
+        assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["attachment_pull_count"] == 20, "attachment_pull_count did not get incremented"
+        assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["attachment_pull_bytes"] > 0, "attachment_pull_bytes did not get incremented"
+        if attachments_generator is not None:
+            assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["attachment_pull_count"] == 0, "attachment_pull_count should not get incremented while attachment generator is None"
+            assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["attachment_pull_bytes"] == 0, "attachment_pull_bytes should not get incremented while attachment generator is None"
+        else:
+            assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["attachment_pull_count"] == 20, "attachment_pull_count did not get incremented"
+            assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["attachment_pull_bytes"] > 0, "attachment_pull_bytes did not get incremented"
+
 
 @pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.replication
-@pytest.mark.parametrize("authenticator_type", [
-    ('session'),
-    ('basic')
+@pytest.mark.parametrize("authenticator_type, attachments_generator", [
+    ('session', attachment.generate_2_png_10_10),
+    ('basic', None)
 ])
-def test_replication_configuration_with_push_replication(params_from_base_test_setup, authenticator_type):
+def test_replication_configuration_with_push_replication(params_from_base_test_setup, authenticator_type, attachments_generator):
     """
         @summary:
         1. Create docs in SG
@@ -238,7 +254,8 @@ def test_replication_configuration_with_push_replication(params_from_base_test_s
     sg_client = MobileRestClient()
     sg_added_doc_ids, cbl_added_doc_ids, session = setup_sg_cbl_docs(params_from_base_test_setup, sg_db=sg_db, base_url=base_url, db=db,
                                                                      cbl_db=cbl_db, sg_url=sg_url, sg_admin_url=sg_admin_url, sg_blip_url=sg_blip_url,
-                                                                     replication_type="push", channels=channels, replicator_authenticator_type=authenticator_type)
+                                                                     replication_type="push", channels=channels, replicator_authenticator_type=authenticator_type,
+                                                                     attachments_generator=attachments_generator)
     sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db)
 
     # Verify database doc counts
@@ -256,6 +273,13 @@ def test_replication_configuration_with_push_replication(params_from_base_test_s
     # Verify sg docs does not exist in CBL as it is just a push replication
     for doc_id in sg_added_doc_ids:
         assert doc_id not in cbl_doc_ids
+
+    if sync_gateway_version >= "2.5.0":
+        expvars = sg_client.get_expvars(sg_admin_url)
+        assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_push"]["doc_push_count"] == 5, "doc_push_count did not get incremented"
+        if attachments_generator is not None:
+            assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_push"]["attachment_push_count"] == 30, "attachment_push_count did not get incremented"
+            assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_push"]["attachment_push_bytes"] > 0, "attachment_push_bytes did not get incremented"
 
 
 @pytest.mark.listener
@@ -377,6 +401,13 @@ def test_replication_push_replication_invalid_authentication(params_from_base_te
 
     assert "401" in error, "expected error did not occurred"
     replicator.stop(repl)
+    if sync_gateway_version >= "2.5.0":
+        expvars = sg_client.get_expvars(sg_admin_url)
+        assert expvars["syncgateway"]["per_db"][sg_db]["security"]["auth_failed_count"] > 0, "auth failed count is not incremented"
+        assert expvars["syncgateway"]["per_db"][sg_db]["security"]["total_auth_time"] > 0, "total_auth_time is not incremented"
+        assert expvars["syncgateway"]["per_db"][sg_db]["security"]["num_docs_rejected"] == 39, "num_docs_rejected is not incremented"
+        assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_push"]["sync_function_time"] > 0, "sync_function_time is not incremented"
+        assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_push"]["sync_function_count"] > 0, "sync_function_count is not incremented"
 
 
 @pytest.mark.listener
@@ -404,6 +435,7 @@ def test_replication_configuration_with_filtered_doc_ids(params_from_base_test_s
     sg_config = params_from_base_test_setup["sg_config"]
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
 
     if mode == "di":
         pytest.skip('Filter doc ids does not work with di modes')
@@ -473,6 +505,10 @@ def test_replication_configuration_with_filtered_doc_ids(params_from_base_test_s
     # Verify non filtered docs ids are not replicated in cbl
     for doc_id in list_of_non_sg_filtered_ids:
         assert doc_id not in cbl_doc_ids
+
+    if sync_gateway_version >= "2.5.0":
+        expvars = sg_client.get_expvars(sg_admin_url)
+        assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["num_pull_repl_total_one_shot"] == 2, "num_pull_repl_total_one_shot did not get incremented"
 
 
 @pytest.mark.listener
@@ -579,6 +615,12 @@ def test_CBL_tombstone_doc(params_from_base_test_setup, num_of_docs):
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
 
+    if sync_gateway_version >= "2.5.0":
+        sg_client = MobileRestClient()
+        expvars = sg_client.get_expvars(sg_admin_url)
+        chan_cache_tombstone_revs = expvars["syncgateway"]["per_db"][sg_db]["cache"]["chan_cache_tombstone_revs"]
+        chan_cache_removal_revs = expvars["syncgateway"]["per_db"][sg_db]["cache"]["chan_cache_removal_revs"]
+
     # 1. Add docs to SG.
     sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
     cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest")
@@ -610,6 +652,11 @@ def test_CBL_tombstone_doc(params_from_base_test_setup, num_of_docs):
     replicator.stop(repl)
     cbl_doc_ids = db.getDocIds(cbl_db)
     assert doc_id not in cbl_doc_ids, "doc is expected to be deleted in CBL ,but not deleted"
+
+    if sync_gateway_version >= "2.5.0":
+        expvars = sg_client.get_expvars(sg_admin_url)
+        assert chan_cache_tombstone_revs < expvars["syncgateway"]["per_db"][sg_db]["cache"]["chan_cache_tombstone_revs"], "chan cache tombstone revs did not get incremented"
+        assert chan_cache_removal_revs < expvars["syncgateway"]["per_db"][sg_db]["cache"]["chan_cache_removal_revs"], "chan_cache_removal_revs did not get incremented"
 
 
 @pytest.mark.listener
@@ -3153,9 +3200,13 @@ def test_replication_push_replication_guest_enabled(params_from_base_test_setup,
     mode = params_from_base_test_setup["mode"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
 
+    """
+    TODO : https://github.com/couchbase/sync_gateway/issues/3830
+    # Enable this commented code once 3830 is fixed.It should be fixed by june 2019
     invalid_username = "invalid_username"
     invalid_password = "invalid_password"
     invalid_session = "invalid_session"
+    """
     valid_username = "autotest"
     valid_password = "password"
     num_docs = 5
@@ -3170,13 +3221,17 @@ def test_replication_push_replication_guest_enabled(params_from_base_test_setup,
     channels = ["ABC"]
     sg_client = MobileRestClient()
     authenticator = Authenticator(base_url)
+    replicator = Replication(base_url)
 
     db.create_bulk_docs(num_docs, "cbl", db=cbl_db, channels=channels)
     sg_client.create_user(sg_admin_url, sg_db, valid_username, password=valid_password, channels=channels)
     cookie, session = sg_client.create_session(sg_admin_url, sg_db, valid_username)
 
+    """
+    TODO : https://github.com/couchbase/sync_gateway/issues/3830
+    # Enable this commented code once 3830 is fixed.It should be fixed by june 2019
     # login as invalid user on cbl and verify user can login successfully and docs got replicated successfully
-    replicator = Replication(base_url)
+
     if replicator_authenticator == "session":
         replicator_authenticator = authenticator.authentication(invalid_session, cookie, authentication_type="session")
     elif replicator_authenticator == "basic":
@@ -3190,7 +3245,7 @@ def test_replication_push_replication_guest_enabled(params_from_base_test_setup,
     assert "401" in error, "did not throw 401 error for invalid authentication"
 
     replicator.stop(repl)
-
+    """
     # Also verify user with valid credentials should be able to login successfully
     db.create_bulk_docs(num_docs, "cbl2", db=cbl_db, channels=channels)
     if replicator_authenticator == "session":
@@ -3205,6 +3260,252 @@ def test_replication_push_replication_guest_enabled(params_from_base_test_setup,
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db)
     assert len(sg_docs["rows"]) == num_docs * 2, "Number of sg docs is not equal to total number of cbl docs and sg docs"
     replicator.stop(repl)
+
+
+@pytest.mark.listener
+@pytest.mark.replication
+def test_doc_removal_from_channel(params_from_base_test_setup):
+    """
+        @summary:
+        1. Create 2 docs in CBL with channel A, B
+        2. Create user in SGW with channel A, B.
+        3. push_pull replicate to SGW
+        4. remove doc A from channel A
+        5. Remove doc B from channel A , B
+        6. continue push_pull replication
+        7. Verify user can only access doc A, but not doc B
+
+    """
+    sg_db = "db"
+    sg_url = params_from_base_test_setup["sg_url"]
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    sg_blip_url = params_from_base_test_setup["target_url"]
+    base_url = params_from_base_test_setup["base_url"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_config = params_from_base_test_setup["sg_config"]
+    db = params_from_base_test_setup["db"]
+    cbl_db = params_from_base_test_setup["source_db"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+
+    username = "autotest"
+    password = "password"
+    document_obj = Document(base_url)
+
+    if sync_gateway_version < "2.5.0":
+        pytest.skip('This test cannnot run with sg version below 2.5.0')
+
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
+
+    channels = ["ABC", "DEF"]
+
+    sg_client = MobileRestClient()
+    authenticator = Authenticator(base_url)
+    replicator = Replication(base_url)
+
+    # 1. Create 2 docs in CBL with channel ABC, DEF
+    cbl_ids = db.create_bulk_docs(2, "cbl", db=cbl_db, channels=channels)
+
+    # 2. Create users in SGW with channel ABC, DEF
+    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channels)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+    session = cookie, session_id
+
+    # 3. push_pull replicate to SGW
+    replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
+    repl = replicator.configure_and_replicate(source_db=cbl_db,
+                                              target_url=sg_blip_url,
+                                              continuous=True,
+                                              replicator_authenticator=replicator_authenticator)
+
+    # 4. remove doc A from channel A
+    doc_obj_A = db.getDocument(cbl_db, cbl_ids[0])
+    doc_A_mut = document_obj.toMutable(doc_obj_A)
+    doc_body_A = document_obj.toMap(doc_A_mut)
+    doc_body_A["channels"] = ["DEF"]
+    db.updateDocument(database=cbl_db, data=doc_body_A, doc_id=cbl_ids[0])
+
+    # 5. Remove doc B from channel A , B
+    doc_obj_B = db.getDocument(cbl_db, cbl_ids[1])
+    doc_B_mut = document_obj.toMutable(doc_obj_B)
+    doc_body_B = document_obj.toMap(doc_B_mut)
+    doc_body_B["channels"] = []
+    db.updateDocument(database=cbl_db, data=doc_body_B, doc_id=cbl_ids[1])
+
+    # 6. continue push_pull replication
+    replicator.wait_until_replicator_idle(repl)
+    replicator.stop(repl)
+
+    # 7. Verify user can only access doc A, but not doc B
+    sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, include_docs=True, auth=session)["rows"]
+    assert len(sg_docs) == 1, "did not remove channels appropriately"
+    sg_doc_ids = [doc['id'] for doc in sg_docs]
+    assert cbl_ids[0] in sg_doc_ids, "doc A does not exist for the user"
+    assert cbl_ids[1] not in sg_doc_ids, "doc B exist for the user"
+
+
+@pytest.mark.listener
+@pytest.mark.replication
+def test_doc_removal_with_multipleChannels(params_from_base_test_setup, setup_customized_teardown_test):
+    """
+        @summary:
+        1. Create users in SGW with multiple channels
+            user A -> channel_A,channel_B, channel_C;
+            userB -> channel_B,
+            userC-> channel_C
+        2. create docs in SGW
+            doc a with channel_A, channel_B ;
+            docb with channel_B ,
+            docc with Channel_A, channel_B, channel_C
+        3. Verify User A can access docA and docC.
+            docB by UserB, UserA
+            docC by user A, user C
+        4. Remove the channel c from all the docs.
+        5. Verify userA can access only docA and doc B, but not docC
+            UserB can access docB
+            UserC cannot access docC
+    """
+
+    sg_db = "db"
+    sg_url = params_from_base_test_setup["sg_url"]
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    sg_blip_url = params_from_base_test_setup["target_url"]
+    base_url = params_from_base_test_setup["base_url"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_config = params_from_base_test_setup["sg_config"]
+    db = params_from_base_test_setup["db"]
+    cbl_db1 = setup_customized_teardown_test["cbl_db1"]
+    cbl_db2 = setup_customized_teardown_test["cbl_db2"]
+    cbl_db3 = setup_customized_teardown_test["cbl_db3"]
+
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+
+    username_A = "autotestA"
+    username_B = "autotestB"
+    username_C = "autotestC"
+    password = "password"
+    num_of_docs = 1
+
+    if sync_gateway_version < "2.5.0":
+        pytest.skip('This test cannnot run with sg version below 2.5.0')
+
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
+
+    channel_A = ["ABC", "DEF", "XYZ"]
+    channel_B = ["DEF"]
+    channel_C = ["XYZ"]
+
+    doc_channel_1 = ["ABC", "DEF"]
+    doc_channel_2 = ["DEF"]
+
+    sg_client = MobileRestClient()
+    replicator = Replication(base_url)
+
+    # 1. Create users in SGW with multiple channels
+    sg_client.create_user(sg_admin_url, sg_db, username_A, password=password, channels=channel_A)
+    cookie_A, session_id_A = sg_client.create_session(sg_admin_url, sg_db, username_A)
+    session_A = cookie_A, session_id_A
+
+    sg_client.create_user(sg_admin_url, sg_db, username_B, password=password, channels=channel_B)
+    cookie_B, session_id_B = sg_client.create_session(sg_admin_url, sg_db, username_B)
+    session_B = cookie_B, session_id_B
+
+    sg_client.create_user(sg_admin_url, sg_db, username_C, password=password, channels=channel_C)
+    cookie_C, session_id_C = sg_client.create_session(sg_admin_url, sg_db, username_C)
+    session_C = cookie_C, session_id_C
+
+    # 2. create docs in SGW
+    #    doc a with channel_A, channel_B ;
+    #    docb with channel_B ,
+    #    docc with Channel_A, channel_B, channel_C
+    sg_docs = document.create_docs(doc_id_prefix='sg_docs-A', number=num_of_docs, channels=doc_channel_1)
+    sg_docs_A = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=session_A)
+
+    sg_docs = document.create_docs(doc_id_prefix='sg_docs-B', number=num_of_docs, channels=doc_channel_2)
+    sg_docs_B = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=session_B)
+
+    sg_docs = document.create_docs(doc_id_prefix='sg_docs-C', number=num_of_docs, channels=channel_C)
+    sg_docs_C = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=session_C)
+
+    # 3. Verify User A(cbl_db1) can access docA and docc.
+    #    UserB(cbl_db2), UserA(cbl_db1) can access docB
+    #    user A(cbl_db1), user C(cbl_db3) can access docc
+
+    # 3. Pull replication from SGW
+    replicator = Replication(base_url)
+    authenticator = Authenticator(base_url)
+    replicator_authenticator_A = authenticator.authentication(session_id_A, cookie_A, authentication_type="session")
+    repl1 = replicator.configure_and_replicate(source_db=cbl_db1,
+                                               target_url=sg_blip_url,
+                                               continuous=True,
+                                               replicator_authenticator=replicator_authenticator_A,
+                                               replication_type="pull")
+
+    replicator_authenticator_B = authenticator.authentication(session_id_B, cookie_B, authentication_type="session")
+    repl2 = replicator.configure_and_replicate(source_db=cbl_db2,
+                                               target_url=sg_blip_url,
+                                               continuous=True,
+                                               replicator_authenticator=replicator_authenticator_B,
+                                               replication_type="pull")
+
+    replicator_authenticator_C = authenticator.authentication(session_id_C, cookie_C, authentication_type="session")
+    repl3 = replicator.configure_and_replicate(source_db=cbl_db3,
+                                               target_url=sg_blip_url,
+                                               continuous=True,
+                                               replicator_authenticator=replicator_authenticator_C,
+                                               replication_type="pull")
+
+    doc_ids_A = db.getDocIds(cbl_db1)
+    doc_ids_B = db.getDocIds(cbl_db2)
+    doc_ids_C = db.getDocIds(cbl_db3)
+
+    for doc in sg_docs_A:
+        assert doc["id"] in doc_ids_A, "docs ids of userA does not exist in cbl db1"
+
+    for doc in sg_docs_B:
+        assert doc["id"] in doc_ids_A, "docs ids of userA does not exist in cbl db1"
+        assert doc["id"] in doc_ids_B, "docs ids of userB does not exist in cbl db2"
+
+    for doc in sg_docs_C:
+        assert doc["id"] in doc_ids_A, "docs ids of userA does not exist in cbl db1"
+        assert doc["id"] in doc_ids_C, "docs ids of userB does not exist in cbl db2"
+
+    # 4. Remove the channel c from all the docs
+    for sg_doc in sg_docs_A:
+        sg_client.update_doc(url=sg_url, db=sg_db, doc_id=sg_doc["id"],
+                             number_updates=1, auth=session_A,
+                             channels=["ABC", "DEF"])
+
+    for sg_doc in sg_docs_C:
+        sg_client.update_doc(url=sg_url, db=sg_db, doc_id=sg_doc["id"],
+                             number_updates=1, auth=session_C,
+                             channels=[])
+
+    replicator.wait_until_replicator_idle(repl1)
+    replicator.wait_until_replicator_idle(repl2)
+    replicator.wait_until_replicator_idle(repl3)
+    replicator.stop(repl1)
+    replicator.stop(repl2)
+    replicator.stop(repl3)
+
+    # 5. Verify userA can access only docA and doc B, but not docC
+    #       UserB can access docB
+    #       UserC cannot access docC
+    doc_ids_A = db.getDocIds(cbl_db1)
+    doc_ids_B = db.getDocIds(cbl_db2)
+    doc_ids_C = db.getDocIds(cbl_db3)
+
+    for doc in sg_docs_A:
+        assert doc["id"] in doc_ids_A, "docs ids of userA does not exist in cbl db1"
+
+    for doc in sg_docs_B:
+        assert doc["id"] in doc_ids_A, "docs ids of userA does not exist in cbl db1"
+        assert doc["id"] in doc_ids_B, "docs ids of userB does not exist in cbl db2"
+
+    for doc in sg_docs_C:
+        assert doc["id"] not in doc_ids_A, "docs ids of userA  exist in cbl db1"
+        assert doc["id"] not in doc_ids_C, "docs ids of userB  exist in cbl db2"
 
 
 def update_and_resetCheckPoint(db, cbl_db, replicator, repl, replication_type, repl_config, num_of_updates):
@@ -3290,17 +3591,17 @@ def setup_sg_cbl_docs(params_from_base_test_setup, sg_db, base_url, db, cbl_db, 
                       sg_admin_url, sg_blip_url, replication_type=None, document_ids=None,
                       channels=None, replicator_authenticator_type=None, headers=None,
                       cbl_id_prefix="cbl", sg_id_prefix="sg_doc",
-                      num_cbl_docs=5, num_sg_docs=10):
+                      num_cbl_docs=5, num_sg_docs=10, attachments_generator=None):
 
     sg_client = MobileRestClient()
 
-    db.create_bulk_docs(number=num_cbl_docs, id_prefix=cbl_id_prefix, db=cbl_db, channels=channels)
+    db.create_bulk_docs(number=num_cbl_docs, id_prefix=cbl_id_prefix, db=cbl_db, channels=channels, attachments_generator=attachments_generator)
     cbl_added_doc_ids = db.getDocIds(cbl_db)
     # Add docs in SG
     sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
     cookie, session = sg_client.create_session(sg_admin_url, sg_db, "autotest")
     auth_session = cookie, session
-    sg_added_docs = sg_client.add_docs(url=sg_url, db=sg_db, number=num_sg_docs, id_prefix=sg_id_prefix, channels=channels, auth=auth_session)
+    sg_added_docs = sg_client.add_docs(url=sg_url, db=sg_db, number=num_sg_docs, id_prefix=sg_id_prefix, channels=channels, auth=auth_session, attachments_generator=attachments_generator)
     sg_added_ids = [row["id"] for row in sg_added_docs]
 
     # Start and stop continuous replication

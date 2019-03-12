@@ -20,7 +20,9 @@
 // 
 
 using System;
+using System.IO;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 
 using HandlerAction = System.Action<System.Collections.Specialized.NameValueCollection, 
@@ -50,9 +52,9 @@ namespace Couchbase.Lite.Testing.NetCore
             Couchbase.Lite.Support.NetDesktop.Activate();
             Extend();
 
-            Couchbase.Lite.Support.NetDesktop.EnableTextLogging("TextLogging");
-            Database.SetLogLevel(Logging.LogDomain.All, Logging.LogLevel.Info);
-
+            Database.Log.Console.Level = Logging.LogLevel.Debug;
+            Database.Log.Console.Domains = Logging.LogDomain.All;
+            
             TestServer.FilePathResolver = path => path;
             var listener = new TestServer();
             listener.Start();
