@@ -306,7 +306,7 @@ def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_o
         # stopping replication
         log_info("Test completed. Stopping Replicators")
     except Exception, err:
-        log_info("Exception occurred: {}".format(err))
+        raise Exception(err)
     finally:
         for repl_obj, repl in zip(replicator_obj_list, replicator_list):
             repl_obj.stop(repl)
