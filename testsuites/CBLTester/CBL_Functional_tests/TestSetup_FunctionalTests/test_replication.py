@@ -204,8 +204,6 @@ def test_replication_configuration_with_pull_replication(params_from_base_test_s
         assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["request_changes_count"] == 1, "request_changes_count did not get incremented"
         assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["request_changes_time"] > 0, "request_changes_time did not get incremented"
         assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["num_pull_repl_since_zero"] == 1, "num_pull_repl_since_zero did not get incremented"
-        assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["attachment_pull_count"] == 20, "attachment_pull_count did not get incremented"
-        assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["attachment_pull_bytes"] > 0, "attachment_pull_bytes did not get incremented"
         if attachments_generator is not None:
             assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["attachment_pull_count"] == 20, "attachment_pull_count did not get incremented"
             assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["attachment_pull_bytes"] > 0, "attachment_pull_bytes did not get incremented"
@@ -239,11 +237,13 @@ def test_replication_configuration_with_push_replication(params_from_base_test_s
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    mode = params_from_base_test_setup["mode"]
 
     if sync_gateway_version < "2.0.0":
         pytest.skip('This test cannnot run with sg version below 2.0')
 
     c = cluster.Cluster(config=cluster_config)
+    sg_config = sync_gateway_config_path_for_mode("custom_sync/grant_access_one", mode)
     c.reset(sg_config_path=sg_config)
 
     channels = ["ABC"]
@@ -274,6 +274,9 @@ def test_replication_configuration_with_push_replication(params_from_base_test_s
     if sync_gateway_version >= "2.5.0":
         expvars = sg_client.get_expvars(sg_admin_url)
         assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_push"]["doc_push_count"] == 5, "doc_push_count did not get incremented"
+        assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_push"]["sync_function_time"] > 0, "sync_function_time is not incremented"
+        assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_push"]["sync_function_count"] > 0, "sync_function_count is not incremented"
+
         if attachments_generator is not None:
             assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_push"]["attachment_push_count"] == 30, "attachment_push_count did not get incremented"
             assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_push"]["attachment_push_bytes"] > 0, "attachment_push_bytes did not get incremented"
@@ -400,11 +403,8 @@ def test_replication_push_replication_invalid_authentication(params_from_base_te
     replicator.stop(repl)
     if sync_gateway_version >= "2.5.0":
         expvars = sg_client.get_expvars(sg_admin_url)
-        assert expvars["syncgateway"]["per_db"][sg_db]["security"]["auth_success_count"] > 0, "auth success count is not incremented"
+        assert expvars["syncgateway"]["per_db"][sg_db]["security"]["auth_failed_count"] > 0, "auth failed count is not incremented"
         assert expvars["syncgateway"]["per_db"][sg_db]["security"]["total_auth_time"] > 0, "total_auth_time is not incremented"
-        assert expvars["syncgateway"]["per_db"][sg_db]["security"]["num_docs_rejected"] == 39, "num_docs_rejected is not incremented"
-        assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_push"]["sync_function_time"] > 0, "sync_function_time is not incremented"
-        assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_push"]["sync_function_count"] > 0, "sync_function_count is not incremented"
 
 
 @pytest.mark.listener

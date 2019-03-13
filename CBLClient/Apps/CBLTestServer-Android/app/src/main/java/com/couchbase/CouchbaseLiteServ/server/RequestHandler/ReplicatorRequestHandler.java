@@ -67,7 +67,7 @@ public class ReplicatorRequestHandler {
     }
 
     public int changeListenerChangesCount(Args args) {
-        MyDocumentReplicatorListener changeListener = args.get("changeListener");
+        MyReplicatorListener changeListener = args.get("changeListener");
         return changeListener.getChanges().size();
     }
 

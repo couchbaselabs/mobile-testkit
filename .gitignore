@@ -6,13 +6,8 @@
 .cache/
 
 *.class
-
 .pydevproject
 .project
-
-*.xcscheme
-*..pbxproj
-*.csproj
 .idea
 *.iml
 *.pyc
@@ -509,3 +504,11 @@ ASALocalRun/
 
 # BeatPulse healthcheck temp database
 healthchecksdb
+
+CBLClient/Apps/CBLTestServer-Android/app/build.gradle
+
+CBLClient/Apps/CBLTestServer-Dotnet/TestServer.Android/TestServer.Android.csproj
+CBLClient/Apps/CBLTestServer-Dotnet/TestServer.iOS/TestServer.iOS.csproj
+CBLClient/Apps/CBLTestServer-Dotnet/TestServer/TestServer.csproj
+
+CBLClient/Apps/CBLTestServer-iOS/Frameworks

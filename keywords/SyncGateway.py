@@ -275,7 +275,7 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config):
         except KeyError:
             log_info("revs_limit not found in {}, Ignoring".format(cluster_config))
 
-        if is_delta_sync_enabled(cluster_config):
+        if is_delta_sync_enabled(cluster_config) and get_sg_version(cluster_config) >= "2.5.0":
             delta_sync_prop = '"delta_sync": { "enabled": true},'
 
         temp = template.render(
@@ -455,7 +455,7 @@ class SyncGateway(object):
                 if status != 0:
                     raise ProvisioningError("Failed to block port on SGW")
 
-        if is_delta_sync_enabled(cluster_config):
+        if is_delta_sync_enabled(cluster_config) and get_sg_version(cluster_config) >= "2.5.0":
             playbook_vars["delta_sync"] = '"delta_sync": { "enabled": true},'
 
         if url is not None:
@@ -615,7 +615,7 @@ class SyncGateway(object):
         except KeyError:
             log_info("revs_limit not found in {}, Ignoring".format(cluster_config))
 
-        if is_delta_sync_enabled(cluster_config):
+        if is_delta_sync_enabled(cluster_config) and version >= "2.5.0":
             playbook_vars["delta_sync"] = '"delta_sync": { "enabled": true},'
 
         if url is not None:
@@ -639,7 +639,7 @@ class SyncGateway(object):
         if status != 0:
             raise Exception("Could not upgrade sync_gateway/sg_accel")
 
-    def enable_import_xattrs(self, cluster_config, sg_conf, url, sync_gateway_version, enable_import=False):
+    def redeploy_sync_gateway_config(self, cluster_config, sg_conf, url, sync_gateway_version, enable_import=False):
         """Deploy an SG config with xattrs enabled
             Will also enable import if enable_import is set to True
             It is used to enable xattrs and import in the SG config"""
@@ -716,7 +716,7 @@ class SyncGateway(object):
         except KeyError:
             log_info("revs_limit not found in {}, Ignoring".format(cluster_config))
 
-        if is_delta_sync_enabled(cluster_config):
+        if is_delta_sync_enabled(cluster_config) and version >= "2.5.0":
             playbook_vars["delta_sync"] = '"delta_sync": { "enabled": true},'
 
         # Deploy config

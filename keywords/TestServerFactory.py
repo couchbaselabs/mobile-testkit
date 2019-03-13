@@ -11,9 +11,6 @@ class TestServerFactory:
         if version_build is None:
             raise ValueError("Make sure you provide a version / build!")
 
-        if len(version_build.split("-")) != 2:
-            raise ValueError("Make sure your version_build follows the format: 2.0.0-576")
-
     @staticmethod
     def validate_platform(platform):
         valid_platforms = ["android", "ios", "net-mono", "net-msft", "net-uwp", "xamarin-android", "xamarin-ios"]
@@ -33,7 +30,6 @@ class TestServerFactory:
     @staticmethod
     def create(platform, version_build, host, port, community_enabled=None, debug_mode=False):
         TestServerFactory.validate_platform(platform)
-        TestServerFactory.validate_version_build(version_build)
         TestServerFactory.validate_host(host)
         TestServerFactory.validate_port(port)
 

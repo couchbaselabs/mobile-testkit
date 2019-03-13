@@ -52,6 +52,7 @@
 		41CFFB4B2202D9FB00D0E1A8 /* CouchbaseLiteSwift.framework.dSYM in Resources */ = {isa = PBXBuildFile; fileRef = 41CFFB492202D9FB00D0E1A8 /* CouchbaseLiteSwift.framework.dSYM */; };
 		41CFFB4C2202DA0200D0E1A8 /* CouchbaseLiteSwift.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 41CFFB482202D9FB00D0E1A8 /* CouchbaseLiteSwift.framework */; };
 		41CFFB4D2202DA0200D0E1A8 /* CouchbaseLiteSwift.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 41CFFB482202D9FB00D0E1A8 /* CouchbaseLiteSwift.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		FB0C46F1221DE1F6002550CC /* PredictiveQueriesRequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB0C46F0221DE1F6002550CC /* PredictiveQueriesRequestHandler.swift */; };
 		FB5934DA219CB5150000C958 /* sg_cert.cer in Resources */ = {isa = PBXBuildFile; fileRef = 2920479F204E05C700B21067 /* sg_cert.cer */; };
 		FB5934E0219CB6220000C958 /* Databases in Resources */ = {isa = PBXBuildFile; fileRef = FB5934DF219CB6220000C958 /* Databases */; };
 		FB5A6A5521123A9A00937927 /* ReplicatorTcpConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB5A6A5421123A9A00937927 /* ReplicatorTcpConnection.swift */; };
@@ -165,6 +166,7 @@
 		29F786901F9FC4180035178F /* GCDWebServerStreamedResponse.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GCDWebServerStreamedResponse.m; sourceTree = "<group>"; };
 		41CFFB482202D9FB00D0E1A8 /* CouchbaseLiteSwift.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CouchbaseLiteSwift.framework; path = Frameworks/CouchbaseLiteSwift.framework; sourceTree = "<group>"; };
 		41CFFB492202D9FB00D0E1A8 /* CouchbaseLiteSwift.framework.dSYM */ = {isa = PBXFileReference; lastKnownFileType = wrapper.dsym; name = CouchbaseLiteSwift.framework.dSYM; path = Frameworks/CouchbaseLiteSwift.framework.dSYM; sourceTree = "<group>"; };
+		FB0C46F0221DE1F6002550CC /* PredictiveQueriesRequestHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PredictiveQueriesRequestHandler.swift; sourceTree = "<group>"; };
 		FB5934DF219CB6220000C958 /* Databases */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Databases; sourceTree = SOURCE_ROOT; };
 		FB5A6A5421123A9A00937927 /* ReplicatorTcpConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReplicatorTcpConnection.swift; sourceTree = "<group>"; };
 		FB5A86752017E672008127FC /* DatabaseConfigurationRequestHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseConfigurationRequestHandler.swift; sourceTree = "<group>"; };
@@ -241,6 +243,7 @@
 				FB72EEA121504FC800B306DF /* TryCatch.h */,
 				FB72EEA221504FC800B306DF /* TryCatch.m */,
 				FB72EEA42150513100B306DF /* TryCatch.swift */,
+				FB0C46F0221DE1F6002550CC /* PredictiveQueriesRequestHandler.swift */,
 			);
 			path = Server;
 			sourceTree = "<group>";
@@ -546,6 +549,7 @@
 				2907D16C200E7BE400CE56EB /* CollationRequestHandler.swift in Sources */,
 				FB72EEA52150513100B306DF /* TryCatch.swift in Sources */,
 				2907D16A200E79C800CE56EB /* ExpressionRequestHandler.swift in Sources */,
+				FB0C46F1221DE1F6002550CC /* PredictiveQueriesRequestHandler.swift in Sources */,
 				294FB20E1FEB0E1800DD0C23 /* DocumentRequestHandler.swift in Sources */,
 				FB6DD8C12232456300C84523 /* FileLoggingRequestHandler.swift in Sources */,
 				29D15BA11FA7DCFA005DAAA3 /* ValueSerializer.swift in Sources */,
