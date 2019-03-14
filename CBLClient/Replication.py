@@ -289,7 +289,7 @@ class Replication(object):
         self.wait_until_replicator_idle(repl, err_check)
         return repl
 
-    def wait_until_replicator_idle(self, repl, err_check=True, max_times=50):
+    def wait_until_replicator_idle(self, repl, err_check=True, max_times=100):
         count = 0
         # Sleep until replicator completely processed
         activity_level = self.getActivitylevel(repl)
@@ -305,8 +305,6 @@ class Replication(object):
                     else:
                         time.sleep(3)
                         break
-            if activity_level == "stopped":
-                break
             if err_check:
                 err = self.getError(repl)
                 if err is not None and err != 'nil' and err != -1:
@@ -314,7 +312,7 @@ class Replication(object):
             activity_level = self.getActivitylevel(repl)
             total = self.getTotal(repl)
             completed = self.getCompleted(repl)
-            if total < completed and total <= 0:
+            if total < completed and total <= 0 and activity_level == "stopped":
                 raise Exception("replication progress is not completed")
 
     def create_session_configure_replicate(self, baseUrl, sg_admin_url, sg_db, username, password,
