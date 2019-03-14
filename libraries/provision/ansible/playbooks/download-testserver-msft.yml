@@ -34,6 +34,8 @@
     win_get_url:
       url: "{{ download_url }}"
       dest: C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ build_name }}\{{ package_name }}.zip
+      skip_certificate_validation: yes
+      validate_certs: no
     when: st.stat.exists == False
 
   - name: Unzip package and remove .zip
