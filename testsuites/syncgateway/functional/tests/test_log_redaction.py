@@ -339,7 +339,7 @@ def verify_log_redaction(cluster_config, log_redaction_level, mode):
         temp_log_path = "/tmp/{}-{}-sglogs".format("log-redaction", date_time)
         shutil.copytree("/tmp/sg_logs", temp_log_path)
         temp_log_path1 = "{}/sg1".format(temp_log_path)
-        temp_log_path_list = [temp_log_path1 + "/sg_info.log", temp_log_path1 + "/sync_gateway_error.log"]
+        temp_log_path_list = [temp_log_path1 + "/sg_info.log", temp_log_path1 + "/sg_debug.log"]
         if mode.lower() == "di":
             temp_log_path_list.append(temp_log_path + "/ac1/sg_accel_error.log")
             temp_log_path_list.append(temp_log_path + "/ac1/sg_debug.log")
