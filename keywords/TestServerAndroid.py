@@ -36,7 +36,7 @@ class TestServerAndroid(TestServerBase):
             # Xamarin-android
             self.package_name = self.apk_name = "TestServer.Android.apk"
             self.installed_package_name = "TestServer.Android"
-            self.activity_name = self.installed_package_name + "/md57aea67c4d08319974f101b0b09ff509e.MainActivity"
+            self.activity_name = self.installed_package_name + "/md53466f247b9f9d18ced632d20bd2e0d5c.MainActivity"
 
         self.device_option = "-e"
 
