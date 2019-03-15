@@ -132,7 +132,7 @@ def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_o
                                          replicator_authenticator=replicator_authenticator)
             repl = repl_obj.create(repl_config)
             repl_obj.start(repl)
-            repl_obj.wait_until_replicator_idle(repl, max_times=maxint)
+            repl_obj.wait_until_replicator_idle(repl, max_times=maxint, sleep_time=20)
 #             session, _, repl = repl_obj.create_session_configure_replicate(
 #                 base_url, sg_admin_url, sg_db, username, password, channels_sg, sg_client, cbl_db, sg_blip_url, continuous=True)
             replicator_list.append(repl)
@@ -315,7 +315,7 @@ def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_o
 
 
 def _replicaton_status_check(repl_obj, replicator):
-    repl_obj.wait_until_replicator_idle(replicator, max_times=maxint)
+    repl_obj.wait_until_replicator_idle(replicator, max_times=maxint, sleep_time=20)
     total = repl_obj.getTotal(replicator)
     completed = repl_obj.getCompleted(replicator)
     assert total == completed, "total is not equal to completed"

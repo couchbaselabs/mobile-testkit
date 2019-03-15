@@ -164,7 +164,6 @@ public class Server {
                         result = try self.peerToPeerRequestHandler.handleRequest(method: method, args: args)
                     } else if method.hasPrefix("predictiveQuery") {
                         result = try self.predictiveQueryRequestHandler.handleRequest(method: method, args: args)
-                    }else {
                     } else if method.hasPrefix("logging") {
                         result = try self.fileLoggingRequestHandler.handleRequest(method: method, args: args)
                     } else {
