@@ -2636,7 +2636,7 @@ def test_stats_logging_import_count(params_from_base_test_setup,
     doc_body = document.create_doc("new_doc_id", channels=['KMOW'])
     try:
         sg_client.add_doc(url=sg_url, db=sg_db, doc=doc_body, auth=autosdkuser_session)
-    except HTTPError as e:
+    except HTTPError:
         log_info("caught the expected exception")
 
     time.sleep(1)
