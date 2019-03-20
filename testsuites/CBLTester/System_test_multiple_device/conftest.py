@@ -298,7 +298,11 @@ def params_from_base_suite_setup(request):
             log_info("Getting the database name")
             assert db.getName(cbl_db) == db_name
             if resume_cluster:
-                path = db.getPath(cbl_db)
+                path = db.getPath(cbl_db).rstrip("/\\")
+                if '\\' in path:
+                    path = '\\'.join(path.split('\\')[:-1])
+                else:
+                    path = '/'.join(path.split('/')[:-1])
                 assert db.exists(db_name, path)
 
     yield {
