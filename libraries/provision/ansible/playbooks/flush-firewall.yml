@@ -1,5 +1,14 @@
 # Flush the firewall rules, some maybe in place if it is a new vm
-- hosts: pool
+- hosts: couchbase_servers
+
+  tasks:
+  - name: OS | Flush Firewall
+    become: yes
+    command: iptables --flush
+    ignore_errors: True
+    when: ansible_distribution == "CentOS"
+
+- hosts: sync_gateways
 
   tasks:
   - name: OS | Flush Firewall
