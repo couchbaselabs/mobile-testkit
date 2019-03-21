@@ -56,7 +56,7 @@ namespace Couchbase.Lite.Testing
                     Database.Log.File.Level = LogLevel.None;
                     break;
             }
-            response.WriteBody(config);
+            response.WriteBody(MemoryMap.Store(config));
         }
 
         public static void GetPlainTextStatus([NotNull] NameValueCollection args,
