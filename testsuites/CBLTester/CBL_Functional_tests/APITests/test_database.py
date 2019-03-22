@@ -356,7 +356,7 @@ class TestDatabase(object):
         """
         doc_id_prefix = "bar"
         num_of_docs = 5
-        db = self.db_obj.create("db_name")
+        db = self.db_obj.create(random_string(5))
         documents = dict()
         ids = []
         for i in range(num_of_docs):
