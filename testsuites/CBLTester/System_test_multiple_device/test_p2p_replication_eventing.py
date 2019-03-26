@@ -4,7 +4,6 @@ import random
 from keywords import attachment
 from CBLClient.Replication import Replication
 from CBLClient.PeerToPeer import PeerToPeer
-from keywords.utils import log_info
 from keywords.utils import get_event_changes
 
 
@@ -266,23 +265,3 @@ def test_peer_to_peer_replication_delete_event(params_from_base_test_setup, serv
     server_docs_count = db_obj_server.getCount(cbl_db_server)
     client_docs_count = db_obj_client.getCount(cbl_db_client)
     assert server_docs_count == client_docs_count, "Server and Client doesn't have equal no. of docs"
-
-
-@pytest.fixture(scope="function")
-def server_setup(params_from_base_test_setup):
-    base_url_list = params_from_base_test_setup["base_url_list"]
-    cbl_db_list = params_from_base_test_setup["cbl_db_list"]
-    base_url_server = base_url_list[0]
-    peerToPeer_server = PeerToPeer(base_url_server)
-    cbl_db_server = cbl_db_list[0]
-    replicator_tcp_listener = peerToPeer_server.server_start(cbl_db_server)
-    log_info("server starting .....")
-    yield {
-        "replicator_tcp_listener": replicator_tcp_listener,
-        "peerToPeer_server": peerToPeer_server,
-        "base_url_list": base_url_list,
-        "base_url_server": base_url_server,
-        "cbl_db_server": cbl_db_server,
-        "cbl_db_list": cbl_db_list
-    }
-    peerToPeer_server.server_stop(replicator_tcp_listener)

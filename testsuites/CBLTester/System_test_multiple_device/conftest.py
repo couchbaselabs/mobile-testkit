@@ -15,6 +15,7 @@ from CBLClient.Database import Database
 from CBLClient.Query import Query
 from CBLClient.Utils import Utils
 from keywords.constants import RESULTS_DIR
+from CBLClient.PeerToPeer import PeerToPeer
 
 
 def pytest_addoption(parser):
@@ -434,3 +435,23 @@ def params_from_base_test_setup(params_from_base_suite_setup):
             log_info("Deleting the database {} at the test teardown".format(db_obj.getName(cbl_db)))
             time.sleep(2)
             db_obj.deleteDB(cbl_db)
+
+
+@pytest.fixture(scope="function")
+def server_setup(params_from_base_test_setup):
+    base_url_list = params_from_base_test_setup["base_url_list"]
+    cbl_db_list = params_from_base_test_setup["cbl_db_list"]
+    base_url_server = base_url_list[0]
+    peerToPeer_server = PeerToPeer(base_url_server)
+    cbl_db_server = cbl_db_list[0]
+    replicator_tcp_listener = peerToPeer_server.server_start(cbl_db_server)
+    log_info("server starting .....")
+    yield {
+        "replicator_tcp_listener": replicator_tcp_listener,
+        "peerToPeer_server": peerToPeer_server,
+        "base_url_list": base_url_list,
+        "base_url_server": base_url_server,
+        "cbl_db_server": cbl_db_server,
+        "cbl_db_list": cbl_db_list
+    }
+    peerToPeer_server.server_stop(replicator_tcp_listener)
