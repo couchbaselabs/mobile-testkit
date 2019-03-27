@@ -1,10 +1,10 @@
 import time
-import pytest
 import datetime
+import pytest
 
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop
+from keywords.utils import host_for_url, clear_resources_pngs
 from keywords.utils import log_info
-from keywords.utils import host_for_url
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.constants import CLUSTER_CONFIGS_DIR
 from keywords.TestServerFactory import TestServerFactory
@@ -273,6 +273,7 @@ def params_from_base_suite_setup(request):
             else:
                 testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp,
                                                                datetime.datetime.now()))
+
         for base_url, i in zip(base_url_list, range(len(base_url_list))):
             db_name = "{}_{}_{}".format(create_db_per_suite, str(time.time()), i + 1)
             log_info("db name for {} is {}".format(base_url, db_name))
@@ -335,6 +336,8 @@ def params_from_base_suite_setup(request):
         utils_obj.flushMemory()
         log_info("Stopping the test server")
         testserver.stop()
+    clear_resources_pngs()
+
 
 
 @pytest.fixture(scope="function")
@@ -432,7 +435,7 @@ def params_from_base_test_setup(params_from_base_suite_setup):
 
     if create_db_per_test:
         for cbl_db, db_obj, base_url in zip(cbl_db_list, db_obj_list, base_url_list):
-            log_info("Deleting the database {} at the test teardown".format(db_obj.getName(cbl_db)))
+            log_info("Deleting the database {} at the test teardown for base url {}".format(db_obj.getName(cbl_db), base_url))
             time.sleep(2)
             db_obj.deleteDB(cbl_db)
 
