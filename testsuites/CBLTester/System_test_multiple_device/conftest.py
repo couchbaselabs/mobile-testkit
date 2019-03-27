@@ -339,7 +339,6 @@ def params_from_base_suite_setup(request):
     clear_resources_pngs()
 
 
-
 @pytest.fixture(scope="function")
 def params_from_base_test_setup(params_from_base_suite_setup):
     cluster_config = params_from_base_suite_setup["cluster_config"]
