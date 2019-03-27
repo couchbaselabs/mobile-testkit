@@ -379,3 +379,11 @@ def deep_dict_compare(object1, object2):
                 return False
 
     return retval
+
+
+def meet_supported_version(version_list, target_version):
+    for ver in version_list:
+        if ver < target_version:
+            return False
+
+    return True
