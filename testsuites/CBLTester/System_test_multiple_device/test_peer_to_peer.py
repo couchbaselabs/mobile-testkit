@@ -465,7 +465,7 @@ def test_peer_to_peer_with_server_down(params_from_base_test_setup, server_setup
     base_url_list = server_setup["base_url_list"]
     cbl_db_server = server_setup["cbl_db_server"]
     cbl_db_list = server_setup["cbl_db_list"]
-    replicatorTcpListener = server_setup["replicatorTcpListener"]
+    replicatorTcpListener = server_setup["replicator_tcp_listener"]
     peerToPeer_server = server_setup["peerToPeer_server"]
     channel = ["peerToPeer"]
 
@@ -701,7 +701,7 @@ def test_peer_to_peer_replication_with_databaseEncryption(params_from_base_test_
     host_list = params_from_base_test_setup["host_list"]
     db_obj_list = params_from_base_test_setup["db_obj_list"]
     base_url_list = server_setup["base_url_list"]
-    replicatorTcpListener = server_setup["replicatorTcpListener"]
+    replicatorTcpListener = server_setup["replicator_tcp_listener"]
     peerToPeer_server = server_setup["peerToPeer_server"]
     channel = ["peerToPeer"]
     password = "encryption"
