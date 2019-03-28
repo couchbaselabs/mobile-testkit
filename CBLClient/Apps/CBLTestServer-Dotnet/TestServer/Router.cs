@@ -246,6 +246,7 @@ namespace Couchbase.Lite.Testing
                 ["logging_getMaxSize"] = FileLoggingMehtod.GetMaxSize,
                 ["logging_getLogLevel"] = FileLoggingMehtod.GetLogLevel,
                 ["logging_getConfig"] = FileLoggingMehtod.GetConfig,
+                ["logging_getDirectory"] = FileLoggingMehtod.GetDirectory,
                 ["logging_setPlainTextStatus"] = FileLoggingMehtod.SetPlainTextStatus,
                 ["logging_setMaxRotateCount"] = FileLoggingMehtod.SetMaxRotateCount,
                 ["logging_setMaxSize"] = FileLoggingMehtod.SetMaxSize,
