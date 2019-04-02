@@ -2,7 +2,7 @@ import random
 
 import pytest
 
-from keywords.utils import add_new_fields_to_doc
+from keywords.utils import add_new_fields_to_doc, meet_supported_version
 from keywords import attachment
 from CBLClient.Replication import Replication
 from CBLClient.PeerToPeer import PeerToPeer
@@ -33,6 +33,7 @@ def test_p2p_replication_push_pull_filtering(params_from_base_test_setup, server
     host_list = params_from_base_test_setup["host_list"]
     db_obj_list = params_from_base_test_setup["db_obj_list"]
     db_name_list = params_from_base_test_setup["db_name_list"]
+    version_list = params_from_base_test_setup["version_list"]
     base_url_list = server_setup["base_url_list"]
     cbl_db_server = server_setup["cbl_db_server"]
     cbl_db_list = server_setup["cbl_db_list"]
@@ -45,6 +46,9 @@ def test_p2p_replication_push_pull_filtering(params_from_base_test_setup, server
     cbl_db_client = cbl_db_list[1]
     db_obj_client = db_obj_list[1]
     db_name_server = db_name_list[0]
+
+    if meet_supported_version(version_list, "2.5.0") is False:
+        pytest.skip("Filtering feature is available only onwards CBL 2.5.0")
 
     server_host = host_list[0]
     if attachments:
@@ -148,6 +152,7 @@ def test_p2p_replication_delete(params_from_base_test_setup, server_setup, num_o
     host_list = params_from_base_test_setup["host_list"]
     db_obj_list = params_from_base_test_setup["db_obj_list"]
     db_name_list = params_from_base_test_setup["db_name_list"]
+    version_list = params_from_base_test_setup["version_list"]
     base_url_list = server_setup["base_url_list"]
     cbl_db_server = server_setup["cbl_db_server"]
     cbl_db_list = server_setup["cbl_db_list"]
@@ -161,6 +166,9 @@ def test_p2p_replication_delete(params_from_base_test_setup, server_setup, num_o
     cbl_db_client = cbl_db_list[1]
     db_obj_client = db_obj_list[1]
     db_name_server = db_name_list[0]
+
+    if meet_supported_version(version_list, "2.5.0") is False:
+        pytest.skip("Filtering feature is available only onwards CBL 2.5.0")
 
     server_host = host_list[0]
     # 1. Create docs on client and server.
@@ -245,6 +253,7 @@ def test_p2p_filter_retrieval_with_replication_restart(params_from_base_test_set
     host_list = params_from_base_test_setup["host_list"]
     db_obj_list = params_from_base_test_setup["db_obj_list"]
     db_name_list = params_from_base_test_setup["db_name_list"]
+    version_list = params_from_base_test_setup["version_list"]
     base_url_list = server_setup["base_url_list"]
     cbl_db_server = server_setup["cbl_db_server"]
     cbl_db_list = server_setup["cbl_db_list"]
@@ -257,6 +266,9 @@ def test_p2p_filter_retrieval_with_replication_restart(params_from_base_test_set
     cbl_db_client = cbl_db_list[1]
     db_obj_client = db_obj_list[1]
     db_name_server = db_name_list[0]
+
+    if meet_supported_version(version_list, "2.5.0") is False:
+        pytest.skip("Filtering feature is available only onwards CBL 2.5.0")
 
     server_host = host_list[0]
     # 1. Create docs on client and server.

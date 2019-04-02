@@ -123,7 +123,7 @@ def test_sg_replicate_basic_test(params_from_base_test_setup):
     # Verify that the doc added to sg2 made it to sg1
     assert_has_doc(sg1_user, doc_id_sg2)
 
-    time.sleep(63)
+    time.sleep(240)
     if sync_gateway_version >= "2.5.0":
         expvars = sg_client.get_expvars(sg2.admin.admin_url)
         assert process_memory_resident < expvars["syncgateway"]["global"]["resource_utilization"]["process_memory_resident"], "process_memory_resident did not get incremented"

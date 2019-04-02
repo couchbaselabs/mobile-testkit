@@ -305,8 +305,6 @@ class Replication(object):
                     else:
                         time.sleep(sleep_time)
                         break
-            if activity_level == "stopped":
-                break
             if err_check:
                 err = self.getError(repl)
                 if err is not None and err != 'nil' and err != -1:
@@ -314,8 +312,13 @@ class Replication(object):
             activity_level = self.getActivitylevel(repl)
             total = self.getTotal(repl)
             completed = self.getCompleted(repl)
+            if activity_level == "stopped":
+                if completed < total:
+                    raise Exception("replication progress is not completed")
+                else:
+                    break
             if total < completed and total <= 0:
-                raise Exception("replication progress is not completed")
+                raise Exception("total is less than completed")
 
     def create_session_configure_replicate(self, baseUrl, sg_admin_url, sg_db, username, password,
                                            channels, sg_client, cbl_db, sg_blip_url, replication_type=None, continuous=True):

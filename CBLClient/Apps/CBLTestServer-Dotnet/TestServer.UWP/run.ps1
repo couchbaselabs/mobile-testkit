@@ -2,8 +2,8 @@ param (
     [Parameter()][string]$AppDirectory
 )
 
-$PackageFullName="b0bd6c4c-e257-44c1-aeeb-7188f65af9d0_1.0.0.0_x64__1v3rwxh47wwxj"
-$LaunchName="b0bd6c4c-e257-44c1-aeeb-7188f65af9d0_1v3rwxh47wwxj!App"
+$PackageFullName="b0bd6c4c-e257-44c1-aeeb-7188f65af9d0_1.0.0.0_x64__75cr2b68sm664"
+$LaunchName="b0bd6c4c-e257-44c1-aeeb-7188f65af9d0_75cr2b68sm664!App"
 if(-Not $AppDirectory) {
     $AppDirectory = $PSScriptRoot
 }

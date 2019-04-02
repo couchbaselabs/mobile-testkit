@@ -2577,15 +2577,9 @@ def test_stats_logging_import_count(params_from_base_test_setup,
     cluster.reset(sg_config_path=sg_conf)
 
     sg_client = MobileRestClient()
-    if sync_gateway_version >= "2.5.0":
-        sg_admin_url = cluster_topology["sync_gateways"][0]["admin"]
-        expvars = sg_client.get_expvars(sg_admin_url)
-        import_count = expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"]
-        import_error_count = expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_error_count"]
-        num_access_errors = expvars["syncgateway"]["per_db"][sg_db]["security"]["num_access_errors"]
 
     sg_client.create_user(url=sg_admin_url, db=sg_db, name='autosdkuser', password='pass', channels=['KMOW'])
-    autosdkuser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autosdkuser', password='pass')
+    autosdkuser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autosdkuser')
 
     # TODO : will remove once dev fix the bug, need to verify whether it is required or not
     # sg_client.create_user(url=sg_admin_url, db=sg_db, name='autosguser', password='pass', channels=['sg-shared'])
@@ -2640,10 +2634,14 @@ def test_stats_logging_import_count(params_from_base_test_setup,
 
     # Write docs via sg
     doc_body = document.create_doc("new_doc_id", channels=['KMOW'])
-    sg_client.add_doc(url=sg_url, db=sg_db, doc=doc_body, auth=autosdkuser_session)
+    try:
+        sg_client.add_doc(url=sg_url, db=sg_db, doc=doc_body, auth=autosdkuser_session)
+    except HTTPError:
+        log_info("caught the expected exception")
 
+    time.sleep(1)
     if sync_gateway_version >= "2.5.0":
         expvars = sg_client.get_expvars(sg_admin_url)
-        assert import_count < expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"], "import_count is not incremented"
-        assert import_error_count < expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_error_count"], "import_error count is not incremented"
-        assert num_access_errors < expvars["syncgateway"]["per_db"][sg_db]["security"]["num_access_errors"], "num_access_errors is not incremented"
+        assert expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"] == 10, "import_count is not incremented"
+        assert expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_error_count"] == 10, "import_error count is not incremented"
+        assert expvars["syncgateway"]["per_db"][sg_db]["security"]["num_access_errors"] == 1, "num_access_errors is not incremented"

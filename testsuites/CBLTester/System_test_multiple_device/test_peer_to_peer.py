@@ -1,6 +1,6 @@
-import pytest
 import time
 import random
+import pytest
 
 from concurrent.futures import ThreadPoolExecutor
 from keywords.utils import log_info
@@ -66,13 +66,13 @@ def test_peer_to_peer_1to1_valid_values(params_from_base_test_setup, server_setu
 
 @pytest.mark.sanity
 @pytest.mark.listener
-@pytest.mark.parametrize("num_of_docs, continuous, endPointType", [
-    (10, True, "MessageEndPoint"),
-    (10, False, "URLEndPoint"),
-    (100, False, "MessageEndPoint"),
-    (100, True, "URLEndPoint"),
+@pytest.mark.parametrize("num_of_docs, continuous, endPointType, attachments", [
+    (10, True, "MessageEndPoint", False),
+    (10, False, "URLEndPoint", True),
+    (100, False, "MessageEndPoint", False),
+    (100, True, "URLEndPoint", True),
 ])
-def test_peer_to_peer2_1to1_pull_replication(params_from_base_test_setup, server_setup, num_of_docs, continuous, endPointType):
+def test_peer_to_peer2_1to1_pull_replication(params_from_base_test_setup, server_setup, num_of_docs, continuous, endPointType, attachments):
     """
         @summary:
         1. Create docs on server.
@@ -98,7 +98,11 @@ def test_peer_to_peer2_1to1_pull_replication(params_from_base_test_setup, server
     db_name_server = db_name_list[0]
 
     server_host = host_list[0]
-    db_obj_server.create_bulk_docs(num_of_docs, "cbl-peerToPeer", db=cbl_db_server, channels=channel)
+
+    if attachments:
+        db_obj_server.create_bulk_docs(num_of_docs, "cbl-peerToPeer", db=cbl_db_server, channels=channel, attachments_generator=attachment.generate_2_png_10_10)
+    else:
+        db_obj_server.create_bulk_docs(num_of_docs, "cbl-peerToPeer", db=cbl_db_server, channels=channel)
 
     # Now set up client
     repl = peerToPeer_client.configure(host=server_host, server_db_name=db_name_server, client_database=cbl_db_client, continuous=continuous, replication_type="pull", endPointType=endPointType)
@@ -240,9 +244,9 @@ def test_peer_to_peer_oneClient_toManyServers(params_from_base_test_setup, num_o
     log_info("servers starting .....")
 
     # Now set up client
-    repl1 = peerToPeer_client.client_start(host=server1_host, server_db_name=db_name_server1, client_database=cbl_db_client, continuous=continuous, replication_type=replicator_type, endPointType=endPointType)
+    repl1 = peerToPeer_client.configure(host=server1_host, server_db_name=db_name_server1, client_database=cbl_db_client, continuous=continuous, replication_type=replicator_type, endPointType=endPointType)
     peerToPeer_client.client_start(repl1)
-    repl2 = peerToPeer_client.client_start(host=server2_host, server_db_name=db_name_server2, client_database=cbl_db_client, continuous=continuous, replication_type=replicator_type, endPointType=endPointType)
+    repl2 = peerToPeer_client.configure(host=server2_host, server_db_name=db_name_server2, client_database=cbl_db_client, continuous=continuous, replication_type=replicator_type, endPointType=endPointType)
     peerToPeer_client.client_start(repl2)
 
     client_replicator.wait_until_replicator_idle(repl1)
@@ -302,9 +306,9 @@ def test_peer_to_peer_oneServer_toManyClients(params_from_base_test_setup, serve
     db_obj_server.create_bulk_docs(num_of_docs, "cbl-peerToPeer", db=cbl_db_server, channels=channel)
 
     # Now set up client
-    repl1 = peerToPeer_client1.client_start(host=server_host, server_db_name=db_name_server, client_database=cbl_db_client1, continuous=continuous, replication_type=replicator_type, endPointType=endPointType)
+    repl1 = peerToPeer_client1.configure(host=server_host, server_db_name=db_name_server, client_database=cbl_db_client1, continuous=continuous, replication_type=replicator_type, endPointType=endPointType)
     peerToPeer_client1.client_start(repl1)
-    repl2 = peerToPeer_client2.client_start(host=server_host, server_db_name=db_name_server, client_database=cbl_db_client2, continuous=continuous, replication_type=replicator_type, endPointType=endPointType)
+    repl2 = peerToPeer_client2.configure(host=server_host, server_db_name=db_name_server, client_database=cbl_db_client2, continuous=continuous, replication_type=replicator_type, endPointType=endPointType)
     peerToPeer_client2.client_start(repl2)
 
     client_replicator1.wait_until_replicator_idle(repl1)
@@ -461,7 +465,7 @@ def test_peer_to_peer_with_server_down(params_from_base_test_setup, server_setup
     base_url_list = server_setup["base_url_list"]
     cbl_db_server = server_setup["cbl_db_server"]
     cbl_db_list = server_setup["cbl_db_list"]
-    replicatorTcpListener = server_setup["replicatorTcpListener"]
+    replicatorTcpListener = server_setup["replicator_tcp_listener"]
     peerToPeer_server = server_setup["peerToPeer_server"]
     channel = ["peerToPeer"]
 
@@ -697,7 +701,7 @@ def test_peer_to_peer_replication_with_databaseEncryption(params_from_base_test_
     host_list = params_from_base_test_setup["host_list"]
     db_obj_list = params_from_base_test_setup["db_obj_list"]
     base_url_list = server_setup["base_url_list"]
-    replicatorTcpListener = server_setup["replicatorTcpListener"]
+    replicatorTcpListener = server_setup["replicator_tcp_listener"]
     peerToPeer_server = server_setup["peerToPeer_server"]
     channel = ["peerToPeer"]
     password = "encryption"

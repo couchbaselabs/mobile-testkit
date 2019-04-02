@@ -4,8 +4,7 @@ import random
 from keywords import attachment
 from CBLClient.Replication import Replication
 from CBLClient.PeerToPeer import PeerToPeer
-from keywords.utils import log_info
-from keywords.utils import get_event_changes
+from keywords.utils import get_event_changes, meet_supported_version
 
 
 @pytest.mark.sanity
@@ -35,7 +34,7 @@ def test_peer_to_peer_replication_eventing_valid_values(params_from_base_test_se
     host_list = params_from_base_test_setup["host_list"]
     db_obj_list = params_from_base_test_setup["db_obj_list"]
     db_name_list = params_from_base_test_setup["db_name_list"]
-    liteserv_version = params_from_base_test_setup["liteserv_versions"].split(',')[0]
+    version_list = params_from_base_test_setup["version_list"]
     base_url_list = server_setup["base_url_list"]
     cbl_db_server = server_setup["cbl_db_server"]
     cbl_db_list = server_setup["cbl_db_list"]
@@ -51,7 +50,7 @@ def test_peer_to_peer_replication_eventing_valid_values(params_from_base_test_se
 
     server_host = host_list[0]
 
-    if liteserv_version < "2.5.0":
+    if meet_supported_version(version_list, "2.5.0") is False:
         pytest.skip("Eventing feature is available only onwards CBL 2.5.0")
 
     if attachments:
@@ -126,7 +125,7 @@ def test_peer_to_peer_push_replication_error_event(params_from_base_test_setup, 
     host_list = params_from_base_test_setup["host_list"]
     db_obj_list = params_from_base_test_setup["db_obj_list"]
     db_name_list = params_from_base_test_setup["db_name_list"]
-    liteserv_version = params_from_base_test_setup["liteserv_versions"].split(',')[0]
+    version_list = params_from_base_test_setup["version_list"]
     base_url_list = server_setup["base_url_list"]
     cbl_db_server = server_setup["cbl_db_server"]
     cbl_db_list = server_setup["cbl_db_list"]
@@ -142,7 +141,7 @@ def test_peer_to_peer_push_replication_error_event(params_from_base_test_setup, 
 
     server_host = host_list[0]
 
-    if liteserv_version < "2.5.0":
+    if meet_supported_version(version_list, "2.5.0") is False:
         pytest.skip("Eventing feature is available only onwards CBL 2.5.0")
 
     client_doc_ids = db_obj_client.create_bulk_docs(num_of_docs, "client_doc", db=cbl_db_client,
@@ -211,7 +210,7 @@ def test_peer_to_peer_replication_delete_event(params_from_base_test_setup, serv
     host_list = params_from_base_test_setup["host_list"]
     db_obj_list = params_from_base_test_setup["db_obj_list"]
     db_name_list = params_from_base_test_setup["db_name_list"]
-    liteserv_version = params_from_base_test_setup["liteserv_versions"].split(',')[0]
+    version_list = params_from_base_test_setup["version_list"]
     base_url_list = server_setup["base_url_list"]
     cbl_db_server = server_setup["cbl_db_server"]
     cbl_db_list = server_setup["cbl_db_list"]
@@ -227,7 +226,7 @@ def test_peer_to_peer_replication_delete_event(params_from_base_test_setup, serv
 
     server_host = host_list[0]
 
-    if liteserv_version < "2.5.0":
+    if meet_supported_version(version_list, "2.5.0") is False:
         pytest.skip("Eventing feature is available only onwards CBL 2.5.0")
 
     client_doc_ids = db_obj_client.create_bulk_docs(num_of_docs, "client_doc", db=cbl_db_client,
@@ -266,23 +265,3 @@ def test_peer_to_peer_replication_delete_event(params_from_base_test_setup, serv
     server_docs_count = db_obj_server.getCount(cbl_db_server)
     client_docs_count = db_obj_client.getCount(cbl_db_client)
     assert server_docs_count == client_docs_count, "Server and Client doesn't have equal no. of docs"
-
-
-@pytest.fixture(scope="function")
-def server_setup(params_from_base_test_setup):
-    base_url_list = params_from_base_test_setup["base_url_list"]
-    cbl_db_list = params_from_base_test_setup["cbl_db_list"]
-    base_url_server = base_url_list[0]
-    peerToPeer_server = PeerToPeer(base_url_server)
-    cbl_db_server = cbl_db_list[0]
-    replicator_tcp_listener = peerToPeer_server.server_start(cbl_db_server)
-    log_info("server starting .....")
-    yield {
-        "replicator_tcp_listener": replicator_tcp_listener,
-        "peerToPeer_server": peerToPeer_server,
-        "base_url_list": base_url_list,
-        "base_url_server": base_url_server,
-        "cbl_db_server": cbl_db_server,
-        "cbl_db_list": cbl_db_list
-    }
-    peerToPeer_server.server_stop(replicator_tcp_listener)
