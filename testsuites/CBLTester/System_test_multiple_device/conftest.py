@@ -111,6 +111,10 @@ def pytest_addoption(parser):
                      help="create-db-per-test: Creates/deletes client DB for every test",
                      default="test")
 
+    parser.addoption("--enable-file-logging",
+                     action="store_true",
+                     help="If set, CBL file logging would enable. Supported only cbl2.5 onwards")
+
     parser.addoption("--enable-rebalance",
                      action="store_true",
                      default=False,
@@ -157,27 +161,27 @@ def params_from_base_suite_setup(request):
     community_enabled = request.config.getoption("--community")
 
     test_name = request.node.name
-#     testserver_list = []
-#     for platform, version, host, port in zip(platform_list,
-#                                              version_list,
-#                                              host_list,
-#                                              port_list):
-#         testserver = TestServerFactory.create(platform=platform,
-#                                               version_build=version,
-#                                               host=host,
-#                                               port=port,
-#                                               community_enabled=community_enabled)
-#
-#         log_info("Downloading TestServer ...")
-#         # Download TestServer app
-#         testserver.download()
-#
-#         # Install TestServer app
-#         if device_enabled and platform == "ios":
-#             testserver.install_device()
-#         else:
-#             testserver.install()
-#         testserver_list.append(testserver)
+    testserver_list = []
+    for platform, version, host, port in zip(platform_list,
+                                             version_list,
+                                             host_list,
+                                             port_list):
+        testserver = TestServerFactory.create(platform=platform,
+                                              version_build=version,
+                                              host=host,
+                                              port=port,
+                                              community_enabled=community_enabled)
+
+        log_info("Downloading TestServer ...")
+        # Download TestServer app
+        testserver.download()
+
+        # Install TestServer app
+        if device_enabled and platform == "ios":
+            testserver.install_device()
+        else:
+            testserver.install()
+        testserver_list.append(testserver)
     base_url_list = []
     for host, port in zip(host_list, port_list):
         base_url_list.append("http://{}:{}".format(host, port))
@@ -271,19 +275,19 @@ def params_from_base_suite_setup(request):
     query_obj_list = []
     if create_db_per_suite:
         # Start Test server which needed for suite level set up like query tests
-#         for testserver in testserver_list:
-#             log_info("Starting TestServer...")
-#             test_name_cp = test_name.replace("/", "-")
-#             if device_enabled:
-#                 testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
-#                                                                       test_name_cp, datetime.datetime.now()))
-#             else:
-#                 testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp,
-#                                                                datetime.datetime.now()))
+        for testserver in testserver_list:
+            log_info("Starting TestServer...")
+            test_name_cp = test_name.replace("/", "-")
+            if device_enabled:
+                testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
+                                                                      test_name_cp, datetime.datetime.now()))
+            else:
+                testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp,
+                                                               datetime.datetime.now()))
         for base_url, i in zip(base_url_list, range(len(base_url_list))):
             cbllog = FileLogging(base_url)
             cbllog.configure(log_level="verbose", max_rotate_count=1000,
-                             max_size= 1000 * 1000 * 512, plain_text=True)
+                             max_size=1000 * 1000 * 512, plain_text=True)
             log_info("Log files available at - {}".format(cbllog.get_directory()))
             db_name = "{}-{}".format(create_db_per_suite, i + 1)
             log_info("db name for {} is {}".format(base_url, db_name))
@@ -345,8 +349,7 @@ def params_from_base_suite_setup(request):
                 db_obj.deleteDB(cbl_db)
 
     # Flush all the memory contents on the server app
-    for base_url in base_url_list:
-#     for base_url, testserver in zip(base_url_list, testserver_list):
+    for base_url, testserver in zip(base_url_list, testserver_list):
         log_info("Flushing server memory")
         utils_obj = Utils(base_url)
         utils_obj.flushMemory()
@@ -450,7 +453,8 @@ def params_from_base_test_setup(params_from_base_suite_setup):
 
     if create_db_per_test:
         for cbl_db, db_obj, base_url in zip(cbl_db_list, db_obj_list, base_url_list):
-            log_info("Deleting the database {} at the test teardown for base url {}".format(db_obj.getName(cbl_db), base_url))
+            log_info("Deleting the database {} at the test teardown for base url {}".format(db_obj.getName(cbl_db),
+                                                                                            base_url))
             time.sleep(2)
             db_obj.deleteDB(cbl_db)
 

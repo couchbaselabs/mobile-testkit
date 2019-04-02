@@ -17,6 +17,7 @@ from keywords.exceptions import ProvisioningError
 from keywords.tklogging import Logging
 from keywords.constants import RESULTS_DIR
 
+from CBLClient.FileLogging import FileLogging
 from CBLClient.Replication import Replication
 from CBLClient.BasicAuthenticator import BasicAuthenticator
 from CBLClient.Database import Database
@@ -125,6 +126,10 @@ def pytest_addoption(parser):
                      help="Number of replicas for the indexer node - SG 2.1 and above only",
                      default=0)
 
+    parser.addoption("--enable-file-logging",
+                     action="store_true",
+                     help="If set, CBL file logging would enable. Supported only cbl2.5 onwards")
+
     parser.addoption("--delta-sync",
                      action="store_true",
                      help="delta-sync: Enable delta-sync for sync gateway")
@@ -161,6 +166,7 @@ def params_from_base_suite_setup(request):
     use_views = request.config.getoption("--use-views")
     number_replicas = request.config.getoption("--number-replicas")
     delta_sync_enabled = request.config.getoption("--delta-sync")
+    enable_file_logging = request.config.getoption("--enable-file-logging")
 
     test_name = request.node.name
 
@@ -320,6 +326,11 @@ def params_from_base_suite_setup(request):
     suite_source_db = None
     suite_db = None
     if create_db_per_suite:
+        if enable_file_logging and liteserv_version >= "2.5.0":
+            cbllog = FileLogging(base_url)
+            cbllog.configure(log_level="verbose", max_rotate_count=1000,
+                             max_size=1000 * 1000 * 512, plain_text=True)
+            log_info("Log files available at - {}".format(cbllog.get_directory()))
         # Create CBL database
         suite_cbl_db = create_db_per_suite
         suite_db = Database(base_url)
@@ -414,7 +425,8 @@ def params_from_base_suite_setup(request):
         "testserver": testserver,
         "device_enabled": device_enabled,
         "flush_memory_per_test": flush_memory_per_test,
-        "delta_sync_enabled": delta_sync_enabled
+        "delta_sync_enabled": delta_sync_enabled,
+        "enable_file_logging": enable_file_logging
     }
 
     if create_db_per_suite:
@@ -461,6 +473,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     enable_sample_bucket = params_from_base_suite_setup["enable_sample_bucket"]
     liteserv_version = params_from_base_suite_setup["liteserv_version"]
     delta_sync_enabled = params_from_base_suite_setup["delta_sync_enabled"]
+    enable_file_logging = params_from_base_suite_setup["enable_file_logging"]
 
     source_db = None
     test_name_cp = test_name.replace("/", "-")
@@ -490,6 +503,11 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     db = None
     cbl_db = None
     if create_db_per_test:
+        if enable_file_logging and liteserv_version >= "2.5.0":
+            cbllog = FileLogging(base_url)
+            cbllog.configure(log_level="verbose", max_rotate_count=1000,
+                             max_size=1000 * 1000 * 512, plain_text=True)
+            log_info("Log files available at - {}".format(cbllog.get_directory()))
         cbl_db = create_db_per_test + str(time.time())
         # Create CBL database
         db = Database(base_url)

@@ -17,12 +17,11 @@ from datetime import datetime, timedelta
 @pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.replication
-@pytest.mark.parametrize("num_of_docs, num_of_updates, num_of_docs_to_update, num_of_docs_in_itr, num_of_doc_to_delete, num_of_docs_to_add, up_time", [
-#     (500000, 100, 100, 1000, 1000, 2000, 4 * 24 * 60),
-    (50000, 50, 50, 1000, 100, 200, 1 * 24 * 60),
-#     (500, 5, 10, 50, 10, 10, 1 * 20),
+@pytest.mark.parametrize("num_of_docs, num_of_updates, num_of_docs_to_update, num_of_docs_in_itr, num_of_doc_to_delete, num_of_docs_to_add, up_time, repl_status_check_sleep_time", [
+    (1000000, 100, 100, 1000, 1000, 2000, 4 * 24 * 60, 20),
+    (500, 5, 10, 50, 10, 10, 1 * 20, 2),
 ])
-def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_of_docs_to_update, num_of_docs_in_itr, num_of_doc_to_delete, num_of_docs_to_add, up_time):
+def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_of_docs_to_update, num_of_docs_in_itr, num_of_doc_to_delete, num_of_docs_to_add, up_time, repl_status_check_sleep_time):
     sg_db = "db"
     sg_url = params_from_base_suite_setup["sg_url"]
     sg_admin_url = params_from_base_suite_setup["sg_admin_url"]
@@ -132,7 +131,7 @@ def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_o
                                          replicator_authenticator=replicator_authenticator)
             repl = repl_obj.create(repl_config)
             repl_obj.start(repl)
-            repl_obj.wait_until_replicator_idle(repl, max_times=maxint, sleep_time=20)
+            repl_obj.wait_until_replicator_idle(repl, max_times=maxint, sleep_time=repl_status_check_sleep_time)
 #             session, _, repl = repl_obj.create_session_configure_replicate(
 #                 base_url, sg_admin_url, sg_db, username, password, channels_sg, sg_client, cbl_db, sg_blip_url, continuous=True)
             replicator_list.append(repl)
@@ -168,7 +167,7 @@ def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_o
                                                      replicator_list,
                                                      cbl_db_list,
                                                      query_obj_list):
-                t = Thread(target=_replicaton_status_check, args=(repl_obj, repl))
+                t = Thread(target=_replicaton_status_check, args=(repl_obj, repl, repl_status_check_sleep_time))
                 t.start()
                 t.join()
                 query.query_get_docs_limit_offset(cbl_db, limit=query_limit, offset=query_offset)
@@ -190,7 +189,7 @@ def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_o
                 db_obj.update_bulk_docs(cbl_db, num_of_updates, list(docs_to_update)[i: i + updates_per_db])
                 i += updates_per_db
                 # updating docs will affect all dbs as they are synced with SG.
-                t = Thread(target=_replicaton_status_check, args=(repl_obj, repl))
+                t = Thread(target=_replicaton_status_check, args=(repl_obj, repl, repl_status_check_sleep_time))
                 t.start()
                 t.join()
                 query.query_get_docs_limit_offset(cbl_db, limit=query_limit, offset=query_offset)
@@ -208,7 +207,7 @@ def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_o
                                                      replicator_list,
                                                      cbl_db_list,
                                                      query_obj_list):
-                t = Thread(target=_replicaton_status_check, args=(repl_obj, repl))
+                t = Thread(target=_replicaton_status_check, args=(repl_obj, repl, repl_status_check_sleep_time))
                 t.start()
                 t.join()
                 query.query_get_docs_limit_offset(cbl_db, limit=query_limit, offset=query_offset)
@@ -245,7 +244,7 @@ def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_o
                                                          replicator_list,
                                                          cbl_db_list,
                                                          query_obj_list):
-                    t = Thread(target=_replicaton_status_check, args=(repl_obj, repl))
+                    t = Thread(target=_replicaton_status_check, args=(repl_obj, repl, repl_status_check_sleep_time))
                     t.start()
                     t.join()
                     query.query_get_docs_limit_offset(cbl_db, limit=query_limit,
@@ -293,7 +292,7 @@ def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_o
                 time.sleep(5)
     
                 # Adding docs will affect all dbs as they are synced with SG.
-                t = Thread(target=_replicaton_status_check, args=(repl_obj, repl))
+                t = Thread(target=_replicaton_status_check, args=(repl_obj, repl, repl_status_check_sleep_time))
                 t.start()
                 t.join()
                 query.query_get_docs_limit_offset(cbl_db, limit=query_limit,
@@ -314,8 +313,8 @@ def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_o
         _check_doc_count(db_obj_list, cbl_db_list)
 
 
-def _replicaton_status_check(repl_obj, replicator):
-    repl_obj.wait_until_replicator_idle(replicator, max_times=maxint, sleep_time=20)
+def _replicaton_status_check(repl_obj, replicator, repl_status_check_sleep_time=2):
+    repl_obj.wait_until_replicator_idle(replicator, max_times=maxint, sleep_time=repl_status_check_sleep_time)
     total = repl_obj.getTotal(replicator)
     completed = repl_obj.getCompleted(replicator)
     assert total == completed, "total is not equal to completed"
