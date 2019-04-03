@@ -5,6 +5,7 @@ import android.util.Log;
 
 import com.couchbase.CouchbaseLiteServ.server.Args;
 import com.couchbase.CouchbaseLiteServ.server.util.ZipUtils;
+import com.couchbase.lite.Blob;
 import com.couchbase.lite.ConcurrencyControl;
 import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.DataSource;
@@ -94,7 +95,27 @@ public class DatabaseRequestHandler {
         for (String id : ids) {
             Document document = database.getDocument(id);
             if (document != null) {
-                documents.put(id, document.toMap());
+                Map<String, Object> doc = document.toMap();
+                // looping through the document, replace the Blob with its properties
+                for (Map.Entry<String, Object> entry : doc.entrySet()) {
+                   if(entry.getValue() instanceof Map<?, ?>){
+                        if(((Map) entry.getValue()).size() == 0){
+                            continue;
+                        }
+                        boolean isBlob = false;
+                        Map<?, ?> value = (Map<?, ?>)entry.getValue();
+                        Map<String, Object> newVal = new HashMap<>();
+                        for (Map.Entry<?, ?> item : value.entrySet()){
+                            if(item.getValue() instanceof Blob){
+                                isBlob = true;
+                                Blob b = (Blob)item.getValue();
+                                newVal.put(item.getKey().toString(), b.getProperties());
+                            }
+                        }
+                        if(isBlob) doc.put(entry.getKey(), newVal);
+                    }
+                }
+                documents.put(id, doc);
             }
         }
         return documents;
