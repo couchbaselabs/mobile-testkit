@@ -14,7 +14,6 @@ from keywords.tklogging import Logging
 from CBLClient.Database import Database
 from CBLClient.FileLogging import FileLogging
 from keywords.utils import host_for_url, clear_resources_pngs
-from libraries.testkit.cluster import Cluster
 from couchbase.bucket import Bucket
 from couchbase.n1ql import N1QLQuery
 
@@ -159,7 +158,6 @@ def params_from_base_suite_setup(request):
     base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
     cluster_config = "{}/multiple_sync_gateways_{}".format(CLUSTER_CONFIGS_DIR, mode)
     no_conflicts_enabled = request.config.getoption("--no-conflicts")
-    sg_config = sync_gateway_config_path_for_mode("listener_tests/multiple_sync_gateways", mode)
     cluster_utils = ClusterKeywords(cluster_config)
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
 
@@ -227,7 +225,6 @@ def params_from_base_suite_setup(request):
     sg_config = sync_gateway_config_path_for_mode("listener_tests/multiple_sync_gateways", mode)
     cluster_utils = ClusterKeywords(cluster_config)
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
-    cluster = Cluster(cluster_config)
 
     log_info("no conflicts enabled {}".format(no_conflicts_enabled))
 

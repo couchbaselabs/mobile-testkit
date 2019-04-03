@@ -355,8 +355,8 @@ def params_from_base_suite_setup(request):
         log_info("Flushing server memory")
         utils_obj = Utils(base_url)
         utils_obj.flushMemory()
-#         log_info("Stopping the test server")
-#         testserver.stop()
+        log_info("Stopping the test server")
+        testserver.stop()
     clear_resources_pngs()
 
 

@@ -60,7 +60,7 @@ def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_o
     if enable_rebalance:
         if len(cluster.servers) < 2:
             raise Exception("Please provide at least 3 servers")
-     
+
         server_urls = []
         for server in cluster.servers:
             server_urls.append(server.url)
@@ -127,23 +127,21 @@ def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_o
             replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
             session = cookie, session_id
             repl_config = repl_obj.configure(cbl_db, sg_blip_url, continuous=True, channels=channels_sg,
-                                         replication_type="push_pull",
-                                         replicator_authenticator=replicator_authenticator)
+                                             replication_type="push_pull",
+                                             replicator_authenticator=replicator_authenticator)
             repl = repl_obj.create(repl_config)
             repl_obj.start(repl)
             repl_obj.wait_until_replicator_idle(repl, max_times=maxint, sleep_time=repl_status_check_sleep_time)
-#             session, _, repl = repl_obj.create_session_configure_replicate(
-#                 base_url, sg_admin_url, sg_db, username, password, channels_sg, sg_client, cbl_db, sg_blip_url, continuous=True)
             replicator_list.append(repl)
             query.query_get_docs_limit_offset(cbl_db, limit=query_limit, offset=query_offset)
-    
+
         current_time = datetime.now()
         running_time = current_time + timedelta(minutes=up_time)
-    
+
         _check_doc_count(db_obj_list, cbl_db_list)
         x = 1
-        while(running_time - current_time > timedelta(0)):
-    
+        while running_time - current_time > timedelta(0):
+
             log_info('*' * 20)
             log_info("Starting iteration no. {} of system testing".format(x))
             log_info('*' * 20)
@@ -161,7 +159,7 @@ def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_o
                                                           docs_to_update))
             sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs,
                                   number_updates=num_of_updates, auth=session, channels=channels_sg)
-    
+
             # Waiting until replicator finishes on all dbs
             for repl_obj, repl, cbl_db, query in zip(replicator_obj_list,
                                                      replicator_list,
@@ -171,7 +169,7 @@ def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_o
                 t.start()
                 t.join()
                 query.query_get_docs_limit_offset(cbl_db, limit=query_limit, offset=query_offset)
-    
+
             #######################################
             # Checking for doc update on CBL side #
             #######################################
@@ -193,7 +191,7 @@ def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_o
                 t.start()
                 t.join()
                 query.query_get_docs_limit_offset(cbl_db, limit=query_limit, offset=query_offset)
-    
+
             ###########################
             # Deleting docs on SG side #
             ###########################
@@ -238,7 +236,7 @@ def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_o
                 time.sleep(5)
                 query.query_get_docs_limit_offset(cbl_db, limit=query_limit,
                                                   offset=query_offset)
-    
+
                 # Deleting docs will affect all dbs as they are synced with SG.
                 for repl_obj, repl, cbl_db, query in zip(replicator_obj_list,
                                                          replicator_list,
@@ -258,7 +256,7 @@ def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_o
                 primary_server.add_node(server, services="kv,index,n1ql")
                 log_info("Rebalance in server: {}".format(server.host))
                 primary_server.rebalance_in(server_urls, server)
-    
+
             #############################
             # Creating docs on CBL side #
             #############################
@@ -290,7 +288,7 @@ def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_o
                                                               new_doc_ids))
                 db_obj.saveDocuments(cbl_db, added_docs)
                 time.sleep(5)
-    
+
                 # Adding docs will affect all dbs as they are synced with SG.
                 t = Thread(target=_replicaton_status_check, args=(repl_obj, repl, repl_status_check_sleep_time))
                 t.start()
@@ -300,7 +298,7 @@ def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_o
                 time.sleep(5)
             doc_id_for_new_docs += num_of_docs_to_add
             _check_doc_count(db_obj_list, cbl_db_list)
-    
+
             current_time = datetime.now()
         # stopping replication
         log_info("Test completed. Stopping Replicators")
@@ -325,4 +323,3 @@ def _check_doc_count(db_obj_list, cbl_db_list):
     log_info("Doc count is - {}".format(new_docs_count))
     if len(new_docs_count) != 1:
         assert 0, "Doc count in all DBs are not equal"
-
