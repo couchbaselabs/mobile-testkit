@@ -288,8 +288,8 @@ def params_from_base_suite_setup(request):
         for base_url, i in zip(base_url_list, range(len(base_url_list))):
             if enable_file_logging and liteserv_versions[0] >= "2.5.0":
                 cbllog = FileLogging(base_url)
-                cbllog.configure(log_level="verbose", max_rotate_count=1000,
-                                 max_size=1000 * 1000 * 512, plain_text=True)
+                cbllog.configure(log_level="verbose", max_rotate_count=2,
+                                 max_size=1000 * 512, plain_text=True)
                 log_info("Log files available at - {}".format(cbllog.get_directory()))
             db_name = "{}-{}".format(create_db_per_suite, i + 1)
             log_info("db name for {} is {}".format(base_url, db_name))

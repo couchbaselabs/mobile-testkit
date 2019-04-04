@@ -261,8 +261,8 @@ def params_from_base_suite_setup(request):
     if create_db_per_suite:
         if enable_file_logging and liteserv_version >= "2.5.0":
             cbllog = FileLogging(base_url)
-            cbllog.configure(log_level="verbose", max_rotate_count=1000,
-                             max_size=1000 * 1000 * 512, plain_text=True)
+            cbllog.configure(log_level="verbose", max_rotate_count=2,
+                             max_size=1000 * 512, plain_text=True)
             log_info("Log files available at - {}".format(cbllog.get_directory()))
         # Create CBL database
         suite_cbl_db = create_db_per_suite
@@ -417,8 +417,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     if create_db_per_test:
         if enable_file_logging and liteserv_version >= "2.5.0":
             cbllog = FileLogging(base_url)
-            cbllog.configure(log_level="verbose", max_rotate_count=1000,
-                             max_size=1000 * 1000 * 512, plain_text=True)
+            cbllog.configure(log_level="verbose", max_rotate_count=2,
+                             max_size=1000 * 512, plain_text=True)
             log_info("Log files available at - {}".format(cbllog.get_directory()))
         cbl_db = create_db_per_test + str(time.time())
         # Create CBL database
