@@ -1,13 +1,36 @@
-# Delete the provided directory
+# Create the provided file
 - name: SYNC GATEWAY | Create sync_gateway empty file {{ file_name }} of size {{ file_size }}
   become: yes
   shell: dd if=/dev/zero of={{ file_name }} bs={{ file_size }} count=1
+  when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
 
 - name: SYNC GATEWAY | Change the mode permissions
   become: yes
   shell: chmod 777 {{ file_name }}
+  when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
 
 
 - name: SYNC GATEWAY | Change the user/group permissions
   become: yes
   shell: chown {{ owner }}:{{ group }} {{ file_name }}
+  when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
+
+- name: SYNC GATEWAY | Delete sync_gateway empty file {{ file_name }} of size {{ file_size }}
+  become: no
+  win_command: rm -rf {{ file_name }}
+  when: ansible_os_family == "Windows"
+
+- name: SYNC GATEWAY | Create sync_gateway empty file {{ file_name }} of size {{ file_size }}
+  become: no
+  win_command: fsutil file createnew {{ file_name }} {{ file_size }}
+  when: ansible_os_family == "Windows"
+
+- name: SYNC GATEWAY | Change the permissions on windows
+  become: no
+  win_command: chmod 777 -R {{ directory }}
+  when: ansible_os_family == "Windows"
+
+- name: SYNC GATEWAY | Change the permissions on windows
+  become: no
+  win_command: chown {{ owner }}:{{ group }} {{ file_name }}
+  when: ansible_os_family == "Windows"
