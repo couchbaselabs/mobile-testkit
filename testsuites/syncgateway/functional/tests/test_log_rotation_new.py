@@ -593,7 +593,6 @@ def test_log_logLevel_invalid(params_from_base_test_setup, sg_conf_name):
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
-    sg_platform = params_from_base_test_setup["sg_platform"]
 
     log_info("Using cluster_conf: {}".format(cluster_conf))
     log_info("Using sg_conf: {}".format(sg_conf))
@@ -661,5 +660,3 @@ def send_request_to_sgw(sg_one_url, sg_admin_url, remote_executor, sg_platform="
             "for ((i=1;i <= 2000;i += 1)); do curl -s http://localhost:4984/ABCD/ > /dev/null; done")
         remote_executor.execute(
             "for ((i=1;i <= 2000;i += 1)); do curl -s -H 'Accept: text/plain' http://localhost:4985/db/ > /dev/null; done")
-
-
