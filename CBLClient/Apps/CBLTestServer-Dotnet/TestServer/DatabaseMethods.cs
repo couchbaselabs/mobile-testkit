@@ -303,11 +303,11 @@ namespace Couchbase.Lite.Testing
                             {
                                 Dictionary<string, object> updatedValue = new Dictionary<string, object>();
                                 bool isBlob = false;
-                                if (item.Value.GetType() == typeof(Couchbase.Lite.DictionaryObject))
+                                if (item.Value != null && item.Value.GetType() == typeof(Couchbase.Lite.DictionaryObject))
                                 {
                                     foreach(KeyValuePair<String, object> innerVal in (Couchbase.Lite.DictionaryObject)item.Value)
                                     {
-                                        if(innerVal.Value.GetType() == typeof(Blob))
+                                        if(innerVal.Value != null && innerVal.Value.GetType() == typeof(Blob))
                                         {
                                             isBlob = true;
                                             Blob blob = (Blob)innerVal.Value;
@@ -319,10 +319,10 @@ namespace Couchbase.Lite.Testing
                                             updatedValue.Add(innerVal.Key, properties);
                                         }
                                     }
-                                }
-                                if (isBlob)
-                                {
-                                    preRetVal[item.Key] = updatedValue;
+                                    if (isBlob && updatedValue != null)
+                                    {
+                                        preRetVal[item.Key] = updatedValue;
+                                    }
                                 }
                             }
                             retVal[id] = preRetVal;
