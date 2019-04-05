@@ -16,6 +16,7 @@ from CBLClient.Query import Query
 from CBLClient.Utils import Utils
 from keywords.constants import RESULTS_DIR
 from CBLClient.PeerToPeer import PeerToPeer
+from CBLClient.FileLogging import FileLogging
 
 
 def pytest_addoption(parser):
@@ -110,6 +111,15 @@ def pytest_addoption(parser):
                      help="create-db-per-test: Creates/deletes client DB for every test",
                      default="test")
 
+    parser.addoption("--enable-file-logging",
+                     action="store_true",
+                     help="If set, CBL file logging would enable. Supported only cbl2.5 onwards")
+
+    parser.addoption("--enable-rebalance",
+                     action="store_true",
+                     default=False,
+                     help="If set, CBS not would be rebalance in/out of cluster")
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -146,6 +156,8 @@ def params_from_base_suite_setup(request):
     cluster_config_prefix = request.config.getoption("--cluster-config")
     create_db_per_test = request.config.getoption("--create-db-per-test")
     create_db_per_suite = request.config.getoption("--create-db-per-suite")
+    enable_rebalance = request.config.getoption("--enable-rebalance")
+    enable_file_logging = request.config.getoption("--enable-file-logging")
 
     community_enabled = request.config.getoption("--community")
 
@@ -273,9 +285,13 @@ def params_from_base_suite_setup(request):
             else:
                 testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp,
                                                                datetime.datetime.now()))
-
         for base_url, i in zip(base_url_list, range(len(base_url_list))):
-            db_name = "{}_{}_{}".format(create_db_per_suite, str(time.time()), i + 1)
+            if enable_file_logging and liteserv_versions[0] >= "2.5.0":
+                cbllog = FileLogging(base_url)
+                cbllog.configure(log_level="verbose", max_rotate_count=2,
+                                 max_size=1000 * 512, plain_text=True)
+                log_info("Log files available at - {}".format(cbllog.get_directory()))
+            db_name = "{}-{}".format(create_db_per_suite, i + 1)
             log_info("db name for {} is {}".format(base_url, db_name))
             db_name_list.append(db_name)
             db = Database(base_url)
@@ -289,7 +305,11 @@ def params_from_base_suite_setup(request):
             log_info("Getting the database name")
             assert db.getName(cbl_db) == db_name
             if resume_cluster:
-                path = db.getPath(cbl_db)
+                path = db.getPath(cbl_db).rstrip("/\\")
+                if '\\' in path:
+                    path = '\\'.join(path.split('\\')[:-1])
+                else:
+                    path = '/'.join(path.split('/')[:-1])
                 assert db.exists(db_name, path)
 
     yield {
@@ -319,7 +339,8 @@ def params_from_base_suite_setup(request):
         "device_enabled": device_enabled,
         "generator": generator,
         "resume_cluster": resume_cluster,
-        "create_db_per_test": create_db_per_test
+        "create_db_per_test": create_db_per_test,
+        "enable_rebalance": enable_rebalance
     }
 
     if create_db_per_suite:
@@ -434,7 +455,8 @@ def params_from_base_test_setup(params_from_base_suite_setup):
 
     if create_db_per_test:
         for cbl_db, db_obj, base_url in zip(cbl_db_list, db_obj_list, base_url_list):
-            log_info("Deleting the database {} at the test teardown for base url {}".format(db_obj.getName(cbl_db), base_url))
+            log_info("Deleting the database {} at the test teardown for base url {}".format(db_obj.getName(cbl_db),
+                                                                                            base_url))
             time.sleep(2)
             db_obj.deleteDB(cbl_db)
 

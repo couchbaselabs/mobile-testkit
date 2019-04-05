@@ -289,13 +289,13 @@ class Replication(object):
         self.wait_until_replicator_idle(repl, err_check)
         return repl
 
-    def wait_until_replicator_idle(self, repl, err_check=True, max_times=100):
+    def wait_until_replicator_idle(self, repl, err_check=True, max_times=50, sleep_time=2):
         count = 0
         # Sleep until replicator completely processed
         activity_level = self.getActivitylevel(repl)
         while count < max_times:
             log_info("Activity level: {}".format(activity_level))
-            time.sleep(2)
+            time.sleep(sleep_time)
             if activity_level == "offline" or activity_level == "connecting" or activity_level == "busy":
                 count += 1
             else:
@@ -303,7 +303,7 @@ class Replication(object):
                     if (self.getCompleted(repl) < self.getTotal(repl)) and self.getTotal(repl) != 0:
                         count += 1
                     else:
-                        time.sleep(3)
+                        time.sleep(sleep_time)
                         break
             if err_check:
                 err = self.getError(repl)
