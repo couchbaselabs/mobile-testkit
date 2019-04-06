@@ -98,7 +98,7 @@ public class DatabaseRequestHandler {
                 Map<String, Object> doc = document.toMap();
                 // looping through the document, replace the Blob with its properties
                 for (Map.Entry<String, Object> entry : doc.entrySet()) {
-                   if(entry.getValue() instanceof Map<?, ?>){
+                   if(entry.getValue() != null && entry.getValue() instanceof Map<?, ?>){
                         if(((Map) entry.getValue()).size() == 0){
                             continue;
                         }
@@ -106,7 +106,7 @@ public class DatabaseRequestHandler {
                         Map<?, ?> value = (Map<?, ?>)entry.getValue();
                         Map<String, Object> newVal = new HashMap<>();
                         for (Map.Entry<?, ?> item : value.entrySet()){
-                            if(item.getValue() instanceof Blob){
+                            if(item.getValue() != null && item.getValue() instanceof Blob){
                                 isBlob = true;
                                 Blob b = (Blob)item.getValue();
                                 newVal.put(item.getKey().toString(), b.getProperties());
