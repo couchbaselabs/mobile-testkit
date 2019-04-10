@@ -75,15 +75,16 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name):
 
     for log in SG_LOGS:
         # Generate a log file with size ~94MB to check that backup file not created while 100MB not reached
-        file_size = 94 * 1024 * 1024
+        file_size = 120 * 1024 * 1024
         file_name = "/tmp/sg_logs/{}.log".format(log)
         log_info("Testing log rotation for {}".format(file_name))
         sg_helper.create_empty_file(cluster_config=cluster_conf, url=sg_one_url, file_name=file_name, file_size=file_size)
 
     # iterate 5 times to verify that every time we get new backup file with ~100MB
     sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
-    for i in xrange(5):
-        # ~1M MB will be added to the info/debug/warn log files after the requests
+
+    for i in xrange(8):
+        log_info("Start sending bunch of requests to syncgatway to have more logs")
         send_request_to_sgw(sg_one_url, sg_admin_url, remote_executor, sg_platform)
 
     # Verify num of log files for every log file type
@@ -91,7 +92,7 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name):
         file_name = "/tmp/sg_logs/{}.log".format(log)
         _, stdout, _ = remote_executor.execute("ls /tmp/sg_logs/ | grep {} | wc -l".format(log))
         log_info("Checking for {} files for {}".format(i + 1, file_name))
-        assert stdout[0].rstrip() == str(i + 1)
+        assert stdout[0].rstrip() == str(2)
 
         sg_helper.stop_sync_gateways(cluster_config=cluster_conf, url=sg_one_url)
 
@@ -294,7 +295,7 @@ def test_log_maxage_timestamp_ignored(params_from_base_test_setup, sg_conf_name)
     sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
 
     for log in SG_LOGS_MAXAGE:
-        _, stdout, _ = remote_executor.execute("cmd.exe ls /tmp/sg_logs/ | grep {} | wc -l".format(log))
+        _, stdout, _ = remote_executor.execute("ls /tmp/sg_logs/ | grep {} | wc -l".format(log))
         # Verify that new log file was not created
         assert stdout[0].rstrip() == SG_LOGS_FILES_NUM[log]
 
@@ -324,8 +325,8 @@ def test_log_rotation_invalid_path(params_from_base_test_setup, sg_conf_name):
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
     sg_ip = host_for_url(sg_admin_url)
 
-    if get_sync_gateway_version(sg_ip)[0] < "2.1":
-        pytest.skip("Continuous logging Test NA for SG < 2.1")
+    """if get_sync_gateway_version(sg_ip)[0] < "2.1":
+        pytest.skip("Continuous logging Test NA for SG < 2.1")"""
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
@@ -382,8 +383,8 @@ def test_log_200mb(params_from_base_test_setup, sg_conf_name):
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
     sg_ip = host_for_url(sg_admin_url)
 
-    if get_sync_gateway_version(sg_ip)[0] < "2.1":
-        pytest.skip("Continuous logging Test NA for SG < 2.1")
+    """if get_sync_gateway_version(sg_ip)[0] < "2.1":
+        pytest.skip("Continuous logging Test NA for SG < 2.1")"""
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
@@ -461,8 +462,8 @@ def test_log_rotation_negative(params_from_base_test_setup, sg_conf_name):
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
     sg_ip = host_for_url(sg_admin_url)
 
-    if get_sync_gateway_version(sg_ip)[0] < "2.1":
-        pytest.skip("Continuous logging Test NA for SG < 2.1")
+    """if get_sync_gateway_version(sg_ip)[0] < "2.1":
+        pytest.skip("Continuous logging Test NA for SG < 2.1")"""
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
@@ -529,8 +530,8 @@ def test_log_maxbackups_0(params_from_base_test_setup, sg_conf_name):
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
     sg_ip = host_for_url(sg_admin_url)
 
-    if get_sync_gateway_version(sg_ip)[0] < "2.1":
-        pytest.skip("Continuous logging Test NA for SG < 2.1")
+    """if get_sync_gateway_version(sg_ip)[0] < "2.1":
+        pytest.skip("Continuous logging Test NA for SG < 2.1")"""
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
@@ -602,8 +603,8 @@ def test_log_logLevel_invalid(params_from_base_test_setup, sg_conf_name):
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
     sg_ip = host_for_url(sg_admin_url)
 
-    if get_sync_gateway_version(sg_ip)[0] < "2.1":
-        pytest.skip("Continuous logging Test NA for SG < 2.1")
+    """if get_sync_gateway_version(sg_ip)[0] < "2.1":
+        pytest.skip("Continuous logging Test NA for SG < 2.1")"""
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
@@ -652,7 +653,7 @@ def send_request_to_sgw(sg_one_url, sg_admin_url, remote_executor, sg_platform="
     if sg_platform == "windows":
         command = "for ((i=1;i <= 2000;i += 1)); do curl -s {}/ABCD/ > /dev/null; done".format(sg_one_url)
         os.system(command)
-        command = "for ((i=1;i <= 2000;i += 1)); do curl -s -H 'Accept: text/plain' {}/db/ > /dev/null; done".format(sg_admin_url)
+        command = "for ((i=1;i <= 2000;i += 1)); do curl -s -H 'Accept: application/json' {}/db/ > /dev/null; done".format(sg_admin_url)
         os.system(command)
 
     else:
