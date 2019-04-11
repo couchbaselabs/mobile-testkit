@@ -297,7 +297,35 @@ namespace Couchbase.Lite.Testing
                     {
                         using (var doc = db.GetDocument(id))
                         {
-                            retVal[id] = doc.ToDictionary();
+                            var preRetVal = doc.ToDictionary();
+
+                            foreach(KeyValuePair<String, object> item in doc)
+                            {
+                                Dictionary<string, object> updatedValue = new Dictionary<string, object>();
+                                bool isBlob = false;
+                                if (item.Value != null && item.Value.GetType() == typeof(Couchbase.Lite.DictionaryObject))
+                                {
+                                    foreach(KeyValuePair<String, object> innerVal in (Couchbase.Lite.DictionaryObject)item.Value)
+                                    {
+                                        if(innerVal.Value != null && innerVal.Value.GetType() == typeof(Blob))
+                                        {
+                                            isBlob = true;
+                                            Blob blob = (Blob)innerVal.Value;
+                                            Dictionary<string, object> properties = new Dictionary<string, object>();
+                                            foreach(KeyValuePair<string, object> p in blob.Properties)
+                                            {
+                                                properties.Add(p.Key, p.Value);
+                                            }
+                                            updatedValue.Add(innerVal.Key, properties);
+                                        }
+                                    }
+                                    if (isBlob && updatedValue != null)
+                                    {
+                                        preRetVal[item.Key] = updatedValue;
+                                    }
+                                }
+                            }
+                            retVal[id] = preRetVal;
                         }
                     }
 
