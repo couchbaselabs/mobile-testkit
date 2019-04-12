@@ -323,6 +323,10 @@ def compare_generic_types(object1, object2):
         return object1 == float(object2)
     elif isinstance(object1, long) and isinstance(object2, float):
         return object1 == long(float(object2))
+    elif isinstance(object1, str) and isinstance(object2, unicode):
+        return object1 == str(object2)
+    elif isinstance(object1, unicode) and isinstance(object2, str):
+        return str(object1) == object2
     return False
 
 
