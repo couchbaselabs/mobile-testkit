@@ -188,6 +188,7 @@ public class Server extends NanoHTTPD {
                     case "predictiveQuery":
                         target = PredictiveQueriesRequestHandler.class.getMethod(method_to_call, Args.class);
                         requestHandler = new PredictiveQueriesRequestHandler();
+                        break;
                     case "logging":
                         target = LoggingRequestHandler.class.getMethod(method_to_call, Args.class);
                         requestHandler = new LoggingRequestHandler();
