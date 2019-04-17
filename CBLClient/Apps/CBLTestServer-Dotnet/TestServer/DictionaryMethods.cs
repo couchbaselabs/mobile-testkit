@@ -98,7 +98,8 @@ namespace Couchbase.Lite.Testing
                                  [NotNull] HttpListenerResponse response)
         {
             var key = postBody["key"].ToString();
-            var val = (float)postBody["value"];
+            var doubleVal = (double)postBody["value"];
+            var val = (float)doubleVal;
             With<MutableDictionaryObject>(postBody, "dictionary", d => response.WriteBody(d.SetFloat(key, val)));
         }
 

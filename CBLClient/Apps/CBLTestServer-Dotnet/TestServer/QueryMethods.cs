@@ -159,7 +159,7 @@ namespace Couchbase.Lite.Testing
                 var prop2 = postBody["select_property2"].ToString();
                 var whrKey = postBody["whr_key"].ToString();
                 var whrval = postBody["whr_val"];
-                IExpression whrVal = Expression.Double((float)whrval);
+                IExpression whrVal = Expression.Double((double)whrval);
                 List<object> resultArray = new List<object>();
                 using (IQuery query = QueryBuilder
                                 .Select(SelectResult.Expression(Meta.ID),

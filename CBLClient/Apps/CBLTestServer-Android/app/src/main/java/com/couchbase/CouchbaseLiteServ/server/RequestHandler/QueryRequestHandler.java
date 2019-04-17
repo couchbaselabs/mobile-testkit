@@ -111,7 +111,8 @@ public class QueryRequestHandler {
         String select_property1 = args.get("select_property1");
         String select_property2 = args.get("select_property2");
         String whr_key = args.get("whr_key");
-        Float whr_val = args.get("whr_val");
+        Double valDouble = args.get("whr_val");
+        Float whr_val = valDouble.floatValue();
         Expression exp_val = Expression.floatValue(whr_val);
         Query search_query = QueryBuilder
             .select(SelectResult.expression(Meta.id),

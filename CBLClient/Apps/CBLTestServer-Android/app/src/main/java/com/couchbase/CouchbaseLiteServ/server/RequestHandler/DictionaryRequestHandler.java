@@ -102,7 +102,8 @@ public class DictionaryRequestHandler{
     public MutableDictionary setFloat(Args args){
         MutableDictionary dictionary = args.get("dictionary");
         String key = args.get("key");
-        Float value = args.get("value");
+        Double valDouble = args.get("value");
+        Float value = valDouble.floatValue();
         return  dictionary.setFloat(key, value);
     }
 
