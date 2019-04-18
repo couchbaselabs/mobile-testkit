@@ -3,7 +3,7 @@ import time
 
 from CBLClient.Database import Database
 from CBLClient.DatabaseConfiguration import DatabaseConfiguration
-
+from CBLClient.Query import Query
 
 @pytest.mark.sanity
 @pytest.mark.listener
@@ -330,3 +330,29 @@ def test_copy_prebuilt_database(params_from_base_test_setup):
 
     # Cleaning the database , tearing down
     db.deleteDB(cbl_db1)
+
+
+@pytest.mark.listener
+@pytest.mark.replication
+def test_query_arthimetic(params_from_base_test_setup):
+    """
+        @summary:
+        1. Clean up the database/ Remove any existing database.
+        2. Copy the prebuilt database
+        3. Verify database is created successfully
+        4. Verify docs in prebuilt database are copied over and exits in current app
+
+    """
+
+    db = params_from_base_test_setup["db"]
+    cbl_db = params_from_base_test_setup["source_db"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    liteserv_platform = params_from_base_test_setup["liteserv_platform"]
+    base_url = params_from_base_test_setup["base_url"]
+
+    if sync_gateway_version < "2.0.0":
+        pytest.skip('This test cannnot run with sg version below 2.0')
+
+    db_name = db.getName(cbl_db)
+    qy = Query(base_url)
+    result_set = qy.query_arthimetic(cbl_db)
