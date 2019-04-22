@@ -230,6 +230,8 @@ class Database(object):
                 doc_body = doc_generators.simple_user()
             elif generator == "complex_doc":
                 doc_body = doc_generators.complex_doc()
+            elif generator == "20mb":
+                doc_body = doc_generators.doc_20mb()
             else:
                 doc_body = doc_generators.simple()
 
