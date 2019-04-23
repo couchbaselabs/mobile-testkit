@@ -3,7 +3,7 @@ import random
 
 from keywords.MobileRestClient import MobileRestClient
 from keywords.utils import get_event_changes
-from keywords.attachment import load_from_data_dir
+from keywords.attachment import load_from_data_dir, generate_2_png_100_100
 from CBLClient.Replication import Replication
 from libraries.testkit import cluster
 
@@ -489,11 +489,12 @@ def test_replication_delete_event(params_from_base_test_setup, num_of_docs):
 
 @pytest.mark.listener
 @pytest.mark.replication
-@pytest.mark.parametrize("attachments", [
-    None,
-    load_from_data_dir("Sample_Image_20mb.png"),
+@pytest.mark.parametrize("attachment_generator, attachment_file_list", [
+#     [None, None],
+#     [load_from_data_dir, ["Sample_Image_30mb.jpg"]],
+    [generate_2_png_100_100, None],
 ])
-def test_push_replication_for_20mb_doc(params_from_base_test_setup, attachments):
+def test_push_replication_for_20mb_doc(params_from_base_test_setup, attachment_generator, attachment_file_list):
     """
     @summary:
     1. Create docs in CBL and replicate to SG using push one-shot replication
@@ -502,7 +503,6 @@ def test_push_replication_for_20mb_doc(params_from_base_test_setup, attachments)
     4. Check the error is thrown in replication event changes
     """
     sg_db = "db"
-    sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_blip_url = params_from_base_test_setup["target_url"]
@@ -524,16 +524,16 @@ def test_push_replication_for_20mb_doc(params_from_base_test_setup, attachments)
     # Reset cluster to ensure no data in system
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
-
+  
     sg_client.create_user(url=sg_admin_url, db=sg_db, name=username, password=password, channels=channels)
     cookie, session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username)
-    auth_session = cookie, session
     sync_cookie = "{}={}".format(cookie, session)
     session_header = {"Cookie": sync_cookie}
 
     # 1. Creating Docs in CBL
     db.create_bulk_docs(number=1, id_prefix="cbl_docs", db=cbl_db, channels=channels,
-                        generator="20mb", attachments_generator=attachments)
+                        generator="20mb", attachments_generator=attachment_generator,
+                        attachment_file_list=attachment_file_list)
 
     replicator = Replication(base_url)
     repl_config = replicator.configure(source_db=cbl_db,
@@ -554,3 +554,6 @@ def test_push_replication_for_20mb_doc(params_from_base_test_setup, attachments)
 
     # Processing received events
     replicated_event_changes = get_event_changes(doc_repl_event_changes)
+    print replicated_event_changes
+    for doc in replicated_event_changes:
+        assert replicated_event_changes[doc]["error_code"] != None, "Replication failed for large doc"
