@@ -286,7 +286,7 @@ def test_push_replication_error_event(params_from_base_test_setup, num_of_docs):
 @pytest.mark.replication
 @pytest.mark.parametrize("num_of_docs", [
     10,
-    # 100,
+    100,
 ])
 def test_replication_access_revoke_event(params_from_base_test_setup, num_of_docs):
     """
@@ -490,8 +490,8 @@ def test_replication_delete_event(params_from_base_test_setup, num_of_docs):
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("attachment_generator, attachment_file_list", [
-#     [None, None],
-#     [load_from_data_dir, ["Sample_Image_30mb.jpg"]],
+    [None, None],
+    [load_from_data_dir, ["Sample_Image_30mb.jpg"]],
     [generate_2_png_100_100, None],
 ])
 def test_push_replication_for_20mb_doc(params_from_base_test_setup, attachment_generator, attachment_file_list):
@@ -524,7 +524,7 @@ def test_push_replication_for_20mb_doc(params_from_base_test_setup, attachment_g
     # Reset cluster to ensure no data in system
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
-  
+
     sg_client.create_user(url=sg_admin_url, db=sg_db, name=username, password=password, channels=channels)
     cookie, session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username)
     sync_cookie = "{}={}".format(cookie, session)
@@ -556,4 +556,4 @@ def test_push_replication_for_20mb_doc(params_from_base_test_setup, attachment_g
     replicated_event_changes = get_event_changes(doc_repl_event_changes)
     print replicated_event_changes
     for doc in replicated_event_changes:
-        assert replicated_event_changes[doc]["error_code"] != None, "Replication failed for large doc"
+        assert replicated_event_changes[doc]["error_code"] is not None, "Replication failed for large doc"

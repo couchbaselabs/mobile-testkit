@@ -239,7 +239,7 @@ class Database(object):
                 doc_body["channels"] = channels
 
             if attachments_generator:
-                if attachment_file_list!=None:
+                if attachment_file_list is not None:
                     attachments = attachments_generator(attachment_file_list)
                 else:
                     types.verify_is_callable(attachments_generator)
