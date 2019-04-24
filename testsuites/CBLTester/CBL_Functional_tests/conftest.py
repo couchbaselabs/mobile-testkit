@@ -134,6 +134,14 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="delta-sync: Enable delta-sync for sync gateway")
 
+    parser.addoption("--cbl-log-decoder-platform",
+                     action="store",
+                     help="cbl-log-decoder-platform: the platform to assign to the cbl-log-decoder platform")
+
+    parser.addoption("--cbl-log-decoder-build",
+                     action="store",
+                     help="cbl-log-decoder-build: the platform to assign to the cbl-log-decoder build")
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -167,6 +175,8 @@ def params_from_base_suite_setup(request):
     number_replicas = request.config.getoption("--number-replicas")
     delta_sync_enabled = request.config.getoption("--delta-sync")
     enable_file_logging = request.config.getoption("--enable-file-logging")
+    cbl_log_decoder_platform = request.config.getoption("--cbl-log-decoder-platform")
+    cbl_log_decoder_build = request.config.getoption("--cbl-log-decoder-build")
 
     test_name = request.node.name
 
@@ -243,6 +253,24 @@ def params_from_base_suite_setup(request):
     else:
         log_info("Running test with sync_gateway version {}".format(sync_gateway_version))
         persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_version', sync_gateway_version)
+
+    try:
+        cbl_log_decoder_platform
+    except NameError:
+        log_info("cbl_log_decoder_platform is not provided")
+        persist_cluster_config_environment_prop(cluster_config, 'cbl_log_decoder_platform', "macos", property_name_check=False)
+    else:
+        log_info("Running test with cbl_log_decoder_platform {}".format(cbl_log_decoder_platform))
+        persist_cluster_config_environment_prop(cluster_config, 'cbl_log_decoder_platform', cbl_log_decoder_platform, property_name_check=False)
+
+    try:
+        cbl_log_decoder_build
+    except NameError:
+        log_info("cbl_log_decoder_build is not provided")
+        persist_cluster_config_environment_prop(cluster_config, 'cbl_log_decoder_build', "", property_name_check=False)
+    else:
+        log_info("Running test with cbl_log_decoder_platform {}".format(cbl_log_decoder_platform))
+        persist_cluster_config_environment_prop(cluster_config, 'cbl_log_decoder_platform', cbl_log_decoder_platform, property_name_check=False)
 
     if xattrs_enabled:
         log_info("Running test with xattrs for sync meta storage")
@@ -427,7 +455,9 @@ def params_from_base_suite_setup(request):
         "device_enabled": device_enabled,
         "flush_memory_per_test": flush_memory_per_test,
         "delta_sync_enabled": delta_sync_enabled,
-        "enable_file_logging": enable_file_logging
+        "enable_file_logging": enable_file_logging,
+        "cbl_log_decoder_platform": cbl_log_decoder_platform,
+        "cbl_log_decoder_build": cbl_log_decoder_build
     }
 
     if create_db_per_suite:
@@ -475,6 +505,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     liteserv_version = params_from_base_suite_setup["liteserv_version"]
     delta_sync_enabled = params_from_base_suite_setup["delta_sync_enabled"]
     enable_file_logging = params_from_base_suite_setup["enable_file_logging"]
+    cbl_log_decoder_platform = params_from_base_suite_setup["cbl_log_decoder_platform"]
+    cbl_log_decoder_build = params_from_base_suite_setup["cbl_log_decoder_build"]
 
     source_db = None
     test_name_cp = test_name.replace("/", "-")
@@ -550,7 +582,9 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "enable_sample_bucket": enable_sample_bucket,
         "log_filename": log_filename,
         "liteserv_version": liteserv_version,
-        "delta_sync_enabled": delta_sync_enabled
+        "delta_sync_enabled": delta_sync_enabled,
+        "cbl_log_decoder_platform": cbl_log_decoder_platform,
+        "cbl_log_decoder_build": cbl_log_decoder_build
     }
 
     log_info("Tearing down test")
