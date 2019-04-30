@@ -498,9 +498,8 @@ def test_push_replication_for_20mb_doc(params_from_base_test_setup, attachment_g
     """
     @summary:
     1. Create docs in CBL and replicate to SG using push one-shot replication
-    2. Add update to SG and CBL to create conflict
-    3. start push one-shot replication and start replication event listener
-    4. Check the error is thrown in replication event changes
+    2. start push one-shot replication and start replication event listener
+    3. Check the error is thrown in replication event changes as CBS can't have doc greater than 20mb
     """
     sg_db = "db"
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
@@ -543,17 +542,16 @@ def test_push_replication_for_20mb_doc(params_from_base_test_setup, attachment_g
     repl = replicator.create(repl_config)
     repl_change_listener = replicator.addReplicatorEventChangeListener(repl)
 
-    # 3. Starting Replication and waiting for it finish
+    # 2. Starting Replication and waiting for it finish
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl, max_times=5000)
 
-    # 4. Getting changes from the replication event listener
+    # 3. Getting changes from the replication event listener
     doc_repl_event_changes = replicator.getReplicatorEventChanges(repl_change_listener)
     replicator.removeReplicatorEventListener(repl, repl_change_listener)
     replicator.stop(repl)
 
     # Processing received events
     replicated_event_changes = get_event_changes(doc_repl_event_changes)
-    print replicated_event_changes
     for doc in replicated_event_changes:
         assert replicated_event_changes[doc]["error_code"] is not None, "Replication failed for large doc"
