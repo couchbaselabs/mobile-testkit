@@ -2,6 +2,7 @@ import pytest
 import mimetypes
 import os
 import requests
+import shutil
 
 from zipfile import ZipFile
 from keywords.constants import BINARY_DIR
@@ -9,16 +10,38 @@ from keywords.constants import RELEASED_BUILDS
 from keywords.constants import LATEST_BUILDS
 from CBLClient.FileLogging import FileLogging
 from keywords.utils import log_info
+from libraries.provision.ansible_runner import AnsibleRunner
+
 
 @pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.database
-@pytest.mark.parametrize("log_level, plain_text", [
-    ("verbose", False),
-])
-def test_cbl_decoder(params_from_base_test_setup, log_level, plain_text):
+def test_cbl_decoder_with_existing_logs(params_from_base_test_setup):
+    liteserv_version = params_from_base_test_setup["liteserv_version"]
+    cbl_log_decoder_platform = params_from_base_test_setup["cbl_log_decoder_platform"]
+    cbl_log_decoder_build = params_from_base_test_setup["cbl_log_decoder_build"]
+
+    log_dir = "resources/data/cbl_logs"
+    cbl_platforms = ["iOS", "xamarin-android", "Net-core", "uwp"]
+    versions = ["2.5.0"]
+
+    for platform in cbl_platforms:
+        for version in versions:
+            cbl_log_dir = "{}/{}/{}".format(log_dir, version, platform)
+            cbl_logs = os.listdir(cbl_log_dir)
+            extracted_cbllog_directory_name = download_cbl_log(cbl_log_decoder_platform, liteserv_version, cbl_log_decoder_build)
+            for log in cbl_logs:
+                file = "{}/{}".format(cbl_log_dir, log)
+                assert is_binary(file), "{} file is not binary ".format(file)
+                decode_logs(extracted_cbllog_directory_name, file)
+
+
+@pytest.mark.listener
+@pytest.mark.database
+def test_cbl_decoder_with_current_logs(params_from_base_test_setup):
     base_url = params_from_base_test_setup["base_url"]
     liteserv_version = params_from_base_test_setup["liteserv_version"]
+    liteserv_platform = params_from_base_test_setup["liteserv_platform"]
     cbl_log_decoder_platform = params_from_base_test_setup["cbl_log_decoder_platform"]
     cbl_log_decoder_build = params_from_base_test_setup["cbl_log_decoder_build"]
     db = params_from_base_test_setup["db"]
@@ -27,28 +50,70 @@ def test_cbl_decoder(params_from_base_test_setup, log_level, plain_text):
     log_obj = FileLogging(base_url)
     num_of_docs = 10
     channels_sg = ["ABC"]
-
-    log_obj.configure(log_level=log_level, plain_text=plain_text)
-    log_file = log_obj.get_directory()
-    log_info("logs are enabled at: {}".format(log_file))
+    log_level = "verbose"
+    plain_text = False
+    cbl_log_dir = "/tmp/test"
+    # Clean up test directory to remove stale logs
+    if os.path.exists(cbl_log_dir):
+        shutil.rmtree(cbl_log_dir)
+    os.makedirs(cbl_log_dir)
+    log_obj.configure(log_level=log_level, plain_text=plain_text, directory=cbl_log_dir)
+    log_directory = log_obj.get_directory()
+    log_info("logs are enabled at: {}".format(log_directory))
     if liteserv_version < "2.5.0":
         pytest.skip('This test cannot run with CBL version below 2.5.0')
 
     db.create_bulk_docs(num_of_docs, id_prefix="cbl-decoder", db=cbl_db, channels=channels_sg)
 
-    log_dir = "resources/data/cbl_logs/xamarin-android"
-    cbl_logs = os.listdir(log_dir)
+    get_logs(liteserv_platform, log_directory)
+    # cbl_log_dir = "{}/{}/{}".format(log_dir, version, platform)
     extracted_cbllog_directory_name = download_cbl_log(cbl_log_decoder_platform, liteserv_version, cbl_log_decoder_build)
+    cbl_logs = os.listdir(cbl_log_dir)
     for log in cbl_logs:
-        file = "{}/{}".format(log_dir, log)
+        file = "{}/{}".format(cbl_log_dir, log)
         assert is_binary(file), "{} file is not binary ".format(file)
         decode_logs(extracted_cbllog_directory_name, file)
+
+     print("test")   
+
+    """
+    log_dir = "resources/data/cbl_logs"
+    cbl_platforms = ["iOS", "xamarin-android", "Net-core", "uwp"]
+    versions = ["2.5.0"]
+
+    for platform in cbl_platforms:
+        for version in versions:"""
+            
+            
+def get_logs(liteserv_platform, log_directory):
+    if liteserv_platform == "ios" or liteserv_platform == "xamarin-ios":
+        # copy logs 
+        log_dir = log_directory
+    elif liteserv_platform == "android" or liteserv_platform == "xamarin-android":
+        os.chdir("/tmp/test")
+        command = "adb -e pull {}".format(log_directory)
+        return_val = os.system(command)
+        if return_val != 0:
+            raise Exception("{0} failed".format(command))
+    else:
+        log_full_path = "/tmp/test/"
+        config_location = "resources/liteserv_configs/net-msft"
+        ansible_runner = AnsibleRunner(config=config_location)
+
+        status = ansible_runner.run_ansible_playbook(
+            "fetch-windows-cbl-logs.yml",
+            extra_vars={
+                "log_full_path": log_full_path
+            }
+        )
+        if status != 0:
+            raise Exception("Could not fetch cbl logs from windows ")
 
 
 def download_cbl_log(cbl_log_decoder_platform, liteserv_version, cbl_log_decoder_build):
 
     version = liteserv_version.split('-')[0]
-    if cbl_log_decoder_platform == "windows" :
+    if cbl_log_decoder_platform == "windows":
         package_name = "couchbase-lite-log-{}-{}-windows.zip".format(version, cbl_log_decoder_build)
     elif cbl_log_decoder_platform == "centos" or cbl_log_decoder_platform == "ubuntu" or cbl_log_decoder_platform == "rhel" or cbl_log_decoder_platform == "debian":
         package_name = "couchbase-lite-log-{}-{}-centos.zip".format(version, cbl_log_decoder_build)
@@ -81,12 +146,10 @@ def download_cbl_log(cbl_log_decoder_platform, liteserv_version, cbl_log_decoder
         # Remove .zip
         os.remove("{}".format(downloaded_package_zip_name))
         os.chmod("{}/bin/cbl-log".format(extracted_directory_name), 0777)
-        print("changed the permission and had full permissions")
         return extracted_directory_name
 
 
 def decode_logs(extracted_directory_name, file):
-    print("extracted directory name is ", extracted_directory_name)
     output_file = "deps/binaries/cbl.txt"
     command = "{}/bin/cbl-log logcat {} {}".format(extracted_directory_name, file, output_file)
     return_val = os.system(command)
