@@ -7,9 +7,9 @@
 - name: Getting directory of files
   win_shell: Get-ChildItem | where {!$_.PsIsContainer} | foreach { $_.Name }
   args:
-    chdir: C:\PROGRA~1\dotnet\TextLogging\
+    chdir: "{{ custom_cbl_log_dir }}"
   register: files_to_copy
 
 - name: Fetch logs
-  fetch: src=C:\PROGRA~1\dotnet\TextLogging\{{ item }} dest={{ log_full_path }} fail_on_missing=yes flat=yes validate_checksum=no
+  fetch: src={{ custom_cbl_log_dir }}/{{ item }} dest={{ log_full_path }} fail_on_missing=yes flat=yes validate_checksum=no
   with_items: "{{ files_to_copy.stdout_lines }}"

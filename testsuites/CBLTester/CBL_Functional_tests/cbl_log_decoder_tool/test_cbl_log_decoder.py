@@ -74,8 +74,6 @@ def test_cbl_decoder_with_current_logs(params_from_base_test_setup):
         assert is_binary(file), "{} file is not binary ".format(file)
         decode_logs(extracted_cbllog_directory_name, file)
 
-     print("test")   
-
     """
     log_dir = "resources/data/cbl_logs"
     cbl_platforms = ["iOS", "xamarin-android", "Net-core", "uwp"]
@@ -90,20 +88,22 @@ def get_logs(liteserv_platform, log_directory):
         # copy logs 
         log_dir = log_directory
     elif liteserv_platform == "android" or liteserv_platform == "xamarin-android":
-        os.chdir("/tmp/test")
-        command = "adb -e pull {}".format(log_directory)
+        shutil.rmtree(log_directory)
+        command = "adb -e pull {} {}".format(log_directory, log_directory)
         return_val = os.system(command)
         if return_val != 0:
             raise Exception("{0} failed".format(command))
     else:
-        log_full_path = "/tmp/test/"
+        log_full_path = "/tmp/test"
+        custom_cbl_log_dir = "c:{}".format(log_full_path)
         config_location = "resources/liteserv_configs/net-msft"
         ansible_runner = AnsibleRunner(config=config_location)
 
         status = ansible_runner.run_ansible_playbook(
             "fetch-windows-cbl-logs.yml",
             extra_vars={
-                "log_full_path": log_full_path
+                "log_full_path": log_full_path,
+                "custom_cbl_log_dir": custom_cbl_log_dir
             }
         )
         if status != 0:
@@ -114,30 +114,31 @@ def download_cbl_log(cbl_log_decoder_platform, liteserv_version, cbl_log_decoder
 
     version = liteserv_version.split('-')[0]
     if cbl_log_decoder_platform == "windows":
-        package_name = "couchbase-lite-log-{}-{}-windows.zip".format(version, cbl_log_decoder_build)
+        package_name = "couchbase-lite-log-{}-{}-windows".format(version, cbl_log_decoder_build)
     elif cbl_log_decoder_platform == "centos" or cbl_log_decoder_platform == "ubuntu" or cbl_log_decoder_platform == "rhel" or cbl_log_decoder_platform == "debian":
-        package_name = "couchbase-lite-log-{}-{}-centos.zip".format(version, cbl_log_decoder_build)
+        package_name = "couchbase-lite-log-{}-{}-centos".format(version, cbl_log_decoder_build)
     else:
-        package_name = "couchbase-lite-log-{}-{}-macos.zip".format(version, cbl_log_decoder_build)
+        package_name = "couchbase-lite-log-{}-{}-macos".format(version, cbl_log_decoder_build)
+    package_zip_name = "{}.zip".format(package_name)
     expected_binary_path = "{}/{}".format(BINARY_DIR, package_name)
     if os.path.isfile(expected_binary_path):
         log_info("Package is already downloaded. Skipping.")
         return
 
     # Package not downloaded, proceed to download from latest builds
-    downloaded_package_zip_name = "{}/{}".format(BINARY_DIR, package_name)
+    downloaded_package_zip_name = "{}/{}".format(BINARY_DIR, package_zip_name)
     if cbl_log_decoder_build is None:
         try:
-            url = "{}/couchbase-lite-log/{}/{}".format(RELEASED_BUILDS, version, package_name)
+            url = "{}/couchbase-lite-log/{}/{}".format(RELEASED_BUILDS, version, package_zip_name)
         except Exception as err:
             raise Exception(str(err) + "this version does not exist in release build, please provide cbl log decoder build number with this flag: --cbl-log-decoder-build")
     else:
-        url = "{}/couchbase-lite-log/{}/{}/{}".format(LATEST_BUILDS, version, cbl_log_decoder_build, package_name)
+        url = "{}/couchbase-lite-log/{}/{}/{}".format(LATEST_BUILDS, version, cbl_log_decoder_build, package_zip_name)
 
-        log_info("Downloading {} -> {}/{}".format(url, BINARY_DIR, package_name))
-        resp = requests.get(url, verify=False)
+        log_info("Downloading {} -> {}/{}".format(url, BINARY_DIR, package_zip_name))
+        resp = requests.get(url, verify=False)  # Need to resolve the certificate verification issue for release branch
         resp.raise_for_status()
-        with open("{}/{}".format(BINARY_DIR, package_name), "wb") as f:
+        with open("{}/{}".format(BINARY_DIR, package_zip_name), "wb") as f:
             f.write(resp.content)
         extracted_directory_name = downloaded_package_zip_name.replace(".zip", "")
         with ZipFile("{}".format(downloaded_package_zip_name)) as zip_f:
