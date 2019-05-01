@@ -135,19 +135,21 @@ def download_cbl_log(cbl_log_decoder_platform, liteserv_version, cbl_log_decoder
     else:
         url = "{}/couchbase-lite-log/{}/{}/{}".format(LATEST_BUILDS, version, cbl_log_decoder_build, package_zip_name)
 
-        log_info("Downloading {} -> {}/{}".format(url, BINARY_DIR, package_zip_name))
-        resp = requests.get(url, verify=False)  # Need to resolve the certificate verification issue for release branch
-        resp.raise_for_status()
-        with open("{}/{}".format(BINARY_DIR, package_zip_name), "wb") as f:
-            f.write(resp.content)
-        extracted_directory_name = downloaded_package_zip_name.replace(".zip", "")
+    log_info("Downloading {} -> {}/{}".format(url, BINARY_DIR, package_zip_name))
+    resp = requests.get(url, verify=False)  # Need to resolve the certificate verification issue for release branch
+    resp.raise_for_status()
+    with open("{}/{}".format(BINARY_DIR, package_zip_name), "wb") as f:
+        f.write(resp.content)
+    extracted_directory_name = downloaded_package_zip_name.replace(".zip", "")
+    if cbl_log_decoder_platform == "macos":
         with ZipFile("{}".format(downloaded_package_zip_name)) as zip_f:
             zip_f.extractall("{}".format(extracted_directory_name))
-
-        # Remove .zip
-        os.remove("{}".format(downloaded_package_zip_name))
-        os.chmod("{}/bin/cbl-log".format(extracted_directory_name), 0777)
-        return extracted_directory_name
+    else:
+        os.system("unzip {} -d {}".format(downloaded_package_zip_name, extracted_directory_name))
+    # Remove .zip
+    os.remove("{}".format(downloaded_package_zip_name))
+    os.chmod("{}/bin/cbl-log".format(extracted_directory_name), 0777)
+    return extracted_directory_name
 
 
 def decode_logs(extracted_directory_name, file):
