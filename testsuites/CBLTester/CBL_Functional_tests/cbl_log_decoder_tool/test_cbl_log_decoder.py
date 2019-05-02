@@ -52,7 +52,7 @@ def test_cbl_decoder_with_current_logs(params_from_base_test_setup):
     channels_sg = ["ABC"]
     log_level = "verbose"
     plain_text = False
-    if liteserv_platform == "net-msft" or liteserv_platform == "net-uwp"
+    if liteserv_platform == "net-msft" or liteserv_platform == "net-uwp":
         cbl_log_dir = "c:\test"
     else:
         cbl_log_dir = "/tmp/test"
