@@ -52,7 +52,10 @@ def test_cbl_decoder_with_current_logs(params_from_base_test_setup):
     channels_sg = ["ABC"]
     log_level = "verbose"
     plain_text = False
-    cbl_log_dir = "/tmp/test"
+    if liteserv_platform == "net-msft" or liteserv_platform == "net-uwp"
+        cbl_log_dir = "c:\test"
+    else:
+        cbl_log_dir = "/tmp/test"
     # Clean up test directory to remove stale logs
     if os.path.exists(cbl_log_dir):
         shutil.rmtree(cbl_log_dir)
@@ -74,15 +77,7 @@ def test_cbl_decoder_with_current_logs(params_from_base_test_setup):
         assert is_binary(file), "{} file is not binary ".format(file)
         decode_logs(extracted_cbllog_directory_name, file)
 
-    """
-    log_dir = "resources/data/cbl_logs"
-    cbl_platforms = ["iOS", "xamarin-android", "Net-core", "uwp"]
-    versions = ["2.5.0"]
 
-    for platform in cbl_platforms:
-        for version in versions:"""
-            
-            
 def get_logs(liteserv_platform, log_directory):
     if liteserv_platform == "ios" or liteserv_platform == "xamarin-ios":
         # copy logs 
