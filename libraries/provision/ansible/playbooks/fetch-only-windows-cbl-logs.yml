@@ -1,0 +1,8 @@
+- name: Windows - Stop TestServer
+  hosts: windows
+  vars:
+    log_full_path:
+    custom_cbl_log_dir: C:\PROGRA~1\dotnet\TextLogging
+
+  tasks:
+    - include: tasks/fetch-only-windows-cbl-logs.yml

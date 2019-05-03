@@ -53,7 +53,7 @@ def test_cbl_decoder_with_current_logs(params_from_base_test_setup):
     log_level = "verbose"
     plain_text = False
     if liteserv_platform == "net-msft" or liteserv_platform == "net-uwp":
-        cbl_log_dir = "c:\test"
+        cbl_log_dir = "c:/test"
     else:
         cbl_log_dir = "/tmp/test"
     # Clean up test directory to remove stale logs
@@ -95,7 +95,7 @@ def get_logs(liteserv_platform, log_directory):
         ansible_runner = AnsibleRunner(config=config_location)
 
         status = ansible_runner.run_ansible_playbook(
-            "fetch-windows-cbl-logs.yml",
+            "fetch-only-windows-cbl-logs.yml",
             extra_vars={
                 "log_full_path": log_full_path,
                 "custom_cbl_log_dir": custom_cbl_log_dir
