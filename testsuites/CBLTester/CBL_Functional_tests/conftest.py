@@ -592,13 +592,6 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         # Delete CBL database
         log_info("Deleting the database {} at test teardown".format(create_db_per_test))
         time.sleep(1)
-        try:
-            path = db.getPath(source_db).rstrip("/\\")
-        except HTTPConnectionPool as err:
-            if device_enabled:
-                testserver.start_device(log_filename)
-            else:
-                testserver.start(log_filename)
         path = db.getPath(source_db).rstrip("/\\")
         if '\\' in path:
             path = '\\'.join(path.split('\\')[:-1])

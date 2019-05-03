@@ -1,5 +1,4 @@
 import pytest
-import mimetypes
 import os
 import requests
 import shutil
@@ -17,6 +16,11 @@ from libraries.provision.ansible_runner import AnsibleRunner
 @pytest.mark.listener
 @pytest.mark.database
 def test_cbl_decoder_with_existing_logs(params_from_base_test_setup):
+    """
+    @summary:
+    1.Get the cbl log decoder tool based on the build number provided
+    2.Decode all binary logs of each release version and verify logs got decoded
+    """
     liteserv_version = params_from_base_test_setup["liteserv_version"]
     cbl_log_decoder_platform = params_from_base_test_setup["cbl_log_decoder_platform"]
     cbl_log_decoder_build = params_from_base_test_setup["cbl_log_decoder_build"]
@@ -39,6 +43,14 @@ def test_cbl_decoder_with_existing_logs(params_from_base_test_setup):
 @pytest.mark.listener
 @pytest.mark.database
 def test_cbl_decoder_with_current_logs(params_from_base_test_setup):
+    """
+    @summary:
+    1.Get the cbl log decoder tool based on the build number provided
+    2.Run some basic flow on cbl like create bulk docs
+    3. Pull logs from cbl client to local machine to /tmp/test directory
+    4. Verify logs are binary
+    5. Use the decoder tool and decode the logs and verify logs are not binary after decoding
+    """
     base_url = params_from_base_test_setup["base_url"]
     liteserv_version = params_from_base_test_setup["liteserv_version"]
     liteserv_platform = params_from_base_test_setup["liteserv_platform"]
@@ -69,7 +81,6 @@ def test_cbl_decoder_with_current_logs(params_from_base_test_setup):
     db.create_bulk_docs(num_of_docs, id_prefix="cbl-decoder", db=cbl_db, channels=channels_sg)
 
     get_logs(liteserv_platform, log_directory)
-    # cbl_log_dir = "{}/{}/{}".format(log_dir, version, platform)
     extracted_cbllog_directory_name = download_cbl_log(cbl_log_decoder_platform, liteserv_version, cbl_log_decoder_build)
     cbl_logs = os.listdir(cbl_log_dir)
     for log in cbl_logs:
@@ -79,10 +90,7 @@ def test_cbl_decoder_with_current_logs(params_from_base_test_setup):
 
 
 def get_logs(liteserv_platform, log_directory):
-    if liteserv_platform == "ios" or liteserv_platform == "xamarin-ios":
-        # copy logs 
-        log_dir = log_directory
-    elif liteserv_platform == "android" or liteserv_platform == "xamarin-android":
+    if liteserv_platform == "android" or liteserv_platform == "xamarin-android":
         shutil.rmtree(log_directory)
         command = "adb -e pull {} {}".format(log_directory, log_directory)
         return_val = os.system(command)
