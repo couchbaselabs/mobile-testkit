@@ -1,12 +1,15 @@
+- name: Debug Msg
+  debug: msg="Copying logs at - {{ log_full_path }}"
+
+- name: Debug Msg
+  debug: msg="Copying logs from - {{ log_file }}"
+
 - name: Getting directory of files
   win_shell: Get-ChildItem | where {!$_.PsIsContainer} | foreach { $_.Name }
   args:
     chdir: "{{ log_file }}"
   register: files_to_copy
 
-- name: Debug Msg
-  debug: msg="Copying logs at - {{ log_full_path }}"
-
 - name: Fetch logs
-  fetch: src={{ log_file }} dest={{ log_full_path }} fail_on_missing=yes validate_checksum=yes flat=yes
+  fetch: src={{ log_file }}\{{ item }} dest={{ log_full_path }} fail_on_missing=yes validate_checksum=yes flat=yes
   with_items: "{{ files_to_copy.stdout_lines }}"
