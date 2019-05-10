@@ -1,3 +1,9 @@
+- name: Stop TestServer
+  win_nssm:
+    name: TestServer
+    application: C:\PROGRA~1\dotnet\dotnet.exe
+    state: stopped
+
 - name: Debug Msg
   debug: msg="Copying logs at - {{ log_full_path }}"
 

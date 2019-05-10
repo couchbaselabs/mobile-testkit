@@ -1,6 +1,7 @@
 import os
 import subprocess
 import pytest
+import time
 
 from keywords.MobileRestClient import MobileRestClient
 from CBLClient.Replication import Replication
@@ -37,10 +38,12 @@ def test_mask_password_in_logs(params_from_base_test_setup, password):
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
-    log_file = params_from_base_test_setup["log_filename"]
+    log_filename = params_from_base_test_setup["log_filename"]
+    log_file = params_from_base_test_setup["test_db_log_file"]
     liteserv_platform = params_from_base_test_setup["liteserv_platform"]
+    testserver = params_from_base_test_setup["testserver"]
 
-    num_cbl_docs = 5
+    num_cbl_docs = 500
     # Cannot run on iOS as there is no support in xcode to grab cbl logs
     if sync_gateway_version < "2.0.0" and log_file is not None:
         pytest.skip('This test cannot run with sg version below 2.0 and File logging not enabled.')
@@ -54,7 +57,6 @@ def test_mask_password_in_logs(params_from_base_test_setup, password):
     authenticator = Authenticator(base_url)
 
     sg_client = MobileRestClient()
-
     db.create_bulk_docs(number=num_cbl_docs, id_prefix="cblid", db=cbl_db, channels=channels)
 
     # Add docs in SG
@@ -69,7 +71,7 @@ def test_mask_password_in_logs(params_from_base_test_setup, password):
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
 
-    verify_password_masked(liteserv_platform, log_file, password)
+    verify_password_masked(liteserv_platform, log_file, password, testserver, log_filename)
 
 
 @pytest.mark.sanity
@@ -98,10 +100,12 @@ def test_verify_invalid_mask_password_in_logs(params_from_base_test_setup, inval
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
-    log_file = params_from_base_test_setup["log_filename"]
+    log_file = params_from_base_test_setup["test_db_log_file"]
     liteserv_platform = params_from_base_test_setup["liteserv_platform"]
+    testserver = params_from_base_test_setup["testserver"]
+    log_filename = params_from_base_test_setup["log_filename"]
 
-    num_cbl_docs = 5
+    num_cbl_docs = 50
     # Cannot run on iOS as there is no support in xcode to grab cbl logs
     if sync_gateway_version < "2.0.0" and log_file is not None:
         pytest.skip('This test cannot run with sg version below 2.0 and File logging not enabled.')
@@ -129,11 +133,10 @@ def test_verify_invalid_mask_password_in_logs(params_from_base_test_setup, inval
     repl = replicator.create(repl_config)
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl, err_check=False)
+    verify_password_masked(liteserv_platform, log_file, invalid_password, testserver, log_filename)
 
-    verify_password_masked(liteserv_platform, log_file, invalid_password)
 
-
-def verify_password_masked(liteserv_platform, log_file, password):
+def verify_password_masked(liteserv_platform, log_file, password, testserver, log_filename):
     """
     @note: Porting logs for Android, xamarin-android, net-core and net-uwp platform, as the logs reside
            outside runner's file directory
