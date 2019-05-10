@@ -1,7 +1,6 @@
 import os
 import subprocess
 import pytest
-import time
 
 from keywords.MobileRestClient import MobileRestClient
 from CBLClient.Replication import Replication
@@ -109,27 +108,27 @@ def test_verify_invalid_mask_password_in_logs(params_from_base_test_setup, inval
     # Cannot run on iOS as there is no support in xcode to grab cbl logs
     if sync_gateway_version < "2.0.0" and log_file is not None:
         pytest.skip('This test cannot run with sg version below 2.0 and File logging not enabled.')
- 
+
     channels = ["ABC"]
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
-  
+
     delete_tmp_logs()  # Clean up tmp logs before test runs
     replicator = Replication(base_url)
     authenticator = Authenticator(base_url)
-  
+
     sg_client = MobileRestClient()
     db.create_bulk_docs(number=num_cbl_docs, id_prefix="cblid", db=cbl_db, channels=channels)
-  
+
     # Add docs in SG
     sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
     sg_client.create_session(sg_admin_url, sg_db, "autotest")
-  
+
     replicator_authenticator = authenticator.authentication(username="autotest", password=invalid_password,
                                                             authentication_type="basic")
     repl_config = replicator.configure(cbl_db, target_url=sg_blip_url, continuous=False,
                                        channels=channels, replicator_authenticator=replicator_authenticator)
-  
+
     repl = replicator.create(repl_config)
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl, err_check=False)
@@ -142,8 +141,8 @@ def verify_password_masked(liteserv_platform, log_file, password, testserver, lo
            outside runner's file directory
     """
     log_full_path = "/tmp/cbl-logs/"
+    os.mkdir(log_full_path)
     if liteserv_platform.lower() == "android" or liteserv_platform.lower() == "xamarin-android":
-        os.mkdir(log_full_path)
         log_info("Running Command: 'adb pull {} {}".format(log_file, log_full_path))
         cmd = ["adb", "pull", log_file, log_full_path]
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -151,10 +150,11 @@ def verify_password_masked(liteserv_platform, log_file, password, testserver, lo
         log_info(out, err)
         log_file = os.path.join(log_full_path, os.path.basename(log_file))
     elif liteserv_platform.lower() == "net-msft" or liteserv_platform.lower() == "net-uwp":
-        
         config_location = "resources/liteserv_configs/net-msft"
         ansible_runner = AnsibleRunner(config=config_location)
-        os.mkdir(log_full_path)
+        log_file = log_file.replace('\\', '\\\\')
+        if liteserv_platform.lower() == "net-uwp":
+            testserver.stop()
         status = ansible_runner.run_ansible_playbook(
             "fetch-windows-cbl-logs.yml",
             extra_vars={
@@ -169,7 +169,8 @@ def verify_password_masked(liteserv_platform, log_file, password, testserver, lo
 
         log_info("Checking {} for copied log files - {}".format(log_full_path, os.listdir(log_full_path)))
         log_file = subprocess.check_output("ls -t {} | head -1".format(log_full_path), shell=True)
-
+    else:
+        log_full_path = log_file
     assert len(os.listdir(log_full_path)) != 0, "Log files are not copied to {}".format(log_full_path)
     command = "grep '{}' {}/*.cbllog | wc -l".format(password, log_file)
     log_info("Running command: {}".format(command))

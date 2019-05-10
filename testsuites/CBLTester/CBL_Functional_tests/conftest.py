@@ -570,14 +570,12 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         # Delete CBL database
         log_info("Deleting the database {} at test teardown".format(create_db_per_test))
         time.sleep(1)
-        if db.exists(cbl_db, path):
-            db.deleteDB(source_db)
-        log_info("Flushing server memory")
-        utils_obj = Utils(base_url)
-        utils_obj.flushMemory()
-
-    if create_db_per_test:
         try:
+            if db.exists(cbl_db, path):
+                db.deleteDB(source_db)
+            log_info("Flushing server memory")
+            utils_obj = Utils(base_url)
+            utils_obj.flushMemory()
             log_info("Stopping the test server per test")
             testserver.stop()
         except Exception, err:
