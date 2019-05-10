@@ -21,9 +21,10 @@ namespace Couchbase.Lite.Testing
             bool plain_text = Convert.ToBoolean(postBody["plain_text"]);
             if (String.IsNullOrEmpty(directory))
             {
-                directory = System.IO.Path.GetTempPath() + "log_" + (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds).ToString();
-                Console.WriteLine("File logging configured at: " + directory.ToString());
+                directory = System.IO.Path.GetTempPath();
             }
+            directory = directory + "log_" + (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds).ToString();
+            Console.WriteLine("File logging configured at: " + directory.ToString());
             LogFileConfiguration config = new LogFileConfiguration(directory);
             if (max_rotate_count > 1)
             {
