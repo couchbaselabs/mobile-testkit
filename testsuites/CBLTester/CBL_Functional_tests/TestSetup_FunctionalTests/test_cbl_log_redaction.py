@@ -164,6 +164,8 @@ def verify_password_masked(liteserv_platform, log_file, password, testserver, lo
         )
         if status != 0:
             raise Exception("Could not fetch cbl logs from windows ")
+        # Restarting Test app
+        testserver.start(log_filename)
 
         log_info("Checking {} for copied log files - {}".format(log_full_path, os.listdir(log_full_path)))
         log_file = subprocess.check_output("ls -t {} | head -1".format(log_full_path), shell=True)
