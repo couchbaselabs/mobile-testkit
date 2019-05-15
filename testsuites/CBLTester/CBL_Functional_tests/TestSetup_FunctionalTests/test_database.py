@@ -5,6 +5,7 @@ from CBLClient.Database import Database
 from CBLClient.DatabaseConfiguration import DatabaseConfiguration
 
 
+
 @pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.database
