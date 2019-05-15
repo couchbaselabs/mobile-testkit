@@ -45,7 +45,7 @@ def test_mask_password_in_logs(params_from_base_test_setup, password):
     num_cbl_docs = 500
     # Cannot run on iOS as there is no support in xcode to grab cbl logs
     if sync_gateway_version < "2.0.0" and log_file is not None:
-        pytest.skip('This test cannot run with sg version below 2.0 and File logging not enabled.')
+        pytest.skip('This test cannot run with sg version below 2.0 or File logging is not enabled.')
 
     channels = ["ABC"]
     c = cluster.Cluster(config=cluster_config)
@@ -107,7 +107,7 @@ def test_verify_invalid_mask_password_in_logs(params_from_base_test_setup, inval
     num_cbl_docs = 50
     # Cannot run on iOS as there is no support in xcode to grab cbl logs
     if sync_gateway_version < "2.0.0" and log_file is not None:
-        pytest.skip('This test cannot run with sg version below 2.0 and File logging not enabled.')
+        pytest.skip('This test cannot run with sg version below 2.0 or File logging is not enabled.')
 
     channels = ["ABC"]
     c = cluster.Cluster(config=cluster_config)
@@ -164,8 +164,6 @@ def verify_password_masked(liteserv_platform, log_file, password, testserver, lo
         )
         if status != 0:
             raise Exception("Could not fetch cbl logs from windows ")
-        # Restarting Test app
-        testserver.start(log_filename)
 
         log_info("Checking {} for copied log files - {}".format(log_full_path, os.listdir(log_full_path)))
         log_file = subprocess.check_output("ls -t {} | head -1".format(log_full_path), shell=True)
