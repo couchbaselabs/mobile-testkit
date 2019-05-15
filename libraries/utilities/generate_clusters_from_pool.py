@@ -407,8 +407,8 @@ def write_config(config, pool_file, use_docker, sg_windows, sg_accel_windows,
         if sg_windows:
             sg_dict = {
                 "sync_gateways:vars": {
-                    "ansible_user": "Administrator",
-                    "ansible_password": "Membase123",
+                    "ansible_user": "FakeUser",
+                    "ansible_password": "FakePassword",
                     "ansible_port": 5986,
                     "ansible_connection": "winrm",
                     "ansible_winrm_server_cert_validation": "ignore"
