@@ -37,10 +37,10 @@ def test_mask_password_in_logs(params_from_base_test_setup, password):
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
-    log_filename = params_from_base_test_setup["log_filename"]
     log_file = params_from_base_test_setup["test_db_log_file"]
     liteserv_platform = params_from_base_test_setup["liteserv_platform"]
     testserver = params_from_base_test_setup["testserver"]
+    device_enabled = params_from_base_test_setup["device_enabled"]
 
     num_cbl_docs = 500
     # Cannot run on iOS as there is no support in xcode to grab cbl logs
@@ -70,7 +70,7 @@ def test_mask_password_in_logs(params_from_base_test_setup, password):
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
 
-    verify_password_masked(liteserv_platform, log_file, password, testserver, log_filename)
+    verify_password_masked(liteserv_platform, log_file, password, testserver, device_enabled)
 
 
 @pytest.mark.sanity
@@ -102,7 +102,7 @@ def test_verify_invalid_mask_password_in_logs(params_from_base_test_setup, inval
     log_file = params_from_base_test_setup["test_db_log_file"]
     liteserv_platform = params_from_base_test_setup["liteserv_platform"]
     testserver = params_from_base_test_setup["testserver"]
-    log_filename = params_from_base_test_setup["log_filename"]
+    device_enabled = params_from_base_test_setup["device_enabled"]
 
     num_cbl_docs = 50
     # Cannot run on iOS as there is no support in xcode to grab cbl logs
@@ -132,10 +132,10 @@ def test_verify_invalid_mask_password_in_logs(params_from_base_test_setup, inval
     repl = replicator.create(repl_config)
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl, err_check=False)
-    verify_password_masked(liteserv_platform, log_file, invalid_password, testserver, log_filename)
+    verify_password_masked(liteserv_platform, log_file, invalid_password, testserver, device_enabled)
 
 
-def verify_password_masked(liteserv_platform, log_file, password, testserver, log_filename):
+def verify_password_masked(liteserv_platform, log_file, password, testserver, device_enabled):
     """
     @note: Porting logs for Android, xamarin-android, net-core and net-uwp platform, as the logs reside
            outside runner's file directory
@@ -144,7 +144,10 @@ def verify_password_masked(liteserv_platform, log_file, password, testserver, lo
     os.mkdir(log_full_path)
     if liteserv_platform.lower() == "android" or liteserv_platform.lower() == "xamarin-android":
         log_info("Running Command: 'adb pull {} {}".format(log_file, log_full_path))
-        cmd = ["adb", "pull", log_file, log_full_path]
+        if device_enabled:
+            cmd = ["adb", "-d", "pull", log_file, log_full_path]
+        else:
+            cmd = ["adb", "-e", "pull", log_file, log_full_path]
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         out, err = proc.communicate()
         log_info(out, err)
