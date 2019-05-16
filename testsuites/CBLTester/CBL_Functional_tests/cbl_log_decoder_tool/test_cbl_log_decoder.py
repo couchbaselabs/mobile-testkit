@@ -26,7 +26,7 @@ def test_cbl_decoder_with_existing_logs(params_from_base_test_setup):
     cbl_log_decoder_build = params_from_base_test_setup["cbl_log_decoder_build"]
 
     log_dir = "resources/data/cbl_logs"
-    cbl_platforms = ["iOS", "xamarin-android", "Net-core", "uwp"]
+    cbl_platforms = ["iOS", "xamarin-android", "Net-core", "uwp", "xamarin-ios", "Android"]
     versions = ["2.5.0"]
 
     for platform in cbl_platforms:
@@ -56,6 +56,7 @@ def test_cbl_decoder_with_current_logs(params_from_base_test_setup):
     liteserv_platform = params_from_base_test_setup["liteserv_platform"]
     cbl_log_decoder_platform = params_from_base_test_setup["cbl_log_decoder_platform"]
     cbl_log_decoder_build = params_from_base_test_setup["cbl_log_decoder_build"]
+    device_enabled = params_from_base_test_setup["device_enabled"]
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
 
@@ -71,6 +72,12 @@ def test_cbl_decoder_with_current_logs(params_from_base_test_setup):
     # Clean up test directory to remove stale logs
     if os.path.exists(cbl_log_dir):
         shutil.rmtree(cbl_log_dir)
+    if liteserv_platform == "android" or liteserv_platform == "xamarin-android":
+        if device_enabled:
+            command = "adb -d shell mkdir /tmp/test"
+        else:
+            command = "adb -e shell mkdir /tmp/test"
+        os.system(command)
     os.makedirs(cbl_log_dir)
     log_obj.configure(log_level=log_level, plain_text=plain_text, directory=cbl_log_dir)
     log_directory = log_obj.get_directory()
@@ -90,13 +97,14 @@ def test_cbl_decoder_with_current_logs(params_from_base_test_setup):
 
 
 def get_logs(liteserv_platform, log_directory):
+    # Not required for iOS as it stores logs in local path. Only Android and windows needs to pull logs from client
     if liteserv_platform == "android" or liteserv_platform == "xamarin-android":
         shutil.rmtree(log_directory)
         command = "adb -e pull {} {}".format(log_directory, log_directory)
         return_val = os.system(command)
         if return_val != 0:
             raise Exception("{0} failed".format(command))
-    else:
+    elif liteserv_platform == "net-msft" or liteserv_platform == "net-uwp":
         log_full_path = "/tmp/test"
         custom_cbl_log_dir = "c:{}".format(log_full_path)
         config_location = "resources/liteserv_configs/net-msft"
@@ -145,7 +153,7 @@ def download_cbl_log(cbl_log_decoder_platform, liteserv_version, cbl_log_decoder
         f.write(resp.content)
     extracted_directory_name = downloaded_package_zip_name.replace(".zip", "")
     if cbl_log_decoder_platform == "macos":
-        with ZipFile("{}".format(downloaded_package_zip_name)) as zip_f:
+        with ZipFile("{}".format(downloaded_package_zip_name), 'r') as zip_f:
             zip_f.extractall("{}".format(extracted_directory_name))
     else:
         os.system("unzip {} -d {}".format(downloaded_package_zip_name, extracted_directory_name))
