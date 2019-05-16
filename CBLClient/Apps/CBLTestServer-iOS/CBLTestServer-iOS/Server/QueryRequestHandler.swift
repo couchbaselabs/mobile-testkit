@@ -228,13 +228,11 @@ public class QueryRequestHandler {
 
         case "query_arthimetic":
             let database: Database = args.get(name: "database")!
-            // let whr_key1: String = args.get(name: "whr_key1")!
-            // let n1 = Expression.property("number1")
             
             let searchQuery = QueryBuilder
                 .select(SelectResult.expression(Meta.id))
                 .from(DataSource.database(database))
-                .where(Expression.property("number1").modulo(Expression.int(2)).equalTo(Expression.int(0)), "modulus:by:(number1, 2) == 0")
+                .where(Expression.property("number1").modulo(Expression.int(2)).equalTo(Expression.int(0)))
             
             var resultArray = [Any]()
             
