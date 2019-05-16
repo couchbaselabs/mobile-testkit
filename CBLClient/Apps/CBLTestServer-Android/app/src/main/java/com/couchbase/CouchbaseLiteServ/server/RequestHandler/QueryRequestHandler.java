@@ -767,4 +767,20 @@ public class QueryRequestHandler {
         }
         return resultArray;
     }
+
+    public List<Object> arthimetic(Args args) throws CouchbaseLiteException {
+        Database database = args.get("database");
+
+        List<Object> resultArray = new ArrayList<>();
+        Query query = QueryBuilder
+                .select(SelectResult.expression(Meta.id))
+                .from(DataSource.database(database))
+                .where(Expression.property("number1").modulo(Expression.intValue(2))
+                        .equalTo(Expression.intValue(0)));
+
+        for (Result row : query.execute()){
+            resultArray.add(row.toMap());
+        }
+        return resultArray;
+    }
 }

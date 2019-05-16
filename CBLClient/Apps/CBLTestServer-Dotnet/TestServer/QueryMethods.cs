@@ -886,6 +886,30 @@ namespace Couchbase.Lite.Testing
 
         }
 
+        internal static void QueryArthimetic([NotNull] NameValueCollection args,
+           [NotNull] IReadOnlyDictionary<string, object> postBody,
+           [NotNull] HttpListenerResponse response)
+        {
+            With<Database>(postBody, "database", db =>
+            {
+
+            List<Object> resultArray = new List<Object>();
+
+            using (IQuery query = QueryBuilder
+                            .Select(SelectResult.Expression(Meta.ID))
+                            .From(DataSource.Database(db))
+                            .Where(Expression.Property("number1").Modulo(Expression.Int(2))
+                                    .EqualTo(Expression.Int(0))))
+
+                    foreach (Result row in query.Execute())
+                    {
+                        resultArray.Add(row.ToDictionary());
+                    }
+                response.WriteBody(resultArray);
+            });
+
+        }
+
         internal static void QueryInnerJoin([NotNull] NameValueCollection args,
            [NotNull] IReadOnlyDictionary<string, object> postBody,
            [NotNull] HttpListenerResponse response)
