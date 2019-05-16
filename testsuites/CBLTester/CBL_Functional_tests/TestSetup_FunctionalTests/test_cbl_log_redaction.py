@@ -43,7 +43,6 @@ def test_mask_password_in_logs(params_from_base_test_setup, password):
     device_enabled = params_from_base_test_setup["device_enabled"]
 
     num_cbl_docs = 500
-    # Cannot run on iOS as there is no support in xcode to grab cbl logs
     if sync_gateway_version < "2.0.0" and log_file is not None:
         pytest.skip('This test cannot run with sg version below 2.0 or File logging is not enabled.')
 
@@ -105,7 +104,6 @@ def test_verify_invalid_mask_password_in_logs(params_from_base_test_setup, inval
     device_enabled = params_from_base_test_setup["device_enabled"]
 
     num_cbl_docs = 50
-    # Cannot run on iOS as there is no support in xcode to grab cbl logs
     if sync_gateway_version < "2.0.0" and log_file is not None:
         pytest.skip('This test cannot run with sg version below 2.0 or File logging is not enabled.')
 
