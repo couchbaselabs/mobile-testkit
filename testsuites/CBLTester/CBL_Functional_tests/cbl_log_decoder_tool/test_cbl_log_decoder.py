@@ -152,6 +152,8 @@ def download_cbl_log(cbl_log_decoder_platform, liteserv_version, cbl_log_decoder
     with open("{}/{}".format(BINARY_DIR, package_zip_name), "wb") as f:
         f.write(resp.content)
     extracted_directory_name = downloaded_package_zip_name.replace(".zip", "")
+    if os.path.exists(extracted_directory_name):
+        shutil.rmtree(extracted_directory_name)
     if cbl_log_decoder_platform == "macos":
         with ZipFile("{}".format(downloaded_package_zip_name), 'r') as zip_f:
             zip_f.extractall("{}".format(extracted_directory_name))
