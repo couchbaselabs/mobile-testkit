@@ -412,11 +412,34 @@ https://raw.githubusercontent.com/ansible/ansible/devel/examples/scripts/Configu
 .\ConfigureRemotingForAnsible.ps1 -SkipNetworkProfileCheck
 ```
 
+==== Refer this winrm set up which can set ansible
+https://docs.ansible.com/ansible/latest/user_guide/windows_setup.html#winrm-setup
+```
+$url = "https://raw.githubusercontent.com/ansible/ansible/devel/examples/scripts/ConfigureRemotingForAnsible.ps1"
+$file = "$env:temp\ConfigureRemotingForAnsible.ps1"
+
+(New-Object -TypeName System.Net.WebClient).DownloadFile($url, $file)
+
+powershell.exe -ExecutionPolicy ByPass -File $file
+```
+To view the current listeners that are running on the WinRM service, run the following command:
+```
+winrm enumerate winrm/config/Listener
+```
+
 If you hit errors, you may have to allow unsigned script execution (Use with caution)
 ```
 Set-ExecutionPolicy Unrestricted
 ```
-
+if you hit into this error:
+ansible winrm : the specified credentials were rejected by the server
+  First make sure credentials are right. If it is right
+  then try changing the port from 5985 to 5986 or vice versa
+  If that does not work, make below changes
+```
+winrm set winrm/config/service/auth '@{Basic="true"}'
+winrm set winrm/config/service '@{AllowUnencrypted="true"}'
+```
 Test by:
 ```
 ansible windows -i resources/cluster_configs/windows -m win_ping

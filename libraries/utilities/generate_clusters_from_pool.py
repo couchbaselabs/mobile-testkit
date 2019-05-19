@@ -404,6 +404,17 @@ def write_config(config, pool_file, use_docker, sg_windows, sg_accel_windows,
             }
         }
 
+        if sg_windows:
+            sg_dict = {
+                "sync_gateways:vars": {
+                    "ansible_user": "FakeUser",
+                    "ansible_password": "FakePassword",
+                    "ansible_port": 5986,
+                    "ansible_connection": "winrm",
+                    "ansible_winrm_server_cert_validation": "ignore"
+                }
+            }
+            cluster_dict.update(sg_dict)
         with open(cluster_json_file, "w") as f_json:
             f_json.write(json.dumps(cluster_dict, indent=4))
 

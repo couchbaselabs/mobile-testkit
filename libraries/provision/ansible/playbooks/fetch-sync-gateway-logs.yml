@@ -11,6 +11,9 @@
   - include: tasks/fetch-sync-gateway-logs-windows.yml
     when: ansible_os_family == "Windows"
 
+  - include: tasks/start-sync-gateway-windows.yml
+    when: ansible_os_family == "Windows"
+
 - hosts: sg_accels
   become: yes
   any_errors_fatal: true

@@ -1,8 +1,22 @@
 # Create the provided directory
-- name: SYNC GATEWAY | Create sync_gateway directory {{ directory }}
+- name: SYNC GATEWAY | Create sync_gateway directory {{ directory }} on non-windows
   become: yes
   shell: mkdir -p {{ directory }}
+  when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
 
-- name: SYNC GATEWAY | Change the permissions
+- name: SYNC GATEWAY | Change the permissions on non-windows
   become: yes
   shell: chmod 777 -R {{ directory }}
+  when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
+
+- name: SYNC GATEWAY | Create sync_gateway directory {{ directory }} on windows
+  become: no
+  win_file:
+    path: "{{ directory }}"
+    state: directory
+  when: ansible_os_family == "Windows"
+
+- name: SYNC GATEWAY | Change the permissions on windows
+  become: no
+  win_command: chmod 777 -R {{ directory }}
+  when: ansible_os_family == "Windows"

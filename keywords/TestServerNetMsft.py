@@ -108,7 +108,8 @@ class TestServerNetMsft(TestServerBase):
             status = self.ansible_runner.run_ansible_playbook(
                 "start-testserver-msft.yml",
                 extra_vars={
-                    "binary_path": self.binary_path
+                    "binary_path": self.binary_path,
+                    "version_build": self.version_build
                 }
             )
         else:
