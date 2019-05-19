@@ -459,7 +459,7 @@ def params_from_base_suite_setup(request):
         "delta_sync_enabled": delta_sync_enabled,
         "enable_file_logging": enable_file_logging,
         "cbl_log_decoder_platform": cbl_log_decoder_platform,
-        "cbl_log_decoder_build": cbl_log_decoder_build
+        "cbl_log_decoder_build": cbl_log_decoder_build,
         "suite_db_log_files": suite_db_log_files
     }
 
