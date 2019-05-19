@@ -4,12 +4,18 @@
     application: C:\PROGRA~1\dotnet\dotnet.exe
     state: stopped
 
+- name: Debug Msg
+  debug: msg="Copying logs at - {{ log_full_path }}"
+
+- name: Debug Msg
+  debug: msg="Copying logs from - {{ log_file }}"
+
 - name: Getting directory of files
   win_shell: Get-ChildItem | where {!$_.PsIsContainer} | foreach { $_.Name }
   args:
-    chdir: C:\PROGRA~1\dotnet\TextLogging\
+    chdir: "{{ log_file }}"
   register: files_to_copy
 
 - name: Fetch logs
-  fetch: src=C:\PROGRA~1\dotnet\TextLogging\{{ item }} dest={{ log_full_path }} fail_on_missing=yes flat=yes validate_checksum=no
+  fetch: src={{ log_file }}\{{ item }} dest={{ log_full_path }} fail_on_missing=yes validate_checksum=yes flat=yes
   with_items: "{{ files_to_copy.stdout_lines }}"

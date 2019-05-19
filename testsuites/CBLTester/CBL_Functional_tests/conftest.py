@@ -325,12 +325,14 @@ def params_from_base_suite_setup(request):
 
     suite_source_db = None
     suite_db = None
+    suite_db_log_files = None
     if create_db_per_suite:
         if enable_file_logging and liteserv_version >= "2.5.0":
             cbllog = FileLogging(base_url)
             cbllog.configure(log_level="verbose", max_rotate_count=2,
-                             max_size=1000 * 512, plain_text=True)
-            log_info("Log files available at - {}".format(cbllog.get_directory()))
+                             max_size=1000000 * 512, plain_text=True)
+            suite_db_log_files = cbllog.get_directory()
+            log_info("Log files available at - {}".format(suite_db_log_files))
         # Create CBL database
         suite_cbl_db = create_db_per_suite
         suite_db = Database(base_url)
@@ -427,7 +429,8 @@ def params_from_base_suite_setup(request):
         "device_enabled": device_enabled,
         "flush_memory_per_test": flush_memory_per_test,
         "delta_sync_enabled": delta_sync_enabled,
-        "enable_file_logging": enable_file_logging
+        "enable_file_logging": enable_file_logging,
+        "suite_db_log_files": suite_db_log_files
     }
 
     if create_db_per_suite:
@@ -503,12 +506,15 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
 
     db = None
     cbl_db = None
+    test_db_log_file = None
+    path = None
     if create_db_per_test:
         if enable_file_logging and liteserv_version >= "2.5.0":
             cbllog = FileLogging(base_url)
             cbllog.configure(log_level="verbose", max_rotate_count=2,
-                             max_size=1000 * 512, plain_text=True)
-            log_info("Log files available at - {}".format(cbllog.get_directory()))
+                             max_size=100000 * 512, plain_text=True)
+            test_db_log_file = cbllog.get_directory()
+            log_info("Log files available at - {}".format(test_db_log_file))
         cbl_db = create_db_per_test + str(time.time())
         # Create CBL database
         db = Database(base_url)
@@ -519,6 +525,11 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         log_info("Getting the database name")
         db_name = db.getName(source_db)
         assert db_name == cbl_db
+        path = db.getPath(source_db).rstrip("/\\")
+        if '\\' in path:
+            path = '\\'.join(path.split('\\')[:-1])
+        else:
+            path = '/'.join(path.split('/')[:-1])
 
     # This dictionary is passed to each test
     yield {
@@ -549,6 +560,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "db_config": db_config,
         "enable_sample_bucket": enable_sample_bucket,
         "log_filename": log_filename,
+        "test_db_log_file": test_db_log_file,
         "liteserv_version": liteserv_version,
         "delta_sync_enabled": delta_sync_enabled
     }
@@ -558,20 +570,16 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         # Delete CBL database
         log_info("Deleting the database {} at test teardown".format(create_db_per_test))
         time.sleep(1)
-        path = db.getPath(source_db).rstrip("/\\")
-        if '\\' in path:
-            path = '\\'.join(path.split('\\')[:-1])
-        else:
-            path = '/'.join(path.split('/')[:-1])
-        if db.exists(cbl_db, path):
-            db.deleteDB(source_db)
-        log_info("Flushing server memory")
-        utils_obj = Utils(base_url)
-        utils_obj.flushMemory()
-
-    if create_db_per_test:
-        log_info("Stopping the test server per test")
-        testserver.stop()
+        try:
+            if db.exists(cbl_db, path):
+                db.deleteDB(source_db)
+            log_info("Flushing server memory")
+            utils_obj = Utils(base_url)
+            utils_obj.flushMemory()
+            log_info("Stopping the test server per test")
+            testserver.stop()
+        except Exception, err:
+            log_info("Exception occurred: {}".format(err))
 
 
 @pytest.fixture(scope="class")

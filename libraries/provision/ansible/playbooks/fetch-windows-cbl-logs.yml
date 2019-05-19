@@ -2,6 +2,8 @@
   hosts: windows
   vars:
     log_full_path:
+    log_file:
+
 
   tasks:
     - include: tasks/stop-fetch-windows-cbl-logs.yml
