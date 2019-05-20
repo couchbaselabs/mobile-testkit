@@ -22,28 +22,36 @@ class RemoteExecutor:
     located in the root of the repository
     """
 
-    def __init__(self, host):
+    def __init__(self, host, sg_platform="centos", username=None, password=None):
         client = paramiko.SSHClient()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         self.client = client
         self.host = host
+        self.sg_platform = sg_platform
         if "[" in self.host:
             self.host = self.host.replace("[", "")
             self.host = self.host.replace("]", "")
         self.username = ansible.constants.DEFAULT_REMOTE_USER
+        if username is not None:
+            self.username = username
+            self.password = password
 
-    def execute(self, commamd):
+    def execute(self, command):
         """Executes a shell command on a remote host.
         It will stream the stdout and stderr and return an error code
         """
 
         log_info("Connecting to {}".format(self.host))
-        self.client.connect(self.host, username=self.username, banner_timeout=REMOTE_EXECUTOR_TIMEOUT)
+        log_info("Running '{}' on host {}".format(command, self.host))
 
-        log_info("Running '{}' on host {}".format(commamd, self.host))
-
-        # get_pty=True is required for sudo commands
-        stdin, stdout, stderr = self.client.exec_command(commamd, get_pty=True)
+        if self.sg_platform == "windows":
+            self.client.connect(self.host, username=self.username, password=self.password, banner_timeout=REMOTE_EXECUTOR_TIMEOUT)
+            command = "cmd /c " + command
+            stdin, stdout, stderr = self.client.exec_command(command, timeout=60)
+        else:
+            self.client.connect(self.host, username=self.username, banner_timeout=REMOTE_EXECUTOR_TIMEOUT)
+            # get_pty=True is required for sudo commands
+            stdin, stdout, stderr = self.client.exec_command(command, get_pty=True)
 
         # We should not be sending / recieving data on the stdin channel so close it
         stdin.close()

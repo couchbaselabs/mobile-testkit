@@ -134,6 +134,14 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="delta-sync: Enable delta-sync for sync gateway")
 
+    parser.addoption("--cbl-log-decoder-platform",
+                     action="store",
+                     help="cbl-log-decoder-platform: the platform to assign to the cbl-log-decoder platform")
+
+    parser.addoption("--cbl-log-decoder-build",
+                     action="store",
+                     help="cbl-log-decoder-build: the platform to assign to the cbl-log-decoder build")
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -167,6 +175,8 @@ def params_from_base_suite_setup(request):
     number_replicas = request.config.getoption("--number-replicas")
     delta_sync_enabled = request.config.getoption("--delta-sync")
     enable_file_logging = request.config.getoption("--enable-file-logging")
+    cbl_log_decoder_platform = request.config.getoption("--cbl-log-decoder-platform")
+    cbl_log_decoder_build = request.config.getoption("--cbl-log-decoder-build")
 
     test_name = request.node.name
 
@@ -243,6 +253,24 @@ def params_from_base_suite_setup(request):
     else:
         log_info("Running test with sync_gateway version {}".format(sync_gateway_version))
         persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_version', sync_gateway_version)
+
+    try:
+        cbl_log_decoder_platform
+    except NameError:
+        log_info("cbl_log_decoder_platform is not provided")
+        persist_cluster_config_environment_prop(cluster_config, 'cbl_log_decoder_platform', "macos", property_name_check=False)
+    else:
+        log_info("Running test with cbl_log_decoder_platform {}".format(cbl_log_decoder_platform))
+        persist_cluster_config_environment_prop(cluster_config, 'cbl_log_decoder_platform', cbl_log_decoder_platform, property_name_check=False)
+
+    try:
+        cbl_log_decoder_build
+    except NameError:
+        log_info("cbl_log_decoder_build is not provided")
+        persist_cluster_config_environment_prop(cluster_config, 'cbl_log_decoder_build', "", property_name_check=False)
+    else:
+        log_info("Running test with cbl_log_decoder_platform {}".format(cbl_log_decoder_platform))
+        persist_cluster_config_environment_prop(cluster_config, 'cbl_log_decoder_platform', cbl_log_decoder_platform, property_name_check=False)
 
     if xattrs_enabled:
         log_info("Running test with xattrs for sync meta storage")
@@ -325,12 +353,14 @@ def params_from_base_suite_setup(request):
 
     suite_source_db = None
     suite_db = None
+    suite_db_log_files = None
     if create_db_per_suite:
         if enable_file_logging and liteserv_version >= "2.5.0":
             cbllog = FileLogging(base_url)
             cbllog.configure(log_level="verbose", max_rotate_count=2,
-                             max_size=1000 * 512, plain_text=True)
-            log_info("Log files available at - {}".format(cbllog.get_directory()))
+                             max_size=1000000 * 512, plain_text=True)
+            suite_db_log_files = cbllog.get_directory()
+            log_info("Log files available at - {}".format(suite_db_log_files))
         # Create CBL database
         suite_cbl_db = create_db_per_suite
         suite_db = Database(base_url)
@@ -427,7 +457,10 @@ def params_from_base_suite_setup(request):
         "device_enabled": device_enabled,
         "flush_memory_per_test": flush_memory_per_test,
         "delta_sync_enabled": delta_sync_enabled,
-        "enable_file_logging": enable_file_logging
+        "enable_file_logging": enable_file_logging,
+        "cbl_log_decoder_platform": cbl_log_decoder_platform,
+        "cbl_log_decoder_build": cbl_log_decoder_build,
+        "suite_db_log_files": suite_db_log_files
     }
 
     if create_db_per_suite:
@@ -475,6 +508,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     liteserv_version = params_from_base_suite_setup["liteserv_version"]
     delta_sync_enabled = params_from_base_suite_setup["delta_sync_enabled"]
     enable_file_logging = params_from_base_suite_setup["enable_file_logging"]
+    cbl_log_decoder_platform = params_from_base_suite_setup["cbl_log_decoder_platform"]
+    cbl_log_decoder_build = params_from_base_suite_setup["cbl_log_decoder_build"]
 
     source_db = None
     test_name_cp = test_name.replace("/", "-")
@@ -503,12 +538,15 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
 
     db = None
     cbl_db = None
+    test_db_log_file = None
+    path = None
     if create_db_per_test:
         if enable_file_logging and liteserv_version >= "2.5.0":
             cbllog = FileLogging(base_url)
             cbllog.configure(log_level="verbose", max_rotate_count=2,
-                             max_size=1000 * 512, plain_text=True)
-            log_info("Log files available at - {}".format(cbllog.get_directory()))
+                             max_size=100000 * 512, plain_text=True)
+            test_db_log_file = cbllog.get_directory()
+            log_info("Log files available at - {}".format(test_db_log_file))
         cbl_db = create_db_per_test + str(time.time())
         # Create CBL database
         db = Database(base_url)
@@ -519,6 +557,11 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         log_info("Getting the database name")
         db_name = db.getName(source_db)
         assert db_name == cbl_db
+        path = db.getPath(source_db).rstrip("/\\")
+        if '\\' in path:
+            path = '\\'.join(path.split('\\')[:-1])
+        else:
+            path = '/'.join(path.split('/')[:-1])
 
     # This dictionary is passed to each test
     yield {
@@ -549,8 +592,11 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "db_config": db_config,
         "enable_sample_bucket": enable_sample_bucket,
         "log_filename": log_filename,
+        "test_db_log_file": test_db_log_file,
         "liteserv_version": liteserv_version,
-        "delta_sync_enabled": delta_sync_enabled
+        "delta_sync_enabled": delta_sync_enabled,
+        "cbl_log_decoder_platform": cbl_log_decoder_platform,
+        "cbl_log_decoder_build": cbl_log_decoder_build
     }
 
     log_info("Tearing down test")
@@ -558,21 +604,16 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         # Delete CBL database
         log_info("Deleting the database {} at test teardown".format(create_db_per_test))
         time.sleep(1)
-        if test_name != "test_copy_prebuilt_database":
-            path = db.getPath(source_db).rstrip("/\\")
-            if '\\' in path:
-                path = '\\'.join(path.split('\\')[:-1])
-            else:
-                path = '/'.join(path.split('/')[:-1])
+        try:
             if db.exists(cbl_db, path):
                 db.deleteDB(source_db)
-        log_info("Flushing server memory")
-        utils_obj = Utils(base_url)
-        utils_obj.flushMemory()
-
-    if create_db_per_test:
-        log_info("Stopping the test server per test")
-        testserver.stop()
+            log_info("Flushing server memory")
+            utils_obj = Utils(base_url)
+            utils_obj.flushMemory()
+            log_info("Stopping the test server per test")
+            testserver.stop()
+        except Exception, err:
+            log_info("Exception occurred: {}".format(err))
 
 
 @pytest.fixture(scope="class")

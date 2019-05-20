@@ -1,11 +1,8 @@
 ---
-- hosts: pool
+- hosts: sync_gateways
   any_errors_fatal: true
 
   tasks:
-  # Remove Couchbase Server
-  - include: tasks/remove-couchbase-server.yml
-
   # Remove sync_gateway
   - include: tasks/remove-sync-gateway.yml
     become: yes
@@ -23,9 +20,6 @@
   - include: tasks/remove-sg-accel-windows.yml
     when: ansible_os_family == "Windows"
 
-  # Remove nginx
-  - include: tasks/remove-nginx.yml
-
   # Delete sync_gateway and sg_accel uses
   - include: tasks/clean-users.yml
     become: yes
@@ -37,6 +31,19 @@
     become: yes
     when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
 
+
+- hosts: couchbase_servers
+  any_errors_fatal: true
+  become: yes
+
+  tasks:
+  # Remove Couchbase Server
+  - include: tasks/remove-couchbase-server.yml
+
+  # Remove nginx
+  - include: tasks/remove-nginx.yml
+
   # Check no servers are running
   - name: ALL | verify no servers not listening on port 8081
     wait_for: port=8091 delay=1 state=stopped
+

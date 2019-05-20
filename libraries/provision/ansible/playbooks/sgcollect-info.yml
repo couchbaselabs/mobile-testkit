@@ -14,9 +14,6 @@
   - include: tasks/sg-sgcollect-info-windows.yml
     when: ansible_os_family == "Windows"
 
-  - include: tasks/sg-pullRedacted-zip-windows.yml
-    when: ansible_os_family == "Windows"
-
 
 - hosts: sg_accels
   become: yes
@@ -32,7 +29,4 @@
     when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
 
   - include: tasks/sa-sgcollect-info-windows.yml
-    when: ansible_os_family == "Windows"
-
-  - include: tasks/sa-pullRedacted-zip-windows.yml
     when: ansible_os_family == "Windows"

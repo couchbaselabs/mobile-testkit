@@ -209,7 +209,7 @@ class Database(object):
             args.setString("concurrencyControlType", concurrencyControlType)
         return self._client.invokeMethod("database_deleteWithConcurrency", args)
 
-    def create_bulk_docs(self, number, id_prefix, db, channels=None, generator=None, attachments_generator=None, id_start_num=0):
+    def create_bulk_docs(self, number, id_prefix, db, channels=None, generator=None, attachments_generator=None, id_start_num=0, attachment_file_list=None):
         """
         if id_prefix == None, generate a uuid for each doc
 
@@ -230,6 +230,8 @@ class Database(object):
                 doc_body = doc_generators.simple_user()
             elif generator == "complex_doc":
                 doc_body = doc_generators.complex_doc()
+            elif generator == "20mb":
+                doc_body = doc_generators.doc_20mb()
             else:
                 doc_body = doc_generators.simple()
 
@@ -237,8 +239,11 @@ class Database(object):
                 doc_body["channels"] = channels
 
             if attachments_generator:
-                types.verify_is_callable(attachments_generator)
-                attachments = attachments_generator()
+                if attachment_file_list is not None:
+                    attachments = attachments_generator(attachment_file_list)
+                else:
+                    types.verify_is_callable(attachments_generator)
+                    attachments = attachments_generator()
                 doc_body["_attachments"] = {att.name: {"data": att.data} for att in attachments}
 
             if id_prefix is None:

@@ -9,6 +9,7 @@ from subprocess import Popen, PIPE
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.exceptions import LogScanningError, CollectionError
 from keywords.SyncGateway import sync_gateway_config_path_for_mode, get_sync_gateway_version
+from keywords.SyncGateway import SyncGateway
 from keywords.utils import log_info, host_for_url
 from libraries.testkit.cluster import Cluster
 from utilities.cluster_config_utils import load_cluster_config_json
@@ -211,6 +212,8 @@ def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_
             directory = "/home/sync_gateway/data"
             if mode == "di":
                 sa_directory = "/home/sg_accel/data"
+        sg_helper = SyncGateway()
+        sg_helper.create_directory(cluster_config=cluster_config, url=sg_url, dir_name=directory)
     else:
         directory = None
     if redaction_salt:
@@ -390,7 +393,7 @@ def pull_redacted_zip_file(cluster_config, sg_platform, output_dir=None, sa_outp
             sg_logs_dir = "/home/sync_gateway/logs"
             sa_logs_dir = "/home/sg_accel/logs"
         if sg_platform == "windows":
-            sg_logs_dir = "C:{}".format("\PROGRA~1\Couchbase\\var\\logs")
+            sg_logs_dir = "C:{}".format("\PROGRA~1\Couchbase\\Sync Gateway\\var\\lib\\couchbase\\logs")
             sa_logs_dir = "C:{}".format("\PROGRA~1\Couchbase\\var\\logs")
     else:
         sg_logs_dir = output_dir
