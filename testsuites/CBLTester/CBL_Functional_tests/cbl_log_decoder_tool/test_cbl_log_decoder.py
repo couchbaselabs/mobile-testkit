@@ -56,6 +56,7 @@ def test_cbl_decoder_with_current_logs(params_from_base_test_setup):
     liteserv_platform = params_from_base_test_setup["liteserv_platform"]
     cbl_log_decoder_platform = params_from_base_test_setup["cbl_log_decoder_platform"]
     cbl_log_decoder_build = params_from_base_test_setup["cbl_log_decoder_build"]
+    log_file = params_from_base_test_setup["test_db_log_file"]
     device_enabled = params_from_base_test_setup["device_enabled"]
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
@@ -66,7 +67,7 @@ def test_cbl_decoder_with_current_logs(params_from_base_test_setup):
     log_level = "verbose"
     plain_text = False
     if liteserv_platform == "net-msft" or liteserv_platform == "net-uwp":
-        cbl_log_dir = "c:/test"
+        cbl_log_dir = log_file
     else:
         cbl_log_dir = "/tmp/test"
     # Clean up test directory to remove stale logs
