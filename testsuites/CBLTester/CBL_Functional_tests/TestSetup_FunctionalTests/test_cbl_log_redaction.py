@@ -160,7 +160,7 @@ def verify_password_masked(liteserv_platform, log_file, password, testserver, de
             "fetch-windows-cbl-logs.yml",
             extra_vars={
                 "log_full_path": log_full_path,
-                "log_file": log_file
+                "custom_cbl_log_dir": log_file
             }
         )
         if status != 0:

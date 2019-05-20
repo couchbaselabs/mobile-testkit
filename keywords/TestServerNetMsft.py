@@ -1,4 +1,5 @@
 import os
+import time
 
 from keywords.TestServerBase import TestServerBase
 from keywords.constants import LATEST_BUILDS, RELEASED_BUILDS
@@ -124,6 +125,7 @@ class TestServerNetMsft(TestServerBase):
 
         if status != 0:
             raise LiteServError("Could not start testserver")
+        time.sleep(15)
 
     def _verify_launched(self):
         """Poll on expected http://<host>:<port> until it is reachable
