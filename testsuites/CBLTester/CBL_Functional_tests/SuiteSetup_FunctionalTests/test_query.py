@@ -1544,3 +1544,22 @@ def test_getDoc_withLocale(params_from_base_test_setup, doc_id_prefix):
     for docs in result_set:
         docs_from_cbl.append(docs)
     assert len(docs_from_cbl) == 5, "Results for locale with - did not return 5 records"
+
+
+def test_query_arthimetic(params_from_base_test_setup):
+    """
+        @summary:
+        1. Query on arthimetic call
+        2. Verify no crash happens
+
+    """
+
+    cbl_db = params_from_base_test_setup["suite_source_db"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    base_url = params_from_base_test_setup["base_url"]
+
+    if sync_gateway_version < "2.0.0":
+        pytest.skip('This test cannnot run with sg version below 2.0')
+
+    qy = Query(base_url)
+    qy.query_arthimetic(cbl_db)

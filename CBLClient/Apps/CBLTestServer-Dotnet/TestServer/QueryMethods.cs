@@ -159,7 +159,7 @@ namespace Couchbase.Lite.Testing
                 var prop2 = postBody["select_property2"].ToString();
                 var whrKey = postBody["whr_key"].ToString();
                 var whrval = postBody["whr_val"];
-                IExpression whrVal = Expression.Double((float)whrval);
+                IExpression whrVal = Expression.Double((double)whrval);
                 List<object> resultArray = new List<object>();
                 using (IQuery query = QueryBuilder
                                 .Select(SelectResult.Expression(Meta.ID),
@@ -876,6 +876,30 @@ namespace Couchbase.Lite.Testing
                        .Join(Join.LeftOuterJoin(DataSource.Database(db).As(secondary))
                              .On(Meta.ID.From(main).EqualTo(Expression.Property(prop).From(secondary))))
                        .Limit(Expression.Int(limit)))
+
+                    foreach (Result row in query.Execute())
+                    {
+                        resultArray.Add(row.ToDictionary());
+                    }
+                response.WriteBody(resultArray);
+            });
+
+        }
+
+        internal static void QueryArthimetic([NotNull] NameValueCollection args,
+           [NotNull] IReadOnlyDictionary<string, object> postBody,
+           [NotNull] HttpListenerResponse response)
+        {
+            With<Database>(postBody, "database", db =>
+            {
+
+            List<Object> resultArray = new List<Object>();
+
+            using (IQuery query = QueryBuilder
+                            .Select(SelectResult.Expression(Meta.ID))
+                            .From(DataSource.Database(db))
+                            .Where(Expression.Property("number1").Modulo(Expression.Int(2))
+                                    .EqualTo(Expression.Int(0))))
 
                     foreach (Result row in query.Execute())
                     {

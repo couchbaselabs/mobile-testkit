@@ -99,9 +99,7 @@ public class ValueSerializer {
             return (T) new Integer(value.substring(1));
         } else if (value.startsWith("L")){
             return (T) new Long(value.substring(1));
-        } else if (value.startsWith("F")){
-            return (T) new Double(value.substring(1));
-        } else if (value.startsWith("D")){
+        } else if ((value.startsWith("F")) || (value.startsWith("D"))){
             return (T) new Double(value.substring(1));
         }
         else {

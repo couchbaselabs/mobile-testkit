@@ -70,10 +70,11 @@ def test_olddoc_nil(params_from_base_test_setup, sg_conf_name):
     cluster_topology = params_from_base_test_setup['cluster_topology']
     mode = params_from_base_test_setup['mode']
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+    delta_sync_enabled = params_from_base_test_setup['delta_sync_enabled']
 
     # This test should only run when using xattr meta storage
-    if not xattrs_enabled:
-        pytest.skip('XATTR tests require --xattrs flag')
+    if not xattrs_enabled or delta_sync_enabled:
+        pytest.skip('XATTR tests require --xattrs flag or test has enable delta sync')
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
