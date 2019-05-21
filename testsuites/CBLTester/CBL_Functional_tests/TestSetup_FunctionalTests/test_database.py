@@ -3,7 +3,7 @@ import time
 
 from CBLClient.Database import Database
 from CBLClient.DatabaseConfiguration import DatabaseConfiguration
-from CBLClient.Query import Query
+
 
 @pytest.mark.sanity
 @pytest.mark.listener
