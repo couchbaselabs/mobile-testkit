@@ -8,7 +8,7 @@
   debug: msg="Copying logs at - {{ log_full_path }}"
 
 - name: Debug Msg
-  debug: msg="Copying logs from - {{ log_file }}"
+  debug: msg="Copying logs from - {{ custom_cbl_log_dir }}"
 
 - name: Getting directory of files
   win_shell: Get-ChildItem | where {!$_.PsIsContainer} | foreach { $_.Name }
