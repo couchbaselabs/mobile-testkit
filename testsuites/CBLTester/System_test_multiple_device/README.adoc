@@ -1,0 +1,50 @@
+=== System Testing Jenkins
+
+http://uberjenkins.sc.couchbase.com:8080/view/03%20CBL-2.x/job/System-Testing/
+
+=== System Test specific options:
+
+*  --resume-cluster: Set to true, if one wants to resume an already existing run (at present, should not be used with jenkins)
+*  --no-db-delete: Set to true, if one don't wants db to be deleted after test finishes. If not set DB will be delete irrespective of Test status (PASS, FAIL or ERROR)
+* --liteserv-platforms: the platforms to assign to the liteserv. 
+    ** Eg: net-msft or net-uwp or ios or android or any combination
+* --liteserv-versions: the versions to download / install for the liteservs
+* --liteserv-hosts: the hosts to deploy liteserv apps
+* --liteserv-ports: the ports to assign to liteserv apps
+* --cluster-config: Provide cluster config if one wants to use other than Basic config ( 1 CBS, 1 SG and Testserver app/s)
+* --enable-file-logging: If set, CBL file logging would enable. Supported only cbl2.5 onwards
+* --enable-rebalance: Should be use in conjection with "cluster-config" option. If set, CBS not would be rebalance in/out of cluster
+
+
+=== System test command
+
+* .net only -
+
+    pytest -s --timeout 86400 --liteserv-versions=2.5.0-190 --liteserv-hosts=172.23.106.117 --liteserv-ports=8080 --liteserv-platforms=net-msft --enable-file-logging --no-db-delete --sync-gateway-version=2.5.0-271 --mode=cc --server-version=6.0.0-1693 --create-db-per-suite=cbl-test testsuites/CBLTester/System_test_multiple_device/test_system_testing.py
+
+* ios only -
+
+    pytest -s --timeout 86400 --liteserv-versions=2.5.0-272 --liteserv-hosts=10.100.161.26 --liteserv-ports=8080 --liteserv-platforms=ios --enable-file-logging --no-db-delete --sync-gateway-version=2.5.0-271 --mode=cc --server-version=6.0.0-1693 --create-db-per-suite=cbl-test testsuites/CBLTester/System_test_multiple_device/test_system_testing.py
+
+* android only -
+
+    pytest -s --timeout 86400 --liteserv-versions=2.5.0-224 --liteserv-hosts=10.100.161.27 --liteserv-ports=8080 --liteserv-platforms=android --enable-file-logging --no-db-delete --sync-gateway-version=2.5.0-271 --mode=cc --server-version=6.0.0-1693 --create-db-per-suite=cbl-test testsuites/CBLTester/System_test_multiple_device/test_system_testing.py
+
+
+=== System test summary
+* Test starts with adding 1M docs equally divided among all the CBL apps in cluster. Docs are added in a batch of 1000 docs per doc sequentially on CBL apps. So if we have 2 cbl app in cluster, 1/2 M docs would be 
+added to each app.
+
+* After adding all the docs, app start syncing docs to rest of the cluster, i.e. CBS and SG. So once the replication ends, each cbl app will have 1M docs along with 1M docs synced to CBS and SG.
+
+* Now the continuous iteration starts, in which we update, delete, add docs on both SG and apps. Continuous replication will sync all mutation in cluster.
+
+    ** We start iteration with updating 100 random docs 100 times on SG and let the replication sync the changes everywhere. Then we update 100 random docs 100 times on all the cbl apps in cluster.
+    ** Then we delete 1000 randoms docs from SG and let th sync complete. After that we select another 1000 different random docs and divide them in equal parts depending on apps available in cluster and then delete docs             on each apps
+    ** Similarily we follow the process of Creating 2000 new docs on SG and CBL. This whole cycle gets repeated in each iteration.
+
+
+=== System test Failure points
+* When running System test with multiple cbl app in cluster, sometimes app not able to catch up with the total no. of docs due to network issue. In that case stop the case and start with --resume-cluster (only for local run)
+* During iteration, some times conflicts causes doc delete in one app but not in other. Currently we don't have exact idea about the solution, but new logging should help.
+* Exit point should be only when the test run time, which is 4 days long. Timer starts once the itreation starts. Anything else is test failure.
