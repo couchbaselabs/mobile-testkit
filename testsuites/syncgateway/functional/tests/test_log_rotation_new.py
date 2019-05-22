@@ -68,10 +68,13 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name):
     sg_helper.create_directory(cluster_config=cluster_conf, url=sg_one_url, dir_name="/tmp/sg_logs")
 
     SG_LOGS = ['sg_debug', 'sg_error', 'sg_info', 'sg_warn']
-    json_cluster = load_cluster_config_json(cluster_conf)
-    sghost_username = json_cluster["sync_gateways:vars"]["ansible_user"]
-    sghost_password = json_cluster["sync_gateways:vars"]["ansible_password"]
-    remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip, sg_platform, sghost_username, sghost_password)
+    if sg_platform == "windows":
+        json_cluster = load_cluster_config_json(cluster_conf)
+        sghost_username = json_cluster["sync_gateways:vars"]["ansible_user"]
+        sghost_password = json_cluster["sync_gateways:vars"]["ansible_password"]
+        remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip, sg_platform, sghost_username, sghost_password)
+    else:
+        remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip)
 
     for log in SG_LOGS:
         # Generate a log file with size ~94MB to check that backup file not created while 100MB not reached
@@ -242,11 +245,13 @@ def test_log_maxage_timestamp_ignored(params_from_base_test_setup, sg_conf_name)
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
-
-    json_cluster = load_cluster_config_json(cluster_conf)
-    sghost_username = json_cluster["sync_gateways:vars"]["ansible_user"]
-    sghost_password = json_cluster["sync_gateways:vars"]["ansible_password"]
-    remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip, sg_platform, sghost_username, sghost_password)
+    if sg_platform == "windows":
+        json_cluster = load_cluster_config_json(cluster_conf)
+        sghost_username = json_cluster["sync_gateways:vars"]["ansible_user"]
+        sghost_password = json_cluster["sync_gateways:vars"]["ansible_password"]
+        remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip, sg_platform, sghost_username, sghost_password)
+    else:
+        remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip)
 
     # Stop sync_gateways
     log_info(">>> Stopping sync_gateway")
@@ -388,10 +393,13 @@ def test_log_200mb(params_from_base_test_setup, sg_conf_name):
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
-    json_cluster = load_cluster_config_json(cluster_conf)
-    sghost_username = json_cluster["sync_gateways:vars"]["ansible_user"]
-    sghost_password = json_cluster["sync_gateways:vars"]["ansible_password"]
-    remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip, sg_platform, sghost_username, sghost_password)
+    if sg_platform == "windows":
+        json_cluster = load_cluster_config_json(cluster_conf)
+        sghost_username = json_cluster["sync_gateways:vars"]["ansible_user"]
+        sghost_password = json_cluster["sync_gateways:vars"]["ansible_password"]
+        remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip, sg_platform, sghost_username, sghost_password)
+    else:
+        remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip)
 
     # Stop sync_gateways
     log_info(">>> Stopping sync_gateway")
@@ -537,11 +545,14 @@ def test_log_maxbackups_0(params_from_base_test_setup, sg_conf_name):
     cluster.reset(sg_config_path=sg_conf)
 
     sg_one_url = cluster_hosts["sync_gateways"][0]["public"]
-
-    json_cluster = load_cluster_config_json(cluster_conf)
-    sghost_username = json_cluster["sync_gateways:vars"]["ansible_user"]
-    sghost_password = json_cluster["sync_gateways:vars"]["ansible_password"]
-    remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip, sg_platform, sghost_username, sghost_password)
+    
+    if sg_platform == "windows":
+        json_cluster = load_cluster_config_json(cluster_conf)
+        sghost_username = json_cluster["sync_gateways:vars"]["ansible_user"]
+        sghost_password = json_cluster["sync_gateways:vars"]["ansible_password"]
+        remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip, sg_platform, sghost_username, sghost_password)
+    else:
+        remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip)
 
     # Stop sync_gateways
     log_info(">>> Stopping sync_gateway")
