@@ -17,10 +17,9 @@ from datetime import datetime, timedelta
 @pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.replication
-@pytest.mark.parametrize("num_of_docs, num_of_updates, num_of_docs_to_update, num_of_docs_in_itr, num_of_doc_to_delete,"
-                         " num_of_docs_to_add, up_time, repl_status_check_sleep_time", [
-    # (1000000, 100, 100, 1000, 1000, 2000, 4 * 24 * 60, 20),
-    (500, 5, 10, 50, 10, 10, 1 * 20, 2),
+@pytest.mark.parametrize("num_of_docs, num_of_updates, num_of_docs_to_update, num_of_docs_in_itr, num_of_doc_to_delete, num_of_docs_to_add, up_time, repl_status_check_sleep_time", [
+    (1000000, 100, 100, 1000, 1000, 2000, 4 * 24 * 60, 20),
+    # (500, 5, 10, 50, 10, 10, 1 * 20, 2),
 ])
 def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_of_docs_to_update, num_of_docs_in_itr, num_of_doc_to_delete, num_of_docs_to_add, up_time, repl_status_check_sleep_time):
     sg_db = "db"
@@ -316,12 +315,11 @@ def _replicaton_status_check(repl_obj, replicator, repl_status_check_sleep_time=
     repl_obj.wait_until_replicator_idle(replicator, max_times=maxint, sleep_time=repl_status_check_sleep_time)
     total = repl_obj.getTotal(replicator)
     completed = repl_obj.getCompleted(replicator)
-    log_info("Total: {}\nCompleted: {}".format(total, completed))
-    # assert total == completed, "total is not equal to completed"
+    assert total == completed, "total is not equal to completed"
 
 
 def _check_doc_count(db_obj_list, cbl_db_list):
     new_docs_count = set([db_obj.getCount(cbl_db) for db_obj, cbl_db in zip(db_obj_list, cbl_db_list)])
     log_info("Doc count is - {}".format(new_docs_count))
-    # if len(new_docs_count) != 1:
-    #     assert 0, "Doc count in all DBs are not equal"
+    if len(new_docs_count) != 1:
+        assert 0, "Doc count in all DBs are not equal"
