@@ -545,7 +545,7 @@ def test_log_maxbackups_0(params_from_base_test_setup, sg_conf_name):
     cluster.reset(sg_config_path=sg_conf)
 
     sg_one_url = cluster_hosts["sync_gateways"][0]["public"]
-    
+
     if sg_platform == "windows":
         json_cluster = load_cluster_config_json(cluster_conf)
         sghost_username = json_cluster["sync_gateways:vars"]["ansible_user"]
