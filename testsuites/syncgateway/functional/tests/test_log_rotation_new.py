@@ -439,7 +439,10 @@ def test_log_200mb(params_from_base_test_setup, sg_conf_name):
     for log in SG_LOGS:
         status, stdout, stderr = remote_executor.execute("ls /tmp/sg_logs/ | grep {} | wc -l".format(log))
         # A backup file should be created with 200MB
-        assert stdout[0].rstrip() == SG_LOGS_FILES_NUM[log]
+        if (log == "sg_debug" or log == "sg_info") and sg_platform != "windows":
+            assert int(stdout[0].rstrip()) == int(SG_LOGS_FILES_NUM[log]) + 1
+        else:
+            assert stdout[0].rstrip() == SG_LOGS_FILES_NUM[log]
 
     # Remove generated conf file
     os.remove(temp_conf)
@@ -588,7 +591,10 @@ def test_log_maxbackups_0(params_from_base_test_setup, sg_conf_name):
     send_request_to_sgw(sg_one_url, sg_admin_url, remote_executor, sg_platform)
     for log in SG_LOGS:
         status, stdout, stderr = remote_executor.execute("ls /tmp/sg_logs/ | grep {} | wc -l".format(log))
-        assert stdout[0].rstrip() == '2'
+        if (log == "sg_debug" or log == "sg_info") and sg_platform != "windows":
+            assert stdout[0].rstrip() == '3'
+        else:
+            assert stdout[0].rstrip() == '2'
 
     # Remove generated conf file
     os.remove(temp_conf)
