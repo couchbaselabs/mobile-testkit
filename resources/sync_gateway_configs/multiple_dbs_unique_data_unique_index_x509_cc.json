@@ -6,7 +6,6 @@
     "maxFileDescriptors": 90000,
     "compressResponses": false,
     "log": ["CRUD+", "Cache+", "HTTP+", "Changes+"],
-    "verbose":"true",
     {{ sslcert }}
     {{ sslkey }}
     "databases": {
