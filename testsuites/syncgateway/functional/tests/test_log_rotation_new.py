@@ -8,6 +8,7 @@ from keywords.SyncGateway import SyncGateway, sync_gateway_config_path_for_mode,
 from keywords.utils import log_info, host_for_url
 from libraries.testkit.cluster import Cluster
 from keywords.exceptions import ProvisioningError
+from utilities.cluster_config_utils import load_cluster_config_json
 
 
 @pytest.mark.sanity
@@ -24,6 +25,7 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name):
     """
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    sg_platform = params_from_base_test_setup["sg_platform"]
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     cluster_helper = ClusterKeywords(cluster_conf)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
@@ -66,36 +68,37 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name):
     sg_helper.create_directory(cluster_config=cluster_conf, url=sg_one_url, dir_name="/tmp/sg_logs")
 
     SG_LOGS = ['sg_debug', 'sg_error', 'sg_info', 'sg_warn']
-    remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip)
+    json_cluster = load_cluster_config_json(cluster_conf)
+    sghost_username = json_cluster["sync_gateways:vars"]["ansible_user"]
+    sghost_password = json_cluster["sync_gateways:vars"]["ansible_password"]
+    remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip, sg_platform, sghost_username, sghost_password)
 
     for log in SG_LOGS:
         # Generate a log file with size ~94MB to check that backup file not created while 100MB not reached
-        file_size = 94 * 1024 * 1024
+        file_size = 120 * 1024 * 1024
         file_name = "/tmp/sg_logs/{}.log".format(log)
         log_info("Testing log rotation for {}".format(file_name))
         sg_helper.create_empty_file(cluster_config=cluster_conf, url=sg_one_url, file_name=file_name, file_size=file_size)
 
     # iterate 5 times to verify that every time we get new backup file with ~100MB
-    for i in xrange(5):
-        sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
-        # ~1M MB will be added to the info/debug/warn log files after the requests
-        remote_executor.execute(
-            "for ((i=1;i <= 2000;i += 1)); do curl -s http://localhost:4984/ABCD/ > /dev/null; done")
-        remote_executor.execute(
-            "for ((i=1;i <= 2000;i += 1)); do curl -s -H 'Accept: text/plain' http://localhost:4985/db/ > /dev/null; done")
+    sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
 
-        # Verify num of log files for every log file type
-        for log in SG_LOGS:
-            file_name = "/tmp/sg_logs/{}.log".format(log)
-            _, stdout, _ = remote_executor.execute("ls /tmp/sg_logs/ | grep {} | wc -l".format(log))
-            log_info("Checking for {} files for {}".format(i + 1, file_name))
-            assert stdout[0].rstrip() == str(i + 1)
+    for i in xrange(8):
+        log_info("Start sending bunch of requests to syncgatway to have more logs")
+        send_request_to_sgw(sg_one_url, sg_admin_url, remote_executor, sg_platform)
 
-            sg_helper.stop_sync_gateways(cluster_config=cluster_conf, url=sg_one_url)
+    # Verify num of log files for every log file type
+    for log in SG_LOGS:
+        file_name = "/tmp/sg_logs/{}.log".format(log)
+        _, stdout, _ = remote_executor.execute("ls /tmp/sg_logs/ | grep {} | wc -l".format(log))
+        log_info("Checking for {} files for {}".format(i + 1, file_name))
+        assert stdout[0].rstrip() == str(2)
 
-            # Generate an empty log file with size ~100MB
-            file_size = 100 * 1024 * 1024
-            sg_helper.create_empty_file(cluster_config=cluster_conf, url=sg_one_url, file_name=file_name, file_size=file_size)
+        sg_helper.stop_sync_gateways(cluster_config=cluster_conf, url=sg_one_url)
+
+        # Generate an empty log file with size ~100MB
+        file_size = 100 * 1024 * 1024
+        sg_helper.create_empty_file(cluster_config=cluster_conf, url=sg_one_url, file_name=file_name, file_size=file_size)
 
     sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=sg_conf)
 
@@ -224,6 +227,7 @@ def test_log_maxage_timestamp_ignored(params_from_base_test_setup, sg_conf_name)
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    sg_platform = params_from_base_test_setup["sg_platform"]
 
     log_info("Using cluster_conf: {}".format(cluster_conf))
     log_info("Using sg_conf: {}".format(sg_conf))
@@ -239,7 +243,10 @@ def test_log_maxage_timestamp_ignored(params_from_base_test_setup, sg_conf_name)
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
 
-    remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip)
+    json_cluster = load_cluster_config_json(cluster_conf)
+    sghost_username = json_cluster["sync_gateways:vars"]["ansible_user"]
+    sghost_password = json_cluster["sync_gateways:vars"]["ansible_password"]
+    remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip, sg_platform, sghost_username, sghost_password)
 
     # Stop sync_gateways
     log_info(">>> Stopping sync_gateway")
@@ -275,8 +282,7 @@ def test_log_maxage_timestamp_ignored(params_from_base_test_setup, sg_conf_name)
 
     sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
     # ~1M MB will be added to log file after requests
-    remote_executor.execute("for ((i=1;i <= 2000;i += 1)); do curl -s http://localhost:4984/ABCD/ > /dev/null; done")
-    remote_executor.execute("for ((i=1;i <= 2000;i += 1)); do curl -s -H 'Accept: text/plain' http://localhost:4985/db/ > /dev/null; done")
+    send_request_to_sgw(sg_one_url, sg_admin_url, remote_executor, sg_platform)
 
     sg_helper.stop_sync_gateways(cluster_config=cluster_conf, url=sg_one_url)
     # Get number of logs for each type of log
@@ -367,6 +373,7 @@ def test_log_200mb(params_from_base_test_setup, sg_conf_name):
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    sg_platform = params_from_base_test_setup["sg_platform"]
 
     log_info("Using cluster_conf: {}".format(cluster_conf))
     log_info("Using sg_conf: {}".format(sg_conf))
@@ -381,8 +388,10 @@ def test_log_200mb(params_from_base_test_setup, sg_conf_name):
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
-
-    remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip)
+    json_cluster = load_cluster_config_json(cluster_conf)
+    sghost_username = json_cluster["sync_gateways:vars"]["ansible_user"]
+    sghost_password = json_cluster["sync_gateways:vars"]["ansible_password"]
+    remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip, sg_platform, sghost_username, sghost_password)
 
     # Stop sync_gateways
     log_info(">>> Stopping sync_gateway")
@@ -417,8 +426,7 @@ def test_log_200mb(params_from_base_test_setup, sg_conf_name):
     sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
     SG_LOGS_FILES_NUM = get_sgLogs_fileNum(SG_LOGS, remote_executor)
     # ~1M MB will be added to log file after requests
-    remote_executor.execute("for ((i=1;i <= 2000;i += 1)); do curl -s http://localhost:4984/ABCD/ > /dev/null; done")
-    remote_executor.execute("for ((i=1;i <= 2000;i += 1)); do curl -s -H 'Accept: text/plain' http://localhost:4985/db/ > /dev/null; done")
+    send_request_to_sgw(sg_one_url, sg_admin_url, remote_executor, sg_platform)
 
     for log in SG_LOGS:
         status, stdout, stderr = remote_executor.execute("ls /tmp/sg_logs/ | grep {} | wc -l".format(log))
@@ -512,6 +520,7 @@ def test_log_maxbackups_0(params_from_base_test_setup, sg_conf_name):
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    sg_platform = params_from_base_test_setup["sg_platform"]
 
     log_info("Using cluster_conf: {}".format(cluster_conf))
     log_info("Using sg_conf: {}".format(sg_conf))
@@ -529,7 +538,10 @@ def test_log_maxbackups_0(params_from_base_test_setup, sg_conf_name):
 
     sg_one_url = cluster_hosts["sync_gateways"][0]["public"]
 
-    remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip)
+    json_cluster = load_cluster_config_json(cluster_conf)
+    sghost_username = json_cluster["sync_gateways:vars"]["ansible_user"]
+    sghost_password = json_cluster["sync_gateways:vars"]["ansible_password"]
+    remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip, sg_platform, sghost_username, sghost_password)
 
     # Stop sync_gateways
     log_info(">>> Stopping sync_gateway")
@@ -562,9 +574,7 @@ def test_log_maxbackups_0(params_from_base_test_setup, sg_conf_name):
 
     sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
     # ~1M MB will be added to log file after requests
-    remote_executor.execute("for ((i=1;i <= 1000;i += 1)); do curl -s http://localhost:4984/ABCD/ > /dev/null; done")
-    remote_executor.execute("for ((i=1;i <= 1000;i += 1)); do curl -s -H 'Accept: text/plain' http://localhost:4985/db/ > /dev/null; done")
-
+    send_request_to_sgw(sg_one_url, sg_admin_url, remote_executor, sg_platform)
     for log in SG_LOGS:
         status, stdout, stderr = remote_executor.execute("ls /tmp/sg_logs/ | grep {} | wc -l".format(log))
         assert stdout[0].rstrip() == '2'
@@ -637,3 +647,17 @@ def get_sgLogs_fileNum(SG_LOGS_MAXAGE, remote_executor):
         SG_LOGS_FILES_NUM[log] = stdout[0].rstrip()
 
     return SG_LOGS_FILES_NUM
+
+
+def send_request_to_sgw(sg_one_url, sg_admin_url, remote_executor, sg_platform="centos"):
+    if sg_platform == "windows":
+        command = "for ((i=1;i <= 2000;i += 1)); do curl -s {}/ABCD/ > /dev/null; done".format(sg_one_url)
+        os.system(command)
+        command = "for ((i=1;i <= 2000;i += 1)); do curl -s -H 'Accept: application/json' {}/db/ > /dev/null; done".format(sg_admin_url)
+        os.system(command)
+
+    else:
+        remote_executor.execute(
+            "for ((i=1;i <= 2000;i += 1)); do curl -s http://localhost:4984/ABCD/ > /dev/null; done")
+        remote_executor.execute(
+            "for ((i=1;i <= 2000;i += 1)); do curl -s -H 'Accept: text/plain' http://localhost:4985/db/ > /dev/null; done")

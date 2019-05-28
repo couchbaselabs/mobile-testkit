@@ -97,7 +97,7 @@ public class QueryRequestHandler {
                 .where(whr_key_prop as! ExpressionProtocol)
 
             return query
-
+            
         case "query_run":
             let query: Query = args.get(name: "query")!
             return try query.execute()
@@ -226,6 +226,22 @@ public class QueryRequestHandler {
 
             return resultArray
 
+        case "query_arthimetic":
+            let database: Database = args.get(name: "database")!
+            
+            let searchQuery = QueryBuilder
+                .select(SelectResult.expression(Meta.id))
+                .from(DataSource.database(database))
+                .where(Expression.property("number1").modulo(Expression.int(2)).equalTo(Expression.int(0)))
+            
+            var resultArray = [Any]()
+            
+            for row in try searchQuery.execute() {
+                resultArray.append(row.toDictionary())
+            }
+            
+            return resultArray
+            
         case "query_like":
             let database: Database = args.get(name: "database")!
             let whr_key: String = args.get(name: "whr_key")!

@@ -147,11 +147,7 @@ namespace Couchbase.Lite.Testing
             {
                 return int.Parse(value.Substring(1));
             }
-            else if (value.StartsWith("F"))
-            {
-                return float.Parse(value.Substring(1));
-            }
-            else if (value.StartsWith("D"))
+            else if ((value.StartsWith("F")) || (value.StartsWith("D")))
             {
                 return double.Parse(value.Substring(1));
             }

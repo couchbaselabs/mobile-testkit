@@ -17,6 +17,7 @@
     couchbase_server_index_ram: 512
     couchbase_server_cluster_ram: "{{((ansible_memtotal_mb|int)*0.8)|int - 512 }}"
     couchbase_server_admin_port: 8091
+    protocol: http
     couchbase_server_home_path: /opt/couchbase
 
     # Primary node
@@ -147,19 +148,19 @@
       wait_for: port=8091 delay=5 timeout=30
 
     - name: COUCHBASE SERVER | Join additional cluster nodes | configure IPv4
-      shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli server-add -c {{ couchbase_server_primary_node }}:{{ couchbase_server_admin_port }} -u={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --server-add={{ couchbase_server_node }}:{{ couchbase_server_admin_port }} --server-add-username={{ couchbase_server_admin }} --server-add-password={{ couchbase_server_password }}"
+      shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli server-add -c {{ protocol }}://{{ couchbase_server_primary_node }}:{{ couchbase_server_admin_port }} -u={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --server-add={{ protocol }}://{{ couchbase_server_node }}:{{ couchbase_server_admin_port }} --server-add-username={{ couchbase_server_admin }} --server-add-password={{ couchbase_server_password }}"
       when: "not (couchbase_server_node == couchbase_server_primary_node ) and (not {{ cb_major_version['stdout'] | search('\\b[1-5]\\b') }}) and not ipv6_enabled"
 
     - name: COUCHBASE SERVER | Join additional cluster nodes | configure IPv6
-      shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli server-add -c [{{ couchbase_server_primary_node }}]:{{ couchbase_server_admin_port }} -u={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --server-add={{ couchbase_server_node }}:{{ couchbase_server_admin_port }} --server-add-username={{ couchbase_server_admin }} --server-add-password={{ couchbase_server_password }}"
+      shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli server-add -c {{ protocol }}://[{{ couchbase_server_primary_node }}]:{{ couchbase_server_admin_port }} -u={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --server-add={{ protocol }}://{{ couchbase_server_node }}:{{ couchbase_server_admin_port }} --server-add-username={{ couchbase_server_admin }} --server-add-password={{ couchbase_server_password }}"
       when: "not (couchbase_server_node == couchbase_server_primary_node ) and (not {{ cb_major_version['stdout'] | search('\\b[1-5]\\b') }}) and ipv6_enabled"
 
     - name: COUCHBASE SERVER | Join additional cluster nodes | configure IPv4
-      shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli server-add -c {{ couchbase_server_primary_node }}:{{ couchbase_server_admin_port }} --user={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --server-add={{ couchbase_server_node }}:{{ couchbase_server_admin_port }} --server-add-username={{ couchbase_server_admin }} --server-add-password={{ couchbase_server_password }}"
+      shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli server-add -c {{ protocol }}://{{ couchbase_server_primary_node }}:{{ couchbase_server_admin_port }} --user={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --server-add={{ protocol }}://{{ couchbase_server_node }}:{{ couchbase_server_admin_port }} --server-add-username={{ couchbase_server_admin }} --server-add-password={{ couchbase_server_password }}"
       when: "not (couchbase_server_node == couchbase_server_primary_node ) and {{ cb_major_version['stdout'] | search('\\b[4-5]\\b') }} and not ipv6_enabled"
 
     - name: COUCHBASE SERVER | Join additional cluster nodes | configure IPv6
-      shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli server-add -c [{{ couchbase_server_primary_node }}]:{{ couchbase_server_admin_port }} --user={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --server-add={{ couchbase_server_node }}:{{ couchbase_server_admin_port }} --server-add-username={{ couchbase_server_admin }} --server-add-password={{ couchbase_server_password }}"
+      shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli server-add -c {{ protocol }}://[{{ couchbase_server_primary_node }}]:{{ couchbase_server_admin_port }} --user={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --server-add={{ protocol }}://{{ couchbase_server_node }}:{{ couchbase_server_admin_port }} --server-add-username={{ couchbase_server_admin }} --server-add-password={{ couchbase_server_password }}"
       when: "not (couchbase_server_node == couchbase_server_primary_node ) and {{ cb_major_version['stdout'] | search('\\b[4-5]\\b') }} and ipv6_enabled"
 
     - name: COUCHBASE SERVER | Rebalance cluster (6.X and up) | configure IPv4

@@ -112,7 +112,8 @@ public class DocumentRequestHandler{
     public MutableDocument setFloat(Args args){
         MutableDocument document = args.get("document");
         String key = args.get("key");
-        Float value = args.get("value");
+        Double valDouble = args.get("value");
+        Float value = valDouble.floatValue();
         return  document.setFloat(key, value);
     }
 

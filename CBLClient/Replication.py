@@ -289,7 +289,7 @@ class Replication(object):
         self.wait_until_replicator_idle(repl, err_check)
         return repl
 
-    def wait_until_replicator_idle(self, repl, err_check=True, max_times=50, sleep_time=2):
+    def wait_until_replicator_idle(self, repl, err_check=True, max_times=150, sleep_time=2):
         count = 0
         # Sleep until replicator completely processed
         activity_level = self.getActivitylevel(repl)

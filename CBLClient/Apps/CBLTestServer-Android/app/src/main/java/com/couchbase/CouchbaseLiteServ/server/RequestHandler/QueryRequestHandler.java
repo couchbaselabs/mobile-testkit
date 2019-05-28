@@ -111,7 +111,8 @@ public class QueryRequestHandler {
         String select_property1 = args.get("select_property1");
         String select_property2 = args.get("select_property2");
         String whr_key = args.get("whr_key");
-        Float whr_val = args.get("whr_val");
+        Double valDouble = args.get("whr_val");
+        Float whr_val = valDouble.floatValue();
         Expression exp_val = Expression.floatValue(whr_val);
         Query search_query = QueryBuilder
             .select(SelectResult.expression(Meta.id),
@@ -762,6 +763,22 @@ public class QueryRequestHandler {
                 .orderBy(Ordering.expression(FullTextFunction.rank(index)).descending())
                 .limit(limit);
         for (Result row : query.execute()) {
+            resultArray.add(row.toMap());
+        }
+        return resultArray;
+    }
+
+    public List<Object> arthimetic(Args args) throws CouchbaseLiteException {
+        Database database = args.get("database");
+
+        List<Object> resultArray = new ArrayList<>();
+        Query query = QueryBuilder
+                .select(SelectResult.expression(Meta.id))
+                .from(DataSource.database(database))
+                .where(Expression.property("number1").modulo(Expression.intValue(2))
+                        .equalTo(Expression.intValue(0)));
+
+        for (Result row : query.execute()){
             resultArray.add(row.toMap());
         }
         return resultArray;

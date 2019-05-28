@@ -2,6 +2,7 @@
   hosts: windows
   vars:
     binary_path:
+    version_build:
 
   tasks:
     - win_stat:
@@ -16,5 +17,5 @@
         app_parameters:
           _: C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ binary_path }}
         state: started
-        stdout_file: C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ binary_path }}\TestServer.log
-        stderr_file: C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ binary_path }}\TestServer.log
+        stdout_file: C:\Users\{{ ansible_user }}\Desktop\TestServer\TestServer-Net-{{ version_build }}\TestServer.log
+        stderr_file: C:\Users\{{ ansible_user }}\Desktop\TestServer\TestServer-Net-{{ version_build }}\TestServer.log
