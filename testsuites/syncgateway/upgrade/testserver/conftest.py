@@ -11,7 +11,7 @@ from keywords.exceptions import ProvisioningError
 from keywords.SyncGateway import (sync_gateway_config_path_for_mode,
                                   validate_sync_gateway_mode)
 from keywords.tklogging import Logging
-from keywords.utils import check_xattr_support, log_info, version_is_binary, clear_resources_pngs, check_delta_sync_support, host_for_url
+from keywords.utils import check_xattr_support, log_info, version_is_binary, clear_resources_pngs, host_for_url
 from libraries.NetworkUtils import NetworkUtils
 from libraries.testkit import cluster
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop
@@ -173,7 +173,7 @@ def params_from_base_suite_setup(request):
     log_info("number_replicas: {}".format(number_replicas))
     log_info("delta_sync_enabled: {}".format(delta_sync_enabled))
 
-    pdb.set_trace()
+    # pdb.set_trace()
 
     # Make sure mode for sync_gateway is supported ('cc' or 'di')
     validate_sync_gateway_mode(mode)
@@ -249,7 +249,7 @@ def params_from_base_suite_setup(request):
 
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
 
-    pdb.set_trace()
+    # pdb.set_trace()
     testserver = TestServerFactory.create(platform=liteserv_platform,
                                           version_build=liteserv_version,
                                           host=liteserv_host,
@@ -259,15 +259,15 @@ def params_from_base_suite_setup(request):
 
     log_info("Downloading TestServer ...")
     # Download TestServer app
-    testserver.download()
-
+    # testserver.download()
+    '''
     # Install TestServer app
     if device_enabled:
         testserver.install_device()
     else:
         testserver.install()
-
-    pdb.set_trace()
+    '''
+    # pdb.set_trace()
     # Skip provisioning if user specifies '--skip-provisoning'
     should_provision = True
     if skip_provisioning:
@@ -295,7 +295,7 @@ def params_from_base_suite_setup(request):
         expected_sync_gateway_version=sync_gateway_version
     )
 
-    pdb.set_trace()
+    # pdb.set_trace()
     yield {
         "cluster_config": cluster_config,
         "mode": mode,
@@ -316,7 +316,8 @@ def params_from_base_suite_setup(request):
         "target_url": target_url,
         "target_admin_url": target_admin_url,
         "sg_ip": sg_ip,
-        "sg_db": sg_db
+        "sg_db": sg_db,
+        "sg_config": sg_config
     }
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
@@ -351,6 +352,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     target_admin_url = params_from_base_suite_setup["target_admin_url"]
     sg_ip = params_from_base_suite_setup["sg_ip"]
     sg_db = params_from_base_suite_setup["sg_db"]
+    sg_config = params_from_base_suite_setup["sg_config"]
 
     test_name = request.node.name
     log_info("Running test '{}'".format(test_name))
@@ -358,21 +360,21 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     log_info("mode: {}".format(mode))
     log_info("xattrs_enabled: {}".format(xattrs_enabled))
 
-    pdb.set_trace()
+    # pdb.set_trace()
     source_db = None
     test_name_cp = test_name.replace("/", "-")
     log_filename = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
                                                  test_name_cp,
                                                  datetime.datetime.now())
-
+    '''
     # Starting TestServer
     log_info("Starting TestServer...")
     if device_enabled:
         testserver.start_device(log_filename)
     else:
         testserver.start(log_filename)
-
-    pdb.set_trace()
+    '''
+    # pdb.set_trace()
 
     if xattrs_enabled:
         log_info("Running upgrade with xattrs for sync meta storage")
@@ -386,7 +388,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
     db = Database(base_url)
 
-    cbl_db = "sg-upgrade{}".format(str(time.time()))
+    cbl_db = "dbl" 
+    # sg-upgrade{}".format(str(time.time()))
     log_info("Creating a Database {} at test setup".format(cbl_db))
     db_config = db.configure()
     source_db = db.create(cbl_db, db_config)
@@ -413,10 +416,12 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "target_admin_url": target_admin_url,
         "sg_ip": sg_ip,
         "sg_db": sg_db,
+        "cbl_db": source_db,
         "db": db,
         "num_docs": num_docs,
         "cbs_platform": cbs_platform,
-        "cbs_toy_build": cbs_toy_build
+        "cbs_toy_build": cbs_toy_build,
+        "sg_config": sg_config
     }
 
     log_info("Tearing down test")
@@ -431,7 +436,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     utils_obj.flushMemory()
 
     log_info("Stopping the test server per test")
-    testserver.stop()
+    # testserver.stop()
 
     network_utils = NetworkUtils()
     network_utils.list_connections()
