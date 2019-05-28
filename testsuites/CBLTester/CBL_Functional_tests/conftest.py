@@ -189,14 +189,14 @@ def params_from_base_suite_setup(request):
 
     log_info("Downloading TestServer ...")
     # Download TestServer app
-    testserver.download()
-
+    # testserver.download()
+    '''
     # Install TestServer app
     if device_enabled:
         testserver.install_device()
     else:
         testserver.install()
-
+    '''
     base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_travel_sample", mode)
 
@@ -337,7 +337,7 @@ def params_from_base_suite_setup(request):
     if enable_sample_bucket and not create_db_per_suite:
         # if enable_sample_bucket and not create_db_per_test:
         raise Exception("enable_sample_bucket has to be used with create_db_per_suite")
-
+    '''
     # Start Test server which needed for suite level set up like query tests
     if create_db_per_suite:
         log_info("Starting TestServer...")
@@ -350,7 +350,7 @@ def params_from_base_suite_setup(request):
             testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
                                                            test_name_cp,
                                                            datetime.datetime.now()))
-
+    '''
     suite_source_db = None
     suite_db = None
     suite_db_log_files = None
@@ -476,7 +476,7 @@ def params_from_base_suite_setup(request):
         utils_obj = Utils(base_url)
         utils_obj.flushMemory()
         log_info("Stopping the test server per suite")
-        testserver.stop()
+        # testserver.stop()
     # Delete png files under resources/data
     clear_resources_pngs()
 
@@ -516,14 +516,14 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     log_filename = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
                                                  test_name_cp,
                                                  datetime.datetime.now())
-
+    '''
     if create_db_per_test:
         log_info("Starting TestServer...")
         if device_enabled:
             testserver.start_device(log_filename)
         else:
             testserver.start(log_filename)
-
+    '''
     cluster_helper = ClusterKeywords(cluster_config)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config=cluster_config)
     sg_url = cluster_hosts["sync_gateways"][0]["public"]
@@ -611,7 +611,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
             utils_obj = Utils(base_url)
             utils_obj.flushMemory()
             log_info("Stopping the test server per test")
-            testserver.stop()
+            # testserver.stop()
         except Exception, err:
             log_info("Exception occurred: {}".format(err))
 

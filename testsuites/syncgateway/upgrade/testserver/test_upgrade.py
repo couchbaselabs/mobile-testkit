@@ -4,7 +4,6 @@ import random
 import time
 
 from keywords.couchbaseserver import verify_server_version
-from libraries.testkit.cluster import Cluster
 from keywords.utils import log_info, host_for_url
 from keywords.SyncGateway import (verify_sg_accel_version,
                                   verify_sync_gateway_version,
@@ -18,8 +17,8 @@ from couchbase.bucket import Bucket
 from keywords.constants import SDK_TIMEOUT
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from requests.exceptions import HTTPError
-
 from CBLClient.Replication import Replication
+from libraries.testkit.cluster import Cluster
 from CBLClient.Authenticator import Authenticator
 
 
@@ -37,17 +36,27 @@ def test_upgrade(params_from_base_test_setup):
     server_upgraded_version = params_from_base_test_setup['server_upgraded_version']
     sync_gateway_upgraded_version = params_from_base_test_setup['sync_gateway_upgraded_version']
     base_url = params_from_base_test_setup["base_url"]
-    sg_url = params_from_base_test_setup['target_url']
-    sg_admin_url = params_from_base_test_setup['target_admin_url']
     sg_blip_url = params_from_base_test_setup["target_url"]
+    # target_admin_url = params_from_base_test_setup['target_admin_url']
     num_docs = int(params_from_base_test_setup['num_docs'])
     cbs_platform = params_from_base_test_setup['cbs_platform']
     cbs_toy_build = params_from_base_test_setup['cbs_toy_build']
-    cbl_db = params_from_base_test_setup["db"]
+    cbl_db = params_from_base_test_setup["cbl_db"]
+    db = params_from_base_test_setup["db"]
+    sg_config = params_from_base_test_setup["sg_config"]
     sg_conf = "{}/resources/sync_gateway_configs/sync_gateway_default_functional_tests_{}.json".format(os.getcwd(), mode)
+
+    cluster_utils = ClusterKeywords(cluster_config)
+    cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
+    sg_pub_url = cluster_topology["sync_gateways"][0]["public"]
+    sg_admin_url = cluster_topology["sync_gateways"][0]["admin"]
+    sg_ip = host_for_url(sg_pub_url)
 
     # Create user and session on SG
     sg_client = MobileRestClient()
+    cluster = Cluster(config=cluster_config)
+    cluster.reset(sg_config_path=sg_config)
+
     sg_user_channels = ["sg_user_channel"]
     sg_db = "db"
     sg_user_name = "sg_user"
@@ -59,41 +68,34 @@ def test_upgrade(params_from_base_test_setup):
         password=sg_user_password,
         channels=sg_user_channels
     )
-    cookie, session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=sg_user_name, password=sg_user_password)
 
-    # Starting continuous push replication from TestServer to sync gateway
-    log_info("Starting continuous push replication from TestServer to sync gateway")
-    replicator_push = Replication(base_url)
-    authenticator = Authenticator(base_url)
-    replicator_authenticator = authenticator.authentication(session, cookie, authentication_type="session")
-
-    repl_config_push = replicator_push.configure(target_db=sg_db, source_db=cbl_db, target_url=sg_blip_url, continuous=True, replication_type="push",
-                                                 replicator_authenticator=replicator_authenticator, channels=sg_user_channels)
-
-    repl_push = replicator_push.create(repl_config_push)
-    replicator_push.start(repl_push)
-    replicator_push.wait_until_replicator_idle(repl_push, err_check=False)
-
-    pdb.set_trace()
-    # Starting continuous pull replication from sync gateway to TestServer
-    log_info("Starting continuous pull replication from sync gateway to TestServer")
-    replicator_pull = Replication(base_url)
-    repl_config_pull = replicator_pull.configure(target_db=sg_db, source_db=cbl_db, target_url=sg_blip_url, continuous=True, replication_type="pull",
-                                                 replicator_authenticator=replicator_authenticator, channels=sg_user_channels)
-
-    repl_pull = replicator_pull.create(repl_config_pull)
-    replicator_pull.start(repl_pull)
-    replicator_pull.wait_until_replicator_idle(repl_pull, err_check=False)
-
-    pdb.set_trace()
     # Add docs to TestServer
-    cbl_db_name = "dbl"
-    cbl_db.create_bulk_docs(number=num_docs, id_prefix="cbl_filter", db=cbl_db_name, channels=sg_user_channels)
-    doc_ids = cbl_db.getDocIds(cbl_db_name)
-    added_docs = cbl_db.getDocuments(cbl_db_name, doc_ids)
+    # cbl_db_name = "dbl"
+    db.create_bulk_docs(number=num_docs, id_prefix="cbl_filter", db=cbl_db, generator="simple_user", channels=sg_user_channels)
+    doc_ids = db.getDocIds(cbl_db)
+    added_docs = db.getDocuments(cbl_db, doc_ids)
     log_info("Added {} docs".format(len(added_docs)))
+    
+    # Starting continuous push_pull replication from TestServer to sync gateway
+    log_info("Starting continuous push pull replication from TestServer to sync gateway")
+    replicator = Replication(base_url)
+    sg_cookie, sg_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=sg_user_name)
+    authenticator = Authenticator(base_url)
+    replicator_authenticator = authenticator.authentication(sg_session, sg_cookie, authentication_type="session")
 
-    pdb.set_trace()
+    repl = replicator.configure_and_replicate(source_db=cbl_db,
+                                              target_url=sg_blip_url,
+                                              continuous=True,
+                                              replication_type="push",
+                                              replicator_authenticator=replicator_authenticator)
+    
+    replicator.stop(repl)
+    '''
+    session, replicator_authenticator, repl = replicator.create_session_configure_replicate(
+        base_url, sg_admin_url, sg_db, sg_user_name, sg_user_password, sg_user_channels, sg_client, cbl_db, sg_blip_url,
+        continuous=True, replication_type="push_pull")
+    '''
+    # pdb.set_trace()
     # start updating docs
     terminator_doc_id = 'terminator'
     with ProcessPoolExecutor() as up:
@@ -113,7 +115,7 @@ def test_upgrade(params_from_base_test_setup):
 
         # Upgrade SG docmeta -> docmeta
         cluster_util = ClusterKeywords(cluster_config)
-        topology = cluster_util.get_cluster_topology(cluster_config, lb_enable=False)
+        topology = cluster_util.get_cluster_topology(cluster_config)
         sync_gateways = topology["sync_gateways"]
         sg_accels = topology["sg_accels"]
 
@@ -219,13 +221,9 @@ def test_upgrade(params_from_base_test_setup):
         log_info("Waiting for doc updates to complete")
         updated_doc_revs = updates_future.result()
 
-        log_info("Stopping replication from liteserv to sync gateway")
+        log_info("Stopping replication between testserver and sync gateway")
         # Stop repl_one
-        replicator_push.stop(repl_config_push)
-
-        log_info("Stopping replication from sync gateway to liteserv")
-        # Stop repl_two
-        replicator_push.stop(repl_config_pull)
+        replicator.stop(repl)
 
         # Gather the new revs for verification
         log_info("Gathering the updated revs for verification")
