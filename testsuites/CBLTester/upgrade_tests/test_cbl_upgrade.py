@@ -16,7 +16,7 @@ def test_upgrade_cbl(params_from_base_suite_setup):
     upgrade_from_encrypted_db = params_from_base_suite_setup["encrypted_db"]
     db_password = params_from_base_suite_setup["db_password"]
 
-    supported_base_liteserv = ["1.4", "2.0", "2.1.5", "2.5.0"]
+    supported_base_liteserv = ["1.4", "2.0.0", "2.1.5", "2.5.0"]
     db = Database(base_url)
     if upgrade_from_encrypted_db:
         db_config = db.configure(password=db_password)
