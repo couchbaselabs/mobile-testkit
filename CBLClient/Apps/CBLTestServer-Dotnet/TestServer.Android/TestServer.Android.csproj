@@ -63,6 +63,7 @@
     <AndroidAsset Include="Assets\travel-sample-2.5.0.cblite2.zip" />
     <AndroidAsset Include="Assets\travel-sample-encrypted-2.5.0.cblite2.zip" />
     <AndroidAsset Include="Assets\travel-sample-encrypted-2.1.5.cblite2.zip" />
+    <AndroidAsset Include="Assets\travel-sample-2.1.5.cblite2.zip" />
     <None Include="Resources\AboutResources.txt" />
     <None Include="Properties\AndroidManifest.xml" />
     <None Include="Assets\AboutAssets.txt" />
