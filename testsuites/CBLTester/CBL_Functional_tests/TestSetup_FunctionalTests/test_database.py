@@ -321,7 +321,8 @@ def test_copy_prebuilt_database(params_from_base_test_setup):
     else:
         prebuilt_db_path = "Databases/PrebuiltDB.cblite2"
 
-    db.copyDatabase(prebuilt_db_path, cbl_db_name, db_config)
+    old_db_path = db.get_pre_built_db(prebuilt_db_path)
+    db.copyDatabase(old_db_path, cbl_db_name, db_config)
     cbl_db1 = db.create(cbl_db_name, db_config)
     cbl_doc_ids = db.getDocIds(cbl_db1)
     assert len(cbl_doc_ids) == 10

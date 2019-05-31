@@ -334,22 +334,28 @@ public class DatabaseRequestHandler {
         return change.getDocumentIDs();
     }
 
-    public void copy(Args args) throws CouchbaseLiteException, IOException {
+    public void copy(Args args) throws CouchbaseLiteException {
       String dbName = args.get("dbName");
       String dbPath = args.get("dbPath");
 
-      Context context = MainActivity.getAppContext();
-      ZipUtils.unzip(getAsset(dbPath), context.getFilesDir());
-      String dbFileName = new File(dbPath).getName();
-      dbFileName = dbFileName.substring(0, dbFileName.lastIndexOf("."));
-
       DatabaseConfiguration dbConfig = args.get("dbConfig");
-      File file = new File(context.getFilesDir().getAbsolutePath() + "/" + dbFileName);
-      Database.copy(file, dbName, dbConfig);
+      File oldDbPath = new File(dbPath);
+      Database.copy(oldDbPath, dbName, dbConfig);
     }
 
     private InputStream getAsset(String name) {
       return this.getClass().getResourceAsStream(name);
+    }
+
+    public String getPreBuitDb(Args args) throws IOException {
+        String dbPath = args.get("dbPath");
+        Context context = MainActivity.getAppContext();
+        String dbFileName = new File(dbPath).getName();
+        dbFileName = dbFileName.substring(0, dbFileName.lastIndexOf("."));
+        ZipUtils.unzip(getAsset(dbPath), context.getFilesDir());
+        String path = context.getFilesDir().getAbsolutePath() + "/" + dbFileName;
+        return path;
+
     }
 
 }
