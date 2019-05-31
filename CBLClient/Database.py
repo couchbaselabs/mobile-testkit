@@ -319,6 +319,11 @@ class Database(object):
         docs = self.getDocuments(cbl_db, cbl_doc_ids)
         return docs
 
+    def get_pre_built_db(self, db_path):
+        args = Args()
+        args.setString("dbPath", db_path)
+        return self._client.invokeMethod("database_getPreBuitDb", args)
+
     def copyDatabase(self, db_path, db_name, db_config):
         args = Args()
         args.setString("dbName", db_name)
