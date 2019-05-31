@@ -99,8 +99,14 @@ def test_write_data_to_db(params_from_base_suite_setup):
     print db.getCount(cbl_db3)
     print "done"
 
-def test_db_upgrade(params_from_base_test_setup):
-    db = params_from_base_test_setup["db"]
-    cbl_db = params_from_base_test_setup["source_db"]
-    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
-    liteserv_platform = params_from_base_test_setup["liteserv_platform"]
+def test_db_new(params_from_base_suite_setup):
+    base_url = params_from_base_suite_setup["base_url"]
+    db = Database(base_url)
+    db_config = db.configure(password="password")
+    cbl_db = db.create("PrebuiltDB-encrypted", config=db_config)
+    db.create_bulk_docs(number=5, id_prefix="cbl", db=cbl_db)
+    db.create_bulk_docs(number=5, id_prefix="cbl2", db=cbl_db)
+    doc = db.getBulkDocs(cbl_db)
+    print db.getCount(cbl_db)
+    print "done"
+
