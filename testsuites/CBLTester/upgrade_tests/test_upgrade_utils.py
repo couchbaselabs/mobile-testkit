@@ -94,7 +94,7 @@ def test_write_data_to_db(params_from_base_suite_setup):
         doc_count -= batch_size
     print db.getCount(database=cbl_db)
     ts_db_path = db.getPath(cbl_db)
-    db.copyDb(ts_db_path, "copied_db", db_config)
+    db.copyDatabase(ts_db_path, "copied_db", db_config)
     cbl_db3 = db.create("copied_db", config=db_config)
     print db.getCount(cbl_db3)
     print "done"
