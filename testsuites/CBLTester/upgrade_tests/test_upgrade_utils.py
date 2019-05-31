@@ -65,7 +65,7 @@ def test_db_preperation(params_from_base_test_setup):
 def test_write_data_to_db(params_from_base_suite_setup):
     base_url = params_from_base_suite_setup["base_url"]
     db = Database(base_url)
-    liteserv_version = "2.0.0"
+    liteserv_version = "2.1.5"
     db_name = "travel-sample-encrypted-{}".format(liteserv_version)
     db_config = db.configure(password="password")
     cbl_db = db.create(db_name, config=db_config)
@@ -92,15 +92,11 @@ def test_write_data_to_db(params_from_base_suite_setup):
         print "{}:{}".format(start, end)
         start += batch_size
         doc_count -= batch_size
-#         for doc_id in docs_data:
-# #             print "{}\n".format(docs_data[doc_id])
-# #             print doc_id + "\n"
-#             doc = doc_obj.create(doc_id, docs_data[doc_id])
-#             db.saveDocument(cbl_db, doc)
-#             print db.getDocuments(cbl_db, [doc_id])
-#         for data in
-#         db.saveDocuments(database=cbl_db, documents=docs_data)
     print db.getCount(database=cbl_db)
+    ts_db_path = db.getPath(cbl_db)
+    db.copyDb(ts_db_path, "copied_db", db_config)
+    cbl_db3 = db.create("copied_db", config=db_config)
+    print db.getCount(cbl_db3)
     print "done"
 
 def test_db_upgrade(params_from_base_test_setup):
