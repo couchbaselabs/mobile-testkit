@@ -347,7 +347,7 @@ public class DatabaseRequestHandler {
       return this.getClass().getResourceAsStream(name);
     }
 
-    public String getPreBuitDb(Args args) throws IOException {
+    public String getPreBuiltDb(Args args) throws IOException {
         String dbPath = args.get("dbPath");
         Context context = MainActivity.getAppContext();
         String dbFileName = new File(dbPath).getName();

@@ -85,7 +85,7 @@ namespace Couchbase.Lite.Testing
                 ["database_exists"] = DatabaseMethods.DatabaseExists,
                 ["database_changeEncryptionKey"] = DatabaseMethods.DatabaseChangeEncryptionKey,
                 ["database_copy"] = DatabaseMethods.DatabaseCopy, 
-                ["database_getPreBuitDb"] = DatabaseMethods.DatabaseGetPreBuitDb,
+                ["database_getPreBuiltDb"] = DatabaseMethods.DatabaseGetPreBuiltDb,
                 ["dictionary_contains"] = DictionaryMethods.DictionaryContains,
                 ["dictionary_count"] = DictionaryMethods.DictionaryCount,
                 ["dictionary_create"] = DictionaryMethods.DictionaryCreate,

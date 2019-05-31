@@ -322,7 +322,7 @@ class Database(object):
     def get_pre_built_db(self, db_path):
         args = Args()
         args.setString("dbPath", db_path)
-        return self._client.invokeMethod("database_getPreBuitDb", args)
+        return self._client.invokeMethod("database_getPreBuiltDb", args)
 
     def copyDatabase(self, db_path, db_name, db_config):
         args = Args()

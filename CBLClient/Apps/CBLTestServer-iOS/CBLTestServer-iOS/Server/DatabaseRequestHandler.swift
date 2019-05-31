@@ -301,7 +301,7 @@ public class DatabaseRequestHandler {
             let dbPath: String! = args.get(name: "dbPath")
             try! Database.copy(fromPath: dbPath, toDatabase: dbName, withConfig: dbConfig)
 
-        case "getPreBuiltDb":
+        case "database_getPreBuiltDb":
             let dbPath: NSString! = args.get(name: "dbPath")
             let path: String! = Bundle(for: type(of:self)).path(forResource: dbPath.deletingPathExtension, ofType: dbPath.pathExtension)
             return path

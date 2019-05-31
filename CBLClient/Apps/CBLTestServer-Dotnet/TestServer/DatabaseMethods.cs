@@ -540,7 +540,7 @@ namespace Couchbase.Lite.Testing
             response.WriteEmptyBody();
         }
 
-        internal static void DatabaseGetPreBuitDb([NotNull] NameValueCollection args,
+        internal static void DatabaseGetPreBuiltDb([NotNull] NameValueCollection args,
                                                   [NotNull] IReadOnlyDictionary<string, object> postBody,
                                                   [NotNull] HttpListenerResponse response)
         {
