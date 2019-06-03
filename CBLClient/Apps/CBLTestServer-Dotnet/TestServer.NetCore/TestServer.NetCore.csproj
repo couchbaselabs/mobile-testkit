@@ -32,4 +32,8 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Databases\travel-sample-1.4.cblite2\attachments\" />
+  </ItemGroup>
 </Project>
