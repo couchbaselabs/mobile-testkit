@@ -26,6 +26,12 @@ public class DictionaryRequestHandler{
         return new MutableDictionary();
     }
 
+    public MutableDictionary toMutableDictionary(Args args) {
+        Map<String, Object> dictionary = args.get("dictionary");
+        MutableDictionary mutableDictionary = new MutableDictionary(dictionary);
+        return mutableDictionary;
+    }
+
     public int count(Args args){
         MutableDictionary dictionary = args.get("dictionary");
         return dictionary.count();

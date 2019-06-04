@@ -236,49 +236,6 @@ public class DatabaseRequestHandler {
             updated_doc.setData(data)
             try! database.saveDocument(updated_doc)
             
-        case "database_updateDocument_blobAttachment":
-            
-            let database: Database = (args.get(name:"database"))!
-            var data: Dictionary<String, Any> = args.get(name: "data")!
-            for (key, value) in data {
-                if key == "_attachments" {
-                    
-                    let att = value as! Dictionary<String, Any>
-                    var item = Dictionary<String, Any>()
-                    var data_field = String()
-                    var data_type = "text/plain" as String
-                    for (fname, file) in att {
-                        let fileContent = file as! Dictionary<String, Any>
-                        for (k, v) in fileContent {
-                            if k == "data" {
-                               data_field = v as! String
-                            }
-                            if k == "type" {
-                                data_type = v as! String
-                            }
-                        }
-                        
-                        let decoded = Data(base64Encoded: data_field)!
-                        let blob = Blob.init(contentType: data_type, data: decoded)
-                        let param = Parameters.init()
-                        param.setBlob(blob, forName: "data")
-                        //var tempFileData = Dictionary<String, Any>()
-                        //tempFileData["data"] = blob
-                        
-                        item[fname] = param //tempFileData
-                    }
-                    //data[key] = item
-                }
-            }
-            
-            let docId: String = args.get(name: "id")!
-            let updated_doc = database.document(withID: docId)!.toMutable()
-            
-            
-            
-            
-            updated_doc.setData(data)
-            try! database.saveDocument(updated_doc)
             
         case "database_getDocIds":
             let database: Database = args.get(name:"database")!

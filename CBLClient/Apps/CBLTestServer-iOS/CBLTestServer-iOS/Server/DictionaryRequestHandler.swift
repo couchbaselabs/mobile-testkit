@@ -26,6 +26,10 @@ public class DictionaryRequestHandler {
                 return MutableDictionaryObject()
             }
 
+        case "dictionary_toMutable":
+            let dictionary: MutableDictionaryObject = args.get(name: "dictionary")!
+            return dictionary.count
+            
         case "dictionary_count":
             let dictionary: MutableDictionaryObject = args.get(name: "dictionary")!
             return dictionary.count
@@ -126,11 +130,13 @@ public class DictionaryRequestHandler {
             return dictionary.blob(forKey: key)
         
         case "dictionary_setBlob":
-            let dictionary: MutableDictionaryObject = args.get(name: "dictionary")!
+            let dictionary: [String: Any]? = args.get(name: "dictionary")!
+            let mutableDictionary = MutableDictionaryObject(data: dictionary)
+            
             let key: String = args.get(name: "key")!
             let value: Blob = args.get(name: "value")!
             
-            return dictionary.setBlob(value, forKey: key)
+            return mutableDictionary.setBlob(value, forKey: key)
         
         case "dictionary_getDate":
             let dictionary: MutableDictionaryObject = args.get(name: "dictionary")!
@@ -201,7 +207,7 @@ public class DictionaryRequestHandler {
         case "dictionary_iterator":
             let dictionary: MutableDictionaryObject = args.get(name: "dictionary")!
             return  dictionary.makeIterator()
-
+        
         default:
             throw RequestHandlerError.MethodNotFound(method)
         }

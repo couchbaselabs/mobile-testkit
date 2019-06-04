@@ -1,5 +1,6 @@
 package com.couchbase.CouchbaseLiteServ.server.RequestHandler;
 
+import android.content.Context;
 
 import com.couchbase.CouchbaseLiteServ.server.Args;
 import com.couchbase.lite.Blob;
@@ -17,7 +18,7 @@ public class BlobRequestHandler {
         byte[] content = args.get("content");
         InputStream stream = args.get("stream");
         URL fileURL = args.get("fileURL");
-        if (!contentType.isEmpty()){
+        if (content != null){
             return new Blob(contentType, content);
         } else if (stream != null){
             return new Blob(contentType, stream);
@@ -26,6 +27,16 @@ public class BlobRequestHandler {
         }else {
             throw new IOException("Incorrect parameters provided");
         }
+    }
+
+    public InputStream createImageContent(Args args) throws IOException {
+        String image = args.get("image");
+        InputStream is = getAsset(image);
+        return is;
+    }
+
+    private InputStream getAsset(String name) {
+        return this.getClass().getResourceAsStream(name);
     }
 
     public String digest(Args args){
