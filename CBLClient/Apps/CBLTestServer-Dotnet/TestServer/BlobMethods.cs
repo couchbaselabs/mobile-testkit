@@ -68,7 +68,6 @@ namespace Couchbase.Lite.Testing
         {
 
             var imageLocation = postBody["image"].ToString();
-
             var image = File.ReadAllBytes(imageLocation);
             MemoryStream stream = new MemoryStream(image);
             response.WriteBody(MemoryMap.Store(stream));
