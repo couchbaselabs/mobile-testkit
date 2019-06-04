@@ -121,23 +121,12 @@ class Database(object):
         args.setDictionary("documents", documents)
         return self._client.invokeMethod("database_updateDocuments", args)
 
-    def updateDocument(self, database, data, doc_id, attachments_name=None):
+    def updateDocument(self, database, data, doc_id):
         args = Args()
-        if attachments_name:
-            data = self.update_doc_with_attachment(attachments_name, data)
         args.setMemoryPointer("database", database)
         args.setDictionary("data", data)
         args.setString("id", doc_id)
         return self._client.invokeMethod("database_updateDocument", args)
-
-    def updateDocumentWithBlobAttachment(self, database, data, doc_id, attachments_name=None):
-        args = Args()
-        if attachments_name:
-            data = self.update_doc_with_attachment(attachments_name, data)
-        args.setMemoryPointer("database", database)
-        args.setDictionary("data", data)
-        args.setString("id", doc_id)
-        return self._client.invokeMethod("database_updateDocument_blobAttachment", args)
 
     def getCount(self, database):
         args = Args()
