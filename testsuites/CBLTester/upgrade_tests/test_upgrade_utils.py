@@ -69,12 +69,7 @@ def test_write_data_to_db(params_from_base_suite_setup):
     db_name = "travel-sample-encrypted-{}".format(liteserv_version)
     db_config = db.configure(password="password")
     cbl_db = db.create(db_name, config=db_config)
-#     db.changeEncryptionKey(cbl_db, "password")
-    db.create_bulk_docs(number=1, id_prefix="test", db=cbl_db, generator="simple")
-    cbl_db_2 = db.create(db_name, db_config)
-    print db.getDocument(cbl_db_2, "test_0")
-    db.delete_bulk_docs(cbl_db_2, ["test_0"])
-    print db.getCount(cbl_db)
+    print db.getPath(cbl_db)
     fh = open("doc_data.pkl", "rb")
     docs_data = pickle.load(fh)
     doc_count = len(docs_data)
@@ -94,6 +89,7 @@ def test_write_data_to_db(params_from_base_suite_setup):
         doc_count -= batch_size
     print db.getCount(database=cbl_db)
     ts_db_path = db.getPath(cbl_db)
+    print ts_db_path
     db.copyDatabase(ts_db_path, "copied_db", db_config)
     cbl_db3 = db.create("copied_db", config=db_config)
     print db.getCount(cbl_db3)

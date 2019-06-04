@@ -1,4 +1,5 @@
 from CBLClient.Client import Client
+from CBLClient.Args import Args
 
 
 class Utils:
@@ -23,3 +24,9 @@ class Utils:
 
     def flushMemory(self):
         return self._client.invokeMethod("flushMemory")
+
+    def copy_files(self, source_path, destination_path):
+        args = Args()
+        args.setString("source_path", source_path)
+        args.setString("destination_path", destination_path)
+        return self._client.invokeMethod("copy_files", args)
