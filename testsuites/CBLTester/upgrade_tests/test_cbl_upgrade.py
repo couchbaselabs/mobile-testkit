@@ -11,17 +11,18 @@ from couchbase.n1ql import N1QLQuery
 from couchbase.bucket import Bucket
 from keywords.constants import SDK_TIMEOUT
 import time
+from CBLClient.MemoryPointer import MemoryPointer
 
 @pytest.mark.listener
 @pytest.mark.upgrade_test
 def test_upgrade_cbl(params_from_base_suite_setup):
-    base_liteserv_version = "2.1.5"#params_from_base_suite_setup["base_liteserv_version"]
+    base_liteserv_version = params_from_base_suite_setup["base_liteserv_version"]
     upgraded_liteserv_version = params_from_base_suite_setup["upgraded_liteserv_version"]
     liteserv_platform = params_from_base_suite_setup["liteserv_platform"]
     liteserv_host = params_from_base_suite_setup["liteserv_host"]
     upgrade_cbl_db_name = "upgarded_db"
     base_url = params_from_base_suite_setup["base_url"]
-    upgrade_from_encrypted_db = True#params_from_base_suite_setup["encrypted_db"]
+    upgrade_from_encrypted_db = params_from_base_suite_setup["encrypted_db"]
     db_password = params_from_base_suite_setup["db_password"]
     sg_db = "db"
     sg_admin_url = params_from_base_suite_setup["sg_admin_url"]
@@ -73,6 +74,7 @@ def test_upgrade_cbl(params_from_base_suite_setup):
     assert "Copied" == utils_obj.copy_files(prebuilt_db_path, new_db_path)
 #     db.copyDatabase(old_db_path, upgrade_cbl_db_name, db_config)
     cbl_db = db.create(upgrade_cbl_db_name, db_config)
+    assert type(cbl_db) == type(MemoryPointer("value")), "Failed to migrate db from previous version of CBL"
     cbl_doc_ids = db.getDocIds(cbl_db, limit=40000)
     assert len(cbl_doc_ids) == 31591
 
@@ -83,23 +85,23 @@ def test_upgrade_cbl(params_from_base_suite_setup):
     password = "password"
 
     # Reset cluster to ensure no data in system
-    c = Cluster(config=cluster_config)
-    c.reset(sg_config_path=sg_config)
-  
-    sg_client.create_user(sg_admin_url, sg_db, username, password)
-    authenticator = Authenticator(base_url)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
-    replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
-    repl_config = replicator.configure(cbl_db, sg_blip_url, replication_type="push", replicator_authenticator=replicator_authenticator)
-    repl = replicator.create(repl_config)
-    replicator.start(repl)
-    replicator.wait_until_replicator_idle(repl,sleep_time=10)
-    total = replicator.getTotal(repl)
-    completed = replicator.getCompleted(repl)
-#     assert total == completed
-    log_info("total:", total)
-    log_info("completed:", completed)
-    replicator.stop(repl)
+#     c = Cluster(config=cluster_config)
+#     c.reset(sg_config_path=sg_config)
+#   
+#     sg_client.create_user(sg_admin_url, sg_db, username, password)
+#     authenticator = Authenticator(base_url)
+#     cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+#     replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
+#     repl_config = replicator.configure(cbl_db, sg_blip_url, replication_type="push", replicator_authenticator=replicator_authenticator)
+#     repl = replicator.create(repl_config)
+#     replicator.start(repl)
+#     replicator.wait_until_replicator_idle(repl,sleep_time=10)
+#     total = replicator.getTotal(repl)
+#     completed = replicator.getCompleted(repl)
+# #     assert total == completed
+#     log_info("total:", total)
+#     log_info("completed:", completed)
+#     replicator.stop(repl)
  
 #     log_info("Creating primary index for {}".format("travel-sample"))
 #     n1ql_query = 'create primary index on {}'.format("travel-sample")

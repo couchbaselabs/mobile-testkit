@@ -65,7 +65,7 @@ def test_db_preperation(params_from_base_test_setup):
 def test_write_data_to_db(params_from_base_suite_setup):
     base_url = params_from_base_suite_setup["base_url"]
     db = Database(base_url)
-    liteserv_version = "2.1.5"
+    liteserv_version = "2.5.0"
     db_name = "travel-sample-encrypted-{}".format(liteserv_version)
     db_config = db.configure(password="password")
     cbl_db = db.create(db_name, config=db_config)
@@ -90,9 +90,9 @@ def test_write_data_to_db(params_from_base_suite_setup):
     print db.getCount(database=cbl_db)
     ts_db_path = db.getPath(cbl_db)
     print ts_db_path
-    db.copyDatabase(ts_db_path, "copied_db", db_config)
-    cbl_db3 = db.create("copied_db", config=db_config)
-    print db.getCount(cbl_db3)
+#     db.copyDatabase(ts_db_path, "copied_db", db_config)
+#     cbl_db3 = db.create("copied_db", config=db_config)
+#     print db.getCount(cbl_db3)
     print "done"
 
 def test_db_new(params_from_base_suite_setup):

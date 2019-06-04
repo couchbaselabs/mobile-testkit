@@ -165,24 +165,24 @@ def params_from_base_suite_setup(request):
     delta_sync_enabled = request.config.getoption("--delta-sync")
     enable_file_logging = request.config.getoption("--enable-file-logging")
 
-#     test_name = request.node.name
-# 
-#     testserver = TestServerFactory.create(platform=liteserv_platform,
-#                                           version_build=upgraded_liteserv_version,
-#                                           host=liteserv_host,
-#                                           port=liteserv_port,
-#                                           community_enabled=community_enabled,
-#                                           debug_mode=debug_mode)
-# 
-#     log_info("Downloading TestServer ...")
-#     # Download TestServer app
-#     testserver.download()
-# 
-#     # Install TestServer app
-#     if device_enabled:
-#         testserver.install_device()
-#     else:
-#         testserver.install()
+    test_name = request.node.name
+ 
+    testserver = TestServerFactory.create(platform=liteserv_platform,
+                                          version_build=upgraded_liteserv_version,
+                                          host=liteserv_host,
+                                          port=liteserv_port,
+                                          community_enabled=community_enabled,
+                                          debug_mode=debug_mode)
+ 
+    log_info("Downloading TestServer ...")
+    # Download TestServer app
+    testserver.download()
+ 
+    # Install TestServer app
+    if device_enabled:
+        testserver.install_device()
+    else:
+        testserver.install()
 
     base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_travel_sample", mode)
