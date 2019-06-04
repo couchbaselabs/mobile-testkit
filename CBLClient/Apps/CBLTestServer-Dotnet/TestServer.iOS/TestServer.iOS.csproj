@@ -92,6 +92,7 @@
     <None Include="Databases\travel-sample-1.4.cblite2\db.sqlite3" />
     <None Include="Databases\travel-sample-1.4.cblite2\db.sqlite3-shm" />
     <None Include="Databases\travel-sample-1.4.cblite2\db.sqlite3-wal" />
+    <None Include="Databases\travel-sample-2.0.0.cblite2\db.sqlite3" />
     <None Include="Databases\travel-sample-2.1.5.cblite2\db.sqlite3" />
     <None Include="Databases\travel-sample-2.5.0.cblite2\db.sqlite3" />
     <None Include="Databases\travel-sample-2.5.0.cblite2\db.sqlite3-shm" />
