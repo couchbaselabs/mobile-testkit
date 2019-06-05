@@ -317,10 +317,11 @@ def test_copy_prebuilt_database(params_from_base_test_setup, encrypted):
     db_name = db.getName(cbl_db)
     db.deleteDB(cbl_db, db_name)
     cbl_db_name = "copiedDB" + str(time.time())
-    db_config = db.configure()
     if encrypted:
+        db_config = db.configure(password="password")
         db_prefix = "PrebuiltDB-encrypted"
     else:
+        db_config = db.configure()
         db_prefix = "PrebuiltDB"
     if liteserv_platform == "android":
         prebuilt_db_path = "/assets/{}.cblite2.zip".format(db_prefix)

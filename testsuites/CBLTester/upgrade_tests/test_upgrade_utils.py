@@ -90,9 +90,6 @@ def test_write_data_to_db(params_from_base_suite_setup):
     print db.getCount(database=cbl_db)
     ts_db_path = db.getPath(cbl_db)
     print ts_db_path
-#     db.copyDatabase(ts_db_path, "copied_db", db_config)
-#     cbl_db3 = db.create("copied_db", config=db_config)
-#     print db.getCount(cbl_db3)
     print "done"
 
 def test_db_new(params_from_base_suite_setup):
@@ -102,7 +99,8 @@ def test_db_new(params_from_base_suite_setup):
     cbl_db = db.create("PrebuiltDB-encrypted", config=db_config)
     db.create_bulk_docs(number=5, id_prefix="cbl", db=cbl_db)
     db.create_bulk_docs(number=5, id_prefix="cbl2", db=cbl_db)
-    doc = db.getBulkDocs(cbl_db)
     print db.getCount(cbl_db)
+    path = db.getPath(cbl_db)
+    db.copyDatabase(path, "new_copied_db", db_config)
     print "done"
 

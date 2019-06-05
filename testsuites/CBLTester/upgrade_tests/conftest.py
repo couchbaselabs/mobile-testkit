@@ -1,40 +1,19 @@
-import time
 import pytest
 import datetime
 
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop
-from keywords.constants import SDK_TIMEOUT
 from keywords.utils import log_info
 from keywords.utils import host_for_url, clear_resources_pngs
 from keywords.ClusterKeywords import ClusterKeywords
-from keywords.couchbaseserver import CouchbaseServer
 from keywords.constants import CLUSTER_CONFIGS_DIR
-from keywords.MobileRestClient import MobileRestClient
 from keywords.TestServerFactory import TestServerFactory
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
-from keywords.SyncGateway import SyncGateway
 from keywords.exceptions import ProvisioningError
 from keywords.tklogging import Logging
 from keywords.constants import RESULTS_DIR
-
 from CBLClient.FileLogging import FileLogging
-from CBLClient.Replication import Replication
-from CBLClient.BasicAuthenticator import BasicAuthenticator
-from CBLClient.Database import Database
-from CBLClient.Document import Document
-from CBLClient.Array import Array
-from CBLClient.Dictionary import Dictionary
-from CBLClient.DataTypeInitiator import DataTypeInitiator
-from CBLClient.SessionAuthenticator import SessionAuthenticator
 from CBLClient.Utils import Utils
-
 from utilities.cluster_config_utils import get_load_balancer_ip
-from CBLClient.ReplicatorConfiguration import ReplicatorConfiguration
-# from libraries.testkit import cluster
-
-# from libraries.testkit.cluster import Cluster
-from couchbase.bucket import Bucket
-from couchbase.n1ql import N1QLQuery
 
 
 def pytest_addoption(parser):
@@ -165,24 +144,24 @@ def params_from_base_suite_setup(request):
     delta_sync_enabled = request.config.getoption("--delta-sync")
     enable_file_logging = request.config.getoption("--enable-file-logging")
 
-    test_name = request.node.name
- 
-    testserver = TestServerFactory.create(platform=liteserv_platform,
-                                          version_build=upgraded_liteserv_version,
-                                          host=liteserv_host,
-                                          port=liteserv_port,
-                                          community_enabled=community_enabled,
-                                          debug_mode=debug_mode)
- 
-    log_info("Downloading TestServer ...")
-    # Download TestServer app
-    testserver.download()
- 
-    # Install TestServer app
-    if device_enabled:
-        testserver.install_device()
-    else:
-        testserver.install()
+#     test_name = request.node.name
+#   
+#     testserver = TestServerFactory.create(platform=liteserv_platform,
+#                                           version_build=upgraded_liteserv_version,
+#                                           host=liteserv_host,
+#                                           port=liteserv_port,
+#                                           community_enabled=community_enabled,
+#                                           debug_mode=debug_mode)
+#   
+#     log_info("Downloading TestServer ...")
+#     # Download TestServer app
+#     testserver.download()
+#   
+#     # Install TestServer app
+#     if device_enabled:
+#         testserver.install_device()
+#     else:
+#         testserver.install()
 
     base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_travel_sample", mode)
@@ -296,23 +275,23 @@ def params_from_base_suite_setup(request):
             raise
 
     # Hit this installed running services to verify the correct versions are installed
-    cluster_utils.verify_cluster_versions(
-        cluster_config,
-        expected_server_version=server_version,
-        expected_sync_gateway_version=sync_gateway_version
-    )
+#     cluster_utils.verify_cluster_versions(
+#         cluster_config,
+#         expected_server_version=server_version,
+#         expected_sync_gateway_version=sync_gateway_version
+#     )
 
     # Start Test server which needed for suite level set up like query tests
     log_info("Starting TestServer...")
-    test_name_cp = test_name.replace("/", "-")
-    if device_enabled:
-        testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
-                                                              test_name_cp,
-                                                              datetime.datetime.now()))
-    else:
-        testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
-                                                       test_name_cp,
-                                                       datetime.datetime.now()))
+#     test_name_cp = test_name.replace("/", "-")
+#     if device_enabled:
+#         testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
+#                                                               test_name_cp,
+#                                                               datetime.datetime.now()))
+#     else:
+#         testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
+#                                                        test_name_cp,
+#                                                        datetime.datetime.now()))
 
     suite_source_db = None
     suite_db_log_files = None
@@ -347,7 +326,7 @@ def params_from_base_suite_setup(request):
         "suite_source_db": suite_source_db,
         "suite_cbl_db": suite_cbl_db,
         "sg_config": sg_config,
-        "testserver": testserver,
+#         "testserver": testserver,
         "device_enabled": device_enabled,
         "delta_sync_enabled": delta_sync_enabled,
         "enable_file_logging": enable_file_logging,
@@ -360,7 +339,7 @@ def params_from_base_suite_setup(request):
     # Flush all the memory contents on the server app
     log_info("Flushing server memory")
     utils_obj.flushMemory()
-    log_info("Stopping the test server per suite")
-    testserver.stop()
+#     log_info("Stopping the test server per suite")
+#     testserver.stop()
     # Delete png files under resources/data
     clear_resources_pngs()
