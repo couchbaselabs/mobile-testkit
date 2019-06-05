@@ -144,24 +144,24 @@ def params_from_base_suite_setup(request):
     delta_sync_enabled = request.config.getoption("--delta-sync")
     enable_file_logging = request.config.getoption("--enable-file-logging")
 
-#     test_name = request.node.name
-#   
-#     testserver = TestServerFactory.create(platform=liteserv_platform,
-#                                           version_build=upgraded_liteserv_version,
-#                                           host=liteserv_host,
-#                                           port=liteserv_port,
-#                                           community_enabled=community_enabled,
-#                                           debug_mode=debug_mode)
-#   
-#     log_info("Downloading TestServer ...")
-#     # Download TestServer app
-#     testserver.download()
-#   
-#     # Install TestServer app
-#     if device_enabled:
-#         testserver.install_device()
-#     else:
-#         testserver.install()
+    test_name = request.node.name
+   
+    testserver = TestServerFactory.create(platform=liteserv_platform,
+                                          version_build=upgraded_liteserv_version,
+                                          host=liteserv_host,
+                                          port=liteserv_port,
+                                          community_enabled=community_enabled,
+                                          debug_mode=debug_mode)
+   
+    log_info("Downloading TestServer ...")
+    # Download TestServer app
+    testserver.download()
+   
+    # Install TestServer app
+    if device_enabled:
+        testserver.install_device()
+    else:
+        testserver.install()
 
     base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_travel_sample", mode)
@@ -253,8 +253,8 @@ def params_from_base_suite_setup(request):
     persist_cluster_config_environment_prop(cluster_config, 'number_replicas', number_replicas)
     cluster_utils = ClusterKeywords(cluster_config)
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
-    cbs_url = cluster_topology['couchbase_servers'][0]
-    cbs_ip = host_for_url(cbs_url)
+    server_url = cluster_topology['couchbase_servers'][0]
+    cbs_ip = host_for_url(server_url)
 
     if sync_gateway_version < "2.0":
         pytest.skip('Does not work with sg < 2.0 , so skipping the test')
@@ -275,23 +275,23 @@ def params_from_base_suite_setup(request):
             raise
 
     # Hit this installed running services to verify the correct versions are installed
-#     cluster_utils.verify_cluster_versions(
-#         cluster_config,
-#         expected_server_version=server_version,
-#         expected_sync_gateway_version=sync_gateway_version
-#     )
+    cluster_utils.verify_cluster_versions(
+        cluster_config,
+        expected_server_version=server_version,
+        expected_sync_gateway_version=sync_gateway_version
+    )
 
     # Start Test server which needed for suite level set up like query tests
     log_info("Starting TestServer...")
-#     test_name_cp = test_name.replace("/", "-")
-#     if device_enabled:
-#         testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
-#                                                               test_name_cp,
-#                                                               datetime.datetime.now()))
-#     else:
-#         testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
-#                                                        test_name_cp,
-#                                                        datetime.datetime.now()))
+    test_name_cp = test_name.replace("/", "-")
+    if device_enabled:
+        testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
+                                                              test_name_cp,
+                                                              datetime.datetime.now()))
+    else:
+        testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
+                                                       test_name_cp,
+                                                       datetime.datetime.now()))
 
     suite_source_db = None
     suite_db_log_files = None
@@ -315,6 +315,7 @@ def params_from_base_suite_setup(request):
         "liteserv_host": liteserv_host,
         "liteserv_port": liteserv_port,
         "target_url": target_url,
+        "server_url": server_url,
         "cbs_ip": cbs_ip,
         "sg_ip": sg_ip,
         "sg_db": sg_db,
@@ -326,7 +327,7 @@ def params_from_base_suite_setup(request):
         "suite_source_db": suite_source_db,
         "suite_cbl_db": suite_cbl_db,
         "sg_config": sg_config,
-#         "testserver": testserver,
+        "testserver": testserver,
         "device_enabled": device_enabled,
         "delta_sync_enabled": delta_sync_enabled,
         "enable_file_logging": enable_file_logging,
@@ -339,7 +340,7 @@ def params_from_base_suite_setup(request):
     # Flush all the memory contents on the server app
     log_info("Flushing server memory")
     utils_obj.flushMemory()
-#     log_info("Stopping the test server per suite")
-#     testserver.stop()
+    log_info("Stopping the test server per suite")
+    testserver.stop()
     # Delete png files under resources/data
     clear_resources_pngs()
