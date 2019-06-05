@@ -4,10 +4,8 @@
     "maxIncomingConnections": 0,
     "maxCouchbaseConnections": 16,
     "maxFileDescriptors": 90000,
-    "slowServerCallWarningThreshold": 500,
     "compressResponses": false,
     {{ logging }}
-    "verbose":"true",
     {{ sslcert }}
     {{ sslkey }}
     "databases": {
