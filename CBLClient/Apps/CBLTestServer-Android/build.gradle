@@ -17,7 +17,7 @@ buildscript {
 allprojects {
     repositories {
         maven {
-            url "http://mobile.maven.couchbase.com/maven2/dev/"
+            url "https://mobile.maven.couchbase.com/maven2/dev/"
         }
         maven {
             url "https://oss.sonatype.org/content/repositories/snapshots"
