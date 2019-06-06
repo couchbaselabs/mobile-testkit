@@ -145,18 +145,18 @@ def params_from_base_suite_setup(request):
     enable_file_logging = request.config.getoption("--enable-file-logging")
 
     test_name = request.node.name
-   
+
     testserver = TestServerFactory.create(platform=liteserv_platform,
                                           version_build=upgraded_liteserv_version,
                                           host=liteserv_host,
                                           port=liteserv_port,
                                           community_enabled=community_enabled,
                                           debug_mode=debug_mode)
-   
+
     log_info("Downloading TestServer ...")
     # Download TestServer app
     testserver.download()
-   
+
     # Install TestServer app
     if device_enabled:
         testserver.install_device()

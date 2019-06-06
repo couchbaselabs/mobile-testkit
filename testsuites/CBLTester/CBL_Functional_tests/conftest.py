@@ -186,11 +186,11 @@ def params_from_base_suite_setup(request):
                                           port=liteserv_port,
                                           community_enabled=community_enabled,
                                           debug_mode=debug_mode)
- 
+
     log_info("Downloading TestServer ...")
     # Download TestServer app
     testserver.download()
- 
+
     # Install TestServer app
     if device_enabled:
         testserver.install_device()
@@ -516,7 +516,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     log_filename = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
                                                  test_name_cp,
                                                  datetime.datetime.now())
- 
+
     if create_db_per_test:
         log_info("Starting TestServer...")
         if device_enabled:
