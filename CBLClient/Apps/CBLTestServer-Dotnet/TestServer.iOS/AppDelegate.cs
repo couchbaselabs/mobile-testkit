@@ -39,7 +39,7 @@ namespace Couchbase.Lite.Testing.iOS
             return true;
         }
 
-        private string ResolvePath(string path)
+        private string ResolvePath(string path, bool unzip)
         {
             var extension = Path.GetExtension(path);
             var withoutExtension = path.Replace(extension, "");
