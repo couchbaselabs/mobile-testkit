@@ -107,7 +107,7 @@ def test_delta_sync_replication(params_from_base_test_setup, num_of_docs, replic
                     if liteserv_platform == "android":
                         blob_value = blob.create("image/jpeg", blob.createImageContent("/assets/golden_gate_large.jpg"))
                     elif liteserv_platform == "xamarin-android":
-                        image_content = blob.createImageContent("Assets/golden_gate_large.jpg")
+                        image_content = blob.createImageContent("golden_gate_large.jpg")
                         blob_value = blob.create("image/jpeg", stream=image_content)
                     else:
                         image_content = blob.createImageContent("Files/golden_gate_large.jpg")

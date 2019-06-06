@@ -67,7 +67,7 @@ namespace Couchbase.Lite.Testing
             [NotNull] HttpListenerResponse response)
         {
 
-            var imageLocation = postBody["image"].ToString();
+            string imageLocation = TestServer.FilePathResolver(postBody["image"].ToString(), false);
             var image = File.ReadAllBytes(imageLocation);
             MemoryStream stream = new MemoryStream(image);
             response.WriteBody(MemoryMap.Store(stream));
