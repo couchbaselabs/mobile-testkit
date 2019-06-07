@@ -1,4 +1,3 @@
-""" Setup for Sync Gateway functional tests """
 import pdb
 import pytest
 import os
@@ -22,9 +21,9 @@ from keywords.TestServerFactory import TestServerFactory
 
 from CBLClient.Database import Database
 from CBLClient.Utils import Utils
+from CBLClient.FileLogging import FileLogging
 
 
-# Add custom arguments for executing tests in this directory
 def pytest_addoption(parser):
     parser.addoption("--mode",
                      action="store",
@@ -112,13 +111,16 @@ def pytest_addoption(parser):
     parser.addoption("--delta-sync",
                      action="store_true",
                      help="delta-sync: Enable delta-sync for sync gateway, Only works with Sync Gateway 2.5+ EE along with CBL 2.5+ EE")
+    
+    parser.addoption("--enable-file-logging",
+                     action="store_true",
+                     help="If set, CBL file logging would enable. Supported only cbl2.5 onwards")
 
 
-# This will be called once for the at the beggining of the execution in the 'tests/' directory
-# and will be torn down, (code after the yeild) when all the test session has completed.
-# IMPORTANT: Tests in 'tests/' should be executed in their own test run and should not be
-# run in the same test run with 'topology_specific_tests/'. Doing so will make have unintended
-# side effects due to the session scope
+# This will get called once before the first test that
+# runs with this as input parameters in this file
+# This setup will be called once for all tests in the
+# testsuites/CBLTester/CBL_Functional_tests/ directory
 @pytest.fixture(scope="session")
 def params_from_base_suite_setup(request):
     log_info("Setting up 'params_from_base_suite_setup' ...")
@@ -145,6 +147,7 @@ def params_from_base_suite_setup(request):
     use_views = request.config.getoption("--use-views")
     number_replicas = request.config.getoption("--number-replicas")
     delta_sync_enabled = request.config.getoption("--delta-sync")
+    enable_file_logging = request.config.getoption("--enable-file-logging")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_upgraded_version, sync_gateway_upgraded_version)
@@ -173,22 +176,54 @@ def params_from_base_suite_setup(request):
     log_info("number_replicas: {}".format(number_replicas))
     log_info("delta_sync_enabled: {}".format(delta_sync_enabled))
 
-    # pdb.set_trace()
+    create_db_per_test = "cbl-test"
+    create_db_per_suite = None
 
-    # Make sure mode for sync_gateway is supported ('cc' or 'di')
-    validate_sync_gateway_mode(mode)
+    testserver = TestServerFactory.create(platform=liteserv_platform,
+                                          version_build=liteserv_version,
+                                          host=liteserv_host,
+                                          port=liteserv_port,
+                                          community_enabled=False,
+                                          debug_mode=False)
 
-    # use ci_lb_cc cluster config if mode is "cc" or ci_lb_di cluster config if more is "di"
-    # use base_(lb_)cc cluster config if mode is "cc" or base_(lb_)di cluster config if mode is "di"
+    log_info("Downloading TestServer ...")
+    # Download TestServer app
+    # testserver.download()
+    '''
+    # Install TestServer app
+    if device_enabled:
+        testserver.install_device()
+    else:
+        testserver.install()
+    '''
+    base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
+    sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
+
     sg_db = "db"
+    suite_cbl_db = None
+
+    # use cluster config specified by arguments with "cc" if mode is "cc" or "di" if mode is "di"
     cluster_config = "{}/{}_{}".format(CLUSTER_CONFIGS_DIR, cluster_config, mode)
     log_info("Using '{}' config!".format(cluster_config))
+    
     cluster_utils = ClusterKeywords(cluster_config)
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
+
     sg_url = cluster_topology["sync_gateways"][0]["public"]
     sg_ip = host_for_url(sg_url)
+
+    persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', False)
     target_url = "ws://{}:4984/{}".format(sg_ip, sg_db)
     target_admin_url = "ws://{}:4985/{}".format(sg_ip, sg_db)
+
+    # Only works with load balancer configs
+    persist_cluster_config_environment_prop(cluster_config, 'sg_lb_enabled', True)
+    
+    if sg_ssl:
+        log_info("Enabling SSL on sync gateway")
+        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', True)
+        target_url = "wss://{}:4984/{}".format(sg_ip, sg_db)
+        target_admin_url = "wss://{}:4985/{}".format(sg_ip, sg_db)
 
     try:
         server_version
@@ -208,28 +243,39 @@ def params_from_base_suite_setup(request):
         log_info("Running test with sync_gateway version {}".format(sync_gateway_version))
         persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_version', sync_gateway_version)
 
-    # Only works with load balancer configs
-    persist_cluster_config_environment_prop(cluster_config, 'sg_lb_enabled', True)
-
-    if sg_ssl:
-        log_info("Enabling SSL on sync gateway")
-        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', True)
-        target_url = "wss://{}:4984/{}".format(sg_ip, sg_db)
-        target_admin_url = "wss://{}:4985/{}".format(sg_ip, sg_db)
+    try:
+        cbl_log_decoder_platform
+    except NameError:
+        log_info("cbl_log_decoder_platform is not provided")
+        persist_cluster_config_environment_prop(cluster_config, 'cbl_log_decoder_platform', "macos", property_name_check=False)
     else:
-        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', False)
+        log_info("Running test with cbl_log_decoder_platform {}".format(cbl_log_decoder_platform))
+        persist_cluster_config_environment_prop(cluster_config, 'cbl_log_decoder_platform', cbl_log_decoder_platform, property_name_check=False)
+
+    try:
+        cbl_log_decoder_build
+    except NameError:
+        log_info("cbl_log_decoder_build is not provided")
+        persist_cluster_config_environment_prop(cluster_config, 'cbl_log_decoder_build', "", property_name_check=False)
+    else:
+        log_info("Running test with cbl_log_decoder_platform {}".format(cbl_log_decoder_platform))
+        persist_cluster_config_environment_prop(cluster_config, 'cbl_log_decoder_platform', cbl_log_decoder_platform, property_name_check=False)
+
+    if xattrs_enabled:
+        log_info("Running test with xattrs for sync meta storage")
+        persist_cluster_config_environment_prop(cluster_config, 'xattrs_enabled', True)
+    else:
+        log_info("Using document storage for sync meta data")
+        persist_cluster_config_environment_prop(cluster_config, 'xattrs_enabled', False)
 
     if use_views:
         log_info("Running SG tests using views")
         # Enable sg views in cluster configs
         persist_cluster_config_environment_prop(cluster_config, 'sg_use_views', True)
     else:
-        log_info("Running tests with cbs <-> sg ssl disabled")
+        log_info("Running tests not using views")
         # Disable sg views in cluster configs
         persist_cluster_config_environment_prop(cluster_config, 'sg_use_views', False)
-
-    # Write the number of replicas to cluster config
-    persist_cluster_config_environment_prop(cluster_config, 'number_replicas', number_replicas)
 
     if cbs_ssl:
         log_info("Running tests with cbs <-> sg ssl enabled")
@@ -240,62 +286,76 @@ def params_from_base_suite_setup(request):
         # Disable ssl in cluster configs
         persist_cluster_config_environment_prop(cluster_config, 'cbs_ssl_enabled', False)
 
-    if delta_sync_enabled:
+    if delta_sync_enabled and (sync_gateway_upgraded_version >= "2.5.0"):
         log_info("Running with delta sync")
         persist_cluster_config_environment_prop(cluster_config, 'delta_sync_enabled', True)
     else:
         log_info("Running without delta sync")
         persist_cluster_config_environment_prop(cluster_config, 'delta_sync_enabled', False)
 
-    sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
-
-    # pdb.set_trace()
-    testserver = TestServerFactory.create(platform=liteserv_platform,
-                                          version_build=liteserv_version,
-                                          host=liteserv_host,
-                                          port=liteserv_port,
-                                          community_enabled=False,  # community_enabled
-                                          debug_mode=False)  # debug_mode
-
-    log_info("Downloading TestServer ...")
-    # Download TestServer app
-    # testserver.download()
-    '''
-    # Install TestServer app
-    if device_enabled:
-        testserver.install_device()
-    else:
-        testserver.install()
-    '''
-    # pdb.set_trace()
-    # Skip provisioning if user specifies '--skip-provisoning'
-    should_provision = True
-    if skip_provisioning:
-        should_provision = False
-
+    # Write the number of replicas to cluster config
+    persist_cluster_config_environment_prop(cluster_config, 'number_replicas', number_replicas) 
     cluster_utils = ClusterKeywords(cluster_config)
-    if should_provision:
+    cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
+    cbs_url = cluster_topology['couchbase_servers'][0]
+    cbs_ip = host_for_url(cbs_url)
+
+    if not skip_provisioning:
+        log_info("Installing Sync Gateway + Couchbase Server + Accels ('di' only)")
+
         try:
             cluster_utils.provision_cluster(
                 cluster_config=cluster_config,
                 server_version=server_version,
                 sync_gateway_version=sync_gateway_version,
-                sync_gateway_config=sg_config,
-                cbs_platform=cbs_platform
+                sync_gateway_config=sg_config
             )
         except ProvisioningError:
             logging_helper = Logging()
             logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=request.node.name)
             raise
 
-    # Hit this intalled running services to verify the correct versions are installed
+    # Hit this installed running services to verify the correct versions are installed
     cluster_utils.verify_cluster_versions(
         cluster_config,
         expected_server_version=server_version,
         expected_sync_gateway_version=sync_gateway_version
     )
 
-    # pdb.set_trace()
+    # Start Test server which needed for suite level set up
+    if create_db_per_suite:
+        log_info("Starting TestServer...")
+        test_name_cp = test_name.replace("/", "-")
+        if device_enabled:
+            testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
+                                                                  test_name_cp,
+                                                                  datetime.datetime.now()))
+        else:
+            testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
+                                                           test_name_cp,
+                                                           datetime.datetime.now()))
+
+    suite_source_db = None
+    suite_db = None
+    suite_db_log_files = None
+    if create_db_per_suite:
+        if enable_file_logging and liteserv_version >= "2.5.0":
+            cbllog = FileLogging(base_url)
+            cbllog.configure(log_level="verbose", max_rotate_count=2,
+                             max_size=1000000 * 512, plain_text=True)
+            suite_db_log_files = cbllog.get_directory()
+            log_info("Log files available at - {}".format(suite_db_log_files))
+        # Create CBL database
+        suite_cbl_db = create_db_per_suite
+        suite_db = Database(base_url)
+
+        log_info("Creating a Database {} at the suite setup".format(suite_cbl_db))
+        db_config = suite_db.configure()
+        suite_source_db = suite_db.create(suite_cbl_db, db_config)
+        log_info("Getting the database name")
+        db_name = suite_db.getName(suite_source_db)
+        assert db_name == suite_cbl_db
+
     yield {
         "cluster_config": cluster_config,
         "mode": mode,
@@ -317,21 +377,26 @@ def params_from_base_suite_setup(request):
         "target_admin_url": target_admin_url,
         "sg_ip": sg_ip,
         "sg_db": sg_db,
-        "sg_config": sg_config
+        "sg_config": sg_config,
+        "create_db_per_test": create_db_per_test,
+        "enable_file_logging": enable_file_logging,
+        "cluster_topology": cluster_topology,
+        "base_url": base_url
     }
 
-    log_info("Tearing down 'params_from_base_suite_setup' ...")
+    # Flush all the memory contents on the server app
+    log_info("Flushing server memory")
+    utils_obj = Utils(base_url)
+    utils_obj.flushMemory()
+    log_info("Stopping the test server per suite")
+    testserver.stop()
+    
     # Delete png files under resources/data
     clear_resources_pngs()
 
 
-# This is called before each test and will yield the dictionary to each test that references the method
-# as a parameter to the test method
 @pytest.fixture(scope="function")
 def params_from_base_test_setup(request, params_from_base_suite_setup):
-    # Code before the yeild will execute before each test starts
-
-    # pytest command line parameters
     cluster_config = params_from_base_suite_setup["cluster_config"]
     mode = params_from_base_suite_setup["mode"]
     xattrs_enabled = params_from_base_suite_setup["xattrs_enabled"]
@@ -353,49 +418,65 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     sg_ip = params_from_base_suite_setup["sg_ip"]
     sg_db = params_from_base_suite_setup["sg_db"]
     sg_config = params_from_base_suite_setup["sg_config"]
+    create_db_per_test = params_from_base_suite_setup["create_db_per_test"]
+    enable_file_logging = params_from_base_suite_setup["enable_file_logging"]
+    cluster_topology = params_from_base_suite_setup["cluster_topology"]
+    base_url = params_from_base_suite_setup["base_url"]
+
 
     test_name = request.node.name
-    log_info("Running test '{}'".format(test_name))
-    log_info("cluster_config: {}".format(cluster_config))
-    log_info("mode: {}".format(mode))
-    log_info("xattrs_enabled: {}".format(xattrs_enabled))
 
-    # pdb.set_trace()
     source_db = None
     test_name_cp = test_name.replace("/", "-")
     log_filename = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
                                                  test_name_cp,
                                                  datetime.datetime.now())
     '''
-    # Starting TestServer
-    log_info("Starting TestServer...")
-    if device_enabled:
-        testserver.start_device(log_filename)
-    else:
-        testserver.start(log_filename)
+    if create_db_per_test:
+        log_info("Starting TestServer...")
+        if device_enabled:
+            testserver.start_device(log_filename)
+        else:
+            testserver.start(log_filename)
     '''
-    # pdb.set_trace()
+    cluster_helper = ClusterKeywords(cluster_config)
+    cluster_hosts = cluster_helper.get_cluster_topology(cluster_config=cluster_config)
+    sg_url = cluster_hosts["sync_gateways"][0]["public"]
+    sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
 
-    if xattrs_enabled:
-        log_info("Running upgrade with xattrs for sync meta storage")
-        persist_cluster_config_environment_prop(cluster_config, 'xattrs_enabled', True)
-    else:
-        log_info("Using document storage for sync meta data")
-        persist_cluster_config_environment_prop(cluster_config, 'xattrs_enabled', False)
+    log_info("Running test '{}'".format(test_name))
+    log_info("cluster_config: {}".format(cluster_config))
+    log_info("cluster_topology: {}".format(cluster_topology))
+    log_info("mode: {}".format(mode))
+    log_info("xattrs_enabled: {}".format(xattrs_enabled))
+    db_config = None
 
-    # Create CBL database
-    log_info("Creating database on cbl...")
-    base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
-    db = Database(base_url)
+    db = None
+    cbl_db = None
+    test_db_log_file = None
+    path = None
+    if create_db_per_test:
+        if enable_file_logging and liteserv_version >= "2.5.0":
+            cbllog = FileLogging(base_url)
+            cbllog.configure(log_level="verbose", max_rotate_count=2,
+                             max_size=100000 * 512, plain_text=True)
+            test_db_log_file = cbllog.get_directory()
+            log_info("Log files available at - {}".format(test_db_log_file))
+        cbl_db = create_db_per_test + str(time.time())
+        # Create CBL database
+        db = Database(base_url)
 
-    cbl_db = "dbl" 
-    # sg-upgrade{}".format(str(time.time()))
-    log_info("Creating a Database {} at test setup".format(cbl_db))
-    db_config = db.configure()
-    source_db = db.create(cbl_db, db_config)
-    log_info("Getting the database name")
-    db_name = db.getName(source_db)
-    assert db_name == cbl_db
+        log_info("Creating a Database {} at test setup".format(cbl_db))
+        db_config = db.configure()
+        source_db = db.create(cbl_db, db_config)
+        log_info("Getting the database name")
+        db_name = db.getName(source_db)
+        assert db_name == cbl_db
+        path = db.getPath(source_db).rstrip("/\\")
+        if '\\' in path:
+            path = '\\'.join(path.split('\\')[:-1])
+        else:
+            path = '/'.join(path.split('/')[:-1])
 
     # This dictionary is passed to each test
     yield {
@@ -416,52 +497,58 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "target_admin_url": target_admin_url,
         "sg_ip": sg_ip,
         "sg_db": sg_db,
-        "cbl_db": source_db,
+        "source_db": source_db,
         "db": db,
         "num_docs": num_docs,
         "cbs_platform": cbs_platform,
         "cbs_toy_build": cbs_toy_build,
-        "sg_config": sg_config
+        "sg_config": sg_config,
+        "cluster_topology": cluster_topology,
+        "sg_url": sg_url,
+        "sg_admin_url": sg_admin_url,
+        "cbl_db": cbl_db
     }
 
     log_info("Tearing down test")
-    # Delete CBL database
-    log_info("Deleting the database sg-upgrade at test teardown")
-    time.sleep(1)
-    path = db.getPath(source_db)
-    if db.exists(cbl_db, path):
-        db.deleteDB(source_db)
-    log_info("Flushing server memory")
-    utils_obj = Utils(base_url)
-    utils_obj.flushMemory()
+    if create_db_per_test:
+        # Delete CBL database
+        log_info("Deleting the database {} at test teardown".format(create_db_per_test))
+        time.sleep(1)
+        try:
+            if db.exists(cbl_db, path):
+                db.deleteDB(source_db)
+            log_info("Flushing server memory")
+            utils_obj = Utils(base_url)
+            utils_obj.flushMemory()
+            log_info("Stopping the test server per test")
+            # testserver.stop()
+        except Exception, err:
+            log_info("Exception occurred: {}".format(err))
 
-    log_info("Stopping the test server per test")
-    # testserver.stop()
 
-    network_utils = NetworkUtils()
-    network_utils.list_connections()
+@pytest.fixture(scope="function")
+def setup_customized_teardown_test(params_from_base_test_setup):
+    cbl_db_name1 = "cbl_db1" + str(time.time())
+    cbl_db_name2 = "cbl_db2" + str(time.time())
+    cbl_db_name3 = "cbl_db3" + str(time.time())
+    base_url = params_from_base_test_setup["base_url"]
+    db = Database(base_url)
+    db_config = db.configure()
+    cbl_db1 = db.create(cbl_db_name1, db_config)
+    cbl_db2 = db.create(cbl_db_name2, db_config)
+    cbl_db3 = db.create(cbl_db_name3, db_config)
+    log_info("setting up all 3 dbs")
 
-    # Verify all sync_gateways and sg_accels are reachable
-    c = cluster.Cluster(cluster_config)
-    errors = c.verify_alive(mode)
-
-    # Fetch logs
-    logging_helper = Logging()
-    logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=test_name)
-
-    assert len(errors) == 0
-
-    # Scan logs
-    # SG logs for panic, data race
-    # System logs for OOM
-    ansible_runner = AnsibleRunner(cluster_config)
-    script_name = "{}/utilities/check_logs.sh".format(os.getcwd())
-    status = ansible_runner.run_ansible_playbook(
-        "check-logs.yml",
-        extra_vars={
-            "script_name": script_name
-        }
-    )
-
-    if status != 0:
-        raise LogScanningError("Errors found in the logs")
+    yield{
+        "db": db,
+        "cbl_db_name1": cbl_db_name1,
+        "cbl_db_name2": cbl_db_name2,
+        "cbl_db_name3": cbl_db_name3,
+        "cbl_db1": cbl_db1,
+        "cbl_db2": cbl_db2,
+        "cbl_db3": cbl_db3,
+    }
+    log_info("Tearing down test")
+    db.deleteDB(cbl_db1)
+    db.deleteDB(cbl_db2)
+    db.deleteDB(cbl_db3)

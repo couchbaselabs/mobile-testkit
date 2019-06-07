@@ -41,16 +41,15 @@ def test_upgrade(params_from_base_test_setup):
     num_docs = int(params_from_base_test_setup['num_docs'])
     cbs_platform = params_from_base_test_setup['cbs_platform']
     cbs_toy_build = params_from_base_test_setup['cbs_toy_build']
-    cbl_db = params_from_base_test_setup["cbl_db"]
+    cbl_db = params_from_base_test_setup["source_db"]
+    cbl_db_name = params_from_base_test_setup["cbl_db"]
     db = params_from_base_test_setup["db"]
     sg_config = params_from_base_test_setup["sg_config"]
+    cluster_topology = params_from_base_test_setup["cluster_topology"]
+    sg_url = params_from_base_test_setup["sg_url"]
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    sg_ip = params_from_base_test_setup["sg_ip"]
     sg_conf = "{}/resources/sync_gateway_configs/sync_gateway_default_functional_tests_{}.json".format(os.getcwd(), mode)
-
-    cluster_utils = ClusterKeywords(cluster_config)
-    cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
-    sg_pub_url = cluster_topology["sync_gateways"][0]["public"]
-    sg_admin_url = cluster_topology["sync_gateways"][0]["admin"]
-    sg_ip = host_for_url(sg_pub_url)
 
     # Create user and session on SG
     sg_client = MobileRestClient()
@@ -69,13 +68,11 @@ def test_upgrade(params_from_base_test_setup):
         channels=sg_user_channels
     )
 
-    # Add docs to TestServer
-    # cbl_db_name = "dbl"
-    db.create_bulk_docs(number=num_docs, id_prefix="cbl_filter", db=cbl_db, generator="simple_user", channels=sg_user_channels)
+    db.create_bulk_docs(number=num_docs, id_prefix="cbl_filter", db=cbl_db, channels=sg_user_channels)
     doc_ids = db.getDocIds(cbl_db)
     added_docs = db.getDocuments(cbl_db, doc_ids)
     log_info("Added {} docs".format(len(added_docs)))
-    
+
     # Starting continuous push_pull replication from TestServer to sync gateway
     log_info("Starting continuous push pull replication from TestServer to sync gateway")
     replicator = Replication(base_url)
@@ -83,19 +80,11 @@ def test_upgrade(params_from_base_test_setup):
     authenticator = Authenticator(base_url)
     replicator_authenticator = authenticator.authentication(sg_session, sg_cookie, authentication_type="session")
 
-    repl = replicator.configure_and_replicate(source_db=cbl_db,
-                                              target_url=sg_blip_url,
-                                              continuous=True,
-                                              replication_type="push",
-                                              replicator_authenticator=replicator_authenticator)
-    
-    replicator.stop(repl)
-    '''
-    session, replicator_authenticator, repl = replicator.create_session_configure_replicate(
-        base_url, sg_admin_url, sg_db, sg_user_name, sg_user_password, sg_user_channels, sg_client, cbl_db, sg_blip_url,
-        continuous=True, replication_type="push_pull")
-    '''
-    # pdb.set_trace()
+    repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=sg_user_channels, replication_type="push_pull", replicator_authenticator=replicator_authenticator)
+    repl = replicator.create(repl_config)
+    replicator.start(repl)
+    replicator.wait_until_replicator_idle(repl)
+
     # start updating docs
     terminator_doc_id = 'terminator'
     with ProcessPoolExecutor() as up:
@@ -105,7 +94,7 @@ def test_upgrade(params_from_base_test_setup):
             cbl_db,
             cbl_db_name,
             added_docs,
-            terminator_doc_id
+            "terminator_1"
         )
 
         # Supported upgrade process
@@ -115,7 +104,7 @@ def test_upgrade(params_from_base_test_setup):
 
         # Upgrade SG docmeta -> docmeta
         cluster_util = ClusterKeywords(cluster_config)
-        topology = cluster_util.get_cluster_topology(cluster_config)
+        topology = cluster_util.get_cluster_topology(cluster_config, lb_enable=False)
         sync_gateways = topology["sync_gateways"]
         sg_accels = topology["sg_accels"]
 
@@ -212,12 +201,8 @@ def test_upgrade(params_from_base_test_setup):
                 enable_import = False
                 # Check Import showing up on all nodes
 
-        send_changes_termination_doc(
-            cbl_db=cbl_db,
-            cbl_db_name=cbl_db_name,
-            terminator_doc_id=terminator_doc_id,
-            terminator_channel=sg_user_channels
-        )
+        db.create_bulk_docs(number=1, id_prefix=terminator_doc_id, db=cbl_db, channels=sg_user_channels)
+        pdb.set_trace()
         log_info("Waiting for doc updates to complete")
         updated_doc_revs = updates_future.result()
 
@@ -333,12 +318,8 @@ def verify_sg_docs_revision_history(url, db, added_docs):
             log_info("Verified doc body for {}".format(doc_id))
 
 
-def send_changes_termination_doc(cbl_db, cbl_db_name, terminator_doc_id, terminator_channel):
-    doc_body = {}
-    doc_body["channels"] = terminator_channel
-    doc_body["_id"] = terminator_doc_id
-    doc_body["foo"] = "bar"
-    cbl_db.saveDocument(database=cbl_db_name, document=doc_body)
+def send_changes_termination_doc(db, cbl_db, terminator_doc_id, terminator_channel):
+    db.create_bulk_docs(number=1, id_prefix=terminator_doc_id, db=cbl_db, channels=terminator_channel)
 
 
 def update_docs(cbl_db, added_docs, cbl_db_name, terminator_doc_id):
