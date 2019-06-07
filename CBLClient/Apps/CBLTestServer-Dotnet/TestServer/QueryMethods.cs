@@ -730,6 +730,35 @@ namespace Couchbase.Lite.Testing
 
         }
 
+        internal static void QueryAnyOperator([NotNull] NameValueCollection args,
+           [NotNull] IReadOnlyDictionary<string, object> postBody,
+           [NotNull] HttpListenerResponse response)
+        {
+            With<Database>(postBody, "database", db =>
+            {
+                var whr_prop = postBody["whr_prop"].ToString();
+                var whr_val = postBody["whr_val"].ToString();
+                var collection = postBody["collection"].ToString();
+                var collection_prop = postBody["collection_prop"].ToString();
+                var collection_val = postBody["collection_val"].ToString();
+                IVariableExpression departure = ArrayExpression.Variable(collection);
+                IVariableExpression departure_utc = ArrayExpression.Variable(collection_prop);
+                List<Object> resultArray = new List<Object>();
+
+                using (IQuery query = QueryBuilder
+                        .Select(SelectResult.Expression(Meta.ID))
+                        .From(DataSource.Database(db))
+                        .Where(Expression.Property(whr_prop).EqualTo(Expression.Value(whr_val)
+                            .And(ArrayExpression.Any(departure).In(Expression.Property(collection))
+                                .Satisfies(departure_utc.GreaterThan(Expression.Value(collection_val)))))))
+                    foreach (Result row in query.Execute())
+                    {
+                        resultArray.Add(row.ToDictionary());
+                    }
+                response.WriteBody(resultArray);
+            });
+        }
+
         internal static void QueryNot([NotNull] NameValueCollection args,
            [NotNull] IReadOnlyDictionary<string, object> postBody,
            [NotNull] HttpListenerResponse response)
