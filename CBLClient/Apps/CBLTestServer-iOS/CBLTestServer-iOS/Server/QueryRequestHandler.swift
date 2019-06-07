@@ -718,7 +718,31 @@ public class QueryRequestHandler {
             }
             
             return resultArray
+
+        case "query_anyOperator":
+            let database: Database = args.get(name: "database")!
+            let collection: String = args.get(name: "collection")!
+            let collection_prop: String = args.get(name: "collection_prop")!
+            let collection_val: String = args.get(name: "collection_val")!
+            let whr_prop: String = args.get(name: "whr_prop")!
+            let whr_val: String = args.get(name: "whr_val")!
+            let departure = ArrayExpression.variable(collection)
+            let departure_utc = ArrayExpression.variable(collection_prop)
             
+            let searchQuery = QueryBuilder
+                .select(SelectResult.expression(Meta.id))
+                .from(DataSource.database(database))
+                .where(Expression.property(whr_prop).equalTo(Expression.value(whr_val)
+                    .and(ArrayExpression.any(departure).in(Expression.property(collection))
+                        .satisfies(departure_utc.greaterThan(Expression.value(collection_val))))))
+            var resultArray = [Any]()
+            
+            for row in try searchQuery.execute() {
+                resultArray.append(row.toDictionary())
+            }
+            
+            return resultArray
+
         case "query_not":
             let database: Database = args.get(name: "database")!
             let val1: Int = args.get(name: "val1")!

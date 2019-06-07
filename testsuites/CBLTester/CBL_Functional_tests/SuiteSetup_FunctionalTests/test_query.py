@@ -45,6 +45,48 @@ def test_get_doc_ids(params_from_base_test_setup):
     log_info("Doc contents match between CBL and n1ql")
 
 
+def test_any_operator(params_from_base_test_setup):
+    """@summary
+    Fetches all the doc ids
+    Tests the below query
+    Query search_query = QueryBuilder
+                .select(SelectResult.all())
+                .from(DataSource.database(database))
+                .where(Expression.property(select_property).equalTo(Expression.property(select_val))
+                        .and(ArrayExpression.any(departure).in(Expression.property(collection))
+                                .satisfies(departure_utc.greaterThan(Expression.property(collection_val)))));
+
+    Verifies with n1ql - select meta().id from `bucket_name` where meta().id not like "_sync%"
+    """
+    cluster_topology = params_from_base_test_setup["cluster_topology"]
+    source_db = params_from_base_test_setup["suite_source_db"]
+    base_url = params_from_base_test_setup["base_url"]
+    cbs_url = cluster_topology['couchbase_servers'][0]
+    db = Database(base_url)
+
+    cbs_ip = host_for_url(cbs_url)
+
+    log_info("Fetching doc ids from the server")
+    bucket_name = "travel-sample"
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
+    n1ql_query = 'select meta().id from `{}` where type="route"' \
+                 'AND ANY departure IN schedule SATISFIES departure.utc > "03:41:00" END;'.format(bucket_name)
+    log_info(n1ql_query)
+    query = N1QLQuery(n1ql_query)
+    doc_ids_from_n1ql = []
+    for row in sdk_client.n1ql_query(query):
+        doc_ids_from_n1ql.append(row["id"])
+
+    # Fetching docs from CBL
+    whr_propery = "type"
+    whr_val = "route"
+    collection = "departure"
+    collection_prop = "departure.utc"
+    collection_val = "03:41:00"
+    qy = Query(base_url)
+    ids = qy.any_operator(source_db, )
+
+
 @pytest.mark.parametrize("doc_id", [
     ("airline_10"),
     ("doc_id_does_not_exist"),
