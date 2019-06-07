@@ -147,7 +147,6 @@ def test_delta_sync_replication(params_from_base_test_setup, num_of_docs, replic
     sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
     doc_ids = db.getDocIds(cbl_db)
     cbl_db_docs = db.getDocuments(cbl_db, doc_ids)
-    print("all cbl docs are ----))))))-----", cbl_db_docs)
     compare_docs(cbl_db, db, sg_docs)
 
 
