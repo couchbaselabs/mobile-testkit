@@ -50,7 +50,9 @@ namespace Couchbase.Lite.Testing
 
         #region Properties
 
-        public static Func<string, string> FilePathResolver { get; set; }
+        // Takes a file path, and a bool for whether or not to unzip (unzipping only
+        // applies to Android)
+        public static Func<string, bool, string> FilePathResolver { get; set; }
 
         #endregion
 

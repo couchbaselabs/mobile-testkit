@@ -55,7 +55,7 @@ namespace Couchbase.Lite.Testing.NetCore
             Database.Log.Console.Level = Logging.LogLevel.Debug;
             Database.Log.Console.Domains = Logging.LogDomain.All;
             
-            TestServer.FilePathResolver = path => path;
+            TestServer.FilePathResolver = (path, unzip) => path;
             var listener = new TestServer();
             listener.Start();
 

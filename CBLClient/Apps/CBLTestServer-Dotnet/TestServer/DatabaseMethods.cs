@@ -533,7 +533,7 @@ namespace Couchbase.Lite.Testing
                                                   [NotNull] HttpListenerResponse response)
         {
             string dbName = postBody["dbName"].ToString();
-            string dbPath = TestServer.FilePathResolver(postBody["dbPath"].ToString());
+            string dbPath = TestServer.FilePathResolver(postBody["dbPath"].ToString(), true);
             dbPath = dbPath + "/";
             DatabaseConfiguration dbConfig = MemoryMap.Get<DatabaseConfiguration>(postBody["dbConfig"].ToString());
             Database.Copy(dbPath, dbName, dbConfig);

@@ -35,7 +35,7 @@ namespace Couchbase.Lite.Testing.UWP
             Label.Text = "CBLTestServer-NetUWP - listening!";
         }
 
-		private string ResolvePath(string path)
+		private string ResolvePath(string path, bool unzip)
 		{
 			return Path.Combine(Windows.ApplicationModel.Package.Current.InstalledLocation.Path, "Assets", path);
 		}

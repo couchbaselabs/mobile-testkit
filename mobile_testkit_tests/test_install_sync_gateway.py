@@ -58,7 +58,6 @@ def test_get_buckets_from_sync_gateway_config_template_vars():
     "maxIncomingConnections": 0,
     "maxCouchbaseConnections": 16,
     "maxFileDescriptors": 90000,
-    "slowServerCallWarningThreshold": 500,
     "compressResponses": true,
     "log": ["CRUD+", "Cache+", "HTTP+", "Changes+"],
     "cluster_config": {
