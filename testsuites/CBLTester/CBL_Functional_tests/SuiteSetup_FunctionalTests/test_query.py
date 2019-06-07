@@ -69,7 +69,7 @@ def test_any_operator(params_from_base_test_setup):
     log_info("Fetching doc ids from the server")
     bucket_name = "travel-sample"
     sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
-    n1ql_query = 'select meta().id from `{}` where type="route"' \
+    n1ql_query = 'select meta().id from `{}` where type="route" ' \
                  'AND ANY departure IN schedule SATISFIES departure.utc > "03:41:00" END;'.format(bucket_name)
     log_info(n1ql_query)
     query = N1QLQuery(n1ql_query)
@@ -78,13 +78,17 @@ def test_any_operator(params_from_base_test_setup):
         doc_ids_from_n1ql.append(row["id"])
 
     # Fetching docs from CBL
-    whr_propery = "type"
+    whr_prop = "type"
     whr_val = "route"
     collection = "departure"
     collection_prop = "departure.utc"
     collection_val = "03:41:00"
     qy = Query(base_url)
-    ids = qy.any_operator(source_db, )
+    ids_from_cbl = qy.query_any_operator(source_db, collection, collection_prop, collection_val, whr_prop, whr_val)
+    assert len(ids_from_cbl) == len(doc_ids_from_n1ql)
+    assert np.array_equal(sorted(ids_from_cbl), sorted(doc_ids_from_n1ql))
+    log_info("Doc contents match between CBL and n1ql")
+
 
 
 @pytest.mark.parametrize("doc_id", [
