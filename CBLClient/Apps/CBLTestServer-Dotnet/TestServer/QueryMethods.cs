@@ -738,19 +738,20 @@ namespace Couchbase.Lite.Testing
             {
                 var whr_prop = postBody["whr_prop"].ToString();
                 var whr_val = postBody["whr_val"].ToString();
-                var collection = postBody["collection"].ToString();
-                var collection_prop = postBody["collection_prop"].ToString();
-                var collection_val = postBody["collection_val"].ToString();
-                IVariableExpression departure = ArrayExpression.Variable(collection);
-                IVariableExpression departure_utc = ArrayExpression.Variable(collection_prop);
+                var schedule = postBody["schedule"].ToString();
+                var departure = postBody["departure"].ToString();
+                var departure_prop = postBody["departure_prop"].ToString();
+                var departure_val = postBody["departure_val"].ToString();
+                IVariableExpression dep_schedule = ArrayExpression.Variable(departure);
+                IVariableExpression departure_utc = ArrayExpression.Variable(departure_prop);
                 List<Object> resultArray = new List<Object>();
 
                 using (IQuery query = QueryBuilder
                         .Select(SelectResult.Expression(Meta.ID))
                         .From(DataSource.Database(db))
-                        .Where(Expression.Property(whr_prop).EqualTo(Expression.Value(whr_val)
-                            .And(ArrayExpression.Any(departure).In(Expression.Property(collection))
-                                .Satisfies(departure_utc.GreaterThan(Expression.Value(collection_val)))))))
+                        .Where(Expression.Property(whr_prop).EqualTo(Expression.Value(whr_val))
+                            .And(ArrayExpression.Any(dep_schedule).In(Expression.Property(schedule))
+                                .Satisfies(departure_utc.GreaterThan(Expression.Value(departure_val))))))
                     foreach (Result row in query.Execute())
                     {
                         resultArray.Add(row.ToDictionary());
