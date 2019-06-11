@@ -99,7 +99,7 @@ public class QueryRequestHandler {
         ResultSet rows = search_query.execute();
         List<Object> resultArray = new ArrayList<>();
         for (Result row : rows) {
-            resultArray.add(row);
+            resultArray.add(row.getString("id"));
         }
         return resultArray;
     }

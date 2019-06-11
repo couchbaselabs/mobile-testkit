@@ -754,7 +754,7 @@ namespace Couchbase.Lite.Testing
                                 .Satisfies(departure_utc.GreaterThan(Expression.Value(departure_val))))))
                     foreach (Result row in query.Execute())
                     {
-                        resultArray.Add(row.ToDictionary());
+                        resultArray.Add(row.GetString("id"));
                     }
                 response.WriteBody(resultArray);
             });

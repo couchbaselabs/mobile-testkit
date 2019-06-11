@@ -740,7 +740,7 @@ public class QueryRequestHandler {
             
             for row in try searchQuery.execute() {
                 
-                resultArray.append(row.toDictionary())
+                resultArray.append(row.string(forKey: "id")!)
             }
             
             return resultArray
