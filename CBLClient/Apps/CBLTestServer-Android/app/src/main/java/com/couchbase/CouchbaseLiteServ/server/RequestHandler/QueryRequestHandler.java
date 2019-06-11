@@ -81,19 +81,21 @@ public class QueryRequestHandler {
         */
         Database database = args.get("database");
         String whr_prop = args.get("whr_prop");
-        String collection = args.get("collection");//departure
-        String collection_prop = args.get("collection_prop");//departure.utc
         String whr_val = args.get("whr_val");
-        String collection_val = args.get("collection_val");
-        VariableExpression departure = ArrayExpression.variable(collection);
-        VariableExpression departure_utc = ArrayExpression.variable(collection_prop);
+        String schedule = args.get("schedule");
+        String departure = args.get("departure");
+        String departure_prop = args.get("departure_prop");
+        String departure_val = args.get("departure_val");
+
+        VariableExpression dep_schedule = ArrayExpression.variable(departure);
+        VariableExpression departure_utc = ArrayExpression.variable(departure_prop);
 
         Query search_query = QueryBuilder
                 .select(SelectResult.expression(Meta.id))
                 .from(DataSource.database(database))
                 .where(Expression.property(whr_prop).equalTo(Expression.value(whr_val))
-                        .and(ArrayExpression.any(departure).in(Expression.property(collection))
-                                .satisfies(departure_utc.greaterThan(Expression.value(collection_val)))));
+                        .and(ArrayExpression.any(dep_schedule).in(Expression.property(schedule))
+                                .satisfies(departure_utc.greaterThan(Expression.value(departure_val)))));
         ResultSet rows = search_query.execute();
         List<Object> resultArray = new ArrayList<>();
         for (Result row : rows) {

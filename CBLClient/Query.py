@@ -362,12 +362,13 @@ class Query(object):
 
         return self._client.invokeMethod("query_isNot", args)
 
-    def query_any_operator(self, database, collection, collection_prop, collection_val, whr_prop, whr_val):
+    def query_any_operator(self, database, schedule, departure, departure_prop, departure_val, whr_prop, whr_val):
         args = Args()
         args.setMemoryPointer("database", database)
-        args.setString("collection", collection)
-        args.setString("collection_prop", collection_prop)
-        args.setString("collection_val", collection_val)
+        args.setString("schedule", schedule)
+        args.setString("departure", departure)
+        args.setString("departure_prop", departure_prop)
+        args.setString("departure_val", departure_val)
         args.setString("whr_prop", whr_prop)
         args.setString("whr_val", whr_val)
 
