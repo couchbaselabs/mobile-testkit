@@ -130,8 +130,6 @@ public class DictionaryRequestHandler {
             return dictionary.blob(forKey: key)
         
         case "dictionary_setBlob":
-            // let dictionary: [String: Any]? = args.get(name: "dictionary")!
-            // let mutableDictionary = MutableDictionaryObject(data: dictionary)
             let mutableDictionary: MutableDictionaryObject = args.get(name: "dictionary")!
             let key: String = args.get(name: "key")!
             let value: Blob = args.get(name: "value")!
