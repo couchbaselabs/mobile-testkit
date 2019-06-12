@@ -104,6 +104,7 @@ def verify_sync_gateway_version(host, expected_sync_gateway_version):
         "1.5.1": "4",
         "2.0.0": "832",
         "2.1.0": "121",
+        "2.1.1": "17",
         "2.1.2": "86",
         "2.5.0": "271"
     }
