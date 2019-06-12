@@ -26,9 +26,9 @@ public class DictionaryRequestHandler {
                 return MutableDictionaryObject()
             }
 
-        case "dictionary_toMutable":
-            let dictionary: MutableDictionaryObject = args.get(name: "dictionary")!
-            return dictionary.count
+        case "dictionary_toMutableDictionary":
+            let dictionary: [String: Any]? = args.get(name: "dictionary")!
+            return MutableDictionaryObject(data: dictionary)
             
         case "dictionary_count":
             let dictionary: MutableDictionaryObject = args.get(name: "dictionary")!
@@ -130,9 +130,9 @@ public class DictionaryRequestHandler {
             return dictionary.blob(forKey: key)
         
         case "dictionary_setBlob":
-            let dictionary: [String: Any]? = args.get(name: "dictionary")!
-            let mutableDictionary = MutableDictionaryObject(data: dictionary)
-            
+            // let dictionary: [String: Any]? = args.get(name: "dictionary")!
+            // let mutableDictionary = MutableDictionaryObject(data: dictionary)
+            let mutableDictionary: MutableDictionaryObject = args.get(name: "dictionary")!
             let key: String = args.get(name: "key")!
             let value: Blob = args.get(name: "value")!
             
