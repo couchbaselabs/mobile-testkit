@@ -544,7 +544,7 @@ namespace Couchbase.Lite.Testing
                                                   [NotNull] IReadOnlyDictionary<string, object> postBody,
                                                   [NotNull] HttpListenerResponse response)
         {
-            string dbPath = TestServer.FilePathResolver(postBody["dbPath"].ToString());
+            string dbPath = TestServer.FilePathResolver(postBody["dbPath"].ToString(), true);
             dbPath = dbPath + "/";
             response.WriteBody(dbPath);
         }
