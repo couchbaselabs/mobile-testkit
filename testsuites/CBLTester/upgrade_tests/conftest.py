@@ -334,7 +334,7 @@ def params_from_base_suite_setup(request):
         "suite_db_log_files": suite_db_log_files,
         "db_password": db_password,
         "encrypted_db": encrypted_db,
-        "utils_obj": utils_obj,
+        "utils_obj": utils_obj
     }
 
     # Flush all the memory contents on the server app
