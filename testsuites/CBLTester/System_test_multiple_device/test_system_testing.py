@@ -315,6 +315,8 @@ def _replicaton_status_check(repl_obj, replicator, repl_status_check_sleep_time=
     repl_obj.wait_until_replicator_idle(replicator, max_times=maxint, sleep_time=repl_status_check_sleep_time)
     total = repl_obj.getTotal(replicator)
     completed = repl_obj.getCompleted(replicator)
+    log_info("total: {}".format(total))
+    log_info("completed: {}".format(completed))
     # assert total == completed, "total is not equal to completed"
 
 
