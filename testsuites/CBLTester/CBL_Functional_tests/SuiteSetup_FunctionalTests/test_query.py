@@ -56,7 +56,7 @@ def test_any_operator(params_from_base_test_setup):
                         .and(ArrayExpression.any(dep_schedule).in(Expression.property(schedule))
                                 .satisfies(departure_utc.greaterThan(Expression.value(departure_val)))));
 
-    Verifies with n1ql - select meta().id from `{}` where type="route" 
+    Verifies with n1ql - select meta().id from `{}` where type="route"
                         AND ANY departure IN schedule SATISFIES departure.utc > "23:41:00" END
     """
     cluster_topology = params_from_base_test_setup["cluster_topology"]
@@ -87,10 +87,11 @@ def test_any_operator(params_from_base_test_setup):
     qy = Query(base_url)
     ids_from_cbl = qy.query_any_operator(source_db, schedule, departure, departure_prop,
                                          departure_val, whr_prop, whr_val)
-    
+
     assert len(ids_from_cbl) == len(doc_ids_from_n1ql)
     assert np.array_equal(sorted(ids_from_cbl), sorted(doc_ids_from_n1ql))
     log_info("Doc contents match between CBL and n1ql")
+
 
 def test_every_operator(params_from_base_test_setup):
     """@summary
@@ -135,14 +136,15 @@ def test_every_operator(params_from_base_test_setup):
     qy = Query(base_url)
     ids_from_cbl = qy.query_any_operator(source_db, schedule, departure, departure_prop,
                                          departure_val, whr_prop, whr_val)
-    
+
     assert len(ids_from_cbl) == len(doc_ids_from_n1ql)
     assert np.array_equal(sorted(ids_from_cbl), sorted(doc_ids_from_n1ql))
     log_info("Doc contents match between CBL and n1ql")
 
+
 @pytest.mark.parametrize("doc_id", [
-    ("airline_10"),
-    ("doc_id_does_not_exist"),
+    "airline_10",
+    "doc_id_does_not_exist",
 ])
 def test_doc_get(params_from_base_test_setup, doc_id):
     """ @summary

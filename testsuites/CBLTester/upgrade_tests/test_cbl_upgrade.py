@@ -1,5 +1,5 @@
 import pytest
-import os
+# import os
 import random
 
 from CBLClient.Database import Database
@@ -14,6 +14,7 @@ from keywords.constants import SDK_TIMEOUT
 import time
 from CBLClient.MemoryPointer import MemoryPointer
 from keywords.couchbaseserver import CouchbaseServer
+from CBLClient.Query import Query
 
 
 @pytest.mark.listener
@@ -32,7 +33,7 @@ def test_upgrade_cbl(params_from_base_suite_setup):
     base_liteserv_version = params_from_base_suite_setup["base_liteserv_version"]
     upgraded_liteserv_version = params_from_base_suite_setup["upgraded_liteserv_version"]
     liteserv_platform = params_from_base_suite_setup["liteserv_platform"]
-    liteserv_host = params_from_base_suite_setup["liteserv_host"]
+    # liteserv_host = params_from_base_suite_setup["liteserv_host"]
     upgrade_cbl_db_name = "upgarded_db"
     base_url = params_from_base_suite_setup["base_url"]
     encrypted_db = params_from_base_suite_setup["encrypted_db"]
@@ -40,8 +41,8 @@ def test_upgrade_cbl(params_from_base_suite_setup):
     sg_db = "db"
     sg_admin_url = params_from_base_suite_setup["sg_admin_url"]
     sg_blip_url = params_from_base_suite_setup["target_url"]
-    sg_version = params_from_base_suite_setup["sync_gateway_version"]
-    server_version = params_from_base_suite_setup["server_version"]
+    # sg_version = params_from_base_suite_setup["sync_gateway_version"]
+    # server_version = params_from_base_suite_setup["server_version"]
     cluster_config = params_from_base_suite_setup["cluster_config"]
     sg_config = params_from_base_suite_setup["sg_config"]
     cbs_ip = params_from_base_suite_setup["cbs_ip"]
@@ -137,17 +138,62 @@ def test_upgrade_cbl(params_from_base_suite_setup):
         cbs_doc_ids.append(row["id"])
     assert sorted(cbs_doc_ids) == sorted(cbl_doc_ids), "Total no. of docs are different in CBS and CBL app"
 
-    # Runing Query tests
-    log_info("Running Query tests")
-    directory = os.getcwd()
-    os.chdir(directory)
-    cmd = ["{}/testsuites/CBLTester/CBL_Functional_tests/SuiteSetup_FunctionalTests".format(os.getcwd()),
-           "--liteserv-version={}".format(upgraded_liteserv_version), "--skip-provisioning",
-           "--liteserv-host={}".format(liteserv_host), "--liteserv-port=8080",
-           "--sync-gateway-version={}".format(sg_version), "--mode=cc", "--server-version={}".format(server_version),
-           "--liteserv-platform={}".format(liteserv_platform), "--create-db-per-suite={}".format(upgrade_cbl_db_name)
-           ]
-    pytest.main(cmd)
+    # Running selected Query tests
+    # 1. Checking for Any operator
+    qy = Query(base_url)
+    cbl_doc_ids = qy.query_any_operator(cbl_db, "schedule", "departure", "departure.utc",
+                                        "23:41:00", "type", "route")
+    n1ql_query = 'select meta().id from `travel-sample` where type="route" ' \
+                 'AND ANY departure IN schedule SATISFIES departure.utc > "23:41:00" END;'
+    log_info(n1ql_query)
+    query = N1QLQuery(n1ql_query)
+    cbs_doc_ids = []
+    for row in sdk_client.n1ql_query(query):
+        cbs_doc_ids.append(row["id"])
+    assert sorted(cbs_doc_ids) == sorted(cbl_doc_ids), "Any operator query output doesn't match"
+
+    # 2. Checking for Between Operator
+    cbl_doc_ids = qy.query_between(cbl_db, id, "1000", "2000")
+    n1ql_query = 'select meta().id from `travel-sample` where {} between 1000 and 2000 order by meta().id asc'
+    log_info(n1ql_query)
+    query = N1QLQuery(n1ql_query)
+    cbs_doc_ids = []
+
+    for row in sdk_client.n1ql_query(query):
+        cbs_doc_ids.append(row)
+    assert sorted(cbs_doc_ids) == sorted(cbl_doc_ids), "Between operator query output doesn't match"
+
+    # 3. Checking for FTS with ranking
+    limit = 10
+    result_set = qy.query_fts_with_ranking(cbl_db, "content", "beautiful", "landmark", limit)
+    cbl_doc_ids = []
+    if result_set != -1 and result_set is not None:
+        for result in result_set:
+            cbl_doc_ids.append(result)
+            log_info(result)
+    assert 0 < len(cbl_doc_ids) <= limit, "FTS ranking query result doesn't match with expected result"
+
+    # 4. Checking for Inner Join query
+    result_set = qy.query_inner_join(cbl_db, "airline", "sourceairport", "country", "country",
+                                     "stops", "United States", 0, "icao", "destinationairport", limit)
+
+    cbl_doc_ids = []
+    for docs in result_set:
+        cbl_doc_ids.append(docs)
+
+    assert len(cbl_doc_ids) == limit
+    log_info("Found {} docs".format(len(cbl_doc_ids)))
+
+    # log_info("Running Query tests")
+    # directory = os.getcwd()
+    # os.chdir(directory)
+    # cmd = ["{}/testsuites/CBLTester/CBL_Functional_tests/SuiteSetup_FunctionalTests".format(os.getcwd()),
+    #        "--liteserv-version={}".format(upgraded_liteserv_version), "--skip-provisioning",
+    #        "--liteserv-host={}".format(liteserv_host), "--liteserv-port=8080",
+    #        "--sync-gateway-version={}".format(sg_version), "--mode=cc", "--server-version={}".format(server_version),
+    #        "--liteserv-platform={}".format(liteserv_platform), "--create-db-per-suite={}".format(upgrade_cbl_db_name)
+    #        ]
+    # pytest.main(cmd)
 
     # Adding few docs to db
     new_doc_ids = db.create_bulk_docs(number=5, id_prefix="new_cbl_docs", db=cbl_db)
@@ -206,4 +252,10 @@ def test_upgrade_cbl(params_from_base_suite_setup):
     assert sorted(cbs_doc_ids) == sorted(new_cbl_doc_ids), "Total no. of docs are different in CBS and CBL app"
 
     # Cleaning the database , tearing down
-    db.deleteDB(cbl_db)
+    db_path = db.getPath(cbl_db).rstrip("/\\")
+    if '\\' in db_path:
+        db_path = '\\'.join(db_path.split('\\')[:-1])
+    else:
+        db_path = '/'.join(db_path.split('/')[:-1])
+    if db.exists(upgrade_cbl_db_name, db_path):
+        db.deleteDB(cbl_db)
