@@ -211,6 +211,7 @@ namespace Couchbase.Lite.Testing
                 ["query_leftOuterJoin"] = QueryMethods.QueryLeftOuterJoin,
                 ["query_innerJoin"] = QueryMethods.QueryInnerJoin,
                 ["query_crossJoin"] = QueryMethods.QueryCrossJoin,
+                ["query_anyOperator"] = QueryMethods.QueryAnyOperator,
                 ["query_greaterThan"] = QueryMethods.QueryGreaterThan,
                 ["query_greaterThanOrEqualTo"] = QueryMethods.QueryGreaterThanOrEqualTo,
                 ["query_lessThan"] = QueryMethods.QueryLessThan,
