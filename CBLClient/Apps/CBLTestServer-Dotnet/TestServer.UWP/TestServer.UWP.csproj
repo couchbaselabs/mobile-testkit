@@ -105,23 +105,6 @@
     <AppxManifest Include="Package.appxmanifest">
       <SubType>Designer</SubType>
     </AppxManifest>
-    <None Include="Assets\Databases\PrebuiltDB-encrypted.cblite2\db.sqlite3" />
-    <None Include="Assets\Databases\PrebuiltDB-encrypted.cblite2\db.sqlite3-shm" />
-    <None Include="Assets\Databases\PrebuiltDB-encrypted.cblite2\db.sqlite3-wal" />
-    <None Include="Assets\Databases\travel-sample-1.4.cblite2\db.sqlite3" />
-    <None Include="Assets\Databases\travel-sample-1.4.cblite2\db.sqlite3-shm" />
-    <None Include="Assets\Databases\travel-sample-1.4.cblite2\db.sqlite3-wal" />
-    <None Include="Assets\Databases\travel-sample-2.0.0.cblite2\db.sqlite3" />
-    <None Include="Assets\Databases\travel-sample-2.1.5.cblite2\db.sqlite3" />
-    <None Include="Assets\Databases\travel-sample-2.5.0.cblite2\db.sqlite3" />
-    <None Include="Assets\Databases\travel-sample-2.5.0.cblite2\db.sqlite3-shm" />
-    <None Include="Assets\Databases\travel-sample-2.5.0.cblite2\db.sqlite3-wal" />
-    <None Include="Assets\Databases\travel-sample-encrypted-2.1.5.cblite2\db.sqlite3" />
-    <None Include="Assets\Databases\travel-sample-encrypted-2.1.5.cblite2\db.sqlite3-shm" />
-    <None Include="Assets\Databases\travel-sample-encrypted-2.1.5.cblite2\db.sqlite3-wal" />
-    <None Include="Assets\Databases\travel-sample-encrypted-2.5.0.cblite2\db.sqlite3" />
-    <None Include="Assets\Databases\travel-sample-encrypted-2.5.0.cblite2\db.sqlite3-shm" />
-    <None Include="Assets\Databases\travel-sample-encrypted-2.5.0.cblite2\db.sqlite3-wal" />
     <None Include="TestServer.UWP_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
@@ -136,6 +119,23 @@
     <Content Include="Assets\Databases\PrebuiltDB.cblite2\db.sqlite3" />
     <Content Include="Assets\Databases\PrebuiltDB.cblite2\db.sqlite3-shm" />
     <Content Include="Assets\Databases\PrebuiltDB.cblite2\db.sqlite3-wal" />
+    <Content Include="Assets\Databases\PrebuiltDB-encrypted.cblite2\db.sqlite3" />
+    <Content Include="Assets\Databases\PrebuiltDB-encrypted.cblite2\db.sqlite3-shm" />
+    <Content Include="Assets\Databases\PrebuiltDB-encrypted.cblite2\db.sqlite3-wal" />
+    <Content Include="Assets\Databases\travel-sample-1.4.cblite2\db.sqlite3" />
+    <Content Include="Assets\Databases\travel-sample-1.4.cblite2\db.sqlite3-shm" />
+    <Content Include="Assets\Databases\travel-sample-1.4.cblite2\db.sqlite3-wal" />
+    <Content Include="Assets\Databases\travel-sample-2.0.0.cblite2\db.sqlite3" />
+    <Content Include="Assets\Databases\travel-sample-2.1.5.cblite2\db.sqlite3" />
+    <Content Include="Assets\Databases\travel-sample-2.5.0.cblite2\db.sqlite3" />
+    <Content Include="Assets\Databases\travel-sample-2.5.0.cblite2\db.sqlite3-shm" />
+    <Content Include="Assets\Databases\travel-sample-2.5.0.cblite2\db.sqlite3-wal" />
+    <Content Include="Assets\Databases\travel-sample-encrypted-2.1.5.cblite2\db.sqlite3" />
+    <Content Include="Assets\Databases\travel-sample-encrypted-2.1.5.cblite2\db.sqlite3-shm" />
+    <Content Include="Assets\Databases\travel-sample-encrypted-2.1.5.cblite2\db.sqlite3-wal" />
+    <Content Include="Assets\Databases\travel-sample-encrypted-2.5.0.cblite2\db.sqlite3" />
+    <Content Include="Assets\Databases\travel-sample-encrypted-2.5.0.cblite2\db.sqlite3-shm" />
+    <Content Include="Assets\Databases\travel-sample-encrypted-2.5.0.cblite2\db.sqlite3-wal" />
   </ItemGroup>
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml">

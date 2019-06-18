@@ -86,23 +86,6 @@
   <ItemGroup>
     <Compile Include="Main.cs" />
     <Compile Include="AppDelegate.cs" />
-    <None Include="Databases\PrebuiltDB-encrypted.cblite2\db.sqlite3" />
-    <None Include="Databases\PrebuiltDB-encrypted.cblite2\db.sqlite3-shm" />
-    <None Include="Databases\PrebuiltDB-encrypted.cblite2\db.sqlite3-wal" />
-    <None Include="Databases\travel-sample-1.4.cblite2\db.sqlite3" />
-    <None Include="Databases\travel-sample-1.4.cblite2\db.sqlite3-shm" />
-    <None Include="Databases\travel-sample-1.4.cblite2\db.sqlite3-wal" />
-    <None Include="Databases\travel-sample-2.0.0.cblite2\db.sqlite3" />
-    <None Include="Databases\travel-sample-2.1.5.cblite2\db.sqlite3" />
-    <None Include="Databases\travel-sample-2.5.0.cblite2\db.sqlite3" />
-    <None Include="Databases\travel-sample-2.5.0.cblite2\db.sqlite3-shm" />
-    <None Include="Databases\travel-sample-2.5.0.cblite2\db.sqlite3-wal" />
-    <None Include="Databases\travel-sample-encrypted-2.1.5.cblite2\db.sqlite3" />
-    <None Include="Databases\travel-sample-encrypted-2.1.5.cblite2\db.sqlite3-shm" />
-    <None Include="Databases\travel-sample-encrypted-2.1.5.cblite2\db.sqlite3-wal" />
-    <None Include="Databases\travel-sample-encrypted-2.5.0.cblite2\db.sqlite3" />
-    <None Include="Databases\travel-sample-encrypted-2.5.0.cblite2\db.sqlite3-shm" />
-    <None Include="Databases\travel-sample-encrypted-2.5.0.cblite2\db.sqlite3-wal" />
     <None Include="GettingStarted.Xamarin" />
     <None Include="Info.plist" />
     <Compile Include="MainViewController.cs" />
@@ -133,7 +116,35 @@
     <BundleResource Include="Databases\PrebuiltDB.cblite2\db.sqlite3-wal" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Databases\travel-sample-1.4.cblite2\attachments\" />
+    <BundleResource Include="Databases\PrebuiltDB-encrypted.cblite2\db.sqlite3" />
+    <BundleResource Include="Databases\PrebuiltDB-encrypted.cblite2\db.sqlite3-shm" />
+    <BundleResource Include="Databases\PrebuiltDB-encrypted.cblite2\db.sqlite3-wal" />
+  </ItemGroup>
+  <ItemGroup>
+    <BundleResource Include="Databases\travel-sample-1.4.cblite2\db.sqlite3" />     
+    <BundleResource Include="Databases\travel-sample-1.4.cblite2\db.sqlite3-shm" />
+    <BundleResource Include="Databases\travel-sample-1.4.cblite2\db.sqlite3-wal" />
+  </ItemGroup>
+  <ItemGroup>
+    <BundleResource Include="Databases\travel-sample-2.0.0.cblite2\db.sqlite3" />
+  </ItemGroup>
+  <ItemGroup>
+    <BundleResource Include="Databases\travel-sample-2.1.5.cblite2\db.sqlite3" />
+  </ItemGroup>
+  <ItemGroup>
+    <BundleResource Include="Databases\travel-sample-2.5.0.cblite2\db.sqlite3" />
+    <BundleResource Include="Databases\travel-sample-2.5.0.cblite2\db.sqlite3-shm" />
+    <BundleResource Include="Databases\travel-sample-2.5.0.cblite2\db.sqlite3-wal" />
+  </ItemGroup>
+  <ItemGroup>
+    <BundleResource Include="Databases\travel-sample-encrypted-2.5.0.cblite2\db.sqlite3" />
+    <BundleResource Include="Databases\travel-sample-encrypted-2.5.0.cblite2\db.sqlite3-shm" />
+    <BundleResource Include="Databases\travel-sample-encrypted-2.5.0.cblite2\db.sqlite3-wal" />
+  </ItemGroup>
+  <ItemGroup>
+    <BundleResource Include="Databases\travel-sample-encrypted-2.1.5.cblite2\db.sqlite3" />
+    <BundleResource Include="Databases\travel-sample-encrypted-2.1.5.cblite2\db.sqlite3-shm" />
+    <BundleResource Include="Databases\travel-sample-encrypted-2.1.5.cblite2\db.sqlite3-wal" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.iOS.CSharp.targets" />
 </Project>

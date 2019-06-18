@@ -59,13 +59,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <AndroidAsset Include="Assets\PrebuiltDB-encrypted.cblite2.zip" />
-    <AndroidAsset Include="Assets\travel-sample-2.5.0.cblite2.zip" />
-    <AndroidAsset Include="Assets\travel-sample-encrypted-2.5.0.cblite2.zip" />
-    <AndroidAsset Include="Assets\travel-sample-encrypted-2.1.5.cblite2.zip" />
-    <AndroidAsset Include="Assets\travel-sample-2.1.5.cblite2.zip" />
-    <AndroidAsset Include="Assets\travel-sample-1.4.cblite2.zip" />
-    <AndroidAsset Include="Assets\travel-sample-2.0.0.cblite2.zip" />
     <None Include="Resources\AboutResources.txt" />
     <None Include="Properties\AndroidManifest.xml" />
     <None Include="Assets\AboutAssets.txt" />
@@ -97,6 +90,13 @@
   </ItemGroup>
   <ItemGroup>
     <AndroidAsset Include="Assets\PrebuiltDB.cblite2.zip" />
+    <AndroidAsset Include="Assets\PrebuiltDB-encrypted.cblite2.zip" />
+    <AndroidAsset Include="Assets\travel-sample-2.5.0.cblite2.zip" />
+    <AndroidAsset Include="Assets\travel-sample-encrypted-2.5.0.cblite2.zip" />
+    <AndroidAsset Include="Assets\travel-sample-encrypted-2.1.5.cblite2.zip" />
+    <AndroidAsset Include="Assets\travel-sample-2.1.5.cblite2.zip" />
+    <AndroidAsset Include="Assets\travel-sample-1.4.cblite2.zip" />
+    <AndroidAsset Include="Assets\travel-sample-2.0.0.cblite2.zip" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
