@@ -106,7 +106,7 @@ def test_upgrade_cbl(params_from_base_suite_setup):
     # Reset cluster to ensure no data in system
     c = Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
-
+  
     sg_client.create_user(sg_admin_url, sg_db, username, password)
     authenticator = Authenticator(base_url)
     cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
@@ -136,12 +136,16 @@ def test_upgrade_cbl(params_from_base_suite_setup):
     cbs_doc_ids = []
     for row in sdk_client.n1ql_query(get_doc_id_from_cbs_query):
         cbs_doc_ids.append(row["id"])
+    log_info("cbl_docs {}, cbs_docs {}".format(len(cbs_doc_ids), len(cbl_doc_ids)))
     assert sorted(cbs_doc_ids) == sorted(cbl_doc_ids), "Total no. of docs are different in CBS and CBL app"
 
     # Running selected Query tests
     # 1. Checking for Any operator
+    # updating some docs to more than 128 times to reproduce issue - https://issues.couchbase.com/browse/CBSE-6844
     qy = Query(base_url)
-    cbl_doc_ids = qy.query_any_operator(cbl_db, "schedule", "departure", "departure.utc",
+    docs_to_update = random.sample(cbl_doc_ids, 20)
+    db.update_bulk_docs(database=cbl_db, number_of_updates=129, doc_ids=docs_to_update)
+    new_cbl_doc_ids = qy.query_any_operator(cbl_db, "schedule", "departure", "departure.utc",
                                         "23:41:00", "type", "route")
     n1ql_query = 'select meta().id from `travel-sample` where type="route" ' \
                  'AND ANY departure IN schedule SATISFIES departure.utc > "23:41:00" END;'
@@ -150,39 +154,39 @@ def test_upgrade_cbl(params_from_base_suite_setup):
     cbs_doc_ids = []
     for row in sdk_client.n1ql_query(query):
         cbs_doc_ids.append(row["id"])
-    assert sorted(cbs_doc_ids) == sorted(cbl_doc_ids), "Any operator query output doesn't match"
+    assert sorted(cbs_doc_ids) == sorted(new_cbl_doc_ids), "Any operator query output doesn't match"
 
     # 2. Checking for Between Operator
-    cbl_doc_ids = qy.query_between(cbl_db, id, "1000", "2000")
+    new_cbl_doc_ids = qy.query_between(cbl_db, id, 1000, 2000)
     n1ql_query = 'select meta().id from `travel-sample` where {} between 1000 and 2000 order by meta().id asc'
     log_info(n1ql_query)
     query = N1QLQuery(n1ql_query)
     cbs_doc_ids = []
-
+ 
     for row in sdk_client.n1ql_query(query):
         cbs_doc_ids.append(row)
-    assert sorted(cbs_doc_ids) == sorted(cbl_doc_ids), "Between operator query output doesn't match"
-
+    assert sorted(cbs_doc_ids) == sorted(new_cbl_doc_ids), "Between operator query output doesn't match"
+ 
     # 3. Checking for FTS with ranking
     limit = 10
     result_set = qy.query_fts_with_ranking(cbl_db, "content", "beautiful", "landmark", limit)
-    cbl_doc_ids = []
+    new_cbl_doc_ids = []
     if result_set != -1 and result_set is not None:
         for result in result_set:
-            cbl_doc_ids.append(result)
+            new_cbl_doc_ids.append(result)
             log_info(result)
-    assert 0 < len(cbl_doc_ids) <= limit, "FTS ranking query result doesn't match with expected result"
-
+    assert 0 < len(new_cbl_doc_ids) <= limit, "FTS ranking query result doesn't match with expected result"
+ 
     # 4. Checking for Inner Join query
     result_set = qy.query_inner_join(cbl_db, "airline", "sourceairport", "country", "country",
                                      "stops", "United States", 0, "icao", "destinationairport", limit)
-
-    cbl_doc_ids = []
+ 
+    new_cbl_doc_ids = []
     for docs in result_set:
-        cbl_doc_ids.append(docs)
-
-    assert len(cbl_doc_ids) == limit
-    log_info("Found {} docs".format(len(cbl_doc_ids)))
+        new_cbl_doc_ids.append(docs)
+ 
+    assert len(new_cbl_doc_ids) == limit
+    log_info("Found {} docs".format(len(new_cbl_doc_ids)))
 
     # log_info("Running Query tests")
     # directory = os.getcwd()
@@ -197,11 +201,11 @@ def test_upgrade_cbl(params_from_base_suite_setup):
 
     # Adding few docs to db
     new_doc_ids = db.create_bulk_docs(number=5, id_prefix="new_cbl_docs", db=cbl_db)
-
+ 
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
     replicator.stop(repl)
-
+ 
     new_cbl_doc_ids = db.getDocIds(cbl_db, limit=40000)
     cbs_docs = sg_client.get_all_docs(sg_admin_url, sg_db, session)["rows"]
     cbs_doc_ids = [doc["id"] for doc in cbs_docs]
@@ -211,9 +215,10 @@ def test_upgrade_cbl(params_from_base_suite_setup):
     assert sorted(cbs_doc_ids) == sorted(new_cbl_doc_ids), "Total no. of docs are different in CBS and CBL app"
 
     # updating old docs
-    random_doc_ids = random.sample(cbl_doc_ids, 5)
-    docs = db.getDocuments(cbl_db, random_doc_ids)
+    doc_ids_to_update = random.sample(cbl_doc_ids, 5)
+    docs = db.getDocuments(cbl_db, doc_ids_to_update)
     for doc_id in docs:
+        log_info("Updating CBL Doc - {}".format(doc_id))
         data = docs[doc_id]
         data["new_field"] = "test_string_for_{}".format(doc_id)
         db.updateDocument(cbl_db, doc_id=doc_id, data=data)
@@ -225,7 +230,7 @@ def test_upgrade_cbl(params_from_base_suite_setup):
     cbs_docs = sg_client.get_all_docs(sg_admin_url, sg_db, session)["rows"]
     cbs_doc_ids = [doc["id"] for doc in cbs_docs]
 
-    for doc_id in random_doc_ids:
+    for doc_id in doc_ids_to_update:
         log_info("Checking for updates in doc on CBS: {}".format(doc_id))
         sg_data = sg_client.get_doc(url=sg_admin_url, db=sg_db, doc_id=doc_id, auth=session)
         assert "new_field" in sg_data, "Updated docs failed to get replicated"
@@ -235,9 +240,9 @@ def test_upgrade_cbl(params_from_base_suite_setup):
     assert sorted(cbs_doc_ids) == sorted(new_cbl_doc_ids), "Total no. of docs are different in CBS and CBL app"
 
     # deleting some of migrated docs
-    random_doc_ids = random.sample(cbl_doc_ids, 5)
-    log_info("Deleting docs from CBL - {}".format(",".join(random_doc_ids)))
-    db.delete_bulk_docs(cbl_db, random_doc_ids)
+    doc_ids_to_delete = random.sample(cbl_doc_ids, 5)
+    log_info("Deleting docs from CBL - {}".format(",".join(doc_ids_to_delete)))
+    db.delete_bulk_docs(cbl_db, doc_ids_to_delete)
 
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
@@ -245,7 +250,7 @@ def test_upgrade_cbl(params_from_base_suite_setup):
 
     cbs_docs = sg_client.get_all_docs(sg_admin_url, sg_db, session)["rows"]
     cbs_doc_ids = [doc["id"] for doc in cbs_docs]
-    for doc_id in random_doc_ids:
+    for doc_id in doc_ids_to_delete:
         assert doc_id not in cbs_doc_ids, "Deleted docs failed to get replicated"
 
     new_cbl_doc_ids = db.getDocIds(cbl_db, limit=40000)
@@ -258,4 +263,5 @@ def test_upgrade_cbl(params_from_base_suite_setup):
     else:
         db_path = '/'.join(db_path.split('/')[:-1])
     if db.exists(upgrade_cbl_db_name, db_path):
+        log_info("Delete DB - {}".format(upgrade_cbl_db_name))
         db.deleteDB(cbl_db)

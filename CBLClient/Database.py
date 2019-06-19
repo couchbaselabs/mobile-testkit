@@ -285,7 +285,7 @@ class Database(object):
 
     def update_all_docs_individually(self, database, num_of_updates=1):
         doc_ids = self.getDocIds(database)
-        doc_obj = Document(self._baseUrl)
+        doc_obj = Document(self.base_url)
         for i in xrange(num_of_updates):
             for doc_id in doc_ids:
                 doc_mem = self.getDocument(database, doc_id)
