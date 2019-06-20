@@ -116,7 +116,7 @@ def test_upgrade_cbl(params_from_base_suite_setup):
                                        replicator_authenticator=replicator_authenticator)
     repl = replicator.create(repl_config)
     replicator.start(repl)
-    replicator.wait_until_replicator_idle(repl, sleep_time=10)
+    replicator.wait_until_replicator_idle(repl, sleep_time=10, max_times=500)
     total = replicator.getTotal(repl)
     completed = replicator.getCompleted(repl)
     assert total == completed
