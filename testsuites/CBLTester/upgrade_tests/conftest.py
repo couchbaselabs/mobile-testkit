@@ -152,11 +152,11 @@ def params_from_base_suite_setup(request):
                                           port=liteserv_port,
                                           community_enabled=community_enabled,
                                           debug_mode=debug_mode)
- 
+
     log_info("Downloading TestServer ...")
     # Download TestServer app
     testserver.download()
- 
+
     # Install TestServer app
     if device_enabled:
         testserver.install_device()
