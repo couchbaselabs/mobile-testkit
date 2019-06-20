@@ -146,22 +146,22 @@ def params_from_base_suite_setup(request):
 
     test_name = request.node.name
 
-    testserver = TestServerFactory.create(platform=liteserv_platform,
-                                          version_build=upgraded_liteserv_version,
-                                          host=liteserv_host,
-                                          port=liteserv_port,
-                                          community_enabled=community_enabled,
-                                          debug_mode=debug_mode)
-
-    log_info("Downloading TestServer ...")
-    # Download TestServer app
-    testserver.download()
-
-    # Install TestServer app
-    if device_enabled:
-        testserver.install_device()
-    else:
-        testserver.install()
+#     testserver = TestServerFactory.create(platform=liteserv_platform,
+#                                           version_build=upgraded_liteserv_version,
+#                                           host=liteserv_host,
+#                                           port=liteserv_port,
+#                                           community_enabled=community_enabled,
+#                                           debug_mode=debug_mode)
+# 
+#     log_info("Downloading TestServer ...")
+#     # Download TestServer app
+#     testserver.download()
+# 
+#     # Install TestServer app
+#     if device_enabled:
+#         testserver.install_device()
+#     else:
+#         testserver.install()
 
     base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_travel_sample", mode)
@@ -284,14 +284,14 @@ def params_from_base_suite_setup(request):
     # Start Test server which needed for suite level set up like query tests
     log_info("Starting TestServer...")
     test_name_cp = test_name.replace("/", "-")
-    if device_enabled:
-        testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
-                                                              test_name_cp,
-                                                              datetime.datetime.now()))
-    else:
-        testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
-                                                       test_name_cp,
-                                                       datetime.datetime.now()))
+#     if device_enabled:
+#         testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
+#                                                               test_name_cp,
+#                                                               datetime.datetime.now()))
+#     else:
+#         testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
+#                                                        test_name_cp,
+#                                                        datetime.datetime.now()))
 
     suite_source_db = None
     suite_db_log_files = None
@@ -327,7 +327,7 @@ def params_from_base_suite_setup(request):
         "suite_source_db": suite_source_db,
         "suite_cbl_db": suite_cbl_db,
         "sg_config": sg_config,
-        "testserver": testserver,
+#         "testserver": testserver,
         "device_enabled": device_enabled,
         "delta_sync_enabled": delta_sync_enabled,
         "enable_file_logging": enable_file_logging,
@@ -340,7 +340,7 @@ def params_from_base_suite_setup(request):
     # Flush all the memory contents on the server app
     log_info("Flushing server memory")
     utils_obj.flushMemory()
-    log_info("Stopping the test server per suite")
-    testserver.stop()
+#     log_info("Stopping the test server per suite")
+#     testserver.stop()
     # Delete png files under resources/data
     clear_resources_pngs()
