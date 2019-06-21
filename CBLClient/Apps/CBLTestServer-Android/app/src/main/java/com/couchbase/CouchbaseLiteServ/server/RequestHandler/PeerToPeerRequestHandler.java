@@ -1,13 +1,15 @@
 package com.couchbase.CouchbaseLiteServ.server.RequestHandler;
 
-/**
- * Created by sridevi.saragadam on 7/9/18.
+/*
+  Created by sridevi.saragadam on 7/9/18.
  */
+
+import android.util.Log;
+
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
-import android.util.Log;
 
 import com.couchbase.CouchbaseLiteServ.server.Args;
 import com.couchbase.lite.Database;
@@ -23,17 +25,19 @@ import com.couchbase.lite.ReplicatorChangeListener;
 import com.couchbase.lite.ReplicatorConfiguration;
 import com.couchbase.lite.URLEndpoint;
 
-public class PeerToPeerRequestHandler implements MessageEndpointDelegate{
 
-    ReplicatorRequestHandler replicatorRequestHandlerObj = new ReplicatorRequestHandler();
+public class PeerToPeerRequestHandler implements MessageEndpointDelegate {
+    private static final String TAG = "P2PHANDLER";
 
-    public void clientStart(Args args) throws Exception{
+    final ReplicatorRequestHandler replicatorRequestHandlerObj = new ReplicatorRequestHandler();
+
+    public void clientStart(Args args) {
         Replicator replicator = args.get("replicator");
         replicator.start();
-        Log.i("Replication status", "Replication started .... ");
+        Log.i(TAG, "Replication started .... ");
     }
 
-    public Replicator configure(Args args) throws Exception{
+    public Replicator configure(Args args) throws Exception {
         String ipaddress = args.get("host");
         int port = args.get("port");
         Database sourceDb = args.get("database");
@@ -48,29 +52,31 @@ public class PeerToPeerRequestHandler implements MessageEndpointDelegate{
         ReplicatorConfiguration config;
         Replicator replicator;
 
-        if (replicationType == null)
-        {
+        if (replicationType == null) {
             replicationType = "push_pull";
         }
         replicationType = replicationType.toLowerCase();
         ReplicatorConfiguration.ReplicatorType replType;
         if (replicationType.equals("push")) {
             replType = ReplicatorConfiguration.ReplicatorType.PUSH;
-        } else if (replicationType.equals("pull")) {
+        }
+        else if (replicationType.equals("pull")) {
             replType = ReplicatorConfiguration.ReplicatorType.PULL;
-        } else {
+        }
+        else {
             replType = ReplicatorConfiguration.ReplicatorType.PUSH_AND_PULL;
         }
-        Log.i("DB name", "serverDBName is "+ serverDBName);
-        URI uri = new URI("ws://" + ipaddress + ":"+port+"/" + serverDBName);
-        if (endPointType.equals("URLEndPoint")){
-            URLEndpoint urlEndPoint= new URLEndpoint(uri);
+        Log.i(TAG, "serverDBName is " + serverDBName);
+        URI uri = new URI("ws://" + ipaddress + ":" + port + "/" + serverDBName);
+        if (endPointType.equals("URLEndPoint")) {
+            URLEndpoint urlEndPoint = new URLEndpoint(uri);
             config = new ReplicatorConfiguration(sourceDb, urlEndPoint);
         }
-        else if (endPointType.equals("MessageEndPoint")){
+        else if (endPointType.equals("MessageEndPoint")) {
             MessageEndpoint messageEndPoint = new MessageEndpoint("p2p", uri, ProtocolType.BYTE_STREAM, this);
             config = new ReplicatorConfiguration(sourceDb, messageEndPoint);
-        } else {
+        }
+        else {
             throw new IllegalArgumentException("Incorrect EndPoint type");
         }
         config.setReplicatorType(replType);
@@ -82,26 +88,37 @@ public class PeerToPeerRequestHandler implements MessageEndpointDelegate{
         }
         if (documentIds != null) {
             config.setDocumentIDs(documentIds);
-        }if (push_filter){
-            if (filter_callback_func.equals("boolean")){
-                config.setPushFilter(new ReplicatorBooleanFiltlerCallback());
-            } else if (filter_callback_func.equals("deleted")){
-                config.setPushFilter(new ReplicatorDeletedFilterCallback());
-            } else if (filter_callback_func.equals("access_revoked")){
-                config.setPushFilter(new ReplicatorAccessRevokedFilterCallback());
-            } else {
-                config.setPushFilter(new DefaultReplicatorFilterCallback());
+        }
+        if (push_filter) {
+            switch (filter_callback_func) {
+                case "boolean":
+                    config.setPushFilter(new ReplicatorBooleanFilterCallback());
+                    break;
+                case "deleted":
+                    config.setPushFilter(new ReplicatorDeletedFilterCallback());
+                    break;
+                case "access_revoked":
+                    config.setPushFilter(new ReplicatorAccessRevokedFilterCallback());
+                    break;
+                default:
+                    config.setPushFilter(new DefaultReplicatorFilterCallback());
+                    break;
             }
         }
-        if (pull_filter){
-            if (filter_callback_func.equals("boolean")){
-                config.setPullFilter(new ReplicatorBooleanFiltlerCallback());
-            } else if (filter_callback_func.equals("deleted")){
-                config.setPullFilter(new ReplicatorDeletedFilterCallback());
-            } else if (filter_callback_func.equals("access_revoked")){
-                config.setPullFilter(new ReplicatorAccessRevokedFilterCallback());
-            } else {
-                config.setPullFilter(new DefaultReplicatorFilterCallback());
+        if (pull_filter) {
+            switch (filter_callback_func) {
+                case "boolean":
+                    config.setPullFilter(new ReplicatorBooleanFilterCallback());
+                    break;
+                case "deleted":
+                    config.setPullFilter(new ReplicatorDeletedFilterCallback());
+                    break;
+                case "access_revoked":
+                    config.setPullFilter(new ReplicatorAccessRevokedFilterCallback());
+                    break;
+                default:
+                    config.setPullFilter(new DefaultReplicatorFilterCallback());
+                    break;
             }
         }
 
@@ -110,35 +127,41 @@ public class PeerToPeerRequestHandler implements MessageEndpointDelegate{
     }
 
     class MyReplicatorListener implements ReplicatorChangeListener {
-        private List<ReplicatorChange> changes = new ArrayList<>();
-        public List<ReplicatorChange> getChanges(){
+        private final List<ReplicatorChange> changes = new ArrayList<>();
+
+        public List<ReplicatorChange> getChanges() {
             return changes;
         }
+
         @Override
         public void changed(ReplicatorChange change) {
             changes.add(change);
         }
     }
 
-    public ReplicatorTcpListener serverStart(Args args) throws IOException{
+    public ReplicatorTcpListener serverStart(Args args) throws IOException {
         Database sourceDb = args.get("database");
         int port = args.get("port");
-        MessageEndpointListener messageEndpointListener = new MessageEndpointListener(new MessageEndpointListenerConfiguration(sourceDb, ProtocolType.BYTE_STREAM));
+        MessageEndpointListener messageEndpointListener =
+            new MessageEndpointListener(new MessageEndpointListenerConfiguration(
+            sourceDb,
+            ProtocolType.BYTE_STREAM));
         ReplicatorTcpListener p2ptcpListener = new ReplicatorTcpListener(sourceDb, port);
         p2ptcpListener.start();
         return p2ptcpListener;
     }
 
-    public void serverStop(Args args){
+    public void serverStop(Args args) {
         ReplicatorTcpListener p2ptcpListener = args.get("replicatorTcpListener");
         p2ptcpListener.stop();
     }
 
-    public MessageEndpointConnection createConnection(MessageEndpoint endpoint){
-        URI url = (URI)endpoint.getTarget();
+    public MessageEndpointConnection createConnection(MessageEndpoint endpoint) {
+        URI url = (URI) endpoint.getTarget();
         return new ReplicatorTcpClientConnection(url);
     }
-public MyDocumentReplicatorListener addReplicatorEventChangeListener(Args args){
+
+    public MyDocumentReplicatorListener addReplicatorEventChangeListener(Args args) {
         return replicatorRequestHandlerObj.addReplicatorEventChangeListener(args);
     }
 
@@ -150,7 +173,7 @@ public MyDocumentReplicatorListener addReplicatorEventChangeListener(Args args){
         return replicatorRequestHandlerObj.changeListenerChangesCount(args);
     }
 
-    public List<String> replicatorEventGetChanges(Args args){
+    public List<String> replicatorEventGetChanges(Args args) {
         return replicatorRequestHandlerObj.replicatorEventGetChanges(args);
     }
 }

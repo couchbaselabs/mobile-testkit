@@ -1,6 +1,28 @@
 apply plugin: 'com.android.application'
 
+ext {
+    DEF_VERSION = "2.6.0-133"
+    COUCHBASE_LITE_VERSION = System.getProperty('version', DEF_VERSION)
+}
+
 android {
+    compileSdkVersion 28
+
+    defaultConfig {
+        applicationId "com.couchbase.TestServerApp"
+        minSdkVersion 19
+        targetSdkVersion 28
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        multiDexEnabled true
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
     signingConfigs {
         config {
             keyAlias 'cbl-android-key'
@@ -9,16 +31,7 @@ android {
             storePassword 'couchbase'
         }
     }
-    compileSdkVersion 26
-    defaultConfig {
-        applicationId "com.couchbase.TestServerApp"
-        minSdkVersion 19
-        targetSdkVersion 26
-        versionCode 1
-        versionName "1.0"
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
-        multiDexEnabled true
-    }
+
     buildTypes {
         release {
             minifyEnabled false
@@ -28,18 +41,22 @@ android {
     }
 }
 
-final String DEF_VERSION = "2.5.0-208"
-def COUCHBASE_LITE_VERSION = System.getProperty('version', DEF_VERSION)
+
+repositories {
+    maven { url "http://mobile.maven.couchbase.com/maven2/dev/" }
+    maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
+    google()
+    jcenter()
+}
 
 dependencies {
+    implementation 'com.android.support.constraint:constraint-layout:1.1.3'
+    implementation 'com.android.support:appcompat-v7:28.0.0'
+
+    implementation 'com.google.code.gson:gson:2.8.5'
+
+    // Using snapshot code to validate our product is incredibly dubious...
     implementation 'org.nanohttpd:nanohttpd:2.3.2-SNAPSHOT'
+
     implementation "com.couchbase.lite:couchbase-lite-android-ee:${COUCHBASE_LITE_VERSION}"
-    implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation 'com.android.support:appcompat-v7:26.1.0'
-    implementation 'com.android.support.constraint:constraint-layout:1.0.2'
-    testImplementation 'junit:junit:4.12'
-    androidTestImplementation 'com.android.support.test:runner:1.0.1'
-    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
-    implementation 'org.jetbrains:annotations-java5:15.0'
-    implementation 'com.google.code.gson:gson:2.8.2'
 }

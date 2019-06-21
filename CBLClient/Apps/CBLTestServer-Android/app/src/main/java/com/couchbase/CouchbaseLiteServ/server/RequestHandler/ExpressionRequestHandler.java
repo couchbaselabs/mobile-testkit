@@ -3,12 +3,13 @@ package com.couchbase.CouchbaseLiteServ.server.RequestHandler;
 
 import com.couchbase.CouchbaseLiteServ.server.Args;
 import com.couchbase.lite.ArrayExpression;
+import com.couchbase.lite.ArrayExpressionIn;
 import com.couchbase.lite.Expression;
 import com.couchbase.lite.Meta;
 import com.couchbase.lite.MetaExpression;
 import com.couchbase.lite.PropertyExpression;
 import com.couchbase.lite.VariableExpression;
-import com.couchbase.lite.ArrayExpressionIn;
+
 
 public class ExpressionRequestHandler {
 
