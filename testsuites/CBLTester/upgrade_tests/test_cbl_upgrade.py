@@ -1,6 +1,6 @@
 import pytest
-# import os
 import random
+import time
 
 from CBLClient.Database import Database
 from keywords.utils import log_info
@@ -11,7 +11,6 @@ from libraries.testkit.cluster import Cluster
 from couchbase.n1ql import N1QLQuery
 from couchbase.bucket import Bucket
 from keywords.constants import SDK_TIMEOUT
-import time
 from CBLClient.MemoryPointer import MemoryPointer
 from keywords.couchbaseserver import CouchbaseServer
 from CBLClient.Query import Query
@@ -25,6 +24,10 @@ def test_upgrade_cbl(params_from_base_suite_setup):
     1. Migrate older-pre-built db to a provided cbl app
     2. Start the replication and replicate db to cluster
     3. Running few query tests
+        a. Run Query test for Any operator
+        b. Run Query test for Between operator
+        c. Run FTS Query test
+        d. Run Join Query test 
     4. Perform mutation operations
         a. Add new docs and replicate to cluster
         b. Update docs for migrated db and replicate to cluster
