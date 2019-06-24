@@ -24,6 +24,7 @@ import com.couchbase.CouchbaseLiteServ.server.RequestHandler.ResultRequestHandle
 import com.couchbase.CouchbaseLiteServ.server.RequestHandler.SelectResultRequestHandler;
 import com.couchbase.CouchbaseLiteServ.server.RequestHandler.SessionAuthenticatorRequestHandler;
 import com.couchbase.CouchbaseLiteServ.server.RequestHandler.PeerToPeerRequestHandler;
+import com.couchbase.CouchbaseLiteServ.server.RequestHandler.BlobRequestHandler;
 import com.couchbase.lite.Database;
 
 import com.couchbase.lite.LogDomain;
@@ -192,6 +193,10 @@ public class Server extends NanoHTTPD {
                     case "logging":
                         target = LoggingRequestHandler.class.getMethod(method_to_call, Args.class);
                         requestHandler = new LoggingRequestHandler();
+                        break;
+                    case "blob":
+                        target = BlobRequestHandler.class.getMethod(method_to_call, Args.class);
+                        requestHandler = new BlobRequestHandler();
                         break;
                     default:
                         throw new IllegalArgumentException("Handler not implemented for this call");

@@ -20,6 +20,11 @@ class Dictionary(object):
             args.setMemoryPointer("content_dict", dictionary)
         return self._client.invokeMethod("dictionary_create", args)
 
+    def toMutableDictionary(self, dictionary):
+        args = Args()
+        args.setMemoryPointer("dictionary", dictionary)
+        return self._client.invokeMethod("dictionary_toMutableDictionary", args)
+
     def getString(self, dictionary, key):
         args = Args()
         args.setMemoryPointer("dictionary", dictionary)

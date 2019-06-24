@@ -27,6 +27,15 @@ namespace Couchbase.Lite.Testing
             response.WriteBody(dictId);
         }
 
+        public static void DictionaryToMutableDictionary([NotNull] NameValueCollection args,
+                                            [NotNull] IReadOnlyDictionary<string, object> postBody,
+                                            [NotNull] HttpListenerResponse response)
+        {
+            var dictionary = postBody["dictionary"];
+
+            response.WriteBody(MemoryMap.New<MutableDictionaryObject>(dictionary));
+        }
+
         public static void DictionaryCount([NotNull] NameValueCollection args,
                                             [NotNull] IReadOnlyDictionary<string, object> postBody,
                                             [NotNull] HttpListenerResponse response)
@@ -150,7 +159,8 @@ namespace Couchbase.Lite.Testing
                                  [NotNull] HttpListenerResponse response)
         {
             var key = postBody["key"].ToString();
-            var val = (Blob)postBody["value"];
+            // var val = (Blob)postBody["value"];
+            var val = MemoryMap.Get<Blob>(postBody["value"].ToString());
             With<MutableDictionaryObject>(postBody, "dictionary", d => response.WriteBody(d.SetBlob(key, val)));
         }
 
