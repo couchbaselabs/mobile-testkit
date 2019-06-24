@@ -1,21 +1,21 @@
 package com.couchbase.CouchbaseLiteServ.server.RequestHandler;
 
 
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
 import com.couchbase.CouchbaseLiteServ.server.Args;
 import com.couchbase.lite.Array;
 import com.couchbase.lite.Blob;
+import com.couchbase.lite.Dictionary;
 import com.couchbase.lite.Document;
 import com.couchbase.lite.DocumentChange;
 import com.couchbase.lite.DocumentChangeListener;
 import com.couchbase.lite.MutableDocument;
-import com.couchbase.lite.Dictionary;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Date;
-import java.lang.Double;
 
-public class DocumentRequestHandler{
+public class DocumentRequestHandler {
     /* ------------ */
     /* - Document - */
     /* ------------ */
@@ -26,19 +26,22 @@ public class DocumentRequestHandler{
         if (id != null) {
             if (dictionary == null) {
                 return new MutableDocument(id);
-            } else {
+            }
+            else {
                 return new MutableDocument(id, dictionary);
             }
-        } else {
+        }
+        else {
             if (dictionary == null) {
                 return new MutableDocument();
-            } else {
+            }
+            else {
                 return new MutableDocument(dictionary);
             }
         }
     }
 
-    public int count(Args args){
+    public int count(Args args) {
         MutableDocument document = args.get("document");
         return document.count();
     }
@@ -61,92 +64,92 @@ public class DocumentRequestHandler{
         return document.setString(key, value);
     }
 
-    public Number getNumber(Args args){
+    public Number getNumber(Args args) {
         MutableDocument document = args.get("document");
         String key = args.get("key");
         return document.getNumber(key);
     }
 
-    public MutableDocument setNumber(Args args){
+    public MutableDocument setNumber(Args args) {
         MutableDocument document = args.get("document");
         String key = args.get("key");
         Number value = args.get("value");
-        return  document.setNumber(key, value);
+        return document.setNumber(key, value);
     }
 
 
-    public Integer getInt(Args args){
+    public Integer getInt(Args args) {
         MutableDocument document = args.get("document");
         String key = args.get("key");
         return document.getInt(key);
     }
 
-    public MutableDocument setInt(Args args){
+    public MutableDocument setInt(Args args) {
         MutableDocument document = args.get("document");
         String key = args.get("key");
         Integer value = args.get("value");
-        return  document.setInt(key, value);
+        return document.setInt(key, value);
     }
 
 
-    public Long getLong(Args args){
+    public Long getLong(Args args) {
         MutableDocument document = args.get("document");
         String key = args.get("key");
         return document.getLong(key);
     }
 
-    public MutableDocument setLong(Args args){
+    public MutableDocument setLong(Args args) {
         MutableDocument document = args.get("document");
         String key = args.get("key");
         Long value = args.get("value");
-        return  document.setLong(key, value);
+        return document.setLong(key, value);
     }
 
 
-    public Float getFloat(Args args){
+    public Float getFloat(Args args) {
         MutableDocument document = args.get("document");
         String key = args.get("key");
         return document.getFloat(key);
     }
 
-    public MutableDocument setFloat(Args args){
+    public MutableDocument setFloat(Args args) {
         MutableDocument document = args.get("document");
         String key = args.get("key");
         Double valDouble = args.get("value");
-        Float value = valDouble.floatValue();
-        return  document.setFloat(key, value);
+        float value = valDouble.floatValue();
+        return document.setFloat(key, value);
     }
 
 
-    public Double getDouble(Args args){
+    public Double getDouble(Args args) {
         MutableDocument document = args.get("document");
         String key = args.get("key");
         return document.getDouble(key);
     }
 
-    public MutableDocument setDouble(Args args){
+    public MutableDocument setDouble(Args args) {
         MutableDocument document = args.get("document");
         String key = args.get("key");
         String value = args.get("value");
-        Double set_value = Double.parseDouble(value);
-        return  document.setDouble(key, set_value);
+        double set_value = Double.parseDouble(value);
+        return document.setDouble(key, set_value);
     }
 
-    public Boolean getBoolean(Args args){
+    public Boolean getBoolean(Args args) {
         MutableDocument document = args.get("document");
         String key = args.get("key");
         return document.getBoolean(key);
     }
 
-    public MutableDocument setBoolean(Args args){
+    public MutableDocument setBoolean(Args args) {
         MutableDocument document = args.get("document");
         String key = args.get("key");
         Boolean value = args.get("value");
-        return  document.setBoolean(key, value);
+        return document.setBoolean(key, value);
     }
 
 
-    public Blob getBlob(Args args){
+    public Blob getBlob(Args args) {
         Document document = args.get("document");
         String key = args.get("key");
         return document.getBlob(key);
@@ -156,7 +159,7 @@ public class DocumentRequestHandler{
         MutableDocument document = args.get("document");
         String key = args.get("key");
         Array value = args.get("value");
-        return  document.setArray(key, value);
+        return document.setArray(key, value);
     }
 
     public MutableDocument toMutable(Args args) {
@@ -171,86 +174,86 @@ public class DocumentRequestHandler{
 
     }
 
-    public MutableDocument setBlob(Args args){
+    public MutableDocument setBlob(Args args) {
         MutableDocument document = args.get("document");
         String key = args.get("key");
         Blob value = args.get("value");
-        return  document.setBlob(key, value);
+        return document.setBlob(key, value);
     }
 
 
-    public Date getDate(Args args){
+    public Date getDate(Args args) {
         Document document = args.get("document");
         String key = args.get("key");
         return document.getDate(key);
     }
 
-    public MutableDocument setDate(Args args){
+    public MutableDocument setDate(Args args) {
         MutableDocument document = args.get("document");
         String key = args.get("key");
         Date value = args.get("value");
-        return  document.setDate(key, value);
+        return document.setDate(key, value);
     }
 
 
-    public Array getArray(Args args){
+    public Array getArray(Args args) {
         Document document = args.get("document");
         String key = args.get("key");
         return document.getArray(key);
     }
 
-    public Dictionary getDictionary(Args args){
+    public Dictionary getDictionary(Args args) {
         Document document = args.get("document");
         String key = args.get("key");
         return document.getDictionary(key);
     }
 
-    public MutableDocument setDictionary(Args args){
+    public MutableDocument setDictionary(Args args) {
         MutableDocument document = args.get("document");
         String key = args.get("key");
         Dictionary value = args.get("value");
-        return  document.setDictionary(key, value);
+        return document.setDictionary(key, value);
     }
 
-    public List<String> getKeys(Args args){
+    public List<String> getKeys(Args args) {
         Document document = args.get("document");
         return document.getKeys();
     }
 
-    public Map<String, Object> toMap(Args args){
+    public Map<String, Object> toMap(Args args) {
         Document document = args.get("document");
         return document.toMap();
     }
 
-    public MutableDocument removeKey(Args args){
+    public MutableDocument removeKey(Args args) {
         MutableDocument document = args.get("document");
         String key = args.get("key");
         return document.remove(key);
     }
 
-    public boolean contains(Args args){
+    public boolean contains(Args args) {
         MutableDocument document = args.get("document");
         String key = args.get("key");
         return document.contains(key);
     }
 
-    public String documentChange_getDocumentId(Args args){
+    public String documentChange_getDocumentId(Args args) {
         DocumentChange change = args.get("change");
         return change.getDocumentID();
     }
 
-    public String documentChange_toString(Args args){
+    public String documentChange_toString(Args args) {
         DocumentChange change = args.get("change");
         return change.toString();
     }
 
-    public Object getValue(Args args){
+    public Object getValue(Args args) {
         MutableDocument document = args.get("document");
         String key = args.get("key");
         return document.getValue(key);
     }
 
-    public void setValue(Args args){
+    public void setValue(Args args) {
         MutableDocument document = args.get("document");
         String key = args.get("key");
         Object value = args.get("value");
@@ -261,7 +264,7 @@ public class DocumentRequestHandler{
 class MyDocumentChangeListener implements DocumentChangeListener {
     private List<DocumentChange> changes;
 
-    public List<DocumentChange> getChanges(){
+    public List<DocumentChange> getChanges() {
         return changes;
     }
 
