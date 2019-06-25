@@ -227,8 +227,11 @@ def test_queries_on_upgrade_cbl(params_from_base_suite_setup):
     sg_blip_url = params_from_base_suite_setup["target_url"]
     cluster_config = params_from_base_suite_setup["cluster_config"]
     sg_config = params_from_base_suite_setup["sg_config"]
+    cbs_ip = params_from_base_suite_setup["cbs_ip"]
+    server_url = params_from_base_suite_setup["server_url"]
 
     cbl_db, upgraded_cbl_db_name = _upgrade_db(params_from_base_suite_setup)
+    db = Database(base_url)
 
     # Replicating docs to CBS
     sg_client = MobileRestClient()
@@ -253,6 +256,24 @@ def test_queries_on_upgrade_cbl(params_from_base_suite_setup):
     completed = replicator.getCompleted(repl)
     assert total == completed
     replicator.stop(repl)
+
+    cbs_bucket = "travel-sample"
+    server = CouchbaseServer(server_url)
+    get_doc_id_from_cbs_query = 'select meta().id from `{}` where meta().id not' \
+                                ' like "_sync%" ORDER BY id'.format("travel-sample")
+    server._create_internal_rbac_bucket_user(cbs_bucket, cluster_config=cluster_config)
+    log_info("Connecting to {}/{} with password {}".format(cbs_ip, cbs_bucket, password))
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, cbs_bucket), password=password, timeout=SDK_TIMEOUT)
+    log_info("Creating primary index for {}".format(cbs_bucket))
+    n1ql_query = "create primary index index1 on `{}`".format(cbs_bucket)
+    query = N1QLQuery(n1ql_query)
+    sdk_client.n1ql_query(query).execute()
+    new_cbl_doc_ids = db.getDocIds(cbl_db, limit=40000)
+    cbs_doc_ids = []
+    for row in sdk_client.n1ql_query(get_doc_id_from_cbs_query):
+        cbs_doc_ids.append(row["id"])
+    log_info("cbl_docs {}, cbs_docs {}".format(len(cbs_doc_ids), len(new_cbl_doc_ids)))
+    assert sorted(cbs_doc_ids) == sorted(new_cbl_doc_ids), "Total no. of docs are different in CBS and CBL app"
 
     # Runing Query tests
     log_info("Running Query tests")
