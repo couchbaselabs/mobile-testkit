@@ -290,7 +290,11 @@ def test_removeDBEncryptionKey(params_from_base_test_setup):
 
 @pytest.mark.listener
 @pytest.mark.replication
-def test_copy_prebuilt_database(params_from_base_test_setup):
+@pytest.mark.parametrize("encrypted", [
+    False,
+    True
+])
+def test_copy_prebuilt_database(params_from_base_test_setup, encrypted):
     """
         @summary:
         1. Clean up the database/ Remove any existing database.
@@ -313,15 +317,21 @@ def test_copy_prebuilt_database(params_from_base_test_setup):
     db_name = db.getName(cbl_db)
     db.deleteDB(cbl_db, db_name)
     cbl_db_name = "copiedDB" + str(time.time())
-    db_config = db.configure()
-    if liteserv_platform == "android":
-        prebuilt_db_path = "/assets/PrebuiltDB.cblite2.zip"
-    elif liteserv_platform == "xamarin-android":
-        prebuilt_db_path = "PrebuiltDB.cblite2.zip"
+    if encrypted:
+        db_config = db.configure(password="password")
+        db_prefix = "PrebuiltDB-encrypted"
     else:
-        prebuilt_db_path = "Databases/PrebuiltDB.cblite2"
+        db_config = db.configure()
+        db_prefix = "PrebuiltDB"
+    if liteserv_platform == "android":
+        prebuilt_db_path = "/assets/{}.cblite2.zip".format(db_prefix)
+    elif liteserv_platform == "xamarin-android":
+        prebuilt_db_path = "{}.cblite2.zip".format(db_prefix)
+    else:
+        prebuilt_db_path = "Databases/{}.cblite2".format(db_prefix)
 
-    db.copyDatabase(prebuilt_db_path, cbl_db_name, db_config)
+    old_db_path = db.get_pre_built_db(prebuilt_db_path)
+    db.copyDatabase(old_db_path, cbl_db_name, db_config)
     cbl_db1 = db.create(cbl_db_name, db_config)
     cbl_doc_ids = db.getDocIds(cbl_db1)
     assert len(cbl_doc_ids) == 10

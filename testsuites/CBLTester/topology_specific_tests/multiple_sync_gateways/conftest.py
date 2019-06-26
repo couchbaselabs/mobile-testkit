@@ -118,6 +118,10 @@ def pytest_addoption(parser):
                      help="Encryption will be enabled for CBL db",
                      default="password")
 
+    parser.addoption("--delta-sync",
+                     action="store_true",
+                     help="delta-sync: Enable delta-sync for sync gateway")
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -147,6 +151,7 @@ def params_from_base_suite_setup(request):
     use_views = request.config.getoption("--use-views")
     number_replicas = request.config.getoption("--number-replicas")
     enable_file_logging = request.config.getoption("--enable-file-logging")
+    delta_sync_enabled = request.config.getoption("--delta-sync")
 
     enable_encryption = request.config.getoption("--enable-encryption")
     encryption_password = request.config.getoption("--encryption-password")
@@ -231,6 +236,13 @@ def params_from_base_suite_setup(request):
         log_info("Running tests with cbs <-> sg ssl disabled")
         # Disable sg views in cluster configs
         persist_cluster_config_environment_prop(cluster_config, 'sg_use_views', False)
+
+    if delta_sync_enabled:
+        log_info("Running with delta sync")
+        persist_cluster_config_environment_prop(cluster_config, 'delta_sync_enabled', True)
+    else:
+        log_info("Running without delta sync")
+        persist_cluster_config_environment_prop(cluster_config, 'delta_sync_enabled', False)
 
     # Write the number of replicas to cluster config
     persist_cluster_config_environment_prop(cluster_config, 'number_replicas', number_replicas)
@@ -356,6 +368,7 @@ def params_from_base_suite_setup(request):
         "device_enabled": device_enabled,
         "flush_memory_per_test": flush_memory_per_test,
         "sg_ssl": sg_ssl,
+        "delta_sync_enabled": delta_sync_enabled
         "enable_file_logging": enable_file_logging,
         "enable_encryption": enable_encryption,
         "encryption_password": encryption_password
@@ -405,6 +418,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     flush_memory_per_test = params_from_base_suite_setup["flush_memory_per_test"]
     sg_ssl = params_from_base_suite_setup["sg_ssl"]
     enable_file_logging = params_from_base_suite_setup["enable_file_logging"]
+    delta_sync_enabled = params_from_base_suite_setup["delta_sync_enabled"]
     encryption_password = params_from_base_suite_setup["encryption_password"]
     enable_encryption = params_from_base_suite_setup["enable_encryption"]
     source_db = None
@@ -481,7 +495,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "device_enabled": device_enabled,
         "testserver": testserver,
         "db_config": db_config,
-        "sg_ssl": sg_ssl
+        "sg_ssl": sg_ssl,
+        "delta_sync_enabled": delta_sync_enabled
     }
 
     log_info("Tearing down test")

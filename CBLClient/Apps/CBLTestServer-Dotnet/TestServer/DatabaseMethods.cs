@@ -528,20 +528,30 @@ namespace Couchbase.Lite.Testing
             });
             response.WriteEmptyBody();
         }
+
         internal static void DatabaseCopy([NotNull] NameValueCollection args,
                                                   [NotNull] IReadOnlyDictionary<string, object> postBody,
                                                   [NotNull] HttpListenerResponse response)
         {
             string dbName = postBody["dbName"].ToString();
-            string dbPath = TestServer.FilePathResolver(postBody["dbPath"].ToString(), true);
-            dbPath = dbPath + "/";
+            string dbPath = postBody["dbPath"].ToString();
             DatabaseConfiguration dbConfig = MemoryMap.Get<DatabaseConfiguration>(postBody["dbConfig"].ToString());
             Database.Copy(dbPath, dbName, dbConfig);
             response.WriteEmptyBody();
         }
 
+        internal static void DatabaseGetPreBuiltDb([NotNull] NameValueCollection args,
+                                                  [NotNull] IReadOnlyDictionary<string, object> postBody,
+                                                  [NotNull] HttpListenerResponse response)
+        {
+            string dbPath = TestServer.FilePathResolver(postBody["dbPath"].ToString(), true);
+            dbPath = dbPath + "/";
+            response.WriteBody(dbPath);
+        }
 
-#endregion
+
+
+        #endregion
     }
 
     internal sealed class DatabaseChangeListenerProxy

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -14,7 +14,7 @@
     <PackageReference Include="Jint" Version="3.0.0-beta-1138" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="2.6.1" />
     <PackageReference Include="System.ServiceProcess.ServiceController" Version="4.5.0-preview1-25914-04" />
-    <PackageReference Include="Couchbase.Lite.Enterprise.Support.NetDesktop" Version="2.5.0-b0180" />
+    <PackageReference Include="Couchbase.Lite.Enterprise.Support.NetDesktop" Version="2.5.0-b0191" />
   </ItemGroup>
 
   <ItemGroup>
@@ -31,5 +31,85 @@
     <None Update="Databases\PrebuiltDB.cblite2\db.sqlite3-wal">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="Databases\PrebuiltDB-encrypted.cblite2\db.sqlite3">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Databases\PrebuiltDB-encrypted.cblite2\db.sqlite3-shm">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Databases\PrebuiltDB-encrypted.cblite2\db.sqlite3-wal">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="Databases\travel-sample-1.4.cblite2\db.sqlite3">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Databases\travel-sample-1.4.cblite2\db.sqlite3-shm">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Databases\travel-sample-1.4.cblite2\db.sqlite3-wal">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="Databases\travel-sample-2.0.0.cblite2\db.sqlite3">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Databases\travel-sample-2.0.0.cblite2\db.sqlite3-shm">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Databases\travel-sample-2.0.0.cblite2\db.sqlite3-wal">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="Databases\travel-sample-2.1.5.cblite2\db.sqlite3">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Databases\travel-sample-2.1.5.cblite2\db.sqlite3-shm">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Databases\travel-sample-2.1.5.cblite2\db.sqlite3-wal">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="Databases\travel-sample-2.5.0.cblite2\db.sqlite3">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Databases\travel-sample-2.5.0.cblite2\db.sqlite3-shm">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Databases\travel-sample-2.5.0.cblite2\db.sqlite3-wal">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="Databases\travel-sample-encrypted-2.5.0.cblite2\db.sqlite3">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Databases\travel-sample-encrypted-2.5.0.cblite2\db.sqlite3-shm">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Databases\travel-sample-encrypted-2.5.0.cblite2\db.sqlite3-wal">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="Databases\travel-sample-encrypted-2.1.5.cblite2\db.sqlite3">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Databases\travel-sample-encrypted-2.1.5.cblite2\db.sqlite3-shm">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Databases\travel-sample-encrypted-2.1.5.cblite2\db.sqlite3-wal">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Files\" />
   </ItemGroup>
 </Project>
