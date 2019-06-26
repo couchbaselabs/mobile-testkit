@@ -24,6 +24,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Text;
 
@@ -85,6 +86,7 @@ namespace Couchbase.Lite.Testing
                 ["database_exists"] = DatabaseMethods.DatabaseExists,
                 ["database_changeEncryptionKey"] = DatabaseMethods.DatabaseChangeEncryptionKey,
                 ["database_copy"] = DatabaseMethods.DatabaseCopy, 
+                ["database_getPreBuiltDb"] = DatabaseMethods.DatabaseGetPreBuiltDb,
                 ["dictionary_contains"] = DictionaryMethods.DictionaryContains,
                 ["dictionary_count"] = DictionaryMethods.DictionaryCount,
                 ["dictionary_create"] = DictionaryMethods.DictionaryCreate,
@@ -210,6 +212,7 @@ namespace Couchbase.Lite.Testing
                 ["query_leftOuterJoin"] = QueryMethods.QueryLeftOuterJoin,
                 ["query_innerJoin"] = QueryMethods.QueryInnerJoin,
                 ["query_crossJoin"] = QueryMethods.QueryCrossJoin,
+                ["query_anyOperator"] = QueryMethods.QueryAnyOperator,
                 ["query_greaterThan"] = QueryMethods.QueryGreaterThan,
                 ["query_greaterThanOrEqualTo"] = QueryMethods.QueryGreaterThanOrEqualTo,
                 ["query_lessThan"] = QueryMethods.QueryLessThan,
@@ -264,6 +267,7 @@ namespace Couchbase.Lite.Testing
                 ["blob_getProperties"] = BlobMethods.GetProperties,
                 ["blob_hashCode"] = BlobMethods.HashCode,
                 ["blob_length"] = BlobMethods.Length,
+                ["copy_files"] = CopyFiles,
                 ["release"] = ReleaseObject,
                 ["flushMemory"] = flushMemory
             };
@@ -348,6 +352,55 @@ namespace Couchbase.Lite.Testing
             MemoryMap.Clear();
             response.WriteEmptyBody(HttpStatusCode.OK);
             return;
+        }
+
+        private static void CopyFiles([NotNull]NameValueCollection args,
+            [NotNull]IReadOnlyDictionary<string, object> postBody,
+            [NotNull]HttpListenerResponse response)
+        {
+            string sourcePath = postBody["source_path"].ToString();
+            string destinationPath = postBody["destination_path"].ToString();
+            DirectoryCopy(sourcePath, destinationPath, true);
+            response.WriteBody("Copied");
+
+        }
+
+        private static void DirectoryCopy(string sourceDirName, string destDirName, bool copySubDirs)
+        {
+            // Get the subdirectories for the specified directory.
+            DirectoryInfo dir = new DirectoryInfo(sourceDirName);
+            Console.WriteLine("Copying " + sourceDirName + " to " + destDirName);
+            if (!dir.Exists)
+            {
+                throw new DirectoryNotFoundException(
+                    "Source directory does not exist or could not be found: "
+                    + sourceDirName);
+            }
+
+            DirectoryInfo[] dirs = dir.GetDirectories();
+            // If the destination directory doesn't exist, create it.
+            if (!Directory.Exists(destDirName))
+            {
+                Directory.CreateDirectory(destDirName);
+            }
+
+            // Get the files in the directory and copy them to the new location.
+            FileInfo[] files = dir.GetFiles();
+            foreach (FileInfo file in files)
+            {
+                string temppath = Path.Combine(destDirName, file.Name);
+                file.CopyTo(temppath, false);
+            }
+
+            // If copying subdirectories, copy them and their contents to new location.
+            if (copySubDirs)
+            {
+                foreach (DirectoryInfo subdir in dirs)
+                {
+                    string temppath = Path.Combine(destDirName, subdir.Name);
+                    DirectoryCopy(subdir.FullName, temppath, copySubDirs);
+                }
+            }
         }
 
         #endregion

@@ -18,9 +18,6 @@ namespace Couchbase.Lite.Testing.Android
             base.OnCreate(savedInstanceState);
 
             Couchbase.Lite.Support.Droid.Activate(ApplicationContext);
-            Couchbase.Lite.Support.Droid.EnableTextLogging();
-
-			Database.SetLogLevel(Logging.LogDomain.All, Logging.LogLevel.Debug);
 
             TestServer.FilePathResolver = ResolvePath;
             var listener = new TestServer();

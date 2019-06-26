@@ -102,13 +102,17 @@ public class Server extends NanoHTTPD {
         try {
             // Find and invoke the method on the RequestHandler.
             String body = null;
+            Object result;
             if ("release".equals(method)) {
                 memory.remove(rawArgs.get("object"));
             }
             else if ("flushMemory".equals(method)) {
                 memory.flushMemory();
-            }
-            else {
+            } else if ("copy_files".equals(method)){
+                result = memory.copyFiles(args);
+                body = ValueSerializer.serialize(result, memory);
+            } else {
+                Object requestHandler = null;
                 final String[] methodArgs = method.split("_");
                 String handlerType = methodArgs[0];
                 String method_to_call = methodArgs[1];
@@ -206,7 +210,7 @@ public class Server extends NanoHTTPD {
                     target.invoke(requestHandler, args);
                 }
                 else {
-                    Object result = target.invoke(requestHandler, args);
+                    result = target.invoke(requestHandler, args);
                     body = ValueSerializer.serialize(result, memory);
                 }
             }

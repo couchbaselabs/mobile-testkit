@@ -283,7 +283,7 @@ class Database(object):
 
     def update_all_docs_individually(self, database, num_of_updates=1):
         doc_ids = self.getDocIds(database)
-        doc_obj = Document(self._baseUrl)
+        doc_obj = Document(self.base_url)
         for i in xrange(num_of_updates):
             for doc_id in doc_ids:
                 doc_mem = self.getDocument(database, doc_id)
@@ -316,6 +316,11 @@ class Database(object):
         cbl_doc_ids = self.getDocIds(cbl_db)
         docs = self.getDocuments(cbl_db, cbl_doc_ids)
         return docs
+
+    def get_pre_built_db(self, db_path):
+        args = Args()
+        args.setString("dbPath", db_path)
+        return self._client.invokeMethod("database_getPreBuiltDb", args)
 
     def copyDatabase(self, db_path, db_name, db_config):
         args = Args()

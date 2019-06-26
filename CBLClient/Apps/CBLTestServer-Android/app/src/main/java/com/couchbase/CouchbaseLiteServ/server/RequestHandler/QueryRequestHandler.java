@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.couchbase.CouchbaseLiteServ.server.Args;
+import com.couchbase.lite.ArrayExpression;
 import com.couchbase.lite.Collation;
 import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.DataSource;
@@ -24,6 +25,7 @@ import com.couchbase.lite.QueryBuilder;
 import com.couchbase.lite.Result;
 import com.couchbase.lite.ResultSet;
 import com.couchbase.lite.SelectResult;
+import com.couchbase.lite.VariableExpression;
 
 
 public class QueryRequestHandler {
@@ -69,6 +71,39 @@ public class QueryRequestHandler {
         }
         return resultArray;
     }
+
+    public List<Object> anyOperator(Args args) throws CouchbaseLiteException {
+        /*select meta().id from `travel-sample` where type="route"
+        AND ANY departure IN schedule SATISFIES departure.utc > "03:41:00" END;
+
+        "$1": 24024
+
+        */
+        Database database = args.get("database");
+        String whr_prop = args.get("whr_prop");
+        String whr_val = args.get("whr_val");
+        String schedule = args.get("schedule");
+        String departure = args.get("departure");
+        String departure_prop = args.get("departure_prop");
+        String departure_val = args.get("departure_val");
+
+        VariableExpression dep_schedule = ArrayExpression.variable(departure);
+        VariableExpression departure_utc = ArrayExpression.variable(departure_prop);
+
+        Query search_query = QueryBuilder
+                .select(SelectResult.expression(Meta.id))
+                .from(DataSource.database(database))
+                .where(Expression.property(whr_prop).equalTo(Expression.value(whr_val))
+                        .and(ArrayExpression.any(dep_schedule).in(Expression.property(schedule))
+                                .satisfies(departure_utc.greaterThan(Expression.value(departure_val)))));
+        ResultSet rows = search_query.execute();
+        List<Object> resultArray = new ArrayList<>();
+        for (Result row : rows) {
+            resultArray.add(row.getString("id"));
+        }
+        return resultArray;
+    }
+
 
     public List<Object> docsLimitOffset(Args args) throws CouchbaseLiteException {
         Database database = args.get("database");

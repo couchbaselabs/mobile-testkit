@@ -116,12 +116,15 @@ public class Server {
 
                 // Find and invoke the method on the RequestHandler.
                 var body: Any? = nil
+                var result: Any? = nil
                 if "release" == method {
                     self.memory.remove(address: rawArgs["object"] as! String)
                 } else if "flushMemory" == method {
                     self.memory.flushMemory()
+                } else if method == "copy_files" {
+                    result = self.memory.CopyFiles(args: args)
+                    body = try ValueSerializer.serialize(value: result, memory: self.memory);
                 } else{
-                    var result: Any? = nil
                     if method.hasPrefix("query") {
                         result = try self.queryRequestHandler.handleRequest(method: method, args: args)
                     } else if method.hasPrefix("databaseConfiguration") {
