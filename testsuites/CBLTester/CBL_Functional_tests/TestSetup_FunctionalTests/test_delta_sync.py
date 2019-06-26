@@ -551,6 +551,82 @@ def test_delta_sync_nested_doc(params_from_base_test_setup, num_of_docs, replica
     verify_delta_stats_counts(sg_client, sg_admin_url, replication_type, sg_db, num_of_docs)
 
 
+@pytest.mark.listener
+@pytest.mark.syncgateway
+@pytest.mark.replication
+@pytest.mark.parametrize("num_of_docs, replication_type", [
+    (1, "pull")
+])
+def test_delta_sync_dbWorker(params_from_base_test_setup, num_of_docs, replication_type):
+    '''
+    @summary:
+    1. Add docs in SGW
+    2. Do push_pull replication
+    3. update docs in SGW
+    4. Do push/pull replication
+    5. Verify docs after replication matching in SGW and CBL
+    Coverage for GitHub 792: DBWorker crashes in Fleece Encoder (writePointer)
+    '''
+    sg_db = "db"
+    sg_url = params_from_base_test_setup["sg_url"]
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_blip_url = params_from_base_test_setup["target_url"]
+    base_url = params_from_base_test_setup["base_url"]
+    db = params_from_base_test_setup["db"]
+    cbl_db = params_from_base_test_setup["source_db"]
+    mode = params_from_base_test_setup["mode"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    sg_config = params_from_base_test_setup["sg_config"]
+
+    if sync_gateway_version < "2.5.0":
+        pytest.skip('This test cannnot run with sg version below 2.5')
+    channels = ["ABC"]
+    username = "autotest"
+    password = "password"
+    number_of_updates = 3
+
+    # Reset cluster to ensure no data in system
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
+    enable_delta_sync(c, sg_config, cluster_config, mode, True)
+
+    sg_client = MobileRestClient()
+    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channels)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+    session = cookie, session_id
+
+    # add docs in SGW
+    sg_client.add_docs(url=sg_url, db=sg_db, number=100, id_prefix="db_worker", channels=channels, auth=session)
+
+    # 3. Do pull replication to SGW
+    replicator = Replication(base_url)
+    authenticator = Authenticator(base_url)
+    replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
+    repl = replicator.configure_and_replicate(source_db=cbl_db,
+                                              target_url=sg_blip_url,
+                                              continuous=True,
+                                              replicator_authenticator=replicator_authenticator,
+                                              replication_type="pull")
+    replicator.stop(repl)
+
+    # 4. update docs in SGW/CBL
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
+    update_docs(replication_type, cbl_db, db, sg_client, sg_docs, sg_url, sg_db, number_of_updates, session, channels)
+    sg_client.add_docs(url=sg_url, db=sg_db, number=100, id_prefix="db_worker2", channels=channels, auth=session)
+
+    # 5. replicate docs using pull replication
+    repl = replicator.configure_and_replicate(source_db=cbl_db,
+                                              target_url=sg_blip_url,
+                                              continuous=False,
+                                              replicator_authenticator=replicator_authenticator,
+                                              replication_type=replication_type)
+
+    # 7. Verify the body of nested doc matches with sgw and cbl
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
+    compare_docs(cbl_db, db, sg_docs)
+
+
 @pytest.mark.syncgateway
 @pytest.mark.replication
 @pytest.mark.parametrize("num_of_docs, replication_type", [
@@ -597,6 +673,7 @@ def test_delta_sync_larger_than_doc(params_from_base_test_setup, num_of_docs, re
     sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channels)
     cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
     session = cookie, session_id
+
     # 2. Create docs in CBL
     db.create_bulk_docs(num_of_docs, "cbl_sync", db=cbl_db, channels=channels)
 
