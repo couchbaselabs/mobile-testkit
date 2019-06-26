@@ -14,19 +14,6 @@ buildscript {
     }
 }
 
-allprojects {
-    repositories {
-        maven {
-            url "https://mobile.maven.couchbase.com/maven2/dev/"
-        }
-        maven {
-            url "https://oss.sonatype.org/content/repositories/snapshots"
-        }
-        google()
-        jcenter()
-    }
-}
-
 task clean(type: Delete) {
     delete rootProject.buildDir
 }

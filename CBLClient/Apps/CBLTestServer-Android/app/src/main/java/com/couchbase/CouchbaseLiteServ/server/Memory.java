@@ -14,15 +14,15 @@ import com.couchbase.CouchbaseLiteServ.server.Server;
 import com.couchbase.lite.internal.utils.FileUtils;
 
 public class Memory {
-    private Map<String, Object> _memory = new HashMap<>();
+    private final Map<String, Object> _memory = new HashMap<>();
     private int _address = 0;
 
     public <T> T get(String address) {
-        return (T)_memory.get(address);
+        return (T) _memory.get(address);
     }
 
     public String add(Object value) {
-        String address = "@" + Integer.toString(++_address) + "_" + MainActivity.ip + "_android";
+        String address = "@" + (++_address) + "_" + MainActivity.ip + "_android";
 
         _memory.put(address, value);
 
@@ -33,11 +33,11 @@ public class Memory {
         _memory.remove(address);
     }
 
-    public Map<String, Object> get_memory_map(){
+    public Map<String, Object> get_memory_map() {
         return _memory;
     }
 
-    public void flushMemory(){
+    public void flushMemory() {
         _memory.clear();
         _address = 0;
     }

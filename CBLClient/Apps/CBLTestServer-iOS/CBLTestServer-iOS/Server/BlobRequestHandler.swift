@@ -8,6 +8,7 @@
 
 import Foundation
 import CouchbaseLiteSwift
+import UIKit
 
 
 public class BlobRequestHandler {
@@ -24,7 +25,7 @@ public class BlobRequestHandler {
             let content: Data = args.get(name: "content")!
             let stream: InputStream? = args.get(name: "stream")!
             let fileURL: URL? = args.get(name: "fileURL")!
-            if (!contentType.isEmpty){
+            if (!content.isEmpty){
                 return Blob(contentType: contentType, data: content)
             } else if (stream != nil){
                 return Blob(contentType: contentType, contentStream: stream!)
@@ -33,6 +34,12 @@ public class BlobRequestHandler {
             } else {
                 throw RequestHandlerError.IOException("Incorrect parameters provided")
             }
+            
+        case "blob_createImageContent":
+            let image: String = args.get(name: "image")!
+            let appleImage = UIImage(named: image)!
+            let imageData = UIImageJPEGRepresentation(appleImage, 1)!
+            return imageData
             
         case "blob_digest":
             let blob: Blob = args.get(name: "blob")!

@@ -1,13 +1,9 @@
 package com.couchbase.CouchbaseLiteServ.server.RequestHandler;
 
-import java.sql.Blob;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Date;
-import java.util.Map;
-import java.util.Set;
 
 import com.couchbase.CouchbaseLiteServ.server.Args;
+
 
 public class DataTypesInitiatorHandler {
     /* ---------------------------------- */
@@ -19,55 +15,40 @@ public class DataTypesInitiatorHandler {
         return new Date();
     }
 
-    public Double setDouble(Args args){
-        Double obj = Double.parseDouble(args.get("value").toString());
-        return obj;
+    public Double setDouble(Args args) {
+        return Double.parseDouble(args.get("value").toString());
     }
 
-    public Float setFloat(Args args){
-        Float obj = Float.parseFloat(args.get("value").toString());
-        return obj;
+    public Float setFloat(Args args) {
+        return Float.parseFloat(args.get("value").toString());
     }
 
-    public Long setLong(Args args){
-        Long obj = Long.parseLong(args.get("value").toString());
-        return obj;
+    public Long setLong(Args args) {
+        return Long.parseLong(args.get("value").toString());
     }
 
-    public Boolean compare(Args args){
+    public Boolean compare(Args args) {
         String first = args.get("first").toString();
         String second = args.get("second").toString();
-        if (first.equals(second)){
-            return true;
-        }
-        return false;
+        return first.equals(second);
     }
 
     public Boolean compareDate(Args args) {
         Date first = args.get("date1");
         Date second = args.get("date2");
-        if (first.equals(second)){
-            return true;
-        }
-        return false;
+        return first.equals(second);
     }
 
     public Boolean compareDouble(Args args) {
         Double first = Double.valueOf(args.get("double1").toString());
         Double second = Double.valueOf(args.get("double2").toString());
-        if (first.equals(second)){
-            return true;
-        }
-        return false;
+        return first.equals(second);
     }
 
     public Boolean compareLong(Args args) {
         Long first = args.get("long1");
         Long second = args.get("long2");
-        if (first.equals(second)){
-            return true;
-        }
-        return false;
+        return first.equals(second);
     }
 
 }

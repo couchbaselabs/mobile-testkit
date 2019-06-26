@@ -232,6 +232,7 @@ public class DatabaseRequestHandler {
             let data: Dictionary<String, Any> = args.get(name: "data")!
             let docId: String = args.get(name: "id")!
             let updated_doc = database.document(withID: docId)!.toMutable()
+            
             updated_doc.setData(data)
             try! database.saveDocument(updated_doc)
             

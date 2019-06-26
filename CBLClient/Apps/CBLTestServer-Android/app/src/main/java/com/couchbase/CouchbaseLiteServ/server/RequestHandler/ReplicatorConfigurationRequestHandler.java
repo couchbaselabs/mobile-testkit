@@ -1,12 +1,22 @@
 package com.couchbase.CouchbaseLiteServ.server.RequestHandler;
 
 
+import android.content.Context;
+import android.content.res.AssetManager;
 import android.util.Log;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
+
+import com.couchbase.CouchbaseLiteServ.CouchbaseLiteServ;
 import com.couchbase.CouchbaseLiteServ.server.Args;
-import com.couchbase.CouchbaseLiteServ.server.Server;
 import com.couchbase.lite.Authenticator;
-// import com.couchbase.lite.ConflictResolver;
 import com.couchbase.lite.Database;
 import com.couchbase.lite.DatabaseEndpoint;
 import com.couchbase.lite.Document;
@@ -14,45 +24,27 @@ import com.couchbase.lite.DocumentFlag;
 import com.couchbase.lite.ReplicationFilter;
 import com.couchbase.lite.ReplicatorConfiguration;
 import com.couchbase.lite.URLEndpoint;
-import com.couchbase.litecore.C4Socket;
-
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Dictionary;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
-import java.io.InputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import javax.net.ssl.X509TrustManager;
-import javax.net.ssl.TrustManager;
-import java.security.cert.X509Certificate;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.HttpsURLConnection;
-import java.security.GeneralSecurityException;
-import android.content.res.AssetManager;
-import android.content.Context;
 
 
 public class ReplicatorConfigurationRequestHandler {
+    private static final String TAG = "REPLCONFIGHANDLER";
 
-    public ReplicatorConfiguration builderCreate(Args args) throws MalformedURLException, URISyntaxException {
+    public ReplicatorConfiguration builderCreate(Args args) throws URISyntaxException {
         Database sourceDb = args.get("sourceDb");
         Database targetDb = args.get("targetDb");
         URI targetURI = null;
         if (args.get("targetURI") != null) {
             targetURI = new URI((String) args.get("targetURI"));
         }
-        if (targetDb != null){
+        if (targetDb != null) {
             DatabaseEndpoint target = new DatabaseEndpoint(targetDb);
             return new ReplicatorConfiguration(sourceDb, target);
-        } else if (targetURI != null){
+        }
+        else if (targetURI != null) {
             URLEndpoint target = new URLEndpoint(targetURI);
             return new ReplicatorConfiguration(sourceDb, target);
-        } else {
+        }
+        else {
             throw new IllegalArgumentException("Incorrect configuration parameter provided");
         }
     }
@@ -60,7 +52,7 @@ public class ReplicatorConfigurationRequestHandler {
     public ReplicatorConfiguration configure(Args args) throws Exception {
         Database sourceDb = args.get("source_db");
         URI targetURL = null;
-        if (args.get("target_url") != null){
+        if (args.get("target_url") != null) {
             targetURL = new URI((String) args.get("target_url"));
         }
         Database targetDb = args.get("target_db");
@@ -76,27 +68,30 @@ public class ReplicatorConfigurationRequestHandler {
         // ConflictResolver conflictResolver = args.get("conflictResolver");
         Map<String, String> headers = args.get("headers");
 
-        if (replicatorType == null)
-        {
+        if (replicatorType == null) {
             replicatorType = "push_pull";
         }
         replicatorType = replicatorType.toLowerCase();
         ReplicatorConfiguration.ReplicatorType replType;
         if (replicatorType.equals("push")) {
             replType = ReplicatorConfiguration.ReplicatorType.PUSH;
-        } else if (replicatorType.equals("pull")) {
+        }
+        else if (replicatorType.equals("pull")) {
             replType = ReplicatorConfiguration.ReplicatorType.PULL;
-        } else {
+        }
+        else {
             replType = ReplicatorConfiguration.ReplicatorType.PUSH_AND_PULL;
         }
         ReplicatorConfiguration config;
         if (sourceDb != null && targetURL != null) {
             URLEndpoint target = new URLEndpoint(targetURL);
             config = new ReplicatorConfiguration(sourceDb, target);
-        } else if (sourceDb != null && targetDb != null) {
+        }
+        else if (sourceDb != null && targetDb != null) {
             DatabaseEndpoint target = new DatabaseEndpoint(targetDb);
             config = new ReplicatorConfiguration(sourceDb, target);
-        } else {
+        }
+        else {
             throw new Exception("\"No source db provided or target url provided\"");
         }
         if (continuous != null) {
@@ -119,49 +114,59 @@ public class ReplicatorConfigurationRequestHandler {
         if (documentIds != null) {
             config.setDocumentIDs(documentIds);
         }
-        System.out.println(args);
-        if (pinnedservercert != null){
-            Context context = com.couchbase.CouchbaseLiteServ.MainActivity.getAppContext();
+
+        Log.d(TAG, "Args: " + args);
+        if (pinnedservercert != null) {
+            Context context = CouchbaseLiteServ.getAppContext();
             byte[] ServerCert = this.getPinnedCertFile(context);
             // Set pinned certificate.
             config.setPinnedServerCertificate(ServerCert);
         }
-        if (push_filter){
-            if (filter_callback_func.equals("boolean")){
-                config.setPushFilter(new ReplicatorBooleanFiltlerCallback());
-            } else if (filter_callback_func.equals("deleted")){
-                config.setPushFilter(new ReplicatorDeletedFilterCallback());
-            } else if (filter_callback_func.equals("access_revoked")){
-                config.setPushFilter(new ReplicatorAccessRevokedFilterCallback());
-            } else {
-                config.setPushFilter(new DefaultReplicatorFilterCallback());
+        if (push_filter) {
+            switch (filter_callback_func) {
+                case "boolean":
+                    config.setPushFilter(new ReplicatorBooleanFilterCallback());
+                    break;
+                case "deleted":
+                    config.setPushFilter(new ReplicatorDeletedFilterCallback());
+                    break;
+                case "access_revoked":
+                    config.setPushFilter(new ReplicatorAccessRevokedFilterCallback());
+                    break;
+                default:
+                    config.setPushFilter(new DefaultReplicatorFilterCallback());
+                    break;
             }
         }
-        if (pull_filter){
-            if (filter_callback_func.equals("boolean")){
-                config.setPullFilter(new ReplicatorBooleanFiltlerCallback());
-            } else if (filter_callback_func.equals("deleted")){
-                config.setPullFilter(new ReplicatorDeletedFilterCallback());
-            } else if (filter_callback_func.equals("access_revoked")){
-                config.setPullFilter(new ReplicatorAccessRevokedFilterCallback());
-            } else {
-                config.setPullFilter(new DefaultReplicatorFilterCallback());
+        if (pull_filter) {
+            switch (filter_callback_func) {
+                case "boolean":
+                    config.setPullFilter(new ReplicatorBooleanFilterCallback());
+                    break;
+                case "deleted":
+                    config.setPullFilter(new ReplicatorDeletedFilterCallback());
+                    break;
+                case "access_revoked":
+                    config.setPullFilter(new ReplicatorAccessRevokedFilterCallback());
+                    break;
+                default:
+                    config.setPullFilter(new DefaultReplicatorFilterCallback());
+                    break;
             }
         }
         return config;
     }
 
     public ReplicatorConfiguration create(Args args) {
-        ReplicatorConfiguration config = args.get("configuration");
-        return config;
+        return args.get("configuration");
     }
 
-    public Authenticator getAuthenticator(Args args){
+    public Authenticator getAuthenticator(Args args) {
         ReplicatorConfiguration replicatorConfiguration = args.get("configuration");
         return replicatorConfiguration.getAuthenticator();
     }
 
-    public List<String>  getChannels(Args args){
+    public List<String> getChannels(Args args) {
         ReplicatorConfiguration replicatorConfiguration = args.get("configuration");
         return replicatorConfiguration.getChannels();
     }
@@ -171,43 +176,43 @@ public class ReplicatorConfigurationRequestHandler {
         return replicatorConfiguration.getConflictResolver();
     }*/
 
-    public Database getDatabase(Args args){
+    public Database getDatabase(Args args) {
         ReplicatorConfiguration replicatorConfiguration = args.get("configuration");
         return replicatorConfiguration.getDatabase();
     }
 
-    public List<String> getDocumentIDs(Args args){
+    public List<String> getDocumentIDs(Args args) {
         ReplicatorConfiguration replicatorConfiguration = args.get("configuration");
         return replicatorConfiguration.getDocumentIDs();
     }
 
-    public byte[] getPinnedServerCertificate(Args args){
+    public byte[] getPinnedServerCertificate(Args args) {
         ReplicatorConfiguration replicatorConfiguration = args.get("configuration");
         return replicatorConfiguration.getPinnedServerCertificate();
     }
 
-    public String getReplicatorType(Args args){
+    public String getReplicatorType(Args args) {
         ReplicatorConfiguration replicatorConfiguration = args.get("configuration");
         return replicatorConfiguration.getReplicatorType().toString();
     }
 
-    public String getTarget(Args args){
+    public String getTarget(Args args) {
         ReplicatorConfiguration replicatorConfiguration = args.get("configuration");
         return replicatorConfiguration.getTarget().toString();
     }
 
-    public Boolean isContinuous(Args args){
+    public Boolean isContinuous(Args args) {
         ReplicatorConfiguration replicatorConfiguration = args.get("configuration");
         return replicatorConfiguration.isContinuous();
     }
 
-    public void setAuthenticator(Args args){
+    public void setAuthenticator(Args args) {
         ReplicatorConfiguration replicatorConfiguration = args.get("configuration");
         Authenticator authenticator = args.get("authenticator");
         replicatorConfiguration.setAuthenticator(authenticator);
     }
 
-    public void setChannels(Args args){
+    public void setChannels(Args args) {
         ReplicatorConfiguration replicatorConfiguration = args.get("configuration");
         List<String> channels = args.get("channels");
         replicatorConfiguration.setChannels(channels);
@@ -219,25 +224,25 @@ public class ReplicatorConfigurationRequestHandler {
         replicatorConfiguration.setConflictResolver(conflictResolver);
     }*/
 
-    public void setContinuous(Args args){
+    public void setContinuous(Args args) {
         ReplicatorConfiguration replicatorConfiguration = args.get("configuration");
         Boolean continuous = args.get("continuous");
         replicatorConfiguration.setContinuous(continuous);
     }
 
-    public void setDocumentIDs(Args args){
+    public void setDocumentIDs(Args args) {
         ReplicatorConfiguration replicatorConfiguration = args.get("configuration");
         List<String> documentIds = args.get("documentIds");
         replicatorConfiguration.setDocumentIDs(documentIds);
     }
 
-    public void setPinnedServerCertificate(Args args){
+    public void setPinnedServerCertificate(Args args) {
         ReplicatorConfiguration replicatorConfiguration = args.get("configuration");
         byte[] cert = args.get("cert");
         replicatorConfiguration.setPinnedServerCertificate(cert);
     }
 
-    public void setReplicatorType(Args args){
+    public void setReplicatorType(Args args) {
         ReplicatorConfiguration replicatorConfiguration = args.get("configuration");
         String type = args.get("replType");
         ReplicatorConfiguration.ReplicatorType replicatorType;
@@ -256,19 +261,20 @@ public class ReplicatorConfigurationRequestHandler {
 
     private byte[] getPinnedCertFile(Context context) {
         AssetManager assetManager = context.getAssets();
-        InputStream is = null;
+        InputStream is;
         byte[] bytes = new byte[0];
         try {
             is = assetManager.open("sg_cert.cer");
             return (toByteArray(is));
-        } catch (IOException e) {
-            e.printStackTrace();
+        }
+        catch (IOException e) {
+            Log.e(TAG, "Failed to retrieve cert", e);
         }
         return null;
 
     }
 
-    public static byte[] toByteArray(InputStream is){
+    public static byte[] toByteArray(InputStream is) {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         byte[] b = new byte[1024];
 
@@ -278,22 +284,21 @@ public class ReplicatorConfigurationRequestHandler {
                 bos.write(b, 0, bytesRead);
                 bytesRead = is.read(b);
             }
-        } catch(IOException io) {
-            System.out.println("Got exception " + io.getMessage() + ", Ignoring...");
+        }
+        catch (IOException io) {
+            Log.w(TAG, "Got exception " + io.getMessage() + ", Ignoring...");
         }
 
-        byte[] bytes = bos.toByteArray();
-        return bytes;
+        return bos.toByteArray();
     }
 }
 
-class ReplicatorBooleanFiltlerCallback implements ReplicationFilter {
+class ReplicatorBooleanFilterCallback implements ReplicationFilter {
     @Override
     public boolean filtered(Document document, EnumSet<DocumentFlag> flags) {
         String key = "new_field_1";
         if (document.contains(key)) {
-            boolean value = document.getBoolean(key);
-            return value;
+            return document.getBoolean(key);
         }
         return true;
     }

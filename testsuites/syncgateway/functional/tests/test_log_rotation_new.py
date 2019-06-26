@@ -592,7 +592,10 @@ def test_log_maxbackups_0(params_from_base_test_setup, sg_conf_name):
     for log in SG_LOGS:
         status, stdout, stderr = remote_executor.execute("ls /tmp/sg_logs/ | grep {} | wc -l".format(log))
         if (log == "sg_debug" or log == "sg_info") and sg_platform != "windows":
-            assert stdout[0].rstrip() == '3'
+            if get_sync_gateway_version(sg_ip)[0] < "2.5":
+                assert stdout[0].rstrip() == '2'
+            else:
+                assert stdout[0].rstrip() == '3'
         else:
             assert stdout[0].rstrip() == '2'
 

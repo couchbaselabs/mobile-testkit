@@ -106,6 +106,7 @@
       <SubType>Designer</SubType>
     </AppxManifest>
     <None Include="TestServer.UWP_TemporaryKey.pfx" />
+    <None Include="Assets\Files\golden_gate_large.jpg" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Properties\Default.rd.xml" />
@@ -149,7 +150,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Couchbase.Lite.Enterprise.Support.UWP">
-      <Version>2.5.2-b0003</Version>
+      <Version>2.5.0-b0180</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform">
       <Version>6.0.4</Version>
@@ -160,6 +161,9 @@
       <Project>{ca1db44f-9a07-40c1-b305-f0b5d797ee6a}</Project>
       <Name>TestServer</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Assets\Files\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Assets\Databases\travel-sample-1.4.cblite2\attachments\" />

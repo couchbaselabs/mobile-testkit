@@ -21,12 +21,17 @@ class Blob(object):
         if content:
             args.setArray("content", content)
         elif stream:
-            args.setArray("stream", stream)
+            args.setMemoryPointer("stream", stream)
         elif file_url:
             args.setMemoryPointer("fileURL", file_url)
         else:
             raise Exception("Provide correct parameter")
         return self._client.invokeMethod("blob_create", args)
+
+    def createImageContent(self, image):
+        args = Args()
+        args.setString("image", image)
+        return self._client.invokeMethod("blob_createImageContent", args)
 
     def digest(self, obj):
         args = Args()
