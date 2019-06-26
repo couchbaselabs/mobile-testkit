@@ -28,11 +28,13 @@ def test_upgrade_cbl(params_from_base_suite_setup):
         a. Run Query test for Any operator
         b. Run Query test for Between operator
         c. Run FTS Query test
-        d. Run Join Query test 
+        d. Run Join Query test
     4. Perform mutation operations
         a. Add new docs and replicate to cluster
         b. Update docs for migrated db and replicate to cluster
         c. Delete docs from migrated db and replicate to cluster
+
+    @note: encrypted prebuilt databases is copied for 2.1.0 and up and unencrypted database below 2.1.0
     """
     base_url = params_from_base_suite_setup["base_url"]
     sg_db = "db"
@@ -213,8 +215,10 @@ def test_upgrade_cbl(params_from_base_suite_setup):
 def test_queries_on_upgrade_cbl(params_from_base_suite_setup):
     """
     @summary:
-    1. Upgrade the db from lower CBl version
+    1. Upgrade the db from lower CBl version.
     2. Run all the query tests on upgraded db
+
+    @note: encrypted prebuilt databases is copied for 2.1.0 and up and unencrypted database below 2.1.0
     """
     upgraded_liteserv_version = params_from_base_suite_setup["upgraded_liteserv_version"]
     liteserv_host = params_from_base_suite_setup["liteserv_host"]
