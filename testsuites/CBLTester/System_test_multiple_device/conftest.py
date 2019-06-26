@@ -120,6 +120,16 @@ def pytest_addoption(parser):
                      default=False,
                      help="If set, CBS not would be rebalance in/out of cluster")
 
+    parser.addoption("--enable-encryption",
+                     action="store_true",
+                     help="Encryption will be enabled for CBL db",
+                     default=True)
+
+    parser.addoption("--encryption-password",
+                     action="store",
+                     help="Encryption will be enabled for CBL db",
+                     default="password")
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -160,6 +170,9 @@ def params_from_base_suite_setup(request):
     enable_file_logging = request.config.getoption("--enable-file-logging")
 
     community_enabled = request.config.getoption("--community")
+
+    enable_encryption = request.config.getoption("--enable-encryption")
+    encryption_password = request.config.getoption("--encryption-password")
 
     test_name = request.node.name
     testserver_list = []
@@ -299,7 +312,10 @@ def params_from_base_suite_setup(request):
             db_obj_list.append(db)
 
             log_info("Creating a Database {} at the suite setup".format(db_name))
-            db_config = db.configure()
+            if enable_encryption:
+                db_config = db.configure(password=encryption_password)
+            else:
+                db_config = db.configure()
             cbl_db = db.create(db_name, db_config)
             cbl_db_list.append(cbl_db)
             log_info("Getting the database name")
@@ -340,7 +356,9 @@ def params_from_base_suite_setup(request):
         "generator": generator,
         "resume_cluster": resume_cluster,
         "create_db_per_test": create_db_per_test,
-        "enable_rebalance": enable_rebalance
+        "enable_rebalance": enable_rebalance,
+        "enable_encryption": enable_encryption,
+        "encryption_password": encryption_password
     }
 
     if create_db_per_suite:
@@ -389,6 +407,8 @@ def params_from_base_test_setup(params_from_base_suite_setup):
     resume_cluster = params_from_base_suite_setup["resume_cluster"]
     create_db_per_test = params_from_base_suite_setup["create_db_per_test"]
     cluster_topology = params_from_base_suite_setup["cluster_topology"]
+    encryption_password = params_from_base_suite_setup["encryption_password"]
+    enable_encryption = params_from_base_suite_setup["enable_encryption"]
     # testserver_list = params_from_base_suite_setup["testserver_list"]
     # test_name = request.node.name
 
@@ -414,7 +434,10 @@ def params_from_base_test_setup(params_from_base_suite_setup):
             db_obj_list.append(db)
 
             log_info("Creating a Database {} at the test setup".format(db_name))
-            db_config = db.configure()
+            if enable_encryption:
+                db_config = db.configure(password=encryption_password)
+            else:
+                db_config = db.configure()
             cbl_db = db.create(db_name, db_config)
             cbl_db_list.append(cbl_db)
             log_info("Getting the database name")
