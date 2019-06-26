@@ -17,6 +17,8 @@ import java.util.Map;
 import com.couchbase.CouchbaseLiteServ.CouchbaseLiteServ;
 import com.couchbase.CouchbaseLiteServ.server.Args;
 import com.couchbase.lite.Authenticator;
+import com.couchbase.lite.Conflict;
+import com.couchbase.lite.ConflictResolver;
 import com.couchbase.lite.Database;
 import com.couchbase.lite.DatabaseEndpoint;
 import com.couchbase.lite.Document;
@@ -65,6 +67,7 @@ public class ReplicatorConfigurationRequestHandler {
         Boolean push_filter = args.get("push_filter");
         Boolean pull_filter = args.get("pull_filter");
         String filter_callback_func = args.get("filter_callback_func");
+        String conflict_resolver = args.get("conflict_resolver");
         // ConflictResolver conflictResolver = args.get("conflictResolver");
         Map<String, String> headers = args.get("headers");
 
@@ -153,6 +156,16 @@ public class ReplicatorConfigurationRequestHandler {
                     config.setPullFilter(new DefaultReplicatorFilterCallback());
                     break;
             }
+        }
+        switch (conflict_resolver) {
+            case "local_wins":
+                config.setConflictResolver(new LocalWinsCustomConflictResolver());
+                break;
+            case "remote_wins":
+                config.setConflictResolver(new RemoteWinsCustomConflictResolver());
+            default:
+                ConflictResolver cr = config.getConflictResolver();
+                break;
         }
         return config;
     }
@@ -326,5 +339,35 @@ class ReplicatorAccessRevokedFilterCallback implements ReplicationFilter {
         return !(flags.contains(DocumentFlag.DocumentFlagsAccessRemoved));
     }
 }
+
+class LocalWinsCustomConflictResolver implements ConflictResolver {
+    @Override
+    public Document resolve(Conflict conflict) {
+        Document localDoc = conflict.getLocalDocument();
+        Document remoteDoc = conflict.getRemoteDocument();
+        String docId = conflict.getDocumentId();
+        System.out.println("Local copy of doc with doc id - " + docId);
+        System.out.println(localDoc.toString());
+        System.out.println("Remote copy of doc with doc id - " + docId);
+        System.out.println(remoteDoc.toString());
+        return localDoc;
+    }
+}
+
+class RemoteWinsCustomConflictResolver implements ConflictResolver {
+    @Override
+    public Document resolve(Conflict conflict) {
+        Document localDoc = conflict.getLocalDocument();
+        Document remoteDoc = conflict.getRemoteDocument();
+        String docId = conflict.getDocumentId();
+        System.out.println("Local copy of doc with doc id - " + docId);
+        System.out.println(localDoc.toString());
+        System.out.println("Remote copy of doc with doc id - " + docId);
+        System.out.println(remoteDoc.toString());
+        return localDoc;
+    }
+}
+
+
 
 
