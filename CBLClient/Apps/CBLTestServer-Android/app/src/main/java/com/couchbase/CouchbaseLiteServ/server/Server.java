@@ -112,7 +112,6 @@ public class Server extends NanoHTTPD {
                 result = memory.copyFiles(args);
                 body = ValueSerializer.serialize(result, memory);
             } else {
-                Object requestHandler = null;
                 final String[] methodArgs = method.split("_");
                 String handlerType = methodArgs[0];
                 String method_to_call = methodArgs[1];

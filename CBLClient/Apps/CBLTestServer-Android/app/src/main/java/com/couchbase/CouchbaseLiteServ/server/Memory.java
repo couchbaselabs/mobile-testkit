@@ -55,7 +55,7 @@ public class Memory {
         if(src.isDirectory()){
 
             if(dest.exists()) {
-                FileUtils.deleteRecursive(dest);
+                deleteRecursive(dest);
             } else {
                 dest.mkdir();
                 System.out.println("Directory copied from "
@@ -91,6 +91,14 @@ public class Memory {
             System.out.println("File copied from " + src + " to " + dest);
 
         }
-        FileUtils.deleteRecursive(src);
+        deleteRecursive(src);
+    }
+
+    public static void deleteRecursive(File fileOrDirectory) {
+        if (fileOrDirectory.isDirectory())
+            for (File child : fileOrDirectory.listFiles())
+                deleteRecursive(child);
+
+        fileOrDirectory.delete();
     }
 }

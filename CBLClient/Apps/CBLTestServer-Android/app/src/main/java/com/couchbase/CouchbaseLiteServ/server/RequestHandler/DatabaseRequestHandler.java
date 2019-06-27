@@ -3,6 +3,7 @@ package com.couchbase.CouchbaseLiteServ.server.RequestHandler;
 import android.content.Context;
 import android.util.Log;
 
+import com.couchbase.CouchbaseLiteServ.CouchbaseLiteServ;
 import com.couchbase.CouchbaseLiteServ.server.Args;
 import com.couchbase.CouchbaseLiteServ.server.util.ZipUtils;
 import com.couchbase.lite.Blob;
@@ -46,8 +47,8 @@ public class DatabaseRequestHandler {
         String name = args.get("name");
         DatabaseConfiguration config = args.get("config");
         if (config == null) {
-            Context context = MainActivity.getAppContext();
-            config = new DatabaseConfiguration(context);
+            Context context = CouchbaseLiteServ.getAppContext();
+            config = new DatabaseConfiguration();
         }
         return new Database(name, config);
     }
@@ -343,7 +344,7 @@ public class DatabaseRequestHandler {
 
     public String getPreBuiltDb(Args args) throws IOException {
         String dbPath = args.get("dbPath");
-        Context context = MainActivity.getAppContext();
+        Context context = CouchbaseLiteServ.getAppContext();
         String dbFileName = new File(dbPath).getName();
         dbFileName = dbFileName.substring(0, dbFileName.lastIndexOf("."));
         ZipUtils.unzip(getAsset(dbPath), context.getFilesDir());
