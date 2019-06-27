@@ -10,8 +10,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.couchbase.CouchbaseLiteServ.MainActivity;
-import com.couchbase.CouchbaseLiteServ.server.Server;
-import com.couchbase.lite.internal.utils.FileUtils;
 
 public class Memory {
     private final Map<String, Object> _memory = new HashMap<>();

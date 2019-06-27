@@ -68,7 +68,6 @@ public class ReplicatorConfigurationRequestHandler {
         Boolean pull_filter = args.get("pull_filter");
         String filter_callback_func = args.get("filter_callback_func");
         String conflict_resolver = args.get("conflict_resolver");
-        // ConflictResolver conflictResolver = args.get("conflictResolver");
         Map<String, String> headers = args.get("headers");
 
         if (replicatorType == null) {
@@ -163,6 +162,13 @@ public class ReplicatorConfigurationRequestHandler {
                 break;
             case "remote_wins":
                 config.setConflictResolver(new RemoteWinsCustomConflictResolver());
+                break;
+            case "null":
+                config.setConflictResolver(new NullCustomConflictResolver());
+                break;
+            case "merge":
+                config.setConflictResolver(new MergeCustomConflictResolver());
+                break;
             default:
                 ConflictResolver cr = config.getConflictResolver();
                 break;
@@ -368,6 +374,24 @@ class RemoteWinsCustomConflictResolver implements ConflictResolver {
     }
 }
 
+class NullCustomConflictResolver implements ConflictResolver {
 
+    @Override
+    public Document resolve(Conflict conflict) {
+        Document localDoc = conflict.getLocalDocument();
+        Document remoteDoc = conflict.getRemoteDocument();
+        String docId = conflict.getDocumentId();
+        return null;
+    }
+}
 
+class MergeCustomConflictResolver implements ConflictResolver {
 
+    @Override
+    public Document resolve(Conflict conflict) {
+        Document localDoc = conflict.getLocalDocument();
+        Document remoteDoc = conflict.getRemoteDocument();
+        String docId = conflict.getDocumentId();
+        return null;
+    }
+}
