@@ -106,9 +106,9 @@
       <SubType>Designer</SubType>
     </AppxManifest>
     <None Include="TestServer.UWP_TemporaryKey.pfx" />
-    
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Assets\Files\golden_gate_large.jpg" />
     <Content Include="Properties\Default.rd.xml" />
     <Content Include="Assets\LockScreenLogo.scale-200.png" />
     <Content Include="Assets\SplashScreen.scale-200.png" />
@@ -161,12 +161,6 @@
       <Project>{ca1db44f-9a07-40c1-b305-f0b5d797ee6a}</Project>
       <Name>TestServer</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Assets\Files\" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Assets\Databases\travel-sample-1.4.cblite2\attachments\" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
