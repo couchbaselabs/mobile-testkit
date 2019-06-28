@@ -108,6 +108,9 @@
     <None Include="TestServer.UWP_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Assets\Databases\PrebuiltDB.cblite2\db.sqlite3" />
+    <Content Include="Assets\Databases\PrebuiltDB.cblite2\db.sqlite3-shm" />
+    <Content Include="Assets\Databases\PrebuiltDB.cblite2\db.sqlite3-wal" />
     <Content Include="Assets\Databases\PrebuiltDB-encrypted.cblite2\db.sqlite3" />
     <Content Include="Assets\Databases\PrebuiltDB-encrypted.cblite2\db.sqlite3-shm" />
     <Content Include="Assets\Databases\PrebuiltDB-encrypted.cblite2\db.sqlite3-wal" />
