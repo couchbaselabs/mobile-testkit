@@ -106,7 +106,7 @@
       <SubType>Designer</SubType>
     </AppxManifest>
     <None Include="TestServer.UWP_TemporaryKey.pfx" />
-    <None Include="Assets\Files\golden_gate_large.jpg" />
+    
   </ItemGroup>
   <ItemGroup>
     <Content Include="Properties\Default.rd.xml" />
