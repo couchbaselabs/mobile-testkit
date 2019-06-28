@@ -30,15 +30,15 @@ def test_local_win_custom_conflicts(params_from_base_test_setup, replicator_type
     sg_config  = params_from_base_test_setup["sg_config"]
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_blip_url = params_from_base_test_setup["target_url"]
-    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    liteserv_version = params_from_base_test_setup["liteserv_version"]
     base_url = params_from_base_test_setup["base_url"]
     num_of_docs = 10
     channels = ["ABC"]
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
 
-    if sync_gateway_version < "2.6.0":
-        pytest.skip('test does not work with sg < 2.6.0 , so skipping the test')
+    if liteserv_version < "2.6.0":
+        pytest.skip('test does not work with liteserv_version < 2.6.0 , so skipping the test')
 
     # Reset cluster to ensure no data in system
     c = Cluster(config=cluster_config)
@@ -47,6 +47,7 @@ def test_local_win_custom_conflicts(params_from_base_test_setup, replicator_type
     # Create bulk doc json
     db.create_bulk_docs(num_of_docs, "local_win_conflicts", db=cbl_db, channels=channels)
     sg_client = MobileRestClient()
+    log_info("Using SG ur: {}".format(sg_admin_url))
     sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
     cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest")
     session = cookie, session_id
