@@ -18,7 +18,7 @@ from datetime import datetime, timedelta
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("num_of_docs, num_of_updates, num_of_docs_to_update, num_of_docs_in_itr, num_of_doc_to_delete, num_of_docs_to_add, up_time, repl_status_check_sleep_time", [
-    (1000000, 100, 100, 1000, 1000, 2000, 4 * 24 * 60, 20),
+    (1000000, 100, 100, 1000, 1000, 2000, 7 * 24 * 60, 20),
     # (500, 5, 10, 50, 10, 10, 1 * 20, 2),
 ])
 def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_of_docs_to_update, num_of_docs_in_itr, num_of_doc_to_delete, num_of_docs_to_add, up_time, repl_status_check_sleep_time):
@@ -123,7 +123,7 @@ def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_o
             repl_obj = Replication(base_url)
             replicator_obj_list.append(repl_obj)
             authenticator = Authenticator(base_url)
-            cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+            cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, ttl=up_time * 1.5)
             replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
             session = cookie, session_id
             repl_config = repl_obj.configure(cbl_db, sg_blip_url, continuous=True, channels=channels_sg,

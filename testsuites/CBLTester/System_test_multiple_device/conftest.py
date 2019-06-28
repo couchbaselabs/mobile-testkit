@@ -302,7 +302,7 @@ def params_from_base_suite_setup(request):
             if enable_file_logging and version_list[0] >= "2.5.0":
                 cbllog = FileLogging(base_url)
                 cbllog.configure(log_level="verbose", max_rotate_count=2,
-                                 max_size=1000 * 512, plain_text=True)
+                                 max_size=1000 * 512 * 4, plain_text=True)
                 log_info("Log files available at - {}".format(cbllog.get_directory()))
             db_name = "{}-{}".format(create_db_per_suite, i + 1)
             log_info("db name for {} is {}".format(base_url, db_name))
