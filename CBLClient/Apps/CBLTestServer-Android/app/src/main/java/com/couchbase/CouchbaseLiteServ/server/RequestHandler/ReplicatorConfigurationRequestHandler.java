@@ -170,7 +170,7 @@ public class ReplicatorConfigurationRequestHandler {
                 config.setConflictResolver(new MergeCustomConflictResolver());
                 break;
             default:
-                ConflictResolver cr = config.getConflictResolver();
+                config.setConflictResolver(null);
                 break;
         }
         return config;
@@ -347,51 +347,89 @@ class ReplicatorAccessRevokedFilterCallback implements ReplicationFilter {
 }
 
 class LocalWinsCustomConflictResolver implements ConflictResolver {
+    private static final String TAG = "CCRREPLCONFIGHANDLER";
     @Override
     public Document resolve(Conflict conflict) {
         Document localDoc = conflict.getLocalDocument();
         Document remoteDoc = conflict.getRemoteDocument();
+        String localDocId = localDoc.getId();
+        String remoteDocId = remoteDoc.getId();
         String docId = conflict.getDocumentId();
-        System.out.println("Local copy of doc with doc id - " + docId);
-        System.out.println(localDoc.toString());
-        System.out.println("Remote copy of doc with doc id - " + docId);
-        System.out.println(remoteDoc.toString());
+        if (remoteDocId != localDocId) {
+            Log.e(TAG, "Remote docId and local docId are different");
+        }
+        if (remoteDocId != docId) {
+            Log.e(TAG, "Remote docId doesn't match with conflict docId");
+        }
+        if (docId != localDocId) {
+            Log.e(TAG, "Local docId doesn't match with conflict docId");
+        }
         return localDoc;
     }
 }
 
 class RemoteWinsCustomConflictResolver implements ConflictResolver {
+    private static final String TAG = "CCRREPLCONFIGHANDLER";
     @Override
     public Document resolve(Conflict conflict) {
         Document localDoc = conflict.getLocalDocument();
         Document remoteDoc = conflict.getRemoteDocument();
         String docId = conflict.getDocumentId();
-        System.out.println("Local copy of doc with doc id - " + docId);
-        System.out.println(localDoc.toString());
-        System.out.println("Remote copy of doc with doc id - " + docId);
-        System.out.println(remoteDoc.toString());
-        return localDoc;
+        String localDocId = localDoc.getId();
+        String remoteDocId = remoteDoc.getId();
+        if (remoteDocId != localDocId) {
+            Log.e(TAG, "Remote docId and local docId are different");
+        }
+        if (remoteDocId != docId) {
+            Log.e(TAG, "Remote docId doesn't match with conflict docId");
+        }
+        if (docId != localDocId) {
+            Log.e(TAG, "Local docId doesn't match with conflict docId");
+        }
+        return remoteDoc;
     }
 }
 
 class NullCustomConflictResolver implements ConflictResolver {
-
+    private static final String TAG = "CCRREPLCONFIGHANDLER";
     @Override
     public Document resolve(Conflict conflict) {
         Document localDoc = conflict.getLocalDocument();
         Document remoteDoc = conflict.getRemoteDocument();
         String docId = conflict.getDocumentId();
+        String remoteDocId = remoteDoc.getId();
+        String localDocId = localDoc.getId();
+        if (remoteDocId != localDocId) {
+            Log.e(TAG, "Remote docId and local docId are different");
+        }
+        if (remoteDocId != docId) {
+            Log.e(TAG, "Remote docId doesn't match with conflict docId");
+        }
+        if (docId != localDocId) {
+            Log.e(TAG, "Local docId doesn't match with conflict docId");
+        }
         return null;
     }
 }
 
 class MergeCustomConflictResolver implements ConflictResolver {
-
+    private static final String TAG = "CCRREPLCONFIGHANDLER";
     @Override
     public Document resolve(Conflict conflict) {
         Document localDoc = conflict.getLocalDocument();
         Document remoteDoc = conflict.getRemoteDocument();
         String docId = conflict.getDocumentId();
+        String remoteDocId = remoteDoc.getId();
+        String localDocId = localDoc.getId();
+        if (remoteDocId != localDocId) {
+            Log.e(TAG, "Remote docId and local docId are different");
+        }
+        if (remoteDocId != docId) {
+            Log.e(TAG, "Remote docId doesn't match with conflict docId");
+        }
+        if (docId != localDocId) {
+            Log.e(TAG, "Local docId doesn't match with conflict docId");
+        }
         return null;
     }
 }
