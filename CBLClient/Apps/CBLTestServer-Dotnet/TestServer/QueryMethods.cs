@@ -730,6 +730,36 @@ namespace Couchbase.Lite.Testing
 
         }
 
+        internal static void QueryAnyOperator([NotNull] NameValueCollection args,
+           [NotNull] IReadOnlyDictionary<string, object> postBody,
+           [NotNull] HttpListenerResponse response)
+        {
+            With<Database>(postBody, "database", db =>
+            {
+                var whr_prop = postBody["whr_prop"].ToString();
+                var whr_val = postBody["whr_val"].ToString();
+                var schedule = postBody["schedule"].ToString();
+                var departure = postBody["departure"].ToString();
+                var departure_prop = postBody["departure_prop"].ToString();
+                var departure_val = postBody["departure_val"].ToString();
+                IVariableExpression dep_schedule = ArrayExpression.Variable(departure);
+                IVariableExpression departure_utc = ArrayExpression.Variable(departure_prop);
+                List<Object> resultArray = new List<Object>();
+
+                using (IQuery query = QueryBuilder
+                        .Select(SelectResult.Expression(Meta.ID))
+                        .From(DataSource.Database(db))
+                        .Where(Expression.Property(whr_prop).EqualTo(Expression.Value(whr_val))
+                            .And(ArrayExpression.Any(dep_schedule).In(Expression.Property(schedule))
+                                .Satisfies(departure_utc.GreaterThan(Expression.Value(departure_val))))))
+                    foreach (Result row in query.Execute())
+                    {
+                        resultArray.Add(row.GetString("id"));
+                    }
+                response.WriteBody(resultArray);
+            });
+        }
+
         internal static void QueryNot([NotNull] NameValueCollection args,
            [NotNull] IReadOnlyDictionary<string, object> postBody,
            [NotNull] HttpListenerResponse response)

@@ -4,7 +4,6 @@
     "maxIncomingConnections": 0,
     "maxCouchbaseConnections": 16,
     "maxFileDescriptors": 90000,
-    "slowServerCallWarningThreshold": 500,
     "compressResponses": true,
     {{ sslcert }}
     {{ sslkey }}

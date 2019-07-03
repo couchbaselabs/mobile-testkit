@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import Foundation.NSFileManager
 
 // Return IP address of WiFi interface (en0) as a String, or `nil`
 func getWiFiAddress() -> String? {
@@ -72,4 +73,26 @@ public class Memory {
         _memory.removeAll()
         _address = 0
     }
+    
+    public func CopyFiles(args: Args) -> String{
+        let sourcePath: String = args.get(name: "source_path")!
+        let destinationPath: String = args.get(name: "destination_path")!
+        let filemanger = FileManager.default
+        let fileExist = filemanger.fileExists(atPath: destinationPath)
+        if (fileExist){
+            do {
+                try filemanger.removeItem(atPath: destinationPath)
+            } catch let error as NSError {
+                return ("Ooops! Something went wrong: \(error)")
+            }
+        }
+        do {
+            try filemanger.copyItem(atPath: sourcePath, toPath: destinationPath)
+            return "Copied"
+        } catch let error {
+            print("Error: \(error.localizedDescription)")
+            return error.localizedDescription
+        }
+    }
+
 }

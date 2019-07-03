@@ -108,6 +108,20 @@ def pytest_addoption(parser):
                      help="Number of replicas for the indexer node - SG 2.1 and above only",
                      default=0)
 
+    parser.addoption("--enable-encryption",
+                     action="store_true",
+                     help="Encryption will be enabled for CBL db",
+                     default=True)
+
+    parser.addoption("--encryption-password",
+                     action="store",
+                     help="Encryption will be enabled for CBL db",
+                     default="password")
+
+    parser.addoption("--delta-sync",
+                     action="store_true",
+                     help="delta-sync: Enable delta-sync for sync gateway")
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -137,6 +151,10 @@ def params_from_base_suite_setup(request):
     use_views = request.config.getoption("--use-views")
     number_replicas = request.config.getoption("--number-replicas")
     enable_file_logging = request.config.getoption("--enable-file-logging")
+    delta_sync_enabled = request.config.getoption("--delta-sync")
+
+    enable_encryption = request.config.getoption("--enable-encryption")
+    encryption_password = request.config.getoption("--encryption-password")
 
     testserver = TestServerFactory.create(platform=liteserv_platform,
                                           version_build=liteserv_version,
@@ -219,6 +237,13 @@ def params_from_base_suite_setup(request):
         # Disable sg views in cluster configs
         persist_cluster_config_environment_prop(cluster_config, 'sg_use_views', False)
 
+    if delta_sync_enabled:
+        log_info("Running with delta sync")
+        persist_cluster_config_environment_prop(cluster_config, 'delta_sync_enabled', True)
+    else:
+        log_info("Running without delta sync")
+        persist_cluster_config_environment_prop(cluster_config, 'delta_sync_enabled', False)
+
     # Write the number of replicas to cluster config
     persist_cluster_config_environment_prop(cluster_config, 'number_replicas', number_replicas)
 
@@ -269,7 +294,10 @@ def params_from_base_suite_setup(request):
         suite_db = Database(base_url)
 
         log_info("Creating a Database {} at the suite setup".format(suite_cbl_db))
-        db_config = suite_db.configure()
+        if enable_encryption:
+            db_config = suite_db.configure(password=encryption_password)
+        else:
+            db_config = suite_db.configure()
         suite_source_db = suite_db.create(suite_cbl_db, db_config)
         log_info("Getting the database name")
         db_name = suite_db.getName(suite_source_db)
@@ -340,7 +368,10 @@ def params_from_base_suite_setup(request):
         "device_enabled": device_enabled,
         "flush_memory_per_test": flush_memory_per_test,
         "sg_ssl": sg_ssl,
-        "enable_file_logging": enable_file_logging
+        "delta_sync_enabled": delta_sync_enabled,
+        "enable_file_logging": enable_file_logging,
+        "enable_encryption": enable_encryption,
+        "encryption_password": encryption_password
     }
     if create_db_per_suite:
         # Delete CBL database
@@ -387,6 +418,9 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     flush_memory_per_test = params_from_base_suite_setup["flush_memory_per_test"]
     sg_ssl = params_from_base_suite_setup["sg_ssl"]
     enable_file_logging = params_from_base_suite_setup["enable_file_logging"]
+    delta_sync_enabled = params_from_base_suite_setup["delta_sync_enabled"]
+    encryption_password = params_from_base_suite_setup["encryption_password"]
+    enable_encryption = params_from_base_suite_setup["enable_encryption"]
     source_db = None
     cbl_db = None
     db_config = None
@@ -425,7 +459,10 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         db = Database(base_url)
 
         log_info("Creating a Database {} at test setup".format(cbl_db))
-        db_config = db.configure()
+        if enable_encryption:
+            db_config = db.configure(password=encryption_password)
+        else:
+            db_config = db.configure()
         source_db = db.create(cbl_db, db_config)
         log_info("Getting the database name")
         db_name = db.getName(source_db)
@@ -458,7 +495,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "device_enabled": device_enabled,
         "testserver": testserver,
         "db_config": db_config,
-        "sg_ssl": sg_ssl
+        "sg_ssl": sg_ssl,
+        "delta_sync_enabled": delta_sync_enabled
     }
 
     log_info("Tearing down test")

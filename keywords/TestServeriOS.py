@@ -35,6 +35,8 @@ class TestServeriOS(TestServerBase):
             "2.1.0": 263,
             "2.1.1": 10,
             "2.1.2": 11,
+            "2.5.0": 272,
+            "2.5.2": 3
         }
 
         if self.version_build == "2.1.0":
@@ -99,7 +101,10 @@ class TestServeriOS(TestServerBase):
             else:
                 url = "{}/couchbase-lite-ios/{}/{}/{}".format(LATEST_BUILDS, self.version, self.build, self.package_name)
         else:
-            url = "{}/couchbase-lite-net/{}/{}/{}".format(LATEST_BUILDS, self.version, self.build, self.package_name)
+            if self.build is None:
+                url = "{}/couchbase-lite-net/{}/{}".format(RELEASED_BUILDS, self.version, self.package_name)
+            else:
+                url = "{}/couchbase-lite-net/{}/{}/{}".format(LATEST_BUILDS, self.version, self.build, self.package_name)
 
         log_info("Downloading {} -> {}/{}".format(url, BINARY_DIR, self.package_name))
         resp = requests.get(url, verify=False)

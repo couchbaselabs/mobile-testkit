@@ -1,5 +1,8 @@
 package com.couchbase.CouchbaseLiteServ.server.RequestHandler;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.couchbase.CouchbaseLiteServ.server.Args;
 import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.DocumentReplication;
@@ -11,8 +14,6 @@ import com.couchbase.lite.ReplicatorChange;
 import com.couchbase.lite.ReplicatorChangeListener;
 import com.couchbase.lite.ReplicatorConfiguration;
 
-import java.util.ArrayList;
-import java.util.List;
 
 public class ReplicatorRequestHandler {
     /* -------------- */
@@ -24,12 +25,12 @@ public class ReplicatorRequestHandler {
         return new Replicator(config);
     }
 
-    public ReplicatorConfiguration getConfig(Args args){
+    public ReplicatorConfiguration getConfig(Args args) {
         Replicator replicator = args.get("replicator");
         return replicator.getConfig();
     }
 
-    public String status(Args args){
+    public String status(Args args) {
         Replicator replicator = args.get("replicator");
         return replicator.getStatus().toString();
     }
@@ -39,20 +40,20 @@ public class ReplicatorRequestHandler {
         return replicator.getStatus().getActivityLevel().toString().toLowerCase();
     }
 
-    public ReplicatorChangeListener addChangeListener(Args args){
+    public ReplicatorChangeListener addChangeListener(Args args) {
         Replicator replicator = args.get("replicator");
         MyReplicatorListener changeListener = new MyReplicatorListener();
         replicator.addChangeListener(changeListener);
         return changeListener;
     }
 
-    public void removeChangeListener(Args args){
+    public void removeChangeListener(Args args) {
         Replicator replicator = args.get("replicator");
         MyReplicatorListener changeListener = args.get("changeListener");
         replicator.addChangeListener(changeListener);
     }
 
-    public MyDocumentReplicatorListener addReplicatorEventChangeListener(Args args){
+    public MyDocumentReplicatorListener addReplicatorEventChangeListener(Args args) {
         Replicator replicator = args.get("replicator");
         MyDocumentReplicatorListener changeListener = new MyDocumentReplicatorListener();
         ListenerToken token = replicator.addDocumentReplicationListener(changeListener);
@@ -60,7 +61,7 @@ public class ReplicatorRequestHandler {
         return changeListener;
     }
 
-    public void removeReplicatorEventListener(Args args){
+    public void removeReplicatorEventListener(Args args) {
         Replicator replicator = args.get("replicator");
         MyDocumentReplicatorListener changeListener = args.get("changeListener");
         replicator.removeChangeListener(changeListener.getToken());
@@ -71,53 +72,53 @@ public class ReplicatorRequestHandler {
         return changeListener.getChanges().size();
     }
 
-    public List<String> replicatorEventGetChanges(Args args){
+    public List<String> replicatorEventGetChanges(Args args) {
         MyDocumentReplicatorListener changeListener = args.get("changeListener");
         List<DocumentReplication> changes = changeListener.getChanges();
-        List <String> event_list = new ArrayList<>();
+        List<String> event_list = new ArrayList<>();
 
-        for (DocumentReplication change: changes) {
-            for (ReplicatedDocument document: change.getDocuments()){
+        for (DocumentReplication change : changes) {
+            for (ReplicatedDocument document : change.getDocuments()) {
                 String event = document.toString();
                 String doc_id = "doc_id: " + document.getID();
                 String error = ", error_code: ";
                 String error_domain = "0";
                 int error_code = 0;
 
-                if (document.getError() != null){
+                if (document.getError() != null) {
                     error_code = document.getError().getCode();
                     error_domain = document.getError().getDomain();
                 }
                 error = error + error_code + ", error_domain: " + error_domain;
-                String flags = ", flags: " + document.flags().toString();
-                String push = ", push: " + Boolean.toString(change.isPush());
+                String flags = ", flags: " + document.flags();
+                String push = ", push: " + change.isPush();
                 event_list.add(doc_id + error + push + flags);
             }
         }
         return event_list;
     }
 
-    public String toString(Args args){
+    public String toString(Args args) {
         Replicator replicator = args.get("replicator");
         return replicator.toString();
     }
 
-    public void start(Args args){
+    public void start(Args args) {
         Replicator replicator = args.get("replicator");
         replicator.start();
     }
 
-    public void stop(Args args){
+    public void stop(Args args) {
         Replicator replicator = args.get("replicator");
         replicator.stop();
     }
 
-    public Replicator changeGetReplicator(Args args){
+    public Replicator changeGetReplicator(Args args) {
         ReplicatorChange change = args.get("change");
         return change.getReplicator();
     }
 
-    public Replicator.Status changeGetStatus(Args args){
+    public Replicator.Status changeGetStatus(Args args) {
         ReplicatorChange change = args.get("change");
         return change.getStatus();
     }
@@ -161,7 +162,7 @@ public class ReplicatorRequestHandler {
         return null;
     }
 
-    public Boolean isContinous(Args args) {
+    public Boolean isContinuous(Args args) {
         ReplicatorConfiguration config = args.get("config");
         return config.isContinuous();
     }
@@ -173,26 +174,28 @@ public class ReplicatorRequestHandler {
 
 }
 
-class MyReplicatorListener implements ReplicatorChangeListener{
-    private List<ReplicatorChange> changes = new ArrayList<>();
-    public List<ReplicatorChange> getChanges(){
+class MyReplicatorListener implements ReplicatorChangeListener {
+    private final List<ReplicatorChange> changes = new ArrayList<>();
+
+    public List<ReplicatorChange> getChanges() {
         return changes;
     }
+
     @Override
     public void changed(ReplicatorChange change) {
         changes.add(change);
     }
 }
 
-class MyDocumentReplicatorListener implements DocumentReplicationListener{
-    private List<DocumentReplication> changes = new ArrayList<>();
+class MyDocumentReplicatorListener implements DocumentReplicationListener {
+    private final List<DocumentReplication> changes = new ArrayList<>();
     private ListenerToken token;
 
-    public List<DocumentReplication> getChanges(){
+    public List<DocumentReplication> getChanges() {
         return changes;
     }
 
-    public void setToken(ListenerToken token){
+    public void setToken(ListenerToken token) {
         this.token = token;
     }
 

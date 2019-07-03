@@ -16,10 +16,7 @@ package com.couchbase.CouchbaseLiteServ.server.RequestHandler;
 // limitations under the License.
 //
 
-import com.couchbase.lite.Database;
-import com.couchbase.lite.MessageEndpointListener;
-import com.couchbase.lite.MessageEndpointListenerConfiguration;
-import com.couchbase.lite.ProtocolType;
+import android.util.Log;
 
 import java.io.IOException;
 import java.net.Inet4Address;
@@ -31,81 +28,85 @@ import java.net.SocketException;
 import java.util.Collections;
 import java.util.List;
 
+import com.couchbase.lite.Database;
+import com.couchbase.lite.MessageEndpointListener;
+import com.couchbase.lite.MessageEndpointListenerConfiguration;
+import com.couchbase.lite.ProtocolType;
+
+
 // WebSocket based listener
 public final class ReplicatorTcpListener {
-  private int PORT = 5000;
-  private ServerSocket server;
-  private MessageEndpointListener endpointListener;
-  private Thread loopThread;
-  private Database database;
+    private static final String TAG = "TCPLISTENER";
 
-  public ReplicatorTcpListener(Database database, int port) {
-    this.database = database;
-    MessageEndpointListenerConfiguration config =
-        new MessageEndpointListenerConfiguration(database, ProtocolType.BYTE_STREAM);
-    this.endpointListener = new MessageEndpointListener(config);
-    this.PORT = port;
-  }
+    private final int port;
+    private ServerSocket server;
+    private final MessageEndpointListener endpointListener;
+    private Thread loopThread;
+    private final Database database;
 
-  public synchronized void start() throws IOException {
-    if (server != null)
-      return;
-
-    server = new ServerSocket(PORT);
-    loopThread = new Thread(new Runnable() {
-      @Override
-      public void run() {
-        acceptLoop();
-      }
-    });
-    loopThread.start();
-  }
-
-  public synchronized void stop() {
-    if (server == null)
-      return;
-
-    try {
-      endpointListener.closeAll();
-      server.close();
-      server = null;
-    } catch (IOException e) {
-      e.printStackTrace();
+    public ReplicatorTcpListener(Database database, int port) {
+        this.database = database;
+        MessageEndpointListenerConfiguration config =
+            new MessageEndpointListenerConfiguration(database, ProtocolType.BYTE_STREAM);
+        this.endpointListener = new MessageEndpointListener(config);
+        this.port = port;
     }
-  }
 
-  public String getURL() {
-    try {
-      List<NetworkInterface> interfaces = Collections.list(NetworkInterface.getNetworkInterfaces());
-      for (NetworkInterface i : interfaces) {
-        List<InetAddress> addresses = Collections.list(i.getInetAddresses());
-        for (InetAddress a : addresses) {
-          if (!a.isLoopbackAddress() && a instanceof Inet4Address) {
-            return "ws://" + a.getHostAddress().toUpperCase() +
-                ":" + PORT + "/" + this.database.getName();
-          }
+    public synchronized void start() throws IOException {
+        if (server != null) { return; }
+
+        server = new ServerSocket(port);
+        loopThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                acceptLoop();
+            }
+        });
+        loopThread.start();
+    }
+
+    public synchronized void stop() {
+        if (server == null) { return; }
+
+        try {
+            endpointListener.closeAll();
+            server.close();
+            server = null;
         }
-      }
-    } catch (SocketException e) {
-      e.printStackTrace();
+        catch (IOException e) {
+            Log.e(TAG, "Failed closing listener", e);
+        }
     }
-    return null;
-  }
 
-  private void acceptLoop() {
-    while(true) {
-      if (server == null)
-        break;
-
-      Socket socket = null;
-      try {
-        socket = server.accept();
-        ReplicatorTcpServerConnection connection =
-            new ReplicatorTcpServerConnection(socket);
-        endpointListener.accept(connection);
-      } catch (IOException e) {
-
-      }
+    public String getURL() {
+        try {
+            List<NetworkInterface> interfaces = Collections.list(NetworkInterface.getNetworkInterfaces());
+            for (NetworkInterface i : interfaces) {
+                List<InetAddress> addresses = Collections.list(i.getInetAddresses());
+                for (InetAddress a : addresses) {
+                    if (!a.isLoopbackAddress() && a instanceof Inet4Address) {
+                        return "ws://" + a.getHostAddress().toUpperCase() +
+                            ":" + port + "/" + this.database.getName();
+                    }
+                }
+            }
+        }
+        catch (SocketException e) {
+            Log.e(TAG, "Failed getting socket address", e);
+        }
+        return null;
     }
-  }
+
+    private void acceptLoop() {
+        while (server != null) {
+            Socket socket;
+            try {
+                socket = server.accept();
+                ReplicatorTcpServerConnection connection =
+                    new ReplicatorTcpServerConnection(socket);
+                endpointListener.accept(connection);
+            }
+            catch (IOException ignore) { }
+        }
+    }
 }

@@ -1,82 +1,76 @@
 package com.couchbase.CouchbaseLiteServ.server.RequestHandler;
 
-
-import com.couchbase.CouchbaseLiteServ.server.Args;
-import com.couchbase.lite.Blob;
-import com.couchbase.litecore.fleece.FLEncoder;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Map;
 
+import com.couchbase.CouchbaseLiteServ.server.Args;
+import com.couchbase.lite.Blob;
+
+
 public class BlobRequestHandler {
 
     public Blob create(Args args) throws IOException {
         String contentType = args.get("contentType");
+
         byte[] content = args.get("content");
+        if (content != null) { return new Blob(contentType, content); }
+
         InputStream stream = args.get("stream");
+        if (stream != null) { return new Blob(contentType, stream); }
+
         URL fileURL = args.get("fileURL");
-        if (!contentType.isEmpty()){
-            return new Blob(contentType, content);
-        } else if (stream != null){
-            return new Blob(contentType, stream);
-        } else if (fileURL != null){
-            return new Blob(contentType, fileURL);
-        }else {
-            throw new IOException("Incorrect parameters provided");
-        }
+        if (fileURL != null) { return new Blob(contentType, fileURL); }
+
+        throw new IOException("Incorrect parameters provided");
     }
 
-    public String digest(Args args){
-        Blob blob = args.get("blob");
-        return blob.digest();
+    public InputStream createImageContent(Args args) throws IOException {
+        return getAsset(args.get("image"));
     }
 
-    public void encodeTo(Args args){
-        Blob blob = args.get("blob");
-        FLEncoder encoder = args.get("encoder");
-        blob.encodeTo(encoder);
+    private InputStream getAsset(String name) {
+        return getClass().getResourceAsStream(name);
     }
 
-    public Boolean equals(Args args){
-        Blob blob = args.get("blob");
-        Object obj = args.get("obj");
-        return blob.equals(obj);
+    public String digest(Args args) {
+        return ((Blob) args.get("blob")).digest();
     }
 
-    public int hashCode(Args args){
-        Blob blob = args.get("blob");
-        return blob.hashCode();
+    public void encodeTo(Args args) {
+        ((Blob) args.get("blob")).encodeTo(args.get("encoder"));
     }
 
-    public byte[] getContent(Args args){
-        Blob blob = args.get("blob");
-        return blob.getContent();
+    public Boolean equals(Args args) {
+        return args.get("blob").equals(args.get("obj"));
     }
 
-    public Map<String, Object> getProperties(Args args){
-        Blob blob = args.get("blob");
-        return blob.getProperties();
+    public int hashCode(Args args) {
+        return ((Blob) args.get("blob")).hashCode();
     }
 
-    public InputStream getContentStream(Args args){
-        Blob blob = args.get("blob");
-        return blob.getContentStream();
+    public byte[] getContent(Args args) {
+        return ((Blob) args.get("blob")).getContent();
     }
 
-    public String getContentType(Args args){
-        Blob blob = args.get("blob");
-        return blob.getContentType();
+    public Map<String, Object> getProperties(Args args) {
+        return ((Blob) args.get("blob")).getProperties();
     }
 
-    public long length(Args args){
-        Blob blob = args.get("blob");
-        return blob.length();
+    public InputStream getContentStream(Args args) {
+        return ((Blob) args.get("blob")).getContentStream();
     }
 
-    public String toString(Args args){
-        Blob blob = args.get("blob");
-        return blob.toString();
+    public String getContentType(Args args) {
+        return ((Blob) args.get("blob")).getContentType();
+    }
+
+    public long length(Args args) {
+        return ((Blob) args.get("blob")).length();
+    }
+
+    public String toString(Args args) {
+        return args.get("blob").toString();
     }
 }

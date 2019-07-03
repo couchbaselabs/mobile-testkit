@@ -1,22 +1,22 @@
 package com.couchbase.CouchbaseLiteServ.server.RequestHandler;
 
 import android.content.Context;
+import android.util.Log;
 
-import com.couchbase.CouchbaseLiteServ.MainActivity;
+import com.couchbase.CouchbaseLiteServ.CouchbaseLiteServ;
 import com.couchbase.CouchbaseLiteServ.server.Args;
 import com.couchbase.lite.Database;
-import com.couchbase.lite.Log;
 import com.couchbase.lite.LogFileConfiguration;
 import com.couchbase.lite.LogLevel;
 
-import java.io.File;
 
 public class LoggingRequestHandler {
+    private static final String TAG = "LOGREQHANDLER";
     /* ----------- */
     /* - Logging - */
     /* ----------- */
 
-    public LogFileConfiguration configure(Args args){
+    public LogFileConfiguration configure(Args args) {
         String log_level = args.get("log_level");
         String directory = args.get("directory");
         int maxRotateCount = args.get("max_rotate_count");
@@ -24,11 +24,11 @@ public class LoggingRequestHandler {
         boolean plainText = args.get("plain_text");
 
         if (directory.isEmpty()) {
-            Context context = MainActivity.getAppContext();
-            long ts = System.currentTimeMillis()/1000;
-            directory = context.getFilesDir().getAbsolutePath() + "/logs_" + ts ;
+            Context context = CouchbaseLiteServ.getAppContext();
+            long ts = System.currentTimeMillis() / 1000;
+            directory = context.getFilesDir().getAbsolutePath() + "/logs_" + ts;
 
-            System.out.println("File logging configured at: " + directory.toString());
+            Log.i(TAG, "File logging configured at: " + directory);
         }
         LogFileConfiguration config = new LogFileConfiguration(directory);
         if (maxRotateCount > 1) {
@@ -90,31 +90,31 @@ public class LoggingRequestHandler {
         LogFileConfiguration config = args.get("config");
         Boolean plain_text = args.get("plain_text");
         config.setUsePlaintext(plain_text);
-        return  config;
+        return config;
     }
 
     public LogFileConfiguration setMaxRotateCount(Args args) {
         LogFileConfiguration config = args.get("config");
         int max_rotate_count = args.get("max_rotate_count");
         config.setMaxRotateCount(max_rotate_count);
-        return  config;
+        return config;
     }
 
     public LogFileConfiguration setMaxSize(Args args) {
         LogFileConfiguration config = args.get("config");
         long max_size = args.get("max_size");
         config.setMaxSize(max_size);
-        return  config;
+        return config;
     }
 
     public LogFileConfiguration setConfig(Args args) {
         String directory = args.get("directory");
         if (directory.isEmpty()) {
-            Context context = MainActivity.getAppContext();
-            long ts = System.currentTimeMillis()/1000;
-            directory = context.getFilesDir().getAbsolutePath() + "/logs_" + ts ;
+            Context context = CouchbaseLiteServ.getAppContext();
+            long ts = System.currentTimeMillis() / 1000;
+            directory = context.getFilesDir().getAbsolutePath() + "/logs_" + ts;
 
-            System.out.println("File logging configured at: " + directory.toString());
+            Log.i(TAG, "File logging configured at: " + directory);
         }
         LogFileConfiguration config = new LogFileConfiguration(directory);
         Database.log.getFile().setConfig(config);
@@ -144,7 +144,7 @@ public class LoggingRequestHandler {
                 Database.log.getFile().setLevel(LogLevel.NONE);
                 break;
         }
-        return  config;
+        return config;
     }
 
 }
