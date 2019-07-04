@@ -30,9 +30,6 @@ from CBLClient.Utils import Utils
 
 from utilities.cluster_config_utils import get_load_balancer_ip
 from CBLClient.ReplicatorConfiguration import ReplicatorConfiguration
-# from libraries.testkit import cluster
-
-# from libraries.testkit.cluster import Cluster
 from couchbase.bucket import Bucket
 from couchbase.n1ql import N1QLQuery
 

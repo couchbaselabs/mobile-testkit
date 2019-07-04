@@ -57,6 +57,7 @@ public class ReplicatorConfigurationRequestHandler {
             let pull_filter: Bool? = args.get(name: "pull_filter")!
             let push_filter: Bool? = args.get(name: "push_filter")!
             let filter_callback_func: String? = args.get(name: "filter_callback_func")
+            let conflict_resolver: String? = args.get(name: "conflict_resolver")
             
             var replicatorType = ReplicatorType.pushAndPull
             
@@ -146,6 +147,23 @@ public class ReplicatorConfigurationRequestHandler {
                 } else {
                     config.pushFilter = _defaultReplicatorFilterCallback;
                 }
+            }
+            switch conflict_resolver {
+                case "local_wins":
+                    config.conflictResolver = _localWinCustomConflictResolver;
+                    break
+                case "remote_wins":
+                    config.conflictResolver = _remoteWinCustomConflictResolver;
+                    break;
+                case "null":
+                    config.conflictResolver = _nullWinCustomConflictResolver;
+                    break;
+                case "merge":
+                    config.conflictResolver = _mergeWinCustomConflictResolver;
+                    break;
+                default:
+                    config.conflictResolver = ConflictResolver.default
+                    break;
             }
             return config
         
@@ -254,5 +272,84 @@ public class ReplicatorConfigurationRequestHandler {
             return false
         }
         return true
+    }
+    
+    private func _localWinCustomConflictResolver(conflict: Conflict) -> Document {
+        let localDoc = conflict.localDocument!
+        let remoteDoc = conflict.remoteDocument!
+        let docId = conflict.documentID
+        let remoteDocId = remoteDoc.id
+        let localDocId = localDoc.id
+        if remoteDocId != localDocId {
+            print("Remote docId and local docId are different")
+        }
+        if remoteDocId != docId {
+            print("Remote docId doesn't match with conflict docId")
+        }
+        if localDocId != docId {
+            print("Local docId doesn't match with conflict docId")
+        }
+        return localDoc
+    }
+    
+    private func _remoteWinCustomConflictResolver(conflict: Conflict) -> Document {
+        let localDoc = conflict.localDocument!
+        let remoteDoc = conflict.remoteDocument!
+        let docId = conflict.documentID
+        let remoteDocId = remoteDoc.id
+        let localDocId = localDoc.id
+        if remoteDocId != localDocId {
+            print("Remote docId and local docId are different")
+        }
+        if remoteDocId != docId {
+            print("Remote docId doesn't match with conflict docId")
+        }
+        if localDocId != docId {
+            print("Local docId doesn't match with conflict docId")
+        }
+        return remoteDoc
+    }
+    
+    private func _nullWinCustomConflictResolver(conflict: Conflict) -> Document {
+        let localDoc = conflict.localDocument!
+        let remoteDoc = conflict.remoteDocument!
+        let docId = conflict.documentID
+        let remoteDocId = remoteDoc.id
+        let localDocId = localDoc.id
+        if remoteDocId != localDocId {
+            print("Remote docId and local docId are different")
+        }
+        if remoteDocId != docId {
+            print("Remote docId doesn't match with conflict docId")
+        }
+        if localDocId != docId {
+            print("Local docId doesn't match with conflict docId")
+        }
+        return nil
+    }
+    
+    private func _mergeWinCustomConflictResolver(conflict: Conflict) -> Document {
+        let localDoc = conflict.localDocument!
+        let remoteDoc = conflict.remoteDocument!
+        let docId = conflict.documentID
+        let remoteDocId = remoteDoc.id
+        let localDocId = localDoc.id
+        if remoteDocId != localDocId {
+            print("Remote docId and local docId are different")
+        }
+        if remoteDocId != docId {
+            print("Remote docId doesn't match with conflict docId")
+        }
+        if localDocId != docId {
+            print("Local docId doesn't match with conflict docId")
+        }
+        let newDoc = localDoc.toMutable()
+        let remoteDocMap = remoteDoc.toDictionary()
+        for (key, value) in remoteDocMap {
+            if !newDoc.contains(key) {
+                newDoc.setValue(value, forKey: key)
+            }
+        }
+        return localDoc
     }
 }

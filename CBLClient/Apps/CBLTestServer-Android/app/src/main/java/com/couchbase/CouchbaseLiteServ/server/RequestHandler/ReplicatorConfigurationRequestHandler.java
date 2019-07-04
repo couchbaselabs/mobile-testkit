@@ -23,6 +23,7 @@ import com.couchbase.lite.Database;
 import com.couchbase.lite.DatabaseEndpoint;
 import com.couchbase.lite.Document;
 import com.couchbase.lite.DocumentFlag;
+import com.couchbase.lite.MutableDocument;
 import com.couchbase.lite.ReplicationFilter;
 import com.couchbase.lite.ReplicatorConfiguration;
 import com.couchbase.lite.URLEndpoint;
@@ -170,7 +171,7 @@ public class ReplicatorConfigurationRequestHandler {
                 config.setConflictResolver(new MergeCustomConflictResolver());
                 break;
             default:
-                config.setConflictResolver(null);
+                config.setConflictResolver(ConflictResolver.DEFAULT);
                 break;
         }
         return config;
@@ -430,6 +431,15 @@ class MergeCustomConflictResolver implements ConflictResolver {
         if (docId != localDocId) {
             Log.e(TAG, "Local docId doesn't match with conflict docId");
         }
-        return null;
+        MutableDocument newDoc = localDoc.toMutable();
+        Map<String, Object> remoteDocMap = remoteDoc.toMap();
+        for (Map.Entry<String, Object> entry : remoteDocMap.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+            if (!newDoc.contains(key)) {
+                newDoc.setValue(key, value);
+            }
+        }
+        return newDoc;
     }
 }
