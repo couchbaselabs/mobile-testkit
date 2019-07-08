@@ -158,43 +158,58 @@ namespace Couchbase.Lite.Testing
                 }
                 if (postBody["push_filter"].Equals(true))
                 {
-                    if (filter_callback_func == "boolean")
+                    switch (filter_callback_func)
                     {
-                        config.PushFilter = _replicator_boolean_filter_callback;
-                    }
-                    else if (filter_callback_func == "deleted")
-                    {
-                        config.PushFilter = _replicator_deleted_filter_callback;
-                    }
-                    else if (filter_callback_func == "access_revoked")
-                    {
-                        config.PushFilter = _replicator_access_revoked_filter_callback;
-                    }
-                    else
-                    {
-                        config.PushFilter = _default_replicator_filter_callback;
+                        case "boolean":
+                            config.PushFilter = _replicator_boolean_filter_callback;
+                            break;
+                        case "deleted":
+                            config.PushFilter = _replicator_deleted_filter_callback;
+                            break;
+                        case "access_revoked":
+                            config.PushFilter = _replicator_access_revoked_filter_callback;
+                            break;
+                        default:
+                            config.PushFilter = _default_replicator_filter_callback;
+                            break;
                     }
                 }
 
                 if (postBody["pull_filter"].Equals(true))
                 {
-                    if (filter_callback_func == "boolean")
+                    switch (filter_callback_func)
                     {
-                        config.PullFilter = _replicator_boolean_filter_callback;
+                        case "boolean":
+                            config.PullFilter = _replicator_boolean_filter_callback;
+                            break;
+                        case "deleted":
+                            config.PullFilter = _replicator_deleted_filter_callback;
+                            break;
+                        case "access_revoked":
+                            config.PullFilter = _replicator_access_revoked_filter_callback;
+                            break;
+                        default:
+                            config.PullFilter = _default_replicator_filter_callback;
+                            break;
                     }
-                    else if (filter_callback_func == "deleted")
-                    {
-                        config.PullFilter = _replicator_deleted_filter_callback;
-                    }
-                    else if (filter_callback_func == "access_revoked")
-                    {
-                        config.PullFilter = _replicator_access_revoked_filter_callback;
-                    }
-                    else
-                    {
-                        config.PullFilter = _default_replicator_filter_callback;
-                    }
-                    
+                }
+                switch (postBody["conflict_resolver"].ToString())
+                {
+                    case "local_wins":
+                        config.ConflictResolver = new LocalWinsCustomConflictResolver();
+                        break;
+                    case "remote_wins":
+                        config.ConflictResolver = new RemoteWinsCustomConflictResolver();
+                        break;
+                    case "null":
+                        config.ConflictResolver = new NullCustomConflictResolver();
+                        break;
+                    case "merge":
+                        config.ConflictResolver = new MergeCustomConflictResolver();
+                        break;
+                    default:
+                        config.ConflictResolver = ConflictResolver.Default;
+                        break;
                 }
                 response.WriteBody(MemoryMap.Store(config));
             });
@@ -370,6 +385,121 @@ namespace Couchbase.Lite.Testing
             {
                 repConf.PinnedServerCertificate = null;
             });
+        }
+    }
+
+    internal sealed class LocalWinsCustomConflictResolver : IConflictResolver
+    {
+        Document IConflictResolver.Resolve(Conflict conflict)
+        {
+            Document localDoc = conflict.LocalDocument;
+            Document remoteDoc = conflict.RemoteDocument;
+            string docId = conflict.DocumentID;
+            string localDocId = localDoc.Id;
+            string remoteDocId = remoteDoc.Id;
+            if (!localDocId.Equals(remoteDocId))
+            {
+                Console.WriteLine("Remote docId and local docId are different");
+            }
+            if (!docId.Equals(remoteDocId))
+            {
+                Console.WriteLine("Remote docId doesn't match with conflict docId");
+            }
+            if (!docId.Equals(localDocId))
+            {
+                Console.WriteLine("Local docId doesn't match with conflict docId");
+            }
+            return localDoc;
+            
+        }
+    }
+
+    internal sealed class RemoteWinsCustomConflictResolver : IConflictResolver
+    {
+        Document IConflictResolver.Resolve(Conflict conflict)
+        {
+            Document localDoc = conflict.LocalDocument;
+            Document remoteDoc = conflict.RemoteDocument;
+            string docId = conflict.DocumentID;
+            string localDocId = localDoc.Id;
+            string remoteDocId = remoteDoc.Id;
+            if (!localDocId.Equals(remoteDocId))
+            {
+                Console.WriteLine("Remote docId and local docId are different");
+            }
+            if (!docId.Equals(remoteDocId))
+            {
+                Console.WriteLine("Remote docId doesn't match with conflict docId");
+            }
+            if (!docId.Equals(localDocId))
+            {
+                Console.WriteLine("Local docId doesn't match with conflict docId");
+            }
+            return remoteDoc;
+
+        }
+    }
+
+    internal sealed class NullCustomConflictResolver : IConflictResolver
+    {
+        Document IConflictResolver.Resolve(Conflict conflict)
+        {
+            Document localDoc = conflict.LocalDocument;
+            Document remoteDoc = conflict.RemoteDocument;
+            string docId = conflict.DocumentID;
+            string localDocId = localDoc.Id;
+            string remoteDocId = remoteDoc.Id;
+            if (!localDocId.Equals(remoteDocId))
+            {
+                Console.WriteLine("Remote docId and local docId are different");
+            }
+            if (!docId.Equals(remoteDocId))
+            {
+                Console.WriteLine("Remote docId doesn't match with conflict docId");
+            }
+            if (!docId.Equals(localDocId))
+            {
+                Console.WriteLine("Local docId doesn't match with conflict docId");
+            }
+            return null;
+
+        }
+    }
+
+    internal sealed class MergeCustomConflictResolver : IConflictResolver
+    {
+        Document IConflictResolver.Resolve(Conflict conflict)
+        {
+            Document localDoc = conflict.LocalDocument;
+            Document remoteDoc = conflict.RemoteDocument;
+            string docId = conflict.DocumentID;
+            string localDocId = localDoc.Id;
+            string remoteDocId = remoteDoc.Id;
+            if (!localDocId.Equals(remoteDocId))
+            {
+                Console.WriteLine("Remote docId and local docId are different");
+            }
+            if (!docId.Equals(remoteDocId))
+            {
+                Console.WriteLine("Remote docId doesn't match with conflict docId");
+            }
+            if (!docId.Equals(localDocId))
+            {
+                Console.WriteLine("Local docId doesn't match with conflict docId");
+            }
+            MutableDocument newDoc = localDoc.ToMutable();
+            Dictionary<string, object> remoteDocMap = remoteDoc.ToDictionary();
+            foreach (KeyValuePair<string, Object> entry in remoteDocMap)
+            {
+                string key = entry.Key;
+                Object value = entry.Value;
+                if (!newDoc.Contains(key))
+                {
+                    newDoc.SetValue(key, value);
+                }
+            }
+            return newDoc;
+
         }
     }
 }

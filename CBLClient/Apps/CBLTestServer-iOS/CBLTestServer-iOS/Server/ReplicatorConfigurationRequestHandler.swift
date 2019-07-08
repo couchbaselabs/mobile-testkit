@@ -150,16 +150,16 @@ public class ReplicatorConfigurationRequestHandler {
             }
             switch conflict_resolver {
                 case "local_wins":
-                    config.conflictResolver = _localWinCustomConflictResolver;
+                    config.conflictResolver = LocalWinCustomConflictResolver();
                     break
                 case "remote_wins":
-                    config.conflictResolver = _remoteWinCustomConflictResolver;
+                    config.conflictResolver = RemoteWinCustomConflictResolver();
                     break;
                 case "null":
-                    config.conflictResolver = _nullWinCustomConflictResolver;
+                    config.conflictResolver = NullWinCustomConflictResolver();
                     break;
                 case "merge":
-                    config.conflictResolver = _mergeWinCustomConflictResolver;
+                    config.conflictResolver = MergeWinCustomConflictResolver();
                     break;
                 default:
                     config.conflictResolver = ConflictResolver.default
@@ -273,8 +273,10 @@ public class ReplicatorConfigurationRequestHandler {
         }
         return true
     }
-    
-    private func _localWinCustomConflictResolver(conflict: Conflict) -> Document {
+}
+
+private class LocalWinCustomConflictResolver: ConflictResolverProtocol {
+    func resolve(conflict: Conflict) -> Document? {
         let localDoc = conflict.localDocument!
         let remoteDoc = conflict.remoteDocument!
         let docId = conflict.documentID
@@ -291,8 +293,10 @@ public class ReplicatorConfigurationRequestHandler {
         }
         return localDoc
     }
-    
-    private func _remoteWinCustomConflictResolver(conflict: Conflict) -> Document {
+}
+
+private class RemoteWinCustomConflictResolver: ConflictResolverProtocol{
+    func resolve(conflict: Conflict) -> Document? {
         let localDoc = conflict.localDocument!
         let remoteDoc = conflict.remoteDocument!
         let docId = conflict.documentID
@@ -309,8 +313,10 @@ public class ReplicatorConfigurationRequestHandler {
         }
         return remoteDoc
     }
-    
-    private func _nullWinCustomConflictResolver(conflict: Conflict) -> Document {
+}
+
+private class NullWinCustomConflictResolver: ConflictResolverProtocol{
+    func resolve(conflict: Conflict) -> Document? {
         let localDoc = conflict.localDocument!
         let remoteDoc = conflict.remoteDocument!
         let docId = conflict.documentID
@@ -327,8 +333,10 @@ public class ReplicatorConfigurationRequestHandler {
         }
         return nil
     }
-    
-    private func _mergeWinCustomConflictResolver(conflict: Conflict) -> Document {
+}
+
+private class MergeWinCustomConflictResolver: ConflictResolverProtocol{
+    func resolve(conflict: Conflict) -> Document? {
         let localDoc = conflict.localDocument!
         let remoteDoc = conflict.remoteDocument!
         let docId = conflict.documentID
@@ -350,6 +358,6 @@ public class ReplicatorConfigurationRequestHandler {
                 newDoc.setValue(value, forKey: key)
             }
         }
-        return localDoc
+        return newDoc
     }
 }

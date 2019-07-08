@@ -149,7 +149,7 @@ namespace Couchbase.Lite.Testing
                     db.ChangeEncryptionKey(null);
                 else
                 {
-                    var encryptionKey = new EncryptionKey(password); ;
+                    var encryptionKey = new EncryptionKey(password);
                     db.ChangeEncryptionKey(encryptionKey);
                 }
             });
@@ -287,7 +287,7 @@ namespace Couchbase.Lite.Testing
             var ids = ((List<object>)postBody["ids"]).OfType<string>();
             With<Database>(postBody, "database", db =>
             {
-                var retVal = new Dictionary<string, object>();
+                var documents = new Dictionary<string, object>();
                 using (var query = Query.QueryBuilder
                        .Select(SelectResult.Expression(Meta.ID))
                     .From(DataSource.Database(db)))
@@ -295,11 +295,12 @@ namespace Couchbase.Lite.Testing
                     var result = query.Execute();
                     foreach (var id in ids)
                     {
-                        using (var doc = db.GetDocument(id))
+                        Document document = db.GetDocument(id);
+                        if (document != null)
                         {
-                            var preRetVal = doc.ToDictionary();
+                            var doc = document.ToDictionary();
 
-                            foreach(KeyValuePair<String, object> item in doc)
+                            foreach(KeyValuePair<String, object> item in document)
                             {
                                 Dictionary<string, object> updatedValue = new Dictionary<string, object>();
                                 bool isBlob = false;
@@ -307,7 +308,7 @@ namespace Couchbase.Lite.Testing
                                 {
                                     foreach(KeyValuePair<String, object> innerVal in (Couchbase.Lite.DictionaryObject)item.Value)
                                     {
-                                        if(innerVal.Value != null && innerVal.Value.GetType() == typeof(Blob))
+                                        if(innerVal.Value != null && innerVal.Value is Blob)
                                         {
                                             isBlob = true;
                                             Blob blob = (Blob)innerVal.Value;
@@ -321,15 +322,15 @@ namespace Couchbase.Lite.Testing
                                     }
                                     if (isBlob && updatedValue != null)
                                     {
-                                        preRetVal[item.Key] = updatedValue;
+                                        doc[item.Key] = updatedValue;
                                     }
                                 }
                             }
-                            retVal[id] = preRetVal;
+                            documents[id] = doc;
                         }
                     }
 
-                    response.WriteBody(retVal);
+                    response.WriteBody(documents);
                 }
             });
         }
