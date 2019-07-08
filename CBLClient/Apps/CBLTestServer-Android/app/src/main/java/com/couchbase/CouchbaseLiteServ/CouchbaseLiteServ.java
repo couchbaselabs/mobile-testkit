@@ -3,9 +3,6 @@ package com.couchbase.CouchbaseLiteServ;
 import android.app.Application;
 import android.content.Context;
 
-import com.couchbase.lite.CouchbaseLite;
-
-
 //
 // Copyright (c) 2019 Couchbase, Inc All rights reserved.
 //
@@ -34,6 +31,5 @@ public class CouchbaseLiteServ extends Application {
 
         setContext(this);
 
-        CouchbaseLite.init(this);
     }
 }

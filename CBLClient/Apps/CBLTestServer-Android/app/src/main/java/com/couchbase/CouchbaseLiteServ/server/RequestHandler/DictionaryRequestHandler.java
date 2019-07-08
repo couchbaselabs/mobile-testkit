@@ -11,7 +11,7 @@ import com.couchbase.lite.Array;
 import com.couchbase.lite.Blob;
 import com.couchbase.lite.Dictionary;
 import com.couchbase.lite.MutableDictionary;
-import com.couchbase.lite.internal.fleece.FLEncoder;
+import com.couchbase.litecore.fleece.FLEncoder;
 
 
 public class DictionaryRequestHandler {

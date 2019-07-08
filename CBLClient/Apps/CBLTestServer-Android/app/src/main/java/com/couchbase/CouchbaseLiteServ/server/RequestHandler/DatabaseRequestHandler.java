@@ -48,7 +48,7 @@ public class DatabaseRequestHandler {
         DatabaseConfiguration config = args.get("config");
         if (config == null) {
             Context context = CouchbaseLiteServ.getAppContext();
-            config = new DatabaseConfiguration();
+            config = new DatabaseConfiguration(context);
         }
         return new Database(name, config);
     }
