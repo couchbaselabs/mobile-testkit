@@ -8,7 +8,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Couchbase.Lite;
 using Couchbase.Lite.DI;
-using Couchbase.Lite.Interop;
 using Couchbase.Lite.Logging;
 using Couchbase.Lite.Util;
 
