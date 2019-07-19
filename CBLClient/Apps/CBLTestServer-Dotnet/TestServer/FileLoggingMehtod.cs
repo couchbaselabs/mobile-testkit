@@ -156,6 +156,26 @@ namespace Couchbase.Lite.Testing
 
         }
 
+        public static void GetLogsInByteArray([NotNull] NameValueCollection args,
+                                [NotNull] IReadOnlyDictionary<string, object> postBody,
+                                [NotNull] HttpListenerResponse response)
+        {
+            var path = Database.Log.File.Config?.Directory;
+            if (path == null) {
+                response.WriteEmptyBody();
+                return;
+            }
+            string[] filePaths = Directory.GetFiles(@path);
+            var content = new List<byte>();
+            foreach (var f in filePaths) {
+                var stream = File.Open(f, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                var bytesReader = new BinaryReader(stream);
+                content.AddRange(bytesReader.ReadBytes((int)stream.Length));
+
+            }
+            response.WriteBody(Convert.ToBase64String(content.ToArray()));
+        }
+
         public static void SetLogLevel([NotNull] NameValueCollection args,
                                 [NotNull] IReadOnlyDictionary<string, object> postBody,
                                 [NotNull] HttpListenerResponse response)
