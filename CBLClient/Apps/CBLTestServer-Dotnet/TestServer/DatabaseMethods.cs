@@ -25,17 +25,10 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
-using static Couchbase.Lite.DatabaseChangedEventArgs;
-
 using Couchbase.Lite.Query;
-using static Couchbase.Lite.Query.QueryBuilder;
-using static Couchbase.Lite.EncryptionKey;
-
-
 using JetBrains.Annotations;
-
 using Newtonsoft.Json.Linq;
-using System.IO;
+
 
 namespace Couchbase.Lite.Testing
 {

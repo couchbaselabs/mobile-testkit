@@ -207,6 +207,9 @@ namespace Couchbase.Lite.Testing
                     case "merge":
                         config.ConflictResolver = new MergeCustomConflictResolver();
                         break;
+                    case "incorrect_doc_id":
+                        config.ConflictResolver = new IncorrectDocIdConflictResolver();
+                        break;
                     default:
                         config.ConflictResolver = ConflictResolver.Default;
                         break;
@@ -498,6 +501,35 @@ namespace Couchbase.Lite.Testing
                     newDoc.SetValue(key, value);
                 }
             }
+            return newDoc;
+
+        }
+    }
+
+    internal sealed class IncorrectDocIdConflictResolver : IConflictResolver
+    {
+        Document IConflictResolver.Resolve(Conflict conflict)
+        {
+            Document localDoc = conflict.LocalDocument;
+            Document remoteDoc = conflict.RemoteDocument;
+            string docId = conflict.DocumentID;
+            string localDocId = localDoc.Id;
+            string remoteDocId = remoteDoc.Id;
+            if (!localDocId.Equals(remoteDocId))
+            {
+                Console.WriteLine("Remote docId and local docId are different");
+            }
+            if (!docId.Equals(remoteDocId))
+            {
+                Console.WriteLine("Remote docId doesn't match with conflict docId");
+            }
+            if (!docId.Equals(localDocId))
+            {
+                Console.WriteLine("Local docId doesn't match with conflict docId");
+            }
+            string newId = "changed" + docId;
+            MutableDocument newDoc = new MutableDocument(newId, localDoc.ToDictionary());
+            newDoc.SetValue("_id", newId);
             return newDoc;
 
         }
