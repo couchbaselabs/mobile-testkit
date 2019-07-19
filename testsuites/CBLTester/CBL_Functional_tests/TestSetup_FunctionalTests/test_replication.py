@@ -723,7 +723,6 @@ def test_CBL_for_purged_doc(params_from_base_test_setup, sg_conf_name, delete_do
     repl = replicator.create(repl_config)
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
-    replicator.stop(repl)
 
     # 3. Purge doc in SG.
     if delete_doc_type == "purge":
