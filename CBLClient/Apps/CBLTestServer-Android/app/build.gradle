@@ -1,7 +1,7 @@
 apply plugin: 'com.android.application'
 
 ext {
-    DEF_VERSION = "2.6.0-138"
+    DEF_VERSION = "2.6.0-144"
     COUCHBASE_LITE_VERSION = System.getProperty('version', DEF_VERSION)
 }
 

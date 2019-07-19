@@ -161,6 +161,9 @@ public class ReplicatorConfigurationRequestHandler {
                 case "merge":
                     config.conflictResolver = MergeWinCustomConflictResolver();
                     break;
+                case "incorrect_doc_id":
+                    config.conflictResolver = IncorrectDocIdCustomConflictResolver();
+                    break;
                 default:
                     config.conflictResolver = ConflictResolver.default
                     break;
@@ -358,6 +361,29 @@ private class MergeWinCustomConflictResolver: ConflictResolverProtocol{
                 newDoc.setValue(value, forKey: key)
             }
         }
+        return newDoc
+    }
+}
+
+private class IncorrectDocIdCustomConflictResolver: ConflictResolverProtocol{
+    func resolve(conflict: Conflict) -> Document? {
+        let localDoc = conflict.localDocument!
+        let remoteDoc = conflict.remoteDocument!
+        let docId = conflict.documentID
+        let remoteDocId = remoteDoc.id
+        let localDocId = localDoc.id
+        if remoteDocId != localDocId {
+            print("Remote docId and local docId are different")
+        }
+        if remoteDocId != docId {
+            print("Remote docId doesn't match with conflict docId")
+        }
+        if localDocId != docId {
+            print("Local docId doesn't match with conflict docId")
+        }
+        let newId = "changed\(docId)"
+        let newDoc = MutableDocument(id: newId, data: localDoc.toDictionary())
+        newDoc.setValue("_id", forKey: newId)
         return newDoc
     }
 }

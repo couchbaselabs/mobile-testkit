@@ -444,3 +444,112 @@ def test_merge_wins_custom_conflicts(params_from_base_test_setup, replicator_typ
                                                                           "with merge win"
             assert sg_doc["random"] == cbl_doc["random"], "CCR failed to resolve conflict with merge win"
             assert "cbl_random" in sg_doc, "CCR failed to resolve conflict with merge win"
+
+
+@pytest.mark.listener
+@pytest.mark.custom_conflict
+@pytest.mark.replication
+@pytest.mark.parametrize("replicator_type", [
+    "pull",
+    "push_pull"
+])
+def test_custom_conflicts_resolution_returns_incorrect_doc_id(params_from_base_test_setup, replicator_type):
+    """
+    @summary: resolve conflicts as per local doc
+    1. Create few docs in app and get them replicated to SG. Stop the replication once docs are replicated.
+    2. Update docs couple of times with different updates on both SG and CBL app. This will create conflict.
+    3. Start the replication with incorrect_doc_id CCR algorithm
+    4. Verifies that CBL has retains its changes and have added all new keys to local doc from remote doc. For push and 
+    pull replication SG changes should be override with that of CBL
+    """
+    sg_db = "db"
+    sg_url = params_from_base_test_setup["sg_url"]
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    sg_config = params_from_base_test_setup["sg_config"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_blip_url = params_from_base_test_setup["target_url"]
+    liteserv_version = params_from_base_test_setup["liteserv_version"]
+    base_url = params_from_base_test_setup["base_url"]
+    num_of_docs = 1
+    channels = ["ABC"]
+    db = params_from_base_test_setup["db"]
+    cbl_db = params_from_base_test_setup["source_db"]
+
+    if liteserv_version < "2.6.0":
+        pytest.skip('test does not work with liteserv_version < 2.6.0 , so skipping the test')
+
+    # Reset cluster to ensure no data in system
+    c = Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
+
+    # Create bulk doc json
+    db.create_bulk_docs(num_of_docs, "incorrect_doc_id_conflicts", db=cbl_db, channels=channels)
+    sg_client = MobileRestClient()
+    log_info("Using SG url: {}".format(sg_admin_url))
+    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest")
+    session = cookie, session_id
+
+    # Start and stop continuous replication
+    replicator = Replication(base_url)
+    authenticator = Authenticator(base_url)
+    replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
+    repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=False, channels=channels,
+                                       replicator_authenticator=replicator_authenticator,
+                                       replication_type="push_pull")
+    repl = replicator.create(repl_config)
+    replicator.start(repl)
+    replicator.wait_until_replicator_idle(repl)
+    total = replicator.getTotal(repl)
+    completed = replicator.getCompleted(repl)
+    replicator.stop(repl)
+    assert total == completed, "total is not equal to completed"
+
+    sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)["rows"]
+
+    # creating conflict for docs on SG
+    sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs, number_updates=2,
+                          property_updater=property_updater, auth=session)
+
+    # creating conflict for docs on CBL
+    doc_ids = db.getDocIds(cbl_db)
+    cbl_docs = db.getDocuments(cbl_db, doc_ids)
+    for doc_id in cbl_docs:
+        for _ in range(2):
+            log_info("Updating CBL Doc - {}".format(doc_id))
+            data = cbl_docs[doc_id]
+            data = property_updater(data)
+            data["cbl_random"] = random_string(length=10, printable=True)
+            db.updateDocument(cbl_db, doc_id=doc_id, data=data)
+
+    repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channels,
+                                       replicator_authenticator=replicator_authenticator,
+                                       replication_type=replicator_type, conflict_resolver="incorrect_doc_id")
+    repl = replicator.create(repl_config)
+    replicator.start(repl)
+    replicator.wait_until_replicator_idle(repl)
+    total = replicator.getTotal(repl)
+    completed = replicator.getCompleted(repl)
+    replicator.stop(repl)
+    assert total == completed, "total is not equal to completed"
+
+    # printing doc content before replication conflicted docs
+    try:
+        sg_docs_content = sg_client.get_bulk_docs(sg_url, sg_db, doc_ids, session)[0]
+    except Exception, err:
+        log_info("Error thrown when requested for Doc from SG:\n {}".format(err))
+        sg_docs_content = []
+    cbl_docs = db.getDocuments(cbl_db, doc_ids)
+    if replicator_type == "pull":
+        for sg_doc in sg_docs_content:
+            doc_id = sg_doc["_id"]
+            cbl_doc = cbl_docs[doc_id]
+            assert  sg_doc != {}, "Incorrect CCR replicated changes to SG in pull replication"
+            assert cbl_doc == {}, "Incorrect CCR failed to resolve conflict with empty docs"
+    if replicator_type == "push_pull":
+        assert  len(sg_docs_content) == 0, "Incorrect CCR failed to resolve conflict with docs delete"
+        for doc_id in cbl_docs:
+            cbl_doc = cbl_docs[doc_id]
+            assert cbl_doc == {}, "Incorrect CCR failed to resolve conflict with empty docs"
+
+

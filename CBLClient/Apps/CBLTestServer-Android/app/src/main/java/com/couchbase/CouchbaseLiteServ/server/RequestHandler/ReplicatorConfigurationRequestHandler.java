@@ -170,6 +170,9 @@ public class ReplicatorConfigurationRequestHandler {
             case "merge":
                 config.setConflictResolver(new MergeCustomConflictResolver());
                 break;
+            case "incorrect_doc_id":
+                config.setConflictResolver(new IncorrectDocIdConflictResolver());
+                break;
             default:
                 config.setConflictResolver(ConflictResolver.DEFAULT);
                 break;
@@ -440,6 +443,31 @@ class MergeCustomConflictResolver implements ConflictResolver {
                 newDoc.setValue(key, value);
             }
         }
+        return newDoc;
+    }
+}
+
+class IncorrectDocIdConflictResolver implements ConflictResolver {
+    private static final String TAG = "CCRREPLCONFIGHANDLER";
+    @Override
+    public Document resolve(Conflict conflict) {
+        Document localDoc = conflict.getLocalDocument();
+        Document remoteDoc = conflict.getRemoteDocument();
+        String docId = conflict.getDocumentId();
+        String remoteDocId = remoteDoc.getId();
+        String localDocId = localDoc.getId();
+        if (remoteDocId != localDocId) {
+            Log.e(TAG, "Remote docId and local docId are different");
+        }
+        if (remoteDocId != docId) {
+            Log.e(TAG, "Remote docId doesn't match with conflict docId");
+        }
+        if (docId != localDocId) {
+            Log.e(TAG, "Local docId doesn't match with conflict docId");
+        }
+        String newId = "changed" + docId;
+        MutableDocument newDoc = new MutableDocument(newId, localDoc.toMap());
+        newDoc.setValue("_id", newId);
         return newDoc;
     }
 }
