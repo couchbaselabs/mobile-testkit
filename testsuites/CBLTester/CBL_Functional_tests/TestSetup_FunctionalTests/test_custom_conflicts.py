@@ -459,8 +459,8 @@ def test_custom_conflicts_resolution_returns_incorrect_doc_id(params_from_base_t
     1. Create few docs in app and get them replicated to SG. Stop the replication once docs are replicated.
     2. Update docs couple of times with different updates on both SG and CBL app. This will create conflict.
     3. Start the replication with incorrect_doc_id CCR algorithm
-    4. Verifies that CBL has retains its changes and have added all new keys to local doc from remote doc. For push and 
-    pull replication SG changes should be override with that of CBL
+    4. Verifies that CBL has docs with empty body. For push and pull replication SG changes should be override with
+    that of CBL
     """
     sg_db = "db"
     sg_url = params_from_base_test_setup["sg_url"]
@@ -470,7 +470,7 @@ def test_custom_conflicts_resolution_returns_incorrect_doc_id(params_from_base_t
     sg_blip_url = params_from_base_test_setup["target_url"]
     liteserv_version = params_from_base_test_setup["liteserv_version"]
     base_url = params_from_base_test_setup["base_url"]
-    num_of_docs = 1
+    num_of_docs = 10
     channels = ["ABC"]
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
