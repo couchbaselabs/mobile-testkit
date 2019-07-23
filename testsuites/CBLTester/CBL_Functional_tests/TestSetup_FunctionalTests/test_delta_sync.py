@@ -4,6 +4,8 @@ import time
 from keywords.MobileRestClient import MobileRestClient
 from keywords.utils import random_string, compare_docs
 from CBLClient.Replication import Replication
+from CBLClient.Dictionary import Dictionary
+from CBLClient.Blob import Blob
 from CBLClient.Authenticator import Authenticator
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
@@ -17,7 +19,7 @@ from libraries.testkit import cluster
 @pytest.mark.parametrize("num_of_docs, replication_type, file_attachment, continuous", [
     (10, "pull", None, True),
     (10, "pull", "sample_text.txt", True),
-    (10, "push", "sample_text.txt", True),
+    (1, "push", "golden_gate_large.jpg", True),
     (10, "push", None, True)
 ])
 def test_delta_sync_replication(params_from_base_test_setup, num_of_docs, replication_type, file_attachment, continuous):
@@ -38,6 +40,7 @@ def test_delta_sync_replication(params_from_base_test_setup, num_of_docs, replic
     sg_config = params_from_base_test_setup["sg_config"]
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
+    liteserv_platform = params_from_base_test_setup["liteserv_platform"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     mode = params_from_base_test_setup["mode"]
 
@@ -47,6 +50,8 @@ def test_delta_sync_replication(params_from_base_test_setup, num_of_docs, replic
     username = "autotest"
     password = "password"
     number_of_updates = 1
+    blob = Blob(base_url)
+    dictionary = Dictionary(base_url)
 
     # Reset cluster to ensure no data in system
     c = cluster.Cluster(config=cluster_config)
@@ -94,9 +99,25 @@ def test_delta_sync_replication(params_from_base_test_setup, num_of_docs, replic
         cbl_db_docs = db.getDocuments(cbl_db, doc_ids)
         for doc_id, doc_body in cbl_db_docs.items():
             for i in range(number_of_updates):
-                doc_body["new_field_1"] = random_string(length=30)
-                doc_body["new_field_2"] = random_string(length=80)
-                db.updateDocument(database=cbl_db, data=doc_body, doc_id=doc_id, attachments_name=file_attachment)
+                if file_attachment:
+                    mutable_dictionary = dictionary.toMutableDictionary(doc_body)
+                    dictionary.setString(mutable_dictionary, "new_field_1", random_string(length=30))
+                    dictionary.setString(mutable_dictionary, "new_field_2", random_string(length=80))
+
+                    if liteserv_platform == "android":
+                        image_content = blob.createImageContent("/assets/golden_gate_large.jpg")
+                        blob_value = blob.create("image/jpeg", stream=image_content)
+                    elif liteserv_platform == "xamarin-android":
+                        image_content = blob.createImageContent("golden_gate_large.jpg")
+                        blob_value = blob.create("image/jpeg", stream=image_content)
+                    elif liteserv_platform == "ios":
+                        image_content = blob.createImageContent("Files/golden_gate_large.jpg")
+                        blob_value = blob.create("image/jpeg", content=image_content)
+                    else:
+                        image_content = blob.createImageContent("Files/golden_gate_large.jpg")
+                        blob_value = blob.create("image/jpeg", stream=image_content)
+                    dictionary.setBlob(mutable_dictionary, "_attachments", blob_value)
+                db.updateDocument(database=cbl_db, data=doc_body, doc_id=doc_id)
     else:
         for doc in sg_docs:
             sg_client.update_doc(url=sg_url, db=sg_db, doc_id=doc["id"], number_updates=number_of_updates, auth=session, channels=channels, attachment_name=file_attachment)
@@ -128,6 +149,8 @@ def test_delta_sync_replication(params_from_base_test_setup, num_of_docs, replic
         assert delta_size < doc_writes_bytes, "did not replicate just delta"
 
     sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
+    doc_ids = db.getDocIds(cbl_db)
+    cbl_db_docs = db.getDocuments(cbl_db, doc_ids)
     compare_docs(cbl_db, db, sg_docs)
 
 

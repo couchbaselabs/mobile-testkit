@@ -108,7 +108,32 @@
     <None Include="TestServer.UWP_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Properties\Default.rd.xml" />
+    <Content Include="Assets\Databases\PrebuiltDB.cblite2\db.sqlite3" />
+    <Content Include="Assets\Databases\PrebuiltDB.cblite2\db.sqlite3-shm" />
+    <Content Include="Assets\Databases\PrebuiltDB.cblite2\db.sqlite3-wal" />
+    <Content Include="Assets\Databases\PrebuiltDB-encrypted.cblite2\db.sqlite3" />
+    <Content Include="Assets\Databases\PrebuiltDB-encrypted.cblite2\db.sqlite3-shm" />
+    <Content Include="Assets\Databases\PrebuiltDB-encrypted.cblite2\db.sqlite3-wal" />
+    <Content Include="Assets\Databases\PrebuiltDB.cblite2\db.sqlite3" />
+    <Content Include="Assets\Databases\PrebuiltDB.cblite2\db.sqlite3-shm" />
+    <Content Include="Assets\Databases\PrebuiltDB.cblite2\db.sqlite3-wal" />
+    <Content Include="Assets\Databases\travel-sample-1.4.cblite2\db.sqlite3" />
+    <Content Include="Assets\Databases\travel-sample-1.4.cblite2\db.sqlite3-shm" />
+    <Content Include="Assets\Databases\travel-sample-1.4.cblite2\db.sqlite3-wal" />
+    <Content Include="Assets\Databases\travel-sample-2.0.0.cblite2\db.sqlite3" />
+    <Content Include="Assets\Databases\travel-sample-2.1.5.cblite2\db.sqlite3" />
+    <Content Include="Assets\Databases\travel-sample-2.1.5.cblite2\db.sqlite3-shm" />
+    <Content Include="Assets\Databases\travel-sample-2.1.5.cblite2\db.sqlite3-wal" />
+    <Content Include="Assets\Databases\travel-sample-2.5.0.cblite2\db.sqlite3" />
+    <Content Include="Assets\Databases\travel-sample-2.5.0.cblite2\db.sqlite3-shm" />
+    <Content Include="Assets\Databases\travel-sample-2.5.0.cblite2\db.sqlite3-wal" />
+    <Content Include="Assets\Databases\travel-sample-encrypted-2.1.5.cblite2\db.sqlite3" />
+    <Content Include="Assets\Databases\travel-sample-encrypted-2.1.5.cblite2\db.sqlite3-shm" />
+    <Content Include="Assets\Databases\travel-sample-encrypted-2.1.5.cblite2\db.sqlite3-wal" />
+    <Content Include="Assets\Databases\travel-sample-encrypted-2.5.0.cblite2\db.sqlite3" />
+    <Content Include="Assets\Databases\travel-sample-encrypted-2.5.0.cblite2\db.sqlite3-shm" />
+    <Content Include="Assets\Databases\travel-sample-encrypted-2.5.0.cblite2\db.sqlite3-wal" />
+    <Content Include="Assets\Files\golden_gate_large.jpg" />
     <Content Include="Assets\LockScreenLogo.scale-200.png" />
     <Content Include="Assets\SplashScreen.scale-200.png" />
     <Content Include="Assets\Square150x150Logo.scale-200.png" />
@@ -116,9 +141,7 @@
     <Content Include="Assets\Square44x44Logo.targetsize-24_altform-unplated.png" />
     <Content Include="Assets\StoreLogo.png" />
     <Content Include="Assets\Wide310x150Logo.scale-200.png" />
-    <Content Include="Assets\Databases\PrebuiltDB.cblite2\db.sqlite3" />
-    <Content Include="Assets\Databases\PrebuiltDB.cblite2\db.sqlite3-shm" />
-    <Content Include="Assets\Databases\PrebuiltDB.cblite2\db.sqlite3-wal" />
+    <Content Include="Properties\Default.rd.xml" />
   </ItemGroup>
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml">

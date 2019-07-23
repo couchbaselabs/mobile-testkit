@@ -142,6 +142,16 @@ def pytest_addoption(parser):
                      action="store",
                      help="cbl-log-decoder-build: the platform to assign to the cbl-log-decoder build")
 
+    parser.addoption("--enable-encryption",
+                     action="store_true",
+                     help="Encryption will be enabled for CBL db",
+                     default=True)
+
+    parser.addoption("--encryption-password",
+                     action="store",
+                     help="Encryption will be enabled for CBL db",
+                     default="password")
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -177,6 +187,9 @@ def params_from_base_suite_setup(request):
     enable_file_logging = request.config.getoption("--enable-file-logging")
     cbl_log_decoder_platform = request.config.getoption("--cbl-log-decoder-platform")
     cbl_log_decoder_build = request.config.getoption("--cbl-log-decoder-build")
+
+    enable_encryption = request.config.getoption("--enable-encryption")
+    encryption_password = request.config.getoption("--encryption-password")
 
     test_name = request.node.name
 
@@ -366,7 +379,10 @@ def params_from_base_suite_setup(request):
         suite_db = Database(base_url)
 
         log_info("Creating a Database {} at the suite setup".format(suite_cbl_db))
-        db_config = suite_db.configure()
+        if enable_encryption:
+            db_config = suite_db.configure(password=encryption_password)
+        else:
+            db_config = suite_db.configure()
         suite_source_db = suite_db.create(suite_cbl_db, db_config)
         log_info("Getting the database name")
         db_name = suite_db.getName(suite_source_db)
@@ -460,7 +476,9 @@ def params_from_base_suite_setup(request):
         "enable_file_logging": enable_file_logging,
         "cbl_log_decoder_platform": cbl_log_decoder_platform,
         "cbl_log_decoder_build": cbl_log_decoder_build,
-        "suite_db_log_files": suite_db_log_files
+        "suite_db_log_files": suite_db_log_files,
+        "enable_encryption": enable_encryption,
+        "encryption_password": encryption_password
     }
 
     if create_db_per_suite:
@@ -510,6 +528,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     enable_file_logging = params_from_base_suite_setup["enable_file_logging"]
     cbl_log_decoder_platform = params_from_base_suite_setup["cbl_log_decoder_platform"]
     cbl_log_decoder_build = params_from_base_suite_setup["cbl_log_decoder_build"]
+    encryption_password = params_from_base_suite_setup["encryption_password"]
+    enable_encryption = params_from_base_suite_setup["enable_encryption"]
 
     source_db = None
     test_name_cp = test_name.replace("/", "-")
@@ -552,7 +572,10 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         db = Database(base_url)
 
         log_info("Creating a Database {} at test setup".format(cbl_db))
-        db_config = db.configure()
+        if enable_encryption:
+            db_config = db.configure(password=encryption_password)
+        else:
+            db_config = db.configure()
         source_db = db.create(cbl_db, db_config)
         log_info("Getting the database name")
         db_name = db.getName(source_db)
@@ -596,7 +619,9 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "liteserv_version": liteserv_version,
         "delta_sync_enabled": delta_sync_enabled,
         "cbl_log_decoder_platform": cbl_log_decoder_platform,
-        "cbl_log_decoder_build": cbl_log_decoder_build
+        "cbl_log_decoder_build": cbl_log_decoder_build,
+        "enable_encryption": enable_encryption,
+        "encryption_password": encryption_password
     }
 
     log_info("Tearing down test")
@@ -620,6 +645,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
 def class_init(request, params_from_base_suite_setup):
     base_url = params_from_base_suite_setup["base_url"]
     liteserv_platform = params_from_base_suite_setup["liteserv_platform"]
+    enable_encryption = params_from_base_suite_setup["enable_encryption"]
+    encryption_password = params_from_base_suite_setup["encryption_password"]
 
     db_obj = Database(base_url)
     doc_obj = Document(base_url)
@@ -632,7 +659,10 @@ def class_init(request, params_from_base_suite_setup):
     base_auth_obj = BasicAuthenticator(base_url)
     session_auth_obj = SessionAuthenticator(base_url)
     sg_client = MobileRestClient()
-    db_config = db_obj.configure()
+    if enable_encryption:
+        db_config = db_obj.configure(password=encryption_password)
+    else:
+        db_config = db_obj.configure()
     db = db_obj.create("cbl-init-db", db_config)
 
     request.cls.db_obj = db_obj
@@ -663,8 +693,13 @@ def setup_customized_teardown_test(params_from_base_test_setup):
     cbl_db_name2 = "cbl_db2" + str(time.time())
     cbl_db_name3 = "cbl_db3" + str(time.time())
     base_url = params_from_base_test_setup["base_url"]
+    enable_encryption = params_from_base_test_setup["enable_encryption"]
+    encryption_password = params_from_base_test_setup["encryption_password"]
     db = Database(base_url)
-    db_config = db.configure()
+    if enable_encryption:
+        db_config = db.configure(password=encryption_password)
+    else:
+        db_config = db.configure()
     cbl_db1 = db.create(cbl_db_name1, db_config)
     cbl_db2 = db.create(cbl_db_name2, db_config)
     cbl_db3 = db.create(cbl_db_name3, db_config)

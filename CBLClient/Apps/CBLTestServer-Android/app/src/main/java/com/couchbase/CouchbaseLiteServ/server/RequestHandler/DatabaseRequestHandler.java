@@ -3,6 +3,7 @@ package com.couchbase.CouchbaseLiteServ.server.RequestHandler;
 import android.content.Context;
 import android.util.Log;
 
+import com.couchbase.CouchbaseLiteServ.CouchbaseLiteServ;
 import com.couchbase.CouchbaseLiteServ.server.Args;
 import com.couchbase.CouchbaseLiteServ.server.util.ZipUtils;
 import com.couchbase.lite.Blob;
@@ -37,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 
 public class DatabaseRequestHandler {
+    private static final String TAG = "DBHANDLER";
     /* ------------ */
     /* - Database - */
     /* ------------ */
@@ -45,7 +47,7 @@ public class DatabaseRequestHandler {
         String name = args.get("name");
         DatabaseConfiguration config = args.get("config");
         if (config == null) {
-            Context context = MainActivity.getAppContext();
+            Context context = CouchbaseLiteServ.getAppContext();
             config = new DatabaseConfiguration(context);
         }
         return new Database(name, config);
@@ -98,21 +100,21 @@ public class DatabaseRequestHandler {
                 Map<String, Object> doc = document.toMap();
                 // looping through the document, replace the Blob with its properties
                 for (Map.Entry<String, Object> entry : doc.entrySet()) {
-                   if(entry.getValue() != null && entry.getValue() instanceof Map<?, ?>){
-                        if(((Map) entry.getValue()).size() == 0){
+                    if (entry.getValue() != null && entry.getValue() instanceof Map<?, ?>) {
+                        if (((Map) entry.getValue()).size() == 0) {
                             continue;
                         }
                         boolean isBlob = false;
-                        Map<?, ?> value = (Map<?, ?>)entry.getValue();
+                        Map<?, ?> value = (Map<?, ?>) entry.getValue();
                         Map<String, Object> newVal = new HashMap<>();
-                        for (Map.Entry<?, ?> item : value.entrySet()){
-                            if(item.getValue() != null && item.getValue() instanceof Blob){
+                        for (Map.Entry<?, ?> item : value.entrySet()) {
+                            if (item.getValue() != null && item.getValue() instanceof Blob) {
                                 isBlob = true;
-                                Blob b = (Blob)item.getValue();
+                                Blob b = (Blob) item.getValue();
                                 newVal.put(item.getKey().toString(), b.getProperties());
                             }
                         }
-                        if(isBlob) doc.put(entry.getKey(), newVal);
+                        if (isBlob) { doc.put(entry.getKey(), newVal); }
                     }
                 }
                 documents.put(id, doc);
@@ -143,8 +145,9 @@ public class DatabaseRequestHandler {
                     updatedDoc.setData(data);
                     try {
                         database.save(updatedDoc);
-                    } catch (CouchbaseLiteException e) {
-                        e.printStackTrace();
+                    }
+                    catch (CouchbaseLiteException e) {
+                        Log.e(TAG, "DB Save failed", e);
                     }
                 }
             }
@@ -155,9 +158,9 @@ public class DatabaseRequestHandler {
         Database database = args.get("database");
         MutableDocument document = args.get("document");
         database.purge(document);
-   }
+    }
 
-   public void saveDocuments(Args args) throws CouchbaseLiteException {
+    public void saveDocuments(Args args) throws CouchbaseLiteException {
         final Database database = args.get("database");
         final Map<String, Map<String, Object>> documents = args.get("documents");
 
@@ -170,13 +173,14 @@ public class DatabaseRequestHandler {
                     MutableDocument document = new MutableDocument(id, data);
                     try {
                         database.save(document);
-                    } catch (CouchbaseLiteException e) {
-                        e.printStackTrace();
+                    }
+                    catch (CouchbaseLiteException e) {
+                        Log.e(TAG, "DB Save failed", e);
                     }
                 }
             }
         });
-   }
+    }
 
     public void save(Args args) throws CouchbaseLiteException {
         Database database = args.get("database");
@@ -188,15 +192,10 @@ public class DatabaseRequestHandler {
         Database database = args.get("database");
         MutableDocument document = args.get("document");
         String concurrencyControlType = args.get("concurrencyControlType");
-        ConcurrencyControl concurrencyType;
-        if (concurrencyControlType == null)
-        {
-            concurrencyType = ConcurrencyControl.LAST_WRITE_WINS;
-        }
-        if(concurrencyControlType.equals("failOnConflict"))
-            concurrencyType = ConcurrencyControl.FAIL_ON_CONFLICT;
-        else
-            concurrencyType = ConcurrencyControl.LAST_WRITE_WINS;
+        ConcurrencyControl concurrencyType
+            = ((concurrencyControlType != null) && (concurrencyControlType.equals("failOnConflict")))
+            ? ConcurrencyControl.FAIL_ON_CONFLICT
+            : ConcurrencyControl.LAST_WRITE_WINS;
         database.save(document, concurrencyType);
     }
 
@@ -204,53 +203,47 @@ public class DatabaseRequestHandler {
         Database database = args.get("database");
         Document document = args.get("document");
         database.delete(document);
-   }
+    }
 
     public void deleteWithConcurrency(Args args) throws CouchbaseLiteException {
-      Database database = args.get("database");
-      Document document = args.get("document");
-      String concurrencyControlType = args.get("concurrencyControlType");
-      ConcurrencyControl concurrencyType;
-      if (concurrencyControlType == null)
-      {
-        concurrencyType = ConcurrencyControl.LAST_WRITE_WINS;
-      }
-      if(concurrencyControlType.equals("failOnConflict"))
-        concurrencyType = ConcurrencyControl.FAIL_ON_CONFLICT;
-      else
-        concurrencyType = ConcurrencyControl.LAST_WRITE_WINS;
-      database.delete(document, concurrencyType);
+        Database database = args.get("database");
+        Document document = args.get("document");
+        String concurrencyControlType = args.get("concurrencyControlType");
+        ConcurrencyControl concurrencyType
+            = ((concurrencyControlType != null) && (concurrencyControlType.equals("failOnConflict")))
+            ? ConcurrencyControl.FAIL_ON_CONFLICT
+            : ConcurrencyControl.LAST_WRITE_WINS;
+
+        database.delete(document, concurrencyType);
     }
 
     public void deleteDB(Args args) throws CouchbaseLiteException {
         Database database = args.get("database");
         try {
             database.delete();
-        }catch (CouchbaseLiteException ex){
-            Log.e("deleteDB", "deleteDB() ERROR !!!!!!");
-            ex.printStackTrace();
+            Log.i(TAG, "database deleted");
         }
-        System.out.println("database delete ");
-   }
+        catch (CouchbaseLiteException ex) {
+            Log.e(TAG, "deleteDB() ERROR !!!!!!", ex);
+        }
+    }
 
     public void changeEncryptionKey(Args args) throws CouchbaseLiteException {
         Database database = args.get("database");
         String password = args.get("password");
         EncryptionKey encryptionKey;
-        if(password.equals("nil"))
-          encryptionKey = null;
-        else
-          encryptionKey = new EncryptionKey(password);
+        if (password.equals("nil")) { encryptionKey = null; }
+        else { encryptionKey = new EncryptionKey(password); }
         database.changeEncryptionKey(encryptionKey);
     }
 
-   public void deleteDbByName(Args args) throws CouchbaseLiteException {
+    public void deleteDbByName(Args args) throws CouchbaseLiteException {
         String dbName = args.get("dbName");
         File directory = args.get("directory");
         Database.delete(dbName, directory.getParentFile());
-   }
+    }
 
-    public boolean exists(Args args){
+    public boolean exists(Args args) {
         String name = args.get("name");
         File directory = new File(args.get("directory").toString());
         return Database.exists(name, directory);
@@ -262,15 +255,16 @@ public class DatabaseRequestHandler {
         db.inBatch(new Runnable() {
             @Override
             public void run() {
-                for(String id : docIds) {
+                for (String id : docIds) {
                     Document document = db.getDocument(id);
                     try {
                         db.delete(document);
-                    } catch (CouchbaseLiteException e) {
-                        e.printStackTrace();
+                    }
+                    catch (CouchbaseLiteException e) {
+                        Log.e(TAG, "DB Delete failed", e);
                     }
                 }
-                }
+            }
         });
 
     }
@@ -280,12 +274,12 @@ public class DatabaseRequestHandler {
         int limit = args.get("limit");
         int offset = args.get("offset");
         Query query = QueryBuilder
-                .select(SelectResult.expression(Meta.id))
-                .from(DataSource.database(database))
-                .limit(Expression.intValue(limit), Expression.intValue(offset));
-        List<String> result = new ArrayList<String>();
+            .select(SelectResult.expression(Meta.id))
+            .from(DataSource.database(database))
+            .limit(Expression.intValue(limit), Expression.intValue(offset));
+        List<String> result = new ArrayList<>();
         ResultSet results = query.execute();
-        for (Result row : results){
+        for (Result row : results) {
 
             result.add(row.getString("id"));
         }
@@ -293,25 +287,26 @@ public class DatabaseRequestHandler {
 
     }
 
-   public ListenerToken addChangeListener(Args args) {
-       Database database = args.get("database");
-       ListenerToken token;
-       if (args.contain("docId")) {
-           String docId = args.get("docId");
-           MyDocumentChangeListener changeListener = new MyDocumentChangeListener();
-           token = database.addDocumentChangeListener(docId, changeListener);
-       } else {
-           MyDatabaseChangeListener changeListener = new MyDatabaseChangeListener();
-           token = database.addChangeListener(changeListener);
-       }
-       return token;
-   }
+    public ListenerToken addChangeListener(Args args) {
+        Database database = args.get("database");
+        ListenerToken token;
+        if (args.contain("docId")) {
+            String docId = args.get("docId");
+            MyDocumentChangeListener changeListener = new MyDocumentChangeListener();
+            token = database.addDocumentChangeListener(docId, changeListener);
+        }
+        else {
+            MyDatabaseChangeListener changeListener = new MyDatabaseChangeListener();
+            token = database.addChangeListener(changeListener);
+        }
+        return token;
+    }
 
-   public void removeChangeListener(Args args) {
-       Database database = args.get("database");
-       ListenerToken token = args.get("changeListenerToken");
-       database.removeChangeListener(token);
-   }
+    public void removeChangeListener(Args args) {
+        Database database = args.get("database");
+        ListenerToken token = args.get("changeListenerToken");
+        database.removeChangeListener(token);
+    }
 
     public int databaseChangeListenerChangesCount(Args args) {
         MyDatabaseChangeListener changeListener = args.get("changeListener");
@@ -324,7 +319,7 @@ public class DatabaseRequestHandler {
         return changeListener.getChanges().get(index);
     }
 
-    public Database changeGetDatabase(Args args){
+    public Database changeGetDatabase(Args args) {
         DatabaseChange change = args.get("change");
         return change.getDatabase();
     }
@@ -334,31 +329,37 @@ public class DatabaseRequestHandler {
         return change.getDocumentIDs();
     }
 
-    public void copy(Args args) throws CouchbaseLiteException, IOException {
-      String dbName = args.get("dbName");
-      String dbPath = args.get("dbPath");
-
-      Context context = MainActivity.getAppContext();
-      ZipUtils.unzip(getAsset(dbPath), context.getFilesDir());
-      String dbFileName = new File(dbPath).getName();
-      dbFileName = dbFileName.substring(0, dbFileName.lastIndexOf("."));
+    public void copy(Args args) throws CouchbaseLiteException {
+        String dbName = args.get("dbName");
+        String dbPath = args.get("dbPath");
 
       DatabaseConfiguration dbConfig = args.get("dbConfig");
-      File file = new File(context.getFilesDir().getAbsolutePath() + "/" + dbFileName);
-      Database.copy(file, dbName, dbConfig);
+      File oldDbPath = new File(dbPath);
+      Database.copy(oldDbPath, dbName, dbConfig);
     }
 
     private InputStream getAsset(String name) {
       return this.getClass().getResourceAsStream(name);
     }
 
+    public String getPreBuiltDb(Args args) throws IOException {
+        String dbPath = args.get("dbPath");
+        Context context = CouchbaseLiteServ.getAppContext();
+        String dbFileName = new File(dbPath).getName();
+        dbFileName = dbFileName.substring(0, dbFileName.lastIndexOf("."));
+        ZipUtils.unzip(getAsset(dbPath), context.getFilesDir());
+        String path = context.getFilesDir().getAbsolutePath() + "/" + dbFileName;
+        return path;
+
+    }
+
 }
 
-class MyDatabaseChangeListener implements DatabaseChangeListener{
+class MyDatabaseChangeListener implements DatabaseChangeListener {
     private List<DatabaseChange> changes;
 
-    public List<DatabaseChange> getChanges(){
-       return changes;
+    public List<DatabaseChange> getChanges() {
+        return changes;
     }
 
     @Override

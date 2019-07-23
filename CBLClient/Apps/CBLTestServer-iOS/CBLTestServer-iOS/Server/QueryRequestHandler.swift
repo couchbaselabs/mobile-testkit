@@ -718,7 +718,33 @@ public class QueryRequestHandler {
             }
             
             return resultArray
+
+        case "query_anyOperator":
+            let database: Database = args.get(name: "database")!
+            let schedule: String = args.get(name: "schedule")!
+            let departure: String = args.get(name: "departure")!
+            let departure_prop: String = args.get(name: "departure_prop")!
+            let departure_val: String = args.get(name: "departure_val")!
+            let whr_prop: String = args.get(name: "whr_prop")!
+            let whr_val: String = args.get(name: "whr_val")!
+            let dep_schedule = ArrayExpression.variable(departure)
+            let departure_utc = ArrayExpression.variable(departure_prop)
             
+            let searchQuery = QueryBuilder
+                .select(SelectResult.expression(Meta.id))
+                .from(DataSource.database(database))
+                .where(Expression.property(whr_prop).equalTo(Expression.value(whr_val))
+                    .and(ArrayExpression.any(dep_schedule).in(Expression.property(schedule))
+                        .satisfies(departure_utc.greaterThan(Expression.value(departure_val)))))
+            var resultArray = [Any]()
+            
+            for row in try searchQuery.execute() {
+                
+                resultArray.append(row.string(forKey: "id")!)
+            }
+            
+            return resultArray
+
         case "query_not":
             let database: Database = args.get(name: "database")!
             let val1: Int = args.get(name: "val1")!

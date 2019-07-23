@@ -45,7 +45,7 @@
     <AndroidUseSharedRuntime>False</AndroidUseSharedRuntime>
     <AndroidLinkMode>SdkOnly</AndroidLinkMode>
     <EmbedAssembliesIntoApk>True</EmbedAssembliesIntoApk>
-    <AndroidSupportedAbis>armeabi-v7a;armeabi;x86;arm64-v8a;x86_64</AndroidSupportedAbis>
+    <AndroidSupportedAbis>x86;arm64-v8a;x86_64;armeabi-v7a</AndroidSupportedAbis>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -85,11 +85,19 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Couchbase.Lite.Enterprise.Support.Android">
-      <Version>2.5.0-b0123</Version>
+      <Version>2.5.0-b0191</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
     <AndroidAsset Include="Assets\PrebuiltDB.cblite2.zip" />
+    <AndroidAsset Include="Assets\golden_gate_large.jpg" />
+    <AndroidAsset Include="Assets\PrebuiltDB-encrypted.cblite2.zip" />
+    <AndroidAsset Include="Assets\travel-sample-1.4.cblite2.zip" />
+    <AndroidAsset Include="Assets\travel-sample-2.0.0.cblite2.zip" />
+    <AndroidAsset Include="Assets\travel-sample-2.1.5.cblite2.zip" />
+    <AndroidAsset Include="Assets\travel-sample-2.5.0.cblite2.zip" />
+    <AndroidAsset Include="Assets\travel-sample-encrypted-2.1.5.cblite2.zip" />
+    <AndroidAsset Include="Assets\travel-sample-encrypted-2.5.0.cblite2.zip" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

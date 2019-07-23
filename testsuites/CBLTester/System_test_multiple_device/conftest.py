@@ -120,6 +120,16 @@ def pytest_addoption(parser):
                      default=False,
                      help="If set, CBS not would be rebalance in/out of cluster")
 
+    parser.addoption("--enable-encryption",
+                     action="store_true",
+                     help="Encryption will be enabled for CBL db",
+                     default=True)
+
+    parser.addoption("--encryption-password",
+                     action="store",
+                     help="Encryption will be enabled for CBL db",
+                     default="password")
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -161,6 +171,9 @@ def params_from_base_suite_setup(request):
 
     community_enabled = request.config.getoption("--community")
 
+    enable_encryption = request.config.getoption("--enable-encryption")
+    encryption_password = request.config.getoption("--encryption-password")
+
     test_name = request.node.name
     testserver_list = []
     for platform, version, host, port in zip(platform_list,
@@ -178,7 +191,7 @@ def params_from_base_suite_setup(request):
         testserver.download()
 
         # Install TestServer app
-        if device_enabled and platform == "ios":
+        if device_enabled and (platform == "ios" or platform == "android"):
             testserver.install_device()
         else:
             testserver.install()
@@ -286,10 +299,10 @@ def params_from_base_suite_setup(request):
                 testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp,
                                                                datetime.datetime.now()))
         for base_url, i in zip(base_url_list, range(len(base_url_list))):
-            if enable_file_logging and liteserv_versions[0] >= "2.5.0":
+            if enable_file_logging and version_list[0] >= "2.5.0":
                 cbllog = FileLogging(base_url)
                 cbllog.configure(log_level="verbose", max_rotate_count=2,
-                                 max_size=1000 * 512, plain_text=True)
+                                 max_size=1000 * 512 * 4, plain_text=True)
                 log_info("Log files available at - {}".format(cbllog.get_directory()))
             db_name = "{}-{}".format(create_db_per_suite, i + 1)
             log_info("db name for {} is {}".format(base_url, db_name))
@@ -299,7 +312,10 @@ def params_from_base_suite_setup(request):
             db_obj_list.append(db)
 
             log_info("Creating a Database {} at the suite setup".format(db_name))
-            db_config = db.configure()
+            if enable_encryption:
+                db_config = db.configure(password=encryption_password)
+            else:
+                db_config = db.configure()
             cbl_db = db.create(db_name, db_config)
             cbl_db_list.append(cbl_db)
             log_info("Getting the database name")
@@ -340,7 +356,9 @@ def params_from_base_suite_setup(request):
         "generator": generator,
         "resume_cluster": resume_cluster,
         "create_db_per_test": create_db_per_test,
-        "enable_rebalance": enable_rebalance
+        "enable_rebalance": enable_rebalance,
+        "enable_encryption": enable_encryption,
+        "encryption_password": encryption_password
     }
 
     if create_db_per_suite:
@@ -389,6 +407,8 @@ def params_from_base_test_setup(params_from_base_suite_setup):
     resume_cluster = params_from_base_suite_setup["resume_cluster"]
     create_db_per_test = params_from_base_suite_setup["create_db_per_test"]
     cluster_topology = params_from_base_suite_setup["cluster_topology"]
+    encryption_password = params_from_base_suite_setup["encryption_password"]
+    enable_encryption = params_from_base_suite_setup["enable_encryption"]
     # testserver_list = params_from_base_suite_setup["testserver_list"]
     # test_name = request.node.name
 
@@ -414,7 +434,10 @@ def params_from_base_test_setup(params_from_base_suite_setup):
             db_obj_list.append(db)
 
             log_info("Creating a Database {} at the test setup".format(db_name))
-            db_config = db.configure()
+            if enable_encryption:
+                db_config = db.configure(password=encryption_password)
+            else:
+                db_config = db.configure()
             cbl_db = db.create(db_name, db_config)
             cbl_db_list.append(cbl_db)
             log_info("Getting the database name")

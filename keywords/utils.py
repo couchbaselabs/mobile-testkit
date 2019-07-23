@@ -62,7 +62,10 @@ def log_r(request, info=True):
         request.request.headers,
         request.request.body))
 
-    logging.debug("{}".format(request.text))
+    try:
+        logging.debug("{}".format(request.text.encode("utf-8")))
+    except Exception, err:
+        log_debug("Error occurred: {}".format(err))
 
 
 def version_is_binary(version):
