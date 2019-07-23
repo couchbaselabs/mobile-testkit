@@ -28,6 +28,8 @@ import com.couchbase.lite.ReplicationFilter;
 import com.couchbase.lite.ReplicatorConfiguration;
 import com.couchbase.lite.URLEndpoint;
 
+import static java.lang.Thread.sleep;
+
 
 public class ReplicatorConfigurationRequestHandler {
     private static final String TAG = "REPLCONFIGHANDLER";
@@ -172,6 +174,9 @@ public class ReplicatorConfigurationRequestHandler {
                 break;
             case "incorrect_doc_id":
                 config.setConflictResolver(new IncorrectDocIdConflictResolver());
+                break;
+            case "delayed_local_win":
+                config.setConflictResolver(new DelayedLocalWinConflictResolver());
                 break;
             default:
                 config.setConflictResolver(ConflictResolver.DEFAULT);
@@ -469,5 +474,32 @@ class IncorrectDocIdConflictResolver implements ConflictResolver {
         MutableDocument newDoc = new MutableDocument(newId, localDoc.toMap());
         newDoc.setValue("_id", newId);
         return newDoc;
+    }
+}
+
+class DelayedLocalWinConflictResolver implements ConflictResolver {
+    private static final String TAG = "CCRREPLCONFIGHANDLER";
+    @Override
+    public Document resolve(Conflict conflict) {
+        Document localDoc = conflict.getLocalDocument();
+        Document remoteDoc = conflict.getRemoteDocument();
+        String docId = conflict.getDocumentId();
+        String remoteDocId = remoteDoc.getId();
+        String localDocId = localDoc.getId();
+        if (remoteDocId != localDocId) {
+            Log.e(TAG, "Remote docId and local docId are different");
+        }
+        if (remoteDocId != docId) {
+            Log.e(TAG, "Remote docId doesn't match with conflict docId");
+        }
+        if (docId != localDocId) {
+            Log.e(TAG, "Local docId doesn't match with conflict docId");
+        }
+        try {
+            sleep(1000 * 10);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return localDoc;
     }
 }

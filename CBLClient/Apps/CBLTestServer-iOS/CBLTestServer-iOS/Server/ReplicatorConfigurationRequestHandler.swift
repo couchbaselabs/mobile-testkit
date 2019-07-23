@@ -164,6 +164,9 @@ public class ReplicatorConfigurationRequestHandler {
                 case "incorrect_doc_id":
                     config.conflictResolver = IncorrectDocIdCustomConflictResolver();
                     break;
+                case "delayed_local_win":
+                    config.conflictResolver = DelayedLocalWinCustomConflictResolver();
+                    break;
                 default:
                     config.conflictResolver = ConflictResolver.default
                     break;
@@ -362,6 +365,27 @@ private class MergeWinCustomConflictResolver: ConflictResolverProtocol{
             }
         }
         return newDoc
+    }
+}
+
+private class DelayedLocalWinCustomConflictResolver: ConflictResolverProtocol{
+    func resolve(conflict: Conflict) -> Document? {
+        let localDoc = conflict.localDocument!
+        let remoteDoc = conflict.remoteDocument!
+        let docId = conflict.documentID
+        let remoteDocId = remoteDoc.id
+        let localDocId = localDoc.id
+        if remoteDocId != localDocId {
+            print("Remote docId and local docId are different")
+        }
+        if remoteDocId != docId {
+            print("Remote docId doesn't match with conflict docId")
+        }
+        if localDocId != docId {
+            print("Local docId doesn't match with conflict docId")
+        }
+        sleep(10)
+        return localDoc
     }
 }
 
