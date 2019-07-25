@@ -37,6 +37,7 @@ using JetBrains.Annotations;
 using Newtonsoft.Json.Linq;
 
 using static Couchbase.Lite.Testing.DatabaseMethods;
+using System.Threading;
 
 namespace Couchbase.Lite.Testing
 {
@@ -209,6 +210,15 @@ namespace Couchbase.Lite.Testing
                         break;
                     case "incorrect_doc_id":
                         config.ConflictResolver = new IncorrectDocIdConflictResolver();
+                        break;
+                    case "delayed_local_win":
+                        config.ConflictResolver = new DelayedLocalWinConflictResolver();
+                        break;
+                    case "delete_not_win":
+                        config.ConflictResolver = new DeleteDocConflictResolver();
+                        break;
+                    case "exception_thrown":
+                        config.ConflictResolver = new ExceptionThrownConflictResolver();
                         break;
                     default:
                         config.ConflictResolver = ConflictResolver.Default;
@@ -531,6 +541,62 @@ namespace Couchbase.Lite.Testing
             MutableDocument newDoc = new MutableDocument(newId, localDoc.ToDictionary());
             newDoc.SetValue("_id", newId);
             return newDoc;
+
+        }
+    }
+
+    internal sealed class DeleteDocConflictResolver : IConflictResolver
+    {
+        Document IConflictResolver.Resolve(Conflict conflict)
+        {
+            Document localDoc = conflict.LocalDocument;
+            Document remoteDoc = conflict.RemoteDocument;
+            string docId = conflict.DocumentID;
+            if (remoteDoc == null)
+            {
+                return localDoc;
+            }
+            else
+            {
+                return null;
+            }
+        }
+    }
+
+    internal sealed class ExceptionThrownConflictResolver : IConflictResolver
+    {
+        Document IConflictResolver.Resolve(Conflict conflict)
+        {
+            Document localDoc = conflict.LocalDocument;
+            Document remoteDoc = conflict.RemoteDocument;
+            string docId = conflict.DocumentID;
+            throw new Exception("Throwing an exception");
+        }
+    }
+
+    internal sealed class DelayedLocalWinConflictResolver : IConflictResolver
+    {
+        Document IConflictResolver.Resolve(Conflict conflict)
+        {
+            Document localDoc = conflict.LocalDocument;
+            Document remoteDoc = conflict.RemoteDocument;
+            string docId = conflict.DocumentID;
+            string localDocId = localDoc.Id;
+            string remoteDocId = remoteDoc.Id;
+            if (!localDocId.Equals(remoteDocId))
+            {
+                Console.WriteLine("Remote docId and local docId are different");
+            }
+            if (!docId.Equals(remoteDocId))
+            {
+                Console.WriteLine("Remote docId doesn't match with conflict docId");
+            }
+            if (!docId.Equals(localDocId))
+            {
+                Console.WriteLine("Local docId doesn't match with conflict docId");
+            }
+            Thread.Sleep(1000 * 10);
+            return localDoc;
 
         }
     }
