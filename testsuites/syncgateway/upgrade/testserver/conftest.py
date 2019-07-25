@@ -34,6 +34,11 @@ def pytest_addoption(parser):
                      help="Skip cluster provisioning at setup",
                      default=False)
 
+    parser.addoption("--use-local-testserver",
+                     action="store_true",
+                     help="Skip download and launch TestServer, use local debug build",
+                     default=False)
+
     parser.addoption("--server-version",
                      action="store",
                      help="server-version: Couchbase Server version to install (ex. 4.5.0 or 4.5.0-2601)")
@@ -133,6 +138,7 @@ def params_from_base_suite_setup(request):
     mode = request.config.getoption("--mode")
     cluster_config = request.config.getoption("--cluster-config")
     skip_provisioning = request.config.getoption("--skip-provisioning")
+    use_local_testserver = request.config.getoption("--use-local-testserver")
     cbs_ssl = request.config.getoption("--server-ssl")
     xattrs_enabled = request.config.getoption("--xattrs")
     liteserv_host = request.config.getoption("--liteserv-host")
@@ -188,14 +194,15 @@ def params_from_base_suite_setup(request):
 
     log_info("Downloading TestServer ...")
     # Download TestServer app
-    # testserver.download()
-    '''
-    # Install TestServer app
-    if device_enabled:
-        testserver.install_device()
-    else:
-        testserver.install()
-    '''
+    if not use_local_testserver:
+        testserver.download()
+
+        # Install TestServer app
+        if device_enabled:
+            testserver.install_device()
+        else:
+            testserver.install()
+
     base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
 
@@ -301,7 +308,7 @@ def params_from_base_suite_setup(request):
     cbs_ip = host_for_url(cbs_url)
 
     if not skip_provisioning:
-        log_info("Installing Sync Gateway + Couchbase Server + Accels ('di' only)")
+        log_info("Installing Sync Gateway + Couchbase Server")
 
         try:
             cluster_utils.provision_cluster(
@@ -316,6 +323,7 @@ def params_from_base_suite_setup(request):
             raise
 
     # Hit this installed running services to verify the correct versions are installed
+
     cluster_utils.verify_cluster_versions(
         cluster_config,
         expected_server_version=server_version,
@@ -389,7 +397,8 @@ def params_from_base_suite_setup(request):
     utils_obj = Utils(base_url)
     utils_obj.flushMemory()
     log_info("Stopping the test server per suite")
-    testserver.stop()
+    if not use_local_testserver:
+        testserver.stop()
     
     # Delete png files under resources/data
     clear_resources_pngs()
@@ -422,8 +431,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     enable_file_logging = params_from_base_suite_setup["enable_file_logging"]
     cluster_topology = params_from_base_suite_setup["cluster_topology"]
     base_url = params_from_base_suite_setup["base_url"]
-
-
+    use_local_testserver = request.config.getoption("--use-local-testserver")
     test_name = request.node.name
 
     source_db = None
@@ -431,14 +439,14 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     log_filename = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
                                                  test_name_cp,
                                                  datetime.datetime.now())
-    '''
-    if create_db_per_test:
+
+    if (not use_local_testserver) and create_db_per_test:
         log_info("Starting TestServer...")
         if device_enabled:
             testserver.start_device(log_filename)
         else:
             testserver.start(log_filename)
-    '''
+
     cluster_helper = ClusterKeywords(cluster_config)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config=cluster_config)
     sg_url = cluster_hosts["sync_gateways"][0]["public"]
@@ -521,7 +529,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
             utils_obj = Utils(base_url)
             utils_obj.flushMemory()
             log_info("Stopping the test server per test")
-            # testserver.stop()
+            if not use_local_testserver:
+                testserver.stop()
         except Exception, err:
             log_info("Exception occurred: {}".format(err))
 
