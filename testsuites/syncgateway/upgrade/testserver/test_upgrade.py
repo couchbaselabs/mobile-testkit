@@ -2,7 +2,7 @@ import os
 import random
 import time
 
-from concurrent.futures import ProcessPoolExecutor, as_completed
+from concurrent.futures import ProcessPoolExecutor
 from couchbase.bucket import Bucket
 
 from keywords.couchbaseserver import verify_server_version
@@ -12,7 +12,6 @@ from keywords.SyncGateway import (verify_sync_gateway_version,
                                   SyncGateway)
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.MobileRestClient import MobileRestClient
-from keywords import attachment
 from keywords.constants import SDK_TIMEOUT
 
 from libraries.testkit.cluster import Cluster
@@ -204,7 +203,7 @@ def verify_sg_docs_revision_history(url, db, added_docs, terminator):
     sg_client = MobileRestClient()
     sg_docs = sg_client.get_all_docs(url=url, db=db, include_docs=True)["rows"]
 
-    expected_doc_map ={}
+    expected_doc_map = {}
     for doc in added_docs:
         if "numOfUpdates" in added_docs[doc]:
             expected_doc_map[doc] = added_docs[doc]["numOfUpdates"] - 1

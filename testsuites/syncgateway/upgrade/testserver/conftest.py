@@ -1,21 +1,14 @@
-import pdb
 import pytest
-import os
 import datetime
 import time
 
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.constants import CLUSTER_CONFIGS_DIR
 from keywords.exceptions import ProvisioningError
-from keywords.SyncGateway import (sync_gateway_config_path_for_mode,
-                                  validate_sync_gateway_mode)
+from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.tklogging import Logging
 from keywords.utils import check_xattr_support, log_info, version_is_binary, clear_resources_pngs, host_for_url
-from libraries.NetworkUtils import NetworkUtils
-from libraries.testkit import cluster
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop
-from keywords.exceptions import LogScanningError
-from libraries.provision.ansible_runner import AnsibleRunner
 from keywords.constants import RESULTS_DIR
 from keywords.TestServerFactory import TestServerFactory
 
@@ -116,7 +109,7 @@ def pytest_addoption(parser):
     parser.addoption("--delta-sync",
                      action="store_true",
                      help="delta-sync: Enable delta-sync for sync gateway, Only works with Sync Gateway 2.5+ EE along with CBL 2.5+ EE")
-    
+
     parser.addoption("--enable-file-logging",
                      action="store_true",
                      help="If set, CBL file logging would enable. Supported only cbl2.5 onwards")
@@ -154,13 +147,14 @@ def params_from_base_suite_setup(request):
     number_replicas = request.config.getoption("--number-replicas")
     delta_sync_enabled = request.config.getoption("--delta-sync")
     enable_file_logging = request.config.getoption("--enable-file-logging")
+    test_name = request.node.name
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_upgraded_version, sync_gateway_upgraded_version)
-
+    '''
     if delta_sync_enabled:
         check_delta_sync_support(sync_gateway_upgraded_version, liteserv_version)
-
+    '''
     log_info("server_version: {}".format(server_version))
     log_info("sync_gateway_version: {}".format(sync_gateway_version))
     log_info("server_upgraded_version: {}".format(server_upgraded_version))
@@ -212,7 +206,7 @@ def params_from_base_suite_setup(request):
     # use cluster config specified by arguments with "cc" if mode is "cc" or "di" if mode is "di"
     cluster_config = "{}/{}_{}".format(CLUSTER_CONFIGS_DIR, cluster_config, mode)
     log_info("Using '{}' config!".format(cluster_config))
-    
+
     cluster_utils = ClusterKeywords(cluster_config)
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
 
@@ -225,7 +219,7 @@ def params_from_base_suite_setup(request):
 
     # Only works with load balancer configs
     persist_cluster_config_environment_prop(cluster_config, 'sg_lb_enabled', True)
-    
+
     if sg_ssl:
         log_info("Enabling SSL on sync gateway")
         persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', True)
@@ -249,24 +243,6 @@ def params_from_base_suite_setup(request):
     else:
         log_info("Running test with sync_gateway version {}".format(sync_gateway_version))
         persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_version', sync_gateway_version)
-
-    try:
-        cbl_log_decoder_platform
-    except NameError:
-        log_info("cbl_log_decoder_platform is not provided")
-        persist_cluster_config_environment_prop(cluster_config, 'cbl_log_decoder_platform', "macos", property_name_check=False)
-    else:
-        log_info("Running test with cbl_log_decoder_platform {}".format(cbl_log_decoder_platform))
-        persist_cluster_config_environment_prop(cluster_config, 'cbl_log_decoder_platform', cbl_log_decoder_platform, property_name_check=False)
-
-    try:
-        cbl_log_decoder_build
-    except NameError:
-        log_info("cbl_log_decoder_build is not provided")
-        persist_cluster_config_environment_prop(cluster_config, 'cbl_log_decoder_build', "", property_name_check=False)
-    else:
-        log_info("Running test with cbl_log_decoder_platform {}".format(cbl_log_decoder_platform))
-        persist_cluster_config_environment_prop(cluster_config, 'cbl_log_decoder_platform', cbl_log_decoder_platform, property_name_check=False)
 
     if xattrs_enabled:
         log_info("Running test with xattrs for sync meta storage")
@@ -301,11 +277,9 @@ def params_from_base_suite_setup(request):
         persist_cluster_config_environment_prop(cluster_config, 'delta_sync_enabled', False)
 
     # Write the number of replicas to cluster config
-    persist_cluster_config_environment_prop(cluster_config, 'number_replicas', number_replicas) 
+    persist_cluster_config_environment_prop(cluster_config, 'number_replicas', number_replicas)
     cluster_utils = ClusterKeywords(cluster_config)
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
-    cbs_url = cluster_topology['couchbase_servers'][0]
-    cbs_ip = host_for_url(cbs_url)
 
     if not skip_provisioning:
         log_info("Installing Sync Gateway + Couchbase Server")
@@ -399,7 +373,7 @@ def params_from_base_suite_setup(request):
     log_info("Stopping the test server per suite")
     if not use_local_testserver:
         testserver.stop()
-    
+
     # Delete png files under resources/data
     clear_resources_pngs()
 
