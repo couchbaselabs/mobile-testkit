@@ -19,6 +19,7 @@ import com.couchbase.CouchbaseLiteServ.server.Args;
 import com.couchbase.lite.Authenticator;
 import com.couchbase.lite.Conflict;
 import com.couchbase.lite.ConflictResolver;
+import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.Database;
 import com.couchbase.lite.DatabaseEndpoint;
 import com.couchbase.lite.Document;
@@ -177,6 +178,12 @@ public class ReplicatorConfigurationRequestHandler {
                 break;
             case "delayed_local_win":
                 config.setConflictResolver(new DelayedLocalWinConflictResolver());
+                break;
+            case "delete_not_win":
+                config.setConflictResolver(new DeleteDocConflictResolver());
+                break;
+            case "exception_thrown":
+                config.setConflictResolver(new ExceptionThrownConflictResolver());
                 break;
             default:
                 config.setConflictResolver(ConflictResolver.DEFAULT);
@@ -501,5 +508,31 @@ class DelayedLocalWinConflictResolver implements ConflictResolver {
             e.printStackTrace();
         }
         return localDoc;
+    }
+}
+
+class DeleteDocConflictResolver implements ConflictResolver {
+    private static final String TAG = "CCRREPLCONFIGHANDLER";
+    @Override
+    public Document resolve(Conflict conflict) {
+        Document localDoc = conflict.getLocalDocument();
+        Document remoteDoc = conflict.getRemoteDocument();
+        String docId = conflict.getDocumentId();
+        if (remoteDoc == null) {
+            return localDoc;
+        } else {
+            return null;
+        }
+    }
+}
+
+class ExceptionThrownConflictResolver implements ConflictResolver {
+    private static final String TAG = "CCRREPLCONFIGHANDLER";
+    @Override
+    public Document resolve(Conflict conflict) {
+        Document localDoc = conflict.getLocalDocument();
+        Document remoteDoc = conflict.getRemoteDocument();
+        String docId = conflict.getDocumentId();
+        throw new IllegalStateException("Throwing an exception");
     }
 }

@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.couchbase.CouchbaseLiteServ.server.Args;
+import com.couchbase.lite.ConflictResolver;
 import com.couchbase.lite.Database;
 import com.couchbase.lite.MessageEndpoint;
 import com.couchbase.lite.MessageEndpointConnection;
@@ -49,6 +50,7 @@ public class PeerToPeerRequestHandler implements MessageEndpointDelegate {
         Boolean push_filter = args.get("push_filter");
         Boolean pull_filter = args.get("pull_filter");
         String filter_callback_func = args.get("filter_callback_func");
+        String conflict_resolver = args.get("conflict_resolver");
         ReplicatorConfiguration config;
         Replicator replicator;
 
@@ -121,7 +123,35 @@ public class PeerToPeerRequestHandler implements MessageEndpointDelegate {
                     break;
             }
         }
-
+        switch (conflict_resolver) {
+            case "local_wins":
+                config.setConflictResolver(new LocalWinsCustomConflictResolver());
+                break;
+            case "remote_wins":
+                config.setConflictResolver(new RemoteWinsCustomConflictResolver());
+                break;
+            case "null":
+                config.setConflictResolver(new NullCustomConflictResolver());
+                break;
+            case "merge":
+                config.setConflictResolver(new MergeCustomConflictResolver());
+                break;
+            case "incorrect_doc_id":
+                config.setConflictResolver(new IncorrectDocIdConflictResolver());
+                break;
+            case "delayed_local_win":
+                config.setConflictResolver(new DelayedLocalWinConflictResolver());
+                break;
+            case "delete_not_win":
+                config.setConflictResolver(new DeleteDocConflictResolver());
+                break;
+            case "exception_thrown":
+                config.setConflictResolver(new ExceptionThrownConflictResolver());
+                break;
+            default:
+                config.setConflictResolver(ConflictResolver.DEFAULT);
+                break;
+        }
         replicator = new Replicator(config);
         return replicator;
     }

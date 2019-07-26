@@ -174,28 +174,28 @@ def params_from_base_suite_setup(request):
     enable_encryption = request.config.getoption("--enable-encryption")
     encryption_password = request.config.getoption("--encryption-password")
 
-    test_name = request.node.name
-    testserver_list = []
-    for platform, version, host, port in zip(platform_list,
-                                             version_list,
-                                             host_list,
-                                             port_list):
-        testserver = TestServerFactory.create(platform=platform,
-                                              version_build=version,
-                                              host=host,
-                                              port=port,
-                                              community_enabled=community_enabled)
-
-        log_info("Downloading TestServer ...")
-        # Download TestServer app
-        testserver.download()
-
-        # Install TestServer app
-        if device_enabled and platform == "ios":
-            testserver.install_device()
-        else:
-            testserver.install()
-        testserver_list.append(testserver)
+#     test_name = request.node.name
+#     testserver_list = []
+#     for platform, version, host, port in zip(platform_list,
+#                                              version_list,
+#                                              host_list,
+#                                              port_list):
+#         testserver = TestServerFactory.create(platform=platform,
+#                                               version_build=version,
+#                                               host=host,
+#                                               port=port,
+#                                               community_enabled=community_enabled)
+# 
+#         log_info("Downloading TestServer ...")
+#         # Download TestServer app
+#         testserver.download()
+# 
+#         # Install TestServer app
+#         if device_enabled and platform == "ios":
+#             testserver.install_device()
+#         else:
+#             testserver.install()
+#         testserver_list.append(testserver)
     base_url_list = []
     for host, port in zip(host_list, port_list):
         base_url_list.append("http://{}:{}".format(host, port))
@@ -264,8 +264,8 @@ def params_from_base_suite_setup(request):
         target_url = "wss://{}:4984/{}".format(sg_ip, sg_db)
         target_admin_url = "wss://{}:4985/{}".format(sg_ip, sg_db)
 
-    if sync_gateway_version < "2.0":
-        pytest.skip('Does not work with sg < 2.0 , so skipping the test')
+#     if sync_gateway_version < "2.0":
+#         pytest.skip('Does not work with sg < 2.0 , so skipping the test')
 
     if not skip_provisioning:
         log_info("Installing Sync Gateway + Couchbase Server + Accels ('di' only)")
@@ -289,15 +289,15 @@ def params_from_base_suite_setup(request):
     query_obj_list = []
     if create_db_per_suite:
         # Start Test server which needed for suite level set up like query tests
-        for testserver in testserver_list:
-            log_info("Starting TestServer...")
-            test_name_cp = test_name.replace("/", "-")
-            if device_enabled:
-                testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
-                                                                      test_name_cp, datetime.datetime.now()))
-            else:
-                testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp,
-                                                               datetime.datetime.now()))
+#         for testserver in testserver_list:
+#             log_info("Starting TestServer...")
+#             test_name_cp = test_name.replace("/", "-")
+#             if device_enabled:
+#                 testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
+#                                                                       test_name_cp, datetime.datetime.now()))
+#             else:
+#                 testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp,
+#                                                                datetime.datetime.now()))
         for base_url, i in zip(base_url_list, range(len(base_url_list))):
             if enable_file_logging and version_list[0] >= "2.5.0":
                 cbllog = FileLogging(base_url)
@@ -369,12 +369,13 @@ def params_from_base_suite_setup(request):
                 db_obj.deleteDB(cbl_db)
 
     # Flush all the memory contents on the server app
-    for base_url, testserver in zip(base_url_list, testserver_list):
+    for base_url in base_url_list:
+#     for base_url, testserver in zip(base_url_list, testserver_list):
         log_info("Flushing server memory")
         utils_obj = Utils(base_url)
         utils_obj.flushMemory()
-        log_info("Stopping the test server")
-        testserver.stop()
+#         log_info("Stopping the test server")
+#         testserver.stop()
     clear_resources_pngs()
 
 

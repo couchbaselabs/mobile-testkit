@@ -10,6 +10,7 @@ import Foundation
 import CouchbaseLiteSwift
 
 
+
 public class ReplicatorConfigurationRequestHandler {
     public static let VOID: String? = nil
     fileprivate var _pushPullReplListener:NSObjectProtocol?
@@ -409,5 +410,17 @@ private class IncorrectDocIdCustomConflictResolver: ConflictResolverProtocol{
         let newDoc = MutableDocument(id: newId, data: localDoc.toDictionary())
         newDoc.setValue("_id", forKey: newId)
         return newDoc
+    }
+}
+
+private class DeleteDocCustomConflictResolver: ConflictResolverProtocol{
+    func resolve(conflict: Conflict) -> Document? {
+        let localDoc = conflict.localDocument
+        let remoteDoc = conflict.remoteDocument
+        _ = conflict.documentID
+        if remoteDoc == nil {
+            return localDoc
+        }
+        return nil
     }
 }
