@@ -240,8 +240,8 @@ def send_changes_termination_doc(db, cbl_db, terminator_doc_id, terminator_chann
 def update_docs(db, cbl_db, added_docs, doc_obj, terminator_doc_id_prefix):
     log_info("Starting doc updates")
     current_user_doc_ids = []
-    print("added_docs: {}".format(added_docs))
     for doc in added_docs:
+        log_info(doc)
         current_user_doc_ids.append(doc)
 
     docs_per_update = 3
@@ -249,8 +249,10 @@ def update_docs(db, cbl_db, added_docs, doc_obj, terminator_doc_id_prefix):
     terminator_doc_id = "{}_0".format(terminator_doc_id_prefix)
 
     while True:
+        log_info("randomly update docs waiting for terminator arrive...")
         try:
             doc_ids = db.getDocIds(cbl_db)
+            log_info("has terminator arrived? {}".format(terminator_doc_id in doc_ids))
             if terminator_doc_id in doc_ids:
                 log_info("update_docs: Found termination doc")
                 log_info("update_docs: Updated {} docs".format(len(doc_revs.keys())))
