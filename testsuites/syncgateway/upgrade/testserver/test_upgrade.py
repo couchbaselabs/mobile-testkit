@@ -253,6 +253,7 @@ def update_docs(db, cbl_db, added_docs, doc_obj, terminator_doc_id_prefix):
         try:
             doc_ids = db.getDocIds(cbl_db)
             log_info("has terminator arrived? {}".format(terminator_doc_id in doc_ids))
+            log_info(doc_ids)
             if terminator_doc_id in doc_ids:
                 log_info("update_docs: Found termination doc")
                 log_info("update_docs: Updated {} docs".format(len(doc_revs.keys())))
