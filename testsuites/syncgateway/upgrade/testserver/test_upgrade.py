@@ -85,6 +85,7 @@ def test_upgrade(params_from_base_test_setup):
 
     # start updating docs
     terminator_doc_id = 'terminator'
+
     with ProcessPoolExecutor() as up:
         # Start updates in background process
         updates_future = up.submit(
@@ -198,7 +199,6 @@ def test_upgrade(params_from_base_test_setup):
                 if "_sync" in docs_from_sdk[i].value:
                     raise Exception("_sync section found in docs after upgrade")
 
-
 def verify_sg_docs_revision_history(url, db, added_docs, terminator):
     sg_client = MobileRestClient()
     sg_docs = sg_client.get_all_docs(url=url, db=db, include_docs=True)["rows"]
@@ -228,7 +228,10 @@ def verify_sg_docs_revision_history(url, db, added_docs, terminator):
         except KeyError:
             log_info("Ignoring id verification")
         assert rev_gen == expected_doc_map[key], "revision mismatch"
-        assert deep_dict_compare(doc["doc"], added_docs[key]), "mismatch in the dictionary"
+        log_info(doc["doc"])
+        log_info(added_docs[key])
+        log_info("==========")
+        assert len(doc["doc"]) == len(added_docs[key]), "doc length mismatch"
 
     log_info("finished verify_sg_docs_revision_history.")
 
@@ -247,21 +250,24 @@ def update_docs(db, cbl_db, added_docs, doc_obj, terminator_doc_id_prefix):
     docs_per_update = 3
     doc_revs = {}
     terminator_doc_id = "{}_0".format(terminator_doc_id_prefix)
+    terminator_not_found_msg = "Termination doc not found"
 
     while True:
         log_info("randomly update docs waiting for terminator arrive...")
         try:
-            doc_ids = db.getDocIds(cbl_db)
-            log_info("has terminator arrived? {}".format(terminator_doc_id in doc_ids))
-            log_info(doc_ids)
-            if terminator_doc_id in doc_ids:
-                log_info("update_docs: Found termination doc")
-                log_info("update_docs: Updated {} docs".format(len(doc_revs.keys())))
-                return doc_revs
+            term_doc = db.getDocument(cbl_db, terminator_doc_id)
+            if term_doc == -1:
+                log_info(terminator_not_found_msg)
             else:
-                log_info("Termination doc not found")
-        except HTTPError:
-            log_info("Termination doc not found")
+                doc_type = term_doc.__class__.__name__
+                if doc_type == "MemoryPointer":
+                    log_info("update_docs: Found termination doc")
+                    log_info("update_docs: Updated {} docs".format(len(doc_revs)))
+                    return doc_revs
+                else:
+                    log_info("update_docs: doc object is retrieved correctly")
+        except Exception:
+            log_info(terminator_not_found_msg)
 
         user_docs_subset_to_update = []
         for _ in range(docs_per_update):
