@@ -16,7 +16,7 @@ class TestDatabase(object):
         if self.liteserv_version >= "2.6.0":
             err_msg = "db name may not be empty"
         log_info("check for error message: {}".format(err_msg))
-        
+
         if self.liteserv_platform != "android" and db_name == "":
             pytest.skip("Test not applicable for ios")
 
