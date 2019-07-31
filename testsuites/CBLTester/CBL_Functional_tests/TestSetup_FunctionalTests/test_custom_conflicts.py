@@ -1004,7 +1004,7 @@ def test_exception_thrown_custom_conflicts(params_from_base_test_setup, replicat
     for sg_doc in sg_docs_content:
         doc_id = sg_doc["_id"]
         cbl_doc = cbl_docs[doc_id]
-        assert sg_doc["sg_new_update1"] != cbl_doc["sg_new_update1"], "exception_thrown ccr didn't crash the app" 
+        assert sg_doc["sg_new_update1"] != cbl_doc["sg_new_update1"], "exception_thrown ccr didn't crash the app"
         assert sg_doc["sg_new_update2"] != cbl_doc["sg_new_update2"], "exception_thrown ccr didn't crash the app"
         assert sg_doc["sg_new_update3"] != cbl_doc["sg_new_update3"], "exception_thrown ccr didn't crash the app"
         assert "random" not in cbl_doc, "exception_thrown ccr didn't crash the app"
