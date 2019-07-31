@@ -242,60 +242,60 @@ if __name__ == "__main__":
                       action="store", type="string", dest="cbs_platform", default="centos7",
                       help="Server Platfrom to download and install. Ex: centos7/centos6")
 
-    parser.addoption("--xattrs",
+    parser.add_option("--xattrs",
                      action="store_true",
                      help="Use xattrs for sync meta storage. Only works with Sync Gateway 1.5.0+ and Couchbase Server 5.0+")
 
-    parser.addoption("--server-ssl",
+    parser.add_option("--server-ssl",
                      action="store_true",
                      help="If set, will enable SSL communication between server and Sync Gateway")
 
-    parser.addoption("--sg-platform",
+    parser.add_option("--sg-platform",
                      action="store",
                      help="Sync Gateway Platform binary to install (ex. centos or windows)",
                      default="centos")
 
-    parser.addoption("--sg-installer-type",
+    parser.add_option("--sg-installer-type",
                      action="store",
                      help="Sync Gateway Installer type (ex. exe or msi)",
                      default="msi")
 
-    parser.addoption("--sa-platform",
+    parser.add_option("--sa-platform",
                      action="store",
                      help="Sync Gateway Accelerator Platform binary to install (ex. centos or windows)",
                      default="centos")
 
-    parser.addoption("--sa-installer-type",
+    parser.add_option("--sa-installer-type",
                      action="store",
                      help="Sync Gateway Accelerator Installer type (ex. exe or msi)",
                      default="msi")
 
-    parser.addoption("--sg-lb",
+    parser.add_option("--sg-lb",
                      action="store_true",
                      help="If set, will enable load balancer for Sync Gateway")
 
-    parser.addoption("--sg-ce",
+    parser.add_option("--sg-ce",
                      action="store_true",
                      help="If set, will install CE version of Sync Gateway")
 
-    parser.addoption("--no-conflicts",
+    parser.add_option("--no-conflicts",
                      action="store_true",
                      help="If set, allow_conflicts is set to false in sync-gateway config")
 
-    parser.addoption("--sg-ssl",
+    parser.add_option("--sg-ssl",
                      action="store_true",
                      help="If set, will enable SSL communication between Sync Gateway and CBL")
 
-    parser.addoption("--use-views",
+    parser.add_option("--use-views",
                      action="store_true",
                      help="If set, uses views instead of GSI - SG 2.1 and above only")
 
-    parser.addoption("--number-replicas",
+    parser.add_option("--number-replicas",
                      action="store",
                      help="Number of replicas for the indexer node - SG 2.1 and above only",
                      default=0)
 
-    parser.addoption("--delta-sync",
+    parser.add_option("--delta-sync",
                      action="store_true",
                      help="delta-sync: Enable delta-sync for sync gateway")
 
