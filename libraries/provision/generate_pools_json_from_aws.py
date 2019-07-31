@@ -147,11 +147,6 @@ def get_ansible_group_for_instance(instance):
     else:
         instance_type = instance.tags['Type']
 
-    if instance_type == "syncgateway":
-        # Deal with special case for sg accels
-        if 'CacheType' in instance.tags:
-            return "sg_accels"
-
     return instance_type_to_ansible_group[instance_type]
 
 

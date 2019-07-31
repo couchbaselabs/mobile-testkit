@@ -368,6 +368,7 @@ def write_config(config, pool_file, use_docker, sg_windows, sg_accel_windows,
         f.write("x509_certs={}\n".format(x509_certs))
         f.write("delta_sync_enabled=False\n")
         f.write("sync_gateway_ssl=False\n")
+        f.write("sg_use_views=False\n")
 
         if sg_windows:
             f.write("\n\n[sync_gateways:vars]\n")
@@ -402,7 +403,8 @@ def write_config(config, pool_file, use_docker, sg_windows, sg_accel_windows,
                 "ipv6_enabled": ipv6,
                 "x509_certs": x509_certs,
                 "delta_sync_enabled": False,
-                "sync_gateway_ssl": False
+                "sync_gateway_ssl": False,
+                "sg_use_views": False
             }
         }
 

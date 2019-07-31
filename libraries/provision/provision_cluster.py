@@ -28,6 +28,20 @@ def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_conf
     log_info("\n>>> Cluster info:\n")
     server_version = "{}-{}".format(couchbase_server_config.version, couchbase_server_config.build)
     sg_version = "{}-{}".format(sync_gateway_config._version_number, sync_gateway_config._build_number)
+    cbs_ssl = request.config.getoption("--server-ssl")
+    xattrs_enabled = request.config.getoption("--xattrs")
+    cbs_platform = request.config.getoption("--cbs-platform")
+    sg_platform = request.config.getoption("--sg-platform")
+    sg_installer_type = request.config.getoption("--sg-installer-type")
+    sa_platform = request.config.getoption("--sa-platform")
+    sa_installer_type = request.config.getoption("--sa-installer-type")
+    sg_lb = request.config.getoption("--sg-lb")
+    sg_ce = request.config.getoption("--sg-ce")
+    no_conflicts_enabled = request.config.getoption("--no-conflicts")
+    sg_ssl = request.config.getoption("--sg-ssl")
+    use_views = request.config.getoption("--use-views")
+    number_replicas = request.config.getoption("--number-replicas")
+    delta_sync_enabled = request.config.getoption("--delta-sync")
 
     try:
         server_version
@@ -46,6 +60,64 @@ def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_conf
     else:
         log_info("Running test with sync_gateway version {}".format(sg_version))
         persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_version', sg_version)
+
+    if sg_ssl:
+        log_info("Enabling SSL on sync gateway")
+        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', True)
+    else:
+        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', False)
+
+    # Add load balancer prop and check if load balancer IP is available
+    if sg_lb:
+        persist_cluster_config_environment_prop(cluster_config, 'sg_lb_enabled', True)
+        log_info("Running tests with load balancer enabled: {}".format(get_load_balancer_ip(cluster_config)))
+    else:
+        log_info("Running tests with load balancer disabled")
+        persist_cluster_config_environment_prop(cluster_config, 'sg_lb_enabled', False)
+
+    if cbs_ssl:
+        log_info("Running tests with cbs <-> sg ssl enabled")
+        # Enable ssl in cluster configs
+        persist_cluster_config_environment_prop(cluster_config, 'cbs_ssl_enabled', True)
+    else:
+        log_info("Running tests with cbs <-> sg ssl disabled")
+        # Disable ssl in cluster configs
+        persist_cluster_config_environment_prop(cluster_config, 'cbs_ssl_enabled', False)
+
+    if use_views:
+        log_info("Running SG tests using views")
+        # Enable sg views in cluster configs
+        persist_cluster_config_environment_prop(cluster_config, 'sg_use_views', True)
+    else:
+        log_info("Running tests with cbs <-> sg ssl disabled")
+        # Disable sg views in cluster configs
+        persist_cluster_config_environment_prop(cluster_config, 'sg_use_views', False)
+
+    # Write the number of replicas to cluster config
+    persist_cluster_config_environment_prop(cluster_config, 'number_replicas', number_replicas)
+
+    if xattrs_enabled:
+        log_info("Running test with xattrs for sync meta storage")
+        persist_cluster_config_environment_prop(cluster_config, 'xattrs_enabled', True)
+    else:
+        log_info("Using document storage for sync meta data")
+        persist_cluster_config_environment_prop(cluster_config, 'xattrs_enabled', False)
+
+    if no_conflicts_enabled:
+        log_info("Running with no conflicts")
+        persist_cluster_config_environment_prop(cluster_config, 'no_conflicts_enabled', True)
+    else:
+        log_info("Running with allow conflicts")
+        persist_cluster_config_environment_prop(cluster_config, 'no_conflicts_enabled', False)
+
+    sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
+
+    if delta_sync_enabled:
+        log_info("Running with delta sync")
+        persist_cluster_config_environment_prop(cluster_config, 'delta_sync_enabled', True)
+    else:
+        log_info("Running without delta sync")
+        persist_cluster_config_environment_prop(cluster_config, 'delta_sync_enabled', False)
 
     with open(cluster_config, "r") as ansible_hosts:
         log_info(ansible_hosts.read())
@@ -80,6 +152,18 @@ def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_conf
 
     log_info(">>> Server package: {0}/{1}".format(server_baseurl, server_package_name))
     log_info(">>> Using sync_gateway config: {}".format(sync_gateway_config.config_path))
+    log_info("xattrs_enabled: {}".format(xattrs_enabled))
+    log_info("sg_platform: {}".format(sg_platform))
+    log_info("sg_installer_type: {}".format(sg_installer_type))
+    log_info("sa_installer_type: {}".format(sa_installer_type))
+    log_info("sa_platform: {}".format(sa_platform))
+    log_info("sg_lb: {}".format(sg_lb))
+    log_info("sg_ce: {}".format(sg_ce))
+    log_info("sg_ssl: {}".format(sg_ssl))
+    log_info("no conflicts enabled {}".format(no_conflicts_enabled))
+    log_info("no_conflicts_enabled: {}".format(no_conflicts_enabled))
+    log_info("use_views: {}".format(use_views))
+    log_info("number_replicas: {}".format(number_replicas))
 
     # Reset previous installs
     clean_cluster(cluster_config)
@@ -157,6 +241,63 @@ if __name__ == "__main__":
     parser.add_option("", "--cbs-platform",
                       action="store", type="string", dest="cbs_platform", default="centos7",
                       help="Server Platfrom to download and install. Ex: centos7/centos6")
+
+    parser.addoption("--xattrs",
+                     action="store_true",
+                     help="Use xattrs for sync meta storage. Only works with Sync Gateway 1.5.0+ and Couchbase Server 5.0+")
+
+    parser.addoption("--server-ssl",
+                     action="store_true",
+                     help="If set, will enable SSL communication between server and Sync Gateway")
+
+    parser.addoption("--sg-platform",
+                     action="store",
+                     help="Sync Gateway Platform binary to install (ex. centos or windows)",
+                     default="centos")
+
+    parser.addoption("--sg-installer-type",
+                     action="store",
+                     help="Sync Gateway Installer type (ex. exe or msi)",
+                     default="msi")
+
+    parser.addoption("--sa-platform",
+                     action="store",
+                     help="Sync Gateway Accelerator Platform binary to install (ex. centos or windows)",
+                     default="centos")
+
+    parser.addoption("--sa-installer-type",
+                     action="store",
+                     help="Sync Gateway Accelerator Installer type (ex. exe or msi)",
+                     default="msi")
+
+    parser.addoption("--sg-lb",
+                     action="store_true",
+                     help="If set, will enable load balancer for Sync Gateway")
+
+    parser.addoption("--sg-ce",
+                     action="store_true",
+                     help="If set, will install CE version of Sync Gateway")
+
+    parser.addoption("--no-conflicts",
+                     action="store_true",
+                     help="If set, allow_conflicts is set to false in sync-gateway config")
+
+    parser.addoption("--sg-ssl",
+                     action="store_true",
+                     help="If set, will enable SSL communication between Sync Gateway and CBL")
+
+    parser.addoption("--use-views",
+                     action="store_true",
+                     help="If set, uses views instead of GSI - SG 2.1 and above only")
+
+    parser.addoption("--number-replicas",
+                     action="store",
+                     help="Number of replicas for the indexer node - SG 2.1 and above only",
+                     default=0)
+
+    parser.addoption("--delta-sync",
+                     action="store_true",
+                     help="delta-sync: Enable delta-sync for sync gateway")
 
     arg_parameters = sys.argv[1:]
 
