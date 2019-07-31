@@ -168,6 +168,9 @@ public class ReplicatorConfigurationRequestHandler {
                 case "delayed_local_win":
                     config.conflictResolver = DelayedLocalWinCustomConflictResolver();
                     break;
+                case "exception_thrown":
+                    config.conflictResolver = ExceptionThrownCustomConflictResolver();
+                    break;
                 default:
                     config.conflictResolver = ConflictResolver.default
                     break;
@@ -422,5 +425,16 @@ private class DeleteDocCustomConflictResolver: ConflictResolverProtocol{
             return localDoc
         }
         return nil
+    }
+}
+
+private class ExceptionThrownCustomConflictResolver: ConflictResolverProtocol{
+    func resolve(conflict: Conflict) -> Document? {
+        let localDoc = conflict.localDocument
+        let remoteDoc = conflict.remoteDocument
+        NSException(name: .internalInconsistencyException,
+                    reason: "some exception happened inside custom conflict resolution",
+                    userInfo: nil).raise()
+        return remoteDoc
     }
 }

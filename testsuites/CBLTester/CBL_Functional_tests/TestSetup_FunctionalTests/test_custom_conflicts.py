@@ -455,7 +455,7 @@ def test_merge_wins_custom_conflicts(params_from_base_test_setup, replicator_typ
     "pull",
     "push_pull"
 ])
-def test_custom_conflicts_resolution_returns_incorrect_doc_id(params_from_base_test_setup, replicator_type):
+def test_incorrect_doc_id_custom_conflicts_resolution(params_from_base_test_setup, replicator_type):
     """
     @summary: resolve conflicts as per local doc
     1. Create few docs in app and get them replicated to SG. Stop the replication once docs are replicated.
@@ -654,7 +654,7 @@ def test_non_blocking_custom_conflicts_resolution(params_from_base_test_setup, r
             # Saving the history of update to CBL doc
             new_docs_body[doc_id].append(data)
 
-    replicator.wait_until_replicator_idle(repl, sleep_time=5)  # Added sleep time because CCR sleeps for 10 secs
+    replicator.wait_until_replicator_idle(repl, sleep_time=12)  # Added sleep time because CCR sleeps for 10 secs
     total = replicator.getTotal(repl)
     completed = replicator.getCompleted(repl)
     replicator.stop(repl)
@@ -931,7 +931,6 @@ def test_exception_thrown_custom_conflicts(params_from_base_test_setup, replicat
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_blip_url = params_from_base_test_setup["target_url"]
     liteserv_version = params_from_base_test_setup["liteserv_version"]
-    liteserv_platform = params_from_base_test_setup["liteserv_platform"]
     base_url = params_from_base_test_setup["base_url"]
     num_of_docs = 10
     channels = ["ABC"]
@@ -940,9 +939,6 @@ def test_exception_thrown_custom_conflicts(params_from_base_test_setup, replicat
 
     if liteserv_version < "2.6.0":
         pytest.skip('test does not work with liteserv_version < 2.6.0 , so skipping the test')
-
-    if liteserv_platform == "ios":
-        pytest.skip("Can't run this test for iOS app")
     # Reset cluster to ensure no data in system
     c = Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)

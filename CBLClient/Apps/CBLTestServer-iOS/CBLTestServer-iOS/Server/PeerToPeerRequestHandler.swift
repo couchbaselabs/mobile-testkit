@@ -144,6 +144,9 @@ public class PeerToPeerRequestHandler {
                 case "delayed_local_win":
                     replicatorConfig.conflictResolver = DelayedLocalWinCustomConflictResolver();
                     break;
+                case "exception_thrown":
+                    replicatorConfig.conflictResolver = ExceptionThrownCustomConflictResolver();
+                    break;
                 default:
                     replicatorConfig.conflictResolver = ConflictResolver.default
                     break;
@@ -342,5 +345,17 @@ private class DeleteDocCustomConflictResolver: ConflictResolverProtocol{
             return localDoc
         }
         return nil
+    }
+}
+
+private class ExceptionThrownCustomConflictResolver: ConflictResolverProtocol{
+    func resolve(conflict: Conflict) -> Document? {
+        let localDoc = conflict.localDocument
+        let remoteDoc = conflict.remoteDocument
+        let docID = conflict.documentID
+        NSException(name: .internalInconsistencyException,
+                    reason: "some exception happened inside custom conflict resolution",
+                    userInfo: nil).raise()
+        return localDoc
     }
 }
