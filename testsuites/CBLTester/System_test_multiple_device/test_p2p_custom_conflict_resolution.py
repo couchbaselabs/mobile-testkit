@@ -5,6 +5,7 @@ from CBLClient.PeerToPeer import PeerToPeer
 from keywords.utils import random_string, log_info
 from testsuites.CBLTester.CBL_Functional_tests.TestSetup_FunctionalTests.test_delta_sync import property_updater
 
+
 @pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.custom_conflict
@@ -29,7 +30,7 @@ def test_p2p_local_wins_custom_conflicts(params_from_base_test_setup, server_set
     cbl_db_server = server_setup["cbl_db_server"]
     cbl_db_list = server_setup["cbl_db_list"]
     channels = ["peerToPeer"]
-    
+
     host_list = params_from_base_test_setup["host_list"]
     db_obj_list = params_from_base_test_setup["db_obj_list"]
     db_name_list = params_from_base_test_setup["db_name_list"]
@@ -42,8 +43,6 @@ def test_p2p_local_wins_custom_conflicts(params_from_base_test_setup, server_set
     cbl_db_client = cbl_db_list[1]
     db_obj_client = db_obj_list[1]
     db_name_server = db_name_list[0]
-    
-
     server_host = host_list[0]
 
     for liteserv_version in liteserv_versions:
@@ -58,12 +57,13 @@ def test_p2p_local_wins_custom_conflicts(params_from_base_test_setup, server_set
     replicator.wait_until_replicator_idle(repl)
     total = replicator.getTotal(repl)
     completed = replicator.getCompleted(repl)
-    assert total == completed, "replication from client to server did not completed " + str(total) + " not equal to " + str(completed)
+    assert total == completed, "replication from client to server did not completed " + str(total) +\
+                               " not equal to " + str(completed)
     server_docs_count = db_obj_server.getCount(cbl_db_server)
     assert server_docs_count == num_of_docs, "Number of docs is not equivalent to number of docs in server "
     replicator.stop(repl)
 
-    # creating conflict for docs 
+    # creating conflict for docs
     doc_ids = db_obj_client.getDocIds(cbl_db_client)
 
     # updating docs on client side
@@ -93,7 +93,8 @@ def test_p2p_local_wins_custom_conflicts(params_from_base_test_setup, server_set
     replicator.wait_until_replicator_idle(repl)
     total = replicator.getTotal(repl)
     completed = replicator.getCompleted(repl)
-    assert total == completed, "replication from client to server did not completed " + str(total) + " not equal to " + str(completed)
+    assert total == completed, "replication from client to server did not completed " + str(total) +\
+                               " not equal to " + str(completed)
     replicator.stop(repl)
 
     client_cbl_docs = db_obj_client.getDocuments(cbl_db_client, doc_ids)
@@ -103,23 +104,23 @@ def test_p2p_local_wins_custom_conflicts(params_from_base_test_setup, server_set
             server_cbl_doc = server_cbl_docs[doc_id]
             client_cbl_doc = client_cbl_docs[doc_id]
             assert server_cbl_doc["sg_new_update1"] != client_cbl_doc["sg_new_update1"], "CCR failed to resolve " \
-                                                                          "conflict with local win"
+                                                                                         "conflict with local win"
             assert server_cbl_doc["sg_new_update2"] != client_cbl_doc["sg_new_update2"], "CCR failed to resolve " \
-                                                                          "conflict with local win"
+                                                                                         "conflict with local win"
             assert server_cbl_doc["sg_new_update3"] != client_cbl_doc["sg_new_update3"], "CCR failed to resolve " \
-                                                                          "conflict with local win"
+                                                                                         "conflict with local win"
             assert "server_random" not in client_cbl_doc, "CCR failed to resolve conflict with local win"
             assert "client_random" not in server_cbl_doc, "CCR failed to resolve conflict with local win"
     elif replicator_type == "push_pull":
         for doc_id in server_cbl_docs:
             server_cbl_doc = server_cbl_docs[doc_id]
             client_cbl_doc = client_cbl_docs[doc_id]
-            assert server_cbl_doc["sg_new_update1"] == client_cbl_doc["sg_new_update1"], "CCR failed to resolve conflict " \
-                                                                          "with local win"
-            assert server_cbl_doc["sg_new_update2"] == client_cbl_doc["sg_new_update2"], "CCR failed to resolve conflict " \
-                                                                          "with local win"
-            assert server_cbl_doc["sg_new_update3"] == client_cbl_doc["sg_new_update3"], "CCR failed to resolve conflict " \
-                                                                          "with local win"
+            assert server_cbl_doc["sg_new_update1"] == client_cbl_doc["sg_new_update1"], "CCR failed to resolve" \
+                                                                                         " conflict with local win"
+            assert server_cbl_doc["sg_new_update2"] == client_cbl_doc["sg_new_update2"], "CCR failed to resolve " \
+                                                                                         "conflict with local win"
+            assert server_cbl_doc["sg_new_update3"] == client_cbl_doc["sg_new_update3"], "CCR failed to resolve " \
+                                                                                         "conflict with local win"
             assert "server_random" not in client_cbl_doc, "CCR failed to resolve conflict with local win"
             assert "client_random" in server_cbl_doc, "CCR failed to resolve conflict with local win"
 
@@ -147,7 +148,7 @@ def test_p2p_remote_wins_custom_conflicts(params_from_base_test_setup, server_se
     cbl_db_server = server_setup["cbl_db_server"]
     cbl_db_list = server_setup["cbl_db_list"]
     channels = ["peerToPeer"]
-    
+
     host_list = params_from_base_test_setup["host_list"]
     db_obj_list = params_from_base_test_setup["db_obj_list"]
     db_name_list = params_from_base_test_setup["db_name_list"]
@@ -160,8 +161,6 @@ def test_p2p_remote_wins_custom_conflicts(params_from_base_test_setup, server_se
     cbl_db_client = cbl_db_list[1]
     db_obj_client = db_obj_list[1]
     db_name_server = db_name_list[0]
-    
-
     server_host = host_list[0]
 
     for liteserv_version in liteserv_versions:
@@ -176,12 +175,13 @@ def test_p2p_remote_wins_custom_conflicts(params_from_base_test_setup, server_se
     replicator.wait_until_replicator_idle(repl)
     total = replicator.getTotal(repl)
     completed = replicator.getCompleted(repl)
-    assert total == completed, "replication from client to server did not completed " + str(total) + " not equal to " + str(completed)
+    assert total == completed, "replication from client to server did not completed " + str(total) +\
+                               " not equal to " + str(completed)
     server_docs_count = db_obj_server.getCount(cbl_db_server)
     assert server_docs_count == num_of_docs, "Number of docs is not equivalent to number of docs in server "
     replicator.stop(repl)
 
-    # creating conflict for docs 
+    # creating conflict for docs
     doc_ids = db_obj_client.getDocIds(cbl_db_client)
 
     # updating docs on client side
@@ -211,7 +211,8 @@ def test_p2p_remote_wins_custom_conflicts(params_from_base_test_setup, server_se
     replicator.wait_until_replicator_idle(repl)
     total = replicator.getTotal(repl)
     completed = replicator.getCompleted(repl)
-    assert total == completed, "replication from client to server did not completed " + str(total) + " not equal to " + str(completed)
+    assert total == completed, "replication from client to server did not completed " + str(total) +\
+                               " not equal to " + str(completed)
     replicator.stop(repl)
 
     client_cbl_docs = db_obj_client.getDocuments(cbl_db_client, doc_ids)
@@ -220,11 +221,11 @@ def test_p2p_remote_wins_custom_conflicts(params_from_base_test_setup, server_se
         server_cbl_doc = server_cbl_docs[doc_id]
         client_cbl_doc = client_cbl_docs[doc_id]
         assert server_cbl_doc["sg_new_update1"] == client_cbl_doc["sg_new_update1"], "CCR failed to resolve conflict " \
-                                                                      "with remote win"
+                                                                                     "with remote win"
         assert server_cbl_doc["sg_new_update2"] == client_cbl_doc["sg_new_update2"], "CCR failed to resolve conflict " \
-                                                                      "with remote win"
+                                                                                     "with remote win"
         assert server_cbl_doc["sg_new_update3"] == client_cbl_doc["sg_new_update3"], "CCR failed to resolve conflict " \
-                                                                      "with remote win"
+                                                                                     "with remote win"
         assert "server_random" in client_cbl_doc, "CCR failed to resolve conflict with remote win"
         assert "client_random" not in client_cbl_doc, "CCR failed to resolve conflict with remote win"
 
@@ -252,7 +253,7 @@ def test_p2p_merge_wins_custom_conflicts(params_from_base_test_setup, server_set
     cbl_db_server = server_setup["cbl_db_server"]
     cbl_db_list = server_setup["cbl_db_list"]
     channels = ["peerToPeer"]
-    
+
     host_list = params_from_base_test_setup["host_list"]
     db_obj_list = params_from_base_test_setup["db_obj_list"]
     db_name_list = params_from_base_test_setup["db_name_list"]
@@ -265,8 +266,6 @@ def test_p2p_merge_wins_custom_conflicts(params_from_base_test_setup, server_set
     cbl_db_client = cbl_db_list[1]
     db_obj_client = db_obj_list[1]
     db_name_server = db_name_list[0]
-    
-
     server_host = host_list[0]
 
     for liteserv_version in liteserv_versions:
@@ -281,12 +280,13 @@ def test_p2p_merge_wins_custom_conflicts(params_from_base_test_setup, server_set
     replicator.wait_until_replicator_idle(repl)
     total = replicator.getTotal(repl)
     completed = replicator.getCompleted(repl)
-    assert total == completed, "replication from client to server did not completed " + str(total) + " not equal to " + str(completed)
+    assert total == completed, "replication from client to server did not completed " + str(total) +\
+                               " not equal to " + str(completed)
     server_docs_count = db_obj_server.getCount(cbl_db_server)
     assert server_docs_count == num_of_docs, "Number of docs is not equivalent to number of docs in server "
     replicator.stop(repl)
 
-    # creating conflict for docs 
+    # creating conflict for docs
     doc_ids = db_obj_client.getDocIds(cbl_db_client)
 
     # updating docs on client side
@@ -316,7 +316,8 @@ def test_p2p_merge_wins_custom_conflicts(params_from_base_test_setup, server_set
     replicator.wait_until_replicator_idle(repl)
     total = replicator.getTotal(repl)
     completed = replicator.getCompleted(repl)
-    assert total == completed, "replication from client to server did not completed " + str(total) + " not equal to " + str(completed)
+    assert total == completed, "replication from client to server did not completed " + str(total) +\
+                               " not equal to " + str(completed)
     replicator.stop(repl)
 
     client_cbl_docs = db_obj_client.getDocuments(cbl_db_client, doc_ids)
@@ -325,25 +326,25 @@ def test_p2p_merge_wins_custom_conflicts(params_from_base_test_setup, server_set
         for doc_id in server_cbl_docs:
             server_cbl_doc = server_cbl_docs[doc_id]
             client_cbl_doc = client_cbl_docs[doc_id]
-            assert server_cbl_doc["sg_new_update1"] != client_cbl_doc["sg_new_update1"], "CCR failed to resolve conflict " \
-                                                                          "with merge win"
-            assert server_cbl_doc["sg_new_update2"] != client_cbl_doc["sg_new_update2"], "CCR failed to resolve conflict " \
-                                                                          "with merge win"
-            assert server_cbl_doc["sg_new_update3"] != client_cbl_doc["sg_new_update3"], "CCR failed to resolve conflict " \
-                                                                          "with merge win"
+            assert server_cbl_doc["sg_new_update1"] != client_cbl_doc["sg_new_update1"], "CCR failed to resolve" \
+                                                                                         " conflict with merge win"
+            assert server_cbl_doc["sg_new_update2"] != client_cbl_doc["sg_new_update2"], "CCR failed to resolve " \
+                                                                                         "conflict with merge win"
+            assert server_cbl_doc["sg_new_update3"] != client_cbl_doc["sg_new_update3"], "CCR failed to resolve " \
+                                                                                         "conflict with merge win"
             assert "server_random" in client_cbl_doc, "CCR failed to resolve conflict with merge win"
             assert "cbl_random" not in server_cbl_doc, "CCR failed to resolve conflict with merge win. SG doc got " \
-                                               "updated with CBL changes"
+                                                       "updated with CBL changes"
     elif replicator_type == "push_pull":
         for doc_id in server_cbl_docs:
             server_cbl_doc = server_cbl_docs[doc_id]
             client_cbl_doc = client_cbl_docs[doc_id]
-            assert server_cbl_doc["sg_new_update1"] == client_cbl_doc["sg_new_update1"], "CCR failed to resolve conflict " \
-                                                                          "with merge win"
-            assert server_cbl_doc["sg_new_update2"] == client_cbl_doc["sg_new_update2"], "CCR failed to resolve conflict " \
-                                                                          "with merge win"
-            assert server_cbl_doc["sg_new_update3"] == client_cbl_doc["sg_new_update3"], "CCR failed to resolve conflict " \
-                                                                          "with merge win"
+            assert server_cbl_doc["sg_new_update1"] == client_cbl_doc["sg_new_update1"], "CCR failed to resolve " \
+                                                                                         "conflict with merge win"
+            assert server_cbl_doc["sg_new_update2"] == client_cbl_doc["sg_new_update2"], "CCR failed to resolve " \
+                                                                                         "conflict with merge win"
+            assert server_cbl_doc["sg_new_update3"] == client_cbl_doc["sg_new_update3"], "CCR failed to resolve " \
+                                                                                         "conflict with merge win"
             assert "server_random" in client_cbl_doc, "CCR failed to resolve conflict with merge win"
             assert "client_random" in server_cbl_doc, "CCR failed to resolve conflict with merge win"
 
@@ -371,7 +372,7 @@ def test_p2p_non_blocking_custom_conflicts(params_from_base_test_setup, server_s
     cbl_db_server = server_setup["cbl_db_server"]
     cbl_db_list = server_setup["cbl_db_list"]
     channels = ["peerToPeer"]
-    
+
     host_list = params_from_base_test_setup["host_list"]
     db_obj_list = params_from_base_test_setup["db_obj_list"]
     db_name_list = params_from_base_test_setup["db_name_list"]
@@ -384,8 +385,6 @@ def test_p2p_non_blocking_custom_conflicts(params_from_base_test_setup, server_s
     cbl_db_client = cbl_db_list[1]
     db_obj_client = db_obj_list[1]
     db_name_server = db_name_list[0]
-    
-
     server_host = host_list[0]
 
     for liteserv_version in liteserv_versions:
@@ -400,12 +399,13 @@ def test_p2p_non_blocking_custom_conflicts(params_from_base_test_setup, server_s
     replicator.wait_until_replicator_idle(repl)
     total = replicator.getTotal(repl)
     completed = replicator.getCompleted(repl)
-    assert total == completed, "replication from client to server did not completed " + str(total) + " not equal to " + str(completed)
+    assert total == completed, "replication from client to server did not completed " + str(total) +\
+                               " not equal to " + str(completed)
     server_docs_count = db_obj_server.getCount(cbl_db_server)
     assert server_docs_count == num_of_docs, "Number of docs is not equivalent to number of docs in server "
     replicator.stop(repl)
 
-    # creating conflict for docs 
+    # creating conflict for docs
     doc_ids = db_obj_client.getDocIds(cbl_db_client)
 
     # updating docs on client side
@@ -448,7 +448,8 @@ def test_p2p_non_blocking_custom_conflicts(params_from_base_test_setup, server_s
     replicator.wait_until_replicator_idle(repl, sleep_time=5)
     total = replicator.getTotal(repl)
     completed = replicator.getCompleted(repl)
-    assert total == completed, "replication from client to server did not completed " + str(total) + " not equal to " + str(completed)
+    assert total == completed, "replication from client to server did not completed " + str(total) +\
+                               " not equal to " + str(completed)
     replicator.stop(repl)
 
     client_cbl_docs = db_obj_client.getDocuments(cbl_db_client, doc_ids)
@@ -457,27 +458,30 @@ def test_p2p_non_blocking_custom_conflicts(params_from_base_test_setup, server_s
         server_cbl_doc = server_cbl_docs[doc_id]
         client_cbl_doc = client_cbl_docs[doc_id]
         if replicator_type == "pull":
-            assert server_cbl_doc["sg_new_update1"] != client_cbl_doc["sg_new_update1"], "CCR failed to resolve conflict " \
-                                                                          "with delayed local win"
-            assert server_cbl_doc["sg_new_update2"] != client_cbl_doc["sg_new_update2"], "CCR failed to resolve conflict " \
-                                                                          "with delayed local win"
-            assert server_cbl_doc["sg_new_update3"] != client_cbl_doc["sg_new_update3"], "CCR failed to resolve conflict " \
-                                                                          "with delayed local win"
+            assert server_cbl_doc["sg_new_update1"] != client_cbl_doc["sg_new_update1"], "CCR failed to resolve " \
+                                                                                         "conflict with delayed " \
+                                                                                         "local win"
+            assert server_cbl_doc["sg_new_update2"] != client_cbl_doc["sg_new_update2"], "CCR failed to resolve " \
+                                                                                         "conflict with delayed " \
+                                                                                         "local win"
+            assert server_cbl_doc["sg_new_update3"] != client_cbl_doc["sg_new_update3"], "CCR failed to resolve " \
+                                                                                         "conflict with delayed " \
+                                                                                         "local win"
             assert "server_random" not in client_cbl_doc, "CCR failed to resolve conflict with delayed local win"
             assert "client_random" not in server_cbl_doc, "CCR failed to resolve conflict with delayed local win"
-            assert new_docs_body[doc_id][1]["update_during_CCR"] == client_cbl_doc["update_during_CCR"], "CCR failed to " \
-                                                                                                  "resolve conflict " \
-                                                                                                  "with delayed " \
-                                                                                                  "local win"
+            assert new_docs_body[doc_id][1]["update_during_CCR"] == client_cbl_doc["update_during_CCR"],\
+                "CCR failed to resolve conflict with delayed local win"
         elif replicator_type == "push_pull":
-            assert server_cbl_doc["sg_new_update1"] == client_cbl_doc["sg_new_update1"], "CCR failed to resolve conflict " \
-                                                                          "with delayed local win"
-            assert server_cbl_doc["sg_new_update2"] == client_cbl_doc["sg_new_update2"], "CCR failed to resolve conflict " \
-                                                                          "with delayed local win"
-            assert server_cbl_doc["sg_new_update3"] == client_cbl_doc["sg_new_update3"], "CCR failed to resolve conflict " \
-                                                                          "with delayed local win"
+            assert server_cbl_doc["sg_new_update1"] == client_cbl_doc["sg_new_update1"], "CCR failed to resolve " \
+                                                                                         "conflict with delayed " \
+                                                                                         "local win"
+            assert server_cbl_doc["sg_new_update2"] == client_cbl_doc["sg_new_update2"], "CCR failed to resolve " \
+                                                                                         "conflict with delayed " \
+                                                                                         "local win"
+            assert server_cbl_doc["sg_new_update3"] == client_cbl_doc["sg_new_update3"], "CCR failed to resolve " \
+                                                                                         "conflict with delayed " \
+                                                                                         "local win"
             assert "server_random" not in server_cbl_doc, "CCR failed to resolve conflict with delayed local win"
             assert "client_random" in server_cbl_doc, "CCR failed to resolve conflict with delayed local win"
-            assert client_cbl_doc["update_during_CCR"] == server_cbl_doc["update_during_CCR"], "CCR failed to resolve " \
-                                                                                "conflict with delayed" \
-                                                                                " local win"
+            assert client_cbl_doc["update_during_CCR"] == server_cbl_doc["update_during_CCR"],\
+                "CCR failed to resolve conflict with delayed local win"
