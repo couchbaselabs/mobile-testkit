@@ -539,7 +539,7 @@ namespace Couchbase.Lite.Testing
             }
             string newId = "changed" + docId;
             MutableDocument newDoc = new MutableDocument(newId, localDoc.ToDictionary());
-            newDoc.SetValue("_id", newId);
+            newDoc.SetValue("new_value", "couchbase");
             return newDoc;
 
         }

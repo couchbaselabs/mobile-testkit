@@ -479,7 +479,7 @@ class IncorrectDocIdConflictResolver implements ConflictResolver {
         }
         String newId = "changed" + docId;
         MutableDocument newDoc = new MutableDocument(newId, localDoc.toMap());
-        newDoc.setValue("_id", newId);
+        newDoc.setValue("new_value", "couchbase");
         return newDoc;
     }
 }

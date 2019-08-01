@@ -457,12 +457,12 @@ def test_merge_wins_custom_conflicts(params_from_base_test_setup, replicator_typ
 ])
 def test_incorrect_doc_id_custom_conflicts_resolution(params_from_base_test_setup, replicator_type):
     """
-    @summary: resolve conflicts as per local doc
+    @summary: resolve conflicts as per modified doc
     1. Create few docs in app and get them replicated to SG. Stop the replication once docs are replicated.
     2. Update docs couple of times with different updates on both SG and CBL app. This will create conflict.
     3. Start the replication with incorrect_doc_id CCR algorithm
-    4. Verifies that CBL has docs with empty body. For push and pull replication SG changes should be override with
-    that of CBL
+    4. Verifies that CBL has docs with doc id corrected and have an additional field called new_value with value as 
+    couchbae. For push and pull replication SG changes should be override with that of CBL
     """
     sg_db = "db"
     sg_url = params_from_base_test_setup["sg_url"]
@@ -542,17 +542,19 @@ def test_incorrect_doc_id_custom_conflicts_resolution(params_from_base_test_setu
         log_info("Error thrown when requested for Doc from SG:\n {}".format(err))
         sg_docs_content = []
     cbl_docs = db.getDocuments(cbl_db, doc_ids)
+    cbl_doc_ids = db.getDocIds(cbl_db)
     if replicator_type == "pull":
+        assert sorted(doc_ids) == sorted(cbl_doc_ids), "CCR failed to correct incorrect-doc-ids"
         for sg_doc in sg_docs_content:
             doc_id = sg_doc["_id"]
             cbl_doc = cbl_docs[doc_id]
-            assert sg_doc != {}, "Incorrect CCR replicated changes to SG in pull replication"
-            assert cbl_doc == {}, "Incorrect CCR failed to resolve conflict with empty docs"
+            assert cbl_doc["new_value"] == "couchbase", "CCR failed to resolve conflict with doc with additional key"
     if replicator_type == "push_pull":
-        assert len(sg_docs_content) == 0, "Incorrect CCR failed to resolve conflict with docs delete"
-        for doc_id in cbl_docs:
+        for sg_doc in sg_docs_content:
+            doc_id = sg_doc["_id"]
             cbl_doc = cbl_docs[doc_id]
-            assert cbl_doc == {}, "Incorrect CCR failed to resolve conflict with empty docs"
+            assert cbl_doc["new_value"] == "couchbase", "CCR failed to resolve conflict with doc with additional key" 
+            assert "new_value" in sg_doc, "CCR failed to resolve conflict with doc with additional key"
 
 
 @pytest.mark.listener

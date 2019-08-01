@@ -411,7 +411,7 @@ private class IncorrectDocIdCustomConflictResolver: ConflictResolverProtocol{
         }
         let newId = "changed\(docId)"
         let newDoc = MutableDocument(id: newId, data: localDoc.toDictionary())
-        newDoc.setValue("_id", forKey: newId)
+        newDoc.setValue("couchbase", forKey: "new_value")
         return newDoc
     }
 }
