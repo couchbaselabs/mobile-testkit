@@ -7,7 +7,7 @@ from keywords.constants import CLUSTER_CONFIGS_DIR
 from keywords.exceptions import ProvisioningError
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.tklogging import Logging
-from keywords.utils import check_xattr_support, log_info, version_is_binary, clear_resources_pngs, host_for_url
+from keywords.utils import check_xattr_support, log_info, version_is_binary, clear_resources_pngs, host_for_url, check_delta_sync_support
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop
 from keywords.constants import RESULTS_DIR
 from keywords.TestServerFactory import TestServerFactory
@@ -22,6 +22,11 @@ def pytest_addoption(parser):
                      action="store",
                      help="Sync Gateway mode to run the test in, 'cc' for channel cache or 'di' for distributed index")
 
+    parser.addoption("--cluster-config",
+                     action="store",
+                     help="Provide a custom cluster config",
+                     default="ci_lb")
+
     parser.addoption("--skip-provisioning",
                      action="store_true",
                      help="Skip cluster provisioning at setup",
@@ -31,6 +36,15 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="Skip download and launch TestServer, use local debug build",
                      default=False)
+
+    parser.addoption("--num-docs",
+                     action="store",
+                     help="num-docs: Number of docs to load")
+
+    parser.addoption("--cbs-platform",
+                     action="store",
+                     help="cbs-platform: Couchbase server platform",
+                     default="centos7")
 
     parser.addoption("--server-version",
                      action="store",
@@ -44,9 +58,26 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="If set, will enable SSL communication between server and Sync Gateway")
 
+    parser.addoption("--sg-ssl",
+                     action="store_true",
+                     help="If set, will enable SSL communication between Sync Gateway and CBL")
+
     parser.addoption("--xattrs",
                      action="store_true",
                      help="Use xattrs for sync meta storage. Only works with Sync Gateway 2.0+ and Couchbase Server 5.0+")
+
+    parser.addoption("--use-views",
+                     action="store_true",
+                     help="If set, uses views instead of GSI - SG 2.1 and above only")
+
+    parser.addoption("--number-replicas",
+                     action="store",
+                     help="Number of replicas for the indexer node - SG 2.1 and above only",
+                     default=0)
+
+    parser.addoption("--delta-sync",
+                     action="store_true",
+                     help="delta-sync: Enable delta-sync for sync gateway, Only works with Sync Gateway 2.5+ EE along with CBL 2.5+ EE")
 
     parser.addoption("--liteserv-host",
                      action="store",
@@ -64,13 +95,12 @@ def pytest_addoption(parser):
                      action="store",
                      help="liteserv-platform: the platform on which to run liteserv")
 
+    parser.addoption("--enable-file-logging",
+                     action="store_true",
+                     help="If set, CBL file logging would enable. Supported only cbl2.5 onwards")
+
     parser.addoption("--device", action="store_true",
                      help="Enable device if you want to run it on device", default=False)
-
-    parser.addoption("--cluster-config",
-                     action="store",
-                     help="Provide a custom cluster config",
-                     default="ci_lb")
 
     parser.addoption("--server-upgraded-version",
                      action="store",
@@ -80,39 +110,34 @@ def pytest_addoption(parser):
                      action="store",
                      help="sync-gateway-version: Sync Gateway version to upgrade (ex. 1.3.1-16 or 590c1c31c7e83503eff304d8c0789bdd268d6291)")
 
-    parser.addoption("--num-docs",
-                     action="store",
-                     help="num-docs: Number of docs to load")
+    parser.addoption("--upgraded-server-ssl",
+                     action="store_true",
+                     help="If set, will enable SSL communication between server and Sync Gateway")
 
-    parser.addoption("--cbs-platform",
+    parser.addoption("--upgraded-sg-ssl",
+                     action="store_true",
+                     help="If set, will enable SSL communication between Sync Gateway and CBL")
+
+    parser.addoption("--upgraded-xattrs",
+                     action="store_true",
+                     help="Use xattrs for sync meta storage after upgrade. Only works with Sync Gateway 2.0+ and Couchbase Server 5.0+")
+
+    parser.addoption("--upgraded-use-views",
+                     action="store_true",
+                     help="If set, uses views instead of GSI  after upgrade - SG 2.1 and above only")
+
+    parser.addoption("--upgraded-number-replicas",
                      action="store",
-                     help="cbs-platform: Couchbase server platform",
-                     default="centos7")
+                     help="Number of replicas for the indexer node  after upgrade - SG 2.1 and above only",
+                     default=0)
+
+    parser.addoption("--upgraded-delta-sync",
+                     action="store_true",
+                     help="delta-sync: Enable delta-sync for sync gateway after upgrade, Only works with Sync Gateway 2.5+ EE along with CBL 2.5+ EE")
 
     parser.addoption("--cbs-upgrade-toybuild",
                      action="store",
                      help="cbs-upgrade-toybuild: Couchbase server toy build to use")
-
-    parser.addoption("--sg-ssl",
-                     action="store_true",
-                     help="If set, will enable SSL communication between Sync Gateway and CBL")
-
-    parser.addoption("--use-views",
-                     action="store_true",
-                     help="If set, uses views instead of GSI - SG 2.1 and above only")
-
-    parser.addoption("--number-replicas",
-                     action="store",
-                     help="Number of replicas for the indexer node - SG 2.1 and above only",
-                     default=0)
-
-    parser.addoption("--delta-sync",
-                     action="store_true",
-                     help="delta-sync: Enable delta-sync for sync gateway, Only works with Sync Gateway 2.5+ EE along with CBL 2.5+ EE")
-
-    parser.addoption("--enable-file-logging",
-                     action="store_true",
-                     help="If set, CBL file logging would enable. Supported only cbl2.5 onwards")
 
 
 # This will get called once before the first test that
@@ -124,57 +149,76 @@ def params_from_base_suite_setup(request):
     log_info("Setting up 'params_from_base_suite_setup' ...")
 
     # pytest command line parameters
-    server_version = request.config.getoption("--server-version")
-    sync_gateway_version = request.config.getoption("--sync-gateway-version")
-    server_upgraded_version = request.config.getoption("--server-upgraded-version")
-    sync_gateway_upgraded_version = request.config.getoption("--sync-gateway-upgraded-version")
     mode = request.config.getoption("--mode")
     cluster_config = request.config.getoption("--cluster-config")
     skip_provisioning = request.config.getoption("--skip-provisioning")
     use_local_testserver = request.config.getoption("--use-local-testserver")
+    num_docs = request.config.getoption("--num-docs")
+    cbs_platform = request.config.getoption("--cbs-platform")
+
+    server_version = request.config.getoption("--server-version")
+    sync_gateway_version = request.config.getoption("--sync-gateway-version")
+
     cbs_ssl = request.config.getoption("--server-ssl")
+    sg_ssl = request.config.getoption("--sg-ssl")
     xattrs_enabled = request.config.getoption("--xattrs")
+    use_views = request.config.getoption("--use-views")
+    number_replicas = request.config.getoption("--number-replicas")
+    delta_sync_enabled = request.config.getoption("--delta-sync")
+
+    server_upgraded_version = request.config.getoption("--server-upgraded-version")
+    sync_gateway_upgraded_version = request.config.getoption("--sync-gateway-upgraded-version")
+    
+    upgraded_cbs_ssl = request.config.getoption("--upgraded-server-ssl")
+    upgraded_sg_ssl = request.config.getoption("--upgraded-sg-ssl")
+    upgraded_xattrs_enabled = request.config.getoption("--upgraded-xattrs")
+    upgraded_use_views = request.config.getoption("--upgraded-use-views")
+    upgraded_number_replicas = request.config.getoption("--upgraded-number-replicas")
+    upgraded_delta_sync_enabled = request.config.getoption("--upgraded-delta-sync")
+ 
     liteserv_host = request.config.getoption("--liteserv-host")
     liteserv_port = request.config.getoption("--liteserv-port")
     liteserv_version = request.config.getoption("--liteserv-version")
     liteserv_platform = request.config.getoption("--liteserv-platform")
-    device_enabled = request.config.getoption("--device")
-    num_docs = request.config.getoption("--num-docs")
-    cbs_platform = request.config.getoption("--cbs-platform")
-    cbs_toy_build = request.config.getoption("--cbs-upgrade-toybuild")
-    sg_ssl = request.config.getoption("--sg-ssl")
-    use_views = request.config.getoption("--use-views")
-    number_replicas = request.config.getoption("--number-replicas")
-    delta_sync_enabled = request.config.getoption("--delta-sync")
     enable_file_logging = request.config.getoption("--enable-file-logging")
+    device_enabled = request.config.getoption("--device")
+    cbs_toy_build = request.config.getoption("--cbs-upgrade-toybuild")
     test_name = request.node.name
 
-    if xattrs_enabled and version_is_binary(sync_gateway_version):
-        check_xattr_support(server_upgraded_version, sync_gateway_upgraded_version)
-    '''
-    if delta_sync_enabled:
-        check_delta_sync_support(sync_gateway_upgraded_version, liteserv_version)
-    '''
-    log_info("server_version: {}".format(server_version))
-    log_info("sync_gateway_version: {}".format(sync_gateway_version))
-    log_info("server_upgraded_version: {}".format(server_upgraded_version))
-    log_info("sync_gateway_upgraded_version: {}".format(sync_gateway_upgraded_version))
     log_info("mode: {}".format(mode))
     log_info("skip_provisioning: {}".format(skip_provisioning))
+    log_info("num_docs: {}".format(num_docs))
+    log_info("cbs_platform: {}".format(cbs_platform))
+    log_info("server_version: {}".format(server_version))
+    log_info("sync_gateway_version: {}".format(sync_gateway_version))
     log_info("cbs_ssl: {}".format(cbs_ssl))
+    log_info("sg_ssl: {}".format(sg_ssl))
     log_info("xattrs_enabled: {}".format(xattrs_enabled))
+    log_info("use_views: {}".format(use_views))
+    log_info("number_replicas: {}".format(number_replicas))
+    log_info("delta_sync_enabled: {}".format(delta_sync_enabled))
+    log_info("enable_file_logging: {}".format(enable_file_logging))
+    log_info("server_upgraded_version: {}".format(server_upgraded_version))
+    log_info("sync_gateway_upgraded_version: {}".format(sync_gateway_upgraded_version))
+    log_info("upgraded_cbs_ssl: {}".format(upgraded_cbs_ssl))
+    log_info("upgraded_sg_ssl: {}".format(upgraded_sg_ssl))
+    log_info("upgraded_xattrs_enabled: {}".format(upgraded_xattrs_enabled))
+    log_info("upgraded_use_views: {}".format(upgraded_use_views))
+    log_info("upgraded_number_replicas: {}".format(upgraded_number_replicas))
+    log_info("upgraded_delta_sync_enabled: {}".format(upgraded_delta_sync_enabled))
     log_info("liteserv_host: {}".format(liteserv_host))
     log_info("liteserv_port: {}".format(liteserv_port))
     log_info("liteserv_version: {}".format(liteserv_version))
     log_info("liteserv_platform: {}".format(liteserv_platform))
     log_info("device_enabled: {}".format(device_enabled))
-    log_info("num_docs: {}".format(num_docs))
-    log_info("cbs_platform: {}".format(cbs_platform))
     log_info("cbs_toy_build: {}".format(cbs_toy_build))
-    log_info("sg_ssl: {}".format(sg_ssl))
-    log_info("use_views: {}".format(use_views))
-    log_info("number_replicas: {}".format(number_replicas))
-    log_info("delta_sync_enabled: {}".format(delta_sync_enabled))
+
+    # if xattrs is specified but the post upgrade SG version doesn't support, don't continue
+    if upgraded_xattrs_enabled and version_is_binary(sync_gateway_upgraded_version):
+        check_xattr_support(server_upgraded_version, sync_gateway_upgraded_version)
+    # if delta_sync is specified but the post upgrade version doesn't support, don't continue
+    if upgraded_delta_sync_enabled:
+        check_delta_sync_support(sync_gateway_upgraded_version, liteserv_version)
 
     create_db_per_test = "cbl-test"
     create_db_per_suite = None
@@ -213,18 +257,12 @@ def params_from_base_suite_setup(request):
     sg_url = cluster_topology["sync_gateways"][0]["public"]
     sg_ip = host_for_url(sg_url)
 
-    persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', False)
+
     target_url = "ws://{}:4984/{}".format(sg_ip, sg_db)
     target_admin_url = "ws://{}:4985/{}".format(sg_ip, sg_db)
 
     # Only works with load balancer configs
     persist_cluster_config_environment_prop(cluster_config, 'sg_lb_enabled', True)
-
-    if sg_ssl:
-        log_info("Enabling SSL on sync gateway")
-        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', True)
-        target_url = "wss://{}:4984/{}".format(sg_ip, sg_db)
-        target_admin_url = "wss://{}:4985/{}".format(sg_ip, sg_db)
 
     try:
         server_version
@@ -243,22 +281,31 @@ def params_from_base_suite_setup(request):
     else:
         log_info("Running test with sync_gateway version {}".format(sync_gateway_version))
         persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_version', sync_gateway_version)
+        if sync_gateway_version >= "2.0.0" and server_version >= "5.0.0":
+            # if SG pre-upgrade version is 2.0+, set xattrs property, otherwise, don't specify in cluster config
+            if xattrs_enabled:
+                log_info("Running test with xattrs for sync meta storage")
+                persist_cluster_config_environment_prop(cluster_config, 'xattrs_enabled', True)
+            else:
+                log_info("Using document storage for sync meta data")
+                persist_cluster_config_environment_prop(cluster_config, 'xattrs_enabled', False)
 
-    if xattrs_enabled:
-        log_info("Running test with xattrs for sync meta storage")
-        persist_cluster_config_environment_prop(cluster_config, 'xattrs_enabled', True)
-    else:
-        log_info("Using document storage for sync meta data")
-        persist_cluster_config_environment_prop(cluster_config, 'xattrs_enabled', False)
+        if sync_gateway_version >= "2.5.0" and server_version >= "5.5.0":
+            # if SG pre-upgrade version is 2.5+, set delta sync property, otherwise, don't specify in cluster config
+            if delta_sync_enabled:
+                log_info("Running with delta sync")
+                persist_cluster_config_environment_prop(cluster_config, 'delta_sync_enabled', True)
+            else:
+                log_info("Running without delta sync")
+                persist_cluster_config_environment_prop(cluster_config, 'delta_sync_enabled', False)
 
-    if use_views:
-        log_info("Running SG tests using views")
-        # Enable sg views in cluster configs
-        persist_cluster_config_environment_prop(cluster_config, 'sg_use_views', True)
+    if sg_ssl:
+        log_info("Enabling SSL on sync gateway")
+        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', True)
+        target_url = "wss://{}:4984/{}".format(sg_ip, sg_db)
+        target_admin_url = "wss://{}:4985/{}".format(sg_ip, sg_db)
     else:
-        log_info("Running tests not using views")
-        # Disable sg views in cluster configs
-        persist_cluster_config_environment_prop(cluster_config, 'sg_use_views', False)
+        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', False)
 
     if cbs_ssl:
         log_info("Running tests with cbs <-> sg ssl enabled")
@@ -269,12 +316,14 @@ def params_from_base_suite_setup(request):
         # Disable ssl in cluster configs
         persist_cluster_config_environment_prop(cluster_config, 'cbs_ssl_enabled', False)
 
-    if delta_sync_enabled and (sync_gateway_upgraded_version >= "2.5.0"):
-        log_info("Running with delta sync")
-        persist_cluster_config_environment_prop(cluster_config, 'delta_sync_enabled', True)
+    if use_views:
+        log_info("Running SG tests using views")
+        # Enable sg views in cluster configs
+        persist_cluster_config_environment_prop(cluster_config, 'sg_use_views', True)
     else:
-        log_info("Running without delta sync")
-        persist_cluster_config_environment_prop(cluster_config, 'delta_sync_enabled', False)
+        log_info("Running tests not using views")
+        # Disable sg views in cluster configs
+        persist_cluster_config_environment_prop(cluster_config, 'sg_use_views', False)
 
     # Write the number of replicas to cluster config
     persist_cluster_config_environment_prop(cluster_config, 'number_replicas', number_replicas)
@@ -340,30 +389,41 @@ def params_from_base_suite_setup(request):
 
     yield {
         "cluster_config": cluster_config,
+        "cluster_topology": cluster_topology,
         "mode": mode,
-        "xattrs_enabled": xattrs_enabled,
+        "cbs_platform": cbs_platform,
         "server_version": server_version,
         "sync_gateway_version": sync_gateway_version,
         "server_upgraded_version": server_upgraded_version,
         "sync_gateway_upgraded_version": sync_gateway_upgraded_version,
+        "cbs_ssl": cbs_ssl,
+        "sg_ssl": sg_ssl,
+        "xattrs_enabled": xattrs_enabled,
+        "use_views": use_views,
+        "number_replicas": number_replicas,
+        "delta_sync_enabled": delta_sync_enabled,
+        "upgraded_cbs_ssl": upgraded_cbs_ssl,
+        "upgraded_sg_ssl": upgraded_sg_ssl,
+        "upgraded_xattrs_enabled": upgraded_xattrs_enabled,
+        "upgraded_use_views": upgraded_use_views,
+        "upgraded_number_replicas": upgraded_number_replicas,
+        "upgraded_delta_sync_enabled": upgraded_delta_sync_enabled,
         "liteserv_host": liteserv_host,
         "liteserv_port": liteserv_port,
         "liteserv_version": liteserv_version,
         "liteserv_platform": liteserv_platform,
+        "enable_file_logging": enable_file_logging,
         "testserver": testserver,
         "device_enabled": device_enabled,
         "num_docs": num_docs,
-        "cbs_platform": cbs_platform,
         "cbs_toy_build": cbs_toy_build,
         "target_url": target_url,
         "target_admin_url": target_admin_url,
+        "base_url": base_url,
         "sg_ip": sg_ip,
         "sg_db": sg_db,
         "sg_config": sg_config,
         "create_db_per_test": create_db_per_test,
-        "enable_file_logging": enable_file_logging,
-        "cluster_topology": cluster_topology,
-        "base_url": base_url
     }
 
     # Flush all the memory contents on the server app
@@ -382,11 +442,22 @@ def params_from_base_suite_setup(request):
 def params_from_base_test_setup(request, params_from_base_suite_setup):
     cluster_config = params_from_base_suite_setup["cluster_config"]
     mode = params_from_base_suite_setup["mode"]
-    xattrs_enabled = params_from_base_suite_setup["xattrs_enabled"]
     server_version = params_from_base_suite_setup["server_version"]
     sync_gateway_version = params_from_base_suite_setup["sync_gateway_version"]
     server_upgraded_version = params_from_base_suite_setup["server_upgraded_version"]
     sync_gateway_upgraded_version = params_from_base_suite_setup["sync_gateway_upgraded_version"]
+    cbs_ssl = params_from_base_suite_setup["cbs_ssl"],
+    sg_ssl = params_from_base_suite_setup["sg_ssl"],
+    xattrs_enabled = params_from_base_suite_setup["xattrs_enabled"],
+    use_views = params_from_base_suite_setup["use_views"],
+    number_replicas = params_from_base_suite_setup["number_replicas"],
+    delta_sync_enabled = params_from_base_suite_setup["delta_sync_enabled"],
+    upgraded_cbs_ssl = params_from_base_suite_setup["upgraded_cbs_ssl"]
+    upgraded_sg_ssl = params_from_base_suite_setup["upgraded_sg_ssl"]
+    upgraded_xattrs_enabled = params_from_base_suite_setup["upgraded_xattrs_enabled"]
+    upgraded_use_views = params_from_base_suite_setup["upgraded_use_views"]
+    upgraded_number_replicas = params_from_base_suite_setup["upgraded_number_replicas"]
+    upgraded_delta_sync_enabled = params_from_base_suite_setup["upgraded_delta_sync_enabled"]
     liteserv_host = params_from_base_suite_setup["liteserv_host"]
     liteserv_port = params_from_base_suite_setup["liteserv_port"]
     liteserv_version = params_from_base_suite_setup["liteserv_version"]
@@ -464,11 +535,22 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     yield {
         "cluster_config": cluster_config,
         "mode": mode,
-        "xattrs_enabled": xattrs_enabled,
         "server_version": server_version,
         "sync_gateway_version": sync_gateway_version,
         "server_upgraded_version": server_upgraded_version,
         "sync_gateway_upgraded_version": sync_gateway_upgraded_version,
+        "cbs_ssl": cbs_ssl,
+        "sg_ssl": sg_ssl,
+        "xattrs_enabled": xattrs_enabled,
+        "use_views": use_views,
+        "number_replicas": number_replicas,
+        "delta_sync_enabled": delta_sync_enabled,
+        "upgraded_cbs_ssl": upgraded_cbs_ssl,
+        "upgraded_sg_ssl": upgraded_sg_ssl,
+        "upgraded_xattrs_enabled": upgraded_xattrs_enabled,
+        "upgraded_use_views": upgraded_use_views,
+        "upgraded_number_replicas": upgraded_number_replicas,
+        "upgraded_delta_sync_enabled": upgraded_delta_sync_enabled,
         "liteserv_host": liteserv_host,
         "liteserv_port": liteserv_port,
         "liteserv_version": liteserv_version,

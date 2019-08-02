@@ -13,6 +13,7 @@ from keywords.SyncGateway import (verify_sync_gateway_version,
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.MobileRestClient import MobileRestClient
 from keywords.constants import SDK_TIMEOUT
+from utilities.cluster_config_utils import persist_cluster_config_environment_prop
 
 from libraries.testkit.cluster import Cluster
 from requests.exceptions import HTTPError
@@ -30,11 +31,22 @@ def test_upgrade(params_from_base_test_setup):
     """
     cluster_config = params_from_base_test_setup['cluster_config']
     mode = params_from_base_test_setup['mode']
-    xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
     server_version = params_from_base_test_setup['server_version']
     sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
     server_upgraded_version = params_from_base_test_setup['server_upgraded_version']
     sync_gateway_upgraded_version = params_from_base_test_setup['sync_gateway_upgraded_version']
+    cbs_ssl = params_from_base_test_setup["cbs_ssl"],
+    sg_ssl = params_from_base_test_setup["sg_ssl"],
+    xattrs_enabled = params_from_base_test_setup["xattrs_enabled"],
+    use_views = params_from_base_test_setup["use_views"],
+    number_replicas = params_from_base_test_setup["number_replicas"],
+    delta_sync_enabled = params_from_base_test_setup["delta_sync_enabled"],
+    upgraded_cbs_ssl = params_from_base_test_setup['upgraded_cbs_ssl']
+    upgraded_sg_ssl = params_from_base_test_setup['upgraded_sg_ssl']
+    upgraded_xattrs_enabled = params_from_base_test_setup['upgraded_xattrs_enabled']
+    upgraded_use_views = params_from_base_test_setup['upgraded_use_views']
+    upgraded_number_replicas = params_from_base_test_setup['upgraded_number_replicas']
+    upgraded_delta_sync_enabled = params_from_base_test_setup['upgraded_delta_sync_enabled']
     base_url = params_from_base_test_setup["base_url"]
     sg_blip_url = params_from_base_test_setup["target_url"]
     # target_admin_url = params_from_base_test_setup['target_admin_url']
@@ -47,6 +59,52 @@ def test_upgrade(params_from_base_test_setup):
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_ip = params_from_base_test_setup["sg_ip"]
     sg_conf = "{}/resources/sync_gateway_configs/sync_gateway_default_functional_tests_{}.json".format(os.getcwd(), mode)
+
+    # update cluster_config with the post upgrade required params
+    need_to_redeploy = False
+    if (sg_ssl != upgraded_sg_ssl) and upgraded_sg_ssl:
+        log_info("Enabling SSL on sync gateway after upgrade")
+        need_to_redeploy = True
+        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', True)
+
+    if (cbs_ssl != upgraded_cbs_ssl) and upgraded_cbs_ssl:
+        log_info("Running tests with cbs <-> sg ssl enabled after upgrade")
+        # Enable ssl in cluster configs
+        need_to_redeploy = True
+        persist_cluster_config_environment_prop(cluster_config, 'cbs_ssl_enabled', True)
+
+    if use_views != upgraded_use_views:
+        need_to_redeploy = True
+        if upgraded_use_views:
+            log_info("Running SG tests using views after upgrade")
+            # Enable sg views in cluster configs
+            persist_cluster_config_environment_prop(cluster_config, 'sg_use_views', True)
+        else:
+            log_info("Running tests not using views after upgrade")
+            # Disable sg views in cluster configs
+            persist_cluster_config_environment_prop(cluster_config, 'sg_use_views', False)
+
+    if (number_replicas != upgraded_number_replicas) and upgraded_number_replicas > 0:
+        need_to_redeploy = True
+        persist_cluster_config_environment_prop(cluster_config, 'number_replicas', upgraded_number_replicas)
+
+    if sync_gateway_upgraded_version >= "2.0.0" and server_upgraded_version >= "5.0.0" and (xattrs_enabled != upgraded_xattrs_enabled):
+        need_to_redeploy = True
+        if upgraded_xattrs_enabled:
+            log_info("Running test with xattrs for sync meta storage after upgrade")
+            persist_cluster_config_environment_prop(cluster_config, 'xattrs_enabled', True)
+        else:
+            log_info("Using document storage for sync meta data after upgrade")
+            persist_cluster_config_environment_prop(cluster_config, 'xattrs_enabled', False)
+
+    if sync_gateway_upgraded_version >= "2.5.0" and server_upgraded_version >= "5.5.0" and (delta_sync_enabled != upgraded_delta_sync_enabled):
+        need_to_redeploy = True
+        if upgraded_delta_sync_enabled:
+            log_info("Running with delta sync after upgrade")
+            persist_cluster_config_environment_prop(cluster_config, 'delta_sync_enabled', True)
+        else:
+            log_info("Running without delta sync after upgrade")
+            persist_cluster_config_environment_prop(cluster_config, 'delta_sync_enabled', False)
 
     # Create user and session on SG
     sg_client = MobileRestClient()
@@ -148,7 +206,7 @@ def test_upgrade(params_from_base_test_setup):
             sg_obj.restart_sync_gateways(cluster_config=cluster_config, url=sg_ip)
             time.sleep(5)
 
-        if xattrs_enabled:
+        if need_to_redeploy:
             # Enable xattrs on all SG/SGAccel nodes
             # cc - Start 1 SG with import enabled, all with XATTRs enabled
             #    - Do not enable import in SG.
@@ -187,7 +245,7 @@ def test_upgrade(params_from_base_test_setup):
         # Verify rev, doc bdy and revision history of all docs
         verify_sg_docs_revision_history(url=sg_admin_url, db=sg_db, added_docs=added_docs, terminator=terminator_doc_id)
 
-        if xattrs_enabled:
+        if need_to_redeploy:
             # Verify through SDK that there is no _sync property in the doc body
             bucket_name = 'data-bucket'
             sdk_client = Bucket('couchbase://{}/{}'.format(primary_server.host, bucket_name), password='password', timeout=SDK_TIMEOUT)
@@ -198,6 +256,7 @@ def test_upgrade(params_from_base_test_setup):
             for i in docs_from_sdk:
                 if "_sync" in docs_from_sdk[i].value:
                     raise Exception("_sync section found in docs after upgrade")
+
 
 def verify_sg_docs_revision_history(url, db, added_docs, terminator):
     sg_client = MobileRestClient()
