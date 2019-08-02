@@ -245,7 +245,7 @@ def test_upgrade(params_from_base_test_setup):
         # Verify rev, doc bdy and revision history of all docs
         verify_sg_docs_revision_history(url=sg_admin_url, db=sg_db, added_docs=added_docs, terminator=terminator_doc_id)
 
-        if need_to_redeploy:
+        if upgraded_xattrs_enabled:
             # Verify through SDK that there is no _sync property in the doc body
             bucket_name = 'data-bucket'
             sdk_client = Bucket('couchbase://{}/{}'.format(primary_server.host, bucket_name), password='password', timeout=SDK_TIMEOUT)
