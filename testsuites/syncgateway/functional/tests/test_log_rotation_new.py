@@ -19,7 +19,7 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name):
     """
     @summary
     Test to verify default values for rotation section:
-    maxsize = 100 MB
+    max_size = 100 MB
     MaxAge = 0(do not limit the number of MaxAge)
     MaxBackups = 0(do not limit the number of backups)
     """
@@ -373,7 +373,7 @@ def test_log_rotation_invalid_path(params_from_base_test_setup, sg_conf_name):
 def test_log_200mb(params_from_base_test_setup, sg_conf_name):
     """
     @summary
-    Test to check maxsize with value 200MB( 100Mb by default)
+    Test to check max_size with value 200MB( 100Mb by default)
     """
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
@@ -423,7 +423,7 @@ def test_log_200mb(params_from_base_test_setup, sg_conf_name):
     # Set maxsize
     for log in SG_LOGS:
         log_section = log.split("_")[1]
-        data['logging'][log_section]["rotation"]["maxsize"] = 200
+        data['logging'][log_section]["rotation"]["max_size"] = 200
 
     # Create a temp config file in the same folder as sg_conf
     temp_conf = "/".join(sg_conf.split('/')[:-2]) + '/temp_conf.json'
@@ -456,7 +456,7 @@ def test_log_rotation_negative(params_from_base_test_setup, sg_conf_name):
     """
     @summary
     Test log rotation with negative values for:
-        "maxsize": -1,
+        "max_size": -1,
         "maxage": -30,
         "maxbackups": -2
     SG shouldn't start
