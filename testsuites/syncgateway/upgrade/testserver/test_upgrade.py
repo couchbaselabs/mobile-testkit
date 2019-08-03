@@ -286,6 +286,8 @@ def verify_sg_docs_revision_history(url, db, added_docs, terminator):
             del added_docs[key]["_id"]
         except KeyError:
             log_info("Ignoring id verification")
+        log_info("rev_gen: {}".format(rev_gen))
+        log_info("added_docs[key]: {}".format(added_docs[key]))
         assert rev_gen == expected_doc_map[key], "revision mismatch"
         log_info(doc["doc"])
         log_info(added_docs[key])
