@@ -191,7 +191,7 @@ def params_from_base_suite_setup(request):
         testserver.download()
 
         # Install TestServer app
-        if device_enabled and platform == "ios":
+        if device_enabled and (platform == "ios" or platform == "android"):
             testserver.install_device()
         else:
             testserver.install()

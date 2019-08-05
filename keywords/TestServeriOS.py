@@ -348,8 +348,8 @@ class TestServeriOS(TestServerBase):
         return True
 
     def close_app(self):
-        cur_dir = os.path.dirname(os.path.abspath(__file__))
-        subprocess.check_output(["osascript", "{}/../utilities/sim_close_app.scpt".format(cur_dir)])
+        cur_dir = os.getcwd()
+        subprocess.check_output(["osascript", "{}/utilities/sim_close_app.scpt".format(cur_dir)])
 
     def open_app(self):
         if self.host == "localhost":

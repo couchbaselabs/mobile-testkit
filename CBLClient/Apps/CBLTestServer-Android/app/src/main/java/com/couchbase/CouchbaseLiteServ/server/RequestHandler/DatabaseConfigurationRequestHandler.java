@@ -19,7 +19,7 @@ public class DatabaseConfigurationRequestHandler {
         //ConflictResolver conflictResolver = args.get("conflictResolver");
         String password = args.get("password");
         Context context = CouchbaseLiteServ.getAppContext();
-        DatabaseConfiguration config = new DatabaseConfiguration();
+        DatabaseConfiguration config = new DatabaseConfiguration(context);
         if (directory != null) {
             config.setDirectory(directory);
         }
