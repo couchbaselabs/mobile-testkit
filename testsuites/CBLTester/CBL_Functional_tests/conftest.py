@@ -359,7 +359,7 @@ def params_from_base_suite_setup(request):
         raise Exception("enable_sample_bucket has to be used with create_db_per_suite")
 
     # Start Test server which needed for suite level set up like query tests
-    if (not use_local_testserver) and create_db_per_suite:
+    if not use_local_testserver and create_db_per_suite:
         log_info("Starting TestServer...")
         test_name_cp = test_name.replace("/", "-")
         if device_enabled:
@@ -546,7 +546,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
                                                  test_name_cp,
                                                  datetime.datetime.now())
 
-    if (not use_local_testserver) and create_db_per_test:
+    if not use_local_testserver and create_db_per_test:
         log_info("Starting TestServer...")
         if device_enabled:
             testserver.start_device(log_filename)
