@@ -484,7 +484,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
                                                  test_name_cp,
                                                  datetime.datetime.now())
 
-    if (not use_local_testserver) and create_db_per_test:
+    if not use_local_testserver and create_db_per_test:
         log_info("Starting TestServer...")
         if device_enabled:
             testserver.start_device(log_filename)
