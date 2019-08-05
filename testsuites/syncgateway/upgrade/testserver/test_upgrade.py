@@ -6,7 +6,7 @@ from concurrent.futures import ProcessPoolExecutor
 from couchbase.bucket import Bucket
 
 from keywords.couchbaseserver import verify_server_version
-from keywords.utils import log_info, host_for_url, deep_dict_compare
+from keywords.utils import log_info, host_for_url
 from keywords.SyncGateway import (verify_sync_gateway_version,
                                   verify_sync_gateway_product_info,
                                   SyncGateway)
@@ -16,7 +16,6 @@ from keywords.constants import SDK_TIMEOUT
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop
 
 from libraries.testkit.cluster import Cluster
-from requests.exceptions import HTTPError
 
 from CBLClient.Authenticator import Authenticator
 from CBLClient.Document import Document

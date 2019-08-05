@@ -168,14 +168,14 @@ def params_from_base_suite_setup(request):
 
     server_upgraded_version = request.config.getoption("--server-upgraded-version")
     sync_gateway_upgraded_version = request.config.getoption("--sync-gateway-upgraded-version")
-    
+
     upgraded_cbs_ssl = request.config.getoption("--upgraded-server-ssl")
     upgraded_sg_ssl = request.config.getoption("--upgraded-sg-ssl")
     upgraded_xattrs_enabled = request.config.getoption("--upgraded-xattrs")
     upgraded_use_views = request.config.getoption("--upgraded-use-views")
     upgraded_number_replicas = request.config.getoption("--upgraded-number-replicas")
     upgraded_delta_sync_enabled = request.config.getoption("--upgraded-delta-sync")
- 
+
     liteserv_host = request.config.getoption("--liteserv-host")
     liteserv_port = request.config.getoption("--liteserv-port")
     liteserv_version = request.config.getoption("--liteserv-version")
@@ -256,7 +256,6 @@ def params_from_base_suite_setup(request):
 
     sg_url = cluster_topology["sync_gateways"][0]["public"]
     sg_ip = host_for_url(sg_url)
-
 
     target_url = "ws://{}:4984/{}".format(sg_ip, sg_db)
     target_admin_url = "ws://{}:4985/{}".format(sg_ip, sg_db)
