@@ -125,7 +125,7 @@ def test_upgrade(params_from_base_test_setup):
 
     doc_obj = Document(base_url)
     db.create_bulk_docs(number=num_docs, id_prefix="cbl_filter", db=cbl_db, channels=sg_user_channels)
-    doc_ids = db.getDocIds(cbl_db)
+    doc_ids = db.getDocIds(cbl_db, limit=num_docs)
     added_docs = db.getDocuments(cbl_db, doc_ids)
     log_info("Added {} docs".format(len(added_docs)))
 
