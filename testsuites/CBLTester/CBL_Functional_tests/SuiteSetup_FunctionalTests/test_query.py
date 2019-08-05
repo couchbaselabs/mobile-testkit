@@ -136,6 +136,7 @@ def test_doc_get(params_from_base_test_setup, doc_id):
     docs_from_n1ql = []
 
     for row in sdk_client.n1ql_query(query):
+        row[enable_sample_bucket].pop('_sync', None)
         docs_from_n1ql.append(row[enable_sample_bucket])
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
