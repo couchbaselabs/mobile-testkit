@@ -1,16 +1,28 @@
+import pytest
 import random
 import time
 from collections import OrderedDict
 
-
+from CBLClient.Query import Query
+from couchbase.bucket import Bucket
+from couchbase.n1ql import N1QLQuery
+from CBLClient.Database import Database
 from CBLClient.Authenticator import Authenticator
 from CBLClient.MemoryPointer import MemoryPointer
 from CBLClient.Replication import Replication
 from keywords.MobileRestClient import MobileRestClient
 from keywords.constants import SDK_TIMEOUT
 from keywords.couchbaseserver import CouchbaseServer
+from keywords.utils import log_info
 from libraries.testkit.cluster import Cluster
-from testsuites.CBLTester.CBL_Functional_tests.SuiteSetup_FunctionalTests.test_query import *
+from testsuites.CBLTester.CBL_Functional_tests.SuiteSetup_FunctionalTests.test_query import test_get_doc_ids, \
+    test_any_operator, test_doc_get, test_get_docs_with_limit_offset, test_multiple_selects, test_query_where_and_or, \
+    test_query_pattern_like, test_query_pattern_regex, test_query_isNullOrMissing, test_query_ordering, \
+    test_query_substring, test_query_collation, test_query_join, test_query_inner_join, test_query_cross_join, \
+    test_query_left_join, test_query_left_outer_join, test_equal_to, test_not_equal_to, test_greater_than, \
+    test_greater_than_or_equal_to, test_less_than, test_less_than_or_equal_to, test_in, test_between, test_is, \
+    test_isnot, test_not, test_single_property_fts, test_multiple_property_fts, test_fts_with_ranking, \
+    test_getDoc_withValueTypeDouble, test_getDoc_withLocale, test_query_arthimetic
 
 
 @pytest.mark.listener
@@ -18,7 +30,7 @@ from testsuites.CBLTester.CBL_Functional_tests.SuiteSetup_FunctionalTests.test_q
 def test_upgrade_cbl(params_from_base_suite_setup):
     """
     @summary:
-    1. Migrate older-pre-built db to a provided cbl appss
+    1. Migrate older-pre-built db to a provided cbl apps
     2. Start the replication and replicate db to cluster
     3. Running few query tests
         a. Run Query test for Any operator
@@ -225,7 +237,7 @@ def test_queries_on_upgrade_cbl(params_from_base_suite_setup):
     cbs_ip = params_from_base_suite_setup["cbs_ip"]
     server_url = params_from_base_suite_setup["server_url"]
 
-    cbl_db, upgrade_cbl_db_name = _upgrade_db(params_from_base_suite_setup)
+    cbl_db, upgraded_cbl_db_name = _upgrade_db(params_from_base_suite_setup)
     db = Database(base_url)
 
     # Replicating docs to CBS
@@ -272,12 +284,12 @@ def test_queries_on_upgrade_cbl(params_from_base_suite_setup):
 
     # Runing Query tests
     params_for_query_tests = {"cluster_config": cluster_config,
-        "cluster_topology": params_from_base_suite_setup["cluster_topology"],
-        "base_url": params_from_base_suite_setup["base_url"],
-        "suite_source_db": cbl_db,
-        "suite_cbl_db": upgrade_cbl_db_name,
-        "sync_gateway_version": params_from_base_suite_setup["sync_gateway_version"],
-    }
+                              "cluster_topology": params_from_base_suite_setup["cluster_topology"],
+                              "base_url": params_from_base_suite_setup["base_url"],
+                              "suite_source_db": cbl_db,
+                              "suite_cbl_db": upgraded_cbl_db_name,
+                              "sync_gateway_version": params_from_base_suite_setup["sync_gateway_version"],
+                              }
     query_test_list = [
         (test_get_doc_ids, (params_for_query_tests,)),
         (test_any_operator, (params_for_query_tests,)),
@@ -397,7 +409,6 @@ def test_queries_on_upgrade_cbl(params_from_base_suite_setup):
     log_info("Tests Result: PASSED {}, FAILED {}".format(test_passed, test_failed))
     for key in tests_result:
         log_info("{}: {}".format(key, tests_result[key]))
-
 
 
 def _upgrade_db(args):
