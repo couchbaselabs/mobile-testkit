@@ -221,11 +221,11 @@ def test_upgrade_cbl(params_from_base_suite_setup):
             tests_result["{}{}".format(query_test_func.__name__, args[1:])] = "FAILED"
             test_failed += 1
 
-    log_info("Tests Result: PASSED {}, FAILED {}".format(test_passed, test_failed))
+    log_info("\n\nTests Result: PASSED {}, FAILED {}".format(test_passed, test_failed))
     for key in tests_result:
         log_info("{}: {}".format(key, tests_result[key]))
 
-    log_info("Starting with mutation tests on upgrade CBL db")
+    log_info("\n\nStarting with mutation tests on upgrade CBL db")
     # Adding few docs to db
     new_doc_ids = db.create_bulk_docs(number=5, id_prefix="new_cbl_docs", db=cbl_db)
 
