@@ -436,6 +436,7 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll(params_from_ba
 
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    sg_platform = params_from_base_test_setup["sg_platform"]
 
     if mode == "di":
         pytest.skip("Offline tests not supported in Di mode -- see https://github.com/couchbase/sync_gateway/issues/2423#issuecomment-300841425")
@@ -460,9 +461,13 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll(params_from_ba
     with concurrent.futures.ThreadPoolExecutor(max_workers=libraries.testkit.settings.MAX_REQUEST_WORKERS) as executor:
         futures = dict()
         futures[executor.submit(seth.start_longpoll_changes_tracking, termination_doc_id=None)] = "polling"
-        futures[executor.submit(doc_pusher.add_docs, num_docs)] = "docs_push"
+        #  For windows, requiest is too slow, so have _offline request to start before creating docs
+        if sg_platform == "windows":
+            futures[executor.submit(sg_client.take_db_offline, cluster_conf, "db")] = "db_offline_task"
         time.sleep(5)
-        futures[executor.submit(sg_client.take_db_offline, cluster_conf, "db")] = "db_offline_task"
+        futures[executor.submit(doc_pusher.add_docs, num_docs)] = "docs_push"
+        if sg_platform != "windows":
+            futures[executor.submit(sg_client.take_db_offline, cluster_conf, "db")] = "db_offline_task"
 
         for future in concurrent.futures.as_completed(futures):
             task_name = futures[future]
@@ -504,7 +509,7 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll(params_from_ba
     seq_num_component = last_seq_num.split("-")
     if mode == "cc":
         # assert the last_seq_number == number _changes + 2 (_user doc starts and one and docs start at _user doc seq + 2)
-        assert len(docs_in_changes) + 2 == int(seq_num_component[0])
+        assert len(docs_in_changes) + 3 == int(seq_num_component[0])
     else:
         # assert the value is not an empty string
         assert last_seq_num != ""
