@@ -213,6 +213,7 @@ def params_from_base_suite_setup(request):
                 log_info("Exception occurred: {}".format(err))
     clear_resources_pngs()
 
+
 @pytest.fixture(scope="function")
 def params_from_base_test_setup(request, params_from_base_suite_setup):
     platform_list = params_from_base_suite_setup["platform_list"]
