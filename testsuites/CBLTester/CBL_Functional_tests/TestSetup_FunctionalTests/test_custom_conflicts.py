@@ -461,7 +461,7 @@ def test_incorrect_doc_id_custom_conflicts_resolution(params_from_base_test_setu
     1. Create few docs in app and get them replicated to SG. Stop the replication once docs are replicated.
     2. Update docs couple of times with different updates on both SG and CBL app. This will create conflict.
     3. Start the replication with incorrect_doc_id CCR algorithm
-    4. Verifies that CBL has docs with doc id corrected and have an additional field called new_value with value as 
+    4. Verifies that CBL has docs with doc id corrected and have an additional field called new_value with value as
     couchbae. For push and pull replication SG changes should be override with that of CBL
     """
     sg_db = "db"
@@ -553,7 +553,7 @@ def test_incorrect_doc_id_custom_conflicts_resolution(params_from_base_test_setu
         for sg_doc in sg_docs_content:
             doc_id = sg_doc["_id"]
             cbl_doc = cbl_docs[doc_id]
-            assert cbl_doc["new_value"] == "couchbase", "CCR failed to resolve conflict with doc with additional key" 
+            assert cbl_doc["new_value"] == "couchbase", "CCR failed to resolve conflict with doc with additional key"
             assert "new_value" in sg_doc, "CCR failed to resolve conflict with doc with additional key"
 
 
@@ -777,10 +777,10 @@ def test_stop_replicator_before_ccr_completes(params_from_base_test_setup):
     repl = replicator.create(repl_config)
     replicator.start(repl)
     sleep(5)  # sleeping so that replicator is in Conflict resolver
+    log_info("Stopping Replicator before CCR finishes - 10 sec delay for CCR")
+    replicator.stop(repl, max_times=100)
     total = replicator.getTotal(repl)
     completed = replicator.getCompleted(repl)
-    log_info("Stopping Replicator before CCR finishes - 10 sec delay for CCR")
-    replicator.stop(repl)
     assert total == completed, "total is not equal to completed"
 
     # printing doc content before replication conflicted docs
