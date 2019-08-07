@@ -64,7 +64,7 @@ def test_upgrade_cbl(params_from_base_suite_setup):
     c = Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
 
-    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=["*"])
+    sg_client.create_user(sg_admin_url, sg_db, username, password)
     authenticator = Authenticator(base_url)
     cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
     session = cookie, session_id
