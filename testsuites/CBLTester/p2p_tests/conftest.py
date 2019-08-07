@@ -139,6 +139,7 @@ def params_from_base_suite_setup(request):
     db_name_list = []
     cbl_db_list = []
     db_obj_list = []
+    db_path_list = []
     query_obj_list = []
     if create_db_per_suite:
         # Start Test server which needed for suite level set up like query tests
@@ -173,6 +174,12 @@ def params_from_base_suite_setup(request):
             cbl_db_list.append(cbl_db)
             log_info("Getting the database name")
             assert db.getName(cbl_db) == db_name
+            path = db.getPath(cbl_db).rstrip("/\\")
+            if '\\' in path:
+                path = '\\'.join(path.split('\\')[:-1])
+            else:
+                path = '/'.join(path.split('/')[:-1])
+            db_path_list.append(path)
 
     yield {
         "platform_list": platform_list,
@@ -195,11 +202,12 @@ def params_from_base_suite_setup(request):
     }
 
     if create_db_per_suite:
-        for cbl_db, db_obj, base_url in zip(cbl_db_list, db_obj_list, base_url_list):
+        for cbl_db, db_obj, base_url, db_name, path in zip(cbl_db_list, db_obj_list, base_url_list, db_name_list, db_path_list):
             if not no_db_delete:
                 log_info("Deleting the database {} at the suite teardown".format(db_obj.getName(cbl_db)))
                 time.sleep(2)
-                db_obj.deleteDB(cbl_db)
+                if db.exists(db_name, path):
+                    db.deleteDB(cbl_db)
 
         # Flush all the memory contents on the server app
         for base_url, testserver in zip(base_url_list, testserver_list):
@@ -239,6 +247,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         db_name_list = []
         cbl_db_list = []
         db_obj_list = []
+        db_path_list = []
         # Start Test server which needed for per test level
         for testserver in testserver_list:
             log_info("Starting TestServer...")
@@ -275,6 +284,12 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
             cbl_db_list.append(cbl_db)
             log_info("Getting the database name")
             assert db.getName(cbl_db) == db_name
+            path = db.getPath(cbl_db).rstrip("/\\")
+            if '\\' in path:
+                path = '\\'.join(path.split('\\')[:-1])
+            else:
+                path = '/'.join(path.split('/')[:-1])
+            db_path_list.append(path)
 
     yield {
         "platform_list": platform_list,
@@ -293,12 +308,13 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     }
 
     if create_db_per_test:
-        for testserver, cbl_db, db_obj, base_url in zip(testserver_list, cbl_db_list, db_obj_list, base_url_list):
+        for testserver, cbl_db, db_obj, base_url, db_name, path in zip(testserver_list, cbl_db_list, db_obj_list, base_url_list, db_name_list, db_path_list):
             try:
                 log_info("Deleting the database {} at the test teardown for base url {}".format(db_obj.getName(cbl_db),
                                                                                                 base_url))
                 time.sleep(2)
-                db_obj.deleteDB(cbl_db)
+                if db.exists(db_name, path):
+                    db.deleteDB(cbl_db)
                 log_info("Flushing server memory")
                 utils_obj = Utils(base_url)
                 utils_obj.flushMemory()
