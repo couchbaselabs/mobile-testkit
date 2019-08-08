@@ -298,7 +298,7 @@ def _upgrade_db(args):
     base_liteserv_version = args["base_liteserv_version"]
     upgraded_liteserv_version = args["upgraded_liteserv_version"]
     liteserv_platform = args["liteserv_platform"]
-    upgrade_cbl_db_name = "upgarded_db"
+    upgrade_cbl_db_name = "upgraded_db"
     base_url = args["base_url"]
     encrypted_db = args["encrypted_db"]
     db_password = args["db_password"]
@@ -327,6 +327,7 @@ def _upgrade_db(args):
         delimiter = "\\"
     new_db_path = "{}".format(delimiter).join(new_db_path.split(delimiter)[:-2]) + \
                   "{}{}.cblite2".format(delimiter, upgrade_cbl_db_name)
+    base_directory = "{}".format(delimiter).join(new_db_path.split(delimiter)[:-2])
     db.deleteDB(temp_db)
 
     old_liteserv_db_name = ""
@@ -340,7 +341,7 @@ def _upgrade_db(args):
     elif liteserv_platform == "xamarin-android":
         prebuilt_db_path = "{}.cblite2.zip".format(old_liteserv_db_name)
     else:
-        prebuilt_db_path = "Databases/{}.cblite2".format(old_liteserv_db_name)
+        prebuilt_db_path = base_directory + "\\" + "Databases\{}.cblite2".format(old_liteserv_db_name)
 
     log_info("Copying db of CBL-{} to CBL-{}".format(base_liteserv_version, upgraded_liteserv_version))
     prebuilt_db_path = db.get_pre_built_db(prebuilt_db_path)
