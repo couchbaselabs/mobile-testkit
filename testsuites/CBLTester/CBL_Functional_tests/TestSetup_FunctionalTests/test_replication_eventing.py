@@ -477,8 +477,9 @@ def test_replication_delete_event(params_from_base_test_setup, num_of_docs):
     replicator.stop(repl_delete)
     assert len(event_dict) != 0, "Replication listener didn't caught events. Check app logs for detailed info"
     for doc_id in event_dict:
-        assert event_dict[doc_id]["flags"] == "1" or event_dict[doc_id]["flags"] == "[DocumentFlagsDeleted]" or \
-            event_dict[doc_id]["flags"] == "Deleted", \
+        flags = event_dict[doc_id]["flags"]
+        assert flags == "1" or flags == "[DocumentFlagsDeleted]" or flags == "Deleted" or \
+            flags == "[DocumentFlagsAccessRemoved]" or flags == "AccessRemoved", \
             'Deleted flag is not tagged for document. Flag value: {}'.format(event_dict[doc_id]["flags"])
 
     # Verifying if the docs, for which access has be revoked, are purged

@@ -693,8 +693,8 @@ def setup_customized_teardown_test(params_from_base_test_setup):
     cbl_db_name2 = "cbl_db2" + str(time.time())
     cbl_db_name3 = "cbl_db3" + str(time.time())
     base_url = params_from_base_test_setup["base_url"]
-    enable_encryption = params_from_base_suite_setup["enable_encryption"]
-    encryption_password = params_from_base_suite_setup["encryption_password"]
+    enable_encryption = params_from_base_test_setup["enable_encryption"]
+    encryption_password = params_from_base_test_setup["encryption_password"]
     db = Database(base_url)
     if enable_encryption:
         db_config = db.configure(password=encryption_password)

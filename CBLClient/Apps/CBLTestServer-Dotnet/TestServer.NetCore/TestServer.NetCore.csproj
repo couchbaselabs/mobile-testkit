@@ -110,6 +110,8 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Files\" />
+    <None Update="Files\golden_gate_large.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 </Project>
