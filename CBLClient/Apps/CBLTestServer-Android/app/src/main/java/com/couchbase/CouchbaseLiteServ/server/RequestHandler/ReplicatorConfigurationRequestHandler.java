@@ -432,6 +432,11 @@ class MergeCustomConflictResolver implements ConflictResolver {
     private static final String TAG = "CCRREPLCONFIGHANDLER";
     @Override
     public Document resolve(Conflict conflict) {
+        /**
+         * Migrate the conflicted doc.
+         * Algorithm creates a new doc with copying local doc and then adding any additional key
+         * from remote doc. Conflicting keys will have value from local doc.
+         */
         Document localDoc = conflict.getLocalDocument();
         Document remoteDoc = conflict.getRemoteDocument();
         String docId = conflict.getDocumentId();

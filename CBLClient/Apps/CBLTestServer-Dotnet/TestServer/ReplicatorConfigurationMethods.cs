@@ -483,6 +483,9 @@ namespace Couchbase.Lite.Testing
     {
         Document IConflictResolver.Resolve(Conflict conflict)
         {
+            // Migrate the conflicted doc
+            // Algorithm creates a new doc with copying local doc and then adding any additional key
+            // from remote doc. Conflicting keys will have value from local doc.
             Document localDoc = conflict.LocalDocument;
             Document remoteDoc = conflict.RemoteDocument;
             string docId = conflict.DocumentID;

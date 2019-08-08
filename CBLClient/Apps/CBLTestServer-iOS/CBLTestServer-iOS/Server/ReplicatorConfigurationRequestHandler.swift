@@ -347,6 +347,9 @@ private class NullWinCustomConflictResolver: ConflictResolverProtocol{
 
 private class MergeWinCustomConflictResolver: ConflictResolverProtocol{
     func resolve(conflict: Conflict) -> Document? {
+        /// Migrate the conflicted doc
+        /// Algorithm creates a new doc with copying local doc and then adding any additional key
+        /// from remote doc. Conflicting keys will have value from local doc.
         let localDoc = conflict.localDocument!
         let remoteDoc = conflict.remoteDocument!
         let docId = conflict.documentID
