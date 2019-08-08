@@ -20,6 +20,7 @@
 // 
 
 using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
@@ -529,8 +530,10 @@ namespace Couchbase.Lite.Testing
         {
             string dbName = postBody["dbName"].ToString();
             string dbPath = postBody["dbPath"].ToString();
+            string currDir = Directory.GetCurrentDirectory();
+            string databasePath = Path.Combine(currDir, dbPath);
             DatabaseConfiguration dbConfig = MemoryMap.Get<DatabaseConfiguration>(postBody["dbConfig"].ToString());
-            Database.Copy(dbPath, dbName, dbConfig);
+            Database.Copy(databasePath, dbName, dbConfig);
             response.WriteEmptyBody();
         }
 
