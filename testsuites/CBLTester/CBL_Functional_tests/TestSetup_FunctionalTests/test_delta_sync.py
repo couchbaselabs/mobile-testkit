@@ -614,7 +614,7 @@ def test_delta_sync_dbWorker(params_from_base_test_setup):
     update_docs(replication_type, cbl_db, db, sg_client, sg_docs, sg_url, sg_db, number_of_updates, session, channels)
     sg_client.add_docs(url=sg_url, db=sg_db, number=num_of_docs, id_prefix="db_worker2", channels=channels, auth=session)
 
-    # 4. Do push/pull replication
+    # 4. Do pull replication
     repl = replicator.configure_and_replicate(source_db=cbl_db,
                                               target_url=sg_blip_url,
                                               continuous=False,
