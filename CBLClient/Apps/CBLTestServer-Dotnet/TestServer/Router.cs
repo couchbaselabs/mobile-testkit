@@ -257,7 +257,7 @@ namespace Couchbase.Lite.Testing
                 ["logging_setMaxSize"] = FileLoggingMehtod.SetMaxSize,
                 ["logging_setLogLevel"] = FileLoggingMehtod.SetLogLevel,
                 ["logging_setConfig"] = FileLoggingMehtod.SetConfig,
-                ["logging_getLogsInByteArray"] = FileLoggingMehtod.GetLogsInByteArray,
+                ["logging_getLogsInZip"] = FileLoggingMehtod.GetLogsInZip,
                 ["blob_create"] = BlobMethods.Create,
                 ["blob_createImageContent"] = BlobMethods.CreateImageContent,
                 ["blob_digest"] = BlobMethods.Digest,

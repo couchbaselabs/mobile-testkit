@@ -5,6 +5,7 @@ using System.IO;
 using System.Net;
 using JetBrains.Annotations;
 using Couchbase.Lite.Logging;
+using System.IO.Compression;
 
 namespace Couchbase.Lite.Testing
 {
@@ -156,7 +157,7 @@ namespace Couchbase.Lite.Testing
 
         }
 
-        public static void GetLogsInByteArray([NotNull] NameValueCollection args,
+        public static void GetLogsInZip([NotNull] NameValueCollection args,
                                 [NotNull] IReadOnlyDictionary<string, object> postBody,
                                 [NotNull] HttpListenerResponse response)
         {
@@ -165,15 +166,31 @@ namespace Couchbase.Lite.Testing
                 response.WriteEmptyBody();
                 return;
             }
-            string[] filePaths = Directory.GetFiles(@path);
-            var content = new List<byte>();
-            foreach (var f in filePaths) {
-                var stream = File.Open(f, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-                var bytesReader = new BinaryReader(stream);
-                content.AddRange(bytesReader.ReadBytes((int)stream.Length));
 
+            string[] filePaths = Directory.GetFiles(@path);
+            var memoryStream = new MemoryStream();
+            using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true)) {
+                foreach (var filePath in filePaths) {
+                    var entry = archive.CreateEntry(Path.GetFileName($"{filePath}.zip"));
+                    using (var file = File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                    using (var entryStream = entry.Open()) {
+                        file.CopyTo(entryStream);
+                    }
+                }
             }
-            response.WriteBody(Convert.ToBase64String(content.ToArray()));
+
+            try {
+                response.ContentLength64 = memoryStream.Length;
+                Stream output = response.OutputStream;
+                memoryStream.WriteTo(output);
+                response.ContentType = "application/zip";
+                response.StatusCode = (int)HttpStatusCode.OK;
+                response.Close();
+            } catch (ObjectDisposedException) {
+                // Swallow...other side closed the connection
+            } finally {
+                memoryStream.Dispose();
+            }  
         }
 
         public static void SetLogLevel([NotNull] NameValueCollection args,
