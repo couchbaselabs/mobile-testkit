@@ -3,6 +3,14 @@ package com.couchbase.CouchbaseLiteServ.server.RequestHandler;
 import android.content.Context;
 import android.util.Log;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import com.couchbase.CouchbaseLiteServ.CouchbaseLiteServ;
 import com.couchbase.CouchbaseLiteServ.server.Args;
 import com.couchbase.CouchbaseLiteServ.server.util.ZipUtils;
@@ -15,7 +23,7 @@ import com.couchbase.lite.DatabaseChange;
 import com.couchbase.lite.DatabaseChangeListener;
 import com.couchbase.lite.DatabaseConfiguration;
 import com.couchbase.lite.Document;
-import com.couchbase.CouchbaseLiteServ.MainActivity;
+import com.couchbase.lite.EncryptionKey;
 import com.couchbase.lite.Expression;
 import com.couchbase.lite.ListenerToken;
 import com.couchbase.lite.Meta;
@@ -25,17 +33,7 @@ import com.couchbase.lite.QueryBuilder;
 import com.couchbase.lite.Result;
 import com.couchbase.lite.ResultSet;
 import com.couchbase.lite.SelectResult;
-import com.couchbase.lite.EncryptionKey;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Dictionary;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class DatabaseRequestHandler {
     private static final String TAG = "DBHANDLER";
@@ -46,10 +44,7 @@ public class DatabaseRequestHandler {
     public Database create(Args args) throws CouchbaseLiteException {
         String name = args.get("name");
         DatabaseConfiguration config = args.get("config");
-        if (config == null) {
-            Context context = CouchbaseLiteServ.getAppContext();
-            config = new DatabaseConfiguration(context);
-        }
+        if (config == null) { config = new DatabaseConfiguration(); }
         return new Database(name, config);
     }
 
@@ -69,7 +64,7 @@ public class DatabaseRequestHandler {
         database.compact();
     }
 
-    public String getPath(Args args) throws CouchbaseLiteException {
+    public String getPath(Args args) {
         Database database = args.get("database");
         return database.getPath();
     }
@@ -126,7 +121,7 @@ public class DatabaseRequestHandler {
     public void updateDocument(Args args) throws CouchbaseLiteException {
         Database database = args.get("database");
         String id = args.get("id");
-        Map<String, Object> data = (Map<String, Object>) args.get("data");
+        Map<String, Object> data = args.get("data");
         MutableDocument updateDoc = database.getDocument(id).toMutable();
         updateDoc.setData(data);
         database.save(updateDoc);
@@ -217,7 +212,7 @@ public class DatabaseRequestHandler {
         database.delete(document, concurrencyType);
     }
 
-    public void deleteDB(Args args) throws CouchbaseLiteException {
+    public void deleteDB(Args args) {
         Database database = args.get("database");
         try {
             database.delete();
@@ -333,13 +328,13 @@ public class DatabaseRequestHandler {
         String dbName = args.get("dbName");
         String dbPath = args.get("dbPath");
 
-      DatabaseConfiguration dbConfig = args.get("dbConfig");
-      File oldDbPath = new File(dbPath);
-      Database.copy(oldDbPath, dbName, dbConfig);
+        DatabaseConfiguration dbConfig = args.get("dbConfig");
+        File oldDbPath = new File(dbPath);
+        Database.copy(oldDbPath, dbName, dbConfig);
     }
 
     private InputStream getAsset(String name) {
-      return this.getClass().getResourceAsStream(name);
+        return this.getClass().getResourceAsStream(name);
     }
 
     public String getPreBuiltDb(Args args) throws IOException {
@@ -348,9 +343,7 @@ public class DatabaseRequestHandler {
         String dbFileName = new File(dbPath).getName();
         dbFileName = dbFileName.substring(0, dbFileName.lastIndexOf("."));
         ZipUtils.unzip(getAsset(dbPath), context.getFilesDir());
-        String path = context.getFilesDir().getAbsolutePath() + "/" + dbFileName;
-        return path;
-
+        return context.getFilesDir().getAbsolutePath() + "/" + dbFileName;
     }
 
 }
@@ -358,12 +351,8 @@ public class DatabaseRequestHandler {
 class MyDatabaseChangeListener implements DatabaseChangeListener {
     private List<DatabaseChange> changes;
 
-    public List<DatabaseChange> getChanges() {
-        return changes;
-    }
+    public List<DatabaseChange> getChanges() { return changes; }
 
     @Override
-    public void changed(DatabaseChange change) {
-        changes.add(change);
-    }
+    public void changed(DatabaseChange change) { changes.add(change); }
 }
