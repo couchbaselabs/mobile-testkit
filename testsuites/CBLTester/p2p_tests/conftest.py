@@ -83,6 +83,8 @@ def pytest_addoption(parser):
 # testsuites/CBLTester/CBL_Functional_tests/ directory
 @pytest.fixture(scope="session")
 def params_from_base_suite_setup(request):
+    use_local_testserver = request.config.getoption("--use-local-testserver")
+
     liteserv_platforms = request.config.getoption("--liteserv-platforms")
     liteserv_versions = request.config.getoption("--liteserv-versions")
     liteserv_hosts = request.config.getoption("--liteserv-hosts")
@@ -120,16 +122,17 @@ def params_from_base_suite_setup(request):
                                               host=host,
                                               port=port,
                                               community_enabled=community_enabled)
+        if not use_local_testserver:
+            log_info("Downloading TestServer ...")
+            # Download TestServer app
+            testserver.download()
 
-        log_info("Downloading TestServer ...")
-        # Download TestServer app
-        testserver.download()
+            # Install TestServer app
+            if device_enabled and (platform == "ios" or platform == "android"):
+                testserver.install_device()
+            else:
+                testserver.install()
 
-        # Install TestServer app
-        if device_enabled and (platform == "ios" or platform == "android"):
-            testserver.install_device()
-        else:
-            testserver.install()
         testserver_list.append(testserver)
     base_url_list = []
     for host, port in zip(host_list, port_list):
@@ -144,13 +147,14 @@ def params_from_base_suite_setup(request):
     if create_db_per_suite:
         # Start Test server which needed for suite level set up like query tests
         for testserver in testserver_list:
-            log_info("Starting TestServer...")
-            test_name_cp = test_name.replace("/", "-")
-            if device_enabled:
-                testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
-                                                                      test_name_cp, datetime.datetime.now()))
-            else:
-                testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp,
+            if not use_local_testserver:
+                log_info("Starting TestServer...")
+                test_name_cp = test_name.replace("/", "-")
+                if device_enabled:
+                    testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
+                                                                          test_name_cp, datetime.datetime.now()))
+                else:
+                    testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp,
                                                                datetime.datetime.now()))
         for base_url, i in zip(base_url_list, range(len(base_url_list))):
             if enable_file_logging and version_list[0] >= "2.5.0":
@@ -215,8 +219,9 @@ def params_from_base_suite_setup(request):
                 log_info("Flushing server memory")
                 utils_obj = Utils(base_url)
                 utils_obj.flushMemory()
-                log_info("Stopping the test server")
-                testserver.stop()
+                if not use_local_testserver:
+                    log_info("Stopping the test server")
+                    testserver.stop()
             except Exception, err:
                 log_info("Exception occurred: {}".format(err))
     clear_resources_pngs()
@@ -241,6 +246,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     enable_encryption = params_from_base_suite_setup["enable_encryption"]
     testserver_list = params_from_base_suite_setup["testserver_list"]
     enable_file_logging = params_from_base_suite_setup["enable_file_logging"]
+    use_local_testserver = request.config.getoption("--use-local-testserver")
     test_name = request.node.name
 
     if create_db_per_test:
@@ -250,16 +256,17 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         db_path_list = []
         # Start Test server which needed for per test level
         for testserver in testserver_list:
-            log_info("Starting TestServer...")
-            test_name_cp = test_name.replace("/", "-")
-            log_filename = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR,
-                                                         type(testserver).__name__,
-                                                         test_name_cp,
-                                                         datetime.datetime.now())
-            if device_enabled:
-                testserver.start_device(log_filename)
-            else:
-                testserver.start(log_filename)
+            if not use_local_testserver:
+                log_info("Starting TestServer...")
+                test_name_cp = test_name.replace("/", "-")
+                log_filename = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR,
+                                                             type(testserver).__name__,
+                                                             test_name_cp,
+                                                             datetime.datetime.now())
+                if device_enabled:
+                    testserver.start_device(log_filename)
+                else:
+                    testserver.start(log_filename)
 
         for base_url, i in zip(base_url_list, range(len(base_url_list))):
             if enable_file_logging and version_list[0] >= "2.5.0":
@@ -318,8 +325,9 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
                 log_info("Flushing server memory")
                 utils_obj = Utils(base_url)
                 utils_obj.flushMemory()
-                log_info("Stopping the test server per test")
-                testserver.stop()
+                if not use_local_testserver:
+                    log_info("Stopping the test server per test")
+                    testserver.stop()
             except Exception, err:
                 log_info("Exception occurred: {}".format(err))
 
