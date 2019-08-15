@@ -155,7 +155,7 @@ def params_from_base_suite_setup(request):
                                                                           test_name_cp, datetime.datetime.now()))
                 else:
                     testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp,
-                                                               datetime.datetime.now()))
+                                                                   datetime.datetime.now()))
         for base_url, i in zip(base_url_list, range(len(base_url_list))):
             if enable_file_logging and version_list[0] >= "2.5.0":
                 cbllog = FileLogging(base_url)

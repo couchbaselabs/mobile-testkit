@@ -414,7 +414,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     testserver_list = params_from_base_suite_setup["testserver_list"]
     enable_file_logging = params_from_base_suite_setup["enable_file_logging"]
     test_name = request.node.name
-    
+
     if create_db_per_test:
         db_name_list = []
         cbl_db_list = []
