@@ -72,7 +72,7 @@ namespace Couchbase.Lite.Testing
             }
             else{
                 TcpMessageEndpointDelegate endpointDelegate = new TcpMessageEndpointDelegate();
-                var _endpoint = new MessageEndpoint("something", host, ProtocolType.ByteStream, endpointDelegate);
+                var _endpoint = new MessageEndpoint(dbUrl.AbsoluteUri, dbUrl, ProtocolType.ByteStream, endpointDelegate);
                 config = new ReplicatorConfiguration(db, _endpoint);
             }
 
