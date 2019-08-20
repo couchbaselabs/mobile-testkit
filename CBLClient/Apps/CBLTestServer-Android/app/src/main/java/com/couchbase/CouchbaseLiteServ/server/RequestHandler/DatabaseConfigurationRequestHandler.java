@@ -1,15 +1,10 @@
 package com.couchbase.CouchbaseLiteServ.server.RequestHandler;
 
 
-import android.content.Context;
-
-import com.couchbase.CouchbaseLiteServ.CouchbaseLiteServ;
 import com.couchbase.CouchbaseLiteServ.server.Args;
 import com.couchbase.lite.CouchbaseLite;
 import com.couchbase.lite.DatabaseConfiguration;
 import com.couchbase.lite.EncryptionKey;
-
-//import com.couchbase.lite.ConflictResolver;
 
 
 public class DatabaseConfigurationRequestHandler {

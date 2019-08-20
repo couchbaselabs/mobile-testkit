@@ -45,6 +45,11 @@ def pytest_addoption(parser):
                      help="Skip cluster provisioning at setup",
                      default=False)
 
+    parser.addoption("--use-local-testserver",
+                     action="store_true",
+                     help="Skip download and launch TestServer, use local debug build",
+                     default=False)
+
     parser.addoption("--server-version",
                      action="store",
                      help="server-version: Couchbase Server version to install (ex. 4.5.0 or 4.5.0-2601)")
@@ -163,6 +168,7 @@ def params_from_base_suite_setup(request):
     liteserv_port = request.config.getoption("--liteserv-port")
 
     skip_provisioning = request.config.getoption("--skip-provisioning")
+    use_local_testserver = request.config.getoption("--use-local-testserver")
     sync_gateway_version = request.config.getoption("--sync-gateway-version")
     mode = request.config.getoption("--mode")
 
@@ -198,15 +204,16 @@ def params_from_base_suite_setup(request):
                                           community_enabled=community_enabled,
                                           debug_mode=debug_mode)
 
-    log_info("Downloading TestServer ...")
-    # Download TestServer app
-    testserver.download()
+    if not use_local_testserver:
+        log_info("Downloading TestServer ...")
+        # Download TestServer app
+        testserver.download()
 
-    # Install TestServer app
-    if device_enabled:
-        testserver.install_device()
-    else:
-        testserver.install()
+        # Install TestServer app
+        if device_enabled:
+            testserver.install_device()
+        else:
+            testserver.install()
 
     base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_travel_sample", mode)
@@ -350,7 +357,7 @@ def params_from_base_suite_setup(request):
         raise Exception("enable_sample_bucket has to be used with create_db_per_suite")
 
     # Start Test server which needed for suite level set up like query tests
-    if create_db_per_suite:
+    if not use_local_testserver and create_db_per_suite:
         log_info("Starting TestServer...")
         test_name_cp = test_name.replace("/", "-")
         if device_enabled:
@@ -491,8 +498,9 @@ def params_from_base_suite_setup(request):
         log_info("Flushing server memory")
         utils_obj = Utils(base_url)
         utils_obj.flushMemory()
-        log_info("Stopping the test server per suite")
-        testserver.stop()
+        if not use_local_testserver:
+            log_info("Stopping the test server per suite")
+            testserver.stop()
     # Delete png files under resources/data
     clear_resources_pngs()
 
@@ -528,6 +536,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     cbl_log_decoder_build = params_from_base_suite_setup["cbl_log_decoder_build"]
     encryption_password = params_from_base_suite_setup["encryption_password"]
     enable_encryption = params_from_base_suite_setup["enable_encryption"]
+    use_local_testserver = request.config.getoption("--use-local-testserver")
 
     source_db = None
     test_name_cp = test_name.replace("/", "-")
@@ -535,7 +544,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
                                                  test_name_cp,
                                                  datetime.datetime.now())
 
-    if create_db_per_test:
+    if not use_local_testserver and create_db_per_test:
         log_info("Starting TestServer...")
         if device_enabled:
             testserver.start_device(log_filename)
@@ -633,8 +642,9 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
             log_info("Flushing server memory")
             utils_obj = Utils(base_url)
             utils_obj.flushMemory()
-            log_info("Stopping the test server per test")
-            testserver.stop()
+            if not use_local_testserver:
+                log_info("Stopping the test server per test")
+                testserver.stop()
         except Exception, err:
             log_info("Exception occurred: {}".format(err))
 
@@ -643,6 +653,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
 def class_init(request, params_from_base_suite_setup):
     base_url = params_from_base_suite_setup["base_url"]
     liteserv_platform = params_from_base_suite_setup["liteserv_platform"]
+    liteserv_version = params_from_base_suite_setup["liteserv_version"]
     enable_encryption = params_from_base_suite_setup["enable_encryption"]
     encryption_password = params_from_base_suite_setup["encryption_password"]
 
@@ -680,6 +691,7 @@ def class_init(request, params_from_base_suite_setup):
     request.cls.db_obj = db_obj
     request.cls.db = db
     request.cls.liteserv_platform = liteserv_platform
+    request.cls.liteserv_version = liteserv_version
 
     yield
     db_obj.deleteDB(db)
