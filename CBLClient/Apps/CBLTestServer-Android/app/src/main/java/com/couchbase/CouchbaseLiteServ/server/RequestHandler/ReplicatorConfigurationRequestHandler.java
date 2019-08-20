@@ -368,18 +368,9 @@ class LocalWinsCustomConflictResolver implements ConflictResolver {
     public Document resolve(Conflict conflict) {
         Document localDoc = conflict.getLocalDocument();
         Document remoteDoc = conflict.getRemoteDocument();
-        String localDocId = localDoc.getId();
-        String remoteDocId = remoteDoc.getId();
         String docId = conflict.getDocumentId();
-        if (remoteDocId != localDocId) {
-            Log.e(TAG, "Remote docId and local docId are different");
-        }
-        if (remoteDocId != docId) {
-            Log.e(TAG, "Remote docId doesn't match with conflict docId");
-        }
-        if (docId != localDocId) {
-            Log.e(TAG, "Local docId doesn't match with conflict docId");
-        }
+        Utility util_obj = new Utility();
+        util_obj.checkMismatchDocId(localDoc, remoteDoc, docId);
         return localDoc;
     }
 }
@@ -391,17 +382,8 @@ class RemoteWinsCustomConflictResolver implements ConflictResolver {
         Document localDoc = conflict.getLocalDocument();
         Document remoteDoc = conflict.getRemoteDocument();
         String docId = conflict.getDocumentId();
-        String localDocId = localDoc.getId();
-        String remoteDocId = remoteDoc.getId();
-        if (remoteDocId != localDocId) {
-            Log.e(TAG, "Remote docId and local docId are different");
-        }
-        if (remoteDocId != docId) {
-            Log.e(TAG, "Remote docId doesn't match with conflict docId");
-        }
-        if (docId != localDocId) {
-            Log.e(TAG, "Local docId doesn't match with conflict docId");
-        }
+        Utility util_obj = new Utility();
+        util_obj.checkMismatchDocId(localDoc, remoteDoc, docId);
         return remoteDoc;
     }
 }
@@ -413,17 +395,8 @@ class NullCustomConflictResolver implements ConflictResolver {
         Document localDoc = conflict.getLocalDocument();
         Document remoteDoc = conflict.getRemoteDocument();
         String docId = conflict.getDocumentId();
-        String remoteDocId = remoteDoc.getId();
-        String localDocId = localDoc.getId();
-        if (remoteDocId != localDocId) {
-            Log.e(TAG, "Remote docId and local docId are different");
-        }
-        if (remoteDocId != docId) {
-            Log.e(TAG, "Remote docId doesn't match with conflict docId");
-        }
-        if (docId != localDocId) {
-            Log.e(TAG, "Local docId doesn't match with conflict docId");
-        }
+        Utility util_obj = new Utility();
+        util_obj.checkMismatchDocId(localDoc, remoteDoc, docId);
         return null;
     }
 }
@@ -440,17 +413,8 @@ class MergeCustomConflictResolver implements ConflictResolver {
         Document localDoc = conflict.getLocalDocument();
         Document remoteDoc = conflict.getRemoteDocument();
         String docId = conflict.getDocumentId();
-        String remoteDocId = remoteDoc.getId();
-        String localDocId = localDoc.getId();
-        if (remoteDocId != localDocId) {
-            Log.e(TAG, "Remote docId and local docId are different");
-        }
-        if (remoteDocId != docId) {
-            Log.e(TAG, "Remote docId doesn't match with conflict docId");
-        }
-        if (docId != localDocId) {
-            Log.e(TAG, "Local docId doesn't match with conflict docId");
-        }
+        Utility util_obj = new Utility();
+        util_obj.checkMismatchDocId(localDoc, remoteDoc, docId);
         MutableDocument newDoc = localDoc.toMutable();
         Map<String, Object> remoteDocMap = remoteDoc.toMap();
         for (Map.Entry<String, Object> entry : remoteDocMap.entrySet()) {
@@ -471,17 +435,8 @@ class IncorrectDocIdConflictResolver implements ConflictResolver {
         Document localDoc = conflict.getLocalDocument();
         Document remoteDoc = conflict.getRemoteDocument();
         String docId = conflict.getDocumentId();
-        String remoteDocId = remoteDoc.getId();
-        String localDocId = localDoc.getId();
-        if (remoteDocId != localDocId) {
-            Log.e(TAG, "Remote docId and local docId are different");
-        }
-        if (remoteDocId != docId) {
-            Log.e(TAG, "Remote docId doesn't match with conflict docId");
-        }
-        if (docId != localDocId) {
-            Log.e(TAG, "Local docId doesn't match with conflict docId");
-        }
+        Utility util_obj = new Utility();
+        util_obj.checkMismatchDocId(localDoc, remoteDoc, docId);
         String newId = "changed" + docId;
         MutableDocument newDoc = new MutableDocument(newId, localDoc.toMap());
         newDoc.setValue("new_value", "couchbase");
@@ -496,17 +451,8 @@ class DelayedLocalWinConflictResolver implements ConflictResolver {
         Document localDoc = conflict.getLocalDocument();
         Document remoteDoc = conflict.getRemoteDocument();
         String docId = conflict.getDocumentId();
-        String remoteDocId = remoteDoc.getId();
-        String localDocId = localDoc.getId();
-        if (remoteDocId != localDocId) {
-            Log.e(TAG, "Remote docId and local docId are different");
-        }
-        if (remoteDocId != docId) {
-            Log.e(TAG, "Remote docId doesn't match with conflict docId");
-        }
-        if (docId != localDocId) {
-            Log.e(TAG, "Local docId doesn't match with conflict docId");
-        }
+        Utility util_obj = new Utility();
+        util_obj.checkMismatchDocId(localDoc, remoteDoc, docId);
         try {
             sleep(1000 * 10);
         } catch (InterruptedException e) {
@@ -523,6 +469,8 @@ class DeleteDocConflictResolver implements ConflictResolver {
         Document localDoc = conflict.getLocalDocument();
         Document remoteDoc = conflict.getRemoteDocument();
         String docId = conflict.getDocumentId();
+        Utility util_obj = new Utility();
+        util_obj.checkMismatchDocId(localDoc, remoteDoc, docId);
         if (remoteDoc == null) {
             return localDoc;
         } else {
@@ -538,6 +486,21 @@ class ExceptionThrownConflictResolver implements ConflictResolver {
         Document localDoc = conflict.getLocalDocument();
         Document remoteDoc = conflict.getRemoteDocument();
         String docId = conflict.getDocumentId();
+        Utility util_obj = new Utility();
+        util_obj.checkMismatchDocId(localDoc, remoteDoc, docId);
         throw new IllegalStateException("Throwing an exception");
+    }
+}
+
+class Utility {
+    public void checkMismatchDocId(Document localDoc, Document remoteDoc, String docId) {
+        String remoteDocId = remoteDoc.getId();
+        String localDocId = localDoc.getId();
+        if (remoteDocId != docId) {
+            throw new IllegalStateException("DocId mismatch");
+        }
+        if (docId != localDocId) {
+            throw new IllegalStateException("DocId mismatch");
+        }
     }
 }

@@ -210,17 +210,7 @@ private class LocalWinCustomConflictResolver: ConflictResolverProtocol {
         let localDoc = conflict.localDocument!
         let remoteDoc = conflict.remoteDocument!
         let docId = conflict.documentID
-        let remoteDocId = remoteDoc.id
-        let localDocId = localDoc.id
-        if remoteDocId != localDocId {
-            print("Remote docId and local docId are different")
-        }
-        if remoteDocId != docId {
-            print("Remote docId doesn't match with conflict docId")
-        }
-        if localDocId != docId {
-            print("Local docId doesn't match with conflict docId")
-        }
+        checkMismatchDocId(localDoc: localDoc, remoteDoc: remoteDoc, docId: docId)
         return localDoc
     }
 }
@@ -230,17 +220,7 @@ private class RemoteWinCustomConflictResolver: ConflictResolverProtocol{
         let localDoc = conflict.localDocument!
         let remoteDoc = conflict.remoteDocument!
         let docId = conflict.documentID
-        let remoteDocId = remoteDoc.id
-        let localDocId = localDoc.id
-        if remoteDocId != localDocId {
-            print("Remote docId and local docId are different")
-        }
-        if remoteDocId != docId {
-            print("Remote docId doesn't match with conflict docId")
-        }
-        if localDocId != docId {
-            print("Local docId doesn't match with conflict docId")
-        }
+        checkMismatchDocId(localDoc: localDoc, remoteDoc: remoteDoc, docId: docId)
         return remoteDoc
     }
 }
@@ -250,17 +230,7 @@ private class NullWinCustomConflictResolver: ConflictResolverProtocol{
         let localDoc = conflict.localDocument!
         let remoteDoc = conflict.remoteDocument!
         let docId = conflict.documentID
-        let remoteDocId = remoteDoc.id
-        let localDocId = localDoc.id
-        if remoteDocId != localDocId {
-            print("Remote docId and local docId are different")
-        }
-        if remoteDocId != docId {
-            print("Remote docId doesn't match with conflict docId")
-        }
-        if localDocId != docId {
-            print("Local docId doesn't match with conflict docId")
-        }
+        checkMismatchDocId(localDoc: localDoc, remoteDoc: remoteDoc, docId: docId)
         return nil
     }
 }
@@ -270,17 +240,7 @@ private class MergeWinCustomConflictResolver: ConflictResolverProtocol{
         let localDoc = conflict.localDocument!
         let remoteDoc = conflict.remoteDocument!
         let docId = conflict.documentID
-        let remoteDocId = remoteDoc.id
-        let localDocId = localDoc.id
-        if remoteDocId != localDocId {
-            print("Remote docId and local docId are different")
-        }
-        if remoteDocId != docId {
-            print("Remote docId doesn't match with conflict docId")
-        }
-        if localDocId != docId {
-            print("Local docId doesn't match with conflict docId")
-        }
+        checkMismatchDocId(localDoc: localDoc, remoteDoc: remoteDoc, docId: docId)
         let newDoc = localDoc.toMutable()
         let remoteDocMap = remoteDoc.toDictionary()
         for (key, value) in remoteDocMap {
@@ -297,17 +257,7 @@ private class DelayedLocalWinCustomConflictResolver: ConflictResolverProtocol{
         let localDoc = conflict.localDocument!
         let remoteDoc = conflict.remoteDocument!
         let docId = conflict.documentID
-        let remoteDocId = remoteDoc.id
-        let localDocId = localDoc.id
-        if remoteDocId != localDocId {
-            print("Remote docId and local docId are different")
-        }
-        if remoteDocId != docId {
-            print("Remote docId doesn't match with conflict docId")
-        }
-        if localDocId != docId {
-            print("Local docId doesn't match with conflict docId")
-        }
+        checkMismatchDocId(localDoc: localDoc, remoteDoc: remoteDoc, docId: docId)
         sleep(10)
         return localDoc
     }
@@ -318,17 +268,7 @@ private class IncorrectDocIdCustomConflictResolver: ConflictResolverProtocol{
         let localDoc = conflict.localDocument!
         let remoteDoc = conflict.remoteDocument!
         let docId = conflict.documentID
-        let remoteDocId = remoteDoc.id
-        let localDocId = localDoc.id
-        if remoteDocId != localDocId {
-            print("Remote docId and local docId are different")
-        }
-        if remoteDocId != docId {
-            print("Remote docId doesn't match with conflict docId")
-        }
-        if localDocId != docId {
-            print("Local docId doesn't match with conflict docId")
-        }
+        checkMismatchDocId(localDoc: localDoc, remoteDoc: remoteDoc, docId: docId)
         let newId = "changed\(docId)"
         let newDoc = MutableDocument(id: newId, data: localDoc.toDictionary())
         newDoc.setValue("_id", forKey: newId)
@@ -340,7 +280,8 @@ private class DeleteDocCustomConflictResolver: ConflictResolverProtocol{
     func resolve(conflict: Conflict) -> Document? {
         let localDoc = conflict.localDocument
         let remoteDoc = conflict.remoteDocument
-        _ = conflict.documentID
+        let docId = conflict.documentID
+        checkMismatchDocId(localDoc: localDoc, remoteDoc: remoteDoc, docId: docId)
         if remoteDoc == nil {
             return localDoc
         }
@@ -352,10 +293,29 @@ private class ExceptionThrownCustomConflictResolver: ConflictResolverProtocol{
     func resolve(conflict: Conflict) -> Document? {
         let localDoc = conflict.localDocument
         let remoteDoc = conflict.remoteDocument
-        let docID = conflict.documentID
+        let docId = conflict.documentID
+        checkMismatchDocId(localDoc: localDoc, remoteDoc: remoteDoc, docId: docId)
         NSException(name: .internalInconsistencyException,
                     reason: "some exception happened inside custom conflict resolution",
                     userInfo: nil).raise()
         return localDoc
     }
 }
+
+private func checkMismatchDocId(localDoc: Document?, remoteDoc: Document?, docId: String) -> Void{
+    if let remoteDocId = remoteDoc?.id {
+        if remoteDocId != docId {
+            NSException(name: .internalInconsistencyException,
+                        reason: "DocId mismatch",
+                        userInfo: nil).raise()
+        }
+    }
+    if let localDocId = localDoc?.id {
+        if localDocId != docId {
+            NSException(name: .internalInconsistencyException,
+                        reason: "DocId mismatch",
+                        userInfo: nil).raise()
+        }
+    }
+}
+

@@ -408,20 +408,8 @@ namespace Couchbase.Lite.Testing
             Document localDoc = conflict.LocalDocument;
             Document remoteDoc = conflict.RemoteDocument;
             string docId = conflict.DocumentID;
-            string localDocId = localDoc.Id;
-            string remoteDocId = remoteDoc.Id;
-            if (!localDocId.Equals(remoteDocId))
-            {
-                Console.WriteLine("Remote docId and local docId are different");
-            }
-            if (!docId.Equals(remoteDocId))
-            {
-                Console.WriteLine("Remote docId doesn't match with conflict docId");
-            }
-            if (!docId.Equals(localDocId))
-            {
-                Console.WriteLine("Local docId doesn't match with conflict docId");
-            }
+            Utility util_obj = new Utility();
+            util_obj.checkMismatchDocId(localDoc, remoteDoc, docId);
             return localDoc;
             
         }
@@ -434,20 +422,8 @@ namespace Couchbase.Lite.Testing
             Document localDoc = conflict.LocalDocument;
             Document remoteDoc = conflict.RemoteDocument;
             string docId = conflict.DocumentID;
-            string localDocId = localDoc.Id;
-            string remoteDocId = remoteDoc.Id;
-            if (!localDocId.Equals(remoteDocId))
-            {
-                Console.WriteLine("Remote docId and local docId are different");
-            }
-            if (!docId.Equals(remoteDocId))
-            {
-                Console.WriteLine("Remote docId doesn't match with conflict docId");
-            }
-            if (!docId.Equals(localDocId))
-            {
-                Console.WriteLine("Local docId doesn't match with conflict docId");
-            }
+            Utility util_obj = new Utility();
+            util_obj.checkMismatchDocId(localDoc, remoteDoc, docId);
             return remoteDoc;
 
         }
@@ -460,20 +436,8 @@ namespace Couchbase.Lite.Testing
             Document localDoc = conflict.LocalDocument;
             Document remoteDoc = conflict.RemoteDocument;
             string docId = conflict.DocumentID;
-            string localDocId = localDoc.Id;
-            string remoteDocId = remoteDoc.Id;
-            if (!localDocId.Equals(remoteDocId))
-            {
-                Console.WriteLine("Remote docId and local docId are different");
-            }
-            if (!docId.Equals(remoteDocId))
-            {
-                Console.WriteLine("Remote docId doesn't match with conflict docId");
-            }
-            if (!docId.Equals(localDocId))
-            {
-                Console.WriteLine("Local docId doesn't match with conflict docId");
-            }
+            Utility util_obj = new Utility();
+            util_obj.checkMismatchDocId(localDoc, remoteDoc, docId);
             return null;
 
         }
@@ -489,20 +453,8 @@ namespace Couchbase.Lite.Testing
             Document localDoc = conflict.LocalDocument;
             Document remoteDoc = conflict.RemoteDocument;
             string docId = conflict.DocumentID;
-            string localDocId = localDoc.Id;
-            string remoteDocId = remoteDoc.Id;
-            if (!localDocId.Equals(remoteDocId))
-            {
-                Console.WriteLine("Remote docId and local docId are different");
-            }
-            if (!docId.Equals(remoteDocId))
-            {
-                Console.WriteLine("Remote docId doesn't match with conflict docId");
-            }
-            if (!docId.Equals(localDocId))
-            {
-                Console.WriteLine("Local docId doesn't match with conflict docId");
-            }
+            Utility util_obj = new Utility();
+            util_obj.checkMismatchDocId(localDoc, remoteDoc, docId);
             MutableDocument newDoc = localDoc.ToMutable();
             Dictionary<string, object> remoteDocMap = remoteDoc.ToDictionary();
             foreach (KeyValuePair<string, Object> entry in remoteDocMap)
@@ -526,20 +478,8 @@ namespace Couchbase.Lite.Testing
             Document localDoc = conflict.LocalDocument;
             Document remoteDoc = conflict.RemoteDocument;
             string docId = conflict.DocumentID;
-            string localDocId = localDoc.Id;
-            string remoteDocId = remoteDoc.Id;
-            if (!localDocId.Equals(remoteDocId))
-            {
-                Console.WriteLine("Remote docId and local docId are different");
-            }
-            if (!docId.Equals(remoteDocId))
-            {
-                Console.WriteLine("Remote docId doesn't match with conflict docId");
-            }
-            if (!docId.Equals(localDocId))
-            {
-                Console.WriteLine("Local docId doesn't match with conflict docId");
-            }
+            Utility util_obj = new Utility();
+            util_obj.checkMismatchDocId(localDoc, remoteDoc, docId);
             string newId = "changed" + docId;
             MutableDocument newDoc = new MutableDocument(newId, localDoc.ToDictionary());
             newDoc.SetValue("new_value", "couchbase");
@@ -555,6 +495,8 @@ namespace Couchbase.Lite.Testing
             Document localDoc = conflict.LocalDocument;
             Document remoteDoc = conflict.RemoteDocument;
             string docId = conflict.DocumentID;
+            Utility util_obj = new Utility();
+            util_obj.checkMismatchDocId(localDoc, remoteDoc, docId);
             if (remoteDoc == null)
             {
                 return localDoc;
@@ -573,6 +515,8 @@ namespace Couchbase.Lite.Testing
             Document localDoc = conflict.LocalDocument;
             Document remoteDoc = conflict.RemoteDocument;
             string docId = conflict.DocumentID;
+            Utility util_obj = new Utility();
+            util_obj.checkMismatchDocId(localDoc, remoteDoc, docId);
             throw new Exception("Throwing an exception");
         }
     }
@@ -584,23 +528,31 @@ namespace Couchbase.Lite.Testing
             Document localDoc = conflict.LocalDocument;
             Document remoteDoc = conflict.RemoteDocument;
             string docId = conflict.DocumentID;
-            string localDocId = localDoc.Id;
-            string remoteDocId = remoteDoc.Id;
-            if (!localDocId.Equals(remoteDocId))
-            {
-                Console.WriteLine("Remote docId and local docId are different");
-            }
-            if (!docId.Equals(remoteDocId))
-            {
-                Console.WriteLine("Remote docId doesn't match with conflict docId");
-            }
-            if (!docId.Equals(localDocId))
-            {
-                Console.WriteLine("Local docId doesn't match with conflict docId");
-            }
+            Utility util_obj = new Utility();
+            util_obj.checkMismatchDocId(localDoc, remoteDoc, docId);
             Thread.Sleep(1000 * 10);
             return localDoc;
 
         }
+    }
+
+    internal sealed class Utility
+    {
+        public void checkMismatchDocId(Document localDoc, Document remoteDoc, string docId)
+        {
+            string localDocId = localDoc.Id;
+            string remoteDocId = remoteDoc.Id;
+            if (!docId.Equals(remoteDocId))
+            {
+                throw new Exception("DocId mismatch");
+            }
+            if (!docId.Equals(localDocId))
+            {
+                throw new Exception("DocId mismatch");
+
+            }
+
+        }
+
     }
 }
