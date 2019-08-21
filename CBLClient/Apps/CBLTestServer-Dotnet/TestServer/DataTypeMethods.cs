@@ -33,7 +33,7 @@ namespace Couchbase.Lite.Testing
                                     [NotNull] IReadOnlyDictionary<string, object> postBody,
                                     [NotNull] HttpListenerResponse response)
         {
-            var val = (float)postBody["value"];
+            var val = Convert.ToSingle(postBody["value"]);
             response.WriteBody(val);
         }
 
