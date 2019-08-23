@@ -148,7 +148,6 @@ def params_from_base_suite_setup(request):
                                           port=liteserv_port,
                                           community_enabled=community_enabled,
                                           debug_mode=debug_mode)
-
     log_info("Downloading TestServer ...")
     # Download TestServer app
     testserver.download()
@@ -179,7 +178,6 @@ def params_from_base_suite_setup(request):
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
 
     sg_url = cluster_topology["sync_gateways"][0]["public"]
-    sg_admin_url = cluster_topology["sync_gateways"][0]["admin"]
     sg_ip = host_for_url(sg_url)
 
     persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', False)
@@ -276,6 +274,7 @@ def params_from_base_suite_setup(request):
         expected_server_version=server_version,
         expected_sync_gateway_version=sync_gateway_version
     )
+    sg_admin_url = cluster_topology["sync_gateways"][0]["admin"]
 
     # Start Test server which needed for suite level set up like query tests
     log_info("Starting TestServer...")
