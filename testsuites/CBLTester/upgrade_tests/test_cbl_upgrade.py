@@ -340,6 +340,8 @@ def _upgrade_db(args):
         prebuilt_db_path = "/assets/{}.cblite2.zip".format(old_liteserv_db_name)
     elif liteserv_platform == "xamarin-android":
         prebuilt_db_path = "{}.cblite2.zip".format(old_liteserv_db_name)
+    elif liteserv_platform == "ios" or liteserv_platform == "xamarin-ios":
+        prebuilt_db_path = "Databases/{}.cblite2".format(old_liteserv_db_name)
     else:
         prebuilt_db_path = base_directory + "\\" + "Databases\{}.cblite2".format(old_liteserv_db_name)
 
