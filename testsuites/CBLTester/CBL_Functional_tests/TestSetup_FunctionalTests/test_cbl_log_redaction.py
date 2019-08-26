@@ -41,10 +41,14 @@ def test_mask_password_in_logs(params_from_base_test_setup, password):
     liteserv_platform = params_from_base_test_setup["liteserv_platform"]
     testserver = params_from_base_test_setup["testserver"]
     device_enabled = params_from_base_test_setup["device_enabled"]
+    enable_file_logging = params_from_base_test_setup["enable_file_logging"]
 
     num_cbl_docs = 500
     if sync_gateway_version < "2.0.0" and log_file is not None:
         pytest.skip('This test cannot run with sg version below 2.0 or File logging is not enabled.')
+
+    if not enable_file_logging:
+        pytest.skip("Cannot run test without file logs")
 
     channels = ["ABC"]
     c = cluster.Cluster(config=cluster_config)
@@ -102,10 +106,14 @@ def test_verify_invalid_mask_password_in_logs(params_from_base_test_setup, inval
     liteserv_platform = params_from_base_test_setup["liteserv_platform"]
     testserver = params_from_base_test_setup["testserver"]
     device_enabled = params_from_base_test_setup["device_enabled"]
+    enable_file_logging = params_from_base_test_setup["enable_file_logging"]
 
     num_cbl_docs = 50
     if sync_gateway_version < "2.0.0" and log_file is not None:
         pytest.skip('This test cannot run with sg version below 2.0 or File logging is not enabled.')
+
+    if not enable_file_logging:
+        pytest.skip("Cannot run test without file logs")
 
     channels = ["ABC"]
     c = cluster.Cluster(config=cluster_config)

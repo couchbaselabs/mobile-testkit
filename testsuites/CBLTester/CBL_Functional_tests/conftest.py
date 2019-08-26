@@ -630,7 +630,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "cbl_log_decoder_platform": cbl_log_decoder_platform,
         "cbl_log_decoder_build": cbl_log_decoder_build,
         "enable_encryption": enable_encryption,
-        "encryption_password": encryption_password
+        "encryption_password": encryption_password,
+        "enable_file_logging": enable_file_logging
     }
 
     log_info("Tearing down test")

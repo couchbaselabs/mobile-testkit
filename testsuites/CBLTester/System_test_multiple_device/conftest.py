@@ -298,8 +298,8 @@ def params_from_base_suite_setup(request):
             else:
                 testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp,
                                                                datetime.datetime.now()))
-        for base_url, i in zip(base_url_list, range(len(base_url_list))):
-            if enable_file_logging and version_list[0] >= "2.5.0":
+        for base_url, i, liteserv_version in zip(base_url_list, range(len(base_url_list)), version_list):
+            if enable_file_logging and liteserv_version >= "2.5.0":
                 cbllog = FileLogging(base_url)
                 cbllog.configure(log_level="verbose", max_rotate_count=2,
                                  max_size=1000 * 512 * 4, plain_text=True)
@@ -358,7 +358,8 @@ def params_from_base_suite_setup(request):
         "create_db_per_test": create_db_per_test,
         "enable_rebalance": enable_rebalance,
         "enable_encryption": enable_encryption,
-        "encryption_password": encryption_password
+        "encryption_password": encryption_password,
+        "enable_file_logging": enable_file_logging
     }
 
     if create_db_per_suite:
@@ -409,6 +410,7 @@ def params_from_base_test_setup(params_from_base_suite_setup):
     cluster_topology = params_from_base_suite_setup["cluster_topology"]
     encryption_password = params_from_base_suite_setup["encryption_password"]
     enable_encryption = params_from_base_suite_setup["enable_encryption"]
+    enable_file_logging = params_from_base_suite_setup["enable_file_logging"]
     # testserver_list = params_from_base_suite_setup["testserver_list"]
     # test_name = request.node.name
 
@@ -416,7 +418,7 @@ def params_from_base_test_setup(params_from_base_suite_setup):
         db_name_list = []
         cbl_db_list = []
         db_obj_list = []
-        for base_url, i in zip(base_url_list, range(len(base_url_list))):
+        for base_url, i, liteserv_version in zip(base_url_list, range(len(base_url_list)), version_list):
             """log_info("Starting TestServer...")
             test_name_cp = test_name.replace("/", "-")
             log_filename = "{}-{}/logs/{}-{}-{}.txt".format("testserver-",RESULTS_DIR,
@@ -426,6 +428,12 @@ def params_from_base_test_setup(params_from_base_suite_setup):
             else:
                 testserver.start(log_filename)
             """
+            if enable_file_logging and liteserv_version >= "2.5.0":
+                cbllog = FileLogging(base_url)
+                cbllog.configure(log_level="verbose", max_rotate_count=2,
+                                 max_size=1000000 * 512, plain_text=True)
+                suite_db_log_files = cbllog.get_directory()
+            log_info("Log files available at - {}".format(suite_db_log_files))
             db_name = "{}_{}_{}".format(create_db_per_test, str(time.time()), i + 1)
             log_info("db name for {} is {}".format(base_url, db_name))
             db_name_list.append(db_name)
@@ -473,7 +481,8 @@ def params_from_base_test_setup(params_from_base_suite_setup):
         # "testserver_list": testserver_list,
         "device_enabled": device_enabled,
         "generator": generator,
-        "resume_cluster": resume_cluster
+        "resume_cluster": resume_cluster,
+        "enable_file_logging": enable_file_logging
     }
 
     if create_db_per_test:
