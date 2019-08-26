@@ -26,6 +26,10 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Couchbase.Lite.Logging;
+using Couchbase.Lite.Support;
+using JetBrains.Annotations;
+using LiteCore.Interop;
 
 
 namespace Couchbase.Lite.Testing

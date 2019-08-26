@@ -11,6 +11,7 @@ import java.util.Map;
 
 import com.couchbase.CouchbaseLiteServ.MainActivity;
 
+
 public class Memory {
     private final Map<String, Object> _memory = new HashMap<>();
     private int _address = 0;
@@ -46,20 +47,21 @@ public class Memory {
         try {
             copyFolder(sourcePath, destinationPath);
             return "Copied";
-        } catch (Exception e){
+        }
+        catch (Exception e) {
             return e.getLocalizedMessage().toString();
         }
     }
 
-    public static void copyFolder(File src, File dest) throws IOException{
-        if(src.isDirectory()){
+    public static void copyFolder(File src, File dest) throws IOException {
+        if (src.isDirectory()) {
 
-            if(dest.exists()) {
+            if (dest.exists()) {
                 deleteRecursive(dest);
-            } else {
+            }
+            else {
                 dest.mkdir();
-                System.out.println("Directory copied from "
-                        + src + "  to " + dest);
+                System.out.println("Directory copied from " + src + "  to " + dest);
             }
 
             //list all the directory contents
@@ -70,9 +72,10 @@ public class Memory {
                 File srcFile = new File(src, file);
                 File destFile = new File(dest, file);
                 //recursive copy
-                copyFolder(srcFile,destFile);
+                copyFolder(srcFile, destFile);
             }
-        }else{
+        }
+        else {
             //if file, then copy it
             //Use bytes stream to support all file types
             InputStream in = new FileInputStream(src);
@@ -82,7 +85,7 @@ public class Memory {
 
             int length;
             //copy the file content in bytes
-            while ((length = in.read(buffer)) > 0){
+            while ((length = in.read(buffer)) > 0) {
                 out.write(buffer, 0, length);
             }
 
@@ -95,9 +98,9 @@ public class Memory {
     }
 
     public static void deleteRecursive(File fileOrDirectory) {
-        if (fileOrDirectory.isDirectory())
-            for (File child : fileOrDirectory.listFiles())
-                deleteRecursive(child);
+        if (fileOrDirectory.isDirectory()) {
+            for (File child : fileOrDirectory.listFiles()) { deleteRecursive(child); }
+        }
 
         fileOrDirectory.delete();
     }

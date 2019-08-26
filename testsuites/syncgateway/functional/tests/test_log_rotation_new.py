@@ -19,7 +19,7 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name):
     """
     @summary
     Test to verify default values for rotation section:
-    maxsize = 100 MB
+    max_size = 100 MB
     MaxAge = 0(do not limit the number of MaxAge)
     MaxBackups = 0(do not limit the number of backups)
     """
@@ -199,7 +199,7 @@ def test_log_nondefault_logKeys_set(params_from_base_test_setup, sg_conf_name):
     data = load_sync_gateway_config(sg_conf, cluster_hosts["couchbase_servers"][0], cluster_conf)
 
     # "FAKE" not valid area in logging
-    data['logging']["console"]["logKeys"] = ["HTTP", "FAKE"]
+    data['logging']["console"]["log_keys"] = ["HTTP", "FAKE"]
     # create temp config file in the same folder as sg_conf
     temp_conf = "/".join(sg_conf.split('/')[:-2]) + '/temp_conf.json'
 
@@ -373,7 +373,7 @@ def test_log_rotation_invalid_path(params_from_base_test_setup, sg_conf_name):
 def test_log_200mb(params_from_base_test_setup, sg_conf_name):
     """
     @summary
-    Test to check maxsize with value 200MB( 100Mb by default)
+    Test to check max_size with value 200MB( 100Mb by default)
     """
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
@@ -423,7 +423,7 @@ def test_log_200mb(params_from_base_test_setup, sg_conf_name):
     # Set maxsize
     for log in SG_LOGS:
         log_section = log.split("_")[1]
-        data['logging'][log_section]["rotation"]["maxsize"] = 200
+        data['logging'][log_section]["rotation"]["max_size"] = 200
 
     # Create a temp config file in the same folder as sg_conf
     temp_conf = "/".join(sg_conf.split('/')[:-2]) + '/temp_conf.json'
@@ -456,7 +456,7 @@ def test_log_rotation_negative(params_from_base_test_setup, sg_conf_name):
     """
     @summary
     Test log rotation with negative values for:
-        "maxsize": -1,
+        "max_size": -1,
         "maxage": -30,
         "maxbackups": -2
     SG shouldn't start
@@ -541,8 +541,8 @@ def test_log_maxbackups_0(params_from_base_test_setup, sg_conf_name):
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
     sg_ip = host_for_url(sg_admin_url)
 
-    if get_sync_gateway_version(sg_ip)[0] < "2.1":
-        pytest.skip("Continuous logging Test NA for SG < 2.1")
+    if get_sync_gateway_version(sg_ip)[0] < "2.1" and get_sync_gateway_version(sg_ip)[0] >= "2.6.0":
+        pytest.skip("Continuous logging Test NA for SG < 2.1 and backup config is removed 2.6.0 and up")
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
@@ -678,6 +678,6 @@ def send_request_to_sgw(sg_one_url, sg_admin_url, remote_executor, sg_platform="
 
     else:
         remote_executor.execute(
-            "for ((i=1;i <= 2000;i += 1)); do curl -s http://localhost:4984/ABCD/ > /dev/null; done")
+            "for ((i=1;i <= 3200;i += 1)); do curl -s http://localhost:4984/ABCD/ > /dev/null; done")
         remote_executor.execute(
             "for ((i=1;i <= 2000;i += 1)); do curl -s -H 'Accept: text/plain' http://localhost:4985/db/ > /dev/null; done")

@@ -7,6 +7,9 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using Couchbase.Lite.DI;
+using Couchbase.Lite.Logging;
+using Couchbase.Lite.Util;
+
 
 
 namespace Couchbase.Lite.Testing

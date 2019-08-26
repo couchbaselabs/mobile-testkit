@@ -28,7 +28,7 @@ class Replication(object):
                   replication_type="push_pull", continuous=False,
                   push_filter=False, pull_filter=False, channels=None,
                   documentIDs=None, replicator_authenticator=None,
-                  headers=None, filter_callback_func="", conflict_resolver=""):
+                  headers=None, filter_callback_func='', conflict_resolver=""):
         args = Args()
         args.setMemoryPointer("source_db", source_db)
         args.setBoolean("continuous", continuous)
