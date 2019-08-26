@@ -224,6 +224,7 @@ def test_upgrade_cbl(params_from_base_suite_setup):
     log_info("\n\nTests Result: PASSED {}, FAILED {}".format(test_passed, test_failed))
     for key in tests_result:
         log_info("{}: {}".format(key, tests_result[key]))
+    assert test_failed == 0, "Some query tests failed. Do check the logs for the details"
 
     log_info("\n\nStarting with mutation tests on upgrade CBL db")
     # Adding few docs to db
