@@ -652,12 +652,7 @@ def test_CBL_tombstone_doc(params_from_base_test_setup, num_of_docs):
 
     if sync_gateway_version >= "2.5.0":
         expvars = sg_client.get_expvars(sg_admin_url)
-        if sync_gateway_version >= "2.6.0":
-            # chan_cache_tombstone_revs remains no change while tombstone a doc because of the cache initialization feature in 2.6
-            assert chan_cache_tombstone_revs == expvars["syncgateway"]["per_db"][sg_db]["cache"]["chan_cache_tombstone_revs"], "chan cache tombstone revs did not get incremented"
-        else:
-            # chan_cache_tombstone_revs increases while tombstone a doc with Iridium release
-            assert chan_cache_tombstone_revs < expvars["syncgateway"]["per_db"][sg_db]["cache"]["chan_cache_tombstone_revs"], "chan cache tombstone revs did not get incremented"
+        assert chan_cache_tombstone_revs < expvars["syncgateway"]["per_db"][sg_db]["cache"]["chan_cache_tombstone_revs"], "chan cache tombstone revs did not get incremented"
         assert chan_cache_removal_revs < expvars["syncgateway"]["per_db"][sg_db]["cache"]["chan_cache_removal_revs"], "chan_cache_removal_revs did not get incremented"
 
 
@@ -2986,8 +2981,11 @@ def test_resetCheckpointFailure(params_from_base_test_setup):
     # verify it throws an error that checkpoint reset is called without stopping replicator.
     with pytest.raises(Exception) as he:
         replicator.resetCheckPoint(repl)
-    assert 'Replicator is not stopped.' in he.value.message
-    assert 'Resetting checkpoint is only allowed when the replicator is in the stopped state' in he.value.message
+    if liteserv_platform.lower() == "android":
+        assert 'Attempt to reset the checkpoint for a replicator that is not stopped.' in he.value.message
+    else:
+        assert 'Replicator is not stopped.' in he.value.message
+        assert 'Resetting checkpoint is only allowed when the replicator is in the stopped state' in he.value.message
     replicator.stop(repl)
 
 
