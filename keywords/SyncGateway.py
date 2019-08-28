@@ -411,7 +411,7 @@ class SyncGateway(object):
             else:
                 num_replicas = get_sg_replicas(cluster_config)
                 playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
-            
+
             if sg_platform == "macos":
                 sg_home_directory = "/Users/sync_gateway"
             else:
