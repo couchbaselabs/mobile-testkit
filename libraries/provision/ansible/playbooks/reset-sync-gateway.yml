@@ -41,6 +41,10 @@
     become: yes
     when: ansible_distribution == "CentOS" or ansible_distribution == "Ubuntu"
 
+  - include: tasks/deploy-sync-gateway-config-macos.yml
+    become: yes
+    when: ansible_distribution == "MacOSX"
+
   - include: tasks/deploy-sync-gateway-config-windows.yml
     when: ansible_os_family == "Windows"
 

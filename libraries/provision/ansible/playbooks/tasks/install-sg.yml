@@ -9,4 +9,10 @@
   shell: dpkg -i /tmp/{{ couchbase_sync_gateway_package }}
   when: ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
 
+- name: SYNC GATEWAY | Install sync_gateway tar.gz
+  become: yes
+  shell: |
+    tar -zxvf /tmp/{{ couchbase_sync_gateway_package }} --directory /opt
+  when: ansible_distribution == "MacOSX"
+
 - include: stop-sync-gateway.yml

@@ -1,7 +1,46 @@
-# Add sync_gateway user
-- name: SYNC GATEWAY | Create sync gateway user
-  become: yes
+# Add sync_gateway user on Centos/linux/ubuntu/debian
+- name: SYNC GATEWAY | Create sync gateway user on Centos/linux/ubuntu/debian
   user: name=sync_gateway createhome=yes
+  when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
+
+# # Add sync_gateway user on macOS 
+#- name: SYNC GATEWAY | Create sync gateway user on MacOS
+#  become: yes
+#  shell: |
+#    sysadminctl -addUser sync_gateway
+#    dseditgroup -o create sync_gateway
+#    dseditgroup -o edit -a sync_gateway -t user sync_gateway
+#  when: ansible_distribution == "MacOSX"
+
+# # Add sync_gateway user on macOS 
+# - name: SYNC GATEWAY | Add sync gateway user on MacOS
+#   become: yes
+#   shell: sysadminctl -addUser sync_gateway -adminUser sridevisaragadam -adminPassword TasRhs_1708
+#   when: ansible_distribution == "MacOSX"
+
+# - name: SYNC GATEWAY | Create group policy for sync gateway on MacOS
+#   become: yes
+#   shell: dseditgroup -o create sync_gateway
+#   when: ansible_distribution == "MacOSX"
+
+# - name: SYNC GATEWAY | Add Sync gateway user to sync gateway group on MacOS
+#   become: yes
+#   shell: dseditgroup -o edit -a sync_gateway -t user sync_gateway
+#   when: ansible_distribution == "MacOSX"
+
+
+- name: SYNC GATEWAY | Add sync gateway user on MacOS
+  become_user: root
+  user:
+    name: "sync_gateway"
+    group: sync_gateway
+    state: present
+    shell: /bin/bash
+    createhome: yes
+    home: "/Users/sync_gateway"
+  when: ansible_distribution == "MacOSX1"
+
+
 
 # Add tmp logging dir (Log Rotation testing)
 - name: SYNC GATEWAY | Create /tmp/sg_logs

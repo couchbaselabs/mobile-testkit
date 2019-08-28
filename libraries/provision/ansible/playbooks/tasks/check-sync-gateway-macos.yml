@@ -1,0 +1,4 @@
+- name: SYNC GATEWAY | check sync_gateway service status on Windows
+  win_command: sc query SyncGateway
+  register: output
+  failed_when: output.stdout | search("STOPPED")

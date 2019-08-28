@@ -208,6 +208,8 @@ def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_
     if output_dir:
         if sg_platform == "windows":
             directory = "c{}\\test".format(":")
+        elif sg_platform == "macos":
+            directory = "/Users/sync_gateway/data"
         else:
             directory = "/home/sync_gateway/data"
             if mode == "di":

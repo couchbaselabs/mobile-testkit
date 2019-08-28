@@ -28,7 +28,7 @@ class ClusterDef:
         )
 
 
-def write_config(config, pool_file, use_docker, sg_windows, sg_accel_windows,
+def write_config(config, pool_file, use_docker, sg_windows, sg_accel_windows, sg_platform="centos",
                  ipv6=False, x509_certs=False):
 
     connection_string = ""
@@ -368,6 +368,10 @@ def write_config(config, pool_file, use_docker, sg_windows, sg_accel_windows,
         f.write("x509_certs={}\n".format(x509_certs))
         f.write("delta_sync_enabled=False\n")
 
+        if sg_platform.lower() == "macos":
+            f.write("\n\n[sync_gateways:vars]\n")
+            f.write("ansible_connection=local\n")
+
         if sg_windows:
             f.write("\n\n[sync_gateways:vars]\n")
             f.write("ansible_user=FakeUser\n")
@@ -437,7 +441,7 @@ def get_hosts(pool_file="resources/pool.json"):
 
 
 def generate_clusters_from_pool(pool_file, use_docker=False, sg_windows=False,
-                                sg_accel_windows=False, ipv6=False,
+                                sg_accel_windows=False, sg_platform="centos", ipv6=False,
                                 x509_certs=False):
 
     cluster_confs = [
@@ -525,7 +529,7 @@ def generate_clusters_from_pool(pool_file, use_docker=False, sg_windows=False,
     print("Generating 'resources/cluster_configs/'. Using docker: {}".format(use_docker))
     for cluster_conf in cluster_confs:
         write_config(cluster_conf, pool_file, use_docker, sg_windows,
-                     sg_accel_windows, ipv6=ipv6, x509_certs=x509_certs)
+                     sg_accel_windows, sg_platform, ipv6=ipv6, x509_certs=x509_certs)
 
 
 if __name__ == "__main__":
@@ -547,6 +551,8 @@ if __name__ == "__main__":
 
     parser.add_option("--sg-accel-windows", action="store_true", dest="sg_accel_windows", default=False, help="Use Windows Sync Gateway Accelerator")
 
+    parser.add_option("--sg-platform", action="store", dest="sg_platform", default="centos", help="Provide Sync gateway platform")
+
     parser.add_option("--ipv6", action="store_true", default=False, help="IPv6 addresses")
 
     parser.add_option("--x509-certs", action="store_true", default=False,
@@ -557,5 +563,5 @@ if __name__ == "__main__":
     (opts, args) = parser.parse_args(arg_parameters)
 
     generate_clusters_from_pool(opts.pool_file, opts.use_docker, opts.sg_windows,
-                                opts.sg_accel_windows, opts.ipv6,
+                                opts.sg_accel_windows, opts.sg_platform, opts.ipv6,
                                 opts.x509_certs)

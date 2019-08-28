@@ -9,5 +9,12 @@
   ignore_errors: yes
   when: (ansible_distribution == "CentOS" and ansible_distribution_major_version == "6")
 
+- name: SYNC GATEWAY | Stop sync_gateway on MacOS
+  become: yes
+  shell: ./sync_gateway_service_uninstall.sh
+  args:
+      chdir: /opt/couchbase-sync-gateway/service
+  when: ansible_distribution == "MacOSX"
+
 - name: SYNC GATEWAY | Verify sync_gateway not listening on port
   wait_for: port=4985 state=stopped
