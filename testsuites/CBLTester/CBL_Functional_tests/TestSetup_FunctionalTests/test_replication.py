@@ -639,10 +639,13 @@ def test_CBL_tombstone_doc(params_from_base_test_setup, num_of_docs):
     replicator.stop(repl)
 
     # 2.5. call POST _changes admin API to apply changes to all channels.
-    body = dict(doc_ids=db.getDocIds(cbl_db))
-    # {"doc_ids", db.getDocIds(cbl_db)}
-    # body["doc_ids"] = db.getDocIds(cbl_db)
-    sg_client.post_changes(url=sg_admin_url, db=sg_db, auth=None, body_elements=body)
+    sg_client.stream_continuous_changes(
+        url=sg_admin_url,
+        db=sg_db,
+        since=0,
+        auth=None,
+        filter_type=None,
+        filter_channels=None)
 
     # 3. tombstone doc in SG.
     doc_id = "sg_docs_6"
