@@ -638,6 +638,12 @@ def test_CBL_tombstone_doc(params_from_base_test_setup, num_of_docs):
     replicator.wait_until_replicator_idle(repl)
     replicator.stop(repl)
 
+    # 2.5. call POST _changes admin API to apply changes to all channels.
+    body = dict(doc_ids=db.getDocIds(cbl_db))
+    # {"doc_ids", db.getDocIds(cbl_db)}
+    # body["doc_ids"] = db.getDocIds(cbl_db)
+    sg_client.post_changes(url=sg_admin_url, db=sg_db, auth=None, body_elements=body)
+
     # 3. tombstone doc in SG.
     doc_id = "sg_docs_6"
     doc = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=session)
@@ -652,12 +658,7 @@ def test_CBL_tombstone_doc(params_from_base_test_setup, num_of_docs):
 
     if sync_gateway_version >= "2.5.0":
         expvars = sg_client.get_expvars(sg_admin_url)
-        if sync_gateway_version >= "2.6.0":
-            # chan_cache_tombstone_revs remains no change while tombstone a doc because of the cache initialization feature in 2.6
-            assert chan_cache_tombstone_revs == expvars["syncgateway"]["per_db"][sg_db]["cache"]["chan_cache_tombstone_revs"], "chan cache tombstone revs should not be incremented with the lazy cache initialization feature"
-        else:
-            # chan_cache_tombstone_revs increases while tombstone a doc with Iridium release
-            assert chan_cache_tombstone_revs < expvars["syncgateway"]["per_db"][sg_db]["cache"]["chan_cache_tombstone_revs"], "chan cache tombstone revs did not get incremented"
+        assert chan_cache_tombstone_revs < expvars["syncgateway"]["per_db"][sg_db]["cache"]["chan_cache_tombstone_revs"], "chan cache tombstone revs did not get incremented"
         assert chan_cache_removal_revs < expvars["syncgateway"]["per_db"][sg_db]["cache"]["chan_cache_removal_revs"], "chan_cache_removal_revs did not get incremented"
 
 
