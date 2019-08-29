@@ -1956,6 +1956,28 @@ class MobileRestClient:
         log_info("Found {} changes".format(len(resp_obj["results"])))
         return resp_obj
 
+    def post_changes(self, url, db, auth, body_elements=None):
+        """
+        This method handles a POST _changes request to Sync Gateway in a generic manner
+        if url points to Public APIs, auth method/value is required.
+        if url points to Admin APIs, no auth is needed. Caller is responsible for matching the url with the auth.
+        body_elements is key-value pairs included in body of the request
+        """
+        auth_type = get_auth_type(auth)
+        body = {}
+        if body_elements is not None:
+            for key, value in body_elements.iteritems():
+                body[key] = value
+
+        if auth_type == AuthType.session:
+            resp = self._session.post("{}/{}/_changes".format(url, db), data=json.dumps(body), cookies=dict(SyncGatewaySession=auth[1]), stream=True)
+        elif auth_type == AuthType.http_basic:
+            resp = self._session.post("{}/{}/_changes".format(url, db), data=json.dumps(body), auth=auth, stream=True)
+        else:
+            resp = self._session.post("{}/{}/_changes".format(url, db), data=json.dumps(body))
+
+        return resp
+
     def verify_doc_id_in_changes(self, url, db, expected_doc_id, auth=None):
         """ Verifies 'expected_doc_id' shows up in the changes feed starting with a since of 0
         if the doc is not found before CLIENT_REQUEST_TIMEOUT, an exception is raised. If it is found,
