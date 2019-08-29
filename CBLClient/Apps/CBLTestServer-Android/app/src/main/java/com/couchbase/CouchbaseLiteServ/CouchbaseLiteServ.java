@@ -1,8 +1,3 @@
-package com.couchbase.CouchbaseLiteServ;
-
-import android.app.Application;
-import android.content.Context;
-
 //
 // Copyright (c) 2019 Couchbase, Inc All rights reserved.
 //
@@ -18,6 +13,14 @@ import android.content.Context;
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
+package com.couchbase.CouchbaseLiteServ;
+
+import android.app.Application;
+import android.content.Context;
+
+import com.couchbase.lite.CouchbaseLite;
+
+
 public class CouchbaseLiteServ extends Application {
     private static Context appContext;
 
@@ -31,5 +34,6 @@ public class CouchbaseLiteServ extends Application {
 
         setContext(this);
 
+        CouchbaseLite.init(this);
     }
 }

@@ -80,7 +80,7 @@ public class ReplicatorTcpServerConnection : ReplicatorTcpConnection {
         
         // Validate path:
         let url = CFHTTPMessageCopyRequestURL(request)?.takeRetainedValue() as URL?
-        guard let path = url?.path, path.hasPrefix("/"), path.hasSuffix("/_blipsync") else {
+        guard let path = url?.path, path.hasPrefix("/") else {
             sendFailureResponse(code: 404, message: "Not Found")
             return
         }
@@ -95,7 +95,13 @@ public class ReplicatorTcpServerConnection : ReplicatorTcpConnection {
         
         // Accept the connection per database:
         let begin = path.index(after: path.startIndex)
-        let end = path.index(path.startIndex, offsetBy: path.count - 11)
+        var end: String.Index!
+        if (path.hasSuffix("/_blipsync")) {
+            end = path.index(path.startIndex, offsetBy: path.count - 11)
+        } else {
+            end = path.index(before: path.endIndex)//path.endIndex
+        }
+
         let db = String(path[begin...end])
         if !(listener!.accept(connection: self, database: db)) {
             response = nil

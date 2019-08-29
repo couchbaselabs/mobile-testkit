@@ -303,7 +303,7 @@ class TestDatabase(object):
     @pytest.mark.parametrize("db1, db2, doc_id", [
         (random_string(1), random_string(1), random_string(6)),
         (random_string(6), random_string(6), random_string(6)),
-        (random_string(128), random_string(128), random_string(6)),
+        (random_string(120), random_string(120), random_string(6)),
         ("_{}".format(random_string(6)), "_{}".format(random_string(6)), random_string(6)),
         ("{}_".format(random_string(6)), "{}_".format(random_string(6)), random_string(6)),
         ("_{}_".format(random_string(6)), "_{}_".format(random_string(6)), random_string(6)),
