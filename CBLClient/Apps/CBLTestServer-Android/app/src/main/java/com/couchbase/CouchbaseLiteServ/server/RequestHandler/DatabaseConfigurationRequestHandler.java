@@ -5,7 +5,8 @@ import com.couchbase.CouchbaseLiteServ.server.Args;
 import com.couchbase.lite.CouchbaseLite;
 import com.couchbase.lite.DatabaseConfiguration;
 import com.couchbase.lite.EncryptionKey;
-
+import android.content.Context;
+import com.couchbase.CouchbaseLiteServ.CouchbaseLiteServ;
 
 public class DatabaseConfigurationRequestHandler {
 
