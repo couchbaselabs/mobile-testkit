@@ -35,7 +35,7 @@ def get_nodes_from_pool_server(num_of_nodes, nodes_os_type, node_os_version, job
             pool_list.append(str(doc_id))
         else:
             continue
-        if len(pool_list) == num_of_nodes:
+        if len(pool_list) == int(num_of_nodes):
             return pool_list
 
     # Not able to allocate all the requested nodes, hence release the node back to the pool
