@@ -208,7 +208,6 @@ def params_from_base_suite_setup(request):
 
     sg_db = "db"
     sg_url = cluster_topology["sync_gateways"][0]["public"]
-    sg_admin_url = cluster_topology["sync_gateways"][0]["admin"]
     sg_ip = host_for_url(sg_url)
     target_url = "ws://{}:4984/{}".format(sg_ip, sg_db)
     target_admin_url = "ws://{}:4985/{}".format(sg_ip, sg_db)
@@ -283,6 +282,7 @@ def params_from_base_suite_setup(request):
             raise
 
     # Create CBL databases on all devices
+    sg_admin_url = cluster_topology["sync_gateways"][0]["admin"]
     db_name_list = []
     cbl_db_list = []
     db_obj_list = []

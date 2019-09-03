@@ -27,9 +27,8 @@ from CBLClient.Dictionary import Dictionary
 from CBLClient.DataTypeInitiator import DataTypeInitiator
 from CBLClient.SessionAuthenticator import SessionAuthenticator
 from CBLClient.Utils import Utils
-
-from utilities.cluster_config_utils import get_load_balancer_ip
 from CBLClient.ReplicatorConfiguration import ReplicatorConfiguration
+from utilities.cluster_config_utils import get_load_balancer_ip
 from couchbase.bucket import Bucket
 from couchbase.n1ql import N1QLQuery
 
