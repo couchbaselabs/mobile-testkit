@@ -4,6 +4,7 @@ import os
 import random
 import string
 import re
+import pdb
 
 from keywords.exceptions import FeatureSupportedError
 from keywords.constants import DATA_DIR
@@ -323,7 +324,7 @@ def compare_generic_types(object1, object2):
     elif isinstance(object1, int) and isinstance(object2, long):
         return object1 == int(object2)
     elif isinstance(object1, float) and isinstance(object2, long):
-        return object1 == float(object2)
+        return abs(object1 - object2) < 100
     elif isinstance(object1, long) and isinstance(object2, float):
         return object1 == long(float(object2))
     elif isinstance(object1, str) and isinstance(object2, unicode):
