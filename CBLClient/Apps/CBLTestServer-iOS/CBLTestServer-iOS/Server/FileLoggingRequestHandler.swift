@@ -86,10 +86,12 @@ public class FileLoggingRequestHandler {
             
             do {
                 let filePath = URL(fileURLWithPath: path)
-                return try Zip.quickZipFiles([filePath], fileName: "archive")
+                let zipFilePath = try Zip.quickZipFiles([filePath],
+                                                        fileName: "archive")
+                return FileManager.default.contents(atPath: zipFilePath.absoluteString) as NSData?
             }
             catch {
-                print("Exception when Zipping \(error)")
+                print("Exception Getting LogsInZip \(error)")
             }
 
         case "logging_setPlainTextStatus":
