@@ -2,9 +2,11 @@ package com.couchbase.CouchbaseLiteServ.server.RequestHandler;
 
 
 import com.couchbase.CouchbaseLiteServ.server.Args;
+import com.couchbase.lite.CouchbaseLite;
 import com.couchbase.lite.DatabaseConfiguration;
 import com.couchbase.lite.EncryptionKey;
-
+import android.content.Context;
+import com.couchbase.CouchbaseLiteServ.CouchbaseLiteServ;
 
 public class DatabaseConfigurationRequestHandler {
 
@@ -13,6 +15,8 @@ public class DatabaseConfigurationRequestHandler {
         EncryptionKey encryptionKey;
         //ConflictResolver conflictResolver = args.get("conflictResolver");
         String password = args.get("password");
+        Context context = CouchbaseLiteServ.getAppContext();
+        CouchbaseLite.init(context);
         DatabaseConfiguration config = new DatabaseConfiguration();
         if (directory != null) {
             config.setDirectory(directory);
