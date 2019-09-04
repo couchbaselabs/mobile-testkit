@@ -4,7 +4,6 @@ import os
 import random
 import string
 import re
-import pdb
 
 from keywords.exceptions import FeatureSupportedError
 from keywords.constants import DATA_DIR
