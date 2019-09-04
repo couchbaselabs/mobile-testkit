@@ -88,7 +88,7 @@ public class FileLoggingRequestHandler {
                 let filePath = URL(fileURLWithPath: path)
                 let zipFilePath = try Zip.quickZipFiles([filePath],
                                                         fileName: "archive")
-                return FileManager.default.contents(atPath: zipFilePath.absoluteString) as NSData?
+                return try Data(contentsOf: zipFilePath)
             }
             catch {
                 print("Exception Getting LogsInZip \(error)")
