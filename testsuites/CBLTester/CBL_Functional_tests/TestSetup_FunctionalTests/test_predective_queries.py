@@ -56,11 +56,13 @@ def test_predictiveQueries_basicInputOutput(params_from_base_test_setup, doc_gen
     else:
         doc_body = doc_generators.simple()
 
-    db.create_bulk_docs(2, "cbl-predictive", db=cbl_db, generator=doc_generator_type)
+    total_docs = 2
+    db.create_bulk_docs(total_docs, "cbl-predictive", db=cbl_db, generator=doc_generator_type)
     result_set = predictive_query.getPredictionQueryResult(model, doc_body, cbl_db)
 
+    assert total_docs == len(result_set), "expected number of docs is {}, the actual number of docs is {}".format(total_docs, len(result_set))
     for result in result_set:
-        assert deep_dict_compare(doc_body, result[result.keys()[0]])
+        assert deep_dict_compare(doc_body, result[result.keys()[0]], True)
 
     non_dict = "non_dict"
     error = predictive_query.queryNonDictionaryInput(model, non_dict, cbl_db)
