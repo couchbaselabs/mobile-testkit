@@ -1,13 +1,14 @@
 ---
 # Delete and create directories
 - hosts: sync_gateways, sg_accels
+  become: yes
   vars:
     directory:
 
   tasks:
   - include: tasks/delete-directory.yml
-    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian" or ansible_os_family == "Windows"
+    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian" or ansible_os_family == "Windows" or ansible_distribution == "MacOSX"
 
   - include: tasks/create-directory.yml
-    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian" or ansible_os_family == "Windows"
+    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian" or ansible_os_family == "Windows" or ansible_distribution == "MacOSX"
 
