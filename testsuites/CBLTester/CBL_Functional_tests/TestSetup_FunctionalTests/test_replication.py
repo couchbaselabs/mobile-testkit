@@ -638,6 +638,15 @@ def test_CBL_tombstone_doc(params_from_base_test_setup, num_of_docs):
     replicator.wait_until_replicator_idle(repl)
     replicator.stop(repl)
 
+    # 2.5. call POST _changes admin API to apply changes to all channels.
+    sg_client.stream_continuous_changes(
+        url=sg_admin_url,
+        db=sg_db,
+        since=0,
+        auth=None,
+        filter_type=None,
+        filter_channels=None)
+
     # 3. tombstone doc in SG.
     doc_id = "sg_docs_6"
     doc = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=session)
@@ -2981,8 +2990,11 @@ def test_resetCheckpointFailure(params_from_base_test_setup):
     # verify it throws an error that checkpoint reset is called without stopping replicator.
     with pytest.raises(Exception) as he:
         replicator.resetCheckPoint(repl)
-    assert 'Replicator is not stopped.' in he.value.message
-    assert 'Resetting checkpoint is only allowed when the replicator is in the stopped state' in he.value.message
+    if liteserv_platform.lower() == "android":
+        assert 'Attempt to reset the checkpoint for a replicator that is not stopped.' in he.value.message, "Reset the checkpoint should have thrown exception to inform that replicator is not stopped."
+    else:
+        assert 'Replicator is not stopped.' in he.value.message
+        assert 'Resetting checkpoint is only allowed when the replicator is in the stopped state' in he.value.message, "Reset the checkpoint should have thrown exception to inform that replicator is not stopped."
     replicator.stop(repl)
 
 

@@ -16,6 +16,7 @@ import com.couchbase.CouchbaseLiteServ.server.Args;
 import com.couchbase.CouchbaseLiteServ.server.util.ZipUtils;
 import com.couchbase.lite.Blob;
 import com.couchbase.lite.ConcurrencyControl;
+import com.couchbase.lite.CouchbaseLite;
 import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.DataSource;
 import com.couchbase.lite.Database;
@@ -44,7 +45,11 @@ public class DatabaseRequestHandler {
     public Database create(Args args) throws CouchbaseLiteException {
         String name = args.get("name");
         DatabaseConfiguration config = args.get("config");
-        if (config == null) { config = new DatabaseConfiguration(); }
+        if (config == null) {
+            Context context = CouchbaseLiteServ.getAppContext();
+            CouchbaseLite.init(context);
+            config = new DatabaseConfiguration();
+        }
         return new Database(name, config);
     }
 
