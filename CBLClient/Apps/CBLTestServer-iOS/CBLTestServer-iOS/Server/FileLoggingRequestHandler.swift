@@ -93,6 +93,7 @@ public class FileLoggingRequestHandler {
             catch {
                 print("Exception Getting LogsInZip \(error)")
             }
+            return nil
 
         case "logging_setPlainTextStatus":
             let config: LogFileConfiguration = args.get(name: "config")!
