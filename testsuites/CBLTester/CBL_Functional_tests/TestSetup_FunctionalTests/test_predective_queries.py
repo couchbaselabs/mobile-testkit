@@ -62,6 +62,10 @@ def test_predictiveQueries_basicInputOutput(params_from_base_test_setup, doc_gen
 
     assert total_docs == len(result_set), "expected number of docs is {}, the actual number of docs is {}".format(total_docs, len(result_set))
     for result in result_set:
+        '''
+        call deep_dict_compare with isPredictiveResult enabled flag
+        this flag allows large numbers do approximate comparison instead of precise comparison.
+        '''
         assert deep_dict_compare(doc_body, result[result.keys()[0]], True)
 
     non_dict = "non_dict"
