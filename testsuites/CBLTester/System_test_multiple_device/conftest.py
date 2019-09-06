@@ -391,7 +391,7 @@ def params_from_base_suite_setup(request):
 
 
 @pytest.fixture(scope="function")
-def params_from_base_test_setup(request, params_from_base_suite_setup):
+def params_from_base_test_setup(params_from_base_suite_setup):
     cluster_config = params_from_base_suite_setup["cluster_config"]
     mode = params_from_base_suite_setup["mode"]
     xattrs_enabled = params_from_base_suite_setup["xattrs_enabled"]
@@ -421,34 +421,23 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     cluster_topology = params_from_base_suite_setup["cluster_topology"]
     encryption_password = params_from_base_suite_setup["encryption_password"]
     enable_encryption = params_from_base_suite_setup["enable_encryption"]
-    testserver_list = params_from_base_suite_setup["testserver_list"]
-    enable_file_logging = params_from_base_suite_setup["enable_file_logging"]
-    test_name = request.node.name
+    # testserver_list = params_from_base_suite_setup["testserver_list"]
+    # test_name = request.node.name
 
     if create_db_per_test:
         db_name_list = []
         cbl_db_list = []
         db_obj_list = []
-        # Start Test server which needed for per test level
-        for testserver in testserver_list:
-            log_info("Starting TestServer...")
+        for base_url, i in zip(base_url_list, range(len(base_url_list))):
+            """log_info("Starting TestServer...")
             test_name_cp = test_name.replace("/", "-")
-            log_filename = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR,
-                                                         type(testserver).__name__,
-                                                         test_name_cp,
-                                                         datetime.datetime.now())
+            log_filename = "{}-{}/logs/{}-{}-{}.txt".format("testserver-",RESULTS_DIR,
+             type(testserver).__name__, test_name_cp, datetime.datetime.now())
             if device_enabled:
                 testserver.start_device(log_filename)
             else:
                 testserver.start(log_filename)
-
-        for base_url, i in zip(base_url_list, range(len(base_url_list))):
-            if enable_file_logging and version_list[0] >= "2.5.0":
-                cbllog = FileLogging(base_url)
-                cbllog.configure(log_level="verbose", max_rotate_count=2,
-                                 max_size=1000 * 512, plain_text=True)
-                log_info("Log files available at - {}".format(cbllog.get_directory()))
-
+            """
             db_name = "{}_{}_{}".format(create_db_per_test, str(time.time()), i + 1)
             log_info("db name for {} is {}".format(base_url, db_name))
             db_name_list.append(db_name)
@@ -500,12 +489,11 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     }
 
     if create_db_per_test:
-        for testserver, cbl_db, db_obj, base_url in zip(testserver_list, cbl_db_list, db_obj_list, base_url_list):
+        for cbl_db, db_obj, base_url in zip(cbl_db_list, db_obj_list, base_url_list):
             log_info("Deleting the database {} at the test teardown for base url {}".format(db_obj.getName(cbl_db),
                                                                                             base_url))
             time.sleep(2)
             db_obj.deleteDB(cbl_db)
-            testserver.stop()
 
 
 @pytest.fixture(scope="function")
