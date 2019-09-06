@@ -300,6 +300,13 @@ def compare_docs(cbl_db, db, docs_dict):
 
 
 def compare_generic_types(object1, object2, isPredictiveResult=False):
+    """
+    @summary:
+    A method to compare generic type of objects with an option of making approximate comparison.
+    If isPredictiveResult flag is enabled, some large numbers are considered equal if the difference is tolerable.
+    @return:
+    true if equals, false otherwise
+    """
     if object1 is None and object2 is None:
         return True
     if isinstance(object1, str) and isinstance(object2, str):
@@ -337,6 +344,13 @@ def compare_generic_types(object1, object2, isPredictiveResult=False):
 
 
 def deep_list_compare(object1, object2, isPredictiveResult=False):
+    """
+    @summary:
+    A method to compare two lists with an option of forwarding 
+    an approximate comparison flag to compare_generic_types function
+    @return:
+    true if equals, false otherwise
+    """
     retval = True
     count = len(object1)
     object1 = sorted(object1)
@@ -362,6 +376,13 @@ def deep_list_compare(object1, object2, isPredictiveResult=False):
 
 
 def deep_dict_compare(object1, object2, isPredictiveResult=False):
+    """
+    @summary:
+    A method to compare two dictionaries with an option of forwarding 
+    an approximate comparison flag to compare_generic_types function.
+    @return:
+    true if equals, false otherwise
+    """
     retval = True
     if len(object1) != len(object2):
         log_info("lengths of sgw object and cbl object are different {} --- {}".format(len(object1), len(object2)))
