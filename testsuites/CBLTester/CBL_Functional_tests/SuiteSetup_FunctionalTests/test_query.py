@@ -9,7 +9,7 @@ from couchbase.n1ql import N1QLQuery
 import numpy as np
 
 
-def test_get_doc_ids(params_from_base_test_setup):
+def test_get_doc_ids(params_from_base_suite_setup):
     """@summary
     Fetches all the doc ids
     Tests the below query
@@ -19,9 +19,9 @@ def test_get_doc_ids(params_from_base_test_setup):
 
     Verifies with n1ql - select meta().id from `bucket_name` where meta().id not like "_sync%"
     """
-    cluster_topology = params_from_base_test_setup["cluster_topology"]
-    source_db = params_from_base_test_setup["suite_source_db"]
-    base_url = params_from_base_test_setup["base_url"]
+    cluster_topology = params_from_base_suite_setup["cluster_topology"]
+    source_db = params_from_base_suite_setup["suite_source_db"]
+    base_url = params_from_base_suite_setup["base_url"]
     cbs_url = cluster_topology['couchbase_servers'][0]
     db = Database(base_url)
 
@@ -45,7 +45,7 @@ def test_get_doc_ids(params_from_base_test_setup):
     log_info("Doc contents match between CBL and n1ql")
 
 
-def test_any_operator(params_from_base_test_setup):
+def test_any_operator(params_from_base_suite_setup):
     """@summary
     Fetches all the doc ids
     Tests the below query
@@ -59,9 +59,9 @@ def test_any_operator(params_from_base_test_setup):
     Verifies with n1ql - select meta().id from `{}` where type="route"
                         AND ANY departure IN schedule SATISFIES departure.utc > "23:41:00" END
     """
-    cluster_topology = params_from_base_test_setup["cluster_topology"]
-    source_db = params_from_base_test_setup["suite_source_db"]
-    base_url = params_from_base_test_setup["base_url"]
+    cluster_topology = params_from_base_suite_setup["cluster_topology"]
+    source_db = params_from_base_suite_setup["suite_source_db"]
+    base_url = params_from_base_suite_setup["base_url"]
     cbs_url = cluster_topology['couchbase_servers'][0]
 
     cbs_ip = host_for_url(cbs_url)
@@ -97,7 +97,7 @@ def test_any_operator(params_from_base_test_setup):
     "airline_10",
     "doc_id_does_not_exist",
 ])
-def test_doc_get(params_from_base_test_setup, doc_id):
+def test_doc_get(params_from_base_suite_setup, doc_id):
     """ @summary
     Fetches a doc
     Tests the below query
@@ -108,12 +108,12 @@ def test_doc_get(params_from_base_test_setup, doc_id):
 
     Verifies with n1ql - select * from `bucket_name` where meta().id="doc_id"
     """
-    cluster_topology = params_from_base_test_setup["cluster_topology"]
-    source_db = params_from_base_test_setup["suite_source_db"]
-    cbl_db = params_from_base_test_setup["suite_cbl_db"]
+    cluster_topology = params_from_base_suite_setup["cluster_topology"]
+    source_db = params_from_base_suite_setup["suite_source_db"]
+    cbl_db = params_from_base_suite_setup["suite_cbl_db"]
     enable_sample_bucket = "travel-sample"
     cbs_url = cluster_topology['couchbase_servers'][0]
-    base_url = params_from_base_test_setup["base_url"]
+    base_url = params_from_base_suite_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
 
     # Get doc from CBL through query
@@ -136,6 +136,7 @@ def test_doc_get(params_from_base_test_setup, doc_id):
     docs_from_n1ql = []
 
     for row in sdk_client.n1ql_query(query):
+        row[enable_sample_bucket].pop('_sync', None)
         docs_from_n1ql.append(row[enable_sample_bucket])
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
@@ -148,7 +149,7 @@ def test_doc_get(params_from_base_test_setup, doc_id):
     (5, 5),
     (-5, -5),
 ])
-def test_get_docs_with_limit_offset(params_from_base_test_setup, limit, offset):
+def test_get_docs_with_limit_offset(params_from_base_suite_setup, limit, offset):
     """ @summary
     Fetches a doc
     Tests the below query
@@ -159,8 +160,8 @@ def test_get_docs_with_limit_offset(params_from_base_test_setup, limit, offset):
 
     Verifies with n1ql - select * from `travel-sample` where meta().id not like "_sync%" limit 5 offset 5
     """
-    source_db = params_from_base_test_setup["suite_source_db"]
-    base_url = params_from_base_test_setup["base_url"]
+    source_db = params_from_base_suite_setup["suite_source_db"]
+    base_url = params_from_base_suite_setup["base_url"]
 
     log_info("Fetching docs from CBL through query")
     qy = Query(base_url)
@@ -181,7 +182,7 @@ def test_get_docs_with_limit_offset(params_from_base_test_setup, limit, offset):
 @pytest.mark.parametrize("select_property1, select_property2, whr_key, whr_val", [
     ("name", "type", "country", "France"),
 ])
-def test_multiple_selects(params_from_base_test_setup, select_property1, select_property2, whr_key, whr_val):
+def test_multiple_selects(params_from_base_suite_setup, select_property1, select_property2, whr_key, whr_val):
     """ @summary
     Fetches multiple fields
 
@@ -194,10 +195,10 @@ def test_multiple_selects(params_from_base_test_setup, select_property1, select_
 
     Verifies with n1ql - select name, type, meta().id from `travel-sample` where country="France"
     """
-    cluster_topology = params_from_base_test_setup["cluster_topology"]
-    source_db = params_from_base_test_setup["suite_source_db"]
+    cluster_topology = params_from_base_suite_setup["cluster_topology"]
+    source_db = params_from_base_suite_setup["suite_source_db"]
     cbs_url = cluster_topology['couchbase_servers'][0]
-    base_url = params_from_base_test_setup["base_url"]
+    base_url = params_from_base_suite_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
 
     log_info("Fetching docs from CBL through query")
@@ -229,7 +230,7 @@ def test_multiple_selects(params_from_base_test_setup, select_property1, select_
 @pytest.mark.parametrize("whr_key1, whr_val1, whr_key2, whr_val2, whr_key3, whr_val3, whr_key4, whr_val4", [
     ("type", "hotel", "country", "United States", "country", "France", "vacancy", True),
 ])
-def test_query_where_and_or(params_from_base_test_setup, whr_key1, whr_val1, whr_key2, whr_val2, whr_key3, whr_val3, whr_key4, whr_val4):
+def test_query_where_and_or(params_from_base_suite_setup, whr_key1, whr_val1, whr_key2, whr_val2, whr_key3, whr_val3, whr_key4, whr_val4):
     """ @summary
     Fetches docs with where an/or clause
 
@@ -243,10 +244,10 @@ def test_query_where_and_or(params_from_base_test_setup, whr_key1, whr_val1, whr
 
     Verifies with n1ql - select meta().id from `travel-sample` t where t.type="hotel" and (t.country="United States" or t.country="France") and t.vacancy=true
     """
-    cluster_topology = params_from_base_test_setup["cluster_topology"]
-    source_db = params_from_base_test_setup["suite_source_db"]
+    cluster_topology = params_from_base_suite_setup["cluster_topology"]
+    source_db = params_from_base_suite_setup["suite_source_db"]
     cbs_url = cluster_topology['couchbase_servers'][0]
-    base_url = params_from_base_test_setup["base_url"]
+    base_url = params_from_base_suite_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
 
     log_info("Fetching docs from CBL through query")
@@ -283,7 +284,7 @@ def test_query_where_and_or(params_from_base_test_setup, whr_key1, whr_val1, whr
     ("type", "landmark", "country", "name", "name", "%eng____r%"),
     ("type", "landmark", "country", "name", "name", "%Eng____r%"),
 ])
-def test_query_pattern_like(params_from_base_test_setup, whr_key, whr_val, select_property1, select_property2, like_key, like_val):
+def test_query_pattern_like(params_from_base_suite_setup, whr_key, whr_val, select_property1, select_property2, like_key, like_val):
     """ @summary
     Fetches docs with like clause
 
@@ -297,10 +298,10 @@ def test_query_pattern_like(params_from_base_test_setup, whr_key, whr_val, selec
 
     Verifies with n1ql - select meta().id, country, name from `travel-sample` t where t.type="landmark"  and t.name like "Royal Engineers Museum"
     """
-    cluster_topology = params_from_base_test_setup["cluster_topology"]
-    source_db = params_from_base_test_setup["suite_source_db"]
+    cluster_topology = params_from_base_suite_setup["cluster_topology"]
+    source_db = params_from_base_suite_setup["suite_source_db"]
     cbs_url = cluster_topology['couchbase_servers'][0]
-    base_url = params_from_base_test_setup["base_url"]
+    base_url = params_from_base_suite_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
 
     log_info("Fetching docs from CBL through query")
@@ -334,7 +335,7 @@ def test_query_pattern_like(params_from_base_test_setup, whr_key, whr_val, selec
     ("type", "landmark", "country", "name", "name", '\\bEng.*e\\b'),
     ("type", "landmark", "country", "name", "name", "\\beng.*e\\b"),
 ])
-def test_query_pattern_regex(params_from_base_test_setup, whr_key, whr_val, select_property1, select_property2, regex_key, regex_val):
+def test_query_pattern_regex(params_from_base_suite_setup, whr_key, whr_val, select_property1, select_property2, regex_key, regex_val):
     """ @summary
     Fetches docs with like clause
 
@@ -348,10 +349,10 @@ def test_query_pattern_regex(params_from_base_test_setup, whr_key, whr_val, sele
 
     Verifies with n1ql - select meta().id, country, name from `travel-sample` t where t.type="landmark" and REGEXP_CONTAINS(t.name, "\\bEng.*e\\b")
     """
-    cluster_topology = params_from_base_test_setup["cluster_topology"]
-    source_db = params_from_base_test_setup["suite_source_db"]
+    cluster_topology = params_from_base_suite_setup["cluster_topology"]
+    source_db = params_from_base_suite_setup["suite_source_db"]
     cbs_url = cluster_topology['couchbase_servers'][0]
-    base_url = params_from_base_test_setup["base_url"]
+    base_url = params_from_base_suite_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
 
     log_info("Fetching docs from CBL through query")
@@ -388,7 +389,7 @@ def test_query_pattern_regex(params_from_base_test_setup, whr_key, whr_val, sele
 @pytest.mark.parametrize("select_property1, limit", [
     ("name", 100),
 ])
-def test_query_isNullOrMissing(params_from_base_test_setup, select_property1, limit):
+def test_query_isNullOrMissing(params_from_base_suite_setup, select_property1, limit):
     """ @summary
     Fetches docs with where email is null or missing
 
@@ -400,10 +401,10 @@ def test_query_isNullOrMissing(params_from_base_test_setup, select_property1, li
 
     Verifies with n1ql - select meta().id from `travel-sample` t where meta().id not like "_sync%" and (t.name IS NULL or t.name IS MISSING)
     """
-    cluster_topology = params_from_base_test_setup["cluster_topology"]
-    source_db = params_from_base_test_setup["suite_source_db"]
+    cluster_topology = params_from_base_suite_setup["cluster_topology"]
+    source_db = params_from_base_suite_setup["suite_source_db"]
     cbs_url = cluster_topology['couchbase_servers'][0]
-    base_url = params_from_base_test_setup["base_url"]
+    base_url = params_from_base_suite_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
 
     log_info("Fetching docs from CBL through query")
@@ -435,7 +436,7 @@ def test_query_isNullOrMissing(params_from_base_test_setup, select_property1, li
 @pytest.mark.parametrize("select_property1, whr_key, whr_val", [
     ("title", "type", "hotel"),
 ])
-def test_query_ordering(params_from_base_test_setup, select_property1, whr_key, whr_val):
+def test_query_ordering(params_from_base_suite_setup, select_property1, whr_key, whr_val):
     """ @summary
     Fetches docs in ascending order
 
@@ -449,10 +450,10 @@ def test_query_ordering(params_from_base_test_setup, select_property1, whr_key, 
 
     Verifies with n1ql - select meta().id, title from `travel-sample` t where t.type = "hotel" order by "title" asc
     """
-    cluster_topology = params_from_base_test_setup["cluster_topology"]
-    source_db = params_from_base_test_setup["suite_source_db"]
+    cluster_topology = params_from_base_suite_setup["cluster_topology"]
+    source_db = params_from_base_suite_setup["suite_source_db"]
     cbs_url = cluster_topology['couchbase_servers'][0]
-    base_url = params_from_base_test_setup["base_url"]
+    base_url = params_from_base_suite_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
 
     log_info("Fetching docs from CBL through query")
@@ -485,7 +486,7 @@ def test_query_ordering(params_from_base_test_setup, select_property1, whr_key, 
 @pytest.mark.parametrize("select_property1, select_property2, substring", [
     ("email", "name", "gmail.com"),
 ])
-def test_query_substring(params_from_base_test_setup, select_property1, select_property2, substring):
+def test_query_substring(params_from_base_suite_setup, select_property1, select_property2, substring):
     """ @summary
     Fetches docs in with a matching substring
 
@@ -499,10 +500,10 @@ def test_query_substring(params_from_base_test_setup, select_property1, select_p
 
     Verifies with n1ql - select meta().id, email, UPPER(name) from `travel-sample` t where CONTAINS(t.email, "gmail.com")
     """
-    cluster_topology = params_from_base_test_setup["cluster_topology"]
-    source_db = params_from_base_test_setup["suite_source_db"]
+    cluster_topology = params_from_base_suite_setup["cluster_topology"]
+    source_db = params_from_base_suite_setup["suite_source_db"]
     cbs_url = cluster_topology['couchbase_servers'][0]
-    base_url = params_from_base_test_setup["base_url"]
+    base_url = params_from_base_suite_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
 
     log_info("Fetching docs from CBL through query")
@@ -537,7 +538,7 @@ def test_query_substring(params_from_base_test_setup, select_property1, select_p
 @pytest.mark.parametrize("select_property1, whr_key1, whr_val1, whr_key2, whr_val2, equal_to", [
     ("name", "type", "hotel", "country", "France", "Le Clos Fleuri"),
 ])
-def test_query_collation(params_from_base_test_setup, select_property1, whr_key1, whr_val1, whr_key2, whr_val2, equal_to):
+def test_query_collation(params_from_base_suite_setup, select_property1, whr_key1, whr_val1, whr_key2, whr_val2, equal_to):
     """ @summary
     Fetches docs using collation
       let collator = Collation.unicode()
@@ -554,10 +555,10 @@ def test_query_collation(params_from_base_test_setup, select_property1, whr_key1
 
     Verifies with n1ql - select meta().id, name from `travel-sample` t where t.type="hotel" and t.country = "France" and lower(t.name) = lower("Le Clos Fleuri")
     """
-    cluster_topology = params_from_base_test_setup["cluster_topology"]
-    source_db = params_from_base_test_setup["suite_source_db"]
+    cluster_topology = params_from_base_suite_setup["cluster_topology"]
+    source_db = params_from_base_suite_setup["suite_source_db"]
     cbs_url = cluster_topology['couchbase_servers'][0]
-    base_url = params_from_base_test_setup["base_url"]
+    base_url = params_from_base_suite_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
 
     log_info("Fetching docs from CBL through query")
@@ -590,7 +591,7 @@ def test_query_collation(params_from_base_test_setup, select_property1, whr_key1
 @pytest.mark.parametrize("select_property1, select_property2, select_property3, select_property4, select_property5, whr_key1, whr_key2, whr_key3, whr_val1, whr_val2, whr_val3, join_key", [
     ("name", "callsign", "destinationairport", "stops", "airline", "type", "type", "sourceairport", "route", "airline", "SFO", "airlineid"),
 ])
-def test_query_join(params_from_base_test_setup, select_property1,
+def test_query_join(params_from_base_suite_setup, select_property1,
                     select_property2, select_property3, select_property4,
                     select_property5, whr_key1, whr_key2, whr_key3,
                     whr_val1, whr_val2, whr_val3, join_key):
@@ -620,10 +621,10 @@ def test_query_join(params_from_base_test_setup, select_property1,
       AND route.sourceairport = "SFO"
     LIMIT 2;
     """
-    cluster_topology = params_from_base_test_setup["cluster_topology"]
-    source_db = params_from_base_test_setup["suite_source_db"]
+    cluster_topology = params_from_base_suite_setup["cluster_topology"]
+    source_db = params_from_base_suite_setup["suite_source_db"]
     cbs_url = cluster_topology['couchbase_servers'][0]
-    base_url = params_from_base_test_setup["base_url"]
+    base_url = params_from_base_suite_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
 
     log_info("Fetching docs from CBL through query")
@@ -668,7 +669,7 @@ def test_query_join(params_from_base_test_setup, select_property1,
 @pytest.mark.parametrize("select_property1, select_property2, select_property3, whr_key1, whr_key2, whr_val1, whr_val2, join_key1, join_key2, limit", [
     ("airline", "sourceairport", "country", "country", "stops", "United States", 0, "icao", "destinationairport", 10),
 ])
-def test_query_inner_join(params_from_base_test_setup, select_property1,
+def test_query_inner_join(params_from_base_suite_setup, select_property1,
                           select_property2, select_property3, whr_key1, whr_key2,
                           whr_val1, whr_val2, join_key1, join_key2, limit):
     """ @summary
@@ -694,11 +695,8 @@ def test_query_inner_join(params_from_base_test_setup, select_property1,
       airport.country = "United States"
       AND route.stops = 0
     """
-    # cluster_topology = params_from_base_test_setup["cluster_topology"]
-    source_db = params_from_base_test_setup["suite_source_db"]
-    # cbs_url = cluster_topology['couchbase_servers'][0]
-    base_url = params_from_base_test_setup["base_url"]
-    # cbs_ip = host_for_url(cbs_url)
+    source_db = params_from_base_suite_setup["suite_source_db"]
+    base_url = params_from_base_suite_setup["base_url"]
 
     log_info("Fetching docs from CBL through query")
     qy = Query(base_url)
@@ -715,7 +713,6 @@ def test_query_inner_join(params_from_base_test_setup, select_property1,
     # Get doc from n1ql through query
     log_info("Fetching docs from server through n1ql")
     bucket_name = "travel-sample"
-    # sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
     n1ql_query = 'select  route.{}, route.{}, airport.{} '\
         'from `{}` route inner join `{}` airport '\
         'on airport.{} = route.{} where airport.{}="{}" and '\
@@ -725,24 +722,15 @@ def test_query_inner_join(params_from_base_test_setup, select_property1,
             join_key1, join_key2, whr_key1, whr_val1, whr_key2, whr_val2,
             select_property1, limit)
     log_info(n1ql_query)
-    # query = N1QLQuery(n1ql_query)
-    # docs_from_n1ql = []
-
-    # for row in sdk_client.n1ql_query(query):
-    #     docs_from_n1ql.append(row)
 
     assert len(docs_from_cbl) == limit
     log_info("Found {} docs".format(len(docs_from_cbl)))
-    # cbl = sorted(docs_from_cbl)
-    # n1ql = sorted(docs_from_n1ql)
-    # assert cbl  == n1ql
-    # log_info("Doc contents match")
 
 
 @pytest.mark.parametrize("select_property1, select_property2, whr_key1, whr_key2, whr_val1, whr_val2, limit", [
     ("country", "city", "type", "type", "airport", "airline", 10),
 ])
-def test_query_cross_join(params_from_base_test_setup, select_property1,
+def test_query_cross_join(params_from_base_suite_setup, select_property1,
                           select_property2, whr_key1, whr_key2,
                           whr_val1, whr_val2, limit):
     """ @summary
@@ -755,11 +743,8 @@ def test_query_cross_join(params_from_base_test_setup, select_property1,
                 .where(Expression.property(whrKey1).from(main).equalTo(Expression.string(whrVal1))
                         .and(Expression.property(whrKey2).from(main).equalTo(Expression.string(whrVal2))));
     """
-    # cluster_topology = params_from_base_test_setup["cluster_topology"]
-    source_db = params_from_base_test_setup["suite_source_db"]
-    # cbs_url = cluster_topology['couchbase_servers'][0]
-    base_url = params_from_base_test_setup["base_url"]
-    # cbs_ip = host_for_url(cbs_url)
+    source_db = params_from_base_suite_setup["suite_source_db"]
+    base_url = params_from_base_suite_setup["base_url"]
 
     log_info("Fetching docs from CBL through query")
     qy = Query(base_url)
@@ -779,7 +764,7 @@ def test_query_cross_join(params_from_base_test_setup, select_property1,
 @pytest.mark.parametrize("select_property, limit", [
     ("airlineid", 10),
 ])
-def test_query_left_join(params_from_base_test_setup, select_property, limit):
+def test_query_left_join(params_from_base_suite_setup, select_property, limit):
     """ @summary
     Fetches docs using collation
       let collator = Collation.unicode()
@@ -796,11 +781,8 @@ def test_query_left_join(params_from_base_test_setup, select_property, limit):
 
     Verifies with n1ql - SELECT airline.*, route.* FROM `travel-sample` route LEFT JOIN `travel-sample` airline ON KEYS route.airlineid
     """
-    # cluster_topology = params_from_base_test_setup["cluster_topology"]
-    source_db = params_from_base_test_setup["suite_source_db"]
-    # cbs_url = cluster_topology['couchbase_servers'][0]
-    base_url = params_from_base_test_setup["base_url"]
-    # cbs_ip = host_for_url(cbs_url)
+    source_db = params_from_base_suite_setup["suite_source_db"]
+    base_url = params_from_base_suite_setup["base_url"]
 
     log_info("Fetching docs from CBL through query")
     qy = Query(base_url)
@@ -814,26 +796,17 @@ def test_query_left_join(params_from_base_test_setup, select_property, limit):
     # Get doc from n1ql through query
     log_info("Fetching docs from server through n1ql")
     bucket_name = "travel-sample"
-    # sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
     n1ql_query = 'select airline.*, route.* from `{}` route LEFT JOIN `{}` route ON KEYS route.{} order by route.{} limit {}'.format(bucket_name, bucket_name, select_property, select_property, limit)
     log_info(n1ql_query)
-    # query = N1QLQuery(n1ql_query)
-    # docs_from_n1ql = []
 
-    # for row in sdk_client.n1ql_query(query):
-    #     docs_from_n1ql.append(row)
-
-    # assert len(docs_from_cbl) == len(docs_from_n1ql)
     assert len(docs_from_cbl) == limit
     log_info("Found {} docs".format(len(docs_from_cbl)))
-    # assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
-    # log_info("Doc contents match")
 
 
 @pytest.mark.parametrize("select_property, limit", [
     ("airlineid", 10),
 ])
-def test_query_left_outer_join(params_from_base_test_setup, select_property, limit):
+def test_query_left_outer_join(params_from_base_suite_setup, select_property, limit):
     """ @summary
     Fetches docs using collation
       let collator = Collation.unicode()
@@ -850,11 +823,8 @@ def test_query_left_outer_join(params_from_base_test_setup, select_property, lim
 
     Verifies with n1ql - SELECT airline.*, route.* FROM `travel-sample` route LEFT OUTER JOIN `travel-sample` airline ON KEYS route.airlineid
     """
-    # cluster_topology = params_from_base_test_setup["cluster_topology"]
-    source_db = params_from_base_test_setup["suite_source_db"]
-    # cbs_url = cluster_topology['couchbase_servers'][0]
-    base_url = params_from_base_test_setup["base_url"]
-    # cbs_ip = host_for_url(cbs_url)
+    source_db = params_from_base_suite_setup["suite_source_db"]
+    base_url = params_from_base_suite_setup["base_url"]
 
     log_info("Fetching docs from CBL through query")
     qy = Query(base_url)
@@ -868,27 +838,18 @@ def test_query_left_outer_join(params_from_base_test_setup, select_property, lim
     # Get doc from n1ql through query
     log_info("Fetching docs from server through n1ql")
     bucket_name = "travel-sample"
-    # sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
     n1ql_query = 'select airline.*, route.* from `{}` route LEFT OUTER JOIN `{}` route ON KEYS route.{} order by route.{} limit {}'.format(bucket_name, bucket_name, select_property, select_property, limit)
     log_info(n1ql_query)
-    # query = N1QLQuery(n1ql_query)
-    # docs_from_n1ql = []
 
-    # for row in sdk_client.n1ql_query(query):
-    #   docs_from_n1ql.append(row)
-
-    # assert len(docs_from_cbl) == len(docs_from_n1ql)
     assert len(docs_from_cbl) == limit
     log_info("Found {} docs".format(len(docs_from_cbl)))
-    # assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
-    # log_info("Doc contents match")
 
 
 @pytest.mark.parametrize("prop, val", [
     ("country", "France"),
     ("type", "airline")
 ])
-def test_equal_to(params_from_base_test_setup, prop, val):
+def test_equal_to(params_from_base_suite_setup, prop, val):
     """ @summary
     Fetches a doc
     Tests the below query
@@ -899,10 +860,10 @@ def test_equal_to(params_from_base_test_setup, prop, val):
 
     Verifies with n1ql - select meta().id from `bucket_name` where country = "france"
     """
-    cluster_topology = params_from_base_test_setup["cluster_topology"]
-    source_db = params_from_base_test_setup["suite_source_db"]
+    cluster_topology = params_from_base_suite_setup["cluster_topology"]
+    source_db = params_from_base_suite_setup["suite_source_db"]
     cbs_url = cluster_topology['couchbase_servers'][0]
-    base_url = params_from_base_test_setup["base_url"]
+    base_url = params_from_base_suite_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
 
     # Get doc from CBL through query
@@ -935,7 +896,7 @@ def test_equal_to(params_from_base_test_setup, prop, val):
     ("country", "United States"),
     ("type", "airline")
 ])
-def test_not_equal_to(params_from_base_test_setup, prop, val):
+def test_not_equal_to(params_from_base_suite_setup, prop, val):
     """ @summary
     Fetches a doc
     Tests the below query
@@ -946,10 +907,10 @@ def test_not_equal_to(params_from_base_test_setup, prop, val):
 
     Verifies with n1ql - select meta().id from `bucket_name` where country != "France"
     """
-    cluster_topology = params_from_base_test_setup["cluster_topology"]
-    source_db = params_from_base_test_setup["suite_source_db"]
+    cluster_topology = params_from_base_suite_setup["cluster_topology"]
+    source_db = params_from_base_suite_setup["suite_source_db"]
     cbs_url = cluster_topology['couchbase_servers'][0]
-    base_url = params_from_base_test_setup["base_url"]
+    base_url = params_from_base_suite_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
 
     # Get doc from CBL through query
@@ -981,7 +942,7 @@ def test_not_equal_to(params_from_base_test_setup, prop, val):
 @pytest.mark.parametrize("prop, val", [
     ("id", 1000),
 ])
-def test_greater_than(params_from_base_test_setup, prop, val):
+def test_greater_than(params_from_base_suite_setup, prop, val):
     """ @summary
     Fetches a doc
     Tests the below query
@@ -992,10 +953,10 @@ def test_greater_than(params_from_base_test_setup, prop, val):
 
     Verifies with n1ql - select meta().id from `bucket_name` where id > 1000
     """
-    cluster_topology = params_from_base_test_setup["cluster_topology"]
-    source_db = params_from_base_test_setup["suite_source_db"]
+    cluster_topology = params_from_base_suite_setup["cluster_topology"]
+    source_db = params_from_base_suite_setup["suite_source_db"]
     cbs_url = cluster_topology['couchbase_servers'][0]
-    base_url = params_from_base_test_setup["base_url"]
+    base_url = params_from_base_suite_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
 
     # Get doc from CBL through query
@@ -1027,7 +988,7 @@ def test_greater_than(params_from_base_test_setup, prop, val):
 @pytest.mark.parametrize("prop, val", [
     ("id", 1000),
 ])
-def test_greater_than_or_equal_to(params_from_base_test_setup, prop, val):
+def test_greater_than_or_equal_to(params_from_base_suite_setup, prop, val):
     """ @summary
     Fetches a doc
     Tests the below query
@@ -1038,10 +999,10 @@ def test_greater_than_or_equal_to(params_from_base_test_setup, prop, val):
 
     Verifies with n1ql - select meta().id from `bucket_name` where id >= 1000
     """
-    cluster_topology = params_from_base_test_setup["cluster_topology"]
-    source_db = params_from_base_test_setup["suite_source_db"]
+    cluster_topology = params_from_base_suite_setup["cluster_topology"]
+    source_db = params_from_base_suite_setup["suite_source_db"]
     cbs_url = cluster_topology['couchbase_servers'][0]
-    base_url = params_from_base_test_setup["base_url"]
+    base_url = params_from_base_suite_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
 
     # Get doc from CBL through query
@@ -1073,7 +1034,7 @@ def test_greater_than_or_equal_to(params_from_base_test_setup, prop, val):
 @pytest.mark.parametrize("prop, val", [
     ("id", 1000),
 ])
-def test_less_than(params_from_base_test_setup, prop, val):
+def test_less_than(params_from_base_suite_setup, prop, val):
     """ @summary
     Fetches a doc
     Tests the below query
@@ -1084,10 +1045,10 @@ def test_less_than(params_from_base_test_setup, prop, val):
 
     Verifies with n1ql - select meta().id from `bucket_name` where id < 1000
     """
-    cluster_topology = params_from_base_test_setup["cluster_topology"]
-    source_db = params_from_base_test_setup["suite_source_db"]
+    cluster_topology = params_from_base_suite_setup["cluster_topology"]
+    source_db = params_from_base_suite_setup["suite_source_db"]
     cbs_url = cluster_topology['couchbase_servers'][0]
-    base_url = params_from_base_test_setup["base_url"]
+    base_url = params_from_base_suite_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
 
     # Get doc from CBL through query
@@ -1119,7 +1080,7 @@ def test_less_than(params_from_base_test_setup, prop, val):
 @pytest.mark.parametrize("prop, val", [
     ("id", 1000),
 ])
-def test_less_than_or_equal_to(params_from_base_test_setup, prop, val):
+def test_less_than_or_equal_to(params_from_base_suite_setup, prop, val):
     """ @summary
     Fetches a doc
     Tests the below query
@@ -1130,10 +1091,10 @@ def test_less_than_or_equal_to(params_from_base_test_setup, prop, val):
 
     Verifies with n1ql - select meta().id from `bucket_name` where id <= 1000
     """
-    cluster_topology = params_from_base_test_setup["cluster_topology"]
-    source_db = params_from_base_test_setup["suite_source_db"]
+    cluster_topology = params_from_base_suite_setup["cluster_topology"]
+    source_db = params_from_base_suite_setup["suite_source_db"]
     cbs_url = cluster_topology['couchbase_servers'][0]
-    base_url = params_from_base_test_setup["base_url"]
+    base_url = params_from_base_suite_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
 
     # Get doc from CBL through query
@@ -1165,7 +1126,7 @@ def test_less_than_or_equal_to(params_from_base_test_setup, prop, val):
 @pytest.mark.parametrize("prop, val1, val2", [
     ("country", "France", "United States"),
 ])
-def test_in(params_from_base_test_setup, prop, val1, val2):
+def test_in(params_from_base_suite_setup, prop, val1, val2):
     """ @summary
     Fetches a doc
     Tests the below query
@@ -1176,10 +1137,10 @@ def test_in(params_from_base_test_setup, prop, val1, val2):
 
     Verifies with n1ql - select meta().id from `bucket_name` where country in ['France', 'United States']
     """
-    cluster_topology = params_from_base_test_setup["cluster_topology"]
-    source_db = params_from_base_test_setup["suite_source_db"]
+    cluster_topology = params_from_base_suite_setup["cluster_topology"]
+    source_db = params_from_base_suite_setup["suite_source_db"]
     cbs_url = cluster_topology['couchbase_servers'][0]
-    base_url = params_from_base_test_setup["base_url"]
+    base_url = params_from_base_suite_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
 
     # Get doc from CBL through query
@@ -1211,7 +1172,7 @@ def test_in(params_from_base_test_setup, prop, val1, val2):
 @pytest.mark.parametrize("prop, val1, val2", [
     ("id", 1000, 2000),
 ])
-def test_between(params_from_base_test_setup, prop, val1, val2):
+def test_between(params_from_base_suite_setup, prop, val1, val2):
     """ @summary
     Fetches a doc
     Tests the below query
@@ -1222,10 +1183,10 @@ def test_between(params_from_base_test_setup, prop, val1, val2):
 
     Verifies with n1ql - select meta().id from `bucket_name` where id between 1000 and 2000
     """
-    cluster_topology = params_from_base_test_setup["cluster_topology"]
-    source_db = params_from_base_test_setup["suite_source_db"]
+    cluster_topology = params_from_base_suite_setup["cluster_topology"]
+    source_db = params_from_base_suite_setup["suite_source_db"]
     cbs_url = cluster_topology['couchbase_servers'][0]
-    base_url = params_from_base_test_setup["base_url"]
+    base_url = params_from_base_suite_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
 
     # Get doc from CBL through query
@@ -1258,7 +1219,7 @@ def test_between(params_from_base_test_setup, prop, val1, val2):
     "callsign",
     "iata"
 ])
-def test_is(params_from_base_test_setup, prop):
+def test_is(params_from_base_suite_setup, prop):
     """ @summary
     Fetches a doc
     Tests the below query
@@ -1269,10 +1230,10 @@ def test_is(params_from_base_test_setup, prop):
 
     Verifies with n1ql - select meta().id from `bucket_name` where iata is null
     """
-    cluster_topology = params_from_base_test_setup["cluster_topology"]
-    source_db = params_from_base_test_setup["suite_source_db"]
+    cluster_topology = params_from_base_suite_setup["cluster_topology"]
+    source_db = params_from_base_suite_setup["suite_source_db"]
     cbs_url = cluster_topology['couchbase_servers'][0]
-    base_url = params_from_base_test_setup["base_url"]
+    base_url = params_from_base_suite_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
 
     # Get doc from CBL through query
@@ -1305,7 +1266,7 @@ def test_is(params_from_base_test_setup, prop):
     "callsign",
     "iata"
 ])
-def test_isnot(params_from_base_test_setup, prop):
+def test_isnot(params_from_base_suite_setup, prop):
     """ @summary
     Fetches a doc
     Tests the below query
@@ -1316,10 +1277,10 @@ def test_isnot(params_from_base_test_setup, prop):
 
     Verifies with n1ql - select meta().id from `bucket_name` where iata is not null
     """
-    cluster_topology = params_from_base_test_setup["cluster_topology"]
-    source_db = params_from_base_test_setup["suite_source_db"]
+    cluster_topology = params_from_base_suite_setup["cluster_topology"]
+    source_db = params_from_base_suite_setup["suite_source_db"]
     cbs_url = cluster_topology['couchbase_servers'][0]
-    base_url = params_from_base_test_setup["base_url"]
+    base_url = params_from_base_suite_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
 
     # Get doc from CBL through query
@@ -1345,14 +1306,13 @@ def test_isnot(params_from_base_test_setup, prop):
     assert len(docs_from_cbl) == len(docs_from_n1ql)
     log_info("Found {} docs".format(len(docs_from_cbl)))
     assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
-    # assert np.array_equal(sorted(docs_from_cbl), sorted(docs_from_n1ql))
     log_info("Doc contents match between CBL and n1ql")
 
 
 @pytest.mark.parametrize("prop, val1, val2", [
     ("id", 1000, 2000),
 ])
-def test_not(params_from_base_test_setup, prop, val1, val2):
+def test_not(params_from_base_suite_setup, prop, val1, val2):
     """ @summary
     Fetches a doc
     Tests the below query
@@ -1363,10 +1323,10 @@ def test_not(params_from_base_test_setup, prop, val1, val2):
 
     Verifies with n1ql - select meta().id from `bucket_name` where id not between 1000 and 2000
     """
-    cluster_topology = params_from_base_test_setup["cluster_topology"]
-    source_db = params_from_base_test_setup["suite_source_db"]
+    cluster_topology = params_from_base_suite_setup["cluster_topology"]
+    source_db = params_from_base_suite_setup["suite_source_db"]
     cbs_url = cluster_topology['couchbase_servers'][0]
-    base_url = params_from_base_test_setup["base_url"]
+    base_url = params_from_base_suite_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
 
     # Get doc from CBL through query
@@ -1411,13 +1371,13 @@ def test_not(params_from_base_test_setup, prop, val1, val2):
     ("content", "'\"foods including'\"", "landmark", False),  # phrase queries
     ("content", "'beautiful NEAR/7 \"local\"'", "landmark", False),  # near queries
 ])
-def test_single_property_fts(params_from_base_test_setup, prop, val, doc_type, stemming):
+def test_single_property_fts(params_from_base_suite_setup, prop, val, doc_type, stemming):
     """ @summary
     Fetches a doc
     Tests the below query
     """
-    source_db = params_from_base_test_setup["suite_source_db"]
-    base_url = params_from_base_test_setup["base_url"]
+    source_db = params_from_base_suite_setup["suite_source_db"]
+    base_url = params_from_base_suite_setup["base_url"]
 
     # Get doc from CBL through query
     qy = Query(base_url)
@@ -1453,13 +1413,13 @@ def test_single_property_fts(params_from_base_test_setup, prop, val, doc_type, s
     ("content", "name", "(beauty AND splendour) OR food", "landmark", False),  # mix logical expression
     ("content", "name", "restaurant NOT chips", "landmark", False),  # NOT logical expression
 ])
-def test_multiple_property_fts(params_from_base_test_setup, prop1, prop2, val, doc_type, stemming):
+def test_multiple_property_fts(params_from_base_suite_setup, prop1, prop2, val, doc_type, stemming):
     """ @summary
     Fetches a doc
     Tests the below query
     """
-    source_db = params_from_base_test_setup["suite_source_db"]
-    base_url = params_from_base_test_setup["base_url"]
+    source_db = params_from_base_suite_setup["suite_source_db"]
+    base_url = params_from_base_suite_setup["base_url"]
 
     # Get doc from CBL through query
     qy = Query(base_url)
@@ -1478,13 +1438,13 @@ def test_multiple_property_fts(params_from_base_test_setup, prop1, prop2, val, d
 @pytest.mark.parametrize("prop, val, doc_type", [
     ("content", "beautiful", "landmark"),
 ])
-def test_fts_with_ranking(params_from_base_test_setup, prop, val, doc_type):
+def test_fts_with_ranking(params_from_base_suite_setup, prop, val, doc_type):
     """ @summary
     Fetches a doc
     Tests the below query
     """
-    source_db = params_from_base_test_setup["suite_source_db"]
-    base_url = params_from_base_test_setup["base_url"]
+    source_db = params_from_base_suite_setup["suite_source_db"]
+    base_url = params_from_base_suite_setup["base_url"]
 
     # Get doc from CBL through query
     qy = Query(base_url)
@@ -1502,7 +1462,7 @@ def test_fts_with_ranking(params_from_base_test_setup, prop, val, doc_type):
 @pytest.mark.parametrize("doc_id_prefix", [
     ("doc_with_double_1")
 ])
-def test_getDoc_withValueTypeDouble(params_from_base_test_setup, doc_id_prefix):
+def test_getDoc_withValueTypeDouble(params_from_base_suite_setup, doc_id_prefix):
     """ @summary
     1. Create docs with one of the column having double value
     2. Fetch the doc using where value as double value
@@ -1516,7 +1476,7 @@ def test_getDoc_withValueTypeDouble(params_from_base_test_setup, doc_id_prefix):
             .where(Expression.property(item_price).equalTo(2.754));
 
     """
-    base_url = params_from_base_test_setup["base_url"]
+    base_url = params_from_base_suite_setup["base_url"]
     database = Database(base_url)
     db_name = "db_name"
 
@@ -1551,7 +1511,7 @@ def test_getDoc_withValueTypeDouble(params_from_base_test_setup, doc_id_prefix):
 @pytest.mark.parametrize("doc_id_prefix", [
     ("doc_with_double_1")
 ])
-def test_getDoc_withLocale(params_from_base_test_setup, doc_id_prefix):
+def test_getDoc_withLocale(params_from_base_suite_setup, doc_id_prefix):
     """ @summary
     1. Add docs with locale name having '-'
     2. Fetch the doc
@@ -1565,7 +1525,7 @@ def test_getDoc_withLocale(params_from_base_test_setup, doc_id_prefix):
                 .orderBy(Ordering.expression(locale_key.collate(with_locale_value)))
 
     """
-    base_url = params_from_base_test_setup["base_url"]
+    base_url = params_from_base_suite_setup["base_url"]
     database = Database(base_url)
     qy = Query(base_url)
 
@@ -1594,7 +1554,7 @@ def test_getDoc_withLocale(params_from_base_test_setup, doc_id_prefix):
     assert len(docs_from_cbl) == 5, "Results for locale with - did not return 5 records"
 
 
-def test_query_arthimetic(params_from_base_test_setup):
+def test_query_arthimetic(params_from_base_suite_setup):
     """
         @summary:
         1. Query on arthimetic call
@@ -1602,12 +1562,12 @@ def test_query_arthimetic(params_from_base_test_setup):
 
     """
 
-    cbl_db = params_from_base_test_setup["suite_source_db"]
-    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
-    base_url = params_from_base_test_setup["base_url"]
+    cbl_db = params_from_base_suite_setup["suite_source_db"]
+    sync_gateway_version = params_from_base_suite_setup["sync_gateway_version"]
+    base_url = params_from_base_suite_setup["base_url"]
 
     if sync_gateway_version < "2.0.0":
-        pytest.skip('This test cannnot run with sg version below 2.0')
+        pytest.skip('This test cannot run with sg version below 2.0')
 
     qy = Query(base_url)
     qy.query_arthimetic(cbl_db)
