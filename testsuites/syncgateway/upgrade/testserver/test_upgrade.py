@@ -297,7 +297,6 @@ def update_docs(db, cbl_db, added_docs, doc_obj, terminator_doc_id_prefix):
     log_info("Starting doc updates")
     current_user_doc_ids = []
     for doc in added_docs:
-        log_info(doc)
         current_user_doc_ids.append(doc)
 
     docs_per_update = 3
