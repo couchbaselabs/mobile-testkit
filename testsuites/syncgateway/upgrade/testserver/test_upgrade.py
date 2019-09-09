@@ -48,7 +48,6 @@ def test_upgrade(params_from_base_test_setup):
     upgraded_delta_sync_enabled = params_from_base_test_setup['upgraded_delta_sync_enabled']
     base_url = params_from_base_test_setup["base_url"]
     sg_blip_url = params_from_base_test_setup["target_url"]
-    # target_admin_url = params_from_base_test_setup['target_admin_url']
     num_docs = int(params_from_base_test_setup['num_docs'])
     cbs_platform = params_from_base_test_setup['cbs_platform']
     cbs_toy_build = params_from_base_test_setup['cbs_toy_build']
@@ -232,7 +231,6 @@ def test_upgrade(params_from_base_test_setup):
         log_info("Stopping replication between testserver and sync gateway")
         replicator.stop(repl)
 
-        # pdb.set_trace()
         # Gather the new revs for verification
         log_info("Gathering the updated revs for verification")
         doc_ids = []
