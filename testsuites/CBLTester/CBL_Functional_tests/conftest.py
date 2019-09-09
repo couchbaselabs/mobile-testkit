@@ -404,6 +404,7 @@ def params_from_base_suite_setup(request):
 
         log_info("Loading sample bucket {}".format(enable_sample_bucket))
         server.load_sample_bucket(enable_sample_bucket)
+        time.sleep(60)
         server._create_internal_rbac_bucket_user(enable_sample_bucket, cluster_config=cluster_config)
 
         # Restart SG after the bucket deletion
