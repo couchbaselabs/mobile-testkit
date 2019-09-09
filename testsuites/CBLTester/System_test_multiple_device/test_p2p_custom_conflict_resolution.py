@@ -18,7 +18,7 @@ from testsuites.CBLTester.CBL_Functional_tests.TestSetup_FunctionalTests.test_de
 ])
 def test_p2p_local_wins_custom_conflicts(params_from_base_test_setup, server_setup, replicator_type, endpoint_type):
     """
-    @summary: resolve conflicts as per local doc
+    @summary:
     1. Create few docs in app and get them replicated to SG. Stop the replication once docs are replicated.
     2. Update docs couple of times with different updates on both SG and CBL app. This will create conflict.
     3. Start the replication with local_win CCR algorithm
@@ -137,7 +137,7 @@ def test_p2p_local_wins_custom_conflicts(params_from_base_test_setup, server_set
 ])
 def test_p2p_remote_wins_custom_conflicts(params_from_base_test_setup, server_setup, replicator_type, endpoint_type):
     """
-    @summary: resolve conflicts as per local doc
+    @summary:
     1. Create few docs in app and get them replicated to SG. Stop the replication once docs are replicated.
     2. Update docs couple of times with different updates on both SG and CBL app. This will create conflict.
     3. Start the replication with remote_wins CCR algorithm
@@ -230,7 +230,6 @@ def test_p2p_remote_wins_custom_conflicts(params_from_base_test_setup, server_se
         assert "client_random" not in client_cbl_doc, "CCR failed to resolve conflict with remote win"
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.custom_conflict
 @pytest.mark.replication
@@ -242,7 +241,7 @@ def test_p2p_remote_wins_custom_conflicts(params_from_base_test_setup, server_se
 ])
 def test_p2p_merge_wins_custom_conflicts(params_from_base_test_setup, server_setup, replicator_type, endpoint_type):
     """
-    @summary: resolve conflicts as per local doc
+    @summary:
     1. Create few docs in app and get them replicated to SG. Stop the replication once docs are replicated.
     2. Update docs couple of times with different updates on both SG and CBL app. This will create conflict.
     3. Start the replication with remote_wins CCR algorithm
@@ -349,7 +348,6 @@ def test_p2p_merge_wins_custom_conflicts(params_from_base_test_setup, server_set
             assert "client_random" in server_cbl_doc, "CCR failed to resolve conflict with merge win"
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.custom_conflict
 @pytest.mark.replication
@@ -361,7 +359,7 @@ def test_p2p_merge_wins_custom_conflicts(params_from_base_test_setup, server_set
 ])
 def test_p2p_non_blocking_custom_conflicts(params_from_base_test_setup, server_setup, replicator_type, endpoint_type):
     """
-    @summary: resolve conflicts as per local doc
+    @summary:
     1. Create few docs in app and get them replicated to SG. Stop the replication once docs are replicated.
     2. Update docs couple of times with different updates on both SG and CBL app. This will create conflict.
     3. Start the replication with remote_wins CCR algorithm

@@ -21,7 +21,7 @@ from testsuites.CBLTester.CBL_Functional_tests.TestSetup_FunctionalTests.test_de
 ])
 def test_local_wins_custom_conflicts(params_from_base_test_setup, replicator_type):
     """
-    @summary: resolve conflicts as per local doc
+    @summary:
     1. Create few docs in app and get them replicated to SG. Stop the replication once docs are replicated.
     2. Update docs couple of times with different updates on both SG and CBL app. This will create conflict.
     3. Start the replication with local_win CCR algorithm
@@ -138,7 +138,7 @@ def test_local_wins_custom_conflicts(params_from_base_test_setup, replicator_typ
 ])
 def test_remote_wins_custom_conflicts(params_from_base_test_setup, replicator_type):
     """
-    @summary: resolve conflicts as per local doc
+    @summary: resolve conflicts as per remote doc
     1. Create few docs in app and get them replicated to SG. Stop the replication once docs are replicated.
     2. Update docs couple of times with different updates on both SG and CBL app. This will create conflict.
     3. Start the replication with remote_win CCR algorithm
@@ -226,7 +226,6 @@ def test_remote_wins_custom_conflicts(params_from_base_test_setup, replicator_ty
         assert sg_doc["random"] == cbl_doc["random"], "CCR failed to resolve conflict with remote win"
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.custom_conflict
 @pytest.mark.replication
@@ -236,7 +235,7 @@ def test_remote_wins_custom_conflicts(params_from_base_test_setup, replicator_ty
 ])
 def test_null_wins_custom_conflicts(params_from_base_test_setup, replicator_type):
     """
-    @summary: resolve conflicts as per local doc
+    @summary:
     1. Create few docs in app and get them replicated to SG. Stop the replication once docs are replicated.
     2. Update docs couple of times with different updates on both SG and CBL app. This will create conflict.
     3. Start the replication with NULL CCR algorithm
@@ -330,7 +329,6 @@ def test_null_wins_custom_conflicts(params_from_base_test_setup, replicator_type
         assert cbl_doc_count == 0, "NULL CCR failed to resolve conflict with docs delete"
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.custom_conflict
 @pytest.mark.replication
@@ -340,7 +338,7 @@ def test_null_wins_custom_conflicts(params_from_base_test_setup, replicator_type
 ])
 def test_merge_wins_custom_conflicts(params_from_base_test_setup, replicator_type):
     """
-    @summary: resolve conflicts as per local doc
+    @summary:
     1. Create few docs in app and get them replicated to SG. Stop the replication once docs are replicated.
     2. Update docs couple of times with different updates on both SG and CBL app. This will create conflict.
     3. Start the replication with merge_wins CCR algorithm
@@ -457,7 +455,7 @@ def test_merge_wins_custom_conflicts(params_from_base_test_setup, replicator_typ
 ])
 def test_incorrect_doc_id_custom_conflicts_resolution(params_from_base_test_setup, replicator_type):
     """
-    @summary: resolve conflicts as per modified doc
+    @summary:
     1. Create few docs in app and get them replicated to SG. Stop the replication once docs are replicated.
     2. Update docs couple of times with different updates on both SG and CBL app. This will create conflict.
     3. Start the replication with incorrect_doc_id CCR algorithm
@@ -566,7 +564,7 @@ def test_incorrect_doc_id_custom_conflicts_resolution(params_from_base_test_setu
 ])
 def test_non_blocking_custom_conflicts_resolution(params_from_base_test_setup, replicator_type):
     """
-    @summary: resolve conflicts as per local doc
+    @summary:
     1. Create few docs in app and get them replicated to SG. Stop the replication once docs are replicated.
     2. Update docs couple of times with different updates on both SG and CBL app. This will create conflict.
     3. Start the replication with delayed_local_win CCR algorithm which takes time to resolve conflicts. Meanwhile
@@ -703,7 +701,7 @@ def test_non_blocking_custom_conflicts_resolution(params_from_base_test_setup, r
 @pytest.mark.replication
 def test_stop_replicator_before_ccr_completes(params_from_base_test_setup):
     """
-    @summary: resolve conflicts as per local doc
+    @summary:
     1. Create few docs in app and get them replicated to SG. Stop the replication once docs are replicated.
     2. Update docs couple of times with different updates on both SG and CBL app. This will create conflict.
     3. Start the replication with delayed_local CCR algorithm and after the sleep of of few seconds before
@@ -808,7 +806,7 @@ def test_stop_replicator_before_ccr_completes(params_from_base_test_setup):
 ])
 def test_delete_not_wins_custom_conflicts(params_from_base_test_setup, replicator_type):
     """
-    @summary: resolve conflicts as per local doc
+    @summary:
     1. Create few docs in app and get them replicated to SG. Stop the replication once docs are replicated.
     2. Update docs couple of times with different updates on one side and delete on other side.
     This will create conflict.
@@ -918,13 +916,12 @@ def test_delete_not_wins_custom_conflicts(params_from_base_test_setup, replicato
 ])
 def test_exception_thrown_custom_conflicts(params_from_base_test_setup, replicator_type):
     """
-    @summary: resolve conflicts as per local doc
+    @summary:
     1. Create few docs in app and get them replicated to SG. Stop the replication once docs are replicated.
     2. Update docs couple of times with different updates on one side and delete on other side.
     This will create conflict.
-    3. Start the replication with delete_not_wins CCR algorithm
-    4. Verifies that CBL has retains its changes. For push and pull replication SG changes should be override with
-    that of CBL
+    3. Start the replication with exception_thrown CCR algorithm
+    4. Verifies that CBL and SG have retain their changes and app is not crashed
     """
     sg_db = "db"
     sg_url = params_from_base_test_setup["sg_url"]
