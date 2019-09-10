@@ -30,9 +30,7 @@ from CBLClient.Utils import Utils
 
 from utilities.cluster_config_utils import get_load_balancer_ip
 from CBLClient.ReplicatorConfiguration import ReplicatorConfiguration
-# from libraries.testkit import cluster
 
-# from libraries.testkit.cluster import Cluster
 from couchbase.bucket import Bucket
 from couchbase.n1ql import N1QLQuery
 
@@ -406,6 +404,7 @@ def params_from_base_suite_setup(request):
 
         log_info("Loading sample bucket {}".format(enable_sample_bucket))
         server.load_sample_bucket(enable_sample_bucket)
+        time.sleep(60)
         server._create_internal_rbac_bucket_user(enable_sample_bucket, cluster_config=cluster_config)
 
         # Restart SG after the bucket deletion

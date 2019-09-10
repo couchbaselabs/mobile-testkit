@@ -130,6 +130,10 @@ def pytest_addoption(parser):
                      help="Encryption will be enabled for CBL db",
                      default="password")
 
+    parser.addoption("--delta-sync",
+                     action="store_true",
+                     help="delta-sync: Enable delta-sync for sync gateway")
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -168,6 +172,7 @@ def params_from_base_suite_setup(request):
     create_db_per_suite = request.config.getoption("--create-db-per-suite")
     enable_rebalance = request.config.getoption("--enable-rebalance")
     enable_file_logging = request.config.getoption("--enable-file-logging")
+    delta_sync_enabled = request.config.getoption("--delta-sync")
 
     community_enabled = request.config.getoption("--community")
 
@@ -208,7 +213,6 @@ def params_from_base_suite_setup(request):
 
     sg_db = "db"
     sg_url = cluster_topology["sync_gateways"][0]["public"]
-    sg_admin_url = cluster_topology["sync_gateways"][0]["admin"]
     sg_ip = host_for_url(sg_url)
     target_url = "ws://{}:4984/{}".format(sg_ip, sg_db)
     target_admin_url = "ws://{}:4985/{}".format(sg_ip, sg_db)
@@ -255,6 +259,12 @@ def params_from_base_suite_setup(request):
         # Disable sg views in cluster configs
         persist_cluster_config_environment_prop(cluster_config, 'sg_use_views', False)
 
+    if delta_sync_enabled:
+        log_info("Running with delta sync")
+        persist_cluster_config_environment_prop(cluster_config, 'delta_sync_enabled', True)
+    else:
+        log_info("Running without delta sync")
+        persist_cluster_config_environment_prop(cluster_config, 'delta_sync_enabled', False)
     # Write the number of replicas to cluster config
     persist_cluster_config_environment_prop(cluster_config, 'number_replicas', number_replicas)
 
@@ -283,6 +293,7 @@ def params_from_base_suite_setup(request):
             raise
 
     # Create CBL databases on all devices
+    sg_admin_url = cluster_topology["sync_gateways"][0]["admin"]
     db_name_list = []
     cbl_db_list = []
     db_obj_list = []
@@ -359,7 +370,8 @@ def params_from_base_suite_setup(request):
         "enable_rebalance": enable_rebalance,
         "enable_encryption": enable_encryption,
         "encryption_password": encryption_password,
-        "enable_file_logging": enable_file_logging
+        "enable_file_logging": enable_file_logging,
+        "delta_sync_enabled": delta_sync_enabled
     }
 
     if create_db_per_suite:
