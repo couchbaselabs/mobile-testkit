@@ -407,6 +407,10 @@ namespace Couchbase.Lite.Testing
         {
             Document localDoc = conflict.LocalDocument;
             Document remoteDoc = conflict.RemoteDocument;
+            if (localDoc == null || remoteDoc == null)
+            {
+                throw new Exception("Either local doc or remote is/are null");
+            }
             string docId = conflict.DocumentID;
             Utility util_obj = new Utility();
             util_obj.checkMismatchDocId(localDoc, remoteDoc, docId);
@@ -421,6 +425,10 @@ namespace Couchbase.Lite.Testing
         {
             Document localDoc = conflict.LocalDocument;
             Document remoteDoc = conflict.RemoteDocument;
+            if (localDoc == null || remoteDoc == null)
+            {
+                throw new Exception("Either local doc or remote is/are null");
+            }
             string docId = conflict.DocumentID;
             Utility util_obj = new Utility();
             util_obj.checkMismatchDocId(localDoc, remoteDoc, docId);
@@ -435,6 +443,10 @@ namespace Couchbase.Lite.Testing
         {
             Document localDoc = conflict.LocalDocument;
             Document remoteDoc = conflict.RemoteDocument;
+            if (localDoc == null || remoteDoc == null)
+            {
+                throw new Exception("Either local doc or remote is/are null");
+            }
             string docId = conflict.DocumentID;
             Utility util_obj = new Utility();
             util_obj.checkMismatchDocId(localDoc, remoteDoc, docId);
@@ -452,6 +464,10 @@ namespace Couchbase.Lite.Testing
             // from remote doc. Conflicting keys will have value from local doc.
             Document localDoc = conflict.LocalDocument;
             Document remoteDoc = conflict.RemoteDocument;
+            if (localDoc == null || remoteDoc == null)
+            {
+                throw new Exception("Either local doc or remote is/are null");
+            }
             string docId = conflict.DocumentID;
             Utility util_obj = new Utility();
             util_obj.checkMismatchDocId(localDoc, remoteDoc, docId);
@@ -477,6 +493,10 @@ namespace Couchbase.Lite.Testing
         {
             Document localDoc = conflict.LocalDocument;
             Document remoteDoc = conflict.RemoteDocument;
+            if (localDoc == null || remoteDoc == null)
+            {
+                throw new Exception("Either local doc or remote is/are null");
+            }
             string docId = conflict.DocumentID;
             Utility util_obj = new Utility();
             util_obj.checkMismatchDocId(localDoc, remoteDoc, docId);
@@ -494,6 +514,10 @@ namespace Couchbase.Lite.Testing
         {
             Document localDoc = conflict.LocalDocument;
             Document remoteDoc = conflict.RemoteDocument;
+            if (localDoc == null || remoteDoc == null)
+            {
+                throw new Exception("Either local doc or remote is/are null");
+            }
             string docId = conflict.DocumentID;
             Utility util_obj = new Utility();
             util_obj.checkMismatchDocId(localDoc, remoteDoc, docId);
@@ -514,6 +538,10 @@ namespace Couchbase.Lite.Testing
         {
             Document localDoc = conflict.LocalDocument;
             Document remoteDoc = conflict.RemoteDocument;
+            if (localDoc == null || remoteDoc == null)
+            {
+                throw new Exception("Either local doc or remote is/are null");
+            }
             string docId = conflict.DocumentID;
             Utility util_obj = new Utility();
             util_obj.checkMismatchDocId(localDoc, remoteDoc, docId);
@@ -527,6 +555,10 @@ namespace Couchbase.Lite.Testing
         {
             Document localDoc = conflict.LocalDocument;
             Document remoteDoc = conflict.RemoteDocument;
+            if (localDoc == null || remoteDoc == null)
+            {
+                throw new Exception("Either local doc or remote is/are null");
+            }
             string docId = conflict.DocumentID;
             Utility util_obj = new Utility();
             util_obj.checkMismatchDocId(localDoc, remoteDoc, docId);

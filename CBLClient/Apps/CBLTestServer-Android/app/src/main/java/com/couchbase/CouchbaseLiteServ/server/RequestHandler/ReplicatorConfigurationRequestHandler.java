@@ -368,6 +368,9 @@ class LocalWinsCustomConflictResolver implements ConflictResolver {
     public Document resolve(Conflict conflict) {
         Document localDoc = conflict.getLocalDocument();
         Document remoteDoc = conflict.getRemoteDocument();
+        if (localDoc == null || remoteDoc == null) {
+            throw new IllegalStateException("Either local doc or remote is/are null");
+        }
         String docId = conflict.getDocumentId();
         Utility util_obj = new Utility();
         util_obj.checkMismatchDocId(localDoc, remoteDoc, docId);
@@ -381,6 +384,9 @@ class RemoteWinsCustomConflictResolver implements ConflictResolver {
     public Document resolve(Conflict conflict) {
         Document localDoc = conflict.getLocalDocument();
         Document remoteDoc = conflict.getRemoteDocument();
+        if (localDoc == null || remoteDoc == null) {
+            throw new IllegalStateException("Either local doc or remote is/are null");
+        }
         String docId = conflict.getDocumentId();
         Utility util_obj = new Utility();
         util_obj.checkMismatchDocId(localDoc, remoteDoc, docId);
@@ -394,6 +400,9 @@ class NullCustomConflictResolver implements ConflictResolver {
     public Document resolve(Conflict conflict) {
         Document localDoc = conflict.getLocalDocument();
         Document remoteDoc = conflict.getRemoteDocument();
+        if (localDoc == null || remoteDoc == null) {
+            throw new IllegalStateException("Either local doc or remote is/are null");
+        }
         String docId = conflict.getDocumentId();
         Utility util_obj = new Utility();
         util_obj.checkMismatchDocId(localDoc, remoteDoc, docId);
@@ -412,6 +421,9 @@ class MergeCustomConflictResolver implements ConflictResolver {
          */
         Document localDoc = conflict.getLocalDocument();
         Document remoteDoc = conflict.getRemoteDocument();
+        if (localDoc == null || remoteDoc == null) {
+            throw new IllegalStateException("Either local doc or remote is/are null");
+        }
         String docId = conflict.getDocumentId();
         Utility util_obj = new Utility();
         util_obj.checkMismatchDocId(localDoc, remoteDoc, docId);
@@ -434,6 +446,9 @@ class IncorrectDocIdConflictResolver implements ConflictResolver {
     public Document resolve(Conflict conflict) {
         Document localDoc = conflict.getLocalDocument();
         Document remoteDoc = conflict.getRemoteDocument();
+        if (localDoc == null || remoteDoc == null) {
+            throw new IllegalStateException("Either local doc or remote is/are null");
+        }
         String docId = conflict.getDocumentId();
         Utility util_obj = new Utility();
         util_obj.checkMismatchDocId(localDoc, remoteDoc, docId);
@@ -450,6 +465,9 @@ class DelayedLocalWinConflictResolver implements ConflictResolver {
     public Document resolve(Conflict conflict) {
         Document localDoc = conflict.getLocalDocument();
         Document remoteDoc = conflict.getRemoteDocument();
+        if (localDoc == null || remoteDoc == null) {
+            throw new IllegalStateException("Either local doc or remote is/are null");
+        }
         String docId = conflict.getDocumentId();
         Utility util_obj = new Utility();
         util_obj.checkMismatchDocId(localDoc, remoteDoc, docId);
@@ -468,6 +486,9 @@ class DeleteDocConflictResolver implements ConflictResolver {
     public Document resolve(Conflict conflict) {
         Document localDoc = conflict.getLocalDocument();
         Document remoteDoc = conflict.getRemoteDocument();
+        if (localDoc == null || remoteDoc == null) {
+            throw new IllegalStateException("Either local doc or remote is/are null");
+        }
         String docId = conflict.getDocumentId();
         Utility util_obj = new Utility();
         util_obj.checkMismatchDocId(localDoc, remoteDoc, docId);
@@ -485,6 +506,9 @@ class ExceptionThrownConflictResolver implements ConflictResolver {
     public Document resolve(Conflict conflict) {
         Document localDoc = conflict.getLocalDocument();
         Document remoteDoc = conflict.getRemoteDocument();
+        if (localDoc == null || remoteDoc == null) {
+            throw new IllegalStateException("Either local doc or remote is/are null");
+        }
         String docId = conflict.getDocumentId();
         Utility util_obj = new Utility();
         util_obj.checkMismatchDocId(localDoc, remoteDoc, docId);

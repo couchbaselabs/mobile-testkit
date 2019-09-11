@@ -565,12 +565,17 @@ def test_incorrect_doc_id_custom_conflicts_resolution(params_from_base_test_setu
 def test_non_blocking_custom_conflicts_resolution(params_from_base_test_setup, replicator_type):
     """
     @summary:
-    1. Create few docs in app and get them replicated to SG. Stop the replication once docs are replicated.
-    2. Update docs couple of times with different updates on both SG and CBL app. This will create conflict.
-    3. Start the replication with delayed_local_win CCR algorithm which takes time to resolve conflicts. Meanwhile
-    update docs on CBL and verify that updates are successful and conflict also resolves
-    4. Verifies that CBL has docs with local win body. For push and pull replication SG changes should be override with
-    that of CBL
+    1. create a doc on cbl then push the doc to sgw
+    2. modify the doc on sgw and cbl separately in offline mode in order to generate conflicts, doc is not null on
+     either sgw or cbl
+    3. get the doc respectively from sgw and cbl, remember the rev id of the sgw doc and the sequence number of the
+     cbl doc
+    4. initialize a replicator, register a custom conflict resolver which intentionally takes longer period of time
+     to complete
+    5. stop replicator before conflict resolver finishes, verify replicator will wait for conflict resolver to complete
+     then stop
+    6. verify the cbl doc is successfully resolved
+    7. replicate with sgw, verify sgw successfully synced with the cbl doc
     """
     sg_db = "db"
     sg_url = params_from_base_test_setup["sg_url"]
