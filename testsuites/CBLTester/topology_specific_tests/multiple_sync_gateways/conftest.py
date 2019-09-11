@@ -496,7 +496,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "testserver": testserver,
         "db_config": db_config,
         "sg_ssl": sg_ssl,
-        "delta_sync_enabled": delta_sync_enabled
+        "delta_sync_enabled": delta_sync_enabled,
+        "enable_file_logging": enable_file_logging
     }
 
     log_info("Tearing down test")
