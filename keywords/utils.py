@@ -353,7 +353,7 @@ def compare_generic_types(object1, object2, isPredictiveResult=False):
 def deep_list_compare(object1, object2, isPredictiveResult=False):
     """
     @summary:
-    A method to compare two lists with an option of forwarding 
+    A method to compare two lists with an option of forwarding
     an approximate comparison flag to compare_generic_types function
     @return:
     true if equals, false otherwise
@@ -385,7 +385,7 @@ def deep_list_compare(object1, object2, isPredictiveResult=False):
 def deep_dict_compare(object1, object2, isPredictiveResult=False):
     """
     @summary:
-    A method to compare two dictionaries with an option of forwarding 
+    A method to compare two dictionaries with an option of forwarding
     an approximate comparison flag to compare_generic_types function.
     @return:
     true if equals, false otherwise
