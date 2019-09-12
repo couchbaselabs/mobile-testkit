@@ -138,7 +138,7 @@ def pytest_addoption(parser):
                      default="1000000",
                      help="Specify the initial no. of docs for an app to start the system test. Default is 1M Docs")
 
-    parser.addoption("--num-of-updates",
+    parser.addoption("--num-of-doc-updates",
                      action="store",
                      default="100",
                      help="Specify the no. of times a random doc will be update. Default is 100 times")
@@ -169,7 +169,7 @@ def pytest_addoption(parser):
     parser.addoption("--up-time",
                      action="store",
                      default="2",
-                     help="Specify the no. of hours system test will execute. Default is 2 days")
+                     help="Specify the no. of days system test will execute. Default is 2 days")
 
     parser.addoption("--repl-status-check-sleep-time",
                      action="store",
@@ -221,7 +221,7 @@ def params_from_base_suite_setup(request):
     enable_encryption = request.config.getoption("--enable-encryption")
     encryption_password = request.config.getoption("--encryption-password")
     num_of_docs = int(request.config.getoption("--num-of-docs"))
-    num_of_updates = int(request.config.getoption("--num-of-updates"))
+    num_of_doc_updates = int(request.config.getoption("--num-of-doc-updates"))
     num_of_docs_to_update = int(request.config.getoption("--num-of-docs-to-update"))
     num_of_docs_in_itr = int(request.config.getoption("--num-of-docs-in-itr"))
     num_of_docs_to_delete = int(request.config.getoption("--num-of-docs-to-delete"))
@@ -429,7 +429,7 @@ def params_from_base_suite_setup(request):
         "num_of_docs_in_itr": num_of_docs_in_itr,
         "num_of_docs_to_add": num_of_docs_to_add,
         "num_of_docs_to_update": num_of_docs_to_update,
-        "num_of_updates": num_of_updates,
+        "num_of_doc_updates": num_of_doc_updates,
         "up_time": up_time,
         "repl_status_check_sleep_time": repl_status_check_sleep_time,
     }

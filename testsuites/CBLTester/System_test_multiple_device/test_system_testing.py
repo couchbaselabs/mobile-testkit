@@ -33,7 +33,7 @@ def test_system(params_from_base_suite_setup):
     generator = params_from_base_suite_setup["generator"]
     enable_rebalance = params_from_base_suite_setup["enable_rebalance"]
     num_of_docs = params_from_base_suite_setup["num_of_docs"]
-    num_of_updates = params_from_base_suite_setup["num_of_updates"]
+    num_of_doc_updates = params_from_base_suite_setup["num_of_doc_updates"]
     num_of_docs_to_update = params_from_base_suite_setup["num_of_docs_to_update"]
     num_of_docs_in_itr = params_from_base_suite_setup["num_of_docs_in_itr"]
     num_of_docs_to_delete = params_from_base_suite_setup["num_of_docs_to_delete"]
@@ -158,7 +158,7 @@ def test_system(params_from_base_suite_setup):
         log_info("Updating {} docs on SG - {}".format(len(docs_to_update),
                                                       docs_to_update))
         sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs,
-                              number_updates=num_of_updates, auth=session, channels=channels_sg)
+                              number_updates=num_of_doc_updates, auth=session, channels=channels_sg)
 
         # Waiting until replicator finishes on all dbs
         for repl_obj, repl, cbl_db, query in zip(replicator_obj_list,
@@ -184,7 +184,7 @@ def test_system(params_from_base_suite_setup):
             log_info("Updating {} docs on {} db - {}".format(updates_per_db,
                                                              db_obj.getName(cbl_db),
                                                              list(docs_to_update)[i: i + updates_per_db]))
-            db_obj.update_bulk_docs(cbl_db, num_of_updates, list(docs_to_update)[i: i + updates_per_db])
+            db_obj.update_bulk_docs(cbl_db, num_of_doc_updates, list(docs_to_update)[i: i + updates_per_db])
             i += updates_per_db
             # updating docs will affect all dbs as they are synced with SG.
             t = Thread(target=_replicaton_status_check, args=(repl_obj, repl, repl_status_check_sleep_time))
