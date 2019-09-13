@@ -114,7 +114,7 @@ class User:
 
         if doc_id is None:
             # Use a POST and let sync_gateway generate an id
-            resp = self._session.post("{0}/{1}/".format(self.target.url, self.db), data=body, timeout=settings.HTTP_REQ_TIMEOUT)
+            resp = self._session.post("{0}/{1}/".format(self.target.url, self.db), data=body)
             log.debug("{0} POST {1}".format(self.name, resp.url))
         else:
             # If the doc id is specified, use PUT with doc_id in url
@@ -124,9 +124,9 @@ class User:
                 # This was using invalid construction of HTTP adapter and currently is not used anywhere.
                 # Retry behavior will be the same as regular behavior. This is a legacy API so just adding this
                 # to do execute the same behavior whether or not retries is specifiec
-                resp = self._session.put(doc_url, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
+                resp = self._session.put(doc_url, data=body)
             else:
-                resp = self._session.put(doc_url, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
+                resp = self._session.put(doc_url, data=body)
 
             log.debug("{0} PUT {1}".format(self.name, resp.url))
 
@@ -189,6 +189,7 @@ class User:
     def add_docs(self, num_docs, bulk=False, name_prefix=None, retries=False):
 
         errors = list()
+        print "add docs for each user object"
 
         # If no name_prefix is specified, use uuids for doc_names
         if name_prefix is None:
@@ -198,7 +199,7 @@ class User:
 
         if not bulk:
             with concurrent.futures.ThreadPoolExecutor(max_workers=settings.MAX_REQUEST_WORKERS) as executor:
-
+                print " adding docs without bulk"
                 if retries:
                     future_to_docs = {executor.submit(self.add_doc, doc, content=None, retries=True): doc for doc in doc_names}
                 else:
