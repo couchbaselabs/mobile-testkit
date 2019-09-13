@@ -88,7 +88,8 @@ public class FileLoggingRequestHandler {
                 let filePath = URL(fileURLWithPath: path)
                 let zipFilePath = try Zip.quickZipFiles([filePath],
                                                         fileName: "archive")
-                return RawData(data: try Data(contentsOf: zipFilePath))
+                return RawData(data: try Data(contentsOf: zipFilePath),
+                               contentType: "application/zip")
             }
             catch {
                 print("Exception Getting LogsInZip \(error)")

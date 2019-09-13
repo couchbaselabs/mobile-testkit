@@ -22,4 +22,5 @@ import Foundation
 /// this type is used to send raw data to test client.  
 public struct RawData {
     let data: Data
+    let contentType: String
 }

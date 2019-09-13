@@ -183,7 +183,7 @@ public class Server {
                             fatalError("type should be a raw data")
                         }
                         return GCDWebServerDataResponse(data: dataObj.data,
-                                                        contentType: "application/x-www-form-urlencoded")
+                                                        contentType: dataObj.contentType)
                     } else {
                         return GCDWebServerDataResponse(text: body as! String)
                     }
