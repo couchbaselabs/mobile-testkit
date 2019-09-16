@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.gson.GsonBuilder;
 import com.google.gson.Gson;
 
 
@@ -46,7 +47,8 @@ public class ValueSerializer {
                 String string = serialize(entry.getValue(), memory);
                 stringMap.put(key, string);
             }
-            return new Gson().toJson(stringMap);
+            Gson gson = new GsonBuilder().serializeNulls().create();
+            return gson.toJson(stringMap);
         }
         else if (value instanceof List) {
             List list = (List) value;
@@ -56,7 +58,8 @@ public class ValueSerializer {
                 String string = serialize(object, memory);
                 stringList.add(string);
             }
-            return new Gson().toJson(stringList);
+            Gson gson = new GsonBuilder().serializeNulls().create();
+            return gson.toJson(stringList);
         }
         else if (value instanceof String) {
             String string = (String) value;
