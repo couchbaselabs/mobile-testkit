@@ -404,6 +404,7 @@ def params_from_base_suite_setup(request):
 
         log_info("Loading sample bucket {}".format(enable_sample_bucket))
         server.load_sample_bucket(enable_sample_bucket)
+        time.sleep(60)
         server._create_internal_rbac_bucket_user(enable_sample_bucket, cluster_config=cluster_config)
 
         # Restart SG after the bucket deletion
@@ -628,7 +629,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "cbl_log_decoder_platform": cbl_log_decoder_platform,
         "cbl_log_decoder_build": cbl_log_decoder_build,
         "enable_encryption": enable_encryption,
-        "encryption_password": encryption_password
+        "encryption_password": encryption_password,
+        "enable_file_logging": enable_file_logging
     }
 
     log_info("Tearing down test")
