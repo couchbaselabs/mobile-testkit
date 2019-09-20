@@ -2,6 +2,7 @@ from keywords.TestServerAndroid import TestServerAndroid
 from keywords.TestServeriOS import TestServeriOS
 from keywords.TestServerNetMono import TestServerNetMono
 from keywords.TestServerNetMsft import TestServerNetMsft
+from keywords.TestServerJava import TestServerJava
 
 
 class TestServerFactory:
@@ -13,7 +14,7 @@ class TestServerFactory:
 
     @staticmethod
     def validate_platform(platform):
-        valid_platforms = ["android", "ios", "net-mono", "net-msft", "net-uwp", "xamarin-android", "xamarin-ios"]
+        valid_platforms = ["android", "ios", "net-mono", "net-msft", "net-uwp", "xamarin-android", "xamarin-ios", "java", "java-ws"]
         if platform not in valid_platforms:
             raise ValueError("Unsupported 'platform': {}".format(platform))
 
@@ -41,5 +42,7 @@ class TestServerFactory:
             return TestServerNetMono(version_build, host, port)
         elif platform == "net-msft" or platform == "net-uwp":
             return TestServerNetMsft(version_build, host, port, platform=platform)
+        elif platform == "java" or platform == "java-ws":
+            return TestServerJava(version_build, host, port, debug_mode, platform=platform)
         else:
             raise NotImplementedError("Test server does not support this version")

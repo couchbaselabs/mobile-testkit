@@ -2990,7 +2990,7 @@ def test_resetCheckpointFailure(params_from_base_test_setup):
     # verify it throws an error that checkpoint reset is called without stopping replicator.
     with pytest.raises(Exception) as he:
         replicator.resetCheckPoint(repl)
-    if liteserv_platform.lower() == "android":
+    if liteserv_platform.lower() == "android" or liteserv_platform.lower() == "java":
         assert 'Attempt to reset the checkpoint for a replicator that is not stopped.' in he.value.message, "Reset the checkpoint should have thrown exception to inform that replicator is not stopped."
     else:
         assert 'Replicator is not stopped.' in he.value.message
