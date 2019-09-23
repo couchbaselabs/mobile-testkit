@@ -199,6 +199,7 @@ def params_from_base_suite_setup(request):
     log_info("no_conflicts_enabled: {}".format(no_conflicts_enabled))
     log_info("use_views: {}".format(use_views))
     log_info("number_replicas: {}".format(number_replicas))
+    log_info("delta_sync_enabled: {}".format(delta_sync_enabled))
 
     # sg-ce is invalid for di mode
     if mode == "di" and sg_ce:
