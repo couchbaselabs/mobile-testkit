@@ -2,6 +2,7 @@ import json
 import os
 import pytest
 
+from zipfile import ZipFile
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.remoteexecutor import RemoteExecutor
 from keywords.SyncGateway import SyncGateway, sync_gateway_config_path_for_mode, load_sync_gateway_config, get_sync_gateway_version
@@ -658,6 +659,97 @@ def test_log_logLevel_invalid(params_from_base_test_setup, sg_conf_name):
     # Remove generated conf file
     os.remove(temp_conf)
     pytest.fail("SG shouldn't be started!!!!")
+
+
+@pytest.mark.syncgateway
+@pytest.mark.logging
+@pytest.mark.parametrize("sg_conf_name", ["log_rotation_new"])
+def test_rotated_logs_size_limit(params_from_base_test_setup, sg_conf_name):
+    """
+    @summary
+    Test to check rotated log size limit with 100MB( 1024Mb by default)
+    """
+    cluster_conf = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    sg_platform = params_from_base_test_setup["sg_platform"]
+
+    log_info("Using cluster_conf: {}".format(cluster_conf))
+    log_info("Using sg_conf: {}".format(sg_conf))
+
+    cluster_helper = ClusterKeywords(cluster_conf)
+    cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
+    sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
+    sg_ip = host_for_url(sg_admin_url)
+
+    if get_sync_gateway_version(sg_ip)[0] < "2.5.0":
+        pytest.skip("rotated log size limit Test NA for the SGW version below 2.5.0")
+
+    cluster = Cluster(config=cluster_conf)
+    cluster.reset(sg_config_path=sg_conf)
+    if sg_platform == "windows":
+        json_cluster = load_cluster_config_json(cluster_conf)
+        sghost_username = json_cluster["sync_gateways:vars"]["ansible_user"]
+        sghost_password = json_cluster["sync_gateways:vars"]["ansible_password"]
+        remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip, sg_platform, sghost_username, sghost_password)
+    else:
+        remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip)
+
+    # Stop sync_gateways
+    log_info(">>> Stopping sync_gateway")
+    sg_helper = SyncGateway()
+    sg_one_url = cluster_hosts["sync_gateways"][0]["public"]
+
+    sg_helper.stop_sync_gateways(cluster_config=cluster_conf, url=sg_one_url)
+
+    # Create /tmp/sg_logs
+    sg_helper.create_directory(cluster_config=cluster_conf, url=sg_one_url, dir_name="/tmp/sg_logs")
+    SG_LOGS = ['sg_debug', 'sg_info', 'sg_warn', 'sg_error']
+
+    for log in SG_LOGS:
+        file_name = "/tmp/sg_logs/{}.log".format(log)
+        file_size = 100 * 1024 * 1024
+        sg_helper.create_empty_file(cluster_config=cluster_conf, url=sg_one_url, file_name=file_name, file_size=file_size)
+
+    # read sample sg_conf
+    data = load_sync_gateway_config(sg_conf, cluster_hosts["couchbase_servers"][0], cluster_conf)
+
+    # Set maxsize
+    for log in SG_LOGS:
+        log_section = log.split("_")[1]
+        data['logging'][log_section]["rotation"]["rotated_logs_size_limit"] = 100
+
+    # Create a temp config file in the same folder as sg_conf
+    temp_conf = "/".join(sg_conf.split('/')[:-2]) + '/temp_conf.json'
+
+    with open(temp_conf, 'w') as fp:
+        json.dump(data, fp, indent=4)
+
+    sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
+    SG_LOGS_FILES_NUM = get_sgLogs_fileNum(SG_LOGS, remote_executor)
+    # ~1M MB will be added to log file after requests
+    send_request_to_sgw(sg_one_url, sg_admin_url, remote_executor, sg_platform)
+
+    for log in SG_LOGS:
+        _, stdout, _ = remote_executor.execute("ls /tmp/sg_logs/ | grep {} | wc -l".format(log))
+        # A rotated log file should be created with 100MB
+        if (log == "sg_debug" or log == "sg_info") and sg_platform != "windows":
+            assert int(stdout[0].rstrip()) == int(SG_LOGS_FILES_NUM[log]) + 1
+        else:
+            assert stdout[0].rstrip() == SG_LOGS_FILES_NUM[log]
+
+    for log in SG_LOGS:
+        _, stdout, _ = remote_executor.execute("ls -rt /tmp/sg_logs/{}*.gz | head -1".format(log))
+        zip_file = stdout[0].rstrip()
+        remote_executor.execute("gunzip {}".format(zip_file))
+        print_variable = "{print $1}"
+        unzip_file = zip_file.split(".gz")[0]
+        _, stdout, _ = remote_executor.execute("ls -s {} | awk '{}'".format(unzip_file, print_variable))
+        log_size = stdout[0].rstrip()
+        assert log_size > 100000, "rotated log size is not created with 100 MB"
+
+    # Remove generated conf file
+    os.remove(temp_conf)
 
 
 def get_sgLogs_fileNum(SG_LOGS_MAXAGE, remote_executor):

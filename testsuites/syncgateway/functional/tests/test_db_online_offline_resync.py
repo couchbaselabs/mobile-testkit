@@ -196,7 +196,8 @@ def test_bucket_online_offline_resync_with_online(params_from_base_test_setup, s
 
     # Add User
     log_info("Add docs")
-    in_parallel(user_objects, 'add_docs', num_docs)
+    bulk = True
+    in_parallel(user_objects, 'add_docs', num_docs, bulk)
 
     # Update docs
     log_info("Update docs")
