@@ -329,7 +329,10 @@ def compare_generic_types(object1, object2, isPredictiveResult=False):
     elif isinstance(object1, float) and isinstance(object2, float):
         return object1 == object2
     elif isinstance(object1, float) and isinstance(object2, int):
-        return object1 == float(object2)
+        if isPredictiveResult:
+            return abs(object1 - object2) < 100
+        else:
+            return object1 == float(object2)
     elif isinstance(object1, int) and isinstance(object2, float):
         return object1 == int(float(object2))
     elif isinstance(object1, long) and isinstance(object2, int):
