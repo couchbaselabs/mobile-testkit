@@ -2,7 +2,6 @@ import json
 import os
 import pytest
 
-from zipfile import ZipFile
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.remoteexecutor import RemoteExecutor
 from keywords.SyncGateway import SyncGateway, sync_gateway_config_path_for_mode, load_sync_gateway_config, get_sync_gateway_version
