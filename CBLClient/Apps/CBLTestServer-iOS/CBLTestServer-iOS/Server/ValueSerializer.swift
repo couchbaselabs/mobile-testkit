@@ -93,7 +93,7 @@ public class ValueSerializer {
             let start = value!.index(value!.startIndex, offsetBy: 1)
             let end = value!.index(value!.endIndex, offsetBy: 0)
             let range = start..<end
-            return Float(value!.substring(with: range)) as? T
+            return Double(value!.substring(with: range)) as? T
            
         } else if value!.hasPrefix("D") {
             let start = value!.index(value!.startIndex, offsetBy: 1)
