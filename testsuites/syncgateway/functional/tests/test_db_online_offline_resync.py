@@ -64,7 +64,8 @@ def test_bucket_online_offline_resync_sanity(params_from_base_test_setup, sg_con
 
     # Add User
     log_info("Add docs")
-    in_parallel(user_objects, 'add_docs', num_docs)
+    bulk = True
+    in_parallel(user_objects, 'add_docs', num_docs, bulk)
 
     # Update docs
     log_info("Update docs")
@@ -381,7 +382,8 @@ def test_bucket_online_offline_resync_with_offline(params_from_base_test_setup, 
 
     # Add User
     log_info("Add docs")
-    in_parallel(user_objects, 'add_docs', num_docs)
+    bulk = True
+    in_parallel(user_objects, 'add_docs', num_docs, bulk)
 
     # Update docs
     log_info("Update docs")
