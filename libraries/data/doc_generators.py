@@ -27,10 +27,11 @@ def random_string(length):
     return "".join(random.choice(string.ascii_letters) for _ in xrange(length))
 
 
-def doc_20mb():
-    with open("resources/data/20mb_doc.json") as fh:
-        json_data = json.load(fh)
-        return json_data
+def doc_size_bymb(size):
+    data = {
+        "name": random_string(size)
+    }
+    return data
 
 
 def simple():
