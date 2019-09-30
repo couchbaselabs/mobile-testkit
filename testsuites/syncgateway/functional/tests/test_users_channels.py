@@ -137,9 +137,10 @@ def test_muliple_users_single_channel(params_from_base_test_setup, sg_conf_name)
     adam = admin.register_user(target=sgs[0], db="db", name="adam", password="password", channels=["ABC"])
     traun = admin.register_user(target=sgs[0], db="db", name="traun", password="password", channels=["ABC"])
 
-    seth.add_docs(num_docs_seth)  # ABC
-    adam.add_docs(num_docs_adam, bulk=True)  # ABC
-    traun.add_docs(num_docs_traun, bulk=True)  # ABC
+    bulk = True
+    seth.add_docs(num_docs_seth, bulk)  # ABC
+    adam.add_docs(num_docs_adam, bulk)  # ABC
+    traun.add_docs(num_docs_traun, bulk)  # ABC
 
     assert len(seth.cache) == num_docs_seth
     assert len(adam.cache) == num_docs_adam
