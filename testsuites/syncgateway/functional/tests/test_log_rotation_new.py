@@ -48,7 +48,7 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name, 
         cluster_conf = temp_cluster_config
 
     cluster = Cluster(config=cluster_conf)
-    cluster.reset(sg_config_path=sg_conf)
+#     cluster.reset(sg_config_path=sg_conf)
 
     # Stop sync_gateways
     log_info(">>> Stopping sync_gateway")
@@ -569,6 +569,7 @@ def test_log_maxbackups_0(params_from_base_test_setup, sg_conf_name):
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
     sg_ip = host_for_url(sg_admin_url)
+    version = get_sync_gateway_version(sg_ip)[0] 
 
     if sync_gateway_version < "2.1" or sync_gateway_version >= "2.6.0":
         pytest.skip("Continuous logging Test NA for SG < 2.1 and backup config is removed 2.6.0 and up")

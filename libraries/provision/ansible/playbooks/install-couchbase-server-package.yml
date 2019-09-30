@@ -61,7 +61,7 @@
       when: ipv6_enabled
 
     - name: Enabling CBS on IPV6 | Enabling IPv6 in static_config
-      shell: sed -i -e 's/ipv6, false/ipv6, true/g' /opt/couchbase/etc/couchbase/static_config
+      shell: echo "{ipv6, true}." >> /opt/couchbase/etc/couchbase/static_config
       when: ipv6_enabled
 
     - name: Enabling CBS on IPV6 | Deleting config.dat
@@ -114,6 +114,10 @@
     - name: COUCHBASE SERVER | Wait for node to be listening on port 8091
       wait_for: port=8091 delay=5 timeout=60
 
+    - name: Setting IP family of the cluster
+      shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli ip-family  --set --ipv6 -c [{{ couchbase_server_node }}]:{{ couchbase_server_admin_port }} -u={{ couchbase_server_admin }} --password={{ couchbase_server_password }}"
+      when: "'6.5' in couchbase_server_package_name and ipv6_enabled"
+
     - name: COUCHBASE SERVER | Configure cluster settings (3.0.X and 3.1.X)
       shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli cluster-init -c {{ couchbase_server_node }}:{{ couchbase_server_admin_port }} --user={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --cluster-port={{couchbase_server_admin_port}} --cluster-ramsize={{ couchbase_server_cluster_ram }}"
       when:  "'3.0' in couchbase_server_package_name or '3.1' in couchbase_server_package_name"
@@ -151,7 +155,7 @@
       when: "(not {{ cb_major_version['stdout'] | search('\\b[1-5]\\b') }}) and not ipv6_enabled"
 
     - name: COUCHBASE SERVER | Initialize primary node (6.X and up)| configure IPv6
-      shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli node-init -c [{{ couchbase_server_node }}]:{{ couchbase_server_admin_port }} -u={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --node-init-hostname={{ couchbase_server_node }}"
+      shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli node-init -c [{{ couchbase_server_node }}]:{{ couchbase_server_admin_port }} -u={{ couchbase_server_admin }} --password={{ couchbase_server_password }}"
       when: "(not {{ cb_major_version['stdout'] | search('\\b[1-5]\\b') }}) and ipv6_enabled"
 
     - name: COUCHBASE SERVER | Wait for node to be listening on port 8091
