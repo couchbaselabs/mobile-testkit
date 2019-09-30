@@ -16,7 +16,7 @@ from libraries.testkit.syncgateway import SyncGateway
 from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
 from utilities.cluster_config_utils import is_load_balancer_enabled, get_revs_limit, get_redact_level, is_ipv6
 from utilities.cluster_config_utils import get_load_balancer_ip, no_conflicts_enabled, is_delta_sync_enabled
-from utilities.cluster_config_utils import generate_x509_certs, is_x509_auth
+from utilities.cluster_config_utils import generate_x509_certs, is_x509_auth, get_cbs_primary_nodes_str
 from keywords.constants import SYNC_GATEWAY_CERT
 from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version
 
@@ -158,11 +158,11 @@ class Cluster:
         server_port = 8091
         server_scheme = "http"
         couchbase_server_primary_node = add_cbs_to_sg_config_server_field(self._cluster_config)
-        if is_ipv6(self._cluster_config):
-            couchbase_server_primary_node = "[{}]".format(couchbase_server_primary_node)
         if self.cbs_ssl:
             server_port = 18091
             server_scheme = "https"
+
+        couchbase_server_primary_node = get_cbs_primary_nodes_str(self._cluster_config, couchbase_server_primary_node)
 
         # Start sync-gateway
         playbook_vars = {

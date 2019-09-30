@@ -632,7 +632,7 @@ def test_large_initial_import(params_from_base_test_setup, sg_conf_name):
         connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, bucket_name)
     else:
         connection_url = 'couchbase://{}/{}'.format(cbs_ip, bucket_name)
-    sdk_client = Bucket(connection_url, password='password')
+    sdk_client = Bucket(connection_url, password='password', timeout=30)
     # Generate array for each doc doc to give it a larger size
 
     def prop_gen():

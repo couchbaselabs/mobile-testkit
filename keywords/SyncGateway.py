@@ -12,7 +12,7 @@ from keywords.utils import log_r
 from keywords.utils import version_and_build
 from keywords.utils import hostname_for_url
 from keywords.utils import log_info
-from utilities.cluster_config_utils import get_revs_limit, is_ipv6, is_x509_auth, generate_x509_certs
+from utilities.cluster_config_utils import get_revs_limit, is_x509_auth, generate_x509_certs, get_cbs_primary_nodes_str
 from keywords.exceptions import ProvisioningError, Error
 from libraries.provision.ansible_runner import AnsibleRunner
 from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_redact_level
@@ -198,7 +198,13 @@ def verify_sg_accel_version(host, expected_sg_accel_version):
 
 def load_sync_gateway_config(sg_conf, server_url, cluster_config):
     """ Loads a syncgateway configuration for modification"""
-    server_scheme, server_ip, server_port = server_url.split(":")
+    match_obj = re.match("(\w+?):\/\/(.*?):(\d+?)$", server_url)
+    if match_obj:
+        server_scheme= match_obj.group(1)
+        server_ip = match_obj.group(2)
+        server_port = match_obj.group(3)
+    else:
+        raise Exception("Regex pattern is not matching with server url format.")
     server_ip = server_ip.replace("//", "")
 
     with open(sg_conf) as default_conf:
@@ -262,8 +268,7 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config):
             password = '"password": "password",'
 
         couchbase_server_primary_node = add_cbs_to_sg_config_server_field(cluster_config)
-        if is_ipv6(cluster_config):
-            couchbase_server_primary_node = "[{}]".format(couchbase_server_primary_node)
+        couchbase_server_primary_node = get_cbs_primary_nodes_str(cluster_config, couchbase_server_primary_node)
 
         if sg_ssl_enabled(cluster_config):
             sslcert_prop = '"SSLCert": "sg_cert.pem",'
@@ -367,8 +372,7 @@ class SyncGateway(object):
             self.server_port = ""
             self.server_scheme = "couchbases"
 
-        if is_ipv6(cluster_config):
-            couchbase_server_primary_node = "[{}]".format(couchbase_server_primary_node)
+        couchbase_server_primary_node = get_cbs_primary_nodes_str(cluster_config, couchbase_server_primary_node)
         playbook_vars = {
             "sync_gateway_config_filepath": config_path,
             "username": "",
@@ -548,9 +552,7 @@ class SyncGateway(object):
             self.server_port = ""
             self.server_scheme = "couchbases"
 
-        if is_ipv6(cluster_config):
-            couchbase_server_primary_node = "[{}]".format(couchbase_server_primary_node)
-
+        couchbase_server_primary_node = get_cbs_primary_nodes_str(cluster_config, couchbase_server_primary_node)
         # Shared vars
         playbook_vars = {
             "sync_gateway_config_filepath": sg_conf,
