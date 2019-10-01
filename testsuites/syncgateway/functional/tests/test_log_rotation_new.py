@@ -48,7 +48,7 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name, 
         cluster_conf = temp_cluster_config
 
     cluster = Cluster(config=cluster_conf)
-#     cluster.reset(sg_config_path=sg_conf)
+    cluster.reset(sg_config_path=sg_conf)
 
     # Stop sync_gateways
     log_info(">>> Stopping sync_gateway")
