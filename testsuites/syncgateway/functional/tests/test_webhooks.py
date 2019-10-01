@@ -103,7 +103,7 @@ def test_webhooks(params_from_base_test_setup, sg_conf_name, num_users, num_chan
 @pytest.mark.session
 @pytest.mark.webhooks
 @pytest.mark.parametrize('sg_conf_name, filtered', [
-#     ('webhooks/webhook', False),
+    ('webhooks/webhook', False),
     ('webhooks/webhook_filter', True)
 ])
 def test_webhooks_crud(params_from_base_test_setup, sg_conf_name, filtered):
