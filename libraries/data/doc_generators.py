@@ -3,7 +3,6 @@ import string
 import random
 import uuid
 import datetime
-import json
 
 
 def random_bool():
