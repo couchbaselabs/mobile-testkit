@@ -220,7 +220,7 @@ namespace Couchbase.Lite.Testing
                 ["query_not"] = QueryMethods.QueryNot,
                 ["query_multipleSelectsDoubleValue"] = QueryMethods.MultipleSelectsDoubleValue,
                 ["query_multipleSelectsOrderByLocaleValue"] = QueryMethods.MultipleSelectsOrderByLocaleValue,
-                ["query_query_arthimetic"] = QueryMethods.QueryArthimetic,
+                ["query_arthimetic"] = QueryMethods.QueryArthimetic,
                 ["datatype_setLong"] = DataTypeMethods.DataTypeSetLong,
                 ["datatype_setDouble"] = DataTypeMethods.DataTypeSetDouble,
                 ["datatype_setFloat"] = DataTypeMethods.DataTypeSetFloat,
