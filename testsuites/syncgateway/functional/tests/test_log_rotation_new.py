@@ -39,7 +39,7 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name):
         pytest.skip("Continuous logging Test NA for SG < 2.1")
 
     cluster = Cluster(config=cluster_conf)
-#     cluster.reset(sg_config_path=sg_conf)
+    cluster.reset(sg_config_path=sg_conf)
 
     # Stop sync_gateways
     log_info(">>> Stopping sync_gateway")
