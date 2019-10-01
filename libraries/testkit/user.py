@@ -114,7 +114,7 @@ class User:
 
         if doc_id is None:
             # Use a POST and let sync_gateway generate an id
-            resp = self._session.post("{0}/{1}/".format(self.target.url, self.db), data=body, timeout=settings.HTTP_REQ_TIMEOUT)
+            resp = self._session.post("{0}/{1}/".format(self.target.url, self.db), data=body)
             log.debug("{0} POST {1}".format(self.name, resp.url))
         else:
             # If the doc id is specified, use PUT with doc_id in url
@@ -124,9 +124,9 @@ class User:
                 # This was using invalid construction of HTTP adapter and currently is not used anywhere.
                 # Retry behavior will be the same as regular behavior. This is a legacy API so just adding this
                 # to do execute the same behavior whether or not retries is specifiec
-                resp = self._session.put(doc_url, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
+                resp = self._session.put(doc_url, data=body)
             else:
-                resp = self._session.put(doc_url, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
+                resp = self._session.put(doc_url, data=body)
 
             log.debug("{0} PUT {1}".format(self.name, resp.url))
 
@@ -165,9 +165,9 @@ class User:
             # This was using invalid construction of HTTP adapter and currently is not used anywhere.
             # Retry behavior will be the same as regular behavior. This is a legacy API so just adding this
             # to do execute the same behavior whether or not retries is specifiec
-            resp = self._session.post("{0}/{1}/_bulk_docs".format(self.target.url, self.db), data=data, timeout=settings.HTTP_REQ_TIMEOUT)
+            resp = self._session.post("{0}/{1}/_bulk_docs".format(self.target.url, self.db), data=data)
         else:
-            resp = self._session.post("{0}/{1}/_bulk_docs".format(self.target.url, self.db), data=data, timeout=settings.HTTP_REQ_TIMEOUT)
+            resp = self._session.post("{0}/{1}/_bulk_docs".format(self.target.url, self.db), data=data)
 
         log.debug("{0} POST {1}".format(self.name, resp.url))
         resp.raise_for_status()
