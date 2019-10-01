@@ -71,6 +71,7 @@ def test_olddoc_nil(params_from_base_test_setup, sg_conf_name):
     mode = params_from_base_test_setup['mode']
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
     delta_sync_enabled = params_from_base_test_setup['delta_sync_enabled']
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
 
     # This test should only run when using xattr meta storage
     if not xattrs_enabled or delta_sync_enabled:
@@ -89,6 +90,11 @@ def test_olddoc_nil(params_from_base_test_setup, sg_conf_name):
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
+
+    if sync_gateway_version >= "2.5.0":
+        sg_client = MobileRestClient()
+        expvars = sg_client.get_expvars(sg_admin_url)
+        error_count = expvars["syncgateway"]["global"]["resource_utilization"]["error_count"]
 
     # Create clients
     sg_client = MobileRestClient()
@@ -162,6 +168,10 @@ def test_olddoc_nil(params_from_base_test_setup, sg_conf_name):
     assert len(user_two_bulk_get_docs) == num_docs
     assert len(errors) == 0
 
+    if sync_gateway_version >= "2.5.0":
+        sg_client = MobileRestClient()
+        expvars = sg_client.get_expvars(sg_admin_url)
+        assert error_count < expvars["syncgateway"]["global"]["resource_utilization"]["error_count"], "error_count did not increment"
 
 @pytest.mark.syncgateway
 @pytest.mark.xattrs
