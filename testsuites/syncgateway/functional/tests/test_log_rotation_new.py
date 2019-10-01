@@ -540,7 +540,6 @@ def test_log_maxbackups_0(params_from_base_test_setup, sg_conf_name):
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
     sg_ip = host_for_url(sg_admin_url)
-    version = get_sync_gateway_version(sg_ip)[0] 
 
     if get_sync_gateway_version(sg_ip)[0] < "2.1" or get_sync_gateway_version(sg_ip)[0] >= "2.6.0":
         pytest.skip("Continuous logging Test NA for SG < 2.1 and backup config is removed 2.6.0 and up")

@@ -200,7 +200,7 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config):
     """ Loads a syncgateway configuration for modification"""
     match_obj = re.match("(\w+?):\/\/(.*?):(\d+?)$", server_url)
     if match_obj:
-        server_scheme= match_obj.group(1)
+        server_scheme = match_obj.group(1)
         server_ip = match_obj.group(2)
         server_port = match_obj.group(3)
     else:
