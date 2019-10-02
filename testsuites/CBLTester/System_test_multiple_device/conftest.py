@@ -15,7 +15,6 @@ from CBLClient.Database import Database
 from CBLClient.Query import Query
 from CBLClient.Utils import Utils
 from keywords.constants import RESULTS_DIR
-from CBLClient.PeerToPeer import PeerToPeer
 from CBLClient.FileLogging import FileLogging
 
 
@@ -134,6 +133,49 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="delta-sync: Enable delta-sync for sync gateway")
 
+    parser.addoption("--num-of-docs",
+                     action="store",
+                     default="1000000",
+                     help="Specify the initial no. of docs for an app to start the system test. Default is 1M Docs")
+
+    parser.addoption("--num-of-doc-updates",
+                     action="store",
+                     default="100",
+                     help="Specify the no. of times a random doc will be update. Default is 100 times")
+
+    parser.addoption("--num-of-docs-to-update",
+                     action="store",
+                     default="100",
+                     help="Specify the no. of random doc to update in each iteration. Default is 100 times")
+
+    parser.addoption("--num-of-docs-to-delete",
+                     action="store",
+                     default="1000",
+                     help="Specify the no. of random docs to delete in each iteration. Default is 1000 times."
+                          "In each iteration twice the no. of docs specified will be deleted. Once from SG side and "
+                          "once from all cbl app in cluster")
+
+    parser.addoption("--num-of-docs-in-itr",
+                     action="store",
+                     default="1000",
+                     help="Specify the max no. of docs that be created in one batch of create doc. "
+                          "Default is 1000 times")
+
+    parser.addoption("--num-of-docs-to-add",
+                     action="store",
+                     default="2000",
+                     help="Specify the no. of random docs to add in each iteration per cbl app. Default is 1000 times")
+
+    parser.addoption("--up-time",
+                     action="store",
+                     default="2",
+                     help="Specify the no. of days system test will execute. Default is 2 days")
+
+    parser.addoption("--repl-status-check-sleep-time",
+                     action="store",
+                     default="20",
+                     help="Specify the time for replicator to sleep before it polls again for replication status")
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -178,6 +220,16 @@ def params_from_base_suite_setup(request):
 
     enable_encryption = request.config.getoption("--enable-encryption")
     encryption_password = request.config.getoption("--encryption-password")
+    num_of_docs = int(request.config.getoption("--num-of-docs"))
+    num_of_doc_updates = int(request.config.getoption("--num-of-doc-updates"))
+    num_of_docs_to_update = int(request.config.getoption("--num-of-docs-to-update"))
+    num_of_docs_in_itr = int(request.config.getoption("--num-of-docs-in-itr"))
+    num_of_docs_to_delete = int(request.config.getoption("--num-of-docs-to-delete"))
+    num_of_docs_to_add = int(request.config.getoption("--num-of-docs-to-add"))
+    up_time = int(request.config.getoption("--up-time"))
+    # Changing up_time in days
+    up_time = up_time * 24 * 60
+    repl_status_check_sleep_time = int(request.config.getoption("--repl-status-check-sleep-time"))
 
     test_name = request.node.name
     testserver_list = []
@@ -309,8 +361,8 @@ def params_from_base_suite_setup(request):
             else:
                 testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp,
                                                                datetime.datetime.now()))
-        for base_url, i in zip(base_url_list, range(len(base_url_list))):
-            if enable_file_logging and version_list[0] >= "2.5.0":
+        for base_url, i, liteserv_version in zip(base_url_list, range(len(base_url_list)), version_list):
+            if enable_file_logging and liteserv_version >= "2.5.0":
                 cbllog = FileLogging(base_url)
                 cbllog.configure(log_level="verbose", max_rotate_count=2,
                                  max_size=1000 * 512 * 4, plain_text=True)
@@ -370,7 +422,16 @@ def params_from_base_suite_setup(request):
         "enable_rebalance": enable_rebalance,
         "enable_encryption": enable_encryption,
         "encryption_password": encryption_password,
-        "delta_sync_enabled": delta_sync_enabled
+        "enable_file_logging": enable_file_logging,
+        "delta_sync_enabled": delta_sync_enabled,
+        "num_of_docs": num_of_docs,
+        "num_of_docs_to_delete": num_of_docs_to_delete,
+        "num_of_docs_in_itr": num_of_docs_in_itr,
+        "num_of_docs_to_add": num_of_docs_to_add,
+        "num_of_docs_to_update": num_of_docs_to_update,
+        "num_of_doc_updates": num_of_doc_updates,
+        "up_time": up_time,
+        "repl_status_check_sleep_time": repl_status_check_sleep_time,
     }
 
     if create_db_per_suite:
@@ -388,129 +449,3 @@ def params_from_base_suite_setup(request):
         log_info("Stopping the test server")
         testserver.stop()
     clear_resources_pngs()
-
-
-@pytest.fixture(scope="function")
-def params_from_base_test_setup(params_from_base_suite_setup):
-    cluster_config = params_from_base_suite_setup["cluster_config"]
-    mode = params_from_base_suite_setup["mode"]
-    xattrs_enabled = params_from_base_suite_setup["xattrs_enabled"]
-    platform_list = params_from_base_suite_setup["platform_list"]
-    version_list = params_from_base_suite_setup["version_list"]
-    host_list = params_from_base_suite_setup["host_list"]
-    port_list = params_from_base_suite_setup["port_list"]
-    target_url = params_from_base_suite_setup["target_url"]
-    sg_ip = params_from_base_suite_setup["sg_ip"]
-    sg_db = params_from_base_suite_setup["sg_db"]
-    sg_url = params_from_base_suite_setup["sg_url"]
-    sg_admin_url = params_from_base_suite_setup["sg_admin_url"]
-    no_conflicts_enabled = params_from_base_suite_setup["no_conflicts_enabled"]
-    sync_gateway_version = params_from_base_suite_setup["sync_gateway_version"]
-    target_admin_url = params_from_base_suite_setup["target_admin_url"]
-    enable_sample_bucket = params_from_base_suite_setup["enable_sample_bucket"]
-    cbl_db_list = params_from_base_suite_setup["cbl_db_list"]
-    db_name_list = params_from_base_suite_setup["db_name_list"]
-    base_url_list = params_from_base_suite_setup["base_url_list"]
-    query_obj_list = params_from_base_suite_setup["query_obj_list"]
-    sg_config = params_from_base_suite_setup["sg_config"]
-    db_obj_list = params_from_base_suite_setup["db_obj_list"]
-    device_enabled = params_from_base_suite_setup["device_enabled"]
-    generator = params_from_base_suite_setup["generator"]
-    resume_cluster = params_from_base_suite_setup["resume_cluster"]
-    create_db_per_test = params_from_base_suite_setup["create_db_per_test"]
-    cluster_topology = params_from_base_suite_setup["cluster_topology"]
-    encryption_password = params_from_base_suite_setup["encryption_password"]
-    enable_encryption = params_from_base_suite_setup["enable_encryption"]
-    # testserver_list = params_from_base_suite_setup["testserver_list"]
-    # test_name = request.node.name
-
-    if create_db_per_test:
-        db_name_list = []
-        cbl_db_list = []
-        db_obj_list = []
-        for base_url, i in zip(base_url_list, range(len(base_url_list))):
-            """log_info("Starting TestServer...")
-            test_name_cp = test_name.replace("/", "-")
-            log_filename = "{}-{}/logs/{}-{}-{}.txt".format("testserver-",RESULTS_DIR,
-             type(testserver).__name__, test_name_cp, datetime.datetime.now())
-            if device_enabled:
-                testserver.start_device(log_filename)
-            else:
-                testserver.start(log_filename)
-            """
-            db_name = "{}_{}_{}".format(create_db_per_test, str(time.time()), i + 1)
-            log_info("db name for {} is {}".format(base_url, db_name))
-            db_name_list.append(db_name)
-            db = Database(base_url)
-            query_obj_list.append(Query(base_url))
-            db_obj_list.append(db)
-
-            log_info("Creating a Database {} at the test setup".format(db_name))
-            if enable_encryption:
-                db_config = db.configure(password=encryption_password)
-            else:
-                db_config = db.configure()
-            cbl_db = db.create(db_name, db_config)
-            cbl_db_list.append(cbl_db)
-            log_info("Getting the database name")
-            assert db.getName(cbl_db) == db_name
-            if resume_cluster:
-                path = db.getPath(cbl_db)
-                assert db.exists(db_name, path)
-
-    yield {
-        "cluster_config": cluster_config,
-        "mode": mode,
-        "xattrs_enabled": xattrs_enabled,
-        "platform_list": platform_list,
-        "cluster_topology": cluster_topology,
-        "version_list": version_list,
-        "host_list": host_list,
-        "port_list": port_list,
-        "target_url": target_url,
-        "sg_ip": sg_ip,
-        "sg_db": sg_db,
-        "sg_url": sg_url,
-        "sg_admin_url": sg_admin_url,
-        "no_conflicts_enabled": no_conflicts_enabled,
-        "sync_gateway_version": sync_gateway_version,
-        "target_admin_url": target_admin_url,
-        "enable_sample_bucket": enable_sample_bucket,
-        "cbl_db_list": cbl_db_list,
-        "db_name_list": db_name_list,
-        "base_url_list": base_url_list,
-        "query_obj_list": query_obj_list,
-        "sg_config": sg_config,
-        "db_obj_list": db_obj_list,
-        # "testserver_list": testserver_list,
-        "device_enabled": device_enabled,
-        "generator": generator,
-        "resume_cluster": resume_cluster
-    }
-
-    if create_db_per_test:
-        for cbl_db, db_obj, base_url in zip(cbl_db_list, db_obj_list, base_url_list):
-            log_info("Deleting the database {} at the test teardown for base url {}".format(db_obj.getName(cbl_db),
-                                                                                            base_url))
-            time.sleep(2)
-            db_obj.deleteDB(cbl_db)
-
-
-@pytest.fixture(scope="function")
-def server_setup(params_from_base_test_setup):
-    base_url_list = params_from_base_test_setup["base_url_list"]
-    cbl_db_list = params_from_base_test_setup["cbl_db_list"]
-    base_url_server = base_url_list[0]
-    peerToPeer_server = PeerToPeer(base_url_server)
-    cbl_db_server = cbl_db_list[0]
-    replicator_tcp_listener = peerToPeer_server.server_start(cbl_db_server)
-    log_info("server starting .....")
-    yield {
-        "replicator_tcp_listener": replicator_tcp_listener,
-        "peerToPeer_server": peerToPeer_server,
-        "base_url_list": base_url_list,
-        "base_url_server": base_url_server,
-        "cbl_db_server": cbl_db_server,
-        "cbl_db_list": cbl_db_list
-    }
-    peerToPeer_server.server_stop(replicator_tcp_listener)
