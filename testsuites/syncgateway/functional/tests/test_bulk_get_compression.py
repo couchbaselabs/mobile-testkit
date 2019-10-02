@@ -12,6 +12,7 @@ from libraries.testkit.admin import Admin
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.utils import log_info
 from keywords.tklogging import Logging
+from utilities.cluster_config_utils import persist_cluster_config_environment_prop
 
 
 uncompressed_size = 6320500
@@ -153,21 +154,22 @@ def verify_response_size(user_agent, accept_encoding, x_accept_part_encoding, re
 @pytest.mark.syncgateway
 @pytest.mark.channel
 @pytest.mark.basicauth
-@pytest.mark.parametrize("sg_conf_name, num_docs, accept_encoding, x_accept_part_encoding, user_agent", [
-    ("sync_gateway_gzip", 300, None, None, None),
-    ("sync_gateway_gzip", 300, None, None, "CouchbaseLite/1.1"),
-    ("sync_gateway_gzip", 300, "gzip", None, None),
-    ("sync_gateway_gzip", 300, "gzip", None, "CouchbaseLite/1.1"),
-    ("sync_gateway_gzip", 300, None, "gzip", None),
-    ("sync_gateway_gzip", 300, None, "gzip", "CouchbaseLite/1.1"),
-    ("sync_gateway_gzip", 300, "gzip", "gzip", None),
-    ("sync_gateway_gzip", 300, "gzip", "gzip", "CouchbaseLite/1.1"),
-    ("sync_gateway_gzip", 300, None, None, "CouchbaseLite/1.2"),
-    ("sync_gateway_gzip", 300, "gzip", None, "CouchbaseLite/1.2"),
-    ("sync_gateway_gzip", 300, None, "gzip", "CouchbaseLite/1.2"),
-    ("sync_gateway_gzip", 300, "gzip", "gzip", "CouchbaseLite/1.2")
+@pytest.mark.parametrize("sg_conf_name, num_docs, accept_encoding, x_accept_part_encoding, user_agent, x509_cert_auth", [
+    ("sync_gateway_gzip", 300, None, None, None, True),
+    ("sync_gateway_gzip", 300, None, None, "CouchbaseLite/1.1", False),
+    ("sync_gateway_gzip", 300, "gzip", None, None, False),
+    ("sync_gateway_gzip", 300, "gzip", None, "CouchbaseLite/1.1", True),
+    ("sync_gateway_gzip", 300, None, "gzip", None, True),
+    ("sync_gateway_gzip", 300, None, "gzip", "CouchbaseLite/1.1", False),
+    ("sync_gateway_gzip", 300, "gzip", "gzip", None, True),
+    ("sync_gateway_gzip", 300, "gzip", "gzip", "CouchbaseLite/1.1", False),
+    ("sync_gateway_gzip", 300, None, None, "CouchbaseLite/1.2", False),
+    ("sync_gateway_gzip", 300, "gzip", None, "CouchbaseLite/1.2", True),
+    ("sync_gateway_gzip", 300, None, "gzip", "CouchbaseLite/1.2", True),
+    ("sync_gateway_gzip", 300, "gzip", "gzip", "CouchbaseLite/1.2", False)
 ])
-def test_bulk_get_compression(params_from_base_test_setup, sg_conf_name, num_docs, accept_encoding, x_accept_part_encoding, user_agent):
+def test_bulk_get_compression(params_from_base_test_setup, sg_conf_name, num_docs, accept_encoding,
+                              x_accept_part_encoding, user_agent, x509_cert_auth):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
@@ -182,6 +184,10 @@ def test_bulk_get_compression(params_from_base_test_setup, sg_conf_name, num_doc
     log_info("Using accept_encoding: {}".format(accept_encoding))
     log_info("Using x_accept_part_encoding: {}".format(x_accept_part_encoding))
 
+    if x509_cert_auth:
+        persist_cluster_config_environment_prop(cluster_config, 'x509_certs', True)
+    else:
+        persist_cluster_config_environment_prop(cluster_config, 'x509_certs', False)
     cluster = Cluster(config=cluster_config)
     cluster.reset(sg_config_path=sg_conf)
     admin = Admin(cluster.sync_gateways[0])
