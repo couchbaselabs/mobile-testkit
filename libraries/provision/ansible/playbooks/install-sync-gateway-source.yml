@@ -121,6 +121,10 @@
     is_index_writer: "false"
   tasks:
   - include: tasks/deploy-sync-gateway-config.yml
+  when: ansible_distribution == "CentOS" or ansible_distribution == "Ubuntu"
+
+  - include: tasks/deploy-sync-gateway-config-macos.yml
+  when: ansible_distribution == "MacOSX"
 
 # Deploy sg_accel configs
 - hosts: sg_accels
