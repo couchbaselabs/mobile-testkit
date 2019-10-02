@@ -31,7 +31,6 @@ def get_nodes_from_pool_server(num_of_nodes, nodes_os_type, node_os_version, job
         doc_id = row["id"]
         node = reserve_node(doc_id, job_name_requesting_node)
         if node:
-
             pool_list.append(str(doc_id))
         else:
             continue
@@ -40,7 +39,7 @@ def get_nodes_from_pool_server(num_of_nodes, nodes_os_type, node_os_version, job
 
     # Not able to allocate all the requested nodes, hence release the node back to the pool
     release_node(pool_list, job_name_requesting_node)
-    raise Exception("Not enough free node available to satisfy the request")
+    raise Exception("Not enough free node/s available to satisfy the request")
 
 
 def reserve_node(doc_id, job_name, counter=0):
@@ -73,7 +72,7 @@ def reserve_node(doc_id, job_name, counter=0):
             log_info("Checking for other node")
             return False
     except Exception as err:
-        log_info("Exception occured: {}".format(err))
+        log_info("Exception occurred: {}".format(err))
         return False
 
 
