@@ -83,7 +83,7 @@ def test_attachment_revpos_when_ancestor_unavailable(params_from_base_test_setup
     sg_util.stop_sync_gateways(cluster_config=cluster_config, url=sg_url)
 
     ipv6 = False
-    if is_ipv6:
+    if is_ipv6(cluster_config):
         ipv6 = True
     cb_server.delete_couchbase_server_cached_rev_bodies(bucket=bucket, ipv6=ipv6)
     sg_util.start_sync_gateways(cluster_config=cluster_config, url=sg_url, config=sg_conf)
