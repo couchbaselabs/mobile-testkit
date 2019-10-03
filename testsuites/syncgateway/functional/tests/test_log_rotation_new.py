@@ -1,6 +1,7 @@
 import json
 import os
 import pytest
+import subprocess
 
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.remoteexecutor import RemoteExecutor
@@ -67,7 +68,7 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name):
     # Create /tmp/sg_logs
     sg_helper.create_directory(cluster_config=cluster_conf, url=sg_one_url, dir_name="/tmp/sg_logs")
 
-    SG_LOGS = ['sg_debug', 'sg_error', 'sg_info', 'sg_warn']
+    SG_LOGS = ['sg_debug', 'sg_info', 'sg_warn']
     if sg_platform == "windows":
         json_cluster = load_cluster_config_json(cluster_conf)
         sghost_username = json_cluster["sync_gateways:vars"]["ansible_user"]
@@ -86,16 +87,20 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name):
     # iterate 5 times to verify that every time we get new backup file with ~100MB
     sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
 
-    for i in xrange(8):
-        log_info("Start sending bunch of requests to syncgatway to have more logs")
-        send_request_to_sgw(sg_one_url, sg_admin_url, remote_executor, sg_platform)
+    log_info("Start sending bunch of requests to syncgatway to have more logs")
+    send_request_to_sgw(sg_one_url, sg_admin_url, remote_executor, sg_platform)
 
     # Verify num of log files for every log file type
     for log in SG_LOGS:
         file_name = "/tmp/sg_logs/{}.log".format(log)
-        _, stdout, _ = remote_executor.execute("ls /tmp/sg_logs/ | grep {} | wc -l".format(log))
-        log_info("Checking for {} files for {}".format(i + 1, file_name))
-        assert stdout[0].rstrip() == str(2)
+        command = "ls /tmp/sg_logs/ | grep {} | wc -l".format(log)
+        log_info("Checking for files for {}".format(file_name))
+        if sg_platform == "macos":
+            stdout = subprocess.check_output(command, shell=True)
+            assert int(stdout) == 2, "debug log files did not get rotated and incremented when logging is exceeded the size"
+        else:
+            _, stdout, _ = remote_executor.execute(command)
+            assert stdout[0].rstrip() == str(2)
 
         sg_helper.stop_sync_gateways(cluster_config=cluster_conf, url=sg_one_url)
 
@@ -291,18 +296,27 @@ def test_log_maxage_timestamp_ignored(params_from_base_test_setup, sg_conf_name)
 
     sg_helper.stop_sync_gateways(cluster_config=cluster_conf, url=sg_one_url)
     # Get number of logs for each type of log
-    SG_LOGS_FILES_NUM = get_sgLogs_fileNum(SG_LOGS_MAXAGE, remote_executor)
+    SG_LOGS_FILES_NUM = get_sgLogs_fileNum(SG_LOGS_MAXAGE, remote_executor, sg_platform)
     # Change the timestamps for SG logs when SG stopped (Name is unchanged)
     for log in SG_LOGS_MAXAGE:
         file_name = "/tmp/sg_logs/{}.log".format(log)
-        remote_executor.execute("sudo touch -d \"{} days ago\" {}".format(SG_LOGS_MAXAGE[log], file_name))
+        command = "sudo touch -d \"{} days ago\" {}".format(SG_LOGS_MAXAGE[log], file_name)
+        if sg_platform == "macos":
+            os.system(command)
+        else:
+            remote_executor.execute(command)
 
     sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
 
     for log in SG_LOGS_MAXAGE:
-        _, stdout, _ = remote_executor.execute("ls /tmp/sg_logs/ | grep {} | wc -l".format(log))
         # Verify that new log file was not created
-        assert stdout[0].rstrip() == SG_LOGS_FILES_NUM[log]
+        command = "ls /tmp/sg_logs/ | grep {} | wc -l".format(log)
+        if sg_platform == "macos":
+            os_output = subprocess.check_output(command, shell=True)
+            assert os_output == SG_LOGS_FILES_NUM[log]
+        else:
+            _, stdout, _ = remote_executor.execute(command)
+            assert stdout[0].rstrip() == SG_LOGS_FILES_NUM[log]
 
     # Remove generated conf file
     os.remove(temp_conf)
@@ -432,17 +446,23 @@ def test_log_200mb(params_from_base_test_setup, sg_conf_name):
         json.dump(data, fp, indent=4)
 
     sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
-    SG_LOGS_FILES_NUM = get_sgLogs_fileNum(SG_LOGS, remote_executor)
+    SG_LOGS_FILES_NUM = get_sgLogs_fileNum(SG_LOGS, remote_executor, sg_platform)
     # ~1M MB will be added to log file after requests
     send_request_to_sgw(sg_one_url, sg_admin_url, remote_executor, sg_platform)
 
     for log in SG_LOGS:
-        status, stdout, stderr = remote_executor.execute("ls /tmp/sg_logs/ | grep {} | wc -l".format(log))
+        command = "ls /tmp/sg_logs/ | grep {} | wc -l".format(log)
+        if sg_platform == "macos":
+            stdout = subprocess.check_output(command, shell=True)
+            output = stdout
+        else:
+            _, stdout, _ = remote_executor.execute(command)
+            output = stdout[0].rstrip()
         # A backup file should be created with 200MB
         if (log == "sg_debug" or log == "sg_info") and sg_platform != "windows":
-            assert int(stdout[0].rstrip()) == int(SG_LOGS_FILES_NUM[log]) + 1
+            assert int(output) == int(SG_LOGS_FILES_NUM[log]) + 1
         else:
-            assert stdout[0].rstrip() == SG_LOGS_FILES_NUM[log]
+            assert output == SG_LOGS_FILES_NUM[log]
 
     # Remove generated conf file
     os.remove(temp_conf)
@@ -660,11 +680,16 @@ def test_log_logLevel_invalid(params_from_base_test_setup, sg_conf_name):
     pytest.fail("SG shouldn't be started!!!!")
 
 
-def get_sgLogs_fileNum(SG_LOGS_MAXAGE, remote_executor):
+def get_sgLogs_fileNum(SG_LOGS_MAXAGE, remote_executor, sg_platform="centos"):
     SG_LOGS_FILES_NUM = {}
     for log in SG_LOGS_MAXAGE:
-        _, stdout, _ = remote_executor.execute("ls /tmp/sg_logs/ | grep {} | wc -l".format(log))
-        SG_LOGS_FILES_NUM[log] = stdout[0].rstrip()
+        command = "ls /tmp/sg_logs/ | grep {} | wc -l".format(log)
+        if sg_platform == "macos":
+            stdout = subprocess.check_output(command, shell=True)
+            SG_LOGS_FILES_NUM[log] = stdout
+        else:
+            _, stdout, _ = remote_executor.execute(command)
+            SG_LOGS_FILES_NUM[log] = stdout[0].rstrip()
 
     return SG_LOGS_FILES_NUM
 
@@ -676,6 +701,9 @@ def send_request_to_sgw(sg_one_url, sg_admin_url, remote_executor, sg_platform="
         command = "for ((i=1;i <= 2000;i += 1)); do curl -s -H 'Accept: application/json' {}/db/ > /dev/null; done".format(sg_admin_url)
         os.system(command)
 
+    elif sg_platform == "macos":
+        os.system("for ((i=1;i <= 3200;i += 1)); do curl -s http://localhost:4984/ABCD/ > /dev/null; done")
+        os.system("for ((i=1;i <= 2000;i += 1)); do curl -s -H 'Accept: text/plain' http://localhost:4985/db/ > /dev/null; done")
     else:
         remote_executor.execute(
             "for ((i=1;i <= 3200;i += 1)); do curl -s http://localhost:4984/ABCD/ > /dev/null; done")

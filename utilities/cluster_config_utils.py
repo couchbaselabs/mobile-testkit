@@ -242,6 +242,11 @@ def get_redact_level(cluster_config):
     return cluster["environment"]["redactlevel"]
 
 
+def get_sg_platform(cluster_config):
+    cluster = load_cluster_config_json(cluster_config)
+    return cluster["environment"]["sg_platform"]
+
+
 def is_delta_sync_enabled(cluster_config):
     """ Loads cluster config to see if delta sync is enabled """
 

@@ -15,7 +15,7 @@ from keywords.utils import log_info
 from utilities.cluster_config_utils import get_revs_limit, is_x509_auth, generate_x509_certs, get_cbs_primary_nodes_str
 from keywords.exceptions import ProvisioningError, Error
 from libraries.provision.ansible_runner import AnsibleRunner
-from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_redact_level
+from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_redact_level, get_sg_platform
 from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version, sg_ssl_enabled, get_cbs_version, is_delta_sync_enabled
 from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
 
@@ -240,6 +240,7 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config):
         sslkey_prop = ""
         delta_sync_prop = ""
 
+        sg_platform = get_sg_platform(cluster_config)
         if get_sg_version(cluster_config) >= "2.1.0":
             logging_config = '"logging": {"debug": {"enabled": true}'
             try:
@@ -254,10 +255,15 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config):
             if get_sg_use_views(cluster_config):
                 sg_use_views_prop = '"use_views": true,'
 
+            if sg_platform == "macos":
+                sg_home_directory = "/Users/sync_gateway"
+            else:
+                sg_home_directory = "/home/sync_gateway"
+
             if is_x509_auth(cluster_config):
-                certpath_prop = '"certpath": "/home/sync_gateway/certs/chain.pem",'
-                keypath_prop = '"keypath": "/home/sync_gateway/certs/pkey.key",'
-                cacertpath_prop = '"cacertpath": "/home/sync_gateway/certs/ca.pem",'
+                certpath_prop = '"certpath": "{}/certs/chain.pem",'.format(sg_home_directory)
+                keypath_prop = '"keypath": "{}/certs/pkey.key",'.format(sg_home_directory)
+                cacertpath_prop = '"cacertpath": "{}/certs/ca.pem",'.format(sg_home_directory)
                 server_scheme = "couchbases"
                 server_port = ""
                 x509_auth_prop = True
@@ -394,7 +400,7 @@ class SyncGateway(object):
             "couchbase_server_primary_node": couchbase_server_primary_node,
             "delta_sync": ""
         }
-
+        sg_platform = get_sg_platform(cluster_config)
         if get_sg_version(cluster_config) >= "2.1.0":
             logging_config = '"logging": {"debug": {"enabled": true}'
             try:
@@ -410,13 +416,18 @@ class SyncGateway(object):
                 num_replicas = get_sg_replicas(cluster_config)
                 playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
 
+            if sg_platform == "macos":
+                sg_home_directory = "/Users/sync_gateway"
+            else:
+                sg_home_directory = "/home/sync_gateway"
+
             if is_x509_auth(cluster_config):
                 playbook_vars[
-                    "certpath"] = '"certpath": "/home/sync_gateway/certs/chain.pem",'
+                    "certpath"] = '"certpath": "{}/certs/chain.pem",'.format(sg_home_directory)
                 playbook_vars[
-                    "keypath"] = '"keypath": "/home/sync_gateway/certs/pkey.key",'
+                    "keypath"] = '"keypath": "{}/certs/pkey.key",'.format(sg_home_directory)
                 playbook_vars[
-                    "cacertpath"] = '"cacertpath": "/home/sync_gateway/certs/ca.pem",'
+                    "cacertpath"] = '"cacertpath": "{}/certs/ca.pem",'.format(sg_home_directory)
                 playbook_vars["server_scheme"] = "couchbases"
                 playbook_vars["server_port"] = ""
                 playbook_vars["x509_auth"] = True
