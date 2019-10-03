@@ -187,7 +187,10 @@ def is_ipv6(cluster_config):
 
 
 def get_cbs_primary_nodes_str(cluster_config, cbs_nodes):
-    """Parse the cluster node string and reformat it according to IP config of nodes"""
+    """Parse the cluster node string and reformat it according to IP config of nodes
+    for IPv4 - 10.0.0.1,10.0.0.2 --> 10.0.0.1,10.0.0.1
+    for IPv6 - fc00::11,fc00::12 --> [fc00::11],[fc00::12]
+    """
     if is_ipv6(cluster_config):
         if ',' in cbs_nodes:
             node_str = ""
