@@ -173,6 +173,7 @@ def test_olddoc_nil(params_from_base_test_setup, sg_conf_name):
         expvars = sg_client.get_expvars(sg_admin_url)
         assert error_count < expvars["syncgateway"]["global"]["resource_utilization"]["error_count"], "error_count did not increment"
 
+
 @pytest.mark.syncgateway
 @pytest.mark.xattrs
 @pytest.mark.changes
