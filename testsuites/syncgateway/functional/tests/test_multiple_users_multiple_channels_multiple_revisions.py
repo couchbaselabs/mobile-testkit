@@ -10,7 +10,7 @@ from libraries.testkit.parallelize import in_parallel
 from keywords.utils import log_info
 from keywords.utils import log_error
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
-from utilities.cluster_config_utils import get_sg_version
+from utilities.cluster_config_utils import get_sg_version, persist_cluster_config_environment_prop
 
 
 # Scenario-2:
@@ -22,12 +22,13 @@ from utilities.cluster_config_utils import get_sg_version
 @pytest.mark.basicauth
 @pytest.mark.channel
 @pytest.mark.changes
-@pytest.mark.parametrize("sg_conf_name, num_users, num_channels, num_docs, num_revisions", [
-    ("sync_gateway_default_functional_tests", 10, 3, 10, 10),
-    ("sync_gateway_default_functional_tests_no_port", 10, 3, 10, 10),
-    ("sync_gateway_default_functional_tests_couchbase_protocol_withport_11210", 10, 3, 10, 10)
+@pytest.mark.parametrize("sg_conf_name, num_users, num_channels, num_docs, num_revisions, x509_cert_auth", [
+    ("sync_gateway_default_functional_tests", 10, 3, 10, 10, False),
+    ("sync_gateway_default_functional_tests_no_port", 10, 3, 10, 10, True),
+    ("sync_gateway_default_functional_tests_couchbase_protocol_withport_11210", 10, 3, 10, 10, False)
 ])
-def test_mulitple_users_mulitiple_channels_mulitple_revisions(params_from_base_test_setup, sg_conf_name, num_users, num_channels, num_docs, num_revisions):
+def test_mulitple_users_mulitiple_channels_mulitple_revisions(params_from_base_test_setup, sg_conf_name, num_users,
+                                                              num_channels, num_docs, num_revisions, x509_cert_auth):
 
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
@@ -42,7 +43,8 @@ def test_mulitple_users_mulitiple_channels_mulitple_revisions(params_from_base_t
     # Skip the test if ssl enabled as it cannot run using couchbase protocol
     # TODO : https://github.com/couchbaselabs/sync-gateway-accel/issues/227
     # Remove DI condiiton once above bug is fixed
-    if "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210" in sg_conf_name and (ssl_enabled or mode.lower() == "di"):
+    if "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210" in sg_conf_name and \
+            (ssl_enabled or mode.lower() == "di"):
         pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
@@ -56,6 +58,11 @@ def test_mulitple_users_mulitiple_channels_mulitple_revisions(params_from_base_t
     log_info("num_revisions: {}".format(num_revisions))
 
     start = time.time()
+
+    if x509_cert_auth:
+        persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', True)
+    else:
+        persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', False)
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)

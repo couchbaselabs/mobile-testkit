@@ -8,7 +8,7 @@ from libraries.testkit.verify import verify_changes
 
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.utils import log_info
-from utilities.cluster_config_utils import is_x509_auth
+from utilities.cluster_config_utils import is_x509_auth, persist_cluster_config_environment_prop
 
 
 @pytest.mark.syncgateway
@@ -76,10 +76,12 @@ def test_multiple_db_unique_data_bucket_unique_index_bucket(params_from_base_tes
 @pytest.mark.channel
 @pytest.mark.bulkops
 @pytest.mark.changes
-@pytest.mark.parametrize("sg_conf_name, num_users, num_docs_per_user", [
-    ("multiple_dbs_shared_data_shared_index", 10, 500),
+@pytest.mark.parametrize("sg_conf_name, num_users, num_docs_per_user, x509_cert_auth", [
+    ("multiple_dbs_shared_data_shared_index", 10, 500, False),
+    ("multiple_dbs_shared_data_shared_index", 10, 500, True)
 ])
-def test_multiple_db_single_data_bucket_single_index_bucket(params_from_base_test_setup, sg_conf_name, num_users, num_docs_per_user):
+def test_multiple_db_single_data_bucket_single_index_bucket(params_from_base_test_setup, sg_conf_name, num_users,
+                                                            num_docs_per_user, x509_cert_auth):
 
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
@@ -91,6 +93,11 @@ def test_multiple_db_single_data_bucket_single_index_bucket(params_from_base_tes
     log_info("Using sg_conf: {}".format(sg_conf))
     log_info("Using num_users: {}".format(num_users))
     log_info("Using num_docs_per_user: {}".format(num_docs_per_user))
+
+    if x509_cert_auth:
+        persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', True)
+    else:
+        persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', False)
 
     # 2 dbs share the same data and index bucket
     cluster = Cluster(config=cluster_conf)

@@ -12,6 +12,8 @@ from keywords import userinfo
 from keywords import document
 import time
 
+from utilities.cluster_config_utils import persist_cluster_config_environment_prop
+
 
 @pytest.mark.sanity
 @pytest.mark.syncgateway
@@ -20,10 +22,11 @@ import time
 @pytest.mark.channel
 @pytest.mark.rollback
 @pytest.mark.bulkops
-@pytest.mark.parametrize("sg_conf_name", [
-    "sync_gateway_default"
+@pytest.mark.parametrize("sg_conf_name, x509_cert_auth", [
+    ("sync_gateway_default", True),
+    ("sync_gateway_default", False)
 ])
-def test_rollback_server_reset(params_from_base_test_setup, sg_conf_name):
+def test_rollback_server_reset(params_from_base_test_setup, sg_conf_name, x509_cert_auth):
     # Ignorning this test for now until we have a fix. Tests which runs after this in Jenkins machine or local machine
     #  fails all the tests which runs after this. looks it needs reset of server or make the test to run at the end.
     """
@@ -56,7 +59,10 @@ def test_rollback_server_reset(params_from_base_test_setup, sg_conf_name):
         pytest.skip("Rollback not supported in channel cache mode")
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
-
+    if x509_cert_auth:
+        persist_cluster_config_environment_prop(cluster_config, 'x509_certs', True)
+    else:
+        persist_cluster_config_environment_prop(cluster_config, 'x509_certs', False)
     cluster = Cluster(cluster_config)
     cluster.reset(sg_conf)
 
