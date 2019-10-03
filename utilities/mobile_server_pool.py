@@ -29,8 +29,8 @@ def get_nodes_from_pool_server(num_of_nodes, nodes_os_type, node_os_version, job
     pool_list = []
     for row in sdk_client.n1ql_query(query):
         doc_id = row["id"]
-        node = reserve_node(doc_id, job_name_requesting_node)
-        if node:
+        is_node_reserved = reserve_node(doc_id, job_name_requesting_node)
+        if is_node_reserved:
             pool_list.append(str(doc_id))
         else:
             continue
