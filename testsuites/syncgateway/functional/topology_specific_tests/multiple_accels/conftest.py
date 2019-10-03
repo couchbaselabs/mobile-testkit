@@ -37,6 +37,7 @@ def params_from_base_suite_setup(request):
     number_replicas = request.config.getoption("--number-replicas")
     sg_installer_type = request.config.getoption("--sg-installer-type")
     sa_installer_type = request.config.getoption("--sa-installer-type")
+    sg_platform = request.config.getoption("--sg-platform")
 
     log_info("server_version: {}".format(server_version))
     log_info("sync_gateway_version: {}".format(sync_gateway_version))
@@ -53,6 +54,7 @@ def params_from_base_suite_setup(request):
     log_info("number_replicas: {}".format(number_replicas))
     log_info("sg_installer_type: {}".format(sg_installer_type))
     log_info("sa_installer_type: {}".format(sa_installer_type))
+    log_info("sg_platform: {}".format(sg_platform))
 
     # sg-ce is invalid for di mode
     if mode == "di" and sg_ce:
@@ -142,6 +144,15 @@ def params_from_base_suite_setup(request):
     else:
         log_info("Running with allow conflicts")
         persist_cluster_config_environment_prop(cluster_config, 'no_conflicts_enabled', False)
+
+    try:
+        sg_platform
+    except NameError:
+        log_info("sg platform  is not provided, so by default it runs on Centos")
+        persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "centos", False)
+    else:
+        log_info("Running test with sg platform {}".format(sg_platform))
+        persist_cluster_config_environment_prop(cluster_config, 'sg_platform', sg_platform, False)
 
     if sync_gateway_version < "2.0.0" and no_conflicts_enabled:
         pytest.skip("Test cannot run with no-conflicts with sg version < 2.0.0")

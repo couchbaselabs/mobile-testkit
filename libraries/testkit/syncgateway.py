@@ -13,7 +13,7 @@ from libraries.testkit.admin import Admin
 from libraries.testkit.config import Config
 from libraries.testkit.debug import log_request, log_response
 from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, sg_ssl_enabled, is_ipv6
-from utilities.cluster_config_utils import get_revs_limit, get_redact_level, is_delta_sync_enabled
+from utilities.cluster_config_utils import get_revs_limit, get_redact_level, is_delta_sync_enabled, get_sg_platform
 from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version, is_x509_auth, generate_x509_certs
 from keywords.utils import add_cbs_to_sg_config_server_field, log_info
 from keywords.constants import SYNC_GATEWAY_CERT
@@ -70,6 +70,7 @@ class SyncGateway:
         log.info(">>> Starting sync_gateway with configuration: {}".format(conf_path))
         sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
         bucket_names = get_buckets_from_sync_gateway_config(conf_path)
+        sg_platform = get_sg_platform(self.cluster_config)
 
         playbook_vars = {
             "sync_gateway_config_filepath": conf_path,
@@ -113,13 +114,18 @@ class SyncGateway:
                 num_replicas = get_sg_replicas(self.cluster_config)
                 playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
 
+            if sg_platform == "macos":
+                sg_home_directory = "/Users/sync_gateway"
+            else:
+                sg_home_directory = "/home/sync_gateway"
+
             if is_x509_auth(self.cluster_config):
                 playbook_vars[
-                    "certpath"] = '"certpath": "/home/sync_gateway/certs/chain.pem",'
+                    "certpath"] = '"certpath": "{}/certs/chain.pem",'.format(sg_home_directory)
                 playbook_vars[
-                    "keypath"] = '"keypath": "/home/sync_gateway/certs/pkey.key",'
+                    "keypath"] = '"keypath": "{}/certs/pkey.key",'.format(sg_home_directory)
                 playbook_vars[
-                    "cacertpath"] = '"cacertpath": "/home/sync_gateway/certs/ca.pem",'
+                    "cacertpath"] = '"cacertpath": "{}/certs/ca.pem",'.format(sg_home_directory)
                 playbook_vars["server_scheme"] = "couchbases"
                 playbook_vars["server_port"] = ""
                 playbook_vars["x509_auth"] = True

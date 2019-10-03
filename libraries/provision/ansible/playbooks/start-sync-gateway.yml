@@ -25,6 +25,9 @@
     sudo: root
     when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
 
+  - include: tasks/deploy-sync-gateway-config-macos.yml
+    when: ansible_os_family == "Darwin"
+
   - include: tasks/deploy-sync-gateway-config-windows.yml
     when: ansible_os_family == "Windows"
 
@@ -38,6 +41,9 @@
   tasks:
   - include: tasks/start-sync-gateway.yml
     when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
+
+  - include: tasks/start-sync-gateway-macos.yml
+    when: ansible_os_family == "Darwin"
 
   - include: tasks/start-sync-gateway-windows.yml
     when: ansible_os_family == "Windows"
