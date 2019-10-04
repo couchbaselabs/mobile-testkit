@@ -8,7 +8,7 @@
 
 import Foundation
 import CouchbaseLiteSwift
-
+import Zip
 
 public class FileLoggingRequestHandler {
     public static let VOID = NSObject()
@@ -78,6 +78,23 @@ public class FileLoggingRequestHandler {
 
         case "logging_getConfig":
             return Database.log.file.config
+            
+        case "logging_getLogsInZip":
+            guard let path = Database.log.file.config?.directory else {
+                return nil
+            }
+            
+            do {
+                let filePath = URL(fileURLWithPath: path)
+                let zipFilePath = try Zip.quickZipFiles([filePath],
+                                                        fileName: "archive")
+                return RawData(data: try Data(contentsOf: zipFilePath),
+                               contentType: "application/zip")
+            }
+            catch {
+                print("Exception Getting LogsInZip \(error)")
+            }
+            return nil
 
         case "logging_setPlainTextStatus":
             let config: LogFileConfiguration = args.get(name: "config")!
