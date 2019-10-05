@@ -1656,6 +1656,7 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
 
         ct_task = crsdk_tpe.submit(changestrack.start())
         log_info("ct_task value {}".format(ct_task))
+
         wait_for_changes = crsdk_tpe.submit(
             changestrack.wait_until, all_docs_via_sg_formatted, rev_prefix_gen=True)
 

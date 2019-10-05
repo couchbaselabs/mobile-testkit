@@ -72,6 +72,8 @@ class SyncGatewayConfig:
             sg_platform_extension = "rpm"
         elif "ubuntu" in sg_platform:
             sg_platform_extension = "deb"
+        elif "macos" in sg_platform:
+            sg_platform_extension = "tar.gz"
 
         # Setting SG Accel platform extension
         if "windows" in sa_platform:
@@ -80,6 +82,8 @@ class SyncGatewayConfig:
             sa_platform_extension = "rpm"
         elif "ubuntu" in sa_platform:
             sa_platform_extension = "deb"
+        elif "macos" in sa_platform:
+            sg_platform_extension = "tar.gz"
 
         if self._version_number == "1.1.0" or self._build_number == "1.1.1":
             log_info("Version unsupported in provisioning.")
@@ -196,13 +200,18 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
             num_replicas = get_sg_replicas(cluster_config)
             playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
 
+        if sg_platform == "macos":
+            sg_home_directory = "/Users/sync_gateway"
+        else:
+            sg_home_directory = "/home/sync_gateway"
+
         if is_x509_auth(cluster_config):
             playbook_vars[
-                "certpath"] = '"certpath": "/home/sync_gateway/certs/chain.pem",'
+                "certpath"] = '"certpath": "{}/certs/chain.pem",'.format(sg_home_directory)
             playbook_vars[
-                "keypath"] = '"keypath": "/home/sync_gateway/certs/pkey.key",'
+                "keypath"] = '"keypath": "{}/certs/pkey.key",'.format(sg_home_directory)
             playbook_vars[
-                "cacertpath"] = '"cacertpath": "/home/sync_gateway/certs/ca.pem",'
+                "cacertpath"] = '"cacertpath": "{}/certs/ca.pem",'.format(sg_home_directory)
             playbook_vars["server_scheme"] = "couchbases"
             playbook_vars["server_port"] = ""
             playbook_vars["x509_auth"] = True
@@ -281,6 +290,11 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
         if sg_platform == "windows":
             status = ansible_runner.run_ansible_playbook(
                 "install-sync-gateway-package-windows.yml",
+                extra_vars=playbook_vars
+            )
+        elif sg_platform == "macos":
+            status = ansible_runner.run_ansible_playbook(
+                "install-sync-gateway-package-macos.yml",
                 extra_vars=playbook_vars
             )
         else:
