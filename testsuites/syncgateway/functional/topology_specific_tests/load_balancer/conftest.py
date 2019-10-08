@@ -37,6 +37,7 @@ def params_from_base_suite_setup(request):
     sg_installer_type = request.config.getoption("--sg-installer-type")
     sa_installer_type = request.config.getoption("--sa-installer-type")
     delta_sync_enabled = request.config.getoption("--delta-sync")
+    sg_platform = request.config.getoption("--sg-platform")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
@@ -57,6 +58,7 @@ def params_from_base_suite_setup(request):
     log_info("sg_installer_type: {}".format(sg_installer_type))
     log_info("sa_installer_type: {}".format(sa_installer_type))
     log_info("delta_sync_enabled: {}".format(delta_sync_enabled))
+    log_info("sg_platform: {}".format(sg_platform))
 
     # sg-ce is invalid for di mode
     if mode == "di" and sg_ce:
@@ -132,6 +134,15 @@ def params_from_base_suite_setup(request):
     else:
         log_info("Running test with sync_gateway version {}".format(sync_gateway_version))
         persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_version', sync_gateway_version)
+
+    try:
+        sg_platform
+    except NameError:
+        log_info("sg platform  is not provided, so by default it runs on Centos")
+        persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "centos", False)
+    else:
+        log_info("Running test with sg platform {}".format(sg_platform))
+        persist_cluster_config_environment_prop(cluster_config, 'sg_platform', sg_platform, False)
 
     if no_conflicts_enabled:
         log_info("Running with no conflicts")

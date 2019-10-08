@@ -138,6 +138,15 @@ def params_from_base_suite_setup(request):
 
         persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_version', sync_gateway_version)
 
+    try:
+        sg_platform
+    except NameError:
+        log_info("sg platform  is not provided, so by default it runs on Centos")
+        persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "centos", False)
+    else:
+        log_info("Running test with sg platform {}".format(sg_platform))
+        persist_cluster_config_environment_prop(cluster_config, 'sg_platform', sg_platform, False)
+
     if no_conflicts_enabled:
         log_info("Running with no conflicts")
         persist_cluster_config_environment_prop(cluster_config, 'no_conflicts_enabled', True)

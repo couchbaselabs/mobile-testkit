@@ -288,14 +288,23 @@ def params_from_base_suite_setup(request):
         log_info("Running with allow conflicts")
         persist_cluster_config_environment_prop(cluster_config, 'no_conflicts_enabled', False)
 
-    sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
-
     if delta_sync_enabled:
         log_info("Running with delta sync")
         persist_cluster_config_environment_prop(cluster_config, 'delta_sync_enabled', True)
     else:
         log_info("Running without delta sync")
         persist_cluster_config_environment_prop(cluster_config, 'delta_sync_enabled', False)
+
+    try:
+        sg_platform
+    except NameError:
+        log_info("sg platform  is not provided, so by default it runs on Centos")
+        persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "centos", False)
+    else:
+        log_info("Running test with sg platform {}".format(sg_platform))
+        persist_cluster_config_environment_prop(cluster_config, 'sg_platform', sg_platform, False)
+
+    sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
 
     # Skip provisioning if user specifies '--skip-provisoning' or '--sequoia'
     should_provision = True

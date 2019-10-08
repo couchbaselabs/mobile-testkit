@@ -1,0 +1,23 @@
+
+  # Copy machine stat collection script to sync_gateways
+  - name: SYNC COLLECT START | sg collect started
+    become: yes
+    shell: /opt/couchbase-sync-gateway/tools/sgcollect_info --log-redaction-level={{ redact_level }} {{ salt_value }} {{ zip_file_name }}
+    args:
+      chdir: /Users/sync_gateway/
+
+  - name: SYNC GATEWAY | Check if sync_gateway redacted zip file exists
+    become: yes
+    stat:
+      path: '/Users/sync_gateway/{{ zip_file_name }}-redacted.zip'
+    register: sgz
+
+  - name: SYNC COLLECT FETCH | sg collect fetching redacted zip file to {{ inventory_hostname }}
+    become: yes
+    fetch: src=/Users/sync_gateway/{{ zip_file_name }}-redacted.zip dest=/tmp/sg_redaction_logs/{{ inventory_hostname }}/ fail_on_missing=yes flat=yes validate_checksum=no
+    when: sgz.stat.exists
+
+  - name: SYNC COLLECT FETCH | sg collect fetching redacted zip file to {{ inventory_hostname }}
+    become: yes
+    fetch: src=/Users/sync_gateway/{{ zip_file_name }}.zip dest=/tmp/sg_redaction_logs/{{ inventory_hostname }}/ fail_on_missing=yes flat=yes validate_checksum=no
+      
