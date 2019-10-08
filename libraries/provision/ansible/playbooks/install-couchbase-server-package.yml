@@ -78,9 +78,15 @@
     - name: COUCHBASE SERVER | raise max file descriptors
       copy: src=files/security-nofiles-limit.conf dest=/etc/security/limits.d/20-nofiles.conf owner=root group=root mode=0644
 
-    - name: COUCHBASE SERVER | Disable Transparent Huge Pages
+    - name: COUCHBASE SERVER | Enabled Transparent Huge Pages
       shell: echo 'for i in /sys/kernel/mm/*transparent_hugepage/enabled; do echo never > $i; done' >> /etc/rc.local
+      when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7"
+
+    - name: COUCHBASE SERVER | Disable Transparent Huge Pages
       shell: echo 'for i in /sys/kernel/mm/*transparent_hugepage/defrag; do echo never > $i; done' >> /etc/rc.local
+      when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7"
+
+    - name: COUCHBASE SERVER | Enabled Transparent Huge Pages again
       shell: for i in /sys/kernel/mm/*transparent_hugepage/enabled; do echo never > $i; done
       when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7"
 

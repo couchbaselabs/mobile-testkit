@@ -2,3 +2,10 @@
 - name: SYNC GATEWAY | Delete sync_gateway logs
   become: yes
   shell: rm -rf /home/sync_gateway/*
+  when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
+
+- name: SYNC GATEWAY | Delete sync_gateway logs
+  become: yes
+  shell: rm -rf /Users/sync_gateway/*
+  ignore_errors: yes
+  when:  ansible_distribution == "MacOSX"
