@@ -257,6 +257,9 @@ def params_from_base_suite_setup(request):
         log_info("Running without delta sync")
         persist_cluster_config_environment_prop(cluster_config, 'delta_sync_enabled', False)
 
+    # SGW upgrade job run with on Centos platform, adding by default centos to environment config
+    persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "centos", False)
+
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
 
     liteserv = LiteServFactory.create(platform=liteserv_platform,

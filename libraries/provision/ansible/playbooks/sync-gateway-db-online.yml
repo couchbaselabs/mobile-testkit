@@ -17,7 +17,7 @@
       body_format: json
       headers:
         Content-Type: "application/json"
-    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Ubuntu"
+    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Ubuntu" or ansible_distribution == "MacOSX"
 
   - win_uri:
       url: http://localhost:4985/{{ db }}/_online
