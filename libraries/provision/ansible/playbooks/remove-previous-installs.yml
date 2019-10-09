@@ -25,6 +25,9 @@
     become: yes
     when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
 
+  # Remove nginx
+  - include: tasks/remove-nginx.yml
+
   # Check no sync_gateways or accels running
   - name: ALL | verify no sg_accel or sgs are running on 4985
     wait_for: port=4985 delay=1 state=stopped
