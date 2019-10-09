@@ -80,4 +80,4 @@ def pytest_addoption(parser):
 
     parser.addoption("--delta-sync",
                      action="store_true",
-                     help="If set, delta-sync is set to true in sync-gateway config")
+                     help="delta-sync: Enable delta-sync for sync gateway")

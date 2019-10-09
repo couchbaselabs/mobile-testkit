@@ -36,6 +36,7 @@ def params_from_base_suite_setup(request):
     number_replicas = request.config.getoption("--number-replicas")
     sg_installer_type = request.config.getoption("--sg-installer-type")
     sa_installer_type = request.config.getoption("--sa-installer-type")
+    delta_sync_enabled = request.config.getoption("--delta-sync")
     sg_platform = request.config.getoption("--sg-platform")
     delta_sync_enabled = request.config.getoption("--delta-sync")
 
@@ -60,6 +61,7 @@ def params_from_base_suite_setup(request):
     log_info("number_replicas: {}".format(number_replicas))
     log_info("sg_installer_type: {}".format(sg_installer_type))
     log_info("sa_installer_type: {}".format(sa_installer_type))
+    log_info("delta_sync_enabled: {}".format(delta_sync_enabled))
     log_info("sg_platform: {}".format(sg_platform))
     log_info("Delta_sync: {}".format(delta_sync_enabled))
 
