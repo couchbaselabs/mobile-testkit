@@ -182,6 +182,9 @@ def params_from_base_suite_setup(request):
     if no_conflicts_enabled and sync_gateway_version < "2.0":
         raise FeatureSupportedError('No conflicts feature not available for sync-gateway version below 2.0, so skipping the test')
 
+    if delta_sync_enabled and sync_gateway_version < "2.5":
+        raise FeatureSupportedError('Delta sync feature not available for sync-gateway version below 2.5, so skipping the test')
+
     log_info("server_version: {}".format(server_version))
     log_info("sync_gateway_version: {}".format(sync_gateway_version))
     log_info("mode: {}".format(mode))
@@ -199,6 +202,7 @@ def params_from_base_suite_setup(request):
     log_info("no_conflicts_enabled: {}".format(no_conflicts_enabled))
     log_info("use_views: {}".format(use_views))
     log_info("number_replicas: {}".format(number_replicas))
+    log_info("Delta_sync: {}".format(delta_sync_enabled))
 
     # sg-ce is invalid for di mode
     if mode == "di" and sg_ce:

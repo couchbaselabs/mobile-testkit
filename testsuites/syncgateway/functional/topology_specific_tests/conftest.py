@@ -77,3 +77,7 @@ def pytest_addoption(parser):
                      action="store",
                      help="Sync Gateway Platform binary to install (ex. centos or windows)",
                      default="centos")
+
+    parser.addoption("--delta-sync",
+                     action="store_true",
+                     help="If set, delta-sync is set to true in sync-gateway config")
