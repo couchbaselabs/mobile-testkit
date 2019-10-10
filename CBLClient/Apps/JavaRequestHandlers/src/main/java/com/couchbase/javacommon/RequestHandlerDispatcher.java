@@ -117,10 +117,6 @@ public class RequestHandlerDispatcher {
                         target = BlobRequestHandler.class.getMethod(method, Args.class);
                         requestHandler = new BlobRequestHandler();
                         break;
-                    case "javabinding":
-                        target = JavaBindingTestRequestHandler.class.getMethod(method, Args.class);
-                        requestHandler = new JavaBindingTestRequestHandler();
-                        break;
                     default:
                         throw new IllegalArgumentException("Handler not implemented for this call");
                 }

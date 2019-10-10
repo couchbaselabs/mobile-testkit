@@ -2,7 +2,7 @@
   Created by sridevi.saragadam on 11/14/18.
  */
 
-package com.couchbase.CouchbaseLiteServ.server.util;
+package com.couchbase.javacommon.util;
 
 import java.io.File;
 import java.io.FileOutputStream;
