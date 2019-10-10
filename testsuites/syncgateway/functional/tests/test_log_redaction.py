@@ -231,6 +231,8 @@ def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_
     if output_dir:
         if sg_platform == "windows":
             directory = "c{}\\test".format(":")
+        elif sg_platform == "macos":
+            directory = "/Users/sync_gateway/data"
         else:
             directory = "/home/sync_gateway/data"
             if mode == "di":
@@ -418,16 +420,18 @@ def sgcollect_redact(cluster_config, log_redaction_level, redaction_salt):
 
 def pull_redacted_zip_file(cluster_config, sg_platform, output_dir=None, sa_output_dir=None):
     ansible_runner = AnsibleRunner(cluster_config)
+    sg_logs_dir = output_dir
+    sa_logs_dir = sa_output_dir
     if output_dir is None:
-        if sg_platform == "centos" or sg_platform == "ubuntu":
-            sg_logs_dir = "/home/sync_gateway/logs"
-            sa_logs_dir = "/home/sg_accel/logs"
-        if sg_platform == "windows":
+        if sg_platform == "macos":
+            sg_logs_dir = "/Users/sync_gateway/logs"
+            sa_logs_dir = "/Users/sg_accel/logs"
+        elif sg_platform == "windows":
             sg_logs_dir = "C:{}".format("\PROGRA~1\Couchbase\\Sync Gateway\\var\\lib\\couchbase\\logs")
             sa_logs_dir = "C:{}".format("\PROGRA~1\Couchbase\\var\\logs")
-    else:
-        sg_logs_dir = output_dir
-        sa_logs_dir = sa_output_dir
+        else:
+            sg_logs_dir = "/home/sync_gateway/logs"
+            sa_logs_dir = "/home/sg_accel/logs"
 
     status = ansible_runner.run_ansible_playbook(
         "pull-sgcollect-zip.yml",

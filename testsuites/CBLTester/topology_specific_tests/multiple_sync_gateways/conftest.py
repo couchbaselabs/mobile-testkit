@@ -244,6 +244,9 @@ def params_from_base_suite_setup(request):
         log_info("Running without delta sync")
         persist_cluster_config_environment_prop(cluster_config, 'delta_sync_enabled', False)
 
+    # As cblite jobs run with on Centos platform, adding by default centos to environment config
+    persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "centos", False)
+
     # Write the number of replicas to cluster config
     persist_cluster_config_environment_prop(cluster_config, 'number_replicas', number_replicas)
 
