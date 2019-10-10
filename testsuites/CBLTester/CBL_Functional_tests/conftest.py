@@ -1,3 +1,4 @@
+from os import path
 import time
 import pytest
 import datetime
@@ -160,6 +161,7 @@ def pytest_addoption(parser):
 # runs with this as input parameters in this file
 # This setup will be called once for all tests in the
 # testsuites/CBLTester/CBL_Functional_tests/ directory
+@pytest.hookimpl(tryfirst=True, hookwrapper=True)
 @pytest.fixture(scope="session")
 def params_from_base_suite_setup(request):
     liteserv_platform = request.config.getoption("--liteserv-platform")
@@ -349,11 +351,11 @@ def params_from_base_suite_setup(request):
             raise
 
     # Hit this installed running services to verify the correct versions are installed
-    cluster_utils.verify_cluster_versions(
-        cluster_config,
-        expected_server_version=server_version,
-        expected_sync_gateway_version=sync_gateway_version
-    )
+#     cluster_utils.verify_cluster_versions(
+#         cluster_config,
+#         expected_server_version=server_version,
+#         expected_sync_gateway_version=sync_gateway_version
+#     )
 
     if enable_sample_bucket and not create_db_per_suite:
         # if enable_sample_bucket and not create_db_per_test:
@@ -404,7 +406,7 @@ def params_from_base_suite_setup(request):
             log_info("Deleting existing {} bucket".format(enable_sample_bucket))
             server.delete_bucket(enable_sample_bucket)
             time.sleep(5)
-
+ 
         log_info("Loading sample bucket {}".format(enable_sample_bucket))
         server.load_sample_bucket(enable_sample_bucket)
         time.sleep(60)
@@ -490,6 +492,11 @@ def params_from_base_suite_setup(request):
         "encryption_password": encryption_password
     }
 
+    out = request.node
+    if request.node.rep_call.failed:
+        print("Collecting logs for failed test", request.node.nodeid)
+        out = cbllog.get_logs_in_zip(suite_db_log_files)
+
     if create_db_per_suite:
         # Delete CBL database
         log_info("Deleting the database {} at the suite teardown".format(create_db_per_suite))
@@ -571,9 +578,9 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     cbl_db = None
     test_db_log_file = None
     path = None
+    cbllog = FileLogging(base_url)
     if create_db_per_test:
         if enable_file_logging and liteserv_version >= "2.5.0":
-            cbllog = FileLogging(base_url)
             cbllog.configure(log_level="verbose", max_rotate_count=2,
                              max_size=100000 * 512, plain_text=True)
             test_db_log_file = cbllog.get_directory()
@@ -598,7 +605,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
             path = '/'.join(path.split('/')[:-1])
 
     # This dictionary is passed to each test
-    yield {
+    outcome = yield {
         "cluster_config": cluster_config,
         "cluster_topology": cluster_topology,
         "mode": mode,
@@ -635,6 +642,10 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "encryption_password": encryption_password,
         "enable_file_logging": enable_file_logging
     }
+
+    if request.node.rep_call.failed:
+        print("Collecting logs for failed test", request.node.nodeid)
+        out = cbllog.get_logs_in_zip(test_db_log_file)
 
     log_info("Tearing down test")
     if create_db_per_test:

@@ -47,7 +47,7 @@ public class DataTypesInitiatorRequestHandler {
             
             
         case "datatype_setDouble":
-            let float_obj: Float = args.get(name: "value")!
+            let float_obj: Double = args.get(name: "value")!
             return Double(float_obj)
            
         case "datatype_setFloat":
@@ -82,8 +82,8 @@ public class DataTypesInitiatorRequestHandler {
             }
 
         case "datatype_compareDouble":
-            let double1: Float = args.get(name: "double1")!
-            let double2: Float = args.get(name: "double2")!
+            let double1: Double = args.get(name: "double1")!
+            let double2: Double = args.get(name: "double2")!
             
             if Double(double1) == Double(double2) {
                 return true

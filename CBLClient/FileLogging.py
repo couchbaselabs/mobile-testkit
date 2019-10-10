@@ -76,3 +76,8 @@ class FileLogging(object):
         args.setMemoryPointer("config", config)
         args.setString("log_level", log_level)
         return self._client.invokeMethod("logging_setLogLevel", args)
+
+    def get_logs_in_zip(self, log_path):
+        args = Args()
+        args.setString("log_path", log_path)
+        return self._client.invokeMethod("logging_getLogsInZip", args)
