@@ -1,8 +1,14 @@
 apply plugin: 'com.android.application'
 
 ext {
-    DEF_VERSION = "2.6.0-152"
+    DEF_VERSION = "2.7.0-105"
     COUCHBASE_LITE_VERSION = System.getProperty('version', DEF_VERSION)
+
+    PROJECT_DIR = "${projectDir}"
+    ROOT_DIR = "${PROJECT_DIR}/../../"
+    JAVA_COMMON_DIR = "${ROOT_DIR}/JavaRequestHandlers"
+    ASSET_DIR = "${JAVA_COMMON_DIR}/src/main/assets"
+    JAVA_SERVER_DIR = "${ROOT_DIR}/JavaRequestListener"
 }
 
 android {
@@ -32,6 +38,23 @@ android {
         }
     }
 
+    sourceSets {
+        main {
+            java.srcDirs = [
+                    "src/main/java/",                                   // android specific codes
+                    "${JAVA_COMMON_DIR}/src/main/java",
+                    "${JAVA_SERVER_DIR}/src/main/java"
+
+            ]
+            resources.srcDirs = [
+                    "src/main/res/",                                    // android resource files
+                    ASSET_DIR
+            ]
+
+        }
+    }
+
+
     buildTypes {
         release {
             minifyEnabled false
@@ -59,4 +82,7 @@ dependencies {
     implementation 'org.nanohttpd:nanohttpd:2.3.2-SNAPSHOT'
 
     implementation "com.couchbase.lite:couchbase-lite-android-ee:${COUCHBASE_LITE_VERSION}"
+
+    implementation fileTree(dir: "${JAVA_COMMON_DIR}", include: ['*.java'])
+    implementation fileTree(dir: "${JAVA_SERVER_DIR}", include: ['*.java'])
 }

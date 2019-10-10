@@ -18,6 +18,7 @@ package com.couchbase.CouchbaseLiteServ;
 import android.app.Application;
 import android.content.Context;
 
+import com.couchbase.javacommon.log.Log;
 import com.couchbase.lite.CouchbaseLite;
 
 
@@ -34,6 +35,7 @@ public class CouchbaseLiteServ extends Application {
 
         setContext(this);
 
+        Log.init(new AndroidLogger());
         CouchbaseLite.init(this);
     }
 }
