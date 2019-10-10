@@ -82,7 +82,7 @@ def test_replication_configuration_valid_values(params_from_base_test_setup, num
     if x509_cert_auth:
         persist_cluster_config_environment_prop(cluster_config, 'x509_certs', True)
     else:
-        persist_cluster_config_environment_prop(cluster_config, 'x509_certs', True)
+        persist_cluster_config_environment_prop(cluster_config, 'x509_certs', False)
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
 
