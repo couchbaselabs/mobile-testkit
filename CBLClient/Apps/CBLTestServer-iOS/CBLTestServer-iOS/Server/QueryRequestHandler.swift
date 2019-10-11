@@ -162,13 +162,13 @@ public class QueryRequestHandler {
             let select_property1: String = args.get(name: "select_property1")!
             let select_property2: String = args.get(name: "select_property2")!
             let whr_key: String = args.get(name: "whr_key")!
-            let whr_val: Float = args.get(name: "whr_val")!
+            let whr_val: Double = args.get(name: "whr_val")!
             let searchQuery = QueryBuilder
                 .select(SelectResult.expression(Meta.id),
                         SelectResult.expression(Expression.property(select_property1)),
                         SelectResult.expression(Expression.property(select_property2)))
                 .from(DataSource.database(database))
-                .where((Expression.property(whr_key)).equalTo(Expression.float(whr_val)))
+                .where((Expression.property(whr_key)).equalTo(Expression.double(whr_val)))
             
             var resultArray = [Any]()
             for row in try searchQuery.execute() {
