@@ -347,7 +347,7 @@ public class DatabaseRequestHandler {
         Context context = CouchbaseLiteServ.getAppContext();
         String dbFileName = new File(dbPath).getName();
         dbFileName = dbFileName.substring(0, dbFileName.lastIndexOf("."));
-        ZipUtils.unzip(getAsset(dbPath), context.getFilesDir());
+        new ZipUtils().unzip(getAsset(dbPath), context.getFilesDir());
         return context.getFilesDir().getAbsolutePath() + "/" + dbFileName;
     }
 
