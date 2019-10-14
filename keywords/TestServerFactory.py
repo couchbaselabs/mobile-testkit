@@ -42,7 +42,9 @@ class TestServerFactory:
             return TestServerNetMono(version_build, host, port)
         elif platform == "net-msft" or platform == "net-uwp":
             return TestServerNetMsft(version_build, host, port, platform=platform)
-        elif platform == "java" or platform == "java-ws":
+        elif platform == "java-msft" or platform == "java-linux":
             return TestServerJava(version_build, host, port, debug_mode, platform=platform)
+        elif platform == "java-ws-msft" or platform == "java-ws-linux":
+            return TestServerJavaWS(version_build, host, port, debug_mode, platform=platform)
         else:
             raise NotImplementedError("Test server does not support this version")
