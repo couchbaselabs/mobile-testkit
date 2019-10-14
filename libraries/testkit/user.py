@@ -298,7 +298,7 @@ class User:
         if len(self.cache.keys()) == 0:
             log.warning("Unable to find any docs to update")
 
-        with concurrent.futures.ThreadPoolExecutor(max_workers=settings.MAX_REQUEST_WORKERS) as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=25) as executor:
 
             if retries:
                 future_to_docs = {executor.submit(self.update_doc, doc_id, num_revs_per_doc, retries=True): doc_id for doc_id in self.cache.keys()}
