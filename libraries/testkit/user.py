@@ -186,7 +186,7 @@ class User:
         # Return list of cache docs that were added
         return bulk_docs_ids
 
-    def add_docs(self, num_docs, bulk=False, name_prefix=None, retries=False):
+    def add_docs(self, num_docs, bulk=True, name_prefix=None, retries=False):
 
         errors = list()
         print "add docs for each user object"
