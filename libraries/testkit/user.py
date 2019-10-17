@@ -266,9 +266,9 @@ class User:
                     # This was using invalid construction of HTTP adapter and currently is not used anywhere.
                     # Retry behavior will be the same as regular behavior. This is a legacy API so just adding this
                     # to do execute the same behavior whether or not retries is specifiec
-                    put_resp = self._session.put(doc_url, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
+                    put_resp = self._session.put(doc_url, data=body)
                 else:
-                    put_resp = self._session.put(doc_url, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
+                    put_resp = self._session.put(doc_url, data=body)
 
                 log.debug("{0} PUT {1}".format(self.name, resp.url))
 

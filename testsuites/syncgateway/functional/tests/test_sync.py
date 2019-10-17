@@ -8,6 +8,10 @@ from libraries.testkit.cluster import Cluster
 from libraries.testkit.verify import verify_changes
 from libraries.testkit.verify import verify_same_docs
 from libraries.testkit.verify import verify_docs_removed
+from keywords.MobileRestClient import MobileRestClient
+from libraries.data import doc_generators
+from requests.exceptions import HTTPError
+from keywords import document
 
 import libraries.testkit.settings
 
@@ -503,3 +507,45 @@ def test_sync_require_roles(params_from_base_test_setup, sg_conf_name):
         assert not k.startswith("bad_doc")
 
     verify_changes(mogul, expected_num_docs=expected_num_radio_docs + expected_num_tv_docs, expected_num_revisions=0, expected_docs=all_docs)
+
+
+@pytest.mark.syncgateway
+@pytest.mark.parametrize('sg_conf_name', [
+    'sync_gateway_default_functional_tests'
+])
+def test_sync_20mb(params_from_base_test_setup, sg_conf_name):
+    """
+    @summary:
+    1. Create a doc with 20MB
+    2. Verify it throws an error with 413 error code while syncing up with Couchbase server
+    """
+
+    cluster_conf = params_from_base_test_setup['cluster_config']
+    cluster_topology = params_from_base_test_setup['cluster_topology']
+    mode = params_from_base_test_setup['mode']
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
+    sg_url = cluster_topology['sync_gateways'][0]['public']
+    sg_db = "db"
+    channels = ['shared']
+
+    log_info('sg_conf: {}'.format(sg_conf))
+    log_info('sg_admin_url: {}'.format(sg_admin_url))
+    log_info('sg_url: {}'.format(sg_url))
+
+    cluster = Cluster(config=cluster_conf)
+    cluster.reset(sg_config_path=sg_conf)
+
+    # Create sg user
+    sg_client = MobileRestClient()
+    sg_client.create_user(url=sg_admin_url, db=sg_db, name='autotest', password='pass', channels=channels)
+    session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest', password='pass')
+
+    sg_doc_body = doc_generators.doc_size_byBytes(22000000)
+    doc_id = "20mb_doc"
+    doc = document.create_doc(doc_id, content=sg_doc_body, channels=channels)
+    try:
+        sg_client.add_doc(url=sg_url, db=sg_db, doc=doc, auth=session)
+    except HTTPError as h:
+        assert "413 Client Error: Request Entity Too Large for url" in h.message, "did not throw 413 client error"

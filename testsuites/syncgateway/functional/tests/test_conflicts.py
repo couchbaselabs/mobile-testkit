@@ -6,6 +6,8 @@ from libraries.testkit import cluster
 from keywords.MobileRestClient import MobileRestClient
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
 from utilities.cluster_config_utils import get_sg_version
+from concurrent.futures import ThreadPoolExecutor
+from keywords.ClusterKeywords import ClusterKeywords
 
 
 import keywords.exceptions
@@ -342,3 +344,72 @@ def test_invalid_revs_limit_with_allow_conflicts(params_from_base_test_setup, sg
     persist_cluster_config_environment_prop(temp_cluster_config, 'revs_limit', revs_limit, property_name_check=False)
     status = clust.sync_gateways[0].restart(config=sg_conf, cluster_config=temp_cluster_config)
     assert status == 0, "Syncgateway did not start after revs_limit changed to 20"
+
+
+@pytest.mark.syncgateway
+@pytest.mark.conflicts
+def test_concurrent_attachment_updatesonDoc(params_from_base_test_setup):
+    """ @summary
+    1. Create a doc
+    2. Add multi process to update same doc with attachment
+    3. Repeat step2 and Step 3 for few updates
+    4. Verify doc with latest attachment exists on SGW and CBS
+    """
+
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+    no_conflicts_enabled = params_from_base_test_setup["no_conflicts_enabled"]
+
+    cluster_helper = ClusterKeywords(cluster_config)
+    cluster_hosts = cluster_helper.get_cluster_topology(cluster_config)
+    sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
+    sg_url = cluster_hosts["sync_gateways"][0]["public"]
+
+    channel = ["concurrent-updates"]
+    username = "autotest"
+    password = "password"
+    doc_id = "doc_1"
+    sg_db = "db"
+    sg_conf_name = "sync_gateway_default_functional_tests"
+    sg_client = MobileRestClient()
+
+    if no_conflicts_enabled:
+        pytest.skip('--no-conflicts is enabled, this test needs to create conflicts, so skipping the test')
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    clust = cluster.Cluster(cluster_config)
+    clust.reset(sg_conf)
+
+    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channel)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest")
+    session = cookie, session_id
+
+    # 1. Create a doc
+    sg_doc_body = document.create_doc(doc_id=doc_id, content="sg-doc1", channels=channel)
+    sg_client.add_doc(url=sg_url, db=sg_db, doc=sg_doc_body, auth=session)
+
+    # 2. Start one thread and update the doc with attachment
+    # Update the same documents concurrently from a sync gateway client and and sdk client
+    # 3. Repeat step2 and Step 3 for few updates
+    with ThreadPoolExecutor(max_workers=30) as tpe:
+        update_from_sg_task = tpe.submit(
+            sg_client.update_doc,
+            url=sg_url,
+            db=sg_db,
+            doc_id=doc_id,
+            number_updates=10,
+            auth=session,
+            attachment_name="sample_text.txt"
+        )
+
+    update_from_sg_task.result()
+
+    # 4. Verify doc with latest attachment exists on SGW and CBS
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
+    for doc in sg_docs:
+        print "doc in sg_docs", doc
+        assert doc["doc"]["updates"] == 10, "doc did not get updated 10 times"
+        try:
+            doc["doc"]["_attachments"]
+        except KeyError:
+            assert False, "attachment is dropped"
