@@ -109,7 +109,8 @@ public class DocumentRequestHandler {
         case "document_setFloat":
             let document: MutableDocument = (args.get(name: "document"))!
             let key: String = (args.get(name: "key"))!
-            let value: Float = (args.get(name: "value"))!
+            let double_value: Double = (args.get(name: "value"))!
+            let value = Float(double_value)
 
             return  document.setFloat(value, forKey: key)
         
