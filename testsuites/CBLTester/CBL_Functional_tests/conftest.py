@@ -1,4 +1,4 @@
-from os import path
+import os
 import time
 import pytest
 import datetime
@@ -655,9 +655,13 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         test_id = request.node.nodeid
         log_info("\n Collecting logs for failed test: {}".format(test_id))
         zip_data = test_cbllog.get_logs_in_zip(test_db_log_file)
-        test_log_zip_file = "{}_{}.zip".format(test_id, str(time.time()))
+        log_directory = "test_failure_logs"
+        if not os.path.exists(log_directory):
+            os.mkdir(log_directory)
+        test_log_zip_file = "{}_{}.zip".format(test_id.split("::")[-1], str(time.time()))
+        test_log = os.path.join(log_directory, test_log_zip_file)
         log_info("Log file for failed test is: {}".format(test_log_zip_file))
-        with open(test_log_zip_file, 'wb') as fh:
+        with open(test_log, 'wb') as fh:
             fh.write(zip_data)
             fh.close()
 
