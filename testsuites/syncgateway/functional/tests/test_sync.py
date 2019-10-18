@@ -473,8 +473,9 @@ def test_sync_require_roles(params_from_base_test_setup, sg_conf_name):
     tv_channel_no_roles_user = admin.register_user(target=cluster.sync_gateways[0], db="db", name="bad_tv_user", password="password", channels=tv_stations)
 
     # Should not be allowed
-    radio_channels_no_roles_user.add_docs(13, name_prefix="bad_doc")
-    tv_channel_no_roles_user.add_docs(26, name_prefix="bad_doc")
+    bulk = False
+    radio_channels_no_roles_user.add_docs(13, name_prefix="bad_doc", bulk=bulk)
+    tv_channel_no_roles_user.add_docs(26, name_prefix="bad_doc", bulk=bulk)
 
     read_only_user_caches = [radio_channels_no_roles_user.cache, tv_channel_no_roles_user.cache]
     read_only_user_docs = {k: v for cache in read_only_user_caches for k, v in cache.items()}
