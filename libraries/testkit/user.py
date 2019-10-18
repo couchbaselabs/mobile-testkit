@@ -11,6 +11,7 @@ from requests.exceptions import HTTPError
 from libraries.testkit.debug import log_request
 from libraries.testkit.debug import log_response
 from libraries.testkit import settings
+from keywords.utils import log_info
 import logging
 log = logging.getLogger(settings.LOGGER)
 
@@ -199,7 +200,7 @@ class User:
 
         if not bulk:
             with concurrent.futures.ThreadPoolExecutor(max_workers=settings.MAX_REQUEST_WORKERS) as executor:
-                print " adding docs without bulk"
+                log_info(" adding docs without bulk")
                 if retries:
                     future_to_docs = {executor.submit(self.add_doc, doc, content=None, retries=True): doc for doc in doc_names}
                 else:

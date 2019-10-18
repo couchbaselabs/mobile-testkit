@@ -454,7 +454,7 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll(params_from_ba
     seth = admin.register_user(target=cluster.sync_gateways[0], db="db", name="seth", password="password", channels=["ABC"])
     doc_pusher = admin.register_user(target=cluster.sync_gateways[0], db="db", name="doc_pusher", password="password", channels=["ABC"])
     sg_client = MobileRestClient()
-
+    bulk = False
     docs_in_changes = dict()
     doc_add_errors = list()
 
@@ -465,7 +465,7 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll(params_from_ba
         if sg_platform == "windows":
             futures[executor.submit(sg_client.take_db_offline, cluster_conf, "db")] = "db_offline_task"
         time.sleep(5)
-        futures[executor.submit(doc_pusher.add_docs, num_docs)] = "docs_push"
+        futures[executor.submit(doc_pusher.add_docs, num_docs, bulk)] = "docs_push"
         if sg_platform != "windows":
             futures[executor.submit(sg_client.take_db_offline, cluster_conf, "db")] = "db_offline_task"
 
@@ -838,7 +838,7 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
     error_responses.extend(add_docs_errors)
 
     # POST /{db}/_bulk_docs
-    bulk_doc_errors = user.add_docs(num_docs=num_docs, bulk=True)
+    bulk_doc_errors = user.add_docs(num_docs=num_docs, bulk=False)
     error_responses.extend(bulk_doc_errors)
 
     # POST /{db}/
