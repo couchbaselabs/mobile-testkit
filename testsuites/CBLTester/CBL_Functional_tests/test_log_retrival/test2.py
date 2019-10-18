@@ -4,7 +4,7 @@ Created on 09-Oct-2019
 @author: hemant
 '''
 def test1(nothing):
-    assert False
+    assert True
 
 def test2(nothing):
     assert 0

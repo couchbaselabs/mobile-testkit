@@ -377,12 +377,12 @@ def params_from_base_suite_setup(request):
     suite_source_db = None
     suite_db = None
     suite_db_log_files = None
+    suite_cbllog = FileLogging(base_url)
     if create_db_per_suite:
         if enable_file_logging and liteserv_version >= "2.5.0":
-            cbllog = FileLogging(base_url)
-            cbllog.configure(log_level="verbose", max_rotate_count=2,
+            suite_cbllog.configure(log_level="verbose", max_rotate_count=2,
                              max_size=1000000 * 512, plain_text=True)
-            suite_db_log_files = cbllog.get_directory()
+            suite_db_log_files = suite_cbllog.get_directory()
             log_info("Log files available at - {}".format(suite_db_log_files))
         # Create CBL database
         suite_cbl_db = create_db_per_suite
@@ -492,10 +492,18 @@ def params_from_base_suite_setup(request):
         "encryption_password": encryption_password
     }
 
-    out = request.node
-    if request.node.rep_call.failed:
-        print("Collecting logs for failed test", request.node.nodeid)
-        out = cbllog.get_logs_in_zip(suite_db_log_files)
+    if request.node.testsfailed != 0 and enable_file_logging:
+        tests_list = request.node.items
+        failed_test_list = []
+        for test in tests_list:
+            if test.rep_call.failed:
+                failed_test_list.append(test.rep_call.nodeid)
+        zip_data = suite_cbllog.get_logs_in_zip(suite_db_log_files)
+        suite_log_zip_file = "Suite_test_log_{}.zip".format(str(time.time()))
+        log_info("Log file for failed Suite tests is: {}".format(suite_log_zip_file))
+        with open(suite_log_zip_file, 'wb') as fh:
+            fh.write(zip_data)
+            fh.close()
 
     if create_db_per_suite:
         # Delete CBL database
@@ -578,12 +586,12 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     cbl_db = None
     test_db_log_file = None
     path = None
-    cbllog = FileLogging(base_url)
+    test_cbllog = FileLogging(base_url)
     if create_db_per_test:
         if enable_file_logging and liteserv_version >= "2.5.0":
-            cbllog.configure(log_level="verbose", max_rotate_count=2,
+            test_cbllog.configure(log_level="verbose", max_rotate_count=2,
                              max_size=100000 * 512, plain_text=True)
-            test_db_log_file = cbllog.get_directory()
+            test_db_log_file = test_cbllog.get_directory()
             log_info("Log files available at - {}".format(test_db_log_file))
         cbl_db = create_db_per_test + str(time.time())
         # Create CBL database
@@ -605,7 +613,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
             path = '/'.join(path.split('/')[:-1])
 
     # This dictionary is passed to each test
-    outcome = yield {
+    yield {
         "cluster_config": cluster_config,
         "cluster_topology": cluster_topology,
         "mode": mode,
@@ -643,9 +651,15 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "enable_file_logging": enable_file_logging
     }
 
-    if request.node.rep_call.failed:
-        print("Collecting logs for failed test", request.node.nodeid)
-        out = cbllog.get_logs_in_zip(test_db_log_file)
+    if request.node.rep_call.failed and enable_file_logging:
+        test_id = request.node.nodeid
+        log_info("\n Collecting logs for failed test: {}".format(test_id))
+        zip_data = test_cbllog.get_logs_in_zip(test_db_log_file)
+        test_log_zip_file = "{}_{}.zip".format(test_id, str(time.time()))
+        log_info("Log file for failed test is: {}".format(test_log_zip_file))
+        with open(test_log_zip_file, 'wb') as fh:
+            fh.write(zip_data)
+            fh.close()
 
     log_info("Tearing down test")
     if create_db_per_test:

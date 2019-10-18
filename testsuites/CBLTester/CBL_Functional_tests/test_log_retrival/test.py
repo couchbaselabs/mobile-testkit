@@ -4,11 +4,11 @@ import pytest
 
 
 def test_setup_fails(something):
-    assert 1 == 2
+    assert 2 == 2
 
 
 def test_call_fails(something):
-    raise
+    pass
 
 def test_fail2(something):
-    assert False
+    assert True
