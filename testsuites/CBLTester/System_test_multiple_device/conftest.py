@@ -320,6 +320,9 @@ def params_from_base_suite_setup(request):
     # Write the number of replicas to cluster config
     persist_cluster_config_environment_prop(cluster_config, 'number_replicas', number_replicas)
 
+    # As cblite jobs run with on Centos platform, adding by default centos to environment config
+    persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "centos", False)
+
     if sg_ssl:
         log_info("Enabling SSL on sync gateway")
         persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', True)

@@ -1643,8 +1643,10 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
         all_docs_via_sg_formatted = [
             {"id": doc, "rev": "1-"} for doc in doc_set_ids1]
 
-        ct_task = crsdk_tpe.submit(changestrack.start(timeout=20000))
+        ct_task = crsdk_tpe.submit(changestrack.start())
+
         log_info("ct_task value {}".format(ct_task))
+
         wait_for_changes = crsdk_tpe.submit(
             changestrack.wait_until, all_docs_via_sg_formatted, rev_prefix_gen=True)
 
@@ -1670,7 +1672,7 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
             if time.time() - start > changesTracktimeout:
                 break
             try:
-                ct_task = upsdk_tpe.submit(changestrack.start(timeout=25000))
+                ct_task = upsdk_tpe.submit(changestrack.start())
                 break
             except ChangesError:
                 continue
@@ -1704,7 +1706,7 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
             if time.time() - start > changesTracktimeout:
                 break
             try:
-                ct_task = upsdksg_tpe.submit(changestrack.start(timeout=25000))
+                ct_task = upsdksg_tpe.submit(changestrack.start())
                 break
             except ChangesError:
                 continue
@@ -1745,7 +1747,7 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
             if time.time() - start > changesTracktimeout:
                 break
             try:
-                ct_task = crsg_tpe.submit(changestrack_sg.start(timeout=25000))
+                ct_task = crsg_tpe.submit(changestrack_sg.start())
                 break
             except ChangesError:
                 continue
@@ -1776,7 +1778,7 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
             if time.time() - start > changesTracktimeout:
                 break
             try:
-                ct_task = upsg_tpe.submit(changestrack_sg.start(timeout=25000))
+                ct_task = upsg_tpe.submit(changestrack_sg.start())
                 break
             except ChangesError:
                 continue
@@ -1805,7 +1807,7 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
             if time.time() - start > changesTracktimeout:
                 break
             try:
-                ct_task = upsgsdk_tpe.submit(changestrack_sg.start(timeout=25000))
+                ct_task = upsgsdk_tpe.submit(changestrack_sg.start())
                 break
             except ChangesError:
                 continue

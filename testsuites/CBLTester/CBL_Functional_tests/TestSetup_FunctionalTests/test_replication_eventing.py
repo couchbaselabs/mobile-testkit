@@ -6,6 +6,7 @@ from keywords.utils import get_event_changes
 from keywords.attachment import load_from_data_dir, generate_2_png_100_100
 from CBLClient.Replication import Replication
 from libraries.testkit import cluster
+from libraries.data import doc_generators
 
 
 @pytest.mark.sanity
@@ -511,9 +512,10 @@ def test_push_replication_for_20mb_doc(params_from_base_test_setup, attachment_g
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    liteserv_platform = params_from_base_test_setup["liteserv_platform"]
 
-    if sync_gateway_version < "2.5.0":
-        pytest.skip('This test cannnot run with sg version below 2.5')
+    if sync_gateway_version < "2.5.0" or liteserv_platform == "android":
+        pytest.skip('This test cannnot run with sg version below 2.5 and fails for Andriod as Android device/emulator cannot handle doc with more than 20MB')
     username = "autotest"
     password = "password"
     channels = ["ABC"]
@@ -531,9 +533,17 @@ def test_push_replication_for_20mb_doc(params_from_base_test_setup, attachment_g
     session_header = {"Cookie": sync_cookie}
 
     # 1. Creating Docs in CBL
-    db.create_bulk_docs(number=1, id_prefix="cbl_docs", db=cbl_db, channels=channels,
-                        generator="20mb", attachments_generator=attachment_generator,
-                        attachment_file_list=attachment_file_list)
+    created_docs_ids = db.create_bulk_docs(number=1, id_prefix="cbl_docs", db=cbl_db, channels=channels,
+                                           generator="simple", attachments_generator=attachment_generator,
+                                           attachment_file_list=attachment_file_list)
+
+    if attachment_generator != "load_from_data_dir":
+        doc_body_4mb = doc_generators.doc_size_bymb(25000000)  # 25MB data generated
+        cbl_db_docs = db.getDocuments(cbl_db, created_docs_ids)
+        for doc in cbl_db_docs:
+            new_update_key = "large_20mb_doc"
+            cbl_db_docs[doc][new_update_key] = doc_body_4mb
+        db.updateDocuments(cbl_db, cbl_db_docs)
 
     replicator = Replication(base_url)
     repl_config = replicator.configure(source_db=cbl_db,
@@ -550,7 +560,6 @@ def test_push_replication_for_20mb_doc(params_from_base_test_setup, attachment_g
     # 3. Getting changes from the replication event listener
     doc_repl_event_changes = replicator.getReplicatorEventChanges(repl_change_listener)
     replicator.removeReplicatorEventListener(repl, repl_change_listener)
-    replicator.stop(repl)
 
     # Processing received events
     replicated_event_changes = get_event_changes(doc_repl_event_changes)
