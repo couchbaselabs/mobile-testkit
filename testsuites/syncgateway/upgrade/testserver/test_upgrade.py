@@ -25,8 +25,24 @@ from CBLClient.Replication import Replication
 def test_upgrade(params_from_base_test_setup):
     """
     @summary
-        The initial versions of SG and CBS has already been provisioned at this point
-        We have to upgrade them to the upgraded versions
+        This test case validates Sync Gateway server to be upgraded
+        wihtout replication downtime along with couchbase lite clients
+        [test prerequisites]:
+        The conftest prepares the test environment,
+        the initial (old) versions of SGW and CBS are provisioned at this point
+        [test environment configuration]:
+        The test environment setup includes: 2 CBS, 2SGW, and 1 SGW load balancer
+        The SGW load balancer is configured with nginx
+        [test scenarios and steps]:
+        1. Create user, session and docs on SG
+        2. Starting continuous push_pull replication between TestServer and SGW
+        3. Start a thread to keep updating docs on CBL
+        4. Upgrade SGW one by one on cluster config list
+        5. Upgrade CBS one by one on cluster config list
+        6. Restart SGWs after the server upgrade
+        7. Gather CBL docs new revs for verification
+        8. Compare rev id, doc body and revision history of all docs on both CBL and SGW
+        9. If xattrs enabled, validate CBS contains _sync records for each doc
     """
     cluster_config = params_from_base_test_setup['cluster_config']
     mode = params_from_base_test_setup['mode']
@@ -104,7 +120,7 @@ def test_upgrade(params_from_base_test_setup):
             log_info("Running without delta sync after upgrade")
             persist_cluster_config_environment_prop(cluster_config, 'delta_sync_enabled', False)
 
-    # Create user and session on SG
+    # 1. Create user, session and docs on SG
     sg_client = MobileRestClient()
     cluster = Cluster(config=cluster_config)
     cluster.reset(sg_config_path=sg_config)
@@ -127,7 +143,7 @@ def test_upgrade(params_from_base_test_setup):
     added_docs = db.getDocuments(cbl_db, doc_ids)
     log_info("Added {} docs".format(len(added_docs)))
 
-    # Starting continuous push_pull replication from TestServer to sync gateway
+    # 2. Starting continuous push_pull replication from TestServer to sync gateway
     log_info("Starting continuous push pull replication from TestServer to sync gateway")
     replicator = Replication(base_url)
     sg_cookie, sg_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=sg_user_name)
@@ -139,7 +155,7 @@ def test_upgrade(params_from_base_test_setup):
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
 
-    # start updating docs
+    # 3. Start a thread to keep updating docs on CBL
     terminator_doc_id = 'terminator'
 
     with ProcessPoolExecutor() as up:
@@ -153,12 +169,7 @@ def test_upgrade(params_from_base_test_setup):
             terminator_doc_id
         )
 
-        # Supported upgrade process
-        # 1. Upgrade SGs first docmeta -> docmeta - CBS 5.0.0 does not support TAP.
-        # 2. Upgrade the CBS cluster.
-        # 3. Enable import/xattrs on SGs
-
-        # Upgrade SG docmeta -> docmeta
+        # 4. Upgrade SGW one by one on cluster config list
         cluster_util = ClusterKeywords(cluster_config)
         topology = cluster_util.get_cluster_topology(cluster_config, lb_enable=False)
         sync_gateways = topology["sync_gateways"]
@@ -171,7 +182,7 @@ def test_upgrade(params_from_base_test_setup):
             cluster_config
         )
 
-        # Upgrade CBS
+        # 5. Upgrade CBS one by one on cluster config list
         cluster = Cluster(config=cluster_config)
         if len(cluster.servers) < 2:
             raise Exception("Please provide at least 3 servers")
@@ -196,7 +207,7 @@ def test_upgrade(params_from_base_test_setup):
             toy_build=cbs_toy_build
         )
 
-        # Restart SGs after the server upgrade
+        # 6. Restart SGWs after the server upgrade
         sg_obj = SyncGateway()
         for sg in sync_gateways:
             sg_ip = host_for_url(sg["admin"])
@@ -231,7 +242,7 @@ def test_upgrade(params_from_base_test_setup):
         log_info("Stopping replication between testserver and sync gateway")
         replicator.stop(repl)
 
-        # Gather the new revs for verification
+        # 7. Gather CBL docs new revs for verification
         log_info("Gathering the updated revs for verification")
         doc_ids = []
         for doc_id in added_docs:
@@ -239,9 +250,10 @@ def test_upgrade(params_from_base_test_setup):
             if doc_id in updated_doc_revs:
                 added_docs[doc_id]["numOfUpdates"] = updated_doc_revs[doc_id]
 
-        # Verify rev, doc bdy and revision history of all docs
+        # 8. Compare rev id, doc body and revision history of all docs on both CBL and SGW
         verify_sg_docs_revision_history(url=sg_admin_url, db=sg_db, added_docs=added_docs, terminator=terminator_doc_id)
 
+        # 9. If xattrs enabled, validate CBS contains _sync records for each doc
         if upgraded_xattrs_enabled:
             # Verify through SDK that there is no _sync property in the doc body
             bucket_name = 'data-bucket'
