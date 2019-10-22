@@ -1333,7 +1333,7 @@ def test_replication_wrong_blip(params_from_base_test_setup):
         replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channels, replicator_authenticator=replicator_authenticator)
     if liteserv_platform == "ios":
         assert "Invalid scheme for URLEndpoint url (ht2tp" in ex.value.message
-        assert "must be either ws or wss" in ex.value.message
+        assert "must be either 'ws:' or 'wss:'" in ex.value.message
     else:
         assert ex.value.message.startswith('400 Client Error: Bad Request for url:')
         assert "unsupported" in ex.value.message or "Invalid" in ex.value.message
