@@ -47,13 +47,19 @@ public class ZipUtils {
     }
 
     public boolean deleteRecursive(File fileOrDirectory) {
+        if (fileOrDirectory == null) { return true; }
+
         if (fileOrDirectory.isDirectory()) {
             for (File child : fileOrDirectory.listFiles()) { deleteRecursive(child); }
         }
+
         return fileOrDirectory.delete() || !fileOrDirectory.exists();
     }
 
-    public void zipDirectory(String srcDirPath, File zipFile) {
+    public void zipDirectory(String srcDirPath, File zipTargetFile) {
+        if (srcDirPath == null) { throw new NullPointerException("srcDirPath must not be null"); }
+        if (zipTargetFile == null) { throw new NullPointerException("zipTargetFile must not be null"); }
+
         List<String> zipFiles = new ArrayList<>();
 
         File srcDir = new File(srcDirPath);
@@ -64,7 +70,7 @@ public class ZipUtils {
         FileOutputStream fos = null;
         ZipOutputStream zos = null;
         try {
-            fos = new FileOutputStream(zipFile);
+            fos = new FileOutputStream(zipTargetFile);
             zos = new ZipOutputStream(fos);
             for (String filePath : zipFiles) { zipFile(filePath, rootPathLen, zos); }
         }
