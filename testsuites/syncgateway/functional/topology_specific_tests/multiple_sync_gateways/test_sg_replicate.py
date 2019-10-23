@@ -327,11 +327,6 @@ def test_sg_replicate_non_existent_db(params_from_base_test_setup):
         sg_config_path=config
     )
 
-    if sync_gateway_version >= "2.5.0":
-        sg_client = MobileRestClient()
-        expvars = sg_client.get_expvars(sg1.admin.admin_url)
-        warn_count = expvars["syncgateway"]["global"]["resource_utilization"]["warn_count"]
-
     # delete databases if they exist
     try:
         sg1.admin.delete_db(DB1)
@@ -354,11 +349,6 @@ def test_sg_replicate_non_existent_db(params_from_base_test_setup):
         got_exception = True
 
     assert got_exception is True, 'Expected an exception trying to create a replication against non-existent db'
-
-    if sync_gateway_version >= "2.5.0":
-        sg_client = MobileRestClient()
-        expvars = sg_client.get_expvars(sg1.admin.admin_url)
-        assert warn_count < expvars["syncgateway"]["global"]["resource_utilization"]["warn_count"], "warn_count did not increment"
 
 
 @pytest.mark.topospecific
