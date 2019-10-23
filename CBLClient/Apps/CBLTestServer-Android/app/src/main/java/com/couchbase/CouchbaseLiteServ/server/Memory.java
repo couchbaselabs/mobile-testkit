@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.couchbase.CouchbaseLiteServ.MainActivity;
+import com.couchbase.CouchbaseLiteServ.server.util.ZipUtils;
 
 
 public class Memory {
@@ -54,10 +55,11 @@ public class Memory {
     }
 
     public static void copyFolder(File src, File dest) throws IOException {
+        ZipUtils zipper = new ZipUtils();
         if (src.isDirectory()) {
 
             if (dest.exists()) {
-                deleteRecursive(dest);
+                zipper.deleteRecursive(dest);
             }
             else {
                 dest.mkdir();
@@ -94,14 +96,7 @@ public class Memory {
             System.out.println("File copied from " + src + " to " + dest);
 
         }
-        deleteRecursive(src);
+        zipper.deleteRecursive(src);
     }
 
-    public static void deleteRecursive(File fileOrDirectory) {
-        if (fileOrDirectory.isDirectory()) {
-            for (File child : fileOrDirectory.listFiles()) { deleteRecursive(child); }
-        }
-
-        fileOrDirectory.delete();
-    }
 }

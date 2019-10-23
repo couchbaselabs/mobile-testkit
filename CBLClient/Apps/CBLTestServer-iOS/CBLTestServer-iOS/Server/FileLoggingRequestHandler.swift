@@ -80,7 +80,10 @@ public class FileLoggingRequestHandler {
             return Database.log.file.config
             
         case "logging_getLogsInZip":
-            let path: String = args.get(name: "path")!
+            guard let path = Database.log.file.config?.directory else {
+                return nil
+            }
+
             do {
                 let filePath = URL(fileURLWithPath: path)
                 let zipFilePath = try Zip.quickZipFiles([filePath],

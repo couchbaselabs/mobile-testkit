@@ -492,7 +492,7 @@ def params_from_base_suite_setup(request):
         "encryption_password": encryption_password
     }
 
-    if request.node.testsfailed != 0 and enable_file_logging:
+    if request.node.testsfailed != 0 and enable_file_logging and create_db_per_suite != None:
         tests_list = request.node.items
         failed_test_list = []
         for test in tests_list:
@@ -651,7 +651,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "enable_file_logging": enable_file_logging
     }
 
-    if request.node.rep_call.failed and enable_file_logging:
+    if request.node.rep_call.failed and enable_file_logging and create_db_per_test != None:
         test_id = request.node.nodeid
         log_info("\n Collecting logs for failed test: {}".format(test_id))
         zip_data = test_cbllog.get_logs_in_zip(test_db_log_file)

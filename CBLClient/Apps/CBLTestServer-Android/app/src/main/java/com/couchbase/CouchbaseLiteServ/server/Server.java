@@ -3,6 +3,8 @@ package com.couchbase.CouchbaseLiteServ.server;
 
 import android.util.Log;
 
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
@@ -101,14 +103,14 @@ public class Server extends NanoHTTPD {
 
         try {
             // Find and invoke the method on the RequestHandler.
-            String body = null;
+            Object body = null;
             Object result;
             if ("release".equals(method)) {
                 memory.remove(rawArgs.get("object"));
             }
             else if ("flushMemory".equals(method)) {
                 memory.flushMemory();
-            } else if ("copy_files".equals(method)){
+            } else if ("copy_files".equals(method)) {
                 result = memory.copyFiles(args);
                 body = ValueSerializer.serialize(result, memory);
             } else {
@@ -210,16 +212,26 @@ public class Server extends NanoHTTPD {
                 }
                 else {
                     result = target.invoke(requestHandler, args);
-                    body = ValueSerializer.serialize(result, memory);
+                    body = (result instanceof RawData)
+                            ? result
+                            : ValueSerializer.serialize(result, memory);
                 }
             }
             session.getHeaders();
-            if (body != null) {
-                IStatus status = Status.OK;
-                return Response.newFixedLengthResponse(status, "text/plain", body.getBytes());
+            if (body == null) {
+                return Response.newFixedLengthResponse(Status.OK, "text/plain", "I-1");
             }
             else {
-                return Response.newFixedLengthResponse(Status.OK, "text/plain", "I-1");
+                if (body instanceof String) {
+                    return Response.newFixedLengthResponse(Status.OK, "text/plain", ((String) body).getBytes());
+                }
+                else if (body instanceof RawData) {
+                    RawData dataObj = (RawData) body;
+                    return Response.newFixedLengthResponse(Status.OK, dataObj.contentType, dataObj.data);
+                }
+                else {
+                    throw new IllegalArgumentException("unrecognized body type: " + body.getClass());
+                }
             }
         }
         catch (Exception e) {
