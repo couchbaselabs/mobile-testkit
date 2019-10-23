@@ -20,14 +20,18 @@
     x509_auth:
 
   tasks:
-    - include: tasks/stop-sync-gateway.yml
-    - include: tasks/deploy-sync-gateway-config.yml
-    - include: tasks/start-sync-gateway.yml
+  - include: tasks/stop-sync-gateway.yml
+
+  - include: tasks/deploy-sync-gateway-config.yml
     when: ansible_distribution == "CentOS" or ansible_distribution == "Ubuntu"
 
-    - include: tasks/stop-sync-gateway.yml
-    - include: tasks/deploy-sync-gateway-config-macos.yml
-    - include: tasks/start-sync-gateway.yml
+  - include: tasks/start-sync-gateway.yml
+    when: ansible_distribution == "CentOS" or ansible_distribution == "Ubuntu"
+
+  - include: tasks/deploy-sync-gateway-config-macos.yml
+    when: ansible_distribution == "MacOSX"
+
+  - include: tasks/start-sync-gateway-macos.yml
     when: ansible_distribution == "MacOSX"
 
 # Deploy SG Accel config
