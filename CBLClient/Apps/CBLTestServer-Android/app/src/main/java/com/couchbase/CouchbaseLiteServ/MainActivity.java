@@ -7,9 +7,9 @@ import android.widget.TextView;
 
 import java.io.IOException;
 
-import com.couchbase.javacommon.Context;
-import com.couchbase.javalistener.Server;
-import com.couchbase.javacommon.log.Log;
+import com.couchbase.mobiletestkit.javacommon.Context;
+import com.couchbase.mobiletestkit.javalistener.Server;
+import com.couchbase.mobiletestkit.javacommon.log.Log;
 
 
 
@@ -23,16 +23,16 @@ public class MainActivity extends AppCompatActivity{
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        context = new AndroidContext();
+        context = CouchbaseLiteServ.getTestServerContext();
         String ip = context.getLocalIpAddress();
 
         setContentView(R.layout.activity_main);
         TextView textView = findViewById(R.id.textView);
         textView.setText(getString(R.string.server_running, ip, PORT));
-        Log.init(new AndroidLogger());
+        Log.init(new TestServerLogger());
 
         try {
-            Server.context = context;
+            Server.setContext(context);
             Server.memory.setIpAddress(ip);
             Log.i(TAG,"Starting the server at " + ip + ", port = " + PORT);
 

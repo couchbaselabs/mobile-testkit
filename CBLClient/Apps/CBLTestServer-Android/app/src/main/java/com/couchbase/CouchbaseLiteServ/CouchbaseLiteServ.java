@@ -18,24 +18,34 @@ package com.couchbase.CouchbaseLiteServ;
 import android.app.Application;
 import android.content.Context;
 
-import com.couchbase.javacommon.log.Log;
+import com.couchbase.mobiletestkit.javacommon.log.Log;
 import com.couchbase.lite.CouchbaseLite;
 
 
 public class CouchbaseLiteServ extends Application {
     private static Context appContext;
+    private static TestServerContext testServerContext;
 
     public static Context getAppContext() { return appContext; }
 
     private static void setContext(Context ctxt) { appContext = ctxt.getApplicationContext(); }
+
+    public static TestServerContext getTestServerContext() {
+        return testServerContext;
+    }
+
+    private static void setTestServerContext(TestServerContext tsContext) {
+        testServerContext = tsContext;
+    }
 
     @Override
     public void onCreate() {
         super.onCreate();
 
         setContext(this);
+        setTestServerContext(new TestServerContext());
 
-        Log.init(new AndroidLogger());
+        Log.init(new TestServerLogger());
         CouchbaseLite.init(this);
     }
 }

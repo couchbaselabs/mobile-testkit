@@ -1,7 +1,7 @@
 apply plugin: 'com.android.application'
 
 ext {
-    DEF_VERSION = "2.7.0-105"
+    DEF_VERSION = "2.7.0-153"
     COUCHBASE_LITE_VERSION = System.getProperty('version', DEF_VERSION)
 
     PROJECT_DIR = "${projectDir}"
@@ -82,7 +82,4 @@ dependencies {
     implementation 'org.nanohttpd:nanohttpd:2.3.2-SNAPSHOT'
 
     implementation "com.couchbase.lite:couchbase-lite-android-ee:${COUCHBASE_LITE_VERSION}"
-
-    implementation fileTree(dir: "${JAVA_COMMON_DIR}", include: ['*.java'])
-    implementation fileTree(dir: "${JAVA_SERVER_DIR}", include: ['*.java'])
 }
