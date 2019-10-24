@@ -9,7 +9,7 @@ import java.io.IOException;
 
 import com.couchbase.mobiletestkit.javacommon.Context;
 import com.couchbase.mobiletestkit.javalistener.Server;
-import com.couchbase.mobiletestkit.javacommon.log.Log;
+import com.couchbase.mobiletestkit.javacommon.util.Log;
 
 
 

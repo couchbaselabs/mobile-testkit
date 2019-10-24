@@ -10,8 +10,8 @@ import java.util.Map;
 
 
 import com.couchbase.mobiletestkit.javacommon.*;
-import com.couchbase.mobiletestkit.javacommon.log.*;
 
+import com.couchbase.mobiletestkit.javacommon.util.Log;
 import com.google.gson.Gson;
 import org.nanohttpd.protocols.http.IHTTPSession;
 import org.nanohttpd.protocols.http.NanoHTTPD;

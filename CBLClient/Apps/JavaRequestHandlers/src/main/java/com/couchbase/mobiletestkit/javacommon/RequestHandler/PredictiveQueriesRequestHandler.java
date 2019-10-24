@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.couchbase.mobiletestkit.javacommon.Args;
-import com.couchbase.mobiletestkit.javacommon.log.Log;
+import com.couchbase.mobiletestkit.javacommon.util.Log;
 import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.DataSource;
 import com.couchbase.lite.Database;

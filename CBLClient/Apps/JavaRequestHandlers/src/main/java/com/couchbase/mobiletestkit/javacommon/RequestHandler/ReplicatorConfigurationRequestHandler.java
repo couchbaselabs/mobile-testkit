@@ -13,7 +13,7 @@ import java.util.Map;
 
 import com.couchbase.mobiletestkit.javacommon.Args;
 import com.couchbase.mobiletestkit.javacommon.RequestHandlerDispatcher;
-import com.couchbase.mobiletestkit.javacommon.log.Log;
+import com.couchbase.mobiletestkit.javacommon.util.Log;
 import com.couchbase.lite.Authenticator;
 import com.couchbase.lite.Database;
 import com.couchbase.lite.DatabaseEndpoint;

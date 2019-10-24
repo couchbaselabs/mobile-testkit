@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.couchbase.mobiletestkit.javacommon.Args;
-import com.couchbase.mobiletestkit.javacommon.log.Log;
+import com.couchbase.mobiletestkit.javacommon.util.Log;
 import com.couchbase.lite.Database;
 import com.couchbase.lite.MessageEndpoint;
 import com.couchbase.lite.MessageEndpointConnection;

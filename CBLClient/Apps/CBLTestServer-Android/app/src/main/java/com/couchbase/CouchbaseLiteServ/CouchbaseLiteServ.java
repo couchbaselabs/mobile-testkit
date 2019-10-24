@@ -18,7 +18,7 @@ package com.couchbase.CouchbaseLiteServ;
 import android.app.Application;
 import android.content.Context;
 
-import com.couchbase.mobiletestkit.javacommon.log.Log;
+import com.couchbase.mobiletestkit.javacommon.util.Log;
 import com.couchbase.lite.CouchbaseLite;
 
 

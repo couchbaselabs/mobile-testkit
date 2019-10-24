@@ -1,7 +1,7 @@
 package com.couchbase.mobiletestkit.javacommon;
 
 import com.couchbase.mobiletestkit.javacommon.RequestHandler.*;
-import com.couchbase.mobiletestkit.javacommon.log.Log;
+import com.couchbase.mobiletestkit.javacommon.util.Log;
 
 import java.lang.reflect.Method;
 

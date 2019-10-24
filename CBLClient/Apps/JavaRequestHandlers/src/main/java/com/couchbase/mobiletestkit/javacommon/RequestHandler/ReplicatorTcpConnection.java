@@ -29,7 +29,7 @@ import java.util.Base64;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.couchbase.mobiletestkit.javacommon.log.Log;
+import com.couchbase.mobiletestkit.javacommon.util.Log;
 import com.couchbase.lite.Message;
 import com.couchbase.lite.MessageEndpointConnection;
 import com.couchbase.lite.MessagingCloseCompletion;

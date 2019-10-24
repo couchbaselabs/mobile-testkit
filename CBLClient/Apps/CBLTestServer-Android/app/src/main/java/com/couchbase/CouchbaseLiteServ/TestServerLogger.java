@@ -1,5 +1,5 @@
 package com.couchbase.CouchbaseLiteServ;
-import com.couchbase.mobiletestkit.javacommon.log.Logger;
+import com.couchbase.mobiletestkit.javacommon.util.Logger;
 import android.util.*;
 
 public class TestServerLogger implements Logger {

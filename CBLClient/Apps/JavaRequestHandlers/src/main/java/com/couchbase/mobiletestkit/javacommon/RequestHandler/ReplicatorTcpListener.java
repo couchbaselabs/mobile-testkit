@@ -26,7 +26,7 @@ import java.net.SocketException;
 import java.util.Collections;
 import java.util.List;
 
-import com.couchbase.mobiletestkit.javacommon.log.Log;
+import com.couchbase.mobiletestkit.javacommon.util.Log;
 import com.couchbase.lite.Database;
 import com.couchbase.lite.MessageEndpointListener;
 import com.couchbase.lite.MessageEndpointListenerConfiguration;

@@ -1,7 +1,7 @@
 package com.couchbase.CouchbaseLiteServ;
 
 import com.couchbase.mobiletestkit.javacommon.Context;
-import com.couchbase.mobiletestkit.javacommon.log.Log;
+import com.couchbase.mobiletestkit.javacommon.util.Log;
 
 import java.io.File;
 import java.io.InputStream;
