@@ -1,0 +1,11 @@
+- debug: msg="Starting sync_gateway"
+
+- name: SYNC GATEWAY | Start sync gateway service on Macos
+  become: yes
+  shell: ./sync_gateway_service_install.sh
+  args:
+      chdir: /opt/couchbase-sync-gateway/service
+
+- name: SYNC GATEWAY | Wait until sync gateway to listen on port on Macos
+  become: yes
+  wait_for: port=4985 timeout=240

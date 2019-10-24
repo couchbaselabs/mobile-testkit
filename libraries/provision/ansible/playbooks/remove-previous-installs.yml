@@ -6,12 +6,12 @@
   # Remove sync_gateway
   - include: tasks/remove-sync-gateway.yml
     become: yes
-    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
+    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian" or ansible_distribution == "MacOSX"
 
   # Remove sync_gateway
   - include: tasks/remove-sync-gateway-windows.yml
     when: ansible_os_family == "Windows"
-
+ 
   # Remove sg_accel
   - include: tasks/remove-sg-accel.yml
     become: yes
@@ -20,16 +20,19 @@
   - include: tasks/remove-sg-accel-windows.yml
     when: ansible_os_family == "Windows"
 
-  # Delete sync_gateway and sg_accel uses
+  # Delete sync_gateway and sg_accel users
   - include: tasks/clean-users.yml
     become: yes
     when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
+
+  # Remove nginx
+  - include: tasks/remove-nginx.yml
 
   # Check no sync_gateways or accels running
   - name: ALL | verify no sg_accel or sgs are running on 4985
     wait_for: port=4985 delay=1 state=stopped
     become: yes
-    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
+    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian" or ansible_distribution == "MacOSX"
 
 
 - hosts: couchbase_servers
