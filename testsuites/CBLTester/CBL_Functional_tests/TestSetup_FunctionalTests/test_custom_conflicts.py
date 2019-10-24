@@ -77,6 +77,13 @@ def test_local_wins_custom_conflicts(params_from_base_test_setup, replicator_typ
     sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs, number_updates=2,
                           property_updater=property_updater, auth=session)
 
+    sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)["rows"]
+    if replicator_type == "push_pull":
+        sg_rev_list_before_ccr = {}
+        for sg_doc in sg_docs:
+            doc_id = sg_doc["id"]
+            sg_rev_list_before_ccr[doc_id] = sg_doc["value"]["rev"]
+
     # creating conflict for docs on CBL
     doc_ids = db.getDocIds(cbl_db)
     cbl_docs = db.getDocuments(cbl_db, doc_ids)
@@ -126,6 +133,8 @@ def test_local_wins_custom_conflicts(params_from_base_test_setup, replicator_typ
                                                                           "with local win"
             assert "random" not in sg_doc, "CCR failed to resolve conflict with local win"
             assert "cbl_random" in sg_doc, "CCR failed to resolve conflict with local win"
+            assert sg_rev_list_before_ccr[doc_id] != sg_doc["_rev"], "CCR failed to resolve conflict " \
+                                                                     "with local win"
 
 
 @pytest.mark.sanity
@@ -394,6 +403,11 @@ def test_merge_wins_custom_conflicts(params_from_base_test_setup, replicator_typ
     sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs, number_updates=2,
                           property_updater=property_updater, auth=session)
 
+    sg_rev_list_before_ccr = {}
+    for sg_doc in sg_docs:
+        doc_id = sg_doc["id"]
+        sg_rev_list_before_ccr[doc_id] = sg_doc["value"]["rev"]
+
     # creating conflict for docs on CBL
     doc_ids = db.getDocIds(cbl_db)
     cbl_docs = db.getDocuments(cbl_db, doc_ids)
@@ -419,31 +433,31 @@ def test_merge_wins_custom_conflicts(params_from_base_test_setup, replicator_typ
     # printing doc content before replication conflicted docs
     sg_docs_content = sg_client.get_bulk_docs(sg_url, sg_db, doc_ids, session)[0]
     cbl_docs = db.getDocuments(cbl_db, doc_ids)
-    if replicator_type == "pull":
-        for sg_doc in sg_docs_content:
-            doc_id = sg_doc["_id"]
-            cbl_doc = cbl_docs[doc_id]
-            assert sg_doc["sg_new_update1"] != cbl_doc["sg_new_update1"], "CCR failed to resolve conflict " \
-                                                                          "with merge win"
-            assert sg_doc["sg_new_update2"] != cbl_doc["sg_new_update2"], "CCR failed to resolve conflict " \
-                                                                          "with merge win"
-            assert sg_doc["sg_new_update3"] != cbl_doc["sg_new_update3"], "CCR failed to resolve conflict " \
-                                                                          "with merge win"
-            assert sg_doc["random"] == cbl_doc["random"], "CCR failed to resolve conflict with merge win"
-            assert "cbl_random" not in sg_doc, "CCR failed to resolve conflict with merge win. SG doc got " \
-                                               "updated with CBL changes"
-    elif replicator_type == "push_pull":
-        for sg_doc in sg_docs_content:
-            doc_id = sg_doc["_id"]
-            cbl_doc = cbl_docs[doc_id]
-            assert sg_doc["sg_new_update1"] == cbl_doc["sg_new_update1"], "CCR failed to resolve conflict " \
-                                                                          "with merge win"
-            assert sg_doc["sg_new_update2"] == cbl_doc["sg_new_update2"], "CCR failed to resolve conflict " \
-                                                                          "with merge win"
-            assert sg_doc["sg_new_update3"] == cbl_doc["sg_new_update3"], "CCR failed to resolve conflict " \
-                                                                          "with merge win"
-            assert sg_doc["random"] == cbl_doc["random"], "CCR failed to resolve conflict with merge win"
-            assert "cbl_random" in sg_doc, "CCR failed to resolve conflict with merge win"
+    for sg_doc in sg_docs_content:
+        if replicator_type == "pull":
+                doc_id = sg_doc["_id"]
+                cbl_doc = cbl_docs[doc_id]
+                assert sg_doc["sg_new_update1"] != cbl_doc["sg_new_update1"], "CCR failed to resolve conflict " \
+                                                                              "with merge win"
+                assert sg_doc["sg_new_update2"] != cbl_doc["sg_new_update2"], "CCR failed to resolve conflict " \
+                                                                              "with merge win"
+                assert sg_doc["sg_new_update3"] != cbl_doc["sg_new_update3"], "CCR failed to resolve conflict " \
+                                                                              "with merge win"
+                assert "cbl_random" not in sg_doc, "CCR failed to resolve conflict with merge win. SG doc got " \
+                                                   "updated with CBL changes"
+        elif replicator_type == "push_pull":
+                doc_id = sg_doc["_id"]
+                cbl_doc = cbl_docs[doc_id]
+                assert sg_doc["sg_new_update1"] == cbl_doc["sg_new_update1"], "CCR failed to resolve conflict " \
+                                                                              "with merge win"
+                assert sg_doc["sg_new_update2"] == cbl_doc["sg_new_update2"], "CCR failed to resolve conflict " \
+                                                                              "with merge win"
+                assert sg_doc["sg_new_update3"] == cbl_doc["sg_new_update3"], "CCR failed to resolve conflict " \
+                                                                              "with merge win"
+                assert "cbl_random" in sg_doc, "CCR failed to resolve conflict with merge win"
+        assert sg_doc["random"] == cbl_doc["random"], "CCR failed to resolve conflict with merge win"
+        assert sg_rev_list_before_ccr[doc_id] != sg_doc["_rev"], "CCR failed to resolve conflict " \
+                                                                 "with merge win"
 
 
 @pytest.mark.listener
