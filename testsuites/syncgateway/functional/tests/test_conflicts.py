@@ -215,10 +215,7 @@ def test_winning_conflict_branch_revisions(params_from_base_test_setup, sg_conf_
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
-    if x509_cert_auth:
-        persist_cluster_config_environment_prop(cluster_config, 'x509_certs', True)
-    else:
-        persist_cluster_config_environment_prop(cluster_config, 'x509_certs', False)
+    persist_cluster_config_environment_prop(cluster_config, 'x509_certs', x509_cert_auth)
 
     c = cluster.Cluster(cluster_config)
     c.reset(sg_conf)

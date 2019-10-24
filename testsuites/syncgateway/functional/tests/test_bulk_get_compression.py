@@ -184,10 +184,8 @@ def test_bulk_get_compression(params_from_base_test_setup, sg_conf_name, num_doc
     log_info("Using accept_encoding: {}".format(accept_encoding))
     log_info("Using x_accept_part_encoding: {}".format(x_accept_part_encoding))
 
-    if x509_cert_auth:
-        persist_cluster_config_environment_prop(cluster_config, 'x509_certs', True)
-    else:
-        persist_cluster_config_environment_prop(cluster_config, 'x509_certs', False)
+    persist_cluster_config_environment_prop(cluster_config, 'x509_certs', x509_cert_auth)
+
     cluster = Cluster(config=cluster_config)
     cluster.reset(sg_config_path=sg_conf)
     admin = Admin(cluster.sync_gateways[0])

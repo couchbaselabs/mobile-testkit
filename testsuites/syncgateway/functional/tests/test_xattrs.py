@@ -344,10 +344,7 @@ def test_on_demand_import_of_external_updates(params_from_base_test_setup, sg_co
     log_info('sg_admin_url: {}'.format(sg_admin_url))
     log_info('sg_url: {}'.format(sg_url))
     log_info('cbs_url: {}'.format(cbs_url))
-    if x509_cert_auth:
-        persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', True)
-    else:
-        persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', False)
+    persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', x509_cert_auth)
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
 
@@ -465,10 +462,7 @@ def test_offline_processing_of_external_updates(params_from_base_test_setup, sg_
     log_info('sg_admin_url: {}'.format(sg_admin_url))
     log_info('sg_url: {}'.format(sg_url))
     log_info('cbs_url: {}'.format(cbs_url))
-    if x509_cert_auth:
-        persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', True)
-    else:
-        persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', False)
+    persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', x509_cert_auth)
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
 
@@ -740,10 +734,7 @@ def test_purge(params_from_base_test_setup, sg_conf_name, use_multiple_channels,
     log_info('sg_conf: {}'.format(sg_conf))
     log_info('sg_admin_url: {}'.format(sg_admin_url))
     log_info('sg_url: {}'.format(sg_url))
-    if x509_cert_auth:
-        persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', True)
-    else:
-        persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', False)
+    persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', x509_cert_auth)
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
 

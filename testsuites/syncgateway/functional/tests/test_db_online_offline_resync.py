@@ -45,10 +45,7 @@ def test_bucket_online_offline_resync_sanity(params_from_base_test_setup, sg_con
 
     start = time.time()
 
-    if x509_cert_auth:
-        persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', True)
-    else:
-        persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', False)
+    persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', x509_cert_auth)
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_conf)

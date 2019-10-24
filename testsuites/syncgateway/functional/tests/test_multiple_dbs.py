@@ -94,10 +94,7 @@ def test_multiple_db_single_data_bucket_single_index_bucket(params_from_base_tes
     log_info("Using num_users: {}".format(num_users))
     log_info("Using num_docs_per_user: {}".format(num_docs_per_user))
 
-    if x509_cert_auth:
-        persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', True)
-    else:
-        persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', False)
+    persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', x509_cert_auth)
 
     # 2 dbs share the same data and index bucket
     cluster = Cluster(config=cluster_conf)

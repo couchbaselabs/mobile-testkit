@@ -127,10 +127,7 @@ def test_remove_add_channels_to_doc(params_from_base_test_setup, sg_conf_name, x
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
-    if x509_cert_auth:
-        persist_cluster_config_environment_prop(cluster_config, 'x509_certs', True)
-    else:
-        persist_cluster_config_environment_prop(cluster_config, 'x509_certs', False)
+    persist_cluster_config_environment_prop(cluster_config, 'x509_certs', x509_cert_auth)
 
     cluster = Cluster(cluster_config)
     cluster.reset(sg_conf)

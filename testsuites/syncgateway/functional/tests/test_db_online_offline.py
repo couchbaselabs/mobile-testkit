@@ -47,10 +47,7 @@ def test_online_default_rest(params_from_base_test_setup, sg_conf_name, num_docs
     log_info("Using sg_conf: {}".format(sg_conf))
     log_info("Using num_docs: {}".format(num_docs))
 
-    if x509_cert_auth:
-        persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', True)
-    else:
-        persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', False)
+    persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', x509_cert_auth)
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)

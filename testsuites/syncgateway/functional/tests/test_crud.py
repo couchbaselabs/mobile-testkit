@@ -99,11 +99,7 @@ def test_document_resurrection(params_from_base_test_setup, sg_conf_name, deleti
     cbs_host = host_for_url(cbs_url)
 
     num_docs_per_client = 10
-
-    if x509_cert_auth:
-        persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', True)
-    else:
-        persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', False)
+    persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', x509_cert_auth)
 
     # Reset cluster
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)

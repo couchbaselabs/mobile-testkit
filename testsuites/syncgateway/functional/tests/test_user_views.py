@@ -35,10 +35,7 @@ def test_user_views_sanity(params_from_base_test_setup, sg_conf_name, x509_cert_
     log_info("Running 'single_user_multiple_channels'")
     log_info("cluster_conf: {}".format(cluster_conf))
     log_info("conf: {}".format(sg_conf))
-    if x509_cert_auth:
-        persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', True)
-    else:
-        persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', False)
+    persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', x509_cert_auth)
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
 

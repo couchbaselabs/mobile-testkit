@@ -49,10 +49,7 @@ def test_seq(params_from_base_test_setup, sg_conf_name, num_users, num_docs, num
     log_info("num_docs: {}".format(num_docs))
     log_info("num_revisions: {}".format(num_revisions))
 
-    if x509_cert_auth:
-        persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', True)
-    else:
-        persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', False)
+    persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', x509_cert_auth)
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)

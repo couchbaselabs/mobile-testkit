@@ -42,10 +42,7 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name, 
     if get_sync_gateway_version(sg_ip)[0] < "2.1":
         pytest.skip("Continuous logging Test NA for SG < 2.1")
 
-    if x509_cert_auth:
-        persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', True)
-    else:
-        persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', False)
+    persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', x509_cert_auth)
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)

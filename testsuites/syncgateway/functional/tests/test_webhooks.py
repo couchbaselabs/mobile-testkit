@@ -51,10 +51,7 @@ def test_webhooks(params_from_base_test_setup, sg_conf_name, num_users, num_chan
     log_info("Using num_channels: {}".format(num_channels))
     log_info("Using num_docs: {}".format(num_docs))
     log_info("Using num_revisions: {}".format(num_revisions))
-    if x509_cert_auth:
-        persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', True)
-    else:
-        persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', False)
+    persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', x509_cert_auth)
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_conf)
 
