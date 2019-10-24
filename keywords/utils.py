@@ -206,6 +206,13 @@ def check_xattr_support(server_version, sync_gateway_version):
         raise FeatureSupportedError('Make sure you are using Coucbhase Sync Gateway 1.5+ for xattrs')
 
 
+def check_delta_sync_support(sync_gateway_version, liteserv_version):
+    if sync_gateway_version < "2.5.0":
+        raise FeatureSupportedError('Make sure you are using Coucbhase Sync Gateway 2.5+ for delta sync')
+    if liteserv_version < "2.5.0":
+        raise FeatureSupportedError('Make sure you are using Coucbhase Lite 2.5+ for delta sync')
+
+
 def add_cbs_to_sg_config_server_field(cluster_config):
     """ This method get all CBS servers ips from cluster config and
        it as server in sync gateway config file . Each ip is seperated
