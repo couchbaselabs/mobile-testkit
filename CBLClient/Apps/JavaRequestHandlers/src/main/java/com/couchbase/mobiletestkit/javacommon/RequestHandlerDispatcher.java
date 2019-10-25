@@ -132,7 +132,14 @@ public class RequestHandlerDispatcher {
 
 
         } catch (Exception e){
-            Log.e(TAG, ((InvocationTargetException) e).getTargetException().getMessage());
+            String errorMsg = "";
+            if(e instanceof InvocationTargetException){
+                errorMsg = ((InvocationTargetException) e).getTargetException().getMessage();
+            }
+            else {
+                errorMsg = e.getMessage();
+            }
+            Log.e(TAG, errorMsg);
             throw e;
         }
 

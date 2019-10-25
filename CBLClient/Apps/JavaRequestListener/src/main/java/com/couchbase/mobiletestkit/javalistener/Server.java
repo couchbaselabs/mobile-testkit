@@ -105,9 +105,17 @@ public class Server extends NanoHTTPD {
             if url format is /flushMemory
             they no Reqest Handler is involved, it deals with the Memory object or other objects.
              */
-            final String[] methodArgs = method.split("_");
-            String handlerType = methodArgs.length > 1 ? methodArgs[0] : "nohandler";
-            String method_to_call = methodArgs.length > 1 ? methodArgs[1] : methodArgs[0];
+            String handlerType = "";
+            String method_to_call = "";
+
+            if(method.equalsIgnoreCase("copy_files")){
+                method_to_call = method;
+            }
+            else {
+                final String[] methodArgs = method.split("_");
+                handlerType = methodArgs.length > 1 ? methodArgs[0] : "nohandler";
+                method_to_call = methodArgs.length > 1 ? methodArgs[1] : methodArgs[0];
+            }
 
             RequestHandlerDispatcher.setDispatcherProperties(context, memory);
             body = RequestHandlerDispatcher.handle(handlerType, method_to_call, args);
