@@ -3,6 +3,7 @@ package com.couchbase.mobiletestkit.javacommon;
 import com.couchbase.mobiletestkit.javacommon.RequestHandler.*;
 import com.couchbase.mobiletestkit.javacommon.util.Log;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 
@@ -131,7 +132,7 @@ public class RequestHandlerDispatcher {
 
 
         } catch (Exception e){
-            Log.e(TAG, e.getMessage());
+            Log.e(TAG, ((InvocationTargetException) e).getTargetException().getMessage());
             throw e;
         }
 
