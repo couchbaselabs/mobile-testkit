@@ -77,7 +77,6 @@ class FileLogging(object):
         args.setString("log_level", log_level)
         return self._client.invokeMethod("logging_setLogLevel", args)
 
-    def get_logs_in_zip(self, log_path):
+    def get_logs_in_zip(self):
         args = Args()
-        args.setString("path", log_path)
         return self._client.invokeMethod("logging_getLogsInZip", args)

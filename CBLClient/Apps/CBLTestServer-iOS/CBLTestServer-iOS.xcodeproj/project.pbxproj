@@ -50,8 +50,9 @@
 		29F7869C1F9FC4180035178F /* GCDWebServerFileResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 29F7868E1F9FC4180035178F /* GCDWebServerFileResponse.m */; };
 		29F7869D1F9FC4180035178F /* GCDWebServerStreamedResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 29F786901F9FC4180035178F /* GCDWebServerStreamedResponse.m */; };
 		2E8631EF229F2C8C00859424 /* Files in Resources */ = {isa = PBXBuildFile; fileRef = 2E8631EE229F2C8C00859424 /* Files */; };
-		410E9312235D91EF002AC728 /* CouchbaseLiteSwift.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 410E9310235D91EF002AC728 /* CouchbaseLiteSwift.framework */; };
 		410E9313235D91EF002AC728 /* CouchbaseLiteSwift.framework.dSYM in Resources */ = {isa = PBXBuildFile; fileRef = 410E9311235D91EF002AC728 /* CouchbaseLiteSwift.framework.dSYM */; };
+		41DAF0882362D6D400BE60C0 /* CouchbaseLiteSwift.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 410E9310235D91EF002AC728 /* CouchbaseLiteSwift.framework */; };
+		41DAF0892362D6D400BE60C0 /* CouchbaseLiteSwift.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 410E9310235D91EF002AC728 /* CouchbaseLiteSwift.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		6917C7BA232C30EE00D99DA6 /* RawData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6917C7B9232C30EE00D99DA6 /* RawData.swift */; };
 		69B864082322DAB3006E6A77 /* Zip.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 69B864072322DAB3006E6A77 /* Zip.framework */; };
 		69B864092322DABA006E6A77 /* Zip.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 69B864072322DAB3006E6A77 /* Zip.framework */; };
@@ -95,6 +96,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				41DAF0892362D6D400BE60C0 /* CouchbaseLiteSwift.framework in Embed Frameworks */,
 				69B8640A2322DABA006E6A77 /* Zip.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
@@ -193,7 +195,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				410E9312235D91EF002AC728 /* CouchbaseLiteSwift.framework in Frameworks */,
+				41DAF0882362D6D400BE60C0 /* CouchbaseLiteSwift.framework in Frameworks */,
 				69B864082322DAB3006E6A77 /* Zip.framework in Frameworks */,
 				69B864092322DABA006E6A77 /* Zip.framework in Frameworks */,
 			);

@@ -381,7 +381,7 @@ def params_from_base_suite_setup(request):
     if create_db_per_suite:
         if enable_file_logging and liteserv_version >= "2.5.0":
             suite_cbllog.configure(log_level="verbose", max_rotate_count=2,
-                             max_size=1000000 * 512, plain_text=True)
+                                   max_size=1000000 * 512, plain_text=True)
             suite_db_log_files = suite_cbllog.get_directory()
             log_info("Log files available at - {}".format(suite_db_log_files))
         # Create CBL database
@@ -406,7 +406,7 @@ def params_from_base_suite_setup(request):
             log_info("Deleting existing {} bucket".format(enable_sample_bucket))
             server.delete_bucket(enable_sample_bucket)
             time.sleep(5)
- 
+
         log_info("Loading sample bucket {}".format(enable_sample_bucket))
         server.load_sample_bucket(enable_sample_bucket)
         time.sleep(60)
@@ -492,7 +492,7 @@ def params_from_base_suite_setup(request):
         "encryption_password": encryption_password
     }
 
-    if request.node.testsfailed != 0 and enable_file_logging and create_db_per_suite != None:
+    if request.node.testsfailed != 0 and enable_file_logging and create_db_per_suite is not None:
         tests_list = request.node.items
         failed_test_list = []
         for test in tests_list:
@@ -590,7 +590,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     if create_db_per_test:
         if enable_file_logging and liteserv_version >= "2.5.0":
             test_cbllog.configure(log_level="verbose", max_rotate_count=2,
-                             max_size=100000 * 512, plain_text=True)
+                                  max_size=100000 * 512, plain_text=True)
             test_db_log_file = test_cbllog.get_directory()
             log_info("Log files available at - {}".format(test_db_log_file))
         cbl_db = create_db_per_test + str(time.time())
@@ -648,14 +648,15 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "cbl_log_decoder_build": cbl_log_decoder_build,
         "enable_encryption": enable_encryption,
         "encryption_password": encryption_password,
-        "enable_file_logging": enable_file_logging
+        "enable_file_logging": enable_file_logging,
+        "test_cbllog": test_cbllog
     }
 
-    if request.node.rep_call.failed and enable_file_logging and create_db_per_test != None:
+    if request.node.rep_call.failed and enable_file_logging and create_db_per_test is not None:
         test_id = request.node.nodeid
         log_info("\n Collecting logs for failed test: {}".format(test_id))
         zip_data = test_cbllog.get_logs_in_zip(test_db_log_file)
-        log_directory = "test_failure_logs"
+        log_directory = "results"
         if not os.path.exists(log_directory):
             os.mkdir(log_directory)
         test_log_zip_file = "{}_{}.zip".format(test_id.split("::")[-1], str(time.time()))

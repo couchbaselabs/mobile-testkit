@@ -1,11 +1,11 @@
 import os
 import subprocess
 import pytest
+import zipfile
 
 from keywords.MobileRestClient import MobileRestClient
 from CBLClient.Replication import Replication
 from CBLClient.Authenticator import Authenticator
-from libraries.provision.ansible_runner import AnsibleRunner
 
 from libraries.testkit import cluster
 from keywords.utils import log_info
@@ -39,9 +39,8 @@ def test_mask_password_in_logs(params_from_base_test_setup, password):
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     log_file = params_from_base_test_setup["test_db_log_file"]
     liteserv_platform = params_from_base_test_setup["liteserv_platform"]
-    testserver = params_from_base_test_setup["testserver"]
-    device_enabled = params_from_base_test_setup["device_enabled"]
     enable_file_logging = params_from_base_test_setup["enable_file_logging"]
+    test_cbllog = params_from_base_test_setup["test_cbllog"]
 
     num_cbl_docs = 500
     if sync_gateway_version < "2.0.0" and not enable_file_logging:
@@ -70,7 +69,7 @@ def test_mask_password_in_logs(params_from_base_test_setup, password):
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
 
-    verify_password_masked(liteserv_platform, log_file, password, testserver, device_enabled)
+    verify_password_masked(liteserv_platform, log_file, password, test_cbllog)
 
 
 @pytest.mark.sanity
@@ -101,9 +100,8 @@ def test_verify_invalid_mask_password_in_logs(params_from_base_test_setup, inval
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     log_file = params_from_base_test_setup["test_db_log_file"]
     liteserv_platform = params_from_base_test_setup["liteserv_platform"]
-    testserver = params_from_base_test_setup["testserver"]
-    device_enabled = params_from_base_test_setup["device_enabled"]
     enable_file_logging = params_from_base_test_setup["enable_file_logging"]
+    test_cbllog = params_from_base_test_setup["test_cbllog"]
 
     num_cbl_docs = 50
     if sync_gateway_version < "2.0.0" and not enable_file_logging:
@@ -132,48 +130,43 @@ def test_verify_invalid_mask_password_in_logs(params_from_base_test_setup, inval
     repl = replicator.create(repl_config)
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl, err_check=False)
-    verify_password_masked(liteserv_platform, log_file, invalid_password, testserver, device_enabled)
+    verify_password_masked(liteserv_platform, log_file, invalid_password, test_cbllog)
 
 
-def verify_password_masked(liteserv_platform, log_file, password, testserver, device_enabled):
+def verify_password_masked(liteserv_platform, log_file, password, test_cbllog):
     """
     @note: Porting logs for Android, xamarin-android, net-core and net-uwp platform, as the logs reside
            outside runner's file directory
     """
-    log_full_path = "/tmp/cbl-logs/"
-    os.mkdir(log_full_path)
-    if liteserv_platform.lower() == "android" or liteserv_platform.lower() == "xamarin-android":
-        log_info("Running Command: 'adb pull {} {}".format(log_file, log_full_path))
-        if device_enabled:
-            cmd = ["adb", "-d", "pull", log_file, log_full_path]
-        else:
-            cmd = ["adb", "-e", "pull", log_file, log_full_path]
-        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        out, err = proc.communicate()
-        log_info(out, err)
-        log_file = os.path.join(log_full_path, os.path.basename(log_file))
-    elif liteserv_platform.lower() == "net-msft" or liteserv_platform.lower() == "net-uwp":
-        config_location = "resources/liteserv_configs/net-msft"
-        ansible_runner = AnsibleRunner(config=config_location)
-        log_file = log_file.replace('\\', '\\\\')
-        if liteserv_platform.lower() == "net-uwp":
-            testserver.stop()
-        status = ansible_runner.run_ansible_playbook(
-            "fetch-windows-cbl-logs.yml",
-            extra_vars={
-                "log_full_path": log_full_path,
-                "custom_cbl_log_dir": log_file
-            }
-        )
-        if status != 0:
-            raise Exception("Could not fetch cbl logs from windows ")
+    delimiter = "/"
+    if liteserv_platform == "net-msft" or liteserv_platform == "uwp":
+        delimiter = "\\"
+    log_dir = log_file.split(delimiter)[-1]
+    log_full_path_dir = "/tmp/cbl-logs/"
+    os.mkdir(log_full_path_dir)
+    log_info("\n Collecting logs")
+    zip_data = test_cbllog.get_logs_in_zip()
+    if zip_data == -1:
+        raise Exception("Failed to get zip log files from CBL app")
+    test_log_zip_file = "cbl_log.zip"
+    test_log = os.path.join(log_full_path_dir, test_log_zip_file)
+    log_info("Log file for failed test is: {}".format(test_log_zip_file))
+    with open(test_log, 'wb') as fh:
+        fh.write(zip_data)
+        fh.close()
 
-        log_info("Checking {} for copied log files - {}".format(log_full_path, os.listdir(log_full_path)))
-        log_file = subprocess.check_output("ls -t {} | head -1".format(log_full_path), shell=True)
-    else:
-        log_full_path = log_file
-    assert len(os.listdir(log_full_path)) != 0, "Log files are not copied to {}".format(log_full_path)
-    command = "grep '{}' {}/*.cbllog | wc -l".format(password, log_file)
+    # unzipping the zipped log files
+    log_dir_path = os.path.join(log_full_path_dir, log_dir)
+    with zipfile.ZipFile(test_log, 'r') as zip_ref:
+        if liteserv_platform == "ios":
+            zip_ref.extractall(log_full_path_dir)
+        else:
+            zip_ref.extractall(log_dir_path)
+
+    log_info("Checking {} for copied log files - {}".format(log_dir_path, os.listdir(log_dir_path)))
+    log_file = subprocess.check_output("ls -t {} | head -1".format(log_dir_path), shell=True)
+    assert len(os.listdir(log_dir_path)) != 0, "Log files are not available at {}".format(log_dir_path)
+    command = "grep '{}' {}/*.cbllog | wc -l".format(password, log_dir_path)
     log_info("Running command: {}".format(command))
     output = subprocess.check_output(command, shell=True)
     output = int(output.strip())
