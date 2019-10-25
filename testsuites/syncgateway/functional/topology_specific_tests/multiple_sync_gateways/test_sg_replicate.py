@@ -316,7 +316,6 @@ def test_sg_replicate_non_existent_db(params_from_base_test_setup):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
-    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
 
     log_info("Running 'test_sg_replicate_non_existent_db'")
     log_info("Using cluster_config: {}".format(cluster_config))
