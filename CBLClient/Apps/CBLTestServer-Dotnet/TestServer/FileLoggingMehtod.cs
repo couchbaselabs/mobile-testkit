@@ -171,7 +171,7 @@ namespace Couchbase.Lite.Testing
             var memoryStream = new MemoryStream();
             using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true)) {
                 foreach (var filePath in filePaths) {
-                    var entry = archive.CreateEntry(Path.GetFileName($"{filePath}.zip"));
+                    var entry = archive.CreateEntry(Path.GetFileName($"{filePath}"));
                     using (var file = File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                     using (var entryStream = entry.Open()) {
                         file.CopyTo(entryStream);

@@ -14,7 +14,7 @@
     <PackageReference Include="Jint" Version="3.0.0-beta-1138" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="2.6.1" />
     <PackageReference Include="System.ServiceProcess.ServiceController" Version="4.5.0-preview1-25914-04" />
-    <PackageReference Include="Couchbase.Lite.Enterprise.Support.NetDesktop" Version="2.5.2-b0005" />
+    <PackageReference Include="Couchbase.Lite.Enterprise.Support.NetDesktop" Version="2.7.0-b0072" />
   </ItemGroup>
 
   <ItemGroup>
