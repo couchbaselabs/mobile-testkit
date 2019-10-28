@@ -28,7 +28,15 @@ public class BlobRequestHandler {
     }
 
     public InputStream createImageContent(Args args) throws IOException {
-        return RequestHandlerDispatcher.context.getAsset(args.get("image"));
+        String imgFileName = "";
+
+        String imgArg = args.get("image");
+        if(!imgArg.isEmpty()){
+            String[] imgFilePath = imgArg.split("/");
+            imgFileName = imgFilePath[imgFilePath.length - 1];
+        }
+
+        return RequestHandlerDispatcher.context.getAsset(imgFileName);
     }
 
     public String digest(Args args) {
