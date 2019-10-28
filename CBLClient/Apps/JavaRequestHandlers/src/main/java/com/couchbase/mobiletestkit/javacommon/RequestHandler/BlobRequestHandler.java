@@ -28,15 +28,13 @@ public class BlobRequestHandler {
     }
 
     public InputStream createImageContent(Args args) throws IOException {
-        String imgFileName = "";
-
-        String imgArg = args.get("image");
-        if(!imgArg.isEmpty()){
-            String[] imgFilePath = imgArg.split("/");
-            imgFileName = imgFilePath[imgFilePath.length - 1];
+        String filePath = args.get("image");
+        if (filePath == null || filePath.isEmpty()) {
+            throw new IOException("Image content file path cannot be null");
         }
 
-        return RequestHandlerDispatcher.context.getAsset(imgFileName);
+        String[] imgFilePath = filePath.split("/");
+        return RequestHandlerDispatcher.context.getAsset(imgFilePath[imgFilePath.length - 1]);
     }
 
     public String digest(Args args) {
