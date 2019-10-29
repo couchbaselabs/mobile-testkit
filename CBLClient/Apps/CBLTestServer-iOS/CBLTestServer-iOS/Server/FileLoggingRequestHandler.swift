@@ -81,17 +81,19 @@ public class FileLoggingRequestHandler {
             
         case "logging_getLogsInZip":
             guard let path = Database.log.file.config?.directory else {
-                return nil
+                fatalError("failed to get the config directory")
+            }
+            
+            let fileURL = URL(fileURLWithPath: path)
+            guard let dir = copyLogsToCacheDirectory(fileURL) else {
+                fatalError("Saving to cache failed")
             }
             
             do {
-                let filePath = URL(fileURLWithPath: path)
-                let zipFilePath = try Zip.quickZipFiles([filePath],
-                                                        fileName: "archive")
+                let zipFilePath = try Zip.quickZipFiles([dir], fileName: "Archive")
                 return RawData(data: try Data(contentsOf: zipFilePath),
                                contentType: "application/zip")
-            }
-            catch {
+            } catch {
                 print("Exception Getting LogsInZip \(error)")
             }
             return nil
@@ -152,5 +154,35 @@ public class FileLoggingRequestHandler {
         default:
             throw RequestHandlerError.MethodNotFound(method)
         }
+    }
+    
+    func copyLogsToCacheDirectory(_ path: URL) -> URL? {
+        let fm = FileManager.default
+        do {
+            let docDir = try fm.url(for: .cachesDirectory,
+                                    in: .userDomainMask,
+                                    appropriateFor: nil,
+                                    create: false)
+            let folderURL = docDir.appendingPathComponent("logs_\(Date())")
+            
+            // if folder doesnt exists create one!!
+            if !fm.fileExists(atPath: folderURL.absoluteString) {
+                do {
+                    try fm.createDirectory(at: folderURL,
+                                           withIntermediateDirectories: true,
+                                           attributes: nil)
+                } catch {
+                    print("Error create log-folder \(error.localizedDescription)");
+                }
+            }
+            
+            try fm.copyItem(at: path, to: folderURL)
+            
+            return folderURL
+        } catch {
+            print("fail to copy item \(error)")
+        }
+        
+        return nil
     }
 }
