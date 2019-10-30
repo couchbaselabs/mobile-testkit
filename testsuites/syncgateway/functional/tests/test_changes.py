@@ -6,15 +6,17 @@ from requests import Session
 from keywords.utils import log_info
 from keywords.SyncGateway import SyncGateway
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
+from utilities.cluster_config_utils import persist_cluster_config_environment_prop
 
 
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.changes
-@pytest.mark.parametrize("sg_conf_name", [
-    "sync_gateway_default"
+@pytest.mark.parametrize("sg_conf_name, x509_cert_auth", [
+    ("sync_gateway_default", True),
+    ("sync_gateway_default", False),
 ])
-def test_deleted_docs_from_changes_active_only(params_from_base_test_setup, sg_conf_name):
+def test_deleted_docs_from_changes_active_only(params_from_base_test_setup, sg_conf_name, x509_cert_auth):
     """
     https://github.com/couchbase/sync_gateway/issues/2955
     1. Create a document
@@ -31,6 +33,9 @@ def test_deleted_docs_from_changes_active_only(params_from_base_test_setup, sg_c
     num_docs = 10
     mode = params_from_base_test_setup["mode"]
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+
+    persist_cluster_config_environment_prop(cluster_config, 'x509_certs', x509_cert_auth)
+
     cluster = Cluster(cluster_config)
     cluster.reset(sg_conf)
     client = MobileRestClient()
