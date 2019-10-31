@@ -5,5 +5,5 @@
 	<uses-permission android:name="android.permission.INTERNET" />
 	<uses-permission android:name="android.permission.ACCESS_WIFI_STATE"></uses-permission>
 	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <application android:networkSecurityConfig="@xml/network_security_config" />
+	<application android:networkSecurityConfig="@xml/network_security_config" />
 </manifest>

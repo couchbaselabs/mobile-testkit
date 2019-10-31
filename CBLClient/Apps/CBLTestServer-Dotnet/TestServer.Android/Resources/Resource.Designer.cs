@@ -72,6 +72,22 @@ namespace TestServer.Android
 			{
 			}
 		}
+		
+		public partial class Xml
+		{
+			
+			// aapt resource value: 0x7F030000
+			public const int network_security_config = 2130903040;
+			
+			static Xml()
+			{
+				global::Android.Runtime.ResourceIdManager.UpdateIdValues();
+			}
+			
+			private Xml()
+			{
+			}
+		}
 	}
 }
 #pragma warning restore 1591
