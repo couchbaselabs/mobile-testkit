@@ -73,6 +73,7 @@ def test_system(params_from_base_suite_setup):
     if not resume_cluster:
         # Reset cluster to ensure no data in system
         cluster.reset(sg_config_path=sg_config)
+        log_info("Using SG ur: {}".format(sg_admin_url))
         sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg)
 
         # adding bulk docs to each db
