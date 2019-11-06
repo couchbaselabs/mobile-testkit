@@ -163,21 +163,21 @@ public class FileLoggingRequestHandler {
                                     in: .userDomainMask,
                                     appropriateFor: nil,
                                     create: false)
-            let folderURL = docDir.appendingPathComponent("logs_\(Date())")
-            
-            // if folder doesnt exists create one!!
-            if !fm.fileExists(atPath: folderURL.absoluteString) {
+            let folderURL = docDir.appendingPathComponent(path.lastPathComponent)
+
+            // if folder exists delete older one!!
+            if fm.fileExists(atPath: folderURL.absoluteString) {
+                print("deleting previous log-folder...");
                 do {
-                    try fm.createDirectory(at: folderURL,
-                                           withIntermediateDirectories: true,
-                                           attributes: nil)
+                    try fm.removeItem(at: folderURL)
                 } catch {
-                    print("Error create log-folder \(error.localizedDescription)");
+                    print("Error delete previous log-folder \(error.localizedDescription)");
                 }
             }
-            
+
+            // copy all files to new folder
             try fm.copyItem(at: path, to: folderURL)
-            
+
             return folderURL
         } catch {
             print("fail to copy item \(error)")
