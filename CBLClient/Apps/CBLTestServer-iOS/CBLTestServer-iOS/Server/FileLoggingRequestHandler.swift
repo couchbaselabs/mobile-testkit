@@ -88,6 +88,21 @@ public class FileLoggingRequestHandler {
             guard let dir = copyLogsToCacheDirectory(fileURL) else {
                 fatalError("Saving to cache failed")
             }
+            let arch_dir : String = NSSearchPathForDirectoriesInDomains(FileManager.SearchPathDirectory.documentDirectory, FileManager.SearchPathDomainMask.allDomainsMask, true)[0]
+            let filePath = arch_dir.appendingFormat("/" + "Archive.zip")
+
+            do {
+                let fileManager = FileManager.default
+
+                // Check if file exists
+                if fileManager.fileExists(atPath: filePath) {
+                    // Delete file
+                    try fileManager.removeItem(atPath: filePath)
+                }
+            }
+            catch let error as NSError {
+                print("An error took place: \(error)")
+            }
 
             do {
                 let zipFilePath = try Zip.quickZipFiles([dir], fileName: "Archive")
@@ -163,19 +178,19 @@ public class FileLoggingRequestHandler {
                                     in: .userDomainMask,
                                     appropriateFor: nil,
                                     create: false)
-            let folderURL = docDir.appendingPathComponent("logs_\(Date())")
+            let folderURL = docDir.appendingPathComponent(path.lastPathComponent)
 
-            // if folder doesnt exists create one!!
-            if !fm.fileExists(atPath: folderURL.absoluteString) {
+            // if folder exists delete older one!!
+            if fm.fileExists(atPath: folderURL.absoluteString) {
+                print("deleting previous log-folder...");
                 do {
-                    try fm.createDirectory(at: folderURL,
-                                           withIntermediateDirectories: true,
-                                           attributes: nil)
+                    try fm.removeItem(at: folderURL)
                 } catch {
-                    print("Error create log-folder \(error.localizedDescription)");
+                    print("Error delete previous log-folder \(error.localizedDescription)");
                 }
             }
 
+            // copy all files to new folder
             try fm.copyItem(at: path, to: folderURL)
 
             return folderURL
