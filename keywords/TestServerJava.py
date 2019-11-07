@@ -1,5 +1,7 @@
-import subprocess
+import os
+from os.path import expanduser
 import time
+from shutil import copyfile
 
 import requests
 
@@ -74,7 +76,9 @@ class TestServerJava(TestServerBase):
 
             # prepare java desktop parameters TODO: remove this line after implementation
             print("self.platform = {}".format(self.platform))
-        elif self.platform == "java-linux":
+        else:
+            home = expanduser("~")
+            self.testserver_path = "{}/javatestserver".format(home)
             # java web service
             # prepare java web service parameters TODO: remove this line after implementation
             print("self.platform = {}".format(self.platform))
@@ -83,8 +87,6 @@ class TestServerJava(TestServerBase):
         """
         1. Downloads the TestServer-Java-Desktop.jar package from latestbuild to the remote Linux or Windows machine
         2. Extracts the package and removes the zip
-        :param version_build
-        :return: nothing
         """
 
         if self.platform == "java-msft":
@@ -95,33 +97,41 @@ class TestServerJava(TestServerBase):
                 "build_name": self.build_name
             })
 
-            if status != 0:
-                raise LiteServError("Failed to download Test server on remote machine")
-        else:
-            # download jar file to the current linux or macosx machine
-            # 1. create a ~/testserver directory
-            testserver_path = "~/testserver"
-            try:
-                subprocess.call("mkdir {}".format(testserver_path))
-            except OSError:
-                log_info("Creation of the directory {} failed".format(testserver_path))
+            if status == 0:
+                return
             else:
-                log_info("Successfully created the directory {} ".format(testserver_path))
+                raise LiteServError("Failed to download Test server on remote machine")
 
-            # 2. download jar package under ~/testserver
-            log_info("Downloading {} -> {}/{}".format(self.download_url, testserver_path, self.package_name))
-            resp = requests.get(self.download_url, verify=False)
-            resp.raise_for_status()
-            with open("{}/{}".format(testserver_path, self.package_name), "wb") as f:
-                f.write(resp.content)
+        # start download java package for non-Windows platforms
+        expected_binary_path = "{}/{}".format(BINARY_DIR, self.package_name)
+        if os.path.isfile(expected_binary_path):
+            log_info("Package {} is already downloaded. Skipping.", self.package_name)
+            return
 
-            # 3. unpackage the war file
-            status = subprocess.check_call("jar -xvf {}/{}".format(testserver_path, self.package_name))
+        # download java package
+        log_info("Downloading {} -> {}/{}".format(self.download_url, BINARY_DIR, self.package_name))
+        '''
+        resp = requests.get(self.download_url, verify=False)
+        resp.raise_for_status()
+        with open("{}/{}".format(BINARY_DIR, self.package_name), "wb") as f:
+            f.write(resp.content)
+        '''
 
     def install(self):
-        # create shared virdir on tomcat
-        # copy unzipped dirs under tomcat dir
-        log_info("{}: Nothing to install".format(self.platform))
+        # 1. create a ~/testserver directory
+        try:
+            if not os.path.exists(self.testserver_path):
+                os.mkdir(self.testserver_path)
+        except OSError:
+            log_info("Creation of the directory {} failed".format(self.testserver_path))
+        else:
+            log_info("Successfully created the directory {} ".format(self.testserver_path))
+
+        # copy the java package to this directory
+        src = "{}/{}".format(BINARY_DIR, self.package_name)
+        des = "{}/{}".format(self.testserver_path, self.package_name)
+        copyfile(src, des)
+        log_info("{} has been copied to ~/javatestserver directory".format(self.package_name))
 
     def remove(self):
         log_info("{}: Nothing to remove".format(self.platform))
@@ -144,13 +154,9 @@ class TestServerJava(TestServerBase):
             # sleep for some seconds
             time.sleep(10)
         else:
-            # linux/macosx
             log_info("Starting Test server {} on {}".format(self.package_name, self.platform))
-            # Start Testserver via Ansible on local machine
-            status = subprocess.call("sudo service tomcat9 start")
-
-        if status != 0:
-            raise LiteServError("Could not start testserver")
+            os.chdir(self.testserver_path)
+            os.system("java -jar {}".format(self.package_name))
 
     def _verify_launched(self):
         raise NotImplementedError()

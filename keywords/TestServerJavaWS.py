@@ -112,6 +112,9 @@ class TestServerJavaWS(TestServerBase):
             with open("{}/{}".format(testserver_path, self.package_name), "wb") as f:
                 f.write(resp.content)
 
+                # 3. unpackage the war file
+            status = subprocess.check_call("jar -xvf {}/{}".format(testserver_path, self.package_name))
+
     def install(self):
         raise NotImplementedError()
 
