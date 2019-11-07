@@ -163,7 +163,6 @@ public class LoggingRequestHandler {
             if (zipFile.exists()) { zipper.deleteRecursive(zipFile); }
 
             zipper.zipDirectory(fileLoggerConfig.getDirectory(), zipFile);
-
             return new RawData("application/zip", zipper.readFile(zipFile));
         }
         finally {

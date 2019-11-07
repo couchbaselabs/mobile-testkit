@@ -55,6 +55,8 @@ public class ZipUtils {
 
     public void zipDirectory(String srcDirPath, File zipFile) {
         List<String> zipFiles = new ArrayList<>();
+        File logDir = new File(srcDirPath);
+        String logDirName = logDir.getName();
 
         File srcDir = new File(srcDirPath);
         getFilesList(srcDir, zipFiles);
@@ -66,7 +68,7 @@ public class ZipUtils {
         try {
             fos = new FileOutputStream(zipFile);
             zos = new ZipOutputStream(fos);
-            for (String filePath : zipFiles) { zipFile(filePath, rootPathLen, zos); }
+            for (String filePath : zipFiles) { zipFile(filePath, logDirName, rootPathLen, zos); }
         }
         catch (IOException e) {
             e.printStackTrace();
@@ -100,14 +102,15 @@ public class ZipUtils {
         return out.toByteArray();
     }
 
-    private void zipFile(String filePath, int rootPathLen, ZipOutputStream zos) throws IOException {
+    private void zipFile(String filePath, String logFileName, int rootPathLen, ZipOutputStream zos) throws IOException {
         FileInputStream fis = null;
         try {
             fis = new FileInputStream(filePath);
 
             String fn = filePath.substring(rootPathLen + 1, filePath.length());
             android.util.Log.d("###", "adding as '" + fn + "': " + filePath);
-            zos.putNextEntry(new ZipEntry(fn));
+            String entry = logFileName + "/" + fn;
+            zos.putNextEntry(new ZipEntry(entry));
 
             copyFile(fis, zos);
         }
