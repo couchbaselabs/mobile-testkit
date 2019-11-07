@@ -167,11 +167,13 @@ namespace Couchbase.Lite.Testing
                 return;
             }
 
+            string logDirName = new DirectoryInfo(path).Name;
             string[] filePaths = Directory.GetFiles(@path);
             var memoryStream = new MemoryStream();
             using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true)) {
                 foreach (var filePath in filePaths) {
-                    var entry = archive.CreateEntry(Path.GetFileName($"{filePath}"));
+                    string fileEntry = logDirName + "/" + Path.GetFileName($"{filePath}");
+                    var entry = archive.CreateEntry(fileEntry);
                     using (var file = File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                     using (var entryStream = entry.Open()) {
                         file.CopyTo(entryStream);
