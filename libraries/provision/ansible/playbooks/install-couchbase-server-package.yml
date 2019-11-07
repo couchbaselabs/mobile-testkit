@@ -112,7 +112,7 @@
       register: cb_full_version
 
     - name: COUCHBASE SERVER | Wait for node to be listening on port 8091
-      wait_for: port=8091 delay=5 timeout=40
+      wait_for: port=8091 delay=5 timeout=60
 
     - name: COUCHBASE SERVER | Configure cluster settings (3.0.X and 3.1.X)
       shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli cluster-init -c {{ couchbase_server_node }}:{{ couchbase_server_admin_port }} --user={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --cluster-port={{couchbase_server_admin_port}} --cluster-ramsize={{ couchbase_server_cluster_ram }}"
@@ -155,7 +155,7 @@
       when: "(not {{ cb_major_version['stdout'] | search('\\b[1-5]\\b') }}) and ipv6_enabled"
 
     - name: COUCHBASE SERVER | Wait for node to be listening on port 8091
-      wait_for: port=8091 delay=5 timeout=40
+      wait_for: port=8091 delay=5 timeout=60
   
     - set_fact:
         protocol: ""
