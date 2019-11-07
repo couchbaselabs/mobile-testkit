@@ -351,11 +351,11 @@ def params_from_base_suite_setup(request):
             raise
 
     # Hit this installed running services to verify the correct versions are installed
-#     cluster_utils.verify_cluster_versions(
-#         cluster_config,
-#         expected_server_version=server_version,
-#         expected_sync_gateway_version=sync_gateway_version
-#     )
+    cluster_utils.verify_cluster_versions(
+        cluster_config,
+        expected_server_version=server_version,
+        expected_sync_gateway_version=sync_gateway_version
+    )
 
     if enable_sample_bucket and not create_db_per_suite:
         # if enable_sample_bucket and not create_db_per_test:
