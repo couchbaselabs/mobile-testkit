@@ -98,13 +98,13 @@ def pytest_addoption(parser):
     parser.addoption("--device", action="store_true",
                      help="Enable device if you want to run it on device", default=False)
 
-    parser.addoption("--cbl-community", action="store_true",
+    parser.addoption("--cbl-ce", action="store_true",
                      help="If set, community edition will get picked up , default is enterprise", default=False)
 
-    parser.addoption("--cbs-community", action="store_true",
+    parser.addoption("--cbs-ce", action="store_true",
                      help="If set, community edition will get picked up , default is enterprise", default=False)
 
-    parser.addoption("--sg-community", action="store_true",
+    parser.addoption("--sg-ce", action="store_true",
                      help="If set, community edition will get picked up , default is enterprise", default=False)
 
     parser.addoption("--sg-ssl",
@@ -184,9 +184,9 @@ def params_from_base_suite_setup(request):
     create_db_per_test = request.config.getoption("--create-db-per-test")
     create_db_per_suite = request.config.getoption("--create-db-per-suite")
     device_enabled = request.config.getoption("--device")
-    cbl_ce = request.config.getoption("--cbl-community")
-    cbs_ce = request.config.getoption("--cbs-community")
-    sg_ce = request.config.getoption("--sg-community")
+    cbl_ce = request.config.getoption("--cbl-ce")
+    cbs_ce = request.config.getoption("--cbs-ce")
+    sg_ce = request.config.getoption("--sg-ce")
     sg_ssl = request.config.getoption("--sg-ssl")
     flush_memory_per_test = request.config.getoption("--flush-memory-per-test")
     sg_lb = request.config.getoption("--sg-lb")
