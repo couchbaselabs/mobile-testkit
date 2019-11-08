@@ -1,4 +1,4 @@
-package com.couchbase.javatestserver;
+package com.couchbase.mobiletestkit.javatestserver;
 
 import com.couchbase.mobiletestkit.javacommon.Context;
 import com.couchbase.mobiletestkit.javacommon.util.Log;
