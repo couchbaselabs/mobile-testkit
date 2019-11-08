@@ -2,6 +2,7 @@ import os
 from os.path import expanduser
 import time
 from shutil import copyfile
+import subprocess
 
 import requests
 
@@ -138,7 +139,9 @@ class TestServerJava(TestServerBase):
 
     def start(self, logfile_name):
         """
-        1. only need to restart tomcat server
+        start the java standalone application by calling java -jar
+        on non-Windows env, directly run on the current machine
+        on Windows env, using ansible to launch the app on remote Windows machine
         """
         if self.platform == "net-msft":
             self.logfile = logfile_name
@@ -155,15 +158,19 @@ class TestServerJava(TestServerBase):
             time.sleep(10)
         else:
             log_info("Starting Test server {} on {}".format(self.package_name, self.platform))
-            os.chdir(self.testserver_path)
-            os.system("java -jar {}".format(self.package_name))
+            # os.chdir(self.testserver_path)
+            print(self.testserver_path)
+            self.java_proc = subprocess.Popen(["java", "-jar", "{}/{}".format(self.testserver_path, self.package_name)])
+
 
     def _verify_launched(self):
         raise NotImplementedError()
 
     def stop(self):
-        status = subprocess.call("sudo service tomcat9 stop")
+        log_info("Stopping JavaTestServer app")
 
-        if status != 0:
-            raise LiteServError("Could not stop testserver")
+        try:
+            self.java_proc.terminate()
+        except:
+            log_info("Failed stopping JavaTestServer app")
 
