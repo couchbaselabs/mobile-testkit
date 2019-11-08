@@ -10,6 +10,7 @@ import Foundation
 import CouchbaseLiteSwift
 
 
+
 public class ReplicatorConfigurationRequestHandler {
     public static let VOID: String? = nil
     fileprivate var _pushPullReplListener:NSObjectProtocol?
@@ -57,6 +58,7 @@ public class ReplicatorConfigurationRequestHandler {
             let pull_filter: Bool? = args.get(name: "pull_filter")!
             let push_filter: Bool? = args.get(name: "push_filter")!
             let filter_callback_func: String? = args.get(name: "filter_callback_func")
+            let conflict_resolver: String? = args.get(name: "conflict_resolver")
             
             var replicatorType = ReplicatorType.pushAndPull
             
@@ -146,6 +148,32 @@ public class ReplicatorConfigurationRequestHandler {
                 } else {
                     config.pushFilter = _defaultReplicatorFilterCallback;
                 }
+            }
+            switch conflict_resolver {
+                case "local_wins":
+                    config.conflictResolver = LocalWinCustomConflictResolver();
+                    break
+                case "remote_wins":
+                    config.conflictResolver = RemoteWinCustomConflictResolver();
+                    break;
+                case "null":
+                    config.conflictResolver = NullWinCustomConflictResolver();
+                    break;
+                case "merge":
+                    config.conflictResolver = MergeWinCustomConflictResolver();
+                    break;
+                case "incorrect_doc_id":
+                    config.conflictResolver = IncorrectDocIdCustomConflictResolver();
+                    break;
+                case "delayed_local_win":
+                    config.conflictResolver = DelayedLocalWinCustomConflictResolver();
+                    break;
+                case "exception_thrown":
+                    config.conflictResolver = ExceptionThrownCustomConflictResolver();
+                    break;
+                default:
+                    config.conflictResolver = ConflictResolver.default
+                    break;
             }
             return config
         
@@ -254,5 +282,162 @@ public class ReplicatorConfigurationRequestHandler {
             return false
         }
         return true
+    }
+}
+
+private class LocalWinCustomConflictResolver: ConflictResolverProtocol {
+    func resolve(conflict: Conflict) -> Document? {
+        let localDoc = conflict.localDocument
+        let remoteDoc = conflict.remoteDocument
+        if (localDoc == nil || remoteDoc == nil) {
+            NSException(name: .internalInconsistencyException,
+                        reason: "Either local doc or remote is/are null",
+                        userInfo: nil).raise()
+        }
+        let docId = conflict.documentID
+        checkMismatchDocId(localDoc: localDoc, remoteDoc: remoteDoc, docId: docId)
+        return localDoc
+    }
+}
+
+private class RemoteWinCustomConflictResolver: ConflictResolverProtocol{
+    func resolve(conflict: Conflict) -> Document? {
+        let localDoc = conflict.localDocument
+        let remoteDoc = conflict.remoteDocument
+        if (localDoc == nil || remoteDoc == nil) {
+            NSException(name: .internalInconsistencyException,
+                        reason: "Either local doc or remote is/are null",
+                        userInfo: nil).raise()
+        }
+        let docId = conflict.documentID
+        checkMismatchDocId(localDoc: localDoc, remoteDoc: remoteDoc, docId: docId)
+        return remoteDoc
+    }
+}
+
+private class NullWinCustomConflictResolver: ConflictResolverProtocol{
+    func resolve(conflict: Conflict) -> Document? {
+        let localDoc = conflict.localDocument
+        let remoteDoc = conflict.remoteDocument
+        if (localDoc == nil || remoteDoc == nil) {
+            NSException(name: .internalInconsistencyException,
+                        reason: "Either local doc or remote is/are null",
+                        userInfo: nil).raise()
+        }
+        let docId = conflict.documentID
+        checkMismatchDocId(localDoc: localDoc, remoteDoc: remoteDoc, docId: docId)
+        return nil
+    }
+}
+
+private class MergeWinCustomConflictResolver: ConflictResolverProtocol{
+    func resolve(conflict: Conflict) -> Document? {
+        /// Migrate the conflicted doc
+        /// Algorithm creates a new doc with copying local doc and then adding any additional key
+        /// from remote doc. Conflicting keys will have value from local doc.
+        let localDoc = conflict.localDocument
+        let remoteDoc = conflict.remoteDocument
+        if (localDoc == nil || remoteDoc == nil) {
+            NSException(name: .internalInconsistencyException,
+                        reason: "Either local doc or remote is/are null",
+                        userInfo: nil).raise()
+        }
+        let docId = conflict.documentID
+        checkMismatchDocId(localDoc: localDoc, remoteDoc: remoteDoc, docId: docId)
+        let newDoc = localDoc!.toMutable()
+        let remoteDocMap = remoteDoc!.toDictionary()
+        for (key, value) in remoteDocMap {
+            if !newDoc.contains(key) {
+                newDoc.setValue(value, forKey: key)
+            }
+        }
+        return newDoc
+    }
+}
+
+private class DelayedLocalWinCustomConflictResolver: ConflictResolverProtocol{
+    func resolve(conflict: Conflict) -> Document? {
+        let localDoc = conflict.localDocument
+        let remoteDoc = conflict.remoteDocument
+        if (localDoc == nil || remoteDoc == nil) {
+            NSException(name: .internalInconsistencyException,
+                        reason: "Either local doc or remote is/are null",
+                        userInfo: nil).raise()
+        }
+        let docId = conflict.documentID
+        checkMismatchDocId(localDoc: localDoc, remoteDoc: remoteDoc, docId: docId)
+        sleep(10)
+        return localDoc
+    }
+}
+
+private class IncorrectDocIdCustomConflictResolver: ConflictResolverProtocol{
+    func resolve(conflict: Conflict) -> Document? {
+        let localDoc = conflict.localDocument
+        let remoteDoc = conflict.remoteDocument
+        if (localDoc == nil || remoteDoc == nil) {
+            NSException(name: .internalInconsistencyException,
+                        reason: "Either local doc or remote is/are null",
+                        userInfo: nil).raise()
+        }
+        let docId = conflict.documentID
+        checkMismatchDocId(localDoc: localDoc, remoteDoc: remoteDoc, docId: docId)
+        let newId = "changed\(docId)"
+        let newDoc = MutableDocument(id: newId, data: localDoc!.toDictionary())
+        newDoc.setValue("couchbase", forKey: "new_value")
+        return newDoc
+    }
+}
+
+private class DeleteDocCustomConflictResolver: ConflictResolverProtocol{
+    func resolve(conflict: Conflict) -> Document? {
+        let localDoc = conflict.localDocument
+        let remoteDoc = conflict.remoteDocument
+        if (localDoc == nil || remoteDoc == nil) {
+            NSException(name: .internalInconsistencyException,
+                        reason: "Either local doc or remote is/are null",
+                        userInfo: nil).raise()
+        }
+        let docId = conflict.documentID
+        checkMismatchDocId(localDoc: localDoc, remoteDoc: remoteDoc, docId: docId)
+        if remoteDoc == nil {
+            return localDoc
+        }
+        return nil
+    }
+}
+
+private class ExceptionThrownCustomConflictResolver: ConflictResolverProtocol{
+    func resolve(conflict: Conflict) -> Document? {
+        let localDoc = conflict.localDocument
+        let remoteDoc = conflict.remoteDocument
+        if (localDoc == nil || remoteDoc == nil) {
+            NSException(name: .internalInconsistencyException,
+                        reason: "Either local doc or remote is/are null",
+                        userInfo: nil).raise()
+        }
+        let docId = conflict.documentID
+        checkMismatchDocId(localDoc: localDoc, remoteDoc: remoteDoc, docId: docId)
+        NSException(name: .internalInconsistencyException,
+                    reason: "some exception happened inside custom conflict resolution",
+                    userInfo: nil).raise()
+        return remoteDoc
+    }
+}
+
+private func checkMismatchDocId(localDoc: Document?, remoteDoc: Document?, docId: String) -> Void{
+    if let remoteDocId = remoteDoc?.id {
+        if remoteDocId != docId {
+            NSException(name: .internalInconsistencyException,
+                        reason: "DocId mismatch",
+                        userInfo: nil).raise()
+        }
+    }
+    if let localDocId = localDoc?.id {
+        if localDocId != docId {
+            NSException(name: .internalInconsistencyException,
+                        reason: "DocId mismatch",
+                        userInfo: nil).raise()
+        }
     }
 }
