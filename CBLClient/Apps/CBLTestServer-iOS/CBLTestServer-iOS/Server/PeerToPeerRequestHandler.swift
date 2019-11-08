@@ -70,6 +70,7 @@ public class PeerToPeerRequestHandler {
             let endPointType: String = args.get(name: "endPointType")!
             let pull_filter: Bool? = args.get(name: "pull_filter")!
             let push_filter: Bool? = args.get(name: "push_filter")!
+            let conflict_resolver: String? = args.get(name: "conflict_resolver")!
             let filter_callback_func: String? = args.get(name: "filter_callback_func")
             var replicatorConfig: ReplicatorConfiguration
             var replicatorType = ReplicatorType.pushAndPull
@@ -124,6 +125,32 @@ public class PeerToPeerRequestHandler {
                     replicatorConfig.pushFilter = _defaultReplicatorFilterCallback;
                 }
             }
+            switch conflict_resolver {
+                case "local_wins":
+                    replicatorConfig.conflictResolver = LocalWinCustomConflictResolver();
+                    break
+                case "remote_wins":
+                    replicatorConfig.conflictResolver = RemoteWinCustomConflictResolver();
+                    break;
+                case "null":
+                    replicatorConfig.conflictResolver = NullWinCustomConflictResolver();
+                    break;
+                case "merge":
+                    replicatorConfig.conflictResolver = MergeWinCustomConflictResolver();
+                    break;
+                case "incorrect_doc_id":
+                    replicatorConfig.conflictResolver = IncorrectDocIdCustomConflictResolver();
+                    break;
+                case "delayed_local_win":
+                    replicatorConfig.conflictResolver = DelayedLocalWinCustomConflictResolver();
+                    break;
+                case "exception_thrown":
+                    replicatorConfig.conflictResolver = ExceptionThrownCustomConflictResolver();
+                    break;
+                default:
+                    replicatorConfig.conflictResolver = ConflictResolver.default
+                    break;
+            }
             replicatorConfig.replicatorType = replicatorType
             let replicator: Replicator = Replicator(config: replicatorConfig)
             return replicator
@@ -175,6 +202,120 @@ extension PeerToPeerRequestHandler: MessageEndpointDelegate {
     public func createConnection(endpoint: MessageEndpoint) -> MessageEndpointConnection {
         let url = endpoint.target as! URL
         return ReplicatorTcpClientConnection.init(url: url)
+    }
+}
+
+private class LocalWinCustomConflictResolver: ConflictResolverProtocol {
+    func resolve(conflict: Conflict) -> Document? {
+        let localDoc = conflict.localDocument!
+        let remoteDoc = conflict.remoteDocument!
+        let docId = conflict.documentID
+        checkMismatchDocId(localDoc: localDoc, remoteDoc: remoteDoc, docId: docId)
+        return localDoc
+    }
+}
+
+private class RemoteWinCustomConflictResolver: ConflictResolverProtocol{
+    func resolve(conflict: Conflict) -> Document? {
+        let localDoc = conflict.localDocument!
+        let remoteDoc = conflict.remoteDocument!
+        let docId = conflict.documentID
+        checkMismatchDocId(localDoc: localDoc, remoteDoc: remoteDoc, docId: docId)
+        return remoteDoc
+    }
+}
+
+private class NullWinCustomConflictResolver: ConflictResolverProtocol{
+    func resolve(conflict: Conflict) -> Document? {
+        let localDoc = conflict.localDocument!
+        let remoteDoc = conflict.remoteDocument!
+        let docId = conflict.documentID
+        checkMismatchDocId(localDoc: localDoc, remoteDoc: remoteDoc, docId: docId)
+        return nil
+    }
+}
+
+private class MergeWinCustomConflictResolver: ConflictResolverProtocol{
+    func resolve(conflict: Conflict) -> Document? {
+        let localDoc = conflict.localDocument!
+        let remoteDoc = conflict.remoteDocument!
+        let docId = conflict.documentID
+        checkMismatchDocId(localDoc: localDoc, remoteDoc: remoteDoc, docId: docId)
+        let newDoc = localDoc.toMutable()
+        let remoteDocMap = remoteDoc.toDictionary()
+        for (key, value) in remoteDocMap {
+            if !newDoc.contains(key) {
+                newDoc.setValue(value, forKey: key)
+            }
+        }
+        return newDoc
+    }
+}
+
+private class DelayedLocalWinCustomConflictResolver: ConflictResolverProtocol{
+    func resolve(conflict: Conflict) -> Document? {
+        let localDoc = conflict.localDocument!
+        let remoteDoc = conflict.remoteDocument!
+        let docId = conflict.documentID
+        checkMismatchDocId(localDoc: localDoc, remoteDoc: remoteDoc, docId: docId)
+        sleep(10)
+        return localDoc
+    }
+}
+
+private class IncorrectDocIdCustomConflictResolver: ConflictResolverProtocol{
+    func resolve(conflict: Conflict) -> Document? {
+        let localDoc = conflict.localDocument!
+        let remoteDoc = conflict.remoteDocument!
+        let docId = conflict.documentID
+        checkMismatchDocId(localDoc: localDoc, remoteDoc: remoteDoc, docId: docId)
+        let newId = "changed\(docId)"
+        let newDoc = MutableDocument(id: newId, data: localDoc.toDictionary())
+        newDoc.setValue("_id", forKey: newId)
+        return newDoc
+    }
+}
+
+private class DeleteDocCustomConflictResolver: ConflictResolverProtocol{
+    func resolve(conflict: Conflict) -> Document? {
+        let localDoc = conflict.localDocument
+        let remoteDoc = conflict.remoteDocument
+        let docId = conflict.documentID
+        checkMismatchDocId(localDoc: localDoc, remoteDoc: remoteDoc, docId: docId)
+        if remoteDoc == nil {
+            return localDoc
+        }
+        return nil
+    }
+}
+
+private class ExceptionThrownCustomConflictResolver: ConflictResolverProtocol{
+    func resolve(conflict: Conflict) -> Document? {
+        let localDoc = conflict.localDocument
+        let remoteDoc = conflict.remoteDocument
+        let docId = conflict.documentID
+        checkMismatchDocId(localDoc: localDoc, remoteDoc: remoteDoc, docId: docId)
+        NSException(name: .internalInconsistencyException,
+                    reason: "some exception happened inside custom conflict resolution",
+                    userInfo: nil).raise()
+        return localDoc
+    }
+}
+
+private func checkMismatchDocId(localDoc: Document?, remoteDoc: Document?, docId: String) -> Void{
+    if let remoteDocId = remoteDoc?.id {
+        if remoteDocId != docId {
+            NSException(name: .internalInconsistencyException,
+                        reason: "DocId mismatch",
+                        userInfo: nil).raise()
+        }
+    }
+    if let localDocId = localDoc?.id {
+        if localDocId != docId {
+            NSException(name: .internalInconsistencyException,
+                        reason: "DocId mismatch",
+                        userInfo: nil).raise()
+        }
     }
 }
 

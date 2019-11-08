@@ -6,13 +6,11 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
-using Couchbase.Lite;
 using Couchbase.Lite.DI;
 using Couchbase.Lite.Logging;
 using Couchbase.Lite.Util;
 
-using LiteCore;
-using LiteCore.Interop;
+
 
 namespace Couchbase.Lite.Testing
 {
