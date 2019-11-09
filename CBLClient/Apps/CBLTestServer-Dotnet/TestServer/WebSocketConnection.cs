@@ -21,21 +21,16 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.Security;
 using System.Net.Sockets;
-using System.Security.Authentication;
 using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Couchbase.Lite.Logging;
 using Couchbase.Lite.Support;
-
 using JetBrains.Annotations;
-
 using LiteCore.Interop;
+
 
 namespace Couchbase.Lite.Testing
 {

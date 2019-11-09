@@ -23,11 +23,12 @@ from libraries.provision.ansible_runner import AnsibleRunner
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.logredaction
-@pytest.mark.parametrize("sg_conf_name, redaction_level", [
-    ("log_redaction", "partial"),
-    ("log_redaction", "none")
+@pytest.mark.parametrize("sg_conf_name, redaction_level, x509_cert_auth", [
+    ("log_redaction", "partial", False),
+    ("log_redaction", "none", True)
 ])
-def test_log_redaction_config(params_from_base_test_setup, remove_tmp_sg_redaction_logs, sg_conf_name, redaction_level):
+def test_log_redaction_config(params_from_base_test_setup, remove_tmp_sg_redaction_logs,
+                              sg_conf_name, redaction_level, x509_cert_auth):
     """
     @summary
     1. Have sync_gateway config file with logging level as partial/none
@@ -57,7 +58,11 @@ def test_log_redaction_config(params_from_base_test_setup, remove_tmp_sg_redacti
 
     # Modifying log redaction level to partial
     temp_cluster_config = copy_to_temp_conf(cluster_config, mode)
-    persist_cluster_config_environment_prop(temp_cluster_config, 'redactlevel', redaction_level, property_name_check=False)
+    persist_cluster_config_environment_prop(temp_cluster_config, 'redactlevel', redaction_level,
+                                            property_name_check=False)
+
+    persist_cluster_config_environment_prop(cluster_config, 'x509_certs', x509_cert_auth)
+
     cluster = Cluster(config=temp_cluster_config)
     cluster.reset(sg_config_path=sg_conf)
 
@@ -80,12 +85,13 @@ def test_log_redaction_config(params_from_base_test_setup, remove_tmp_sg_redacti
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.logredaction
-@pytest.mark.parametrize("sg_conf_name, redaction_level, redaction_salt", [
-    ("log_redaction", "partial", False),
-    ("log_redaction", "none", False),
-    ("log_redaction", "partial", True)
+@pytest.mark.parametrize("sg_conf_name, redaction_level, redaction_salt, x509_cert_auth", [
+    ("log_redaction", "partial", False, True),
+    ("log_redaction", "none", False, False),
+    ("log_redaction", "partial", True, True)
 ])
-def test_sgCollect1(params_from_base_test_setup, remove_tmp_sg_redaction_logs, sg_conf_name, redaction_level, redaction_salt):
+def test_sgCollect1(params_from_base_test_setup, remove_tmp_sg_redaction_logs, sg_conf_name,
+                    redaction_level, redaction_salt, x509_cert_auth):
     """
     @summary
     1. Have sync_gateway config file with logging level as partial/None
@@ -114,6 +120,9 @@ def test_sgCollect1(params_from_base_test_setup, remove_tmp_sg_redaction_logs, s
     # Modifying log redaction level to partial
     temp_cluster_config = copy_to_temp_conf(cluster_config, mode)
     persist_cluster_config_environment_prop(temp_cluster_config, 'redactlevel', "partial", property_name_check=False)
+
+    persist_cluster_config_environment_prop(cluster_config, 'x509_certs', x509_cert_auth)
+
     cluster = Cluster(config=temp_cluster_config)
     cluster.reset(sg_config_path=sg_conf)
 
@@ -138,13 +147,14 @@ def test_sgCollect1(params_from_base_test_setup, remove_tmp_sg_redaction_logs, s
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.logredaction
-@pytest.mark.parametrize("sg_conf_name, redaction_level, redaction_salt, output_dir", [
-    ("log_redaction", "partial", False, False),
-    ("log_redaction", None, False, False),
-    ("log_redaction", "partial", True, False),
-    ("log_redaction", "partial", True, True)
+@pytest.mark.parametrize("sg_conf_name, redaction_level, redaction_salt, output_dir, x509_cert_auth", [
+    ("log_redaction", "partial", False, False, True),
+    ("log_redaction", None, False, False, False),
+    ("log_redaction", "partial", True, False, False),
+    ("log_redaction", "partial", True, True, True)
 ])
-def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_logs, sg_conf_name, redaction_level, redaction_salt, output_dir):
+def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_logs, sg_conf_name, redaction_level,
+                           redaction_salt, output_dir, x509_cert_auth):
     """
     @summary
     1. Have sync_gateway config file with logging level as partial/None
@@ -176,6 +186,9 @@ def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_
     # Modifying log redaction level to partial
     temp_cluster_config = copy_to_temp_conf(cluster_config, mode)
     persist_cluster_config_environment_prop(temp_cluster_config, 'redactlevel', "partial", property_name_check=False)
+
+    persist_cluster_config_environment_prop(cluster_config, 'x509_certs', x509_cert_auth)
+
     cluster = Cluster(config=temp_cluster_config)
     cluster.reset(sg_config_path=sg_conf)
 
@@ -252,10 +265,11 @@ def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.logredaction
-@pytest.mark.parametrize("sg_conf_name", [
-    ("log_redaction")
+@pytest.mark.parametrize("sg_conf_name, x509_cert_auth", [
+    ("log_redaction", False),
+    ("log_redaction", True)
 ])
-def test_sgCollectRestApi_errorMessages(params_from_base_test_setup, remove_tmp_sg_redaction_logs, sg_conf_name):
+def test_sgCollectRestApi_errorMessages(params_from_base_test_setup, remove_tmp_sg_redaction_logs, sg_conf_name, x509_cert_auth):
     """
     @summary
     1. Have sync_gateway config file with logging level as partial/None
@@ -282,6 +296,9 @@ def test_sgCollectRestApi_errorMessages(params_from_base_test_setup, remove_tmp_
     # Modifying log redaction level to partial
     temp_cluster_config = copy_to_temp_conf(cluster_config, mode)
     persist_cluster_config_environment_prop(temp_cluster_config, 'redactlevel', "partial", property_name_check=False)
+
+    persist_cluster_config_environment_prop(cluster_config, 'x509_certs', x509_cert_auth)
+
     cluster = Cluster(config=temp_cluster_config)
     cluster.reset(sg_config_path=sg_conf)
 
