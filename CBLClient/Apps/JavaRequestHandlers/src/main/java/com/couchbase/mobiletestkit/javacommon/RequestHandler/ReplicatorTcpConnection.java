@@ -25,10 +25,10 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.couchbase.mobiletestkit.javacommon.RequestHandlerDispatcher;
 import com.couchbase.mobiletestkit.javacommon.util.Log;
 import com.couchbase.lite.Message;
 import com.couchbase.lite.MessageEndpointConnection;
@@ -173,7 +173,6 @@ public abstract class ReplicatorTcpConnection implements MessageEndpointConnecti
         }
 
         byte[] hashBytes = md.digest(longKey.getBytes(StandardCharsets.US_ASCII));
-        //return Base64.encodeToString(hashBytes, Base64.NO_WRAP); TODO - NEED TO REVISIT AND SEE IF IT WORKS WITHOUT NO_WRAP FORMAT
-        return Base64.getEncoder().encodeToString(hashBytes);
+        return RequestHandlerDispatcher.context.customEncode(hashBytes);
     }
 }
