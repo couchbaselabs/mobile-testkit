@@ -841,6 +841,7 @@ def test_delta_sync_on_community_edition(params_from_base_test_setup, num_of_doc
         for doc in sg_docs:
             sg_client.update_doc(url=sg_url, db=sg_db, doc_id=doc["id"], number_updates=number_of_updates, auth=session, channels=channels, attachment_name=file_attachment)
 
+    # 4. Do push/pull replication
     repl = replicator.configure_and_replicate(source_db=cbl_db,
                                               target_url=sg_blip_url,
                                               continuous=continuous,
@@ -851,6 +852,7 @@ def test_delta_sync_on_community_edition(params_from_base_test_setup, num_of_doc
     # Get Sync Gateway Expvars
     expvars = sg_client.get_expvars(url=sg_admin_url)
 
+    # 5. Verify delta sync stats are not available for community edition
     assert "delta_sync" not in expvars['syncgateway']['per_db'][sg_db], "delta_sync in SG CE"
 
     sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
