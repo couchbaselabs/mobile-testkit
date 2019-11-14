@@ -27,7 +27,11 @@ public class FileLoggingRequestHandler {
             let plain_text: Bool = args.get(name: "plain_text")!
             var directory: String = args.get(name: "directory")!
             if (directory.isEmpty) {
-                directory = NSHomeDirectory() + "/logs" + String(Date().timeIntervalSince1970)
+                let cacheDir = try FileManager.default.url(for: .cachesDirectory,
+                                                           in: .userDomainMask,
+                                                           appropriateFor: nil,
+                                                           create: false)
+                directory = cacheDir.appendingPathComponent("logs_\(Date().timeIntervalSince1970)").path
                 print("File logging configured at : " + directory)
             }
             
@@ -83,29 +87,11 @@ public class FileLoggingRequestHandler {
             guard let path = Database.log.file.config?.directory else {
                 fatalError("failed to get the config directory")
             }
-
-            let fileURL = URL(fileURLWithPath: path)
-            guard let dir = copyLogsToCacheDirectory(fileURL) else {
-                fatalError("Saving to cache failed")
-            }
-            let arch_dir : String = NSSearchPathForDirectoriesInDomains(FileManager.SearchPathDirectory.documentDirectory, FileManager.SearchPathDomainMask.allDomainsMask, true)[0]
-            let filePath = arch_dir.appendingFormat("/" + "Archive.zip")
-
+            
             do {
-                let fileManager = FileManager.default
-
-                // Check if file exists
-                if fileManager.fileExists(atPath: filePath) {
-                    // Delete file
-                    try fileManager.removeItem(atPath: filePath)
-                }
-            }
-            catch let error as NSError {
-                print("An error took place: \(error)")
-            }
-
-            do {
-                let zipFilePath = try Zip.quickZipFiles([dir], fileName: "Archive")
+                let dirURL = URL(fileURLWithPath: path)
+                let zipFilePath = try Zip.quickZipFiles([dirURL],
+                                                        fileName: "Archive")
                 return RawData(data: try Data(contentsOf: zipFilePath),
                                contentType: "application/zip")
             } catch {
@@ -169,35 +155,5 @@ public class FileLoggingRequestHandler {
         default:
             throw RequestHandlerError.MethodNotFound(method)
         }
-    }
-
-    func copyLogsToCacheDirectory(_ path: URL) -> URL? {
-        let fm = FileManager.default
-        do {
-            let docDir = try fm.url(for: .cachesDirectory,
-                                    in: .userDomainMask,
-                                    appropriateFor: nil,
-                                    create: false)
-            let folderURL = docDir.appendingPathComponent(path.lastPathComponent)
-
-            // if folder exists delete older one!!
-            if fm.fileExists(atPath: folderURL.absoluteString) {
-                print("deleting previous log-folder...");
-                do {
-                    try fm.removeItem(at: folderURL)
-                } catch {
-                    print("Error delete previous log-folder \(error.localizedDescription)");
-                }
-            }
-
-            // copy all files to new folder
-            try fm.copyItem(at: path, to: folderURL)
-
-            return folderURL
-        } catch {
-            print("fail to copy item \(error)")
-        }
-
-        return nil
     }
 }
