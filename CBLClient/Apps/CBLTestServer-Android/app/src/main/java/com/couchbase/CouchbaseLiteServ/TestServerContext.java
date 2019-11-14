@@ -59,7 +59,7 @@ public class TestServerContext implements Context {
     }
 
     @Override
-    public String customEncode(byte[] hashBytes){
+    public String encodeBase64(byte[] hashBytes){
         // load android.util.Base64 in android app
         return Base64.encodeToString(hashBytes, Base64.NO_WRAP);
     }

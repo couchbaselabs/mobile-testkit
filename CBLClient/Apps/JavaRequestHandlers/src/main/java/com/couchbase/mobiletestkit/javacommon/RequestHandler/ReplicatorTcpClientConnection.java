@@ -94,7 +94,7 @@ public final class ReplicatorTcpClientConnection extends ReplicatorTcpConnection
         Random random = new Random();
         random.nextBytes(keyBytes);
 
-        return RequestHandlerDispatcher.context.customEncode(keyBytes);
+        return RequestHandlerDispatcher.context.encodeBase64(keyBytes);
     }
 
 }

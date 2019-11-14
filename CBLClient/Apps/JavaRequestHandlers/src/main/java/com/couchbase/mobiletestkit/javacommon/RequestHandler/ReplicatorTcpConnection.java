@@ -173,6 +173,6 @@ public abstract class ReplicatorTcpConnection implements MessageEndpointConnecti
         }
 
         byte[] hashBytes = md.digest(longKey.getBytes(StandardCharsets.US_ASCII));
-        return RequestHandlerDispatcher.context.customEncode(hashBytes);
+        return RequestHandlerDispatcher.context.encodeBase64(hashBytes);
     }
 }
