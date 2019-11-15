@@ -17,6 +17,8 @@ package com.couchbase.mobiletestkit.javacommon.RequestHandler;
 //
 
 
+import com.couchbase.mobiletestkit.javacommon.RequestHandlerDispatcher;
+
 import java.io.IOException;
 import java.net.Socket;
 import java.net.URI;
@@ -91,8 +93,8 @@ public final class ReplicatorTcpClientConnection extends ReplicatorTcpConnection
         byte[] keyBytes = new byte[16];
         Random random = new Random();
         random.nextBytes(keyBytes);
-        //return Base64.encodeToString(keyBytes, Base64.NO_WRAP); TODO - NEED TO REVISIT AND VERIFY IF VALUE STILL CORRECT WITHNOT NO_WRAP
-        return Base64.getEncoder().encodeToString(keyBytes);
+
+        return RequestHandlerDispatcher.context.encodeBase64(keyBytes);
     }
 
 }
