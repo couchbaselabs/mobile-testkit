@@ -229,12 +229,11 @@ class Replication(object):
         args.setMemoryPointer("replicator", replicator)
         return self._client.invokeMethod("replicator_start", args)
 
-    def stop(self, replicator):
+    def stop(self, replicator, max_times=15):
         args = Args()
         args.setMemoryPointer("replicator", replicator)
         # return self._client.invokeMethod("replicator_stop", args)
         self._client.invokeMethod("replicator_stop", args)
-        max_times = 15
         count = 0
         while self.getActivitylevel(replicator) != "stopped" and count < max_times:
             time.sleep(2)

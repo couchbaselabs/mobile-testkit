@@ -9,14 +9,17 @@ from keywords.SyncGateway import SyncGateway, sync_gateway_config_path_for_mode,
 from keywords.utils import log_info, host_for_url
 from libraries.testkit.cluster import Cluster
 from keywords.exceptions import ProvisioningError
-from utilities.cluster_config_utils import load_cluster_config_json
+from utilities.cluster_config_utils import load_cluster_config_json, persist_cluster_config_environment_prop
 
 
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.logging
-@pytest.mark.parametrize("sg_conf_name", ["log_rotation_new"])
-def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name):
+@pytest.mark.parametrize("sg_conf_name, x509_cert_auth", [
+    ("log_rotation_new", True),
+    ("log_rotation_new", False)
+])
+def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name, x509_cert_auth):
     """
     @summary
     Test to verify default values for rotation section:
@@ -38,6 +41,8 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name):
 
     if get_sync_gateway_version(sg_ip)[0] < "2.1":
         pytest.skip("Continuous logging Test NA for SG < 2.1")
+
+    persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', x509_cert_auth)
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)

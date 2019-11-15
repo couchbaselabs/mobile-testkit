@@ -57,7 +57,7 @@ class SyncGateway:
                                                                        self.couchbase_server_primary_node)
 
     def info(self):
-        r = requests.get(self.url)
+        r = requests.get(self.url, verify=False)
         r.raise_for_status()
         return r.text
 
