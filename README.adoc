@@ -229,6 +229,7 @@ NOTE: This has only been tested on Mac OSX
 
 ==== Installation
 
+. Make sure VirtualBox installation is complete then only install Vagrant
 . https://www.virtualbox.org/wiki/Downloads[Install VirtualBox]
 . https://www.vagrantup.com/downloads.html[Install Vagrant]
 . `cd` into `vagrant/private_network` (or `vagrant/public_network` if you need VM's exposed to LAN, for example when testing against actual mobile devices)
@@ -244,6 +245,7 @@ python utilities/generate_cluster_configs_from_vagrant_hosts.py --private-networ
 ```
     - This will discover running vagrant boxes and get their ips
     - Generate `resources/pool.json`
+      - Go to resources folder and copy the pool.json.example to generate the pool.json
     - Generate `resources/cluster_configs/`
 
 ==== SSH Authentication
@@ -275,6 +277,11 @@ $ Redirecting to /bin/systemctl restart  sshd.service
 python libraries/utilities/install_keys.py --public-key-path=~/.ssh/id_rsa.pub --ssh-user=vagrant --ssh-password=vagrant
 ```
 The password is set to `vagrant`.
+
+.If you see any abort error install cryptography module
+```
+ pip install cryptography
+```
 
 ==== Install dependencies
 
