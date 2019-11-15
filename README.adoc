@@ -229,7 +229,7 @@ NOTE: This has only been tested on Mac OSX
 
 ==== Installation
 
-. Make sure VirtualBox installation is complete then only install Vagrant
+. NOTE: Install the Vagrant only when Virtual box is up and running
 . https://www.virtualbox.org/wiki/Downloads[Install VirtualBox]
 . https://www.vagrantup.com/downloads.html[Install Vagrant]
 . `cd` into `vagrant/private_network` (or `vagrant/public_network` if you need VM's exposed to LAN, for example when testing against actual mobile devices)
