@@ -117,7 +117,7 @@ def create_doc(doc_id, content=None, attachments=None, expiry=None, channels=Non
     if prop_generator is not None:
         types.verify_is_callable(prop_generator)
         props = prop_generator()
-        for k, v in props.items():
+        for k, v in list(props.items()):
             doc[k] = v
 
     return doc

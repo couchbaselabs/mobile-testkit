@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 
 from couchbase.bucket import Bucket
 
@@ -23,7 +23,7 @@ def check_lite_updates():
         print('Running: {}'.format(query))
         ids = [row['id'] for row in SDK_CLIENT.n1ql_query(query)]
         docs = SDK_CLIENT.get_multi(ids)
-        for _, val in docs.items():
+        for _, val in list(docs.items()):
             if 'lite_touched' not in val.value:
                 print('Doc with body: {} not updated!'.format(val.value))
             else:
@@ -57,7 +57,7 @@ def update_from_sdk():
         ids = [row['id'] for row in SDK_CLIENT.n1ql_query(query)]
         docs = SDK_CLIENT.get_multi(ids)
         print('Updating: {} docs'.format(len(docs)))
-        for doc_id, val in docs.items():
+        for doc_id, val in list(docs.items()):
             doc_body = val.value
             doc_body['sdk_touched'] = True
             SDK_CLIENT.upsert(doc_id, doc_body)

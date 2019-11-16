@@ -61,7 +61,7 @@ def generate_cluster_configs_from_vagrant(private_network, public_network,
         if len(ip_addresses) < 2:
             raise ProvisioningError("Expected at least 2 ip addresses hostname -I result: {}".format(ip_addresses))
         public_ip = ip_addresses[1]
-        print("host: {} ip: {}".format(name, public_ip))
+        print(("host: {} ip: {}".format(name, public_ip)))
         vagrant_ips.append(public_ip)
 
     # Restore previous directory

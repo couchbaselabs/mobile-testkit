@@ -2,13 +2,13 @@ import os
 import sys
 from optparse import OptionParser
 
-import install_sync_gateway
-import install_couchbase_server
+from . import install_sync_gateway
+from . import install_couchbase_server
 
-from clean_cluster import clean_cluster
-from install_couchbase_server import CouchbaseServerConfig
-from install_sync_gateway import SyncGatewayConfig
-from install_nginx import install_nginx
+from .clean_cluster import clean_cluster
+from .install_couchbase_server import CouchbaseServerConfig
+from .install_sync_gateway import SyncGatewayConfig
+from .install_nginx import install_nginx
 
 from libraries.provision.install_deps import install_deps
 from libraries.testkit.config import Config
@@ -54,7 +54,7 @@ def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_conf
 
     log_info(couchbase_server_config)
     log_info(sync_gateway_config)
-
+    print(("******",sync_gateway_config))
     if not sync_gateway_config.is_valid():
         log_info("Invalid sync_gateway provisioning configuration. Exiting ...")
         sys.exit(1)

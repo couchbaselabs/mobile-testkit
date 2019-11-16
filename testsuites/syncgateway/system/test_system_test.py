@@ -212,7 +212,7 @@ def test_system_test(params_from_base_test_setup):
         )
 
         all_user_channels = []
-        for k, v in users.items():
+        for k, v in list(users.items()):
             log_info('User ({}) updated docs {} times!'.format(k, v['updates']))
             all_user_channels.append(k)
 
@@ -241,7 +241,7 @@ def print_summary(users):
     log_info('------------------------------------------')
     log_info('Summary')
     log_info('------------------------------------------')
-    for user_name, value in users.items():
+    for user_name, value in list(users.items()):
         num_user_docs = len(value['doc_ids'])
         log_info('-> {} added: {} docs'.format(user_name, num_user_docs))
 
@@ -267,7 +267,7 @@ def grant_users_access(users, channels, sg_admin_url, sg_db):
 def send_changes_termination_doc(sg_url, sg_db, users, terminator_doc_id, terminator_channel):
     sg_client = MobileRestClient()
 
-    random_user_id = random.choice(users.keys())
+    random_user_id = random.choice(list(users.keys()))
     random_user = users[random_user_id]
     log_info('Sending changes termination doc for all users')
     doc = {'_id': terminator_doc_id, 'channels': [terminator_channel]}
@@ -390,7 +390,7 @@ def start_changes_processing(sg_url, sg_db, users, changes_delay, changes_limit,
         longpoll_changes_tasks = []
         continuous_changes_tasks = []
 
-        for user_key, user_val in users.items():
+        for user_key, user_val in list(users.items()):
 
             channels_filtered = False
             doc_ids_filtered = False

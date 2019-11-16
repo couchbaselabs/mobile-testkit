@@ -126,7 +126,7 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name, 
 
     remote_executor.execute("sudo chmod 777 -R /tmp/sg_logs")
     # iterate 5th times to verify that every time we get new backup file with ~100MB
-    for i in xrange(5):
+    for i in range(5):
         sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
         # ~1M MB will be added to log file after requests
         remote_executor.execute(
@@ -493,7 +493,7 @@ def test_log_number_backups(params_from_base_test_setup, sg_conf_name):
     remote_executor.execute("sudo chmod 777 -R /tmp/sg_logs")
 
     # iterate 5 times
-    for i in xrange(5):
+    for i in range(5):
         sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=sg_conf)
         # ~1M MB will be added to log file after requests
         remote_executor.execute(

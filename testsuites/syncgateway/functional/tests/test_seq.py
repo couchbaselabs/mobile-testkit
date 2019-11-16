@@ -94,5 +94,5 @@ def test_seq(params_from_base_test_setup, sg_conf_name, num_users, num_docs, num
             raise ValueError("Unsupported 'mode' !!")
 
     all_doc_caches = [user.cache for user in users]
-    all_docs = {k: v for cache in all_doc_caches for k, v in cache.items()}
+    all_docs = {k: v for cache in all_doc_caches for k, v in list(cache.items())}
     verify_changes(users, expected_num_docs=num_users * num_docs, expected_num_revisions=num_revisions, expected_docs=all_docs)

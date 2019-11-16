@@ -29,11 +29,11 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    print("Installing LiteServ: {} {} on {}:{} with storage engine: {}".format(args.platform,
+    print(("Installing LiteServ: {} {} on {}:{} with storage engine: {}".format(args.platform,
                                                                                args.version_build,
                                                                                args.host,
                                                                                args.port,
-                                                                               args.storage_engine))
+                                                                               args.storage_engine)))
 
     install_liteserv(platform=args.platform,
                      version_build=args.version_build,

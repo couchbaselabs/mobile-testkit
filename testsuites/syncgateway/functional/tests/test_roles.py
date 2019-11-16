@@ -74,7 +74,7 @@ def test_roles_sanity(params_from_base_test_setup, sg_conf_name, x509_cert_auth)
         doc_pusher.add_docs(number_of_docs_per_pusher, bulk=True)
         radio_doc_caches.append(doc_pusher.cache)
 
-    radio_docs = {k: v for cache in radio_doc_caches for k, v in cache.items()}
+    radio_docs = {k: v for cache in radio_doc_caches for k, v in list(cache.items())}
 
     tv_doc_caches = []
     for tv_station in tv_stations:
@@ -82,7 +82,7 @@ def test_roles_sanity(params_from_base_test_setup, sg_conf_name, x509_cert_auth)
         doc_pusher.add_docs(number_of_docs_per_pusher, bulk=True)
         tv_doc_caches.append(doc_pusher.cache)
 
-    tv_docs = {k: v for cache in tv_doc_caches for k, v in cache.items()}
+    tv_docs = {k: v for cache in tv_doc_caches for k, v in list(cache.items())}
 
     # Verify djs get docs for all the channels associated with the radio_stations role
     expected_num_radio_docs = len(radio_stations) * number_of_docs_per_pusher
@@ -95,7 +95,7 @@ def test_roles_sanity(params_from_base_test_setup, sg_conf_name, x509_cert_auth)
     # Verify mogul gets docs for all the channels associated with the radio_stations + tv_stations roles
     all_docs_caches = list(radio_doc_caches)
     all_docs_caches.extend(tv_doc_caches)
-    all_docs = {k: v for cache in all_docs_caches for k, v in cache.items()}
+    all_docs = {k: v for cache in all_docs_caches for k, v in list(cache.items())}
     verify_changes(mogul, expected_num_docs=expected_num_radio_docs + expected_num_tv_docs, expected_num_revisions=0, expected_docs=all_docs)
 
 

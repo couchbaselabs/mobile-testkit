@@ -451,7 +451,7 @@ def verify_udTags_in_zippedFile(zip_file_name):
         ud_output_list = ud_output.splitlines()
         if len(line_num_output) == 0 and len(ud_output) == 0:
             assert False, "No user data tags found in " + non_redacted_zip_file
-        nonredact_dict = dict(zip(ln_output_list, ud_output_list))
+        nonredact_dict = dict(list(zip(ln_output_list, ud_output_list)))
 
         redacted_zip_file = "/tmp/sg_redaction_logs/sg1/{}-redacted.zip".format(zip_file_name)
         command = "zipgrep -n -o \"<ud>.+</ud>\" " + redacted_zip_file + " | cut -f2 -d/ | cut -f1 -d\<"
@@ -463,11 +463,11 @@ def verify_udTags_in_zippedFile(zip_file_name):
         ud_output_list = ud_output.splitlines()
         if len(line_num_output) == 0 and len(ud_output) == 0:
             assert False, "No user data tags found in " + redacted_zip_file
-        redact_dict = dict(zip(ln_output_list, ud_output_list))
-        if len(nonredact_dict.items()) != len(redact_dict.items()):
+        redact_dict = dict(list(zip(ln_output_list, ud_output_list)))
+        if len(list(nonredact_dict.items())) != len(list(redact_dict.items())):
             assert False, "User tags count mismatch between redacted and non-redacted files"
 
-        for key, value in redact_dict.items():
+        for key, value in list(redact_dict.items()):
             redact_match = re.search("<ud>.+</ud>", value)
             if redact_match:
                 redact_content = redact_match.group(0)

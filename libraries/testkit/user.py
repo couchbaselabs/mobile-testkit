@@ -274,7 +274,7 @@ class User:
                 if put_resp.status_code == 201:
                     data = put_resp.json()
 
-                if "rev" not in data.keys():
+                if "rev" not in list(data.keys()):
                     log.error("Error: Did not find _rev property after Update response")
                     raise ValueError("Did not find _rev property after Update response")
 
@@ -294,15 +294,15 @@ class User:
 
         errors = list()
 
-        if len(self.cache.keys()) == 0:
+        if len(list(self.cache.keys())) == 0:
             log.warning("Unable to find any docs to update")
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=settings.MAX_REQUEST_WORKERS) as executor:
 
             if retries:
-                future_to_docs = {executor.submit(self.update_doc, doc_id, num_revs_per_doc, retries=True): doc_id for doc_id in self.cache.keys()}
+                future_to_docs = {executor.submit(self.update_doc, doc_id, num_revs_per_doc, retries=True): doc_id for doc_id in list(self.cache.keys())}
             else:
-                future_to_docs = {executor.submit(self.update_doc, doc_id, num_revs_per_doc): doc_id for doc_id in self.cache.keys()}
+                future_to_docs = {executor.submit(self.update_doc, doc_id, num_revs_per_doc): doc_id for doc_id in list(self.cache.keys())}
 
             for future in concurrent.futures.as_completed(future_to_docs):
                 doc = future_to_docs[future]
@@ -343,7 +343,7 @@ class User:
                 revision_num = match.group(1)
                 log.debug(revision_num)
 
-            if obj["id"] in docs.keys():
+            if obj["id"] in list(docs.keys()):
                 log.error("Key already exists")
                 raise "Key already exists"
             else:
@@ -362,7 +362,7 @@ class User:
             else:
                 superset.append(obj["id"])
 
-        for doc_id in self.cache.keys():
+        for doc_id in list(self.cache.keys()):
             if doc_id not in superset:
                 log.error("doc-id {} missing from superset for User {}".format(doc_id, self.name))
                 errors += 1

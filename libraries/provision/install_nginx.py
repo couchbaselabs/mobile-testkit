@@ -3,7 +3,7 @@ import os
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.utils import log_info
 
-from ansible_runner import AnsibleRunner
+from .ansible_runner import AnsibleRunner
 
 
 def install_nginx(cluster_config):

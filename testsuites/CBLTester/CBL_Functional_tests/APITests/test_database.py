@@ -26,7 +26,7 @@ class TestDatabase(object):
         try:
             self.db_obj.create(db_name)
             assert 0
-        except Exception, err_resp:
+        except Exception as err_resp:
             assert err_msg in str(err_resp)
 
     def test_get_document_exception(self):
@@ -39,7 +39,7 @@ class TestDatabase(object):
         try:
             self.db_obj.getDocument(db, None)
             assert 0
-        except Exception, err_resp:
+        except Exception as err_resp:
             assert err_msg in str(err_resp)
         # checking document in db with empty name
         doc_id = self.db_obj.getDocument(db, "")
@@ -57,7 +57,7 @@ class TestDatabase(object):
         try:
             self.db_obj.saveDocument(db, None)
             assert 0
-        except Exception, err_resp:
+        except Exception as err_resp:
             assert err_msg in str(err_resp)
 
     def test_delete_exception(self):
@@ -70,12 +70,12 @@ class TestDatabase(object):
         try:
             self.db_obj.delete(database=db, document=None)
             assert 0
-        except Exception, err_resp:
+        except Exception as err_resp:
             assert err_msg in str(err_resp)
         try:
             self.db_obj.purge(database=db, document=None)
             assert 0
-        except Exception, err_resp:
+        except Exception as err_resp:
             assert err_msg in str(err_resp)
 
     @pytest.mark.parametrize("db_name", [

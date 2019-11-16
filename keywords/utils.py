@@ -64,7 +64,7 @@ def log_r(request, info=True):
 
     try:
         logging.debug("{}".format(request.text.encode("utf-8")))
-    except Exception, err:
+    except Exception as err:
         log_debug("Error occurred: {}".format(err))
 
 
@@ -318,13 +318,13 @@ def compare_generic_types(object1, object2, isPredictiveResult=False):
         return True
     if isinstance(object1, str) and isinstance(object2, str):
         return object1 == object2
-    elif isinstance(object1, unicode) and isinstance(object2, unicode):
+    elif isinstance(object1, str) and isinstance(object2, str):
         return object1 == object2
     elif isinstance(object1, bool) and isinstance(object2, bool):
         return object1 == object2
     elif isinstance(object1, int) and isinstance(object2, int):
         return object1 == object2
-    elif isinstance(object1, long) and isinstance(object2, long):
+    elif isinstance(object1, int) and isinstance(object2, int):
         return object1 == object2
     elif isinstance(object1, float) and isinstance(object2, float):
         return object1 == object2
@@ -335,20 +335,20 @@ def compare_generic_types(object1, object2, isPredictiveResult=False):
             return object1 == float(object2)
     elif isinstance(object1, int) and isinstance(object2, float):
         return object1 == int(float(object2))
-    elif isinstance(object1, long) and isinstance(object2, int):
-        return object1 == long(object2)
-    elif isinstance(object1, int) and isinstance(object2, long):
+    elif isinstance(object1, int) and isinstance(object2, int):
         return object1 == int(object2)
-    elif isinstance(object1, float) and isinstance(object2, long):
+    elif isinstance(object1, int) and isinstance(object2, int):
+        return object1 == int(object2)
+    elif isinstance(object1, float) and isinstance(object2, int):
         if isPredictiveResult:
             return abs(object1 - object2) < 100
         else:
             return object1 == float(object2)
-    elif isinstance(object1, long) and isinstance(object2, float):
-        return object1 == long(float(object2))
-    elif isinstance(object1, str) and isinstance(object2, unicode):
+    elif isinstance(object1, int) and isinstance(object2, float):
+        return object1 == int(float(object2))
+    elif isinstance(object1, str) and isinstance(object2, str):
         return object1 == str(object2)
-    elif isinstance(object1, unicode) and isinstance(object2, str):
+    elif isinstance(object1, str) and isinstance(object2, str):
         return str(object1) == object2
     return False
 
@@ -396,10 +396,10 @@ def deep_dict_compare(object1, object2, isPredictiveResult=False):
     retval = True
     if len(object1) != len(object2):
         log_info("lengths of sgw object and cbl object are different {} --- {}".format(len(object1), len(object2)))
-        log_info("keys of object 1 and object2 {}\n---{}".format(object1.keys(), object2.keys()))
+        log_info("keys of object 1 and object2 {}\n---{}".format(list(object1.keys()), list(object2.keys())))
         return False
 
-    for k in object1.iterkeys():
+    for k in object1.keys():
         obj1 = object1[k]
         obj2 = object2[k]
         if isinstance(obj1, list) and isinstance(obj2, list):

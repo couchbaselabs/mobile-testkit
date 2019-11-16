@@ -312,7 +312,7 @@ def multiple_replace(text, a_dict):
 
 def converty_to_json_string(query):
     query_str = ''
-    for k, v in query.iteritems():
+    for k, v in query.items():
         query_str += k + ": " + str(v).replace('\'', '"') + ", "
     query_str = '{ ' + query_str.rstrip(", ") + ' }'
     query_str = query_str.replace('"true"', 'true')
@@ -351,13 +351,13 @@ if __name__ == '__main__':
             fh.write(json_query)
             fh.write("\n")
             cmd = ["./cblite", "query", "--limit", "10", "travel-sample.cblite2"]
-            print "*" * 60
-            print "Executing command {} '{}'".format(" ".join(cmd), json_query)
-            print "*" * 60
+            print("*" * 60)
+            print("Executing command {} '{}'".format(" ".join(cmd), json_query))
+            print("*" * 60)
             cmd.append(json_query)
             p = Popen(cmd)
             p.communicate()
-            print "\n"
-        except Exception, err:
+            print("\n")
+        except Exception as err:
             log_info("Error for Query: {}\n{}\n".format(query, str(err)))
     fh.close()

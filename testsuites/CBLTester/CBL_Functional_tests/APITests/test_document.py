@@ -104,7 +104,7 @@ class TestDocument(object):
         hashmap[key] = value
         self.doc_obj.setInt(doc, key, value)
         key = "Long_key"
-        value = long(random.randint(10, 10000))
+        value = int(random.randint(10, 10000))
         hashmap[key] = value
         self.doc_obj.setLong(doc, key, value)
         key = "Float_key"
@@ -132,7 +132,7 @@ class TestDocument(object):
         result_list.append(key)
         self.doc_obj.setInt(doc, key, value)
         key = "Long_key"
-        value = long(random.randint(10, 10000))
+        value = int(random.randint(10, 10000))
         result_list.append(key)
         self.doc_obj.setLong(doc, key, value)
         key = "Float_key"
@@ -259,7 +259,7 @@ class TestDocument(object):
         doc = self.doc_obj.create()
         self.doc_obj.setLong(doc, key, value)
         result = self.doc_obj.getLong(doc, key)
-        assert long(value) == result
+        assert int(value) == result
 
     def test_set_immutable_dict_to_doc(self):
         '''

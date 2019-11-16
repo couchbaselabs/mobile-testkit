@@ -1215,7 +1215,7 @@ def test_initial_pull_replication_background_apprun(params_from_base_test_setup,
     else:
         sg_doc_bodies = document.create_docs(doc_id_prefix='seeded_doc', number=num_docs, channels=["ABC"])
     # if adding bulk docs with huge attachment more than 5000 fails
-    for x in xrange(0, len(sg_doc_bodies), 100000):
+    for x in range(0, len(sg_doc_bodies), 100000):
         chunk_docs = sg_doc_bodies[x:x + 100000]
         ch_bulk_docs_resp = client.add_bulk_docs(url=sg_admin_url, db=sg_db, docs=chunk_docs, auth=session)
         log_info("length of bulk docs resp{}".format(len(ch_bulk_docs_resp)))
@@ -1302,12 +1302,12 @@ def test_push_replication_with_backgroundApp(params_from_base_test_setup, num_do
     # liteserv cannot handle bulk docs more than 100000, if you run more than 100000, it will chunk the
     # docs into set of 100000 and call add bulk docs
     if need_attachments:
-        for x in xrange(0, num_docs, 100000):
+        for x in range(0, num_docs, 100000):
             cbl_prefix = "cbl" + str(x)
             db.create_bulk_docs(num_docs, cbl_prefix, db=cbl_db, generator="simple_user",
                                 attachments_generator=attachment.generate_png_100_100, channels=channels)
     else:
-        for x in xrange(0, num_docs, 100000):
+        for x in range(0, num_docs, 100000):
             cbl_prefix = "cbl" + str(x)
             db.create_bulk_docs(num_docs, cbl_prefix, db=cbl_db, channels=channels)
 
@@ -1612,7 +1612,7 @@ def test_default_conflict_scenario_highRevGeneration_wins(params_from_base_test_
     else:
         for doc in cbl_docs:
             assert cbl_docs[doc]["updates"] == 2, "cbl with high rev id is not updated "
-        for i in xrange(len(sg_docs_values)):
+        for i in range(len(sg_docs_values)):
             assert sg_docs_values[i]["updates"] == 2, "sg with high rev id is not updated"
 
     sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs, number_updates=3, auth=session)
@@ -1641,7 +1641,7 @@ def test_default_conflict_scenario_highRevGeneration_wins(params_from_base_test_
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session, include_docs=True)
     sg_docs = sg_docs["rows"]
     sg_docs_values = [doc['doc'] for doc in sg_docs]
-    for i in xrange(len(sg_docs_values)):
+    for i in range(len(sg_docs_values)):
         assert sg_docs_values[i]["updates"] == verify_updates, "sg with high rev id is not updated"
     if sg_mode == "di":
         replicator.stop(repl)
@@ -1711,7 +1711,7 @@ def test_default_conflict_scenario_highRevID_wins(params_from_base_test_setup, h
         new_revision = "3-00000000000000000000000000000000"
     if highrevId_source == 'sg':
         new_revision = "3-ffffffffffffffffffffffffffffffff"
-        for i in xrange(len(sg_docs)):
+        for i in range(len(sg_docs)):
             sg_client.add_conflict(url=sg_url, db=sg_db, doc_id=sg_docs[i]["id"],
                                    parent_revisions=sg_docs[i]["value"]["rev"], new_revision=new_revision, auth=session)
         replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator,
@@ -1793,7 +1793,7 @@ def test_default_conflict_with_two_conflictsAndTomstone(params_from_base_test_se
     sg_docs = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=session)
 
     # 2. Create two conflicts with 2-hex in sg.
-    for i in xrange(len(sg_docs)):
+    for i in range(len(sg_docs)):
         sg_client.add_conflict(url=sg_url, db=sg_db, doc_id=sg_docs[i]["id"], parent_revisions=sg_docs[i]["rev"],
                                new_revision="2-41fa", auth=session)
         sg_client.add_conflict(url=sg_url, db=sg_db, doc_id=sg_docs[i]["id"], parent_revisions=sg_docs[i]["rev"],
@@ -1905,7 +1905,7 @@ def test_default_conflict_with_oneTombstone_conflict(params_from_base_test_setup
     sg_docs = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=session)
 
     # 2. Create two conflicts with 2-hex in sg.
-    for i in xrange(len(sg_docs)):
+    for i in range(len(sg_docs)):
         sg_client.add_conflict(url=sg_url, db=sg_db, doc_id=sg_docs[i]["id"], parent_revisions=sg_docs[i]["rev"],
                                new_revision="2-41fa", auth=session)
         sg_client.add_conflict(url=sg_url, db=sg_db, doc_id=sg_docs[i]["id"], parent_revisions=sg_docs[i]["rev"],
@@ -1914,7 +1914,7 @@ def test_default_conflict_with_oneTombstone_conflict(params_from_base_test_setup
     # 3. Tombstone the doc which has higher and active revision in sg.
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)
     sg_docs = sg_docs["rows"]
-    for i in xrange(len(sg_docs)):
+    for i in range(len(sg_docs)):
         sg_client.delete_doc(url=sg_url, db=sg_db, doc_id=sg_docs[i]["id"], rev="2-41fa9b",
                              auth=session)
 
@@ -1986,7 +1986,7 @@ def test_default_conflict_with_three_conflicts(params_from_base_test_setup):
     sg_docs = document.create_docs(doc_id_prefix='sg_docs', number=num_of_docs, channels=channels)
     sg_docs = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=session)
     # 2. Create two conflicts with 2-hex in sg.
-    for i in xrange(len(sg_docs)):
+    for i in range(len(sg_docs)):
         sg_client.add_conflict(url=sg_url, db=sg_db, doc_id=sg_docs[i]["id"], parent_revisions=sg_docs[i]["rev"],
                                new_revision="2-41fa", auth=session)
         sg_client.add_conflict(url=sg_url, db=sg_db, doc_id=sg_docs[i]["id"], parent_revisions=sg_docs[i]["rev"],
@@ -2069,7 +2069,7 @@ def test_default_conflict_withConflicts_and_sgOffline(params_from_base_test_setu
     sg_docs = document.create_docs(doc_id_prefix='sg_docs', number=num_of_docs, channels=channels)
     sg_docs = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=session)
     # 2. Create two conflicts with 2-hex in sg.
-    for i in xrange(len(sg_docs)):
+    for i in range(len(sg_docs)):
         sg_client.add_conflict(url=sg_url, db=sg_db, doc_id=sg_docs[i]["id"], parent_revisions=sg_docs[i]["rev"],
                                new_revision="2-41fa", auth=session)
         sg_client.add_conflict(url=sg_url, db=sg_db, doc_id=sg_docs[i]["id"], parent_revisions=sg_docs[i]["rev"],
@@ -2191,7 +2191,7 @@ def test_default_conflict_withConflicts_withChannels(params_from_base_test_setup
     sg_docs = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=session1)
 
     # Create two conflicts with 2-hex in sg by user1.
-    for i in xrange(len(sg_docs)):
+    for i in range(len(sg_docs)):
         sg_client.add_conflict(url=sg_url, db=sg_db, doc_id=sg_docs[i]["id"], parent_revisions=sg_docs[i]["rev"],
                                new_revision="2-41fa", auth=session1)
         sg_client.add_conflict(url=sg_url, db=sg_db, doc_id=sg_docs[i]["id"], parent_revisions=sg_docs[i]["rev"],
@@ -2200,7 +2200,7 @@ def test_default_conflict_withConflicts_withChannels(params_from_base_test_setup
     # Create two conflicts with 2-hex in sg by user2.
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session2)
     sg_docs = sg_docs["rows"]
-    for i in xrange(len(sg_docs)):
+    for i in range(len(sg_docs)):
         sg_client.add_conflict(url=sg_url, db=sg_db, doc_id=sg_docs[i]["id"],
                                parent_revisions=sg_docs[i]["value"]["rev"],
                                new_revision="2-31fa", auth=session2)
@@ -3057,7 +3057,7 @@ def test_resetCheckpointWithPurge(params_from_base_test_setup, replication_type,
     # Reset checkpoint and do replication again from sg to cbl
     # Verify all docs are back
     replicator.resetCheckPoint(repl)
-    print "replicator after checkpoint...."
+    print("replicator after checkpoint....")
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
     assert db.getCount(cbl_db) == num_of_docs, "Docs that got purged in CBL did not got back after resetCheckpoint"
@@ -3671,7 +3671,7 @@ def update_and_resetCheckPoint(db, cbl_db, replicator, repl, replication_type, r
         replicator.setReplicatorType(repl_config, "pull")
         repl = replicator.create(repl_config)
 
-    print "replicator after checkpoint...."
+    print("replicator after checkpoint....")
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
     replicator.stop(repl)
