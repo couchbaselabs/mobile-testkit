@@ -3,6 +3,7 @@ import os.path
 import sys
 
 
+<<<<<<< HEAD
 from keywords.utils import log_info
 import ansible
 import ansible.inventory
@@ -13,7 +14,6 @@ from ansible.utils.display import Display
 from ansible import constants
 from ansible.parsing.dataloader import DataLoader
 import ansible.inventory
-
 
 class Options(object):
     """
