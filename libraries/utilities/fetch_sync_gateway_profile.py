@@ -18,7 +18,7 @@ def fetch_sync_gateway_profile(cluster_config, folder_name):
 
             print("\n")
 
-            print("Pulling sync_gateway profile.  Attempt #{}".format(attempt_number))
+            print(("Pulling sync_gateway profile.  Attempt #{}".format(attempt_number)))
             # fetch logs from sync_gateway instances
             status = ansible_runner.run_ansible_playbook("fetch-sync-gateway-profile.yml")
             if status != 0:

@@ -2,13 +2,13 @@ import os
 
 from keywords.utils import log_info
 
-from ansible.inventory import Inventory
-from ansible.vars import VariableManager
-from ansible.executor import playbook_executor
-from ansible.utils.display import Display
-from ansible import constants
-from ansible.parsing.dataloader import DataLoader
-import ansible.inventory
+from .ansible.inventory import Inventory
+from .ansible.vars import VariableManager
+from .ansible.executor import playbook_executor
+from .ansible.utils.display import Display
+from .ansible import constants
+from .ansible.parsing.dataloader import DataLoader
+from . import ansible.inventory
 
 
 class Options(object):

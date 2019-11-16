@@ -66,7 +66,7 @@ def test_predictiveQueries_basicInputOutput(params_from_base_test_setup, doc_gen
         call deep_dict_compare with isPredictiveResult enabled flag
         this flag allows large numbers do approximate comparison instead of precise comparison.
         '''
-        assert deep_dict_compare(doc_body, result[result.keys()[0]], True)
+        assert deep_dict_compare(doc_body, result[list(result.keys())[0]], True)
 
     non_dict = "non_dict"
     error = predictive_query.queryNonDictionaryInput(model, non_dict, cbl_db)
@@ -125,9 +125,9 @@ def test_predictiveQueries_euclideanCosineDistance(params_from_base_test_setup, 
     result_square_euclidean_dist = predictive_query.getSquaredEuclideanDistance(cbl_db, keys[0], keys[1])[0]
     result_consine_distance = predictive_query.getCosineDistance(cbl_db, keys[0], keys[1])[0]
     if euclidean_result is not None:
-        euclidean_value = result_euclidean_dist[result_euclidean_dist.keys()[0]]
-        square_euclidean_value = result_square_euclidean_dist[result_square_euclidean_dist.keys()[0]]
-        consine_distance_value = result_consine_distance[result_consine_distance.keys()[0]]
+        euclidean_value = result_euclidean_dist[list(result_euclidean_dist.keys())[0]]
+        square_euclidean_value = result_square_euclidean_dist[list(result_square_euclidean_dist.keys())[0]]
+        consine_distance_value = result_consine_distance[list(result_consine_distance.keys())[0]]
         assert str(euclidean_result) in str(euclidean_value), "euclidean distance did not get the right value for coordinates {}".format(coordinates)
         assert square_euclidean_value == squareEuclidean_result, "square euclidean distance did not get the right value for coordinates {}".format(coordinates)
         assert str(cosine_result) in str(consine_distance_value), "cosine distance did not get the right value for coordinates"

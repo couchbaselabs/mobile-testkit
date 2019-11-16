@@ -14,7 +14,7 @@ class Args(object):
         self._args[name] = integer
 
     def setLong(self, name, long_val):
-        self._args[name] = long(long_val)
+        self._args[name] = int(long_val)
 
     def setFloat(self, name, f):
         self._args[name] = float(f)
@@ -42,9 +42,9 @@ class Args(object):
     def __iter__(self):
         return self
 
-    def next(self):
-        key_args = self._args.keys()
-        val_args = self._args.values()
+    def __next__(self):
+        key_args = list(self._args.keys())
+        val_args = list(self._args.values())
 
         if self.index >= len(self._args):
             self.index = 0

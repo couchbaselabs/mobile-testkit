@@ -12,7 +12,7 @@ class ValueSerializer(object):
         elif isinstance(value, str):
             string = str(value)
             return "\"" + string + "\""
-        elif isinstance(value, unicode):
+        elif isinstance(value, str):
             value = value.encode('utf-8')
             return "\"" + value + "\""
         elif isinstance(value, bool):
@@ -20,8 +20,8 @@ class ValueSerializer(object):
             # Python's Bool gets caught by int
             bool_val = bool(value)
             return "true" if bool_val else "false"
-        elif isinstance(value, long):
-            number = long(value)
+        elif isinstance(value, int):
+            number = int(value)
             return "L" + str(number)
         elif isinstance(value, int):
             if value / 1000000000 < 2:
@@ -66,7 +66,7 @@ class ValueSerializer(object):
         elif value.startswith("I"):
             return int(value[1:])
         elif value.startswith("L"):
-            return long(value[1:])
+            return int(value[1:])
         elif value.startswith("F") or value.startswith("D"):
             return float(value[1:])
         elif value.startswith("#"):

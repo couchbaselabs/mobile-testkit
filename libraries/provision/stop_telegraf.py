@@ -1,6 +1,6 @@
 import os
 
-from ansible_runner import AnsibleRunner
+from .ansible_runner import AnsibleRunner
 
 
 if __name__ == "__main__":

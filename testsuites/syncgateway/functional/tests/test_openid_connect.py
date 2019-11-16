@@ -1,6 +1,6 @@
 import time
-from urlparse import urlparse
-from HTMLParser import HTMLParser
+from urllib.parse import urlparse
+from html.parser import HTMLParser
 
 import jwt
 import pytest
@@ -182,7 +182,7 @@ def test_openidconnect_basic_test(params_from_base_test_setup, sg_conf_name, is_
 
     # make sure the id token has the email field in it
     decoded_id_token = jwt.decode(id_token, verify=False)
-    assert "email" in decoded_id_token.keys()
+    assert "email" in list(decoded_id_token.keys())
 
     # make a request using the ID token against the db and expect a 200 response
     headers = {"Authorization": "Bearer {}".format(id_token)}
@@ -206,7 +206,7 @@ def test_openidconnect_basic_test(params_from_base_test_setup, sg_conf_name, is_
 
     # try to use the refresh token to get a few new id_tokens
     id_tokens = [id_token]
-    for i in xrange(3):
+    for i in range(3):
 
         # This pause is required because according to @ajres:
         # The id_token will only be unique if the two calls are more than a second apart.
@@ -658,7 +658,7 @@ def test_openidconnect_small_scope(params_from_base_test_setup, sg_conf_name):
     # {u'iss': u'http://localhost:4984/db/_oidc_testing', u'iat': 1466050188, u'aud': u'sync_gateway', u'exp': 1466053788, u'sub': u'testuser'}
     decoded_id_token = jwt.decode(id_token, verify=False)
 
-    assert "email" not in decoded_id_token.keys()
+    assert "email" not in list(decoded_id_token.keys())
 
 
 @pytest.mark.syncgateway
@@ -720,7 +720,7 @@ def test_openidconnect_large_scope(params_from_base_test_setup, sg_conf_name):
 
     log_info("decoded_id_token: {}".format(decoded_id_token))
 
-    assert "nickname" in decoded_id_token.keys()
+    assert "nickname" in list(decoded_id_token.keys())
 
 
 @pytest.mark.syncgateway
@@ -787,6 +787,6 @@ def test_openidconnect_public_session_endpoint(params_from_base_test_setup, sg_c
     )
 
     response = requests.post(url, headers=headers)
-    assert "Set-Cookie" in response.headers.keys()
+    assert "Set-Cookie" in list(response.headers.keys())
     set_cookie_response = response.headers['Set-Cookie']
     assert "SyncGatewaySession" in set_cookie_response
