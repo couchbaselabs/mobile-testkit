@@ -863,7 +863,9 @@ class MobileRestClient:
                 resp = self._session.post("{}/{}/".format(url, db), data=json.dumps(doc, cls=MyEncoder))
             else:
                 try:
+
                     resp = self._session.put("{}/{}/{}".format(url, db, doc["_id"]), data=json.dumps(doc, cls=MyEncoder))
+
                 except Exception as err:
                     print(err)
                     raise
