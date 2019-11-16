@@ -455,8 +455,8 @@ def verify_udTags_in_zippedFile(zip_file_name):
             assert False, "User tags count mismatch between redacted and non-redacted files"
 
         for key, value in list(redact_dict.items()):
-            redact_match = re.search("<ud>.+</ud>", value.decode('ascii'))
 
+            redact_match = re.search("<ud>.+</ud>", value.decode('ascii'))
             if redact_match:
                 redact_content = redact_match.group(0)
             else:
