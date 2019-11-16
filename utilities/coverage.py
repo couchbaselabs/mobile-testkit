@@ -45,9 +45,9 @@ def print_sg_coverage():
         )
         topospecific_test_number = int(output_topospecific_tests.strip())
 
-        print('Functional Area: {}, Number of Tests: {}'.format(
+        print(('Functional Area: {}, Number of Tests: {}'.format(
             marker, test_number + topospecific_test_number
-        ))
+        )))
 
 
 if __name__ == "__main__":

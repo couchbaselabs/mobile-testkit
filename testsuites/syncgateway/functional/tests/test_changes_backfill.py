@@ -352,7 +352,7 @@ def test_backfill_channels_oneshot_limit_changes(params_from_base_test_setup, sg
 
     # Create a dictionary keyed on doc id for all of channel A docs
     ids_and_revs_from_a_docs = {doc["id"]: doc["rev"] for doc in a_docs}
-    assert len(ids_and_revs_from_a_docs.keys()) == 50
+    assert len(list(ids_and_revs_from_a_docs.keys())) == 50
 
     log_info("Doing 3, 1 shot changes with limit and last seq!")
     # Issue 3 oneshot changes with a limit of 20
@@ -529,7 +529,7 @@ def test_awaken_backfill_channels_longpoll_changes_with_limit(params_from_base_t
 
     # Create a dictionary keyed on doc id for all of channel A docs
     ids_and_revs_from_a_docs = {doc["id"]: doc["rev"] for doc in a_docs}
-    assert len(ids_and_revs_from_a_docs.keys()) == 50
+    assert len(list(ids_and_revs_from_a_docs.keys())) == 50
 
     # Get last_seq for user_b
     user_b_changes = client.get_changes(url=sg_url, db=sg_db, since=0, auth=user_b_session, feed="normal")
@@ -623,7 +623,7 @@ def test_awaken_backfill_channels_longpoll_changes_with_limit(params_from_base_t
     last_seq = changes["last_seq"]
     while True:
 
-        if len(ids_and_revs_from_a_docs.keys()) == 0:
+        if len(list(ids_and_revs_from_a_docs.keys())) == 0:
             log_info("All docs were found! Exiting polling loop")
             break
 

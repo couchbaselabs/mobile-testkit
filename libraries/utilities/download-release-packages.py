@@ -23,10 +23,10 @@ def pull_package_and_dump_contents(package_defs):
     # accel sample url -     http://latestbuilds.hq.couchbase.com/couchbase-sync-gateway/1.2.1/1.2.1-4/couchbase-sg-accel-enterprise_1.2.1-4_x86_64.tar.gz
 
     base_url = "http://latestbuilds.hq.couchbase.com"
-    print("Base url: {}".format(base_url))
+    print(("Base url: {}".format(base_url)))
 
     package_dir = "deps/packages/"
-    print("Package download directory: {}".format(package_dir))
+    print(("Package download directory: {}".format(package_dir)))
 
     if os.path.isdir(package_dir):
         # Remove existing package directory
@@ -35,9 +35,9 @@ def pull_package_and_dump_contents(package_defs):
     os.mkdir("deps/packages")
     os.mkdir("deps/packages/package-contents")
 
-    for platform, full_version in package_defs.iteritems():
+    for platform, full_version in package_defs.items():
 
-        print("Platform: {}, Version: {}".format(platform, full_version))
+        print(("Platform: {}, Version: {}".format(platform, full_version)))
 
         if platform == "android":
             version, build = version_and_build(full_version)
@@ -81,7 +81,7 @@ def pull_package_and_dump_contents(package_defs):
         os.chdir("deps/packages/")
 
         # Download the packages
-        print("Downloading: {}".format(url))
+        print(("Downloading: {}".format(url)))
         resp = requests.get(url)
         resp.raise_for_status()
         with open(file_name, "wb") as f:
@@ -105,7 +105,7 @@ def pull_package_and_dump_contents(package_defs):
 
         # Write package contents
         file_contents = subprocess.check_output(["find", extracted_file_name])
-        print("\n{}\n".format(file_contents))
+        print(("\n{}\n".format(file_contents)))
         with open("package-contents/{}-package-contents.txt".format(file_name), "w") as f:
             f.write("Downloaded package: {}\n\n".format(url))
             f.write(file_contents)

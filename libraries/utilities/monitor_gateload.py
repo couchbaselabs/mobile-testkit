@@ -1,7 +1,7 @@
 import subprocess
 import sys
 import os
-from provisioning_config_parser import hosts_for_tag
+from .provisioning_config_parser import hosts_for_tag
 
 from keywords.utils import log_info
 
@@ -24,7 +24,7 @@ if __name__ == "__main__":
         print("No gateloads to monitor in 'provisioning_config'")
         sys.exit(1)
 
-    print("Monitoring gateloads: {}".format(lgs))
+    print(("Monitoring gateloads: {}".format(lgs)))
     lgs_with_port = [lg + ":9876" for lg in lgs]
     lgs_joined = ",".join(lgs_with_port)
 

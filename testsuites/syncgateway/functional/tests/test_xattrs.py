@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 
 import random
 import time
@@ -517,8 +517,8 @@ def test_offline_processing_of_external_updates(params_from_base_test_setup, sg_
 
     # Update docs that sync gateway wrote via SDK
     sg_docs_via_sdk_get = sdk_client.get_multi(sg_doc_ids)
-    assert len(sg_docs_via_sdk_get.keys()) == num_docs_per_client
-    for doc_id, val in sg_docs_via_sdk_get.items():
+    assert len(list(sg_docs_via_sdk_get.keys())) == num_docs_per_client
+    for doc_id, val in list(sg_docs_via_sdk_get.items()):
         log_info("Updating: '{}' via SDK".format(doc_id))
         doc_body = val.value
         doc_body["updated_by_sdk"] = True
@@ -987,7 +987,7 @@ def test_sdk_does_not_see_sync_meta(params_from_base_test_setup, sg_conf_name):
     assert len(docs_from_sg) == number_of_sg_docs, "sg docs and docs from sdk has mismatch"
 
     attachment_name_ids = []
-    for doc_key, doc_val in docs_from_sg.items():
+    for doc_key, doc_val in list(docs_from_sg.items()):
         # Scratch doc off in list of all doc ids
         doc_ids.remove(doc_key)
 
@@ -999,7 +999,7 @@ def test_sdk_does_not_see_sync_meta(params_from_base_test_setup, sg_conf_name):
 
         # Build tuple of the filename and server doc id of the attachments
         if sync_gateway_version < "2.5":
-            for att_key, att_val in doc_body['_attachments'].items():
+            for att_key, att_val in list(doc_body['_attachments'].items()):
                 attachment_name_ids.append((att_key, '_sync:att:{}'.format(att_val['digest'])))
 
     assert len(doc_ids) == 0
@@ -1155,10 +1155,10 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
 
         # Get docs and extract doc_id (key) and doc_body (value.value)
         sdk_docs_resp = sdk_client.get_multi(sdk_doc_ids)
-        docs = {k: v.value for k, v in sdk_docs_resp.items()}
+        docs = {k: v.value for k, v in list(sdk_docs_resp.items())}
 
         # update the updates property for every doc
-        for _, v in docs.items():
+        for _, v in list(docs.items()):
             v['content']['updates'] += 1
 
         # Push the updated batch to Couchbase Server
@@ -1211,7 +1211,7 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
     log_info('Verify SDK sees updates via get_multi ...')
     all_docs_from_sdk = sdk_client.get_multi(all_doc_ids)
     assert len(all_docs_from_sdk) == number_docs_per_client * 2
-    for doc_id, value in all_docs_from_sdk.items():
+    for doc_id, value in list(all_docs_from_sdk.items()):
         assert '_sync' not in value.value
         assert value.value['content']['updates'] == number_updates + 1
 
@@ -1662,8 +1662,8 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
 
         # Update docs via SDK
         sdk_docs = sdk_client.get_multi(doc_set_ids1)
-        assert len(sdk_docs.keys()) == number_docs_per_client
-        for doc_id, val in sdk_docs.items():
+        assert len(list(sdk_docs.keys())) == number_docs_per_client
+        for doc_id, val in list(sdk_docs.items()):
             doc_body = val.value
             doc_body["updated_by_sdk"] = True
             sdk_client.upsert(doc_id, doc_body)
@@ -1797,8 +1797,8 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
         log_info("Updating sg docs via SDK...")
 
         sdk_docs = sdk_client.get_multi(sg_docs)
-        assert len(sdk_docs.keys()) == number_docs_per_client
-        for doc_id, val in sdk_docs.items():
+        assert len(list(sdk_docs.keys())) == number_docs_per_client
+        for doc_id, val in list(sdk_docs.items()):
             doc_body = val.value
             doc_body["updated_by_sdk"] = True
             sdk_client.upsert(doc_id, doc_body)
@@ -2093,11 +2093,11 @@ def verify_sg_xattrs(mode, sg_client, sg_url, sg_db, doc_id, expected_number_of_
         assert isinstance(sg_sync_meta['recent_sequences'], list)
         assert len(sg_sync_meta['recent_sequences']) == expected_number_of_revs
 
-    assert isinstance(sg_sync_meta['cas'], unicode)
+    assert isinstance(sg_sync_meta['cas'], str)
     assert sg_sync_meta['rev'].startswith('{}-'.format(expected_number_of_revs))
     assert isinstance(sg_sync_meta['channels'], dict)
     assert len(sg_sync_meta['channels']) == expected_number_of_channels
-    assert isinstance(sg_sync_meta['time_saved'], unicode)
+    assert isinstance(sg_sync_meta['time_saved'], str)
     assert isinstance(sg_sync_meta['history']['channels'], list)
     assert len(sg_sync_meta['history']['channels']) == expected_number_of_revs
     assert isinstance(sg_sync_meta['history']['revs'], list)
@@ -2162,7 +2162,7 @@ def verify_doc_ids_in_sdk_get_multi(response, expected_number_docs, expected_ids
     assert len(response) == expected_number_docs
 
     # Cross off all the doc ids seen in the response from the scratch pad
-    for doc_id, value in response.items():
+    for doc_id, value in list(response.items()):
         assert '_sync' not in value.value
         expected_ids_scratch_pad.remove(doc_id)
 
@@ -2304,8 +2304,8 @@ def test_sg_sdk_interop_shared_updates_from_sg(params_from_base_test_setup,
 
     # Update docs via SDK
     sdk_docs = sdk_client.get_multi(sg_doc_ids)
-    assert len(sdk_docs.keys()) == number_docs_per_client
-    for doc_id, val in sdk_docs.items():
+    assert len(list(sdk_docs.keys())) == number_docs_per_client
+    for doc_id, val in list(sdk_docs.items()):
         doc_body = val.value
         doc_body["updated_by_sdk"] = True
         sdk_client.upsert(doc_id, doc_body)
@@ -2336,8 +2336,8 @@ def test_sg_sdk_interop_shared_updates_from_sg(params_from_base_test_setup,
     assert(sg_update_doc.startswith("2-"))
     # Update docs via SDK
     sdk_docs = sdk_client.get_multi(sg_doc_ids)
-    assert len(sdk_docs.keys()) == number_docs_per_client
-    for doc_id, val in sdk_docs.items():
+    assert len(list(sdk_docs.keys())) == number_docs_per_client
+    for doc_id, val in list(sdk_docs.items()):
         doc_body = val.value
         doc_body["updated_by_sdk2"] = True
         sdk_client.upsert(doc_id, doc_body)

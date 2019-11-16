@@ -101,7 +101,7 @@ def test_mulitple_users_mulitiple_channels_mulitple_revisions(params_from_base_t
     recieved_docs = in_parallel(user_objects, 'get_num_docs')
 
     expected_docs = num_users * num_docs
-    for user_obj, docs in recieved_docs.items():
+    for user_obj, docs in list(recieved_docs.items()):
         log_info('User {} got {} docs, expected docs: {}'.format(user_obj.name, docs, expected_docs))
         assert docs == expected_docs
 
@@ -111,8 +111,8 @@ def test_mulitple_users_mulitiple_channels_mulitple_revisions(params_from_base_t
     expected_revision = str(num_revisions + 1)
     docs_rev_dict = in_parallel(user_objects, 'get_num_revisions')
     rev_errors = []
-    for user_obj, docs_revision_dict in docs_rev_dict.items():
-        for doc_id in docs_revision_dict.keys():
+    for user_obj, docs_revision_dict in list(docs_rev_dict.items()):
+        for doc_id in list(docs_revision_dict.keys()):
             rev = docs_revision_dict[doc_id]
             log_info('User {} doc_id {} has {} revisions, expected revision: {}'.format(user_obj.name,
                                                                                         doc_id, rev, expected_revision))
@@ -129,7 +129,7 @@ def test_mulitple_users_mulitiple_channels_mulitple_revisions(params_from_base_t
 
     # Verify each User created docs are part of changes feed
     output = in_parallel(user_objects, 'check_doc_ids_in_changes_feed')
-    assert True in output.values()
+    assert True in list(output.values())
 
     end = time.time()
     log_info("Test ended.")

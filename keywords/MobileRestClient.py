@@ -812,7 +812,7 @@ class MobileRestClient:
         resp_obj = resp.json()
 
         if "_attachments" in resp_obj:
-            for k in resp_obj["_attachments"].keys():
+            for k in list(resp_obj["_attachments"].keys()):
                 del resp_obj["_attachments"][k]["digest"]
                 del resp_obj["_attachments"][k]["length"]
 
@@ -854,8 +854,8 @@ class MobileRestClient:
             else:
                 try:
                     resp = self._session.put("{}/{}/{}".format(url, db, doc["_id"]), data=json.dumps(doc))
-                except Exception, err:
-                    print err
+                except Exception as err:
+                    print(err)
                     raise
 
         log_r(resp)
@@ -910,7 +910,7 @@ class MobileRestClient:
             are ordered from latest to oldest to ensure the document is built correctly
         """
 
-        if isinstance(parent_revisions, basestring):
+        if isinstance(parent_revisions, str):
             # if only one rev is specified, wrap it in a list
             parent_revs = [parent_revisions]
         elif isinstance(parent_revisions, list):
@@ -1221,7 +1221,7 @@ class MobileRestClient:
         log_info("Updating {}/{}/{}: {} times".format(url, db, doc_id, number_updates))
         if remove_expiry:
             del doc["_exp"]
-        for i in xrange(number_updates):
+        for i in range(number_updates):
 
             # Add "random" this to make each update unique. This will
             # cause document to conflict rather than optimize out
@@ -1283,7 +1283,7 @@ class MobileRestClient:
 
         log_info("PUT {} docs to {}/{}/ with prefix {}".format(number, url, db, id_prefix))
 
-        for i in xrange(number):
+        for i in range(number):
 
             if generator == "four_k":
                 doc_body = doc_generators.four_k()
@@ -1309,7 +1309,7 @@ class MobileRestClient:
 
             doc_obj = self.add_doc(url, db, doc_body, auth=auth, use_post=False)
             if attachments_generator:
-                doc_obj["attachments"] = doc_body["_attachments"].keys()
+                doc_obj["attachments"] = list(doc_body["_attachments"].keys())
             added_docs.append(doc_obj)
 
         # check that the docs returned in the responses equals the expected number
@@ -1744,7 +1744,7 @@ class MobileRestClient:
 
             if server_type == ServerType.listener:
 
-                data = {"keys": expected_doc_map.keys()}
+                data = {"keys": list(expected_doc_map.keys())}
                 resp = self._session.post("{}/{}/_all_docs".format(url, db), data=json.dumps(data))
                 log_r(resp)
                 resp.raise_for_status()
@@ -1754,7 +1754,7 @@ class MobileRestClient:
 
                 # Constuct _bulk_get body
                 bulk_get_body_id_list = []
-                for key in expected_doc_map.keys():
+                for key in list(expected_doc_map.keys()):
                     bulk_get_body_id_list.append({"id": key})
                 bulk_get_body = {"docs": bulk_get_body_id_list}
 
@@ -1798,7 +1798,7 @@ class MobileRestClient:
                     doc_data = self._session.get("{}/{}/{}".format(url, db, doc_id))
                     doc_json = doc_data.json()
 
-                    if "_attachments" not in doc_json and "id" in resp_doc and expected_attachment_map[resp_doc["id"]] != doc_json["_attachments"].keys():
+                    if "_attachments" not in doc_json and "id" in resp_doc and expected_attachment_map[resp_doc["id"]] != list(doc_json["_attachments"].keys()):
                         all_attachments_returned = False
                         missing_attachment_docs.append(doc_id)
 

@@ -81,14 +81,14 @@ def test_p2p_replication_push_pull_filtering(params_from_base_test_setup, server
         push_filter = True
         pull_filter = False
         client_docs = db_obj_client.getDocuments(cbl_db_client, client_doc_ids)
-        for doc_id, doc_body in client_docs.items():
+        for doc_id, doc_body in list(client_docs.items()):
             doc_body = add_new_fields_to_doc(doc_body)
             db_obj_client.updateDocument(database=cbl_db_client, data=doc_body, doc_id=doc_id)
     else:
         push_filter = False
         pull_filter = True
         server_docs = db_obj_server.getDocuments(cbl_db_server, server_doc_ids)
-        for doc_id, doc_body in server_docs.items():
+        for doc_id, doc_body in list(server_docs.items()):
             doc_body = add_new_fields_to_doc(doc_body)
             db_obj_server.updateDocument(database=cbl_db_server, data=doc_body, doc_id=doc_id)
 

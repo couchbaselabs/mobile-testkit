@@ -31,7 +31,7 @@ from libraries.provision.ansible_runner import PLAYBOOKS_HOME
 
 
 def hosts_for_tag(cluster_config, tag):
-    print(os.getcwd())
+    print((os.getcwd()))
 
     variable_manager = VariableManager()
     loader = DataLoader()
@@ -95,7 +95,7 @@ def upload_gateload_config(cluster_config,
     outfile = os.path.join("/tmp", gateload_inventory_hostname)
     with open(outfile, 'w') as f:
         f.write(rendered)
-    print("Wrote to file: {}".format(outfile))
+    print(("Wrote to file: {}".format(outfile)))
 
     # transfer file to remote host
     cmd = 'ansible {} -i {} -m copy -a "src={} dest=/home/centos/gateload_config.json" --user {}'.format(
@@ -104,9 +104,9 @@ def upload_gateload_config(cluster_config,
         outfile,
         constants.DEFAULT_REMOTE_USER
     )
-    print("Uploading gateload config using command: {}".format(cmd))
+    print(("Uploading gateload config using command: {}".format(cmd)))
     result = subprocess.check_output(cmd, shell=True)
-    print("File transfer result: {}".format(result))
+    print(("File transfer result: {}".format(result)))
 
 
 def main(cluster_config, test_id, gateload_params):
@@ -116,7 +116,7 @@ def main(cluster_config, test_id, gateload_params):
     gateload_hosts = gateloads(cluster_config)
 
     if len(sync_gateway_hosts) != len(gateload_hosts):
-        print("Warning: you have {} sync gateway non index writers, but does not match up with {} load generators".format(len(sync_gateway_hosts), len(gateload_hosts)))
+        print(("Warning: you have {} sync gateway non index writers, but does not match up with {} load generators".format(len(sync_gateway_hosts), len(gateload_hosts))))
 
     for idx, gateload in enumerate(gateload_hosts):
 

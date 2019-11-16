@@ -68,7 +68,7 @@ class LiteServMacOSX(LiteServBase):
 
         # Make binary executable
         binary_path = "{}/{}/LiteServ".format(BINARY_DIR, directory_name)
-        os.chmod(binary_path, 0755)
+        os.chmod(binary_path, 0o755)
         log_info("LiteServ: {}".format(binary_path))
 
     def install(self):

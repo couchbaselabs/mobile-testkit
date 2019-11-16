@@ -1,7 +1,7 @@
 import json
 import threading
 import time
-from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler, HTTPServer
 
 from keywords.utils import log_info
 

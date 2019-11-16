@@ -80,7 +80,7 @@ def test_replication_push_filtering(params_from_base_test_setup, num_of_docs):
     doc_ids = db.getDocIds(cbl_db)
     cbl_db_docs = db.getDocuments(cbl_db, doc_ids)
     updates_in_doc = {}
-    for doc_id, doc_body in cbl_db_docs.items():
+    for doc_id, doc_body in list(cbl_db_docs.items()):
         doc_body = add_new_fields_to_doc(doc_body)
         updates_in_doc[doc_id] = {
             "new_field_1": doc_body["new_field_1"],
@@ -121,8 +121,8 @@ def test_replication_push_filtering(params_from_base_test_setup, num_of_docs):
             assert cbl_doc["new_field_2"] == sg_doc["new_field_2"], "new_field_2 data is not matching"
             assert cbl_doc["new_field_3"] == sg_doc["new_field_3"], "new_field_3 data is not matching"
         else:
-            assert "new_field_1" not in sg_doc.keys() or "new_field_2" not in sg_doc.keys() or\
-                   "new_field_3" not in sg_doc.keys(), "updated key found in doc. Push filter is not working"
+            assert "new_field_1" not in list(sg_doc.keys()) or "new_field_2" not in list(sg_doc.keys()) or\
+                   "new_field_3" not in list(sg_doc.keys()), "updated key found in doc. Push filter is not working"
 
 
 @pytest.mark.sanity
@@ -227,8 +227,8 @@ def test_replication_pull_filtering(params_from_base_test_setup, num_of_docs):
             assert cbl_doc["new_field_1"] is True,\
                 "Replication didn't update the doc properly. Doc after replication finish {}".format(cbl_doc)
         else:
-            assert "new_field_1" not in cbl_doc.keys() or "new_field_2" not in cbl_doc.keys() or\
-                   "new_field_3" not in cbl_doc.keys(), "updated key found in doc. Pull filter is not working"
+            assert "new_field_1" not in list(cbl_doc.keys()) or "new_field_2" not in list(cbl_doc.keys()) or\
+                   "new_field_3" not in list(cbl_doc.keys()), "updated key found in doc. Pull filter is not working"
 
 
 @pytest.mark.sanity
@@ -520,7 +520,7 @@ def test_filter_retrieval_with_replication_restart(params_from_base_test_setup, 
     doc_ids = db.getDocIds(cbl_db)
     docs = db.getDocuments(cbl_db, doc_ids)
     updates_in_doc = {}
-    for doc_id, doc_body in docs.items():
+    for doc_id, doc_body in list(docs.items()):
         if "cbl_doc" in doc_id:
             doc_body = add_new_fields_to_doc(doc_body)
             db.updateDocument(database=cbl_db, data=doc_body, doc_id=doc_id)
