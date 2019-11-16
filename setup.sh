@@ -5,31 +5,31 @@
 # 3. Installs all pip packages required by this repo
 # 4. Adds custom library paths to your PYTHONPATH
 
-version=$(python -c 'import sys; print "{}.{}.{}".format(sys.version_info.major, sys.version_info.minor, sys.version_info.micro)')
+version=$(python -c 'import sys; print("{}.{}.{}".format(sys.version_info.major, sys.version_info.minor, sys.version_info.micro))');
 
-if [[ $version == 2.7.* ]]; then
+if [[ $version == 3.7.* ]]; then
     printf "Using Python version: %s\n" $version
 else
-    echo "Exiting. Make sure Python version is 2.7."
+    echo "Exiting. Make sure Python version is 3.7." $version
     return 1
 fi
 
-python -m virtualenv --version
+python -m virtualenv -p python ~/environments
 if [ $? -ne 0 ]; then
     # Install virtual env
     echo "Virtualenv not detected, running pip install virtualenv.  If you don't have pip, run easy_install pip"
     return 1
 fi
-
+`mkdir ~/environments`
 currentdir=`pwd`
 export PATH=$PATH:/usr/local/bin
 
 # Setup virtual env
-virtualenv -p python venv
-source venv/bin/activate
+#virtualenv -p python venv
+source ~/environments/bin/activate
 
 # Install python dependencies
-pip install -r requirements.txt
+pip3 install -r requirements.txt
 
 # set python env
 export PYTHONPATH=$PYTHONPATH:$currentdir/

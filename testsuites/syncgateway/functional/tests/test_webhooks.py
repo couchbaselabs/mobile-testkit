@@ -220,13 +220,13 @@ def test_webhooks_crud(params_from_base_test_setup, sg_conf_name, filtered):
 
     # Add filtered property to every other doc
     count = 0
-    for _, doc_val in sdk_docs.items():
+    for _, doc_val in list(sdk_docs.items()):
         if count % 2 == 0:
             doc_val['filtered'] = True
         count += 1
 
     sdk_doc_ids = [doc for doc in sdk_docs]
-    sdk_filtered_doc_ids = [k for k, v in sdk_docs.items() if 'filtered' in v]
+    sdk_filtered_doc_ids = [k for k, v in list(sdk_docs.items()) if 'filtered' in v]
     assert len(sdk_doc_ids) == num_docs_per_client
     assert len(sdk_filtered_doc_ids) == num_docs_per_client / 2
 
@@ -448,7 +448,7 @@ def poll_for_webhook_data(webhook_server, expected_doc_ids, expected_num_revs, e
             all_docs_revs_found = False
 
         else:
-            for doc_id, doc in posted_webhook_events.items():
+            for doc_id, doc in list(posted_webhook_events.items()):
 
                 if deleted:
                     assert doc['_deleted']

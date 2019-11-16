@@ -162,7 +162,7 @@ def download_cbl_log(cbl_log_decoder_platform, liteserv_version, cbl_log_decoder
         os.system("unzip {} -d {}".format(downloaded_package_zip_name, extracted_directory_name))
     # Remove .zip
     os.remove("{}".format(downloaded_package_zip_name))
-    os.chmod("{}/bin/cbl-log".format(extracted_directory_name), 0777)
+    os.chmod("{}/bin/cbl-log".format(extracted_directory_name), 0o777)
     return extracted_directory_name
 
 

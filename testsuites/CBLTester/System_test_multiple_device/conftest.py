@@ -364,7 +364,7 @@ def params_from_base_suite_setup(request):
             else:
                 testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp,
                                                                datetime.datetime.now()))
-        for base_url, i, liteserv_version in zip(base_url_list, range(len(base_url_list)), version_list):
+        for base_url, i, liteserv_version in zip(base_url_list, list(range(len(base_url_list))), version_list):
             if enable_file_logging and liteserv_version >= "2.5.0":
                 cbllog = FileLogging(base_url)
                 cbllog.configure(log_level="verbose", max_rotate_count=2,

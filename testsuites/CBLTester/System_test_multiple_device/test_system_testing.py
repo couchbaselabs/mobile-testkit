@@ -1,7 +1,7 @@
 import pytest
 import time
 import random
-from sys import maxint
+from sys import maxsize
 from threading import Thread
 
 from keywords.MobileRestClient import MobileRestClient

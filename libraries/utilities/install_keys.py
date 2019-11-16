@@ -2,8 +2,7 @@ import os
 import sys
 
 from optparse import OptionParser
-
-from generate_clusters_from_pool import get_hosts
+from .generate_clusters_from_pool import get_hosts
 import paramiko
 
 
@@ -11,15 +10,15 @@ def install_keys(public_key_path, user_name, ssh_password):
 
     hosts, _ = get_hosts()
 
-    print("Deploying key '{0}' to vms: {1}".format(
+    print(("Deploying key '{0}' to vms: {1}".format(
         public_key_path, hosts
-    ))
+    )))
 
     public_key_data = open(os.path.expanduser(public_key_path)).read()
 
     for host in hosts:
 
-        print("Deploying key to {}@{}".format(user_name, host))
+        print(("Deploying key to {}@{}".format(user_name, host)))
 
         deploy_key(
             public_key_data,

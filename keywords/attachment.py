@@ -40,11 +40,11 @@ def generate_png(width, height):
     """ Generates a noise rgb images for attachment testing. """
 
     img = Image.new("RGBA", (width, height), 255)
-    random_rgb_grid = map(lambda x: (
+    random_rgb_grid = [(
         int(random.random() * 256),
         int(random.random() * 256),
         int(random.random() * 256)
-    ), [0] * width * height)
+    ) for x in [0] * width * height]
 
     img.putdata(random_rgb_grid)
 
