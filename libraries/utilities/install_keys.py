@@ -2,7 +2,7 @@ import os
 import sys
 
 from optparse import OptionParser
-from .generate_clusters_from_pool import get_hosts
+from generate_clusters_from_pool import get_hosts
 import paramiko
 
 
