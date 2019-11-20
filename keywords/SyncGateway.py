@@ -404,7 +404,7 @@ class SyncGateway(object):
                 redact_level = get_redact_level(cluster_config)
                 playbook_vars["logging"] = '{}, "redaction_level": "{}" {},'.format(logging_config, redact_level, "}")
             except KeyError as ex:
-                log_info("Keyerror in getting logging{}".format(ex.message))
+                log_info("Keyerror in getting logging{}".format(ex))
                 playbook_vars["logging"] = '{} {},'.format(logging_config, "}")
 
             if get_sg_use_views(cluster_config):

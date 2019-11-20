@@ -77,6 +77,14 @@ def get_auth_type(auth):
     return auth_type
 
 
+
+class MyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, (bytes, bytearray)):
+            return obj.decode("ASCII") # <- or any other encoding of your choice
+        # Let the base class default method raise the TypeError
+        return json.JSONEncoder.default(self, obj)
+
 class MobileRestClient:
     """
     A set of robot keyworks that can be executed against
@@ -840,20 +848,20 @@ class MobileRestClient:
 
         if auth_type == AuthType.session:
             if use_post:
-                resp = self._session.post("{}/{}/".format(url, db), data=json.dumps(doc), cookies=dict(SyncGatewaySession=auth[1]))
+                resp = self._session.post("{}/{}/".format(url, db), data=json.dumps(doc, cls=MyEncoder), cookies=dict(SyncGatewaySession=auth[1]))
             else:
-                resp = self._session.put("{}/{}/{}".format(url, db, doc["_id"]), data=json.dumps(doc), cookies=dict(SyncGatewaySession=auth[1]))
+                resp = self._session.put("{}/{}/{}".format(url, db, doc["_id"]), data=json.dumps(doc, cls=MyEncoder), cookies=dict(SyncGatewaySession=auth[1]))
         elif auth_type == AuthType.http_basic:
             if use_post:
-                resp = self._session.post("{}/{}/".format(url, db), data=json.dumps(doc), auth=auth)
+                resp = self._session.post("{}/{}/".format(url, db), data=json.dumps(doc, cls=MyEncoder), auth=auth)
             else:
-                resp = self._session.put("{}/{}/{}".format(url, db, doc["_id"]), data=json.dumps(doc), auth=auth)
+                resp = self._session.put("{}/{}/{}".format(url, db, doc["_id"]), data=json.dumps(doc, cls=MyEncoder), auth=auth)
         else:
             if use_post:
-                resp = self._session.post("{}/{}/".format(url, db), data=json.dumps(doc))
+                resp = self._session.post("{}/{}/".format(url, db), data=json.dumps(doc, cls=MyEncoder))
             else:
                 try:
-                    resp = self._session.put("{}/{}/{}".format(url, db, doc["_id"]), data=json.dumps(doc))
+                    resp = self._session.put("{}/{}/{}".format(url, db, doc["_id"]), data=json.dumps(doc, cls=MyEncoder))
                 except Exception as err:
                     print(err)
                     raise
@@ -1248,11 +1256,11 @@ class MobileRestClient:
                 types.verify_is_callable(property_updater)
                 doc = property_updater(doc)
             if auth_type == AuthType.session:
-                resp = self._session.put("{}/{}/{}".format(url, db, doc_id), data=json.dumps(doc), cookies=dict(SyncGatewaySession=auth[1]))
+                resp = self._session.put("{}/{}/{}".format(url, db, doc_id), data=json.dumps(doc, cls=MyEncoder), cookies=dict(SyncGatewaySession=auth[1]))
             elif auth_type == AuthType.http_basic:
-                resp = self._session.put("{}/{}/{}".format(url, db, doc_id), data=json.dumps(doc), auth=auth)
+                resp = self._session.put("{}/{}/{}".format(url, db, doc_id), data=json.dumps(doc, cls=MyEncoder), auth=auth)
             else:
-                resp = self._session.put("{}/{}/{}".format(url, db, doc_id), data=json.dumps(doc))
+                resp = self._session.put("{}/{}/{}".format(url, db, doc_id), data=json.dumps(doc, cls=MyEncoder))
 
             log_r(resp, info=False)
             resp.raise_for_status()
