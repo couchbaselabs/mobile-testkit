@@ -8,7 +8,7 @@ from .ansible.executor import playbook_executor
 from .ansible.utils.display import Display
 from .ansible import constants
 from .ansible.parsing.dataloader import DataLoader
-from . import ansible.inventory
+import ansible.inventory
 
 
 class Options(object):

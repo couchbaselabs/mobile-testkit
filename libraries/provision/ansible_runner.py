@@ -1,5 +1,5 @@
-from .ansible_python_runner import Runner
-from .ansible import constants
+from . ansible_python_runner import Runner
+from ansible import constants
 import logging
 
 PLAYBOOKS_HOME = "libraries/provision/ansible/playbooks"
