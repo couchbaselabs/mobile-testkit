@@ -53,14 +53,14 @@ def test_mask_password_in_logs(params_from_base_test_setup, password):
     delete_tmp_logs()
     replicator = Replication(base_url)
     authenticator = Authenticator(base_url)
- 
+
     sg_client = MobileRestClient()
     db.create_bulk_docs(number=num_cbl_docs, id_prefix="cblid", db=cbl_db, channels=channels)
- 
+
     # Add docs in SG
     sg_client.create_user(sg_admin_url, sg_db, "autotest", password=password, channels=channels)
     sg_client.create_session(sg_admin_url, sg_db, "autotest")
- 
+
     replicator_authenticator = authenticator.authentication(username="autotest", password=password,
                                                             authentication_type="basic")
     repl_config = replicator.configure(cbl_db, target_url=sg_blip_url, continuous=False,
