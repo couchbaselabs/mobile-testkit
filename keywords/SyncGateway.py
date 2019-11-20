@@ -18,6 +18,7 @@ from libraries.provision.ansible_runner import AnsibleRunner
 from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_redact_level, get_sg_platform
 from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version, sg_ssl_enabled, get_cbs_version, is_delta_sync_enabled
 from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
+from libraries.testkit.cluster import Cluster
 
 
 def validate_sync_gateway_mode(mode):
@@ -209,7 +210,7 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config):
         sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
         cbs_cert_path = os.path.join(os.getcwd(), "certs")
         if is_xattrs_enabled(cluster_config):
-            autoimport_prop = '"import_docs": "continuous",'
+            autoimport_prop = '"import_docs": true,'
             xattrs_prop = '"enable_shared_bucket_access": true,'
         else:
             autoimport_prop = ""
@@ -440,7 +441,7 @@ class SyncGateway(object):
             playbook_vars["password"] = '"password": "password",'
 
         if is_xattrs_enabled(cluster_config):
-            playbook_vars["autoimport"] = '"import_docs": "continuous",'
+            playbook_vars["autoimport"] = '"import_docs": true,'
             playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
 
         if sg_ssl_enabled(cluster_config):
@@ -614,7 +615,7 @@ class SyncGateway(object):
             playbook_vars["logging"] = '"log": ["*"],'
 
         if is_xattrs_enabled(cluster_config) and cbs_version >= "5.0.0":
-            playbook_vars["autoimport"] = '"import_docs": "continuous",'
+            playbook_vars["autoimport"] = '"import_docs": true,'
             playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
 
         if sg_ssl_enabled(cluster_config):
@@ -715,7 +716,7 @@ class SyncGateway(object):
             playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
 
         if is_xattrs_enabled(cluster_config) and enable_import:
-            playbook_vars["autoimport"] = '"import_docs": "continuous",'
+            playbook_vars["autoimport"] = '"import_docs": true,'
 
         if no_conflicts_enabled(cluster_config):
             playbook_vars["no_conflicts"] = '"allow_conflicts": false,'
@@ -808,3 +809,13 @@ class SyncGateway(object):
 
         if status != 0:
             raise ProvisioningError("Could not create an empty file on sync_gateway")
+
+
+def create_sync_gateways(cluster_config, sg_config_path):
+
+    cluster = Cluster(config=cluster_config)
+    cluster.reset(sg_config_path=sg_config_path)
+    sg1 = cluster.sync_gateways[0]
+    sg2 = cluster.sync_gateways[1]
+
+    return sg1, sg2

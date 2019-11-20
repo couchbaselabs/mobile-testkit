@@ -12,6 +12,7 @@ from CBLClient.Replication import Replication
 from CBLClient.Document import Document
 from CBLClient.Authenticator import Authenticator
 from concurrent.futures import ThreadPoolExecutor
+from libraries.testkit.admin import Admin
 
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords import document, attachment
@@ -3514,6 +3515,179 @@ def test_doc_removal_with_multipleChannels(params_from_base_test_setup, setup_cu
     for doc in sg_docs_C:
         assert doc["id"] not in doc_ids_A, "docs ids of userA  exist in cbl db1"
         assert doc["id"] not in doc_ids_C, "docs ids of userB  exist in cbl db2"
+
+
+@pytest.mark.listener
+@pytest.mark.replication
+@pytest.mark.syncgateway
+def test_roles_replication(params_from_base_test_setup):
+    """
+        @summary:
+        1. Create user.
+        2. Add new role.
+        3. Create docs on SGW.
+        4. Do pull replication from SGW.
+        5. verify docs got replicated to CBL
+        6 change the role to something while replication is happening.
+        7. Add new docs to SGW.
+        8. Continue to pull replication from SGW
+        9. CBL  should not get any new docs which created at step #6.
+        Have the coverage from CBL.Verify the docs from CBL side according to the new role.
+    """
+    sg_db = "db"
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    sg_blip_url = params_from_base_test_setup["target_url"]
+    base_url = params_from_base_test_setup["base_url"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_config = params_from_base_test_setup["sg_config"]
+    db = params_from_base_test_setup["db"]
+    cbl_db = params_from_base_test_setup["source_db"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+
+    username = "autotest"
+    password = "password"
+    num_docs = 10
+
+    if sync_gateway_version < "2.5.0":
+        pytest.skip('This test cannnot run with sg version below 2.5.0')
+
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
+
+    abc_channels = ["ABC", "DEF"]
+
+    sg_client = MobileRestClient()
+    authenticator = Authenticator(base_url)
+    replicator = Replication(base_url)
+    admin = Admin(c.sync_gateways[0])
+
+    # 1. Create user.
+    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=abc_channels)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+    session = cookie, session_id
+
+    # 2. Add new role.
+    admin.create_role("db", name="ABCDEF_role", channels=abc_channels)
+
+    # 3. Create docs on SGW.
+    sg_client.add_docs(url=sg_admin_url, db=sg_db, number=num_docs, id_prefix="role_doc",
+                       channels=abc_channels, auth=session)
+
+    # 4. Do pull replication from SGW.
+    replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
+    repl = replicator.configure_and_replicate(source_db=cbl_db,
+                                              target_url=sg_blip_url,
+                                              continuous=True,
+                                              replication_type="pull",
+                                              replicator_authenticator=replicator_authenticator)
+    replicator.wait_until_replicator_idle(repl)
+    replicator.stop(repl)
+
+    # 5. verify docs got replicated to CBL
+    cbl_doc_ids = db.getDocIds(cbl_db)
+    cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
+    assert len(cbl_docs) == num_docs, "Docs did not get replicated to CBL"
+
+    # 6 change the role to something while replication is happening .
+    admin.create_role("db", name="new_role", channels=abc_channels)
+
+    # 7. Add new docs to SGW.
+    sg_client.add_docs(url=sg_admin_url, db=sg_db, number=num_docs, id_prefix="new_role_doc",
+                       channels=abc_channels, auth=session)
+
+    # 8. Continue to pull replication from SGW
+    replicator.wait_until_replicator_idle(repl)
+    replicator.stop(repl)
+
+    # 9. CBL should not get any new docs which created at step #6.
+
+    # verify_sgDocIds_cblDocIds(sg_client, sg_admin_url, sg_db, session, cbl_db, db)
+    cbl_doc_ids = db.getDocIds(cbl_db)
+    assert len(cbl_doc_ids) == num_docs, "new docs which created in sgw after role change got replicated to cbl"
+    for id in cbl_doc_ids:
+        assert "new_role_doc" not in id, "new doc got replicated to cbl"
+
+
+@pytest.mark.listener
+@pytest.mark.replication
+@pytest.mark.syncgateway
+def test_replication_behavior_with_channelRole_modification(params_from_base_test_setup):
+    """
+        @summary:
+        1. Create user
+        2. Add new channel
+        3. change it to new channel
+        4. Verify docs cannot be accessed by old user, but can be accessed by new user
+    """
+    sg_db = "db"
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    sg_blip_url = params_from_base_test_setup["target_url"]
+    base_url = params_from_base_test_setup["base_url"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_config = params_from_base_test_setup["sg_config"]
+    db = params_from_base_test_setup["db"]
+    cbl_db = params_from_base_test_setup["source_db"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+
+    username = "autotest"
+    password = "password"
+    abc_channels = ["ABC", "DEF"]
+    num_docs = 10
+
+    if sync_gateway_version < "2.5.0":
+        pytest.skip('This test cannnot run with sg version below 2.5.0')
+
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
+
+    sg_client = MobileRestClient()
+    authenticator = Authenticator(base_url)
+    replicator = Replication(base_url)
+    admin = Admin(c.sync_gateways[0])
+
+    # 1. Create user
+    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=abc_channels)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+    session = cookie, session_id
+
+    # 2. Add new role.
+    admin.create_role("db", name="ABCDEF_role", channels=abc_channels)
+
+    # 3. Create docs on SGW.
+    sg_client.add_docs(url=sg_admin_url, db=sg_db, number=num_docs, id_prefix="role_doc",
+                       channels=abc_channels, auth=session)
+
+    # 4. Do pull replication from SGW.
+    replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
+    repl = replicator.configure_and_replicate(source_db=cbl_db,
+                                              target_url=sg_blip_url,
+                                              continuous=True,
+                                              replication_type="pull",
+                                              replicator_authenticator=replicator_authenticator)
+    replicator.wait_until_replicator_idle(repl)
+    replicator.stop(repl)
+
+    # 5. verify docs got replicated to CBL
+    cbl_doc_ids = db.getDocIds(cbl_db)
+    cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
+    assert len(cbl_docs) == num_docs, "Docs did not get replicated to CBL"
+
+    # 6 change the role to something while replication is happening .
+    abc_channels = ["XYZ"]
+
+    # 7. Add new docs to SGW.
+    sg_client.add_docs(url=sg_admin_url, db=sg_db, number=num_docs, id_prefix="new_role_doc",
+                       channels=abc_channels, auth=session)
+
+    # 8. Continue to pull replication from SGW
+    replicator.wait_until_replicator_idle(repl)
+    replicator.stop(repl)
+
+    # 9. CBL should not get any new docs which created at step #6.
+    cbl_doc_ids = db.getDocIds(cbl_db)
+    assert len(cbl_doc_ids) == num_docs, "new docs which created in sgw after role change got replicated to cbl"
+    for id in cbl_doc_ids:
+        assert "new_role_doc" not in id, "new doc got replicated to cbl"
 
 
 def update_and_resetCheckPoint(db, cbl_db, replicator, repl, replication_type, repl_config, num_of_updates):

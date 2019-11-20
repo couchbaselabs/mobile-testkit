@@ -323,7 +323,7 @@ def params_from_base_suite_setup(request):
         log_info("Running tests not using views")
         # Disable sg views in cluster configs
         persist_cluster_config_environment_prop(cluster_config, 'sg_use_views', False)
-        
+
     persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "centos", False)
 
     # Write the number of replicas to cluster config

@@ -22,7 +22,7 @@ def load_sync_gateway_config(sync_gateway_config, mode, server_url, xattrs_enabl
         template = Template(default_conf.read())
 
         if xattrs_enabled:
-            autoimport_prop = '"import_docs": "continuous",'
+            autoimport_prop = '"import_docs": true,'
             xattrs_prop = '"enable_shared_bucket_access": true,'
         else:
             autoimport_prop = ""

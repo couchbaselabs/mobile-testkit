@@ -5,11 +5,11 @@
     "maxCouchbaseConnections": 16,
     "maxFileDescriptors": 90000,
     "compressResponses": false,
+    {{ sslcert }}
+    {{ sslkey }}
     {{ logging }}
     "databases":{
         "db":{
-            {{ autoimport }}
-            {{ xattrs }}
             {{ no_conflicts }}
             {{ sg_use_views }}
             {{ num_index_replicas }}
@@ -19,6 +19,8 @@
             {{ certpath }}
             {{ keypath }}
             {{ delta_sync }}
+            "enable_shared_bucket_access": true,
+            "import_docs": false,
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket"
         }

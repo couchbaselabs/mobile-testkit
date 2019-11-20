@@ -18,7 +18,7 @@
     "databases":{
         "db":{
             "enable_shared_bucket_access": true,
-            "import_docs": "continuous",
+            "import_docs": true,
             {{ no_conflicts }}
             {{ sg_use_views }}
             {{ num_index_replicas }}

@@ -353,7 +353,8 @@ def params_from_base_suite_setup(request):
         "no_conflicts_enabled": no_conflicts_enabled,
         "sg_platform": sg_platform,
         "ssl_enabled": cbs_ssl,
-        "delta_sync_enabled": delta_sync_enabled
+        "delta_sync_enabled": delta_sync_enabled,
+        "sg_ce": sg_ce
     }
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
@@ -385,6 +386,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     sync_gateway_version = params_from_base_suite_setup["sync_gateway_version"]
     sg_platform = params_from_base_suite_setup["sg_platform"]
     delta_sync_enabled = params_from_base_suite_setup["delta_sync_enabled"]
+    sg_ce = params_from_base_suite_setup["sg_ce"]
 
     test_name = request.node.name
 
@@ -422,7 +424,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "sync_gateway_version": sync_gateway_version,
         "sg_platform": sg_platform,
         "ssl_enabled": cbs_ssl,
-        "delta_sync_enabled": delta_sync_enabled
+        "delta_sync_enabled": delta_sync_enabled,
+        "sg_ce": sg_ce
     }
 
     # Code after the yield will execute when each test finishes
