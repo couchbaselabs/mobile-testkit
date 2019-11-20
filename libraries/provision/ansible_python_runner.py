@@ -1,13 +1,16 @@
 import os
+import os.path
+import sys
+
 
 from keywords.utils import log_info
 
-from .ansible.inventory import Inventory
-from .ansible.vars import VariableManager
-from .ansible.executor import playbook_executor
-from .ansible.utils.display import Display
-from .ansible import constants
-from .ansible.parsing.dataloader import DataLoader
+from ansible.inventory import Inventory
+from ansible.vars import VariableManager
+from ansible.executor import playbook_executor
+from ansible.utils.display import Display
+from ansible import constants
+from ansible.parsing.dataloader import DataLoader
 import ansible.inventory
 
 
