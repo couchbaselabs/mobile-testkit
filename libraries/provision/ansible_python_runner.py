@@ -2,8 +2,6 @@ import os
 import os.path
 import sys
 
-
-<<<<<<< HEAD
 from keywords.utils import log_info
 import ansible
 import ansible.inventory
