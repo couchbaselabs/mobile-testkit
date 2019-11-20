@@ -1,4 +1,4 @@
-from ansible_python_runner import Runner
+from . ansible_python_runner import Runner
 from ansible import constants
 import logging
 

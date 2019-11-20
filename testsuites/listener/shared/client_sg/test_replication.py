@@ -201,7 +201,7 @@ def test_initial_pull_replication_background_apprun(setup_client_syncgateway_tes
     else:
         sg_doc_bodies = document.create_docs(doc_id_prefix='seeded_doc', number=num_docs, channels=["ABC"])
     # if adding bulk docs with huge attachment more than 5000 fails
-    for x in xrange(0, len(sg_doc_bodies), 100000):
+    for x in range(0, len(sg_doc_bodies), 100000):
         chunk_docs = sg_doc_bodies[x:x + 100000]
         ch_bulk_docs_resp = client.add_bulk_docs(url=sg_one_public, db=sg_db, docs=chunk_docs, auth=session)
         log_info("length of bulk docs resp{}".format(len(ch_bulk_docs_resp)))
@@ -386,7 +386,7 @@ def test_push_replication_with_backgroundApp(setup_client_syncgateway_test, num_
 
     # liteserv cannot handle bulk docs more than 100000, if you run more than 100000, it will chunk the
     # docs into set of 100000 and call add bulk docs
-    for x in xrange(0, len(doc_bodies), 100000):
+    for x in range(0, len(doc_bodies), 100000):
         chunk_docs = doc_bodies[x:x + 100000]
         ch_bulk_docs_resp = client.add_bulk_docs(url=ls_url, db=ls_db, docs=chunk_docs, auth=session)
         bulk_docs_resp += ch_bulk_docs_resp
@@ -1778,8 +1778,8 @@ def add_2MB_docs(url, db, number, id_prefix, auth=None, channels=None, attachmen
         types.verify_is_list(channels)
 
     log_info("PUT {} docs to {}/{}/ with prefix {}".format(number, url, db, id_prefix))
-    for i in xrange(number):
-        print "i in number is ", i
+    for i in range(number):
+        print("i in number is ", i)
         doc_body = doc_generators.simple()
         if channels is not None:
             doc_body["channels"] = channels
@@ -1798,7 +1798,7 @@ def add_2MB_docs(url, db, number, id_prefix, auth=None, channels=None, attachmen
 
         doc_body["_id"] = doc_id
         doc_obj = client.add_doc(url, db, doc_body, auth=auth, use_post=False)
-        doc_obj["attachments"] = doc_body["_attachments"].keys()
+        doc_obj["attachments"] = list(doc_body["_attachments"].keys())
         added_docs.append(doc_obj)
 
     # check that the docs returned in the responses equals the expected number

@@ -153,7 +153,7 @@ def maybe_deploy_github_keys(sg_deploy_type):
 
 def maybe_install_deps(install_deps_flag, cluster_config):
     if install_deps_flag:
-        print("install_deps_flag: {}, installing deps", install_deps_flag)
+        print(("install_deps_flag: {}, installing deps", install_deps_flag))
         install_deps(cluster_config)
 
 

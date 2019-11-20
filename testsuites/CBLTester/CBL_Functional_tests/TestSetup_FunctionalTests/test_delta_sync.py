@@ -75,7 +75,7 @@ def test_delta_sync_replication(params_from_base_test_setup, num_of_docs, replic
                                               replicator_authenticator=replicator_authenticator,
                                               replication_type="push")
     replicator.stop(repl)
-    doc_reads_bytes, doc_writes_bytes = get_net_stats(sg_client, sg_admin_url)
+    _, doc_writes_bytes = get_net_stats(sg_client, sg_admin_url)
     sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
     # Verify database doc counts
     cbl_doc_count = db.getCount(cbl_db)
@@ -97,8 +97,8 @@ def test_delta_sync_replication(params_from_base_test_setup, num_of_docs, replic
     if replication_type == "push":
         doc_ids = db.getDocIds(cbl_db)
         cbl_db_docs = db.getDocuments(cbl_db, doc_ids)
-        for doc_id, doc_body in cbl_db_docs.items():
-            for i in range(number_of_updates):
+        for doc_id, doc_body in list(cbl_db_docs.items()):
+            for _ in range(number_of_updates):
                 if file_attachment:
                     mutable_dictionary = dictionary.toMutableDictionary(doc_body)
                     dictionary.setString(mutable_dictionary, "new_field_1", random_string(length=30))
@@ -113,6 +113,11 @@ def test_delta_sync_replication(params_from_base_test_setup, num_of_docs, replic
                     elif liteserv_platform == "ios":
                         image_content = blob.createImageContent("Files/golden_gate_large.jpg")
                         blob_value = blob.create("image/jpeg", content=image_content)
+                    elif liteserv_platform == "net-msft":
+                        db_path = db.getPath(cbl_db).rstrip("\\")
+                        app_dir = "\\".join(db_path.split("\\")[:-2])
+                        image_content = blob.createImageContent("{}\\Files\\golden_gate_large.jpg".format(app_dir))
+                        blob_value = blob.create("image/jpeg", stream=image_content)
                     else:
                         image_content = blob.createImageContent("Files/golden_gate_large.jpg")
                         blob_value = blob.create("image/jpeg", stream=image_content)
@@ -222,7 +227,7 @@ def test_delta_sync_enabled_disabled(params_from_base_test_setup, num_of_docs, r
     sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
 
     # Get expvars and get original size of document
-    doc_reads_bytes, doc_writes_bytes = get_net_stats(sg_client, sg_admin_url)
+    _, doc_writes_bytes = get_net_stats(sg_client, sg_admin_url)
     update_docs(replication_type, cbl_db, db, sg_client, sg_docs, sg_url, sg_db, number_of_updates, session, channels)
 
     repl = replicator.configure_and_replicate(source_db=cbl_db,
@@ -344,7 +349,7 @@ def test_delta_sync_within_expiry(params_from_base_test_setup, num_of_docs, repl
     replicator.stop(repl)
 
     # get stats_send from expvar api
-    doc_reads_bytes1, doc_writes_bytes1 = get_net_stats(sg_client, sg_admin_url)
+    _, doc_writes_bytes1 = get_net_stats(sg_client, sg_admin_url)
 
     # 4. update docs in SGW/CBL
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, include_docs=True, auth=session)["rows"]
@@ -444,7 +449,7 @@ def test_delta_sync_utf8_strings(params_from_base_test_setup, num_of_docs, repli
                                               replicator_authenticator=replicator_authenticator,
                                               replication_type="push")
     replicator.stop(repl)
-    doc_reads_bytes1, doc_writes_bytes1 = get_net_stats(sg_client, sg_admin_url)
+    _, doc_writes_bytes1 = get_net_stats(sg_client, sg_admin_url)
     full_doc_size = doc_writes_bytes1
 
     # 4. update docs in SGW/CBL
@@ -529,7 +534,7 @@ def test_delta_sync_nested_doc(params_from_base_test_setup, num_of_docs, replica
     replicator.stop(repl)
 
     # get net_stats_send from expvar api
-    doc_reads_bytes1, doc_writes_bytes1 = get_net_stats(sg_client, sg_admin_url)
+    _, doc_writes_bytes1 = get_net_stats(sg_client, sg_admin_url)
 
     # 4. update docs in SGW/CBL
     sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
@@ -543,7 +548,7 @@ def test_delta_sync_nested_doc(params_from_base_test_setup, num_of_docs, replica
                                               replication_type=replication_type)
 
     # 6. get pub_net_stats_send from expvar api
-    doc_reads_bytes2, doc_writes_bytes2 = get_net_stats(sg_client, sg_admin_url)
+    doc_reads_bytes2, _ = get_net_stats(sg_client, sg_admin_url)
     assert doc_reads_bytes2 < doc_writes_bytes1, "delta size is not less than full doc size"
 
     # 7. Verify the body of nested doc matches with sgw and cbl
@@ -721,10 +726,10 @@ def update_docs(replication_type, cbl_db, db, sg_client, sg_docs, sg_url, sg_db,
     if replication_type == "push":
         doc_ids = db.getDocIds(cbl_db)
         cbl_db_docs = db.getDocuments(cbl_db, doc_ids)
-        for doc_id, doc_body in cbl_db_docs.items():
+        for doc_id, doc_body in list(cbl_db_docs.items()):
             if string_type == "utf-8":
-                doc_body["new-1"] = unicode(random_string(length=70), "utf-8")
-                doc_body["new-2"] = unicode(random_string(length=70), "utf-8")
+                doc_body["new-1"] = str(random_string(length=70), "utf-8")
+                doc_body["new-2"] = str(random_string(length=70), "utf-8")
             else:
                 doc_body["new-1"] = random_string(length=70)
                 doc_body["new-2"] = random_string(length=30)
@@ -732,7 +737,7 @@ def update_docs(replication_type, cbl_db, db, sg_client, sg_docs, sg_url, sg_db,
     else:
         def property_updater(doc_body):
             if string_type == "utf-8":
-                doc_body['sg_new_update'] = unicode(random_string(length=70), "utf-8")
+                doc_body['sg_new_update'] = str(random_string(length=70), "utf-8")
             else:
                 doc_body["sg_new_update"] = random_string(length=70)
             return doc_body
@@ -744,7 +749,7 @@ def update_larger_doc(replication_type, cbl_db, db, sg_client, sg_docs, sg_url, 
     if replication_type == "push":
         doc_ids = db.getDocIds(cbl_db)
         cbl_db_docs = db.getDocuments(cbl_db, doc_ids)
-        for doc_id, doc_body in cbl_db_docs.items():
+        for doc_id, doc_body in list(cbl_db_docs.items()):
             doc_body["new-1"] = random_string(length=100)
             doc_body["new-2"] = random_string(length=100)
             doc_body["new-3"] = random_string(length=100)

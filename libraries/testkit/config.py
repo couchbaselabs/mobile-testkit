@@ -86,7 +86,7 @@ class Config:
 
     def discover_mode(self, conf_obj):
 
-        if "cluster_config" in conf_obj.keys():
+        if "cluster_config" in list(conf_obj.keys()):
             self.mode = "di"
         else:
             self.mode = "cc"
@@ -95,11 +95,11 @@ class Config:
 
         bucket_names_from_config = []
         # Add CBGT buckets
-        if "cluster_config" in conf_obj.keys():
+        if "cluster_config" in list(conf_obj.keys()):
             bucket_names_from_config.append(conf_obj["cluster_config"]["bucket"])
 
         dbs = conf_obj["databases"]
-        for _, val in dbs.iteritems():
+        for _, val in dbs.items():
 
             if "bucket" in val:
 

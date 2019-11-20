@@ -11,7 +11,7 @@ from collections import OrderedDict
 
 from requests.exceptions import RequestException
 
-from provisioning_config_parser import hosts_for_tag
+from .provisioning_config_parser import hosts_for_tag
 
 
 def dump_results(test_folder, gateload_results, sync_gateway_results):
@@ -117,7 +117,7 @@ def wait_for_endpoints_alive_or_raise(endpoints, num_attempts=5):
     """
     Wait for the given endpoints to be up or throw an exception
     """
-    for i in xrange(num_attempts):
+    for i in range(num_attempts):
         endpoints_are_up = True
         for endpoint in endpoints:
             endpoint_url = endpoint

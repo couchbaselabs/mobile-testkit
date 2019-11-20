@@ -6,7 +6,7 @@ from libraries.testkit.verify import verify_changes
 
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.utils import log_info
-from utilities.cluster_config_utils import get_sg_version
+from utilities.cluster_config_utils import get_sg_version, persist_cluster_config_environment_prop
 
 
 @pytest.mark.sanity
@@ -16,13 +16,12 @@ from utilities.cluster_config_utils import get_sg_version
 @pytest.mark.channel
 @pytest.mark.bulkops
 @pytest.mark.changes
-@pytest.mark.parametrize("sg_conf_name", [
-    "sync_gateway_default_functional_tests",
-    "sync_gateway_default_functional_tests_no_port",
-    "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210"
-
+@pytest.mark.parametrize("sg_conf_name, x509_cert_auth", [
+    ("sync_gateway_default_functional_tests", True),
+    ("sync_gateway_default_functional_tests_no_port", False),
+    ("sync_gateway_default_functional_tests_couchbase_protocol_withport_11210", True)
 ])
-def test_roles_sanity(params_from_base_test_setup, sg_conf_name):
+def test_roles_sanity(params_from_base_test_setup, sg_conf_name, x509_cert_auth):
 
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
@@ -45,6 +44,8 @@ def test_roles_sanity(params_from_base_test_setup, sg_conf_name):
     log_info("Running 'roles_sanity'")
     log_info("cluster_conf: {}".format(cluster_conf))
     log_info("sg_conf: {}".format(sg_conf))
+
+    persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', x509_cert_auth)
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
@@ -73,7 +74,7 @@ def test_roles_sanity(params_from_base_test_setup, sg_conf_name):
         doc_pusher.add_docs(number_of_docs_per_pusher, bulk=True)
         radio_doc_caches.append(doc_pusher.cache)
 
-    radio_docs = {k: v for cache in radio_doc_caches for k, v in cache.items()}
+    radio_docs = {k: v for cache in radio_doc_caches for k, v in list(cache.items())}
 
     tv_doc_caches = []
     for tv_station in tv_stations:
@@ -81,7 +82,7 @@ def test_roles_sanity(params_from_base_test_setup, sg_conf_name):
         doc_pusher.add_docs(number_of_docs_per_pusher, bulk=True)
         tv_doc_caches.append(doc_pusher.cache)
 
-    tv_docs = {k: v for cache in tv_doc_caches for k, v in cache.items()}
+    tv_docs = {k: v for cache in tv_doc_caches for k, v in list(cache.items())}
 
     # Verify djs get docs for all the channels associated with the radio_stations role
     expected_num_radio_docs = len(radio_stations) * number_of_docs_per_pusher
@@ -94,7 +95,7 @@ def test_roles_sanity(params_from_base_test_setup, sg_conf_name):
     # Verify mogul gets docs for all the channels associated with the radio_stations + tv_stations roles
     all_docs_caches = list(radio_doc_caches)
     all_docs_caches.extend(tv_doc_caches)
-    all_docs = {k: v for cache in all_docs_caches for k, v in cache.items()}
+    all_docs = {k: v for cache in all_docs_caches for k, v in list(cache.items())}
     verify_changes(mogul, expected_num_docs=expected_num_radio_docs + expected_num_tv_docs, expected_num_revisions=0, expected_docs=all_docs)
 
 

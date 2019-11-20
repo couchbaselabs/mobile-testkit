@@ -138,6 +138,36 @@ namespace Couchbase.Lite.Testing
                 }
 
             }
+            switch (postBody["conflict_resolver"].ToString())
+            {
+                case "local_wins":
+                    config.ConflictResolver = new LocalWinsCustomConflictResolver();
+                    break;
+                case "remote_wins":
+                    config.ConflictResolver = new RemoteWinsCustomConflictResolver();
+                    break;
+                case "null":
+                    config.ConflictResolver = new NullCustomConflictResolver();
+                    break;
+                case "merge":
+                    config.ConflictResolver = new MergeCustomConflictResolver();
+                    break;
+                case "incorrect_doc_id":
+                    config.ConflictResolver = new IncorrectDocIdConflictResolver();
+                    break;
+                case "delayed_local_win":
+                    config.ConflictResolver = new DelayedLocalWinConflictResolver();
+                    break;
+                case "delete_not_win":
+                    config.ConflictResolver = new DeleteDocConflictResolver();
+                    break;
+                case "exception_thrown":
+                    config.ConflictResolver = new ExceptionThrownConflictResolver();
+                    break;
+                default:
+                    config.ConflictResolver = ConflictResolver.Default;
+                    break;
+            }
             Replicator replicator = new Replicator(config);
             response.WriteBody(MemoryMap.Store(replicator));
 

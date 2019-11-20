@@ -8,7 +8,7 @@ from libraries.testkit.verify import verify_changes
 
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.utils import log_info
-from utilities.cluster_config_utils import get_sg_version
+from utilities.cluster_config_utils import get_sg_version, persist_cluster_config_environment_prop
 
 
 @pytest.mark.sanity
@@ -17,12 +17,12 @@ from utilities.cluster_config_utils import get_sg_version
 @pytest.mark.channel
 @pytest.mark.bulkops
 @pytest.mark.changes
-@pytest.mark.parametrize("sg_conf_name, num_users, num_docs, num_revisions", [
-    ("sync_gateway_default_functional_tests", 10, 500, 1),
-    ("sync_gateway_default_functional_tests_no_port", 10, 500, 1),
-    ("sync_gateway_default_functional_tests_couchbase_protocol_withport_11210", 10, 500, 1)
+@pytest.mark.parametrize("sg_conf_name, num_users, num_docs, num_revisions, x509_cert_auth", [
+    ("sync_gateway_default_functional_tests", 10, 500, 1, False),
+    ("sync_gateway_default_functional_tests_no_port", 10, 500, 1, True),
+    ("sync_gateway_default_functional_tests_couchbase_protocol_withport_11210", 10, 500, 1, False)
 ])
-def test_seq(params_from_base_test_setup, sg_conf_name, num_users, num_docs, num_revisions):
+def test_seq(params_from_base_test_setup, sg_conf_name, num_users, num_docs, num_revisions, x509_cert_auth):
 
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
@@ -48,6 +48,8 @@ def test_seq(params_from_base_test_setup, sg_conf_name, num_users, num_docs, num
     log_info("num_users: {}".format(num_users))
     log_info("num_docs: {}".format(num_docs))
     log_info("num_revisions: {}".format(num_revisions))
+
+    persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', x509_cert_auth)
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
@@ -92,5 +94,5 @@ def test_seq(params_from_base_test_setup, sg_conf_name, num_users, num_docs, num
             raise ValueError("Unsupported 'mode' !!")
 
     all_doc_caches = [user.cache for user in users]
-    all_docs = {k: v for cache in all_doc_caches for k, v in cache.items()}
+    all_docs = {k: v for cache in all_doc_caches for k, v in list(cache.items())}
     verify_changes(users, expected_num_docs=num_users * num_docs, expected_num_revisions=num_revisions, expected_docs=all_docs)

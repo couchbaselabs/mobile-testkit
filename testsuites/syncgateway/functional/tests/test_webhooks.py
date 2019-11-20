@@ -14,6 +14,7 @@ from libraries.testkit.parallelize import in_parallel
 from libraries.testkit.web_server import WebServer
 from keywords.exceptions import TimeoutError
 from keywords.constants import CLIENT_REQUEST_TIMEOUT
+from utilities.cluster_config_utils import persist_cluster_config_environment_prop
 
 
 @pytest.mark.sanity
@@ -22,10 +23,12 @@ from keywords.constants import CLIENT_REQUEST_TIMEOUT
 @pytest.mark.webhooks
 @pytest.mark.basicauth
 @pytest.mark.channel
-@pytest.mark.parametrize("sg_conf_name, num_users, num_channels, num_docs, num_revisions", [
-    ("webhooks/webhook_offline", 5, 1, 1, 2),
+@pytest.mark.parametrize("sg_conf_name, num_users, num_channels, num_docs, num_revisions, x509_cert_auth", [
+    ("webhooks/webhook_offline", 5, 1, 1, 2, True),
+    ("webhooks/webhook_offline", 5, 1, 1, 2, False)
 ])
-def test_webhooks(params_from_base_test_setup, sg_conf_name, num_users, num_channels, num_docs, num_revisions):
+def test_webhooks(params_from_base_test_setup, sg_conf_name, num_users, num_channels, num_docs,
+                  num_revisions, x509_cert_auth):
     """
     Scenario:
     - Start a webserver on machine running the test to recieved webhook events
@@ -48,7 +51,7 @@ def test_webhooks(params_from_base_test_setup, sg_conf_name, num_users, num_chan
     log_info("Using num_channels: {}".format(num_channels))
     log_info("Using num_docs: {}".format(num_docs))
     log_info("Using num_revisions: {}".format(num_revisions))
-
+    persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', x509_cert_auth)
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_conf)
 
@@ -217,13 +220,13 @@ def test_webhooks_crud(params_from_base_test_setup, sg_conf_name, filtered):
 
     # Add filtered property to every other doc
     count = 0
-    for _, doc_val in sdk_docs.items():
+    for _, doc_val in list(sdk_docs.items()):
         if count % 2 == 0:
             doc_val['filtered'] = True
         count += 1
 
     sdk_doc_ids = [doc for doc in sdk_docs]
-    sdk_filtered_doc_ids = [k for k, v in sdk_docs.items() if 'filtered' in v]
+    sdk_filtered_doc_ids = [k for k, v in list(sdk_docs.items()) if 'filtered' in v]
     assert len(sdk_doc_ids) == num_docs_per_client
     assert len(sdk_filtered_doc_ids) == num_docs_per_client / 2
 
@@ -445,7 +448,7 @@ def poll_for_webhook_data(webhook_server, expected_doc_ids, expected_num_revs, e
             all_docs_revs_found = False
 
         else:
-            for doc_id, doc in posted_webhook_events.items():
+            for doc_id, doc in list(posted_webhook_events.items()):
 
                 if deleted:
                     assert doc['_deleted']

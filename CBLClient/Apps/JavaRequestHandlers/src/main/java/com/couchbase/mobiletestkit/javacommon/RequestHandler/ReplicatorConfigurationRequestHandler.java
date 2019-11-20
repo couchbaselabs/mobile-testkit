@@ -15,13 +15,19 @@ import com.couchbase.mobiletestkit.javacommon.Args;
 import com.couchbase.mobiletestkit.javacommon.RequestHandlerDispatcher;
 import com.couchbase.mobiletestkit.javacommon.util.Log;
 import com.couchbase.lite.Authenticator;
+import com.couchbase.lite.Conflict;
+import com.couchbase.lite.ConflictResolver;
+import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.Database;
 import com.couchbase.lite.DatabaseEndpoint;
 import com.couchbase.lite.Document;
 import com.couchbase.lite.DocumentFlag;
+import com.couchbase.lite.MutableDocument;
 import com.couchbase.lite.ReplicationFilter;
 import com.couchbase.lite.ReplicatorConfiguration;
 import com.couchbase.lite.URLEndpoint;
+
+import static java.lang.Thread.sleep;
 
 
 public class ReplicatorConfigurationRequestHandler {
@@ -63,7 +69,7 @@ public class ReplicatorConfigurationRequestHandler {
         Boolean push_filter = args.get("push_filter");
         Boolean pull_filter = args.get("pull_filter");
         String filter_callback_func = args.get("filter_callback_func");
-        // ConflictResolver conflictResolver = args.get("conflictResolver");
+        String conflict_resolver = args.get("conflict_resolver");
         Map<String, String> headers = args.get("headers");
 
         if (replicatorType == null) {
@@ -150,6 +156,35 @@ public class ReplicatorConfigurationRequestHandler {
                     config.setPullFilter(new DefaultReplicatorFilterCallback());
                     break;
             }
+        }
+        switch (conflict_resolver) {
+            case "local_wins":
+                config.setConflictResolver(new LocalWinsCustomConflictResolver());
+                break;
+            case "remote_wins":
+                config.setConflictResolver(new RemoteWinsCustomConflictResolver());
+                break;
+            case "null":
+                config.setConflictResolver(new NullCustomConflictResolver());
+                break;
+            case "merge":
+                config.setConflictResolver(new MergeCustomConflictResolver());
+                break;
+            case "incorrect_doc_id":
+                config.setConflictResolver(new IncorrectDocIdConflictResolver());
+                break;
+            case "delayed_local_win":
+                config.setConflictResolver(new DelayedLocalWinConflictResolver());
+                break;
+            case "delete_not_win":
+                config.setConflictResolver(new DeleteDocConflictResolver());
+                break;
+            case "exception_thrown":
+                config.setConflictResolver(new ExceptionThrownConflictResolver());
+                break;
+            default:
+                config.setConflictResolver(ConflictResolver.DEFAULT);
+                break;
         }
         return config;
     }
@@ -320,4 +355,169 @@ class ReplicatorAccessRevokedFilterCallback implements ReplicationFilter {
     }
 }
 
+class LocalWinsCustomConflictResolver implements ConflictResolver {
+    private static final String TAG = "CCRREPLCONFIGHANDLER";
+    @Override
+    public Document resolve(Conflict conflict) {
+        Document localDoc = conflict.getLocalDocument();
+        Document remoteDoc = conflict.getRemoteDocument();
+        if (localDoc == null || remoteDoc == null) {
+            throw new IllegalStateException("Either local doc or remote is/are null");
+        }
+        String docId = conflict.getDocumentId();
+        Utility util_obj = new Utility();
+        util_obj.checkMismatchDocId(localDoc, remoteDoc, docId);
+        return localDoc;
+    }
+}
 
+class RemoteWinsCustomConflictResolver implements ConflictResolver {
+    private static final String TAG = "CCRREPLCONFIGHANDLER";
+    @Override
+    public Document resolve(Conflict conflict) {
+        Document localDoc = conflict.getLocalDocument();
+        Document remoteDoc = conflict.getRemoteDocument();
+        if (localDoc == null || remoteDoc == null) {
+            throw new IllegalStateException("Either local doc or remote is/are null");
+        }
+        String docId = conflict.getDocumentId();
+        Utility util_obj = new Utility();
+        util_obj.checkMismatchDocId(localDoc, remoteDoc, docId);
+        return remoteDoc;
+    }
+}
+
+class NullCustomConflictResolver implements ConflictResolver {
+    private static final String TAG = "CCRREPLCONFIGHANDLER";
+    @Override
+    public Document resolve(Conflict conflict) {
+        Document localDoc = conflict.getLocalDocument();
+        Document remoteDoc = conflict.getRemoteDocument();
+        if (localDoc == null || remoteDoc == null) {
+            throw new IllegalStateException("Either local doc or remote is/are null");
+        }
+        String docId = conflict.getDocumentId();
+        Utility util_obj = new Utility();
+        util_obj.checkMismatchDocId(localDoc, remoteDoc, docId);
+        return null;
+    }
+}
+
+class MergeCustomConflictResolver implements ConflictResolver {
+    private static final String TAG = "CCRREPLCONFIGHANDLER";
+    @Override
+    public Document resolve(Conflict conflict) {
+        /**
+         * Migrate the conflicted doc.
+         * Algorithm creates a new doc with copying local doc and then adding any additional key
+         * from remote doc. Conflicting keys will have value from local doc.
+         */
+        Document localDoc = conflict.getLocalDocument();
+        Document remoteDoc = conflict.getRemoteDocument();
+        if (localDoc == null || remoteDoc == null) {
+            throw new IllegalStateException("Either local doc or remote is/are null");
+        }
+        String docId = conflict.getDocumentId();
+        Utility util_obj = new Utility();
+        util_obj.checkMismatchDocId(localDoc, remoteDoc, docId);
+        MutableDocument newDoc = localDoc.toMutable();
+        Map<String, Object> remoteDocMap = remoteDoc.toMap();
+        for (Map.Entry<String, Object> entry : remoteDocMap.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+            if (!newDoc.contains(key)) {
+                newDoc.setValue(key, value);
+            }
+        }
+        return newDoc;
+    }
+}
+
+class IncorrectDocIdConflictResolver implements ConflictResolver {
+    private static final String TAG = "CCRREPLCONFIGHANDLER";
+    @Override
+    public Document resolve(Conflict conflict) {
+        Document localDoc = conflict.getLocalDocument();
+        Document remoteDoc = conflict.getRemoteDocument();
+        if (localDoc == null || remoteDoc == null) {
+            throw new IllegalStateException("Either local doc or remote is/are null");
+        }
+        String docId = conflict.getDocumentId();
+        Utility util_obj = new Utility();
+        util_obj.checkMismatchDocId(localDoc, remoteDoc, docId);
+        String newId = "changed" + docId;
+        MutableDocument newDoc = new MutableDocument(newId, localDoc.toMap());
+        newDoc.setValue("new_value", "couchbase");
+        return newDoc;
+    }
+}
+
+class DelayedLocalWinConflictResolver implements ConflictResolver {
+    private static final String TAG = "CCRREPLCONFIGHANDLER";
+    @Override
+    public Document resolve(Conflict conflict) {
+        Document localDoc = conflict.getLocalDocument();
+        Document remoteDoc = conflict.getRemoteDocument();
+        if (localDoc == null || remoteDoc == null) {
+            throw new IllegalStateException("Either local doc or remote is/are null");
+        }
+        String docId = conflict.getDocumentId();
+        Utility util_obj = new Utility();
+        util_obj.checkMismatchDocId(localDoc, remoteDoc, docId);
+        try {
+            sleep(1000 * 10);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return localDoc;
+    }
+}
+
+class DeleteDocConflictResolver implements ConflictResolver {
+    private static final String TAG = "CCRREPLCONFIGHANDLER";
+    @Override
+    public Document resolve(Conflict conflict) {
+        Document localDoc = conflict.getLocalDocument();
+        Document remoteDoc = conflict.getRemoteDocument();
+        if (localDoc == null || remoteDoc == null) {
+            throw new IllegalStateException("Either local doc or remote is/are null");
+        }
+        String docId = conflict.getDocumentId();
+        Utility util_obj = new Utility();
+        util_obj.checkMismatchDocId(localDoc, remoteDoc, docId);
+        if (remoteDoc == null) {
+            return localDoc;
+        } else {
+            return null;
+        }
+    }
+}
+
+class ExceptionThrownConflictResolver implements ConflictResolver {
+    private static final String TAG = "CCRREPLCONFIGHANDLER";
+    @Override
+    public Document resolve(Conflict conflict) {
+        Document localDoc = conflict.getLocalDocument();
+        Document remoteDoc = conflict.getRemoteDocument();
+        if (localDoc == null || remoteDoc == null) {
+            throw new IllegalStateException("Either local doc or remote is/are null");
+        }
+        String docId = conflict.getDocumentId();
+        Utility util_obj = new Utility();
+        util_obj.checkMismatchDocId(localDoc, remoteDoc, docId);
+        throw new IllegalStateException("Throwing an exception");
+    }
+}
+
+class Utility {
+    public void checkMismatchDocId(Document localDoc, Document remoteDoc, String docId) {
+        String remoteDocId = remoteDoc.getId();
+        String localDocId = localDoc.getId();
+        if (remoteDocId != docId) {
+            throw new IllegalStateException("DocId mismatch");
+        }
+        if (docId != localDocId) {
+            throw new IllegalStateException("DocId mismatch");
+        }
+    }
+}

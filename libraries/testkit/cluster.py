@@ -196,7 +196,7 @@ class Cluster:
                 redact_level = get_redact_level(self._cluster_config)
                 playbook_vars["logging"] = '{}, "redaction_level": "{}" {},'.format(logging_config, redact_level, "}")
             except KeyError as ex:
-                log_info("Keyerror in getting logging{}".format(ex.message))
+                log_info("Keyerror in getting logging{}".format(ex))
                 playbook_vars["logging"] = '{} {},'.format(logging_config, "}")
             if get_sg_use_views(self._cluster_config):
                 playbook_vars["sg_use_views"] = '"use_views": true,'
@@ -320,7 +320,7 @@ class Cluster:
         Validates the CBGT pindex distribution by looking for nodes that don't have
         any pindexes assigned to it
         """
-        for i in xrange(10):
+        for i in range(10):
             is_valid = self.validate_cbgt_pindex_distribution(num_running_sg_accels)
             if is_valid:
                 return True
@@ -346,7 +346,7 @@ class Cluster:
         # this will end up with a dictionary like:
         #  {'74c818f04b99b169': 32, '11886131c807a30e': 32}  (each node uuid has 32 pindexes)
         plan_pindexes = cbgt_cfg.p_indexes
-        for data_bucket_key, data_bucket_val in plan_pindexes.iteritems():
+        for data_bucket_key, data_bucket_val in plan_pindexes.items():
 
             # get the nodes where this pindex lives
             nodes = data_bucket_val["nodes"]
@@ -377,7 +377,7 @@ class Cluster:
         # make sure that all of the nodes have approx the same number of pindexes assigneed to them
         i = 0
         num_pindex_first_node = 0
-        for node_def_uuid, num_pindexes in node_defs_pindex_counts.iteritems():
+        for node_def_uuid, num_pindexes in node_defs_pindex_counts.items():
 
             if i == 0:
                 # it's the first node we've looked at, just record number of pindexes and continue

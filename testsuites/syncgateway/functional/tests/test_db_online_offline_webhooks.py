@@ -12,14 +12,19 @@ from keywords.MobileRestClient import MobileRestClient
 
 
 # implements scenarios: 18 and 19
+from utilities.cluster_config_utils import persist_cluster_config_environment_prop
+
+
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.onlineoffline
 @pytest.mark.webhooks
-@pytest.mark.parametrize("sg_conf_name, num_users, num_channels, num_docs, num_revisions", [
-    ("webhooks/webhook_offline", 5, 1, 1, 2),
+@pytest.mark.parametrize("sg_conf_name, num_users, num_channels, num_docs, num_revisions, x509_cert_auth", [
+    ("webhooks/webhook_offline", 5, 1, 1, 2, False),
+    ("webhooks/webhook_offline", 5, 1, 1, 2, True)
 ])
-def test_db_online_offline_webhooks_offline(params_from_base_test_setup, sg_conf_name, num_users, num_channels, num_docs, num_revisions):
+def test_db_online_offline_webhooks_offline(params_from_base_test_setup, sg_conf_name, num_users, num_channels,
+                                            num_docs, num_revisions, x509_cert_auth):
 
     start = time.time()
 
@@ -27,7 +32,8 @@ def test_db_online_offline_webhooks_offline(params_from_base_test_setup, sg_conf
     mode = params_from_base_test_setup["mode"]
 
     if mode == "di":
-        pytest.skip("Offline tests not supported in Di mode -- see https://github.com/couchbase/sync_gateway/issues/2423#issuecomment-300841425")
+        pytest.skip("Offline tests not supported in Di mode -- "
+                    "see https://github.com/couchbase/sync_gateway/issues/2423#issuecomment-300841425")
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
@@ -37,6 +43,8 @@ def test_db_online_offline_webhooks_offline(params_from_base_test_setup, sg_conf
     log_info("Using num_channels: {}".format(num_channels))
     log_info("Using num_docs: {}".format(num_docs))
     log_info("Using num_revisions: {}".format(num_revisions))
+
+    persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', x509_cert_auth)
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_conf)

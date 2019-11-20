@@ -37,6 +37,7 @@ using JetBrains.Annotations;
 using Newtonsoft.Json.Linq;
 
 using static Couchbase.Lite.Testing.DatabaseMethods;
+using System.Threading;
 
 namespace Couchbase.Lite.Testing
 {
@@ -158,43 +159,70 @@ namespace Couchbase.Lite.Testing
                 }
                 if (postBody["push_filter"].Equals(true))
                 {
-                    if (filter_callback_func == "boolean")
+                    switch (filter_callback_func)
                     {
-                        config.PushFilter = _replicator_boolean_filter_callback;
-                    }
-                    else if (filter_callback_func == "deleted")
-                    {
-                        config.PushFilter = _replicator_deleted_filter_callback;
-                    }
-                    else if (filter_callback_func == "access_revoked")
-                    {
-                        config.PushFilter = _replicator_access_revoked_filter_callback;
-                    }
-                    else
-                    {
-                        config.PushFilter = _default_replicator_filter_callback;
+                        case "boolean":
+                            config.PushFilter = _replicator_boolean_filter_callback;
+                            break;
+                        case "deleted":
+                            config.PushFilter = _replicator_deleted_filter_callback;
+                            break;
+                        case "access_revoked":
+                            config.PushFilter = _replicator_access_revoked_filter_callback;
+                            break;
+                        default:
+                            config.PushFilter = _default_replicator_filter_callback;
+                            break;
                     }
                 }
 
                 if (postBody["pull_filter"].Equals(true))
                 {
-                    if (filter_callback_func == "boolean")
+                    switch (filter_callback_func)
                     {
-                        config.PullFilter = _replicator_boolean_filter_callback;
+                        case "boolean":
+                            config.PullFilter = _replicator_boolean_filter_callback;
+                            break;
+                        case "deleted":
+                            config.PullFilter = _replicator_deleted_filter_callback;
+                            break;
+                        case "access_revoked":
+                            config.PullFilter = _replicator_access_revoked_filter_callback;
+                            break;
+                        default:
+                            config.PullFilter = _default_replicator_filter_callback;
+                            break;
                     }
-                    else if (filter_callback_func == "deleted")
-                    {
-                        config.PullFilter = _replicator_deleted_filter_callback;
-                    }
-                    else if (filter_callback_func == "access_revoked")
-                    {
-                        config.PullFilter = _replicator_access_revoked_filter_callback;
-                    }
-                    else
-                    {
-                        config.PullFilter = _default_replicator_filter_callback;
-                    }
-                    
+                }
+                switch (postBody["conflict_resolver"].ToString())
+                {
+                    case "local_wins":
+                        config.ConflictResolver = new LocalWinsCustomConflictResolver();
+                        break;
+                    case "remote_wins":
+                        config.ConflictResolver = new RemoteWinsCustomConflictResolver();
+                        break;
+                    case "null":
+                        config.ConflictResolver = new NullCustomConflictResolver();
+                        break;
+                    case "merge":
+                        config.ConflictResolver = new MergeCustomConflictResolver();
+                        break;
+                    case "incorrect_doc_id":
+                        config.ConflictResolver = new IncorrectDocIdConflictResolver();
+                        break;
+                    case "delayed_local_win":
+                        config.ConflictResolver = new DelayedLocalWinConflictResolver();
+                        break;
+                    case "delete_not_win":
+                        config.ConflictResolver = new DeleteDocConflictResolver();
+                        break;
+                    case "exception_thrown":
+                        config.ConflictResolver = new ExceptionThrownConflictResolver();
+                        break;
+                    default:
+                        config.ConflictResolver = ConflictResolver.Default;
+                        break;
                 }
                 response.WriteBody(MemoryMap.Store(config));
             });
@@ -371,5 +399,192 @@ namespace Couchbase.Lite.Testing
                 repConf.PinnedServerCertificate = null;
             });
         }
+    }
+
+    internal sealed class LocalWinsCustomConflictResolver : IConflictResolver
+    {
+        Document IConflictResolver.Resolve(Conflict conflict)
+        {
+            Document localDoc = conflict.LocalDocument;
+            Document remoteDoc = conflict.RemoteDocument;
+            if (localDoc == null || remoteDoc == null)
+            {
+                throw new Exception("Either local doc or remote is/are null");
+            }
+            string docId = conflict.DocumentID;
+            Utility util_obj = new Utility();
+            util_obj.checkMismatchDocId(localDoc, remoteDoc, docId);
+            return localDoc;
+            
+        }
+    }
+
+    internal sealed class RemoteWinsCustomConflictResolver : IConflictResolver
+    {
+        Document IConflictResolver.Resolve(Conflict conflict)
+        {
+            Document localDoc = conflict.LocalDocument;
+            Document remoteDoc = conflict.RemoteDocument;
+            if (localDoc == null || remoteDoc == null)
+            {
+                throw new Exception("Either local doc or remote is/are null");
+            }
+            string docId = conflict.DocumentID;
+            Utility util_obj = new Utility();
+            util_obj.checkMismatchDocId(localDoc, remoteDoc, docId);
+            return remoteDoc;
+
+        }
+    }
+
+    internal sealed class NullCustomConflictResolver : IConflictResolver
+    {
+        Document IConflictResolver.Resolve(Conflict conflict)
+        {
+            Document localDoc = conflict.LocalDocument;
+            Document remoteDoc = conflict.RemoteDocument;
+            if (localDoc == null || remoteDoc == null)
+            {
+                throw new Exception("Either local doc or remote is/are null");
+            }
+            string docId = conflict.DocumentID;
+            Utility util_obj = new Utility();
+            util_obj.checkMismatchDocId(localDoc, remoteDoc, docId);
+            return null;
+
+        }
+    }
+
+    internal sealed class MergeCustomConflictResolver : IConflictResolver
+    {
+        Document IConflictResolver.Resolve(Conflict conflict)
+        {
+            // Migrate the conflicted doc
+            // Algorithm creates a new doc with copying local doc and then adding any additional key
+            // from remote doc. Conflicting keys will have value from local doc.
+            Document localDoc = conflict.LocalDocument;
+            Document remoteDoc = conflict.RemoteDocument;
+            if (localDoc == null || remoteDoc == null)
+            {
+                throw new Exception("Either local doc or remote is/are null");
+            }
+            string docId = conflict.DocumentID;
+            Utility util_obj = new Utility();
+            util_obj.checkMismatchDocId(localDoc, remoteDoc, docId);
+            MutableDocument newDoc = localDoc.ToMutable();
+            Dictionary<string, object> remoteDocMap = remoteDoc.ToDictionary();
+            foreach (KeyValuePair<string, Object> entry in remoteDocMap)
+            {
+                string key = entry.Key;
+                Object value = entry.Value;
+                if (!newDoc.Contains(key))
+                {
+                    newDoc.SetValue(key, value);
+                }
+            }
+            return newDoc;
+
+        }
+    }
+
+    internal sealed class IncorrectDocIdConflictResolver : IConflictResolver
+    {
+        Document IConflictResolver.Resolve(Conflict conflict)
+        {
+            Document localDoc = conflict.LocalDocument;
+            Document remoteDoc = conflict.RemoteDocument;
+            if (localDoc == null || remoteDoc == null)
+            {
+                throw new Exception("Either local doc or remote is/are null");
+            }
+            string docId = conflict.DocumentID;
+            Utility util_obj = new Utility();
+            util_obj.checkMismatchDocId(localDoc, remoteDoc, docId);
+            string newId = "changed" + docId;
+            MutableDocument newDoc = new MutableDocument(newId, localDoc.ToDictionary());
+            newDoc.SetValue("new_value", "couchbase");
+            return newDoc;
+
+        }
+    }
+
+    internal sealed class DeleteDocConflictResolver : IConflictResolver
+    {
+        Document IConflictResolver.Resolve(Conflict conflict)
+        {
+            Document localDoc = conflict.LocalDocument;
+            Document remoteDoc = conflict.RemoteDocument;
+            if (localDoc == null || remoteDoc == null)
+            {
+                throw new Exception("Either local doc or remote is/are null");
+            }
+            string docId = conflict.DocumentID;
+            Utility util_obj = new Utility();
+            util_obj.checkMismatchDocId(localDoc, remoteDoc, docId);
+            if (remoteDoc == null)
+            {
+                return localDoc;
+            }
+            else
+            {
+                return null;
+            }
+        }
+    }
+
+    internal sealed class ExceptionThrownConflictResolver : IConflictResolver
+    {
+        Document IConflictResolver.Resolve(Conflict conflict)
+        {
+            Document localDoc = conflict.LocalDocument;
+            Document remoteDoc = conflict.RemoteDocument;
+            if (localDoc == null || remoteDoc == null)
+            {
+                throw new Exception("Either local doc or remote is/are null");
+            }
+            string docId = conflict.DocumentID;
+            Utility util_obj = new Utility();
+            util_obj.checkMismatchDocId(localDoc, remoteDoc, docId);
+            throw new Exception("Throwing an exception");
+        }
+    }
+
+    internal sealed class DelayedLocalWinConflictResolver : IConflictResolver
+    {
+        Document IConflictResolver.Resolve(Conflict conflict)
+        {
+            Document localDoc = conflict.LocalDocument;
+            Document remoteDoc = conflict.RemoteDocument;
+            if (localDoc == null || remoteDoc == null)
+            {
+                throw new Exception("Either local doc or remote is/are null");
+            }
+            string docId = conflict.DocumentID;
+            Utility util_obj = new Utility();
+            util_obj.checkMismatchDocId(localDoc, remoteDoc, docId);
+            Thread.Sleep(1000 * 10);
+            return localDoc;
+
+        }
+    }
+
+    internal sealed class Utility
+    {
+        public void checkMismatchDocId(Document localDoc, Document remoteDoc, string docId)
+        {
+            string localDocId = localDoc.Id;
+            string remoteDocId = remoteDoc.Id;
+            if (!docId.Equals(remoteDocId))
+            {
+                throw new Exception("DocId mismatch");
+            }
+            if (!docId.Equals(localDocId))
+            {
+                throw new Exception("DocId mismatch");
+
+            }
+
+        }
+
     }
 }

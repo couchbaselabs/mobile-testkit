@@ -156,7 +156,7 @@ def params_from_base_suite_setup(request):
                 else:
                     testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp,
                                                                    datetime.datetime.now()))
-        for base_url, i in zip(base_url_list, range(len(base_url_list))):
+        for base_url, i in zip(base_url_list, list(range(len(base_url_list)))):
             if enable_file_logging and version_list[0] >= "2.5.0":
                 cbllog = FileLogging(base_url)
                 cbllog.configure(log_level="verbose", max_rotate_count=2,
@@ -222,7 +222,7 @@ def params_from_base_suite_setup(request):
                 if not use_local_testserver:
                     log_info("Stopping the test server")
                     testserver.stop()
-            except Exception, err:
+            except Exception as err:
                 log_info("Exception occurred: {}".format(err))
     clear_resources_pngs()
 
@@ -268,7 +268,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
                 else:
                     testserver.start(log_filename)
 
-        for base_url, i in zip(base_url_list, range(len(base_url_list))):
+        for base_url, i in zip(base_url_list, list(range(len(base_url_list)))):
             if enable_file_logging and version_list[0] >= "2.5.0":
                 cbllog = FileLogging(base_url)
                 cbllog.configure(log_level="verbose", max_rotate_count=2,
@@ -328,7 +328,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
                 if not use_local_testserver:
                     log_info("Stopping the test server per test")
                     testserver.stop()
-            except Exception, err:
+            except Exception as err:
                 log_info("Exception occurred: {}".format(err))
 
 

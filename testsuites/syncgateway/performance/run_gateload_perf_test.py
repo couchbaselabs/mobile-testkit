@@ -6,11 +6,11 @@ import collections
 
 from optparse import OptionParser
 from libraries.provision.ansible_runner import AnsibleRunner
-import generate_gateload_configs
+from . import generate_gateload_configs
 from keywords.exceptions import ProvisioningError
 from libraries.utilities.log_expvars import log_expvars
 from libraries.utilities.fetch_sync_gateway_profile import fetch_sync_gateway_profile
-from kill_gateload import kill_gateload
+from .kill_gateload import kill_gateload
 
 GateloadParams = collections.namedtuple(
     "GateloadParams",
@@ -36,7 +36,7 @@ def run_gateload_perf_test(gen_gateload_config, test_id, gateload_params, delay_
         print ("Make sure CLUSTER_CONFIG is defined and pointing to the configuration you would like to provision")
         sys.exit(1)
 
-    print("Running perf test against cluster: {}".format(cluster_config))
+    print(("Running perf test against cluster: {}".format(cluster_config)))
     ansible_runner = AnsibleRunner(cluster_config)
 
     # Install + configure telegraf
@@ -84,9 +84,9 @@ def run_gateload_perf_test(gen_gateload_config, test_id, gateload_params, delay_
     assert status == 0, "Could not start profiling collection scripts"
 
     # Start gateload
-    print(">>> Starting gateload with {0} pullers and {1} pushers".format(
+    print((">>> Starting gateload with {0} pullers and {1} pushers".format(
         gateload_params.number_pullers, gateload_params.number_pushers
-    ))
+    )))
     status = ansible_runner.run_ansible_playbook(
         "start-gateload.yml",
         extra_vars={
