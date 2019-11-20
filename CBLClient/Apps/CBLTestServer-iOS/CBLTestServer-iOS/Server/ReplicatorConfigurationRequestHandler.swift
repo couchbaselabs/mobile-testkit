@@ -168,6 +168,9 @@ public class ReplicatorConfigurationRequestHandler {
                 case "delayed_local_win":
                     config.conflictResolver = DelayedLocalWinCustomConflictResolver();
                     break;
+                case "delete_not_win":
+                    config.conflictResolver = DeleteDocCustomConflictResolver();
+                    break
                 case "exception_thrown":
                     config.conflictResolver = ExceptionThrownCustomConflictResolver();
                     break;
