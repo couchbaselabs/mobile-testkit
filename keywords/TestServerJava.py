@@ -179,9 +179,7 @@ class TestServerJava(TestServerBase):
     def stop(self):
         log_info("Stopping JavaTestServer app")
 
-        if self.platform == "net-msft":
-
-        else:
+        if self.platform != "net-msft":
             try:
                 self.java_proc.terminate()
             except:
