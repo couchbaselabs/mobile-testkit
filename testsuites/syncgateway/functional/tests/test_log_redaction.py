@@ -138,13 +138,15 @@ def test_sgCollect1(params_from_base_test_setup, remove_tmp_sg_redaction_logs, s
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.logredaction
-@pytest.mark.parametrize("sg_conf_name, redaction_level, redaction_salt, output_dir, x509_cert_auth", [
-    ("log_redaction", "partial", False, False, True),
-    ("log_redaction", None, False, False, False),
-    ("log_redaction", "partial", True, False, False),
-    ("log_redaction", "partial", True, True, True)
+@pytest.mark.parametrize("sg_conf_name, redaction_level, redaction_salt, output_dir", [
+    ("log_redaction", "partial", False, False),
+    ("log_redaction", None, False, False),
+    ("log_redaction", "partial", True, False),
+    ("log_redaction", "partial", True, True)
 ])
-def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_logs, sg_conf_name, redaction_level, redaction_salt, output_dir, x509_cert_auth):
+
+def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_logs, sg_conf_name, redaction_level, redaction_salt, output_dir):
+
     """
     @summary
     1. Have sync_gateway config file with logging level as partial/None

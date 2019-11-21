@@ -1331,7 +1331,10 @@ def test_replication_wrong_blip(params_from_base_test_setup):
     replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
     with pytest.raises(Exception) as ex:
         replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channels, replicator_authenticator=replicator_authenticator)
+<<<<<<< HEAD
     ex_data = str(ex.value)
+=======
+>>>>>>> Revert "Fix/x509 test runs (#1626)"
     if liteserv_platform == "ios":
         assert "Invalid scheme for URLEndpoint url (ht2tp" in ex_data
         assert "must be either 'ws:' or 'wss:'" in ex_data
@@ -2116,7 +2119,7 @@ def test_default_conflict_withConflicts_withChannels(params_from_base_test_setup
     # Create two conflicts with 2-hex in sg by user2.
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session2)
     sg_docs = sg_docs["rows"]
-    for i in range(len(sg_docs)):
+	    for i in range(len(sg_docs)):
         sg_client.add_conflict(url=sg_url, db=sg_db, doc_id=sg_docs[i]["id"],
                                parent_revisions=sg_docs[i]["value"]["rev"], new_revision="2-31fa", auth=session2)
 
