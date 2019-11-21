@@ -11,7 +11,6 @@ import requests
 
 from keywords.utils import log_info
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
-from utilities.cluster_config_utils import persist_cluster_config_environment_prop
 
 
 @pytest.mark.sanity
@@ -20,14 +19,13 @@ from utilities.cluster_config_utils import persist_cluster_config_environment_pr
 @pytest.mark.channel
 @pytest.mark.bulkops
 @pytest.mark.changes
-@pytest.mark.parametrize("sg_conf_name, num_docs, user_channels, filter, limit, x509_cert_auth", [
-    ("sync_gateway_channel_cache", 5000, "*", True, 50, False),
-    ("sync_gateway_channel_cache", 1000, "*", True, 50, True),
-    ("sync_gateway_channel_cache", 1000, "ABC", False, 50, True),
-    ("sync_gateway_channel_cache", 1000, "ABC", True, 50, False),
+@pytest.mark.parametrize("sg_conf_name, num_docs, user_channels, filter, limit", [
+    ("sync_gateway_channel_cache", 5000, "*", True, 50),
+    ("sync_gateway_channel_cache", 1000, "*", True, 50),
+    ("sync_gateway_channel_cache", 1000, "ABC", False, 50),
+    ("sync_gateway_channel_cache", 1000, "ABC", True, 50),
 ])
-def test_overloaded_channel_cache(params_from_base_test_setup, sg_conf_name, num_docs, user_channels,
-                                  filter, limit, x509_cert_auth):
+def test_overloaded_channel_cache(params_from_base_test_setup, sg_conf_name, num_docs, user_channels, filter, limit):
 
     """
     The purpose of this test is to verify that channel cache backfill via view queries is working properly.
@@ -60,8 +58,6 @@ def test_overloaded_channel_cache(params_from_base_test_setup, sg_conf_name, num
     log_info("Using user_channels: {}".format(user_channels))
     log_info("Using filter: {}".format(filter))
     log_info("Using limit: {}".format(limit))
-
-    persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', x509_cert_auth)
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)

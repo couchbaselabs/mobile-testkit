@@ -10,7 +10,6 @@ from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.utils import log_info
 from libraries.testkit.cluster import Cluster
 from keywords.MobileRestClient import MobileRestClient
-from utilities.cluster_config_utils import persist_cluster_config_environment_prop
 
 
 @pytest.mark.sanity
@@ -21,11 +20,10 @@ from utilities.cluster_config_utils import persist_cluster_config_environment_pr
 @pytest.mark.changes
 @pytest.mark.session
 @pytest.mark.attachments
-@pytest.mark.parametrize("sg_conf_name, x509_cert_auth", [
-    ("user_views/user_views", False),
-    ("user_views/user_views", True)
+@pytest.mark.parametrize("sg_conf_name", [
+    "user_views/user_views",
 ])
-def test_user_views_sanity(params_from_base_test_setup, sg_conf_name, x509_cert_auth):
+def test_user_views_sanity(params_from_base_test_setup, sg_conf_name):
 
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
@@ -35,7 +33,7 @@ def test_user_views_sanity(params_from_base_test_setup, sg_conf_name, x509_cert_
     log_info("Running 'single_user_multiple_channels'")
     log_info("cluster_conf: {}".format(cluster_conf))
     log_info("conf: {}".format(sg_conf))
-    persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', x509_cert_auth)
+
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
 
