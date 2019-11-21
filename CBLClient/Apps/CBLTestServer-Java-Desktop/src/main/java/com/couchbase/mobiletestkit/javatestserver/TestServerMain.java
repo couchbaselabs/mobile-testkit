@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 public class TestServerMain {
-    private static final int PORT = 8888;
+    private static final int PORT = 8080;
     private static Context context;
 
     public static void main(String[] args) throws IOException {

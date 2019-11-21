@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.net.*;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.Base64;
 
 public class TestServerContext implements Context {
     private final String TAG = "JavaContext";
@@ -77,6 +78,12 @@ public class TestServerContext implements Context {
         }
 
         return ip;
+    }
+
+    @Override
+    public String encodeBase64(byte[] hashBytes){
+        // load java.util.Base64 in java standalone app
+        return Base64.getEncoder().encodeToString(hashBytes);
     }
 
     private String getIpAddressByInterface(NetworkInterface networkInterface){
