@@ -111,12 +111,11 @@ class TestServerJava(TestServerBase):
 
         # download java package
         log_info("Downloading {} -> {}/{}".format(self.download_url, BINARY_DIR, self.package_name))
-        '''
+
         resp = requests.get(self.download_url, verify=False)
         resp.raise_for_status()
         with open("{}/{}".format(BINARY_DIR, self.package_name), "wb") as f:
             f.write(resp.content)
-        '''
 
     def install(self):
         if self.platform == "java-msft":
