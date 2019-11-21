@@ -14,7 +14,6 @@ from libraries.testkit.parallelize import in_parallel
 from libraries.testkit.web_server import WebServer
 from keywords.exceptions import TimeoutError
 from keywords.constants import CLIENT_REQUEST_TIMEOUT
-from utilities.cluster_config_utils import persist_cluster_config_environment_prop
 
 
 @pytest.mark.sanity
@@ -23,12 +22,10 @@ from utilities.cluster_config_utils import persist_cluster_config_environment_pr
 @pytest.mark.webhooks
 @pytest.mark.basicauth
 @pytest.mark.channel
-@pytest.mark.parametrize("sg_conf_name, num_users, num_channels, num_docs, num_revisions, x509_cert_auth", [
-    ("webhooks/webhook_offline", 5, 1, 1, 2, True),
-    ("webhooks/webhook_offline", 5, 1, 1, 2, False)
+@pytest.mark.parametrize("sg_conf_name, num_users, num_channels, num_docs, num_revisions", [
+    ("webhooks/webhook_offline", 5, 1, 1, 2),
 ])
-def test_webhooks(params_from_base_test_setup, sg_conf_name, num_users, num_channels, num_docs,
-                  num_revisions, x509_cert_auth):
+def test_webhooks(params_from_base_test_setup, sg_conf_name, num_users, num_channels, num_docs, num_revisions):
     """
     Scenario:
     - Start a webserver on machine running the test to recieved webhook events
@@ -51,7 +48,7 @@ def test_webhooks(params_from_base_test_setup, sg_conf_name, num_users, num_chan
     log_info("Using num_channels: {}".format(num_channels))
     log_info("Using num_docs: {}".format(num_docs))
     log_info("Using num_revisions: {}".format(num_revisions))
-    persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', x509_cert_auth)
+
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_conf)
 

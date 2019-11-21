@@ -10,17 +10,15 @@ from keywords.utils import log_info
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from libraries.provision.ansible_runner import AnsibleRunner
 from keywords.exceptions import CollectionError
-from utilities.cluster_config_utils import persist_cluster_config_environment_prop
 
 
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.changes
-@pytest.mark.parametrize("sg_conf_name, x509_cert_auth", [
-    ("custom_sync/grant_access_one", False),
-    ("custom_sync/grant_access_one", True)
+@pytest.mark.parametrize("sg_conf_name", [
+    "custom_sync/grant_access_one"
 ])
-def test_resync(params_from_base_test_setup, sg_conf_name, x509_cert_auth):
+def test_resync(params_from_base_test_setup, sg_conf_name):
     """
     https://issues.couchbase.com/browse/CBSE-5686
     @summary:
@@ -41,9 +39,6 @@ def test_resync(params_from_base_test_setup, sg_conf_name, x509_cert_auth):
     num_docs = 100
     mode = params_from_base_test_setup["mode"]
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
-
-    persist_cluster_config_environment_prop(cluster_config, 'x509_certs', x509_cert_auth)
-
     cluster = Cluster(cluster_config)
     cluster.reset(sg_conf)
     client = MobileRestClient()
