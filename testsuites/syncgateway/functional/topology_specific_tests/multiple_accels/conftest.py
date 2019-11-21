@@ -30,6 +30,7 @@ def params_from_base_suite_setup(request):
     xattrs_enabled = request.config.getoption("--xattrs")
     sg_lb = request.config.getoption("--sg-lb")
     sg_ce = request.config.getoption("--sg-ce")
+    cbs_ce = request.config.getoption("--cbs-ce")
     use_sequoia = request.config.getoption("--sequoia")
     no_conflicts_enabled = request.config.getoption("--no-conflicts")
     sg_ssl = request.config.getoption("--sg-ssl")
@@ -78,7 +79,6 @@ def params_from_base_suite_setup(request):
     # use multiple_sg_accels_di
     cluster_config = "{}/multiple_sg_accels_di".format(keywords.constants.CLUSTER_CONFIGS_DIR)
     sg_config = "{}/sync_gateway_default_functional_tests_di.json".format(SYNC_GATEWAY_CONFIGS)
-    cluster_utils = ClusterKeywords(cluster_config)
 
     if sg_ssl:
         log_info("Enabling SSL on sync gateway")
@@ -180,6 +180,7 @@ def params_from_base_suite_setup(request):
                 sync_gateway_config=sg_config,
                 race_enabled=race_enabled,
                 sg_ce=sg_ce,
+                cbs_ce=cbs_ce,
                 sg_installer_type=sg_installer_type,
                 sa_installer_type=sa_installer_type
             )
