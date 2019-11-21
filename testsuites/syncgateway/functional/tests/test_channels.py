@@ -7,7 +7,6 @@ from libraries.testkit.cluster import Cluster
 from keywords.MobileRestClient import MobileRestClient
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.SyncGateway import SyncGateway
-from utilities.cluster_config_utils import persist_cluster_config_environment_prop
 
 import keywords.exceptions
 from keywords import userinfo
@@ -111,11 +110,10 @@ def test_channels_view_after_restart(params_from_base_test_setup, sg_conf_name):
 @pytest.mark.changes
 @pytest.mark.basicauth
 @pytest.mark.channel
-@pytest.mark.parametrize("sg_conf_name, x509_cert_auth", [
-    ("sync_gateway_default", True),
-    ("sync_gateway_default", False),
+@pytest.mark.parametrize("sg_conf_name", [
+    "sync_gateway_default"
 ])
-def test_remove_add_channels_to_doc(params_from_base_test_setup, sg_conf_name, x509_cert_auth):
+def test_remove_add_channels_to_doc(params_from_base_test_setup, sg_conf_name):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     topology = params_from_base_test_setup["cluster_topology"]
@@ -126,8 +124,6 @@ def test_remove_add_channels_to_doc(params_from_base_test_setup, sg_conf_name, x
     sg_db = "db"
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
-
-    persist_cluster_config_environment_prop(cluster_config, 'x509_certs', x509_cert_auth)
 
     cluster = Cluster(cluster_config)
     cluster.reset(sg_conf)

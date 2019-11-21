@@ -15,7 +15,6 @@ from requests.exceptions import HTTPError
 from keywords.utils import log_info
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.MobileRestClient import MobileRestClient
-from utilities.cluster_config_utils import persist_cluster_config_environment_prop
 
 NUM_ENDPOINTS = 13
 
@@ -29,11 +28,10 @@ NUM_ENDPOINTS = 13
 @pytest.mark.channel
 @pytest.mark.bulkops
 @pytest.mark.changes
-@pytest.mark.parametrize("sg_conf_name, num_docs, x509_cert_auth", [
-    ("bucket_online_offline/bucket_online_offline_default", 100, True),
-    ("bucket_online_offline/bucket_online_offline_default", 100, False)
+@pytest.mark.parametrize("sg_conf_name, num_docs", [
+    ("bucket_online_offline/bucket_online_offline_default", 100)
 ])
-def test_online_default_rest(params_from_base_test_setup, sg_conf_name, num_docs, x509_cert_auth):
+def test_online_default_rest(params_from_base_test_setup, sg_conf_name, num_docs):
 
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
@@ -46,8 +44,6 @@ def test_online_default_rest(params_from_base_test_setup, sg_conf_name, num_docs
     log_info("Using cluster_conf: {}".format(cluster_conf))
     log_info("Using sg_conf: {}".format(sg_conf))
     log_info("Using num_docs: {}".format(num_docs))
-
-    persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', x509_cert_auth)
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)

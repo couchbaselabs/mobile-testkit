@@ -10,8 +10,7 @@ from keywords.remoteexecutor import RemoteExecutor
 from keywords.SyncGateway import SyncGateway, sync_gateway_config_path_for_mode, get_sync_gateway_version
 from keywords.utils import log_info, add_cbs_to_sg_config_server_field, host_for_url
 from libraries.testkit.cluster import Cluster
-from utilities.cluster_config_utils import is_cbs_ssl_enabled, get_sg_replicas, get_sg_use_views, get_sg_version, \
-    persist_cluster_config_environment_prop
+from utilities.cluster_config_utils import is_cbs_ssl_enabled, get_sg_replicas, get_sg_use_views, get_sg_version
 
 
 def load_sync_gateway_config(sync_gateway_config, mode, server_url, xattrs_enabled, cluster_config):
@@ -67,11 +66,8 @@ def load_sync_gateway_config(sync_gateway_config, mode, server_url, xattrs_enabl
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.logging
-@pytest.mark.parametrize("sg_conf_name, x509_cert_auth", [
-    ("log_rotation", True),
-    ("log_rotation", False)
-])
-def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name, x509_cert_auth):
+@pytest.mark.parametrize("sg_conf_name", ["log_rotation"])
+def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name):
     """Test to verify default values for rotation section:
     maxsize = 100 MB
     MaxAge = 0(do not limit the number of MaxAge)
@@ -92,8 +88,6 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name, 
 
     log_info("Using cluster_conf: {}".format(cluster_conf))
     log_info("Using sg_conf: {}".format(sg_conf))
-
-    persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', x509_cert_auth)
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
