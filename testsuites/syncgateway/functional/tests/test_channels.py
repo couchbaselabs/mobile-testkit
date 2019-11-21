@@ -110,8 +110,9 @@ def test_channels_view_after_restart(params_from_base_test_setup, sg_conf_name):
 @pytest.mark.changes
 @pytest.mark.basicauth
 @pytest.mark.channel
-@pytest.mark.parametrize("sg_conf_name", [])
-# "sync_gateway_default"
+@pytest.mark.parametrize("sg_conf_name", [
+    "sync_gateway_default"
+])
 def test_remove_add_channels_to_doc(params_from_base_test_setup, sg_conf_name):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
