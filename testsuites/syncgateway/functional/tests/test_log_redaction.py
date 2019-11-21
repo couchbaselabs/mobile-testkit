@@ -145,7 +145,6 @@ def test_sgCollect1(params_from_base_test_setup, remove_tmp_sg_redaction_logs, s
     ("log_redaction", "partial", True, False)
 ])
 def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_logs, sg_conf_name, redaction_level, redaction_salt, output_dir):
-
     """
     @summary
     1. Have sync_gateway config file with logging level as partial/None
