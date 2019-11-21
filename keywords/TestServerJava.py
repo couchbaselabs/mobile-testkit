@@ -23,17 +23,17 @@ class TestServerJava(TestServerBase):
 
         self.platform = platform
         self.released_version = {
-            "2.7.0": 188
+            "2.7.0": 56
         }
 
         self.version_build = version_build
         self.version, self.build = version_and_build(self.version_build)
 
         if self.build is None:
-            self.package_name = "CBLTestServer-Java-Desktop-{}-enterprise-release.jar".format(self.version)
+            self.package_name = "CBLTestServer-Java-Desktop-{}-enterprise.jar".format(self.version)
             self.download_url = "{}/couchbase-lite-java/{}/{}".format(RELEASED_BUILDS, self.version, self.package_name)
         else:
-            self.package_name = "CBLTestServer-Java-Desktop-{}-enterprise-release.jar".format(self.version_build)
+            self.package_name = "CBLTestServer-Java-Desktop-{}-enterprise.jar".format(self.version_build)
             self.download_url = "{}/couchbase-lite-java/{}/{}/{}".format(LATEST_BUILDS, self.version, self.build, self.package_name)
         
         self.build_name = "TestServer-java-desktop-{}".format(self.version_build)
@@ -119,16 +119,21 @@ class TestServerJava(TestServerBase):
         '''
 
     def install(self):
-        # 1. create a ~/testserver directory
+        if self.platform == "java-msft":
+            log_info("there is nothing to install on windows platform")
+            return
+
+        # 1. cleanup ~/testserver directory if exist, create a new with same dir name
         try:
-            if not os.path.exists(self.testserver_path):
-                os.mkdir(self.testserver_path)
+            if os.path.exists(self.testserver_path):
+                os.rmdir(self.testserver_path)
+            os.mkdir(self.testserver_path)
         except OSError:
             log_info("Creation of the directory {} failed".format(self.testserver_path))
         else:
             log_info("Successfully created the directory {} ".format(self.testserver_path))
 
-        # copy the java package to this directory
+        # 2. copy the jar package to this directory
         src = "{}/{}".format(BINARY_DIR, self.package_name)
         des = "{}/{}".format(self.testserver_path, self.package_name)
         copyfile(src, des)
@@ -143,24 +148,29 @@ class TestServerJava(TestServerBase):
         on non-Windows env, directly run on the current machine
         on Windows env, using ansible to launch the app on remote Windows machine
         """
-        if self.platform == "net-msft":
+        if self.platform == "java-msft":
             self.logfile = logfile_name
             log_info("Starting Test server {}".format(self.package_name))
             # Start Testserver via Ansible on remote machine
             status = self.ansible_runner.run_ansible_playbook(
-                "start-testserver-java-ws-msft.yml",
+                "start-testserver-java-desktop-msft.yml",
                 extra_vars={
                     "package_name": self.package_name,
-                    "version_build": self.version_build
+                    "version_build": self.version_build,
+                    "build_name": self.build_name
                 }
             )
             # sleep for some seconds
             time.sleep(10)
+
+            if status != 0:
+                raise LiteServError("Failed to launch Test server on windows machine")
         else:
             log_info("Starting Test server {} on {}".format(self.package_name, self.platform))
             # os.chdir(self.testserver_path)
             print(self.testserver_path)
             self.java_proc = subprocess.Popen(["java", "-jar", "{}/{}".format(self.testserver_path, self.package_name)])
+            time.sleep(5)
 
 
     def _verify_launched(self):
@@ -169,8 +179,11 @@ class TestServerJava(TestServerBase):
     def stop(self):
         log_info("Stopping JavaTestServer app")
 
-        try:
-            self.java_proc.terminate()
-        except:
-            log_info("Failed stopping JavaTestServer app")
+        if self.platform == "net-msft":
+
+        else:
+            try:
+                self.java_proc.terminate()
+            except:
+                log_info("Failed stopping JavaTestServer app")
 

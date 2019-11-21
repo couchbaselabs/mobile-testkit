@@ -10,7 +10,7 @@
       msg: "download_url {{ download_url }}, build_name {{ build_name }}"
 
   - win_stat:
-      path: C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ build_name }}\com.couchbase.TestServer.jar
+      path: C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ build_name }}\{{package_name}}
     register: st
 
   - name: Delete any exiting packages
