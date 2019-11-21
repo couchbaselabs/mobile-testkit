@@ -10,21 +10,20 @@ from keywords.SyncGateway import SyncGateway, sync_gateway_config_path_for_mode
 from keywords.userinfo import UserInfo
 from keywords.utils import log_info
 from libraries.testkit.cluster import Cluster
-from utilities.cluster_config_utils import get_sg_version, persist_cluster_config_environment_prop
+from utilities.cluster_config_utils import get_sg_version
 
 
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.views
 @pytest.mark.session
-@pytest.mark.parametrize('sg_conf_name, validate_changes_before_restart, x509_cert_auth', [
-    ('sync_gateway_default_functional_tests', False, False),
-    ('sync_gateway_default_functional_tests', True, True),
-    ('sync_gateway_default_functional_tests_no_port', False, True),
-    ('sync_gateway_default_functional_tests_no_port', True, False)
+@pytest.mark.parametrize('sg_conf_name, validate_changes_before_restart', [
+    ('sync_gateway_default_functional_tests', False),
+    ('sync_gateway_default_functional_tests', True),
+    ('sync_gateway_default_functional_tests_no_port', False),
+    ('sync_gateway_default_functional_tests_no_port', True)
 ])
-def test_view_backfill_for_deletes(params_from_base_test_setup, sg_conf_name,
-                                   validate_changes_before_restart, x509_cert_auth):
+def test_view_backfill_for_deletes(params_from_base_test_setup, sg_conf_name, validate_changes_before_restart):
     """
     Scenario:
     1. Write a bunch of docs
@@ -56,7 +55,7 @@ def test_view_backfill_for_deletes(params_from_base_test_setup, sg_conf_name,
     log_info('sg_url: {}'.format(sg_url))
     log_info('cbs_url: {}'.format(cbs_url))
     log_info('validate_changes_before_restart: {}'.format(validate_changes_before_restart))
-    persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', x509_cert_auth)
+
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
 

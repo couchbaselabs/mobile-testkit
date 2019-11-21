@@ -54,7 +54,7 @@ class SyncGateway:
         self.couchbase_server_primary_node = add_cbs_to_sg_config_server_field(self.cluster_config)
 
     def info(self):
-        r = requests.get(self.url, verify=False)
+        r = requests.get(self.url)
         r.raise_for_status()
         return r.text
 
