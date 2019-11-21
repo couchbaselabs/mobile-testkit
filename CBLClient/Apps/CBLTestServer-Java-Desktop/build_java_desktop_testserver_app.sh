@@ -5,11 +5,6 @@ VERSION=$2
 BUILD_NUM=$3
 
 FAIL=0
-if [ -z "${JAVA_HOME}" ] || [ ! -d "${JAVA_HOME}" ]; then
-    echo "Not found: JAVA_HOME = '$JAVA_HOME'"
-    FAIL=1
-fi
-
 if [ -z "${ARTIFACTS_DIR}" ] || [ ! -d "${ARTIFACTS_DIR}" ]; then
     echo "Not found: ARTIFACTS_DIR = '$ARTIFACTS_DIR'"
     FAIL=1
