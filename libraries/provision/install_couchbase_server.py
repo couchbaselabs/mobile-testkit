@@ -33,17 +33,17 @@ class CouchbaseServerConfig:
         else:
             self.build = None
 
-    def get_baseurl_package(self, cb_server, cbs_platform="centos7"):
+    def get_baseurl_package(self, cb_server, cbs_platform="centos7", cbs_ce=False):
 
         if self.build is None:
             # since the user didn't specify a build number,
             # this means user wants an official released version, so
             # return cbmobile-packages bucket url
-            return cb_server.resolve_cb_mobile_url(self.version, cbs_platform=cbs_platform)
+            return cb_server.resolve_cb_mobile_url(self.version, cbs_platform=cbs_platform, cbs_ce=cbs_ce)
         else:
             # the user specified an explicit build number, so grab the
             # build off the "cbnas" server (Couchbase VPN only)
-            return cb_server.resolve_cb_nas_url(self.version, self.build, cbs_platform=cbs_platform)
+            return cb_server.resolve_cb_nas_url(self.version, self.build, cbs_platform=cbs_platform, cbs_ce=cbs_ce)
 
     def __str__(self):
         output = "\n  Couchbase Server configuration\n"
@@ -52,7 +52,7 @@ class CouchbaseServerConfig:
         return output
 
 
-def install_couchbase_server(cluster_config, couchbase_server_config, cbs_platform="centos7"):
+def install_couchbase_server(cluster_config, couchbase_server_config, cbs_platform="centos7", cbs_ce=False):
 
     log_info(cluster_config)
     log_info(couchbase_server_config)
@@ -67,7 +67,7 @@ def install_couchbase_server(cluster_config, couchbase_server_config, cbs_platfo
 
     log_info(">>> Installing Couchbase Server")
     # Install Server
-    server_baseurl, server_package_name = couchbase_server_config.get_baseurl_package(cb_server, cbs_platform)
+    server_baseurl, server_package_name = couchbase_server_config.get_baseurl_package(cb_server, cbs_platform, cbs_ce)
     status = ansible_runner.run_ansible_playbook(
         "install-couchbase-server-package.yml",
         extra_vars={

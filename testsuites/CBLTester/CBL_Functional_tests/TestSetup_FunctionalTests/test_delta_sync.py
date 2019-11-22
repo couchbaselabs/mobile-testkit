@@ -722,6 +722,145 @@ def test_delta_sync_larger_than_doc(params_from_base_test_setup, num_of_docs, re
     assert larger_delta_size >= full_doc_size, "did not get full doc size after deltas is expired"
 
 
+@pytest.mark.community
+@pytest.mark.listener
+@pytest.mark.syncgateway
+@pytest.mark.replication
+@pytest.mark.parametrize("num_of_docs, replication_type, file_attachment, continuous", [
+    (10, "pull", None, True),
+    (10, "pull", "sample_text.txt", True),
+    (1, "push", "golden_gate_large.jpg", True),
+    (10, "push", None, True)
+])
+def test_delta_sync_on_community_edition(params_from_base_test_setup, num_of_docs, replication_type, file_attachment, continuous):
+    '''
+    @summary:
+    1. Create docs in CBL
+    2. Do push_pull replication
+    3. update docs in SGW  with/without attachment
+    4. Do push/pull replication
+    5. Verify delta sync stats are not available for community edition
+    '''
+    sg_db = "db"
+    sg_url = params_from_base_test_setup["sg_url"]
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_blip_url = params_from_base_test_setup["target_url"]
+    base_url = params_from_base_test_setup["base_url"]
+    sg_config = params_from_base_test_setup["sg_config"]
+    db = params_from_base_test_setup["db"]
+    cbl_db = params_from_base_test_setup["source_db"]
+    liteserv_platform = params_from_base_test_setup["liteserv_platform"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    sg_ce = params_from_base_test_setup["sg_ce"]
+    mode = params_from_base_test_setup["mode"]
+
+    if not sg_ce:
+        pytest.skip("Test is only for community edition of SG")
+
+    if sync_gateway_version < "2.5.0":
+        pytest.skip('This test cannnot run with sg version below 2.5')
+    channels = ["ABC"]
+    username = "autotest"
+    password = "password"
+    number_of_updates = 1
+    blob = Blob(base_url)
+    dictionary = Dictionary(base_url)
+
+    # Reset cluster to ensure no data in system
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
+    enable_delta_sync(c, sg_config, cluster_config, mode, True)
+
+    sg_client = MobileRestClient()
+    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channels)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+    session = cookie, session_id
+    # 1. Create docs in CBL
+    db.create_bulk_docs(num_of_docs, "cbl_sync", db=cbl_db, channels=channels)
+
+    # 2. Do push replication
+    replicator = Replication(base_url)
+    authenticator = Authenticator(base_url)
+    replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
+    repl = replicator.configure_and_replicate(source_db=cbl_db,
+                                              target_url=sg_blip_url,
+                                              continuous=continuous,
+                                              replicator_authenticator=replicator_authenticator,
+                                              replication_type="push")
+    replicator.stop(repl)
+    doc_read_bytes, doc_writes_bytes = get_net_stats(sg_client, sg_admin_url)
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
+    # Verify database doc counts
+    cbl_doc_count = db.getCount(cbl_db)
+    assert len(sg_docs) == cbl_doc_count, "Expected number of docs does not exist in sync-gateway after replication"
+
+    # 3. update docs in SGW  with/without attachment
+    for doc in sg_docs:
+        sg_client.update_doc(url=sg_url, db=sg_db, doc_id=doc["id"], number_updates=1, auth=session, channels=channels, attachment_name=file_attachment)
+    repl = replicator.configure_and_replicate(source_db=cbl_db,
+                                              target_url=sg_blip_url,
+                                              continuous=continuous,
+                                              replicator_authenticator=replicator_authenticator,
+                                              replication_type="pull")
+    replicator.stop(repl)
+    doc_reads_bytes1, doc_writes_bytes1 = get_net_stats(sg_client, sg_admin_url)
+    delta_size = doc_reads_bytes1
+    assert delta_size > doc_writes_bytes, "delta_sync in SG CE"
+
+    if replication_type == "push":
+        doc_ids = db.getDocIds(cbl_db)
+        cbl_db_docs = db.getDocuments(cbl_db, doc_ids)
+        for doc_id, doc_body in cbl_db_docs.items():
+            for _ in range(number_of_updates):
+                if file_attachment:
+                    mutable_dictionary = dictionary.toMutableDictionary(doc_body)
+                    dictionary.setString(mutable_dictionary, "new_field_1", random_string(length=30))
+                    dictionary.setString(mutable_dictionary, "new_field_2", random_string(length=80))
+
+                    if liteserv_platform == "android":
+                        image_content = blob.createImageContent("/assets/golden_gate_large.jpg")
+                        blob_value = blob.create("image/jpeg", stream=image_content)
+                    elif liteserv_platform == "xamarin-android":
+                        image_content = blob.createImageContent("golden_gate_large.jpg")
+                        blob_value = blob.create("image/jpeg", stream=image_content)
+                    elif liteserv_platform == "ios":
+                        image_content = blob.createImageContent("Files/golden_gate_large.jpg")
+                        blob_value = blob.create("image/jpeg", content=image_content)
+                    elif liteserv_platform == "net-msft":
+                        db_path = db.getPath(cbl_db).rstrip("\\")
+                        app_dir = "\\".join(db_path.split("\\")[:-2])
+                        image_content = blob.createImageContent("{}\\Files\\golden_gate_large.jpg".format(app_dir))
+                        blob_value = blob.create("image/jpeg", stream=image_content)
+                    else:
+                        image_content = blob.createImageContent("Files/golden_gate_large.jpg")
+                        blob_value = blob.create("image/jpeg", stream=image_content)
+                    dictionary.setBlob(mutable_dictionary, "_attachments", blob_value)
+                db.updateDocument(database=cbl_db, data=doc_body, doc_id=doc_id)
+    else:
+        for doc in sg_docs:
+            sg_client.update_doc(url=sg_url, db=sg_db, doc_id=doc["id"], number_updates=number_of_updates, auth=session, channels=channels, attachment_name=file_attachment)
+
+    # 4. Do push/pull replication
+    repl = replicator.configure_and_replicate(source_db=cbl_db,
+                                              target_url=sg_blip_url,
+                                              continuous=continuous,
+                                              replicator_authenticator=replicator_authenticator,
+                                              replication_type=replication_type)
+    replicator.stop(repl)
+
+    # Get Sync Gateway Expvars
+    expvars = sg_client.get_expvars(url=sg_admin_url)
+
+    # 5. Verify delta sync stats are not available for community edition
+    assert "delta_sync" not in expvars['syncgateway']['per_db'][sg_db], "delta_sync in SG CE"
+
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
+    doc_ids = db.getDocIds(cbl_db)
+    cbl_db_docs = db.getDocuments(cbl_db, doc_ids)
+    compare_docs(cbl_db, db, sg_docs)
+
+
 def update_docs(replication_type, cbl_db, db, sg_client, sg_docs, sg_url, sg_db, number_of_updates, session, channels, string_type="normal"):
     if replication_type == "push":
         doc_ids = db.getDocIds(cbl_db)
