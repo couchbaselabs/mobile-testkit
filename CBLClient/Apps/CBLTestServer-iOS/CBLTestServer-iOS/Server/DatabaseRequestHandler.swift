@@ -261,19 +261,20 @@ public class DatabaseRequestHandler {
             var documents = [String: [String: Any]]()
 
             for id in ids {
-                let document: Document = database.document(withID: id)!
-                
-                var dict = document.toDictionary()
-                for (key, value) in dict {
-                    if let list = value as? Dictionary<String, Blob> {
-                        var item = Dictionary<String, Any>()
-                        for (k, v) in list {
-                            item[k] = v.properties
+                let document: Document? = database.document(withID: id)
+                if document != nil{
+                    var dict = document!.toDictionary()
+                    for (key, value) in dict {
+                        if let list = value as? Dictionary<String, Blob> {
+                            var item = Dictionary<String, Any>()
+                            for (k, v) in list {
+                                item[k] = v.properties
+                            }
+                            dict[key] = item
                         }
-                        dict[key] = item
                     }
+                    documents[id] = dict
                 }
-                documents[id] = dict
             }
 
             return documents

@@ -81,3 +81,6 @@ def pytest_addoption(parser):
     parser.addoption("--delta-sync",
                      action="store_true",
                      help="delta-sync: Enable delta-sync for sync gateway")
+
+    parser.addoption("--cbs-ce", action="store_true",
+                     help="If set, community edition will get picked up , default is enterprise", default=False)

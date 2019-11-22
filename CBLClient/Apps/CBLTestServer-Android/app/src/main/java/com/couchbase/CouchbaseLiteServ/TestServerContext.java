@@ -9,6 +9,8 @@ import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 
+import android.util.Base64;
+
 import java.util.Enumeration;
 
 public class TestServerContext implements Context {
@@ -56,4 +58,9 @@ public class TestServerContext implements Context {
         return ip;
     }
 
+    @Override
+    public String encodeBase64(byte[] hashBytes){
+        // load android.util.Base64 in android app
+        return Base64.encodeToString(hashBytes, Base64.NO_WRAP);
+    }
 }
