@@ -168,7 +168,11 @@ class TestServerJava(TestServerBase):
             log_info("Starting Test server {} on {}".format(self.package_name, self.platform))
             # os.chdir(self.testserver_path)
             print(self.testserver_path)
-            self.java_proc = subprocess.Popen(["java", "-jar", "{}/{}".format(self.testserver_path, self.package_name)])
+            self.java_proc = subprocess.Popen(
+                ["java", "-jar", "{}/{}".format(self.testserver_path, self.package_name)],
+                stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE, shell=False,
+                universal_newlines=True, preexec_fn=os.setsid)
             time.sleep(10)
 
 
