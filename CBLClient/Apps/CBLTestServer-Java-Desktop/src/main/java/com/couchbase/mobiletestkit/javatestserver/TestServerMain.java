@@ -23,7 +23,7 @@ public class TestServerMain {
         context = new TestServerContext(new File(curPath));
         Server.setContext(context);
 
-        String ip = context.getLocalIpAddress();
+        String ip = context.getLocalIpAddress();  //here the context hands out an ip address of 0.0.0.0
         Server.memory.setIpAddress(ip);
         Log.i("JavaDesktop", "Starting the server at " + ip + ", port = " + PORT);
 

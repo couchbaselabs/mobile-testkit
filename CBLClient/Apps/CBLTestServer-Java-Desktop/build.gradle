@@ -8,11 +8,9 @@ ext {
     DEF_VERSION = "2.7.0-56"
     COUCHBASE_LITE_JAVA_VERSION = System.getProperty('version', DEF_VERSION)
 
-    PROJECT_DIR = "${projectDir}"
-    ROOT_DIR = "${PROJECT_DIR}/.."
-    JAVA_COMMON_DIR = "${ROOT_DIR}/JavaRequestHandlers"
+    JAVA_COMMON_DIR = "${projectDir}/../JavaRequestHandlers"
     ASSET_DIR = "${JAVA_COMMON_DIR}/src/main/assets"
-    JAVA_SERVER_DIR = "${ROOT_DIR}/JavaRequestListener"
+    JAVA_SERVER_DIR = "${projectDir}/../JavaRequestListener"
 }
 
 
@@ -21,7 +19,7 @@ sourceCompatibility = 1.8
 jar {
     archiveBaseName = "CBLTestServer-Java"
     archiveAppendix = "Desktop"
-    archiveVersion = "${COUCHBASE_LITE_JAVA_VERSION}"
+    archiveVersion = COUCHBASE_LITE_JAVA_VERSION
     archiveClassifier = "enterprise"
     //archiveExtension = "jar"
 

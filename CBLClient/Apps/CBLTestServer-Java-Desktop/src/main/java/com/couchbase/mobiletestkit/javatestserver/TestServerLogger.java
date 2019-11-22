@@ -21,6 +21,7 @@ public class TestServerLogger implements Logger {
     @Override
     public void e(String tag, String msg, Throwable throwable) {
         System.out.println("ERROR " + tag + ": " + msg + " - " + throwable);
+        throwable.printStackTrace();
     }
 
     @Override
@@ -31,5 +32,6 @@ public class TestServerLogger implements Logger {
     @Override
     public void w(String tag, String msg, Throwable throwable) {
         System.out.println("WARNING " + tag + ": " + msg + " - " + throwable);
+        throwable.printStackTrace();
     }
 }
