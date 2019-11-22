@@ -1,7 +1,7 @@
 import os
 from os.path import expanduser
 import time
-from shutil import copyfile
+from shutil import copyfile, rmtree
 import subprocess
 
 import requests
@@ -125,7 +125,7 @@ class TestServerJava(TestServerBase):
         # 1. cleanup ~/testserver directory if exist, create a new with same dir name
         try:
             if os.path.exists(self.testserver_path):
-                os.rmdir(self.testserver_path)
+                rmtree(self.testserver_path)
             os.mkdir(self.testserver_path)
         except OSError:
             log_info("Creation of the directory {} failed".format(self.testserver_path))
