@@ -48,6 +48,12 @@ def gen_template(config):
             ),
             ec2.SecurityGroupRule(
                 IpProtocol="tcp",
+                FromPort="18091",
+                ToPort="18091",
+                CidrIp="0.0.0.0/0",
+            ),
+            ec2.SecurityGroupRule(
+                IpProtocol="tcp",
                 FromPort="8093",
                 ToPort="8093",
                 CidrIp="0.0.0.0/0",
