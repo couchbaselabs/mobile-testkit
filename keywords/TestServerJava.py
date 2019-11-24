@@ -169,8 +169,10 @@ class TestServerJava(TestServerBase):
             os.chdir(self.testserver_path)
             print(self.testserver_path)
             self.java_proc = subprocess.Popen(
-                ["java", "-jar", self.package_name])
-            time.sleep(10)
+                ["java", "-jar", self.package_name],
+                stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE, shell=False)
+            time.sleep(5)
 
 
     def _verify_launched(self):
