@@ -166,10 +166,10 @@ class TestServerJava(TestServerBase):
                 raise LiteServError("Failed to launch Test server on windows machine")
         else:
             log_info("Starting Test server {} on {}".format(self.package_name, self.platform))
-            # os.chdir(self.testserver_path)
+            os.chdir(self.testserver_path)
             print(self.testserver_path)
             self.java_proc = subprocess.Popen(
-                ["java", "-jar", "{}/{}".format(self.testserver_path, self.package_name)])
+                ["java", "-jar", self.package_name])
             time.sleep(10)
 
 
