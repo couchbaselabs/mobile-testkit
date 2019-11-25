@@ -43,19 +43,13 @@ def gen_template(config):
             ec2.SecurityGroupRule(
                 IpProtocol="tcp",
                 FromPort="8091",
-                ToPort="8091",
+                ToPort="8096",
                 CidrIp="0.0.0.0/0",
             ),
             ec2.SecurityGroupRule(
                 IpProtocol="tcp",
                 FromPort="18091",
-                ToPort="18091",
-                CidrIp="0.0.0.0/0",
-            ),
-            ec2.SecurityGroupRule(
-                IpProtocol="tcp",
-                FromPort="8093",
-                ToPort="8093",
+                ToPort="18096",
                 CidrIp="0.0.0.0/0",
             ),
             ec2.SecurityGroupRule(   # sync gw user port
@@ -90,12 +84,6 @@ def gen_template(config):
             ),
             ec2.SecurityGroupRule(   # couchbase server
                 IpProtocol="tcp",
-                FromPort="8092",
-                ToPort="8092",
-                CidrIp="0.0.0.0/0",
-            ),
-            ec2.SecurityGroupRule(   # couchbase server
-                IpProtocol="tcp",
                 FromPort="11209",
                 ToPort="11209",
                 CidrIp="0.0.0.0/0",
@@ -114,10 +102,28 @@ def gen_template(config):
             ),
             ec2.SecurityGroupRule(   # couchbase server
                 IpProtocol="tcp",
+                FromPort="11207",
+                ToPort="11207",
+                CidrIp="0.0.0.0/0",
+            ),
+            ec2.SecurityGroupRule(   # couchbase server
+                IpProtocol="tcp",
                 FromPort="21100",
                 ToPort="21299",
                 CidrIp="0.0.0.0/0",
-            )
+            ),
+            ec2.SecurityGroupRule(
+                IpProtocol="tcp",
+                FromPort="9102",
+                ToPort="9102",
+                CidrIp="0.0.0.0/0",
+            ),
+            ec2.SecurityGroupRule(
+                IpProtocol="tcp",
+                FromPort="19102",
+                ToPort="19102",
+                CidrIp="0.0.0.0/0",
+            ),
 
         ]
 
