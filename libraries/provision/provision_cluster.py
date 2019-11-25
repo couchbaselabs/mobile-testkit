@@ -23,7 +23,9 @@ from keywords.couchbaseserver import CouchbaseServer
 from keywords.ClusterKeywords import ClusterKeywords
 
 
-def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_config, sg_ce=False, cbs_platform="centos7", sg_platform="centos", sg_installer_type="msi", sa_platform="centos", sa_installer_type="msi"):
+def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_config, sg_ce=False,
+                      cbs_platform="centos7", sg_platform="centos", sg_installer_type="msi", sa_platform="centos",
+                      sa_installer_type="msi", cbs_ce=False):
 
     log_info("\n>>> Cluster info:\n")
     server_version = "{}-{}".format(couchbase_server_config.version, couchbase_server_config.build)
@@ -76,7 +78,7 @@ def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_conf
     cluster_topology = cluster_keywords.get_cluster_topology(cluster_config)
     server_url = cluster_topology["couchbase_servers"][0]
     cb_server = CouchbaseServer(server_url)
-    server_baseurl, server_package_name = couchbase_server_config.get_baseurl_package(cb_server, cbs_platform)
+    server_baseurl, server_package_name = couchbase_server_config.get_baseurl_package(cb_server, cbs_platform, cbs_ce)
 
     log_info(">>> Server package: {0}/{1}".format(server_baseurl, server_package_name))
     log_info(">>> Using sync_gateway config: {}".format(sync_gateway_config.config_path))
@@ -88,7 +90,7 @@ def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_conf
     install_couchbase_server.install_couchbase_server(
         cluster_config=cluster_config,
         couchbase_server_config=couchbase_server_config,
-        cbs_platform=cbs_platform
+        cbs_platform=cbs_platform, cbs_ce=cbs_ce
     )
 
     # Install sync_gateway
@@ -101,7 +103,7 @@ def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_conf
         sa_platform=sa_platform,
         sa_installer_type=sa_installer_type,
         sg_ce=sg_ce,
-        ipv6=cluster.ipv6
+        ipv6=cluster.ipv6,
     )
 
     # Install nginx

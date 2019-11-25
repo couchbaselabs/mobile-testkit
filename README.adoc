@@ -229,6 +229,7 @@ NOTE: This has only been tested on Mac OSX
 
 ==== Installation
 
+. NOTE: Install the Vagrant only when Virtual box is up and running
 . https://www.virtualbox.org/wiki/Downloads[Install VirtualBox]
 . https://www.vagrantup.com/downloads.html[Install Vagrant]
 . `cd` into `vagrant/private_network` (or `vagrant/public_network` if you need VM's exposed to LAN, for example when testing against actual mobile devices)
@@ -244,6 +245,7 @@ python utilities/generate_cluster_configs_from_vagrant_hosts.py --private-networ
 ```
     - This will discover running vagrant boxes and get their ips
     - Generate `resources/pool.json`
+      - Go to resources folder and copy the pool.json.example to generate the pool.json
     - Generate `resources/cluster_configs/`
 
 ==== SSH Authentication
@@ -275,6 +277,11 @@ $ Redirecting to /bin/systemctl restart  sshd.service
 python libraries/utilities/install_keys.py --public-key-path=~/.ssh/id_rsa.pub --ssh-user=vagrant --ssh-password=vagrant
 ```
 The password is set to `vagrant`.
+
+.Install cryptography module when you see any abort errors
+```
+ pip install cryptography
+```
 
 ==== Install dependencies
 
@@ -541,6 +548,19 @@ link:testsuites/listener/shared/client_client/README.md[Running Tests]
 === Listener Test Excecution (Client + SG)
 
 link:testsuites/listener/shared/client_sg/README.md[Running Tests]
+
+=== GenyMotion Emulator Setup
+
+* In Android Studio, go to File/Settings (for Windows and Linux) or to Android Studio/Preferences (for Mac OS X)
+* Select Plugins and click Browse Repositories.
+* Right-click on Genymotion and click Download and install. To see Genymotion plugin icon, display the toolbar by clicking View > Toolbar.
+* Or Download https://www.genymotion.com/download/ [genymotion] and install
+
+* Open Genymotion and choose Custom Phone from available templates
+* Open Android app in the android studio[Use sample app form mobile-testkit framework mobile-testkit/CBLClient/Apps/CBLTestServer-Android]
+* Build the app using custom phone emulator
+* Now you should see the custom phone running in the VirtualBox
+* Verify emulator IP (under network details) is matching with the VirtualBox IP(VirtualBox/File/HostNetworkManager/DHCP Server). If it is not matching update it in and restart VirtualBox and Gennymotion.
 
 === Android Emulator Setup
 ==== Setting up Google Emulators
