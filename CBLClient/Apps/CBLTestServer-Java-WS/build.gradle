@@ -5,21 +5,31 @@ apply plugin: 'com.bmuschko.tomcat'
 sourceCompatibility = 1.8
 
 ext {
-    PROJECT_DIR = "${projectDir}"
-    ROOT_DIR = "${PROJECT_DIR}/.."
-    JAVA_COMMON_DIR = "${ROOT_DIR}/JavaRequestHandlers"
+    COUCHBASE_LITE_JAVA_VERSION = System.getProperty('version', "2.7.0-56")
+
+    JAVA_COMMON_DIR = "${projectDir}/../JavaRequestHandlers"
     ASSET_DIR = "${JAVA_COMMON_DIR}/src/main/assets"
+}
+
+war {
+    archiveBaseName = "CBLTestServer-Java"
+    archiveAppendix = "WS"
+    archiveVersion = COUCHBASE_LITE_JAVA_VERSION
+    archiveClassifier = "enterprise"
 }
 
 repositories {
     jcenter()
     mavenCentral()
+    maven {
+        url "http://172.23.121.218/maven2/internalmaven/"
+    }
 }
 
 sourceSets {
     main {
         java.srcDirs = [
-                "${PROJECT_DIR}/src/main/java",
+                "${projectDir}/src/main/java",
                 "${JAVA_COMMON_DIR}/src/main/java"
         ]
         resources.srcDirs = [ASSET_DIR]
@@ -27,7 +37,7 @@ sourceSets {
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: '*.jar')
+    providedCompile "com.couchbase.lite:couchbase-lite-java-ee:${COUCHBASE_LITE_JAVA_VERSION}"
     implementation 'com.google.code.gson:gson:2.8.5'
     testCompile group: 'junit', name: 'junit', version: '4.12'
     providedCompile "javax.servlet:javax.servlet-api:4.0.1"
@@ -56,11 +66,8 @@ buildscript {
 }
 
 [tomcatRun, tomcatRunWar].each { task ->
-    fileTree("libs").visit { FileVisitDetails details ->
-        task.additionalRuntimeResources << file(details.file.path)
-    }
+    // need to fix later for local debug run
+    // task.additionalRuntimeResources << file(compileClasspath)
 }
-
-
 
 
