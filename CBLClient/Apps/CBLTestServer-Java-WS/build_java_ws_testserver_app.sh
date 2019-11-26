@@ -39,6 +39,8 @@ export PATH=$PATH:$JAVA_HOME
 echo ./gradlew clean -Dversion=${MAVEN_UPLOAD_VERSION} war
 ./gradlew clean -Dversion=${MAVEN_UPLOAD_VERSION} war
 
-TESTSERVER_JAR="./build/libs/CBLTestServer-Java-WS-${MAVEN_UPLOAD_VERSION}-${EDITION}.war"
-cp -f ${TESTSERVER_JAR} ${ARTIFACTS_DIR}/CBLTestServer-Java-WS-${MAVEN_UPLOAD_VERSION}-${EDITION}.war.zip
+TESTSERVER_WAR="./build/libs/CBLTestServer-Java-WS-${MAVEN_UPLOAD_VERSION}-${EDITION}.war"
+echo TESTSERVER_WAR
+echo ${ARTIFACTS_DIR}/CBLTestServer-Java-WS-${MAVEN_UPLOAD_VERSION}-${EDITION}.war
+cp -f ${TESTSERVER_WAR} ${ARTIFACTS_DIR}/CBLTestServer-Java-WS-${MAVEN_UPLOAD_VERSION}-${EDITION}.war.zip
 
