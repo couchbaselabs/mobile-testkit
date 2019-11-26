@@ -40,5 +40,5 @@ echo ./gradlew clean -Dversion=${MAVEN_UPLOAD_VERSION} war
 ./gradlew clean -Dversion=${MAVEN_UPLOAD_VERSION} war
 
 TESTSERVER_JAR="./build/libs/CBLTestServer-Java-WS-${MAVEN_UPLOAD_VERSION}-${EDITION}.war"
-cp -f ${TESTSERVER_JAR} ${ARTIFACTS_DIR}/CBLTestServer-Java-WS-${MAVEN_UPLOAD_VERSION}-${EDITION}.war
+cp -f ${TESTSERVER_JAR} ${ARTIFACTS_DIR}/CBLTestServer-Java-WS-${MAVEN_UPLOAD_VERSION}-${EDITION}.war.zip
 
