@@ -4,6 +4,8 @@ EDITION=$1
 VERSION=$2
 BLD_NUM=$3
 cd ${WORKSPACE}/mobile-testkit/CBLClient/Apps/CBLTestServer-iOS
+brew install carthage
+carthage update
 if [[ ! -d Frameworks ]]; then mkdir Frameworks; fi
 
 # Prepare framework
