@@ -3,8 +3,6 @@ import os.path
 import sys
 from optparse import OptionParser
 
-import libraries.provision.install_sync_gateway as install_sync_gateway
-import libraries.provision.install_couchbase_server as install_couchbase_server
 from libraries.provision.clean_cluster import clean_cluster
 from libraries.provision.install_couchbase_server import CouchbaseServerConfig
 from libraries.provision.install_sync_gateway import SyncGatewayConfig
@@ -53,9 +51,12 @@ def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_conf
     log_info(couchbase_server_config)
     log_info(sync_gateway_config)
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
     print(("******",sync_gateway_config))
 >>>>>>> Initial version of changes for python2to3
+=======
+>>>>>>> Adding python3 changes
     if not sync_gateway_config.is_valid():
         log_info("Invalid sync_gateway provisioning configuration. Exiting ...")
         sys.exit(1)
