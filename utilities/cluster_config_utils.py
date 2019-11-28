@@ -206,7 +206,6 @@ def no_conflicts_enabled(cluster_config):
     except KeyError:
         return False
 
-
 def sg_ssl_enabled(cluster_config):
     "Get SG SSL value from cluster config"
     cluster = load_cluster_config_json(cluster_config)

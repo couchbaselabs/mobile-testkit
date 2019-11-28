@@ -68,10 +68,11 @@ def generate_cluster_configs_from_vagrant(private_network, public_network,
     os.chdir(cwd)
 
     # Write pool.json
+    binary_vagrant_ips = list(map(lambda x: x.decode('ascii'), vagrant_ips))
     pool_file = "resources/pool.json"
-    pool_def = {"ips": vagrant_ips}
+    pool_def = {"ips": binary_vagrant_ips}
     with open(pool_file, "w") as f:
-        print("Writing 'resources/pool.json' ...")
+        print("Writing 'resources/pool.json'..., ", pool_def)
         f.write(json.dumps(pool_def, indent=4))
 
     # Generate cluster configs

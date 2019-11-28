@@ -11,7 +11,7 @@ cffi==1.10.0
 colorama==0.3.3
 configparser==3.5.0
 couchbase==2.2.6
-cryptography==2.7
+cryptography==2.8
 docker==2.2.1
 docker-pycreds==0.2.1
 docutils==0.12

@@ -1,6 +1,6 @@
 import os
-
-from .ansible_runner import AnsibleRunner
+import os.path
+from libraries.provision.ansible_runner import AnsibleRunner
 from keywords.exceptions import ProvisioningError
 
 from keywords.utils import log_info
