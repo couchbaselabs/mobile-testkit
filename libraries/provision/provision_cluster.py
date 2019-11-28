@@ -1,14 +1,15 @@
 import os
+import os.path
 import sys
 from optparse import OptionParser
 
-from . import install_sync_gateway
-from . import install_couchbase_server
+import libraries.provision.install_sync_gateway as install_sync_gateway
+import libraries.provision.install_couchbase_server as install_couchbase_server
 
-from .clean_cluster import clean_cluster
-from .install_couchbase_server import CouchbaseServerConfig
-from .install_sync_gateway import SyncGatewayConfig
-from .install_nginx import install_nginx
+from libraries.provision.clean_cluster import clean_cluster
+from libraries.provision.install_couchbase_server import CouchbaseServerConfig
+from libraries.provision.install_sync_gateway import SyncGatewayConfig
+from libraries.provision.install_nginx import install_nginx
 
 from libraries.provision.install_deps import install_deps
 from libraries.testkit.config import Config
@@ -52,7 +53,6 @@ def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_conf
 
     log_info(couchbase_server_config)
     log_info(sync_gateway_config)
-    print(("******",sync_gateway_config))
     if not sync_gateway_config.is_valid():
         log_info("Invalid sync_gateway provisioning configuration. Exiting ...")
         sys.exit(1)
@@ -69,7 +69,7 @@ def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_conf
     if not is_valid:
         raise ProvisioningError(reason)
 
-    log_info(">>> Provisioning cluster...")
+    log_info(">>> Provisioning cluster...", cluster_config)
 
     # Get server base url and package name
     cluster_keywords = ClusterKeywords(cluster_config)
@@ -124,7 +124,7 @@ if __name__ == "__main__":
 
     parser = OptionParser(usage=usage)
 
-    default_sync_gateway_config = os.path.abspath("resources/sync_gateway_configs/sync_gateway_default_di.json")
+    default_sync_gateway_config = os.path.abspath("resources/sync_gateway_configs/sync_gateway_default_cc.json")
 
     parser.add_option("", "--server-version",
                       action="store", type="string", dest="server_version", default=None,
