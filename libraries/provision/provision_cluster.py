@@ -3,6 +3,9 @@ import os.path
 import sys
 from optparse import OptionParser
 
+import libraries.provision.install_sync_gateway as install_sync_gateway
+import libraries.provision.install_couchbase_server as install_couchbase_server
+
 from libraries.provision.clean_cluster import clean_cluster
 from libraries.provision.install_couchbase_server import CouchbaseServerConfig
 from libraries.provision.install_sync_gateway import SyncGatewayConfig
