@@ -50,17 +50,6 @@ def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_conf
 
     log_info(couchbase_server_config)
     log_info(sync_gateway_config)
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-    print(("******",sync_gateway_config))
->>>>>>> Initial version of changes for python2to3
-=======
->>>>>>> Adding python3 changes
-=======
-    print(("******",sync_gateway_config))
->>>>>>> Initial version of changes for python2to3
     if not sync_gateway_config.is_valid():
         log_info("Invalid sync_gateway provisioning configuration. Exiting ...")
         sys.exit(1)

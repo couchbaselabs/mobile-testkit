@@ -4,7 +4,6 @@ import sys
 from keywords.utils import log_info
 import ansible
 import ansible.inventory
-from keywords.utils import log_info
 from ansible.inventory import Inventory
 from ansible.vars import VariableManager
 from ansible.executor import playbook_executor
