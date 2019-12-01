@@ -1,6 +1,6 @@
 ---
 - hosts: sync_gateways
-  
+
   tasks:
   - include: tasks/stop-sync-gateway.yml
     become: yes
@@ -25,7 +25,7 @@
     when: ansible_os_family == "Windows"
 
 - hosts: sg_accels
-  
+
   tasks:
   - include: tasks/stop-sg-accel.yml
     become: yes
@@ -36,7 +36,7 @@
 
 - hosts: sg_accels
   any_errors_fatal: true
-  
+
   tasks:
   - include: tasks/start-sg-accel.yml
     become: yes

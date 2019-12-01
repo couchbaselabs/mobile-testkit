@@ -34,3 +34,15 @@
   win_file:
     path: "C:/tmp/sg_logs/"
     state: directory
+
+- name: SYNC GATEWAY | Create probram files x86 couchbase directory on Windows
+  become: no
+  win_file:
+    path: "C:/PROGRA~2/Couchbase/var/lib"
+    state: absent
+
+- name: SYNC GATEWAY | Create probram files couchbase directory on Windows
+  become: no
+  win_file:
+    path: "C:/PROGRA~1/Couchbase/Sync Gateway/var/lib/couchbase/logs"
+    state: absent
