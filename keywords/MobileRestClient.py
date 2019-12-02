@@ -28,6 +28,8 @@ from keywords.exceptions import RestError, TimeoutException, LiteServError, Chan
 from keywords import types
 
 
+
+
 def parse_multipart_response(response):
     """
     Parses a multipart response where each section looks like below:
@@ -1328,6 +1330,8 @@ class MobileRestClient:
 
         return added_docs
 
+
+
     def add_bulk_docs(self, url, db, docs, auth=None):
         """
         Keyword that issues POST _bulk docs with the specified 'docs'.
@@ -1344,7 +1348,7 @@ class MobileRestClient:
 
         if auth_type == AuthType.session:
             resp = self._session.post("{}/{}/_bulk_docs".format(url, db),
-                                      data=json.dumps(request_body),
+                                      data=json.dumps(request_body, cls=MyEncoder),
                                       cookies=dict(SyncGatewaySession=auth[1]))
         elif auth_type == AuthType.http_basic:
             resp = self._session.post("{}/{}/_bulk_docs".format(url, db), data=json.dumps(request_body), auth=auth)

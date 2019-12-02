@@ -135,14 +135,15 @@ def test_sgCollect1(params_from_base_test_setup, remove_tmp_sg_redaction_logs, s
     log_verification_withsgCollect(redaction_level, user_name, password, zip_file_name)
 
 
+
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.logredaction
 @pytest.mark.parametrize("sg_conf_name, redaction_level, redaction_salt, output_dir", [
+    ("log_redaction", "partial", True, True),
     ("log_redaction", "partial", False, False),
     ("log_redaction", None, False, False),
-    ("log_redaction", "partial", True, False),
-    ("log_redaction", "partial", True, True)
+    ("log_redaction", "partial", True, False)\
 ])
 def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_logs, sg_conf_name, redaction_level, redaction_salt, output_dir):
     """
@@ -203,6 +204,9 @@ def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_
     # 4. Create docs with xattrs
     sgdoc_bodies = document.create_docs(doc_id_prefix='sg_docs', number=num_of_docs,
                                         attachments_generator=attachment.generate_2_png_10_10, channels=channels)
+    png_a = next(iter(sgdoc_bodies[0]['_attachments']))
+    binary_data = sgdoc_bodies[0]["_attachments"][png_a]["data"]
+    sgdoc_bodies[0]["_attachments"][png_a]["data"] = str(binary_data, encoding='utf-8')
     sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sgdoc_bodies, auth=autouser_session)
     assert len(sgdoc_bodies) == num_of_docs
     if output_dir:
@@ -306,27 +310,28 @@ def test_sgCollectRestApi_errorMessages(params_from_base_test_setup, remove_tmp_
     # should throw an error when trying with upload host without upload
     upload_host = "https://s3.amazonaws.com/cb-customers"
     resp = sg_client.sgCollect_restCall(sg_host, redact_level="partial", upload_host=upload_host)
-    assert "Invalid options used for sgcollect_info: upload must be set to true if upload_host is specified" in resp.content
+    log_info("Response Content", resp.content.decode('ascii'))
+    assert "Invalid options used for sgcollect_info: upload must be set to true if upload_host is specified" in resp.content.decode('ascii')
     customer = "customer-name"
     ticket = "123"
 
     # should throw an error when trying with customer without upload parameter
     resp = sg_client.sgCollect_restCall(sg_host, redact_level="partial", customer=customer)
-    assert "Invalid options used for sgcollect_info: upload must be set to true if customer is specified" in resp.content
+    assert "Invalid options used for sgcollect_info: upload must be set to true if customer is specified" in resp.content.decode('ascii')
 
     # should throw an error when trying ticket without upload
     resp = sg_client.sgCollect_restCall(sg_host, redact_level="partial", ticket=ticket)
-    assert "Invalid options used for sgcollect_info: upload must be set to true if ticket is specified" in resp.content
+    assert "Invalid options used for sgcollect_info: upload must be set to true if ticket is specified" in resp.content.decode('ascii')
 
     # should throw an error when trying with upload_host, customer and ticket without upload
     resp = sg_client.sgCollect_restCall(sg_host, redact_level="partial", upload_host=upload_host, customer=customer, ticket=ticket)
-    assert "Invalid options used for sgcollect_info: upload must be set to true if upload_host is specified" in resp.content
+    assert "Invalid options used for sgcollect_info: upload must be set to true if upload_host is specified" in resp.content.decode('ascii')
 
     # should throw an error when trying with output dir which does not exist
     output_dir = "/abc"
     resp = sg_client.sgCollect_restCall(sg_host, redact_level="partial", output_directory=output_dir)
 
-    assert "Invalid options used for sgcollect_info: no such file or directory:" in resp.content
+    assert "Invalid options used for sgcollect_info: no such file or directory:" in resp.content.decode('ascii')
 
 
 def verify_log_redaction(cluster_config, log_redaction_level, mode):
@@ -451,7 +456,7 @@ def verify_udTags_in_zippedFile(zip_file_name):
             assert False, "User tags count mismatch between redacted and non-redacted files"
 
         for key, value in list(redact_dict.items()):
-            redact_match = re.search("<ud>.+</ud>", value)
+            redact_match = re.search("<ud>.+</ud>", value.decode('ascii'))
             if redact_match:
                 redact_content = redact_match.group(0)
             else:
@@ -470,10 +475,12 @@ def log_verification_withsgCollect(redaction_level, user, password, zip_file_nam
             command = "ls /tmp/sg_redaction_logs/sg1/*-redacted.zip | awk -F'-redacted.zip' '{print $1}' | grep -o '[^/]*$'"
         zip_file_name = subprocess.check_output(command, shell=True)
         zip_file_name = zip_file_name.rstrip()
+    zip_file_name = zip_file_name.decode('ascii')
     redacted_file_name = "/tmp/sg_redaction_logs/sg1/{}-redacted.zip".format(zip_file_name)
     nonredacted_file_name = "/tmp/sg_redaction_logs/sg1/{}.zip".format(zip_file_name)
     if redaction_level == "partial":
         assert os.path.isfile(redacted_file_name), "redacted file is not generated"
+
         verify_udTags_in_zippedFile(zip_file_name)
         verify_pattern_redacted(redacted_file_name, user)
         verify_pattern_redacted(redacted_file_name, password)
