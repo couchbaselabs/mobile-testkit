@@ -135,23 +135,17 @@ def test_sgCollect1(params_from_base_test_setup, remove_tmp_sg_redaction_logs, s
     log_verification_withsgCollect(redaction_level, user_name, password, zip_file_name)
 
 
+
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.logredaction
-@pytest.mark.parametrize("sg_conf_name, redaction_level, redaction_salt, output_dir", [
-<<<<<<< HEAD
-    ("log_redaction", "partial", True, True),
-    ("log_redaction", "partial", False, False),
-    ("log_redaction", None, False, False),
-    ("log_redaction", "partial", True, False)
-=======
-    ("log_redaction", "partial", False, False),
-    ("log_redaction", None, False, False),
-    ("log_redaction", "partial", True, False),
-    ("log_redaction", "partial", True, True)
->>>>>>> Revert "Fix/x509 test runs (#1626)"
+@pytest.mark.parametrize("sg_conf_name, redaction_level, redaction_salt, output_dir, x509_cert_auth", [
+    ("log_redaction", "partial", False, False, True),
+    ("log_redaction", None, False, False, False),
+    ("log_redaction", "partial", True, False, False),
+    ("log_redaction", "partial", True, True, True)
 ])
-def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_logs, sg_conf_name, redaction_level, redaction_salt, output_dir):
+def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_logs, sg_conf_name, redaction_level, redaction_salt, output_dir, x509_cert_auth):
     """
     @summary
     1. Have sync_gateway config file with logging level as partial/None
@@ -463,7 +457,10 @@ def verify_udTags_in_zippedFile(zip_file_name):
 
         for key, value in list(redact_dict.items()):
             redact_match = re.search("<ud>.+</ud>", value.decode('ascii'))
+<<<<<<< HEAD
 
+=======
+>>>>>>> Fixed test_log_redaction.py should fix 7 tests
             if redact_match:
                 redact_content = redact_match.group(0)
             else:
@@ -482,8 +479,12 @@ def log_verification_withsgCollect(redaction_level, user, password, zip_file_nam
             command = "ls /tmp/sg_redaction_logs/sg1/*-redacted.zip | awk -F'-redacted.zip' '{print $1}' | grep -o '[^/]*$'"
         zip_file_name = subprocess.check_output(command, shell=True)
         zip_file_name = zip_file_name.rstrip()
+<<<<<<< HEAD
         if isinstance(zip_file_name, (bytes, bytearray)):
             zip_file_name = zip_file_name.decode()
+=======
+    zip_file_name = zip_file_name.decode('ascii')
+>>>>>>> Fixed test_log_redaction.py should fix 7 tests
     redacted_file_name = "/tmp/sg_redaction_logs/sg1/{}-redacted.zip".format(zip_file_name)
     nonredacted_file_name = "/tmp/sg_redaction_logs/sg1/{}.zip".format(zip_file_name)
     if redaction_level == "partial":
