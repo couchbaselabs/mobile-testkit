@@ -398,7 +398,8 @@ def test_on_demand_import_of_external_updates(params_from_base_test_setup, sg_co
     with pytest.raises(HTTPError) as he:
         sg_client.put_doc(url=sg_url, db=sg_db, doc_id=doc_id, rev=doc_rev_one, doc_body=doc_body, auth=seth_auth)
     log_info(he.value)
-    assert he.value.message.startswith('409')
+    res_message = str(he.value)
+    assert res_message.startswith('409')
 
     # Following update_doc method will get the doc with on demand processing and update the doc based on rev got from get doc
     sg_updated_doc = sg_client.update_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=seth_auth)

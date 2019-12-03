@@ -86,7 +86,7 @@ def test_view_backfill_for_deletes(params_from_base_test_setup, sg_conf_name, va
 
     # Delete half of the docs randomly
     deleted_docs = []
-    for _ in range(num_docs / 2):
+    for _ in range(num_docs // 2):
         random_doc = random.choice(bulk_resp)
         deleted_doc = sg_client.delete_doc(url=sg_url, db=sg_db, doc_id=random_doc['id'], rev=random_doc['rev'], auth=seth_auth)
         deleted_docs.append(deleted_doc)
