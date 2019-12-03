@@ -134,8 +134,6 @@ def test_sgCollect1(params_from_base_test_setup, remove_tmp_sg_redaction_logs, s
     # verify redacted zip file exists for partial and non redacted file for none
     log_verification_withsgCollect(redaction_level, user_name, password, zip_file_name)
 
-
-
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.logredaction
@@ -143,7 +141,7 @@ def test_sgCollect1(params_from_base_test_setup, remove_tmp_sg_redaction_logs, s
     ("log_redaction", "partial", True, True),
     ("log_redaction", "partial", False, False),
     ("log_redaction", None, False, False),
-    ("log_redaction", "partial", True, False)\
+    ("log_redaction", "partial", True, False)
 ])
 def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_logs, sg_conf_name, redaction_level, redaction_salt, output_dir):
     """
