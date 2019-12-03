@@ -11,7 +11,9 @@ from keywords import userinfo
 from keywords import document
 from keywords import exceptions
 
-
+# ,
+#     ("custom_sync/access", "CHANNEL-TO-ROLE-REST"),
+#     ("custom_sync/access", "CHANNEL-TO-ROLE-SYNC")
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.changes
@@ -24,9 +26,7 @@ from keywords import exceptions
     ("custom_sync/access", "CHANNEL-REST"),
     ("custom_sync/access", "CHANNEL-SYNC"),
     ("custom_sync/access", "ROLE-REST"),
-    ("custom_sync/access", "ROLE-SYNC"),
-    ("custom_sync/access", "CHANNEL-TO-ROLE-REST"),
-    ("custom_sync/access", "CHANNEL-TO-ROLE-SYNC")
+    ("custom_sync/access", "ROLE-SYNC")
 ])
 def test_backfill_channels_oneshot_changes(params_from_base_test_setup, sg_conf_name, grant_type):
     """
