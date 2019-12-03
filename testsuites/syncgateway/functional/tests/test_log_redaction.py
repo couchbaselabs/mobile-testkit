@@ -134,6 +134,7 @@ def test_sgCollect1(params_from_base_test_setup, remove_tmp_sg_redaction_logs, s
     # verify redacted zip file exists for partial and non redacted file for none
     log_verification_withsgCollect(redaction_level, user_name, password, zip_file_name)
 
+
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.logredaction
