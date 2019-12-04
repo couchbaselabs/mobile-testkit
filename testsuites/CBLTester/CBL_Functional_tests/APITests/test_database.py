@@ -193,8 +193,6 @@ class TestDatabase(object):
         """
         @summary: Testing getCount method of Database API
         """
-        if num_of_docs > 100 and self.liteserv_platform == "java-centos":
-            pytest.skip("Skip num_of_docs over 100 on java platform for now, test hangs")
 
         db = self.db_obj.create(db_name)
         for i in range(num_of_docs):
