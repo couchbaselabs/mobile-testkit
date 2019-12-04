@@ -11,7 +11,7 @@ from keywords.utils import log_info
 from utilities.cluster_config_utils import get_sg_version
 
 
-@pytest.mark.sanity
+@pytest.mark.sanity_test
 @pytest.mark.syncgateway
 @pytest.mark.basicauth
 @pytest.mark.channel
