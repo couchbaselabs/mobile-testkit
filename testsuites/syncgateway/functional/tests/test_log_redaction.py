@@ -456,10 +456,7 @@ def verify_udTags_in_zippedFile(zip_file_name):
 
         for key, value in list(redact_dict.items()):
             redact_match = re.search("<ud>.+</ud>", value.decode('ascii'))
-<<<<<<< HEAD
 
-=======
->>>>>>> Fixed test_log_redaction.py should fix 7 tests
             if redact_match:
                 redact_content = redact_match.group(0)
             else:
@@ -478,12 +475,8 @@ def log_verification_withsgCollect(redaction_level, user, password, zip_file_nam
             command = "ls /tmp/sg_redaction_logs/sg1/*-redacted.zip | awk -F'-redacted.zip' '{print $1}' | grep -o '[^/]*$'"
         zip_file_name = subprocess.check_output(command, shell=True)
         zip_file_name = zip_file_name.rstrip()
-<<<<<<< HEAD
         if isinstance(zip_file_name, (bytes, bytearray)):
             zip_file_name = zip_file_name.decode()
-=======
-    zip_file_name = zip_file_name.decode('ascii')
->>>>>>> Fixed test_log_redaction.py should fix 7 tests
     redacted_file_name = "/tmp/sg_redaction_logs/sg1/{}-redacted.zip".format(zip_file_name)
     nonredacted_file_name = "/tmp/sg_redaction_logs/sg1/{}.zip".format(zip_file_name)
     if redaction_level == "partial":
