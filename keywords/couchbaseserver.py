@@ -274,7 +274,7 @@ class CouchbaseServer:
             resp.raise_for_status()
         except HTTPError as h:
             log_info("resp code: {}; error: {}".format(resp, h))
-            if '404 Client Error: Object Not Found for url' in h.message:
+            if '404 Client Error: Object Not Found for url' in str(h):
                 log_info("RBAC user does not exist, no need to delete RBAC bucket user {}".format(bucketname))
             else:
                 raise RBACUserDeletionError(h)
