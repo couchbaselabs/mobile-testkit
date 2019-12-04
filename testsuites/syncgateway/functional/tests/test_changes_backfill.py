@@ -11,9 +11,7 @@ from keywords import userinfo
 from keywords import document
 from keywords import exceptions
 
-# ,
-#     ("custom_sync/access", "CHANNEL-TO-ROLE-REST"),
-#     ("custom_sync/access", "CHANNEL-TO-ROLE-SYNC")
+
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.changes
