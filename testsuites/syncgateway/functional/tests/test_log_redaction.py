@@ -474,7 +474,8 @@ def log_verification_withsgCollect(redaction_level, user, password, zip_file_nam
             command = "ls /tmp/sg_redaction_logs/sg1/*-redacted.zip | awk -F'-redacted.zip' '{print $1}' | grep -o '[^/]*$'"
         zip_file_name = subprocess.check_output(command, shell=True)
         zip_file_name = zip_file_name.rstrip()
-    zip_file_name = zip_file_name.decode('ascii')
+    if isinstance(zip_file_name, (bytes, bytearray)):
+	    zip_file_name = zip_file_name.decode()
     redacted_file_name = "/tmp/sg_redaction_logs/sg1/{}-redacted.zip".format(zip_file_name)
     nonredacted_file_name = "/tmp/sg_redaction_logs/sg1/{}.zip".format(zip_file_name)
     if redaction_level == "partial":
