@@ -11,7 +11,7 @@ from keywords.utils import log_info
 from utilities.cluster_config_utils import get_sg_version
 
 
-@pytest.mark.sanity
+@pytest.mark.sanity_test
 @pytest.mark.syncgateway
 @pytest.mark.basicauth
 @pytest.mark.channel
@@ -65,7 +65,7 @@ def test_seq(params_from_base_test_setup, sg_conf_name, num_users, num_docs, num
     time.sleep(5)
 
     user_0_changes = users[0].get_changes(since=0)
-    doc_seq = user_0_changes["results"][num_docs / 2]["seq"]
+    doc_seq = user_0_changes["results"][num_docs // 2]["seq"]
 
     # https://github.com/couchbase/sync_gateway/issues/1475#issuecomment-172426052
     # verify you can issue _changes with since=12313-0::1023.15
