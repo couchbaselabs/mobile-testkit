@@ -144,7 +144,6 @@ def test_sgCollect1(params_from_base_test_setup, remove_tmp_sg_redaction_logs, s
     ("log_redaction", None, False, False),
     ("log_redaction", "partial", True, False)
 ])
-
 def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_logs, sg_conf_name, redaction_level, redaction_salt, output_dir):
 
     """
@@ -478,6 +477,8 @@ def log_verification_withsgCollect(redaction_level, user, password, zip_file_nam
         zip_file_name = zip_file_name.rstrip()
         if isinstance(zip_file_name, (bytes, bytearray)):
             zip_file_name = zip_file_name.decode()
+    if isinstance(zip_file_name, (bytes, bytearray)):
+        zip_file_name = zip_file_name.decode()
     redacted_file_name = "/tmp/sg_redaction_logs/sg1/{}-redacted.zip".format(zip_file_name)
     nonredacted_file_name = "/tmp/sg_redaction_logs/sg1/{}.zip".format(zip_file_name)
     if redaction_level == "partial":
