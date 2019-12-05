@@ -47,7 +47,9 @@ def persist_cluster_config_environment_prop(cluster_config, property_name, value
     """
 
     if property_name_check is True:
-        valid_props = ["cbs_ssl_enabled", "xattrs_enabled", "sg_lb_enabled", "sync_gateway_version", "server_version", "no_conflicts_enabled", "sync_gateway_ssl", "sg_use_views", "number_replicas", "delta_sync_enabled"]
+        valid_props = ["cbs_ssl_enabled", "xattrs_enabled", "sg_lb_enabled", "sync_gateway_version", "server_version",
+                       "no_conflicts_enabled", "sync_gateway_ssl", "sg_use_views", "number_replicas",
+                       "delta_sync_enabled", "x509_certs"]
         if property_name not in valid_props:
             raise ProvisioningError("Make sure the property you are trying to change is one of: {}".format(valid_props))
 
@@ -154,6 +156,12 @@ def is_load_balancer_enabled(cluster_config):
     """ Loads cluster config to see if load balancer is enabled """
     cluster = load_cluster_config_json(cluster_config)
     return cluster["environment"]["sg_lb_enabled"]
+
+
+def is_sg_ssl_enabled(cluster_config):
+    """ Loads cluster config to see if sg_ssl is enabled """
+    cluster = load_cluster_config_json(cluster_config)
+    return cluster["environment"]["sync_gateway_ssl"]
 
 
 def get_load_balancer_ip(cluster_config):

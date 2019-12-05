@@ -9,7 +9,7 @@ from keywords.MobileRestClient import MobileRestClient
 
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.utils import log_info
-from utilities.cluster_config_utils import get_sg_version
+from utilities.cluster_config_utils import get_sg_version, persist_cluster_config_environment_prop
 from requests import Session
 from keywords.utils import log_r
 
@@ -19,12 +19,12 @@ from keywords.utils import log_r
 @pytest.mark.basicauth
 @pytest.mark.channel
 @pytest.mark.changes
-@pytest.mark.parametrize("sg_conf_name", [
-    "sync_gateway_default_functional_tests",
-    "sync_gateway_default_functional_tests_no_port",
-    "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210"
+@pytest.mark.parametrize("sg_conf_name, x509_cert_auth", [
+    ("sync_gateway_default_functional_tests", True),
+    ("sync_gateway_default_functional_tests_no_port", False),
+    ("sync_gateway_default_functional_tests_couchbase_protocol_withport_11210", True)
 ])
-def test_multiple_users_multiple_channels(params_from_base_test_setup, sg_conf_name):
+def test_multiple_users_multiple_channels(params_from_base_test_setup, sg_conf_name, x509_cert_auth):
 
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
@@ -47,7 +47,7 @@ def test_multiple_users_multiple_channels(params_from_base_test_setup, sg_conf_n
     log_info("Running 'multiple_users_multiple_channels'")
     log_info("cluster_conf: {}".format(cluster_conf))
     log_info("conf: {}".format(sg_conf))
-
+    persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', x509_cert_auth)
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
 

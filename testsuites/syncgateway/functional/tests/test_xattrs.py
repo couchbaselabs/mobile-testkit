@@ -23,7 +23,7 @@ from keywords.userinfo import UserInfo
 from keywords.utils import host_for_url, log_info
 from libraries.testkit.cluster import Cluster
 from keywords.ChangesTracker import ChangesTracker
-from utilities.cluster_config_utils import get_sg_use_views, get_sg_version
+from utilities.cluster_config_utils import get_sg_use_views, get_sg_version, persist_cluster_config_environment_prop
 from keywords.constants import SDK_TIMEOUT
 
 # Since sdk is quicker to update docs we need to have it sleep longer
@@ -316,10 +316,11 @@ def test_on_demand_doc_processing(params_from_base_test_setup, sg_conf_name, num
 @pytest.mark.syncgateway
 @pytest.mark.xattrs
 @pytest.mark.session
-@pytest.mark.parametrize('sg_conf_name', [
-    'xattrs/no_import'
+@pytest.mark.parametrize('sg_conf_name, x509_cert_auth', [
+    ('xattrs/no_import', True),
+    ('xattrs/no_import', False)
 ])
-def test_on_demand_import_of_external_updates(params_from_base_test_setup, sg_conf_name):
+def test_on_demand_import_of_external_updates(params_from_base_test_setup, sg_conf_name, x509_cert_auth):
     """
     Scenario: On demand processing of external updates
 
@@ -354,7 +355,7 @@ def test_on_demand_import_of_external_updates(params_from_base_test_setup, sg_co
     log_info('sg_admin_url: {}'.format(sg_admin_url))
     log_info('sg_url: {}'.format(sg_url))
     log_info('cbs_url: {}'.format(cbs_url))
-
+    persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', x509_cert_auth)
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
 
@@ -421,12 +422,12 @@ def test_on_demand_import_of_external_updates(params_from_base_test_setup, sg_co
 @pytest.mark.syncgateway
 @pytest.mark.xattrs
 @pytest.mark.session
-@pytest.mark.parametrize('sg_conf_name', [
-    'sync_gateway_default_functional_tests',
-    'sync_gateway_default_functional_tests_no_port',
-    "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210"
+@pytest.mark.parametrize('sg_conf_name, x509_cert_auth', [
+    ('sync_gateway_default_functional_tests', True),
+    ('sync_gateway_default_functional_tests_no_port', False),
+    ("sync_gateway_default_functional_tests_couchbase_protocol_withport_11210", True)
 ])
-def test_offline_processing_of_external_updates(params_from_base_test_setup, sg_conf_name):
+def test_offline_processing_of_external_updates(params_from_base_test_setup, sg_conf_name, x509_cert_auth):
     """
     Scenario:
     1. Start SG, write some docs
@@ -472,7 +473,7 @@ def test_offline_processing_of_external_updates(params_from_base_test_setup, sg_
     log_info('sg_admin_url: {}'.format(sg_admin_url))
     log_info('sg_url: {}'.format(sg_url))
     log_info('cbs_url: {}'.format(cbs_url))
-
+    persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', x509_cert_auth)
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
 
@@ -689,13 +690,13 @@ def test_large_initial_import(params_from_base_test_setup, sg_conf_name):
 @pytest.mark.xattrs
 @pytest.mark.changes
 @pytest.mark.session
-@pytest.mark.parametrize('sg_conf_name, use_multiple_channels', [
-    ('sync_gateway_default_functional_tests', False),
-    ('sync_gateway_default_functional_tests', True),
-    ('sync_gateway_default_functional_tests_no_port', False),
-    ('sync_gateway_default_functional_tests_no_port', True)
+@pytest.mark.parametrize('sg_conf_name, use_multiple_channels, x509_cert_auth', [
+    ('sync_gateway_default_functional_tests', False, True),
+    ('sync_gateway_default_functional_tests', True, False),
+    ('sync_gateway_default_functional_tests_no_port', False, True),
+    ('sync_gateway_default_functional_tests_no_port', True, False)
 ])
-def test_purge(params_from_base_test_setup, sg_conf_name, use_multiple_channels):
+def test_purge(params_from_base_test_setup, sg_conf_name, use_multiple_channels, x509_cert_auth):
     """
     Scenario:
     - Bulk create 1000 docs via Sync Gateway
@@ -744,7 +745,7 @@ def test_purge(params_from_base_test_setup, sg_conf_name, use_multiple_channels)
     log_info('sg_conf: {}'.format(sg_conf))
     log_info('sg_admin_url: {}'.format(sg_admin_url))
     log_info('sg_url: {}'.format(sg_url))
-
+    persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', x509_cert_auth)
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
 

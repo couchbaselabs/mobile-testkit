@@ -13,6 +13,7 @@ from libraries.testkit.parallelize import in_parallel
 from keywords.utils import log_info
 from keywords.utils import log_error
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
+from utilities.cluster_config_utils import persist_cluster_config_environment_prop
 
 
 @pytest.mark.sanity
@@ -21,10 +22,12 @@ from keywords.SyncGateway import sync_gateway_config_path_for_mode
 @pytest.mark.basicauth
 @pytest.mark.channel
 @pytest.mark.changes
-@pytest.mark.parametrize("sg_conf_name, num_users, num_docs, num_revisions", [
-    ("bucket_online_offline/db_online_offline_access_all", 5, 100, 10),
+@pytest.mark.parametrize("sg_conf_name, num_users, num_docs, num_revisions, x509_cert_auth", [
+    ("bucket_online_offline/db_online_offline_access_all", 5, 100, 10, True),
+    ("bucket_online_offline/db_online_offline_access_all", 5, 100, 10, False)
 ])
-def test_bucket_online_offline_resync_sanity(params_from_base_test_setup, sg_conf_name, num_users, num_docs, num_revisions):
+def test_bucket_online_offline_resync_sanity(params_from_base_test_setup, sg_conf_name, num_users, num_docs,
+                                             num_revisions, x509_cert_auth):
 
     cluster_conf = params_from_base_test_setup["cluster_config"]
     test_mode = params_from_base_test_setup["mode"]
@@ -41,6 +44,8 @@ def test_bucket_online_offline_resync_sanity(params_from_base_test_setup, sg_con
     log_info("Using num_revisions: {}".format(num_revisions))
 
     start = time.time()
+
+    persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', x509_cert_auth)
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_conf)

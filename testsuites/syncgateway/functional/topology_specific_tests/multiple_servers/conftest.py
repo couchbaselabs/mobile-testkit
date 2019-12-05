@@ -32,6 +32,7 @@ def params_from_base_suite_setup(request):
     xattrs_enabled = request.config.getoption("--xattrs")
     sg_lb = request.config.getoption("--sg-lb")
     sg_ce = request.config.getoption("--sg-ce")
+    cbs_ce = request.config.getoption("--cbs-ce")
     use_sequoia = request.config.getoption("--sequoia")
     no_conflicts_enabled = request.config.getoption("--no-conflicts")
     use_views = request.config.getoption("--use-views")
@@ -79,7 +80,6 @@ def params_from_base_suite_setup(request):
     # use base_cc cluster config if mode is "cc" or base_di cluster config if more is "di"
     cluster_config = "{}/multiple_servers_{}".format(CLUSTER_CONFIGS_DIR, mode)
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
-    cluster_utils = ClusterKeywords(cluster_config)
 
     if use_views:
         log_info("Running SG tests using views")
@@ -183,7 +183,8 @@ def params_from_base_suite_setup(request):
                 race_enabled=race_enabled,
                 sg_installer_type=sg_installer_type,
                 sa_installer_type=sa_installer_type,
-                sg_ce=sg_ce
+                sg_ce=sg_ce,
+                cbs_ce=cbs_ce
             )
         except ProvisioningError:
             logging_helper = Logging()

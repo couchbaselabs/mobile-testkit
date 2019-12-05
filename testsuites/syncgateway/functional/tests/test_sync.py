@@ -20,6 +20,9 @@ from keywords.SyncGateway import sync_gateway_config_path_for_mode
 
 
 # https://github.com/couchbase/sync_gateway/issues/1524
+from utilities.cluster_config_utils import persist_cluster_config_environment_prop
+
+
 @pytest.mark.syncgateway
 @pytest.mark.sync
 @pytest.mark.basicauth
@@ -105,10 +108,11 @@ def test_issue_1524(params_from_base_test_setup, sg_conf_name, num_docs):
 @pytest.mark.basicauth
 @pytest.mark.channel
 @pytest.mark.changes
-@pytest.mark.parametrize("sg_conf_name", [
-    "custom_sync/sync_gateway_custom_sync_access_sanity"
+@pytest.mark.parametrize("sg_conf_name, x509_cert_auth", [
+    ("custom_sync/sync_gateway_custom_sync_access_sanity", False),
+    ("custom_sync/sync_gateway_custom_sync_access_sanity", True)
 ])
-def test_sync_access_sanity(params_from_base_test_setup, sg_conf_name):
+def test_sync_access_sanity(params_from_base_test_setup, sg_conf_name, x509_cert_auth):
 
     num_docs = 100
 
@@ -120,7 +124,7 @@ def test_sync_access_sanity(params_from_base_test_setup, sg_conf_name):
     log_info("Running 'sync_access_sanity'")
     log_info("Using cluster_conf: {}".format(cluster_conf))
     log_info("Using sg_conf: {}".format(sg_conf))
-
+    persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', x509_cert_auth)
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
     admin = Admin(cluster.sync_gateways[0])
