@@ -63,7 +63,6 @@ def params_from_base_suite_setup(request):
     log_info("sa_installer_type: {}".format(sa_installer_type))
     log_info("delta_sync_enabled: {}".format(delta_sync_enabled))
     log_info("sg_platform: {}".format(sg_platform))
-    log_info("Delta_sync: {}".format(delta_sync_enabled))
 
     # sg-ce is invalid for di mode
     if mode == "di" and sg_ce:

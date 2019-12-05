@@ -688,6 +688,10 @@ def test_rotated_logs_size_limit(params_from_base_test_setup, sg_conf_name):
     """
     @summary
     Test to check rotated log size limit with 100MB( 1024Mb by default)
+    1. Have the sg config rotated_logs_size_limit with 100MB
+    2. Start the sgw
+    3. Send bunch of requests to sgw to get logs with 100MB size
+    4. Verify that log gets rotation once it reach 100MB
     """
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
