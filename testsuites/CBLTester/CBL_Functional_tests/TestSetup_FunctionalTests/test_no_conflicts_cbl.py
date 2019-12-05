@@ -567,7 +567,7 @@ def test_sg_CBL_updates_concurrently(params_from_base_test_setup, sg_conf_name, 
     liteserv_platform = params_from_base_test_setup["liteserv_platform"]
 
     if liteserv_platform in ["java-macosx", "java-msft", "java-ubuntu", "java-centos"]:
-        pytest.skip('this test case cause a crash on java, skip it for now, need further investigation')  
+        pytest.skip('this test case cause a crash on java, skip it for now, need further investigation')
 
     if sync_gateway_version < "2.0":
         pytest.skip('Does not work with sg < 2.0 , so skipping the test')
