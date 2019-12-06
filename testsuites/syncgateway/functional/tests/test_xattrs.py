@@ -71,6 +71,7 @@ def test_olddoc_nil(params_from_base_test_setup, sg_conf_name):
     mode = params_from_base_test_setup['mode']
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
     delta_sync_enabled = params_from_base_test_setup['delta_sync_enabled']
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
 
     # This test should only run when using xattr meta storage
     if not xattrs_enabled or delta_sync_enabled:
@@ -89,6 +90,11 @@ def test_olddoc_nil(params_from_base_test_setup, sg_conf_name):
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
+
+    if sync_gateway_version >= "2.5.0":
+        sg_client = MobileRestClient()
+        expvars = sg_client.get_expvars(sg_admin_url)
+        error_count = expvars["syncgateway"]["global"]["resource_utilization"]["error_count"]
 
     # Create clients
     sg_client = MobileRestClient()
@@ -161,6 +167,11 @@ def test_olddoc_nil(params_from_base_test_setup, sg_conf_name):
     user_two_bulk_get_docs, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=abc_doc_ids, auth=user_two_auth)
     assert len(user_two_bulk_get_docs) == num_docs
     assert len(errors) == 0
+
+    if sync_gateway_version >= "2.5.0":
+        sg_client = MobileRestClient()
+        expvars = sg_client.get_expvars(sg_admin_url)
+        assert error_count < expvars["syncgateway"]["global"]["resource_utilization"]["error_count"], "error_count did not increment"
 
 
 @pytest.mark.syncgateway
@@ -1645,7 +1656,6 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
             {"id": doc, "rev": "1-"} for doc in doc_set_ids1]
 
         ct_task = crsdk_tpe.submit(changestrack.start())
-
         log_info("ct_task value {}".format(ct_task))
 
         wait_for_changes = crsdk_tpe.submit(

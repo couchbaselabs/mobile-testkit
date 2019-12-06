@@ -68,7 +68,8 @@ def test_db_online_offline_webhooks_offline(params_from_base_test_setup, sg_conf
 
     # Add User
     log_info("Add docs")
-    in_parallel(user_objects, 'add_docs', num_docs)
+    bulk = True
+    in_parallel(user_objects, 'add_docs', num_docs, bulk)
 
     # Update docs
     log_info("Update docs")
@@ -162,7 +163,8 @@ def test_db_online_offline_webhooks_offline_two(params_from_base_test_setup, sg_
 
     # Add User
     log_info("Add docs")
-    in_parallel(user_objects, 'add_docs', num_docs)
+    bulk = True
+    in_parallel(user_objects, 'add_docs', num_docs, bulk)
 
     # Update docs
     log_info("Update docs")

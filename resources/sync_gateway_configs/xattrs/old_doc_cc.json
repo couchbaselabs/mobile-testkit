@@ -24,6 +24,7 @@
                 if (oldDoc != null) {
                     throw({forbidden: "Old doc should be null!"})
                 } else {
+                    console.error("oldDoc is null"); 
                     console.log("oldDoc is null");
                     console.log(doc.channels);
                     channel(doc.channels);

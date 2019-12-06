@@ -81,7 +81,8 @@ def test_mulitple_users_mulitiple_channels_mulitple_revisions(params_from_base_t
 
     # Add User
     log_info("Add docs")
-    in_parallel(user_objects, 'add_docs', num_docs)
+    bulk = True
+    in_parallel(user_objects, 'add_docs', num_docs, bulk)
 
     # Update docs
     log_info("Update docs")

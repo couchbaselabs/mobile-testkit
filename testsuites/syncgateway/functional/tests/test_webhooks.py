@@ -74,7 +74,8 @@ def test_webhooks(params_from_base_test_setup, sg_conf_name, num_users, num_chan
 
     # Add User
     log_info("Add docs")
-    in_parallel(user_objects, 'add_docs', num_docs)
+    bulk = True
+    in_parallel(user_objects, 'add_docs', num_docs, bulk)
 
     # Update docs
     log_info("Update docs")
