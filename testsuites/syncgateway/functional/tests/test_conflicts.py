@@ -410,7 +410,6 @@ def test_concurrent_attachment_updatesonDoc(params_from_base_test_setup):
     # 4. Verify doc with latest attachment exists on SGW and CBS
     sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
     for doc in sg_docs:
-        print "doc in sg_docs", doc
         assert doc["doc"]["updates"] == 10, "doc did not get updated 10 times"
         try:
             doc["doc"]["_attachments"]

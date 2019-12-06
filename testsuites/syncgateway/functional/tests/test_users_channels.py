@@ -306,7 +306,6 @@ def test_create_invalid_email(params_from_base_test_setup):
     if sync_gateway_version >= "2.5.0":
         expvars = sg_client.get_expvars(sg_admin_url)
         warn_count = expvars["syncgateway"]["global"]["resource_utilization"]["warn_count"]
-        print "warn_count is ", warn_count
 
     data = {
         "name": "autotest",
