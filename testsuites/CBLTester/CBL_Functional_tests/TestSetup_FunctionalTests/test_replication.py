@@ -1199,6 +1199,9 @@ def test_initial_pull_replication_background_apprun(params_from_base_test_setup,
             (liteserv_platform.lower() != "ios" or liteserv_platform.lower() != "xamarin-ios") and device_enabled):
         pytest.skip('This test cannot run either it is .Net or ios with device enabled ')
 
+    if liteserv_platform in ["java-macosx", "java-msft", "java-ubuntu", "java-centos"]:
+        pytest.skip('This test cannot run as a Java application')
+
     client = MobileRestClient()
     client.create_user(sg_admin_url, sg_db, "testuser", password="password", channels=["ABC", "NBC"])
     cookie, session_id = client.create_session(sg_admin_url, sg_db, "testuser")
@@ -1293,6 +1296,9 @@ def test_push_replication_with_backgroundApp(params_from_base_test_setup, num_do
     if liteserv_platform.lower() == "net-msft" or liteserv_platform.lower() == "net-uwp" or (
             (liteserv_platform.lower() != "ios" or liteserv_platform.lower() != "xamarin-ios") and device_enabled):
         pytest.skip('This test cannot run either it is .Net or ios with device enabled ')
+
+    if liteserv_platform in ["java-macosx", "java-msft", "java-ubuntu", "java-centos"]:
+        pytest.skip('This test cannot run as a Java application')
 
     client = MobileRestClient()
     client.create_user(sg_admin_url, sg_db, "testuser", password="password", channels=channels)
@@ -3091,6 +3097,9 @@ def test_resetCheckpointFailure(params_from_base_test_setup):
         pytest.skip(
             'ResetCheckPoint API does not throw exception in iOS if replicator is not stopped, so skipping test')
         # It crashes the app, but does not throw error
+
+    if liteserv_platform in ["java-macosx", "java-msft", "java-ubuntu", "java-centos"]:
+        pytest.skip('Temporarily skip since not sure if this will work on a Java application')
 
     # Reset cluster to ensure no data in system
     c = cluster.Cluster(config=cluster_config)
