@@ -5,6 +5,7 @@ import java.io.InputStream;
 
 public interface Context {
     File getFilesDir();
+    File getExternalFilesDir(String filetype);
     InputStream getAsset(String name);
     String getPlatform();
     String getLocalIpAddress();
@@ -15,5 +16,4 @@ public interface Context {
      * android.util.Base64 in android apps
      */
     String encodeBase64(byte[] hashBytes);
-
 }
