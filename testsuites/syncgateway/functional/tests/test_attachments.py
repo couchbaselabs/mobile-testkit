@@ -175,7 +175,7 @@ def test_attachment_revpos_when_ancestor_unavailable_active_revision_doesnt_shar
     assert http_error_str.startswith("400 Client Error: Bad Request for url: ")
 
 
-@pytest.mark.sanity
+# @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.attachments
 @pytest.mark.session
