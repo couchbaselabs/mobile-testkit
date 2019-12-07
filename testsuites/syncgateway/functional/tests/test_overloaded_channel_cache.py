@@ -24,6 +24,7 @@ from keywords.SyncGateway import sync_gateway_config_path_for_mode
     ("sync_gateway_channel_cache", 1000, "*", True, 50),
     ("sync_gateway_channel_cache", 1000, "ABC", False, 50),
     ("sync_gateway_channel_cache", 1000, "ABC", True, 50)
+
 ])
 def test_overloaded_channel_cache(params_from_base_test_setup, sg_conf_name, num_docs, user_channels, filter, limit):
 
