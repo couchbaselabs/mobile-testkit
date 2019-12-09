@@ -22,7 +22,7 @@ from keywords.utils import log_r
 @pytest.mark.parametrize("sg_conf_name, x509_cert_auth", [
     ("sync_gateway_default_functional_tests", True),
     ("sync_gateway_default_functional_tests_no_port", False),
-    ("sync_gateway_default_functional_tests_couchbase_protocol_withport_11210", True)
+    ("sync_gateway_default_functional_tests_couchbase_protocol_withport_11210", False)
 ])
 def test_multiple_users_multiple_channels(params_from_base_test_setup, sg_conf_name, x509_cert_auth):
 
