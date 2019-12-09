@@ -169,13 +169,13 @@ class TestServerJava(TestServerBase):
             work_dir = os.getcwd()
             os.chdir(self.testserver_path)
             print(self.testserver_path)
-            '''
             self.java_proc = subprocess.Popen(
                 ["java", "-jar", self.package_name],
                 stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE, shell=False)
+                stderr=subprocess.PIPE)
             '''
             self.java_proc = subprocess.Popen(["java", "-jar", self.package_name])
+            '''
             time.sleep(5)
             os.chdir(work_dir)
 
