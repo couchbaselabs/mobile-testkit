@@ -444,10 +444,10 @@ def test_p2p_non_blocking_custom_conflicts(params_from_base_test_setup, server_s
             db_obj_client.updateDocument(cbl_db_client, doc_id=doc_id, data=data)
             # Saving the history of update to CBL doc
             new_docs_body[doc_id].append(data)
-    replicator.wait_until_replicator_idle(repl, sleep_time=8)
+    replicator.wait_until_replicator_idle(repl, sleep_time=12)
     # Double checking that the complete replication is done as delayed CCR might give false idle for replication
     sleep(2)
-    replicator.wait_until_replicator_idle(repl, sleep_time=8)
+    replicator.wait_until_replicator_idle(repl, sleep_time=12)
     total = replicator.getTotal(repl)
     completed = replicator.getCompleted(repl)
     assert total == completed, "replication from client to server did not completed " + str(total) +\
