@@ -16,7 +16,7 @@ from keywords.exceptions import TimeoutError
 from keywords.constants import CLIENT_REQUEST_TIMEOUT
 
 
-@pytest.mark.sanity
+# @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.onlineoffline
 @pytest.mark.webhooks
