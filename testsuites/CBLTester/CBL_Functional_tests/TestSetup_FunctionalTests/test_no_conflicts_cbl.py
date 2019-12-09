@@ -564,7 +564,7 @@ def test_sg_CBL_updates_concurrently(params_from_base_test_setup, sg_conf_name, 
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
     channels = ["no-conflicts-channel"]
-    liteserv_platform = params_from_base_test_setup["liteserv_platform"]
+    # liteserv_platform = params_from_base_test_setup["liteserv_platform"]
 
     # if liteserv_platform in ["java-macosx", "java-msft", "java-ubuntu", "java-centos"]:
     #    pytest.skip('this test case cause a crash on java, skip it for now, need further investigation')

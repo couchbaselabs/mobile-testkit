@@ -17,7 +17,7 @@ class TestServerNetMsft(TestServerWinBase):
         # Initialize baseclass properies
         super(TestServerNetMsft, self).__init__(version_build, host, port)
 
-        self.platform = platform      
+        self.platform = platform
 
         if version_build <= "2.1.0":
             raise Exception("No .net based app available to download for 2.1.0 or below at latestbuild. Use nuget package to create app.")

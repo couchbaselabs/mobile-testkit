@@ -5,10 +5,10 @@ import requests
 
 from keywords.TestServerBase import TestServerBase
 from keywords.constants import LATEST_BUILDS, RELEASED_BUILDS
-from keywords.constants import BINARY_DIR
 from keywords.exceptions import LiteServError
 from keywords.utils import version_and_build
 from keywords.utils import log_info
+from libraries.provision.ansible_runner import AnsibleRunner
 
 
 class TestServerJavaWS(TestServerBase):
@@ -129,4 +129,3 @@ class TestServerJavaWS(TestServerBase):
 
     def stop(self):
         raise NotImplementedError()
-

@@ -35,7 +35,7 @@ class TestServerJava(TestServerBase):
         else:
             self.package_name = "CBLTestServer-Java-Desktop-{}-enterprise.jar".format(self.version_build)
             self.download_url = "{}/couchbase-lite-java/{}/{}/{}".format(LATEST_BUILDS, self.version, self.build, self.package_name)
-        
+
         self.build_name = "TestServer-java-desktop-{}".format(self.version_build)
 
         # for debugging TODO: will be removed
@@ -179,7 +179,6 @@ class TestServerJava(TestServerBase):
             time.sleep(5)
             os.chdir(work_dir)
 
-
     def _verify_launched(self):
         raise NotImplementedError()
 
@@ -191,4 +190,3 @@ class TestServerJava(TestServerBase):
                 self.java_proc.terminate()
             except:
                 log_info("Failed stopping JavaTestServer app")
-
