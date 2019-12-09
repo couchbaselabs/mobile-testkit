@@ -3501,9 +3501,9 @@ def test_doc_removal_with_multipleChannels(params_from_base_test_setup, setup_cu
             userB -> channel_B,
             userC-> channel_C
         2. create docs in SGW
-            doc a with channel_A, channel_B ;
+            doca with channel_A, channel_B ;
             docb with channel_B ,
-            docc with Channel_A, channel_B, channel_C
+            docc with channel_C
         3. Verify User A can access docA and docC.
             docB by UserB, UserA
             docC by user A, user C
