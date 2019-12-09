@@ -12,7 +12,7 @@ from keywords.MobileRestClient import MobileRestClient
 
 
 # implements scenarios: 18 and 19
-@pytest.mark.sanity
+# @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.onlineoffline
 @pytest.mark.webhooks
