@@ -6,7 +6,7 @@ from requests import Session
 from keywords.utils import log_info
 from keywords.SyncGateway import SyncGateway
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
-from utilities.cluster_config_utils import persist_cluster_config_environment_prop
+from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
 
 
 @pytest.mark.sanity
@@ -34,7 +34,10 @@ def test_deleted_docs_from_changes_active_only(params_from_base_test_setup, sg_c
     mode = params_from_base_test_setup["mode"]
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
-    persist_cluster_config_environment_prop(cluster_config, 'x509_certs', x509_cert_auth)
+    if x509_cert_auth:
+        temp_cluster_config = copy_to_temp_conf(cluster_config, mode)
+        persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
+        cluster_config = temp_cluster_config
 
     cluster = Cluster(cluster_config)
     cluster.reset(sg_conf)
