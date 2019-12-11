@@ -512,7 +512,7 @@ def params_from_base_suite_setup(request):
         for test in tests_list:
             if test.rep_call.failed:
                 failed_test_list.append(test.rep_call.nodeid)
-        zip_data = suite_cbllog.get_logs_in_zip(suite_db_log_files)
+        zip_data = suite_cbllog.get_logs_in_zip()
         suite_log_zip_file = "Suite_test_log_{}.zip".format(str(time.time()))
         log_info("Log file for failed Suite tests is: {}".format(suite_log_zip_file))
         with open(suite_log_zip_file, 'wb') as fh:

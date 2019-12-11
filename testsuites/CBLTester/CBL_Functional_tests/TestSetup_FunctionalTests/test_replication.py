@@ -43,9 +43,7 @@ def setup_teardown_test(params_from_base_test_setup):
 @pytest.mark.replication
 @pytest.mark.parametrize("num_of_docs, continuous, x509_cert_auth", [
     (10, True, True),
-    (10, False, True),
     (100, True, False),
-    (100, False, True),
     (1000, True, True),
     (1000, False, False)
 ])
