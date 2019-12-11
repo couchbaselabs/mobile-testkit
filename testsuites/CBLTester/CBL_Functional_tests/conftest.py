@@ -27,10 +27,8 @@ from CBLClient.Dictionary import Dictionary
 from CBLClient.DataTypeInitiator import DataTypeInitiator
 from CBLClient.SessionAuthenticator import SessionAuthenticator
 from CBLClient.Utils import Utils
-
-from utilities.cluster_config_utils import get_load_balancer_ip
 from CBLClient.ReplicatorConfiguration import ReplicatorConfiguration
-
+from utilities.cluster_config_utils import get_load_balancer_ip
 from couchbase.bucket import Bucket
 from couchbase.n1ql import N1QLQuery
 
@@ -98,7 +96,13 @@ def pytest_addoption(parser):
     parser.addoption("--device", action="store_true",
                      help="Enable device if you want to run it on device", default=False)
 
-    parser.addoption("--community", action="store_true",
+    parser.addoption("--cbl-ce", action="store_true",
+                     help="If set, community edition will get picked up , default is enterprise", default=False)
+
+    parser.addoption("--cbs-ce", action="store_true",
+                     help="If set, community edition will get picked up , default is enterprise", default=False)
+
+    parser.addoption("--sg-ce", action="store_true",
                      help="If set, community edition will get picked up , default is enterprise", default=False)
 
     parser.addoption("--sg-ssl",
@@ -178,7 +182,9 @@ def params_from_base_suite_setup(request):
     create_db_per_test = request.config.getoption("--create-db-per-test")
     create_db_per_suite = request.config.getoption("--create-db-per-suite")
     device_enabled = request.config.getoption("--device")
-    community_enabled = request.config.getoption("--community")
+    cbl_ce = request.config.getoption("--cbl-ce")
+    cbs_ce = request.config.getoption("--cbs-ce")
+    sg_ce = request.config.getoption("--sg-ce")
     sg_ssl = request.config.getoption("--sg-ssl")
     flush_memory_per_test = request.config.getoption("--flush-memory-per-test")
     sg_lb = request.config.getoption("--sg-lb")
@@ -201,7 +207,7 @@ def params_from_base_suite_setup(request):
                                           version_build=liteserv_version,
                                           host=liteserv_host,
                                           port=liteserv_port,
-                                          community_enabled=community_enabled,
+                                          community_enabled=cbl_ce,
                                           debug_mode=debug_mode)
 
     if not use_local_testserver:
@@ -276,10 +282,12 @@ def params_from_base_suite_setup(request):
         cbl_log_decoder_platform
     except NameError:
         log_info("cbl_log_decoder_platform is not provided")
-        persist_cluster_config_environment_prop(cluster_config, 'cbl_log_decoder_platform', "macos", property_name_check=False)
+        persist_cluster_config_environment_prop(cluster_config, 'cbl_log_decoder_platform', "macos",
+                                                property_name_check=False)
     else:
         log_info("Running test with cbl_log_decoder_platform {}".format(cbl_log_decoder_platform))
-        persist_cluster_config_environment_prop(cluster_config, 'cbl_log_decoder_platform', cbl_log_decoder_platform, property_name_check=False)
+        persist_cluster_config_environment_prop(cluster_config, 'cbl_log_decoder_platform', cbl_log_decoder_platform,
+                                                property_name_check=False)
 
     try:
         cbl_log_decoder_build
@@ -288,7 +296,8 @@ def params_from_base_suite_setup(request):
         persist_cluster_config_environment_prop(cluster_config, 'cbl_log_decoder_build', "", property_name_check=False)
     else:
         log_info("Running test with cbl_log_decoder_platform {}".format(cbl_log_decoder_platform))
-        persist_cluster_config_environment_prop(cluster_config, 'cbl_log_decoder_platform', cbl_log_decoder_platform, property_name_check=False)
+        persist_cluster_config_environment_prop(cluster_config, 'cbl_log_decoder_platform', cbl_log_decoder_platform,
+                                                property_name_check=False)
 
     if xattrs_enabled:
         log_info("Running test with xattrs for sync meta storage")
@@ -341,7 +350,9 @@ def params_from_base_suite_setup(request):
                 cluster_config=cluster_config,
                 server_version=server_version,
                 sync_gateway_version=sync_gateway_version,
-                sync_gateway_config=sg_config
+                sync_gateway_config=sg_config,
+                cbs_ce=cbs_ce,
+                sg_ce=sg_ce
             )
         except ProvisioningError:
             logging_helper = Logging()
@@ -487,7 +498,10 @@ def params_from_base_suite_setup(request):
         "cbl_log_decoder_build": cbl_log_decoder_build,
         "suite_db_log_files": suite_db_log_files,
         "enable_encryption": enable_encryption,
-        "encryption_password": encryption_password
+        "encryption_password": encryption_password,
+        "cbs_ce": cbs_ce,
+        "sg_ce": sg_ce,
+        "cbl_ce": cbl_ce
     }
 
     if create_db_per_suite:
@@ -541,6 +555,9 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     encryption_password = params_from_base_suite_setup["encryption_password"]
     enable_encryption = params_from_base_suite_setup["enable_encryption"]
     use_local_testserver = request.config.getoption("--use-local-testserver")
+    cbl_ce = params_from_base_suite_setup["cbl_ce"]
+    cbs_ce = params_from_base_suite_setup["cbs_ce"]
+    sg_ce = params_from_base_suite_setup["sg_ce"]
 
     source_db = None
     test_name_cp = test_name.replace("/", "-")
@@ -633,7 +650,10 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "cbl_log_decoder_build": cbl_log_decoder_build,
         "enable_encryption": enable_encryption,
         "encryption_password": encryption_password,
-        "enable_file_logging": enable_file_logging
+        "enable_file_logging": enable_file_logging,
+        "cbs_ce": cbs_ce,
+        "sg_ce": sg_ce,
+        "cbl_ce": cbl_ce
     }
 
     log_info("Tearing down test")
