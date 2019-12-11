@@ -107,7 +107,7 @@ def test_delta_sync_replication(params_from_base_test_setup, num_of_docs, replic
                     if liteserv_platform == "android":
                         image_content = blob.createImageContent("/assets/golden_gate_large.jpg")
                         blob_value = blob.create("image/jpeg", stream=image_content)
-                    elif liteserv_platform in ["java-macosx", "java-msft", "java-ubuntu", "java-centos"]:
+                    elif liteserv_platform in ["java-macosx", "java-msft", "java-ubuntu", "java-centos", "javaws-macosx", "javaws-msft", "javaws-ubuntu", "javaws-centos"]:
                         image_content = blob.createImageContent("golden_gate_large.jpg")
                         blob_value = blob.create("image/jpeg", stream=image_content)
                     elif liteserv_platform == "xamarin-android":
