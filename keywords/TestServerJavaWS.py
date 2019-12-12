@@ -98,33 +98,32 @@ class TestServerJavaWS(TestServerBase):
             else:
                 raise LiteServError("Failed to download Test server on remote machine")
 
-        # download testserver war package for non-windows platform
+        # check if exists for testserver war package for non-windows platform
         expected_testserver_path = "{}/{}".format(BINARY_DIR, self.package_name)
         if os.path.isfile(expected_testserver_path):
             log_info("Package {} is already downloaded. Skipping.", self.package_name)
-            return
+        else:
+            # download java ws package
+            log_info("Downloading {} -> {}/{}".format(self.download_url, BINARY_DIR, self.package_name))
 
-        # download java ws package
-        log_info("Downloading {} -> {}/{}".format(self.download_url, BINARY_DIR, self.package_name))
-
-        resp = requests.get(self.download_url, verify=False)
-        resp.raise_for_status()
-        with open("{}/{}".format(BINARY_DIR, self.package_name), "wb") as f:
-            f.write(resp.content)
+            resp = requests.get(self.download_url, verify=False)
+            resp.raise_for_status()
+            with open("{}/{}".format(BINARY_DIR, self.package_name), "wb") as f:
+                f.write(resp.content)
 
         # download cbl core java jar package
         expected_cbl_core_path = "{}/{}".format(BINARY_DIR, self.cbl_core_lib_name)
         if os.path.isfile(expected_cbl_core_path):
             log_info("CBL Java Core Library {} is already downloaded. Skipping.", self.cbl_core_lib_name)
-            return
+        else:
+            # download cbl core java library, 
+            # such as couchbase-lite-java-ee-2.7.0-77.zip
+            log_info("Downloading {} -> {}/{}".format(self.download_corelib_url, BINARY_DIR, self.cbl_core_lib_name))
 
-        # download cbl core java library
-        log_info("Downloading {} -> {}/{}".format(self.download_corelib_url, BINARY_DIR, self.cbl_core_lib_name))
-
-        resp = requests.get(self.download_corelib_url, verify=False)
-        resp.raise_for_status()
-        with open("{}/{}".format(BINARY_DIR, self.cbl_core_lib_name), "wb") as f:
-            f.write(resp.content)
+            resp = requests.get(self.download_corelib_url, verify=False)
+            resp.raise_for_status()
+            with open("{}/{}".format(BINARY_DIR, self.cbl_core_lib_name), "wb") as f:
+                f.write(resp.content)
 
     def install(self):
         raise NotImplementedError()
