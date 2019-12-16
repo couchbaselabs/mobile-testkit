@@ -141,7 +141,7 @@ class CouchbaseServer:
         """
 
         count = 0
-        max_retries = 3
+        max_retries = 5
         while True:
 
             if count == max_retries:
@@ -270,6 +270,7 @@ class CouchbaseServer:
         resp = None
         try:
             resp = self._session.delete(rbac_url, data=data_user_params, auth=('Administrator', 'password'))
+            log_info("rbac: {}; data user params: {}".format(rbac_url, data_user_params))
             log_r(resp)
             resp.raise_for_status()
         except HTTPError as h:
