@@ -163,6 +163,7 @@ class CouchbaseServer:
             for bucket_name in bucket_names:
                 try:
                     self.delete_bucket(bucket_name)
+
                 except HTTPError as e:
                     num_failures += 1
                     log_info("Failed to delete bucket: {}. Retrying ...".format(e))
@@ -277,8 +278,9 @@ class CouchbaseServer:
             log_info("resp code: {}; error: {}".format(resp, h))
             if '404 Client Error: Object Not Found for url' in str(h):
                 log_info("RBAC user does not exist, no need to delete RBAC bucket user {}".format(bucketname))
-            else:
-                raise RBACUserDeletionError(h)
+        except ConnectionError as e:
+            log_info(str(e))
+            log_info("RBAC user does not exist, Catching connection errors here")
 
     def _get_mem_total_lowest(self, server_info):
         # Workaround for https://github.com/couchbaselabs/mobile-testkit/issues/709

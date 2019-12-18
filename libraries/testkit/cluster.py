@@ -404,9 +404,9 @@ class Cluster:
         for sg in self.sync_gateways:
             try:
                 info = sg.info()
-                log_info("sync_gateway: {}, info: {}".format(sg.url, info))
+                log_info(" verify_alive sync_gateway : {}, info: {}".format(sg.url, info))
             except ConnectionError as e:
-                log_info("sync_gateway down: {}".format(e))
+                log_info("verify_alive sync_gateway down: {}".format(e))
                 errors.append((sg, e))
 
         if mode == "di":
