@@ -2116,15 +2116,10 @@ def test_default_conflict_withConflicts_withChannels(params_from_base_test_setup
     # Create two conflicts with 2-hex in sg by user2.
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session2)
     sg_docs = sg_docs["rows"]
-	    for i in range(len(sg_docs)):
+    for i in range(len(sg_docs)):
         sg_client.add_conflict(url=sg_url, db=sg_db, doc_id=sg_docs[i]["id"],
-<<<<<<< HEAD
                                parent_revisions=sg_docs[i]["value"]["rev"], new_revision="2-31fa", auth=session2)
 
-=======
-                               parent_revisions=sg_docs[i]["value"]["rev"],
-                               new_revision="2-31fa", auth=session2)
->>>>>>> Revert "Fix/x509 test runs (#1626)"
         sg_client.add_conflict(url=sg_url, db=sg_db, doc_id=sg_docs[i]["id"], parent_revisions=sg_docs[i]["value"]["rev"],
                                new_revision="2-31fa9b", auth=session2)
 
