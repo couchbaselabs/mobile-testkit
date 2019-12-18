@@ -15,7 +15,7 @@ from requests.exceptions import HTTPError
 from keywords.utils import log_info
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.MobileRestClient import MobileRestClient
-from utilities.cluster_config_utils import persist_cluster_config_environment_prop
+from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
 
 NUM_ENDPOINTS = 13
 
@@ -47,7 +47,10 @@ def test_online_default_rest(params_from_base_test_setup, sg_conf_name, num_docs
     log_info("Using sg_conf: {}".format(sg_conf))
     log_info("Using num_docs: {}".format(num_docs))
 
-    persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', x509_cert_auth)
+    if x509_cert_auth:
+        temp_cluster_config = copy_to_temp_conf(cluster_conf, mode)
+        persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
+        cluster_conf = temp_cluster_config
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
@@ -458,7 +461,7 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll(params_from_ba
     seth = admin.register_user(target=cluster.sync_gateways[0], db="db", name="seth", password="password", channels=["ABC"])
     doc_pusher = admin.register_user(target=cluster.sync_gateways[0], db="db", name="doc_pusher", password="password", channels=["ABC"])
     sg_client = MobileRestClient()
-
+    bulk = False
     docs_in_changes = dict()
     doc_add_errors = list()
 
@@ -469,7 +472,7 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll(params_from_ba
         if sg_platform == "windows":
             futures[executor.submit(sg_client.take_db_offline, cluster_conf, "db")] = "db_offline_task"
         time.sleep(5)
-        futures[executor.submit(doc_pusher.add_docs, num_docs)] = "docs_push"
+        futures[executor.submit(doc_pusher.add_docs, num_docs, bulk)] = "docs_push"
         if sg_platform != "windows":
             futures[executor.submit(sg_client.take_db_offline, cluster_conf, "db")] = "db_offline_task"
 
@@ -842,7 +845,7 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
     error_responses.extend(add_docs_errors)
 
     # POST /{db}/_bulk_docs
-    bulk_doc_errors = user.add_docs(num_docs=num_docs, bulk=True)
+    bulk_doc_errors = user.add_docs(num_docs=num_docs, bulk=False)
     error_responses.extend(bulk_doc_errors)
 
     # POST /{db}/

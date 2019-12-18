@@ -16,7 +16,7 @@ from concurrent.futures import ThreadPoolExecutor
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords import document, attachment
 from libraries.testkit import cluster
-from utilities.cluster_config_utils import persist_cluster_config_environment_prop
+from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
 
 
 @pytest.fixture(scope="function")
@@ -66,6 +66,7 @@ def test_replication_configuration_valid_values(params_from_base_test_setup, num
     sg_config = params_from_base_test_setup["sg_config"]
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
+    mode = params_from_base_test_setup["mode"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
 
     if sync_gateway_version < "2.0.0":
@@ -80,9 +81,9 @@ def test_replication_configuration_valid_values(params_from_base_test_setup, num
 
     # Reset cluster to ensure no data in system
     if x509_cert_auth:
-        persist_cluster_config_environment_prop(cluster_config, 'x509_certs', True)
-    else:
-        persist_cluster_config_environment_prop(cluster_config, 'x509_certs', False)
+        temp_cluster_config = copy_to_temp_conf(cluster_config, mode)
+        persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
+        cluster_config = temp_cluster_config
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
 
@@ -636,6 +637,7 @@ def test_CBL_tombstone_doc(params_from_base_test_setup, num_of_docs, x509_cert_a
     sg_config = params_from_base_test_setup["sg_config"]
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
+    mode = params_from_base_test_setup["mode"]
 
     if sync_gateway_version < "2.0":
         pytest.skip('--no-conflicts is enabled and does not work with sg < 2.0 , so skipping the test')
@@ -645,9 +647,9 @@ def test_CBL_tombstone_doc(params_from_base_test_setup, num_of_docs, x509_cert_a
 
     # Modify sync-gateway config to use no-conflicts config
     if x509_cert_auth:
-        persist_cluster_config_environment_prop(cluster_config, 'x509_certs', True)
-    else:
-        persist_cluster_config_environment_prop(cluster_config, 'x509_certs', False)
+        temp_cluster_config = copy_to_temp_conf(cluster_config, mode)
+        persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
+        cluster_config = temp_cluster_config
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
 
@@ -3501,9 +3503,9 @@ def test_doc_removal_with_multipleChannels(params_from_base_test_setup, setup_cu
             userB -> channel_B,
             userC-> channel_C
         2. create docs in SGW
-            doc a with channel_A, channel_B ;
+            doca with channel_A, channel_B ;
             docb with channel_B ,
-            docc with Channel_A, channel_B, channel_C
+            docc with channel_C
         3. Verify User A can access docA and docC.
             docB by UserB, UserA
             docC by user A, user C

@@ -8,6 +8,10 @@ from libraries.testkit.cluster import Cluster
 from libraries.testkit.verify import verify_changes
 from libraries.testkit.verify import verify_same_docs
 from libraries.testkit.verify import verify_docs_removed
+from keywords.MobileRestClient import MobileRestClient
+from libraries.data import doc_generators
+from requests.exceptions import HTTPError
+from keywords import document
 
 import libraries.testkit.settings
 
@@ -16,7 +20,7 @@ from keywords.SyncGateway import sync_gateway_config_path_for_mode
 
 
 # https://github.com/couchbase/sync_gateway/issues/1524
-from utilities.cluster_config_utils import persist_cluster_config_environment_prop
+from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
 
 
 @pytest.mark.syncgateway
@@ -120,7 +124,10 @@ def test_sync_access_sanity(params_from_base_test_setup, sg_conf_name, x509_cert
     log_info("Running 'sync_access_sanity'")
     log_info("Using cluster_conf: {}".format(cluster_conf))
     log_info("Using sg_conf: {}".format(sg_conf))
-    persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', x509_cert_auth)
+    if x509_cert_auth:
+        temp_cluster_config = copy_to_temp_conf(cluster_conf, mode)
+        persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
+        cluster_conf = temp_cluster_config
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
     admin = Admin(cluster.sync_gateways[0])
@@ -473,8 +480,9 @@ def test_sync_require_roles(params_from_base_test_setup, sg_conf_name):
     tv_channel_no_roles_user = admin.register_user(target=cluster.sync_gateways[0], db="db", name="bad_tv_user", password="password", channels=tv_stations)
 
     # Should not be allowed
-    radio_channels_no_roles_user.add_docs(13, name_prefix="bad_doc")
-    tv_channel_no_roles_user.add_docs(26, name_prefix="bad_doc")
+    bulk = False
+    radio_channels_no_roles_user.add_docs(13, name_prefix="bad_doc", bulk=bulk)
+    tv_channel_no_roles_user.add_docs(26, name_prefix="bad_doc", bulk=bulk)
 
     read_only_user_caches = [radio_channels_no_roles_user.cache, tv_channel_no_roles_user.cache]
     read_only_user_docs = {k: v for cache in read_only_user_caches for k, v in cache.items()}
@@ -507,3 +515,45 @@ def test_sync_require_roles(params_from_base_test_setup, sg_conf_name):
         assert not k.startswith("bad_doc")
 
     verify_changes(mogul, expected_num_docs=expected_num_radio_docs + expected_num_tv_docs, expected_num_revisions=0, expected_docs=all_docs)
+
+
+@pytest.mark.syncgateway
+@pytest.mark.parametrize('sg_conf_name', [
+    'sync_gateway_default_functional_tests'
+])
+def test_sync_20mb(params_from_base_test_setup, sg_conf_name):
+    """
+    @summary:
+    1. Create a doc with 20MB
+    2. Verify it throws an error with 413 error code while syncing up with Couchbase server
+    """
+
+    cluster_conf = params_from_base_test_setup['cluster_config']
+    cluster_topology = params_from_base_test_setup['cluster_topology']
+    mode = params_from_base_test_setup['mode']
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
+    sg_url = cluster_topology['sync_gateways'][0]['public']
+    sg_db = "db"
+    channels = ['shared']
+
+    log_info('sg_conf: {}'.format(sg_conf))
+    log_info('sg_admin_url: {}'.format(sg_admin_url))
+    log_info('sg_url: {}'.format(sg_url))
+
+    cluster = Cluster(config=cluster_conf)
+    cluster.reset(sg_config_path=sg_conf)
+
+    # Create sg user
+    sg_client = MobileRestClient()
+    sg_client.create_user(url=sg_admin_url, db=sg_db, name='autotest', password='pass', channels=channels)
+    session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest', password='pass')
+
+    sg_doc_body = doc_generators.doc_size_byBytes(22000000)
+    doc_id = "20mb_doc"
+    doc = document.create_doc(doc_id, content=sg_doc_body, channels=channels)
+    try:
+        sg_client.add_doc(url=sg_url, db=sg_db, doc=doc, auth=session)
+    except HTTPError as h:
+        assert "413 Client Error: Request Entity Too Large for url" in h.message, "did not throw 413 client error"

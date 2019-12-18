@@ -1,5 +1,6 @@
 # Remove sync_gateway package
 - name: SYNC GATEWAY | Uninstall sync_gateway
+  ignore_errors: yes
   win_command: wmic product where name='Couchbase Sync Gateway' call uninstall
 
 # Delete sync_gateway binary

@@ -39,9 +39,13 @@ def params_from_base_suite_setup(request):
     sa_installer_type = request.config.getoption("--sa-installer-type")
     delta_sync_enabled = request.config.getoption("--delta-sync")
     sg_platform = request.config.getoption("--sg-platform")
+    delta_sync_enabled = request.config.getoption("--delta-sync")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
+
+    if delta_sync_enabled and sync_gateway_version < "2.5":
+        raise FeatureSupportedError('Delta sync feature not available for sync-gateway version below 2.5, so skipping the test')
 
     log_info("server_version: {}".format(server_version))
     log_info("sync_gateway_version: {}".format(sync_gateway_version))

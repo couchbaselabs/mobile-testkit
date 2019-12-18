@@ -1,4 +1,4 @@
-# Fetch sync gateway logs for CentOS
+# Fetch sync gateway logs for Windows
 - name: SYNC GATEWAY | Check if sync_gateway_error.log is present on Windows
   win_stat:
     path: 'C:\PROGRA~2\Couchbase\\var\lib\couchbase\logs\sync_gateway_error.log'
