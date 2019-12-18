@@ -199,7 +199,7 @@ class TestServeriOS(TestServerBase):
                     "xcrun", "simctl", "spawn", "booted", "launchctl", "print", "system"
                 ], stdout=subprocess.PIPE)
                 output = subprocess.check_output(('grep', 'com.apple.springboard.services'), stdin=output.stdout)
-                output = re.sub(' +', ' ', output).strip()
+                output = re.sub(' +', ' ', output.decode()).strip()
                 status = output.split(" ")[2]
                 if status == "A":
                     log_info("iPhone Simulator seems to have booted up")
@@ -214,7 +214,7 @@ class TestServeriOS(TestServerBase):
         output = subprocess.check_output(('grep', 'Booted'), stdin=list_output.stdout)
         for line in output.splitlines():
             if "Phone" in line:
-                self.device_id = re.sub(' +', ' ', line).strip()
+                self.device_id = re.sub(' +', ' ', line.decode()).strip()
                 self.device_id = self.device_id.split(" ")[3]
                 self.device_id = self.device_id.strip('(')
                 self.device_id = self.device_id.strip(')')
