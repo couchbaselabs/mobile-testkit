@@ -181,7 +181,7 @@ class TestServeriOS(TestServerBase):
         log_info(output)
         list_output = subprocess.Popen(["xcrun", "simctl", "list"], stdout=subprocess.PIPE)
         output = subprocess.check_output(('grep', 'Booted'), stdin=list_output.stdout)
-        if len(output.splitlines()) > 0:
+        if len(output.decode().splitlines()) > 0:
             # Wait for the device to boot up
             # We check the status of the simulator using the command
             # xcrun simctl spawn booted launchctl print system | grep com.apple.springboard.services
@@ -235,7 +235,7 @@ class TestServeriOS(TestServerBase):
         output = subprocess.check_output(["ios-deploy", "--list_bundle_id"])
         log_info(output)
 
-        if self.bundle_id in output:
+        if self.bundle_id in output.decode():
             raise LiteServError("CBLTestServer-iOS is still present after uninstall")
 
     def remove(self):
@@ -257,7 +257,7 @@ class TestServeriOS(TestServerBase):
             "xcrun", "simctl", "erase", self.device_id
         ])
 
-        if self.bundle_id in output:
+        if self.bundle_id in output.decode():
             raise LiteServError("{} is still present after uninstall".format(self.bundle_id))
 
     def start(self, logfile_name):
@@ -357,5 +357,5 @@ class TestServeriOS(TestServerBase):
             output = subprocess.check_output(["xcrun", "simctl", "launch", "booted", self.bundle_id])
         else:
             output = subprocess.check_output(["ios-deploy", "--justlaunch", "--bundle", self.app_path])
-        log_info("output of open app is {}".format(output))
+        log_info("output of open app is {}".format(output.decode()))
         time.sleep(5)
