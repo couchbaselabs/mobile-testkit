@@ -11,7 +11,7 @@ from keywords.SyncGateway import SyncGateway, sync_gateway_config_path_for_mode,
 from keywords.utils import log_info, add_cbs_to_sg_config_server_field, host_for_url
 from libraries.testkit.cluster import Cluster
 from utilities.cluster_config_utils import is_cbs_ssl_enabled, get_sg_replicas, get_sg_use_views, get_sg_version, \
-    persist_cluster_config_environment_prop
+    persist_cluster_config_environment_prop, copy_to_temp_conf
 
 
 def load_sync_gateway_config(sync_gateway_config, mode, server_url, xattrs_enabled, cluster_config):
@@ -93,7 +93,10 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name, 
     log_info("Using cluster_conf: {}".format(cluster_conf))
     log_info("Using sg_conf: {}".format(sg_conf))
 
-    persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', x509_cert_auth)
+    if x509_cert_auth:
+        temp_cluster_config = copy_to_temp_conf(cluster_conf, mode)
+        persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
+        cluster_conf = temp_cluster_config
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
