@@ -142,7 +142,7 @@ class TestServeriOS(TestServerBase):
         output = subprocess.check_output(["ios-deploy", "--list_bundle_id"])
         log_info(output)
 
-        if self.bundle_id not in output:
+        if self.bundle_id not in output.decode():
             raise LiteServError("Could not install CBLTestServer-iOS")
 
         self.stop()
