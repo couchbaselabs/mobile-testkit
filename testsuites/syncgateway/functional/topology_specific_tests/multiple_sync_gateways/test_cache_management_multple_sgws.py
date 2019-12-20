@@ -82,7 +82,7 @@ def test_importdocs_false_shared_bucket_access_true(params_from_base_test_setup)
     sg_client.get_changes(url=sg2.admin.admin_url, db=sg_db, auth=None, since=0)
     sg1_expvars = sg_client.get_expvars(sg1.admin.admin_url)
     sg2_expvars = sg_client.get_expvars(sg2.admin.admin_url)
-    
+
     # 6. Verify import_count on SG1 should show 0
     is_import_count_available = 0
     try:
@@ -90,7 +90,7 @@ def test_importdocs_false_shared_bucket_access_true(params_from_base_test_setup)
     except KeyError:
         is_import_count_available = 1
     assert is_import_count_available == 1, "import_count appears on sync gateway node"
-    
+
     # 7. Verify import_count on SGW2 should show the number matches with num of docs
     sg2_import_count = sg2_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"]
     assert sg2_import_count == num_docs, "import count should be equal to number of docs"

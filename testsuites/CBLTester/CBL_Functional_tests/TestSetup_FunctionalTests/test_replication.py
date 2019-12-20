@@ -12,7 +12,6 @@ from CBLClient.Replication import Replication
 from CBLClient.Document import Document
 from CBLClient.Authenticator import Authenticator
 from concurrent.futures import ThreadPoolExecutor
-from libraries.testkit.admin import Admin
 
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords import document, attachment
@@ -3664,16 +3663,16 @@ def test_doc_removal_with_multipleChannels(params_from_base_test_setup, setup_cu
 def test_roles_replication(params_from_base_test_setup):
     """
         @summary:
-        1. Create user. 
+        1. Create user.
         2. Create 2 roles with 2 differrent channels.
         3. Create docs on SGW in both channels.
-        4. Do pull replication from SGW . 
+        4. Do pull replication from SGW .
         5. Verify docs got replicated to CBL dB from only one channel
         6. Add 2nd role to the user .
-        8. Add new docs to SGW in both channels. 
+        8. Add new docs to SGW in both channels.
         9.Continue to pull replication from SGW .
         10.Verify all new docs got replicated from both channels
- 
+
     """
     sg_db = "db"
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
@@ -3749,6 +3748,7 @@ def test_roles_replication(params_from_base_test_setup):
     cbl_doc_ids = db.getDocIds(cbl_db)
     print " all cbl doc ids are ", cbl_doc_ids
     assert len(cbl_doc_ids) == num_docs * 3, "new docs which created in sgw after role change got replicated to cbl"
+
 
 @pytest.mark.listener
 @pytest.mark.replication
@@ -3827,7 +3827,7 @@ def test_channel_update_replication(params_from_base_test_setup):
     replicator.wait_until_replicator_idle(repl)
     replicator.stop(repl)
 
-    # 8. CBL should not get any new docs which created at step 
+    # 8. CBL should not get any new docs which created at step
     cbl_doc_ids = db.getDocIds(cbl_db)
     assert len(cbl_doc_ids) == num_docs, "new docs which created in sgw after role change got replicated to cbl"
     for id in cbl_doc_ids:

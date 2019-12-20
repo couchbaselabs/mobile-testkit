@@ -819,7 +819,7 @@ def create_sync_gateways(cluster_config, sg_config_path):
 
     """
     @summary:
-    Get the ips from cluster config and generate two sync gateways and return the objects 
+    Get the ips from cluster config and generate two sync gateways and return the objects
     """
     cluster = Cluster(config=cluster_config)
     cluster.reset(sg_config_path=sg_config_path)
@@ -844,4 +844,3 @@ def create_docs_via_sdk(cbs_url, cbs_cluster, bucket_name, num_docs):
 
     log_info("Adding docs done on CBS")
     return sdk_docs, sdk_client
-
