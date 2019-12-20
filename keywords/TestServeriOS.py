@@ -86,7 +86,7 @@ class TestServeriOS(TestServerBase):
             app_name = self.app
 
         expected_binary_path = "{}/{}/{}".format(BINARY_DIR, self.app_dir, app_name)
-        if os.path.isfile(expected_binary_path):
+        if os.path.exists(expected_binary_path):
             log_info("Package is already downloaded. Skipping.")
             return
 

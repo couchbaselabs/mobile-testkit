@@ -759,29 +759,34 @@ class CouchbaseServer:
             connection_str = "couchbase://{}/{}".format(self.host, bucket_name)
         return Bucket(connection_str, password='password')
 
-    def get_package_name(self, version, build_number, cbs_platform="centos7"):
+    def get_package_name(self, version, build_number, cbs_platform="centos7", cbs_ce=False):
         """
         Given:
         version - the version without any build number information, eg 4.5.0
         build_number - the build number associated with this major version release, eg, 2601 (or None)
         Return the filename portion of the package download URL
         """
+        if cbs_ce:
+            edition = "community"
+        else:
+            edition = "enterprise"
+
         if "ubuntu" in cbs_platform:
             if version.startswith("3.1.6"):
-                return "couchbase-server-enterprise-{}-{}.x86_64.deb".format(version, cbs_platform)
+                return "couchbase-server-{}-{}-{}.x86_64.deb".format(edition, version, cbs_platform)
             elif version.startswith("3.1"):
-                return "couchbase-server-enterprise_{}_x86_64_{}-{}-rel.deb".format(cbs_platform, version, build_number)
+                return "couchbase-server-{}_{}_x86_64_{}-{}-rel.deb".format(edition, cbs_platform, version, build_number)
             else:
-                return "couchbase-server-enterprise_{}-{}-{}_amd64.deb".format(version, build_number, cbs_platform)
+                return "couchbase-server-{}_{}-{}-{}_amd64.deb".format(edition, version, build_number, cbs_platform)
         elif "centos" in cbs_platform:
             if version.startswith("3.1.6"):
-                return "couchbase-server-enterprise-{}-{}.x86_64.rpm".format(version, cbs_platform)
+                return "couchbase-server-{}-{}-{}.x86_64.rpm".format(edition, version, cbs_platform)
             elif version.startswith("3.1"):
-                return "couchbase-server-enterprise_{}_x86_64_{}-{}-rel.rpm".format(cbs_platform, version, build_number)
+                return "couchbase-server-{}_{}_x86_64_{}-{}-rel.rpm".format(edition, cbs_platform, version, build_number)
             else:
-                return "couchbase-server-enterprise-{}-{}-{}.x86_64.rpm".format(version, build_number, cbs_platform)
+                return "couchbase-server-{}-{}-{}-{}.x86_64.rpm".format(edition, version, build_number, cbs_platform)
 
-    def resolve_cb_nas_url(self, version, build_number, cbs_platform="centos7"):
+    def resolve_cb_nas_url(self, version, build_number, cbs_platform="centos7", cbs_ce=False):
         """
         Resolve a download URL for couchbase server on the internal VPN download site
         Given:
@@ -809,12 +814,11 @@ class CouchbaseServer:
         else:
             raise Exception(
                 "Unexpected couchbase server version: {}".format(version))
-        package_name = self.get_package_name(
-            version, build_number, cbs_platform)
+        package_name = self.get_package_name(version, build_number, cbs_platform, cbs_ce=cbs_ce)
 
         return base_url, package_name
 
-    def resolve_cb_mobile_url(self, version, cbs_platform="centos7"):
+    def resolve_cb_mobile_url(self, version, cbs_platform="centos7", cbs_ce=False):
         """
         Resolve a download URL for the corresponding package to given
         version on http://cbmobile-packages.s3.amazonaws.com (an S3 bucket
@@ -845,7 +849,7 @@ class CouchbaseServer:
         }
         build_number = released_versions[version]
         base_url = "http://cbmobile-packages.s3.amazonaws.com"
-        package_name = self.get_package_name(version, build_number, cbs_platform)
+        package_name = self.get_package_name(version, build_number, cbs_platform, cbs_ce=cbs_ce)
         return base_url, package_name
 
     def upgrade_server(self, cluster_config, server_version_build, cbs_platform, target=None, toy_build=None):
@@ -901,4 +905,4 @@ class CouchbaseServer:
     def load_sample_bucket(self, sample_bucket):
         """ Loads a given sample bucket """
         log_info("Enabling sample bucket {}".format(sample_bucket))
-        self.remote_executor.must_execute('sudo /opt/couchbase/bin/cbdocloader -c localhost:8091 -u Administrator -p password -b {} -m 100 -d /opt/couchbase/samples/{}.zip'.format(sample_bucket, sample_bucket))
+        self.remote_executor.must_execute('sudo /opt/couchbase/bin/cbdocloader -c localhost:8091 -u Administrator -p password -b {} -m 200 -d /opt/couchbase/samples/{}.zip'.format(sample_bucket, sample_bucket))

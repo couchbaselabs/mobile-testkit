@@ -77,3 +77,10 @@ def pytest_addoption(parser):
                      action="store",
                      help="Sync Gateway Platform binary to install (ex. centos or windows)",
                      default="centos")
+
+    parser.addoption("--delta-sync",
+                     action="store_true",
+                     help="delta-sync: Enable delta-sync for sync gateway")
+
+    parser.addoption("--cbs-ce", action="store_true",
+                     help="If set, community edition will get picked up , default is enterprise", default=False)

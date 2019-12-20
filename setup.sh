@@ -5,6 +5,11 @@
 # 3. Installs all pip packages required by this repo
 # 4. Adds custom library paths to your PYTHONPATH
 
+if [[ $_ == $0 ]]; then
+    echo "Source this script!  Do not run it!"
+    exit 1
+fi
+
 version=$(python -c 'import sys; print "{}.{}.{}".format(sys.version_info.major, sys.version_info.minor, sys.version_info.micro)')
 
 if [[ $version == 2.7.* ]]; then

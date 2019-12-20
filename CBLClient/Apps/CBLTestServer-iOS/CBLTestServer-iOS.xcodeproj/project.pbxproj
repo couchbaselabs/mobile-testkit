@@ -90,7 +90,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		41CFFB502202FBA900D0E1A8 /* Embed Frameworks */ = {
+		416AF9AD22D5CD9400395483 /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "";
@@ -406,7 +406,7 @@
 				29F77F1F1F9FC18D0035178F /* Sources */,
 				29F77F201F9FC18D0035178F /* Frameworks */,
 				29F77F211F9FC18D0035178F /* Resources */,
-				41CFFB502202FBA900D0E1A8 /* Embed Frameworks */,
+				416AF9AD22D5CD9400395483 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -511,9 +511,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				41CFFB4B2202D9FB00D0E1A8 /* CouchbaseLiteSwift.framework.dSYM in Resources */,
 				29F77F311F9FC18D0035178F /* LaunchScreen.storyboard in Resources */,
 				29F77F2E1F9FC18D0035178F /* Assets.xcassets in Resources */,
+				4186BA4622FACC5100A2073B /* CouchbaseLiteSwift.framework.dSYM in Resources */,
 				FB5934DA219CB5150000C958 /* sg_cert.cer in Resources */,
 				29F77F2C1F9FC18D0035178F /* Main.storyboard in Resources */,
 				2E8631EF229F2C8C00859424 /* Files in Resources */,

@@ -29,6 +29,7 @@ def params_from_base_suite_setup(request):
     xattrs_enabled = request.config.getoption("--xattrs")
     sg_lb = request.config.getoption("--sg-lb")
     sg_ce = request.config.getoption("--sg-ce")
+    cbs_ce = request.config.getoption("--cbs-ce")
     use_sequoia = request.config.getoption("--sequoia")
     no_conflicts_enabled = request.config.getoption("--no-conflicts")
     sg_ssl = request.config.getoption("--sg-ssl")
@@ -36,9 +37,15 @@ def params_from_base_suite_setup(request):
     number_replicas = request.config.getoption("--number-replicas")
     sg_installer_type = request.config.getoption("--sg-installer-type")
     sa_installer_type = request.config.getoption("--sa-installer-type")
+    delta_sync_enabled = request.config.getoption("--delta-sync")
+    sg_platform = request.config.getoption("--sg-platform")
+    delta_sync_enabled = request.config.getoption("--delta-sync")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
+
+    if delta_sync_enabled and sync_gateway_version < "2.5":
+        raise FeatureSupportedError('Delta sync feature not available for sync-gateway version below 2.5, so skipping the test')
 
     log_info("server_version: {}".format(server_version))
     log_info("sync_gateway_version: {}".format(sync_gateway_version))
@@ -55,6 +62,8 @@ def params_from_base_suite_setup(request):
     log_info("number_replicas: {}".format(number_replicas))
     log_info("sg_installer_type: {}".format(sg_installer_type))
     log_info("sa_installer_type: {}".format(sa_installer_type))
+    log_info("delta_sync_enabled: {}".format(delta_sync_enabled))
+    log_info("sg_platform: {}".format(sg_platform))
 
     # sg-ce is invalid for di mode
     if mode == "di" and sg_ce:
@@ -131,12 +140,28 @@ def params_from_base_suite_setup(request):
         log_info("Running test with sync_gateway version {}".format(sync_gateway_version))
         persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_version', sync_gateway_version)
 
+    try:
+        sg_platform
+    except NameError:
+        log_info("sg platform  is not provided, so by default it runs on Centos")
+        persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "centos", False)
+    else:
+        log_info("Running test with sg platform {}".format(sg_platform))
+        persist_cluster_config_environment_prop(cluster_config, 'sg_platform', sg_platform, False)
+
     if no_conflicts_enabled:
         log_info("Running with no conflicts")
         persist_cluster_config_environment_prop(cluster_config, 'no_conflicts_enabled', True)
     else:
         log_info("Running with allow conflicts")
         persist_cluster_config_environment_prop(cluster_config, 'no_conflicts_enabled', False)
+
+    if delta_sync_enabled:
+        log_info("Running with delta sync")
+        persist_cluster_config_environment_prop(cluster_config, 'delta_sync_enabled', True)
+    else:
+        log_info("Running without delta sync")
+        persist_cluster_config_environment_prop(cluster_config, 'delta_sync_enabled', False)
 
     if sync_gateway_version < "2.0.0" and no_conflicts_enabled:
         pytest.skip("Test cannot run with no-conflicts with sg version < 2.0.0")
@@ -156,6 +181,7 @@ def params_from_base_suite_setup(request):
                 sync_gateway_config=sg_config,
                 race_enabled=race_enabled,
                 sg_ce=sg_ce,
+                cbs_ce=cbs_ce,
                 sg_installer_type=sg_installer_type,
                 sa_installer_type=sa_installer_type
             )

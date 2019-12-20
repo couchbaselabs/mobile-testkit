@@ -76,7 +76,7 @@ class PeerToPeer(object):
 
     def configure(self, host, server_db_name, client_database, port=5000, continuous=None, authenticator=None,
                   replication_type=None, documentIDs=None, endPointType="MessageEndPoint",
-                  push_filter=False, pull_filter=False, filter_callback_func=''):
+                  push_filter=False, pull_filter=False, filter_callback_func='', conflict_resolver=""):
         args = Args()
         args.setString("host", host)
         args.setInt("port", port)
@@ -85,6 +85,7 @@ class PeerToPeer(object):
         args.setBoolean("push_filter", push_filter)
         args.setBoolean("pull_filter", pull_filter)
         args.setString("filter_callback_func", filter_callback_func)
+        args.setString("conflict_resolver", conflict_resolver)
         if authenticator is not None:
             args.setMemoryPointer("authenticator", authenticator)
         if replication_type is not None:

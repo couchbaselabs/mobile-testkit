@@ -206,6 +206,13 @@ def check_xattr_support(server_version, sync_gateway_version):
         raise FeatureSupportedError('Make sure you are using Coucbhase Sync Gateway 1.5+ for xattrs')
 
 
+def check_delta_sync_support(sync_gateway_version, liteserv_version):
+    if sync_gateway_version < "2.5.0":
+        raise FeatureSupportedError('Make sure you are using Coucbhase Sync Gateway 2.5+ for delta sync')
+    if liteserv_version < "2.5.0":
+        raise FeatureSupportedError('Make sure you are using Coucbhase Lite 2.5+ for delta sync')
+
+
 def add_cbs_to_sg_config_server_field(cluster_config):
     """ This method get all CBS servers ips from cluster config and
        it as server in sync gateway config file . Each ip is seperated
@@ -299,7 +306,14 @@ def compare_docs(cbl_db, db, docs_dict):
         assert deep_dict_compare(doc["doc"], cbl_db_docs[key]), "mismatch in the dictionary"
 
 
-def compare_generic_types(object1, object2):
+def compare_generic_types(object1, object2, isPredictiveResult=False):
+    """
+    @summary:
+    A method to compare generic type of objects with an option of making approximate comparison.
+    If isPredictiveResult flag is enabled, some large numbers are considered equal if the difference is tolerable.
+    @return:
+    true if equals, false otherwise
+    """
     if object1 is None and object2 is None:
         return True
     if isinstance(object1, str) and isinstance(object2, str):
@@ -315,7 +329,10 @@ def compare_generic_types(object1, object2):
     elif isinstance(object1, float) and isinstance(object2, float):
         return object1 == object2
     elif isinstance(object1, float) and isinstance(object2, int):
-        return object1 == float(object2)
+        if isPredictiveResult:
+            return abs(object1 - object2) < 100
+        else:
+            return object1 == float(object2)
     elif isinstance(object1, int) and isinstance(object2, float):
         return object1 == int(float(object2))
     elif isinstance(object1, long) and isinstance(object2, int):
@@ -323,7 +340,10 @@ def compare_generic_types(object1, object2):
     elif isinstance(object1, int) and isinstance(object2, long):
         return object1 == int(object2)
     elif isinstance(object1, float) and isinstance(object2, long):
-        return object1 == float(object2)
+        if isPredictiveResult:
+            return abs(object1 - object2) < 100
+        else:
+            return object1 == float(object2)
     elif isinstance(object1, long) and isinstance(object2, float):
         return object1 == long(float(object2))
     elif isinstance(object1, str) and isinstance(object2, unicode):
@@ -333,24 +353,31 @@ def compare_generic_types(object1, object2):
     return False
 
 
-def deep_list_compare(object1, object2):
+def deep_list_compare(object1, object2, isPredictiveResult=False):
+    """
+    @summary:
+    A method to compare two lists with an option of forwarding
+    an approximate comparison flag to compare_generic_types function
+    @return:
+    true if equals, false otherwise
+    """
     retval = True
     count = len(object1)
     object1 = sorted(object1)
     object2 = sorted(object2)
     for x in range(count):
         if isinstance(object1[x], dict) and isinstance(object2[x], dict):
-            retval = deep_dict_compare(object1[x], object2[x])
+            retval = deep_dict_compare(object1[x], object2[x], isPredictiveResult)
             if retval is False:
                 log_info("Unable to match element in dict {} and {}".format(object1, object2))
                 return False
         elif isinstance(object1[x], list) and isinstance(object2[x], list):
-            retval = deep_list_compare(object1[x], object2[x])
+            retval = deep_list_compare(object1[x], object2[x], isPredictiveResult)
             if retval is False:
                 log_info("Unable to match element in list {} and {}".format(object1[x], object2[x]))
                 return False
         else:
-            retval = compare_generic_types(object1[x], object2[x])
+            retval = compare_generic_types(object1[x], object2[x], isPredictiveResult)
             if retval is False:
                 log_info("Unable to match objects in generic {} and {}".format(object1[x], object2[x]))
                 return False
@@ -358,7 +385,14 @@ def deep_list_compare(object1, object2):
     return retval
 
 
-def deep_dict_compare(object1, object2):
+def deep_dict_compare(object1, object2, isPredictiveResult=False):
+    """
+    @summary:
+    A method to compare two dictionaries with an option of forwarding
+    an approximate comparison flag to compare_generic_types function.
+    @return:
+    true if equals, false otherwise
+    """
     retval = True
     if len(object1) != len(object2):
         log_info("lengths of sgw object and cbl object are different {} --- {}".format(len(object1), len(object2)))
@@ -369,18 +403,18 @@ def deep_dict_compare(object1, object2):
         obj1 = object1[k]
         obj2 = object2[k]
         if isinstance(obj1, list) and isinstance(obj2, list):
-            retval = deep_list_compare(obj1, obj2)
+            retval = deep_list_compare(obj1, obj2, isPredictiveResult)
             if retval is False:
                 log_info("mismatch between sgw: {} and cbl lists :{}".format(obj1, obj2))
                 return False
 
         elif isinstance(obj1, dict) and isinstance(obj2, dict):
-            retval = deep_dict_compare(obj1, obj2)
+            retval = deep_dict_compare(obj1, obj2, isPredictiveResult)
             if retval is False:
                 log_info("mismatch between sgw: {} and cbl dict :{}".format(obj1, obj2))
                 return False
         else:
-            retval = compare_generic_types(obj1, obj2)
+            retval = compare_generic_types(obj1, obj2, isPredictiveResult)
             if retval is False:
                 log_info("mismatch {} and {}".format(obj1, obj2))
                 return False

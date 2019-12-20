@@ -11,6 +11,7 @@ import requests
 
 from keywords.utils import log_info
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
+from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
 
 
 @pytest.mark.sanity
@@ -19,13 +20,14 @@ from keywords.SyncGateway import sync_gateway_config_path_for_mode
 @pytest.mark.channel
 @pytest.mark.bulkops
 @pytest.mark.changes
-@pytest.mark.parametrize("sg_conf_name, num_docs, user_channels, filter, limit", [
-    ("sync_gateway_channel_cache", 5000, "*", True, 50),
-    ("sync_gateway_channel_cache", 1000, "*", True, 50),
-    ("sync_gateway_channel_cache", 1000, "ABC", False, 50),
-    ("sync_gateway_channel_cache", 1000, "ABC", True, 50),
+@pytest.mark.parametrize("sg_conf_name, num_docs, user_channels, filter, limit, x509_cert_auth", [
+    ("sync_gateway_channel_cache", 5000, "*", True, 50, False),
+    ("sync_gateway_channel_cache", 1000, "*", True, 50, True),
+    ("sync_gateway_channel_cache", 1000, "ABC", False, 50, True),
+    ("sync_gateway_channel_cache", 1000, "ABC", True, 50, False),
 ])
-def test_overloaded_channel_cache(params_from_base_test_setup, sg_conf_name, num_docs, user_channels, filter, limit):
+def test_overloaded_channel_cache(params_from_base_test_setup, sg_conf_name, num_docs, user_channels,
+                                  filter, limit, x509_cert_auth):
 
     """
     The purpose of this test is to verify that channel cache backfill via view queries is working properly.
@@ -59,6 +61,11 @@ def test_overloaded_channel_cache(params_from_base_test_setup, sg_conf_name, num
     log_info("Using filter: {}".format(filter))
     log_info("Using limit: {}".format(limit))
 
+    if x509_cert_auth:
+        temp_cluster_config = copy_to_temp_conf(cluster_conf, mode)
+        persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
+        cluster_conf = temp_cluster_config
+
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
 
@@ -66,11 +73,11 @@ def test_overloaded_channel_cache(params_from_base_test_setup, sg_conf_name, num
 
     admin = Admin(target_sg)
 
-    users = admin.register_bulk_users(target_sg, "db", "user", 1000, "password", [user_channels])
+    users = admin.register_bulk_users(target_sg, "db", "user", 1000, "password", [user_channels], num_of_workers=10)
     assert len(users) == 1000
 
     doc_pusher = admin.register_user(target_sg, "db", "abc_doc_pusher", "password", ["ABC"])
-    doc_pusher.add_docs(num_docs, bulk=True)
+    doc_pusher.add_docs(num_docs)
 
     # Give a few seconds to let changes register
     time.sleep(2)
