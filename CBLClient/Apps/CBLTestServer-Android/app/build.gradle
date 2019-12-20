@@ -82,4 +82,9 @@ dependencies {
     implementation 'org.nanohttpd:nanohttpd:2.3.2-SNAPSHOT'
 
     implementation "com.couchbase.lite:couchbase-lite-android-ee:${COUCHBASE_LITE_VERSION}"
+
+    testImplementation 'junit:junit:4.12'
+
+    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation "com.android.support.test.espresso:espresso-core:3.0.2"
 }
