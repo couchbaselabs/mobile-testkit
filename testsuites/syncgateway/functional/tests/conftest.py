@@ -143,6 +143,9 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="delta-sync: Enable delta-sync for sync gateway")
 
+    parser.addoption("--cbs-ce", action="store_true",
+                     help="If set, community edition will get picked up , default is enterprise", default=False)
+
 
 # This will be called once for the at the beggining of the execution in the 'tests/' directory
 # and will be torn down, (code after the yeild) when all the test session has completed.
@@ -169,6 +172,7 @@ def params_from_base_suite_setup(request):
     sa_installer_type = request.config.getoption("--sa-installer-type")
     sg_lb = request.config.getoption("--sg-lb")
     sg_ce = request.config.getoption("--sg-ce")
+    cbs_ce = request.config.getoption("--cbs-ce")
     use_sequoia = request.config.getoption("--sequoia")
     no_conflicts_enabled = request.config.getoption("--no-conflicts")
     sg_ssl = request.config.getoption("--sg-ssl")
@@ -181,6 +185,9 @@ def params_from_base_suite_setup(request):
 
     if no_conflicts_enabled and sync_gateway_version < "2.0":
         raise FeatureSupportedError('No conflicts feature not available for sync-gateway version below 2.0, so skipping the test')
+
+    if delta_sync_enabled and sync_gateway_version < "2.5":
+        raise FeatureSupportedError('Delta sync feature not available for sync-gateway version below 2.5, so skipping the test')
 
     log_info("server_version: {}".format(server_version))
     log_info("sync_gateway_version: {}".format(sync_gateway_version))
@@ -199,6 +206,7 @@ def params_from_base_suite_setup(request):
     log_info("no_conflicts_enabled: {}".format(no_conflicts_enabled))
     log_info("use_views: {}".format(use_views))
     log_info("number_replicas: {}".format(number_replicas))
+    log_info("delta_sync_enabled: {}".format(delta_sync_enabled))
 
     # sg-ce is invalid for di mode
     if mode == "di" and sg_ce:
@@ -218,7 +226,6 @@ def params_from_base_suite_setup(request):
             cluster_config = "{}/base_lb_{}".format(CLUSTER_CONFIGS_DIR, mode)
 
     log_info("Using '{}' config!".format(cluster_config))
-    cluster_utils = ClusterKeywords(cluster_config)
 
     if sg_ssl:
         log_info("Enabling SSL on sync gateway")
@@ -324,7 +331,8 @@ def params_from_base_suite_setup(request):
                 sg_installer_type=sg_installer_type,
                 sa_platform=sa_platform,
                 sa_installer_type=sa_installer_type,
-                sg_ce=sg_ce
+                sg_ce=sg_ce,
+                cbs_ce=cbs_ce
             )
         except ProvisioningError:
             logging_helper = Logging()

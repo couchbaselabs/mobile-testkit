@@ -209,6 +209,7 @@ class ClusterKeywords:
             "2.1.0": "121",
             "2.1.1": "17",
             "2.1.2": "86",
+            "2.1.3.1": "2",
             "2.5.0": "271",
             "2.6.0": "127"
         }
@@ -246,7 +247,9 @@ class ClusterKeywords:
         cluster = Cluster(config=cluster_config)
         cluster.reset(sync_gateway_config)
 
-    def provision_cluster(self, cluster_config, server_version, sync_gateway_version, sync_gateway_config, race_enabled=False, sg_ce=False, cbs_platform="centos7", sg_platform="centos", sg_installer_type="msi", sa_platform="centos", sa_installer_type="msi"):
+    def provision_cluster(self, cluster_config, server_version, sync_gateway_version, sync_gateway_config, race_enabled=False,
+                          sg_ce=False, cbs_platform="centos7", sg_platform="centos", sg_installer_type="msi",
+                          sa_platform="centos", sa_installer_type="msi", cbs_ce=False):
         if server_version is None or sync_gateway_version is None or sync_gateway_version is None:
             raise ProvisioningError("Please make sure you have server_version, sync_gateway_version, and sync_gateway_config are set")
 
@@ -291,6 +294,7 @@ class ClusterKeywords:
             couchbase_server_config=cbs_config,
             sync_gateway_config=sg_config,
             sg_ce=sg_ce,
+            cbs_ce=cbs_ce,
             cbs_platform=cbs_platform,
             sg_platform=sg_platform,
             sg_installer_type=sg_installer_type,

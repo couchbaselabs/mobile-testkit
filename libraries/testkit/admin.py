@@ -86,13 +86,13 @@ class Admin:
 
         return User(target, db, name, password, channels)
 
-    def register_bulk_users(self, target, db, name_prefix, number, password, channels=list(), roles=list()):
+    def register_bulk_users(self, target, db, name_prefix, number, password, channels=list(), roles=list(), num_of_workers=settings.MAX_REQUEST_WORKERS):
 
         if type(channels) is not list:
             raise ValueError("Channels needs to be a list")
 
         users = []
-        with concurrent.futures.ThreadPoolExecutor(max_workers=settings.MAX_REQUEST_WORKERS) as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=num_of_workers) as executor:
             futures = [executor.submit(self.register_user, target=target, db=db, name="{}_{}".format(name_prefix, i), password=password, channels=channels, roles=roles) for i in range(number)]
             for future in concurrent.futures.as_completed(futures):
                 try:

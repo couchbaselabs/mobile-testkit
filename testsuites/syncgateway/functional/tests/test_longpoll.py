@@ -13,7 +13,7 @@ from libraries.testkit.verify import verify_same_docs
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.utils import log_info
 from keywords.MobileRestClient import MobileRestClient
-from utilities.cluster_config_utils import get_sg_version
+from utilities.cluster_config_utils import get_sg_version, persist_cluster_config_environment_prop, copy_to_temp_conf
 
 from keywords import document
 from keywords import userinfo
@@ -96,12 +96,12 @@ def test_longpoll_changes_parametrized(params_from_base_test_setup, sg_conf_name
 @pytest.mark.changes
 @pytest.mark.basicauth
 @pytest.mark.channel
-@pytest.mark.parametrize("sg_conf_name, num_docs, num_revisions", [
-    ("sync_gateway_default_functional_tests", 10, 10),
-    ("sync_gateway_default_functional_tests_no_port", 10, 10),
-    ("sync_gateway_default_functional_tests_couchbase_protocol_withport_11210", 10, 10)
+@pytest.mark.parametrize("sg_conf_name, num_docs, num_revisions, x509_cert_auth", [
+    ("sync_gateway_default_functional_tests", 10, 10, True),
+    ("sync_gateway_default_functional_tests_no_port", 10, 10, False),
+    ("sync_gateway_default_functional_tests_couchbase_protocol_withport_11210", 10, 10, False)
 ])
-def test_longpoll_changes_sanity(params_from_base_test_setup, sg_conf_name, num_docs, num_revisions):
+def test_longpoll_changes_sanity(params_from_base_test_setup, sg_conf_name, num_docs, num_revisions, x509_cert_auth):
 
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
@@ -125,6 +125,11 @@ def test_longpoll_changes_sanity(params_from_base_test_setup, sg_conf_name, num_
     log_info("sg_conf: {}".format(sg_conf))
     log_info("num_docs: {}".format(num_docs))
     log_info("num_revisions: {}".format(num_revisions))
+
+    if x509_cert_auth:
+        temp_cluster_config = copy_to_temp_conf(cluster_conf, mode)
+        persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
+        cluster_conf = temp_cluster_config
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)

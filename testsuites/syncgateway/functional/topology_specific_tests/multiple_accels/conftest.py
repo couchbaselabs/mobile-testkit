@@ -30,6 +30,7 @@ def params_from_base_suite_setup(request):
     xattrs_enabled = request.config.getoption("--xattrs")
     sg_lb = request.config.getoption("--sg-lb")
     sg_ce = request.config.getoption("--sg-ce")
+    cbs_ce = request.config.getoption("--cbs-ce")
     use_sequoia = request.config.getoption("--sequoia")
     no_conflicts_enabled = request.config.getoption("--no-conflicts")
     sg_ssl = request.config.getoption("--sg-ssl")
@@ -37,6 +38,7 @@ def params_from_base_suite_setup(request):
     number_replicas = request.config.getoption("--number-replicas")
     sg_installer_type = request.config.getoption("--sg-installer-type")
     sa_installer_type = request.config.getoption("--sa-installer-type")
+    delta_sync_enabled = request.config.getoption("--delta-sync")
     sg_platform = request.config.getoption("--sg-platform")
 
     log_info("server_version: {}".format(server_version))
@@ -54,6 +56,7 @@ def params_from_base_suite_setup(request):
     log_info("number_replicas: {}".format(number_replicas))
     log_info("sg_installer_type: {}".format(sg_installer_type))
     log_info("sa_installer_type: {}".format(sa_installer_type))
+    log_info("delta_sync_enabled: {}".format(delta_sync_enabled))
     log_info("sg_platform: {}".format(sg_platform))
 
     # sg-ce is invalid for di mode
@@ -76,7 +79,6 @@ def params_from_base_suite_setup(request):
     # use multiple_sg_accels_di
     cluster_config = "{}/multiple_sg_accels_di".format(keywords.constants.CLUSTER_CONFIGS_DIR)
     sg_config = "{}/sync_gateway_default_functional_tests_di.json".format(SYNC_GATEWAY_CONFIGS)
-    cluster_utils = ClusterKeywords(cluster_config)
 
     if sg_ssl:
         log_info("Enabling SSL on sync gateway")
@@ -145,6 +147,12 @@ def params_from_base_suite_setup(request):
         log_info("Running with allow conflicts")
         persist_cluster_config_environment_prop(cluster_config, 'no_conflicts_enabled', False)
 
+    if delta_sync_enabled:
+        log_info("Running with delta sync")
+        persist_cluster_config_environment_prop(cluster_config, 'delta_sync_enabled', True)
+    else:
+        log_info("Running without delta sync")
+        persist_cluster_config_environment_prop(cluster_config, 'delta_sync_enabled', False)
     try:
         sg_platform
     except NameError:
@@ -172,6 +180,7 @@ def params_from_base_suite_setup(request):
                 sync_gateway_config=sg_config,
                 race_enabled=race_enabled,
                 sg_ce=sg_ce,
+                cbs_ce=cbs_ce,
                 sg_installer_type=sg_installer_type,
                 sa_installer_type=sa_installer_type
             )
