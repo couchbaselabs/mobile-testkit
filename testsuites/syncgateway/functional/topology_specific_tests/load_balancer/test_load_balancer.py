@@ -5,10 +5,9 @@ from keywords.utils import log_info
 from keywords.MobileRestClient import MobileRestClient
 from keywords.ChangesTracker import ChangesTracker
 from keywords.ClusterKeywords import ClusterKeywords
-from keywords.SyncGateway import sync_gateway_config_path_for_mode
+from keywords.SyncGateway import sync_gateway_config_path_for_mode, create_docs_via_sdk
 from libraries.testkit import cluster
 from libraries.testkit.cluster import Cluster
-from testsuites.syncgateway.sgw_utilities import create_docs_via_sdk
 
 
 @pytest.mark.topospecific

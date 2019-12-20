@@ -2,7 +2,6 @@
     "interface":":4984",
     "adminInterface": "0.0.0.0:4985",
     "maxIncomingConnections": 0,
-    "maxCouchbaseConnections": 16,
     "maxFileDescriptors": 90000,
     "compressResponses": false,
     {{ sslcert }}

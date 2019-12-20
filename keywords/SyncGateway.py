@@ -19,6 +19,9 @@ from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled
 from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version, sg_ssl_enabled, get_cbs_version, is_delta_sync_enabled
 from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
 from libraries.testkit.cluster import Cluster
+from keywords.utils import host_for_url
+from couchbase.bucket import Bucket
+from keywords import document
 
 
 def validate_sync_gateway_mode(mode):
@@ -556,7 +559,7 @@ class SyncGateway(object):
 
         if is_cbs_ssl_enabled(cluster_config):
             self.server_port = 18091
-            self.server_scheme = "https"
+            self.server_scheme = "couchbases"
 
         if is_x509_auth(cluster_config):
             self.server_port = ""
@@ -668,7 +671,7 @@ class SyncGateway(object):
 
         if is_cbs_ssl_enabled(cluster_config):
             server_port = 18091
-            server_scheme = "https"
+            server_scheme = "couchbases"
 
         # Shared vars
         playbook_vars = {
@@ -814,9 +817,31 @@ class SyncGateway(object):
 
 def create_sync_gateways(cluster_config, sg_config_path):
 
+    """
+    @summary:
+    Get the ips from cluster config and generate two sync gateways and return the objects 
+    """
     cluster = Cluster(config=cluster_config)
     cluster.reset(sg_config_path=sg_config_path)
     sg1 = cluster.sync_gateways[0]
     sg2 = cluster.sync_gateways[1]
 
     return sg1, sg2
+
+
+def create_docs_via_sdk(cbs_url, cbs_cluster, bucket_name, num_docs):
+    cbs_host = host_for_url(cbs_url)
+    log_info("Adding docs via SDK...")
+    if cbs_cluster.ipv6:
+        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_host, bucket_name), password='password')
+    else:
+        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_host, bucket_name), password='password')
+    sdk_client.timeout = 600
+
+    sdk_doc_bodies = document.create_docs('doc_set_two', num_docs)
+    sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
+    sdk_client.upsert_multi(sdk_docs)
+
+    log_info("Adding docs done on CBS")
+    return sdk_docs, sdk_client
+

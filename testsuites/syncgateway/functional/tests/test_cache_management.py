@@ -183,7 +183,7 @@ def test_importPartitions_withSharedBucketAccessTrue(params_from_base_test_setup
     log_info('sg_admin_url: {}'.format(sg_admin_url))
     log_info('sg_url: {}'.format(sg_url))
     log_info('cbs_url: {}'.format(cbs_url))
-    if sync_gateway_version < "2.7.0" and xattrs_enabled:
+    if sync_gateway_version < "2.7.0" or xattrs_enabled:
         pytest.skip('This functionality does not work for the versions below 2.7.0 , it does not need to run if xattrs enabled')
 
     # 1. Configure SGW with import_partitions >=1 , but less than 128

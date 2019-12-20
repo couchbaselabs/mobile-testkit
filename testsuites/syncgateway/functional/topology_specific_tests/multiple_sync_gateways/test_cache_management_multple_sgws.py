@@ -3,14 +3,13 @@ import time
 
 from keywords.utils import log_info
 from libraries.testkit.cluster import Cluster
-from keywords.SyncGateway import sync_gateway_config_path_for_mode
+from keywords.SyncGateway import sync_gateway_config_path_for_mode, create_docs_via_sdk
 from keywords import document
 from keywords.utils import host_for_url
 from couchbase.bucket import Bucket
 from keywords.MobileRestClient import MobileRestClient
 from keywords.ClusterKeywords import ClusterKeywords
 from libraries.testkit import cluster
-from testsuites.syncgateway.sgw_utilities import create_docs_via_sdk
 
 
 @pytest.mark.syncgateway
@@ -23,7 +22,9 @@ def test_importdocs_false_shared_bucket_access_true(params_from_base_test_setup)
     3. Have one node as import_docs=false
     4. Create docs in CBs
     5. Verify  SGW node which does not have config import_docs=false has docs imported.
-        but not for the other SGW node.
+    6. Verify import_count on SG1 should show 0
+    7. Verify import_count on SGW2 should show the number matches with num of docs
+
     """
 
     sg_db = 'db'
@@ -55,9 +56,9 @@ def test_importdocs_false_shared_bucket_access_true(params_from_base_test_setup)
     # 1. Enable shared_bucket_access = true on all nodes
     # 2. Have 2 SGWs and have CBS set up  with above configuation on SGW.
     # 3. Have one node as import_docs=false
-    c = cluster.Cluster(config=cluster_conf)
-    sg1 = c.sync_gateways[0]
-    sg2 = c.sync_gateways[1]
+    cbs_cluster.reset(sg_config_path=sg_conf1)
+    sg1 = cbs_cluster.sync_gateways[0]
+    sg2 = cbs_cluster.sync_gateways[1]
     status = sg1.restart(config=sg_conf1, cluster_config=cluster_conf)
     assert status == 0, "Sync_gateway1  did not start"
     status = sg2.restart(config=sg_conf2, cluster_config=cluster_conf)
@@ -74,14 +75,25 @@ def test_importdocs_false_shared_bucket_access_true(params_from_base_test_setup)
     log_info('Adding {} docs via SDK ...'.format(num_docs))
     sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
     sdk_client.upsert_multi(sdk_docs)
-
+    time.sleep(3)
     # 5. Verify  SGW node which does not have config import_docs=false has docs imported.
-    #  but not for the other SGW node.
-    sg1_changes = sg_client.get_changes(url=sg1.admin.admin_url, db=sg_db, auth=None, since=0)
-    assert len(sg1_changes["results"]) == 0
-
-    sg2_changes = sg_client.get_changes(url=sg2.admin.admin_url, db=sg_db, auth=None, since=0)
-    assert len(sg2_changes["results"]) == num_docs
+    # but not for the other SGW node.
+    sg_client.get_changes(url=sg1.admin.admin_url, db=sg_db, auth=None, since=0)
+    sg_client.get_changes(url=sg2.admin.admin_url, db=sg_db, auth=None, since=0)
+    sg1_expvars = sg_client.get_expvars(sg1.admin.admin_url)
+    sg2_expvars = sg_client.get_expvars(sg2.admin.admin_url)
+    
+    # 6. Verify import_count on SG1 should show 0
+    is_import_count_available = 0
+    try:
+        sg1_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"]
+    except KeyError:
+        is_import_count_available = 1
+    assert is_import_count_available == 1, "import_count appears on sync gateway node"
+    
+    # 7. Verify import_count on SGW2 should show the number matches with num of docs
+    sg2_import_count = sg2_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"]
+    assert sg2_import_count == num_docs, "import count should be equal to number of docs"
 
 
 @pytest.mark.topospecific

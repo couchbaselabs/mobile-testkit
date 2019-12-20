@@ -158,7 +158,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
 
     if is_cbs_ssl_enabled(cluster_config):
         server_port = 18091
-        server_scheme = "https"
+        server_scheme = "couchbases"
 
     # Shared vars
     playbook_vars = {
