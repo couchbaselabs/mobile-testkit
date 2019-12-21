@@ -220,7 +220,7 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config):
             autoimport_prop = ""
             xattrs_prop = ""
         if is_cbs_ssl_enabled(cluster_config):
-            server_port = 18091
+            server_port = ""
             server_scheme = "couchbases"
 
         if is_x509_auth(cluster_config):
@@ -372,7 +372,7 @@ class SyncGateway(object):
         bucket_names = get_buckets_from_sync_gateway_config(config_path)
         couchbase_server_primary_node = add_cbs_to_sg_config_server_field(cluster_config)
         if is_cbs_ssl_enabled(cluster_config):
-            self.server_port = 18091
+            self.server_port = ""
             self.server_scheme = "couchbases"
 
         if is_x509_auth(cluster_config):
@@ -558,7 +558,7 @@ class SyncGateway(object):
         bucket_names = get_buckets_from_sync_gateway_config(sg_conf)
 
         if is_cbs_ssl_enabled(cluster_config):
-            self.server_port = 18091
+            self.server_port = ""
             self.server_scheme = "couchbases"
 
         if is_x509_auth(cluster_config):
@@ -670,7 +670,7 @@ class SyncGateway(object):
         version, build = version_and_build(sync_gateway_version)
 
         if is_cbs_ssl_enabled(cluster_config):
-            server_port = 18091
+            server_port = ""
             server_scheme = "couchbases"
 
         # Shared vars

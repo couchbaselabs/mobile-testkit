@@ -157,7 +157,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
     server_scheme = "http"
 
     if is_cbs_ssl_enabled(cluster_config):
-        server_port = 18091
+        server_port = ""
         server_scheme = "couchbases"
 
     # Shared vars
