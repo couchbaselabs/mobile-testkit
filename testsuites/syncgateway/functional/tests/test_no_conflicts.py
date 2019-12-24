@@ -424,7 +424,8 @@ def test_migrate_conflicts_to_noConflicts(params_from_base_test_setup, sg_conf_n
         with pytest.raises(HTTPError) as he:
             sg_client.add_conflict(url=sg_url, db=sg_db, doc_id=doc["id"], parent_revisions=doc["rev"], new_revision="2-foo1",
                                    auth=autouser_session)
-        assert he.value.message.startswith('409 Client Error: Conflict for url:')
+        resp = str(he.value)
+        assert resp.startswith('409 Client Error: Conflict for url:')
 
     # 8. update docs few number of times.
     update_sg_docs = sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs, number_updates=additional_updates,
@@ -669,7 +670,7 @@ def test_revs_cache_size(params_from_base_test_setup, sg_conf_name, num_of_docs)
     sg_url = topology["sync_gateways"][0]["public"]
     sg_admin_url = topology["sync_gateways"][0]["admin"]
     sg_db = "db"
-    retrieved_docs = num_of_docs / 2
+    retrieved_docs = num_of_docs // 2
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
 
     if sync_gateway_version < "2.0":
