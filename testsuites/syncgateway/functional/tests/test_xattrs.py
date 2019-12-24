@@ -1875,7 +1875,7 @@ def update_sg_docs(client, url, db, docs_to_update, prop_to_update, number_updat
 
 def is_conflict(httperror):
     if httperror.response.status_code == 409 \
-            and httperror.message.startswith('409 Client Error: Conflict for url:'):
+            and str(httperror).startswith('409 Client Error: Conflict for url:'):
         return True
     else:
         return False
