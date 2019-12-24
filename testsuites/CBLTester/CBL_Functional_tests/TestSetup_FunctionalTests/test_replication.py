@@ -42,11 +42,11 @@ def setup_teardown_test(params_from_base_test_setup):
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("num_of_docs, continuous, x509_cert_auth", [
-    (10, True, True),
-    (10, False, True),
+    (10, True, False),
+    (10, False, False),
     (100, True, False),
-    (100, False, True),
-    (1000, True, True),
+    (100, False, False),
+    (1000, True, False),
     (1000, False, False)
 ])
 def test_replication_configuration_valid_values(params_from_base_test_setup, num_of_docs, continuous, x509_cert_auth):
@@ -614,7 +614,7 @@ def test_replication_configuration_with_headers(params_from_base_test_setup):
 @pytest.mark.noconflicts
 @pytest.mark.parametrize("num_of_docs, x509_cert_auth", [
     (10, False),
-    (100, True),
+    (100, False),
     (1000, False)
 ])
 def test_CBL_tombstone_doc(params_from_base_test_setup, num_of_docs, x509_cert_auth):
