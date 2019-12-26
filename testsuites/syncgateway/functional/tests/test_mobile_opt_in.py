@@ -220,7 +220,7 @@ def test_mobile_opt_in(params_from_base_test_setup, sg_conf_name):
     with pytest.raises(HTTPError) as he:
         sg_client.add_doc(url=sg_url, db=sg_db, doc=doc_body, auth=test_auth_session)
     log_info(he.value)
-    assert he.value.message.startswith('409 Client Error: Conflict for url:')
+    assert str(he.value).startswith('409 Client Error: Conflict for url:')
     sg_client.update_doc(url=sg_url, db=sg_db, doc_id=doc_id8, number_updates=1, auth=test_auth_session)
     sg_get_doc8 = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id8, auth=test_auth_session)
     assert sg_get_doc8['_rev'].startswith('2-') and sg_get_doc8['_id'] == doc_id8
