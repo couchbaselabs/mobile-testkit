@@ -2015,14 +2015,14 @@ def verify_sg_deletes(client, url, db, docs_to_verify_deleted, auth):
             client.get_doc(url=url, db=db, doc_id=doc_id, auth=auth)
 
         assert he is not None
-        log_info(he.value.message)
+        log_info(str(he.value))
 
-        assert he.value.message.startswith('404 Client Error: Not Found for url:') or \
-            he.value.message.startswith('403 Client Error: Forbidden for url:')
+        assert str(he.value).startswith('404 Client Error: Not Found for url:') or \
+            str(he.value).startswith('403 Client Error: Forbidden for url:')
 
         # Parse out the doc id
         # sg_0?conflicts=true&revs=true
-        parts = he.value.message.split('/')[-1]
+        parts = str(he.value).split('/')[-1]
         doc_id_from_parts = parts.split('?')[0]
 
         # Remove the doc id from the list
