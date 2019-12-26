@@ -69,7 +69,7 @@ def test_attachments_on_docs_rejected_by_sync_function(params_from_base_test_set
     # Verify docs are getting rejected
     with pytest.raises(HTTPError) as he:
         client.add_docs(url=sg_url, db=sg_db, number=100, id_prefix=sg_db, channels=sg_user_channels, auth=sg_user_session)
-    assert he.value[0].startswith("403 Client Error: Forbidden for url:")
+    assert str(he.value[0]).startswith("403 Client Error: Forbidden for url:")
 
     # Create doc with attachment and push to sync_gateway
     atts = attachment.load_from_data_dir(["sample_text.txt"])
@@ -78,7 +78,7 @@ def test_attachments_on_docs_rejected_by_sync_function(params_from_base_test_set
     # Verify all docs are getting rejected
     with pytest.raises(HTTPError) as he:
         client.add_doc(url=sg_url, db=sg_db, doc=doc_with_att, auth=sg_user_session)
-    assert he.value[0].startswith("403 Client Error: Forbidden for url:")
+    assert str(he.value[0]).startswith("403 Client Error: Forbidden for url:")
 
     cb_server = couchbaseserver.CouchbaseServer(cbs_url)
 
