@@ -19,6 +19,11 @@ from CBLClient.FileLogging import FileLogging
 
 
 def pytest_addoption(parser):
+    parser.addoption("--use-local-testserver",
+                     action="store_true",
+                     help="Skip installing testserver at setup",
+                     default=False)
+
     parser.addoption("--mode",
                      action="store",
                      help="Sync Gateway mode to run the test in, 'cc' for channel cache or 'di' for distributed index")
@@ -183,6 +188,7 @@ def pytest_addoption(parser):
 # testsuites/CBLTester/CBL_Functional_tests/ directory
 @pytest.fixture(scope="session")
 def params_from_base_suite_setup(request):
+    use_local_testserver = request.config.getoption("--use-local-testserver")
     liteserv_platforms = request.config.getoption("--liteserv-platforms")
     liteserv_versions = request.config.getoption("--liteserv-versions")
     liteserv_hosts = request.config.getoption("--liteserv-hosts")
@@ -243,15 +249,17 @@ def params_from_base_suite_setup(request):
                                               port=port,
                                               community_enabled=community_enabled)
 
-        log_info("Downloading TestServer ...")
-        # Download TestServer app
-        testserver.download()
+        if not use_local_testserver:
+            log_info("Downloading TestServer ...")
+            # Download TestServer app
+            testserver.download()
 
-        # Install TestServer app
-        if device_enabled and (platform == "ios" or platform == "android"):
-            testserver.install_device()
-        else:
-            testserver.install()
+            # Install TestServer app
+            if device_enabled and (platform == "ios" or platform == "android"):
+                testserver.install_device()
+            else:
+                testserver.install()
+
         testserver_list.append(testserver)
     base_url_list = []
     for host, port in zip(host_list, port_list):
@@ -356,14 +364,15 @@ def params_from_base_suite_setup(request):
     if create_db_per_suite:
         # Start Test server which needed for suite level set up like query tests
         for testserver in testserver_list:
-            log_info("Starting TestServer...")
-            test_name_cp = test_name.replace("/", "-")
-            if device_enabled:
-                testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
-                                                                      test_name_cp, datetime.datetime.now()))
-            else:
-                testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp,
-                                                               datetime.datetime.now()))
+            if not use_local_testserver:
+                log_info("Starting TestServer...")
+                test_name_cp = test_name.replace("/", "-")
+                if device_enabled:
+                    testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
+                                                                          test_name_cp, datetime.datetime.now()))
+                else:
+                    testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp,
+                                                                   datetime.datetime.now()))
         for base_url, i, liteserv_version in zip(base_url_list, range(len(base_url_list)), version_list):
             if enable_file_logging and liteserv_version >= "2.5.0":
                 cbllog = FileLogging(base_url)
@@ -449,6 +458,7 @@ def params_from_base_suite_setup(request):
         log_info("Flushing server memory")
         utils_obj = Utils(base_url)
         utils_obj.flushMemory()
-        log_info("Stopping the test server")
-        testserver.stop()
+        if not use_local_testserver:
+            log_info("Stopping the test server")
+            testserver.stop()
     clear_resources_pngs()
