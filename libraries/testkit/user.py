@@ -303,6 +303,7 @@ class User:
                 future_to_docs = {executor.submit(self.update_doc, doc_id, num_revs_per_doc, retries=True): doc_id for doc_id in list(self.cache.keys())}
             else:
                 future_to_docs = {executor.submit(self.update_doc, doc_id, num_revs_per_doc): doc_id for doc_id in list(self.cache.keys())}
+            log.debug(future_to_docs)
             for future in concurrent.futures.as_completed(future_to_docs):
                 doc = future_to_docs[future]
                 try:
