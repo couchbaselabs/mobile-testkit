@@ -197,13 +197,13 @@ class User:
             doc_names = [name_prefix + str(i) for i in range(num_docs)]
 
         if not bulk:
-            with concurrent.futures.ThreadPoolExecutor(max_workers=settings.MAX_REQUEST_WORKERS) as executor:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=None) as executor:
 
                 if retries:
                     future_to_docs = {executor.submit(self.add_doc, doc, content=None, retries=True): doc for doc in doc_names}
                 else:
                     future_to_docs = {executor.submit(self.add_doc, doc, content=None): doc for doc in doc_names}
-
+                log.debug(future_to_docs)
                 for future in concurrent.futures.as_completed(future_to_docs):
                     doc = future_to_docs[future]
                     log.debug(doc)
@@ -214,13 +214,13 @@ class User:
                         log.info("HTTPError: {0} {1} {2}".format(self.name, e.response.url, e.response.status_code))
                         errors.append((e.response.url, e.response.status_code))
         else:
-            with concurrent.futures.ThreadPoolExecutor(max_workers=settings.MAX_REQUEST_WORKERS) as executor:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=None) as executor:
 
                 if retries:
                     future = [executor.submit(self.add_bulk_docs, doc_names, retries=True)]
                 else:
                     future = [executor.submit(self.add_bulk_docs, doc_names)]
-
+                log.debug(future)
                 for f in concurrent.futures.as_completed(future):
                     try:
                         doc_list = f.result()
@@ -297,13 +297,13 @@ class User:
         if len(list(self.cache.keys())) == 0:
             log.warning("Unable to find any docs to update")
 
-        with concurrent.futures.ThreadPoolExecutor(max_workers=settings.MAX_REQUEST_WORKERS) as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=None) as executor:
 
             if retries:
                 future_to_docs = {executor.submit(self.update_doc, doc_id, num_revs_per_doc, retries=True): doc_id for doc_id in list(self.cache.keys())}
             else:
                 future_to_docs = {executor.submit(self.update_doc, doc_id, num_revs_per_doc): doc_id for doc_id in list(self.cache.keys())}
-
+            log.debug(future_to_docs)
             for future in concurrent.futures.as_completed(future_to_docs):
                 doc = future_to_docs[future]
                 try:
