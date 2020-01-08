@@ -62,7 +62,6 @@ def test_log_redaction_config(params_from_base_test_setup, remove_tmp_sg_redacti
                                             property_name_check=False)
 
     if x509_cert_auth:
-        temp_cluster_config = copy_to_temp_conf(temp_cluster_config, mode)
         persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
 
     cluster = Cluster(config=temp_cluster_config)
@@ -124,7 +123,6 @@ def test_sgCollect1(params_from_base_test_setup, remove_tmp_sg_redaction_logs, s
     persist_cluster_config_environment_prop(temp_cluster_config, 'redactlevel', "partial", property_name_check=False)
 
     if x509_cert_auth:
-        temp_cluster_config = copy_to_temp_conf(temp_cluster_config, mode)
         persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
 
     cluster = Cluster(config=temp_cluster_config)
@@ -192,7 +190,6 @@ def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_
     persist_cluster_config_environment_prop(temp_cluster_config, 'redactlevel', "partial", property_name_check=False)
 
     if x509_cert_auth:
-        temp_cluster_config = copy_to_temp_conf(temp_cluster_config, mode)
         persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
 
     cluster = Cluster(config=temp_cluster_config)
@@ -304,7 +301,6 @@ def test_sgCollectRestApi_errorMessages(params_from_base_test_setup, remove_tmp_
     persist_cluster_config_environment_prop(temp_cluster_config, 'redactlevel', "partial", property_name_check=False)
 
     if x509_cert_auth:
-        temp_cluster_config = copy_to_temp_conf(temp_cluster_config, mode)
         persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
 
     cluster = Cluster(config=temp_cluster_config)

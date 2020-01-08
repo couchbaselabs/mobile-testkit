@@ -8,7 +8,7 @@
 
 import Foundation
 import CouchbaseLiteSwift
-
+import Zip
 
 public class FileLoggingRequestHandler {
     public static let VOID = NSObject()
@@ -27,7 +27,11 @@ public class FileLoggingRequestHandler {
             let plain_text: Bool = args.get(name: "plain_text")!
             var directory: String = args.get(name: "directory")!
             if (directory.isEmpty) {
-                directory = NSHomeDirectory() + "/logs" + String(Date().timeIntervalSince1970)
+                let cacheDir = try FileManager.default.url(for: .cachesDirectory,
+                                                           in: .userDomainMask,
+                                                           appropriateFor: nil,
+                                                           create: false)
+                directory = cacheDir.appendingPathComponent("logs_\(Date().timeIntervalSince1970)").path
                 print("File logging configured at : " + directory)
             }
             
@@ -78,6 +82,22 @@ public class FileLoggingRequestHandler {
 
         case "logging_getConfig":
             return Database.log.file.config
+            
+        case "logging_getLogsInZip":
+            guard let path = Database.log.file.config?.directory else {
+                fatalError("failed to get the config directory")
+            }
+            
+            do {
+                let dirURL = URL(fileURLWithPath: path)
+                let zipFilePath = try Zip.quickZipFiles([dirURL],
+                                                        fileName: "Archive")
+                return RawData(data: try Data(contentsOf: zipFilePath),
+                               contentType: "application/zip")
+            } catch {
+                print("Exception Getting LogsInZip \(error)")
+            }
+            return nil
 
         case "logging_setPlainTextStatus":
             let config: LogFileConfiguration = args.get(name: "config")!
