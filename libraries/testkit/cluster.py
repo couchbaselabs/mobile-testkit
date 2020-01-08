@@ -18,7 +18,7 @@ from utilities.cluster_config_utils import is_load_balancer_enabled, get_revs_li
 from utilities.cluster_config_utils import get_load_balancer_ip, no_conflicts_enabled, is_delta_sync_enabled, get_sg_platform
 from utilities.cluster_config_utils import generate_x509_certs, is_x509_auth, get_cbs_primary_nodes_str
 from keywords.constants import SYNC_GATEWAY_CERT
-from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version
+from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version, get_sg_platform
 
 
 class Cluster:
@@ -66,7 +66,7 @@ class Cluster:
 
         for ac in cluster["sg_accels"]:
             if cluster["environment"]["ipv6_enabled"]:
-                    ac["ip"] = "[{}]".format(ac["ip"])
+                ac["ip"] = "[{}]".format(ac["ip"])
             acs.append({"name": ac["name"], "ip": ac["ip"]})
 
         self.cbs_ssl = cluster["environment"]["cbs_ssl_enabled"]
