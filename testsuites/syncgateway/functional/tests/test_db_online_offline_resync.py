@@ -13,7 +13,7 @@ from libraries.testkit.parallelize import in_parallel
 from keywords.utils import log_info
 from keywords.utils import log_error
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
-from utilities.cluster_config_utils import persist_cluster_config_environment_prop
+from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
 
 
 @pytest.mark.sanity
@@ -45,7 +45,10 @@ def test_bucket_online_offline_resync_sanity(params_from_base_test_setup, sg_con
 
     start = time.time()
 
-    persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', x509_cert_auth)
+    if x509_cert_auth:
+        temp_cluster_config = copy_to_temp_conf(cluster_conf, test_mode)
+        persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
+        cluster_conf = temp_cluster_config
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_conf)
@@ -69,7 +72,8 @@ def test_bucket_online_offline_resync_sanity(params_from_base_test_setup, sg_con
 
     # Add User
     log_info("Add docs")
-    in_parallel(user_objects, 'add_docs', num_docs)
+    bulk = True
+    in_parallel(user_objects, 'add_docs', num_docs, bulk)
 
     # Update docs
     log_info("Update docs")
@@ -201,7 +205,8 @@ def test_bucket_online_offline_resync_with_online(params_from_base_test_setup, s
 
     # Add User
     log_info("Add docs")
-    in_parallel(user_objects, 'add_docs', num_docs)
+    bulk = True
+    in_parallel(user_objects, 'add_docs', num_docs, bulk)
 
     # Update docs
     log_info("Update docs")
@@ -385,7 +390,8 @@ def test_bucket_online_offline_resync_with_offline(params_from_base_test_setup, 
 
     # Add User
     log_info("Add docs")
-    in_parallel(user_objects, 'add_docs', num_docs)
+    bulk = True
+    in_parallel(user_objects, 'add_docs', num_docs, bulk)
 
     # Update docs
     log_info("Update docs")

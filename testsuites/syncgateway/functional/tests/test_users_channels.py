@@ -1,14 +1,17 @@
 import time
-
+import json
 import pytest
 
 from libraries.testkit.admin import Admin
 from libraries.testkit.cluster import Cluster
 from libraries.testkit.verify import verify_changes
+from keywords.MobileRestClient import MobileRestClient
 
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.utils import log_info
-from utilities.cluster_config_utils import get_sg_version, persist_cluster_config_environment_prop
+from utilities.cluster_config_utils import get_sg_version, persist_cluster_config_environment_prop, copy_to_temp_conf
+from requests import Session
+from keywords.utils import log_r
 
 
 @pytest.mark.sanity
@@ -19,7 +22,7 @@ from utilities.cluster_config_utils import get_sg_version, persist_cluster_confi
 @pytest.mark.parametrize("sg_conf_name, x509_cert_auth", [
     ("sync_gateway_default_functional_tests", True),
     ("sync_gateway_default_functional_tests_no_port", False),
-    ("sync_gateway_default_functional_tests_couchbase_protocol_withport_11210", True)
+    ("sync_gateway_default_functional_tests_couchbase_protocol_withport_11210", False)
 ])
 def test_multiple_users_multiple_channels(params_from_base_test_setup, sg_conf_name, x509_cert_auth):
 
@@ -44,7 +47,10 @@ def test_multiple_users_multiple_channels(params_from_base_test_setup, sg_conf_n
     log_info("Running 'multiple_users_multiple_channels'")
     log_info("cluster_conf: {}".format(cluster_conf))
     log_info("conf: {}".format(sg_conf))
-    persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', x509_cert_auth)
+    if x509_cert_auth:
+        temp_cluster_config = copy_to_temp_conf(cluster_conf, mode)
+        persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
+        cluster_conf = temp_cluster_config
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
 
@@ -137,9 +143,10 @@ def test_muliple_users_single_channel(params_from_base_test_setup, sg_conf_name)
     adam = admin.register_user(target=sgs[0], db="db", name="adam", password="password", channels=["ABC"])
     traun = admin.register_user(target=sgs[0], db="db", name="traun", password="password", channels=["ABC"])
 
-    seth.add_docs(num_docs_seth)  # ABC
-    adam.add_docs(num_docs_adam, bulk=True)  # ABC
-    traun.add_docs(num_docs_traun, bulk=True)  # ABC
+    bulk = True
+    seth.add_docs(num_docs_seth, bulk)  # ABC
+    adam.add_docs(num_docs_adam, bulk)  # ABC
+    traun.add_docs(num_docs_traun, bulk)  # ABC
 
     assert len(seth.cache) == num_docs_seth
     assert len(adam.cache) == num_docs_adam
@@ -277,3 +284,46 @@ def test_single_user_single_channel(params_from_base_test_setup, sg_conf_name):
     all_doc_caches = [seth.cache, cbs_user.cache]
     all_docs = {k: v for cache in all_doc_caches for k, v in cache.items()}
     verify_changes([admin_user], expected_num_docs=num_cbs_docs + num_seth_docs, expected_num_revisions=0, expected_docs=all_docs)
+
+
+@pytest.mark.syncgateway
+def test_create_invalid_email(params_from_base_test_setup):
+    """
+    @summary
+    1. Create doc with data with invalid email
+    2. Verify it increases warn_count
+    """
+    cluster_conf = params_from_base_test_setup["cluster_config"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    cluster_topology = params_from_base_test_setup['cluster_topology']
+    mode = params_from_base_test_setup['mode']
+    sg_conf_name = "sync_gateway_default_functional_tests"
+    db = 'db'
+    sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+
+    cluster = Cluster(config=cluster_conf)
+    cluster.reset(sg_config_path=sg_conf)
+
+    sg_client = MobileRestClient()
+    if sync_gateway_version >= "2.5.0":
+        expvars = sg_client.get_expvars(sg_admin_url)
+        warn_count = expvars["syncgateway"]["global"]["resource_utilization"]["warn_count"]
+
+    data = {
+        "name": "autotest",
+        "password": "password",
+        "email": "autotest@autotest@autotest"
+    }
+
+    headers = {"Content-Type": "application/json"}
+    session = Session()
+    session.headers = headers
+    session.verify = False
+    resp = session.post("{}/{}/_user/".format(sg_admin_url, db), data=json.dumps(data))
+    log_r(resp)
+    resp.raise_for_status()
+    if sync_gateway_version >= "2.5.0":
+        sg_client = MobileRestClient()
+        expvars = sg_client.get_expvars(sg_admin_url)
+        assert warn_count < expvars["syncgateway"]["global"]["resource_utilization"]["warn_count"], "warn_count did not increment"

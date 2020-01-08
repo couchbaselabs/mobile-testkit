@@ -269,7 +269,7 @@ def is_delta_sync_enabled(cluster_config):
 
 
 def copy_to_temp_conf(cluster_config, mode):
-    # Creating temporary cluster config and json files to add revs limit dynamically
+    # Creating temporary cluster config and json files to add configuration dynamically
     temp_cluster_config = "resources/cluster_configs/temp_cluster_config_{}".format(mode)
     temp_cluster_config_json = "resources/cluster_configs/temp_cluster_config_{}.json".format(mode)
     cluster_config_json = "{}.json".format(cluster_config)
