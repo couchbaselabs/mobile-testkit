@@ -53,7 +53,7 @@ def verify_server_version(host, expected_server_version, cbs_ssl=False):
     # Check both version parts if expected version contains a build
     if len(expected_server_version_parts) == 2:
         # 4.1.1-5487
-        log_info("Expected Server Version: {}".format(expected_server_version))
+        log_info("Expected Server Version: {}".format(expected_server_version.strip()))
         log_info("Running Server Version: {}".format(running_server_version))
         if running_server_version != expected_server_version:
             raise ProvisioningError("Unexpected server version!! Expected: {} Actual: {}".format(expected_server_version, running_server_version))
