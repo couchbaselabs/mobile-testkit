@@ -30,7 +30,7 @@ namespace Couchbase.Lite.Testing.iOS
             Window.MakeKeyAndVisible();
 
             Couchbase.Lite.Support.iOS.Activate();
-            Database.Log.Console.Level = Logging.LogLevel.Verbose;
+            Database.Log.Console.Level = Logging.LogLevel.None;
 
             TestServer.FilePathResolver = ResolvePath;
             var listener = new TestServer();
