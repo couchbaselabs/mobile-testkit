@@ -666,8 +666,8 @@ class SyncGateway(object):
         version, build = version_and_build(sync_gateway_version)
 
         if is_cbs_ssl_enabled(cluster_config):
-            server_port = 18091
-            server_scheme = "https"
+            server_port = ""
+            server_scheme = "couchbases"
 
         # Shared vars
         playbook_vars = {
