@@ -6,7 +6,7 @@ import install_sync_gateway
 import install_couchbase_server
 
 from clean_cluster import clean_cluster
-from libraries.provision.install_couchbase_server import CouchbaseServerConfig
+from install_couchbase_server import CouchbaseServerConfig
 from install_sync_gateway import SyncGatewayConfig
 from install_nginx import install_nginx
 
@@ -21,11 +21,9 @@ from libraries.testkit.cluster import Cluster
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop
 from keywords.couchbaseserver import CouchbaseServer
 from keywords.ClusterKeywords import ClusterKeywords
-from utilities.cluster_config_utils import get_load_balancer_ip
 
 
-def provision_cluster(sg_ssl, sg_lb, cbs_ssl, use_views, xattrs_enabled, no_conflicts_enabled, delta_sync_enabled,
-                      number_replicas, cluster_config, couchbase_server_config, sync_gateway_config, sg_ce=False,
+def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_config, sg_ce=False,
                       cbs_platform="centos7", sg_platform="centos", sg_installer_type="msi", sa_platform="centos",
                       sa_installer_type="msi", cbs_ce=False):
 
@@ -50,63 +48,6 @@ def provision_cluster(sg_ssl, sg_lb, cbs_ssl, use_views, xattrs_enabled, no_conf
     else:
         log_info("Running test with sync_gateway version {}".format(sg_version))
         persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_version', sg_version)
-
-    if sg_ssl:
-        log_info("Enabling SSL on sync gateway")
-        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', True)
-    else:
-        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', False)
-
-    # Add load balancer prop and check if load balancer IP is available
-    print "sgl_lb after while provisioning cluster is ", sg_lb
-    if sg_lb:
-        persist_cluster_config_environment_prop(cluster_config, 'sg_lb_enabled', True)
-        log_info("Running tests with load balancer enabled: {}".format(get_load_balancer_ip(cluster_config)))
-    else:
-        log_info("Running tests with load balancer disabled")
-        persist_cluster_config_environment_prop(cluster_config, 'sg_lb_enabled', False)
-
-    if cbs_ssl:
-        log_info("Running tests with cbs <-> sg ssl enabled")
-        # Enable ssl in cluster configs
-        persist_cluster_config_environment_prop(cluster_config, 'cbs_ssl_enabled', True)
-    else:
-        log_info("Running tests with cbs <-> sg ssl disabled")
-        # Disable ssl in cluster configs
-        persist_cluster_config_environment_prop(cluster_config, 'cbs_ssl_enabled', False)
-
-    if use_views:
-        log_info("Running SG tests using views")
-        # Enable sg views in cluster configs
-        persist_cluster_config_environment_prop(cluster_config, 'sg_use_views', True)
-    else:
-        log_info("Running tests with cbs <-> sg ssl disabled")
-        # Disable sg views in cluster configs
-        persist_cluster_config_environment_prop(cluster_config, 'sg_use_views', False)
-
-    # Write the number of replicas to cluster config
-    persist_cluster_config_environment_prop(cluster_config, 'number_replicas', number_replicas)
-
-    if xattrs_enabled:
-        log_info("Running test with xattrs for sync meta storage")
-        persist_cluster_config_environment_prop(cluster_config, 'xattrs_enabled', True)
-    else:
-        log_info("Using document storage for sync meta data")
-        persist_cluster_config_environment_prop(cluster_config, 'xattrs_enabled', False)
-
-    if no_conflicts_enabled:
-        log_info("Running with no conflicts")
-        persist_cluster_config_environment_prop(cluster_config, 'no_conflicts_enabled', True)
-    else:
-        log_info("Running with allow conflicts")
-        persist_cluster_config_environment_prop(cluster_config, 'no_conflicts_enabled', False)
-
-    if delta_sync_enabled:
-        log_info("Running with delta sync")
-        persist_cluster_config_environment_prop(cluster_config, 'delta_sync_enabled', True)
-    else:
-        log_info("Running without delta sync")
-        persist_cluster_config_environment_prop(cluster_config, 'delta_sync_enabled', False)
 
     with open(cluster_config, "r") as ansible_hosts:
         log_info(ansible_hosts.read())
@@ -151,7 +92,7 @@ def provision_cluster(sg_ssl, sg_lb, cbs_ssl, use_views, xattrs_enabled, no_conf
         couchbase_server_config=couchbase_server_config,
         cbs_platform=cbs_platform, cbs_ce=cbs_ce
     )
-    aws = True
+
     # Install sync_gateway
     log_info("Installing Sync Gateway")
     install_sync_gateway.install_sync_gateway(
@@ -163,7 +104,6 @@ def provision_cluster(sg_ssl, sg_lb, cbs_ssl, use_views, xattrs_enabled, no_conf
         sa_installer_type=sa_installer_type,
         sg_ce=sg_ce,
         ipv6=cluster.ipv6,
-        aws=aws
     )
 
     # Install nginx
@@ -176,21 +116,16 @@ if __name__ == "__main__":
     usage = """usage: python provision_cluster.py
     --server-version=<server_version_number>
     --sync-gateway-version=<sync_gateway_version_number>
-    --xattrs=<True/False>
-    --delta-sync=<True/False>
-    --server-ssl=<True/False>
 
     or
 
     usage: python provision_cluster.py
     --server-version=<server_version_number>
     --sync-gateway-commit=<sync_gateway_commit_to_build>
-    --xattrs=<True/False>
-    --delta-sync=<True/False>
-    --server-ssl=<True/False>
     """
+
     parser = OptionParser(usage=usage)
-    
+
     default_sync_gateway_config = os.path.abspath("resources/sync_gateway_configs/sync_gateway_default_di.json")
 
     parser.add_option("", "--server-version",
@@ -225,37 +160,6 @@ if __name__ == "__main__":
                       action="store", type="string", dest="cbs_platform", default="centos7",
                       help="Server Platfrom to download and install. Ex: centos7/centos6")
 
-    parser.add_option("", "--xattrs",
-                      action="store", type="string", dest="xattrs_enabled", default=False,
-                      help="Use xattrs for sync meta storage. Only works with Sync Gateway 1.5.0+ and Couchbase Server 5.0+")
-
-    parser.add_option("", "--server-ssl",
-                      action="store", type="string", dest="cbs_ssl", default=False,
-                      help="If set, will enable SSL communication between server and Sync Gateway")
-
-    parser.add_option("", "--sg-lb",
-                      action="store", type="string", dest="sg_lb", default=False,
-                      help="If set, will enable load balancer for Sync Gateway")
-
-    parser.add_option("", "--no-conflicts",
-                      action="store", type="string", dest="no_conflicts_enabled", default=False,
-                      help="If set, allow_conflicts is set to false in sync-gateway config")
-
-    parser.add_option("--sg-ssl",
-                      action="store", type="string", dest="sg_ssl", default=False,
-                      help="If set, will enable SSL communication between Sync Gateway and CBL")
-
-    parser.add_option("", "--use-views",
-                      action="store", type="string", dest="use_views", default=False,
-                      help="If set, uses views instead of GSI - SG 2.1 and above only")
-
-    parser.add_option("", "--number-replicas",
-                      action="store", type="int", dest="number_replicas", default=0,
-                      help="Number of replicas for the indexer node - SG 2.1 and above only")
-
-    parser.add_option("", "--delta-sync",
-                      action="store", type="string", dest="delta_sync_enabled", default=False,
-                      help="delta-sync: Enable delta-sync for sync gateway")
     arg_parameters = sys.argv[1:]
 
     (opts, args) = parser.parse_args(arg_parameters)
@@ -289,7 +193,8 @@ if __name__ == "__main__":
     )
 
     provision_cluster(
-        opts.sg_ssl, opts.sg_lb, opts.cbs_ssl, opts.use_views, opts.xattrs_enabled, opts.no_conflicts_enabled, 
-        opts.delta_sync_enabled, opts.number_replicas, cluster_config=cluster_conf, couchbase_server_config=server_config,
-        sync_gateway_config=sync_gateway_conf, cbs_platform=opts.cbs_platform
+        cluster_config=cluster_conf,
+        couchbase_server_config=server_config,
+        sync_gateway_config=sync_gateway_conf,
+        cbs_platform=opts.cbs_platform
     )
