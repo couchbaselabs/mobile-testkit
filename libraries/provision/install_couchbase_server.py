@@ -67,7 +67,7 @@ def install_couchbase_server(cluster_config, couchbase_server_config, cbs_platfo
 
     log_info(">>> Installing Couchbase Server")
     # Install Server
-    server_baseurl, server_package_name = couchbase_server_config.get_baseurl_package(cb_server, cbs_platform, cbs_ce=cbs_ce)
+    server_baseurl, server_package_name = couchbase_server_config.get_baseurl_package(cb_server, cbs_platform, cbs_ce)
     status = ansible_runner.run_ansible_playbook(
         "install-couchbase-server-package.yml",
         extra_vars={
