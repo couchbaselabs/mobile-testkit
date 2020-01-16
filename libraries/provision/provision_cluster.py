@@ -24,10 +24,10 @@ from keywords.ClusterKeywords import ClusterKeywords
 from utilities.cluster_config_utils import get_load_balancer_ip
 
 
-def provision_cluster(sg_ssl, sg_lb, cbs_ssl, use_views, xattrs_enabled, no_conflicts_enabled, delta_sync_enabled,
-                      number_replicas, cluster_config, couchbase_server_config, sync_gateway_config, sg_ce=False,
+def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_config, sg_ssl=None, sg_lb=None, cbs_ssl=None, use_views=None,
+                      xattrs_enabled=None, no_conflicts_enabled=None, delta_sync_enabled=None, number_replicas=None, sg_ce=False,
                       cbs_platform="centos7", sg_platform="centos", sg_installer_type="msi", sa_platform="centos",
-                      sa_installer_type="msi", cbs_ce=False):
+                      sa_installer_type="msi", cbs_ce=False, aws=False):
 
     log_info("\n>>> Cluster info:\n")
     server_version = "{}-{}".format(couchbase_server_config.version, couchbase_server_config.build)
@@ -151,7 +151,7 @@ def provision_cluster(sg_ssl, sg_lb, cbs_ssl, use_views, xattrs_enabled, no_conf
         couchbase_server_config=couchbase_server_config,
         cbs_platform=cbs_platform, cbs_ce=cbs_ce
     )
-    aws = True
+
     # Install sync_gateway
     log_info("Installing Sync Gateway")
     install_sync_gateway.install_sync_gateway(
@@ -190,7 +190,7 @@ if __name__ == "__main__":
     --server-ssl=<True/False>
     """
     parser = OptionParser(usage=usage)
-    
+
     default_sync_gateway_config = os.path.abspath("resources/sync_gateway_configs/sync_gateway_default_di.json")
 
     parser.add_option("", "--server-version",
@@ -289,7 +289,7 @@ if __name__ == "__main__":
     )
 
     provision_cluster(
-        opts.sg_ssl, opts.sg_lb, opts.cbs_ssl, opts.use_views, opts.xattrs_enabled, opts.no_conflicts_enabled, 
-        opts.delta_sync_enabled, opts.number_replicas, cluster_config=cluster_conf, couchbase_server_config=server_config,
-        sync_gateway_config=sync_gateway_conf, cbs_platform=opts.cbs_platform
+        sg_ssl=opts.sg_ssl, sg_lb=opts.sg_lb, cbs_ssl=opts.cbs_ssl, use_views=opts.use_views, xattrs_enabled=opts.xattrs_enabled, no_conflicts_enabled=opts.no_conflicts_enabled,
+        delta_sync_enabled=opts.delta_sync_enabled, number_replicas=opts.number_replicas, cluster_config=cluster_conf, couchbase_server_config=server_config,
+        sync_gateway_config=sync_gateway_conf, cbs_platform=opts.cbs_platform, aws=True
     )
