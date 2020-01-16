@@ -226,7 +226,6 @@ def test_multiple_selects(params_from_base_suite_setup, select_property1, select
     log_info(docs_from_n1ql)
     log_info(docs_from_cbl)
     assert sorted(docs_from_cbl, key=itemgetter('id')) == sorted(docs_from_n1ql, key=itemgetter('id'))
-
     log_info("Doc contents match")
 
 
