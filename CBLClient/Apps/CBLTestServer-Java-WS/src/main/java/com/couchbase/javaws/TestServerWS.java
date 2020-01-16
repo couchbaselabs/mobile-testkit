@@ -76,7 +76,12 @@ public class TestServerWS extends HttpServlet {
         if (query != null) {
             for (String key : query.keySet()) {
                 String value = (String) query.get(key);
-                args.put(key, ValueSerializer.deserialize(value, RequestHandlerDispatcher.memory));
+                if("release".equals(method)){
+                    args.put(key, value);
+                }
+                else {
+                    args.put(key, ValueSerializer.deserialize(value, RequestHandlerDispatcher.memory));
+                }
             }
         }
         if(!args.contain("config") && !args.contain("directory")){
@@ -104,7 +109,8 @@ public class TestServerWS extends HttpServlet {
             Log.e(TAG, e.getMessage());
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             response.setHeader("Content-Type", "text/plain");
-            response.getWriter().write(e.getMessage());
+            response.getWriter().println(e.getMessage());
+            //response.getWriter().write("eunice");
         }
     }
 }

@@ -23,7 +23,7 @@ public class RequestHandlerDispatcher {
         try{
             Object result;
             if ("release".equals(method)) {
-                memory.remove(args.get("releaseObject"));
+                memory.remove(args.get("object"));
             }
             else if ("flushMemory".equals(method)) {
                 memory.flushMemory();

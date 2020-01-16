@@ -5,7 +5,7 @@ apply plugin: 'com.bmuschko.tomcat'
 sourceCompatibility = 1.8
 
 ext {
-    COUCHBASE_LITE_JAVA_VERSION = System.getProperty('version', "2.7.0-56")
+    COUCHBASE_LITE_JAVA_VERSION = System.getProperty('version', "2.7.0-94")
 
     JAVA_COMMON_DIR = "${projectDir}/../JavaRequestHandlers"
     ASSET_DIR = "${JAVA_COMMON_DIR}/src/main/assets"
@@ -47,7 +47,8 @@ dependencies {
     def tomcatVersion = '9.0.1'
     tomcat "org.apache.tomcat.embed:tomcat-embed-core:${tomcatVersion}",
             "org.apache.tomcat.embed:tomcat-embed-logging-juli:9.0.0.M6",
-            "org.apache.tomcat.embed:tomcat-embed-jasper:${tomcatVersion}"
+            "org.apache.tomcat.embed:tomcat-embed-jasper:${tomcatVersion}",
+            "com.couchbase.lite:couchbase-lite-java-ee:${COUCHBASE_LITE_JAVA_VERSION}"
 }
 
 tomcat {
@@ -64,10 +65,4 @@ buildscript {
         classpath 'com.bmuschko:gradle-tomcat-plugin:2.5'
     }
 }
-
-[tomcatRun, tomcatRunWar].each { task ->
-    // need to fix later for local debug run
-    // task.additionalRuntimeResources << file(compileClasspath)
-}
-
 
