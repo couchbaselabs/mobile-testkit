@@ -6,6 +6,7 @@ from CBLClient.Query import Query
 from keywords.utils import host_for_url
 from couchbase.bucket import Bucket
 from couchbase.n1ql import N1QLQuery
+from operator import itemgetter
 import numpy as np
 
 
@@ -141,7 +142,7 @@ def test_doc_get(params_from_base_suite_setup, doc_id):
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
     log_info("Found {} docs".format(len(docs_from_cbl)))
-    assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
+    assert sorted(docs_from_cbl, key=itemgetter('type')) == sorted(docs_from_n1ql, key=itemgetter('type'))
     log_info("Doc contents match between CBL and n1ql")
 
 
@@ -222,7 +223,9 @@ def test_multiple_selects(params_from_base_suite_setup, select_property1, select
         docs_from_n1ql.append(row)
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
-    assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
+    log_info(docs_from_n1ql)
+    log_info(docs_from_cbl)
+    assert sorted(docs_from_cbl, key=itemgetter('type')) == sorted(docs_from_n1ql, key=itemgetter('type'))
 
     log_info("Doc contents match")
 
@@ -272,7 +275,7 @@ def test_query_where_and_or(params_from_base_suite_setup, whr_key1, whr_val1, wh
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
     log_info("Found {} docs".format(len(docs_from_cbl)))
-    assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
+    assert sorted(docs_from_cbl, key=itemgetter('id')) == sorted(docs_from_n1ql, key=itemgetter('id'))
     log_info("Doc contents match")
 
 
@@ -327,7 +330,7 @@ def test_query_pattern_like(params_from_base_suite_setup, whr_key, whr_val, sele
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
     log_info("Found {} docs".format(len(docs_from_cbl)))
-    assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
+    assert sorted(docs_from_cbl, key=itemgetter('id')) == sorted(docs_from_n1ql, key=itemgetter('id'))
     log_info("Doc contents match")
 
 
@@ -382,7 +385,7 @@ def test_query_pattern_regex(params_from_base_suite_setup, whr_key, whr_val, sel
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
     log_info("Found {} docs".format(len(docs_from_cbl)))
-    assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
+    assert sorted(docs_from_cbl, key=itemgetter('type')) == sorted(docs_from_n1ql, key=itemgetter('type'))
     log_info("Doc contents match")
 
 
@@ -429,7 +432,9 @@ def test_query_isNullOrMissing(params_from_base_suite_setup, select_property1, l
         docs_from_n1ql.append(row)
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
-    assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
+    log_info(docs_from_n1ql)
+    log_info(docs_from_cbl)
+    assert sorted(docs_from_cbl, key=itemgetter('id')) == sorted(docs_from_n1ql, key=itemgetter('id'))
     log_info("Doc contents match")
 
 
@@ -479,7 +484,7 @@ def test_query_ordering(params_from_base_suite_setup, select_property1, whr_key,
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
     log_info("Found {} docs".format(len(docs_from_cbl)))
-    assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
+    assert sorted(docs_from_cbl, key=itemgetter('id')) == sorted(docs_from_n1ql, key=itemgetter('id'))
     log_info("Doc contents match")
 
 
@@ -584,7 +589,7 @@ def test_query_collation(params_from_base_suite_setup, select_property1, whr_key
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
     log_info("Found {} docs".format(len(docs_from_cbl)))
-    assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
+    assert sorted(docs_from_cbl, key=itemgetter('id')) == sorted(docs_from_n1ql, key=itemgetter('id'))
     log_info("Doc contents match")
 
 
@@ -662,7 +667,7 @@ def test_query_join(params_from_base_suite_setup, select_property1,
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
     log_info("Found {} docs".format(len(docs_from_cbl)))
-    assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
+    assert sorted(docs_from_cbl, key=itemgetter('name')) == sorted(docs_from_n1ql, key=itemgetter('name'))
     log_info("Doc contents match")
 
 
@@ -888,7 +893,7 @@ def test_equal_to(params_from_base_suite_setup, prop, val):
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
     log_info("Found {} docs".format(len(docs_from_cbl)))
-    assert np.array_equal(sorted(docs_from_cbl), sorted(docs_from_n1ql))
+    assert np.array_equal(sorted(docs_from_cbl, key=itemgetter('id')), sorted(docs_from_n1ql, key=itemgetter('id')))
     log_info("Doc contents match between CBL and n1ql")
 
 
@@ -935,7 +940,7 @@ def test_not_equal_to(params_from_base_suite_setup, prop, val):
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
     log_info("Found {} docs".format(len(docs_from_cbl)))
-    assert np.array_equal(sorted(docs_from_cbl), sorted(docs_from_n1ql))
+    assert np.array_equal(sorted(docs_from_cbl, key=itemgetter('id')), sorted(docs_from_n1ql, key=itemgetter('id')))
     log_info("Doc contents match between CBL and n1ql")
 
 
@@ -981,7 +986,7 @@ def test_greater_than(params_from_base_suite_setup, prop, val):
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
     log_info("Found {} docs".format(len(docs_from_cbl)))
-    assert np.array_equal(sorted(docs_from_cbl), sorted(docs_from_n1ql))
+    assert np.array_equal(sorted(docs_from_cbl, key=itemgetter('id')), sorted(docs_from_n1ql, key=itemgetter('id')))
     log_info("Doc contents match between CBL and n1ql")
 
 
@@ -1027,7 +1032,7 @@ def test_greater_than_or_equal_to(params_from_base_suite_setup, prop, val):
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
     log_info("Found {} docs".format(len(docs_from_cbl)))
-    assert np.array_equal(sorted(docs_from_cbl), sorted(docs_from_n1ql))
+    assert np.array_equal(sorted(docs_from_cbl, key=itemgetter('id')), sorted(docs_from_n1ql, key=itemgetter('id')))
     log_info("Doc contents match between CBL and n1ql")
 
 
@@ -1073,7 +1078,7 @@ def test_less_than(params_from_base_suite_setup, prop, val):
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
     log_info("Found {} docs".format(len(docs_from_cbl)))
-    assert np.array_equal(sorted(docs_from_cbl), sorted(docs_from_n1ql))
+    assert np.array_equal(sorted(docs_from_cbl, key=itemgetter('id')), sorted(docs_from_n1ql, key=itemgetter('id')))
     log_info("Doc contents match between CBL and n1ql")
 
 
@@ -1119,7 +1124,7 @@ def test_less_than_or_equal_to(params_from_base_suite_setup, prop, val):
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
     log_info("Found {} docs".format(len(docs_from_cbl)))
-    assert np.array_equal(sorted(docs_from_cbl), sorted(docs_from_n1ql))
+    assert np.array_equal(sorted(docs_from_cbl, key=itemgetter('id')), sorted(docs_from_n1ql, key=itemgetter('id')))
     log_info("Doc contents match between CBL and n1ql")
 
 
@@ -1165,7 +1170,7 @@ def test_in(params_from_base_suite_setup, prop, val1, val2):
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
     log_info("Found {} docs".format(len(docs_from_cbl)))
-    assert np.array_equal(sorted(docs_from_cbl), sorted(docs_from_n1ql))
+    assert np.array_equal(sorted(docs_from_cbl, key=itemgetter('id')), sorted(docs_from_n1ql, key=itemgetter('id')))
     log_info("Doc contents match between CBL and n1ql")
 
 
@@ -1211,7 +1216,7 @@ def test_between(params_from_base_suite_setup, prop, val1, val2):
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
     log_info("Found {} docs".format(len(docs_from_cbl)))
-    assert np.array_equal(sorted(docs_from_cbl), sorted(docs_from_n1ql))
+    assert np.array_equal(sorted(docs_from_cbl, key=itemgetter('id')), sorted(docs_from_n1ql, key=itemgetter('id')))
     log_info("Doc contents match between CBL and n1ql")
 
 
@@ -1258,7 +1263,7 @@ def test_is(params_from_base_suite_setup, prop):
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
     log_info("Found {} docs".format(len(docs_from_cbl)))
-    assert np.array_equal(sorted(docs_from_cbl), sorted(docs_from_n1ql))
+    assert np.array_equal(sorted(docs_from_cbl, key=itemgetter('id')), sorted(docs_from_n1ql, key=itemgetter('id')))
     log_info("Doc contents match between CBL and n1ql")
 
 
@@ -1305,7 +1310,7 @@ def test_isnot(params_from_base_suite_setup, prop):
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
     log_info("Found {} docs".format(len(docs_from_cbl)))
-    assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
+    assert sorted(docs_from_cbl, key=itemgetter('id')) == sorted(docs_from_n1ql, key=itemgetter('id'))
     log_info("Doc contents match between CBL and n1ql")
 
 
@@ -1351,7 +1356,7 @@ def test_not(params_from_base_suite_setup, prop, val1, val2):
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
     log_info("Found {} docs".format(len(docs_from_cbl)))
-    assert np.array_equal(sorted(docs_from_cbl), sorted(docs_from_n1ql))
+    assert np.array_equal(sorted(docs_from_cbl, key=itemgetter('id')), sorted(docs_from_n1ql, key=itemgetter('id')))
     log_info("Doc contents match between CBL and n1ql")
 
 
