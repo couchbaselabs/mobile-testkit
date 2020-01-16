@@ -674,6 +674,9 @@ def test_non_blocking_custom_conflicts_resolution(params_from_base_test_setup, r
             new_docs_body[doc_id].append(data)
 
     replicator.wait_until_replicator_idle(repl, sleep_time=12)  # Added sleep time because CCR sleeps for 10 secs
+    # Double checking that the complete replication is done as delayed CCR might give false idle for replication
+    sleep(2)
+    replicator.wait_until_replicator_idle(repl, sleep_time=12)
     total = replicator.getTotal(repl)
     completed = replicator.getCompleted(repl)
     replicator.stop(repl)

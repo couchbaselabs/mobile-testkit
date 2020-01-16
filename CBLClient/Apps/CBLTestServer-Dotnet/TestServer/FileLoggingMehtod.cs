@@ -192,7 +192,7 @@ namespace Couchbase.Lite.Testing
                 // Swallow...other side closed the connection
             } finally {
                 memoryStream.Dispose();
-            }  
+            }
         }
 
         public static void SetLogLevel([NotNull] NameValueCollection args,

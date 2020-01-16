@@ -1,4 +1,5 @@
 import pytest
+from time import sleep
 
 from CBLClient.Replication import Replication
 from CBLClient.PeerToPeer import PeerToPeer
@@ -361,9 +362,9 @@ def test_p2p_non_blocking_custom_conflicts(params_from_base_test_setup, server_s
     """
     @summary:
     1. Create few docs in app and get them replicated to SG. Stop the replication once docs are replicated.
-    2. Update docs couple of times with different updates on both SG and CBL app. This will create conflict.
-    3. Start the replication with remote_wins CCR algorithm
-    4. Verifies that CBL hasn't retains its changes. For push and pull replication SG changes should retain its changes
+    2. Update docs couple of times with different updates on both CBL apps. This will create conflict.
+    3. Start the replication with delayed_local_wins CCR algorithm and update some docs during CCR is resolving conflicts
+    4. Verifies that client app hasn't retains its changes. For push and pull replication Client changes should have its changes on Server app
     """
     num_of_docs = 10
     base_url_list = server_setup["base_url_list"]
@@ -413,7 +414,7 @@ def test_p2p_non_blocking_custom_conflicts(params_from_base_test_setup, server_s
             log_info("Updating CBL Doc - {}".format(doc_id))
             data = client_cbl_docs[doc_id]
             data = property_updater(data)
-            data["client_random"] = random_string(length=10, printable=True)
+            data["client_random"] = random_string(length=10)
             db_obj_client.updateDocument(cbl_db_client, doc_id=doc_id, data=data)
 
     # updating docs on client side
@@ -423,7 +424,7 @@ def test_p2p_non_blocking_custom_conflicts(params_from_base_test_setup, server_s
             log_info("Updating CBL Doc - {}".format(doc_id))
             data = server_cbl_docs[doc_id]
             data = property_updater(data)
-            data["server_random"] = random_string(length=10, printable=True)
+            data["server_random"] = random_string(length=10)
             db_obj_server.updateDocument(cbl_db_server, doc_id=doc_id, data=data)
 
     repl = peer_to_peer_client.configure(host=server_host, server_db_name=db_name_server, client_database=cbl_db_client,
@@ -439,11 +440,14 @@ def test_p2p_non_blocking_custom_conflicts(params_from_base_test_setup, server_s
             data = client_cbl_docs[doc_id]
             data = property_updater(data)
             new_docs_body[doc_id] = [data]
-            data["update_during_CCR"] = random_string(length=10, printable=True)
+            data["update_during_CCR"] = random_string(length=10)
             db_obj_client.updateDocument(cbl_db_client, doc_id=doc_id, data=data)
             # Saving the history of update to CBL doc
             new_docs_body[doc_id].append(data)
-    replicator.wait_until_replicator_idle(repl, sleep_time=5)
+    replicator.wait_until_replicator_idle(repl, sleep_time=12)
+    # Double checking that the complete replication is done as delayed CCR might give false idle for replication
+    sleep(2)
+    replicator.wait_until_replicator_idle(repl, sleep_time=12)
     total = replicator.getTotal(repl)
     completed = replicator.getCompleted(repl)
     assert total == completed, "replication from client to server did not completed " + str(total) +\
