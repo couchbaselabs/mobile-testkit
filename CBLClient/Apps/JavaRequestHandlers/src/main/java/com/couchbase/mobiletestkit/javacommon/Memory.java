@@ -9,6 +9,8 @@ import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.couchbase.mobiletestkit.javacommon.util.ZipUtils;
+
 public class Memory {
     private static String ipAddress = "";
     private final Map<String, Object> _memory = new HashMap<>();
@@ -54,10 +56,11 @@ public class Memory {
     }
 
     public static void copyFolder(File src, File dest) throws IOException {
+        ZipUtils zipper = new ZipUtils();
         if (src.isDirectory()) {
 
             if (dest.exists()) {
-                deleteRecursive(dest);
+                zipper.deleteRecursive(dest);
             }
             else {
                 dest.mkdir();
@@ -94,14 +97,7 @@ public class Memory {
             System.out.println("File copied from " + src + " to " + dest);
 
         }
-        deleteRecursive(src);
-    }
 
-    public static void deleteRecursive(File fileOrDirectory) {
-        if (fileOrDirectory.isDirectory()) {
-            for (File child : fileOrDirectory.listFiles()) { deleteRecursive(child); }
-        }
-
-        fileOrDirectory.delete();
+        zipper.deleteRecursive(src);
     }
 }

@@ -26,7 +26,7 @@ def random_string(length):
     return "".join(random.choice(string.ascii_letters) for _ in xrange(length))
 
 
-def doc_size_bymb(size):
+def doc_size_byBytes(size):
     data = {
         "name": random_string(size)
     }

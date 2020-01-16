@@ -1,10 +1,14 @@
 package com.couchbase.mobiletestkit.javacommon.RequestHandler;
 
+import java.io.File;
+
 import com.couchbase.mobiletestkit.javacommon.Args;
 import com.couchbase.mobiletestkit.javacommon.RequestHandlerDispatcher;
+import com.couchbase.mobiletestkit.javacommon.RawData;
 import com.couchbase.mobiletestkit.javacommon.util.Log;
-import com.couchbase.lite.*;
+import com.couchbase.mobiletestkit.javacommon.util.ZipUtils;
 
+import com.couchbase.lite.*;
 
 public class LoggingRequestHandler {
     private static final String TAG = "LOGREQHANDLER";
@@ -138,6 +142,25 @@ public class LoggingRequestHandler {
                 break;
         }
         return config;
+    }
+
+    public RawData getLogsInZip(Args args) {
+        LogFileConfiguration fileLoggerConfig = Database.log.getFile().getConfig();
+        if (fileLoggerConfig == null) { return null; }
+
+        ZipUtils zipper = new ZipUtils();
+
+        File zipDir = RequestHandlerDispatcher.context.getExternalFilesDir("zip");
+        try {
+            File zipFile = new File(zipDir, "archive.zip");
+            if (zipFile.exists()) { zipper.deleteRecursive(zipFile); }
+
+            zipper.zipDirectory(fileLoggerConfig.getDirectory(), zipFile);
+            return new RawData("application/zip", zipper.readFile(zipFile));
+        }
+        finally {
+            zipper.deleteRecursive(zipDir);
+        }
     }
 
 }

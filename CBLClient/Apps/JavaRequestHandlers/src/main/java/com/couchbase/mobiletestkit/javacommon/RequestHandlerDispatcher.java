@@ -17,8 +17,8 @@ public class RequestHandlerDispatcher {
         memory = memoryObject;
     }
 
-    public static String handle(String handlerType, String method, Args args) throws Exception {
-        String body = null;
+    public static Object handle(String handlerType, String method, Args args) throws Exception {
+        Object body = null;
 
         try{
             Object result;
@@ -126,7 +126,7 @@ public class RequestHandlerDispatcher {
                 }
                 else {
                     result = target.invoke(requestHandler, args);
-                    body = ValueSerializer.serialize(result, memory);
+					body = (result instanceof RawData) ? result : ValueSerializer.serialize(result, memory);
                 }
             }
 

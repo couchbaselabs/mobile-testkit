@@ -11,6 +11,7 @@ from requests.exceptions import HTTPError
 from libraries.testkit.debug import log_request
 from libraries.testkit.debug import log_response
 from libraries.testkit import settings
+from keywords.utils import log_info
 import logging
 log = logging.getLogger(settings.LOGGER)
 
@@ -186,9 +187,10 @@ class User:
         # Return list of cache docs that were added
         return bulk_docs_ids
 
-    def add_docs(self, num_docs, bulk=False, name_prefix=None, retries=False):
+    def add_docs(self, num_docs, bulk=True, name_prefix=None, retries=False):
 
         errors = list()
+        print "add docs for each user object"
 
         # If no name_prefix is specified, use uuids for doc_names
         if name_prefix is None:
@@ -198,7 +200,7 @@ class User:
 
         if not bulk:
             with concurrent.futures.ThreadPoolExecutor(max_workers=settings.MAX_REQUEST_WORKERS) as executor:
-
+                log_info(" adding docs without bulk")
                 if retries:
                     future_to_docs = {executor.submit(self.add_doc, doc, content=None, retries=True): doc for doc in doc_names}
                 else:
@@ -265,9 +267,9 @@ class User:
                     # This was using invalid construction of HTTP adapter and currently is not used anywhere.
                     # Retry behavior will be the same as regular behavior. This is a legacy API so just adding this
                     # to do execute the same behavior whether or not retries is specifiec
-                    put_resp = self._session.put(doc_url, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
+                    put_resp = self._session.put(doc_url, data=body)
                 else:
-                    put_resp = self._session.put(doc_url, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
+                    put_resp = self._session.put(doc_url, data=body)
 
                 log.debug("{0} PUT {1}".format(self.name, resp.url))
 
@@ -297,7 +299,7 @@ class User:
         if len(self.cache.keys()) == 0:
             log.warning("Unable to find any docs to update")
 
-        with concurrent.futures.ThreadPoolExecutor(max_workers=settings.MAX_REQUEST_WORKERS) as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=25) as executor:
 
             if retries:
                 future_to_docs = {executor.submit(self.update_doc, doc_id, num_revs_per_doc, retries=True): doc_id for doc_id in self.cache.keys()}
