@@ -225,7 +225,7 @@ def test_multiple_selects(params_from_base_suite_setup, select_property1, select
     assert len(docs_from_cbl) == len(docs_from_n1ql)
     log_info(docs_from_n1ql)
     log_info(docs_from_cbl)
-    assert sorted(docs_from_cbl, key=itemgetter('type')) == sorted(docs_from_n1ql, key=itemgetter('type'))
+    assert sorted(docs_from_cbl, key=itemgetter('id')) == sorted(docs_from_n1ql, key=itemgetter('id'))
 
     log_info("Doc contents match")
 
@@ -385,7 +385,7 @@ def test_query_pattern_regex(params_from_base_suite_setup, whr_key, whr_val, sel
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
     log_info("Found {} docs".format(len(docs_from_cbl)))
-    assert sorted(docs_from_cbl, key=itemgetter('type')) == sorted(docs_from_n1ql, key=itemgetter('type'))
+    assert sorted(docs_from_cbl, key=itemgetter('id')) == sorted(docs_from_n1ql, key=itemgetter('id'))
     log_info("Doc contents match")
 
 
@@ -667,7 +667,7 @@ def test_query_join(params_from_base_suite_setup, select_property1,
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
     log_info("Found {} docs".format(len(docs_from_cbl)))
-    assert sorted(docs_from_cbl, key=itemgetter('name')) == sorted(docs_from_n1ql, key=itemgetter('name'))
+    assert sorted(docs_from_cbl, key=itemgetter('airline')) == sorted(docs_from_n1ql, key=itemgetter('airline'))
     log_info("Doc contents match")
 
 
