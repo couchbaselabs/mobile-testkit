@@ -334,12 +334,11 @@ public class DatabaseRequestHandler {
 
     public String getPreBuiltDb(Args args) throws IOException {
         String dbPath = args.get("dbPath");
-        String[] dbPathLayers = dbPath.split("/");
-        String dbFileName = dbPathLayers[dbPathLayers.length - 1];
-        String dbFileNameNoExt = new File(dbPath).getName();
-        dbFileNameNoExt = dbFileNameNoExt.substring(0, dbFileNameNoExt.lastIndexOf("."));
-        ZipUtils.unzip(RequestHandlerDispatcher.context.getAsset(dbFileName), RequestHandlerDispatcher.context.getFilesDir());
-        return RequestHandlerDispatcher.context.getFilesDir().getAbsolutePath() + "/" + dbFileNameNoExt;
+        Context context = CouchbaseLiteServ.getAppContext();
+        String dbFileName = new File(dbPath).getName();
+        dbFileName = dbFileName.substring(0, dbFileName.lastIndexOf("."));
+        new ZipUtils().unzip(getAsset(dbPath), context.getFilesDir());
+        return context.getFilesDir().getAbsolutePath() + "/" + dbFileName;
     }
 
 }

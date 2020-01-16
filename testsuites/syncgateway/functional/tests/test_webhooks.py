@@ -14,7 +14,7 @@ from libraries.testkit.parallelize import in_parallel
 from libraries.testkit.web_server import WebServer
 from keywords.exceptions import TimeoutError
 from keywords.constants import CLIENT_REQUEST_TIMEOUT
-from utilities.cluster_config_utils import persist_cluster_config_environment_prop
+from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
 
 
 @pytest.mark.sanity
@@ -51,7 +51,10 @@ def test_webhooks(params_from_base_test_setup, sg_conf_name, num_users, num_chan
     log_info("Using num_channels: {}".format(num_channels))
     log_info("Using num_docs: {}".format(num_docs))
     log_info("Using num_revisions: {}".format(num_revisions))
-    persist_cluster_config_environment_prop(cluster_conf, 'x509_certs', x509_cert_auth)
+    if x509_cert_auth:
+        temp_cluster_config = copy_to_temp_conf(cluster_conf, mode)
+        persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
+        cluster_conf = temp_cluster_config
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_conf)
 
@@ -74,7 +77,8 @@ def test_webhooks(params_from_base_test_setup, sg_conf_name, num_users, num_chan
 
     # Add User
     log_info("Add docs")
-    in_parallel(user_objects, 'add_docs', num_docs)
+    bulk = True
+    in_parallel(user_objects, 'add_docs', num_docs, bulk)
 
     # Update docs
     log_info("Update docs")

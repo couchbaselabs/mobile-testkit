@@ -17,16 +17,16 @@
       "username":"data-bucket",
       "password": "password",
       "users": {
-        "jay": {"password": "pass", "admin_channels": ["jay"]},
-        "eunice": {"password": "pass", "admin_channels": ["eunice"]},
+        "traun": {"password": "pass", "admin_channels": ["traun"]},
+        "james": {"password": "pass", "admin_channels": ["james"]},
         "pasin": {"password": "pass", "admin_channels": ["pasin"]},
         "jens": {"password": "pass", "admin_channels": ["jens"]},
         "jim": {"password": "pass", "admin_channels": ["jim"]},
         "sridevi": {"password": "pass", "admin_channels": ["sridevi"]},
-        "manasa": {"password": "pass", "admin_channels": ["manasa"]},
-        "sandy": {"password": "pass", "admin_roles": ["sandy"]},
+        "raghu": {"password": "pass", "admin_channels": ["raghu"]},
+        "mod": {"password": "pass", "admin_roles": ["moderator"]},
         "admin": {"password": "pass", "admin_roles": ["admin"]},
-        "blake": {"password": "pass", "admin_roles": ["blake"]}
+        "hemant": {"password": "pass", "admin_roles": ["admin"]}
       },
       "roles": {
         "moderator": {},

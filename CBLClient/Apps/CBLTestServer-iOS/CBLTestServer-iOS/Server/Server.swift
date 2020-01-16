@@ -178,7 +178,15 @@ public class Server {
                 }
 
                 if body != nil {
-                    return GCDWebServerDataResponse(text: body as! String)
+                    if body is RawData {
+                        guard let dataObj = body as? RawData else {
+                            fatalError("type should be a raw data")
+                        }
+                        return GCDWebServerDataResponse(data: dataObj.data,
+                                                        contentType: dataObj.contentType)
+                    } else {
+                        return GCDWebServerDataResponse(text: body as! String)
+                    }
                 } else {
                     // Send 200 code and close
                     return GCDWebServerDataResponse(text: "I-1")

@@ -56,7 +56,6 @@ def test_get_buckets_from_sync_gateway_config_template_vars():
     "interface":":4984",
     "adminInterface": "0.0.0.0:4985",
     "maxIncomingConnections": 0,
-    "maxCouchbaseConnections": 16,
     "maxFileDescriptors": 90000,
     "compressResponses": true,
     "log": ["CRUD+", "Cache+", "HTTP+", "Changes+"],
