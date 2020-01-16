@@ -20,9 +20,8 @@ import java.io.File;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.couchbase.CouchbaseLiteServ.server.Args;
-import com.couchbase.CouchbaseLiteServ.server.RawData;
-import com.couchbase.CouchbaseLiteServ.server.RequestHandler.LoggingRequestHandler;
+import com.couchbase.mobiletestkit.javacommon.*;
+import com.couchbase.mobiletestkit.javacommon.RequestHandler.*;
 import com.couchbase.lite.Database;
 import com.couchbase.lite.FileLogger;
 import com.couchbase.lite.LogDomain;
@@ -33,6 +32,7 @@ public class LogTest {
 
     @Test
     public void testLogZipper() throws Exception {
+        RequestHandlerDispatcher.context = CouchbaseLiteServ.getTestServerContext();
         LoggingRequestHandler logRequestHandler = new LoggingRequestHandler();
 
         final Args args = new Args();
