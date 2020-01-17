@@ -24,8 +24,8 @@ from keywords.ClusterKeywords import ClusterKeywords
 from utilities.cluster_config_utils import get_load_balancer_ip
 
 
-def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_config, sg_ssl=None, sg_lb=None, cbs_ssl=None, use_views=None,
-                      xattrs_enabled=None, no_conflicts_enabled=None, delta_sync_enabled=None, number_replicas=None, sg_ce=False,
+def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_config, sg_ssl=False, sg_lb=False, cbs_ssl=False, use_views=False,
+                      xattrs_enabled=False, no_conflicts_enabled=False, delta_sync_enabled=False, number_replicas=0, sg_ce=False,
                       cbs_platform="centos7", sg_platform="centos", sg_installer_type="msi", sa_platform="centos",
                       sa_installer_type="msi", cbs_ce=False, aws=False):
 
