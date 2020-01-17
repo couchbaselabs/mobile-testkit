@@ -350,7 +350,7 @@ def test_replication_access_revoke_event(params_from_base_test_setup, num_of_doc
 
     # 3 changing channel of some docs, so that we get access revoked event
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=auth_session)["rows"]
-    docs_to_modify = random.sample(sg_docs, (num_of_docs / 10) * 2)
+    docs_to_modify = random.sample(sg_docs, (num_of_docs // 10) * 2)
     for sg_doc in docs_to_modify:
         sg_client.update_doc(url=sg_url, db=sg_db, doc_id=sg_doc["id"],
                              number_updates=1, auth=auth_session,
@@ -453,7 +453,7 @@ def test_replication_delete_event(params_from_base_test_setup, num_of_docs):
 
     # 3 deleting some docs, so that we get delete event
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=auth_session)["rows"]
-    docs_to_modify = random.sample(sg_docs, (num_of_docs / 10) * 2)
+    docs_to_modify = random.sample(sg_docs, (num_of_docs // 10) * 2)
     for doc in docs_to_modify:
         doc_id = doc["id"]
         sg_client.delete_doc(url=sg_url, db=sg_db, doc_id=doc_id, rev=doc["value"]["rev"], auth=auth_session)

@@ -8,6 +8,7 @@ import re
 from keywords.exceptions import FeatureSupportedError
 from keywords.constants import DATA_DIR
 from utilities.cluster_config_utils import get_cbs_servers, get_sg_version
+from operator import itemgetter
 
 
 # TODO: Use python logging hooks instead of wrappers - https://github.com/couchbaselabs/mobile-testkit/issues/686
@@ -363,8 +364,8 @@ def deep_list_compare(object1, object2, isPredictiveResult=False):
     """
     retval = True
     count = len(object1)
-    object1 = sorted(object1)
-    object2 = sorted(object2)
+    # object1 = sorted(object1)
+    # object2 = sorted(object2)
     for x in range(count):
         if isinstance(object1[x], dict) and isinstance(object2[x], dict):
             retval = deep_dict_compare(object1[x], object2[x], isPredictiveResult)

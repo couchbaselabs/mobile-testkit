@@ -868,8 +868,8 @@ def update_docs(replication_type, cbl_db, db, sg_client, sg_docs, sg_url, sg_db,
         cbl_db_docs = db.getDocuments(cbl_db, doc_ids)
         for doc_id, doc_body in list(cbl_db_docs.items()):
             if string_type == "utf-8":
-                doc_body["new-1"] = str(random_string(length=70), "utf-8")
-                doc_body["new-2"] = str(random_string(length=70), "utf-8")
+                doc_body["new-1"] = random_string(length=70).encode('utf-8')
+                doc_body["new-2"] = random_string(length=70).encode('utf-8')
             else:
                 doc_body["new-1"] = random_string(length=70)
                 doc_body["new-2"] = random_string(length=30)
