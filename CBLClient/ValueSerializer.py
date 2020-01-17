@@ -34,6 +34,8 @@ class ValueSerializer(object):
             string_map = {}
 
             for map_param in dict_map:
+                if isinstance(map_param, bytes):
+                    map_param = map_param.decode()
                 val = ValueSerializer.serialize(dict_map[map_param])
                 string_map[map_param] = val
 

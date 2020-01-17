@@ -258,7 +258,7 @@ def test_replication_filter_deleted_document(params_from_base_test_setup, num_of
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
-    num_of_docs_to_delete = (num_of_docs * 2) / 10
+    num_of_docs_to_delete = (num_of_docs * 2) // 10
 
     if sync_gateway_version < "2.5.0":
         pytest.skip('This test cannot run with sg version below 2.5')
@@ -361,7 +361,7 @@ def test_replication_filter_access_revoke_document(params_from_base_test_setup, 
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
-    num_of_docs_to_delete = (num_of_docs * 2) / 10
+    num_of_docs_to_delete = (num_of_docs * 2) // 10
 
     if sync_gateway_version < "2.5.0":
         pytest.skip('This test cannnot run with sg version below 2.5')
