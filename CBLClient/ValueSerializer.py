@@ -10,7 +10,11 @@ class ValueSerializer(object):
         elif isinstance(value, MemoryPointer):
             return value.getAddress()
         elif isinstance(value, str):
-            string = str(value)
+            if value.endswith(",LONGTYPE"):
+                value = value.split(',')
+                return "L" + value[0]
+            else:
+                string = str(value)
             return "\"" + string + "\""
         elif isinstance(value, str):
             value = value.encode('utf-8')
