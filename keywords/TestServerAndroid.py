@@ -139,7 +139,7 @@ class TestServerAndroid(TestServerBase):
                     break
 
         output = subprocess.check_output(["adb", "-d", "shell", "pm", "list", "packages"])
-        if self.installed_package_name not in output:
+        if self.installed_package_name not in output.decode():
             raise LiteServError("Failed to install package: {}".format(output))
 
         log_info("LiteServ installed to {}".format(self.host))
