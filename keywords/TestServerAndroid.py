@@ -153,7 +153,7 @@ class TestServerAndroid(TestServerBase):
             raise LiteServError("Error. Could not remove app.")
 
         output = subprocess.check_output(["adb", "shell", "pm", "list", "packages"])
-        if self.installed_package_name in output:
+        if self.installed_package_name in output.decode():
             raise LiteServError("Error uninstalling app!")
 
         log_info("Testserver app removed from {}".format(self.host))
