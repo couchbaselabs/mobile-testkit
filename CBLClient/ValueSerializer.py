@@ -36,11 +36,12 @@ class ValueSerializer(object):
         elif isinstance(value, dict):
             dict_map = value
             string_map = {}
-
             for map_param in dict_map:
-                if isinstance(map_param, bytes):
-                    map_param = map_param.decode()
-                val = ValueSerializer.serialize(dict_map[map_param])
+                if isinstance(dict_map[map_param], bytes):
+                    map_param_value = dict_map[map_param].decode()
+                else:
+                    map_param_value = dict_map[map_param]
+                val = ValueSerializer.serialize(map_param_value)
                 string_map[map_param] = val
 
             return json.dumps(string_map)
