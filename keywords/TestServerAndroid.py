@@ -90,7 +90,7 @@ class TestServerAndroid(TestServerBase):
                 output = subprocess.check_output(["adb", "-e", "install", "-r", apk_path])
                 break
             except Exception as e:
-                if "INSTALL_FAILED_ALREADY_EXISTS" in e.message or "INSTALL_FAILED_UPDATE_INCOMPATIBLE" in e.message:
+                if "INSTALL_FAILED_ALREADY_EXISTS" in e.message or "INSTALL_FAILED_UPDATE_INCOMPATIBLE" in str(e):
                     # Apk may be installed, remove and retry install
                     log_info("Trying to remove....")
                     self.remove()
