@@ -876,7 +876,7 @@ def update_docs(replication_type, cbl_db, db, sg_client, sg_docs, sg_url, sg_db,
     else:
         def property_updater(doc_body):
             if string_type == "utf-8":
-                doc_body['sg_new_update'] = str(random_string(length=70), "utf-8")
+                doc_body['sg_new_update'] = random_string(length=70).encode('utf-8')
             else:
                 doc_body["sg_new_update"] = random_string(length=70)
             return doc_body
