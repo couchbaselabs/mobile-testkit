@@ -48,7 +48,10 @@ class Client(object):
                 return ValueSerializer.deserialize(result)
         except Exception as err:
             if resp.content:
-                raise Exception(str(err) + resp.content)
+                cont = resp.content
+                if isinstance(resp.content, bytes):
+                    cont = resp.content.decode()
+                raise Exception(str(err) + cont)
             else:
                 raise Exception(str(err))
 
