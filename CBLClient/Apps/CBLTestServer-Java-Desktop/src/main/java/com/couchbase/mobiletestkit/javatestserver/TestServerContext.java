@@ -23,6 +23,14 @@ public class TestServerContext implements Context {
         return this.directory;
     }
 
+    @Override
+    public File getExternalFilesDir(String filetype) {
+        File externalFilesDir = new File(this.directory.getAbsolutePath(), filetype);
+        externalFilesDir.mkdir();
+
+        return externalFilesDir;
+    }
+
 
     @Override
     public InputStream getAsset(String name) {

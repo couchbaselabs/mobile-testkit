@@ -13,14 +13,15 @@ import java.io.InputStream;
 
 public class TestServerMain {
     private static final int PORT = 8080;
+    private static final String TMP_DIR = System.getProperty("java.io.tmpdir");
     private static Context context;
 
     public static void main(String[] args) throws IOException {
         Log.init(new TestServerLogger());
         CouchbaseLite.init();
 
-        String curPath = new File(".").getCanonicalPath();
-        context = new TestServerContext(new File(curPath));
+        File tempDir = new File(TMP_DIR, "TestServerTemp");
+        context = new TestServerContext(tempDir);
         Server.setContext(context);
 
         String ip = context.getLocalIpAddress();  //here the context hands out an ip address of 0.0.0.0
