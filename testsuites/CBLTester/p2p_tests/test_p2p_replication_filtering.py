@@ -159,7 +159,7 @@ def test_p2p_replication_delete(params_from_base_test_setup, server_setup, num_o
     channels = ["peerToPeer"]
     base_url_client = base_url_list[1]
     replicator = Replication(base_url_client)
-    num_of_docs_to_delete = (num_of_docs * 2) / 10
+    num_of_docs_to_delete = (num_of_docs * 2) // 10
 
     p2p_client = PeerToPeer(base_url_client)
     db_obj_server = db_obj_list[0]
@@ -205,8 +205,8 @@ def test_p2p_replication_delete(params_from_base_test_setup, server_setup, num_o
     # 4. Delete few docs on both server and client and replicate them using delete filter
     client_ids = [doc_id for doc_id in client_doc_ids if "client" in doc_id]
     server_ids = [doc_id for doc_id in client_doc_ids if "server" in doc_id]
-    client_doc_ids_to_delete = random.sample(client_ids, num_of_docs_to_delete / 2)
-    server_doc_ids_to_delete = random.sample(server_ids, num_of_docs_to_delete / 2)
+    client_doc_ids_to_delete = random.sample(client_ids, num_of_docs_to_delete // 2)
+    server_doc_ids_to_delete = random.sample(server_ids, num_of_docs_to_delete // 2)
 
     db_obj_server.delete_bulk_docs(database=cbl_db_server, doc_ids=server_doc_ids_to_delete)
     db_obj_client.delete_bulk_docs(database=cbl_db_client, doc_ids=client_doc_ids_to_delete)
