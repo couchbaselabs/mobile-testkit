@@ -5,6 +5,7 @@ using System.IO;
 using System.Net;
 using JetBrains.Annotations;
 using Couchbase.Lite.Logging;
+using System.IO.Compression;
 
 namespace Couchbase.Lite.Testing
 {
@@ -154,6 +155,44 @@ namespace Couchbase.Lite.Testing
             Database.Log.File.Config = config;
             response.WriteBody(Database.Log.File.Config);
 
+        }
+
+        public static void GetLogsInZip([NotNull] NameValueCollection args,
+                                [NotNull] IReadOnlyDictionary<string, object> postBody,
+                                [NotNull] HttpListenerResponse response)
+        {
+            var path = Database.Log.File.Config?.Directory;
+            if (path == null) {
+                response.WriteEmptyBody();
+                return;
+            }
+
+            string logDirName = new DirectoryInfo(path).Name;
+            string[] filePaths = Directory.GetFiles(@path);
+            var memoryStream = new MemoryStream();
+            using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true)) {
+                foreach (var filePath in filePaths) {
+                    string fileEntry = logDirName + "/" + Path.GetFileName($"{filePath}");
+                    var entry = archive.CreateEntry(fileEntry);
+                    using (var file = File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                    using (var entryStream = entry.Open()) {
+                        file.CopyTo(entryStream);
+                    }
+                }
+            }
+
+            try {
+                response.ContentLength64 = memoryStream.Length;
+                Stream output = response.OutputStream;
+                memoryStream.WriteTo(output);
+                response.ContentType = "application/zip";
+                response.StatusCode = (int)HttpStatusCode.OK;
+                response.Close();
+            } catch (ObjectDisposedException) {
+                // Swallow...other side closed the connection
+            } finally {
+                memoryStream.Dispose();
+            }
         }
 
         public static void SetLogLevel([NotNull] NameValueCollection args,

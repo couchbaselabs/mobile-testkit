@@ -68,6 +68,9 @@ public class ValueSerializer {
                 throw ValueSerializerError.SerializerError("Error converting Array to json")
             }
         }
+        else if (v is RawData) {
+            return v
+        }
         else {
             return memory.add(value: value!)
         }

@@ -32,6 +32,11 @@ public class TestServerContext implements Context {
     }
 
     @Override
+    public File getExternalFilesDir(String filetype){
+        return CouchbaseLiteServ.getAppContext().getExternalFilesDir(filetype);
+    }
+
+    @Override
     public String getLocalIpAddress() {
         String ip = "";
         try {

@@ -44,8 +44,8 @@ class SyncGateway:
         self.server_scheme = "http"
 
         if is_cbs_ssl_enabled(self.cluster_config):
-            self.server_port = 18091
-            self.server_scheme = "https"
+            self.server_port = ""
+            self.server_scheme = "couchbases"
 
         if is_x509_auth(cluster_config):
             self.server_port = ""

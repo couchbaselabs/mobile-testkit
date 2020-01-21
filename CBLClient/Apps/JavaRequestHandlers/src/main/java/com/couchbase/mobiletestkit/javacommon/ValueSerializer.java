@@ -15,7 +15,7 @@ public class ValueSerializer {
         if (value == null) {
             return null;
         }
-        else if (value instanceof Boolean) {
+       else if (value instanceof Boolean) {
             Boolean bool = (Boolean) value;
 
             return (bool ? "true" : "false");

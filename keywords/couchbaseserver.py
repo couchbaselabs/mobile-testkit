@@ -811,6 +811,8 @@ class CouchbaseServer:
             base_url = "{}/alice/{}".format(cbnas_base_url, build_number)
         elif version.startswith("6.5"):
             base_url = "{}/mad-hatter/{}".format(cbnas_base_url, build_number)
+        elif version.startswith("7.0"):
+            base_url = "{}/cheshire-cat/{}".format(cbnas_base_url, build_number)
         else:
             raise Exception(
                 "Unexpected couchbase server version: {}".format(version))

@@ -338,7 +338,9 @@ public class DatabaseRequestHandler {
         String dbFileName = dbPathLayers[dbPathLayers.length - 1];
         String dbFileNameNoExt = new File(dbPath).getName();
         dbFileNameNoExt = dbFileNameNoExt.substring(0, dbFileNameNoExt.lastIndexOf("."));
-        ZipUtils.unzip(RequestHandlerDispatcher.context.getAsset(dbFileName), RequestHandlerDispatcher.context.getFilesDir());
+
+        ZipUtils zipper = new ZipUtils();
+        zipper.unzip(RequestHandlerDispatcher.context.getAsset(dbFileName), RequestHandlerDispatcher.context.getFilesDir());
         return RequestHandlerDispatcher.context.getFilesDir().getAbsolutePath() + "/" + dbFileNameNoExt;
     }
 
