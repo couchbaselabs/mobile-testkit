@@ -28,7 +28,6 @@ public class TestServerContext implements Context {
 
     @Override
     public File getFilesDir() {
-        //return new File(servletRequest.getServletContext().getRealPath("CouchbaseLiteTemp"));
         File temp_dir = new File(TMP_DIR, "TestServerTemp");
         if(!temp_dir.exists()){
             try {
@@ -39,6 +38,19 @@ public class TestServerContext implements Context {
         }
 
         return temp_dir;
+    }
+
+    @Override
+    public File getExternalFilesDir(String filetype) {
+        File externalFilesDir = new File(getFilesDir().getAbsoluteFile().getName(), filetype);
+        if(!externalFilesDir.exists()){
+            try {
+                externalFilesDir.mkdir();
+            }catch(SecurityException se){
+                throw se;
+            }
+        }
+        return externalFilesDir;
     }
 
     @Override

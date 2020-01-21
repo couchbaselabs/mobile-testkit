@@ -28,7 +28,7 @@ public class TestServerWS extends HttpServlet {
     public void init() throws ServletException {
         CouchbaseLite.init();
         Database.log.getConsole().setLevel(LogLevel.DEBUG);
-        Database.log.getConsole().setDomains(EnumSet.of(LogDomain.ALL));
+        Database.log.getConsole().setDomains(LogDomain.ALL_DOMAINS);
 
         Log.init(new TestServerLogger());
     }
@@ -89,12 +89,12 @@ public class TestServerWS extends HttpServlet {
         }
 
         try{
-            String body = RequestHandlerDispatcher.handle(handlerType, method, args);
+            Object body = RequestHandlerDispatcher.handle(handlerType, method, args);
 
             if (body != null) {
                 response.setStatus(HttpServletResponse.SC_OK);
                 response.setHeader("Content-Type", "text/plain");
-                response.getOutputStream().write(body.getBytes());
+                response.getOutputStream().write(body.toString().getBytes());
                 response.getOutputStream().flush();
                 response.getOutputStream().close();
             }
@@ -110,7 +110,20 @@ public class TestServerWS extends HttpServlet {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             response.setHeader("Content-Type", "text/plain");
             response.getWriter().println(e.getMessage());
-            //response.getWriter().write("eunice");
         }
+    }
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        /*
+        this serves as GET method for testing
+        */
+        String resp_msg = "CouchbaseLite Java WebService - Respond OK";
+
+        response.setStatus(HttpServletResponse.SC_OK);
+        response.setHeader("Content-Type", "text/plain");
+        response.getOutputStream().write(resp_msg.getBytes());
+        response.getOutputStream().flush();
+        response.getOutputStream().close();
     }
 }
