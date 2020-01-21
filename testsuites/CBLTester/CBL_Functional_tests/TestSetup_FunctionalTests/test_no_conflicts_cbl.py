@@ -84,7 +84,8 @@ def test_no_conflicts_enabled(params_from_base_test_setup):
         with pytest.raises(HTTPError) as he:
             sg_client.add_conflict(url=sg_url, db=sg_db, doc_id=doc["id"], parent_revisions=doc["value"]["rev"], new_revision="2-foo",
                                    auth=session)
-        assert he.value.message.startswith('409 Client Error: Conflict for url:')
+
+        assert str(he.value).startswith('409 Client Error: Conflict for url:')
 
 
 @pytest.mark.sanity
@@ -815,7 +816,7 @@ def test_multiple_cbls_updates_concurrently_with_push(params_from_base_test_setu
             with pytest.raises(HTTPError) as he:
                 sg_client.add_conflict(url=sg_url, db=sg_db, doc_id=doc["id"], parent_revisions=doc["value"]["rev"], new_revision="2-2B",
                                        auth=session)
-            assert he.value.message.startswith('409 Client Error: Conflict for url:')
+            assert str(he.value).startswith('409 Client Error: Conflict for url:')
 
 
 @pytest.mark.listener
