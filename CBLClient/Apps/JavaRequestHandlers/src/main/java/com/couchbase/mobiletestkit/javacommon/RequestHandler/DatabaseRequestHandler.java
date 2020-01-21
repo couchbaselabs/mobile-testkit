@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.couchbase.mobiletestkit.javacommon.Args;
+import com.couchbase.mobiletestkit.javacommon.Context;
 import com.couchbase.mobiletestkit.javacommon.RequestHandlerDispatcher;
 import com.couchbase.mobiletestkit.javacommon.util.Log;
 import com.couchbase.mobiletestkit.javacommon.util.ZipUtils;
@@ -334,14 +335,13 @@ public class DatabaseRequestHandler {
 
     public String getPreBuiltDb(Args args) throws IOException {
         String dbPath = args.get("dbPath");
-        String[] dbPathLayers = dbPath.split("/");
-        String dbFileName = dbPathLayers[dbPathLayers.length - 1];
-        String dbFileNameNoExt = new File(dbPath).getName();
-        dbFileNameNoExt = dbFileNameNoExt.substring(0, dbFileNameNoExt.lastIndexOf("."));
+        String dbFileName = new File(dbPath).getName();
+        dbFileName = dbFileName.substring(0, dbFileName.lastIndexOf("."));
+        Context context = RequestHandlerDispatcher.context;
 
         ZipUtils zipper = new ZipUtils();
-        zipper.unzip(RequestHandlerDispatcher.context.getAsset(dbFileName), RequestHandlerDispatcher.context.getFilesDir());
-        return RequestHandlerDispatcher.context.getFilesDir().getAbsolutePath() + "/" + dbFileNameNoExt;
+        zipper.unzip(context.getAsset(dbPath), context.getFilesDir());
+        return context.getFilesDir().getAbsolutePath() + "/" + dbFileName;
     }
 
 }
