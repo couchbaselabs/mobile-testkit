@@ -108,7 +108,7 @@ public class ZipUtils {
             fis = new FileInputStream(filePath);
 
             String fn = filePath.substring(rootPathLen + 1, filePath.length());
-            android.util.Log.d("###", "adding as '" + fn + "': " + filePath);
+            Log.d("###", "adding as '" + fn + "': " + filePath);
             String entry = logFileName + "/" + fn;
             zos.putNextEntry(new ZipEntry(entry));
 
