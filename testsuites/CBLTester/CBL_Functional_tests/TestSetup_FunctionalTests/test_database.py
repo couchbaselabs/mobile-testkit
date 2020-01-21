@@ -61,7 +61,7 @@ def test_databaseEncryption(params_from_base_test_setup, password):
     else:
         with pytest.raises(Exception) as he:
             db.create(cbl_db_name, db_config)
-        assert he.value.message.startswith('400 Client Error: Bad Request for url:')
+        assert str(he.value).startswith('400 Client Error: Bad Request for url:')
 
     # 6. Verify that database can be accessed with password
     db_config1 = db.configure(password=password)
@@ -117,7 +117,7 @@ def test_invalidEncryption(params_from_base_test_setup, password):
     else:
         with pytest.raises(Exception) as he:
             db.create(cbl_db_name, db_config_without_password)
-        assert he.value.message.startswith('400 Client Error: Bad Request for url:')
+        assert str(he.value).startswith('400 Client Error: Bad Request for url:')
 
     # 4. access database with invalid password
     # 5. Verify database cannot be accessed
@@ -129,7 +129,7 @@ def test_invalidEncryption(params_from_base_test_setup, password):
         with pytest.raises(Exception) as he:
             invalid_key_db_config = db_configure.setEncryptionKey(db_config, password=password)
             db.create(cbl_db_name, invalid_key_db_config)
-        assert he.value.message.startswith('400 Client Error: Bad Request for url:')
+        assert str(he.value).startswith('400 Client Error: Bad Request for url:')
 
 
 @pytest.mark.sanity
@@ -177,7 +177,7 @@ def test_updateDBEncryptionKey(params_from_base_test_setup):
     else:
         with pytest.raises(Exception) as he:
             db.create(cbl_db_name, db_config)
-        assert he.value.message.startswith('400 Client Error: Bad Request for url:')
+        assert str(he.value).startswith('400 Client Error: Bad Request for url:')
 
 
 @pytest.mark.sanity
@@ -276,7 +276,7 @@ def test_removeDBEncryptionKey(params_from_base_test_setup):
     else:
         with pytest.raises(Exception) as he:
             db.create(cbl_db_name, db_config)
-        assert he.value.message.startswith('400 Client Error: Bad Request for url:')
+        assert str(he.value).startswith('400 Client Error: Bad Request for url:')
 
     # 5. Verify database can be accessed without password.
     print("starting the database access without password")
