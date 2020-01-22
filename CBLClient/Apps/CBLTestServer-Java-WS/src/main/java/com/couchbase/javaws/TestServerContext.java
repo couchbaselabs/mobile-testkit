@@ -28,6 +28,11 @@ public class TestServerContext implements Context {
 
     @Override
     public File getFilesDir() {
+        /*
+        this function to provide temp directory location
+        where CouchbaseLite database files and log files will be stored
+        in Tomcat structure, this points to %CATALINE_HOME%/temp/
+         */
         File temp_dir = new File(TMP_DIR, "TestServerTemp");
         if(!temp_dir.exists()){
             try {
@@ -42,6 +47,12 @@ public class TestServerContext implements Context {
 
     @Override
     public File getExternalFilesDir(String filetype) {
+        /*
+        this function to provide a location
+        that zipped log archive file will temporarily be stored
+        in Tomcat structure, this points to %CATALINE_HOME%/temp/TestServerTemp/
+        and a subdirectory with the value of filetype will be created under
+         */
         File externalFilesDir = new File(getFilesDir().getAbsoluteFile().getName(), filetype);
         if(!externalFilesDir.exists()){
             try {
