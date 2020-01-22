@@ -76,6 +76,11 @@ public class TestServerWS extends HttpServlet {
         if (query != null) {
             for (String key : query.keySet()) {
                 String value = (String) query.get(key);
+                /*
+                while receiving a release method in request
+                no deserialization is needed,
+                the original object memory address is required
+                */
                 if("release".equals(method)){
                     args.put(key, value);
                 }

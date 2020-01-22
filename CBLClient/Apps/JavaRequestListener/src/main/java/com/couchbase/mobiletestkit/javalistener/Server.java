@@ -86,6 +86,11 @@ public class Server extends NanoHTTPD {
         Map<String, Object> query = new Gson().fromJson(rawArgs.get("postData"), Map.class);
         if (query != null) {
             for (String key : query.keySet()) {
+                /*
+                while receiving a release method in request
+                no deserialization is needed,
+                the original object memory address is required
+                */
                 if("release".equals(method)){
                     args.put(key, query.get(key));
                 }
