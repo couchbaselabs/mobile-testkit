@@ -9,9 +9,7 @@ import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.couchbase.CouchbaseLiteServ.MainActivity;
-import com.couchbase.CouchbaseLiteServ.server.util.ZipUtils;
-
+import com.couchbase.mobiletestkit.javacommon.util.ZipUtils;
 
 public class Memory {
     private static String ipAddress = "";

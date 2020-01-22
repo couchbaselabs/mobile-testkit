@@ -557,11 +557,7 @@ class SyncGateway(object):
         couchbase_server_primary_node = add_cbs_to_sg_config_server_field(cluster_config)
         bucket_names = get_buckets_from_sync_gateway_config(sg_conf)
 
-        if is_cbs_ssl_enabled(cluster_config):
-            self.server_port = ""
-            self.server_scheme = "couchbases"
-
-        if is_x509_auth(cluster_config):
+        if is_x509_auth(cluster_config) or is_cbs_ssl_enabled(cluster_config):
             self.server_port = ""
             self.server_scheme = "couchbases"
 

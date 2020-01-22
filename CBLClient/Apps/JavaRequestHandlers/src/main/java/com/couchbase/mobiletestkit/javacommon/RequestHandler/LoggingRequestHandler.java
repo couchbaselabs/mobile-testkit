@@ -1,22 +1,14 @@
 package com.couchbase.mobiletestkit.javacommon.RequestHandler;
 
-import android.content.Context;
-import android.util.Log;
-
 import java.io.File;
 
-import com.couchbase.CouchbaseLiteServ.CouchbaseLiteServ;
-import com.couchbase.CouchbaseLiteServ.server.Args;
-import com.couchbase.CouchbaseLiteServ.server.RawData;
-import com.couchbase.CouchbaseLiteServ.server.util.ZipUtils;
-import com.couchbase.lite.Database;
-import com.couchbase.lite.LogFileConfiguration;
-import com.couchbase.lite.LogLevel;
 import com.couchbase.mobiletestkit.javacommon.Args;
 import com.couchbase.mobiletestkit.javacommon.RequestHandlerDispatcher;
+import com.couchbase.mobiletestkit.javacommon.RawData;
 import com.couchbase.mobiletestkit.javacommon.util.Log;
-import com.couchbase.lite.*;
+import com.couchbase.mobiletestkit.javacommon.util.ZipUtils;
 
+import com.couchbase.lite.*;
 
 public class LoggingRequestHandler {
     private static final String TAG = "LOGREQHANDLER";
@@ -158,17 +150,17 @@ public class LoggingRequestHandler {
 
         ZipUtils zipper = new ZipUtils();
 
-        File zipDir = CouchbaseLiteServ.getAppContext().getExternalFilesDir("zip");
+        File zipDir = RequestHandlerDispatcher.context.getExternalFilesDir("zip");
         try {
             File zipFile = new File(zipDir, "archive.zip");
             if (zipFile.exists()) { zipper.deleteRecursive(zipFile); }
 
             zipper.zipDirectory(fileLoggerConfig.getDirectory(), zipFile);
-
             return new RawData("application/zip", zipper.readFile(zipFile));
         }
         finally {
             zipper.deleteRecursive(zipDir);
         }
     }
+
 }

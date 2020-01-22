@@ -49,7 +49,7 @@ public class DataTypesInitiatorRequestHandler {
         case "datatype_setDouble":
             let double_obj: Double = args.get(name: "value")!
             return double_obj
-           
+
         case "datatype_setFloat":
             let double_obj: Double = args.get(name: "value")!
             let obj = Float(double_obj)
