@@ -212,7 +212,6 @@ def test_dcp_reshard_single_sg_accel_goes_down_and_up(params_from_base_test_setu
 
 
 @pytest.mark.topospecific
-
 @pytest.mark.syncgateway
 @pytest.mark.sgaccel
 @pytest.mark.parametrize("sg_conf", [
