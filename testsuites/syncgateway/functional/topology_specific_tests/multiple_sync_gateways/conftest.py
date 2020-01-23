@@ -45,6 +45,9 @@ def params_from_base_suite_setup(request):
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
 
+    if delta_sync_enabled and sync_gateway_version < "2.5":
+        raise FeatureSupportedError('Delta sync feature not available for sync-gateway version below 2.5, so skipping the test')
+
     log_info("server_version: {}".format(server_version))
     log_info("sync_gateway_version: {}".format(sync_gateway_version))
     log_info("mode: {}".format(mode))
@@ -200,7 +203,8 @@ def params_from_base_suite_setup(request):
            "mode": mode,
            "xattrs_enabled": xattrs_enabled,
            "sg_platform": sg_platform,
-           "sync_gateway_version": sync_gateway_version
+           "sync_gateway_version": sync_gateway_version,
+           "sg_ce": sg_ce
            }
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
@@ -227,6 +231,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     xattrs_enabled = params_from_base_suite_setup["xattrs_enabled"]
     sg_platform = params_from_base_suite_setup["sg_platform"]
     sync_gateway_version = params_from_base_suite_setup["sync_gateway_version"]
+    sg_ce = params_from_base_suite_setup["sg_ce"]
 
     test_name = request.node.name
     log_info("Setting up test '{}'".format(test_name))
@@ -236,7 +241,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
            "mode": mode,
            "xattrs_enabled": xattrs_enabled,
            "sg_platform": sg_platform,
-           "sync_gateway_version": sync_gateway_version
+           "sync_gateway_version": sync_gateway_version,
+           "sg_ce": sg_ce
            }
 
     # Code after the yeild will execute when each test finishes

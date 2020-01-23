@@ -57,7 +57,12 @@ def test_log_redaction_config(params_from_base_test_setup, remove_tmp_sg_redacti
 
     # Modifying log redaction level to partial
     temp_cluster_config = copy_to_temp_conf(cluster_config, mode)
-    persist_cluster_config_environment_prop(temp_cluster_config, 'redactlevel', redaction_level, property_name_check=False)
+    persist_cluster_config_environment_prop(temp_cluster_config, 'redactlevel', redaction_level,
+                                            property_name_check=False)
+
+    if x509_cert_auth:
+        persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
+
     cluster = Cluster(config=temp_cluster_config)
     cluster.reset(sg_config_path=sg_conf)
 
@@ -114,6 +119,10 @@ def test_sgCollect1(params_from_base_test_setup, remove_tmp_sg_redaction_logs, s
     # Modifying log redaction level to partial
     temp_cluster_config = copy_to_temp_conf(cluster_config, mode)
     persist_cluster_config_environment_prop(temp_cluster_config, 'redactlevel', "partial", property_name_check=False)
+
+    if x509_cert_auth:
+        persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
+
     cluster = Cluster(config=temp_cluster_config)
     cluster.reset(sg_config_path=sg_conf)
 
@@ -176,6 +185,10 @@ def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_
     # Modifying log redaction level to partial
     temp_cluster_config = copy_to_temp_conf(cluster_config, mode)
     persist_cluster_config_environment_prop(temp_cluster_config, 'redactlevel', "partial", property_name_check=False)
+
+    if x509_cert_auth:
+        persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
+
     cluster = Cluster(config=temp_cluster_config)
     cluster.reset(sg_config_path=sg_conf)
 
@@ -285,6 +298,10 @@ def test_sgCollectRestApi_errorMessages(params_from_base_test_setup, remove_tmp_
     # Modifying log redaction level to partial
     temp_cluster_config = copy_to_temp_conf(cluster_config, mode)
     persist_cluster_config_environment_prop(temp_cluster_config, 'redactlevel', "partial", property_name_check=False)
+
+    if x509_cert_auth:
+        persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
+
     cluster = Cluster(config=temp_cluster_config)
     cluster.reset(sg_config_path=sg_conf)
 

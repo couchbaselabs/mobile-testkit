@@ -12,7 +12,7 @@ from keywords.utils import host_for_url, log_info
 from libraries.testkit.cluster import Cluster
 from keywords.userinfo import UserInfo
 from keywords.exceptions import TimeoutException
-from utilities.cluster_config_utils import get_sg_version
+from utilities.cluster_config_utils import get_sg_version, persist_cluster_config_environment_prop, copy_to_temp_conf
 
 
 @pytest.mark.sanity
@@ -99,6 +99,10 @@ def test_document_resurrection(params_from_base_test_setup, sg_conf_name, deleti
     cbs_host = host_for_url(cbs_url)
 
     num_docs_per_client = 10
+    if x509_cert_auth:
+        temp_cluster_config = copy_to_temp_conf(cluster_conf, mode)
+        persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
+        cluster_conf = temp_cluster_config
 
     # Reset cluster
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)

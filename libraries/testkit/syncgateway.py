@@ -44,8 +44,8 @@ class SyncGateway:
         self.server_scheme = "http"
 
         if is_cbs_ssl_enabled(self.cluster_config):
-            self.server_port = 18091
-            self.server_scheme = "https"
+            self.server_port = ""
+            self.server_scheme = "couchbases"
 
         if is_x509_auth(cluster_config):
             self.server_port = ""
@@ -145,7 +145,7 @@ class SyncGateway:
             playbook_vars["sslkey"] = '"SSLKey": "sg_privkey.pem",'
 
         if is_xattrs_enabled(self.cluster_config):
-            playbook_vars["autoimport"] = '"import_docs": "continuous",'
+            playbook_vars["autoimport"] = '"import_docs": true,'
             playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
 
         if no_conflicts_enabled(self.cluster_config):
@@ -253,7 +253,7 @@ class SyncGateway:
             playbook_vars["password"] = '"password": "password",'
 
         if is_xattrs_enabled(self.cluster_config):
-            playbook_vars["autoimport"] = '"import_docs": "continuous",'
+            playbook_vars["autoimport"] = '"import_docs": true,'
             playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
 
         if no_conflicts_enabled(self.cluster_config):

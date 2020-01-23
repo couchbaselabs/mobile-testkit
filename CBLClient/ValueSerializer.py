@@ -59,6 +59,8 @@ class ValueSerializer(object):
     def deserialize(value):
         if not value or len(value) == 0 or value == "null":
             return None
+        elif value.startswith("PK"):
+            return value
         elif value.startswith("@") or value.startswith("\"@"):
             return MemoryPointer(value)
         elif value.startswith("\"") and value.endswith("\""):

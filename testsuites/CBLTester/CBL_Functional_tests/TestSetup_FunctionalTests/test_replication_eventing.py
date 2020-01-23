@@ -538,7 +538,7 @@ def test_push_replication_for_20mb_doc(params_from_base_test_setup, attachment_g
                                            attachment_file_list=attachment_file_list)
 
     if attachment_generator != "load_from_data_dir":
-        doc_body_4mb = doc_generators.doc_size_bymb(25000000)  # 25MB data generated
+        doc_body_4mb = doc_generators.doc_size_byBytes(25000000)  # 25MB data generated
         cbl_db_docs = db.getDocuments(cbl_db, created_docs_ids)
         for doc in cbl_db_docs:
             new_update_key = "large_20mb_doc"

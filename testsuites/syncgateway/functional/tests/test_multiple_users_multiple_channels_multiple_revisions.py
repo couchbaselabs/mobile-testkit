@@ -10,7 +10,7 @@ from libraries.testkit.parallelize import in_parallel
 from keywords.utils import log_info
 from keywords.utils import log_error
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
-from utilities.cluster_config_utils import get_sg_version
+from utilities.cluster_config_utils import get_sg_version, persist_cluster_config_environment_prop, copy_to_temp_conf
 
 
 # Scenario-2:
@@ -57,6 +57,11 @@ def test_mulitple_users_mulitiple_channels_mulitple_revisions(params_from_base_t
 
     start = time.time()
 
+    if x509_cert_auth:
+        temp_cluster_config = copy_to_temp_conf(cluster_conf, mode)
+        persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
+        cluster_conf = temp_cluster_config
+
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
 
@@ -77,7 +82,8 @@ def test_mulitple_users_mulitiple_channels_mulitple_revisions(params_from_base_t
 
     # Add User
     log_info("Add docs")
-    in_parallel(user_objects, 'add_docs', num_docs)
+    bulk = True
+    in_parallel(user_objects, 'add_docs', num_docs, bulk)
 
     # Update docs
     log_info("Update docs")

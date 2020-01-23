@@ -10,7 +10,8 @@ from keywords.remoteexecutor import RemoteExecutor
 from keywords.SyncGateway import SyncGateway, sync_gateway_config_path_for_mode, get_sync_gateway_version
 from keywords.utils import log_info, add_cbs_to_sg_config_server_field, host_for_url
 from libraries.testkit.cluster import Cluster
-from utilities.cluster_config_utils import is_cbs_ssl_enabled, get_sg_replicas, get_sg_use_views, get_sg_version
+from utilities.cluster_config_utils import is_cbs_ssl_enabled, get_sg_replicas, get_sg_use_views, get_sg_version, \
+    persist_cluster_config_environment_prop, copy_to_temp_conf
 
 
 def load_sync_gateway_config(sync_gateway_config, mode, server_url, xattrs_enabled, cluster_config):
@@ -22,7 +23,7 @@ def load_sync_gateway_config(sync_gateway_config, mode, server_url, xattrs_enabl
         template = Template(default_conf.read())
 
         if xattrs_enabled:
-            autoimport_prop = '"import_docs": "continuous",'
+            autoimport_prop = '"import_docs": true,'
             xattrs_prop = '"enable_shared_bucket_access": true,'
         else:
             autoimport_prop = ""
@@ -88,6 +89,11 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name):
 
     log_info("Using cluster_conf: {}".format(cluster_conf))
     log_info("Using sg_conf: {}".format(sg_conf))
+
+    if x509_cert_auth:
+        temp_cluster_config = copy_to_temp_conf(cluster_conf, mode)
+        persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
+        cluster_conf = temp_cluster_config
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)

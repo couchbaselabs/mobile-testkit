@@ -8,7 +8,7 @@ from libraries.testkit.verify import verify_changes
 
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.utils import log_info
-from utilities.cluster_config_utils import is_x509_auth
+from utilities.cluster_config_utils import is_x509_auth, persist_cluster_config_environment_prop, copy_to_temp_conf
 
 
 @pytest.mark.syncgateway
@@ -91,6 +91,11 @@ def test_multiple_db_single_data_bucket_single_index_bucket(params_from_base_tes
     log_info("Using sg_conf: {}".format(sg_conf))
     log_info("Using num_users: {}".format(num_users))
     log_info("Using num_docs_per_user: {}".format(num_docs_per_user))
+
+    if x509_cert_auth:
+        temp_cluster_config = copy_to_temp_conf(cluster_conf, mode)
+        persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
+        cluster_conf = temp_cluster_config
 
     # 2 dbs share the same data and index bucket
     cluster = Cluster(config=cluster_conf)

@@ -85,7 +85,7 @@ class SgAccel:
             playbook_vars["logging"] = '"log": ["*"],'
 
         if is_xattrs_enabled(self.cluster_config):
-            playbook_vars["autoimport"] = '"import_docs": "continuous",'
+            playbook_vars["autoimport"] = '"import_docs": true,'
             playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
 
         if self.sync_gateway_ssl:

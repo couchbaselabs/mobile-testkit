@@ -2,7 +2,6 @@
     "interface":":4984",
     "adminInterface": "0.0.0.0:4985",
     "maxIncomingConnections": 0,
-    "maxCouchbaseConnections": 16,
     "maxFileDescriptors": 90000,
     "compressResponses": false,
     {{ logging }}
@@ -18,7 +17,7 @@
     "databases":{
         "db":{
             "enable_shared_bucket_access": true,
-            "import_docs": "continuous",
+            "import_docs": true,
             {{ no_conflicts }}
             {{ sg_use_views }}
             {{ num_index_replicas }}

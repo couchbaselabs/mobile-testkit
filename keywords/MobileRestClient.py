@@ -830,7 +830,11 @@ class MobileRestClient:
 
     def get_raw_doc(self, url, db, doc_id):
         """ Get a document via _raw Sync Gateway endpoint """
-        resp = self._session.get("{}/{}/_raw/{}".format(url, db, doc_id))
+        params = {
+            "include_doc": "true",
+            "redact": "false"
+        }
+        resp = self._session.get("{}/{}/_raw/{}".format(url, db, doc_id), params=params)
         log_r(resp)
         resp.raise_for_status()
         return resp.json()

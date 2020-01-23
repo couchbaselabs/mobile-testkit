@@ -23,7 +23,7 @@ from keywords.userinfo import UserInfo
 from keywords.utils import host_for_url, log_info
 from libraries.testkit.cluster import Cluster
 from keywords.ChangesTracker import ChangesTracker
-from utilities.cluster_config_utils import get_sg_use_views, get_sg_version
+from utilities.cluster_config_utils import get_sg_use_views, get_sg_version, persist_cluster_config_environment_prop, copy_to_temp_conf
 from keywords.constants import SDK_TIMEOUT
 
 # Since sdk is quicker to update docs we need to have it sleep longer
@@ -71,6 +71,7 @@ def test_olddoc_nil(params_from_base_test_setup, sg_conf_name):
     mode = params_from_base_test_setup['mode']
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
     delta_sync_enabled = params_from_base_test_setup['delta_sync_enabled']
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
 
     # This test should only run when using xattr meta storage
     if not xattrs_enabled or delta_sync_enabled:
@@ -89,6 +90,11 @@ def test_olddoc_nil(params_from_base_test_setup, sg_conf_name):
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
+
+    if sync_gateway_version >= "2.5.0":
+        sg_client = MobileRestClient()
+        expvars = sg_client.get_expvars(sg_admin_url)
+        error_count = expvars["syncgateway"]["global"]["resource_utilization"]["error_count"]
 
     # Create clients
     sg_client = MobileRestClient()
@@ -161,6 +167,11 @@ def test_olddoc_nil(params_from_base_test_setup, sg_conf_name):
     user_two_bulk_get_docs, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=abc_doc_ids, auth=user_two_auth)
     assert len(user_two_bulk_get_docs) == num_docs
     assert len(errors) == 0
+
+    if sync_gateway_version >= "2.5.0":
+        sg_client = MobileRestClient()
+        expvars = sg_client.get_expvars(sg_admin_url)
+        assert error_count < expvars["syncgateway"]["global"]["resource_utilization"]["error_count"], "error_count did not increment"
 
 
 @pytest.mark.syncgateway
@@ -343,7 +354,10 @@ def test_on_demand_import_of_external_updates(params_from_base_test_setup, sg_co
     log_info('sg_admin_url: {}'.format(sg_admin_url))
     log_info('sg_url: {}'.format(sg_url))
     log_info('cbs_url: {}'.format(cbs_url))
-
+    if x509_cert_auth:
+        temp_cluster_config = copy_to_temp_conf(cluster_conf, mode)
+        persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
+        cluster_conf = temp_cluster_config
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
 
@@ -411,10 +425,10 @@ def test_on_demand_import_of_external_updates(params_from_base_test_setup, sg_co
 @pytest.mark.syncgateway
 @pytest.mark.xattrs
 @pytest.mark.session
-@pytest.mark.parametrize('sg_conf_name', [
-    'sync_gateway_default_functional_tests',
-    'sync_gateway_default_functional_tests_no_port',
-    "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210"
+@pytest.mark.parametrize('sg_conf_name, x509_cert_auth', [
+    ('sync_gateway_default_functional_tests', True),
+    ('sync_gateway_default_functional_tests_no_port', False),
+    ("sync_gateway_default_functional_tests_couchbase_protocol_withport_11210", False)
 ])
 def test_offline_processing_of_external_updates(params_from_base_test_setup, sg_conf_name):
     """
@@ -462,7 +476,10 @@ def test_offline_processing_of_external_updates(params_from_base_test_setup, sg_
     log_info('sg_admin_url: {}'.format(sg_admin_url))
     log_info('sg_url: {}'.format(sg_url))
     log_info('cbs_url: {}'.format(cbs_url))
-
+    if x509_cert_auth:
+        temp_cluster_config = copy_to_temp_conf(cluster_conf, mode)
+        persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
+        cluster_conf = temp_cluster_config
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
 
@@ -734,7 +751,10 @@ def test_purge(params_from_base_test_setup, sg_conf_name, use_multiple_channels)
     log_info('sg_conf: {}'.format(sg_conf))
     log_info('sg_admin_url: {}'.format(sg_admin_url))
     log_info('sg_url: {}'.format(sg_url))
-
+    if x509_cert_auth:
+        temp_cluster_config = copy_to_temp_conf(cluster_conf, mode)
+        persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
+        cluster_conf = temp_cluster_config
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
 
@@ -1645,7 +1665,6 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
             {"id": doc, "rev": "1-"} for doc in doc_set_ids1]
 
         ct_task = crsdk_tpe.submit(changestrack.start())
-
         log_info("ct_task value {}".format(ct_task))
 
         wait_for_changes = crsdk_tpe.submit(

@@ -2,7 +2,6 @@
     "interface":":4984",
     "adminInterface": "0.0.0.0:4985",
     "maxIncomingConnections": 0,
-    "maxCouchbaseConnections": 16,
     "maxFileDescriptors": 90000,
     "compressResponses": false,
     {{ logging }}
@@ -19,7 +18,6 @@
             {{ certpath }}
             {{ keypath }}
             {{ delta_sync }}
-            "enable_shared_bucket_access": true,
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket"
         }

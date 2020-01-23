@@ -10,7 +10,7 @@ from keywords.SyncGateway import SyncGateway, sync_gateway_config_path_for_mode
 from keywords.userinfo import UserInfo
 from keywords.utils import log_info
 from libraries.testkit.cluster import Cluster
-from utilities.cluster_config_utils import get_sg_version
+from utilities.cluster_config_utils import get_sg_version, persist_cluster_config_environment_prop, copy_to_temp_conf
 
 
 @pytest.mark.sanity
@@ -55,7 +55,10 @@ def test_view_backfill_for_deletes(params_from_base_test_setup, sg_conf_name, va
     log_info('sg_url: {}'.format(sg_url))
     log_info('cbs_url: {}'.format(cbs_url))
     log_info('validate_changes_before_restart: {}'.format(validate_changes_before_restart))
-
+    if x509_cert_auth:
+        temp_cluster_config = copy_to_temp_conf(cluster_conf, mode)
+        persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
+        cluster_conf = temp_cluster_config
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
 
