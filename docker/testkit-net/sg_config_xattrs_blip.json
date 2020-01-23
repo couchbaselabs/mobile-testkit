@@ -5,7 +5,7 @@
     ],
     "databases": {
         "db": {
-            "import_docs": "continuous",
+            "import_docs": true,
             "server": "http://localhost:8091",
             "bucket": "default",
             "password": "password",
