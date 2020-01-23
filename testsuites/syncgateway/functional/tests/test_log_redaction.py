@@ -138,11 +138,11 @@ def test_sgCollect1(params_from_base_test_setup, remove_tmp_sg_redaction_logs, s
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.logredaction
-@pytest.mark.parametrize("sg_conf_name, redaction_level, redaction_salt, output_dir, x509_cert_auth", [
-    ("log_redaction", "partial", False, False, True),
-    ("log_redaction", None, False, False, False),
-    ("log_redaction", "partial", True, False, False),
-    ("log_redaction", "partial", True, True, True)
+@pytest.mark.parametrize("sg_conf_name, redaction_level, redaction_salt, output_dir", [
+    ("log_redaction", "partial", True, True),
+    ("log_redaction", "partial", False, False),
+    ("log_redaction", None, False, False),
+    ("log_redaction", "partial", True, False)
 ])
 def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_logs, sg_conf_name, redaction_level, redaction_salt, output_dir, x509_cert_auth):
     """
@@ -456,7 +456,10 @@ def verify_udTags_in_zippedFile(zip_file_name):
 
         for key, value in list(redact_dict.items()):
             redact_match = re.search("<ud>.+</ud>", value.decode('ascii'))
+<<<<<<< HEAD
 
+=======
+>>>>>>> ba38a5bab7e17b7cf20f75e3a28905930584ae72
             if redact_match:
                 redact_content = redact_match.group(0)
             else:

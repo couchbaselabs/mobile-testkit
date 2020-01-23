@@ -6,7 +6,6 @@ if [[ $py3version == 3.6.* ]]; then
     printf "Using Python3 version: %s\n" $py3version
     PYTHON=python3
     PIP=pip3
-
 elif [[ $py2version == 2.7.* ]]; then
     printf "Using Python2 version: %s\n" $py2version
     PYTHON=python
@@ -17,7 +16,6 @@ else
 fi
 
 $PYTHON -m virtualenv --version
-
 if [ $? -ne 0 ]; then
     # Install virtual env
     echo "Virtualenv not detected, running $PIP install virtualenv.  If you don't have $PIP, run easy_install $PIP"
