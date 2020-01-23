@@ -15,7 +15,6 @@ from keywords.exceptions import TimeoutException
 from utilities.cluster_config_utils import get_sg_version, persist_cluster_config_environment_prop, copy_to_temp_conf
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.xattrs
 @pytest.mark.changes
@@ -24,7 +23,7 @@ from utilities.cluster_config_utils import get_sg_version, persist_cluster_confi
     ('sync_gateway_default_functional_tests', 'tombstone', False),
     ('sync_gateway_default_functional_tests', 'purge', True),
     ('sync_gateway_default_functional_tests_no_port', 'tombstone', True),
-    ('sync_gateway_default_functional_tests_no_port', 'purge', False),
+    pytest.param('sync_gateway_default_functional_tests_no_port', 'purge', False, marks=pytest.mark.sanity),
     ('sync_gateway_default_functional_tests_couchbase_protocol_withport_11210', 'purge', False)
 ])
 def test_document_resurrection(params_from_base_test_setup, sg_conf_name, deletion_type, x509_cert_auth):

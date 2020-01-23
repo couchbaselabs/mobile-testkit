@@ -68,8 +68,7 @@ def load_sync_gateway_config(sync_gateway_config, mode, server_url, xattrs_enabl
 @pytest.mark.syncgateway
 @pytest.mark.logging
 @pytest.mark.parametrize("sg_conf_name, x509_cert_auth", [
-    ("log_rotation", True),
-    ("log_rotation", False)
+    ("log_rotation", True)
 ])
 def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name, x509_cert_auth):
     """Test to verify default values for rotation section:

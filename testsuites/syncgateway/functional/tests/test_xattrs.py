@@ -317,7 +317,6 @@ def test_on_demand_doc_processing(params_from_base_test_setup, sg_conf_name, num
 @pytest.mark.xattrs
 @pytest.mark.session
 @pytest.mark.parametrize('sg_conf_name, x509_cert_auth', [
-    ('xattrs/no_import', True),
     ('xattrs/no_import', False)
 ])
 def test_on_demand_import_of_external_updates(params_from_base_test_setup, sg_conf_name, x509_cert_auth):
@@ -421,12 +420,11 @@ def test_on_demand_import_of_external_updates(params_from_base_test_setup, sg_co
     assert sg_updated_rev.startswith("3-")
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.xattrs
 @pytest.mark.session
 @pytest.mark.parametrize('sg_conf_name, x509_cert_auth', [
-    ('sync_gateway_default_functional_tests', True),
+    pytest.param('sync_gateway_default_functional_tests', True, marks=pytest.mark.sanity),
     ('sync_gateway_default_functional_tests_no_port', False),
     ("sync_gateway_default_functional_tests_couchbase_protocol_withport_11210", False)
 ])
@@ -691,7 +689,6 @@ def test_large_initial_import(params_from_base_test_setup, sg_conf_name):
     sg_client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=docs_to_verify_in_changes, auth=seth_auth)
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.xattrs
 @pytest.mark.changes
