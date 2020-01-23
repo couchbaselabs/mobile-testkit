@@ -811,7 +811,6 @@ def test_delta_sync_on_community_edition(params_from_base_test_setup, num_of_doc
     if replication_type == "push":
         doc_ids = db.getDocIds(cbl_db)
         cbl_db_docs = db.getDocuments(cbl_db, doc_ids)
-<<<<<<< HEAD
 
         for doc_id, doc_body in cbl_db_docs.items():
             for _ in range(number_of_updates):
