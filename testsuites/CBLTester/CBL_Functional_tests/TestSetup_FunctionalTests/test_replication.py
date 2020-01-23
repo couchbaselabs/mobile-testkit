@@ -18,6 +18,7 @@ from keywords import document, attachment
 from libraries.testkit import cluster
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
 
+
 @pytest.fixture(scope="function")
 def setup_teardown_test(params_from_base_test_setup):
     cbl_db_name = "cbl_db"
@@ -46,7 +47,7 @@ def setup_teardown_test(params_from_base_test_setup):
     (1000, True, True),
     (1000, False, False)
 ])
-def test_replication_configuration_valid_values(params_from_base_test_setup, num_of_docs, continuous):
+def test_replication_configuration_valid_values(params_from_base_test_setup, num_of_docs, continuous, x509_cert_auth):
     """
         @summary:
         1. Create CBL DB and create bulk doc in CBL
@@ -579,12 +580,12 @@ def test_replication_configuration_with_headers(params_from_base_test_setup):
 @pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.noconflicts
-@pytest.mark.parametrize("num_of_docs", [
-    (10),
-    (100),
-    (1000)
+@pytest.mark.parametrize("num_of_docs, x509_cert_auth", [
+    (10, False),
+    (100, True),
+    (1000, False)
 ])
-def test_CBL_tombstone_doc(params_from_base_test_setup, num_of_docs):
+def test_CBL_tombstone_doc(params_from_base_test_setup, num_of_docs, x509_cert_auth):
     """
         @summary:
         1. Create docs in SG.
@@ -2941,7 +2942,6 @@ def test_resetCheckpointWithPurge(params_from_base_test_setup, replication_type,
     # Reset checkpoint and do replication again from sg to cbl
     # Verify all docs are back
     replicator.resetCheckPoint(repl)
-    print("replicator after checkpoint....")
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
     assert db.getCount(cbl_db) == num_of_docs, "Docs that got purged in CBL did not got back after resetCheckpoint"
@@ -3618,7 +3618,6 @@ def test_roles_replication(params_from_base_test_setup):
 
     # 10.Verify all new docs got replicated from both channels
     cbl_doc_ids = db.getDocIds(cbl_db)
-    print " all cbl doc ids are ", cbl_doc_ids
     assert len(cbl_doc_ids) == num_docs * 3, "new docs which created in sgw after role change got replicated to cbl"
 
 
@@ -3808,7 +3807,6 @@ def update_and_resetCheckPoint(db, cbl_db, replicator, repl, replication_type, r
         replicator.setReplicatorType(repl_config, "pull")
         repl = replicator.create(repl_config)
 
-    print("replicator after checkpoint....")
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
     replicator.stop(repl)
