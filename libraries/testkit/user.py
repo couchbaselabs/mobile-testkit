@@ -190,7 +190,6 @@ class User:
     def add_docs(self, num_docs, bulk=True, name_prefix=None, retries=False):
 
         errors = list()
-        print "add docs for each user object"
 
         # If no name_prefix is specified, use uuids for doc_names
         if name_prefix is None:
