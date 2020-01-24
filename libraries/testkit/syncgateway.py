@@ -105,7 +105,7 @@ class SyncGateway:
                 redact_level = get_redact_level(self.cluster_config)
                 playbook_vars["logging"] = '{}, "redaction_level": "{}" {},'.format(logging_config, redact_level, "}")
             except KeyError as ex:
-                log_info("Keyerror in getting logging{}".format(ex.message))
+                log_info("Keyerror in getting logging{}".format(ex.args))
                 playbook_vars["logging"] = '{} {},'.format(logging_config, "}")
 
             if get_sg_use_views(self.cluster_config):
@@ -223,7 +223,7 @@ class SyncGateway:
                 redact_level = get_redact_level(self.cluster_config)
                 playbook_vars["logging"] = '{}, "redaction_level": "{}" {},'.format(logging_config, redact_level, "}")
             except KeyError as ex:
-                log_info("Keyerror in getting logging{}".format(ex.message))
+                log_info("Keyerror in getting logging{}".format(ex.args))
                 playbook_vars["logging"] = '{} {},'.format(logging_config, "}")
             if get_sg_use_views(self.cluster_config):
                 playbook_vars["sg_use_views"] = '"use_views": true,'

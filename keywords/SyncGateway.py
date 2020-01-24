@@ -243,7 +243,7 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config):
                 redact_level = get_redact_level(cluster_config)
                 logging_prop = '{}, "redaction_level": "{}" {},'.format(logging_config, redact_level, "}")
             except KeyError as ex:
-                log_info("Keyerror in getting logging{}".format(ex.message))
+                log_info("Keyerror in getting logging{}".format(ex.args))
                 logging_prop = '{} {},'.format(logging_config, "}")
 
             num_replicas = get_sg_replicas(cluster_config)
@@ -405,7 +405,7 @@ class SyncGateway(object):
                 redact_level = get_redact_level(cluster_config)
                 playbook_vars["logging"] = '{}, "redaction_level": "{}" {},'.format(logging_config, redact_level, "}")
             except KeyError as ex:
-                log_info("Keyerror in getting logging{}".format(ex.message))
+                log_info("Keyerror in getting logging{}".format(ex.args))
                 playbook_vars["logging"] = '{} {},'.format(logging_config, "}")
 
             if get_sg_use_views(cluster_config):
@@ -599,7 +599,7 @@ class SyncGateway(object):
                 redact_level = get_redact_level(cluster_config)
                 playbook_vars["logging"] = '{}, "redaction_level": "{}" {},'.format(logging_config, redact_level, "}")
             except KeyError as ex:
-                log_info("Keyerror in getting logging{}".format(ex.message))
+                log_info("Keyerror in getting logging{}".format(ex.args))
                 playbook_vars["logging"] = '{} {},'.format(logging_config, "}")
 
             if not get_sg_use_views(cluster_config) and cbs_version >= "5.5.0":
@@ -697,7 +697,7 @@ class SyncGateway(object):
                 redact_level = get_redact_level(cluster_config)
                 playbook_vars["logging"] = '{}, "redaction_level": "{}" {},'.format(logging_config, redact_level, "}")
             except KeyError as ex:
-                log_info("Keyerror in getting logging{}".format(ex.message))
+                log_info("Keyerror in getting logging{}".format(ex.args))
                 playbook_vars["logging"] = '{} {},'.format(logging_config, "}")
 
             if get_sg_use_views(cluster_config):

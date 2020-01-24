@@ -196,7 +196,7 @@ class Cluster:
                 redact_level = get_redact_level(self._cluster_config)
                 playbook_vars["logging"] = '{}, "redaction_level": "{}" {},'.format(logging_config, redact_level, "}")
             except KeyError as ex:
-                log_info("Keyerror in getting logging{}".format(ex.message))
+                log_info("Keyerror in getting logging{}".format(ex.args))
                 playbook_vars["logging"] = '{} {},'.format(logging_config, "}")
             if get_sg_use_views(self._cluster_config):
                 playbook_vars["sg_use_views"] = '"use_views": true,'
