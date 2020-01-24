@@ -59,7 +59,7 @@
       state: absent
 
   - debug: msg="Copy TestServer war file"
-  - win_shell: copy C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ build_name }}\{{ war_package_name }} "{{ ansible_env.CATALINA_BASE }}\\webapps\\ROOT.war"
+  - win_shell: copy C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ build_name }}\{{ war_package_name }}.war "{{ ansible_env.CATALINA_BASE }}\\webapps\\ROOT.war"
 
   - debug: msg="Copy CouchbaseLite supporting jar files"
   - win_shell: copy C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ build_name }}\{{ core_package_name }}\lib\*.jar "{{ ansible_env.CATALINA_BASE }}\\lib"
