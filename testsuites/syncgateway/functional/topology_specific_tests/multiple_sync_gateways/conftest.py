@@ -203,7 +203,8 @@ def params_from_base_suite_setup(request):
            "mode": mode,
            "xattrs_enabled": xattrs_enabled,
            "sg_platform": sg_platform,
-           "sync_gateway_version": sync_gateway_version
+           "sync_gateway_version": sync_gateway_version,
+           "sg_ce": sg_ce
            }
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
@@ -230,6 +231,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     xattrs_enabled = params_from_base_suite_setup["xattrs_enabled"]
     sg_platform = params_from_base_suite_setup["sg_platform"]
     sync_gateway_version = params_from_base_suite_setup["sync_gateway_version"]
+    sg_ce = params_from_base_suite_setup["sg_ce"]
 
     test_name = request.node.name
     log_info("Setting up test '{}'".format(test_name))
@@ -239,7 +241,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
            "mode": mode,
            "xattrs_enabled": xattrs_enabled,
            "sg_platform": sg_platform,
-           "sync_gateway_version": sync_gateway_version
+           "sync_gateway_version": sync_gateway_version,
+           "sg_ce": sg_ce
            }
 
     # Code after the yeild will execute when each test finishes
