@@ -316,10 +316,11 @@ def test_on_demand_doc_processing(params_from_base_test_setup, sg_conf_name, num
 @pytest.mark.syncgateway
 @pytest.mark.xattrs
 @pytest.mark.session
-@pytest.mark.parametrize('sg_conf_name', [
-    'xattrs/no_import'
+@pytest.mark.parametrize('sg_conf_name, x509_cert_auth', [
+    ('xattrs/no_import', True),
+    ('xattrs/no_import', False)
 ])
-def test_on_demand_import_of_external_updates(params_from_base_test_setup, sg_conf_name):
+def test_on_demand_import_of_external_updates(params_from_base_test_setup, sg_conf_name, x509_cert_auth):
     """
     Scenario: On demand processing of external updates
 
@@ -430,7 +431,7 @@ def test_on_demand_import_of_external_updates(params_from_base_test_setup, sg_co
     ('sync_gateway_default_functional_tests_no_port', False),
     ("sync_gateway_default_functional_tests_couchbase_protocol_withport_11210", False)
 ])
-def test_offline_processing_of_external_updates(params_from_base_test_setup, sg_conf_name):
+def test_offline_processing_of_external_updates(params_from_base_test_setup, sg_conf_name, x509_cert_auth):
     """
     Scenario:
     1. Start SG, write some docs
@@ -696,13 +697,13 @@ def test_large_initial_import(params_from_base_test_setup, sg_conf_name):
 @pytest.mark.xattrs
 @pytest.mark.changes
 @pytest.mark.session
-@pytest.mark.parametrize('sg_conf_name, use_multiple_channels', [
-    ('sync_gateway_default_functional_tests', False),
-    ('sync_gateway_default_functional_tests', True),
-    ('sync_gateway_default_functional_tests_no_port', False),
-    ('sync_gateway_default_functional_tests_no_port', True)
+@pytest.mark.parametrize('sg_conf_name, use_multiple_channels, x509_cert_auth', [
+    ('sync_gateway_default_functional_tests', False, True),
+    ('sync_gateway_default_functional_tests', True, False),
+    ('sync_gateway_default_functional_tests_no_port', False, True),
+    ('sync_gateway_default_functional_tests_no_port', True, False)
 ])
-def test_purge(params_from_base_test_setup, sg_conf_name, use_multiple_channels):
+def test_purge(params_from_base_test_setup, sg_conf_name, use_multiple_channels, x509_cert_auth):
     """
     Scenario:
     - Bulk create 1000 docs via Sync Gateway

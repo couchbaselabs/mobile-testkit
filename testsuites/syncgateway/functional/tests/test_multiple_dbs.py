@@ -76,11 +76,12 @@ def test_multiple_db_unique_data_bucket_unique_index_bucket(params_from_base_tes
 @pytest.mark.channel
 @pytest.mark.bulkops
 @pytest.mark.changes
-@pytest.mark.parametrize("sg_conf_name, num_users, num_docs_per_user", [
-    ("multiple_dbs_shared_data_shared_index", 10, 500),
+@pytest.mark.parametrize("sg_conf_name, num_users, num_docs_per_user, x509_cert_auth", [
+    ("multiple_dbs_shared_data_shared_index", 10, 500, False),
+    ("multiple_dbs_shared_data_shared_index", 10, 500, True)
 ])
-def test_multiple_db_single_data_bucket_single_index_bucket(params_from_base_test_setup, sg_conf_name, num_users, num_docs_per_user):
-
+def test_multiple_db_single_data_bucket_single_index_bucket(params_from_base_test_setup, sg_conf_name, num_users,
+                                                            num_docs_per_user, x509_cert_auth):
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
 

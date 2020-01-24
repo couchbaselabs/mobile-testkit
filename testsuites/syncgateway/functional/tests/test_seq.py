@@ -17,13 +17,12 @@ from utilities.cluster_config_utils import get_sg_version, persist_cluster_confi
 @pytest.mark.channel
 @pytest.mark.bulkops
 @pytest.mark.changes
-@pytest.mark.parametrize("sg_conf_name, num_users, num_docs, num_revisions", [
-    ("sync_gateway_default_functional_tests", 10, 500, 1),
-    ("sync_gateway_default_functional_tests_no_port", 10, 500, 1),
-    ("sync_gateway_default_functional_tests_couchbase_protocol_withport_11210", 10, 500, 1)
+@pytest.mark.parametrize("sg_conf_name, num_users, num_docs, num_revisions, x509_cert_auth", [
+    ("sync_gateway_default_functional_tests", 10, 500, 1, False),
+    ("sync_gateway_default_functional_tests_no_port", 10, 500, 1, True),
+    ("sync_gateway_default_functional_tests_couchbase_protocol_withport_11210", 10, 500, 1, False)
 ])
-def test_seq(params_from_base_test_setup, sg_conf_name, num_users, num_docs, num_revisions):
-
+def test_seq(params_from_base_test_setup, sg_conf_name, num_users, num_docs, num_revisions, x509_cert_auth):
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]

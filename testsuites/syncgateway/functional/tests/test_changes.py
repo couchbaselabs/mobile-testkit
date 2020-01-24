@@ -8,13 +8,15 @@ from keywords.SyncGateway import SyncGateway
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
 
+
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.changes
-@pytest.mark.parametrize("sg_conf_name", [
-    "sync_gateway_default"
+@pytest.mark.parametrize("sg_conf_name, x509_cert_auth", [
+    ("sync_gateway_default", True),
+    ("sync_gateway_default", False),
 ])
-def test_deleted_docs_from_changes_active_only(params_from_base_test_setup, sg_conf_name):
+def test_deleted_docs_from_changes_active_only(params_from_base_test_setup, sg_conf_name, x509_cert_auth):
     """
     https://github.com/couchbase/sync_gateway/issues/2955
     1. Create a document

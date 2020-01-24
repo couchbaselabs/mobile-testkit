@@ -22,10 +22,11 @@ from utilities.cluster_config_utils import persist_cluster_config_environment_pr
 @pytest.mark.channel
 @pytest.mark.rollback
 @pytest.mark.bulkops
-@pytest.mark.parametrize("sg_conf_name", [
-    "sync_gateway_default"
+@pytest.mark.parametrize("sg_conf_name, x509_cert_auth", [
+    ("sync_gateway_default", True),
+    ("sync_gateway_default", False)
 ])
-def test_rollback_server_reset(params_from_base_test_setup, sg_conf_name):
+def test_rollback_server_reset(params_from_base_test_setup, sg_conf_name, x509_cert_auth):
     # Ignorning this test for now until we have a fix. Tests which runs after this in Jenkins machine or local machine
     #  fails all the tests which runs after this. looks it needs reset of server or make the test to run at the end.
     """

@@ -19,6 +19,7 @@ from keywords import document
 from keywords import userinfo
 
 
+@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.changes
 @pytest.mark.basicauth
@@ -31,12 +32,11 @@ from keywords import userinfo
     ("sync_gateway_default_functional_tests_couchbase_protocol_withport_11210", 50, 100),
 ])
 def test_longpoll_changes_parametrized(params_from_base_test_setup, sg_conf_name, num_docs, num_revisions):
-
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
-    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     # Skip the test if ssl disabled as it cannot run without port using http protocol
     if ("sync_gateway_default_functional_tests_no_port" in sg_conf_name) and get_sg_version(cluster_conf) < "1.5.0":
         pytest.skip('couchbase/couchbases ports do not support for versions below 1.5')
@@ -49,7 +49,7 @@ def test_longpoll_changes_parametrized(params_from_base_test_setup, sg_conf_name
     if "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210" in sg_conf_name and (ssl_enabled or mode.lower() == "di"):
         pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
-    log_info("Running: 'longpoll_changes_parametrized': {}".format(cluster_conf))
+    log_info("Running: 'longpoll_changes_sanity': {}".format(cluster_conf))
     log_info("cluster_conf: {}".format(cluster_conf))
     log_info("sg_conf: {}".format(sg_conf))
     log_info("num_docs: {}".format(num_docs))
@@ -78,11 +78,12 @@ def test_longpoll_changes_parametrized(params_from_base_test_setup, sg_conf_name
             if task_name == "doc_pusher":
                 abc_doc_pusher.update_docs(num_revs_per_doc=num_revisions)
 
+                # Allow time for changes to reach subscribers
                 time.sleep(5)
 
                 doc_terminator.add_doc("killpolling")
             elif task_name == "polling":
-                docs_in_changes, last_seq = future.result()
+                docs_in_changes, seq_num = future.result()
 
     # Verify abc_docs_pusher gets the correct docs in changes feed
     verify_changes(abc_doc_pusher, expected_num_docs=num_docs, expected_num_revisions=num_revisions, expected_docs=abc_doc_pusher.cache)
@@ -101,7 +102,7 @@ def test_longpoll_changes_parametrized(params_from_base_test_setup, sg_conf_name
     ("sync_gateway_default_functional_tests_no_port", 10, 10, False),
     ("sync_gateway_default_functional_tests_couchbase_protocol_withport_11210", 10, 10, False)
 ])
-def test_longpoll_changes_sanity(params_from_base_test_setup, sg_conf_name, num_docs, num_revisions):
+def test_longpoll_changes_sanity(params_from_base_test_setup, sg_conf_name, num_docs, num_revisions, x509_cert_auth):
 
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]

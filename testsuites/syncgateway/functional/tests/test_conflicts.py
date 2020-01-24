@@ -184,10 +184,11 @@ def test_non_winning_revisions(params_from_base_test_setup, sg_conf_name):
 @pytest.mark.changes
 @pytest.mark.basicauth
 @pytest.mark.channel
-@pytest.mark.parametrize("sg_conf_name", [
-    "sync_gateway_default_functional_tests"
+@pytest.mark.parametrize("sg_conf_name, x509_cert_auth", [
+    ("sync_gateway_default_functional_tests", True),
+    ("sync_gateway_default_functional_tests", False)
 ])
-def test_winning_conflict_branch_revisions(params_from_base_test_setup, sg_conf_name):
+def test_winning_conflict_branch_revisions(params_from_base_test_setup, sg_conf_name, x509_cert_auth):
     """ Add winning conflict revisions to the revision tree and ensure
     that the changes feed returns the correct revisions
 

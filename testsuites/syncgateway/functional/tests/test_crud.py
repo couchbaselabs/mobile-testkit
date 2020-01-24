@@ -20,14 +20,14 @@ from utilities.cluster_config_utils import get_sg_version, persist_cluster_confi
 @pytest.mark.xattrs
 @pytest.mark.changes
 @pytest.mark.session
-@pytest.mark.parametrize('sg_conf_name, deletion_type', [
-    ('sync_gateway_default_functional_tests', 'tombstone'),
-    ('sync_gateway_default_functional_tests', 'purge'),
-    ('sync_gateway_default_functional_tests_no_port', 'tombstone'),
-    ('sync_gateway_default_functional_tests_no_port', 'purge'),
-    ('sync_gateway_default_functional_tests_couchbase_protocol_withport_11210', 'purge')
+@pytest.mark.parametrize('sg_conf_name, deletion_type, x509_cert_auth', [
+    ('sync_gateway_default_functional_tests', 'tombstone', False),
+    ('sync_gateway_default_functional_tests', 'purge', True),
+    ('sync_gateway_default_functional_tests_no_port', 'tombstone', True),
+    ('sync_gateway_default_functional_tests_no_port', 'purge', False),
+    ('sync_gateway_default_functional_tests_couchbase_protocol_withport_11210', 'purge', False)
 ])
-def test_document_resurrection(params_from_base_test_setup, sg_conf_name, deletion_type):
+def test_document_resurrection(params_from_base_test_setup, sg_conf_name, deletion_type, x509_cert_auth):
     """
     Scenarios:
 

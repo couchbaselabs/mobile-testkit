@@ -16,10 +16,11 @@ from utilities.cluster_config_utils import persist_cluster_config_environment_pr
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.changes
-@pytest.mark.parametrize("sg_conf_name", [
-    "custom_sync/grant_access_one"
+@pytest.mark.parametrize("sg_conf_name, x509_cert_auth", [
+    ("custom_sync/grant_access_one", False),
+    ("custom_sync/grant_access_one", True)
 ])
-def test_resync(params_from_base_test_setup, sg_conf_name):
+def test_resync(params_from_base_test_setup, sg_conf_name, x509_cert_auth):
     """
     https://issues.couchbase.com/browse/CBSE-5686
     @summary:

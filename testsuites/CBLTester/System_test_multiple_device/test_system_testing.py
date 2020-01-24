@@ -132,7 +132,7 @@ def test_system(params_from_base_suite_setup):
                                          replicator_authenticator=replicator_authenticator)
         repl = repl_obj.create(repl_config)
         repl_obj.start(repl)
-        repl_obj.wait_until_replicator_idle(repl, max_times=maxint, sleep_time=repl_status_check_sleep_time)
+        repl_obj.wait_until_replicator_idle(repl, max_times=maxsize, sleep_time=repl_status_check_sleep_time)
         replicator_list.append(repl)
         query.query_get_docs_limit_offset(cbl_db, limit=query_limit, offset=query_offset)
 
@@ -306,7 +306,7 @@ def test_system(params_from_base_suite_setup):
 
 
 def _replicaton_status_check(repl_obj, replicator, repl_status_check_sleep_time=2):
-    repl_obj.wait_until_replicator_idle(replicator, max_times=maxint, sleep_time=repl_status_check_sleep_time)
+    repl_obj.wait_until_replicator_idle(replicator, max_times=maxsize, sleep_time=repl_status_check_sleep_time)
     total = repl_obj.getTotal(replicator)
     completed = repl_obj.getCompleted(replicator)
     log_info("total: {}".format(total))

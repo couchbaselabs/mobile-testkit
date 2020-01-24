@@ -22,11 +22,12 @@ from utilities.cluster_config_utils import persist_cluster_config_environment_pr
 @pytest.mark.onlineoffline
 @pytest.mark.webhooks
 @pytest.mark.basicauth
-@pytest.mark.channel
-@pytest.mark.parametrize("sg_conf_name, num_users, num_channels, num_docs, num_revisions", [
-    ("webhooks/webhook_offline", 5, 1, 1, 2),
+@pytest.mark.parametrize("sg_conf_name, num_users, num_channels, num_docs, num_revisions, x509_cert_auth", [
+    ("webhooks/webhook_offline", 5, 1, 1, 2, True),
+    ("webhooks/webhook_offline", 5, 1, 1, 2, False)
 ])
-def test_webhooks(params_from_base_test_setup, sg_conf_name, num_users, num_channels, num_docs, num_revisions):
+def test_webhooks(params_from_base_test_setup, sg_conf_name, num_users, num_channels, num_docs,
+                  num_revisions, x509_cert_auth):
     """
     Scenario:
     - Start a webserver on machine running the test to recieved webhook events

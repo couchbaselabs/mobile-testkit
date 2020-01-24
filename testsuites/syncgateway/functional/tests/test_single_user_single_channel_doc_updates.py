@@ -23,14 +23,13 @@ log = logging.getLogger(libraries.testkit.settings.LOGGER)
 @pytest.mark.basicauth
 @pytest.mark.channel
 @pytest.mark.changes
-@pytest.mark.parametrize("sg_conf_name, num_docs, num_revisions", [
-    ("sync_gateway_default_functional_tests", 100, 100),
-    ("sync_gateway_default_functional_tests_no_port", 100, 100),
-    ("sync_gateway_default_functional_tests_couchbase_protocol_withport_11210", 100, 100)
-
+@pytest.mark.parametrize("sg_conf_name, num_docs, num_revisions, x509_cert_auth", [
+    ("sync_gateway_default_functional_tests", 100, 100, False),
+    ("sync_gateway_default_functional_tests_no_port", 100, 100, True),
+    ("sync_gateway_default_functional_tests_couchbase_protocol_withport_11210", 100, 100, False)
 ])
-def test_single_user_single_channel_doc_updates(params_from_base_test_setup, sg_conf_name, num_docs, num_revisions):
-
+def test_single_user_single_channel_doc_updates(params_from_base_test_setup, sg_conf_name, num_docs,
+                                                num_revisions, x509_cert_auth):
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]

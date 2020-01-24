@@ -19,11 +19,12 @@ from utilities.cluster_config_utils import persist_cluster_config_environment_pr
 @pytest.mark.syncgateway
 @pytest.mark.onlineoffline
 @pytest.mark.webhooks
-@pytest.mark.parametrize("sg_conf_name, num_users, num_channels, num_docs, num_revisions", [
-    ("webhooks/webhook_offline", 5, 1, 1, 2),
+@pytest.mark.parametrize("sg_conf_name, num_users, num_channels, num_docs, num_revisions, x509_cert_auth", [
+    ("webhooks/webhook_offline", 5, 1, 1, 2, False),
+    ("webhooks/webhook_offline", 5, 1, 1, 2, True)
 ])
-def test_db_online_offline_webhooks_offline(params_from_base_test_setup, sg_conf_name, num_users, num_channels, num_docs, num_revisions):
-
+def test_db_online_offline_webhooks_offline(params_from_base_test_setup, sg_conf_name, num_users, num_channels,
+                                            num_docs, num_revisions, x509_cert_auth):
     start = time.time()
 
     cluster_conf = params_from_base_test_setup["cluster_config"]

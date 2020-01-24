@@ -154,22 +154,22 @@ def verify_response_size(user_agent, accept_encoding, x_accept_part_encoding, re
 @pytest.mark.syncgateway
 @pytest.mark.channel
 @pytest.mark.basicauth
-@pytest.mark.parametrize("sg_conf_name, num_docs, accept_encoding, x_accept_part_encoding, user_agent", [
-    ("sync_gateway_gzip", 300, None, None, None),
-    ("sync_gateway_gzip", 300, None, None, "CouchbaseLite/1.1"),
-    ("sync_gateway_gzip", 300, "gzip", None, None),
-    ("sync_gateway_gzip", 300, "gzip", None, "CouchbaseLite/1.1"),
-    ("sync_gateway_gzip", 300, None, "gzip", None),
-    ("sync_gateway_gzip", 300, None, "gzip", "CouchbaseLite/1.1"),
-    ("sync_gateway_gzip", 300, "gzip", "gzip", None),
-    ("sync_gateway_gzip", 300, "gzip", "gzip", "CouchbaseLite/1.1"),
-    ("sync_gateway_gzip", 300, None, None, "CouchbaseLite/1.2"),
-    ("sync_gateway_gzip", 300, "gzip", None, "CouchbaseLite/1.2"),
-    ("sync_gateway_gzip", 300, None, "gzip", "CouchbaseLite/1.2"),
-    ("sync_gateway_gzip", 300, "gzip", "gzip", "CouchbaseLite/1.2")
+@pytest.mark.parametrize("sg_conf_name, num_docs, accept_encoding, x_accept_part_encoding, user_agent, x509_cert_auth", [
+    ("sync_gateway_gzip", 300, None, None, None, True),
+    ("sync_gateway_gzip", 300, None, None, "CouchbaseLite/1.1", False),
+    ("sync_gateway_gzip", 300, "gzip", None, None, False),
+    ("sync_gateway_gzip", 300, "gzip", None, "CouchbaseLite/1.1", True),
+    ("sync_gateway_gzip", 300, None, "gzip", None, True),
+    ("sync_gateway_gzip", 300, None, "gzip", "CouchbaseLite/1.1", False),
+    ("sync_gateway_gzip", 300, "gzip", "gzip", None, True),
+    ("sync_gateway_gzip", 300, "gzip", "gzip", "CouchbaseLite/1.1", False),
+    ("sync_gateway_gzip", 300, None, None, "CouchbaseLite/1.2", False),
+    ("sync_gateway_gzip", 300, "gzip", None, "CouchbaseLite/1.2", True),
+    ("sync_gateway_gzip", 300, None, "gzip", "CouchbaseLite/1.2", True),
+    ("sync_gateway_gzip", 300, "gzip", "gzip", "CouchbaseLite/1.2", False)
 ])
-def test_bulk_get_compression(params_from_base_test_setup, sg_conf_name, num_docs, accept_encoding, x_accept_part_encoding, user_agent):
-
+def test_bulk_get_compression(params_from_base_test_setup, sg_conf_name, num_docs, accept_encoding,
+                              x_accept_part_encoding, user_agent, x509_cert_auth):
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
 

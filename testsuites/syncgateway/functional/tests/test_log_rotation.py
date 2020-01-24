@@ -67,8 +67,11 @@ def load_sync_gateway_config(sync_gateway_config, mode, server_url, xattrs_enabl
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.logging
-@pytest.mark.parametrize("sg_conf_name", ["log_rotation"])
-def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name):
+@pytest.mark.parametrize("sg_conf_name, x509_cert_auth", [
+    ("log_rotation", True),
+    ("log_rotation", False)
+])
+def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name, x509_cert_auth):
     """Test to verify default values for rotation section:
     maxsize = 100 MB
     MaxAge = 0(do not limit the number of MaxAge)

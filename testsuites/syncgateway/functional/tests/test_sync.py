@@ -108,11 +108,11 @@ def test_issue_1524(params_from_base_test_setup, sg_conf_name, num_docs):
 @pytest.mark.basicauth
 @pytest.mark.channel
 @pytest.mark.changes
-@pytest.mark.parametrize("sg_conf_name", [
-    "custom_sync/sync_gateway_custom_sync_access_sanity"
+@pytest.mark.parametrize("sg_conf_name, x509_cert_auth", [
+    ("custom_sync/sync_gateway_custom_sync_access_sanity", False),
+    ("custom_sync/sync_gateway_custom_sync_access_sanity", True)
 ])
-def test_sync_access_sanity(params_from_base_test_setup, sg_conf_name):
-
+def test_sync_access_sanity(params_from_base_test_setup, sg_conf_name, x509_cert_auth):
     num_docs = 100
 
     cluster_conf = params_from_base_test_setup["cluster_config"]
