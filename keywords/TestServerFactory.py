@@ -17,7 +17,7 @@ class TestServerFactory:
     def validate_platform(platform):
         valid_platforms = ["android", "ios", "net-mono", "net-msft", "net-uwp", "xamarin-android", "xamarin-ios",
                            "java-macosx", "java-msft", "java-ubuntu", "java-centos",
-                           "javaws-msxosx", "javaws-msft", "javaws-ubuntu", "javaws-centos"]
+                           "javaws-macosx", "javaws-msft", "javaws-ubuntu", "javaws-centos"]
         if platform not in valid_platforms:
             raise ValueError("Unsupported 'platform': {}".format(platform))
 
