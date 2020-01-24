@@ -18,7 +18,7 @@ class TestServerJava(TestServerBase):
 
     def start(self, logfile_name):
         raise NotImplementedError()
- 
+
     def _verify_launched(self):
         raise NotImplementedError()
 
