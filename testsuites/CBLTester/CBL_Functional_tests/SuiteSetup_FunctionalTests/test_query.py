@@ -666,7 +666,8 @@ def test_query_join(params_from_base_suite_setup, select_property1,
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
     log_info("Found {} docs".format(len(docs_from_cbl)))
-    assert sorted(docs_from_cbl, key=itemgetter('airline')) == sorted(docs_from_n1ql, key=itemgetter('airline'))
+    #assert sorted(docs_from_cbl, key=itemgetter('airline')) == sorted(docs_from_n1ql, key=itemgetter('airline'))
+    assert docs_from_cbl.items() == docs_from_n1ql.items()
     log_info("Doc contents match")
 
 
