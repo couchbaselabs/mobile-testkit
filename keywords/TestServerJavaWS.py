@@ -1,5 +1,6 @@
 import os
 import requests
+import time
 
 from keywords.TestServerBase import TestServerBase
 from keywords.constants import LATEST_BUILDS, RELEASED_BUILDS
@@ -79,9 +80,9 @@ class TestServerJavaWS(TestServerBase):
 
     def download(self, version_build=None):
         """
-        1. Downloads CBLTestServer-Java-WS-2.7.0-94-enterprise.war package 
+        1. Downloads CBLTestServer-Java-WS-2.7.0-94-enterprise.war package
         from latestbuild to the remote Linux or Windows machine
-        2. Downloads CouchbaseLite Java Core library couchbase-lite-java-ee-2.7.0-94.zip, 
+        2. Downloads CouchbaseLite Java Core library couchbase-lite-java-ee-2.7.0-94.zip,
         extracts the package and removes the zip
         :params: testserver_download_url, cblite_download_url, war_package_name, build_name
         :return: nothing
@@ -120,7 +121,7 @@ class TestServerJavaWS(TestServerBase):
         if os.path.isfile("{}.zip".format(expected_cbl_core_path)):
             log_info("CBL Java Core Library {} is already downloaded. Skipping.", self.cbl_core_lib_name)
         else:
-            # download cbl core java library, 
+            # download cbl core java library,
             # such as couchbase-lite-java-ee-2.7.0-77.zip
             log_info("Downloading {} -> {}/{}".format(self.download_corelib_url, BINARY_DIR, self.cbl_core_lib_name))
 
@@ -157,6 +158,8 @@ class TestServerJavaWS(TestServerBase):
             status = self.ansible_runner.run_ansible_playbook("manage-testserver-java-ws-msft.yml", extra_vars={
                 "service_status": "started"
             })
+
+            time.sleep(15)
 
             if status == 0:
                 return
