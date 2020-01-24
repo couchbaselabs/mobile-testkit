@@ -539,8 +539,8 @@ def test_cbl_no_conflicts_sgAccel_added(params_from_base_test_setup, sg_conf_nam
 @pytest.mark.replication
 @pytest.mark.parametrize("sg_conf_name, num_of_docs, number_of_updates", [
     ('listener_tests/listener_tests_no_conflicts', 10, 4),
-    # ('listener_tests/listener_tests_no_conflicts', 100, 10),
-    # ('listener_tests/listener_tests_no_conflicts', 1000, 10)
+    ('listener_tests/listener_tests_no_conflicts', 100, 10),
+    ('listener_tests/listener_tests_no_conflicts', 1000, 10)
 ])
 def test_sg_CBL_updates_concurrently(params_from_base_test_setup, sg_conf_name, num_of_docs, number_of_updates):
     """

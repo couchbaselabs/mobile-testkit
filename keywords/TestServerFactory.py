@@ -47,7 +47,7 @@ class TestServerFactory:
             return TestServerNetMsft(version_build, host, port, platform=platform)
         elif platform in ["java-macosx", "java-msft", "java-ubuntu", "java-centos"]:
             return TestServerJava(version_build, host, port, debug_mode, platform=platform)
-        elif platform in ["javaws-msxosx", "javaws-msft", "javaws-ubuntu", "javaws-centos"]:
+        elif platform in ["javaws-macosx", "javaws-msft", "javaws-ubuntu", "javaws-centos"]:
             return TestServerJavaWS(version_build, host, port, debug_mode, platform=platform)
         else:
             raise NotImplementedError("Test server does not support this version")
