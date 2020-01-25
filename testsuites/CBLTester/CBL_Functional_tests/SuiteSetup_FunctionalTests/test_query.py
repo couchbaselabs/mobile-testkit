@@ -657,7 +657,6 @@ def test_query_join(params_from_base_suite_setup, select_property1,
             select_property5, bucket_name, bucket_name,
             join_key, whr_key1, whr_val1, whr_key2, whr_val2,
             whr_key3, whr_val3)
-    log_info(n1ql_query)
     query = N1QLQuery(n1ql_query)
     docs_from_n1ql = []
 
@@ -666,7 +665,8 @@ def test_query_join(params_from_base_suite_setup, select_property1,
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
     log_info("Found {} docs".format(len(docs_from_cbl)))
-    assert docs_from_cbl.items() == docs_from_n1ql.items()
+    t = [i for i in docs_from_cbl if i not in docs_from_n1ql] + [j for j in docs_from_n1ql if j not in docs_from_cbl]
+    assert len(t) == 0
     log_info("Doc contents match")
 
 
