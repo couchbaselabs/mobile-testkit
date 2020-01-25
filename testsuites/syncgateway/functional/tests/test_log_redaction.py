@@ -372,7 +372,7 @@ def verify_log_redaction(cluster_config, log_redaction_level, mode):
                 if log_redaction_level == "none":
                     continue
                 else:
-                    assert False, le.message
+                    assert False, str(le)
 
     # verify starting and ending ud tags are equal
     num_ud_tags = subprocess.check_output("find {} -name '*.log' | xargs grep '<ud>' | wc -l".format(temp_log_path), shell=True)

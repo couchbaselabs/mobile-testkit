@@ -604,7 +604,7 @@ def test_longpoll_awaken_channels(params_from_base_test_setup, sg_conf_name):
     for user_auth in [adam_auth, traun_auth, andy_auth]:
         with pytest.raises(requests.exceptions.HTTPError) as excinfo:
             client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=user_auth)
-        assert "403 Client Error: Forbidden for url:" in excinfo.value.message
+        assert "403 Client Error: Forbidden for url:" in excinfo.value.args[0]
 
     ############################################################
     # changes feed wakes with Channel Grant via Sync function

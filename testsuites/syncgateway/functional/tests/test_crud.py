@@ -386,10 +386,10 @@ def verify_sg_deletes(sg_client, sg_url, sg_db, expected_deleted_ids, sg_auth):
         he = None
         with pytest.raises(HTTPError) as he:
             sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=sg_auth)
-        log_info("HTTP error message is {}".format(he.value.message))
+        log_info("HTTP error message is {}".format(he.value.args[0]))
         assert he is not None
-        log_info(he.value.message)
-        assert he.value.message.startswith('403 Client Error: Forbidden for url:')
+        log_info(he.value.args[0])
+        assert he.value.args[0].startswith('403 Client Error: Forbidden for url:')
 
 
 def verify_sg_purges(sg_client, sg_url, sg_db, expected_deleted_ids, sg_auth):
@@ -398,8 +398,8 @@ def verify_sg_purges(sg_client, sg_url, sg_db, expected_deleted_ids, sg_auth):
         with pytest.raises(HTTPError) as he:
             sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=sg_auth)
         assert he is not None
-        log_info(he.value.message)
-        assert he.value.message.startswith('404 Client Error: Not Found for url:')
+        log_info(he.value.args[0])
+        assert he.value.args[0].startswith('404 Client Error: Not Found for url:')
 
 
 def verify_sdk_deletes(sdk_client, expected_deleted_ids):
@@ -408,5 +408,5 @@ def verify_sdk_deletes(sdk_client, expected_deleted_ids):
         with pytest.raises(NotFoundError) as nfe:
             sdk_client.get(doc_id)
         assert nfe is not None
-        log_info(nfe.value.message)
+        log_info(str(nfe))
         assert 'The key does not exist on the server' in str(nfe)

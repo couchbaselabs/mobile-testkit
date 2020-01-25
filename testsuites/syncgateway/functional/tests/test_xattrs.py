@@ -412,7 +412,7 @@ def test_on_demand_import_of_external_updates(params_from_base_test_setup, sg_co
     with pytest.raises(HTTPError) as he:
         sg_client.put_doc(url=sg_url, db=sg_db, doc_id=doc_id, rev=doc_rev_one, doc_body=doc_body, auth=seth_auth)
     log_info(he.value)
-    assert he.value.message.startswith('409')
+    assert str(he.value).startswith('409')
 
     # Following update_doc method will get the doc with on demand processing and update the doc based on rev got from get doc
     sg_updated_doc = sg_client.update_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=seth_auth)
@@ -1891,7 +1891,7 @@ def update_sg_docs(client, url, db, docs_to_update, prop_to_update, number_updat
 
 def is_conflict(httperror):
     if httperror.response.status_code == 409 \
-            and httperror.message.startswith('409 Client Error: Conflict for url:'):
+            and str(httperror).startswith('409 Client Error: Conflict for url:'):
         return True
     else:
         return False
@@ -2031,14 +2031,14 @@ def verify_sg_deletes(client, url, db, docs_to_verify_deleted, auth):
             client.get_doc(url=url, db=db, doc_id=doc_id, auth=auth)
 
         assert he is not None
-        log_info(he.value.message)
+        log_info(str(he.value))
 
-        assert he.value.message.startswith('404 Client Error: Not Found for url:') or \
-            he.value.message.startswith('403 Client Error: Forbidden for url:')
+        assert str(he.value).startswith('404 Client Error: Not Found for url:') or \
+            str(he.value).startswith('403 Client Error: Forbidden for url:')
 
         # Parse out the doc id
         # sg_0?conflicts=true&revs=true
-        parts = he.value.message.split('/')[-1]
+        parts = str(he.value).split('/')[-1]
         doc_id_from_parts = parts.split('?')[0]
 
         # Remove the doc id from the list
