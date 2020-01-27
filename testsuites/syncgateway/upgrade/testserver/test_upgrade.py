@@ -98,7 +98,7 @@ def test_upgrade(params_from_base_test_setup):
             # Disable sg views in cluster configs
             persist_cluster_config_environment_prop(cluster_config, 'sg_use_views', False)
 
-    if (number_replicas != upgraded_number_replicas) and upgraded_number_replicas > 0:
+    if (number_replicas != upgraded_number_replicas) and int(upgraded_number_replicas) > 0:
         need_to_redeploy = True
         persist_cluster_config_environment_prop(cluster_config, 'number_replicas', upgraded_number_replicas)
 
