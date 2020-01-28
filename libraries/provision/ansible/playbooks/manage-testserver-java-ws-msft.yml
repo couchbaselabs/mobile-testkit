@@ -1,0 +1,11 @@
+- name: Windows - Start Tomcat service which contains Testserver Java WebService
+  hosts: windows
+  vars:
+    service_status:
+
+  tasks:
+  - debug: msg="Start Tomcat Service"
+  - name: Start Tomcat Service
+    win_service:
+      name: Tomcat9
+      state: "{{ service_status }}"
