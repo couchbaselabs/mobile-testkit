@@ -54,9 +54,9 @@ def test_system(params_from_base_suite_setup):
     sg_client = MobileRestClient()
 
     doc_ids = set()
-    docs_per_db = num_of_docs / len(cbl_db_list)  # Equally distributing docs to db
+    docs_per_db = num_of_docs // len(cbl_db_list)  # Equally distributing docs to db
     extra_docs = num_of_docs % len(cbl_db_list)  # Docs left after equal distribution
-    num_of_itr_per_db = docs_per_db / num_of_docs_in_itr  # iteration required to add docs in each db
+    num_of_itr_per_db = docs_per_db // num_of_docs_in_itr  # iteration required to add docs in each db
     extra_docs_in_itr_per_db = docs_per_db % num_of_docs_in_itr  # iteration required to add docs leftover docs per db
 
     cluster = Cluster(config=cluster_config)
@@ -100,7 +100,7 @@ def test_system(params_from_base_suite_setup):
         # getting doc ids from the dbs
         # _check_doc_count(db_obj_list, cbl_db_list)
         count = db_obj_list[0].getCount(cbl_db_list[0])
-        itr_count = count / query_limit
+        itr_count = count // query_limit
         if itr_count == 0:
             itr_count = 1
         for _ in range(itr_count):
@@ -181,7 +181,7 @@ def test_system(params_from_base_suite_setup):
                                                          replicator_obj_list,
                                                          replicator_list,
                                                          query_obj_list):
-            updates_per_db = len(docs_to_update) / len(db_obj_list)
+            updates_per_db = len(docs_to_update) // len(db_obj_list)
             log_info("Updating {} docs on {} db - {}".format(updates_per_db,
                                                              db_obj.getName(cbl_db),
                                                              list(docs_to_update)[i: i + updates_per_db]))
@@ -222,7 +222,7 @@ def test_system(params_from_base_suite_setup):
         # Deleting docs on CBL side #
         ############################
         docs_to_delete = set(random.sample(doc_ids, num_of_docs_to_delete))
-        docs_to_delete_per_db = len(docs_to_delete) / len(db_obj_list)
+        docs_to_delete_per_db = len(docs_to_delete) // len(db_obj_list)
         i = 0
         for db_obj, cbl_db, repl_obj, repl, query in zip(db_obj_list,
                                                          cbl_db_list,
