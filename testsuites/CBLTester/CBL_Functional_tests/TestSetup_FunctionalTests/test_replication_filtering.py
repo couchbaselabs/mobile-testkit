@@ -9,12 +9,11 @@ from CBLClient.Replication import Replication
 from libraries.testkit import cluster
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("num_of_docs", [
     10,
-    100,
+    pytest.param(100, marks=pytest.mark.sanity),
     1000
 ])
 def test_replication_push_filtering(params_from_base_test_setup, num_of_docs):
@@ -125,7 +124,6 @@ def test_replication_push_filtering(params_from_base_test_setup, num_of_docs):
                    "new_field_3" not in sg_doc.keys(), "updated key found in doc. Push filter is not working"
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("num_of_docs", [
@@ -231,7 +229,6 @@ def test_replication_pull_filtering(params_from_base_test_setup, num_of_docs):
                    "new_field_3" not in cbl_doc.keys(), "updated key found in doc. Pull filter is not working"
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("num_of_docs", [
@@ -334,7 +331,6 @@ def test_replication_filter_deleted_document(params_from_base_test_setup, num_of
         assert doc_id in sg_doc_ids, "CBL deleted docs got replicated to CBL"
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("num_of_docs", [
@@ -440,7 +436,6 @@ def test_replication_filter_access_revoke_document(params_from_base_test_setup, 
                    "new_field_3" in cbl_docs[doc_id]
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("num_of_docs", [

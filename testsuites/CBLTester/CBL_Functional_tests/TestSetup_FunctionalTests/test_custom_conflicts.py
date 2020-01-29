@@ -11,13 +11,12 @@ from keywords.MobileRestClient import MobileRestClient
 from testsuites.CBLTester.CBL_Functional_tests.TestSetup_FunctionalTests.test_delta_sync import property_updater
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.custom_conflict
 @pytest.mark.replication
 @pytest.mark.parametrize("replicator_type", [
-    "pull",
-    "push_pull"
+    ("pull"),
+    pytest.param("push_pull", marks=pytest.mark.sanity)
 ])
 def test_local_wins_custom_conflicts(params_from_base_test_setup, replicator_type):
     """
@@ -137,7 +136,6 @@ def test_local_wins_custom_conflicts(params_from_base_test_setup, replicator_typ
                                                                      "with local win"
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.custom_conflict
 @pytest.mark.replication

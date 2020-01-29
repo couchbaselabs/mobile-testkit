@@ -13,7 +13,6 @@ from libraries.data.doc_generators import simple, four_k, simple_user, complex_d
 from datetime import datetime, timedelta
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.replication
 def test_system(params_from_base_suite_setup):
