@@ -1,5 +1,4 @@
 import os
-import requests
 import time
 
 from keywords.TestServerBase import TestServerBase
@@ -7,7 +6,6 @@ from keywords.constants import LATEST_BUILDS, RELEASED_BUILDS
 from keywords.exceptions import LiteServError
 from keywords.utils import version_and_build
 from keywords.utils import log_info
-from keywords.constants import BINARY_DIR
 from libraries.provision.ansible_runner import AnsibleRunner
 
 
@@ -155,7 +153,7 @@ class TestServerJavaWS(TestServerBase):
                 "service_status": "started"
             })
         else:
-            # start Tomcat Service
+            # start Tomcat Server
             status = self.ansible_runner.run_ansible_playbook("manage-testserver-java-ws.yml", extra_vars={
                 "service_status": "start"
             })
@@ -177,7 +175,7 @@ class TestServerJavaWS(TestServerBase):
                 "service_status": "stopped"
             })
         else:
-            # stop Tomcat Windows Service
+            # stop Tomcat Server
             status = self.ansible_runner.run_ansible_playbook("manage-testserver-java-ws.yml", extra_vars={
                 "service_status": "stop"
             })
