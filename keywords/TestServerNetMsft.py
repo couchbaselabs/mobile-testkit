@@ -4,10 +4,7 @@ import time
 from keywords.TestServerWinBase import TestServerWinBase
 from keywords.constants import LATEST_BUILDS, RELEASED_BUILDS
 from keywords.exceptions import LiteServError
-# from keywords.utils import version_and_build
 from keywords.utils import log_info
-
-# from libraries.provision.ansible_runner import AnsibleRunner
 
 
 class TestServerNetMsft(TestServerWinBase):

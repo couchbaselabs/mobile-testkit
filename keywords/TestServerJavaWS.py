@@ -12,7 +12,6 @@ from libraries.provision.ansible_runner import AnsibleRunner
 
 
 class TestServerJavaWS(TestServerBase):
-
     def __init__(self, version_build, host, port, community_enabled=None, debug_mode=False, platform="javaws-centos"):
         super(TestServerJavaWS, self).__init__(version_build, host, port)
         self.platform = platform
@@ -154,6 +153,7 @@ class TestServerJavaWS(TestServerBase):
         raise NotImplementedError()
 
     def start(self, logfile_name):
+
         if self.platform == "javaws-msft":
             # start Tomcat Windows Service
             status = self.ansible_runner.run_ansible_playbook("manage-testserver-java-ws-msft.yml", extra_vars={
