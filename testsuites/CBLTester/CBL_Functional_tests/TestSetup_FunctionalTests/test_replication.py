@@ -1199,6 +1199,9 @@ def test_initial_pull_replication_background_apprun(params_from_base_test_setup,
             (liteserv_platform.lower() != "ios" or liteserv_platform.lower() != "xamarin-ios") and device_enabled):
         pytest.skip('This test cannot run either it is .Net or ios with device enabled ')
 
+    if liteserv_platform in ["java-macosx", "java-msft", "java-ubuntu", "java-centos", "javaws-macosx", "javaws-msft", "javaws-ubuntu", "javaws-centos"]:
+        pytest.skip('This test cannot run as a Java application')
+
     client = MobileRestClient()
     client.create_user(sg_admin_url, sg_db, "testuser", password="password", channels=["ABC", "NBC"])
     cookie, session_id = client.create_session(sg_admin_url, sg_db, "testuser")
@@ -1293,6 +1296,9 @@ def test_push_replication_with_backgroundApp(params_from_base_test_setup, num_do
     if liteserv_platform.lower() == "net-msft" or liteserv_platform.lower() == "net-uwp" or (
             (liteserv_platform.lower() != "ios" or liteserv_platform.lower() != "xamarin-ios") and device_enabled):
         pytest.skip('This test cannot run either it is .Net or ios with device enabled ')
+
+    if liteserv_platform in ["java-macosx", "java-msft", "java-ubuntu", "java-centos", "javaws-macosx", "javaws-msft", "javaws-ubuntu", "javaws-centos"]:
+        pytest.skip('This test cannot run as a Java application')
 
     client = MobileRestClient()
     client.create_user(sg_admin_url, sg_db, "testuser", password="password", channels=channels)
@@ -3120,11 +3126,9 @@ def test_resetCheckpointFailure(params_from_base_test_setup):
     # verify it throws an error that checkpoint reset is called without stopping replicator.
     with pytest.raises(Exception) as he:
         replicator.resetCheckPoint(repl)
-    if liteserv_platform.lower() == "android":
-        assert 'Attempt to reset the checkpoint for a replicator that is not stopped.' in he.value.message, "Reset the checkpoint should have thrown exception to inform that replicator is not stopped."
-    else:
-        assert 'Replicator is not stopped.' in he.value.message
-        assert 'Resetting checkpoint is only allowed when the replicator is in the stopped state' in he.value.message, "Reset the checkpoint should have thrown exception to inform that replicator is not stopped."
+
+    assert 'Replicator is not stopped.' in he.value.message
+    assert 'Resetting checkpoint is only allowed when the replicator is in the stopped state' in he.value.message, "Reset the checkpoint should have thrown exception to inform that replicator is not stopped."
     replicator.stop(repl)
 
 
