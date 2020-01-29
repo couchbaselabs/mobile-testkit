@@ -430,7 +430,7 @@ def params_from_base_suite_setup(request):
     # Flush all the memory contents on the server app
     log_info("Flushing server memory")
     utils_obj = Utils(base_url)
-    # utils_obj.flushMemory()
+    utils_obj.flushMemory()
     log_info("Stopping the test server per suite")
     if not use_local_testserver:
         testserver.stop()

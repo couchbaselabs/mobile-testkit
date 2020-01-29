@@ -1386,11 +1386,16 @@ def test_single_property_fts(params_from_base_suite_setup, prop, val, doc_type, 
     # Get doc from CBL through query
     qy = Query(base_url)
     limit = 10
+
     result_set = qy.query_single_property_fts(source_db, prop, val,
                                               doc_type, limit, stemming)
+
     docs_from_cbl = []
+    log_info("Respose Content In The test " * 20 )
     if result_set != -1 and result_set is not None:
+        log_info("In th IF")
         for result in result_set:
+            log_info("In the for ")
             docs_from_cbl.append(result)
             log_info(result)
     assert 0 < len(docs_from_cbl) <= limit
