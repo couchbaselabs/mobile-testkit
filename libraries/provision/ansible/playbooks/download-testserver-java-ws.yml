@@ -57,7 +57,7 @@
   - name: Download TestServer Java WebService .war
     get_url:
       url: "{{ testserver_download_url }}"
-      dest: ~/javatestserver/{{ war_package_name }}
+      dest: ~/javatestserver/{{ war_package_name }}.war
     when: war_st.stat.exists == False
 
   - name: Download Couchbase Lite Library .zip

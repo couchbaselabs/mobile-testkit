@@ -1,0 +1,9 @@
+- name: CentOS - Start or Stop Tomcat which contains Testserver Java WebService
+  hosts: centos
+  vars:
+    service_status:
+
+  tasks:
+  - debug: msg="{{ ansible_env.CATALINA_BASE }}/bin/catalina.sh {{service_status}}"
+  - name: Manage Tomcat Service
+    shell: "{{ ansible_env.CATALINA_BASE }}/bin/catalina.sh {{service_status}}"

@@ -135,7 +135,7 @@ class TestServerJavaWS(TestServerBase):
 
     def install(self):
         if self.platform == "javaws-msft":
-            # download war file to a remote Windows server machine
+            # deploy jar/war files to Tomcat
             status = self.ansible_runner.run_ansible_playbook("install-testserver-java-ws-msft.yml", extra_vars={
                 "war_package_name": self.package_name,
                 "core_package_name": self.cbl_core_lib_name,
