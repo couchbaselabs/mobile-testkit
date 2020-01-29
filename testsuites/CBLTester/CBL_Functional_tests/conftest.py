@@ -675,7 +675,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     if request.node.rep_call.failed and enable_file_logging and create_db_per_test is not None:
         test_id = request.node.nodeid
         log_info("\n Collecting logs for failed test: {}".format(test_id))
-        zip_data = test_cbllog.get_logs_in_zip(test_db_log_file)
+        zip_data = test_cbllog.get_logs_in_zip()
         log_directory = "results"
         if not os.path.exists(log_directory):
             os.mkdir(log_directory)

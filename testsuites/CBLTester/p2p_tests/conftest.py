@@ -59,8 +59,7 @@ def pytest_addoption(parser):
 
     parser.addoption("--create-db-per-test",
                      action="store",
-                     help="create-db-per-test: Creates/deletes client DB for every test",
-                     default="test")
+                     help="create-db-per-test: Creates/deletes client DB for every test")
 
     parser.addoption("--enable-file-logging",
                      action="store_true",
