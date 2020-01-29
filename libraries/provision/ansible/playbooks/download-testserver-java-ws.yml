@@ -1,5 +1,5 @@
-- name: CentOS - Download Testserver Java WebService Package
-  hosts: centos
+- name: Download Testserver Java WebService Package
+  hosts: testserver
   vars:
     testserver_download_url:
     cblite_download_url:

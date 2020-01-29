@@ -1,5 +1,5 @@
-- name: CentOS - Start or Stop Tomcat which contains Testserver Java WebService
-  hosts: centos
+- name: Start or Stop Tomcat which contains Testserver Java WebService
+  hosts: testserver
   vars:
     service_status:
 

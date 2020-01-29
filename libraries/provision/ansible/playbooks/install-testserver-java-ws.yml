@@ -1,5 +1,5 @@
-- name: CentOS - Install Testserver Java WebService to Tomcat
-  hosts: centos
+- name: Install Testserver Java WebService to Tomcat
+  hosts: testserver
   vars:
     war_package_name:
     core_package_name:
