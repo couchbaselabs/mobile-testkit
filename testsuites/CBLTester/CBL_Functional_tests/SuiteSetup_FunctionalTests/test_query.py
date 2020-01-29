@@ -1391,7 +1391,7 @@ def test_single_property_fts(params_from_base_suite_setup, prop, val, doc_type, 
                                               doc_type, limit, stemming)
 
     docs_from_cbl = []
-    log_info("Respose Content In The test " * 20 )
+    log_info("Respose Content In The test " * 20)
     if result_set != -1 and result_set is not None:
         log_info("In th IF")
         for result in result_set:
