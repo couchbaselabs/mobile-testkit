@@ -65,7 +65,7 @@ class TestServerJavaWS(TestServerBase):
                 "ansible_winrm_server_cert_validation=ignore"
             ]
         else:
-            # java ws on Windows platform
+            # java ws on non-Windows platform
             if "TESTSERVER_HOST_USER" not in os.environ:
                 raise LiteServError(
                     "Make sure you define 'TESTSERVER_HOST_USER' as the user for the host you are targeting")
@@ -74,7 +74,7 @@ class TestServerJavaWS(TestServerBase):
                 raise LiteServError(
                     "Make sure you define 'TESTSERVER_HOST_PASSWORD' as the user for the host you are targeting")
 
-            # Create config for TestServer CentOS host
+            # Create config for TestServer non-Windows host
             ansible_testserver_target_lines = [
                 "[testserver]",
                 "testserver ansible_host={}".format(host),
@@ -126,13 +126,14 @@ class TestServerJavaWS(TestServerBase):
 
     def install(self):
         if self.platform == "javaws-msft":
-            # deploy jar/war files to Tomcat
+            # deploy jar/war files to Tomcat on Windows
             status = self.ansible_runner.run_ansible_playbook("install-testserver-java-ws-msft.yml", extra_vars={
                 "war_package_name": self.package_name,
                 "core_package_name": self.cbl_core_lib_name,
                 "build_name": self.build_name
             })
         else:
+            # deploy jar/war files to Tomcat on non-Windows
             status = self.ansible_runner.run_ansible_playbook("install-testserver-java-ws.yml", extra_vars={
                 "war_package_name": self.package_name,
                 "core_package_name": self.cbl_core_lib_name
