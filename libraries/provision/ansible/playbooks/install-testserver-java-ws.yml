@@ -8,7 +8,8 @@
   - debug: msg="Tomcat home directory is {{ ansible_env.CATALINA_BASE }}"
  
   - name: Stop Tomcat Service
-    shell: "{{ ansible_env.CATALINA_BASE }}/bin/catalina.sh stop"
+    shell: "{{ ansible_env.CATALINA_BASE }}/bin/catalina.sh stop 30 -force"
+    ignore_errors: yes
 
   - name: Collect CouchbaseLite jar and supporting files
     find:
