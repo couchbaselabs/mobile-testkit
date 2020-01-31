@@ -19,14 +19,59 @@ public class TestServerMain implements Daemon {
     private static final int PORT = 8080;
     private static final String TMP_DIR = System.getProperty("java.io.tmpdir");
     private static Context context;
+    private static boolean stopped = false;
 
     public static void main(String[] args) throws IOException {
-        String ip = context.getLocalIpAddress();  //here the context hands out an ip address of 0.0.0.0
-        Server.memory.setIpAddress(ip);
-        Log.i("JavaDesktop", "Launching a HTTP server at " + ip + ", port = " + PORT);
+        //ServerRunner.executeInstance(server);
+        new TestServerMain().startServer(false);
+    }
 
-        NanoHTTPD server = new Server(context, PORT);
-        ServerRunner.executeInstance(server);
+    public void startServer(boolean asService) {
+        NanoHTTPD server = null;
+        try {
+            String ip = context.getLocalIpAddress();  //here the context hands out an ip address of 0.0.0.0
+            Server.memory.setIpAddress(ip);
+
+            server = new Server(context, PORT);
+            server.start(5000, false);
+
+            Log.i("JavaDesktop", "Launching a HTTP server at " + ip + ", port = " + PORT);
+        } catch (IOException var3) {
+            System.err.println("Couldn't start server:\n" + var3);
+            System.exit(-1);
+        }
+
+        if (asService) {
+            waitForStopService();
+        } else {
+            waitForEnter();
+        }
+
+        if (server != null) {
+            server.stop();
+            System.out.println("Server stopped.\n");
+        }
+    }
+
+    private void waitForEnter() {
+        System.out.println("Server started, Hit Enter to stop.\n");
+        try {
+            System.in.read();
+        } catch (Throwable th) { }
+    }
+
+    private synchronized void waitForStopService() {
+        try {
+            wait();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        stopped = false;
+    }
+
+    private synchronized void notifyStopped() {
+        stopped = true;
+        notifyAll();
     }
 
     @Override
@@ -42,12 +87,13 @@ public class TestServerMain implements Daemon {
     @Override
     public void start() throws Exception {
         Log.i("JavaDesktop", "Starting TestServer application as a daemon service.");
-        main(null);
+        startServer(true);
     }
 
     @Override
     public void stop() throws Exception {
         Log.i("JavaDesktop", "Stopping TestServer daemon service.");
+        notifyStopped();
     }
 
     @Override
