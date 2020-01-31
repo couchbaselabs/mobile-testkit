@@ -555,4 +555,4 @@ def test_sync_20mb(params_from_base_test_setup, sg_conf_name):
     try:
         sg_client.add_doc(url=sg_url, db=sg_db, doc=doc, auth=session)
     except HTTPError as h:
-        assert "413 Client Error: Request Entity Too Large for url" in h.message, "did not throw 413 client error"
+        assert "413 Client Error: Request Entity Too Large for url" in str(h), "did not throw 413 client error"
