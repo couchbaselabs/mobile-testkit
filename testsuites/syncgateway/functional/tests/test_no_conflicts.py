@@ -41,7 +41,7 @@ def test_no_conflicts_enabled(params_from_base_test_setup, sg_conf_name, num_of_
     mode = params_from_base_test_setup["mode"]
     sg_url = topology["sync_gateways"][0]["public"]
     sg_admin_url = topology["sync_gateways"][0]["admin"]
-    no_conflicts_enabled = params_from_base_test_setup["no_conflicts_enabled"]:74
+    no_conflicts_enabled = params_from_base_test_setup["no_conflicts_enabled"]
     sg_db = "db"
 
     if not no_conflicts_enabled:
