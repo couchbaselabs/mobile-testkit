@@ -6,7 +6,6 @@ import ansible
 import ansible.inventory
 from ansible.inventory.manager import InventoryManager
 from ansible.vars.manager import VariableManager
-from ansible.vars import VariableManager
 from ansible.executor import playbook_executor
 from ansible.utils.display import Display
 from ansible import constants
