@@ -17,4 +17,6 @@
       fetch: src=C:\Users\{{ ansible_user }}\Desktop\LiteServ\LiteServ.log dest={{ log_full_path }} flat=yes
 
     - name: Delete log file
-      win_file: path=C:\Users\{{ ansible_user }}\Desktop\LiteServ\LiteServ.log state=absent
+      win_file:
+        path: C:\Users\{{ ansible_user }}\Desktop\LiteServ\LiteServ.log
+        state: absent

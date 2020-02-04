@@ -8,4 +8,6 @@
     - include: tasks/stop-fetch-windows-cbl-logs.yml
 
     - name: Delete log file
-      win_file: path=C:\PROGRA~1\dotnet\TextLogging\* state=absent
+      win_file:
+        path: C:\PROGRA~1\dotnet\TextLogging\*
+        state: absent
