@@ -778,7 +778,7 @@ def test_rotated_logs_size_limit(params_from_base_test_setup, sg_conf_name):
         unzip_file = zip_file.split(".gz")[0]
         _, stdout, _ = remote_executor.execute("ls -s {} | awk '{}'".format(unzip_file, print_variable))
         log_size = stdout[0].rstrip()
-        assert log_size > 100000, "rotated log size is not created with 100 MB"
+        assert int(log_size) > 100000, "rotated log size is not created with 100 MB"
 
     # Remove generated conf file
     os.remove(temp_conf)
