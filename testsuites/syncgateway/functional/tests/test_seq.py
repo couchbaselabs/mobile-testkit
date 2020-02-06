@@ -11,7 +11,6 @@ from keywords.utils import log_info
 from utilities.cluster_config_utils import get_sg_version, persist_cluster_config_environment_prop, copy_to_temp_conf
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.basicauth
 @pytest.mark.channel
@@ -20,7 +19,7 @@ from utilities.cluster_config_utils import get_sg_version, persist_cluster_confi
 @pytest.mark.parametrize("sg_conf_name, num_users, num_docs, num_revisions, x509_cert_auth", [
     ("sync_gateway_default_functional_tests", 10, 500, 1, False),
     ("sync_gateway_default_functional_tests_no_port", 10, 500, 1, True),
-    ("sync_gateway_default_functional_tests_couchbase_protocol_withport_11210", 10, 500, 1, False)
+    pytest.param("sync_gateway_default_functional_tests_couchbase_protocol_withport_11210", 10, 500, 1, False, marks=pytest.mark.sanity)
 ])
 def test_seq(params_from_base_test_setup, sg_conf_name, num_users, num_docs, num_revisions, x509_cert_auth):
     cluster_conf = params_from_base_test_setup["cluster_config"]

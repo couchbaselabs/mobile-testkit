@@ -38,14 +38,12 @@ def setup_teardown_test(params_from_base_test_setup):
     db.deleteDB(cbl_db)
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("num_of_docs, continuous, x509_cert_auth", [
     (10, True, True),
-    (100, True, False),
-    (1000, True, True),
-    (1000, False, False)
+    pytest.param(100, True, False, marks=pytest.mark.sanity),
+    (1000, True, True)
 ])
 def test_replication_configuration_valid_values(params_from_base_test_setup, num_of_docs, continuous, x509_cert_auth):
     """
@@ -133,7 +131,6 @@ def test_replication_configuration_valid_values(params_from_base_test_setup, num
     assert total == completed, "total is not equal to completed"
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("authenticator_type, attachments_generator", [
@@ -213,7 +210,6 @@ def test_replication_configuration_with_pull_replication(params_from_base_test_s
             assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["attachment_pull_bytes"] > 0, "attachment_pull_bytes did not get incremented"
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("authenticator_type, attachments_generator", [
@@ -577,7 +573,6 @@ def test_replication_configuration_with_headers(params_from_base_test_setup):
         assert doc in sg_ids
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.noconflicts
 @pytest.mark.parametrize("num_of_docs, x509_cert_auth", [
@@ -1018,7 +1013,6 @@ def test_CBL_push_pull_with_sgAccel_down(params_from_base_test_setup, sg_conf_na
         assert cbl_db_docs[doc]["updates-cbl"] == number_of_updates, "updates-cbl did not get updated"
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.noconflicts
 @pytest.mark.parametrize("sg_conf_name, num_of_docs", [
@@ -1789,7 +1783,7 @@ def test_default_conflict_with_two_conflictsAndTomstone(params_from_base_test_se
         with pytest.raises(KeyError) as ke:
             cbl_docs[id]["updates"]
 
-        assert ke.value.message.startswith('updates')
+        assert ke.value.args[0].startswith('updates')
     replicator.stop(repl)
 
 
@@ -2531,7 +2525,6 @@ def test_replication_withChannels1_withMultipleSgDBs(params_from_base_test_setup
     replicator.stop(repl2)
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("topology_type", [
@@ -2852,7 +2845,6 @@ def test_replication_multipleChannels_withFilteredDocIds(params_from_base_test_s
         assert doc_id not in cbl_doc_ids, "Non filtered doc id is replicated to cbl"
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("replication_type, target_db", [

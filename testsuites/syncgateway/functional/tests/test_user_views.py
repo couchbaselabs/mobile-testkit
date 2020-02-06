@@ -23,7 +23,6 @@ from utilities.cluster_config_utils import persist_cluster_config_environment_pr
 @pytest.mark.attachments
 @pytest.mark.parametrize("sg_conf_name, x509_cert_auth", [
     ("user_views/user_views", False),
-    ("user_views/user_views", True)
 ])
 def test_user_views_sanity(params_from_base_test_setup, sg_conf_name, x509_cert_auth):
     cluster_conf = params_from_base_test_setup["cluster_config"]

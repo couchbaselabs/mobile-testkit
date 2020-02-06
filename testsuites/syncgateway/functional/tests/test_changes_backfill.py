@@ -13,7 +13,6 @@ from keywords import document
 from keywords import exceptions
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.changes
 @pytest.mark.session
@@ -23,7 +22,7 @@ from keywords import exceptions
 @pytest.mark.backfill
 @pytest.mark.parametrize("sg_conf_name, grant_type, x509_cert_auth", [
     ("custom_sync/access", "CHANNEL-REST", True),
-    ("custom_sync/access", "CHANNEL-SYNC", False),
+    pytest.param("custom_sync/access", "CHANNEL-SYNC", False, marks=pytest.mark.sanity),
     ("custom_sync/access", "ROLE-REST", False),
     ("custom_sync/access", "ROLE-SYNC", True),
     ("custom_sync/access", "CHANNEL-TO-ROLE-REST", True),

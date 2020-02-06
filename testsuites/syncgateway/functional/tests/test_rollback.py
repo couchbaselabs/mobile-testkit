@@ -23,7 +23,6 @@ from utilities.cluster_config_utils import persist_cluster_config_environment_pr
 @pytest.mark.rollback
 @pytest.mark.bulkops
 @pytest.mark.parametrize("sg_conf_name, x509_cert_auth", [
-    ("sync_gateway_default", True),
     ("sync_gateway_default", False)
 ])
 def test_rollback_server_reset(params_from_base_test_setup, sg_conf_name, x509_cert_auth):

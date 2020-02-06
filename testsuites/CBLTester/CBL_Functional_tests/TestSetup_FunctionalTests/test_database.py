@@ -5,13 +5,12 @@ from CBLClient.Database import Database
 from CBLClient.DatabaseConfiguration import DatabaseConfiguration
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.database
 @pytest.mark.parametrize(
     'password',
     [
-        ('encrypting-password'),
+        pytest.param('encrypting-password', marks=pytest.mark.sanity),
         ('123'),
         ('****&&&'),
         ('1*rt')
@@ -61,7 +60,9 @@ def test_databaseEncryption(params_from_base_test_setup, password):
     else:
         with pytest.raises(Exception) as he:
             db.create(cbl_db_name, db_config)
+
         assert str(he.value).startswith('400 Client Error: Bad Request for url:')
+
 
     # 6. Verify that database can be accessed with password
     db_config1 = db.configure(password=password)
@@ -73,7 +74,6 @@ def test_databaseEncryption(params_from_base_test_setup, password):
     db.deleteDB(cbl_db3)
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.database
 @pytest.mark.parametrize(
@@ -132,7 +132,6 @@ def test_invalidEncryption(params_from_base_test_setup, password):
         assert str(he.value).startswith('400 Client Error: Bad Request for url:')
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.database
 def test_updateDBEncryptionKey(params_from_base_test_setup):
@@ -177,10 +176,10 @@ def test_updateDBEncryptionKey(params_from_base_test_setup):
     else:
         with pytest.raises(Exception) as he:
             db.create(cbl_db_name, db_config)
+
         assert str(he.value).startswith('400 Client Error: Bad Request for url:')
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.database
 def test_DBEncryptionKey_withCompact(params_from_base_test_setup):
@@ -228,7 +227,6 @@ def test_DBEncryptionKey_withCompact(params_from_base_test_setup):
         assert doc_id in cbl_doc_ids1, "cbl doc is in first list does not exist in second list"
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.database
 def test_removeDBEncryptionKey(params_from_base_test_setup):
@@ -277,6 +275,7 @@ def test_removeDBEncryptionKey(params_from_base_test_setup):
         with pytest.raises(Exception) as he:
             db.create(cbl_db_name, db_config)
         assert str(he.value).startswith('400 Client Error: Bad Request for url:')
+
 
     # 5. Verify database can be accessed without password.
     print("starting the database access without password")

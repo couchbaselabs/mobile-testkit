@@ -11,13 +11,12 @@ from libraries.testkit import cluster
 from keywords.utils import log_info
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("password", [
-    "auto-password",
-    "auto password",
-    "validpassword",
+    pytest.param("auto-password", marks=pytest.mark.sanity),
+    ("auto password"),
+    ("validpassword"),
 ])
 def test_mask_password_in_logs(params_from_base_test_setup, password):
     """
@@ -72,7 +71,6 @@ def test_mask_password_in_logs(params_from_base_test_setup, password):
     verify_password_masked(liteserv_platform, log_file, password, test_cbllog)
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("invalid_password", [

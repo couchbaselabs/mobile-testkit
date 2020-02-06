@@ -13,12 +13,11 @@ from libraries.testkit.cluster import Cluster
 from utilities.cluster_config_utils import get_sg_version, persist_cluster_config_environment_prop, copy_to_temp_conf
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.views
 @pytest.mark.session
 @pytest.mark.parametrize('sg_conf_name, validate_changes_before_restart, x509_cert_auth', [
-    ('sync_gateway_default_functional_tests', False, False),
+    pytest.param('sync_gateway_default_functional_tests', False, False, marks=pytest.mark.sanity),
     ('sync_gateway_default_functional_tests', True, True),
     ('sync_gateway_default_functional_tests_no_port', False, True),
     ('sync_gateway_default_functional_tests_no_port', True, False)

@@ -17,13 +17,12 @@ from keywords.constants import CLIENT_REQUEST_TIMEOUT
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.onlineoffline
 @pytest.mark.webhooks
 @pytest.mark.basicauth
 @pytest.mark.parametrize("sg_conf_name, num_users, num_channels, num_docs, num_revisions, x509_cert_auth", [
-    ("webhooks/webhook_offline", 5, 1, 1, 2, True),
+    pytest.param("webhooks/webhook_offline", 5, 1, 1, 2, True, marks=pytest.mark.sanity),
     ("webhooks/webhook_offline", 5, 1, 1, 2, False)
 ])
 def test_webhooks(params_from_base_test_setup, sg_conf_name, num_users, num_channels, num_docs,

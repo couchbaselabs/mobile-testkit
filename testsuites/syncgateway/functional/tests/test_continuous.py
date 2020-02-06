@@ -88,14 +88,13 @@ def test_continuous_changes_parametrized(params_from_base_test_setup, sg_conf_na
     verify_changes(abc_doc_pusher, expected_num_docs=num_docs, expected_num_revisions=num_revisions, expected_docs=abc_doc_pusher.cache)
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.changes
 @pytest.mark.basicauth
 @pytest.mark.channel
 @pytest.mark.parametrize("sg_conf_name, num_docs, num_revisions, x509_cert_auth", [
     ("sync_gateway_default_functional_tests", 10, 10, True),
-    ("sync_gateway_default_functional_tests_no_port", 10, 10, False),
+    pytest.param("sync_gateway_default_functional_tests_no_port", 10, 10, False, marks=pytest.mark.sanity),
     ("sync_gateway_default_functional_tests_couchbase_protocol_withport_11210", 10, 10, False)
 ])
 def test_continuous_changes_sanity(params_from_base_test_setup, sg_conf_name, num_docs, num_revisions, x509_cert_auth):

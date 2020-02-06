@@ -192,6 +192,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
             playbook_vars["logging"] = '{}, "redaction_level": "{}" {},'.format(logging_config, redact_level, "}")
         except KeyError as ex:
             log_info("Keyerror in getting logging{}".format(ex))
+
             playbook_vars["logging"] = '{} {},'.format(logging_config, "}")
 
         if get_sg_use_views(cluster_config):

@@ -84,11 +84,9 @@ def test_no_conflicts_enabled(params_from_base_test_setup):
         with pytest.raises(HTTPError) as he:
             sg_client.add_conflict(url=sg_url, db=sg_db, doc_id=doc["id"], parent_revisions=doc["value"]["rev"], new_revision="2-foo",
                                    auth=session)
-
         assert str(he.value).startswith('409 Client Error: Conflict for url:')
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.parametrize("sg_conf_name, num_of_docs, revs_limit", [
     ('sync_gateway_revs_conflict_configurable', 10, 1),
@@ -171,6 +169,7 @@ def test_no_conflicts_enabled_with_revs_limit(params_from_base_test_setup, sg_co
                 sg_client.add_conflict(url=sg_url, db=sg_db, doc_id=doc["id"], parent_revisions=doc["value"]["rev"], new_revision="2-foo",
                                        auth=session)
             assert str(he.value).startswith('409 Client Error: Conflict for url:')
+
         else:
             conflicted_rev = sg_client.add_conflict(url=sg_url, db=sg_db, doc_id=doc["id"], parent_revisions=doc["value"]["rev"], new_revision="2-foo",
                                                     auth=session)
@@ -190,7 +189,6 @@ def test_no_conflicts_enabled_with_revs_limit(params_from_base_test_setup, sg_co
         assert len(num_of_revs) == revs_limit, "Number of revisions in history is more than revs_limit set in sg config"
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.conflicts
 @pytest.mark.noconflicts
@@ -272,6 +270,7 @@ def test_no_conflicts_update_with_revs_limit(params_from_base_test_setup, sg_con
                 sg_client.add_conflict(url=sg_url, db=sg_db, doc_id=doc["id"], parent_revisions=doc["value"]["rev"], new_revision="2-2B",
                                        auth=session)
             assert str(he.value).startswith('409 Client Error: Conflict for url:')
+
             time.sleep(1)
         else:
             conflicted_rev = sg_client.add_conflict(url=sg_url, db=sg_db, doc_id=doc["id"], parent_revisions=doc["value"]["rev"], new_revision="2-2B",
@@ -309,7 +308,6 @@ def test_no_conflicts_update_with_revs_limit(params_from_base_test_setup, sg_con
     replicator.stop(repl)
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.conflicts
 @pytest.mark.noconflicts
@@ -402,7 +400,7 @@ def test_migrate_conflicts_to_noConflicts_CBL(params_from_base_test_setup, sg_co
         with pytest.raises(HTTPError) as he:
             sg_client.add_conflict(url=sg_url, db=sg_db, doc_id=doc["id"], parent_revisions=doc["value"]["rev"], new_revision="3-2B",
                                    auth=session)
-        assert he.value.message.startswith('409 Client Error: Conflict for url:')
+        assert he.value.args[0].startswith('409 Client Error: Conflict for url:')
 
     total_updates = (revs_limit + 5) / 2
     for i in range(total_updates):
@@ -522,7 +520,7 @@ def test_cbl_no_conflicts_sgAccel_added(params_from_base_test_setup, sg_conf_nam
         with pytest.raises(HTTPError) as he:
             sg_client.add_conflict(url=sg_url, db=sg_db, doc_id=doc["id"], parent_revisions=doc["value"]["rev"], new_revision="2-foo1",
                                    auth=session)
-        assert he.value.message.startswith('409 Client Error: Conflict for url:')
+        assert he.value.args[0].startswith('409 Client Error: Conflict for url:')
 
     db.update_bulk_docs(database=cbl_db, number_of_updates=3)
     replicator.wait_until_replicator_idle(repl)
@@ -531,10 +529,9 @@ def test_cbl_no_conflicts_sgAccel_added(params_from_base_test_setup, sg_conf_nam
         with pytest.raises(HTTPError) as he:
             sg_client.add_conflict(url=sg_url, db=sg_db, doc_id=doc["id"], parent_revisions=doc["value"]["rev"], new_revision="2-foo1",
                                    auth=session)
-        assert he.value.message.startswith('409 Client Error: Conflict for url:')
+        assert he.value.args[0].startswith('409 Client Error: Conflict for url:')
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.noconflicts
 @pytest.mark.replication
@@ -649,6 +646,7 @@ def test_sg_CBL_updates_concurrently(params_from_base_test_setup, sg_conf_name, 
                 sg_client.add_conflict(url=sg_url, db=sg_db, doc_id=doc["id"], parent_revisions=doc["value"]["rev"], new_revision="2-foo",
                                        auth=session)
             assert str(he.value).startswith('409 Client Error: Conflict for url:')
+
     else:
         for doc in sg_docs:
             conflicted_rev = sg_client.add_conflict(url=sg_url, db=sg_db, doc_id=doc["id"], parent_revisions=doc["value"]["rev"], new_revision="2-foo",

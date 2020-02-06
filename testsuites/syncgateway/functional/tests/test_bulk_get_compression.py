@@ -150,7 +150,6 @@ def verify_response_size(user_agent, accept_encoding, x_accept_part_encoding, re
         raise ValueError("Unsupported user agent")
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.channel
 @pytest.mark.basicauth
@@ -166,7 +165,7 @@ def verify_response_size(user_agent, accept_encoding, x_accept_part_encoding, re
     ("sync_gateway_gzip", 300, None, None, "CouchbaseLite/1.2", False),
     ("sync_gateway_gzip", 300, "gzip", None, "CouchbaseLite/1.2", True),
     ("sync_gateway_gzip", 300, None, "gzip", "CouchbaseLite/1.2", True),
-    ("sync_gateway_gzip", 300, "gzip", "gzip", "CouchbaseLite/1.2", False)
+    pytest.param("sync_gateway_gzip", 300, "gzip", "gzip", "CouchbaseLite/1.2", False, marks=pytest.mark.sanity)
 ])
 def test_bulk_get_compression(params_from_base_test_setup, sg_conf_name, num_docs, accept_encoding,
                               x_accept_part_encoding, user_agent, x509_cert_auth):

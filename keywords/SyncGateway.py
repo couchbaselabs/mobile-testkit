@@ -604,6 +604,7 @@ class SyncGateway(object):
                 playbook_vars["logging"] = '{}, "redaction_level": "{}" {},'.format(logging_config, redact_level, "}")
             except KeyError as ex:
                 log_info("Keyerror in getting logging{}".format(str(ex)))
+
                 playbook_vars["logging"] = '{} {},'.format(logging_config, "}")
 
             if not get_sg_use_views(cluster_config) and cbs_version >= "5.5.0":

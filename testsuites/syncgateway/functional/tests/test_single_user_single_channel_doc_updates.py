@@ -18,13 +18,12 @@ log = logging.getLogger(libraries.testkit.settings.LOGGER)
 # Single User Single Channel: Create Unique docs and update docs verify all num docs present in changes feed.
 # Verify all revisions in changes feed
 # https://docs.google.com/spreadsheets/d/1nlba3SsWagDrnAep3rDZHXHIDmRH_FFDeTaYJms_55k/edit#gid=598127796
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.basicauth
 @pytest.mark.channel
 @pytest.mark.changes
 @pytest.mark.parametrize("sg_conf_name, num_docs, num_revisions, x509_cert_auth", [
-    ("sync_gateway_default_functional_tests", 100, 100, False),
+    pytest.param("sync_gateway_default_functional_tests", 100, 100, False, marks=pytest.mark.sanity),
     ("sync_gateway_default_functional_tests_no_port", 100, 100, True),
     ("sync_gateway_default_functional_tests_couchbase_protocol_withport_11210", 100, 100, False)
 ])

@@ -30,7 +30,6 @@ NUM_ENDPOINTS = 13
 @pytest.mark.bulkops
 @pytest.mark.changes
 @pytest.mark.parametrize("sg_conf_name, num_docs, x509_cert_auth", [
-    ("bucket_online_offline/bucket_online_offline_default", 100, True),
     ("bucket_online_offline/bucket_online_offline_default", 100, False)
 ])
 def test_online_default_rest(params_from_base_test_setup, sg_conf_name, num_docs, x509_cert_auth):

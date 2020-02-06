@@ -112,12 +112,11 @@ def discover_authenticate_endpoint(sg_url, sg_db, provider, ipv6):
     return parser.form_action
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.oidc
 @pytest.mark.parametrize("sg_conf_name, is_admin_port, expect_signed_id_token", [
     ("sync_gateway_openid_connect", False, True),
-    ("sync_gateway_openid_connect", True, True),
+    pytest.param("sync_gateway_openid_connect", True, True, marks=pytest.mark.sanity),
     ("sync_gateway_openid_connect_unsigned", False, False)
 ])
 def test_openidconnect_basic_test(params_from_base_test_setup, sg_conf_name, is_admin_port, expect_signed_id_token):

@@ -20,11 +20,10 @@ from keywords import document, attachment
 from libraries.provision.ansible_runner import AnsibleRunner
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.logredaction
 @pytest.mark.parametrize("sg_conf_name, redaction_level, x509_cert_auth", [
-    ("log_redaction", "partial", False),
+    pytest.param("log_redaction", "partial", False, marks=pytest.mark.sanity),
     ("log_redaction", "none", True)
 ])
 def test_log_redaction_config(params_from_base_test_setup, remove_tmp_sg_redaction_logs,
@@ -83,12 +82,11 @@ def test_log_redaction_config(params_from_base_test_setup, remove_tmp_sg_redacti
     verify_log_redaction(temp_cluster_config, redaction_level, mode)
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.logredaction
 @pytest.mark.parametrize("sg_conf_name, redaction_level, redaction_salt, x509_cert_auth", [
     ("log_redaction", "partial", False, True),
-    ("log_redaction", "none", False, False),
+    pytest.param("log_redaction", "none", False, False, marks=pytest.mark.sanity),
     ("log_redaction", "partial", True, True)
 ])
 def test_sgCollect1(params_from_base_test_setup, remove_tmp_sg_redaction_logs, sg_conf_name,
@@ -146,7 +144,6 @@ def test_sgCollect1(params_from_base_test_setup, remove_tmp_sg_redaction_logs, s
     log_verification_withsgCollect(redaction_level, user_name, password, zip_file_name)
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.logredaction
 @pytest.mark.parametrize("sg_conf_name, redaction_level, redaction_salt, output_dir, x509_cert_auth", [
@@ -268,12 +265,10 @@ def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_
     log_verification_withsgCollect(redaction_level, user_name, password)
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.logredaction
 @pytest.mark.parametrize("sg_conf_name, x509_cert_auth", [
-    ("log_redaction", False),
-    ("log_redaction", True)
+    ("log_redaction", False)
 ])
 def test_sgCollectRestApi_errorMessages(params_from_base_test_setup, remove_tmp_sg_redaction_logs, sg_conf_name, x509_cert_auth):
     """
@@ -381,7 +376,7 @@ def verify_log_redaction(cluster_config, log_redaction_level, mode):
                 if log_redaction_level == "none":
                     continue
                 else:
-                    assert False, le.message
+                    assert False, str(le)
 
     # verify starting and ending ud tags are equal
     num_ud_tags = subprocess.check_output("find {} -name '*.log' | xargs grep '<ud>' | wc -l".format(temp_log_path), shell=True)

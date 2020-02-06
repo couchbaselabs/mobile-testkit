@@ -15,7 +15,6 @@ from keywords.exceptions import TimeoutException
 from utilities.cluster_config_utils import get_sg_version, persist_cluster_config_environment_prop, copy_to_temp_conf
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.xattrs
 @pytest.mark.changes
@@ -24,7 +23,7 @@ from utilities.cluster_config_utils import get_sg_version, persist_cluster_confi
     ('sync_gateway_default_functional_tests', 'tombstone', False),
     ('sync_gateway_default_functional_tests', 'purge', True),
     ('sync_gateway_default_functional_tests_no_port', 'tombstone', True),
-    ('sync_gateway_default_functional_tests_no_port', 'purge', False),
+    pytest.param('sync_gateway_default_functional_tests_no_port', 'purge', False, marks=pytest.mark.sanity),
     ('sync_gateway_default_functional_tests_couchbase_protocol_withport_11210', 'purge', False)
 ])
 def test_document_resurrection(params_from_base_test_setup, sg_conf_name, deletion_type, x509_cert_auth):
@@ -387,6 +386,7 @@ def verify_sg_deletes(sg_client, sg_url, sg_db, expected_deleted_ids, sg_auth):
         he = None
         with pytest.raises(HTTPError) as he:
             sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=sg_auth)
+
         resp_message = str(he.value)
         log_info("HTTP error message is {}".format(resp_message))
         assert he is not None
@@ -412,5 +412,5 @@ def verify_sdk_deletes(sdk_client, expected_deleted_ids):
         with pytest.raises(NotFoundError) as nfe:
             sdk_client.get(doc_id)
         assert nfe is not None
-        log_info(nfe.value.message)
+        log_info(str(nfe))
         assert 'The key does not exist on the server' in str(nfe)

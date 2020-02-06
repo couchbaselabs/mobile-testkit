@@ -178,14 +178,13 @@ def test_non_winning_revisions(params_from_base_test_setup, sg_conf_name):
     assert len(changes_5["results"]) == 0
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.conflicts
 @pytest.mark.changes
 @pytest.mark.basicauth
 @pytest.mark.channel
 @pytest.mark.parametrize("sg_conf_name, x509_cert_auth", [
-    ("sync_gateway_default_functional_tests", True),
+    pytest.param("sync_gateway_default_functional_tests", True, marks=pytest.mark.sanity),
     ("sync_gateway_default_functional_tests", False)
 ])
 def test_winning_conflict_branch_revisions(params_from_base_test_setup, sg_conf_name, x509_cert_auth):

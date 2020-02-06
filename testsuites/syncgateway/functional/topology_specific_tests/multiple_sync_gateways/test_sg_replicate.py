@@ -138,7 +138,6 @@ def test_sg_replicate_basic_test(params_from_base_test_setup):
 
 
 @pytest.mark.topospecific
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.sgreplicate
 @pytest.mark.channel
@@ -195,7 +194,6 @@ def test_sg_replicate_basic_test_channels(params_from_base_test_setup):
 
 
 @pytest.mark.topospecific
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.sgreplicate
 @pytest.mark.channel
@@ -309,7 +307,6 @@ def test_sg_replicate_continuous_replication(params_from_base_test_setup):
 
 
 @pytest.mark.topospecific
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.sgreplicate
 def test_sg_replicate_non_existent_db(params_from_base_test_setup):
@@ -351,7 +348,6 @@ def test_sg_replicate_non_existent_db(params_from_base_test_setup):
 
 
 @pytest.mark.topospecific
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.sgreplicate
 @pytest.mark.channel
@@ -417,7 +413,6 @@ def test_sg_replicate_push_async(params_from_base_test_setup, num_docs):
 
 
 @pytest.mark.topospecific
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.sgreplicate
 @pytest.mark.channel
@@ -467,7 +462,6 @@ def test_stop_replication_via_replication_id(params_from_base_test_setup):
 
 
 @pytest.mark.topospecific
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.sgreplicate
 def test_replication_config(params_from_base_test_setup):
