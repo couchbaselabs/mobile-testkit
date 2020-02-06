@@ -7,7 +7,6 @@ from keywords.utils import random_string, log_info
 from testsuites.CBLTester.CBL_Functional_tests.TestSetup_FunctionalTests.test_delta_sync import property_updater
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.custom_conflict
 @pytest.mark.replication
@@ -126,7 +125,6 @@ def test_p2p_local_wins_custom_conflicts(params_from_base_test_setup, server_set
             assert "client_random" in server_cbl_doc, "CCR failed to resolve conflict with local win"
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.custom_conflict
 @pytest.mark.replication
@@ -134,7 +132,7 @@ def test_p2p_local_wins_custom_conflicts(params_from_base_test_setup, server_set
     ("pull", "URLEndPoint"),
     ("pull", "MessageEndPoint"),
     ("push_pull", "URLEndPoint"),
-    ("push_pull", "MessageEndPoint")
+    pytest.param("push_pull", "MessageEndPoint", marks=pytest.mark.sanity)
 ])
 def test_p2p_remote_wins_custom_conflicts(params_from_base_test_setup, server_setup, replicator_type, endpoint_type):
     """

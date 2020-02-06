@@ -7,12 +7,11 @@ from libraries.testkit import cluster
 from keywords.utils import deep_dict_compare
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.parametrize(
     'doc_generator_type',
     [
-        ('four_k'),
+        pytest.param('four_k', marks=pytest.mark.sanity),
         ('simple_user'),
         ('complex_doc'),
         ('simple')
@@ -73,7 +72,6 @@ def test_predictiveQueries_basicInputOutput(params_from_base_test_setup, doc_gen
     assert "Parameter of prediction() must be a dictionary" in error
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.predictivequeries
 @pytest.mark.parametrize("coordinates, euclidean_result, squareEuclidean_result, cosine_result",
