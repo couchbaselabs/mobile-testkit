@@ -427,7 +427,6 @@ def test_migrate_conflicts_to_noConflicts(params_from_base_test_setup, sg_conf_n
         resp = str(he.value)
         assert resp.startswith('409 Client Error: Conflict for url:')
 
-
     # 8. update docs few number of times.
     update_sg_docs = sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs, number_updates=additional_updates,
                                            auth=autouser_session, channels=channels)
