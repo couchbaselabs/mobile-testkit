@@ -5,7 +5,7 @@
   {{ sslkey }}
   "databases": {
     "travel-sample": {
-      "import_docs": "continuous",
+      "import_docs": true,
       "unsupported": {
         "enable_extended_attributes": true
       },

@@ -70,14 +70,13 @@ def test_multiple_db_unique_data_bucket_unique_index_bucket(params_from_base_tes
 
 
 # Kind of an edge case in that most users would not point multiple dbs at the same server bucket
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.basicauth
 @pytest.mark.channel
 @pytest.mark.bulkops
 @pytest.mark.changes
 @pytest.mark.parametrize("sg_conf_name, num_users, num_docs_per_user, x509_cert_auth", [
-    ("multiple_dbs_shared_data_shared_index", 10, 500, False),
+    pytest.param("multiple_dbs_shared_data_shared_index", 10, 500, False, marks=pytest.mark.sanity),
     ("multiple_dbs_shared_data_shared_index", 10, 500, True)
 ])
 def test_multiple_db_single_data_bucket_single_index_bucket(params_from_base_test_setup, sg_conf_name, num_users,

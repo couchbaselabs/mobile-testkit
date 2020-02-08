@@ -109,7 +109,6 @@ def test_issue_1524(params_from_base_test_setup, sg_conf_name, num_docs):
 @pytest.mark.channel
 @pytest.mark.changes
 @pytest.mark.parametrize("sg_conf_name, x509_cert_auth", [
-    ("custom_sync/sync_gateway_custom_sync_access_sanity", False),
     ("custom_sync/sync_gateway_custom_sync_access_sanity", True)
 ])
 def test_sync_access_sanity(params_from_base_test_setup, sg_conf_name, x509_cert_auth):
@@ -159,7 +158,6 @@ def test_sync_access_sanity(params_from_base_test_setup, sg_conf_name, x509_cert
     verify_changes(seth, expected_num_docs=0, expected_num_revisions=0, expected_docs={})
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.sync
 @pytest.mark.channel
@@ -228,7 +226,6 @@ def test_sync_channel_sanity(params_from_base_test_setup, sg_conf_name):
     # TODO Push more docs to channel and make sure they do not show up in the users changes feed.
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.sync
 @pytest.mark.role
@@ -358,7 +355,6 @@ def test_sync_sanity(params_from_base_test_setup, sg_conf_name):
     verify_changes(dj_0, expected_num_docs=number_of_docs_per_pusher, expected_num_revisions=0, expected_docs=kdwb_docs)
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.sync
 @pytest.mark.basicauth
@@ -556,4 +552,4 @@ def test_sync_20mb(params_from_base_test_setup, sg_conf_name):
     try:
         sg_client.add_doc(url=sg_url, db=sg_db, doc=doc, auth=session)
     except HTTPError as h:
-        assert "413 Client Error: Request Entity Too Large for url" in h.message, "did not throw 413 client error"
+        assert "413 Client Error: Request Entity Too Large for url" in str(h), "did not throw 413 client error"

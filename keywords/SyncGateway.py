@@ -18,6 +18,10 @@ from libraries.provision.ansible_runner import AnsibleRunner
 from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_redact_level, get_sg_platform
 from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version, sg_ssl_enabled, get_cbs_version, is_delta_sync_enabled
 from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
+from libraries.testkit.cluster import Cluster
+from keywords.utils import host_for_url
+from couchbase.bucket import Bucket
+from keywords import document
 
 
 def validate_sync_gateway_mode(mode):
@@ -216,13 +220,13 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config):
         sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
         cbs_cert_path = os.path.join(os.getcwd(), "certs")
         if is_xattrs_enabled(cluster_config):
-            autoimport_prop = '"import_docs": "continuous",'
+            autoimport_prop = '"import_docs": true,'
             xattrs_prop = '"enable_shared_bucket_access": true,'
         else:
             autoimport_prop = ""
             xattrs_prop = ""
         if is_cbs_ssl_enabled(cluster_config):
-            server_port = 18091
+            server_port = ""
             server_scheme = "couchbases"
 
         if is_x509_auth(cluster_config):
@@ -249,7 +253,7 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config):
                 redact_level = get_redact_level(cluster_config)
                 logging_prop = '{}, "redaction_level": "{}" {},'.format(logging_config, redact_level, "}")
             except KeyError as ex:
-                log_info("Keyerror in getting logging{}".format(ex.message))
+                log_info("Keyerror in getting logging{}".format(ex.args))
                 logging_prop = '{} {},'.format(logging_config, "}")
 
             num_replicas = get_sg_replicas(cluster_config)
@@ -373,7 +377,7 @@ class SyncGateway(object):
         bucket_names = get_buckets_from_sync_gateway_config(config_path)
         couchbase_server_primary_node = add_cbs_to_sg_config_server_field(cluster_config)
         if is_cbs_ssl_enabled(cluster_config):
-            self.server_port = 18091
+            self.server_port = ""
             self.server_scheme = "couchbases"
 
         if is_x509_auth(cluster_config):
@@ -409,7 +413,7 @@ class SyncGateway(object):
                 redact_level = get_redact_level(cluster_config)
                 playbook_vars["logging"] = '{}, "redaction_level": "{}" {},'.format(logging_config, redact_level, "}")
             except KeyError as ex:
-                log_info("Keyerror in getting logging{}".format(ex.message))
+                log_info("Keyerror in getting logging{}".format(ex.args))
                 playbook_vars["logging"] = '{} {},'.format(logging_config, "}")
 
             if get_sg_use_views(cluster_config):
@@ -445,7 +449,7 @@ class SyncGateway(object):
             playbook_vars["password"] = '"password": "password",'
 
         if is_xattrs_enabled(cluster_config):
-            playbook_vars["autoimport"] = '"import_docs": "continuous",'
+            playbook_vars["autoimport"] = '"import_docs": true,'
             playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
 
         if sg_ssl_enabled(cluster_config):
@@ -557,11 +561,7 @@ class SyncGateway(object):
         couchbase_server_primary_node = add_cbs_to_sg_config_server_field(cluster_config)
         bucket_names = get_buckets_from_sync_gateway_config(sg_conf)
 
-        if is_cbs_ssl_enabled(cluster_config):
-            self.server_port = 18091
-            self.server_scheme = "https"
-
-        if is_x509_auth(cluster_config):
+        if is_x509_auth(cluster_config) or is_cbs_ssl_enabled(cluster_config):
             self.server_port = ""
             self.server_scheme = "couchbases"
 
@@ -605,7 +605,7 @@ class SyncGateway(object):
                 redact_level = get_redact_level(cluster_config)
                 playbook_vars["logging"] = '{}, "redaction_level": "{}" {},'.format(logging_config, redact_level, "}")
             except KeyError as ex:
-                log_info("Keyerror in getting logging{}".format(ex.message))
+                log_info("Keyerror in getting logging{}".format(ex.args))
                 playbook_vars["logging"] = '{} {},'.format(logging_config, "}")
 
             if not get_sg_use_views(cluster_config) and cbs_version >= "5.5.0":
@@ -617,7 +617,7 @@ class SyncGateway(object):
             playbook_vars["logging"] = '"log": ["*"],'
 
         if is_xattrs_enabled(cluster_config) and cbs_version >= "5.0.0":
-            playbook_vars["autoimport"] = '"import_docs": "continuous",'
+            playbook_vars["autoimport"] = '"import_docs": true,'
             playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
 
         if sg_ssl_enabled(cluster_config):
@@ -668,8 +668,8 @@ class SyncGateway(object):
         version, build = version_and_build(sync_gateway_version)
 
         if is_cbs_ssl_enabled(cluster_config):
-            server_port = 18091
-            server_scheme = "https"
+            server_port = ""
+            server_scheme = "couchbases"
 
         # Shared vars
         playbook_vars = {
@@ -703,7 +703,7 @@ class SyncGateway(object):
                 redact_level = get_redact_level(cluster_config)
                 playbook_vars["logging"] = '{}, "redaction_level": "{}" {},'.format(logging_config, redact_level, "}")
             except KeyError as ex:
-                log_info("Keyerror in getting logging{}".format(ex.message))
+                log_info("Keyerror in getting logging{}".format(ex.args))
                 playbook_vars["logging"] = '{} {},'.format(logging_config, "}")
 
             if get_sg_use_views(cluster_config):
@@ -718,7 +718,7 @@ class SyncGateway(object):
             playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
 
         if is_xattrs_enabled(cluster_config) and enable_import:
-            playbook_vars["autoimport"] = '"import_docs": "continuous",'
+            playbook_vars["autoimport"] = '"import_docs": true,'
 
         if no_conflicts_enabled(cluster_config):
             playbook_vars["no_conflicts"] = '"allow_conflicts": false,'
@@ -811,3 +811,34 @@ class SyncGateway(object):
 
         if status != 0:
             raise ProvisioningError("Could not create an empty file on sync_gateway")
+
+
+def create_sync_gateways(cluster_config, sg_config_path):
+
+    """
+    @summary:
+    Get the ips from cluster config and generate two sync gateways and return the objects
+    """
+    cluster = Cluster(config=cluster_config)
+    cluster.reset(sg_config_path=sg_config_path)
+    sg1 = cluster.sync_gateways[0]
+    sg2 = cluster.sync_gateways[1]
+
+    return sg1, sg2
+
+
+def create_docs_via_sdk(cbs_url, cbs_cluster, bucket_name, num_docs):
+    cbs_host = host_for_url(cbs_url)
+    log_info("Adding docs via SDK...")
+    if cbs_cluster.ipv6:
+        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_host, bucket_name), password='password')
+    else:
+        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_host, bucket_name), password='password')
+    sdk_client.timeout = 600
+
+    sdk_doc_bodies = document.create_docs('doc_set_two', num_docs)
+    sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
+    sdk_client.upsert_multi(sdk_docs)
+
+    log_info("Adding docs done on CBS")
+    return sdk_docs, sdk_client

@@ -98,7 +98,7 @@ public class DictionaryRequestHandler {
             let key: String = args.get(name: "key")!
             let double_value: Double = args.get(name: "value")!
             let value = Float(double_value)
-            
+
             return dictionary.setFloat(value, forKey: key)
         
         case "dictionary_getDouble":

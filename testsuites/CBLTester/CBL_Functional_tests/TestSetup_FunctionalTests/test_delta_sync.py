@@ -12,13 +12,12 @@ from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from libraries.testkit import cluster
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.syncgateway
 @pytest.mark.replication
 @pytest.mark.parametrize("num_of_docs, replication_type, file_attachment, continuous", [
     (10, "pull", None, True),
-    (10, "pull", "sample_text.txt", True),
+    pytest.param(10, "pull", "sample_text.txt", True, marks=pytest.mark.sanity),
     (1, "push", "golden_gate_large.jpg", True),
     (10, "push", None, True)
 ])
@@ -107,7 +106,8 @@ def test_delta_sync_replication(params_from_base_test_setup, num_of_docs, replic
                     if liteserv_platform == "android":
                         image_content = blob.createImageContent("/assets/golden_gate_large.jpg")
                         blob_value = blob.create("image/jpeg", stream=image_content)
-                    elif liteserv_platform == "xamarin-android":
+                    elif liteserv_platform in ["xamarin-android", "java-macosx", "java-msft", "java-ubuntu", "java-centos",
+                                               "javaws-macosx", "javaws-msft", "javaws-ubuntu", "javaws-centos"]:
                         image_content = blob.createImageContent("golden_gate_large.jpg")
                         blob_value = blob.create("image/jpeg", stream=image_content)
                     elif liteserv_platform == "ios":

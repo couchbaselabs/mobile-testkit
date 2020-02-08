@@ -38,16 +38,12 @@ def setup_teardown_test(params_from_base_test_setup):
     db.deleteDB(cbl_db)
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("num_of_docs, continuous, x509_cert_auth", [
     (10, True, True),
-    (10, False, True),
-    (100, True, False),
-    (100, False, True),
-    (1000, True, True),
-    (1000, False, False)
+    pytest.param(100, True, False, marks=pytest.mark.sanity),
+    (1000, True, True)
 ])
 def test_replication_configuration_valid_values(params_from_base_test_setup, num_of_docs, continuous, x509_cert_auth):
     """
@@ -136,7 +132,6 @@ def test_replication_configuration_valid_values(params_from_base_test_setup, num
     assert total == completed, "total is not equal to completed"
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("authenticator_type, attachments_generator", [
@@ -225,7 +220,6 @@ def test_replication_configuration_with_pull_replication(params_from_base_test_s
                 "attachment_pull_bytes did not get incremented"
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("authenticator_type, attachments_generator", [
@@ -609,7 +603,6 @@ def test_replication_configuration_with_headers(params_from_base_test_setup):
         assert doc in sg_ids
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.noconflicts
 @pytest.mark.parametrize("num_of_docs, x509_cert_auth", [
@@ -1058,7 +1051,6 @@ def test_CBL_push_pull_with_sgAccel_down(params_from_base_test_setup, sg_conf_na
         assert cbl_db_docs[doc]["updates-cbl"] == number_of_updates, "updates-cbl did not get updated"
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.noconflicts
 @pytest.mark.parametrize("sg_conf_name, num_of_docs", [
@@ -1201,6 +1193,9 @@ def test_initial_pull_replication_background_apprun(params_from_base_test_setup,
             (liteserv_platform.lower() != "ios" or liteserv_platform.lower() != "xamarin-ios") and device_enabled):
         pytest.skip('This test cannot run either it is .Net or ios with device enabled ')
 
+    if liteserv_platform in ["java-macosx", "java-msft", "java-ubuntu", "java-centos", "javaws-macosx", "javaws-msft", "javaws-ubuntu", "javaws-centos"]:
+        pytest.skip('This test cannot run as a Java application')
+
     client = MobileRestClient()
     client.create_user(sg_admin_url, sg_db, "testuser", password="password", channels=["ABC", "NBC"])
     cookie, session_id = client.create_session(sg_admin_url, sg_db, "testuser")
@@ -1296,6 +1291,9 @@ def test_push_replication_with_backgroundApp(params_from_base_test_setup, num_do
             (liteserv_platform.lower() != "ios" or liteserv_platform.lower() != "xamarin-ios") and device_enabled):
         pytest.skip('This test cannot run either it is .Net or ios with device enabled ')
 
+    if liteserv_platform in ["java-macosx", "java-msft", "java-ubuntu", "java-centos", "javaws-macosx", "javaws-msft", "javaws-ubuntu", "javaws-centos"]:
+        pytest.skip('This test cannot run as a Java application')
+
     client = MobileRestClient()
     client.create_user(sg_admin_url, sg_db, "testuser", password="password", channels=channels)
     cookie, session_id = client.create_session(sg_admin_url, sg_db, "testuser")
@@ -1385,12 +1383,12 @@ def test_replication_wrong_blip(params_from_base_test_setup):
         replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channels,
                              replicator_authenticator=replicator_authenticator)
     if liteserv_platform == "ios":
-        assert "Invalid scheme for URLEndpoint url (ht2tp" in ex.value.message
-        assert "must be either 'ws:' or 'wss:'" in ex.value.message
+        assert "Invalid scheme for URLEndpoint url (ht2tp" in str(ex.value)
+        assert "must be either 'ws:' or 'wss:'" in str(ex.value)
     else:
-        assert ex.value.message.startswith('400 Client Error: Bad Request for url:')
-        assert "unsupported" in ex.value.message or "Invalid" in ex.value.message
-    assert "ws" in ex.value.message and "wss" in ex.value.message
+        assert str(ex.value).startswith('400 Client Error: Bad Request for url:')
+        assert "unsupported" in str(ex.value) or "Invalid" in str(ex.value)
+    assert "ws" in str(ex.value) and "wss" in str(ex.value)
 
 
 @pytest.mark.listener
@@ -1857,7 +1855,7 @@ def test_default_conflict_with_two_conflictsAndTomstone(params_from_base_test_se
         with pytest.raises(KeyError) as ke:
             cbl_docs[id]["updates"]
 
-        assert ke.value.message.startswith('updates')
+        assert ke.value.args[0].startswith('updates')
     replicator.stop(repl)
 
 
@@ -2623,7 +2621,6 @@ def test_replication_withChannels1_withMultipleSgDBs(params_from_base_test_setup
     replicator.stop(repl2)
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("topology_type", [
@@ -2959,7 +2956,6 @@ def test_replication_multipleChannels_withFilteredDocIds(params_from_base_test_s
         assert doc_id not in cbl_doc_ids, "Non filtered doc id is replicated to cbl"
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("replication_type, target_db", [
@@ -3122,11 +3118,9 @@ def test_resetCheckpointFailure(params_from_base_test_setup):
     # verify it throws an error that checkpoint reset is called without stopping replicator.
     with pytest.raises(Exception) as he:
         replicator.resetCheckPoint(repl)
-    if liteserv_platform.lower() == "android":
-        assert 'Attempt to reset the checkpoint for a replicator that is not stopped.' in he.value.message, "Reset the checkpoint should have thrown exception to inform that replicator is not stopped."
-    else:
-        assert 'Replicator is not stopped.' in he.value.message
-        assert 'Resetting checkpoint is only allowed when the replicator is in the stopped state' in he.value.message, "Reset the checkpoint should have thrown exception to inform that replicator is not stopped."
+
+    assert 'Replicator is not stopped.' in he.value.message
+    assert 'Resetting checkpoint is only allowed when the replicator is in the stopped state' in he.value.message, "Reset the checkpoint should have thrown exception to inform that replicator is not stopped."
     replicator.stop(repl)
 
 
@@ -3655,6 +3649,269 @@ def test_doc_removal_with_multipleChannels(params_from_base_test_setup, setup_cu
     for doc in sg_docs_C:
         assert doc["id"] not in doc_ids_A, "docs ids of userA  exist in cbl db1"
         assert doc["id"] not in doc_ids_C, "docs ids of userB  exist in cbl db2"
+
+
+@pytest.mark.listener
+@pytest.mark.replication
+@pytest.mark.syncgateway
+def test_roles_replication(params_from_base_test_setup):
+    """
+        @summary:
+        1. Create user.
+        2. Create 2 roles with 2 differrent channels.
+        3. Create docs on SGW in both channels.
+        4. Do pull replication from SGW .
+        5. Verify docs got replicated to CBL dB from only one channel
+        6. Add 2nd role to the user .
+        8. Add new docs to SGW in both channels.
+        9.Continue to pull replication from SGW .
+        10.Verify all new docs got replicated from both channels
+
+    """
+    sg_db = "db"
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    sg_blip_url = params_from_base_test_setup["target_url"]
+    base_url = params_from_base_test_setup["base_url"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_config = params_from_base_test_setup["sg_config"]
+    db = params_from_base_test_setup["db"]
+    cbl_db = params_from_base_test_setup["source_db"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+
+    username = "autotest"
+    password = "password"
+    num_docs = 10
+
+    if sync_gateway_version < "2.5.0":
+        pytest.skip('This test cannnot run with sg version below 2.5.0')
+
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
+
+    role1_channels = ["ABC", "DEF"]
+    role2_channels = ["xyz", "XXX"]
+    role_name = "cache_role"
+    roles = [role_name]
+    new_role_name = "new_role"
+
+    sg_client = MobileRestClient()
+    authenticator = Authenticator(base_url)
+    replicator = Replication(base_url)
+
+    # 1. Create user.
+    sg_client.create_user(sg_admin_url, sg_db, username, password=password, roles=roles)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+    session = cookie, session_id
+
+    # 2. Add new roles.
+    sg_client.create_role(url=sg_admin_url, db=sg_db, name=role_name, channels=role1_channels)
+    sg_client.create_role(url=sg_admin_url, db=sg_db, name=new_role_name, channels=role2_channels)
+
+    # 3. Create docs on SGW.
+    sg_client.add_docs(url=sg_admin_url, db=sg_db, number=num_docs, id_prefix="role_doc",
+                       channels=role1_channels, auth=session)
+
+    # 4. Do pull replication from SGW.
+    replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
+    repl = replicator.configure_and_replicate(source_db=cbl_db,
+                                              target_url=sg_blip_url,
+                                              continuous=True,
+                                              replication_type="pull",
+                                              replicator_authenticator=replicator_authenticator)
+    replicator.wait_until_replicator_idle(repl)
+
+    # 5. verify docs got replicated to CBL
+    cbl_doc_ids = db.getDocIds(cbl_db)
+    cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
+    assert len(cbl_docs) == num_docs, "Docs did not get replicated to CBL"
+
+    # 6. Add 2nd role to the user .
+    sg_client.update_user(url=sg_admin_url, db=sg_db, name=username, roles=[role_name, new_role_name])
+
+    # 7. Add new docs to SGW.
+    sg_client.add_docs(url=sg_admin_url, db=sg_db, number=num_docs, id_prefix="new_role1_doc",
+                       channels=role1_channels, auth=session)
+    sg_client.add_docs(url=sg_admin_url, db=sg_db, number=num_docs, id_prefix="new_role2_doc",
+                       channels=role2_channels, auth=session)
+
+    # 8. Continue to pull replication from SGW
+    replicator.wait_until_replicator_idle(repl)
+    replicator.stop(repl)
+
+    # 10.Verify all new docs got replicated from both channels
+    cbl_doc_ids = db.getDocIds(cbl_db)
+    print " all cbl doc ids are ", cbl_doc_ids
+    assert len(cbl_doc_ids) == num_docs * 3, "new docs which created in sgw after role change got replicated to cbl"
+
+
+@pytest.mark.listener
+@pytest.mark.replication
+@pytest.mark.syncgateway
+def test_channel_update_replication(params_from_base_test_setup):
+    """
+        @summary:
+        1. Create user.
+        2. Create docs on SGW.
+        3. Do pull replication from SGW.
+        4. verify docs got replicated to CBL
+        5 Update the user to a differrent channel while replication is happening.
+        6. Add new docs to SGW.
+        7. Continue to pull replication from SGW
+        8. CBL  should not get any new docs which created at step #6.
+        Have the coverage from CBL.Verify the docs from CBL side according to the new role.
+    """
+    sg_db = "db"
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    sg_blip_url = params_from_base_test_setup["target_url"]
+    base_url = params_from_base_test_setup["base_url"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_config = params_from_base_test_setup["sg_config"]
+    db = params_from_base_test_setup["db"]
+    cbl_db = params_from_base_test_setup["source_db"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+
+    username = "autotest"
+    password = "password"
+    num_docs = 10
+
+    if sync_gateway_version < "2.5.0":
+        pytest.skip('This test cannnot run with sg version below 2.5.0')
+
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
+
+    abc_channels = ["ABC", "DEF"]
+    xyz_channels = ["xyz"]
+
+    sg_client = MobileRestClient()
+    authenticator = Authenticator(base_url)
+    replicator = Replication(base_url)
+
+    # 1. Create user.
+    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=abc_channels)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+    session = cookie, session_id
+
+    # 2. Create docs on SGW.
+    sg_client.add_docs(url=sg_admin_url, db=sg_db, number=num_docs, id_prefix="role_doc",
+                       channels=abc_channels, auth=session)
+
+    # 3. Do pull replication from SGW.
+    replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
+    repl = replicator.configure_and_replicate(source_db=cbl_db,
+                                              target_url=sg_blip_url,
+                                              continuous=True,
+                                              replication_type="pull",
+                                              replicator_authenticator=replicator_authenticator)
+    replicator.wait_until_replicator_idle(repl)
+
+    # 4. verify docs got replicated to CBL
+    cbl_doc_ids = db.getDocIds(cbl_db)
+    cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
+    assert len(cbl_docs) == num_docs, "Docs did not get replicated to CBL"
+
+    # 5. update the user to a differrent channel  to something while replication is happening .
+    sg_client.update_user(url=sg_admin_url, db=sg_db, name=username, channels=xyz_channels)
+
+    # 6. Add new docs to SGW.
+    sg_client.add_docs(url=sg_admin_url, db=sg_db, number=num_docs, id_prefix="new_role_doc",
+                       channels=abc_channels, auth=session)
+
+    # 7. Continue to pull replication from SGW
+    replicator.wait_until_replicator_idle(repl)
+    replicator.stop(repl)
+
+    # 8. CBL should not get any new docs which created at step
+    cbl_doc_ids = db.getDocIds(cbl_db)
+    assert len(cbl_doc_ids) == num_docs, "new docs which created in sgw after role change got replicated to cbl"
+    for id in cbl_doc_ids:
+        assert "new_role_doc" not in id, "new doc got replicated to cbl"
+
+
+@pytest.mark.listener
+@pytest.mark.replication
+@pytest.mark.syncgateway
+def test_replication_behavior_with_channelRole_modification(params_from_base_test_setup):
+    """
+        @summary:
+        1. Create user
+        2. Add new role.
+        3. Create docs on SGW.
+        4. Do pull replication from SGW.
+        5. verify docs got replicated to CBL
+        6 change the channel of the role to something while replication is happening.
+        7. Add new docs to SGW.
+        8. Continue to pull replication from SGW
+        9. CBL should not get any new docs which created at step #6.
+    """
+    sg_db = "db"
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    sg_blip_url = params_from_base_test_setup["target_url"]
+    base_url = params_from_base_test_setup["base_url"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_config = params_from_base_test_setup["sg_config"]
+    db = params_from_base_test_setup["db"]
+    cbl_db = params_from_base_test_setup["source_db"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+
+    username = "autotest"
+    password = "password"
+    abc_channels = ["ABC", "DEF"]
+    num_docs = 10
+
+    if sync_gateway_version < "2.5.0":
+        pytest.skip('This test cannnot run with sg version below 2.5.0')
+
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
+
+    sg_client = MobileRestClient()
+    authenticator = Authenticator(base_url)
+    replicator = Replication(base_url)
+
+    # 1. Create user
+    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=abc_channels)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+    session = cookie, session_id
+
+    # 2. Add new role.
+    sg_client.create_role(url=sg_admin_url, db=sg_db, name="ABCDEF_role", channels=abc_channels)
+
+    # 3. Create docs on SGW.
+    sg_client.add_docs(url=sg_admin_url, db=sg_db, number=num_docs, id_prefix="role_doc",
+                       channels=abc_channels, auth=session)
+
+    # 4. Do pull replication from SGW.
+    replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
+    repl = replicator.configure_and_replicate(source_db=cbl_db,
+                                              target_url=sg_blip_url,
+                                              continuous=True,
+                                              replication_type="pull",
+                                              replicator_authenticator=replicator_authenticator)
+    replicator.wait_until_replicator_idle(repl)
+
+    # 5. verify docs got replicated to CBL
+    cbl_doc_ids = db.getDocIds(cbl_db)
+    cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
+    assert len(cbl_docs) == num_docs, "Docs did not get replicated to CBL"
+
+    # 6 change it to new channel to the role
+    abc_channels = ["XYZ"]
+    sg_client.update_role(url=sg_admin_url, db=sg_db, name="ABCDEF_role", channels=["new_channel"])
+
+    # 7. Add new docs to SGW.
+    sg_client.add_docs(url=sg_admin_url, db=sg_db, number=num_docs, id_prefix="new_role_doc",
+                       channels=abc_channels, auth=session)
+
+    # 8. Continue to pull replication from SGW
+    replicator.wait_until_replicator_idle(repl)
+    replicator.stop(repl)
+
+    # 9. CBL should not get any new docs which created at step #6.
+    cbl_doc_ids = db.getDocIds(cbl_db)
+    assert len(cbl_doc_ids) == num_docs, "new docs which created in sgw after role change got replicated to cbl"
+    for id in cbl_doc_ids:
+        assert "new_role_doc" not in id, "new doc got replicated to cbl"
 
 
 def update_and_resetCheckPoint(db, cbl_db, replicator, repl, replication_type, repl_config, num_of_updates):

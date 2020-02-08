@@ -91,13 +91,12 @@ def test_longpoll_changes_parametrized(params_from_base_test_setup, sg_conf_name
     verify_same_docs(expected_num_docs=num_docs, doc_dict_one=docs_in_changes, doc_dict_two=abc_doc_pusher.cache)
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.changes
 @pytest.mark.basicauth
 @pytest.mark.channel
 @pytest.mark.parametrize("sg_conf_name, num_docs, num_revisions, x509_cert_auth", [
-    ("sync_gateway_default_functional_tests", 10, 10, True),
+    pytest.param("sync_gateway_default_functional_tests", 10, 10, True, marks=pytest.mark.sanity),
     ("sync_gateway_default_functional_tests_no_port", 10, 10, False),
     ("sync_gateway_default_functional_tests_couchbase_protocol_withport_11210", 10, 10, False)
 ])
@@ -605,7 +604,7 @@ def test_longpoll_awaken_channels(params_from_base_test_setup, sg_conf_name):
     for user_auth in [adam_auth, traun_auth, andy_auth]:
         with pytest.raises(requests.exceptions.HTTPError) as excinfo:
             client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=user_auth)
-        assert "403 Client Error: Forbidden for url:" in excinfo.value.message
+        assert "403 Client Error: Forbidden for url:" in excinfo.value.args[0]
 
     ############################################################
     # changes feed wakes with Channel Grant via Sync function

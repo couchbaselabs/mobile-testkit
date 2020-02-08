@@ -158,8 +158,8 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
     server_scheme = "http"
 
     if is_cbs_ssl_enabled(cluster_config):
-        server_port = 18091
-        server_scheme = "https"
+        server_port = ""
+        server_scheme = "couchbases"
 
     couchbase_server_primary_node = get_cbs_primary_nodes_str(cluster_config, couchbase_server_primary_node)
     # Shared vars
@@ -193,7 +193,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
             redact_level = get_redact_level(cluster_config)
             playbook_vars["logging"] = '{}, "redaction_level": "{}" {},'.format(logging_config, redact_level, "}")
         except KeyError as ex:
-            log_info("Keyerror in getting logging{}".format(ex.message))
+            log_info("Keyerror in getting logging{}".format(ex.args))
             playbook_vars["logging"] = '{} {},'.format(logging_config, "}")
 
         if get_sg_use_views(cluster_config):
@@ -243,7 +243,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
                 raise ProvisioningError("Failed to block port on SGW")
 
     if is_xattrs_enabled(cluster_config):
-        playbook_vars["autoimport"] = '"import_docs": "continuous",'
+        playbook_vars["autoimport"] = '"import_docs": true,'
         playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
 
     if no_conflicts_enabled(cluster_config):

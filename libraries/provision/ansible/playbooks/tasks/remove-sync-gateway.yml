@@ -1,7 +1,7 @@
 # Stop sync_gateway service
 - name: SYNC GATEWAY | Stop sync_gateway service
   service: name=sync_gateway state=stopped
-  when: (ansible_distribution == "CentOS" and ansible_distribution_major_version == "7") or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian" or ansible_distribution == "MacOSX"
+  when: (ansible_distribution == "CentOS" and ansible_distribution_major_version >= "7") or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian" or ansible_distribution == "MacOSX"
   ignore_errors: yes
 
 - name: SYNC GATEWAY | Stop sync_gateway

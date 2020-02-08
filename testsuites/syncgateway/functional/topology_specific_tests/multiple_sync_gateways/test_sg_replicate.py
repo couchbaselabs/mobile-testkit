@@ -21,7 +21,7 @@ import time
 import logging
 
 from keywords.utils import log_info
-from keywords.SyncGateway import sync_gateway_config_path_for_mode
+from keywords.SyncGateway import sync_gateway_config_path_for_mode, create_sync_gateways
 
 DB1 = "db1"
 DB2 = "db2"
@@ -138,7 +138,6 @@ def test_sg_replicate_basic_test(params_from_base_test_setup):
 
 
 @pytest.mark.topospecific
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.sgreplicate
 @pytest.mark.channel
@@ -195,7 +194,6 @@ def test_sg_replicate_basic_test_channels(params_from_base_test_setup):
 
 
 @pytest.mark.topospecific
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.sgreplicate
 @pytest.mark.channel
@@ -309,7 +307,6 @@ def test_sg_replicate_continuous_replication(params_from_base_test_setup):
 
 
 @pytest.mark.topospecific
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.sgreplicate
 def test_sg_replicate_non_existent_db(params_from_base_test_setup):
@@ -351,7 +348,6 @@ def test_sg_replicate_non_existent_db(params_from_base_test_setup):
 
 
 @pytest.mark.topospecific
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.sgreplicate
 @pytest.mark.channel
@@ -417,7 +413,6 @@ def test_sg_replicate_push_async(params_from_base_test_setup, num_docs):
 
 
 @pytest.mark.topospecific
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.sgreplicate
 @pytest.mark.channel
@@ -467,7 +462,6 @@ def test_stop_replication_via_replication_id(params_from_base_test_setup):
 
 
 @pytest.mark.topospecific
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.sgreplicate
 def test_replication_config(params_from_base_test_setup):
@@ -598,16 +592,6 @@ def update_docs_via_sdk(client, docs_to_update, prop_to_update, number_updates):
             doc[prop_to_update] += 1
             cur_cas = doc_value_result.cas
             client.upsert(doc_id, doc, cas=cur_cas)
-
-
-def create_sync_gateways(cluster_config, sg_config_path):
-
-    cluster = Cluster(config=cluster_config)
-    cluster.reset(sg_config_path=sg_config_path)
-    sg1 = cluster.sync_gateways[0]
-    sg2 = cluster.sync_gateways[1]
-
-    return sg1, sg2
 
 
 def create_sg_users_channels(sg1, sg2, db1, db2):

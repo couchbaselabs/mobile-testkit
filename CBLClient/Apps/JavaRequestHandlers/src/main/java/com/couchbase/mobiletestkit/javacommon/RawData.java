@@ -1,4 +1,4 @@
-package com.couchbase.CouchbaseLiteServ.server;
+package com.couchbase.mobiletestkit.javacommon;
 
 //
 // Copyright (c) 2019 Couchbase, Inc All rights reserved.
