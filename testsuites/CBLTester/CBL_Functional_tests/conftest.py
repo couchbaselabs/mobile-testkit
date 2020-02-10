@@ -516,7 +516,7 @@ def params_from_base_suite_setup(request):
         suite_log_zip_file = "Suite_test_log_{}.zip".format(str(time.time()))
         log_info("Log file for failed Suite tests is: {}".format(suite_log_zip_file))
         with open(suite_log_zip_file, 'wb') as fh:
-            fh.write(zip_data)
+            fh.write(zip_data.encode())
             fh.close()
 
     if create_db_per_suite:
