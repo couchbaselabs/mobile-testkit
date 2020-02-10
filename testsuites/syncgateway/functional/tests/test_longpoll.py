@@ -19,7 +19,6 @@ from keywords import document
 from keywords import userinfo
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.changes
 @pytest.mark.basicauth

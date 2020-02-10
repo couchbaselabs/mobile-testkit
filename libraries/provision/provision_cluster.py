@@ -123,7 +123,7 @@ if __name__ == "__main__":
 
     parser = OptionParser(usage=usage)
 
-    default_sync_gateway_config = os.path.abspath("resources/sync_gateway_configs/sync_gateway_default_cc.json")
+    default_sync_gateway_config = os.path.abspath("resources/sync_gateway_configs/sync_gateway_default_di.json")
 
     parser.add_option("", "--server-version",
                       action="store", type="string", dest="server_version", default=None,

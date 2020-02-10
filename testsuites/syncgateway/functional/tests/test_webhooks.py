@@ -21,6 +21,7 @@ from utilities.cluster_config_utils import persist_cluster_config_environment_pr
 @pytest.mark.onlineoffline
 @pytest.mark.webhooks
 @pytest.mark.basicauth
+@pytest.mark.channel
 @pytest.mark.parametrize("sg_conf_name, num_users, num_channels, num_docs, num_revisions, x509_cert_auth", [
     pytest.param("webhooks/webhook_offline", 5, 1, 1, 2, True, marks=pytest.mark.sanity),
     ("webhooks/webhook_offline", 5, 1, 1, 2, False)
