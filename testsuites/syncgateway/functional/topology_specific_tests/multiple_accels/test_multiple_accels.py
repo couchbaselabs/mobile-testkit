@@ -85,7 +85,6 @@ def test_dcp_reshard_sync_gateway_goes_down(params_from_base_test_setup, sg_conf
 
 
 @pytest.mark.topospecific
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.sgaccel
 @pytest.mark.basicauth
@@ -143,7 +142,6 @@ def test_dcp_reshard_sync_gateway_comes_up(params_from_base_test_setup, sg_conf)
 
 
 @pytest.mark.topospecific
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.sgaccel
 @pytest.mark.basicauth
@@ -214,7 +212,6 @@ def test_dcp_reshard_single_sg_accel_goes_down_and_up(params_from_base_test_setu
 
 
 @pytest.mark.topospecific
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.sgaccel
 @pytest.mark.parametrize("sg_conf", [
@@ -237,7 +234,6 @@ def test_pindex_distribution(params_from_base_test_setup, sg_conf):
 
 
 @pytest.mark.topospecific
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.sgaccel
 @pytest.mark.basicauth
@@ -334,7 +330,6 @@ def test_take_down_bring_up_sg_accel_validate_cbgt(params_from_base_test_setup, 
 
 
 @pytest.mark.topospecific
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.sgaccel
 @pytest.mark.session
@@ -476,7 +471,6 @@ def test_take_all_sgaccels_down(params_from_base_test_setup, sg_conf):
 
 
 @pytest.mark.topospecific
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.sgaccel
 @pytest.mark.parametrize("sg_conf", [
@@ -515,7 +509,6 @@ def test_missing_num_shards(params_from_base_test_setup, sg_conf):
 # When the test was written, sync gateway should fail to start in this scenario. This behavior was removed in the
 # above commit and now sync gateway will start when in this state
 @pytest.mark.topospecific
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.sgaccel
 @pytest.mark.basicauth

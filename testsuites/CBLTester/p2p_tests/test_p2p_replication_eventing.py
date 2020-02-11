@@ -7,7 +7,6 @@ from CBLClient.PeerToPeer import PeerToPeer
 from keywords.utils import get_event_changes, meet_supported_version
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.parametrize("num_of_docs, continuous, replicator_type, attachments, endpoint_type", [
     (10, True, "push_pull", False, "URLEndPoint"),
@@ -16,7 +15,7 @@ from keywords.utils import get_event_changes, meet_supported_version
     (100, False, "push_pull", False, "URLEndPoint"),
     (10, True, "push_pull", False, "MessageEndPoint"),
     (10, False, "push_pull", False, "MessageEndPoint"),
-    (10, False, "push_pull", True, "MessageEndPoint"),
+    pytest.param(10, False, "push_pull", True, "MessageEndPoint", marks=pytest.mark.sanity),
     (100, False, "push_pull", False, "MessageEndPoint"),
 
 ])

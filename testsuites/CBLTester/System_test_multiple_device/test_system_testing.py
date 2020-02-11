@@ -14,7 +14,6 @@ from datetime import datetime, timedelta
 from CBLClient.Utils import Utils
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.replication
 def test_system(params_from_base_suite_setup):

@@ -9,13 +9,12 @@ from libraries.testkit import cluster
 from libraries.data import doc_generators
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("num_of_docs", [
-    10,
-    100,
-    1000,
+    (10),
+    pytest.param(100, marks=pytest.mark.sanity),
+    (1000),
 ])
 def test_replication_eventing_status(params_from_base_test_setup, num_of_docs):
     """

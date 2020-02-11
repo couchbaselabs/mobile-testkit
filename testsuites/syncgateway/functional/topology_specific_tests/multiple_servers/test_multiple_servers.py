@@ -98,7 +98,6 @@ def test_rebalance_sanity(params_from_base_test_setup):
     cb_server.rebalance_in(cluster_servers, server_to_remove)
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.changes
 @pytest.mark.failover
@@ -222,7 +221,6 @@ def test_server_goes_down_sanity(params_from_base_test_setup):
     log_info("test_server_goes_down_sanity complete!")
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.changes
 @pytest.mark.failover

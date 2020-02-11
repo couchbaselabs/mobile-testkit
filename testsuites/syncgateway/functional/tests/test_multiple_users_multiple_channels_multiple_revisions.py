@@ -17,7 +17,6 @@ from utilities.cluster_config_utils import get_sg_version, persist_cluster_confi
 # Single User Single Channel: Create Unique docs and update docs verify all num docs present in changes feed.
 # Verify all revisions in changes feed
 # https://docs.google.com/spreadsheets/d/1nlba3SsWagDrnAep3rDZHXHIDmRH_FFDeTaYJms_55k/edit#gid=598127796
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.basicauth
 @pytest.mark.channel
@@ -25,7 +24,7 @@ from utilities.cluster_config_utils import get_sg_version, persist_cluster_confi
 @pytest.mark.parametrize("sg_conf_name, num_users, num_channels, num_docs, num_revisions, x509_cert_auth", [
     ("sync_gateway_default_functional_tests", 10, 3, 10, 10, False),
     ("sync_gateway_default_functional_tests_no_port", 10, 3, 10, 10, True),
-    ("sync_gateway_default_functional_tests_couchbase_protocol_withport_11210", 10, 3, 10, 10, False)
+    pytest.param("sync_gateway_default_functional_tests_couchbase_protocol_withport_11210", 10, 3, 10, 10, False, marks=pytest.mark.sanity)
 ])
 def test_mulitple_users_mulitiple_channels_mulitple_revisions(params_from_base_test_setup, sg_conf_name, num_users,
                                                               num_channels, num_docs, num_revisions, x509_cert_auth):
