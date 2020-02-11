@@ -683,7 +683,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         test_log = os.path.join(log_directory, test_log_zip_file)
         log_info("Log file for failed test is: {}".format(test_log_zip_file))
         with open(test_log, 'wb') as fh:
-            fh.write(zip_data)
+            fh.write(zip_data.encode())
             fh.close()
 
     log_info("Tearing down test")
