@@ -70,7 +70,7 @@ class CouchbaseServer:
     """ Installs Couchbase Server on machine host"""
 
     def __init__(self, url):
-        self.url = url
+        self.url = url.strip('[]')
         self.cbs_ssl = False
         self.max_retries = 5
 
