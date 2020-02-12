@@ -46,11 +46,7 @@ public class TestServerMain implements Daemon {
      * @param args Arguments from prunsrv command line
      **/
     public static void windowsService(String args[]) {
-        String cmd = "start";
-        if (args.length > 0) {
-            cmd = args[0];
-        }
-
+        final String cmd = (args.length <= 0) ? "start" : args[0];
         if ("start".equals(cmd)) {
             if(testserverLauncherInstance == null){
                 testserverLauncherInstance = new TestServerMain();
@@ -72,8 +68,6 @@ public class TestServerMain implements Daemon {
     public void startServer(boolean asService) {
         NanoHTTPD server = null;
         try {
-
-
             File tempDir = new File(TMP_DIR, "TestServerTemp");
             context = new TestServerContext(tempDir);
             Server.setContext(context);
@@ -104,16 +98,25 @@ public class TestServerMain implements Daemon {
 
     private void waitForEnter() {
         System.out.println("Server started, Hit Enter to stop.\n");
+
         try {
             System.in.read();
-        } catch (Throwable th) { }
+        } catch (IOException ioe) {
+            System.err.println("waiting for entry key, but failed to get:\n" + ioe.toString());
+        }
     }
 
     private synchronized void waitForStopService() {
+        if(stopped){
+            stopped = false;
+            return;
+        }
         try {
+            // service will be running until stop() method gets called
+            // which will notify this wait function and set server to stop
             wait();
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            System.err.println("service got interrupted while waiting for notify call.");
         }
         stopped = false;
     }
