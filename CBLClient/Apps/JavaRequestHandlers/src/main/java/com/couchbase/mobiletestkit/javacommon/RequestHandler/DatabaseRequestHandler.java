@@ -45,6 +45,11 @@ public class DatabaseRequestHandler {
         if (config == null) {
             config = new DatabaseConfiguration();
         }
+        String dbDir = config.getDirectory();
+        if(dbDir == null || dbDir.equals("/")){
+            config.setDirectory(RequestHandlerDispatcher.context.getFilesDir().getAbsolutePath());
+        }
+        Log.i(TAG, "database_create directory=" + config.getDirectory());
         return new Database(name, config);
     }
 
