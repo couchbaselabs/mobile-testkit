@@ -152,7 +152,6 @@ def test_bucket_shadow_low_revs_limit_repeated_deletes(params_from_base_test_set
 
 
 @pytest.mark.topospecific
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.bucketshadow
 @pytest.mark.channel

@@ -1,0 +1,70 @@
+- name: Download Testserver Java WebService Package
+  hosts: testserver
+  vars:
+    testserver_download_url:
+    cblite_download_url:
+    war_package_name:
+    core_package_name:
+ 
+  tasks:
+  - debug:
+      msg: "testserver_download_url: {{ testserver_download_url }}"
+
+  - debug:
+      msg: "cblite_download_url: {{ cblite_download_url }}"
+
+  - debug:
+      msg: "war_package_name {{ war_package_name }}.war"
+
+  - debug:
+      msg: "core_package_name {{ core_package_name }}.zip"
+
+  - debug:
+      msg: "build_name {{ build_name }}"
+
+  tasks:
+  - name: Check the TestServer war file exists
+    stat:
+      path: ~/javatestserver/{{ war_package_name }}.war
+    register: war_st
+
+  - name: Check the CouchbaseLite core zip file exists
+    stat:
+      path: ~/javatestserver/{{ core_package_name }}.zip
+    register: core_st
+
+  - name: Delete any exiting pre-downloaded files
+    file:
+      path: ~/javatestserver
+      state: absent
+    when: war_st.stat.exists == False and core_st.stat.exists == False
+ 
+  - debug:
+      msg: "testserver war files and CouchbaseLite core zip already present, skipping download..."
+    when: war_st.stat.exists == True and core_st.stat.exists == True
+
+  - name: Check the TestServer war file exists
+    stat:
+      path: ~/javatestserver
+    register: javatestserver_dir
+
+  - name: create javatestserver directory if not exists
+    file:
+      path: ~/javatestserver
+      state: directory
+    when: javatestserver_dir.stat.exists == False
+
+  - name: Download TestServer Java WebService .war
+    get_url:
+      url: "{{ testserver_download_url }}"
+      dest: ~/javatestserver/{{ war_package_name }}.war
+    when: war_st.stat.exists == False
+
+  - name: Download Couchbase Lite Library .zip
+    get_url:
+      url: "{{ cblite_download_url }}"
+      dest: ~/javatestserver/{{ core_package_name }}.zip
+    when: core_st.stat.exists == False
+
+  - name: Unzip Couchbase Lite Library and remove .zip
+    unarchive: src=~/javatestserver/{{ core_package_name }}.zip dest=~/javatestserver copy=no

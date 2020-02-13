@@ -12,7 +12,6 @@ from keywords.constants import BINARY_DIR
 from keywords.exceptions import LiteServError
 from keywords.utils import version_and_build
 from keywords.utils import log_info
-
 from libraries.provision.ansible_runner import AnsibleRunner
 
 
@@ -179,6 +178,7 @@ class TestServerJava(TestServerBase):
             time.sleep(5)
             os.chdir(work_dir)
 
+
     def _verify_launched(self):
         raise NotImplementedError()
 
@@ -190,3 +190,4 @@ class TestServerJava(TestServerBase):
                 self.java_proc.terminate()
             except:
                 log_info("Failed stopping JavaTestServer app")
+

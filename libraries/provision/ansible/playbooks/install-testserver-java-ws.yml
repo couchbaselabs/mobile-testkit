@@ -1,0 +1,78 @@
+- name: Install Testserver Java WebService to Tomcat
+  hosts: testserver
+  vars:
+    war_package_name:
+    core_package_name:
+
+  tasks:
+  - debug: msg="Tomcat home directory is {{ ansible_env.CATALINA_BASE }}"
+ 
+  - name: Stop Tomcat Service
+    shell: "{{ ansible_env.CATALINA_BASE }}/bin/catalina.sh stop 30 -force"
+    ignore_errors: yes
+
+  - name: Collect CouchbaseLite jar and supporting files
+    find:
+      paths: "{{ ansible_env.CATALINA_BASE }}/lib"
+      patterns: "couchbase-lite-java-ee-*.jar,json-*.jar,okhttp-*.jar,okio-*.jar"
+      recurse: True
+    register: cblite_jar
+
+  - name: Remove collected couchbase lite files
+    file:
+      path: "{{ item.path }}"
+      state: absent
+    with_items: "{{ cblite_jar.files }}"
+
+  - name: Remove TestServer webapp files
+    file:
+      path: "{{ ansible_env.CATALINA_BASE }}/webapps/ROOT"
+      state: absent
+
+  - name: Remove TestServer webapp files
+    file:
+      path: "{{ ansible_env.CATALINA_BASE }}/webapps/ROOT.war"
+      state: absent
+
+  - name: Remove TestServer log files and runtime libaries
+    file:
+      path: "{{ ansible_env.CATALINA_BASE }}/temp/TestServerTemp"
+      state: absent
+
+  - name: Remove TestServer runtime libaries
+    file:
+      path: "{{ ansible_env.CATALINA_BASE }}/temp/com.couchbase.lite.java"
+      state: absent
+
+  - name: Remove Tomcat logs
+    find:
+      paths: "{{ ansible_env.CATALINA_BASE }}/logs"
+      patterns: '*.*'
+      recurse: True
+    register: tomcat_log
+
+  - name: remove collected log files
+    file:
+      path: "{{ item.path }}"
+      state: absent
+    with_items: "{{ tomcat_log.files }}"
+
+  - name: Collect CouchbaseLite jar and supporting files in package to be installed
+    find:
+      paths: "/root/javatestserver/{{ core_package_name }}/lib"
+      patterns: "*.jar"
+      recurse: True
+    register: new_cblite_jar
+
+  - name: Copy CouchbaseLite jar files to Tomcat
+    copy: 
+      src: "{{ item.path }}"
+      dest: "/opt/tomcat/lib"
+      remote_src: yes
+    with_items: "{{ new_cblite_jar.files }}"
+
+  - name: Copy TestServer war files to Tomcat
+    copy:
+      src: "~/javatestserver/{{ war_package_name }}.war"
+      dest: /opt/tomcat/webapps/ROOT.war
+      remote_src: yes

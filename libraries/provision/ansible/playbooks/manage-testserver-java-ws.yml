@@ -1,0 +1,16 @@
+- name: Manage Tomcat which contains Testserver Java WebService
+  hosts: testserver
+  vars:
+    service_status:
+
+  tasks:
+  - debug: msg="{{ ansible_env.CATALINA_BASE }}/bin/catalina.sh {{service_status}}"
+  - name: Start Tomcat Service
+    command: nohup {{ ansible_env.CATALINA_BASE }}/bin/catalina.sh start
+    when: "{{ service_status | search('start') }}"
+
+  - name: Stop Tomcat Service
+    command: "{{ ansible_env.CATALINA_BASE }}/bin/catalina.sh stop 30 -force"
+    when: "{{ service_status | search('stop') }}"
+    ignore_errors: yes
+

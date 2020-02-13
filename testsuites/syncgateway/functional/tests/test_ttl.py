@@ -50,15 +50,14 @@ Test suite for Sync Gateway's expiry feature.
 """
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.ttl
 @pytest.mark.session
 @pytest.mark.channel
 @pytest.mark.parametrize("sg_conf_name", [
-    "sync_gateway_default_functional_tests",
-    "sync_gateway_default_functional_tests_no_port",
-    "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210"
+    pytest.param("sync_gateway_default_functional_tests", marks=pytest.mark.sanity),
+    ("sync_gateway_default_functional_tests_no_port"),
+    ("sync_gateway_default_functional_tests_couchbase_protocol_withport_11210")
 ])
 def test_numeric_expiry_as_ttl(params_from_base_test_setup, sg_conf_name):
     """

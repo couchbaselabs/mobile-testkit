@@ -12,11 +12,10 @@ from keywords.constants import CLUSTER_CONFIGS_DIR
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("sg_conf_name, num_of_docs", [
-    ('listener_tests/multiple_sync_gateways', 10),
+    pytest.param('listener_tests/multiple_sync_gateways', 10, marks=pytest.mark.sanity),
     ('listener_tests/multiple_sync_gateways', 100),
     ('listener_tests/multiple_sync_gateways', 1000)
 ])
@@ -154,11 +153,10 @@ def test_multiple_sgs_with_differrent_revs_limit(params_from_base_test_setup, se
         assert len(revs) == revs_limit2
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("sg_conf_name, num_of_docs", [
-    ('listener_tests/multiple_sync_gateways', 10),
+    pytest.param('listener_tests/multiple_sync_gateways', 10, marks=pytest.mark.sanity),
     ('listener_tests/multiple_sync_gateways', 100),
     ('listener_tests/multiple_sync_gateways', 1000)
 ])
