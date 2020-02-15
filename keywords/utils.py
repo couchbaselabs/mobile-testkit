@@ -95,6 +95,7 @@ def host_for_url(url):
         host = url.replace("http://", "")
 
     host = host.rsplit(":", 1)[0]
+    host = re.sub(r'[\[\]]', '', host)
     log_info("Extracted host ({}) from url ({})".format(host, url))
 
     return host

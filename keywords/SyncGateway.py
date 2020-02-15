@@ -5,7 +5,7 @@ import json
 import requests
 from requests import Session
 from jinja2 import Template
-
+import re
 from keywords.constants import SYNC_GATEWAY_CONFIGS, SYNC_GATEWAY_CERT
 from keywords.utils import version_is_binary, add_cbs_to_sg_config_server_field
 from keywords.utils import log_r
@@ -831,7 +831,7 @@ def create_docs_via_sdk(cbs_url, cbs_cluster, bucket_name, num_docs):
     cbs_host = host_for_url(cbs_url)
     log_info("Adding docs via SDK...")
     if cbs_cluster.ipv6:
-        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_host, bucket_name), password='password')
+        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(re.sub(r'[\[\]]', '', cbs_host), bucket_name), password='password')
     else:
         sdk_client = Bucket('couchbase://{}/{}'.format(cbs_host, bucket_name), password='password')
     sdk_client.timeout = 600
