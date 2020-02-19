@@ -7,34 +7,45 @@
 
   tasks:
   - debug:
-      msg: "download_url {{ download_url }}, build_name {{ build_name }}"
+      msg: "download_url: {{ download_url }}"
+
+  - debug:
+      msg: "package_name {{ package_name }}.zip"
+
+  - debug:
+      msg: "build_name {{ build_name }}"
 
   - win_stat:
-      path: C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ build_name }}\{{package_name}}
-    register: st
+      path: C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ build_name }}\{{package_name}}.zip
+    register: pkg_st
 
-  - name: Delete any exiting packages
-    win_file: 
+  - name: Delete any exiting pre-downloaded files
+    win_file:
       path: C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ build_name }}\*
       state: absent
-    when: st.stat.exists == False
+    when: pkg_st.stat.exists == False
     ignore_errors: yes
 
   - debug:
       msg: "{{ build_name }} already present, skipping download..."
-    when: st.stat.exists
+    when: pkg_st.stat.exists == True
 
   - name: Create TestServer directory
-    win_file: 
+    win_file:
       path: C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ build_name }}
       state: directory
-    when: st.stat.exists == False
+    when: pkg_st.stat.exists == False
 
-  - name: Download TestServer Windows Java Desktop .jar
+  - name: Download TestServer Java .zip
     win_get_url:
       url: "{{ download_url }}"
-      dest: C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ build_name }}\{{ package_name }}.jar
+      dest: C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ build_name }}\{{ package_name }}.zip
       skip_certificate_validation: yes
       validate_certs: no
-    when: st.stat.exists == False
+    when: pkg_st.stat.exists == False
 
+  - name: Unzip TestServer package and remove .zip
+    win_unzip:
+      src: C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ build_name }}\{{ package_name }}.zip
+      dest: C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ build_name }}
+      rm: true

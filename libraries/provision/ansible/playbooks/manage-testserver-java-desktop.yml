@@ -1,0 +1,13 @@
+- name: Manage TestServer Java Desktop as Daemon Service
+  hosts: testserver
+  vars:
+    service_status:
+
+  tasks:
+  - debug: msg="JAVA_HOME location is {{ ansible_env.JAVA_HOME }}"
+  - debug: msg="JSVC_HOME location is {{ ansible_env.JSVC_HOME }}"
+
+  - name: Stop TestServer Java Daemon Service
+    shell: "~/javatestserver/daemon_manager.sh stop ~/javatestserver/{{ package_name }}.jar ~/javatestserver/output {{ ansible_env.JAVA_HOME }} {{ ansible_env.JSVC_HOME }}"
+    when: "{{ service_status | search('stop') }}"
+    ignore_errors: yes

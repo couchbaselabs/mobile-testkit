@@ -1,0 +1,31 @@
+- name: Windows - Install Testserver Java Desktop as Windows Service
+  hosts: windows
+  vars:
+    package_name:
+    build_name:
+    service_user:
+    service_pwd:
+
+  tasks:
+  - debug: msg="Apache Common Daemon directory is {{ ansible_env.APACHE_COMMON_DAEMON }}"
+  - name: Stop TestServerJava Service
+    win_service:
+      name: TestServerJava
+      state: stopped
+    ignore_errors: yes
+  
+  - win_stat:
+      path: C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ build_name }}\logs
+    register: logs_st
+
+  - name: Create logs directory
+    win_file:
+      path: C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ build_name }}\logs
+      state: directory
+    when: logs_st.stat.exists == False
+
+  - debug: msg="Copy Apache Common Daemon files"
+  - win_shell: copy "{{ ansible_env.APACHE_COMMON_DAEMON }}\amd64\prunsrv.exe" "C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ build_name }}\TestServerJava.exe"
+
+  - name: Install TestServerJava as a windows service and start
+    win_command: chdir=C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ build_name }} C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ build_name }}\win_service_manager.bat TestServerJava start C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ build_name }} {{ package_name}}.jar {{service_user}} {{service_pwd}}
