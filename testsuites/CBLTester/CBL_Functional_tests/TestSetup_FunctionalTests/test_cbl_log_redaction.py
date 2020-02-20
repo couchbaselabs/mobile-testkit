@@ -2,7 +2,6 @@ import os
 import subprocess
 import pytest
 import zipfile
-import os, shutil
 
 from keywords.MobileRestClient import MobileRestClient
 from CBLClient.Replication import Replication
