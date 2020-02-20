@@ -186,12 +186,12 @@ def test_system(params_from_base_suite_setup):
         docs_to_update = random.sample(doc_ids, num_of_docs_to_update)
         i = 0
         for base_url, db_obj, cbl_db, repl_obj, repl, query, platform in zip(base_url_list,
-                                                                   db_obj_list,
-                                                                   cbl_db_list,
-                                                                   replicator_obj_list,
-                                                                   replicator_list,
-                                                                   query_obj_list
-                                                                   platform_list):
+                                                                             db_obj_list,
+                                                                             cbl_db_list,
+                                                                             replicator_obj_list,
+                                                                             replicator_list,
+                                                                             query_obj_list,
+                                                                             platform_list):
             updates_per_db = len(docs_to_update) / len(db_obj_list)
             log_info("Updating {} docs on {} db - {}".format(updates_per_db,
                                                              db_obj.getName(cbl_db),
@@ -264,7 +264,7 @@ def test_system(params_from_base_suite_setup):
 
             # Deleting docs will affect all dbs as they are synced with SG.
             _check_parallel_replication_changes(base_url_list, replicator_obj_list, replicator_list, cbl_db_list, query_obj_list,
-                                                repl_status_check_sleep_time, query_limit, query_offset)
+                                                repl_status_check_sleep_time, query_limit, platform_list, query_offset)
         # _check_doc_count(db_obj_list, cbl_db_list)
         # removing ids of deleted doc from the list
         doc_ids = doc_ids - docs_to_delete
@@ -352,7 +352,7 @@ def _check_doc_count(db_obj_list, cbl_db_list):
 
 
 def _check_parallel_replication_changes(base_url_list, replicator_obj_list, replicator_list, cbl_db_list, query_obj_list,
-                                        repl_status_check_sleep_time, query_limit, query_offset):
+                                        repl_status_check_sleep_time, query_limit, platform_list, query_offset):
     for base_url, repl_obj, repl, cbl_db, query, platform in zip(base_url_list,
                                                        replicator_obj_list,
                                                        replicator_list,
