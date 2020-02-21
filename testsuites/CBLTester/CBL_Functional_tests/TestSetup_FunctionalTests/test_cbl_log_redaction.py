@@ -1,5 +1,4 @@
 import os
-import sys
 import subprocess
 import pytest
 import zipfile
@@ -138,7 +137,6 @@ def verify_password_masked(liteserv_platform, log_file, password, test_cbllog):
            outside runner's file directory
     """
     delimiter = "/"
-    sys.setdefaultencoding("UTF-8")
     if liteserv_platform == "net-msft" or liteserv_platform == "uwp":
         delimiter = "\\"
     log_dir = log_file.split(delimiter)[-1]
