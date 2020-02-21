@@ -10,12 +10,11 @@ from CBLClient.Replication import Replication
 from CBLClient.PeerToPeer import PeerToPeer
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.parametrize("num_of_docs, continuous, replicator_type, attachments, endPointType", [
     (10, True, "push_pull", False, "URLEndPoint"),
     (100, True, "push_pull", True, "MessageEndPoint"),
-    (10, True, "push_pull", False, "MessageEndPoint"),
+    pytest.param(10, True, "push_pull", False, "MessageEndPoint", marks=pytest.mark.sanity),
     (100, False, "push", False, "URLEndPoint"),
 ])
 def test_peer_to_peer_1to1_valid_values(params_from_base_test_setup, server_setup, num_of_docs, continuous, replicator_type, attachments, endPointType):
@@ -64,7 +63,6 @@ def test_peer_to_peer_1to1_valid_values(params_from_base_test_setup, server_setu
     replicator.stop(repl)
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.parametrize("num_of_docs, continuous, endPointType, attachments", [
     (10, True, "MessageEndPoint", False),
@@ -116,7 +114,6 @@ def test_peer_to_peer2_1to1_pull_replication(params_from_base_test_setup, server
     replicator.stop(repl)
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.parametrize("num_of_docs, continuous, replicator_type, endPointType", [
     (10, True, "push_pull", "MessageEndPoint"),
@@ -196,11 +193,10 @@ def test_peer_to_peer_concurrent_replication(params_from_base_test_setup, server
     replicator.stop(repl)
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.parametrize("num_of_docs, continuous, replicator_type, endPointType", [
     (10, True, "push_pull", "URLEndPoint"),
-    (10, False, "push_pull", "MessageEndPoint"),
+    pytest.param(10, False, "push_pull", "MessageEndPoint", marks=pytest.mark.sanity),
     (100, False, "push", "URLEndPoint"),
     (100, True, "push", "MessageEndPoint"),
 ])
@@ -265,7 +261,6 @@ def test_peer_to_peer_oneClient_toManyServers(params_from_base_test_setup, num_o
     peerToPeer_server2.server_stop(replicatorTcpListener2)
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.parametrize("num_of_docs, continuous, replicator_type, endPointType", [
     (10, True, "push_pull", "MessageEndPoint"),
@@ -326,12 +321,11 @@ def test_peer_to_peer_oneServer_toManyClients(params_from_base_test_setup, serve
     client_replicator2.stop(repl2)
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.parametrize("num_of_docs, replicator_type, endPointType", [
     (10, "push_pull", "MessageEndPoint"),
     (100, "push", "MessageEndPoint"),
-    (10, "push_pull", "URLEndPoint"),
+    pytest.param(10, "push_pull", "URLEndPoint", marks=pytest.mark.sanity),
     (100, "push", "URLEndPoint")
 ])
 def test_peer_to_peer_filter_docs_ids(params_from_base_test_setup, server_setup, num_of_docs, replicator_type, endPointType):
@@ -381,7 +375,6 @@ def test_peer_to_peer_filter_docs_ids(params_from_base_test_setup, server_setup,
     replicator.stop(repl)
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.parametrize("num_of_docs, replicator_type, endPointType", [
     (10, "push_pull", "MessageEndPoint"),
@@ -442,10 +435,9 @@ def test_peer_to_peer_delete_docs(params_from_base_test_setup, server_setup, num
     replicator.stop(repl)
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.parametrize("num_of_docs, continuous, replicator_type, endPointType", [
-    (10, True, "push_pull", "MessageEndPoint"),
+    pytest.param(10, True, "push_pull", "MessageEndPoint", marks=pytest.mark.sanity),
     (10, False, "push_pull", "URLEndPoint"),
     (100, True, "push", "MessageEndPoint"),
     (100, True, "push", "URLEndPoint"),
@@ -519,7 +511,6 @@ def test_peer_to_peer_with_server_down(params_from_base_test_setup, server_setup
     replicator.stop(repl)
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.parametrize("num_of_docs, continuous, replicator_type, endPointType", [
     (10, True, "push_pull", "URLEndPoint"),
@@ -589,7 +580,6 @@ def test_peer_to_peer_resetCheckPoint(params_from_base_test_setup, server_setup,
     replicator.stop(repl)
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.parametrize("num_of_docs, continuous, replicator_type, endPointType", [
     (10, True, "push_pull", "URLEndPoint"),
@@ -684,7 +674,6 @@ def test_peer_to_peer_replication_with_multiple_dbs(params_from_base_test_setup,
     peerToPeer_server.server_stop(replicatorTcpListener3)
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.parametrize("num_of_docs, continuous, replicator_type, endPointType", [
     (10, True, "push_pull", "MessageEndPoint"),

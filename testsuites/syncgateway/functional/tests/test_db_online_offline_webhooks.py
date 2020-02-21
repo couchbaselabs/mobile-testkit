@@ -15,12 +15,11 @@ from keywords.MobileRestClient import MobileRestClient
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.onlineoffline
 @pytest.mark.webhooks
 @pytest.mark.parametrize("sg_conf_name, num_users, num_channels, num_docs, num_revisions, x509_cert_auth", [
-    ("webhooks/webhook_offline", 5, 1, 1, 2, False),
+    pytest.param("webhooks/webhook_offline", 5, 1, 1, 2, False, marks=pytest.mark.sanity),
     ("webhooks/webhook_offline", 5, 1, 1, 2, True)
 ])
 def test_db_online_offline_webhooks_offline(params_from_base_test_setup, sg_conf_name, num_users, num_channels,

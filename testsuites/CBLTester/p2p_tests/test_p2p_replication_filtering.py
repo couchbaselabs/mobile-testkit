@@ -8,13 +8,12 @@ from CBLClient.Replication import Replication
 from CBLClient.PeerToPeer import PeerToPeer
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.parametrize("num_of_docs, replicator_type, attachments, endpoint_type", [
     (10, "push", False, "URLEndPoint"),
     (10, "pull", False, "URLEndPoint"),
     (10, "push", False, "MessageEndPoint"),
-    (10, "pull", False, "MessageEndPoint"),
+    pytest.param(10, "pull", False, "MessageEndPoint", marks=pytest.mark.sanity),
     (100, "push", True, "URLEndPoint"),
     (100, "pull", True, "URLEndPoint"),
     (100, "push", True, "MessageEndPoint"),

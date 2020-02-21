@@ -17,13 +17,13 @@ public class RequestHandlerDispatcher {
         memory = memoryObject;
     }
 
-    public static String handle(String handlerType, String method, Args args) throws Exception {
-        String body = null;
+    public static Object handle(String handlerType, String method, Args args) throws Exception {
+        Object body = null;
 
         try{
             Object result;
             if ("release".equals(method)) {
-                memory.remove(args.get("releaseObject"));
+                memory.remove(args.get("object"));
             }
             else if ("flushMemory".equals(method)) {
                 memory.flushMemory();
@@ -126,7 +126,7 @@ public class RequestHandlerDispatcher {
                 }
                 else {
                     result = target.invoke(requestHandler, args);
-                    body = ValueSerializer.serialize(result, memory);
+					body = (result instanceof RawData) ? result : ValueSerializer.serialize(result, memory);
                 }
             }
 

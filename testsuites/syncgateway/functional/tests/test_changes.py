@@ -13,7 +13,6 @@ from utilities.cluster_config_utils import persist_cluster_config_environment_pr
 @pytest.mark.syncgateway
 @pytest.mark.changes
 @pytest.mark.parametrize("sg_conf_name, x509_cert_auth", [
-    ("sync_gateway_default", True),
     ("sync_gateway_default", False),
 ])
 def test_deleted_docs_from_changes_active_only(params_from_base_test_setup, sg_conf_name, x509_cert_auth):
