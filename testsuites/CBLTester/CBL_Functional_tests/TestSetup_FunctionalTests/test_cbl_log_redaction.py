@@ -1,4 +1,5 @@
 import os
+import sys
 import subprocess
 import pytest
 import zipfile
@@ -137,6 +138,7 @@ def verify_password_masked(liteserv_platform, log_file, password, test_cbllog):
            outside runner's file directory
     """
     delimiter = "/"
+    sys.setdefaultencoding("UTF-8")
     if liteserv_platform == "net-msft" or liteserv_platform == "uwp":
         delimiter = "\\"
     log_dir = log_file.split(delimiter)[-1]
@@ -149,7 +151,7 @@ def verify_password_masked(liteserv_platform, log_file, password, test_cbllog):
     test_log_zip_file = "cbl_log.zip"
     test_log = os.path.join(log_full_path_dir, test_log_zip_file)
     log_info("Log file for failed test is: {}".format(test_log_zip_file))
-    with open(test_log, 'w+') as fh:
+    with open(test_log, 'w+', encoding="utf-8") as fh:
         # encoded data is coming as a string,
         fh.write(zip_data)
         fh.close()
