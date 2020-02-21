@@ -151,7 +151,7 @@ def verify_password_masked(liteserv_platform, log_file, password, test_cbllog):
     log_info("Log file for failed test is: {}".format(test_log_zip_file))
     with open(test_log, 'w+') as fh:
         # encoded data is coming as a string,
-        fh.write(zip_data.encode("ascii"))
+        fh.write(zip_data)
         fh.close()
 
     # unzipping the zipped log files
