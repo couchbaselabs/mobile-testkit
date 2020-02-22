@@ -52,7 +52,7 @@ namespace Couchbase.Lite.Testing.NetCore
             Couchbase.Lite.Support.NetDesktop.Activate();
             Extend();
 
-            Database.Log.Console.Level = Logging.LogLevel.Debug;
+            Database.Log.Console.Level = Logging.LogLevel.None;
             Database.Log.Console.Domains = Logging.LogDomain.All;
             
             TestServer.FilePathResolver = (path, unzip) => path;
