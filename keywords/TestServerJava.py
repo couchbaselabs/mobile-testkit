@@ -119,8 +119,8 @@ class TestServerJava(TestServerBase):
             status = self.ansible_runner.run_ansible_playbook("install-testserver-java-desktop-msft.yml", extra_vars={
                 "package_name": self.package_name,
                 "build_name": self.build_name,
-                "service_user": os.environ["TESTSERVER_HOST_MSFT_USER"],
-                "service_pwd": os.environ["TESTSERVER_HOST_MSFT_PASSWORD"]
+                "service_user": os.environ["LITESERV_MSFT_HOST_USER"],
+                "service_pwd": os.environ["LITESERV_MSFT_HOST_PASSWORD"]
             })
         else:
             # install jar file as a daemon service on non-Windows environment
