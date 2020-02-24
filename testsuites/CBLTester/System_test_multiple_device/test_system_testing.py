@@ -40,6 +40,7 @@ def test_system(params_from_base_suite_setup):
     num_of_docs_to_add = params_from_base_suite_setup["num_of_docs_to_add"]
     up_time = params_from_base_suite_setup["up_time"]
     repl_status_check_sleep_time = params_from_base_suite_setup["repl_status_check_sleep_time"]
+    platform_list = params_from_base_suite_setup["platform_list"]
     doc_id_for_new_docs = num_of_docs
     query_limit = 1000
     query_offset = 0
@@ -120,7 +121,7 @@ def test_system(params_from_base_suite_setup):
     # Configure replication with push_pull for all db
     replicator_obj_list = []
     replicator_list = []
-    for base_url, cbl_db, query in zip(base_url_list, cbl_db_list, query_obj_list):
+    for base_url, cbl_db, query, platform in zip(base_url_list, cbl_db_list, query_obj_list, platform_list):
         repl_obj = Replication(base_url)
         replicator_obj_list.append(repl_obj)
         authenticator = Authenticator(base_url)
@@ -135,7 +136,9 @@ def test_system(params_from_base_suite_setup):
         repl_obj.wait_until_replicator_idle(repl, max_times=maxint, sleep_time=repl_status_check_sleep_time)
         replicator_list.append(repl)
         results = query.query_get_docs_limit_offset(cbl_db, limit=query_limit, offset=query_offset)
-        _releaseQueryResults(base_url, results)
+        # Query results do not store in memory for dot net, so no need to release memory for dotnet
+        if(platform.lower() != "net-msft" and platform.lower() != "uwp" and platform.lower() != "xamarin-ios" and platform.lower() != "xamarin-android"):
+            _releaseQueryResults(base_url, results)
 
     current_time = datetime.now()
     running_time = current_time + timedelta(minutes=up_time)
@@ -163,28 +166,32 @@ def test_system(params_from_base_suite_setup):
                               number_updates=num_of_doc_updates, auth=session, channels=channels_sg)
 
         # Waiting until replicator finishes on all dbs
-        for base_url, repl_obj, repl, cbl_db, query in zip(base_url_list,
+        for base_url, repl_obj, repl, cbl_db, query, platform in zip(base_url_list,
                                                            replicator_obj_list,
                                                            replicator_list,
                                                            cbl_db_list,
-                                                           query_obj_list):
+                                                           query_obj_list,
+                                                           platform_list):
             t = Thread(target=_replicaton_status_check, args=(repl_obj, repl, repl_status_check_sleep_time))
             t.start()
             t.join()
             results = query.query_get_docs_limit_offset(cbl_db, limit=query_limit, offset=query_offset)
-            _releaseQueryResults(base_url, results)
+            # Query results do not store in memory for dot net, so no need to release memory for dotnet
+            if(platform.lower() != "net-msft" and platform.lower() != "uwp" and platform.lower() != "xamarin-ios" and platform.lower() != "xamarin-android"):
+                _releaseQueryResults(base_url, results)
 
         #######################################
         # Checking for doc update on CBL side #
         #######################################
         docs_to_update = random.sample(doc_ids, num_of_docs_to_update)
         i = 0
-        for base_url, db_obj, cbl_db, repl_obj, repl, query in zip(base_url_list,
-                                                                   db_obj_list,
-                                                                   cbl_db_list,
-                                                                   replicator_obj_list,
-                                                                   replicator_list,
-                                                                   query_obj_list):
+        for base_url, db_obj, cbl_db, repl_obj, repl, query, platform in zip(base_url_list,
+                                                                             db_obj_list,
+                                                                             cbl_db_list,
+                                                                             replicator_obj_list,
+                                                                             replicator_list,
+                                                                             query_obj_list,
+                                                                             platform_list):
             updates_per_db = len(docs_to_update) / len(db_obj_list)
             log_info("Updating {} docs on {} db - {}".format(updates_per_db,
                                                              db_obj.getName(cbl_db),
@@ -196,7 +203,9 @@ def test_system(params_from_base_suite_setup):
             t.start()
             t.join()
             results = query.query_get_docs_limit_offset(cbl_db, limit=query_limit, offset=query_offset)
-            _releaseQueryResults(base_url, results)
+            # Query results do not store in memory for dot net, so no need to release memory for dotnet
+            if(platform.lower() != "net-msft" and platform.lower() != "uwp" and platform.lower() != "xamarin-ios" and platform.lower() != "xamarin-android"):
+                _releaseQueryResults(base_url, results)
 
         ###########################
         # Deleting docs on SG side #
@@ -207,16 +216,19 @@ def test_system(params_from_base_suite_setup):
                                                       docs_to_delete))
         sg_client.delete_bulk_docs(url=sg_url, db=sg_db,
                                    docs=sg_docs, auth=session)
-        for base_url, repl_obj, repl, cbl_db, query in zip(base_url_list,
+        for base_url, repl_obj, repl, cbl_db, query, platform in zip(base_url_list,
                                                            replicator_obj_list,
                                                            replicator_list,
                                                            cbl_db_list,
-                                                           query_obj_list):
+                                                           query_obj_list,
+                                                           platform_list):
             t = Thread(target=_replicaton_status_check, args=(repl_obj, repl, repl_status_check_sleep_time))
             t.start()
             t.join()
             results = query.query_get_docs_limit_offset(cbl_db, limit=query_limit, offset=query_offset)
-            _releaseQueryResults(base_url, results)
+            # Query results do not store in memory for dot net, so no need to release memory for dotnet
+            if(platform.lower() != "net-msft" and platform.lower() != "uwp" and platform.lower() != "xamarin-ios" and platform.lower() != "xamarin-android"):
+                _releaseQueryResults(base_url, results)
             time.sleep(5)
         # _check_doc_count(db_obj_list, cbl_db_list)
         # removing ids of deleted doc from the list
@@ -231,12 +243,13 @@ def test_system(params_from_base_suite_setup):
         docs_to_delete = set(random.sample(doc_ids, num_of_docs_to_delete))
         docs_to_delete_per_db = len(docs_to_delete) / len(db_obj_list)
         i = 0
-        for base_url, db_obj, cbl_db, repl_obj, repl, query in zip(base_url_list,
+        for base_url, db_obj, cbl_db, repl_obj, repl, query, platform in zip(base_url_list,
                                                                    db_obj_list,
                                                                    cbl_db_list,
                                                                    replicator_obj_list,
                                                                    replicator_list,
-                                                                   query_obj_list):
+                                                                   query_obj_list,
+                                                                   platform_list):
             log_info("deleting {} docs from {} db - {}".format(docs_to_delete_per_db,
                                                                db_obj.getName(cbl_db),
                                                                list(docs_to_delete)[i: i + docs_to_delete_per_db]))
@@ -245,11 +258,13 @@ def test_system(params_from_base_suite_setup):
             time.sleep(5)
             results = query.query_get_docs_limit_offset(cbl_db, limit=query_limit,
                                                         offset=query_offset)
-            _releaseQueryResults(base_url, results)
+            # Query results do not store in memory for dot net, so no need to release memory for dotnet
+            if(platform.lower() != "net-msft" and platform.lower() != "uwp" and platform.lower() != "xamarin-ios" and platform.lower() != "xamarin-android"):
+                _releaseQueryResults(base_url, results)
 
             # Deleting docs will affect all dbs as they are synced with SG.
             _check_parallel_replication_changes(base_url_list, replicator_obj_list, replicator_list, cbl_db_list, query_obj_list,
-                                                repl_status_check_sleep_time, query_limit, query_offset)
+                                                repl_status_check_sleep_time, query_limit, platform_list, query_offset)
         # _check_doc_count(db_obj_list, cbl_db_list)
         # removing ids of deleted doc from the list
         doc_ids = doc_ids - docs_to_delete
@@ -263,12 +278,13 @@ def test_system(params_from_base_suite_setup):
         #############################
         # Creating docs on CBL side #
         #############################
-        for base_url, db_obj, cbl_db, repl_obj, repl, query in zip(base_url_list,
+        for base_url, db_obj, cbl_db, repl_obj, repl, query, platform in zip(base_url_list,
                                                                    db_obj_list,
                                                                    cbl_db_list,
                                                                    replicator_obj_list,
                                                                    replicator_list,
-                                                                   query_obj_list):
+                                                                   query_obj_list,
+                                                                   platform_list):
             name = db_obj.getName(cbl_db)
             docs_to_create = ["cbl_{}_{}".format(name, doc_id) for doc_id in range(doc_id_for_new_docs,
                                                                                    doc_id_for_new_docs +
@@ -301,7 +317,9 @@ def test_system(params_from_base_suite_setup):
             t.join()
             results = query.query_get_docs_limit_offset(cbl_db, limit=query_limit,
                                                         offset=query_offset)
-            _releaseQueryResults(base_url, results)
+            # Query results do not store in memory for dot net, so no need to release memory for dotnet
+            if(platform.lower() != "net-msft" and platform.lower() != "uwp" and platform.lower() != "xamarin-ios" and platform.lower() != "xamarin-android"):
+                _releaseQueryResults(base_url, results)
 
             time.sleep(5)
         doc_id_for_new_docs += num_of_docs_to_add
@@ -334,17 +352,20 @@ def _check_doc_count(db_obj_list, cbl_db_list):
 
 
 def _check_parallel_replication_changes(base_url_list, replicator_obj_list, replicator_list, cbl_db_list, query_obj_list,
-                                        repl_status_check_sleep_time, query_limit, query_offset):
-    for base_url, repl_obj, repl, cbl_db, query in zip(base_url_list,
+                                        repl_status_check_sleep_time, query_limit, platform_list, query_offset):
+    for base_url, repl_obj, repl, cbl_db, query, platform in zip(base_url_list,
                                                        replicator_obj_list,
                                                        replicator_list,
                                                        cbl_db_list,
-                                                       query_obj_list):
+                                                       query_obj_list,
+                                                       platform_list):
         t = Thread(target=_replicaton_status_check, args=(repl_obj, repl, repl_status_check_sleep_time))
         t.start()
         t.join()
         results = query.query_get_docs_limit_offset(cbl_db, limit=query_limit, offset=query_offset)
-        _releaseQueryResults(base_url, results)
+        # Query results do not store in memory for dot net, so no need to release memory for dotnet 
+        if(platform.lower() != "net-msft" and platform.lower() != "uwp" and platform.lower() != "xamarin-ios" and platform.lower() != "xamarin-android"):
+            _releaseQueryResults(base_url, results)
 
 
 def _releaseQueryResults(base_url, results):
