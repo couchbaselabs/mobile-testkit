@@ -193,7 +193,6 @@ class TestDatabase(object):
         """
         @summary: Testing getCount method of Database API
         """
-
         db = self.db_obj.create(db_name)
         for i in range(num_of_docs):
             doc = self.doc_obj.create(doc_id="{}_{}".format(doc_id, i))

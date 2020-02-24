@@ -328,10 +328,6 @@ def test_copy_prebuilt_database(params_from_base_test_setup, encrypted):
     elif liteserv_platform in ["xamarin-android", "java-macosx", "java-msft", "java-ubuntu", "java-centos",
                                "javaws-macosx", "javaws-msft", "javaws-ubuntu", "javaws-centos"]:
         prebuilt_db_path = "{}.cblite2.zip".format(db_prefix)
-    elif liteserv_platform in ["java-macosx", "java-msft", "java-ubuntu", "java-centos"]:
-        prebuilt_db_path = "{}.cblite2.zip".format(db_prefix)
-    elif liteserv_platform in ["javaws-macosx", "javaws-msft", "javaws-ubuntu", "javaws-centos"]:
-        prebuilt_db_path = "{}.cblite2.zip".format(db_prefix)
     elif liteserv_platform == "net-msft":
         app_dir = "\\".join(db_path.split("\\")[:-2])
         prebuilt_db_path = "{}\\Databases\\{}.cblite2".format(app_dir, db_prefix)
