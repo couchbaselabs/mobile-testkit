@@ -44,7 +44,6 @@ class TestServerJavaWS(TestServerBase):
         '''
         if self.platform == "javaws-msft":
             # java ws on Windows platform
-
             if "LITESERV_MSFT_HOST_USER" not in os.environ:
                 raise LiteServError(
                     "Make sure you define 'LITESERV_MSFT_HOST_USER' as the windows user for the host you are targeting")
