@@ -28,13 +28,13 @@ public class TestServerMain implements Daemon {
      * @throws IOException
      */
     public static void main(String[] args) throws IOException {
-        if(testserverLauncherInstance == null){
+        if (testserverLauncherInstance == null) {
             testserverLauncherInstance = new TestServerMain();
         }
 
         testserverLauncherInstance.initCouchbaseLite();
         Log.i(TAG, "Main");
-        testserverLauncherInstance.startServer(stopped);
+        testserverLauncherInstance.startServer(false);
     }
 
     /**
@@ -48,7 +48,7 @@ public class TestServerMain implements Daemon {
     public static void windowsService(String args[]) {
         final String cmd = (args.length <= 0) ? "start" : args[0];
         if ("start".equals(cmd)) {
-            if(testserverLauncherInstance == null){
+            if (testserverLauncherInstance == null) {
                 testserverLauncherInstance = new TestServerMain();
             }
 
@@ -56,7 +56,7 @@ public class TestServerMain implements Daemon {
             testserverLauncherInstance.startServer(true);
         }
         else {
-            try{
+            try {
                 testserverLauncherInstance.stop();
             }
             catch (Exception e){
@@ -107,7 +107,7 @@ public class TestServerMain implements Daemon {
     }
 
     private synchronized void waitForStopService() {
-        if(stopped){
+        if (stopped) {
             stopped = false;
             return;
         }

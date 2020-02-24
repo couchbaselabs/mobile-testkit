@@ -11,7 +11,7 @@ public class DatabaseConfigurationRequestHandler {
     private static final String TAG = "DATABASE_CONFIG";
     public DatabaseConfiguration configure(Args args) {
         String directory = args.get("directory");
-        if(directory == null){
+        if (directory == null) {
             directory = RequestHandlerDispatcher.context.getFilesDir().getAbsolutePath();
             Log.i(TAG, "No directory is set, now point to " + directory);
         }

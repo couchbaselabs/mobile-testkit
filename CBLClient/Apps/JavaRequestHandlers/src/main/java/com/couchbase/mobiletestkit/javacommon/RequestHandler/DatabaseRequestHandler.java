@@ -46,7 +46,14 @@ public class DatabaseRequestHandler {
             config = new DatabaseConfiguration();
         }
         String dbDir = config.getDirectory();
-        if(dbDir == null || dbDir.equals("/")){
+        /*
+        dbDir is obtained from cblite database configuration
+        1. dbDir shouldn't be null unless a bad situation happen.
+        2. while TestServer app running as a daemon service,
+           cblite core sets dbDir "/", which will cause due permission issues.
+           set dbDir to wherever the application context points to
+        */
+        if (dbDir == null || dbDir.equals("/")) {
             config.setDirectory(RequestHandlerDispatcher.context.getFilesDir().getAbsolutePath());
         }
         Log.i(TAG, "database_create directory=" + config.getDirectory());
