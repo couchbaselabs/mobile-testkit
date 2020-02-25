@@ -9,5 +9,5 @@
 
     - name: Delete log file
       win_file:
-        path: C:\PROGRA~1\dotnet\TextLogging
+        path: C:\PROGRA~1\dotnet\TextLogging\*
         state: absent
