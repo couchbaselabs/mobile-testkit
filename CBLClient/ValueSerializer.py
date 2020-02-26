@@ -69,9 +69,7 @@ class ValueSerializer(object):
             return True
         elif value == "false":
             return False
-        elif value.startswith("I"):
-            return int(value[1:])
-        elif value.startswith("L"):
+        elif value.startswith("I") or value.startswith("L"):
             return int(value[1:])
         elif value.startswith("F") or value.startswith("D"):
             return float(value[1:])

@@ -83,7 +83,7 @@ def get_auth_type(auth):
 class MyEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, (bytes, bytearray)):
-            return obj.decode("ASCII") # <- or any other encoding of your choice
+            return obj.decode("ASCII")
         # Let the base class default method raise the TypeError
         return json.JSONEncoder.default(self, obj)
 
@@ -1333,7 +1333,6 @@ class MobileRestClient:
         log_info("Added: {} docs".format(len(added_docs)))
 
         return added_docs
-
 
 
     def add_bulk_docs(self, url, db, docs, auth=None):

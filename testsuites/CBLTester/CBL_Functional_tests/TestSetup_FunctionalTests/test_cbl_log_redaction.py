@@ -132,8 +132,7 @@ def test_verify_invalid_mask_password_in_logs(params_from_base_test_setup, inval
 
 
 def verify_password_masked(liteserv_platform, log_file, password, test_cbllog):
-    """
-    @note: Porting logs for Android, xamarin-android, net-core and net-uwp platform, as the logs reside
+    """testsuites/syncgateway/functional/tests/test_users_channels.py
            outside runner's file directory
     """
     delimiter = "/"

@@ -27,18 +27,14 @@ class Client(object):
                     body[k] = val
 
             # Create connection to method endpoint.
-            log_info("request url: {}".format(url))
-            log_info("request body: {}".format(json.dumps(body)))
             headers = {"Content-Type": "application/json"}
             self.session.headers = headers
             resp = self.session.post(url, data=json.dumps(body))
             resp.raise_for_status()
             responseCode = resp.status_code
-            log_info("Respose Code: {}".format(responseCode))
 
             if responseCode == 200:
                 result = resp.content
-                log_info("Respose Content: {}".format(result))
                 if isinstance(result, bytes):
                     result = result.decode('utf8', 'ignore')
                 if len(result) < 25:

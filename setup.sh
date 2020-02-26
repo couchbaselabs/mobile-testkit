@@ -36,10 +36,10 @@ export PATH=$PATH:/usr/local/bin
 virtualenv -p $PYTHON venv
 source venv/bin/activate
 
-# Install $PYTHON dependencies
+# Install PYTHON dependencies
 $PIP install -r requirements.txt
 
-# set $PYTHON env
+# set PYTHON env
 export PYTHONPATH=$PYTHONPATH:$currentdir/
 
 export ANSIBLE_CONFIG=$currentdir/ansible.cfg

@@ -43,4 +43,4 @@ class NetworkUtils:
             name = "/tmp/ngrep-{}-{}-output".format(test_name, date_time)
             shutil.make_archive(name, "zip", "/tmp/sys-logs")
             shutil.rmtree("/tmp/sys-logs")
-            print(("ngrep logs copied here {}.zip\n".format(name)))
+            log_info("ngrep logs copied here {}.zip\n".format(name))

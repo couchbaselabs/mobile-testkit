@@ -34,8 +34,6 @@ class Options(object):
         self.vault_password_files = vault_password_files
         self.new_vault_password_file = new_vault_password_file
         self.output_file = output_file
-        # self.tags = tags
-        # self.skip_tags = skip_tags
         self.one_line = one_line
         self.tree = tree
         self.ask_sudo_pass = ask_sudo_pass
