@@ -122,8 +122,25 @@ class TestServerJava(TestServerBase):
                 "service_user": os.environ["LITESERV_MSFT_HOST_USER"],
                 "service_pwd": os.environ["LITESERV_MSFT_HOST_PASSWORD"]
             })
+
+            if status == 0:
+                return
+            else:
+                raise LiteServError("Failed to install Test server on remote machine")
         else:
-            # install jar file as a daemon service on non-Windows environment
+            log_info("{}: Nothing to install".format(self.platform))
+
+    def remove(self):
+        raise NotImplementedError()
+
+    def start(self, logfile_name):
+        if self.platform == "java-msft":
+            # start  Tomcat Windows Service
+            status = self.ansible_runner.run_ansible_playbook("manage-testserver-java-desktop-msft.yml", extra_vars={
+                "service_status": "started"
+            })
+        else:
+            # install jar file as a daemon service on non-Windows environment and start
             status = self.ansible_runner.run_ansible_playbook("install-testserver-java-desktop.yml", extra_vars={
                 "package_name": self.package_name,
             })
@@ -133,25 +150,17 @@ class TestServerJava(TestServerBase):
         else:
             raise LiteServError("Failed to install Test server on remote machine")
 
-    def remove(self):
-        raise NotImplementedError()
-
-    def start(self, logfile_name):
-        # do nothing here.
-        log_info("TestServerJava service is installed as auto-start.")
-        return
-
     def _verify_launched(self):
         raise NotImplementedError()
 
     def stop(self):
         if self.platform == "java-msft":
-            # stop Tomcat Windows Service
+            # stop TestServerJava Windows Service
             status = self.ansible_runner.run_ansible_playbook("manage-testserver-java-desktop-msft.yml", extra_vars={
                 "service_status": "stopped"
             })
         else:
-            # stop Tomcat Server
+            # stop TestServerJava Daemon Service
             status = self.ansible_runner.run_ansible_playbook("manage-testserver-java-desktop.yml", extra_vars={
                 "service_status": "stop"
             })

@@ -19,6 +19,15 @@
       path: C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ build_name }}\{{package_name}}.zip
     register: pkg_st
 
+  - win_stat:
+      path: C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ build_name }}\TestServerJava.exe
+    register: prunsrv_st
+
+  - name: Remove TestServerJava service
+    win_command: chdir=C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ build_name }} C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ build_name }}\win_service_manager.bat TestServerJava remove
+    when: prunsrv_st.stat.exists == True
+    ignore_errors: yes
+
   - name: Delete any exiting pre-downloaded files
     win_file:
       path: C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ build_name }}\*

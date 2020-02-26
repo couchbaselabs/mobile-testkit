@@ -27,5 +27,5 @@
   - debug: msg="Copy Apache Common Daemon files"
   - win_shell: copy "{{ ansible_env.APACHE_COMMON_DAEMON }}\amd64\prunsrv.exe" "C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ build_name }}\TestServerJava.exe"
 
-  - name: Install TestServerJava as a windows service and start
-    win_command: chdir=C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ build_name }} C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ build_name }}\win_service_manager.bat TestServerJava start C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ build_name }} {{ package_name}}.jar {{service_user}} {{service_pwd}}
+  - name: Install TestServerJava as a windows service
+    win_command: chdir=C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ build_name }} C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ build_name }}\win_service_manager.bat TestServerJava install C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ build_name }} {{ package_name}}.jar {{service_user}} {{service_pwd}}
