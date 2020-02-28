@@ -229,7 +229,7 @@ class TestDocument(object):
         '''
         doc = self.doc_obj.create()
         self.doc_obj.setDouble(doc, key, value)
-        assert round(float(value), 5) == round(float(self.doc_obj.getDouble(doc, key)), 5)
+        assert round(float(value), 7) == round(float(self.doc_obj.getDouble(doc, key)), 7)
 
     @pytest.mark.parametrize("key, value", [
         (random_string(6), round(random.uniform(0, 1), 3)),
