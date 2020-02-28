@@ -66,7 +66,7 @@ def test_replication_configuration_valid_values(params_from_base_test_setup, num
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
 
     if sync_gateway_version < "2.0.0":
-        pytest.skip('This test cannnot run with sg version below 2.0')
+        pytest.skip('This test cannot run with sg version below 2.0')
     channels_sg = ["ABC"]
     username = "autotest"
     password = "password"
@@ -240,7 +240,7 @@ def test_replication_configuration_with_push_replication(params_from_base_test_s
     mode = params_from_base_test_setup["mode"]
 
     if sync_gateway_version < "2.0.0":
-        pytest.skip('This test cannnot run with sg version below 2.0')
+        pytest.skip('This test cannot run with sg version below 2.0')
 
     c = cluster.Cluster(config=cluster_config)
     sg_config = sync_gateway_config_path_for_mode("custom_sync/grant_access_one", mode)
@@ -306,7 +306,7 @@ def test_replication_push_replication_without_authentication(params_from_base_te
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
 
     if sync_gateway_version < "2.0.0":
-        pytest.skip('This test cannnot run with sg version below 2.0')
+        pytest.skip('This test cannot run with sg version below 2.0')
 
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
@@ -373,7 +373,7 @@ def test_replication_push_replication_invalid_authentication(params_from_base_te
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
 
     if sync_gateway_version < "2.0.0":
-        pytest.skip('This test cannnot run with sg version below 2.0')
+        pytest.skip('This test cannot run with sg version below 2.0')
 
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
@@ -532,7 +532,7 @@ def test_replication_configuration_with_headers(params_from_base_test_setup):
     cbl_db = params_from_base_test_setup["source_db"]
 
     if sync_gateway_version < "2.0.0":
-        pytest.skip('This test cannnot run with sg version below 2.0')
+        pytest.skip('This test cannot run with sg version below 2.0')
 
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
@@ -1054,7 +1054,7 @@ def CBL_offline_test(params_from_base_test_setup, sg_conf_name, num_of_docs):
     replicator = Replication(base_url)
 
     if sync_gateway_version < "2.0.0":
-        pytest.skip('This test cannnot run with sg version below 2.0')
+        pytest.skip('This test cannot run with sg version below 2.0')
 
     if no_conflicts_enabled:
         sg_config = sync_gateway_config_path_for_mode(sg_conf_name, sg_mode)
@@ -3228,7 +3228,7 @@ def test_replication_push_replication_guest_enabled(params_from_base_test_setup,
     num_docs = 5
 
     if sync_gateway_version < "2.0.0":
-        pytest.skip('This test cannnot run with sg version below 2.0')
+        pytest.skip('This test cannot run with sg version below 2.0')
 
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_guest_enabled", mode)
     c = cluster.Cluster(config=cluster_config)
@@ -3308,7 +3308,7 @@ def test_doc_removal_from_channel(params_from_base_test_setup):
     document_obj = Document(base_url)
 
     if sync_gateway_version < "2.5.0":
-        pytest.skip('This test cannnot run with sg version below 2.5.0')
+        pytest.skip('This test cannot run with sg version below 2.5.0')
 
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
@@ -3403,7 +3403,7 @@ def test_doc_removal_with_multipleChannels(params_from_base_test_setup, setup_cu
     num_of_docs = 1
 
     if sync_gateway_version < "2.5.0":
-        pytest.skip('This test cannnot run with sg version below 2.5.0')
+        pytest.skip('This test cannot run with sg version below 2.5.0')
 
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
@@ -3556,7 +3556,7 @@ def test_roles_replication(params_from_base_test_setup):
     num_docs = 10
 
     if sync_gateway_version < "2.5.0":
-        pytest.skip('This test cannnot run with sg version below 2.5.0')
+        pytest.skip('This test cannot run with sg version below 2.5.0')
 
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
@@ -3647,7 +3647,7 @@ def test_channel_update_replication(params_from_base_test_setup):
     num_docs = 10
 
     if sync_gateway_version < "2.5.0":
-        pytest.skip('This test cannnot run with sg version below 2.5.0')
+        pytest.skip('This test cannot run with sg version below 2.5.0')
 
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
@@ -3732,7 +3732,7 @@ def test_replication_behavior_with_channelRole_modification(params_from_base_tes
     num_docs = 10
 
     if sync_gateway_version < "2.5.0":
-        pytest.skip('This test cannnot run with sg version below 2.5.0')
+        pytest.skip('This test cannot run with sg version below 2.5.0')
 
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
