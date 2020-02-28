@@ -161,7 +161,7 @@ def test_replication_configuration_with_pull_replication(params_from_base_test_s
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
 
     if sync_gateway_version < "2.0.0":
-        pytest.skip('This test cannnot run with sg version below 2.0')
+        pytest.skip('This test cannot run with sg version below 2.0')
 
     channels = ["ABC"]
     c = cluster.Cluster(config=cluster_config)
