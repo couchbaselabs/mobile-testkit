@@ -27,7 +27,6 @@ from utilities.cluster_config_utils import persist_cluster_config_environment_pr
 ])
 def test_overloaded_channel_cache(params_from_base_test_setup, sg_conf_name, num_docs, user_channels,
                                   filter, limit, x509_cert_auth):
-
     """
     The purpose of this test is to verify that channel cache backfill via view queries is working properly.
     It works by doing the following:

@@ -65,7 +65,7 @@ def install_couchbase_server(cluster_config, couchbase_server_config, cbs_platfo
     server_url = cluster_topology["couchbase_servers"][0]
     cb_server = CouchbaseServer(server_url)
 
-    log_info(">>> Installing Couchbase Server")
+    log_info(">>> Installing Couchbase Server" , str(cb_server) + str(cbs_platform))
     # Install Server
     server_baseurl, server_package_name = couchbase_server_config.get_baseurl_package(cb_server, cbs_platform, cbs_ce)
     status = ansible_runner.run_ansible_playbook(

@@ -24,7 +24,6 @@ from keywords.utils import log_r
     ("sync_gateway_default_functional_tests_couchbase_protocol_withport_11210", False)
 ])
 def test_multiple_users_multiple_channels(params_from_base_test_setup, sg_conf_name, x509_cert_auth):
-
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
@@ -79,17 +78,17 @@ def test_multiple_users_multiple_channels(params_from_base_test_setup, sg_conf_n
 
     # Seth should get docs from seth + traun
     seth_subset = [seth.cache, traun.cache]
-    seth_expected_docs = {k: v for cache in seth_subset for k, v in cache.items()}
+    seth_expected_docs = {k: v for cache in seth_subset for k, v in list(cache.items())}
     verify_changes([seth], expected_num_docs=num_docs_seth + num_docs_traun, expected_num_revisions=0, expected_docs=seth_expected_docs)
 
     # Adam should get docs from adam + traun
     adam_subset = [adam.cache, traun.cache]
-    adam_expected_docs = {k: v for cache in adam_subset for k, v in cache.items()}
+    adam_expected_docs = {k: v for cache in adam_subset for k, v in list(cache.items())}
     verify_changes([adam], expected_num_docs=num_docs_adam + num_docs_traun, expected_num_revisions=0, expected_docs=adam_expected_docs)
 
     # Traun should get docs from seth + adam + traun
     traun_subset = [seth.cache, adam.cache, traun.cache]
-    traun_expected_docs = {k: v for cache in traun_subset for k, v in cache.items()}
+    traun_expected_docs = {k: v for cache in traun_subset for k, v in list(cache.items())}
     verify_changes([traun], expected_num_docs=num_docs_seth + num_docs_adam + num_docs_traun, expected_num_revisions=0, expected_docs=traun_expected_docs)
 
 
@@ -156,7 +155,7 @@ def test_muliple_users_single_channel(params_from_base_test_setup, sg_conf_name)
 
     # Each user should get all docs from all users
     all_caches = [seth.cache, adam.cache, traun.cache]
-    all_docs = {k: v for cache in all_caches for k, v in cache.items()}
+    all_docs = {k: v for cache in all_caches for k, v in list(cache.items())}
 
     verify_changes([seth, adam, traun], expected_num_docs=num_docs_seth + num_docs_adam + num_docs_traun, expected_num_revisions=0, expected_docs=all_docs)
 
@@ -281,7 +280,7 @@ def test_single_user_single_channel(params_from_base_test_setup, sg_conf_name):
     verify_changes([cbs_user], expected_num_docs=num_cbs_docs, expected_num_revisions=0, expected_docs=cbs_user.cache)
 
     all_doc_caches = [seth.cache, cbs_user.cache]
-    all_docs = {k: v for cache in all_doc_caches for k, v in cache.items()}
+    all_docs = {k: v for cache in all_doc_caches for k, v in list(cache.items())}
     verify_changes([admin_user], expected_num_docs=num_cbs_docs + num_seth_docs, expected_num_revisions=0, expected_docs=all_docs)
 
 

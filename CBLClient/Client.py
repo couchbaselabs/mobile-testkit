@@ -35,13 +35,18 @@ class Client(object):
 
             if responseCode == 200:
                 result = resp.content
+                if isinstance(result, bytes):
+                    result = result.decode('utf8', 'ignore')
                 if len(result) < 25:
                     # Only print short messages
                     log_info("Got response: {}".format(result))
                 return ValueSerializer.deserialize(result)
         except Exception as err:
             if resp.content:
-                raise Exception(str(err) + resp.content)
+                cont = resp.content
+                if isinstance(resp.content, bytes):
+                    cont = resp.content.decode('utf8', 'ignore')
+                raise Exception(str(err) + cont)
             else:
                 raise Exception(str(err))
 

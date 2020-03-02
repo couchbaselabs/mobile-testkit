@@ -10,7 +10,7 @@
       win_nssm:
         name: LiteServ
         application: C:\Users\{{ ansible_user }}\Desktop\LiteServ\{{ binary_path }}
-        app_parameters:
+        app_parameters_free_form:
           _: "{{ launch_args }}"
         state: started
         stdout_file: C:\Users\{{ ansible_user }}\Desktop\LiteServ\LiteServ.log

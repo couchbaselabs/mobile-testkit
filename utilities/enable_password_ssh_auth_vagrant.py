@@ -2,7 +2,7 @@ import json
 import os
 import subprocess
 from optparse import OptionParser
-from generate_cluster_configs_from_vagrant_hosts import check_network_options
+from .generate_cluster_configs_from_vagrant_hosts import check_network_options
 import sys
 
 

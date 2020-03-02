@@ -1,7 +1,7 @@
 import pytest
 import time
 import random
-from sys import maxint
+from sys import maxsize
 from threading import Thread
 
 from keywords.MobileRestClient import MobileRestClient
@@ -55,9 +55,9 @@ def test_system(params_from_base_suite_setup):
     sg_client = MobileRestClient()
 
     doc_ids = set()
-    docs_per_db = num_of_docs / len(cbl_db_list)  # Equally distributing docs to db
+    docs_per_db = num_of_docs // len(cbl_db_list)  # Equally distributing docs to db
     extra_docs = num_of_docs % len(cbl_db_list)  # Docs left after equal distribution
-    num_of_itr_per_db = docs_per_db / num_of_docs_in_itr  # iteration required to add docs in each db
+    num_of_itr_per_db = docs_per_db // num_of_docs_in_itr  # iteration required to add docs in each db
     extra_docs_in_itr_per_db = docs_per_db % num_of_docs_in_itr  # iteration required to add docs leftover docs per db
 
     cluster = Cluster(config=cluster_config)
@@ -101,7 +101,7 @@ def test_system(params_from_base_suite_setup):
         # getting doc ids from the dbs
         # _check_doc_count(db_obj_list, cbl_db_list)
         count = db_obj_list[0].getCount(cbl_db_list[0])
-        itr_count = count / query_limit
+        itr_count = count // query_limit
         if itr_count == 0:
             itr_count = 1
         for _ in range(itr_count):
@@ -133,7 +133,7 @@ def test_system(params_from_base_suite_setup):
                                          replicator_authenticator=replicator_authenticator)
         repl = repl_obj.create(repl_config)
         repl_obj.start(repl)
-        repl_obj.wait_until_replicator_idle(repl, max_times=maxint, sleep_time=repl_status_check_sleep_time)
+        repl_obj.wait_until_replicator_idle(repl, max_times=maxsize, sleep_time=repl_status_check_sleep_time)
         replicator_list.append(repl)
         results = query.query_get_docs_limit_offset(cbl_db, limit=query_limit, offset=query_offset)
         # Query results do not store in memory for dot net, so no need to release memory for dotnet
@@ -192,7 +192,7 @@ def test_system(params_from_base_suite_setup):
                                                                              replicator_list,
                                                                              query_obj_list,
                                                                              platform_list):
-            updates_per_db = len(docs_to_update) / len(db_obj_list)
+            updates_per_db = len(docs_to_update) // len(db_obj_list)
             log_info("Updating {} docs on {} db - {}".format(updates_per_db,
                                                              db_obj.getName(cbl_db),
                                                              list(docs_to_update)[i: i + updates_per_db]))
@@ -241,7 +241,7 @@ def test_system(params_from_base_suite_setup):
         # Deleting docs on CBL side #
         ############################
         docs_to_delete = set(random.sample(doc_ids, num_of_docs_to_delete))
-        docs_to_delete_per_db = len(docs_to_delete) / len(db_obj_list)
+        docs_to_delete_per_db = len(docs_to_delete) // len(db_obj_list)
         i = 0
         for base_url, db_obj, cbl_db, repl_obj, repl, query, platform in zip(base_url_list,
                                                                    db_obj_list,
@@ -336,7 +336,7 @@ def test_system(params_from_base_suite_setup):
 
 
 def _replicaton_status_check(repl_obj, replicator, repl_status_check_sleep_time=2):
-    repl_obj.wait_until_replicator_idle(replicator, max_times=maxint, sleep_time=repl_status_check_sleep_time)
+    repl_obj.wait_until_replicator_idle(replicator, max_times=maxsize, sleep_time=repl_status_check_sleep_time)
     total = repl_obj.getTotal(replicator)
     completed = repl_obj.getCompleted(replicator)
     log_info("total: {}".format(total))

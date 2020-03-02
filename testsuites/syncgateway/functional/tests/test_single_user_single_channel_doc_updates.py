@@ -26,11 +26,9 @@ log = logging.getLogger(libraries.testkit.settings.LOGGER)
     pytest.param("sync_gateway_default_functional_tests", 100, 100, False, marks=pytest.mark.sanity),
     ("sync_gateway_default_functional_tests_no_port", 100, 100, True),
     ("sync_gateway_default_functional_tests_couchbase_protocol_withport_11210", 100, 100, False)
-
 ])
 def test_single_user_single_channel_doc_updates(params_from_base_test_setup, sg_conf_name, num_docs,
                                                 num_revisions, x509_cert_auth):
-
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
@@ -44,8 +42,7 @@ def test_single_user_single_channel_doc_updates(params_from_base_test_setup, sg_
     # Skip the test if ssl enabled as it cannot run using couchbase protocol
     # TODO : https://github.com/couchbaselabs/sync-gateway-accel/issues/227
     # Remove DI condiiton once above bug is fixed
-    if "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210" in sg_conf_name and (
-            ssl_enabled or mode.lower() == "di"):
+    if "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210" in sg_conf_name and (ssl_enabled or mode.lower() == "di"):
         pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)

@@ -648,27 +648,27 @@ def test_peer_to_peer_replication_with_multiple_dbs(params_from_base_test_setup,
     replicatorTcpListener3 = peerToPeer_server.server_start(cbl_db3_server, 7000)
 
     # Create docs in all 3 dbs in client.
-    for i in xrange(3):
+    for i in range(3):
         db_obj_client.create_bulk_docs(num_of_docs, "cbl-peerToPeer{}".format(i), db=cbl_dbs_client[i], channels=channel)
-        print "client num of docs are {} ".format(i), db_obj_client.getCount(cbl_dbs_client[i])
+        print("client num of docs are {} ".format(i), db_obj_client.getCount(cbl_dbs_client[i]))
 
     # replicate all docs of all 3 dbs of client to all 3 dbs of server
     repls = []
-    for i in xrange(3):
+    for i in range(3):
         repl = peerToPeer_client.configure(host=server_host, port=ports[i], server_db_name=db_names_server[i], client_database=cbl_dbs_client[i], continuous=continuous, replication_type=replicator_type, endPointType=endPointType)
         peerToPeer_client.client_start(repl)
         repls.append(repl)
 
-    for i in xrange(3):
+    for i in range(3):
         replicator.wait_until_replicator_idle(repls[i])
 
     # Verify each db got docs from each db of client.
-    for i in xrange(3):
+    for i in range(3):
         client_cbl_doc_ids = db_obj_client.getDocIds(cbl_dbs_client[i])
         server_cbl_doc_ids = db_obj_server.getDocIds(cbl_dbs_server[i])
         for id in client_cbl_doc_ids:
             assert id in server_cbl_doc_ids, "client docs did not replicate to server for db {}".format(i)
-    for i in xrange(3):
+    for i in range(3):
         replicator.stop(repls[i])
     peerToPeer_server.server_stop(replicatorTcpListener2)
     peerToPeer_server.server_stop(replicatorTcpListener3)
@@ -790,7 +790,7 @@ def test_default_conflict_scenario_delete_wins(params_from_base_test_setup, serv
     replicator.stop(repl)
 
     server_docs = db_obj_server.getBulkDocs(cbl_db_server)
-    server_doc_ids = server_docs.keys()
+    server_doc_ids = list(server_docs.keys())
 
     if delete_source == 'cbl2':
         with ThreadPoolExecutor(max_workers=4) as tpe:
@@ -905,7 +905,7 @@ def test_default_conflict_scenario_highRevGeneration_wins(params_from_base_test_
     replicator.stop(repl)
 
     server_docs = db_obj_server.getBulkDocs(cbl_db_server)
-    server_doc_ids = server_docs.keys()
+    server_doc_ids = list(server_docs.keys())
 
     if highrev_source == 'cbl2':
         db_obj_server.update_bulk_docs(database=cbl_db_server, number_of_updates=1, doc_ids=server_doc_ids)
@@ -979,7 +979,7 @@ def updata_bulk_docs_custom(db_obj, database, number_of_updates=1, param="none",
     docs = db_obj.getDocuments(database, doc_ids)
     if len(docs) < 1:
         raise Exception("cbl docs are empty , cannot update docs")
-    for _ in xrange(number_of_updates):
+    for _ in range(number_of_updates):
         for doc in docs:
             doc_body = docs[doc]
             if param not in doc_body:
