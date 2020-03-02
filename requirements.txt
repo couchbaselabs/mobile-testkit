@@ -48,7 +48,7 @@ python-dateutil==2.5.1
 python-ntlm3==1.0.2
 python-vagrant==0.5.14
 pywinrm==0.2.1
-PyYAML==3.12
+PyYAML==5.1
 requests==2.19.0
 requests-ntlm==0.3.0
 rsa==3.3
