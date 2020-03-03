@@ -1,7 +1,7 @@
 import subprocess
 import sys
 import os
-from provisioning_config_parser import hosts_for_tag
+from .provisioning_config_parser import hosts_for_tag
 
 from keywords.utils import log_info
 
@@ -24,7 +24,7 @@ if __name__ == "__main__":
         print("No sync_gateways to monitor in 'provisioning_config'")
         sys.exit(1)
 
-    print("Monitoring sync_gateways: {}".format(sgs))
+    print(("Monitoring sync_gateways: {}".format(sgs)))
     sgs_with_port = [sg + ":4985" for sg in sgs]
     sgs_joined = ",".join(sgs_with_port)
 

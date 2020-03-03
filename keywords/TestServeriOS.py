@@ -142,7 +142,7 @@ class TestServeriOS(TestServerBase):
         output = subprocess.check_output(["ios-deploy", "--list_bundle_id"])
         log_info(output)
 
-        if self.bundle_id not in output:
+        if self.bundle_id not in output.decode():
             raise LiteServError("Could not install CBLTestServer-iOS")
 
         self.stop()
@@ -181,7 +181,7 @@ class TestServeriOS(TestServerBase):
         log_info(output)
         list_output = subprocess.Popen(["xcrun", "simctl", "list"], stdout=subprocess.PIPE)
         output = subprocess.check_output(('grep', 'Booted'), stdin=list_output.stdout)
-        if len(output.splitlines()) > 0:
+        if len(output.decode().splitlines()) > 0:
             # Wait for the device to boot up
             # We check the status of the simulator using the command
             # xcrun simctl spawn booted launchctl print system | grep com.apple.springboard.services
@@ -199,7 +199,7 @@ class TestServeriOS(TestServerBase):
                     "xcrun", "simctl", "spawn", "booted", "launchctl", "print", "system"
                 ], stdout=subprocess.PIPE)
                 output = subprocess.check_output(('grep', 'com.apple.springboard.services'), stdin=output.stdout)
-                output = re.sub(' +', ' ', output).strip()
+                output = re.sub(' +', ' ', output.decode()).strip()
                 status = output.split(" ")[2]
                 if status == "A":
                     log_info("iPhone Simulator seems to have booted up")
@@ -213,8 +213,8 @@ class TestServeriOS(TestServerBase):
         list_output = subprocess.Popen(["xcrun", "simctl", "list"], stdout=subprocess.PIPE)
         output = subprocess.check_output(('grep', 'Booted'), stdin=list_output.stdout)
         for line in output.splitlines():
-            if "Phone" in line:
-                self.device_id = re.sub(' +', ' ', line).strip()
+            if "Phone" in line.decode():
+                self.device_id = re.sub(' +', ' ', line.decode()).strip()
                 self.device_id = self.device_id.split(" ")[3]
                 self.device_id = self.device_id.strip('(')
                 self.device_id = self.device_id.strip(')')
@@ -235,7 +235,7 @@ class TestServeriOS(TestServerBase):
         output = subprocess.check_output(["ios-deploy", "--list_bundle_id"])
         log_info(output)
 
-        if self.bundle_id in output:
+        if self.bundle_id in output.decode():
             raise LiteServError("CBLTestServer-iOS is still present after uninstall")
 
     def remove(self):
@@ -257,7 +257,7 @@ class TestServeriOS(TestServerBase):
             "xcrun", "simctl", "erase", self.device_id
         ])
 
-        if self.bundle_id in output:
+        if self.bundle_id in output.decode():
             raise LiteServError("{} is still present after uninstall".format(self.bundle_id))
 
     def start(self, logfile_name):
@@ -278,7 +278,6 @@ class TestServeriOS(TestServerBase):
             "ios-sim", "--devicetypeid", self.device, "launch", self.app_path, "--exit"
         ])
 
-        log_info(output)
         self._wait_until_reachable(port=self.port)
         self._verify_running()
 
@@ -357,5 +356,5 @@ class TestServeriOS(TestServerBase):
             output = subprocess.check_output(["xcrun", "simctl", "launch", "booted", self.bundle_id])
         else:
             output = subprocess.check_output(["ios-deploy", "--justlaunch", "--bundle", self.app_path])
-        log_info("output of open app is {}".format(output))
+        log_info("output of open app is {}".format(output.decode()))
         time.sleep(5)

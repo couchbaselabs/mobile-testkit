@@ -25,7 +25,6 @@ from utilities.cluster_config_utils import persist_cluster_config_environment_pr
     ("user_views/user_views", False),
 ])
 def test_user_views_sanity(params_from_base_test_setup, sg_conf_name, x509_cert_auth):
-
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
 

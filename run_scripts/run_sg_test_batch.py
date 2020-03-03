@@ -25,7 +25,7 @@ def run_tests(abort_on_fail=False):
         testname = test["testname"]
         mode = test["mode"]
 
-        print "------------------------------------------------- Running test: suite: {}, testname: {}".format(suite, testname)
+        print("------------------------------------------------- Running test: suite: {}, testname: {}".format(suite, testname))
 
         cmd_args = [
             "pytest",
@@ -34,10 +34,10 @@ def run_tests(abort_on_fail=False):
         ]
 
         if suite == provisioned_test_suite:
-            print "Skipping provisioning"
+            print("Skipping provisioning")
             cmd_args += ["--skip-provisioning"]
         else:
-            print "--------------------------------------------- Provisioning test: suite: {}, testname: {}".format(suite, testname)
+            print("--------------------------------------------- Provisioning test: suite: {}, testname: {}".format(suite, testname))
             # force provisioning and record this as the provisioned_test_suite
             cmd_args += [
                 "--server-version={}".format(SERVER_VERSION),
@@ -52,9 +52,9 @@ def run_tests(abort_on_fail=False):
             suite
         ]
 
-        print "cmd_args: {}".format(cmd_args)
+        print("cmd_args: {}".format(cmd_args))
         cmd = " ".join(cmd_args)
-        print("Command: {}".format(cmd))
+        print(("Command: {}".format(cmd)))
         raw_exit_val = os.system(cmd)
         exit_code = os.WEXITSTATUS(raw_exit_val)
         if abort_on_fail is True and exit_code != 0:

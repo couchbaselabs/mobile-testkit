@@ -1,7 +1,7 @@
 
 # This is intended to replace run_perf_test.py once gateload has been replaced by sgload
 
-from __future__ import print_function
+
 
 import sys
 import os

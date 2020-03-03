@@ -588,7 +588,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
             log_info("Stopping the test server per test")
             if not use_local_testserver:
                 testserver.stop()
-        except Exception, err:
+        except Exception as err:
             log_info("Exception occurred: {}".format(err))
 
 

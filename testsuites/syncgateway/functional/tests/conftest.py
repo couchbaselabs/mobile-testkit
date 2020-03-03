@@ -1,7 +1,6 @@
 """ Setup for Sync Gateway functional tests """
 
 import pytest
-
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.constants import CLUSTER_CONFIGS_DIR
 from keywords.exceptions import ProvisioningError, FeatureSupportedError

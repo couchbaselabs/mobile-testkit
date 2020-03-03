@@ -2,6 +2,7 @@ package com.couchbase.mobiletestkit.javacommon.RequestHandler;
 
 
 import com.couchbase.mobiletestkit.javacommon.Args;
+import com.couchbase.mobiletestkit.javacommon.RequestHandlerDispatcher;
 import com.couchbase.mobiletestkit.javacommon.util.Log;
 import com.couchbase.lite.DatabaseConfiguration;
 import com.couchbase.lite.EncryptionKey;
@@ -10,17 +11,16 @@ public class DatabaseConfigurationRequestHandler {
     private static final String TAG = "DATABASE_CONFIG";
     public DatabaseConfiguration configure(Args args) {
         String directory = args.get("directory");
-        Log.i(TAG, "database_create name=" + directory);
-        EncryptionKey encryptionKey;
-        //ConflictResolver conflictResolver = args.get("conflictResolver");
-        String password = args.get("password");
-        DatabaseConfiguration config = new DatabaseConfiguration();
-        if (directory != null) {
-            config.setDirectory(directory);
+        if (directory == null) {
+            directory = RequestHandlerDispatcher.context.getFilesDir().getAbsolutePath();
+            Log.i(TAG, "No directory is set, now point to " + directory);
         }
-        /*if (conflictResolver != null) {
-            config.setConflictResolver(conflictResolver);
-        }*/
+        Log.i(TAG, "DatabaseConfiguration_configure directory=" + directory);
+        DatabaseConfiguration config = new DatabaseConfiguration();
+        config.setDirectory(directory);
+
+        EncryptionKey encryptionKey;
+        String password = args.get("password");
         if (password != null) {
             encryptionKey = new EncryptionKey(password);
             config.setEncryptionKey(encryptionKey);

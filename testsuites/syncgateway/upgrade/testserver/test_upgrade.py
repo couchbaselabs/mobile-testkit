@@ -98,7 +98,7 @@ def test_upgrade(params_from_base_test_setup):
             # Disable sg views in cluster configs
             persist_cluster_config_environment_prop(cluster_config, 'sg_use_views', False)
 
-    if (number_replicas != upgraded_number_replicas) and upgraded_number_replicas > 0:
+    if (number_replicas != upgraded_number_replicas) and int(upgraded_number_replicas) > 0:
         need_to_redeploy = True
         persist_cluster_config_environment_prop(cluster_config, 'number_replicas', upgraded_number_replicas)
 
@@ -353,7 +353,7 @@ def update_docs(db, cbl_db, added_docs, doc_obj, terminator_doc_id_prefix):
             cbl_db_docs_to_update[doc_id] = doc_body
             db.updateDocument(database=cbl_db, doc_id=doc_id, data=doc_body)
 
-        for doc_id, doc_body in cbl_db_docs_to_update.items():
+        for doc_id, doc_body in list(cbl_db_docs_to_update.items()):
             new_doc = db.getDocument(cbl_db, doc_id)
             doc_revs[doc_id] = doc_obj.toMap(new_doc)['numOfUpdates']
 

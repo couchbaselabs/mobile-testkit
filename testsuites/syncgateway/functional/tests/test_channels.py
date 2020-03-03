@@ -115,7 +115,6 @@ def test_channels_view_after_restart(params_from_base_test_setup, sg_conf_name):
     ("sync_gateway_default", False),
 ])
 def test_remove_add_channels_to_doc(params_from_base_test_setup, sg_conf_name, x509_cert_auth):
-
     cluster_config = params_from_base_test_setup["cluster_config"]
     topology = params_from_base_test_setup["cluster_topology"]
     mode = params_from_base_test_setup["mode"]

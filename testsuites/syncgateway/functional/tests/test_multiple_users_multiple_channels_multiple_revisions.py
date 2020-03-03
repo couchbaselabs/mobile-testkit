@@ -28,7 +28,6 @@ from utilities.cluster_config_utils import get_sg_version, persist_cluster_confi
 ])
 def test_mulitple_users_mulitiple_channels_mulitple_revisions(params_from_base_test_setup, sg_conf_name, num_users,
                                                               num_channels, num_docs, num_revisions, x509_cert_auth):
-
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
@@ -42,8 +41,7 @@ def test_mulitple_users_mulitiple_channels_mulitple_revisions(params_from_base_t
     # Skip the test if ssl enabled as it cannot run using couchbase protocol
     # TODO : https://github.com/couchbaselabs/sync-gateway-accel/issues/227
     # Remove DI condiiton once above bug is fixed
-    if "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210" in sg_conf_name and \
-            (ssl_enabled or mode.lower() == "di"):
+    if "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210" in sg_conf_name and (ssl_enabled or mode.lower() == "di"):
         pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
@@ -104,7 +102,7 @@ def test_mulitple_users_mulitiple_channels_mulitple_revisions(params_from_base_t
     recieved_docs = in_parallel(user_objects, 'get_num_docs')
 
     expected_docs = num_users * num_docs
-    for user_obj, docs in recieved_docs.items():
+    for user_obj, docs in list(recieved_docs.items()):
         log_info('User {} got {} docs, expected docs: {}'.format(user_obj.name, docs, expected_docs))
         assert docs == expected_docs
 
@@ -114,8 +112,8 @@ def test_mulitple_users_mulitiple_channels_mulitple_revisions(params_from_base_t
     expected_revision = str(num_revisions + 1)
     docs_rev_dict = in_parallel(user_objects, 'get_num_revisions')
     rev_errors = []
-    for user_obj, docs_revision_dict in docs_rev_dict.items():
-        for doc_id in docs_revision_dict.keys():
+    for user_obj, docs_revision_dict in list(docs_rev_dict.items()):
+        for doc_id in list(docs_revision_dict.keys()):
             rev = docs_revision_dict[doc_id]
             log_info('User {} doc_id {} has {} revisions, expected revision: {}'.format(user_obj.name,
                                                                                         doc_id, rev, expected_revision))
@@ -132,7 +130,7 @@ def test_mulitple_users_mulitiple_channels_mulitple_revisions(params_from_base_t
 
     # Verify each User created docs are part of changes feed
     output = in_parallel(user_objects, 'check_doc_ids_in_changes_feed')
-    assert True in output.values()
+    assert True in list(output.values())
 
     end = time.time()
     log_info("Test ended.")

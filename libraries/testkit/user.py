@@ -190,7 +190,6 @@ class User:
     def add_docs(self, num_docs, bulk=True, name_prefix=None, retries=False):
 
         errors = list()
-        print "add docs for each user object"
 
         # If no name_prefix is specified, use uuids for doc_names
         if name_prefix is None:
@@ -199,13 +198,12 @@ class User:
             doc_names = [name_prefix + str(i) for i in range(num_docs)]
 
         if not bulk:
-            with concurrent.futures.ThreadPoolExecutor(max_workers=settings.MAX_REQUEST_WORKERS) as executor:
-                log_info(" adding docs without bulk")
+            with concurrent.futures.ThreadPoolExecutor(max_workers=None) as executor:
                 if retries:
                     future_to_docs = {executor.submit(self.add_doc, doc, content=None, retries=True): doc for doc in doc_names}
                 else:
                     future_to_docs = {executor.submit(self.add_doc, doc, content=None): doc for doc in doc_names}
-
+                log.debug(future_to_docs)
                 for future in concurrent.futures.as_completed(future_to_docs):
                     doc = future_to_docs[future]
                     log.debug(doc)
@@ -216,13 +214,13 @@ class User:
                         log.info("HTTPError: {0} {1} {2}".format(self.name, e.response.url, e.response.status_code))
                         errors.append((e.response.url, e.response.status_code))
         else:
-            with concurrent.futures.ThreadPoolExecutor(max_workers=settings.MAX_REQUEST_WORKERS) as executor:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=None) as executor:
 
                 if retries:
                     future = [executor.submit(self.add_bulk_docs, doc_names, retries=True)]
                 else:
                     future = [executor.submit(self.add_bulk_docs, doc_names)]
-
+                log.debug(future)
                 for f in concurrent.futures.as_completed(future):
                     try:
                         doc_list = f.result()
@@ -276,7 +274,7 @@ class User:
                 if put_resp.status_code == 201:
                     data = put_resp.json()
 
-                if "rev" not in data.keys():
+                if "rev" not in list(data.keys()):
                     log.error("Error: Did not find _rev property after Update response")
                     raise ValueError("Did not find _rev property after Update response")
 
@@ -296,16 +294,15 @@ class User:
 
         errors = list()
 
-        if len(self.cache.keys()) == 0:
+        if len(list(self.cache.keys())) == 0:
             log.warning("Unable to find any docs to update")
 
-        with concurrent.futures.ThreadPoolExecutor(max_workers=25) as executor:
-
+        with concurrent.futures.ThreadPoolExecutor(max_workers=None) as executor:
             if retries:
-                future_to_docs = {executor.submit(self.update_doc, doc_id, num_revs_per_doc, retries=True): doc_id for doc_id in self.cache.keys()}
+                future_to_docs = {executor.submit(self.update_doc, doc_id, num_revs_per_doc, retries=True): doc_id for doc_id in list(self.cache.keys())}
             else:
-                future_to_docs = {executor.submit(self.update_doc, doc_id, num_revs_per_doc): doc_id for doc_id in self.cache.keys()}
-
+                future_to_docs = {executor.submit(self.update_doc, doc_id, num_revs_per_doc): doc_id for doc_id in list(self.cache.keys())}
+            log.debug(future_to_docs)
             for future in concurrent.futures.as_completed(future_to_docs):
                 doc = future_to_docs[future]
                 try:
@@ -345,7 +342,7 @@ class User:
                 revision_num = match.group(1)
                 log.debug(revision_num)
 
-            if obj["id"] in docs.keys():
+            if obj["id"] in list(docs.keys()):
                 log.error("Key already exists")
                 raise "Key already exists"
             else:
@@ -364,7 +361,7 @@ class User:
             else:
                 superset.append(obj["id"])
 
-        for doc_id in self.cache.keys():
+        for doc_id in list(self.cache.keys()):
             if doc_id not in superset:
                 log.error("doc-id {} missing from superset for User {}".format(doc_id, self.name))
                 errors += 1

@@ -20,14 +20,14 @@ with open("cpu_stats.json", "w") as f:
     # collect cpu stats while sync_gateway process is running
     while is_running("sync_gateway") or is_running("sg_accel"):
 
-        print("Datetime: {}".format(datetime.datetime.now()))
+        print(("Datetime: {}".format(datetime.datetime.now())))
         print("-------------------------------")
-        print("CPU times: {}".format(psutil.cpu_times()))
-        print("CPU times (per CPU): {}".format(psutil.cpu_times(percpu=True)))
-        print("CPU percent: {}".format(psutil.cpu_percent(interval=1)))
-        print("CPU percent (per CPU): {}".format(psutil.cpu_percent(interval=1, percpu=True)))
-        print("Virtual memory: {}".format(psutil.virtual_memory()))
-        print("Swap memory: {}".format(psutil.swap_memory()))
+        print(("CPU times: {}".format(psutil.cpu_times())))
+        print(("CPU times (per CPU): {}".format(psutil.cpu_times(percpu=True))))
+        print(("CPU percent: {}".format(psutil.cpu_percent(interval=1))))
+        print(("CPU percent (per CPU): {}".format(psutil.cpu_percent(interval=1, percpu=True))))
+        print(("Virtual memory: {}".format(psutil.virtual_memory())))
+        print(("Swap memory: {}".format(psutil.swap_memory())))
 
         current_datetime = "{}".format(datetime.datetime.utcnow())
         obj[current_datetime] = dict()
