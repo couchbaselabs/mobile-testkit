@@ -1,7 +1,6 @@
 import time
 import json
 import requests
-import os
 from requests.exceptions import ConnectionError, HTTPError
 from requests import Session
 from requests.packages.urllib3.exceptions import InsecureRequestWarning

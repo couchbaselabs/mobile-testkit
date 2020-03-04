@@ -2,7 +2,6 @@
 # This is intended to replace run_perf_test.py once gateload has been replaced by sgload
 
 
-
 import sys
 import os
 
@@ -150,7 +149,7 @@ if __name__ == "__main__":
     try:
         main_cluster_config = os.environ["CLUSTER_CONFIG"]
     except KeyError:
-        print ("Make sure CLUSTER_CONFIG is defined and pointing to the configuration you would like to provision")
+        print("Make sure CLUSTER_CONFIG is defined and pointing to the configuration you would like to provision")
         sys.exit(1)
 
     run_sgload_perf_test(

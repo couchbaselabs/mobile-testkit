@@ -98,23 +98,23 @@ def test_net_msft_storage_engine(request, liteserv_with_storage_engine_from_fixt
         if storage_engine == "SQLite":
 
             # Note: SQLite mode uses SQLCipher by default
-            assert "Using Couchbase.Lite.Storage.SQLCipher.SqliteCouchStore for db at C:\\Users\\user\Desktop\LiteServ\ls_db.cblite2" in contents
+            assert r"Using Couchbase.Lite.Storage.SQLCipher.SqliteCouchStore for db at C:\\Users\\user\Desktop\LiteServ\ls_db.cblite2" in contents
             assert "encryption key given" not in contents
 
         elif storage_engine == "SQLCipher":
 
-            assert "Using Couchbase.Lite.Storage.SQLCipher.SqliteCouchStore for db at C:\\Users\\user\Desktop\LiteServ\ls_db.cblite2" in contents
-            assert "Open C:\\Users\\user\Desktop\LiteServ\ls_db.cblite2\db.sqlite3" in contents
+            assert r"Using Couchbase.Lite.Storage.SQLCipher.SqliteCouchStore for db at C:\\Users\\user\Desktop\LiteServ\ls_db.cblite2" in contents
+            assert r"Open C:\\Users\\user\Desktop\LiteServ\ls_db.cblite2\db.sqlite3" in contents
             assert "encryption key given"
 
         elif storage_engine == "ForestDB":
 
-            assert "Using Couchbase.Lite.Storage.ForestDB.ForestDBCouchStore for db at C:\\Users\\user\Desktop\LiteServ\ls_db.cblite2" in contents
+            assert r"Using Couchbase.Lite.Storage.ForestDB.ForestDBCouchStore for db at C:\\Users\\user\Desktop\LiteServ\ls_db.cblite2" in contents
             assert "Database is encrypted; setting CBForest encryption key" not in contents
 
         elif storage_engine == "ForestDB+Encryption":
 
-            assert "Using Couchbase.Lite.Storage.ForestDB.ForestDBCouchStore for db at C:\\Users\\user\Desktop\LiteServ\ls_db.cblite2" in contents
+            assert r"Using Couchbase.Lite.Storage.ForestDB.ForestDBCouchStore for db at C:\\Users\\user\Desktop\LiteServ\ls_db.cblite2" in contents
             assert "Database is encrypted; setting CBForest encryption key" in contents
 
         else:

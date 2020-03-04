@@ -33,7 +33,7 @@ def run_gateload_perf_test(gen_gateload_config, test_id, gateload_params, delay_
     try:
         cluster_config = os.environ["CLUSTER_CONFIG"]
     except KeyError:
-        print ("Make sure CLUSTER_CONFIG is defined and pointing to the configuration you would like to provision")
+        print("Make sure CLUSTER_CONFIG is defined and pointing to the configuration you would like to provision")
         sys.exit(1)
 
     print(("Running perf test against cluster: {}".format(cluster_config)))

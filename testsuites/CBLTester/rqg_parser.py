@@ -296,7 +296,7 @@ def get_json_query(query="SELECT name.first, name.last FROM students WHERE grade
     json_txt["WHERE"] = prefix_evaluation(get_prefix_list(where_token.strip()))
     json_txt["DISTINCT"] = '"False"'
     if 'DISTINCT' in select_token.strip():
-        out = re.search("DISTINCT\((.*?)\)", select_token)
+        out = re.search(r"DISTINCT\((.*?)\)", select_token)
         select_token = out.groups()[0]
         json_txt["DISTINCT"] = '"True"'
     return json_txt

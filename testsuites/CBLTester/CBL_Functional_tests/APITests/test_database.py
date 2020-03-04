@@ -139,7 +139,7 @@ class TestDatabase(object):
             pytest.skip("Test not supported on .net platforms or the db name is longer than or equal to 128 characters")
 
         db = self.db_obj.create(db_name)
-        path = self.db_obj.getPath(db).rstrip("\//")
+        path = self.db_obj.getPath(db).rstrip(r"\//")
         if '\\' in path:
             path = '\\'.join(path.split('\\')[:-1])
         else:
