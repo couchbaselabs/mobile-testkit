@@ -859,7 +859,6 @@ def test_default_conflict_scenario_delete_wins(params_from_base_test_setup, serv
     ('cbl1', False, "MessageEndPoint")
 ])
 def test_default_conflict_scenario_highRevGeneration_wins(params_from_base_test_setup, server_setup, highrev_source, attachments, endPointType):
-
     """
         @summary:
         1. Create docs in CBL2.
@@ -927,7 +926,7 @@ def test_default_conflict_scenario_highRevGeneration_wins(params_from_base_test_
     server_docs = db_obj_server.getBulkDocs(cbl_db_server)
 
     for doc in cbl2_docs:
-            assert cbl2_docs[doc]["updates-cbl"] == 2, "cbl2 with high rev id is not updated "
+        assert cbl2_docs[doc]["updates-cbl"] == 2, "cbl2 with high rev id is not updated "
     if highrev_source == 'cbl1':
         for sdoc in server_docs:
             assert server_docs[sdoc]["updates-cbl"] == 2, "cbl1 with high rev id is not updated"

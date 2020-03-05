@@ -18,7 +18,6 @@ from utilities.cluster_config_utils import persist_cluster_config_environment_pr
 # testsuites/listener/shared/client_sg_topology_specific/multiple_sync_gateways/ directory
 @pytest.fixture(scope="module")
 def setup_client_syncgateway_suite(request):
-
     """Suite setup fixture for client sync_gateway tests"""
 
     log_info("Setting up client sync_gateway suite ...")
@@ -45,7 +44,7 @@ def setup_client_syncgateway_suite(request):
                                       storage_engine=liteserv_storage_engine)
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
-            check_xattr_support(server_version, sync_gateway_version)
+        check_xattr_support(server_version, sync_gateway_version)
 
     log_info("Downloading LiteServ ...")
     # Download LiteServ
