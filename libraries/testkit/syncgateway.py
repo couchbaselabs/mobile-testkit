@@ -135,7 +135,7 @@ class SyncGateway:
                 playbook_vars["server_scheme"] = "couchbases"
                 playbook_vars["server_port"] = ""
                 playbook_vars["x509_auth"] = True
-                generate_x509_certs(conf_path, bucket_names, sg_platform)
+                generate_x509_certs(self.cluster_config, bucket_names, sg_platform)
             else:
                 playbook_vars["username"] = '"username": "{}",'.format(
                     bucket_names[0])
@@ -246,7 +246,7 @@ class SyncGateway:
             else:
                 sg_home_directory = "/home/sync_gateway"
 
-            if is_x509_auth(self._cluster_config):
+            if is_x509_auth(self.cluster_config):
                 playbook_vars[
                     "certpath"] = '"certpath": "{}/certs/chain.pem",'.format(sg_home_directory)
                 playbook_vars[
@@ -260,7 +260,7 @@ class SyncGateway:
                 playbook_vars["server_scheme"] = "couchbases"
                 playbook_vars["server_port"] = ""
                 playbook_vars["x509_auth"] = True
-                generate_x509_certs(self._cluster_config, bucket_names, sg_platform)
+                generate_x509_certs(self.cluster_config, bucket_names, sg_platform)
             else:
                 playbook_vars["username"] = '"username": "{}",'.format(
                     bucket_names[0])
