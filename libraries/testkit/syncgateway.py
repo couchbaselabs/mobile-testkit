@@ -116,6 +116,8 @@ class SyncGateway:
 
             if sg_platform == "macos":
                 sg_home_directory = "/Users/sync_gateway"
+            elif sg_platform == "windows":
+                sg_home_directory = "C:\\\\PROGRA~1\\\\Couchbase\\\\Sync Gateway"
             else:
                 sg_home_directory = "/home/sync_gateway"
 
@@ -126,10 +128,14 @@ class SyncGateway:
                     "keypath"] = '"keypath": "{}/certs/pkey.key",'.format(sg_home_directory)
                 playbook_vars[
                     "cacertpath"] = '"cacertpath": "{}/certs/ca.pem",'.format(sg_home_directory)
+                if sg_platform == "windows":
+                    playbook_vars["certpath"] = playbook_vars["certpath"].replace("/", "\\\\")
+                    playbook_vars["keypath"] = playbook_vars["keypath"].replace("/", "\\\\")
+                    playbook_vars["cacertpath"] = playbook_vars["cacertpath"].replace("/", "\\\\")
                 playbook_vars["server_scheme"] = "couchbases"
                 playbook_vars["server_port"] = ""
                 playbook_vars["x509_auth"] = True
-                generate_x509_certs(conf_path, bucket_names)
+                generate_x509_certs(conf_path, bucket_names, sg_platform)
             else:
                 playbook_vars["username"] = '"username": "{}",'.format(
                     bucket_names[0])
@@ -212,7 +218,7 @@ class SyncGateway:
             "couchbase_server_primary_node": self.couchbase_server_primary_node,
             "delta_sync": ""
         }
-
+        sg_platform = get_sg_platform(self.cluster_config)
         if sg_ssl_enabled(self.cluster_config):
             playbook_vars["sslcert"] = '"SSLCert": "sg_cert.pem",'
             playbook_vars["sslkey"] = '"SSLKey": "sg_privkey.pem",'
@@ -233,17 +239,28 @@ class SyncGateway:
                 num_replicas = get_sg_replicas(self.cluster_config)
                 playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
 
-            if is_x509_auth(cluster_config):
+            if sg_platform == "macos":
+                sg_home_directory = "/Users/sync_gateway"
+            elif sg_platform == "windows":
+                sg_home_directory = "C:\\\\PROGRA~1\\\\Couchbase\\\\Sync Gateway"
+            else:
+                sg_home_directory = "/home/sync_gateway"
+
+            if is_x509_auth(self._cluster_config):
                 playbook_vars[
-                    "certpath"] = '"certpath": "/home/sync_gateway/certs/chain.pem",'
+                    "certpath"] = '"certpath": "{}/certs/chain.pem",'.format(sg_home_directory)
                 playbook_vars[
-                    "keypath"] = '"keypath": "/home/sync_gateway/certs/pkey.key",'
+                    "keypath"] = '"keypath": "{}/certs/pkey.key",'.format(sg_home_directory)
                 playbook_vars[
-                    "cacertpath"] = '"cacertpath": "/home/sync_gateway/certs/ca.pem",'
+                    "cacertpath"] = '"cacertpath": "{}/certs/ca.pem",'.format(sg_home_directory)
+                if sg_platform == "windows":
+                    playbook_vars["certpath"] = playbook_vars["certpath"].replace("/", "\\\\")
+                    playbook_vars["keypath"] = playbook_vars["keypath"].replace("/", "\\\\")
+                    playbook_vars["cacertpath"] = playbook_vars["cacertpath"].replace("/", "\\\\")
                 playbook_vars["server_scheme"] = "couchbases"
                 playbook_vars["server_port"] = ""
                 playbook_vars["x509_auth"] = True
-                generate_x509_certs(cluster_config, bucket_names)
+                generate_x509_certs(self._cluster_config, bucket_names, sg_platform)
             else:
                 playbook_vars["username"] = '"username": "{}",'.format(
                     bucket_names[0])
@@ -317,7 +334,7 @@ class SyncGateway:
                                continuous=True,
                                use_remote_source=False,
                                channels=None,
-                               async=False,
+                               repl_async=False,
                                use_admin_url=False):
 
         if channels is None:
@@ -340,7 +357,7 @@ class SyncGateway:
             data["filter"] = "sync_gateway/bychannel"
             data["query_params"] = channels
 
-        if async is True:
+        if repl_async is True:
             data["async"] = True
 
         r = requests.post("{}/_replicate".format(sg_url), headers=self._headers, data=json.dumps(data))

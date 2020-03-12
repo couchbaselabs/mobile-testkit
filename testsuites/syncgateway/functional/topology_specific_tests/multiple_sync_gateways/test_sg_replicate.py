@@ -401,7 +401,7 @@ def test_sg_replicate_push_async(params_from_base_test_setup, num_docs):
         DB2,
         continuous=False,
         use_remote_source=True,
-        async=True,
+        repl_async=True,
         use_admin_url=True
     )
 

@@ -18,7 +18,7 @@ from utilities.cluster_config_utils import is_load_balancer_enabled, get_revs_li
 from utilities.cluster_config_utils import get_load_balancer_ip, no_conflicts_enabled, is_delta_sync_enabled, get_sg_platform
 from utilities.cluster_config_utils import generate_x509_certs, is_x509_auth
 from keywords.constants import SYNC_GATEWAY_CERT
-from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version
+from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version, get_cbs_version
 
 
 class Cluster:
@@ -206,6 +206,8 @@ class Cluster:
 
             if sg_platform == "macos":
                 sg_home_directory = "/Users/sync_gateway"
+            elif sg_platform == "windows":
+                sg_home_directory = "C:\\\\PROGRA~1\\\\Couchbase\\\\Sync Gateway"
             else:
                 sg_home_directory = "/home/sync_gateway"
 
@@ -216,10 +218,14 @@ class Cluster:
                     "keypath"] = '"keypath": "{}/certs/pkey.key",'.format(sg_home_directory)
                 playbook_vars[
                     "cacertpath"] = '"cacertpath": "{}/certs/ca.pem",'.format(sg_home_directory)
+                if sg_platform == "windows":
+                    playbook_vars["certpath"] = playbook_vars["certpath"].replace("/", "\\\\")
+                    playbook_vars["keypath"] = playbook_vars["keypath"].replace("/", "\\\\")
+                    playbook_vars["cacertpath"] = playbook_vars["cacertpath"].replace("/", "\\\\")
                 playbook_vars["server_scheme"] = "couchbases"
                 playbook_vars["server_port"] = ""
                 playbook_vars["x509_auth"] = True
-                generate_x509_certs(self._cluster_config, bucket_names)
+                generate_x509_certs(self._cluster_config, bucket_names, sg_platform)
             else:
                 playbook_vars["username"] = '"username": "{}",'.format(
                     bucket_names[0])

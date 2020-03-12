@@ -1,0 +1,13 @@
+  - name: BLOCKPORTS | Verify that port is blocked in iptables
+    win_shell: netsh advfirewall firewall show rule name=all | grep {{ port }} | wc -l
+    ignore_errors: yes
+    register: iprules
+
+  - name: BLOCKPORTS | drop tcp {{ port }} on windows with {{ iprules }}
+    win_shell: netsh advfirewall firewall add rule name="block inbound tcp port" protocol=TCP dir=in localport={{ port }} action=block
+    when: iprules|length <=0
+
+  - name: BLOCKPORTS | drop udp {{ port }}
+    win_shell: netsh advfirewall firewall add rule name="block inbound udp port" protocol=UDP dir=in localport={{ port }} action=block
+    when: iprules|length <=0
+

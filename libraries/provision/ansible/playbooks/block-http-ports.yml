@@ -1,30 +1,15 @@
-# Block http ports
-- hosts: sync_gateways:sg_accels
-  any_errors_fatal: true
-  become: yes
-  vars:
-    port :
+---
+- hosts: sync_gateways
+
   tasks:
-  - name: BLOCKPORTS | Verify that port is blocked in iptables
-    shell: iptables-save | grep -- "OUTPUT -p tcp -m tcp --dport {{ port }} -j DROP" | wc -l
-    register: iptablesrules
+  - include: tasks/block-http-ports.yml
+    become: yes
+    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
 
-  - name: BLOCKPORTS | drop tcp {{ port }}
-    shell: iptables -I OUTPUT -p tcp --dport {{ port }} -j DROP
-    when: iptablesrules|length >= 1
+  - include: tasks/block-http-ports-macos.yml
+    become: yes
+    when: ansible_distribution == "MacOSX"
 
-  - name: BLOCKPORTS | drop udp {{ port }}
-    shell: iptables -I OUTPUT -p udp --dport {{ port }} -j DROP
-    when: iptablesrules|length >= 1
+  - include: tasks/block-http-ports-windows.yml
+    when: ansible_os_family == "Windows"
 
-  - name: BLOCKPORTS | install iptables-services
-    shell: yum -y install iptables-services
-    when: iptablesrules|length >= 1
-
-  - name: BLOCKPORTS | save iptables after dropping
-    shell: service iptables save
-    when: iptablesrules|length >= 1
-
-  - name: BLOCKPORTS | restart iptables after dropping
-    shell: service iptables restart
-    when: iptablesrules|length >= 1
