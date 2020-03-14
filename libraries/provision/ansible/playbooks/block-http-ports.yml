@@ -8,7 +8,7 @@
 
   - include: tasks/block-http-ports-macos.yml
     become: yes
-    when: ansible_distribution == "MacOSX"
+    when: ansible_os_family == "Darwin"
 
   - include: tasks/block-http-ports-windows.yml
     when: ansible_os_family == "Windows"

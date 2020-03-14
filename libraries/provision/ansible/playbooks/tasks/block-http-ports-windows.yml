@@ -4,10 +4,10 @@
     register: iprules
 
   - name: BLOCKPORTS | drop tcp {{ port }} on windows with {{ iprules }}
-    win_shell: netsh advfirewall firewall add rule name="block inbound tcp port" protocol=TCP dir=in localport={{ port }} action=block
+    win_shell: netsh advfirewall firewall add rule name="block outbound tcp port" protocol=TCP dir=out localport={{ port }} action=block
     when: iprules|length <=0
 
   - name: BLOCKPORTS | drop udp {{ port }}
-    win_shell: netsh advfirewall firewall add rule name="block inbound udp port" protocol=UDP dir=in localport={{ port }} action=block
+    win_shell: netsh advfirewall firewall add rule name="block outbound udp port" protocol=UDP dir=out localport={{ port }} action=block
     when: iprules|length <=0
 

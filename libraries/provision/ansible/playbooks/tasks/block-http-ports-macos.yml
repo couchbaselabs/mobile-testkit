@@ -1,23 +1,16 @@
-  - name: BLOCKPORTS | Verify that port is blocked in iptables
-    shell: iptables-save | grep -- "OUTPUT -p tcp -m tcp --dport {{ port }} -j DROP" | wc -l
-    register: iptablesrules
-
-  - name: BLOCKPORTS | drop tcp {{ port }}
-    shell: iptables -I OUTPUT -p tcp --dport {{ port }} -j DROP
-    when: iptablesrules|length >= 1
+  - name: BLOCKPORTS | drop outbound tcp {{ port }}
+    ignore_errors: yes
+    shell: (pfctl -sr; echo "block drop quick proto tcp from any to any port = {{ port }}") | pfctl -ef -
 
   - name: BLOCKPORTS | drop udp {{ port }}
-    shell: iptables -I OUTPUT -p udp --dport {{ port }} -j DROP
-    when: iptablesrules|length >= 1
+    ignore_errors: yes
+    shell: (pfctl -sr; echo "block drop quick proto udp from any to any port = {{ port }}") | pfctl -ef -
 
-  - name: BLOCKPORTS | install iptables-services
-    shell: yum -y install iptables-services
-    when: iptablesrules|length >= 1
+  - name: BLOCKPORTS | enabled rules {{ port }}
+    shell: pfctl -sr
 
-  - name: BLOCKPORTS | save iptables after dropping
-    shell: service iptables save
-    when: iptablesrules|length >= 1
+  - name: BLOCKPORTS | Verify port {{ port }} is blocked 
+    shell: pfctl -s rules
+    register: output
+    failed_when: output.stdout is not search("port = {{ port }}")
 
-  - name: BLOCKPORTS | restart iptables after dropping
-    shell: service iptables restart
-    when: iptablesrules|length >= 1
