@@ -1117,7 +1117,7 @@ def CBL_offline_test(params_from_base_test_setup, sg_conf_name, num_of_docs):
 @pytest.mark.listener
 @pytest.mark.syncgateway
 @pytest.mark.replication
-@pytest.mark.session
+@pytest.mark.backgroundapp
 @pytest.mark.parametrize("num_docs, need_attachments, replication_after_backgroundApp", [
     (1000, True, False),
     (1000, False, False),
@@ -1213,6 +1213,7 @@ def test_initial_pull_replication_background_apprun(params_from_base_test_setup,
 
 @pytest.mark.listener
 @pytest.mark.replication
+@pytest.mark.backgroundapp
 @pytest.mark.parametrize("num_docs, need_attachments, replication_after_backgroundApp", [
     (100, True, False),
     (10000, False, False),
