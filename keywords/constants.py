@@ -2,7 +2,7 @@ from enum import Enum
 
 BINARY_DIR = "deps/binaries"
 LATEST_BUILDS = "http://latestbuilds.service.couchbase.com/builds/latestbuilds"
-RELEASED_BUILDS = "https://latestbuilds.service.couchbase.com/builds/releases/mobile"
+RELEASED_BUILDS = "http://latestbuilds.service.couchbase.com/builds/releases/mobile"
 RESULTS_DIR = "results"
 TEST_DIR = "framework_tests"
 CLUSTER_CONFIGS_DIR = "resources/cluster_configs"
