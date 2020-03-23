@@ -36,7 +36,8 @@ class TestServeriOS(TestServerBase):
             "2.1.1": 10,
             "2.1.2": 11,
             "2.5.0": 272,
-            "2.5.2": 3
+            "2.5.2": 3,
+            "2.7.0": 5
         }
 
         if self.version_build == "2.1.0":

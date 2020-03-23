@@ -552,3 +552,68 @@ def test_sync_20mb(params_from_base_test_setup, sg_conf_name):
         sg_client.add_doc(url=sg_url, db=sg_db, doc=doc, auth=session)
     except HTTPError as h:
         assert "413 Client Error: Request Entity Too Large for url" in str(h), "did not throw 413 client error"
+
+
+@pytest.mark.syncgateway
+@pytest.mark.parametrize('sg_conf_name', [
+    'custom_sync/sync_gateway_custom_sync_olddoc_delete_check'
+])
+def test_verify_deleted_prop_tombstoned_olddoc(params_from_base_test_setup, sg_conf_name):
+    """
+    @summary:
+    Addressing the issue : https://issues.couchbase.com/browse/CBSE-8087
+    1. Have a sync function to change the channel of the doc if old doc has _deleted property
+    2. Create a doc
+    3. delete the doc 
+    4. Resurrect the doc by updating the doc  with the revision of deleted doc at step #2
+    5. verify doc is moved to a new channel
+    """
+
+    sg_db = 'db'
+    doc_id = 'tombstone_olddoc'
+    cluster_conf = params_from_base_test_setup['cluster_config']
+    cluster_topology = params_from_base_test_setup['cluster_topology']
+    mode = params_from_base_test_setup['mode']
+    xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
+    sg_url = cluster_topology['sync_gateways'][0]['public']
+
+    if xattrs_enabled:
+        pytest.skip("Test is applicable only to non-xattrs")
+
+    # 1. Have a sync function to change the channel of the doc if old doc has _deleted property
+    cluster = Cluster(config=cluster_conf)
+    cluster.reset(sg_config_path=sg_conf)
+    sg_client = MobileRestClient()
+    channels = ['tombstone_deleted_property']
+    sg_user_name = 'autotest'
+    sg_password = 'pass'
+    sg_user_name2 = 'autotest2'
+    sg_password2 = 'pass2'
+    channels2 = ['olddoc_deleted_channel']
+
+    # Create user / session
+    sg_client.create_user(url=sg_admin_url, db=sg_db, name=sg_user_name, password=sg_password,
+                          channels=channels)
+
+    test_auth_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=sg_user_name, password=sg_password)
+
+    # Create user2 / session2
+    sg_client.create_user(url=sg_admin_url, db=sg_db, name=sg_user_name2, password=sg_password2,
+                          channels=channels2)
+
+    test_auth_session2 = sg_client.create_session(url=sg_admin_url, db=sg_db, name=sg_user_name2, password=sg_password2)
+
+    # 1. Create a doc
+    doc_body = document.create_doc(doc_id=doc_id, channels=channels)
+    added_doc = sg_client.add_doc(url=sg_url, db=sg_db, doc=doc_body, auth=test_auth_session)
+    # 2. delete the doc
+    deleted_doc = sg_client.delete_doc(url=sg_url, db=sg_db, doc_id=doc_id, rev=added_doc['rev'], auth=test_auth_session)
+    # 4. Resurrect the doc by updating the doc  with the revision of deleted doc at step #2
+    sg_client.update_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=test_auth_session, rev=deleted_doc["rev"], doc=deleted_doc)
+    # 5. verify doc is moved to a new channel
+    all_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=test_auth_session2)
+    assert len(all_docs["rows"]) == 1, "_deleted property did not exist in old doc, that is why it did not move to new channel"
+    
