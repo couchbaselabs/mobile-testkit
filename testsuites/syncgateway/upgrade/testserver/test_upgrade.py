@@ -16,7 +16,7 @@ from keywords.constants import SDK_TIMEOUT
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop
 
 from libraries.testkit.cluster import Cluster
-
+from keywords import attachment
 from CBLClient.Authenticator import Authenticator
 from CBLClient.Document import Document
 from CBLClient.Replication import Replication
@@ -68,6 +68,7 @@ def test_upgrade(params_from_base_test_setup):
     cbs_platform = params_from_base_test_setup['cbs_platform']
     cbs_toy_build = params_from_base_test_setup['cbs_toy_build']
     cbl_db = params_from_base_test_setup["source_db"]
+    cbl_db2 = params_from_base_test_setup["source_db2"]
     db = params_from_base_test_setup["db"]
     sg_config = params_from_base_test_setup["sg_config"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
@@ -138,7 +139,7 @@ def test_upgrade(params_from_base_test_setup):
     )
 
     doc_obj = Document(base_url)
-    db.create_bulk_docs(number=num_docs, id_prefix="cbl_filter", db=cbl_db, channels=sg_user_channels)
+    db.create_bulk_docs(number=num_docs, id_prefix="cbl_filter", db=cbl_db, channels=sg_user_channels, attachments_generator=attachment.generate_2_png_10_10)
     doc_ids = db.getDocIds(cbl_db, limit=num_docs)
     added_docs = db.getDocuments(cbl_db, doc_ids)
     log_info("Added {} docs".format(len(added_docs)))
@@ -149,15 +150,21 @@ def test_upgrade(params_from_base_test_setup):
     sg_cookie, sg_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=sg_user_name)
     authenticator = Authenticator(base_url)
     replicator_authenticator = authenticator.authentication(sg_session, sg_cookie, authentication_type="session")
-
     repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=sg_user_channels, replication_type="push_pull", replicator_authenticator=replicator_authenticator)
     repl = replicator.create(repl_config)
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
 
+    # Start 2nd replicator to verify docs with attachments gets replicated after the upgrade for one shot replications
+    sg_cookie, sg_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=sg_user_name)
+    sg_cookie1, sg_session1 = sg_client.create_session(url=sg_admin_url, db=sg_db, name=sg_user_name)
+    repl_config1 = replicator.configure(cbl_db2, sg_blip_url, continuous=False, channels=sg_user_channels, replication_type="push_pull", replicator_authenticator=replicator_authenticator)
+    repl1 = replicator.create(repl_config1)
+    replicator.start(repl1)
+    replicator.wait_until_replicator_idle(repl1)
+    sg_added_docs = sg_client.add_docs(url=sg_admin_url, db=sg_db, number=2, id_prefix="sgw_docs1", channels=sg_user_channels, generator="simple_user", attachments_generator=attachment.generate_2_png_10_10)
     # 3. Start a thread to keep updating docs on CBL
     terminator_doc_id = 'terminator'
-
     with ProcessPoolExecutor() as up:
         # Start updates in background process
         updates_future = up.submit(
@@ -234,7 +241,10 @@ def test_upgrade(params_from_base_test_setup):
                 )
                 enable_import = False
                 # Check Import showing up on all nodes
-
+        # set up another replicator to verify attachments replicated after the upgrade
+        repl_config1 = replicator.configure(cbl_db2, sg_blip_url, continuous=True, channels=sg_user_channels, replication_type="push_pull", replicator_authenticator=replicator_authenticator)
+        repl1 = replicator.create(repl_config1)
+        replicator.start(repl1)
         db.create_bulk_docs(number=1, id_prefix=terminator_doc_id, db=cbl_db, channels=sg_user_channels)
         log_info("Waiting for doc updates to complete")
         updated_doc_revs = updates_future.result()
@@ -251,7 +261,7 @@ def test_upgrade(params_from_base_test_setup):
                 added_docs[doc_id]["numOfUpdates"] = updated_doc_revs[doc_id]
 
         # 8. Compare rev id, doc body and revision history of all docs on both CBL and SGW
-        verify_sg_docs_revision_history(url=sg_admin_url, db=sg_db, added_docs=added_docs, terminator=terminator_doc_id)
+        verify_sg_docs_revision_history(sg_admin_url, db, cbl_db2, num_docs, sg_db=sg_db, added_docs=added_docs, sg_added_docs=sg_added_docs, terminator=terminator_doc_id)
 
         # 9. If xattrs enabled, validate CBS contains _sync records for each doc
         if upgraded_xattrs_enabled:
@@ -267,10 +277,12 @@ def test_upgrade(params_from_base_test_setup):
                     raise Exception("_sync section found in docs after upgrade")
 
 
-def verify_sg_docs_revision_history(url, db, added_docs, terminator):
+def verify_sg_docs_revision_history(url, db, cbl_db2, num_docs, sg_db, added_docs, sg_added_docs, terminator):
     sg_client = MobileRestClient()
-    sg_docs = sg_client.get_all_docs(url=url, db=db, include_docs=True)["rows"]
-
+    sg_docs = sg_client.get_all_docs(url=url, db=sg_db, include_docs=True)["rows"]
+    cbl_doc_ids2 = db.getDocIds(cbl_db2)
+    cbl_docs2 = db.getDocuments(cbl_db2, cbl_doc_ids2)
+    num_sg_docs_in_cbldb2 = 0
     expected_doc_map = {}
     for doc in added_docs:
         if "numOfUpdates" in added_docs[doc]:
@@ -278,25 +290,31 @@ def verify_sg_docs_revision_history(url, db, added_docs, terminator):
         else:
             expected_doc_map[doc] = 1
 
+    for doc in cbl_docs2:
+        if "sgw_docs" in doc:
+            num_sg_docs_in_cbldb2 += 1
+            assert '_attachments' in cbl_docs2[doc], "_attachments does not exist in doc created in sgw"
+    assert num_sg_docs_in_cbldb2 == 2, "sgw docs are not replicated to cbl db2"
     for doc in sg_docs:
-        key = doc["doc"]["_id"]
-        if terminator in key:
-            continue
-        rev = doc["doc"]["_rev"]
-        rev_gen = int(rev.split("-")[0])
+        if "sgw_docs" not in doc['id']:
+            key = doc["doc"]["_id"]
+            if terminator in key:
+                continue
+            rev = doc["doc"]["_rev"]
+            rev_gen = int(rev.split("-")[0])
 
-        try:
-            del doc["doc"]["_rev"]
-        except KeyError:
-            log_info("no _rev exists in the dict")
+            try:
+                del doc["doc"]["_rev"]
+            except KeyError:
+                log_info("no _rev exists in the dict")
 
-        del doc["doc"]["_id"]
-        try:
-            del added_docs[key]["_id"]
-        except KeyError:
-            log_info("Ignoring id verification")
-        assert rev_gen == expected_doc_map[key], "revision mismatch"
-        assert len(doc["doc"]) == len(added_docs[key]), "doc length mismatch"
+            del doc["doc"]["_id"]
+            try:
+                del added_docs[key]["_id"]
+            except KeyError:
+                log_info("Ignoring id verification")
+            assert rev_gen == expected_doc_map[key], "revision mismatch"
+            assert len(doc["doc"]) == len(added_docs[key]), "doc length mismatch"
 
     log_info("finished verify_sg_docs_revision_history.")
 
@@ -376,23 +394,23 @@ def upgrade_server_cluster(servers, primary_server, secondary_server, server_ver
         primary_server.add_node(server)
         log_info("Rebalance in server: {}".format(server.host))
         primary_server.rebalance_in(server_urls, server)
-        log_info("Checking for the server version: {}".format(server_upgraded_version))
+        log_info("Checking for the server version after the rebalance : {}".format(server_upgraded_version))
         verify_server_version(server.host, server_upgraded_version)
         time.sleep(10)
 
     # Upgrade the primary server
     primary_server_services = "kv,index,n1ql"
-    log_info("Checking for the server version: {}".format(server_version))
+    log_info("Checking for the primary server version: {}".format(server_version))
     verify_server_version(primary_server.host, server_version)
-    log_info("Rebalance out server: {}".format(primary_server.host))
+    log_info("Rebalance out primary server: {}".format(primary_server.host))
     secondary_server.rebalance_out(server_urls, primary_server)
-    log_info("Upgrading the server: {}".format(primary_server.host))
+    log_info("Upgrading the primary server: {}".format(primary_server.host))
     secondary_server.upgrade_server(cluster_config=cluster_config, server_version_build=server_upgraded_version, target=primary_server.host, cbs_platform=cbs_platform, toy_build=toy_build)
-    log_info("Adding the node back to the cluster: {}".format(primary_server.host))
+    log_info("Adding the node back to the cluster for primary server: {}".format(primary_server.host))
     secondary_server.add_node(primary_server, services=primary_server_services)
-    log_info("Rebalance in server: {}".format(primary_server.host))
+    log_info("Rebalance in primary server: {}".format(primary_server.host))
     secondary_server.rebalance_in(server_urls, primary_server)
-    log_info("Checking for the server version: {}".format(server_upgraded_version))
+    log_info("Checking for the primary server version after the rebalance: {}".format(server_upgraded_version))
     verify_server_version(primary_server.host, server_upgraded_version)
     log_info("Upgraded all the server nodes in the cluster")
     log_info('------------------------------------------')
