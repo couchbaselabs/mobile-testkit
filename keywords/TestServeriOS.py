@@ -284,7 +284,7 @@ class TestServeriOS(TestServerBase):
         output = subprocess.check_output([
             "ios-sim", "launch", self.app_path, "--devicetypeid", self.device,  "--exit"
         ])
-
+        log_info(output)
         self._wait_until_reachable(port=self.port)
         self._verify_running()
 

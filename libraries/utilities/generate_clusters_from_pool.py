@@ -20,11 +20,7 @@ class ClusterDef:
 
     def num_machines_required(self):
         return (
-            self.num_sgs +
-            self.num_acs +
-            self.num_cbs +
-            self.num_lgs +
-            self.num_lbs
+            self.num_sgs + self.num_acs + self.num_cbs + self.num_lgs + self.num_lbs
         )
 
 

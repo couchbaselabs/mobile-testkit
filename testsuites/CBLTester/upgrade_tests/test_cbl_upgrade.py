@@ -345,7 +345,7 @@ def _upgrade_db(args):
     elif liteserv_platform == "ios" or liteserv_platform == "xamarin-ios":
         prebuilt_db_path = "Databases/{}.cblite2".format(old_liteserv_db_name)
     else:
-        prebuilt_db_path = base_directory + "\\" + "Databases\{}.cblite2".format(old_liteserv_db_name)
+        prebuilt_db_path = base_directory + "\\" + r"Databases\{}.cblite2".format(old_liteserv_db_name)
 
     log_info("Copying db of CBL-{} to CBL-{}".format(base_liteserv_version, upgraded_liteserv_version))
     prebuilt_db_path = db.get_pre_built_db(prebuilt_db_path)

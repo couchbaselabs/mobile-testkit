@@ -417,8 +417,8 @@ def pull_redacted_zip_file(cluster_config, sg_platform, output_dir=None, sa_outp
             sg_logs_dir = "/Users/sync_gateway/logs"
             sa_logs_dir = "/Users/sg_accel/logs"
         elif sg_platform == "windows":
-            sg_logs_dir = "C:{}".format("\PROGRA~1\Couchbase\\Sync Gateway\\var\\lib\\couchbase\\logs")
-            sa_logs_dir = "C:{}".format("\PROGRA~1\Couchbase\\var\\logs")
+            sg_logs_dir = "C:{}".format(r"\PROGRA~1\Couchbase\\Sync Gateway\\var\\lib\\couchbase\\logs")
+            sa_logs_dir = "C:{}".format(r"\PROGRA~1\Couchbase\\var\\logs")
         else:
             sg_logs_dir = "/home/sync_gateway/logs"
             sa_logs_dir = "/home/sg_accel/logs"
@@ -446,7 +446,7 @@ def verify_pattern_redacted(zip_file_name, pattern):
 def verify_udTags_in_zippedFile(zip_file_name):
     if os.path.isdir("/tmp/sg_redaction_logs"):
         non_redacted_zip_file = "/tmp/sg_redaction_logs/sg1/{}.zip".format(zip_file_name)
-        command = "zipgrep -n -o \"<ud>.+</ud>\" " + non_redacted_zip_file + " | cut -f2 -d/ | cut -f1 -d\<"
+        command = "zipgrep -n -o \"<ud>.+</ud>\" " + non_redacted_zip_file + r" | cut -f2 -d/ | cut -f1 -d\<"
         line_num_output = subprocess.check_output(command, shell=True)
         ln_output_list = line_num_output.splitlines()
         command = "zipgrep -h -o \"<ud>.+</ud>\" " + non_redacted_zip_file
@@ -457,7 +457,7 @@ def verify_udTags_in_zippedFile(zip_file_name):
         nonredact_dict = dict(list(zip(ln_output_list, ud_output_list)))
 
         redacted_zip_file = "/tmp/sg_redaction_logs/sg1/{}-redacted.zip".format(zip_file_name)
-        command = "zipgrep -n -o \"<ud>.+</ud>\" " + redacted_zip_file + " | cut -f2 -d/ | cut -f1 -d\<"
+        command = "zipgrep -n -o \"<ud>.+</ud>\" " + redacted_zip_file + r" | cut -f2 -d/ | cut -f1 -d\<"
 
         line_num_output = subprocess.check_output(command, shell=True)
         ln_output_list = line_num_output.splitlines()

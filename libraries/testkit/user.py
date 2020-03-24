@@ -11,7 +11,6 @@ from requests.exceptions import HTTPError
 from libraries.testkit.debug import log_request
 from libraries.testkit.debug import log_response
 from libraries.testkit import settings
-from keywords.utils import log_info
 import logging
 log = logging.getLogger(settings.LOGGER)
 
@@ -336,7 +335,7 @@ class User:
                 continue
             revision = obj["changes"][0]["rev"]
             log.debug(revision)
-            match = re.search('(\d+)-\w+', revision)
+            match = re.search(r'(\d+)-\w+', revision)
             if match:
                 log.debug("match found")
                 revision_num = match.group(1)

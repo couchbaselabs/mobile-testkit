@@ -53,23 +53,23 @@ def render_gateload_template(sync_gateway,
                              user_offset,
                              gateload_params):
 
-        # run template to produce file
-        gateload_config = open("{}/files/gateload_config.json".format(PLAYBOOKS_HOME))
-        template = Template(gateload_config.read())
-        rendered = template.render(
-            sync_gateway_private_ip=sync_gateway['ansible_host'],
-            user_offset=user_offset,
-            number_of_pullers=gateload_params.number_pullers,
-            number_of_pushers=gateload_params.number_pushers,
-            doc_size=gateload_params.doc_size,
-            runtime_ms=gateload_params.runtime_ms,
-            rampup_interval_ms=gateload_params.rampup_interval_ms,
-            feed_type=gateload_params.feed_type,
-            sleep_time_ms=gateload_params.sleep_time_ms,
-            channel_active_users=gateload_params.channel_active_users,
-            channel_concurrent_users=gateload_params.channel_concurrent_users
-        )
-        return rendered
+    # run template to produce file
+    gateload_config = open("{}/files/gateload_config.json".format(PLAYBOOKS_HOME))
+    template = Template(gateload_config.read())
+    rendered = template.render(
+        sync_gateway_private_ip=sync_gateway['ansible_host'],
+        user_offset=user_offset,
+        number_of_pullers=gateload_params.number_pullers,
+        number_of_pushers=gateload_params.number_pushers,
+        doc_size=gateload_params.doc_size,
+        runtime_ms=gateload_params.runtime_ms,
+        rampup_interval_ms=gateload_params.rampup_interval_ms,
+        feed_type=gateload_params.feed_type,
+        sleep_time_ms=gateload_params.sleep_time_ms,
+        channel_active_users=gateload_params.channel_active_users,
+        channel_concurrent_users=gateload_params.channel_concurrent_users
+    )
+    return rendered
 
 
 def upload_gateload_config(cluster_config,

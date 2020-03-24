@@ -4,11 +4,9 @@ import os
 import random
 import string
 import re
-
 from keywords.exceptions import FeatureSupportedError
 from keywords.constants import DATA_DIR
 from utilities.cluster_config_utils import get_cbs_servers, get_sg_version
-from operator import itemgetter
 
 
 # TODO: Use python logging hooks instead of wrappers - https://github.com/couchbaselabs/mobile-testkit/issues/686
@@ -44,7 +42,7 @@ def log_error(message):
 def log_warn(message):
     """Wrapper around logging.warn if we want to add hooks in the future."""
     print(message)
-    logging.warn(message)
+    logging.warning(message)
 
 
 def log_r(request, info=True):
