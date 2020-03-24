@@ -42,7 +42,7 @@ def log_error(message):
 def log_warn(message):
     """Wrapper around logging.warn if we want to add hooks in the future."""
     print(message)
-    logging.warn(message)
+    logging.warning(message)
 
 
 def log_r(request, info=True):
