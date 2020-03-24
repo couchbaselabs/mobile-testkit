@@ -169,7 +169,12 @@ class SyncGateway:
             playbook_vars["server_scheme"] = "couchbases"
             playbook_vars["server_port"] = 11207
             block_http_vars = {}
-            port_list = [8091, 8092, 8093, 8094, 8095, 8096, 11210, 11211]
+            # as jenkins slave and sync gateway run on same maachine, libcouchbase on slave cannot contact to server if 11210 is blocked
+            # So avoiding blocking 11210 port on mac
+            if sg_platform == "macos":
+                port_list = [8091, 8092, 8093, 8094, 8095, 8096, 11211]
+            else:
+                port_list = [8091, 8092, 8093, 8094, 8095, 8096, 11210, 11211]
             for port in port_list:
                 block_http_vars["port"] = port
                 status = self.ansible_runner.run_ansible_playbook(
@@ -293,7 +298,12 @@ class SyncGateway:
             playbook_vars["server_scheme"] = "couchbases"
             playbook_vars["server_port"] = 11207
             block_http_vars = {}
-            port_list = [8091, 8092, 8093, 8094, 8095, 8096, 11210, 11211]
+            # as jenkins slave and sync gateway run on same maachine, libcouchbase on slave cannot contact to server if 11210 is blocked
+            # So avoiding blocking 11210 port on mac
+            if sg_platform == "macos":
+                port_list = [8091, 8092, 8093, 8094, 8095, 8096, 11211]
+            else:
+                port_list = [8091, 8092, 8093, 8094, 8095, 8096, 11210, 11211]
             for port in port_list:
                 block_http_vars["port"] = port
                 status = self.ansible_runner.run_ansible_playbook(
