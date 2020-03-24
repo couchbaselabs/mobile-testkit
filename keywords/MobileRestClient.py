@@ -1214,7 +1214,7 @@ class MobileRestClient:
 
         return resp.json()
 
-    def update_doc(self, url, db, doc_id, number_updates=1, attachment_name=None, expiry=None, delay=None, auth=None, channels=None, property_updater=None, remove_expiry=False):
+    def update_doc(self, url, db, doc_id, number_updates=1, attachment_name=None, expiry=None, delay=None, auth=None, channels=None, property_updater=None, remove_expiry=False, rev=None, doc=None):
         """
         Updates a doc on a db a number of times.
             1. GETs the doc
@@ -1223,8 +1223,13 @@ class MobileRestClient:
         """
 
         auth_type = get_auth_type(auth)
-        doc = self.get_doc(url, db, doc_id, auth)
-        current_rev = doc["_rev"]
+        if doc is None:
+            doc = self.get_doc(url, db, doc_id, auth)
+
+        if rev is None:
+            current_rev = doc["_rev"]
+        else:
+            current_rev = rev
         try:
             doc["updates"]
         except Exception:

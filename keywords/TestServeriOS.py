@@ -36,7 +36,8 @@ class TestServeriOS(TestServerBase):
             "2.1.1": 10,
             "2.1.2": 11,
             "2.5.0": 272,
-            "2.5.2": 3
+            "2.5.2": 3,
+            "2.7.0": 5
         }
 
         if self.version_build == "2.1.0":
@@ -174,8 +175,11 @@ class TestServeriOS(TestServerBase):
 
         log_info("Installing: {}".format(self.app_path))
         # Launch the simulator and install the app
+        # output = subprocess.check_output([
+        #     "ios-sim", "--devicetypeid", self.device, "install", self.app_path, "--exit"
+        # ])
         output = subprocess.check_output([
-            "ios-sim", "--devicetypeid", self.device, "install", self.app_path, "--exit"
+             "ios-sim", "install", self.app_path, "--devicetypeid", self.device, "--exit"
         ])
 
         log_info(output)
@@ -274,8 +278,11 @@ class TestServeriOS(TestServerBase):
         # Without --exit, ios-sim blocks
         # With --exit, --log has no effect
         # subprocess.Popen didn't launch the app
+        # output = subprocess.check_output([
+        #    "ios-sim", "--devicetypeid", self.device, "launch", self.app_path, "--exit"
+        # ])
         output = subprocess.check_output([
-            "ios-sim", "--devicetypeid", self.device, "launch", self.app_path, "--exit"
+            "ios-sim", "launch", self.app_path, "--devicetypeid", self.device,  "--exit"
         ])
 
         self._wait_until_reachable(port=self.port)
