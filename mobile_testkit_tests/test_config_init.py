@@ -55,4 +55,4 @@ def test_config_init(sync_gateway_config, buckets, mode):
 
     assert config
     assert config.mode == mode
-    assert config.bucket_name_set == buckets
+    assert config.bucket_name_set.sort() == buckets.sort()

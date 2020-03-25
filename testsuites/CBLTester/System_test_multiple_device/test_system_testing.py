@@ -167,11 +167,11 @@ def test_system(params_from_base_suite_setup):
 
         # Waiting until replicator finishes on all dbs
         for base_url, repl_obj, repl, cbl_db, query, platform in zip(base_url_list,
-                                                           replicator_obj_list,
-                                                           replicator_list,
-                                                           cbl_db_list,
-                                                           query_obj_list,
-                                                           platform_list):
+                                                                     replicator_obj_list,
+                                                                     replicator_list,
+                                                                     cbl_db_list,
+                                                                     query_obj_list,
+                                                                     platform_list):
             t = Thread(target=_replicaton_status_check, args=(repl_obj, repl, repl_status_check_sleep_time))
             t.start()
             t.join()
@@ -217,11 +217,11 @@ def test_system(params_from_base_suite_setup):
         sg_client.delete_bulk_docs(url=sg_url, db=sg_db,
                                    docs=sg_docs, auth=session)
         for base_url, repl_obj, repl, cbl_db, query, platform in zip(base_url_list,
-                                                           replicator_obj_list,
-                                                           replicator_list,
-                                                           cbl_db_list,
-                                                           query_obj_list,
-                                                           platform_list):
+                                                                     replicator_obj_list,
+                                                                     replicator_list,
+                                                                     cbl_db_list,
+                                                                     query_obj_list,
+                                                                     platform_list):
             t = Thread(target=_replicaton_status_check, args=(repl_obj, repl, repl_status_check_sleep_time))
             t.start()
             t.join()
@@ -244,12 +244,12 @@ def test_system(params_from_base_suite_setup):
         docs_to_delete_per_db = len(docs_to_delete) // len(db_obj_list)
         i = 0
         for base_url, db_obj, cbl_db, repl_obj, repl, query, platform in zip(base_url_list,
-                                                                   db_obj_list,
-                                                                   cbl_db_list,
-                                                                   replicator_obj_list,
-                                                                   replicator_list,
-                                                                   query_obj_list,
-                                                                   platform_list):
+                                                                             db_obj_list,
+                                                                             cbl_db_list,
+                                                                             replicator_obj_list,
+                                                                             replicator_list,
+                                                                             query_obj_list,
+                                                                             platform_list):
             log_info("deleting {} docs from {} db - {}".format(docs_to_delete_per_db,
                                                                db_obj.getName(cbl_db),
                                                                list(docs_to_delete)[i: i + docs_to_delete_per_db]))
@@ -279,16 +279,14 @@ def test_system(params_from_base_suite_setup):
         # Creating docs on CBL side #
         #############################
         for base_url, db_obj, cbl_db, repl_obj, repl, query, platform in zip(base_url_list,
-                                                                   db_obj_list,
-                                                                   cbl_db_list,
-                                                                   replicator_obj_list,
-                                                                   replicator_list,
-                                                                   query_obj_list,
-                                                                   platform_list):
+                                                                             db_obj_list,
+                                                                             cbl_db_list,
+                                                                             replicator_obj_list,
+                                                                             replicator_list,
+                                                                             query_obj_list,
+                                                                             platform_list):
             name = db_obj.getName(cbl_db)
-            docs_to_create = ["cbl_{}_{}".format(name, doc_id) for doc_id in range(doc_id_for_new_docs,
-                                                                                   doc_id_for_new_docs +
-                                                                                   num_of_docs_to_add)]
+            docs_to_create = ["cbl_{}_{}".format(name, doc_id) for doc_id in range(doc_id_for_new_docs, doc_id_for_new_docs + num_of_docs_to_add)]
             added_docs = {}
             new_doc_ids = []
             for doc_id in docs_to_create:
@@ -354,16 +352,16 @@ def _check_doc_count(db_obj_list, cbl_db_list):
 def _check_parallel_replication_changes(base_url_list, replicator_obj_list, replicator_list, cbl_db_list, query_obj_list,
                                         repl_status_check_sleep_time, query_limit, platform_list, query_offset):
     for base_url, repl_obj, repl, cbl_db, query, platform in zip(base_url_list,
-                                                       replicator_obj_list,
-                                                       replicator_list,
-                                                       cbl_db_list,
-                                                       query_obj_list,
-                                                       platform_list):
+                                                                 replicator_obj_list,
+                                                                 replicator_list,
+                                                                 cbl_db_list,
+                                                                 query_obj_list,
+                                                                 platform_list):
         t = Thread(target=_replicaton_status_check, args=(repl_obj, repl, repl_status_check_sleep_time))
         t.start()
         t.join()
         results = query.query_get_docs_limit_offset(cbl_db, limit=query_limit, offset=query_offset)
-        # Query results do not store in memory for dot net, so no need to release memory for dotnet 
+        # Query results do not store in memory for dot net, so no need to release memory for dotnet
         if(platform.lower() != "net-msft" and platform.lower() != "uwp" and platform.lower() != "xamarin-ios" and platform.lower() != "xamarin-android"):
             _releaseQueryResults(base_url, results)
 

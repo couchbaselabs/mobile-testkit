@@ -62,4 +62,4 @@ def test_get_buckets_from_sync_gateway_config(sync_gateway_path, buckets):
     # mock_pool_ips.json will generate 22 files ansible+json
     log_info(bucket_list)
     log_info(buckets)
-    assert bucket_list == buckets
+    assert bucket_list.sort() == buckets.sort()

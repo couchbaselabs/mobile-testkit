@@ -28,8 +28,6 @@ from keywords.exceptions import RestError, TimeoutException, LiteServError, Chan
 from keywords import types
 
 
-
-
 def parse_multipart_response(response):
     """
     Parses a multipart response where each section looks like below:
@@ -79,13 +77,13 @@ def get_auth_type(auth):
     return auth_type
 
 
-
 class MyEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, (bytes, bytearray)):
             return obj.decode("ASCII")
         # Let the base class default method raise the TypeError
         return json.JSONEncoder.default(self, obj)
+
 
 class MobileRestClient:
     """
@@ -172,7 +170,6 @@ class MobileRestClient:
         raise ValueError("Unsupported platform type")
 
     def get_session(self, url, db=None, session_id=None):
-
         """
         :param url: url to get session from
         :param session_id: the session id to get information from
@@ -1339,7 +1336,6 @@ class MobileRestClient:
 
         return added_docs
 
-
     def add_bulk_docs(self, url, db, docs, auth=None):
         """
         Keyword that issues POST _bulk docs with the specified 'docs'.
@@ -1575,7 +1571,6 @@ class MobileRestClient:
                          repl_filter=None,
                          doc_ids=None,
                          channels_filter=None):
-
         """
         Starts a replication (one-shot or continous) between Lite instances (P2P),
         Sync Gateways, or Lite <-> Sync Gateways

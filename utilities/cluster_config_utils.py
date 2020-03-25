@@ -12,6 +12,7 @@ class CustomConfigParser(configparser.RawConfigParser):
     """Virtually identical to the original method, but delimit keys and values with '=' instead of ' = '
        Python 3 has a space_around_delimiters=False option for write, it does not work for python 2.x
     """
+
     def write(self, fp):
 
         DEFAULTSECT = "DEFAULT"
@@ -75,7 +76,7 @@ def generate_x509_certs(cluster_config, bucket_name):
     ''' Generate and insert x509 certs for CBS and SG TLS Handshake'''
     cluster = load_cluster_config_json(cluster_config)
     for line in open("ansible.cfg"):
-        match = re.match('remote_user\s*=\s*(\w*)$', line)
+        match = re.match(r'remote_user\s*=\s*(\w*)$', line)
         if match:
             username = match.groups()[0].strip()
             break
@@ -207,6 +208,7 @@ def no_conflicts_enabled(cluster_config):
         return cluster["environment"]["no_conflicts_enabled"]
     except KeyError:
         return False
+
 
 def sg_ssl_enabled(cluster_config):
     "Get SG SSL value from cluster config"
