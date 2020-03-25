@@ -479,7 +479,7 @@ class SyncGateway(object):
             # as jenkins slave and sync gateway run on same maachine, libcouchbase on slave cannot contact to server if 11210 is blocked
             # So avoiding blocking 11210 port on mac
             if sg_platform == "macos":
-                port_list = [8091, 8092, 8093, 8094, 8095, 8096, 11211]
+                port_list = [8092, 8093, 8094, 8095, 8096, 11211]
             else:
                 port_list = [8091, 8092, 8093, 8094, 8095, 8096, 11210, 11211]
             for port in port_list:
