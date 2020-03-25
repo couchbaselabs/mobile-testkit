@@ -564,7 +564,7 @@ def test_verify_deleted_prop_tombstoned_olddoc(params_from_base_test_setup, sg_c
     Addressing the issue : https://issues.couchbase.com/browse/CBSE-8087
     1. Have a sync function to change the channel of the doc if old doc has _deleted property
     2. Create a doc
-    3. delete the doc 
+    3. delete the doc
     4. Resurrect the doc by updating the doc  with the revision of deleted doc at step #2
     5. verify doc is moved to a new channel
     """
@@ -616,4 +616,3 @@ def test_verify_deleted_prop_tombstoned_olddoc(params_from_base_test_setup, sg_c
     # 5. verify doc is moved to a new channel
     all_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=test_auth_session2)
     assert len(all_docs["rows"]) == 1, "_deleted property did not exist in old doc, that is why it did not move to new channel"
-    
