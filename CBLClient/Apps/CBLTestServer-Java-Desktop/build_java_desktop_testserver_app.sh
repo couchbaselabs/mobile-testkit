@@ -39,6 +39,10 @@ export PATH=$PATH:$JAVA_HOME
 echo ./gradlew clean -Dversion=${MAVEN_UPLOAD_VERSION} assemble
 ./gradlew clean -Dversion=${MAVEN_UPLOAD_VERSION} assemble
 
-TESTSERVER_JAR="./build/libs/CBLTestServer-Java-Desktop-${MAVEN_UPLOAD_VERSION}-${EDITION}.jar"
-cp -f ${TESTSERVER_JAR} ${ARTIFACTS_DIR}/CBLTestServer-Java-Desktop-${MAVEN_UPLOAD_VERSION}-${EDITION}.jar
+cp "./build/libs/CBLTestServer-Java-Desktop-${MAVEN_UPLOAD_VERSION}-${EDITION}.jar" "CBLTestServer-Java-Desktop-${MAVEN_UPLOAD_VERSION}-${EDITION}.jar"
+
+zip "CBLTestServer-Java-Desktop-${MAVEN_UPLOAD_VERSION}-${EDITION}.zip" "./CBLTestServer-Java-Desktop-${MAVEN_UPLOAD_VERSION}-${EDITION}.jar" daemon_manager.sh win_service_manager.bat
+
+TESTSERVER_ZIP="CBLTestServer-Java-Desktop-${MAVEN_UPLOAD_VERSION}-${EDITION}.zip"
+cp -f ${TESTSERVER_ZIP} ${ARTIFACTS_DIR}/CBLTestServer-Java-Desktop-${MAVEN_UPLOAD_VERSION}-${EDITION}.zip
 

@@ -33,7 +33,6 @@ def pytest_addoption(parser):
 # testsuites/listener/shared/client_sg/ directory
 @pytest.fixture(scope="session")
 def setup_client_syncgateway_suite(request):
-
     """Suite setup fixture for client sync_gateway tests"""
 
     log_info("Setting up client sync_gateway suite ...")
@@ -59,7 +58,7 @@ def setup_client_syncgateway_suite(request):
                                       storage_engine=liteserv_storage_engine)
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
-            check_xattr_support(server_version, sync_gateway_version)
+        check_xattr_support(server_version, sync_gateway_version)
 
     log_info("Downloading LiteServ ...")
     # Download LiteServ

@@ -6,7 +6,7 @@ from optparse import OptionParser
 
 import keywords.exceptions
 
-import cloudformation_template
+from . import cloudformation_template
 
 BUCKET_NAME = "cbmobile-bucket"
 BUCKET_FOLDER = "mobile-testkit"
@@ -89,19 +89,19 @@ class ClusterConfig:
         with open("resources/limits.json") as limits_config:
             limits = json.load(limits_config)
             if self.__server_number > limits["max_servers"]:
-                print("You have exceed your maximum number of servers: {}".format(limits["max_servers"]))
+                print(("You have exceed your maximum number of servers: {}".format(limits["max_servers"])))
                 print("Edit you limits.json file to override this behavior")
                 return False
             if self.__sync_gateway_number > limits["max_sync_gateways"]:
-                print("You have exceed your maximum number of servers: {}".format(limits["max_sync_gateways"]))
+                print(("You have exceed your maximum number of servers: {}".format(limits["max_sync_gateways"])))
                 print("Edit you limits.json file to override this behavior")
                 return False
             if self.__load_number > limits["max_loads"]:
-                print("You have exceed your maximum number of servers: {}".format(limits["max_loads"]))
+                print(("You have exceed your maximum number of servers: {}".format(limits["max_loads"])))
                 print("Edit you limits.json file to override this behavior")
                 return False
             if self.__lb_number > limits["max_lbs"]:
-                print("You have exceed your maximum number of servers: {}".format(limits["max_lbs"]))
+                print(("You have exceed your maximum number of servers: {}".format(limits["max_lbs"])))
                 print("Edit you limits.json file to override this behavior")
                 return False
             return True
@@ -119,41 +119,41 @@ def create_and_instantiate_cluster(config):
 
     print(">>> Creating cluster... ")
 
-    print(">>> Couchbase Server Instances: {}".format(config.server_number))
-    print(">>> Couchbase Server Type:      {}".format(config.server_type))
+    print((">>> Couchbase Server Instances: {}".format(config.server_number)))
+    print((">>> Couchbase Server Type:      {}".format(config.server_type)))
 
-    print(">>> Sync Gateway Instances:     {}".format(config.sync_gateway_number))
-    print(">>> Sync Gateway Type:          {}".format(config.sync_gateway_type))
+    print((">>> Sync Gateway Instances:     {}".format(config.sync_gateway_number)))
+    print((">>> Sync Gateway Type:          {}".format(config.sync_gateway_type)))
 
-    print(">>> Load Instances:             {}".format(config.load_number))
-    print(">>> Load Type:                  {}".format(config.load_type))
+    print((">>> Load Instances:             {}".format(config.load_number)))
+    print((">>> Load Type:                  {}".format(config.load_type)))
 
-    print(">>> Load Balancer Instances:    {}".format(config.lb_number))
-    print(">>> Load Balancer Type:         {}".format(config.lb_type))
+    print((">>> Load Balancer Instances:    {}".format(config.lb_number)))
+    print((">>> Load Balancer Type:         {}".format(config.lb_type)))
 
     print(">>> Generating Cloudformation Template")
     templ_json = cloudformation_template.gen_template(config)
-    print(">>> Template contents {}".format(templ_json))
+    print((">>> Template contents {}".format(templ_json)))
 
     template_file_name = "{}_cf_template.json".format(cluster_config.name)
     with open(template_file_name, 'w') as f:
         f.write(templ_json)
 
-    print(">>> Creating {} cluster on AWS".format(config.name))
+    print((">>> Creating {} cluster on AWS".format(config.name)))
 
     if "AWS_KEY" not in os.environ:
         raise keywords.exceptions.ProvisioningError("Cannot create cloudformation stack if you do not have AWS_KEY set")
 
     # Upload template to s3
     # TODO: this should use boto rather than cli
-    print("Uploading {} to s3".format(template_file_name))
+    print(("Uploading {} to s3".format(template_file_name)))
     output = subprocess.check_output([
         "aws", "s3", "cp", template_file_name, "s3://{}/{}/{}".format(BUCKET_NAME, BUCKET_FOLDER, template_file_name)
     ])
     print(output)
 
     # Create Stack
-    print("Creating cloudformation stack: {}".format(template_file_name))
+    print(("Creating cloudformation stack: {}".format(template_file_name)))
     subprocess.call([
         "aws", "cloudformation", "create-stack",
         "--stack-name", config.name,

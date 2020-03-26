@@ -12,6 +12,7 @@ class Replication(object):
     '''
     classdocs
     '''
+
     def __init__(self, base_url):
         '''
         Constructor
@@ -335,6 +336,6 @@ class Replication(object):
         return session, replicator_authenticator, repl
 
     def resetCheckPoint(self, replicator):
-            args = Args()
-            args.setMemoryPointer("replicator", replicator)
-            return self._client.invokeMethod("replicator_resetCheckpoint", args)
+        args = Args()
+        args.setMemoryPointer("replicator", replicator)
+        return self._client.invokeMethod("replicator_resetCheckpoint", args)

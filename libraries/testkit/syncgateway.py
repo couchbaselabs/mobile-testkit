@@ -53,7 +53,7 @@ class SyncGateway:
         self.couchbase_server_primary_node = add_cbs_to_sg_config_server_field(self.cluster_config)
 
     def info(self):
-        r = requests.get(self.url, verify=False)
+        r = requests.get(self.url)
         r.raise_for_status()
         return r.text
 
@@ -222,7 +222,9 @@ class SyncGateway:
                 redact_level = get_redact_level(self.cluster_config)
                 playbook_vars["logging"] = '{}, "redaction_level": "{}" {},'.format(logging_config, redact_level, "}")
             except KeyError as ex:
-                log_info("Keyerror in getting logging{}".format(ex.args))
+
+                log_info("Keyerror in getting logging{}".format(str(ex)))
+
                 playbook_vars["logging"] = '{} {},'.format(logging_config, "}")
             if get_sg_use_views(self.cluster_config):
                 playbook_vars["sg_use_views"] = '"use_views": true,'
@@ -494,7 +496,7 @@ def wait_until_doc_in_changes_feed(sg, db, doc_id):
     max_tries = 10
     sleep_retry_seconds = 1
 
-    for attempt in xrange(max_tries):
+    for attempt in range(max_tries):
         changes_results = sg.admin.get_global_changes(db)
         for changes_result in changes_results:
             if changes_result["id"] == doc_id:
@@ -510,7 +512,7 @@ def wait_until_active_tasks_empty(sg):
     max_tries = 10
     sleep_retry_seconds = 1
 
-    for attempt in xrange(max_tries):
+    for attempt in range(max_tries):
         active_tasks = sg.admin.get_active_tasks()
         if len(active_tasks) == 0:
             return
@@ -524,7 +526,7 @@ def wait_until_active_tasks_non_empty(sg):
     max_tries = 10
     sleep_retry_seconds = 1
 
-    for attempt in xrange(max_tries):
+    for attempt in range(max_tries):
         active_tasks = sg.admin.get_active_tasks()
         if len(active_tasks) > 0:
             return
@@ -542,7 +544,7 @@ def wait_until_doc_sync(sg_user, doc_id):
     max_tries_per_doc = 100
     sleep_retry_per_doc_seconds = 1
 
-    for attempt in xrange(max_tries_per_doc):
+    for attempt in range(max_tries_per_doc):
         try:
             sg_user.get_doc(doc_id)
             # if we got a doc, and no exception was thrown, we're done

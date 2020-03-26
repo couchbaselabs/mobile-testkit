@@ -516,7 +516,7 @@ def params_from_base_suite_setup(request):
         suite_log_zip_file = "Suite_test_log_{}.zip".format(str(time.time()))
         log_info("Log file for failed Suite tests is: {}".format(suite_log_zip_file))
         with open(suite_log_zip_file, 'wb') as fh:
-            fh.write(zip_data)
+            fh.write(zip_data.encode())
             fh.close()
 
     if create_db_per_suite:
@@ -683,7 +683,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         test_log = os.path.join(log_directory, test_log_zip_file)
         log_info("Log file for failed test is: {}".format(test_log_zip_file))
         with open(test_log, 'wb') as fh:
-            fh.write(zip_data)
+            fh.write(zip_data.encode())
             fh.close()
 
     log_info("Tearing down test")
@@ -700,7 +700,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
             if not use_local_testserver:
                 log_info("Stopping the test server per test")
                 testserver.stop()
-        except Exception, err:
+        except Exception as err:
             log_info("Exception occurred: {}".format(err))
 
 

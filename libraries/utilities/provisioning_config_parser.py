@@ -9,7 +9,7 @@ from ansible.vars import VariableManager
 def hosts_for_tag(cluster_config, tag):
 
     if not os.path.isfile(cluster_config):
-        print("Hostfile does not exist {}".format(cluster_config))
+        print(("Hostfile does not exist {}".format(cluster_config)))
         sys.exit(1)
 
     variable_manager = VariableManager()

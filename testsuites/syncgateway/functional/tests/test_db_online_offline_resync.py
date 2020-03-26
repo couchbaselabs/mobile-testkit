@@ -88,7 +88,7 @@ def test_bucket_online_offline_resync_sanity(params_from_base_test_setup, sg_con
     recieved_docs = in_parallel(user_objects, 'get_num_docs')
 
     expected_docs = num_users * num_docs
-    for user_obj, docs in recieved_docs.items():
+    for user_obj, docs in list(recieved_docs.items()):
         log_info('User {} got {} docs, expected docs: {}'.format(user_obj.name, docs, expected_docs))
         assert docs == expected_docs
 
@@ -98,8 +98,8 @@ def test_bucket_online_offline_resync_sanity(params_from_base_test_setup, sg_con
     expected_revision = str(num_revisions + 1)
     docs_rev_dict = in_parallel(user_objects, 'get_num_revisions')
     rev_errors = []
-    for user_obj, docs_revision_dict in docs_rev_dict.items():
-        for doc_id in docs_revision_dict.keys():
+    for user_obj, docs_revision_dict in list(docs_rev_dict.items()):
+        for doc_id in list(docs_revision_dict.keys()):
             rev = docs_revision_dict[doc_id]
             log_info('User {} doc_id {} has {} revisions, expected revision: {}'.format(user_obj.name,
                                                                                         doc_id, rev, expected_revision))
@@ -116,7 +116,7 @@ def test_bucket_online_offline_resync_sanity(params_from_base_test_setup, sg_con
 
     # Verify each User created docs are part of changes feed
     output = in_parallel(user_objects, 'check_doc_ids_in_changes_feed')
-    assert True in output.values()
+    assert True in list(output.values())
 
     # Take "db" offline
     sg_client = MobileRestClient()
@@ -143,7 +143,7 @@ def test_bucket_online_offline_resync_sanity(params_from_base_test_setup, sg_con
     for user in user_objects:
         global_cache.append(user.cache)
 
-    all_docs = {k: v for user_cache in global_cache for k, v in user_cache.items()}
+    all_docs = {k: v for user_cache in global_cache for k, v in list(user_cache.items())}
 
     verify_changes(user_x, expected_num_docs=expected_docs, expected_num_revisions=num_revisions, expected_docs=all_docs)
 
@@ -221,7 +221,7 @@ def test_bucket_online_offline_resync_with_online(params_from_base_test_setup, s
     recieved_docs = in_parallel(user_objects, 'get_num_docs')
 
     expected_docs = num_users * num_docs
-    for user_obj, docs in recieved_docs.items():
+    for user_obj, docs in list(recieved_docs.items()):
         log_info('User {} got {} docs, expected docs: {}'.format(user_obj.name, docs, expected_docs))
         assert docs == expected_docs
 
@@ -231,8 +231,8 @@ def test_bucket_online_offline_resync_with_online(params_from_base_test_setup, s
     expected_revision = str(num_revisions + 1)
     docs_rev_dict = in_parallel(user_objects, 'get_num_revisions')
     rev_errors = []
-    for user_obj, docs_revision_dict in docs_rev_dict.items():
-        for doc_id in docs_revision_dict.keys():
+    for user_obj, docs_revision_dict in list(docs_rev_dict.items()):
+        for doc_id in list(docs_revision_dict.keys()):
             rev = docs_revision_dict[doc_id]
             log_info('User {} doc_id {} has {} revisions, expected revision: {}'.format(
                 user_obj.name,
@@ -253,7 +253,7 @@ def test_bucket_online_offline_resync_with_online(params_from_base_test_setup, s
 
     # Verify each User created docs are part of changes feed
     output = in_parallel(user_objects, 'check_doc_ids_in_changes_feed')
-    assert True in output.values()
+    assert True in list(output.values())
 
     # Take "db" offline
     sg_client = MobileRestClient()
@@ -328,7 +328,7 @@ def test_bucket_online_offline_resync_with_online(params_from_base_test_setup, s
     for user in user_objects:
         global_cache.append(user.cache)
 
-    all_docs = {k: v for user_cache in global_cache for k, v in user_cache.items()}
+    all_docs = {k: v for user_cache in global_cache for k, v in list(user_cache.items())}
 
     verify_changes(user_x, expected_num_docs=expected_docs, expected_num_revisions=num_revisions, expected_docs=all_docs)
 
@@ -406,7 +406,7 @@ def test_bucket_online_offline_resync_with_offline(params_from_base_test_setup, 
     recieved_docs = in_parallel(user_objects, 'get_num_docs')
 
     expected_docs = num_users * num_docs
-    for user_obj, docs in recieved_docs.items():
+    for user_obj, docs in list(recieved_docs.items()):
         log_info('User {} got {} docs, expected docs: {}'.format(user_obj.name, docs, expected_docs))
         assert docs == expected_docs
 
@@ -416,8 +416,8 @@ def test_bucket_online_offline_resync_with_offline(params_from_base_test_setup, 
     expected_revision = str(num_revisions + 1)
     docs_rev_dict = in_parallel(user_objects, 'get_num_revisions')
     rev_errors = []
-    for user_obj, docs_revision_dict in docs_rev_dict.items():
-        for doc_id in docs_revision_dict.keys():
+    for user_obj, docs_revision_dict in list(docs_rev_dict.items()):
+        for doc_id in list(docs_revision_dict.keys()):
             rev = docs_revision_dict[doc_id]
             log_info('User {} doc_id {} has {} revisions, expected revision: {}'.format(
                 user_obj.name,
@@ -438,7 +438,7 @@ def test_bucket_online_offline_resync_with_offline(params_from_base_test_setup, 
 
     # Verify each User created docs are part of changes feed
     output = in_parallel(user_objects, 'check_doc_ids_in_changes_feed')
-    assert True in output.values()
+    assert True in list(output.values())
 
     # Take "db" offline
     sg_client = MobileRestClient()
@@ -511,7 +511,7 @@ def test_bucket_online_offline_resync_with_offline(params_from_base_test_setup, 
     for user in user_objects:
         global_cache.append(user.cache)
 
-    all_docs = {k: v for user_cache in global_cache for k, v in user_cache.items()}
+    all_docs = {k: v for user_cache in global_cache for k, v in list(user_cache.items())}
 
     verify_changes(user_x, expected_num_docs=expected_docs, expected_num_revisions=num_revisions, expected_docs=all_docs)
 

@@ -48,7 +48,7 @@ def main():
         filename=opts.targetfile,
     )
 
-    print("Generated {}".format(opts.targetfile))
+    print(("Generated {}".format(opts.targetfile)))
 
 
 def get_running_instances_for_cloudformation_stack(stackname):
@@ -192,25 +192,25 @@ def wait_until_stack_create_complete(stackname):
     event.resource_type = AWS::CloudFormation::Stack
     event.resource_status = CREATE_COMPLETE
     """
-    for x in xrange(NUM_RETRIES):
-        print("Waiting for {} to finish launching.  Attempt: {}".format(stackname, x))
+    for x in range(NUM_RETRIES):
+        print(("Waiting for {} to finish launching.  Attempt: {}".format(stackname, x)))
         region = cloudformation.connect_to_region(DEFAULT_REGION)
 
         try:
             region.describe_stacks(stackname)
         except BotoServerError as bse:
-            print("Exception describing stack: {}, exception: {}. Retrying.".format(stackname, bse))
+            print(("Exception describing stack: {}, exception: {}. Retrying.".format(stackname, bse)))
             continue
 
         stack_events = region.describe_stack_events(stackname)
 
         for stack_event in stack_events:
             if stack_event.stack_name != stackname:
-                print("Ignoring {} since it's stack name is {} instead of {}".format(stack_event, stack_event.stack_name, stackname))
+                print(("Ignoring {} since it's stack name is {} instead of {}".format(stack_event, stack_event.stack_name, stackname)))
                 continue
             if stack_event.resource_type == "AWS::CloudFormation::Stack":
                 if stack_event.resource_status in ["CREATE_COMPLETE", "UPDATE_COMPLETE"]:
-                    print("Stack {} has successfully been created/updated".format(stackname))
+                    print(("Stack {} has successfully been created/updated".format(stackname)))
                     return
 
         # didn't find it, lets wait and try again
@@ -224,9 +224,9 @@ def wait_until_state(instances, instance_ids, state):
     passed in case the instance objects need to be refreshed from AWS
     """
 
-    for x in xrange(NUM_RETRIES):
+    for x in range(NUM_RETRIES):
 
-        print("Waiting for instances {} to be {}".format(instance_ids, state))
+        print(("Waiting for instances {} to be {}".format(instance_ids, state)))
         instances_not_in_state = []
         all_instances_in_state = True
         for instance in instances:
@@ -239,7 +239,7 @@ def wait_until_state(instances, instance_ids, state):
             return
 
         # otherwise ..
-        print("The following instances are not yet in state {}: {}.  Waiting will retry.. Iteration: {}".format(instances_not_in_state, state, x))
+        print(("The following instances are not yet in state {}: {}.  Waiting will retry.. Iteration: {}".format(instances_not_in_state, state, x)))
         time.sleep(5)
         instances = lookup_instances_from_ids(instance_ids)
 
@@ -248,7 +248,7 @@ def wait_until_state(instances, instance_ids, state):
 
 def wait_until_sshd_port_listening(instances):
 
-    for x in xrange(NUM_RETRIES):
+    for x in range(NUM_RETRIES):
 
         print("Waiting for instances to be listening on port 22")
         all_instances_listening = True
@@ -257,7 +257,7 @@ def wait_until_sshd_port_listening(instances):
             try:
                 client_socket.connect((instance.ip_address, 22))
             except Exception:
-                print("Couldn't connect to {} on port 22".format(instance.ip_address))
+                print(("Couldn't connect to {} on port 22".format(instance.ip_address)))
                 all_instances_listening = False
 
         # if all instances were in the given state, we're done
@@ -265,7 +265,7 @@ def wait_until_sshd_port_listening(instances):
             return
 
         # otherwise ..
-        print("Not all instances listening on port 22.  Waiting and will retry.. Iteration: {}".format(x))
+        print(("Not all instances listening on port 22.  Waiting and will retry.. Iteration: {}".format(x)))
         time.sleep(5)
 
     raise Exception("Gave up waiting for instances to be listening on port 22")

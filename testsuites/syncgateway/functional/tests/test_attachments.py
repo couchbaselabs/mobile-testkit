@@ -175,7 +175,8 @@ def test_attachment_revpos_when_ancestor_unavailable_active_revision_doesnt_shar
             new_revision="3-foo3",
             auth=sg_user_session
         )
-    assert he.value[0].startswith("400 Client Error: Bad Request for url: ")
+    http_error_str = str(he.value)
+    assert http_error_str.startswith("400 Client Error: Bad Request for url: ")
 
 
 @pytest.mark.sanity

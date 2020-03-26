@@ -98,7 +98,6 @@ def test_continuous_changes_parametrized(params_from_base_test_setup, sg_conf_na
     ("sync_gateway_default_functional_tests_couchbase_protocol_withport_11210", 10, 10, False)
 ])
 def test_continuous_changes_sanity(params_from_base_test_setup, sg_conf_name, num_docs, num_revisions, x509_cert_auth):
-
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]

@@ -92,7 +92,7 @@ def test_issue_1524(params_from_base_test_setup, sg_conf_name, num_docs):
     log_info("Verifying 'user_no_channels' has same docs as 'a_doc_pusher' + access_doc")
 
     # One off changes verification will include the termination doc
-    expected_docs = {k: v for cache in [a_doc_pusher.cache, terminator.cache] for k, v in cache.items()}
+    expected_docs = {k: v for cache in [a_doc_pusher.cache, terminator.cache] for k, v in list(cache.items())}
     verify_changes(user_no_channels, expected_num_docs=num_docs + 1, expected_num_revisions=0, expected_docs=expected_docs)
 
     # TODO: Fix this inconsistency suite wide
@@ -112,7 +112,6 @@ def test_issue_1524(params_from_base_test_setup, sg_conf_name, num_docs):
     ("custom_sync/sync_gateway_custom_sync_access_sanity", True)
 ])
 def test_sync_access_sanity(params_from_base_test_setup, sg_conf_name, x509_cert_auth):
-
     num_docs = 100
 
     cluster_conf = params_from_base_test_setup["cluster_config"]
@@ -204,7 +203,7 @@ def test_sync_channel_sanity(params_from_base_test_setup, sg_conf_name):
     time.sleep(20)
 
     # subscriber should recieve all docs
-    all_docs = {k: v for cache in doc_pusher_caches for k, v in cache.items()}
+    all_docs = {k: v for cache in doc_pusher_caches for k, v in list(cache.items())}
     verify_changes(subscriber, expected_num_docs=len(channels) * num_docs_per_channel, expected_num_revisions=0, expected_docs=all_docs)
 
     # update subscribers cache so the user knows what docs to update
@@ -221,7 +220,7 @@ def test_sync_channel_sanity(params_from_base_test_setup, sg_conf_name):
         verify_changes(doc_pusher, expected_num_docs=num_docs_per_channel, expected_num_revisions=1, expected_docs=doc_pusher.cache, ignore_rev_ids=True)
 
     # Verify that all docs have been flaged with _removed = true in changes feed for subscriber
-    verify_docs_removed(subscriber, expected_num_docs=len(all_docs.items()), expected_docs=all_docs)
+    verify_docs_removed(subscriber, expected_num_docs=len(list(all_docs.items())), expected_docs=all_docs)
 
     # TODO Push more docs to channel and make sure they do not show up in the users changes feed.
 
@@ -279,7 +278,7 @@ def test_sync_role_sanity(params_from_base_test_setup, sg_conf_name):
     # Allow docs to backfill
     time.sleep(5)
 
-    all_tv_docs = {k: v for cache in doc_pusher_caches for k, v in cache.items()}
+    all_tv_docs = {k: v for cache in doc_pusher_caches for k, v in list(cache.items())}
     verify_changes(seth, expected_num_docs=num_docs_per_channel * len(tv_channels), expected_num_revisions=0, expected_docs=all_tv_docs)
 
     # Remove seth from tv_stations role
@@ -346,7 +345,7 @@ def test_sync_sanity(params_from_base_test_setup, sg_conf_name):
             kdwb_caches.append(doc_pusher.cache)
 
     # Build global doc_id, rev dict for all docs from all KDWB caches
-    kdwb_docs = {k: v for cache in kdwb_caches for k, v in cache.items()}
+    kdwb_docs = {k: v for cache in kdwb_caches for k, v in list(cache.items())}
 
     # wait for changes
     time.sleep(5)
@@ -399,7 +398,7 @@ def test_sync_sanity_backfill(params_from_base_test_setup, sg_conf_name):
     access_doc_pusher.add_doc("access_doc", content="access")
 
     # Build global doc_id, rev dict for all docs from all KDWB caches
-    kdwb_docs = {k: v for cache in kdwb_caches for k, v in cache.items()}
+    kdwb_docs = {k: v for cache in kdwb_caches for k, v in list(cache.items())}
 
     # wait for changes
     time.sleep(5)
@@ -458,7 +457,7 @@ def test_sync_require_roles(params_from_base_test_setup, sg_conf_name):
     expected_num_radio_docs = len(radio_stations) * number_of_docs_per_pusher
 
     # All docs that have been pushed with the "radio_stations" role
-    all_radio_docs = {k: v for cache in radio_doc_caches for k, v in cache.items()}
+    all_radio_docs = {k: v for cache in radio_doc_caches for k, v in list(cache.items())}
 
     tv_doc_caches = []
     for tv_station in tv_stations:
@@ -469,7 +468,7 @@ def test_sync_require_roles(params_from_base_test_setup, sg_conf_name):
     expected_num_tv_docs = len(tv_stations) * number_of_docs_per_pusher
 
     # All docs that have been pushed with the "tv_stations" role
-    all_tv_docs = {k: v for cache in tv_doc_caches for k, v in cache.items()}
+    all_tv_docs = {k: v for cache in tv_doc_caches for k, v in list(cache.items())}
 
     # Read only users
     radio_channels_no_roles_user = admin.register_user(target=cluster.sync_gateways[0], db="db", name="bad_radio_user", password="password", channels=radio_stations)
@@ -481,10 +480,10 @@ def test_sync_require_roles(params_from_base_test_setup, sg_conf_name):
     tv_channel_no_roles_user.add_docs(26, name_prefix="bad_doc", bulk=bulk)
 
     read_only_user_caches = [radio_channels_no_roles_user.cache, tv_channel_no_roles_user.cache]
-    read_only_user_docs = {k: v for cache in read_only_user_caches for k, v in cache.items()}
+    read_only_user_docs = {k: v for cache in read_only_user_caches for k, v in list(cache.items())}
 
     # Dictionary should be empty if they were blocked from pushing docs
-    assert len(read_only_user_docs.items()) == 0
+    assert len(list(read_only_user_docs.items())) == 0
 
     # It seems be non deterministic but sometimes when issuing the changes call return, some of the documents are returned but not all.
     # There is currently no retry loop in verify_changes and I'm guessing that the bulk_docs requests are still processing.
@@ -505,9 +504,9 @@ def test_sync_require_roles(params_from_base_test_setup, sg_conf_name):
     # Verify mogul gets docs for all the channels associated with the radio_stations + tv_stations roles
     all_doc_caches = list(radio_doc_caches)
     all_doc_caches.extend(tv_doc_caches)
-    all_docs = {k: v for cache in all_doc_caches for k, v in cache.items()}
+    all_docs = {k: v for cache in all_doc_caches for k, v in list(cache.items())}
 
-    for k, v in all_docs.items():
+    for k, v in list(all_docs.items()):
         assert not k.startswith("bad_doc")
 
     verify_changes(mogul, expected_num_docs=expected_num_radio_docs + expected_num_tv_docs, expected_num_revisions=0, expected_docs=all_docs)
@@ -553,3 +552,67 @@ def test_sync_20mb(params_from_base_test_setup, sg_conf_name):
         sg_client.add_doc(url=sg_url, db=sg_db, doc=doc, auth=session)
     except HTTPError as h:
         assert "413 Client Error: Request Entity Too Large for url" in str(h), "did not throw 413 client error"
+
+
+@pytest.mark.syncgateway
+@pytest.mark.parametrize('sg_conf_name', [
+    'custom_sync/sync_gateway_custom_sync_olddoc_delete_check'
+])
+def test_verify_deleted_prop_tombstoned_olddoc(params_from_base_test_setup, sg_conf_name):
+    """
+    @summary:
+    Addressing the issue : https://issues.couchbase.com/browse/CBSE-8087
+    1. Have a sync function to change the channel of the doc if old doc has _deleted property
+    2. Create a doc
+    3. delete the doc
+    4. Resurrect the doc by updating the doc  with the revision of deleted doc at step #2
+    5. verify doc is moved to a new channel
+    """
+
+    sg_db = 'db'
+    doc_id = 'tombstone_olddoc'
+    cluster_conf = params_from_base_test_setup['cluster_config']
+    cluster_topology = params_from_base_test_setup['cluster_topology']
+    mode = params_from_base_test_setup['mode']
+    xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
+    sg_url = cluster_topology['sync_gateways'][0]['public']
+
+    if xattrs_enabled:
+        pytest.skip("Test is applicable only to non-xattrs")
+
+    # 1. Have a sync function to change the channel of the doc if old doc has _deleted property
+    cluster = Cluster(config=cluster_conf)
+    cluster.reset(sg_config_path=sg_conf)
+    sg_client = MobileRestClient()
+    channels = ['tombstone_deleted_property']
+    sg_user_name = 'autotest'
+    sg_password = 'pass'
+    sg_user_name2 = 'autotest2'
+    sg_password2 = 'pass2'
+    channels2 = ['olddoc_deleted_channel']
+
+    # Create user / session
+    sg_client.create_user(url=sg_admin_url, db=sg_db, name=sg_user_name, password=sg_password,
+                          channels=channels)
+
+    test_auth_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=sg_user_name, password=sg_password)
+
+    # Create user2 / session2
+    sg_client.create_user(url=sg_admin_url, db=sg_db, name=sg_user_name2, password=sg_password2,
+                          channels=channels2)
+
+    test_auth_session2 = sg_client.create_session(url=sg_admin_url, db=sg_db, name=sg_user_name2, password=sg_password2)
+
+    # 1. Create a doc
+    doc_body = document.create_doc(doc_id=doc_id, channels=channels)
+    added_doc = sg_client.add_doc(url=sg_url, db=sg_db, doc=doc_body, auth=test_auth_session)
+    # 2. delete the doc
+    deleted_doc = sg_client.delete_doc(url=sg_url, db=sg_db, doc_id=doc_id, rev=added_doc['rev'], auth=test_auth_session)
+    # 4. Resurrect the doc by updating the doc  with the revision of deleted doc at step #2
+    sg_client.update_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=test_auth_session, rev=deleted_doc["rev"], doc=deleted_doc)
+    # 5. verify doc is moved to a new channel
+    all_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=test_auth_session2)
+    assert len(all_docs["rows"]) == 1, "_deleted property did not exist in old doc, that is why it did not move to new channel"

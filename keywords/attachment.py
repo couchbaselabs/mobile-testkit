@@ -40,11 +40,11 @@ def generate_png(width, height):
     """ Generates a noise rgb images for attachment testing. """
 
     img = Image.new("RGBA", (width, height), 255)
-    random_rgb_grid = map(lambda x: (
+    random_rgb_grid = [(
         int(random.random() * 256),
         int(random.random() * 256),
         int(random.random() * 256)
-    ), [0] * width * height)
+    ) for x in [0] * width * height]
 
     img.putdata(random_rgb_grid)
 
@@ -71,8 +71,8 @@ def load_from_data_dir(names):
     for name in names:
         file_path = "{}/{}".format(DATA_DIR, name)
         log_info("Loading attachment from file: {}".format(file_path))
-        with open(file_path) as f:
-            data = base64.standard_b64encode(f.read())
+        with open(file_path, 'r', encoding='utf-8', errors='replace') as f:
+            data = base64.standard_b64encode(f.read().encode())
             atts.append(Attachment(name, data))
     return atts
 

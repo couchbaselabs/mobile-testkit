@@ -54,7 +54,7 @@ class SyncGatewayConfig:
                                                                     self._build_number,
                                                                     platform_extension)
         else:
-            base_url = "https://latestbuilds.service.couchbase.com/builds/releases/mobile/couchbase-sync-gateway/{}".format(self._version_number)
+            base_url = "http://latestbuilds.service.couchbase.com/builds/releases/mobile/couchbase-sync-gateway/{}".format(self._version_number)
             package_name = "couchbase-{}-{}_{}_x86_64.{}".format(installer,
                                                                  sg_type,
                                                                  self._version_number,
@@ -193,7 +193,8 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
             redact_level = get_redact_level(cluster_config)
             playbook_vars["logging"] = '{}, "redaction_level": "{}" {},'.format(logging_config, redact_level, "}")
         except KeyError as ex:
-            log_info("Keyerror in getting logging{}".format(ex.args))
+            log_info("Keyerror in getting logging{}".format(ex))
+
             playbook_vars["logging"] = '{} {},'.format(logging_config, "}")
 
         if get_sg_use_views(cluster_config):
