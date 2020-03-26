@@ -78,8 +78,7 @@ def test_view_backfill_for_deletes(params_from_base_test_setup, sg_conf_name,
     seth_auth = sg_client.create_session(
         url=sg_admin_url,
         db=sg_db,
-        name=seth_user_info.name,
-        password=seth_user_info.password
+        name=seth_user_info.name
     )
 
     # Add 'num_docs' to Sync Gateway

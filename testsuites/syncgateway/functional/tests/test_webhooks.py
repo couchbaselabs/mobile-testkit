@@ -187,8 +187,7 @@ def test_webhooks_crud(params_from_base_test_setup, sg_conf_name, filtered):
     sg_auth = sg_client.create_session(
         url=sg_admin_url,
         db=sg_db,
-        name=sg_info.name,
-        password=sg_info.password
+        name=sg_info.name
     )
 
     # Create sg docs

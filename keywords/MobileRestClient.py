@@ -208,22 +208,19 @@ class MobileRestClient:
 
         return resp_obj
 
-    def request_session(self, url, db, name, password=None, ttl=86400):
+    def request_session(self, url, db, name, ttl=86400):
         data = {
             "name": name,
             "ttl": ttl
         }
-
-        if password:
-            data["password"] = password
 
         resp = self._session.post("{}/{}/_session".format(url, db), data=json.dumps(data))
         log_r(resp)
         resp.raise_for_status()
         return resp
 
-    def create_session(self, url, db, name, password=None, ttl=86400):
-        resp = self.request_session(url, db, name, password, ttl)
+    def create_session(self, url, db, name, ttl=86400):
+        resp = self.request_session(url, db, name, ttl)
         resp_obj = resp.json()
 
         if "cookie_name" in resp_obj:
@@ -245,13 +242,13 @@ class MobileRestClient:
         log_info("cookie name {}, session id {}".format(cookie_name, session_id))
         return cookie_name, session_id
 
-    def create_session_header(self, url, db, name, password=None, ttl=86400):
+    def create_session_header(self, url, db, name, ttl=86400):
         """
         Issues a POST to the public _session enpoint on sync_gateway for a user.
         Return the entire 'Set-Cookie' header. This is useful for creating authenticated
         push and pull replication via the Listener and REST
         """
-        resp = self.request_session(url, db, name, password, ttl)
+        resp = self.request_session(url, db, name, ttl)
         return resp.headers["Set-Cookie"]
 
     def delete_session(self, url, db, user_name=None, session_id=None):

@@ -124,15 +124,13 @@ def test_olddoc_nil(params_from_base_test_setup, sg_conf_name):
     user_one_auth = sg_client.create_session(
         url=sg_admin_url,
         db=sg_db,
-        name=user_one_info.name,
-        password=user_one_info.password
+        name=user_one_info.name
     )
 
     user_two_auth = sg_client.create_session(
         url=sg_admin_url,
         db=sg_db,
-        name=user_two_info.name,
-        password=user_two_info.password
+        name=user_two_info.name
     )
 
     abc_docs = document.create_docs(doc_id_prefix="abc_docs", number=num_docs, channels=user_one_info.channels)
@@ -244,7 +242,7 @@ def test_on_demand_doc_processing(params_from_base_test_setup, sg_conf_name, num
     for user_name in user_names:
         user_channels = ['{}_chan'.format(user_name)]
         sg_client.create_user(url=sg_admin_url, db=sg_db, name=user_name, password='pass', channels=user_channels)
-        auth_dict[user_name] = sg_client.create_session(url=sg_admin_url, db=sg_db, name=user_name, password='pass')
+        auth_dict[user_name] = sg_client.create_session(url=sg_admin_url, db=sg_db, name=user_name)
         docs = document.create_docs('{}_doc'.format(user_name), number=number_docs_per_user, channels=user_channels, prop_generator=update_props)
         for doc in docs:
             docs_to_add[doc['_id']] = doc
@@ -386,8 +384,7 @@ def test_on_demand_import_of_external_updates(params_from_base_test_setup, sg_co
     seth_auth = sg_client.create_session(
         url=sg_admin_url,
         db=sg_db,
-        name=seth_user_info.name,
-        password=seth_user_info.password
+        name=seth_user_info.name
     )
 
     doc_id = 'test_doc'
@@ -512,8 +509,7 @@ def test_offline_processing_of_external_updates(params_from_base_test_setup, sg_
     seth_auth = sg_client.create_session(
         url=sg_admin_url,
         db=sg_db,
-        name=seth_user_info.name,
-        password=seth_user_info.password
+        name=seth_user_info.name
     )
 
     # Add docs
@@ -769,8 +765,7 @@ def test_purge(params_from_base_test_setup, sg_conf_name, use_multiple_channels,
     seth_auth = sg_client.create_session(
         url=sg_admin_url,
         db=sg_db,
-        name=seth_user_info.name,
-        password=seth_user_info.password
+        name=seth_user_info.name
     )
 
     # Create 'number_docs_per_client' docs from Sync Gateway
@@ -975,7 +970,7 @@ def test_sdk_does_not_see_sync_meta(params_from_base_test_setup, sg_conf_name):
     # Create sg user
     sg_client = MobileRestClient()
     sg_client.create_user(url=sg_admin_url, db=sg_db, name='seth', password='pass', channels=['shared'])
-    seth_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='seth', password='pass')
+    seth_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='seth')
 
     # Connect to server via SDK
     cbs_ip = host_for_url(cbs_url)
@@ -1132,7 +1127,7 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
     log_info('Creating user / session on Sync Gateway ...')
     sg_client = MobileRestClient()
     sg_client.create_user(url=sg_admin_url, db=sg_db, name='seth', password='pass', channels=['sg', 'sdk'])
-    seth_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='seth', password='pass')
+    seth_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='seth')
 
     # Create / add docs to sync gateway
     log_info('Adding docs Sync Gateway ...')
@@ -1351,7 +1346,7 @@ def test_sg_sdk_interop_shared_docs(params_from_base_test_setup,
     # Create sg user
     sg_client = MobileRestClient()
     sg_client.create_user(url=sg_admin_url, db=sg_db, name='seth', password='pass', channels=['shared'])
-    seth_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='seth', password='pass')
+    seth_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='seth')
 
     # Connect to server via SDK
     cbs_ip = host_for_url(cbs_url)
@@ -1602,10 +1597,10 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
 
     sg_client = MobileRestClient()
     sg_client.create_user(url=sg_admin_url, db=sg_db, name='autosdkuser', password='pass', channels=['shared'])
-    autosdkuser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autosdkuser', password='pass')
+    autosdkuser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autosdkuser')
 
     sg_client.create_user(url=sg_admin_url, db=sg_db, name='autosguser', password='pass', channels=['sg-shared'])
-    autosguser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autosguser', password='pass')
+    autosguser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autosguser')
 
     log_info('Num docs per client: {}'.format(number_docs_per_client))
     log_info('Num updates per doc per client: {}'.format(number_updates_per_doc_per_client))
@@ -2273,7 +2268,7 @@ def test_sg_sdk_interop_shared_updates_from_sg(params_from_base_test_setup,
     # Create sg user
     sg_client = MobileRestClient()
     sg_client.create_user(url=sg_admin_url, db=sg_db, name='autotest', password='pass', channels=['shared'])
-    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest', password='pass')
+    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest')
 
     # Connect to server via SDK
     cbs_ip = host_for_url(cbs_url)
@@ -2322,7 +2317,7 @@ def test_sg_sdk_interop_shared_updates_from_sg(params_from_base_test_setup,
     # Update docs via SDK
     sdk_docs = sdk_client.get_multi(sg_doc_ids)
     assert len(list(sdk_docs.keys())) == number_docs_per_client
-    for doc_id, val in list(sdk_docs.items()):
+    for doc_id, val in sdk_docs.items():
         doc_body = val.value
         doc_body["updated_by_sdk"] = True
         sdk_client.upsert(doc_id, doc_body)
@@ -2478,8 +2473,7 @@ def test_purge_and_view_compaction(params_from_base_test_setup, sg_conf_name):
     test_auth_session = sg_client.create_session(
         url=sg_admin_url,
         db=sg_db,
-        name=auto_user_info.name,
-        password=auto_user_info.password
+        name=auto_user_info.name
     )
 
     def update_prop():

@@ -103,8 +103,8 @@ def test_user_views_sanity(params_from_base_test_setup, sg_conf_name, x509_cert_
     assert raghu_user["admin_roles"] == ["Researcher"]
     assert raghu_user["roles"] == ["Researcher"]
 
-    seth_session = client.create_session(url=sg_admin_url, db=sg_db, name="seth", password="pass")
-    raghu_session = client.create_session(url=sg_admin_url, db=sg_db, name="raghu", password="pass")
+    seth_session = client.create_session(url=sg_admin_url, db=sg_db, name="seth")
+    raghu_session = client.create_session(url=sg_admin_url, db=sg_db, name="raghu")
 
     start = time.time()
 

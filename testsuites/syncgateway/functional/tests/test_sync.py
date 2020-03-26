@@ -543,7 +543,7 @@ def test_sync_20mb(params_from_base_test_setup, sg_conf_name):
     # Create sg user
     sg_client = MobileRestClient()
     sg_client.create_user(url=sg_admin_url, db=sg_db, name='autotest', password='pass', channels=channels)
-    session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest', password='pass')
+    session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest')
 
     sg_doc_body = doc_generators.doc_size_byBytes(22000000)
     doc_id = "20mb_doc"
