@@ -1,8 +1,6 @@
 import time
 import json
 import requests
-import os
-import os.path
 from requests.exceptions import ConnectionError, HTTPError
 from requests import Session
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
@@ -13,7 +11,7 @@ from couchbase.exceptions import CouchbaseError, NotFoundError
 
 import keywords.constants
 from keywords.remoteexecutor import RemoteExecutor
-from keywords.exceptions import CBServerError, ProvisioningError, TimeoutError, RBACUserCreationError, RBACUserDeletionError
+from keywords.exceptions import CBServerError, ProvisioningError, TimeoutError, RBACUserCreationError
 from keywords.utils import log_r, log_info, log_debug, log_error, hostname_for_url
 from keywords import types
 from utilities.cluster_config_utils import is_x509_auth

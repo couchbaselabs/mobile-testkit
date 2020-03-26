@@ -1,6 +1,5 @@
 import os
 import os.path
-import sys
 from keywords.utils import log_info
 import ansible
 import ansible.inventory
@@ -10,12 +9,13 @@ from ansible.executor import playbook_executor
 from ansible.utils.display import Display
 from ansible import constants
 from ansible.parsing.dataloader import DataLoader
-import ansible.inventory
+
 
 class Options(object):
     """
     Options class to replace Ansible OptParser
     """
+
     def __init__(self, verbosity=None, inventory=None, listhosts=None, subset=None, module_paths=None, extra_vars=None,
                  forks=None, ask_vault_pass=None, vault_password_files=None, new_vault_password_file=None,
                  output_file=None, one_line=None, tree=None, ask_sudo_pass=None, ask_su_pass=None,
@@ -126,7 +126,6 @@ class Runner(object):
         self.inventory.subset(self.options.subset)
         self.variable_manager = VariableManager(loader=self.loader, inventory=self.inventory)
         self.variable_manager.extra_vars = extra_vars
-
 
         # Setup playbook executor, but don't run until run() called
         log_info("Running playbook: {}".format(playbook))

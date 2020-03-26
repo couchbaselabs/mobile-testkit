@@ -1043,7 +1043,6 @@ def test_sdk_does_not_see_sync_meta(params_from_base_test_setup, sg_conf_name):
     'sync_gateway_default_functional_tests_couchbase_protocol_withport_11210'
 ])
 def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
-
     """
     Scenario:
     - Bulk create 'number_docs' docs from SDK with id prefix 'sdk' and channels ['sdk']
@@ -2375,7 +2374,7 @@ def test_sg_sdk_interop_shared_updates_from_sg(params_from_base_test_setup,
             log_info("conflict revision does not exist {}".format(revs))
             assert False
         if sg_create_doc not in revs and sg_update_doc not in revs:
-                assert True
+            assert True
         else:
             log_info("Non conflict revision exist {} ".format(revs))
             assert False
@@ -2404,11 +2403,11 @@ def test_sg_sdk_interop_shared_updates_from_sg(params_from_base_test_setup,
         revs = [doc['rev'] for doc in docs]
         assert len(revs) == 2
         if sdk_first_update_doc not in revs and sdk_update_doc2 not in revs and sg_create_doc not in revs and sg_update_doc not in revs:
-                assert True
+            assert True
         else:
-                log_info(
-                    "Deleted branched revisions still appear here {}".format(revs))
-                assert False
+            log_info(
+                "Deleted branched revisions still appear here {}".format(revs))
+            assert False
 
 
 @pytest.mark.syncgateway
@@ -2504,7 +2503,7 @@ def test_purge_and_view_compaction(params_from_base_test_setup, sg_conf_name):
         channel_view_query = sg_client.view_query_through_channels(url=sg_admin_url, db=sg_db)
         channel_view_query_string = json.dumps(channel_view_query)
         if(doc_id in channel_view_query_string or time.time() - start > timeout):
-                break
+            break
     assert doc_id in channel_view_query_string, "doc id not exists in view query"
     time.sleep(300)  # wait for 5 mins and see meta is still available as it is not purged yet
     verify_sg_xattrs(
@@ -2540,7 +2539,7 @@ def test_purge_and_view_compaction(params_from_base_test_setup, sg_conf_name):
         channel_view_query = sg_client.view_query_through_channels(url=sg_admin_url, db=sg_db)
         channel_view_query_string = json.dumps(channel_view_query)
         if(doc_id not in channel_view_query_string or time.time() - start > timeout):
-                break
+            break
     assert doc_id not in channel_view_query_string, "doc id exists in chanel view query after compaction"
 
 
