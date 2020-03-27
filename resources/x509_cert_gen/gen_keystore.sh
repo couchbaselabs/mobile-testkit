@@ -44,7 +44,7 @@ echo Generate RSA
 openssl genrsa -out ${NODE}.key 2048 2>/dev/null
 openssl req -new -key ${NODE}.key -out ${NODE}.csr -subj "/C=UA/O=My Company/CN=${USERNAME}" 2>/dev/null
 openssl x509 -req -in ${NODE}.csr -CA ${INTERMEDIATE}.pem -CAkey ${INTERMEDIATE}.key -CAcreateserial \
--CAserial intermediateCA.srl -out ${NODE}.pem -days 365 -extfile openssl-san.cnf -extensions 'v3_req'
+-CAserial intermediateCA.srl -out ${NODE}.pem -days 365 -extfile openssl-san.cnf #-extensions 'v3_req'
 
 # Generate certificate chain file
 cat ${NODE}.pem ${INTERMEDIATE}.pem ${ROOT_CA}.pem > ${CHAIN}.pem
@@ -59,15 +59,31 @@ arr_hosts=( $hosts )
 echo Loop through nodes
 for host in "${arr_hosts[@]}"
 do
-	ip=`echo $host|sed 's/\"\([^:]*\):.*/\1/'`
+        echo $host
+        if  [[ ${host:1:1} == "[" ]] 
+        then 
+             ip=`echo $host|sed "s/.*\[//;s/\].*//;"`
+             echo "${ip}"
+             ip="[${ip}]"
+        else
+             ip=`echo $host|sed 's/\"\([^:]*\):.*/\1/'`
+        fi
 	# Copy private key and chain file to a node:/opt/couchbase/var/lib/couchbase/inbox
-	echo "Setup Certificate for ${ip}"
-	${SSH} root@${ip} "mkdir ${INBOX}" 2>/dev/null || true
-	${SCP} chain.pem root@${ip}:${INBOX}
-	${SCP} pkey.key root@${ip}:${INBOX}
-	${SSH} root@${ip} "chmod a+x ${INBOX}${CHAIN}"
-	${SSH} root@${ip} "chmod a+x ${INBOX}${NODE}.key"
+	      echo "Setup Certificate for ${ip}"
+	      ${SSH} root@${ip} "mkdir ${INBOX}" 2>/dev/null || true
+        echo $INBOX
+        ${SCP} chain.pem root@${ip}:${INBOX}
 
+        ${SCP} pkey.key root@${ip}:${INBOX}
+        if  [[ ${host:1:1} == "[" ]]
+        then
+            new_ip=`echo $ip|sed "s/.*\[//;s/\].*//;"`
+            ${SSH} root@${new_ip} "chmod a+x ${INBOX}${CHAIN}"
+	          ${SSH} root@${new_ip} "chmod a+x ${INBOX}${NODE}.key"
+	      else
+	          ${SSH} root@${ip} "chmod a+x ${INBOX}${CHAIN}"
+	          ${SSH} root@${ip} "chmod a+x ${INBOX}${NODE}.key"
+	      if
 	# Upload ROOT CA and activate it
 	curl -s -o /dev/null --data-binary "@./${ROOT_CA}.pem" \
     	http://${ADMINCRED}@${ip}:8091/controller/uploadClusterCA
