@@ -86,6 +86,11 @@ do
 	          ${SSH} root@${ip} "chmod a+x ${INBOX}${CHAIN}"
 	          ${SSH} root@${ip} "chmod a+x ${INBOX}${NODE}.key"
 	      fi
+	      if  [[ ${host:1:1} == "[" ]]
+	      then
+	        new_ip=`echo $ip|sed "s/.*\[//;s/\].*//;"`
+	        ip = $new_ip
+	      fi
 	      # Upload ROOT CA and activate it
 	      curl -s -o /dev/null --data-binary "@./${ROOT_CA}.pem" \
     	  http://${ADMINCRED}@${ip}:8091/controller/uploadClusterCA
