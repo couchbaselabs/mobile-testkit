@@ -53,7 +53,7 @@ class SyncGatewayConfig:
                                                                     self._build_number,
                                                                     platform_extension)
         else:
-            base_url = "https://latestbuilds.service.couchbase.com/builds/releases/mobile/couchbase-sync-gateway/{}".format(self._version_number)
+            base_url = "http://latestbuilds.service.couchbase.com/builds/releases/mobile/couchbase-sync-gateway/{}".format(self._version_number)
             package_name = "couchbase-{}-{}_{}_x86_64.{}".format(installer,
                                                                  sg_type,
                                                                  self._version_number,

@@ -28,8 +28,6 @@ from keywords.exceptions import RestError, TimeoutException, LiteServError, Chan
 from keywords import types
 
 
-
-
 def parse_multipart_response(response):
     """
     Parses a multipart response where each section looks like below:
@@ -79,13 +77,13 @@ def get_auth_type(auth):
     return auth_type
 
 
-
 class MyEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, (bytes, bytearray)):
             return obj.decode("ASCII")
         # Let the base class default method raise the TypeError
         return json.JSONEncoder.default(self, obj)
+
 
 class MobileRestClient:
     """
@@ -172,7 +170,6 @@ class MobileRestClient:
         raise ValueError("Unsupported platform type")
 
     def get_session(self, url, db=None, session_id=None):
-
         """
         :param url: url to get session from
         :param session_id: the session id to get information from
@@ -1214,7 +1211,7 @@ class MobileRestClient:
 
         return resp.json()
 
-    def update_doc(self, url, db, doc_id, number_updates=1, attachment_name=None, expiry=None, delay=None, auth=None, channels=None, property_updater=None, remove_expiry=False):
+    def update_doc(self, url, db, doc_id, number_updates=1, attachment_name=None, expiry=None, delay=None, auth=None, channels=None, property_updater=None, remove_expiry=False, rev=None, doc=None):
         """
         Updates a doc on a db a number of times.
             1. GETs the doc
@@ -1223,8 +1220,13 @@ class MobileRestClient:
         """
 
         auth_type = get_auth_type(auth)
-        doc = self.get_doc(url, db, doc_id, auth)
-        current_rev = doc["_rev"]
+        if doc is None:
+            doc = self.get_doc(url, db, doc_id, auth)
+
+        if rev is None:
+            current_rev = doc["_rev"]
+        else:
+            current_rev = rev
         try:
             doc["updates"]
         except Exception:
@@ -1333,7 +1335,6 @@ class MobileRestClient:
         log_info("Added: {} docs".format(len(added_docs)))
 
         return added_docs
-
 
     def add_bulk_docs(self, url, db, docs, auth=None):
         """
@@ -1570,7 +1571,6 @@ class MobileRestClient:
                          repl_filter=None,
                          doc_ids=None,
                          channels_filter=None):
-
         """
         Starts a replication (one-shot or continous) between Lite instances (P2P),
         Sync Gateways, or Lite <-> Sync Gateways

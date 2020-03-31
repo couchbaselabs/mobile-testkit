@@ -481,6 +481,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     test_name = request.node.name
 
     source_db = None
+    source_db2 = None
     test_name_cp = test_name.replace("/", "-")
     log_filename = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
                                                  test_name_cp,
@@ -507,6 +508,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
 
     db = None
     cbl_db = None
+    cbl_db2 = None
     test_db_log_file = None
     path = None
     if create_db_per_test:
@@ -517,20 +519,25 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
             test_db_log_file = cbllog.get_directory()
             log_info("Log files available at - {}".format(test_db_log_file))
         cbl_db = create_db_per_test + str(time.time())
+        cbl_db2 = create_db_per_test + "-2-" + str(time.time())
         # Create CBL database
         db = Database(base_url)
 
         log_info("Creating a Database {} at test setup".format(cbl_db))
         db_config = db.configure()
         source_db = db.create(cbl_db, db_config)
+        source_db2 = db.create(cbl_db2, db_config)
         log_info("Getting the database name")
         db_name = db.getName(source_db)
         assert db_name == cbl_db
         path = db.getPath(source_db).rstrip("/\\")
+        path2 = db.getPath(source_db2).rstrip("/\\")
         if '\\' in path:
             path = '\\'.join(path.split('\\')[:-1])
+            path2 = '\\'.join(path2.split('\\')[:-1])
         else:
             path = '/'.join(path.split('/')[:-1])
+            path2 = '/'.join(path2.split('/')[:-1])
 
     # This dictionary is passed to each test
     yield {
@@ -563,6 +570,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "sg_ip": sg_ip,
         "sg_db": sg_db,
         "source_db": source_db,
+        "source_db2": source_db2,
         "db": db,
         "num_docs": num_docs,
         "cbs_platform": cbs_platform,
@@ -582,6 +590,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         try:
             if db.exists(cbl_db, path):
                 db.deleteDB(source_db)
+            if db.exists(cbl_db2, path2):
+                db.deleteDB(source_db2)
             log_info("Flushing server memory")
             utils_obj = Utils(base_url)
             utils_obj.flushMemory()

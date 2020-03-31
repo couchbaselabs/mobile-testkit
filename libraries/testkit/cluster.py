@@ -66,7 +66,7 @@ class Cluster:
 
         for ac in cluster["sg_accels"]:
             if cluster["environment"]["ipv6_enabled"]:
-                    ac["ip"] = "[{}]".format(ac["ip"])
+                ac["ip"] = "[{}]".format(ac["ip"])
             acs.append({"name": ac["name"], "ip": ac["ip"]})
 
         self.cbs_ssl = cluster["environment"]["cbs_ssl_enabled"]
