@@ -44,7 +44,7 @@ echo Generate RSA
 openssl genrsa -out ${NODE}.key 2048 2>/dev/null
 openssl req -new -key ${NODE}.key -out ${NODE}.csr -subj "/C=UA/O=My Company/CN=${USERNAME}" 2>/dev/null
 openssl x509 -req -in ${NODE}.csr -CA ${INTERMEDIATE}.pem -CAkey ${INTERMEDIATE}.key -CAcreateserial \
--CAserial intermediateCA.srl -out ${NODE}.pem -days 365 -extfile openssl-san.cnf #-extensions 'v3_req'
+-CAserial intermediateCA.srl -out ${NODE}.pem -days 365 -extfile openssl-san.cnf
 
 # Generate certificate chain file
 cat ${NODE}.pem ${INTERMEDIATE}.pem ${ROOT_CA}.pem > ${CHAIN}.pem
@@ -88,8 +88,7 @@ do
 	      fi
 	      if  [[ ${host:1:1} == "[" ]]
 	      then
-	        new_ip=`echo $ip|sed "s/.*\[//;s/\].*//;"`
-	        ip = $new_ip
+	        ip=`echo $ip|sed "s/.*\[//;s/\].*//;"`
 	      fi
 	      # Upload ROOT CA and activate it
 	      curl -s -o /dev/null --data-binary "@./${ROOT_CA}.pem" \
