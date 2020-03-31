@@ -6,10 +6,6 @@
     become: yes
     when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
 
-  - include: tasks/block-http-ports-macos.yml
-    become: yes
-    when: ansible_os_family == "Darwin"
-
   - include: tasks/block-http-ports-windows.yml
     when: ansible_os_family == "Windows"
 
