@@ -43,8 +43,8 @@ openssl x509 -req -in ${INTERMEDIATE}.csr -CA ${ROOT_CA}.pem -CAkey ${ROOT_CA}.k
 echo Generate RSA
 openssl genrsa -out ${NODE}.key 2048 2>/dev/null
 openssl req -new -key ${NODE}.key -out ${NODE}.csr -subj "/C=UA/O=My Company/CN=${USERNAME}" 2>/dev/null
-openssl x509 -req -in ${NODE}.csr -CA ${INTERMEDIATE}.pem -CAkey ${INTERMEDIATE}.key -CAcreateserial \
--CAserial intermediateCA.srl -out ${NODE}.pem -days 365 -extfile openssl-san.cnf
+openssl x509 -new -req -in ${NODE}.csr -CA ${INTERMEDIATE}.pem -CAkey ${INTERMEDIATE}.key -CAcreateserial \
+-CAserial intermediateCA.srl -out ${NODE}.pem -days 365 -extfile openssl-san.cnf -extensions 'v3_req'
 
 # Generate certificate chain file
 cat ${NODE}.pem ${INTERMEDIATE}.pem ${ROOT_CA}.pem > ${CHAIN}.pem
@@ -68,7 +68,7 @@ do
         else
              ip=`echo $host|sed 's/\"\([^:]*\):.*/\1/'`
         fi
-	# Copy private key and chain file to a node:/opt/couchbase/var/lib/couchbase/inbox
+	      # Copy private key and chain file to a node:/opt/couchbase/var/lib/couchbase/inbox
 	      echo "Setup Certificate for ${ip}"
 
         if  [[ ${host:1:1} == "[" ]]
