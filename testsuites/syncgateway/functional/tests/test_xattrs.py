@@ -2373,7 +2373,7 @@ def test_sg_sdk_interop_shared_updates_from_sg(params_from_base_test_setup,
     # which created before branched revisions does not show up in changes feed
     for docs in doc_changes_in_changes[1:]:  # skip first item in list as first item has user information, but not doc information
         revs = [doc['rev'] for doc in docs]
-        if sdk_first_update_doc in revs and sdk_update_doc2 in revs:
+        if sdk_first_update_doc in revs:
             assert True
         else:
             log_info("conflict revision does not exist {}".format(revs))
@@ -2383,6 +2383,10 @@ def test_sg_sdk_interop_shared_updates_from_sg(params_from_base_test_setup,
         else:
             log_info("Non conflict revision exist {} ".format(revs))
             assert False
+
+    for doc in sdk_update_docs2:
+        change_for_doc = sg_client.get_changes(url=sg_url, db=sg_db, since=0, auth=autouser_session, feed="normal", filter_type="_doc_ids", filter_doc_ids=[doc["_id"]])
+        assert doc["_rev"] in change_for_doc["results"][0]["changes"][0]["rev"], "current revision does not exist in changes"
 
     # Do SDK deleted and SG delete after branched revision created and check changes feed removed branched revisions
     sdk_client.remove_multi(sg_doc_ids)
