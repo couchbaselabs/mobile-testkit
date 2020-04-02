@@ -78,7 +78,7 @@ do
             ${SCP} chain.pem root@${ip}:${INBOX}
             ${SCP} pkey.key root@${ip}:${INBOX}
             ${SSH} root@${new_ip} "chmod a+x ${INBOX}${CHAIN}"
-	          ${SSH} root@${new_ip} "chmod a+x ${INBOX}${NODE}.key"
+	          ${SSH} root@${new_ip} "chmod 777 ${INBOX}${NODE}.key"
 	      else
 	          ${SSH} root@${ip} "mkdir ${INBOX}" 2>/dev/null || true
 	          ${SCP} chain.pem root@${ip}:${INBOX}
