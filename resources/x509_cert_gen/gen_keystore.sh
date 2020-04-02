@@ -44,7 +44,7 @@ echo Generate RSA
 openssl genrsa -out ${NODE}.key 2048 2>/dev/null
 openssl req -new -key ${NODE}.key -out ${NODE}.csr -subj "/C=UA/O=My Company/CN=${USERNAME}" 2>/dev/null
 openssl x509 -req -in ${NODE}.csr -CA ${INTERMEDIATE}.pem -CAkey ${INTERMEDIATE}.key -CAcreateserial \
--CAserial intermediateCA.srl -out ${NODE}.pem -days 365 -extfile openssl-san.cnf -extensions 'v3_req'
+-CAserial intermediateCA.srl -out ${NODE}.pem -days 365 -extfile openssl-san.cnf
 
 # Generate certificate chain file
 cat ${NODE}.pem ${INTERMEDIATE}.pem ${ROOT_CA}.pem > ${CHAIN}.pem
@@ -84,7 +84,7 @@ do
 	          ${SCP} chain.pem root@${ip}:${INBOX}
             ${SCP} pkey.key root@${ip}:${INBOX}
 	          ${SSH} root@${ip} "chmod a+x ${INBOX}${CHAIN}"
-	          ${SSH} root@${ip} "chmod a+x ${INBOX}${NODE}.key"
+	          ${SSH} root@${ip} "chmod 777 ${INBOX}${NODE}.key"
 	      fi
 	      if  [[ ${host:1:1} == "[" ]]
 	      then

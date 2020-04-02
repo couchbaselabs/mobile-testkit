@@ -1,10 +1,9 @@
 [req]
-x509_extensions = v3_req
 distinguished_name = req_distinguished_name
 
 [req_distinguished_name]
 
-[ v3_req ]
+[v3_req]
 
 # Extensions to add to a certificate request
 
