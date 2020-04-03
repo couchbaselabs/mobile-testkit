@@ -2,6 +2,7 @@ import configparser
 import json
 import os
 import re
+
 from keywords.exceptions import ProvisioningError
 from shutil import copyfile, rmtree, make_archive
 from subprocess import Popen, PIPE
@@ -72,14 +73,15 @@ def persist_cluster_config_environment_prop(cluster_config, property_name, value
         config.write(f)
 
 
-def generate_x509_certs(cluster_config, bucket_name):
+def generate_x509_certs(cluster_config, bucket_name, sg_platform):
     ''' Generate and insert x509 certs for CBS and SG TLS Handshake'''
     cluster = load_cluster_config_json(cluster_config)
-    for line in open("ansible.cfg"):
-        match = re.match(r'remote_user\s*=\s*(\w*)$', line)
-        if match:
-            username = match.groups()[0].strip()
-            break
+    if sg_platform.lower() != "windows" and sg_platform.lower() != "macos":
+        for line in open("ansible.cfg"):
+            match = re.match('remote_user\s*=\s*(\w*)$', line)
+            if match:
+                username = match.groups()[0].strip()
+                break
 
     curr_dir = os.getcwd()
     certs_dir = os.path.join(curr_dir, "certs")
@@ -106,7 +108,10 @@ def generate_x509_certs(cluster_config, bucket_name):
     make_archive("certs", "zip", certs_dir)
 
     for node in cluster["sync_gateways"]:
-        cmd = ["scp", "certs.zip", "{}@{}:/tmp".format(username, node["ip"])]
+        if sg_platform.lower() != "macos" and sg_platform.lower() != "windows":
+            cmd = ["scp", "certs.zip", "{}@{}:/tmp".format(username, node["ip"])]
+        else:
+            cmd = ["cp", "certs.zip", "/tmp"]
         print(" ".join(cmd))
         proc = Popen(cmd, stdout=PIPE, stderr=PIPE)
         stdout, stderr = proc.communicate()
