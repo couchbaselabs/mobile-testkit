@@ -92,9 +92,9 @@ def generate_x509_certs(cluster_config, bucket_name):
     copy_tree(src, certs_dir)
     os.chdir(certs_dir)
     cbs_nodes = [node["ip"] for node in cluster["couchbase_servers"]]
-    with open("openssl-san.cnf", "a+") as f:
-        for item in range(len(cbs_nodes)):
-            f.write("IP.{} = {}\n".format(item + 1, cbs_nodes[item]))
+    # with open("openssl-san.cnf", "a+") as f:
+    #     for item in range(len(cbs_nodes)):
+    #         f.write("IP.{} = {}\n".format(item + 1, cbs_nodes[item]))
     cmd = ["./gen_keystore.sh", cbs_nodes[0], bucket_name[0]]
     print(" ".join(cmd))
     proc = Popen(cmd, stdout=PIPE, stderr=PIPE)
