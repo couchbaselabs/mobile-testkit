@@ -76,10 +76,10 @@ do
 	# Enable client cert
 	if ${USE_JSON} ;then
 	    POST_DATA='{"state": "enable","prefixes": [{"path": "subject.cn","prefix": "","delimiter": ""}]}'
-        curl -s -H "Content-Type: application/json" -X POST -d "${POST_DATA}" http://${ADMINCRED}@${ip}:8091/settings/clientCertAuth
+            curl -s -H "Content-Type: application/json" -X POST -d "${POST_DATA}" http://${ADMINCRED}@${ip}:8091/settings/clientCertAuth
 	else
-        curl -s -d "state=enable" -d "delimiter=" -d "path=subject.cn" -d "prefix=" http://${ADMINCRED}@${ip}:8091/settings/clientCertAuth
-    fi
+            curl -s -d "state=enable" -d "delimiter=" -d "path=subject.cn" -d "prefix=" http://${ADMINCRED}@${ip}:8091/settings/clientCertAuth
+        fi
 done
 
 # Create keystore file and import ROOT/INTERMEDIATE/CLIENT cert
