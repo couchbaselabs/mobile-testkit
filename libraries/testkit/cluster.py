@@ -18,7 +18,7 @@ from utilities.cluster_config_utils import is_load_balancer_enabled, get_revs_li
 from utilities.cluster_config_utils import get_load_balancer_ip, no_conflicts_enabled, is_delta_sync_enabled, get_sg_platform
 from utilities.cluster_config_utils import generate_x509_certs, is_x509_auth
 from keywords.constants import SYNC_GATEWAY_CERT
-from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version, get_cbs_version
+from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version
 
 
 class Cluster:
@@ -240,8 +240,6 @@ class Cluster:
             playbook_vars["server_scheme"] = "couchbases"
             playbook_vars["server_port"] = 11207
             block_http_vars = {}
-            # as jenkins slave and sync gateway run on same maachine, libcouchbase on slave cannot contact to server if 11210 is blocked
-            # So avoiding blocking 11210 port on mac
             port_list = [8091, 8092, 8093, 8094, 8095, 8096, 11210, 11211]
             for port in port_list:
                 block_http_vars["port"] = port
