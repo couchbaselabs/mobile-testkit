@@ -598,13 +598,13 @@ def test_verify_deleted_prop_tombstoned_olddoc(params_from_base_test_setup, sg_c
     sg_client.create_user(url=sg_admin_url, db=sg_db, name=sg_user_name, password=sg_password,
                           channels=channels)
 
-    test_auth_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=sg_user_name, password=sg_password)
+    test_auth_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=sg_user_name)
 
     # Create user2 / session2
     sg_client.create_user(url=sg_admin_url, db=sg_db, name=sg_user_name2, password=sg_password2,
                           channels=channels2)
 
-    test_auth_session2 = sg_client.create_session(url=sg_admin_url, db=sg_db, name=sg_user_name2, password=sg_password2)
+    test_auth_session2 = sg_client.create_session(url=sg_admin_url, db=sg_db, name=sg_user_name2)
 
     # 1. Create a doc
     doc_body = document.create_doc(doc_id=doc_id, channels=channels)
