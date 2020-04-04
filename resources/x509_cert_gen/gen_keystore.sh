@@ -77,14 +77,14 @@ do
             ${SSH} root@${new_ip} "mkdir ${INBOX}" 2>/dev/null || true
             ${SCP} chain.pem root@${ip}:${INBOX}
             ${SCP} pkey.key root@${ip}:${INBOX}
-            ${SSH} root@${new_ip} "chmod a+x ${INBOX}${CHAIN}"
-	          ${SSH} root@${new_ip} "chmod 777 ${INBOX}${NODE}.key"
+            ${SSH} root@${new_ip} "chmod o+rx ${INBOX}${CHAIN}"
+	          ${SSH} root@${new_ip} "chmod o+rx ${INBOX}${NODE}.key"
 	      else
 	          ${SSH} root@${ip} "mkdir ${INBOX}" 2>/dev/null || true
 	          ${SCP} chain.pem root@${ip}:${INBOX}
             ${SCP} pkey.key root@${ip}:${INBOX}
-	          ${SSH} root@${ip} "chmod a+x ${INBOX}${CHAIN}"
-	          ${SSH} root@${ip} "chmod 777 ${INBOX}${NODE}.key"
+	          ${SSH} root@${ip} "chmod o+rx ${INBOX}${CHAIN}"
+	          ${SSH} root@${ip} "chmod o+rx ${INBOX}${NODE}.key"
 	      fi
 	      if  [[ ${host:1:1} == "[" ]]
 	      then
@@ -92,14 +92,14 @@ do
 	      fi
 	      # Upload ROOT CA and activate it
 	      curl -s -o /dev/null --data-binary "@./${ROOT_CA}.pem" \
-    	  http://${ADMINCRED}@${ip}:8091/controller/uploadClusterCA
+    	      http://${ADMINCRED}@${ip}:8091/controller/uploadClusterCA
 	      curl -sX POST http://${ADMINCRED}@${ip}:8091/node/controller/reloadCertificate
 	      # Enable client cert
 	      if ${USE_JSON} ;then
-         	      POST_DATA='{"state": "enable","prefixes": [{"path": "subject.cn","prefix": "","delimiter": ""}]}'
-        	      curl -s -H "Content-Type: application/json" -X POST -d "${POST_DATA}" http://${ADMINCRED}@${ip}:8091/settings/clientCertAuth
+         	  POST_DATA='{"state": "enable","prefixes": [{"path": "subject.cn","prefix": "","delimiter": ""}]}'
+        	  curl -s -H "Content-Type: application/json" -X POST -d "${POST_DATA}" http://${ADMINCRED}@${ip}:8091/settings/clientCertAuth
 	      else
-        	      curl -s -d "state=enable" -d "delimiter=" -d "path=subject.cn" -d "prefix=" http://${ADMINCRED}@${ip}:8091/settings/clientCertAuth
+        	  curl -s -d "state=enable" -d "delimiter=" -d "path=subject.cn" -d "prefix=" http://${ADMINCRED}@${ip}:8091/settings/clientCertAuth
     	  fi
 done
 
