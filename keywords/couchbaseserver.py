@@ -129,7 +129,11 @@ class CouchbaseServer:
         if server_major_version >= 5:
             self._delete_internal_rbac_bucket_user(name)
 
-        resp = self._session.delete("{0}/pools/default/buckets/{1}".format(self.url, name))
+        count = 0
+        max_retries = 5
+        while count < max_retries:
+            resp = self._session.delete("{0}/pools/default/buckets/{1}".format(self.url, name))
+            count += 1
         log_r(resp)
         resp.raise_for_status()
 
@@ -762,7 +766,7 @@ class CouchbaseServer:
             connection_str = "couchbase://{}/{}".format(self.host, bucket_name)
         return Bucket(connection_str, password='password')
 
-    def get_package_name(self, version, build_number, cbs_platform="centos7", cbs_ce=False):
+    def get_package_name(self, version, build_number, cbs_platform="centos8", cbs_ce=False):
         """
         Given:
         version - the version without any build number information, eg 4.5.0
@@ -789,7 +793,7 @@ class CouchbaseServer:
             else:
                 return "couchbase-server-{}-{}-{}-{}.x86_64.rpm".format(edition, version, build_number, cbs_platform)
 
-    def resolve_cb_nas_url(self, version, build_number, cbs_platform="centos7", cbs_ce=False):
+    def resolve_cb_nas_url(self, version, build_number, cbs_platform="centos8", cbs_ce=False):
         """
         Resolve a download URL for couchbase server on the internal VPN download site
         Given:
@@ -823,7 +827,7 @@ class CouchbaseServer:
 
         return base_url, package_name
 
-    def resolve_cb_mobile_url(self, version, cbs_platform="centos7", cbs_ce=False):
+    def resolve_cb_mobile_url(self, version, cbs_platform="centos8", cbs_ce=False):
         """
         Resolve a download URL for the corresponding package to given
         version on http://cbmobile-packages.s3.amazonaws.com (an S3 bucket

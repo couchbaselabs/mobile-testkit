@@ -773,7 +773,7 @@ def test_replication_with_session_cookie(setup_client_syncgateway_test):
     client.create_database(url=ls_url, name=ls_db)
 
     # Get session header for user_1
-    session_header = client.create_session_header(url=sg_url, db=sg_db, name="user_1")
+    session_header = client.create_session_header(url=sg_url, db=sg_db, name="user_1", password="foo")
 
     # Get session id from header
     session_parts = re.split("=|;", session_header)
@@ -873,7 +873,7 @@ def test_replication_with_session_cookie(setup_client_syncgateway_test):
     assert len(replications) == 0, "All replications should be stopped"
 
     # Create new session and new push / pull replications
-    session_header = client.create_session_header(url=sg_url, db=sg_db, name="user_1")
+    session_header = client.create_session_header(url=sg_url, db=sg_db, name="user_1", password="foo")
 
     # Get session id from header
     session_parts = re.split("=|;", session_header)
