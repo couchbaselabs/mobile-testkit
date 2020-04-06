@@ -12,7 +12,7 @@ from libraries.NetworkUtils import NetworkUtils
 from libraries.testkit import cluster
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop, is_x509_auth
 from utilities.cluster_config_utils import get_load_balancer_ip
-from libraries.provision.clean_cluster import clean_cluster
+from libraries.provision.clean_cluster import clear_firewall_rules
 
 UNSUPPORTED_1_5_0_CC = {
     "test_db_offline_tap_loss_sanity[bucket_online_offline/bucket_online_offline_default_dcp-100]": {
@@ -367,7 +367,7 @@ def params_from_base_suite_setup(request):
     log_info("Tearing down 'params_from_base_suite_setup' ...")
 
     # clean up firewall rules if any ports blocked for server ssl testing
-    clean_cluster(cluster_config)
+    clear_firewall_rules(cluster_config)
     # Stop all sync_gateway and sg_accels as test finished
     c = cluster.Cluster(cluster_config)
     c.stop_sg_and_accel()
