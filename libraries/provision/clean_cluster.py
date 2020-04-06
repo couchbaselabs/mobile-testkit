@@ -20,6 +20,15 @@ def clean_cluster(cluster_config):
         raise ProvisioningError("Failed to flush firewall")
 
 
+def clear_firewall_rules(cluster_config):
+    log_info("Flusing firewall before teardown: {}".format(cluster_config))
+
+    ansible_runner = AnsibleRunner(config=cluster_config)
+    status = ansible_runner.run_ansible_playbook("flush-firewall.yml")
+    if status != 0:
+        raise ProvisioningError("Failed to flush firewall")
+
+
 if __name__ == "__main__":
     usage = "usage: python clean_cluster.py"
 
