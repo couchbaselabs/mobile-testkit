@@ -178,9 +178,7 @@ class TestServeriOS(TestServerBase):
         # output = subprocess.check_output([
         #     "ios-sim", "--devicetypeid", self.device, "install", self.app_path, "--exit"
         # ])
-        output = subprocess.check_output([
-	    "ios-sim", "install", self.app_path, "--devicetypeid", self.device, "--exit"
-        ])
+        output = subprocess.check_output(["ios-sim", "install", self.app_path, "--devicetypeid", self.device, "--exit"])
         log_info(output)
         list_output = subprocess.Popen(["xcrun", "simctl", "list"], stdout=subprocess.PIPE)
         output = subprocess.check_output(('grep', 'Booted'), stdin=list_output.stdout)

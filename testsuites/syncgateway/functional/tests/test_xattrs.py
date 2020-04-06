@@ -2381,6 +2381,10 @@ def test_sg_sdk_interop_shared_updates_from_sg(params_from_base_test_setup,
         change_for_doc = sg_client.get_changes(url=sg_url, db=sg_db, since=0, auth=autouser_session, feed="normal", filter_type="_doc_ids", filter_doc_ids=[doc["_id"]])
         assert doc["_rev"] in change_for_doc["results"][0]["changes"][0]["rev"], "current revision does not exist in changes"
 
+    for doc in sdk_update_docs2:
+        change_for_doc = sg_client.get_changes(url=sg_url, db=sg_db, since=0, auth=autouser_session, feed="normal", filter_type="_doc_ids", filter_doc_ids=[doc["_id"]])
+        assert doc["_rev"] in change_for_doc["results"][0]["changes"][0]["rev"], "current revision does not exist in changes"
+
     # Do SDK deleted and SG delete after branched revision created and check changes feed removed branched revisions
     sdk_client.remove_multi(sg_doc_ids)
     time.sleep(1)  # Need some delay to have _changes to update with latest branched revisions
