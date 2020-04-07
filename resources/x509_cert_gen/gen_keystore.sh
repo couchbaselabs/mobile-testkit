@@ -77,8 +77,8 @@ do
             ${SSH} root@${new_ip} "mkdir ${INBOX}" 2>/dev/null || true
             ${SCP} chain.pem root@${ip}:${INBOX}
             ${SCP} pkey.key root@${ip}:${INBOX}
-            ${SSH} root@${new_ip} "chmod o+rx ${INBOX}${CHAIN}"
-	          ${SSH} root@${new_ip} "chmod o+rx ${INBOX}${NODE}.key"
+            ${SSH} root@${new_ip} "chmod 777 ${INBOX}${CHAIN}"
+	          ${SSH} root@${new_ip} "chmod 777 ${INBOX}${NODE}.key"
 	      else
 	          ${SSH} root@${ip} "mkdir ${INBOX}" 2>/dev/null || true
 	          ${SCP} chain.pem root@${ip}:${INBOX}
@@ -89,6 +89,7 @@ do
 	      if  [[ ${host:1:1} == "[" ]]
 	      then
 	        ip=`echo $ip|sed "s/.*\[//;s/\].*//;"`
+	        ip="[${ip}]"
 	      fi
 	      # Upload ROOT CA and activate it
 	      curl -s -o /dev/null --data-binary "@./${ROOT_CA}.pem" \
