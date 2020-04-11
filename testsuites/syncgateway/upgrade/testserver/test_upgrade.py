@@ -162,7 +162,7 @@ def test_upgrade(params_from_base_test_setup):
     repl1 = replicator.create(repl_config1)
     replicator.start(repl1)
     replicator.wait_until_replicator_idle(repl1)
-    sg_added_docs = sg_client.add_docs(url=sg_admin_url, db=sg_db, number=2, id_prefix="sgw_docs1", channels=sg_user_channels, generator="simple_user", attachments_generator=attachment.generate_2_png_10_10)
+    sg_client.add_docs(url=sg_admin_url, db=sg_db, number=2, id_prefix="sgw_docs1", channels=sg_user_channels, generator="simple_user", attachments_generator=attachment.generate_2_png_10_10)
     # 3. Start a thread to keep updating docs on CBL
     terminator_doc_id = 'terminator'
     with ProcessPoolExecutor() as up:
@@ -250,6 +250,7 @@ def test_upgrade(params_from_base_test_setup):
         updated_doc_revs = updates_future.result()
 
         log_info("Stopping replication between testserver and sync gateway")
+        replicator.wait_until_replicator_idle(repl1, max_times=3000)
         replicator.stop(repl)
 
         # 7. Gather CBL docs new revs for verification
@@ -261,7 +262,7 @@ def test_upgrade(params_from_base_test_setup):
                 added_docs[doc_id]["numOfUpdates"] = updated_doc_revs[doc_id]
 
         # 8. Compare rev id, doc body and revision history of all docs on both CBL and SGW
-        verify_sg_docs_revision_history(sg_admin_url, db, cbl_db2, num_docs, sg_db=sg_db, added_docs=added_docs, sg_added_docs=sg_added_docs, terminator=terminator_doc_id)
+        verify_sg_docs_revision_history(sg_admin_url, db, cbl_db2, num_docs, sg_db=sg_db, added_docs=added_docs, terminator=terminator_doc_id)
 
         # 9. If xattrs enabled, validate CBS contains _sync records for each doc
         if upgraded_xattrs_enabled:
@@ -277,10 +278,10 @@ def test_upgrade(params_from_base_test_setup):
                     raise Exception("_sync section found in docs after upgrade")
 
 
-def verify_sg_docs_revision_history(url, db, cbl_db2, num_docs, sg_db, added_docs, sg_added_docs, terminator):
+def verify_sg_docs_revision_history(url, db, cbl_db2, num_docs, sg_db, added_docs, terminator):
     sg_client = MobileRestClient()
     sg_docs = sg_client.get_all_docs(url=url, db=sg_db, include_docs=True)["rows"]
-    cbl_doc_ids2 = db.getDocIds(cbl_db2)
+    cbl_doc_ids2 = db.getDocIds(cbl_db2, limit=num_docs)
     cbl_docs2 = db.getDocuments(cbl_db2, cbl_doc_ids2)
     num_sg_docs_in_cbldb2 = 0
     expected_doc_map = {}
@@ -289,7 +290,6 @@ def verify_sg_docs_revision_history(url, db, cbl_db2, num_docs, sg_db, added_doc
             expected_doc_map[doc] = added_docs[doc]["numOfUpdates"] - 1
         else:
             expected_doc_map[doc] = 1
-
     for doc in cbl_docs2:
         if "sgw_docs" in doc:
             num_sg_docs_in_cbldb2 += 1
