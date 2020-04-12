@@ -251,6 +251,7 @@ def test_upgrade(params_from_base_test_setup):
         updated_doc_revs = updates_future.result()
 
         log_info("Stopping replication between testserver and sync gateway")
+        replicator.wait_until_replicator_idle(repl1, max_times=3000)
         replicator.stop(repl)
 
         # 7. Gather CBL docs new revs for verification
