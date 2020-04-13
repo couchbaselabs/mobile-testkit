@@ -241,17 +241,16 @@ def test_upgrade(params_from_base_test_setup):
                 )
                 enable_import = False
                 # Check Import showing up on all nodes
-        
+        repl_config2 = replicator.configure(cbl_db2, sg_blip_url, continuous=True, channels=sg_user_channels, replication_type="push_pull", replicator_authenticator=replicator_authenticator)
+        repl2 = replicator.create(repl_config2)
+        replicator.start(repl2)
+        log_info("waiting for the replication to complete")
+        replicator.wait_until_replicator_idle(repl2, max_times=3000)
         db.create_bulk_docs(number=1, id_prefix=terminator_doc_id, db=cbl_db, channels=sg_user_channels)
         log_info("Waiting for doc updates to complete")
         updated_doc_revs = updates_future.result()
 
         # set up another replicator to verify attachments replicated after the upgrade
-        repl_config2 = replicator.configure(cbl_db2, sg_blip_url, continuous=True, channels=sg_user_channels, replication_type="push_pull", replicator_authenticator=replicator_authenticator)
-        repl2 = replicator.create(repl_config2)
-        replicator.start(repl2) 
-        log_info("waiting for the replication to complete")
-        replicator.wait_until_replicator_idle(repl2, max_times=3000)
         log_info("Stopping replication between testserver and sync gateway")
         replicator.stop(repl2)
         replicator.stop(repl)
