@@ -12,7 +12,7 @@
 - name: SYNC GATEWAY | Install sync_gateway zip
   become: yes
   shell: |
-    unzip /tmp/{{ couchbase_sync_gateway_package }} --directory /opt
+    unzip /tmp/{{ couchbase_sync_gateway_package }} -d /opt
   when: ansible_distribution == "MacOSX"
 
 - include: stop-sync-gateway.yml
