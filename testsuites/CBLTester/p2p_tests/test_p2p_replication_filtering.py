@@ -102,7 +102,7 @@ def test_p2p_replication_push_pull_filtering(params_from_base_test_setup, server
     replicator.wait_until_replicator_idle(repl_config)
     replicator.stop(repl_config)
 
-    # 4. Verify SG has new fields added only when "new_field_1" is true
+    # 4. Verify S has new fields added only when "new_field_1" is true
     server_docs = db_obj_server.getDocuments(cbl_db_server, server_doc_ids)
     client_docs = db_obj_client.getDocuments(cbl_db_client, client_doc_ids)
 
