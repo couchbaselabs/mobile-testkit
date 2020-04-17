@@ -290,7 +290,7 @@ def add_docs_to_client_task(client, url, db, channels, num_docs):
 def verify_sg_docs_revision_history(url, db, added_docs):
     sg_client = MobileRestClient()
     expected_doc_map = {added_doc["id"]: added_doc["rev"] for added_doc in added_docs}
-    doc_ids = expected_doc_map.keys()
+    doc_ids = list(expected_doc_map.keys())
 
     log_info("Bulk getting docs from sync gateway")
     docs = sg_client.get_bulk_docs(url, db, doc_ids, rev_history="true")
@@ -357,7 +357,7 @@ def update_docs(client, ls_url, ls_db, added_docs, auth, terminator_doc_id):
         try:
             client.get_doc(url=ls_url, db=ls_db, doc_id=terminator_doc_id, auth=auth)
             log_info("update_docs: Found termination doc")
-            log_info("update_docs: Updated {} docs".format(len(doc_revs.keys())))
+            log_info("update_docs: Updated {} docs".format(len(list(doc_revs.keys()))))
             return doc_revs
         except HTTPError:
             log_info("Termination doc not found")

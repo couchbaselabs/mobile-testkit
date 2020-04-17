@@ -133,7 +133,7 @@ def test_verify_invalid_mask_password_in_logs(params_from_base_test_setup, inval
 
 def verify_password_masked(liteserv_platform, log_file, password, test_cbllog):
     """
-    @note: Porting logs for Android, xamarin-android, net-core and net-uwp platform, as the logs reside
+       @note: Porting logs for Android, xamarin-android, net-core and net-uwp platform, as the logs reside
            outside runner's file directory
     """
     delimiter = "/"
@@ -149,14 +149,18 @@ def verify_password_masked(liteserv_platform, log_file, password, test_cbllog):
     test_log_zip_file = "cbl_log.zip"
     test_log = os.path.join(log_full_path_dir, test_log_zip_file)
     log_info("Log file for failed test is: {}".format(test_log_zip_file))
-    with open(test_log, 'wb') as fh:
+    with open(test_log, 'w+', encoding="utf-8") as fh:
+        # encoded data is coming as a string,
         fh.write(zip_data)
         fh.close()
 
     # unzipping the zipped log files
     log_dir_path = os.path.join(log_full_path_dir, log_dir)
-    with zipfile.ZipFile(test_log, 'r') as zip_ref:
-        zip_ref.extractall(log_full_path_dir)
+    if zipfile.is_zipfile(test_log):
+        with zipfile.ZipFile(test_log, 'r') as zip_ref:
+            zip_ref.extractall(log_full_path_dir)
+    else:
+        log_dir_path = log_full_path_dir
 
     log_info("Checking {} for copied log files - {}".format(log_dir_path, os.listdir(log_dir_path)))
     log_file = subprocess.check_output("ls -t {} | head -1".format(log_dir_path), shell=True)

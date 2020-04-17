@@ -1,7 +1,7 @@
 import json
 import threading
 import time
-from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler, HTTPServer
 
 from keywords.utils import log_info
 
@@ -19,7 +19,7 @@ class HttpHandler(BaseHTTPRequestHandler):
         return
 
     def do_POST(self):
-        content_len = int(self.headers.getheader('content-length', 0))
+        content_len = int(self.headers.get('content-length', 0))
         post_body = self.rfile.read(content_len)
         data = json.loads(post_body)
 

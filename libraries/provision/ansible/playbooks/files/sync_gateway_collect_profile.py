@@ -31,7 +31,7 @@ def collect_profiles(results_directory, sg_binary_path, profile_types, format_ty
 
     for profile_type in profile_types:
         for format_type in format_types:
-            print("Collecting {0} profile in format {1}".format(profile_type, format_type))
+            print(("Collecting {0} profile in format {1}".format(profile_type, format_type)))
             if profile_type == "heap":
                 for heap_type in heap_val_selection_types:
                     out_filename = "{}-{}.{}".format(profile_type, heap_type, format_type)
@@ -108,13 +108,13 @@ def collect_profile_loop(final_results_directory, profile_types, format_types, h
             # package the all of the profile results
             run_command("tar cvfz {0}.tar.gz {1}".format(final_results_directory, final_results_directory))
 
-            print("Waiting {} before collecting next profile".format(delay_secs))
+            print(("Waiting {} before collecting next profile".format(delay_secs)))
 
             time.sleep(delay_secs)
 
         except Exception as e:
 
-            print("Exception trying to collect profile. {}  Will sleep {} seconds and try again".format(e, delay_secs))
+            print(("Exception trying to collect profile. {}  Will sleep {} seconds and try again".format(e, delay_secs)))
             time.sleep(delay_secs)
 
 

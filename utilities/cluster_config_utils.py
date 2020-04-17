@@ -1,17 +1,19 @@
-import ConfigParser
+import configparser
 import json
 import os
 import re
+
 from keywords.exceptions import ProvisioningError
 from shutil import copyfile, rmtree, make_archive
 from subprocess import Popen, PIPE
 from distutils.dir_util import copy_tree
 
 
-class CustomConfigParser(ConfigParser.RawConfigParser):
+class CustomConfigParser(configparser.RawConfigParser):
     """Virtually identical to the original method, but delimit keys and values with '=' instead of ' = '
        Python 3 has a space_around_delimiters=False option for write, it does not work for python 2.x
     """
+
     def write(self, fp):
 
         DEFAULTSECT = "DEFAULT"
@@ -19,12 +21,12 @@ class CustomConfigParser(ConfigParser.RawConfigParser):
         # Write an .ini-format representation of the configuration state.
         if self._defaults:
             fp.write("[%s]\n" % DEFAULTSECT)
-            for (key, value) in self._defaults.items():
+            for (key, value) in list(self._defaults.items()):
                 fp.write("%s=%s\n" % (key, str(value).replace('\n', '\n\t')))
             fp.write("\n")
         for section in self._sections:
             fp.write("[%s]\n" % section)
-            for (key, value) in self._sections[section].items():
+            for (key, value) in list(self._sections[section].items()):
                 if key == "__name__":
                     continue
                 if (value is not None) or (self._optcre == self.OPTCRE):
@@ -71,14 +73,15 @@ def persist_cluster_config_environment_prop(cluster_config, property_name, value
         config.write(f)
 
 
-def generate_x509_certs(cluster_config, bucket_name):
+def generate_x509_certs(cluster_config, bucket_name, sg_platform):
     ''' Generate and insert x509 certs for CBS and SG TLS Handshake'''
     cluster = load_cluster_config_json(cluster_config)
-    for line in open("ansible.cfg"):
-        match = re.match('remote_user\s*=\s*(\w*)$', line)
-        if match:
-            username = match.groups()[0].strip()
-            break
+    if sg_platform.lower() != "windows" and sg_platform.lower() != "macos":
+        for line in open("ansible.cfg"):
+            match = re.match('remote_user\s*=\s*(\w*)$', line)
+            if match:
+                username = match.groups()[0].strip()
+                break
 
     curr_dir = os.getcwd()
     certs_dir = os.path.join(curr_dir, "certs")
@@ -95,22 +98,25 @@ def generate_x509_certs(cluster_config, bucket_name):
         for item in range(len(cbs_nodes)):
             f.write("IP.{} = {}\n".format(item + 1, cbs_nodes[item]))
     cmd = ["./gen_keystore.sh", cbs_nodes[0], bucket_name[0]]
-    print " ".join(cmd)
+    print(" ".join(cmd))
     proc = Popen(cmd, stdout=PIPE, stderr=PIPE)
     stdout, stderr = proc.communicate()
-    print stdout, stderr
+    print(stdout, stderr)
 
     # zipping the certificates
     os.chdir(curr_dir)
     make_archive("certs", "zip", certs_dir)
 
     for node in cluster["sync_gateways"]:
-        cmd = ["scp", "certs.zip", "{}@{}:/tmp".format(username, node["ip"])]
-        print " ".join(cmd)
+        if sg_platform.lower() != "macos" and sg_platform.lower() != "windows":
+            cmd = ["scp", "certs.zip", "{}@{}:/tmp".format(username, node["ip"])]
+        else:
+            cmd = ["cp", "certs.zip", "/tmp"]
+        print(" ".join(cmd))
         proc = Popen(cmd, stdout=PIPE, stderr=PIPE)
         stdout, stderr = proc.communicate()
         if stdout or stderr:
-            print stdout, stderr
+            print(stdout, stderr)
 
 
 def load_cluster_config_json(cluster_config):
@@ -156,12 +162,6 @@ def is_load_balancer_enabled(cluster_config):
     """ Loads cluster config to see if load balancer is enabled """
     cluster = load_cluster_config_json(cluster_config)
     return cluster["environment"]["sg_lb_enabled"]
-
-
-def is_sg_ssl_enabled(cluster_config):
-    """ Loads cluster config to see if sg_ssl is enabled """
-    cluster = load_cluster_config_json(cluster_config)
-    return cluster["environment"]["sync_gateway_ssl"]
 
 
 def get_load_balancer_ip(cluster_config):

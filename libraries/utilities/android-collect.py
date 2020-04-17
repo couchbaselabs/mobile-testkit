@@ -33,7 +33,7 @@ def collect(directory_name, package_name):
 
     devices = get_devices()
     for device in devices:
-        print("Found device: {}".format(device))
+        print(("Found device: {}".format(device)))
 
         device_dir = "{}/{}".format(directory_name, device)
 

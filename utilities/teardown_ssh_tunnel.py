@@ -31,6 +31,6 @@ if __name__ == "__main__":
     with open(args.remote_hosts_file) as f:
         pools = json.load(f)
         remote_host_list = pools['ips']
-        print('Tearing down ssh tunneling for {} ... '.format(remote_host_list))
+        print(('Tearing down ssh tunneling for {} ... '.format(remote_host_list)))
 
     teardown_tunnel(remote_host_list)

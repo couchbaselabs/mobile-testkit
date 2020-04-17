@@ -55,12 +55,12 @@ def plot_gateload_expvars(figure, json_file_name):
             if "total_doc_failed_to_push" in obj[timestamp]["expvars"]["gateload"]:
                 docs_failed = obj[timestamp]["expvars"]["gateload"]["total_doc_failed_to_push"]
                 docs_failed_to_push.append(docs_failed)
-                print("!!! ERROR: docs failed to push: {} !!!".format(docs_failed_to_push))
+                print(("!!! ERROR: docs failed to push: {} !!!".format(docs_failed_to_push)))
 
             if "total_doc_failed_to_pull" in obj[timestamp]["expvars"]["gateload"]:
                 docs_failed = obj[timestamp]["expvars"]["gateload"]["total_doc_failed_to_pull"]
                 docs_failed_to_pull.append(docs_failed)
-                print("!!! ERROR: docs failed to pull: {} !!!".format(docs_failed_to_pull))
+                print(("!!! ERROR: docs failed to pull: {} !!!".format(docs_failed_to_pull)))
 
     # Plot p95 / p99
     ax1 = figure.add_subplot(211)
@@ -179,7 +179,7 @@ def plot_machine_stats(cluster_config, figure, folder_path):
         cpu_percents = []
 
         # create a list of timestamps with the corresponding CPU percent
-        for timestamp in entity.keys():
+        for timestamp in list(entity.keys()):
             datetimes.append(datetime.datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S.%f"))
             cpu_percents.append(entity[timestamp]["cpu_percent"])
 
@@ -194,7 +194,7 @@ def plot_machine_stats(cluster_config, figure, folder_path):
 
 def analze_perf_results(cluster_config, test_id):
 
-    print("Generating graphs for {}".format(test_id))
+    print(("Generating graphs for {}".format(test_id)))
 
     # Generate plot of gateload expvars
     fig1 = plt.figure()
@@ -236,7 +236,7 @@ if __name__ == "__main__":
     try:
         cluster_conf = os.environ["CLUSTER_CONFIG"]
     except KeyError as ke:
-        print ("Make sure CLUSTER_CONFIG is defined and pointing to the configuration you would like to provision")
+        print("Make sure CLUSTER_CONFIG is defined and pointing to the configuration you would like to provision")
         raise KeyError("CLUSTER_CONFIG not defined. Unable to provision cluster.")
 
     if opts.test_id is None:

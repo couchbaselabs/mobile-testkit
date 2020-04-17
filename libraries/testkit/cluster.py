@@ -66,7 +66,7 @@ class Cluster:
 
         for ac in cluster["sg_accels"]:
             if cluster["environment"]["ipv6_enabled"]:
-                    ac["ip"] = "[{}]".format(ac["ip"])
+                ac["ip"] = "[{}]".format(ac["ip"])
             acs.append({"name": ac["name"], "ip": ac["ip"]})
 
         self.cbs_ssl = cluster["environment"]["cbs_ssl_enabled"]
@@ -196,7 +196,7 @@ class Cluster:
                 redact_level = get_redact_level(self._cluster_config)
                 playbook_vars["logging"] = '{}, "redaction_level": "{}" {},'.format(logging_config, redact_level, "}")
             except KeyError as ex:
-                log_info("Keyerror in getting logging{}".format(ex.args))
+                log_info("Keyerror in getting logging{}".format(ex))
                 playbook_vars["logging"] = '{} {},'.format(logging_config, "}")
             if get_sg_use_views(self._cluster_config):
                 playbook_vars["sg_use_views"] = '"use_views": true,'
@@ -206,6 +206,8 @@ class Cluster:
 
             if sg_platform == "macos":
                 sg_home_directory = "/Users/sync_gateway"
+            elif sg_platform == "windows":
+                sg_home_directory = "C:\\\\PROGRA~1\\\\Couchbase\\\\Sync Gateway"
             else:
                 sg_home_directory = "/home/sync_gateway"
 
@@ -216,10 +218,14 @@ class Cluster:
                     "keypath"] = '"keypath": "{}/certs/pkey.key",'.format(sg_home_directory)
                 playbook_vars[
                     "cacertpath"] = '"cacertpath": "{}/certs/ca.pem",'.format(sg_home_directory)
+                if sg_platform == "windows":
+                    playbook_vars["certpath"] = playbook_vars["certpath"].replace("/", "\\\\")
+                    playbook_vars["keypath"] = playbook_vars["keypath"].replace("/", "\\\\")
+                    playbook_vars["cacertpath"] = playbook_vars["cacertpath"].replace("/", "\\\\")
                 playbook_vars["server_scheme"] = "couchbases"
                 playbook_vars["server_port"] = ""
                 playbook_vars["x509_auth"] = True
-                generate_x509_certs(self._cluster_config, bucket_names)
+                generate_x509_certs(self._cluster_config, bucket_names, sg_platform)
             else:
                 playbook_vars["username"] = '"username": "{}",'.format(
                     bucket_names[0])
@@ -320,7 +326,7 @@ class Cluster:
         Validates the CBGT pindex distribution by looking for nodes that don't have
         any pindexes assigned to it
         """
-        for i in xrange(10):
+        for i in range(10):
             is_valid = self.validate_cbgt_pindex_distribution(num_running_sg_accels)
             if is_valid:
                 return True
@@ -346,7 +352,7 @@ class Cluster:
         # this will end up with a dictionary like:
         #  {'74c818f04b99b169': 32, '11886131c807a30e': 32}  (each node uuid has 32 pindexes)
         plan_pindexes = cbgt_cfg.p_indexes
-        for data_bucket_key, data_bucket_val in plan_pindexes.iteritems():
+        for data_bucket_key, data_bucket_val in plan_pindexes.items():
 
             # get the nodes where this pindex lives
             nodes = data_bucket_val["nodes"]
@@ -377,7 +383,7 @@ class Cluster:
         # make sure that all of the nodes have approx the same number of pindexes assigneed to them
         i = 0
         num_pindex_first_node = 0
-        for node_def_uuid, num_pindexes in node_defs_pindex_counts.iteritems():
+        for node_def_uuid, num_pindexes in node_defs_pindex_counts.items():
 
             if i == 0:
                 # it's the first node we've looked at, just record number of pindexes and continue
@@ -404,9 +410,9 @@ class Cluster:
         for sg in self.sync_gateways:
             try:
                 info = sg.info()
-                log_info("sync_gateway: {}, info: {}".format(sg.url, info))
+                log_info(" verify_alive sync_gateway : {}, info: {}".format(sg.url, info))
             except ConnectionError as e:
-                log_info("sync_gateway down: {}".format(e))
+                log_info("verify_alive sync_gateway down: {}".format(e))
                 errors.append((sg, e))
 
         if mode == "di":

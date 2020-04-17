@@ -35,6 +35,11 @@
   when: x509_auth
   become: yes
 
+- name: SYNC GATEWAY | Change the mode permissions
+  become: yes
+  shell: chmod 777 /Users/sync_gateway/certs/*.*
+  when: x509_auth
+
 - name: SYNC GATEWAY | Check deployed config
   become: yes
   shell: cat /Users/sync_gateway/sync_gateway.json

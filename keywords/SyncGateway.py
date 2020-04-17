@@ -112,7 +112,8 @@ def verify_sync_gateway_version(host, expected_sync_gateway_version):
         "2.1.2": "86",
         "2.1.3.1": "2",
         "2.5.0": "271",
-        "2.6.0": "127"
+        "2.6.0": "127",
+        "2.7.0": "166"
     }
     version, build = version_and_build(expected_sync_gateway_version)
     if build is None:
@@ -247,7 +248,7 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config):
                 redact_level = get_redact_level(cluster_config)
                 logging_prop = '{}, "redaction_level": "{}" {},'.format(logging_config, redact_level, "}")
             except KeyError as ex:
-                log_info("Keyerror in getting logging{}".format(ex.args))
+                log_info("Keyerror in getting logging{}".format(str(ex)))
                 logging_prop = '{} {},'.format(logging_config, "}")
 
             num_replicas = get_sg_replicas(cluster_config)
@@ -257,6 +258,8 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config):
 
             if sg_platform == "macos":
                 sg_home_directory = "/Users/sync_gateway"
+            elif sg_platform == "windows":
+                sg_home_directory = "C:\\\\PROGRA~1\\\\Couchbase\\\\Sync Gateway"
             else:
                 sg_home_directory = "/home/sync_gateway"
 
@@ -264,10 +267,14 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config):
                 certpath_prop = '"certpath": "{}/certs/chain.pem",'.format(sg_home_directory)
                 keypath_prop = '"keypath": "{}/certs/pkey.key",'.format(sg_home_directory)
                 cacertpath_prop = '"cacertpath": "{}/certs/ca.pem",'.format(sg_home_directory)
+                if sg_platform == "windows":
+                    certpath_prop = certpath_prop.replace("/", "\\\\")
+                    keypath_prop = keypath_prop.replace("/", "\\\\")
+                    cacertpath_prop = cacertpath_prop.replace("/", "\\\\")
                 server_scheme = "couchbases"
                 server_port = ""
                 x509_auth_prop = True
-                generate_x509_certs(cluster_config, bucket_names)
+                generate_x509_certs(cluster_config, bucket_names, sg_platform)
             else:
                 logging_prop = '"log": ["*"],'
             username = '"username": "{}",'.format(bucket_names[0])
@@ -409,7 +416,7 @@ class SyncGateway(object):
                 redact_level = get_redact_level(cluster_config)
                 playbook_vars["logging"] = '{}, "redaction_level": "{}" {},'.format(logging_config, redact_level, "}")
             except KeyError as ex:
-                log_info("Keyerror in getting logging{}".format(ex.args))
+                log_info("Keyerror in getting logging{}".format(str(ex)))
                 playbook_vars["logging"] = '{} {},'.format(logging_config, "}")
 
             if get_sg_use_views(cluster_config):
@@ -420,6 +427,8 @@ class SyncGateway(object):
 
             if sg_platform == "macos":
                 sg_home_directory = "/Users/sync_gateway"
+            elif sg_platform == "windows":
+                sg_home_directory = "C:\\\\PROGRA~1\\\\Couchbase\\\\Sync Gateway"
             else:
                 sg_home_directory = "/home/sync_gateway"
 
@@ -430,10 +439,14 @@ class SyncGateway(object):
                     "keypath"] = '"keypath": "{}/certs/pkey.key",'.format(sg_home_directory)
                 playbook_vars[
                     "cacertpath"] = '"cacertpath": "{}/certs/ca.pem",'.format(sg_home_directory)
+                if sg_platform == "windows":
+                    playbook_vars["certpath"] = playbook_vars["certpath"].replace("/", "\\\\")
+                    playbook_vars["keypath"] = playbook_vars["keypath"].replace("/", "\\\\")
+                    playbook_vars["cacertpath"] = playbook_vars["cacertpath"].replace("/", "\\\\")
                 playbook_vars["server_scheme"] = "couchbases"
                 playbook_vars["server_port"] = ""
                 playbook_vars["x509_auth"] = True
-                generate_x509_certs(cluster_config, bucket_names)
+                generate_x509_certs(cluster_config, bucket_names, sg_platform)
             else:
                 playbook_vars["username"] = '"username": "{}",'.format(
                     bucket_names[0])
@@ -603,7 +616,8 @@ class SyncGateway(object):
                 redact_level = get_redact_level(cluster_config)
                 playbook_vars["logging"] = '{}, "redaction_level": "{}" {},'.format(logging_config, redact_level, "}")
             except KeyError as ex:
-                log_info("Keyerror in getting logging{}".format(ex.args))
+                log_info("Keyerror in getting logging{}".format(str(ex)))
+
                 playbook_vars["logging"] = '{} {},'.format(logging_config, "}")
 
             if not get_sg_use_views(cluster_config) and cbs_version >= "5.5.0":
@@ -611,6 +625,34 @@ class SyncGateway(object):
                 playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
             else:
                 playbook_vars["sg_use_views"] = '"use_views": true,'
+
+            sg_platform = get_sg_platform(cluster_config)
+            if sg_platform == "macos":
+                sg_home_directory = "/Users/sync_gateway"
+            elif sg_platform == "windows":
+                sg_home_directory = "C:\\\\PROGRA~1\\\\Couchbase\\\\Sync Gateway"
+            else:
+                sg_home_directory = "/home/sync_gateway"
+
+            if is_x509_auth(cluster_config):
+                playbook_vars[
+                    "certpath"] = '"certpath": "{}/certs/chain.pem",'.format(sg_home_directory)
+                playbook_vars[
+                    "keypath"] = '"keypath": "{}/certs/pkey.key",'.format(sg_home_directory)
+                playbook_vars[
+                    "cacertpath"] = '"cacertpath": "{}/certs/ca.pem",'.format(sg_home_directory)
+                if sg_platform == "windows":
+                    playbook_vars["certpath"] = playbook_vars["certpath"].replace("/", "\\\\")
+                    playbook_vars["keypath"] = playbook_vars["keypath"].replace("/", "\\\\")
+                    playbook_vars["cacertpath"] = playbook_vars["cacertpath"].replace("/", "\\\\")
+                playbook_vars["server_scheme"] = "couchbases"
+                playbook_vars["server_port"] = ""
+                playbook_vars["x509_auth"] = True
+                generate_x509_certs(cluster_config, bucket_names, sg_platform)
+            else:
+                playbook_vars["username"] = '"username": "{}",'.format(
+                    bucket_names[0])
+                playbook_vars["password"] = '"password": "password",'
         else:
             playbook_vars["logging"] = '"log": ["*"],'
 
@@ -701,7 +743,7 @@ class SyncGateway(object):
                 redact_level = get_redact_level(cluster_config)
                 playbook_vars["logging"] = '{}, "redaction_level": "{}" {},'.format(logging_config, redact_level, "}")
             except KeyError as ex:
-                log_info("Keyerror in getting logging{}".format(ex.args))
+                log_info("Keyerror in getting logging{}".format(str(ex)))
                 playbook_vars["logging"] = '{} {},'.format(logging_config, "}")
 
             if get_sg_use_views(cluster_config):
@@ -709,6 +751,30 @@ class SyncGateway(object):
             else:
                 num_replicas = get_sg_replicas(cluster_config)
                 playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
+
+            sg_platform = get_sg_platform(self.cluster_config)
+            if sg_platform == "macos":
+                sg_home_directory = "/Users/sync_gateway"
+            elif sg_platform == "windows":
+                sg_home_directory = "C:\\\\PROGRA~1\\\\Couchbase\\\\Sync Gateway"
+            else:
+                sg_home_directory = "/home/sync_gateway"
+
+            if is_x509_auth(self.cluster_config):
+                playbook_vars[
+                    "certpath"] = '"certpath": "{}/certs/chain.pem",'.format(sg_home_directory)
+                playbook_vars[
+                    "keypath"] = '"keypath": "{}/certs/pkey.key",'.format(sg_home_directory)
+                playbook_vars[
+                    "cacertpath"] = '"cacertpath": "{}/certs/ca.pem",'.format(sg_home_directory)
+                if sg_platform == "windows":
+                    playbook_vars["certpath"] = playbook_vars["certpath"].replace("/", "\\\\")
+                    playbook_vars["keypath"] = playbook_vars["keypath"].replace("/", "\\\\")
+                    playbook_vars["cacertpath"] = playbook_vars["cacertpath"].replace("/", "\\\\")
+                playbook_vars["server_scheme"] = "couchbases"
+                playbook_vars["server_port"] = ""
+                playbook_vars["x509_auth"] = True
+                generate_x509_certs(self.cluster_config, bucket_names, sg_platform)
         else:
             playbook_vars["logging"] = '"log": ["*"],'
 
