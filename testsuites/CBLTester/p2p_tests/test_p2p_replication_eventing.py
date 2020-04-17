@@ -23,7 +23,7 @@ def test_peer_to_peer_replication_eventing_valid_values(params_from_base_test_se
                                                         continuous, replicator_type, attachments, endpoint_type):
     """
         @summary:
-        1. Create docs on client and SG.
+        1. Create docs on client and Server.
         2. Start the server.
         3. Add Listener to replicator and start replication from client.
         4. Verify replication is completed.
