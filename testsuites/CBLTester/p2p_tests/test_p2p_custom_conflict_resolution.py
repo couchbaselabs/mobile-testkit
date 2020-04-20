@@ -19,11 +19,11 @@ from testsuites.CBLTester.CBL_Functional_tests.TestSetup_FunctionalTests.test_de
 def test_p2p_local_wins_custom_conflicts(params_from_base_test_setup, server_setup, replicator_type, endpoint_type):
     """
     @summary:
-    1. Create few docs in app and get them replicated to SG. Stop the replication once docs are replicated.
-    2. Update docs couple of times with different updates on both SG and CBL app. This will create conflict.
+    1. Create few docs in client and get them replicated to server. Stop the replication once docs are replicated.
+    2. Update docs couple of times with different updates on both client and server. This will create conflict.
     3. Start the replication with local_win CCR algorithm
-    4. Verifies that CBL has retains its changes. For push and pull replication SG changes should be override with
-    that of CBL
+    4. Verifies that client has retains its changes. For push and pull replication on server changes should be override with
+    that of client
     """
     num_of_docs = 10
     base_url_list = server_setup["base_url_list"]
@@ -137,10 +137,10 @@ def test_p2p_local_wins_custom_conflicts(params_from_base_test_setup, server_set
 def test_p2p_remote_wins_custom_conflicts(params_from_base_test_setup, server_setup, replicator_type, endpoint_type):
     """
     @summary:
-    1. Create few docs in app and get them replicated to SG. Stop the replication once docs are replicated.
-    2. Update docs couple of times with different updates on both SG and CBL app. This will create conflict.
+    1. Create few docs in Client and get them replicated to Server. Stop the replication once docs are replicated.
+    2. Update docs couple of times with different updates on both Server and Client app. This will create conflict.
     3. Start the replication with remote_wins CCR algorithm
-    4. Verifies that CBL hasn't retains its changes. For push and pull replication SG changes should retain its changes
+    4. Verifies that CBL hasn't retains its changes. For push and pull replication server changes should retain its changes
     """
     num_of_docs = 10
     base_url_list = server_setup["base_url_list"]
@@ -241,10 +241,10 @@ def test_p2p_remote_wins_custom_conflicts(params_from_base_test_setup, server_se
 def test_p2p_merge_wins_custom_conflicts(params_from_base_test_setup, server_setup, replicator_type, endpoint_type):
     """
     @summary:
-    1. Create few docs in app and get them replicated to SG. Stop the replication once docs are replicated.
-    2. Update docs couple of times with different updates on both SG and CBL app. This will create conflict.
+    1. Create few docs in Client and get them replicated to Server. Stop the replication once docs are replicated.
+    2. Update docs couple of times with different updates on both Server and Client. This will create conflict.
     3. Start the replication with remote_wins CCR algorithm
-    4. Verifies that CBL hasn't retains its changes. For push and pull replication SG changes should retain its changes
+    4. Verifies that Client hasn't retains its changes. For push and pull replication Server changes should retain its changes
     """
     num_of_docs = 10
     base_url_list = server_setup["base_url_list"]
@@ -331,7 +331,7 @@ def test_p2p_merge_wins_custom_conflicts(params_from_base_test_setup, server_set
             assert server_cbl_doc["sg_new_update3"] != client_cbl_doc["sg_new_update3"], "CCR failed to resolve " \
                                                                                          "conflict with merge win"
             assert "server_random" in client_cbl_doc, "CCR failed to resolve conflict with merge win"
-            assert "cbl_random" not in server_cbl_doc, "CCR failed to resolve conflict with merge win. SG doc got " \
+            assert "cbl_random" not in server_cbl_doc, "CCR failed to resolve conflict with merge win. Server doc got " \
                                                        "updated with CBL changes"
     elif replicator_type == "push_pull":
         for doc_id in server_cbl_docs:
@@ -359,10 +359,10 @@ def test_p2p_merge_wins_custom_conflicts(params_from_base_test_setup, server_set
 def test_p2p_non_blocking_custom_conflicts(params_from_base_test_setup, server_setup, replicator_type, endpoint_type):
     """
     @summary:
-    1. Create few docs in app and get them replicated to SG. Stop the replication once docs are replicated.
-    2. Update docs couple of times with different updates on both CBL apps. This will create conflict.
+    1. Create few docs in app and get them replicated to Server. Stop the replication once docs are replicated.
+    2. Update docs couple of times with different updates on both Client apps. This will create conflict.
     3. Start the replication with delayed_local_wins CCR algorithm and update some docs during CCR is resolving conflicts
-    4. Verifies that client app hasn't retains its changes. For push and pull replication Client changes should have its changes on Server app
+    4. Verifies that client app hasn't retains its changes. For push and pull replication Client changes should have its changes on Server
     """
     num_of_docs = 10
     base_url_list = server_setup["base_url_list"]
