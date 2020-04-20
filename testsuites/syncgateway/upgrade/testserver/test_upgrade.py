@@ -163,6 +163,7 @@ def test_upgrade(params_from_base_test_setup):
     replicator.start(repl1)
     replicator.wait_until_replicator_idle(repl1)
     sg_client.add_docs(url=sg_admin_url, db=sg_db, number=2, id_prefix="sgw_docs1", channels=sg_user_channels, generator="simple_user", attachments_generator=attachment.generate_2_png_10_10)
+    # sg_client.add_docs(url=sg_admin_url, db=sg_db, number=2, id_prefix="sgw_docs1", channels=sg_user_channels, generator="simple_user")
     # 3. Start a thread to keep updating docs on CBL
     terminator_doc_id = 'terminator'
     with ProcessPoolExecutor() as up:
@@ -246,6 +247,7 @@ def test_upgrade(params_from_base_test_setup):
         replicator.start(repl2)
         log_info("waiting for the replication to complete")
         replicator.wait_until_replicator_idle(repl2, max_times=3000)
+        log_info("Trying to create terminator id ....")
         db.create_bulk_docs(number=1, id_prefix=terminator_doc_id, db=cbl_db, channels=sg_user_channels)
         log_info("Waiting for doc updates to complete")
         updated_doc_revs = updates_future.result()
@@ -378,7 +380,7 @@ def update_docs(db, cbl_db, added_docs, doc_obj, terminator_doc_id_prefix):
             new_doc = db.getDocument(cbl_db, doc_id)
             doc_revs[doc_id] = doc_obj.toMap(new_doc)['numOfUpdates']
 
-        time.sleep(5)
+        time.sleep(20)
 
 
 def upgrade_server_cluster(servers, primary_server, secondary_server, server_version, server_upgraded_version, server_urls, cluster_config, cbs_platform, toy_build=None):
