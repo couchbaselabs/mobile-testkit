@@ -147,7 +147,6 @@ class TestServerJava(TestServerBase):
             })
 
         if status == 0:
-            time.sleep(15)
             return
         else:
             raise LiteServError("Failed to install Test server on remote machine")
