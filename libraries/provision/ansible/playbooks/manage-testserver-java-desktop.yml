@@ -2,6 +2,7 @@
   hosts: testserver
   vars:
     service_status:
+    package_name:
 
   tasks:
   - debug: msg="JAVA_HOME location is {{ ansible_env.JAVA_HOME }}"

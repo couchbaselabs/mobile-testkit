@@ -1,4 +1,5 @@
 import os
+import time
 from keywords.TestServerBase import TestServerBase
 from keywords.constants import LATEST_BUILDS, RELEASED_BUILDS
 from keywords.exceptions import LiteServError
@@ -150,6 +151,8 @@ class TestServerJava(TestServerBase):
         else:
             raise LiteServError("Failed to install Test server on remote machine")
 
+        time.sleep(15)
+
     def _verify_launched(self):
         raise NotImplementedError()
 
@@ -162,7 +165,8 @@ class TestServerJava(TestServerBase):
         else:
             # stop TestServerJava Daemon Service
             status = self.ansible_runner.run_ansible_playbook("manage-testserver-java-desktop.yml", extra_vars={
-                "service_status": "stop"
+                "service_status": "stop",
+                "package_name": this.package_name
             })
 
         if status == 0:
