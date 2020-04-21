@@ -337,7 +337,7 @@ def _upgrade_db(args):
     else:
         pytest.skip("Run test with one of supported base liteserv version - ".format(supported_base_liteserv))
 
-    if liteserv_platform in ["android", "xamarin-android", 
+    if liteserv_platform in ["android", "xamarin-android",
                              "java-macosx", "java-msft", "java-ubuntu", "java-centos",
                              "javaws-macosx", "javaws-msft", "javaws-ubuntu", "javaws-centos"]:
         prebuilt_db_path = "{}.cblite2.zip".format(old_liteserv_db_name)
