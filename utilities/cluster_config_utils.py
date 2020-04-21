@@ -97,7 +97,8 @@ def generate_x509_certs(cluster_config, bucket_name, sg_platform):
 
     with open("openssl-san.cnf", "a+") as f:
         for item in range(1, len(cbs_nodes)):
-            f.write("IP.{} = {}\n".format(item + 1, cbs_nodes[item]))
+            if "[" not in cbs_nodes[item]:
+                f.write("IP.{} = {}\n".format(item + 1, cbs_nodes[item]))
 
     cmd = ["./gen_keystore.sh", cbs_nodes[0], bucket_name[0]]
     print(" ".join(cmd))
