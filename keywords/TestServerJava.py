@@ -151,7 +151,7 @@ class TestServerJava(TestServerBase):
         else:
             raise LiteServError("Failed to install Test server on remote machine")
 
-        time.sleep(15)
+        time.sleep(30)
 
     def _verify_launched(self):
         raise NotImplementedError()
