@@ -1,5 +1,4 @@
 import os
-import time
 from keywords.TestServerBase import TestServerBase
 from keywords.constants import LATEST_BUILDS, RELEASED_BUILDS
 from keywords.exceptions import LiteServError
@@ -164,7 +163,7 @@ class TestServerJava(TestServerBase):
             # stop TestServerJava Daemon Service
             status = self.ansible_runner.run_ansible_playbook("manage-testserver-java-desktop.yml", extra_vars={
                 "service_status": "stop",
-                "package_name": this.package_name
+                "package_name": self.package_name
             })
 
         if status == 0:
