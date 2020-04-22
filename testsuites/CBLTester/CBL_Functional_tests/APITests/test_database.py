@@ -49,8 +49,8 @@ class TestDatabase(object):
         assert doc_id == -1
 
     def test_save_document_exception(self):
-        if self.liteserv_platform not in ["android", 
-                                          "java-macosx", "java-msft", "java-ubuntu", "java-centos", 
+        if self.liteserv_platform not in ["android",
+                                          "java-macosx", "java-msft", "java-ubuntu", "java-centos",
                                           "javaws-macosx", "javaws-msft", "javaws-ubuntu", "javaws-centos"]:
             pytest.skip("Test only applicable for android and java platforms")
 
@@ -63,8 +63,8 @@ class TestDatabase(object):
             assert err_msg in str(err_resp)
 
     def test_delete_exception(self):
-        if self.liteserv_platform not in ["android", 
-                                          "java-macosx", "java-msft", "java-ubuntu", "java-centos", 
+        if self.liteserv_platform not in ["android",
+                                          "java-macosx", "java-msft", "java-ubuntu", "java-centos",
                                           "javaws-macosx", "javaws-msft", "javaws-ubuntu", "javaws-centos"]:
             pytest.skip("Test only applicable for android and java platforms")
 
