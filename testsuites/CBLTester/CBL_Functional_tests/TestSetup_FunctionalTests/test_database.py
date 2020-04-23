@@ -60,7 +60,7 @@ def test_databaseEncryption(params_from_base_test_setup, password):
     elif liteserv_platform in ["javaws-macosx", "javaws-msft", "javaws-ubuntu", "javaws-centos"]:
         with pytest.raises(Exception) as he:
             db.create(cbl_db_name, db_config)
-        assert he.value.message.startswith('400 Client Error:')
+        assert str(he.value).startswith('400 Client Error:')
     else:
         with pytest.raises(Exception) as he:
             db.create(cbl_db_name, db_config)
