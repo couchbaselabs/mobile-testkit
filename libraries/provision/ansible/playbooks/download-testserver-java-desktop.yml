@@ -1,0 +1,47 @@
+- name: Download Testserver Java Desktop
+  hosts: testserver
+  vars:
+    download_url:
+    package_name:
+
+  tasks:
+  - debug:
+      msg: "download_url: {{ download_url }}"
+
+  - debug:
+      msg: "package_name {{ package_name }}.zip"
+
+  - name: Check the TestServer zip file exists
+    stat:
+      path: ~/javatestserver/{{ package_name }}.zip
+    register: pkg_st
+
+  - name: Delete any exiting pre-downloaded files
+    file:
+      path: ~/javatestserver
+      state: absent
+    when: pkg_st.stat.exists == False
+ 
+  - debug:
+      msg: "testserver zip file already presents, skipping download..."
+    when: pkg_st.stat.exists == True
+
+  - name: Set javatestserver location
+    stat:
+      path: ~/javatestserver
+    register: javatestserver_dir
+
+  - name: create javatestserver directory if not exists
+    file:
+      path: ~/javatestserver
+      state: directory
+    when: javatestserver_dir.stat.exists == False
+
+  - name: Download TestServer Java .zip
+    get_url:
+      url: "{{ download_url }}"
+      dest: ~/javatestserver/{{ package_name }}.zip
+    when: pkg_st.stat.exists == False
+
+  - name: Unzip TestServer Java Package and remove .zip
+    unarchive: src=~/javatestserver/{{ package_name }}.zip dest=~/javatestserver copy=no

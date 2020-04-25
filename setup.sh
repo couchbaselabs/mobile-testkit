@@ -12,6 +12,10 @@ if [[ $py3version == 3.6.* ]]; then
     printf "Using Python3 version: %s\n" $py3version
     PYTHON=python3
     PIP=pip3.6
+elif [[ $py3version == 3.7.* ]]; then
+    printf "Using Python3 version: %s\n" $py3version
+    PYTHON=python3
+    PIP=pip3
 elif [[ $py2version == 2.7.* ]]; then
     printf "Using Python2 version: %s\n" $py2version
     PYTHON=python
