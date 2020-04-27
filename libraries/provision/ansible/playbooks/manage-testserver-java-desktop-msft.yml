@@ -1,0 +1,10 @@
+- name: Windows - Manage Testserver Java Desktop as Windows Service
+  hosts: windows
+  vars:
+    service_status:
+
+  tasks:
+  - name: Manage TestServerJava Service
+    win_service:
+      name: TestServerJava
+      state: "{{ service_status }}"

@@ -74,7 +74,7 @@ class SyncGatewayConfig:
         elif "ubuntu" in sg_platform:
             sg_platform_extension = "deb"
         elif "macos" in sg_platform:
-            sg_platform_extension = "tar.gz"
+            sg_platform_extension = "zip"
 
         # Setting SG Accel platform extension
         if "windows" in sa_platform:
@@ -84,7 +84,7 @@ class SyncGatewayConfig:
         elif "ubuntu" in sa_platform:
             sa_platform_extension = "deb"
         elif "macos" in sa_platform:
-            sg_platform_extension = "tar.gz"
+            sg_platform_extension = "zip"
 
         if self._version_number == "1.1.0" or self._build_number == "1.1.1":
             log_info("Version unsupported in provisioning.")

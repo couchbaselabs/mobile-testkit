@@ -753,7 +753,7 @@ class SyncGateway(object):
                 num_replicas = get_sg_replicas(cluster_config)
                 playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
 
-            sg_platform = get_sg_platform(self.cluster_config)
+            sg_platform = get_sg_platform(cluster_config)
             if sg_platform == "macos":
                 sg_home_directory = "/Users/sync_gateway"
             elif sg_platform == "windows":
@@ -761,7 +761,7 @@ class SyncGateway(object):
             else:
                 sg_home_directory = "/home/sync_gateway"
 
-            if is_x509_auth(self.cluster_config):
+            if is_x509_auth(cluster_config):
                 playbook_vars[
                     "certpath"] = '"certpath": "{}/certs/chain.pem",'.format(sg_home_directory)
                 playbook_vars[
@@ -775,7 +775,7 @@ class SyncGateway(object):
                 playbook_vars["server_scheme"] = "couchbases"
                 playbook_vars["server_port"] = ""
                 playbook_vars["x509_auth"] = True
-                generate_x509_certs(self.cluster_config, bucket_names, sg_platform)
+                generate_x509_certs(cluster_config, bucket_names, sg_platform)
         else:
             playbook_vars["logging"] = '"log": ["*"],'
 
