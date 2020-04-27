@@ -35,7 +35,7 @@ openssl req -new -x509  -days 3650 -sha256 -key ${ROOT_CA}.key -out ${ROOT_CA}.p
 echo Generate Intermediate
 # Generate intemediate key and sign with ROOT CA
 openssl genrsa -out ${INTERMEDIATE}.key 2048 2>/dev/null
-openssl req -new -key ${INTERMEDIATE}.key -out ${INTERMEDIATE}.csr -subj '/C=US/O=couchbase/CN=My Company Root' 2>/dev/null
+openssl req -new -key ${INTERMEDIATE}.key -out ${INTERMEDIATE}.csr -subj '/C=US/O=couchbase/CN=My Company Intermediate CA' 2>/dev/null
 openssl x509 -req -in ${INTERMEDIATE}.csr -CA ${ROOT_CA}.pem -CAkey ${ROOT_CA}.key -CAcreateserial \
 -CAserial rootCA.srl -extfile v3_ca.ext -out ${INTERMEDIATE}.pem -days 365 2>/dev/null
 
