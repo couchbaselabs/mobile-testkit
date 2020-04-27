@@ -101,7 +101,7 @@ def test_issue_1524(params_from_base_test_setup, sg_conf_name, num_docs):
     verify_same_docs(num_docs, longpoll_docs, a_doc_pusher.cache)
 
 
-@pytest.mark.sanity
+
 @pytest.mark.syncgateway
 @pytest.mark.sync
 @pytest.mark.access
@@ -112,6 +112,7 @@ def test_issue_1524(params_from_base_test_setup, sg_conf_name, num_docs):
     ("custom_sync/sync_gateway_custom_sync_access_sanity", True)
 ])
 def test_sync_access_sanity(params_from_base_test_setup, sg_conf_name, x509_cert_auth):
+    # @pytest.mark.sanity
     num_docs = 100
 
     cluster_conf = params_from_base_test_setup["cluster_config"]
