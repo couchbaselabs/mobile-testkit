@@ -62,13 +62,13 @@ do
         if  [[ ${host:1:1} == "[" ]] 
         then 
              ip=`echo $host|sed "s/.*\[//;s/\].*//;"`
-             echo "${ip}"
              ip="[${ip}]"
         else
              ip=`echo $host|sed 's/\"\([^:]*\):.*/\1/'`
         fi
-	      # Copy private key and chain file to a node:/opt/couchbase/var/lib/couchbase/inbox
-	      echo "Setup Certificate for ${ip}"
+	# Copy private key and chain file to a node:/opt/couchbase/var/lib/couchbase/inbox
+	echo "Setup Certificate for ${ip}"
+
 
         if  [[ ${host:1:1} == "[" ]]
         then
