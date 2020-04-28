@@ -59,35 +59,27 @@ arr_hosts=( $hosts )
 echo Loop through nodes
 for host in "${arr_hosts[@]}"
 do
-  if  [[ ${host:1:1} == "[" ]]
-  then
-      ip=`echo $host|sed "s/.*\[//;s/\].*//;"`
-      ip="[${ip}]"
-  else
-      ip=`echo $host|sed 's/\"\([^:]*\):.*/\1/'`
-  fi
   # Copy private key and chain file to a node:/opt/couchbase/var/lib/couchbase/inbox
   echo "Setup Certificate for ${ip}"
 
   if  [[ ${host:1:1} == "[" ]]
   then
+      ip=`echo $host|sed "s/.*\[//;s/\].*//;"`
+      ip="[${ip}]"
       new_ip=`echo $ip|sed "s/.*\[//;s/\].*//;"`
       ${SSH} root@${new_ip} "mkdir ${INBOX}" 2>/dev/null || true
       ${SCP} chain.pem root@${ip}:${INBOX}
       ${SCP} pkey.key root@${ip}:${INBOX}
       ${SSH} root@${new_ip} "chmod 777 ${INBOX}${CHAIN}"
       ${SSH} root@${new_ip} "chmod 777 ${INBOX}${NODE}.key"
+      ip="[${new_ip}]"
   else
+      ip=`echo $host|sed 's/\"\([^:]*\):.*/\1/'`
       ${SSH} root@${ip} "mkdir ${INBOX}" 2>/dev/null || true
       ${SCP} chain.pem root@${ip}:${INBOX}
       ${SCP} pkey.key root@${ip}:${INBOX}
       ${SSH} root@${ip} "chmod o+rx ${INBOX}${CHAIN}"
       ${SSH} root@${ip} "chmod o+rx ${INBOX}${NODE}.key"
-  fi
-  if  [[ ${host:1:1} == "[" ]]
-  then
-      ip=`echo $ip|sed "s/.*\[//;s/\].*//;"`
-      ip="[${ip}]"
   fi
   # Upload ROOT CA and activate it
   curl -s -o /dev/null --data-binary "@./${ROOT_CA}.pem" http://${ADMINCRED}@${ip}:8091/controller/uploadClusterCA
