@@ -12,7 +12,7 @@ from libraries.provision.ansible_runner import AnsibleRunner
 from libraries.testkit.admin import Admin
 from libraries.testkit.config import Config
 from libraries.testkit.debug import log_request, log_response
-from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, sg_ssl_enabled, is_ipv6
+from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, sg_ssl_enabled
 from utilities.cluster_config_utils import get_revs_limit, get_redact_level, is_delta_sync_enabled, get_sg_platform
 from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version, is_x509_auth, generate_x509_certs
 from keywords.utils import add_cbs_to_sg_config_server_field, log_info
@@ -50,7 +50,6 @@ class SyncGateway:
         if is_x509_auth(cluster_config):
             self.server_port = ""
             self.server_scheme = "couchbases"
-
         self.couchbase_server_primary_node = add_cbs_to_sg_config_server_field(self.cluster_config)
 
     def info(self):
@@ -188,7 +187,7 @@ class SyncGateway:
 
     def restart(self, config, cluster_config=None):
 
-        if(cluster_config is not None):
+        if cluster_config is not None:
             self.cluster_config = cluster_config
         conf_path = os.path.abspath(config)
         log.info(">>> Restarting sync_gateway with configuration: {}".format(conf_path))
@@ -287,8 +286,6 @@ class SyncGateway:
         if is_delta_sync_enabled(self.cluster_config) and get_sg_version(self.cluster_config) >= "2.5.0":
             playbook_vars["delta_sync"] = '"delta_sync": { "enabled": true},'
 
-        if is_ipv6(self.cluster_config):
-            playbook_vars["couchbase_server_primary_node"] = "[{}]".format(playbook_vars["couchbase_server_primary_node"])
         if is_cbs_ssl_enabled(self.cluster_config) and get_sg_version(self.cluster_config) >= "1.5.0":
             playbook_vars["server_scheme"] = "couchbases"
             playbook_vars["server_port"] = 11207
