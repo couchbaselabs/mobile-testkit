@@ -72,7 +72,7 @@ do
       ${SCP} pkey.key root@${ip}:${INBOX}
       ${SSH} root@${new_ip} "chmod 777 ${INBOX}${CHAIN}"
       ${SSH} root@${new_ip} "chmod 777 ${INBOX}${NODE}.key"
-      ip="[${new_ip}]"
+      ip="${CLUSTER}"
   else
       ip=`echo $host|sed 's/\"\([^:]*\):.*/\1/'`
       ${SSH} root@${ip} "mkdir ${INBOX}" 2>/dev/null || true

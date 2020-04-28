@@ -99,6 +99,8 @@ def generate_x509_certs(cluster_config, bucket_name, sg_platform):
         for item in range(len(cbs_nodes)):
             if "couchbase" not in cbs_nodes[item]:
                 f.write("IP.{} = {}\n".format(item + 1, cbs_nodes[item]))
+            else:
+                f.write("DNS.{} = {}\n".format(item + 1, cbs_nodes[item]))
 
     cmd = ["./gen_keystore.sh", cbs_nodes[0], bucket_name[0]]
     print(" ".join(cmd))

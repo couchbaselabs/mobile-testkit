@@ -10,4 +10,4 @@ keyUsage = nonRepudiation, digitalSignature, keyEncipherment
 subjectAltName = @alt_names
 
 [ alt_names ]
-DNS.1 = *.couchbase.com
+DNS.1 = s10501-ip6.qe.couchbase.com
