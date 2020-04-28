@@ -96,19 +96,38 @@ public class TestServerWS extends HttpServlet {
         try{
             Object body = RequestHandlerDispatcher.handle(handlerType, method, args);
 
-            if (body != null) {
-                response.setStatus(HttpServletResponse.SC_OK);
-                response.setHeader("Content-Type", "text/plain");
-                response.getOutputStream().write(body.toString().getBytes());
-                response.getOutputStream().flush();
-                response.getOutputStream().close();
-            }
-            else {
+            if (body == null) {
                 response.setStatus(HttpServletResponse.SC_OK);
                 response.setHeader("Content-Type", "text/plain");
                 response.getWriter().write("I-1");
                 response.getWriter().flush();
                 response.getWriter().close();
+
+                return;
+            }
+
+            if (body instanceof String) {
+                response.setStatus(HttpServletResponse.SC_OK);
+                response.setHeader("Content-Type", "text/plain");
+                response.getOutputStream().write(body.toString().getBytes());
+                response.getOutputStream().flush();
+                response.getOutputStream().close();
+
+                return;
+            }
+            else if (body instanceof RawData) {
+                RawData dataObj = (RawData) body;
+
+                response.setStatus(HttpServletResponse.SC_OK);
+                response.setHeader("Content-Type", dataObj.contentType);
+                response.getOutputStream().write(dataObj.data);
+                response.getOutputStream().flush();
+                response.getOutputStream().close();
+
+                return;
+            }
+            else {
+                throw new IllegalArgumentException("unrecognized body type: " + body.getClass());
             }
         }catch (Exception e){
             Log.e(TAG, e.getMessage());

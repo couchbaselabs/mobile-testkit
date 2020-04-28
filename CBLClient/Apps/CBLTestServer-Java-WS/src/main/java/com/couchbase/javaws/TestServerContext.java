@@ -53,7 +53,7 @@ public class TestServerContext implements Context {
         in Tomcat structure, this points to %CATALINE_HOME%/temp/TestServerTemp/
         and a subdirectory with the value of filetype will be created under
          */
-        File externalFilesDir = new File(getFilesDir().getAbsoluteFile().getName(), filetype);
+        File externalFilesDir = new File(getFilesDir().getAbsoluteFile(), filetype);
         if(!externalFilesDir.exists()){
             try {
                 externalFilesDir.mkdir();
