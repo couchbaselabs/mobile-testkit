@@ -94,9 +94,14 @@ def generate_x509_certs(cluster_config, bucket_name, sg_platform):
     copy_tree(src, certs_dir)
     os.chdir(certs_dir)
     cbs_nodes = [node["ip"] for node in cluster["couchbase_servers"]]
+
     with open("openssl-san.cnf", "a+") as f:
         for item in range(len(cbs_nodes)):
-            f.write("IP.{} = {}\n".format(item + 1, cbs_nodes[item]))
+            if "couchbase" not in cbs_nodes[item]:
+                f.write("IP.{} = {}\n".format(item + 1, cbs_nodes[item]))
+            else:
+                f.write("DNS.{} = {}\n".format(item + 1, cbs_nodes[item]))
+
     cmd = ["./gen_keystore.sh", cbs_nodes[0], bucket_name[0]]
     print(" ".join(cmd))
     proc = Popen(cmd, stdout=PIPE, stderr=PIPE)
@@ -192,6 +197,24 @@ def is_ipv6(cluster_config):
     """ Loads cluster config to get IPv6 status"""
     cluster = load_cluster_config_json(cluster_config)
     return cluster["environment"]["ipv6_enabled"]
+
+
+def get_cbs_primary_nodes_str(cluster_config, cbs_nodes):
+    """Parse the cluster node string and reformat it according to IP config of nodes
+    for IPv4 - 10.0.0.1,10.0.0.2 --> 10.0.0.1,10.0.0.1
+    for IPv6 - fc00::11,fc00::12 --> [fc00::11],[fc00::12]
+    """
+    if is_ipv6(cluster_config):
+        if ',' in cbs_nodes:
+            node_str = ""
+            for node in cbs_nodes.split(','):
+                node_str = node_str + "[{}],".format(node)
+            cbs_nodes = node_str.rstrip(",")
+            return cbs_nodes
+        else:
+            return "[{}]".format(cbs_nodes)
+    else:
+        return cbs_nodes
 
 
 def get_sg_version(cluster_config):

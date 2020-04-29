@@ -10,6 +10,7 @@ import java.util.Map;
 import com.couchbase.mobiletestkit.javacommon.Args;
 import com.couchbase.mobiletestkit.javacommon.Context;
 import com.couchbase.mobiletestkit.javacommon.RequestHandlerDispatcher;
+import com.couchbase.mobiletestkit.javacommon.util.ConcurrentExecutor;
 import com.couchbase.mobiletestkit.javacommon.util.Log;
 import com.couchbase.mobiletestkit.javacommon.util.ZipUtils;
 import com.couchbase.lite.Blob;
@@ -300,11 +301,11 @@ public class DatabaseRequestHandler {
         if (args.contain("docId")) {
             String docId = args.get("docId");
             MyDocumentChangeListener changeListener = new MyDocumentChangeListener();
-            token = database.addDocumentChangeListener(docId, changeListener);
+            token = database.addDocumentChangeListener(docId, ConcurrentExecutor.EXECUTOR, changeListener);
         }
         else {
             MyDatabaseChangeListener changeListener = new MyDatabaseChangeListener();
-            token = database.addChangeListener(changeListener);
+            token = database.addChangeListener(ConcurrentExecutor.EXECUTOR, changeListener);
         }
         return token;
     }

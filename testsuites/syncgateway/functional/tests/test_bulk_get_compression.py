@@ -1,3 +1,4 @@
+import re
 import concurrent.futures
 import pytest
 import subprocess
@@ -70,7 +71,7 @@ def issue_request(target, user_agent, accept_encoding, x_accept_part_encoding, p
 
     # Issue curl and write response to disc
     bulk_get_curl_command = 'curl -X "POST" {0}/db/_bulk_get {1} -d $\'{2}\''.format(
-        target.url,
+        re.sub(r'[\[\]]', '', target.url),
         headers,
         json.dumps(payload)
     )

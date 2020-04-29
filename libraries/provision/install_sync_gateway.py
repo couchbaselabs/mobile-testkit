@@ -11,8 +11,9 @@ from libraries.provision.ansible_runner import AnsibleRunner
 from libraries.testkit.config import Config
 from libraries.testkit.cluster import Cluster
 from keywords.constants import SYNC_GATEWAY_CERT
-from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_revs_limit, sg_ssl_enabled
-from utilities.cluster_config_utils import get_sg_version, get_sg_replicas, get_sg_use_views, get_redact_level, is_ipv6, is_x509_auth, generate_x509_certs, is_delta_sync_enabled
+from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_revs_limit, sg_ssl_enabled,\
+    get_cbs_primary_nodes_str
+from utilities.cluster_config_utils import get_sg_version, get_sg_replicas, get_sg_use_views, get_redact_level, is_x509_auth, generate_x509_certs, is_delta_sync_enabled
 
 
 class SyncGatewayConfig:
@@ -73,7 +74,7 @@ class SyncGatewayConfig:
         elif "ubuntu" in sg_platform:
             sg_platform_extension = "deb"
         elif "macos" in sg_platform:
-            sg_platform_extension = "tar.gz"
+            sg_platform_extension = "zip"
 
         # Setting SG Accel platform extension
         if "windows" in sa_platform:
@@ -83,7 +84,7 @@ class SyncGatewayConfig:
         elif "ubuntu" in sa_platform:
             sa_platform_extension = "deb"
         elif "macos" in sa_platform:
-            sg_platform_extension = "tar.gz"
+            sg_platform_extension = "zip"
 
         if self._version_number == "1.1.0" or self._build_number == "1.1.1":
             log_info("Version unsupported in provisioning.")
@@ -160,6 +161,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
         server_port = ""
         server_scheme = "couchbases"
 
+    couchbase_server_primary_node = get_cbs_primary_nodes_str(cluster_config, couchbase_server_primary_node)
     # Shared vars
     playbook_vars = {
         "sync_gateway_config_filepath": config_path,
@@ -292,8 +294,6 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
         playbook_vars["couchbase_sg_accel_package"] = sg_accel_package_name
         playbook_vars["couchbase_server_version"] = sync_gateway_config.get_sg_version_build()
 
-        if is_ipv6(cluster_config):
-            playbook_vars["couchbase_server_primary_node"] = "[{}]".format(couchbase_server_primary_node)
         if sg_platform == "windows":
             status = ansible_runner.run_ansible_playbook(
                 "install-sync-gateway-package-windows.yml",
