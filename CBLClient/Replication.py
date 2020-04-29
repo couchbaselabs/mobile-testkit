@@ -310,7 +310,7 @@ class Replication(object):
                     else:
                         idle_count += 1
                         time.sleep(sleep_time)
-                        if idle_count > 25:
+                        if idle_count > 1:
                             break
             if err_check:
                 err = self.getError(repl)
