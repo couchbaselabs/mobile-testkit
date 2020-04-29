@@ -195,6 +195,14 @@ if __name__ == "__main__":
     parser.add_option("--pool-list",
                       action="store", dest="pool_list",
                       help="Pass the list of ips to be release back to QE-mobile-pool.")
+
+    parser.add_option("--sgw-nodes",
+                      action="store", dest="sgw_nodes", default=None,
+                      help="Pass the list of sgw ips to label on pool.json.")
+
+    parser.add_option("--loadbalancer-nodes",
+                      action="store", dest="load_balancer_nodes", default=None,
+                      help="Pass the list of load balancer ips to  label on pool.json")
     arg_parameters = sys.argv[1:]
 
     (opts, args) = parser.parse_args(arg_parameters)
@@ -210,8 +218,31 @@ if __name__ == "__main__":
             pool_json_str = '{ "ips": ['
             for node in node_list:
                 pool_json_str += '"{}", '.format(node)
+            if opts.sgw_nodes:
+                sgw_node_list = opts.sgw_nodes.strip().split(',')
+                for node in sgw_node_list:
+                    pool_json_str += '"{}", '.format(node)
+            if opts.load_balancer_nodes:
+                lp_node_list = opts.load_balancer_nodes.strip().split(',')
+                for node in lp_node_list:
+                    pool_json_str += '"{}", '.format(node)
             pool_json_str = pool_json_str.rstrip(', ')
-            pool_json_str += "] }"
+            pool_json_str += "],"
+            if opts.sgw_nodes:
+                pool_json_str += '"ip_to_node_type": {'
+                for node in node_list:
+                    pool_json_str += '"{}": "couchbase_servers", '.format(node)
+            
+                for sgw_node in sgw_node_list:
+                    print("sgw nodes is : ", sgw_node)
+                    pool_json_str += '"{}": "sync_gateways", '.format(sgw_node)
+                if opts.load_balancer_nodes:
+                    for lp_node in lp_node_list:
+                        pool_json_str += '"{}": "load_balancers", '.format(lp_node)
+                pool_json_str = pool_json_str.rstrip(', ')
+                pool_json_str += "},"
+            pool_json_str = pool_json_str.rstrip(', ')
+            pool_json_str += "}"
             fh.write(pool_json_str)
     elif opts.release_nodes:
         try:
