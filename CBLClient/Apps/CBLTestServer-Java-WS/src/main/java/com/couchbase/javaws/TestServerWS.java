@@ -11,7 +11,6 @@ import com.google.gson.GsonBuilder;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.util.EnumSet;
 import java.util.Map;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -130,10 +129,10 @@ public class TestServerWS extends HttpServlet {
                 throw new IllegalArgumentException("unrecognized body type: " + body.getClass());
             }
         }catch (Exception e){
-            Log.e(TAG, e.getMessage());
+            Log.w(TAG, "Request failed", e);
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             response.setHeader("Content-Type", "text/plain");
-            response.getWriter().println(e.getMessage());
+            response.getWriter().println(e.toString());
         }
     }
 
