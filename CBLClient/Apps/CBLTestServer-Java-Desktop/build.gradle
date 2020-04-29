@@ -32,7 +32,7 @@ jar {
 repositories {
     mavenCentral()
     maven {
-        url "http://172.23.121.218/maven2/internalmaven/"
+        url "http://mobile.maven.couchbase.com/maven2/internalmaven/"
     }
     maven {
         url "https://oss.sonatype.org/content/repositories/snapshots"
@@ -53,7 +53,8 @@ java {
 }
 
 dependencies {
-    testCompile group: 'junit', name: 'junit', version: '4.12'
+    implementation 'commons-daemon:commons-daemon:1.2.2'
+    testImplementation group: 'junit', name: 'junit', version: '4.12'
 
     implementation "com.couchbase.lite:couchbase-lite-java-ee:${COUCHBASE_LITE_JAVA_VERSION}"
     implementation 'com.google.code.gson:gson:2.8.5'

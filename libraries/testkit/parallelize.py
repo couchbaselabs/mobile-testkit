@@ -1,6 +1,6 @@
 import concurrent.futures
 from libraries.testkit import settings
-import copy_reg
+import copyreg
 import types
 from threading import Thread
 
@@ -12,13 +12,13 @@ from keywords.utils import log_debug
 # concurrent.futures.
 #
 def _pickle_method(m):
-    if m.im_self is None:
-        return getattr, (m.im_class, m.im_func.func_name)
+    if m.__self__ is None:
+        return getattr, (m.__self__.__class__, m.__func__.__name__)
     else:
-        return getattr, (m.im_self, m.im_func.func_name)
+        return getattr, (m.__self__, m.__func__.__name__)
 
 
-copy_reg.pickle(types.MethodType, _pickle_method)
+copyreg.pickle(types.MethodType, _pickle_method)
 
 
 # Using Process Pool

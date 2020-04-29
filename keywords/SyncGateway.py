@@ -1,18 +1,17 @@
-import re
 import os
 import json
 
 import requests
 from requests import Session
 from jinja2 import Template
-
+import re
 from keywords.constants import SYNC_GATEWAY_CONFIGS, SYNC_GATEWAY_CERT
 from keywords.utils import version_is_binary, add_cbs_to_sg_config_server_field
 from keywords.utils import log_r
 from keywords.utils import version_and_build
 from keywords.utils import hostname_for_url
 from keywords.utils import log_info
-from utilities.cluster_config_utils import get_revs_limit, is_ipv6, is_x509_auth, generate_x509_certs
+from utilities.cluster_config_utils import get_revs_limit, is_x509_auth, generate_x509_certs, get_cbs_primary_nodes_str
 from keywords.exceptions import ProvisioningError, Error
 from libraries.provision.ansible_runner import AnsibleRunner
 from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_redact_level, get_sg_platform
@@ -112,7 +111,8 @@ def verify_sync_gateway_version(host, expected_sync_gateway_version):
         "2.1.2": "86",
         "2.1.3.1": "2",
         "2.5.0": "271",
-        "2.6.0": "127"
+        "2.6.0": "127",
+        "2.7.0": "166"
     }
     version, build = version_and_build(expected_sync_gateway_version)
     if build is None:
@@ -204,7 +204,13 @@ def verify_sg_accel_version(host, expected_sg_accel_version):
 
 def load_sync_gateway_config(sg_conf, server_url, cluster_config):
     """ Loads a syncgateway configuration for modification"""
-    server_scheme, server_ip, server_port = server_url.split(":")
+    match_obj = re.match("(\w+?):\/\/(.*?):(\d+?)$", server_url)
+    if match_obj:
+        server_scheme = match_obj.group(1)
+        server_ip = match_obj.group(2)
+        server_port = match_obj.group(3)
+    else:
+        raise Exception("Regex pattern is not matching with server url format.")
     server_ip = server_ip.replace("//", "")
 
     with open(sg_conf) as default_conf:
@@ -247,7 +253,7 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config):
                 redact_level = get_redact_level(cluster_config)
                 logging_prop = '{}, "redaction_level": "{}" {},'.format(logging_config, redact_level, "}")
             except KeyError as ex:
-                log_info("Keyerror in getting logging{}".format(ex.args))
+                log_info("Keyerror in getting logging{}".format(str(ex)))
                 logging_prop = '{} {},'.format(logging_config, "}")
 
             num_replicas = get_sg_replicas(cluster_config)
@@ -257,6 +263,8 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config):
 
             if sg_platform == "macos":
                 sg_home_directory = "/Users/sync_gateway"
+            elif sg_platform == "windows":
+                sg_home_directory = "C:\\\\PROGRA~1\\\\Couchbase\\\\Sync Gateway"
             else:
                 sg_home_directory = "/home/sync_gateway"
 
@@ -264,18 +272,21 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config):
                 certpath_prop = '"certpath": "{}/certs/chain.pem",'.format(sg_home_directory)
                 keypath_prop = '"keypath": "{}/certs/pkey.key",'.format(sg_home_directory)
                 cacertpath_prop = '"cacertpath": "{}/certs/ca.pem",'.format(sg_home_directory)
+                if sg_platform == "windows":
+                    certpath_prop = certpath_prop.replace("/", "\\\\")
+                    keypath_prop = keypath_prop.replace("/", "\\\\")
+                    cacertpath_prop = cacertpath_prop.replace("/", "\\\\")
                 server_scheme = "couchbases"
                 server_port = ""
                 x509_auth_prop = True
-                generate_x509_certs(cluster_config, bucket_names)
+                generate_x509_certs(cluster_config, bucket_names, sg_platform)
             else:
                 logging_prop = '"log": ["*"],'
             username = '"username": "{}",'.format(bucket_names[0])
             password = '"password": "password",'
 
         couchbase_server_primary_node = add_cbs_to_sg_config_server_field(cluster_config)
-        if is_ipv6(cluster_config):
-            couchbase_server_primary_node = "[{}]".format(couchbase_server_primary_node)
+        couchbase_server_primary_node = get_cbs_primary_nodes_str(cluster_config, couchbase_server_primary_node)
 
         if sg_ssl_enabled(cluster_config):
             sslcert_prop = '"SSLCert": "sg_cert.pem",'
@@ -379,8 +390,7 @@ class SyncGateway(object):
             self.server_port = ""
             self.server_scheme = "couchbases"
 
-        if is_ipv6(cluster_config):
-            couchbase_server_primary_node = "[{}]".format(couchbase_server_primary_node)
+        couchbase_server_primary_node = get_cbs_primary_nodes_str(cluster_config, couchbase_server_primary_node)
         playbook_vars = {
             "sync_gateway_config_filepath": config_path,
             "username": "",
@@ -409,7 +419,7 @@ class SyncGateway(object):
                 redact_level = get_redact_level(cluster_config)
                 playbook_vars["logging"] = '{}, "redaction_level": "{}" {},'.format(logging_config, redact_level, "}")
             except KeyError as ex:
-                log_info("Keyerror in getting logging{}".format(ex.args))
+                log_info("Keyerror in getting logging{}".format(str(ex)))
                 playbook_vars["logging"] = '{} {},'.format(logging_config, "}")
 
             if get_sg_use_views(cluster_config):
@@ -420,6 +430,8 @@ class SyncGateway(object):
 
             if sg_platform == "macos":
                 sg_home_directory = "/Users/sync_gateway"
+            elif sg_platform == "windows":
+                sg_home_directory = "C:\\\\PROGRA~1\\\\Couchbase\\\\Sync Gateway"
             else:
                 sg_home_directory = "/home/sync_gateway"
 
@@ -430,10 +442,14 @@ class SyncGateway(object):
                     "keypath"] = '"keypath": "{}/certs/pkey.key",'.format(sg_home_directory)
                 playbook_vars[
                     "cacertpath"] = '"cacertpath": "{}/certs/ca.pem",'.format(sg_home_directory)
+                if sg_platform == "windows":
+                    playbook_vars["certpath"] = playbook_vars["certpath"].replace("/", "\\\\")
+                    playbook_vars["keypath"] = playbook_vars["keypath"].replace("/", "\\\\")
+                    playbook_vars["cacertpath"] = playbook_vars["cacertpath"].replace("/", "\\\\")
                 playbook_vars["server_scheme"] = "couchbases"
                 playbook_vars["server_port"] = ""
                 playbook_vars["x509_auth"] = True
-                generate_x509_certs(cluster_config, bucket_names)
+                generate_x509_certs(cluster_config, bucket_names, sg_platform)
             else:
                 playbook_vars["username"] = '"username": "{}",'.format(
                     bucket_names[0])
@@ -561,9 +577,7 @@ class SyncGateway(object):
             self.server_port = ""
             self.server_scheme = "couchbases"
 
-        if is_ipv6(cluster_config):
-            couchbase_server_primary_node = "[{}]".format(couchbase_server_primary_node)
-
+        couchbase_server_primary_node = get_cbs_primary_nodes_str(cluster_config, couchbase_server_primary_node)
         # Shared vars
         playbook_vars = {
             "sync_gateway_config_filepath": sg_conf,
@@ -603,7 +617,8 @@ class SyncGateway(object):
                 redact_level = get_redact_level(cluster_config)
                 playbook_vars["logging"] = '{}, "redaction_level": "{}" {},'.format(logging_config, redact_level, "}")
             except KeyError as ex:
-                log_info("Keyerror in getting logging{}".format(ex.args))
+                log_info("Keyerror in getting logging{}".format(str(ex)))
+
                 playbook_vars["logging"] = '{} {},'.format(logging_config, "}")
 
             if not get_sg_use_views(cluster_config) and cbs_version >= "5.5.0":
@@ -611,6 +626,34 @@ class SyncGateway(object):
                 playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
             else:
                 playbook_vars["sg_use_views"] = '"use_views": true,'
+
+            sg_platform = get_sg_platform(cluster_config)
+            if sg_platform == "macos":
+                sg_home_directory = "/Users/sync_gateway"
+            elif sg_platform == "windows":
+                sg_home_directory = "C:\\\\PROGRA~1\\\\Couchbase\\\\Sync Gateway"
+            else:
+                sg_home_directory = "/home/sync_gateway"
+
+            if is_x509_auth(cluster_config):
+                playbook_vars[
+                    "certpath"] = '"certpath": "{}/certs/chain.pem",'.format(sg_home_directory)
+                playbook_vars[
+                    "keypath"] = '"keypath": "{}/certs/pkey.key",'.format(sg_home_directory)
+                playbook_vars[
+                    "cacertpath"] = '"cacertpath": "{}/certs/ca.pem",'.format(sg_home_directory)
+                if sg_platform == "windows":
+                    playbook_vars["certpath"] = playbook_vars["certpath"].replace("/", "\\\\")
+                    playbook_vars["keypath"] = playbook_vars["keypath"].replace("/", "\\\\")
+                    playbook_vars["cacertpath"] = playbook_vars["cacertpath"].replace("/", "\\\\")
+                playbook_vars["server_scheme"] = "couchbases"
+                playbook_vars["server_port"] = ""
+                playbook_vars["x509_auth"] = True
+                generate_x509_certs(cluster_config, bucket_names, sg_platform)
+            else:
+                playbook_vars["username"] = '"username": "{}",'.format(
+                    bucket_names[0])
+                playbook_vars["password"] = '"password": "password",'
         else:
             playbook_vars["logging"] = '"log": ["*"],'
 
@@ -701,7 +744,7 @@ class SyncGateway(object):
                 redact_level = get_redact_level(cluster_config)
                 playbook_vars["logging"] = '{}, "redaction_level": "{}" {},'.format(logging_config, redact_level, "}")
             except KeyError as ex:
-                log_info("Keyerror in getting logging{}".format(ex.args))
+                log_info("Keyerror in getting logging{}".format(str(ex)))
                 playbook_vars["logging"] = '{} {},'.format(logging_config, "}")
 
             if get_sg_use_views(cluster_config):
@@ -709,6 +752,30 @@ class SyncGateway(object):
             else:
                 num_replicas = get_sg_replicas(cluster_config)
                 playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
+
+            sg_platform = get_sg_platform(cluster_config)
+            if sg_platform == "macos":
+                sg_home_directory = "/Users/sync_gateway"
+            elif sg_platform == "windows":
+                sg_home_directory = "C:\\\\PROGRA~1\\\\Couchbase\\\\Sync Gateway"
+            else:
+                sg_home_directory = "/home/sync_gateway"
+
+            if is_x509_auth(cluster_config):
+                playbook_vars[
+                    "certpath"] = '"certpath": "{}/certs/chain.pem",'.format(sg_home_directory)
+                playbook_vars[
+                    "keypath"] = '"keypath": "{}/certs/pkey.key",'.format(sg_home_directory)
+                playbook_vars[
+                    "cacertpath"] = '"cacertpath": "{}/certs/ca.pem",'.format(sg_home_directory)
+                if sg_platform == "windows":
+                    playbook_vars["certpath"] = playbook_vars["certpath"].replace("/", "\\\\")
+                    playbook_vars["keypath"] = playbook_vars["keypath"].replace("/", "\\\\")
+                    playbook_vars["cacertpath"] = playbook_vars["cacertpath"].replace("/", "\\\\")
+                playbook_vars["server_scheme"] = "couchbases"
+                playbook_vars["server_port"] = ""
+                playbook_vars["x509_auth"] = True
+                generate_x509_certs(cluster_config, bucket_names, sg_platform)
         else:
             playbook_vars["logging"] = '"log": ["*"],'
 
@@ -829,7 +896,7 @@ def create_docs_via_sdk(cbs_url, cbs_cluster, bucket_name, num_docs):
     cbs_host = host_for_url(cbs_url)
     log_info("Adding docs via SDK...")
     if cbs_cluster.ipv6:
-        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_host, bucket_name), password='password')
+        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(re.sub(r'[\[\]]', '', cbs_host), bucket_name), password='password')
     else:
         sdk_client = Bucket('couchbase://{}/{}'.format(cbs_host, bucket_name), password='password')
     sdk_client.timeout = 600

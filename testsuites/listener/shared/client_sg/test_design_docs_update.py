@@ -154,7 +154,7 @@ def test_design_doc_delete(setup_client_syncgateway_test):
     try:
         client.get_view(url=ls_url, db=ls_db, design_doc_name=d_doc_name, view_name="content_view")
         assert False, "Deleting the design doc doesn't also deleting the view index."
-    except Exception, err:
+    except Exception as err:
         err_msg = "404 Client Error"
         assert err_msg in str(err)
 

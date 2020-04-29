@@ -5,7 +5,7 @@ from CBLClient.Args import Args
 from keywords.utils import log_info
 from keywords import types
 from libraries.data import doc_generators
-from Document import Document
+from .Document import Document
 from keywords import attachment
 
 
@@ -220,7 +220,7 @@ class Database(object):
 
         log_info("PUT {} docs to with prefix {}".format(number, id_prefix))
 
-        for i in xrange(id_start_num, id_start_num + number):
+        for i in range(id_start_num, id_start_num + number):
 
             if generator == "four_k":
                 doc_body = doc_generators.four_k()
@@ -250,7 +250,7 @@ class Database(object):
             doc_body["_id"] = doc_id
             added_docs[doc_id] = doc_body
         self.saveDocuments(db, added_docs)
-        return added_docs.keys()
+        return list(added_docs.keys())
 
     def delete_bulk_docs(self, database, doc_ids=[]):
         if not doc_ids:
@@ -270,7 +270,7 @@ class Database(object):
         docs = self.getDocuments(database, doc_ids)
         if len(docs) < 1:
             raise Exception("cbl docs are empty , cannot update docs")
-        for _ in xrange(number_of_updates):
+        for _ in range(number_of_updates):
             for doc in docs:
                 doc_body = docs[doc]
                 if "updates-cbl" not in doc_body:
@@ -282,7 +282,7 @@ class Database(object):
     def update_all_docs_individually(self, database, num_of_updates=1):
         doc_ids = self.getDocIds(database)
         doc_obj = Document(self.base_url)
-        for i in xrange(num_of_updates):
+        for i in range(num_of_updates):
             for doc_id in doc_ids:
                 doc_mem = self.getDocument(database, doc_id)
                 doc_mut = doc_obj.toMutable(doc_mem)

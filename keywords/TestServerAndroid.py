@@ -90,7 +90,8 @@ class TestServerAndroid(TestServerBase):
                 output = subprocess.check_output(["adb", "-e", "install", "-r", apk_path])
                 break
             except Exception as e:
-                if "INSTALL_FAILED_ALREADY_EXISTS" in e.args[0] or "INSTALL_FAILED_UPDATE_INCOMPATIBLE" in e.message:
+                if "INSTALL_FAILED_ALREADY_EXISTS" in str(e) or "INSTALL_FAILED_UPDATE_INCOMPATIBLE" in str(e):
+
                     # Apk may be installed, remove and retry install
                     log_info("Trying to remove....")
                     self.remove()
@@ -102,7 +103,7 @@ class TestServerAndroid(TestServerBase):
 
         output = subprocess.check_output(["adb", "-e", "shell", "pm", "list", "packages"])
 
-        if self.installed_package_name not in output:
+        if str(self.installed_package_name) not in str(output):
             raise LiteServError("Failed to install package: {}".format(output))
 
         log_info("LiteServ installed to {}".format(self.host))
@@ -139,7 +140,7 @@ class TestServerAndroid(TestServerBase):
                     break
 
         output = subprocess.check_output(["adb", "-d", "shell", "pm", "list", "packages"])
-        if self.installed_package_name not in output:
+        if self.installed_package_name not in output.decode():
             raise LiteServError("Failed to install package: {}".format(output))
 
         log_info("LiteServ installed to {}".format(self.host))
@@ -153,7 +154,7 @@ class TestServerAndroid(TestServerBase):
             raise LiteServError("Error. Could not remove app.")
 
         output = subprocess.check_output(["adb", "shell", "pm", "list", "packages"])
-        if self.installed_package_name in output:
+        if self.installed_package_name in output.decode():
             raise LiteServError("Error uninstalling app!")
 
         log_info("Testserver app removed from {}".format(self.host))

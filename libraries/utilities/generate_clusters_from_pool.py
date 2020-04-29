@@ -20,11 +20,7 @@ class ClusterDef:
 
     def num_machines_required(self):
         return (
-            self.num_sgs +
-            self.num_acs +
-            self.num_cbs +
-            self.num_lgs +
-            self.num_lbs
+            self.num_sgs + self.num_acs + self.num_cbs + self.num_lgs + self.num_lbs
         )
 
 
@@ -183,7 +179,7 @@ def write_config(config, pool_file, use_docker, sg_windows, sg_accel_windows, sg
             sg_ips_to_remove.append(ip)
 
         for sg_ip in sg_ips_to_remove:
-            print "REMOVING {} and {} from {}".format(sg_ip, sg_ips_to_remove, ips)
+            print("REMOVING {} and {} from {}".format(sg_ip, sg_ips_to_remove, ips))
             ips.remove(sg_ip)
 
         f.write("\n")
@@ -527,7 +523,7 @@ def generate_clusters_from_pool(pool_file, use_docker=False, sg_windows=False,
     for host in get_hosts(pool_file):
         print(host)
 
-    print("Generating 'resources/cluster_configs/'. Using docker: {}".format(use_docker))
+    print(("Generating 'resources/cluster_configs/'. Using docker: {}".format(use_docker)))
     for cluster_conf in cluster_confs:
         write_config(cluster_conf, pool_file, use_docker, sg_windows,
                      sg_accel_windows, sg_platform, ipv6=ipv6, x509_certs=x509_certs)

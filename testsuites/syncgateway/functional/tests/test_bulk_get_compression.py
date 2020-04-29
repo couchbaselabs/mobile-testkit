@@ -1,3 +1,4 @@
+import re
 import concurrent.futures
 import pytest
 import subprocess
@@ -16,16 +17,16 @@ from utilities.cluster_config_utils import persist_cluster_config_environment_pr
 
 
 uncompressed_size = 6320500
-uncompressed_lower_limit = uncompressed_size - (uncompressed_size / 10)
-uncompressed_upper_limit = uncompressed_size + (uncompressed_size / 10)
+uncompressed_lower_limit = uncompressed_size - (uncompressed_size // 10)
+uncompressed_upper_limit = uncompressed_size + (uncompressed_size // 10)
 
 part_encoded_size = 2244500
-part_encoded_lower_limit = part_encoded_size - (part_encoded_size / 10)
-part_encoded_upper_limit = part_encoded_size + (part_encoded_size / 10)
+part_encoded_lower_limit = part_encoded_size - (part_encoded_size // 10)
+part_encoded_upper_limit = part_encoded_size + (part_encoded_size // 10)
 
 whole_response_compressed_size = 75500
-whole_response_compressed_lower_limit = whole_response_compressed_size - (whole_response_compressed_size / 10)
-whole_response_compressed_upper_limit = whole_response_compressed_size + (whole_response_compressed_size / 10)
+whole_response_compressed_lower_limit = whole_response_compressed_size - (whole_response_compressed_size // 10)
+whole_response_compressed_upper_limit = whole_response_compressed_size + (whole_response_compressed_size // 10)
 
 
 # This is called before each test and will yield the cluster_config to each test in the file
@@ -70,7 +71,7 @@ def issue_request(target, user_agent, accept_encoding, x_accept_part_encoding, p
 
     # Issue curl and write response to disc
     bulk_get_curl_command = 'curl -X "POST" {0}/db/_bulk_get {1} -d $\'{2}\''.format(
-        target.url,
+        re.sub(r'[\[\]]', '', target.url),
         headers,
         json.dumps(payload)
     )
@@ -169,7 +170,6 @@ def verify_response_size(user_agent, accept_encoding, x_accept_part_encoding, re
 ])
 def test_bulk_get_compression(params_from_base_test_setup, sg_conf_name, num_docs, accept_encoding,
                               x_accept_part_encoding, user_agent, x509_cert_auth):
-
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
 
@@ -187,7 +187,6 @@ def test_bulk_get_compression(params_from_base_test_setup, sg_conf_name, num_doc
         temp_cluster_config = copy_to_temp_conf(cluster_config, mode)
         persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
         cluster_config = temp_cluster_config
-
     cluster = Cluster(config=cluster_config)
     cluster.reset(sg_config_path=sg_conf)
     admin = Admin(cluster.sync_gateways[0])

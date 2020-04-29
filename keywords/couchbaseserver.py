@@ -1,6 +1,7 @@
 import time
 import json
 import requests
+import re
 from requests.exceptions import ConnectionError, HTTPError
 from requests import Session
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
@@ -51,7 +52,7 @@ def verify_server_version(host, expected_server_version, cbs_ssl=False):
     # Check both version parts if expected version contains a build
     if len(expected_server_version_parts) == 2:
         # 4.1.1-5487
-        log_info("Expected Server Version: {}".format(expected_server_version))
+        log_info("Expected Server Version: {}".format(expected_server_version.strip()))
         log_info("Running Server Version: {}".format(running_server_version))
         if running_server_version != expected_server_version:
             raise ProvisioningError("Unexpected server version!! Expected: {} Actual: {}".format(expected_server_version, running_server_version))
@@ -70,7 +71,7 @@ class CouchbaseServer:
     """ Installs Couchbase Server on machine host"""
 
     def __init__(self, url):
-        self.url = url
+        self.url = re.sub(r'[\[\]]', '', url)
         self.cbs_ssl = False
         self.max_retries = 5
 
@@ -139,7 +140,7 @@ class CouchbaseServer:
         """
 
         count = 0
-        max_retries = 3
+        max_retries = 5
         while True:
 
             if count == max_retries:
@@ -161,6 +162,7 @@ class CouchbaseServer:
             for bucket_name in bucket_names:
                 try:
                     self.delete_bucket(bucket_name)
+
                 except HTTPError as e:
                     num_failures += 1
                     log_info("Failed to delete bucket: {}. Retrying ...".format(e))
@@ -268,14 +270,16 @@ class CouchbaseServer:
         resp = None
         try:
             resp = self._session.delete(rbac_url, data=data_user_params, auth=('Administrator', 'password'))
+            log_info("rbac: {}; data user params: {}".format(rbac_url, data_user_params))
             log_r(resp)
             resp.raise_for_status()
         except HTTPError as h:
             log_info("resp code: {}; error: {}".format(resp, h))
-            if '404 Client Error: Object Not Found for url' in h.message:
+            if '404 Client Error: Object Not Found for url' in str(h):
                 log_info("RBAC user does not exist, no need to delete RBAC bucket user {}".format(bucketname))
-            else:
-                raise RBACUserDeletionError(h)
+        except ConnectionError as e:
+            log_info(str(e))
+            log_info("RBAC user does not exist, Catching connection errors here")
 
     def _get_mem_total_lowest(self, server_info):
         # Workaround for https://github.com/couchbaselabs/mobile-testkit/issues/709
@@ -833,6 +837,7 @@ class CouchbaseServer:
         Return the base_url of the package download URL (everything except the filename)
         """
         released_versions = {
+            "6.5.0": "4960",
             "5.5.0": "2958",
             "5.1.0": "5552",
             "5.0.1": "5003",

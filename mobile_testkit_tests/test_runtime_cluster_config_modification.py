@@ -1,6 +1,6 @@
 """ tests for runtime setting of cluster configuration """
 
-import ConfigParser
+import configparser
 import json
 import os
 
@@ -32,7 +32,7 @@ def test_enable_cbs_ssl_in_cluster_config():
     c = Cluster(MOCK_CLUSTER_CONFIG)
     assert c.cbs_ssl
 
-    config = ConfigParser.ConfigParser()
+    config = configparser.ConfigParser()
     config.read(MOCK_CLUSTER_CONFIG)
 
     assert config.has_section("environment")
@@ -56,7 +56,7 @@ def test_enable_sg_ssl_in_cluster_config():
     c = Cluster(MOCK_CLUSTER_CONFIG)
     assert c.sync_gateway_ssl
 
-    config = ConfigParser.ConfigParser()
+    config = configparser.ConfigParser()
     config.read(MOCK_CLUSTER_CONFIG)
 
     assert config.has_section("environment")
@@ -74,7 +74,7 @@ def test_is_cbs_ssl_enabled():
     assert "environment" in cluster_json
     assert cluster_json["environment"]["cbs_ssl_enabled"] == enabled
 
-    config = ConfigParser.ConfigParser()
+    config = configparser.ConfigParser()
     config.read(MOCK_CLUSTER_CONFIG)
 
     assert config.has_section("environment")
@@ -92,7 +92,7 @@ def test_is_sg_ssl_enabled():
     assert "environment" in cluster_json
     assert cluster_json["environment"]["sync_gateway_ssl"] == enabled
 
-    config = ConfigParser.ConfigParser()
+    config = configparser.ConfigParser()
     config.read(MOCK_CLUSTER_CONFIG)
 
     assert config.has_section("environment")
@@ -113,7 +113,7 @@ def test_disable_cbs_ssl_in_cluster_config():
     assert "environment" in cluster_json
     assert not cluster_json["environment"]["cbs_ssl_enabled"]
 
-    config = ConfigParser.ConfigParser()
+    config = configparser.ConfigParser()
     config.read(MOCK_CLUSTER_CONFIG)
 
     assert config.has_section("environment")
@@ -134,7 +134,7 @@ def test_disable_sg_ssl_in_cluster_config():
     assert "environment" in cluster_json
     assert not cluster_json["environment"]["sync_gateway_ssl"]
 
-    config = ConfigParser.ConfigParser()
+    config = configparser.ConfigParser()
     config.read(MOCK_CLUSTER_CONFIG)
 
     assert config.has_section("environment")
@@ -152,7 +152,7 @@ def test_is_cbs_ssl_disabled():
     assert "environment" in cluster_json
     assert cluster_json["environment"]["sync_gateway_ssl"] == disabled
 
-    config = ConfigParser.ConfigParser()
+    config = configparser.ConfigParser()
     config.read(MOCK_CLUSTER_CONFIG)
 
     assert config.has_section("environment")
@@ -170,7 +170,7 @@ def test_is_sg_ssl_disabled():
     assert "environment" in cluster_json
     assert cluster_json["environment"]["cbs_ssl_enabled"] == disabled
 
-    config = ConfigParser.ConfigParser()
+    config = configparser.ConfigParser()
     config.read(MOCK_CLUSTER_CONFIG)
 
     assert config.has_section("environment")
@@ -183,7 +183,7 @@ def test_enable_disable_xattrs():
     with open(MOCK_CLUSTER_CONFIG + ".json") as f:
         cluster_json = json.loads(f.read())
 
-    config = ConfigParser.ConfigParser()
+    config = configparser.ConfigParser()
     config.read(MOCK_CLUSTER_CONFIG)
 
     c = Cluster(MOCK_CLUSTER_CONFIG)
@@ -206,7 +206,7 @@ def test_enable_disable_xattrs():
     with open(MOCK_CLUSTER_CONFIG + ".json") as f:
         cluster_json = json.loads(f.read())
 
-    config = ConfigParser.ConfigParser()
+    config = configparser.ConfigParser()
     config.read(MOCK_CLUSTER_CONFIG)
 
     # Make sure xattrs are enabled
@@ -227,7 +227,7 @@ def test_enable_disable_xattrs():
     with open(MOCK_CLUSTER_CONFIG + ".json") as f:
         cluster_json = json.loads(f.read())
 
-    config = ConfigParser.ConfigParser()
+    config = configparser.ConfigParser()
     config.read(MOCK_CLUSTER_CONFIG)
 
     # Make sure xattrs are disabled

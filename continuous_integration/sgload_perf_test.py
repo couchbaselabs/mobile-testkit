@@ -20,26 +20,26 @@ from keywords.utils import version_and_build
 # A named tuple to hold all the environment variables (lightweight class without the boilerplate)
 ScriptEnv = collections.namedtuple(
     'ScriptEnv',
-    'remote_user ' +
-    'pools_json ' +
-    'sg_deploy_type ' +
-    'install_deps_flag ' +
-    'cluster_config ' +
-    'provision_or_reset ' +
-    'couchbase_server_version ' +
-    'sync_gateway_version ' +
-    'sync_gateway_commit ' +
-    'sync_gateway_config_file ' +
-    'sgload_num_readers ' +
-    'sgload_num_writers ' +
-    'sgload_num_updaters ' +
-    'sgload_num_revs_per_doc ' +
-    'sgload_num_docs ' +
-    'sgload_num_channels ' +
-    'sgload_batch_size ' +
-    'sgload_writer_delay_ms ' +
-    'sgload_log_level ' +
-    'influxdb_host',
+    'remote_user',
+    'pools_json'
+    + 'sg_deploy_type'
+    + 'install_deps_flag'
+    + 'cluster_config'
+    + 'provision_or_reset'
+    + 'couchbase_server_version'
+    + 'sync_gateway_version'
+    + 'sync_gateway_commit'
+    + 'sync_gateway_config_file'
+    + 'sgload_num_readers'
+    + 'sgload_num_writers'
+    + 'sgload_num_updaters'
+    + 'sgload_num_revs_per_doc'
+    + 'sgload_num_docs'
+    + 'sgload_num_channels'
+    + 'sgload_batch_size'
+    + 'sgload_writer_delay_ms'
+    + 'sgload_log_level'
+    + 'influxdb_host',
 )
 
 RESOURCES_POOL_FILENAME = "resources/pool.json"
@@ -153,7 +153,7 @@ def maybe_deploy_github_keys(sg_deploy_type):
 
 def maybe_install_deps(install_deps_flag, cluster_config):
     if install_deps_flag:
-        print("install_deps_flag: {}, installing deps", install_deps_flag)
+        print(("install_deps_flag: {}, installing deps", install_deps_flag))
         install_deps(cluster_config)
 
 

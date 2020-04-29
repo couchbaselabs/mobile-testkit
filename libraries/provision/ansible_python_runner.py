@@ -1,23 +1,24 @@
 import os
-
+import os.path
 from keywords.utils import log_info
-
-from ansible.inventory import Inventory
-from ansible.vars import VariableManager
+import ansible
+import ansible.inventory
+from ansible.inventory.manager import InventoryManager
+from ansible.vars.manager import VariableManager
 from ansible.executor import playbook_executor
 from ansible.utils.display import Display
 from ansible import constants
 from ansible.parsing.dataloader import DataLoader
-import ansible.inventory
 
 
 class Options(object):
     """
     Options class to replace Ansible OptParser
     """
+
     def __init__(self, verbosity=None, inventory=None, listhosts=None, subset=None, module_paths=None, extra_vars=None,
                  forks=None, ask_vault_pass=None, vault_password_files=None, new_vault_password_file=None,
-                 output_file=None, tags=None, skip_tags=None, one_line=None, tree=None, ask_sudo_pass=None, ask_su_pass=None,
+                 output_file=None, one_line=None, tree=None, ask_sudo_pass=None, ask_su_pass=None,
                  sudo=None, sudo_user=None, become=None, become_method=None, become_user=None, become_ask_pass=None,
                  ask_pass=None, private_key_file=None, remote_user=None, connection=None, timeout=None, ssh_common_args=None,
                  sftp_extra_args=None, scp_extra_args=None, ssh_extra_args=None, poll_interval=None, seconds=None, check=None,
@@ -33,8 +34,6 @@ class Options(object):
         self.vault_password_files = vault_password_files
         self.new_vault_password_file = new_vault_password_file
         self.output_file = output_file
-        self.tags = tags
-        self.skip_tags = skip_tags
         self.one_line = one_line
         self.tree = tree
         self.ask_sudo_pass = ask_sudo_pass
@@ -123,9 +122,10 @@ class Runner(object):
         ansible.inventory.HOSTS_PATTERNS_CACHE = {}
 
         # Set inventory, using most of above objects
-        self.inventory = Inventory(loader=self.loader, variable_manager=self.variable_manager, host_list=inventory_filename)
+        self.inventory = InventoryManager(loader=self.loader, sources=[inventory_filename])
         self.inventory.subset(self.options.subset)
-        self.variable_manager.set_inventory(self.inventory)
+        self.variable_manager = VariableManager(loader=self.loader, inventory=self.inventory)
+        self.variable_manager.extra_vars = extra_vars
 
         # Setup playbook executor, but don't run until run() called
         log_info("Running playbook: {}".format(playbook))

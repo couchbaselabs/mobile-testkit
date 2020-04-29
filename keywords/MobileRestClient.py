@@ -77,6 +77,14 @@ def get_auth_type(auth):
     return auth_type
 
 
+class MyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, (bytes, bytearray)):
+            return obj.decode("ASCII")
+        # Let the base class default method raise the TypeError
+        return json.JSONEncoder.default(self, obj)
+
+
 class MobileRestClient:
     """
     A set of robot keyworks that can be executed against
@@ -162,7 +170,6 @@ class MobileRestClient:
         raise ValueError("Unsupported platform type")
 
     def get_session(self, url, db=None, session_id=None):
-
         """
         :param url: url to get session from
         :param session_id: the session id to get information from
@@ -812,7 +819,7 @@ class MobileRestClient:
         resp_obj = resp.json()
 
         if "_attachments" in resp_obj:
-            for k in resp_obj["_attachments"].keys():
+            for k in list(resp_obj["_attachments"].keys()):
                 del resp_obj["_attachments"][k]["digest"]
                 del resp_obj["_attachments"][k]["length"]
 
@@ -844,22 +851,22 @@ class MobileRestClient:
 
         if auth_type == AuthType.session:
             if use_post:
-                resp = self._session.post("{}/{}/".format(url, db), data=json.dumps(doc), cookies=dict(SyncGatewaySession=auth[1]))
+                resp = self._session.post("{}/{}/".format(url, db), data=json.dumps(doc, cls=MyEncoder), cookies=dict(SyncGatewaySession=auth[1]))
             else:
-                resp = self._session.put("{}/{}/{}".format(url, db, doc["_id"]), data=json.dumps(doc), cookies=dict(SyncGatewaySession=auth[1]))
+                resp = self._session.put("{}/{}/{}".format(url, db, doc["_id"]), data=json.dumps(doc, cls=MyEncoder), cookies=dict(SyncGatewaySession=auth[1]))
         elif auth_type == AuthType.http_basic:
             if use_post:
-                resp = self._session.post("{}/{}/".format(url, db), data=json.dumps(doc), auth=auth)
+                resp = self._session.post("{}/{}/".format(url, db), data=json.dumps(doc, cls=MyEncoder), auth=auth)
             else:
-                resp = self._session.put("{}/{}/{}".format(url, db, doc["_id"]), data=json.dumps(doc), auth=auth)
+                resp = self._session.put("{}/{}/{}".format(url, db, doc["_id"]), data=json.dumps(doc, cls=MyEncoder), auth=auth)
         else:
             if use_post:
-                resp = self._session.post("{}/{}/".format(url, db), data=json.dumps(doc))
+                resp = self._session.post("{}/{}/".format(url, db), data=json.dumps(doc, cls=MyEncoder))
             else:
                 try:
-                    resp = self._session.put("{}/{}/{}".format(url, db, doc["_id"]), data=json.dumps(doc))
-                except Exception, err:
-                    print err
+                    resp = self._session.put("{}/{}/{}".format(url, db, doc["_id"]), data=json.dumps(doc, cls=MyEncoder))
+                except Exception as err:
+                    print(err)
                     raise
 
         log_r(resp)
@@ -914,7 +921,7 @@ class MobileRestClient:
             are ordered from latest to oldest to ensure the document is built correctly
         """
 
-        if isinstance(parent_revisions, basestring):
+        if isinstance(parent_revisions, str):
             # if only one rev is specified, wrap it in a list
             parent_revs = [parent_revisions]
         elif isinstance(parent_revisions, list):
@@ -1204,7 +1211,7 @@ class MobileRestClient:
 
         return resp.json()
 
-    def update_doc(self, url, db, doc_id, number_updates=1, attachment_name=None, expiry=None, delay=None, auth=None, channels=None, property_updater=None, remove_expiry=False):
+    def update_doc(self, url, db, doc_id, number_updates=1, attachment_name=None, expiry=None, delay=None, auth=None, channels=None, property_updater=None, remove_expiry=False, rev=None, doc=None):
         """
         Updates a doc on a db a number of times.
             1. GETs the doc
@@ -1213,8 +1220,13 @@ class MobileRestClient:
         """
 
         auth_type = get_auth_type(auth)
-        doc = self.get_doc(url, db, doc_id, auth)
-        current_rev = doc["_rev"]
+        if doc is None:
+            doc = self.get_doc(url, db, doc_id, auth)
+
+        if rev is None:
+            current_rev = doc["_rev"]
+        else:
+            current_rev = rev
         try:
             doc["updates"]
         except Exception:
@@ -1225,7 +1237,7 @@ class MobileRestClient:
         log_info("Updating {}/{}/{}: {} times".format(url, db, doc_id, number_updates))
         if remove_expiry:
             del doc["_exp"]
-        for i in xrange(number_updates):
+        for i in range(number_updates):
 
             # Add "random" this to make each update unique. This will
             # cause document to conflict rather than optimize out
@@ -1252,11 +1264,11 @@ class MobileRestClient:
                 types.verify_is_callable(property_updater)
                 doc = property_updater(doc)
             if auth_type == AuthType.session:
-                resp = self._session.put("{}/{}/{}".format(url, db, doc_id), data=json.dumps(doc), cookies=dict(SyncGatewaySession=auth[1]))
+                resp = self._session.put("{}/{}/{}".format(url, db, doc_id), data=json.dumps(doc, cls=MyEncoder), cookies=dict(SyncGatewaySession=auth[1]))
             elif auth_type == AuthType.http_basic:
-                resp = self._session.put("{}/{}/{}".format(url, db, doc_id), data=json.dumps(doc), auth=auth)
+                resp = self._session.put("{}/{}/{}".format(url, db, doc_id), data=json.dumps(doc, cls=MyEncoder), auth=auth)
             else:
-                resp = self._session.put("{}/{}/{}".format(url, db, doc_id), data=json.dumps(doc))
+                resp = self._session.put("{}/{}/{}".format(url, db, doc_id), data=json.dumps(doc, cls=MyEncoder))
 
             log_r(resp, info=False)
             resp.raise_for_status()
@@ -1287,7 +1299,7 @@ class MobileRestClient:
 
         log_info("PUT {} docs to {}/{}/ with prefix {}".format(number, url, db, id_prefix))
 
-        for i in xrange(number):
+        for i in range(number):
 
             if generator == "four_k":
                 doc_body = doc_generators.four_k()
@@ -1313,7 +1325,7 @@ class MobileRestClient:
 
             doc_obj = self.add_doc(url, db, doc_body, auth=auth, use_post=False)
             if attachments_generator:
-                doc_obj["attachments"] = doc_body["_attachments"].keys()
+                doc_obj["attachments"] = list(doc_body["_attachments"].keys())
             added_docs.append(doc_obj)
 
         # check that the docs returned in the responses equals the expected number
@@ -1340,7 +1352,7 @@ class MobileRestClient:
 
         if auth_type == AuthType.session:
             resp = self._session.post("{}/{}/_bulk_docs".format(url, db),
-                                      data=json.dumps(request_body),
+                                      data=json.dumps(request_body, cls=MyEncoder),
                                       cookies=dict(SyncGatewaySession=auth[1]))
         elif auth_type == AuthType.http_basic:
             resp = self._session.post("{}/{}/_bulk_docs".format(url, db), data=json.dumps(request_body), auth=auth)
@@ -1559,7 +1571,6 @@ class MobileRestClient:
                          repl_filter=None,
                          doc_ids=None,
                          channels_filter=None):
-
         """
         Starts a replication (one-shot or continous) between Lite instances (P2P),
         Sync Gateways, or Lite <-> Sync Gateways
@@ -1748,7 +1759,7 @@ class MobileRestClient:
 
             if server_type == ServerType.listener:
 
-                data = {"keys": expected_doc_map.keys()}
+                data = {"keys": list(expected_doc_map.keys())}
                 resp = self._session.post("{}/{}/_all_docs".format(url, db), data=json.dumps(data))
                 log_r(resp)
                 resp.raise_for_status()
@@ -1758,7 +1769,7 @@ class MobileRestClient:
 
                 # Constuct _bulk_get body
                 bulk_get_body_id_list = []
-                for key in expected_doc_map.keys():
+                for key in list(expected_doc_map.keys()):
                     bulk_get_body_id_list.append({"id": key})
                 bulk_get_body = {"docs": bulk_get_body_id_list}
 
@@ -1802,7 +1813,7 @@ class MobileRestClient:
                     doc_data = self._session.get("{}/{}/{}".format(url, db, doc_id))
                     doc_json = doc_data.json()
 
-                    if "_attachments" not in doc_json and "id" in resp_doc and expected_attachment_map[resp_doc["id"]] != doc_json["_attachments"].keys():
+                    if "_attachments" not in doc_json and "id" in resp_doc and expected_attachment_map[resp_doc["id"]] != list(doc_json["_attachments"].keys()):
                         all_attachments_returned = False
                         missing_attachment_docs.append(doc_id)
 

@@ -4,7 +4,7 @@
 
 import os
 import pytest
-
+from keywords.utils import log_info
 from libraries.provision.install_sync_gateway import get_buckets_from_sync_gateway_config
 
 
@@ -60,6 +60,6 @@ def test_get_buckets_from_sync_gateway_config(sync_gateway_path, buckets):
 
     # Verification
     # mock_pool_ips.json will generate 22 files ansible+json
-    print bucket_list
-    print buckets
-    assert bucket_list == buckets
+    log_info(bucket_list)
+    log_info(buckets)
+    assert bucket_list.sort() == buckets.sort()

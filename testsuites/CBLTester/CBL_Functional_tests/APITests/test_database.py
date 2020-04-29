@@ -14,7 +14,7 @@ class TestDatabase(object):
         @summary: Checking for the Exception handling in database create API
         """
         if self.liteserv_version >= "2.6.0":
-            err_msg = "db name may not be empty"
+            err_msg = "db name must not be empty"
         log_info("check for error message: {}".format(err_msg))
 
         if self.liteserv_platform != "android" and db_name == "":
@@ -26,7 +26,7 @@ class TestDatabase(object):
         try:
             self.db_obj.create(db_name)
             assert 0
-        except Exception, err_resp:
+        except Exception as err_resp:
             assert err_msg in str(err_resp)
 
     def test_get_document_exception(self):
@@ -39,7 +39,7 @@ class TestDatabase(object):
         try:
             self.db_obj.getDocument(db, None)
             assert 0
-        except Exception, err_resp:
+        except Exception as err_resp:
             assert err_msg in str(err_resp)
         # checking document in db with empty name
         doc_id = self.db_obj.getDocument(db, "")
@@ -49,33 +49,37 @@ class TestDatabase(object):
         assert doc_id == -1
 
     def test_save_document_exception(self):
-        if self.liteserv_platform != "android":
-            pytest.skip("Test not applicable for ios")
+        if self.liteserv_platform not in ["android",
+                                          "java-macosx", "java-msft", "java-ubuntu", "java-centos",
+                                          "javaws-macosx", "javaws-msft", "javaws-ubuntu", "javaws-centos"]:
+            pytest.skip("Test only applicable for android and java platforms")
 
         db = self.db_obj.create(random_string(6))
-        err_msg = "document cannot be null"
+        err_msg = "document must not be null"
         try:
             self.db_obj.saveDocument(db, None)
             assert 0
-        except Exception, err_resp:
+        except Exception as err_resp:
             assert err_msg in str(err_resp)
 
     def test_delete_exception(self):
-        if self.liteserv_platform != "android":
-            pytest.skip("Test not applicable for ios")
+        if self.liteserv_platform not in ["android",
+                                          "java-macosx", "java-msft", "java-ubuntu", "java-centos",
+                                          "javaws-macosx", "javaws-msft", "javaws-ubuntu", "javaws-centos"]:
+            pytest.skip("Test only applicable for android and java platforms")
 
         db = self.db_obj.create(random_string(6))
         # Exception checking when document id is null
-        err_msg = "document cannot be null"
+        err_msg = "document must not be null"
         try:
             self.db_obj.delete(database=db, document=None)
             assert 0
-        except Exception, err_resp:
+        except Exception as err_resp:
             assert err_msg in str(err_resp)
         try:
             self.db_obj.purge(database=db, document=None)
             assert 0
-        except Exception, err_resp:
+        except Exception as err_resp:
             assert err_msg in str(err_resp)
 
     @pytest.mark.parametrize("db_name", [
@@ -139,7 +143,7 @@ class TestDatabase(object):
             pytest.skip("Test not supported on .net platforms or the db name is longer than or equal to 128 characters")
 
         db = self.db_obj.create(db_name)
-        path = self.db_obj.getPath(db).rstrip("\//")
+        path = self.db_obj.getPath(db).rstrip(r"\//")
         if '\\' in path:
             path = '\\'.join(path.split('\\')[:-1])
         else:

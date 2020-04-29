@@ -2,17 +2,38 @@
 - hosts: couchbase_servers
 
   tasks:
-  - name: OS | Flush Firewall
+  - name: OS | Flush Firewall on Centos
     become: yes
     command: iptables --flush
     ignore_errors: True
-    when: ansible_distribution == "CentOS"
+    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
 
 - hosts: sync_gateways
 
   tasks:
-  - name: OS | Flush Firewall
+  - name: OS | Flush Firewall on Centos
     become: yes
     command: iptables --flush
     ignore_errors: True
-    when: ansible_distribution == "CentOS"
+    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
+
+- hosts: sync_gateways
+
+  tasks:
+  - name: OS | Flush Firewall on Windows
+    win_shell: | 
+      netsh advfirewall firewall delete rule name="block outbound tcp port"
+      netsh advfirewall firewall delete rule name="block outbound udp port"
+    register: output
+    failed_when: output.stdout is not search("No rules match the specified criteria.") and output.stdout is not search("Deleted")
+    when: ansible_os_family == "Windows"
+
+
+- hosts: sync_gateways
+
+  tasks:
+  - name: OS | Flush Firewall on MacOS
+    become: yes
+    shell: pfctl -f /etc/pf.conf
+    when: ansible_os_family == "Darwin"
+ 

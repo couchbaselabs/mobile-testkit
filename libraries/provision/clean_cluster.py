@@ -1,6 +1,6 @@
 import os
 
-from ansible_runner import AnsibleRunner
+from libraries.provision.ansible_runner import AnsibleRunner
 from keywords.exceptions import ProvisioningError
 from keywords.utils import log_info
 
@@ -15,6 +15,15 @@ def clean_cluster(cluster_config):
         raise ProvisioningError("Failed to removed previous installs")
 
     # Clear firewall rules
+    status = ansible_runner.run_ansible_playbook("flush-firewall.yml")
+    if status != 0:
+        raise ProvisioningError("Failed to flush firewall")
+
+
+def clear_firewall_rules(cluster_config):
+    log_info("Flusing firewall before teardown: {}".format(cluster_config))
+
+    ansible_runner = AnsibleRunner(config=cluster_config)
     status = ansible_runner.run_ansible_playbook("flush-firewall.yml")
     if status != 0:
         raise ProvisioningError("Failed to flush firewall")

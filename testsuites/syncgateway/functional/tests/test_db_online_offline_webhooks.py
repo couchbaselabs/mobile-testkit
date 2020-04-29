@@ -24,15 +24,13 @@ from utilities.cluster_config_utils import persist_cluster_config_environment_pr
 ])
 def test_db_online_offline_webhooks_offline(params_from_base_test_setup, sg_conf_name, num_users, num_channels,
                                             num_docs, num_revisions, x509_cert_auth):
-
     start = time.time()
 
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
 
     if mode == "di":
-        pytest.skip("Offline tests not supported in Di mode -- "
-                    "see https://github.com/couchbase/sync_gateway/issues/2423#issuecomment-300841425")
+        pytest.skip("Offline tests not supported in Di mode -- see https://github.com/couchbase/sync_gateway/issues/2423#issuecomment-300841425")
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
