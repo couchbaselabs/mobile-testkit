@@ -101,12 +101,10 @@ def cleanup_for_blocked_nodes(job_name=None):
     Go through QE-mobile-pool bucket and release unused block nodes
     :return: void
     """
-    # query_str = "select meta().id from `{}`".format(BUCKET_NAME)
     if job_name is not None:
         query_str = "select meta().id from `{}` where state=\"booked\" and username=\"{}\"".format(BUCKET_NAME, job_name)
     else:
         query_str = "select meta().id from `{}` where state=\"booked\"".format(BUCKET_NAME)
-    print("query string is ----", query_str)
     query = N1QLQuery(query_str)
     release_node_list = []
     for row in sdk_client.n1ql_query(query):
@@ -125,7 +123,7 @@ def cleanup_for_blocked_nodes(job_name=None):
         job_name = length_array[0]
         build_id = length_array[1]
         log_info("Releasing node {} for job {}".format(doc_id, job_id))
-        if not is_jenkins_job_running(job_name, build_id):
+        if job_name is not None or not is_jenkins_job_running(job_name, build_id) :
             doc["prevUser"] = doc["username"]
             doc["username"] = ""
             doc["state"] = "available"
