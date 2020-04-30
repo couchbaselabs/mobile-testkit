@@ -96,12 +96,17 @@ def release_node(pool_list, job_name):
             raise Exception("Unable to release the node. Release node manually")
 
 
-def cleanup_for_blocked_nodes():
+def cleanup_for_blocked_nodes(job_name=None):
     """
     Go through QE-mobile-pool bucket and release unused block nodes
     :return: void
     """
-    query_str = "select meta().id from `{}`".format(BUCKET_NAME)
+    # query_str = "select meta().id from `{}`".format(BUCKET_NAME)
+    if job_name is not None:
+        query_str = "select meta().id from `{}` where state=\"booked\" and username=\"{}\"".format(BUCKET_NAME, job_name)
+    else:
+        query_str = "select meta().id from `{}` where state=\"booked\"".format(BUCKET_NAME)
+    print("query string is ----", query_str)
     query = N1QLQuery(query_str)
     release_node_list = []
     for row in sdk_client.n1ql_query(query):
@@ -115,7 +120,10 @@ def cleanup_for_blocked_nodes():
         job_id = doc["username"]
         if job_id == "":
             job_id = "test_job:123"
-        job_name, build_id = job_id.split(":")
+        length_array = []
+        length_array = job_id.split(":")
+        job_name = length_array[0]
+        build_id = length_array[1]
         log_info("Releasing node {} for job {}".format(doc_id, job_id))
         if not is_jenkins_job_running(job_name, build_id):
             doc["prevUser"] = doc["username"]
@@ -177,7 +185,7 @@ if __name__ == "__main__":
                       help="specify the os version of requested node")
 
     parser.add_option("--job-name",
-                      action="store", dest="job_name", default="test:123",
+                      action="store", dest="job_name",
                       help="specify the job name which is requesting/releasing nodes")
 
     parser.add_option("--reserve-nodes",
@@ -234,7 +242,6 @@ if __name__ == "__main__":
                     pool_json_str += '"{}": "couchbase_servers", '.format(node)
             
                 for sgw_node in sgw_node_list:
-                    print("sgw nodes is : ", sgw_node)
                     pool_json_str += '"{}": "sync_gateways", '.format(sgw_node)
                 if opts.load_balancer_nodes:
                     for lp_node in lp_node_list:
@@ -252,6 +259,6 @@ if __name__ == "__main__":
         log_info("Releasing nodes {} back to QE-mobile-pool".format(node_list))
         release_node(node_list, opts.job_name)
     elif opts.cleanup_nodes:
-        cleanup_for_blocked_nodes()
+        cleanup_for_blocked_nodes(opts.job_name)
     else:
         raise Exception("Use either one the flag from --cleanup_nodes or --release-nodes or --reserve-nodes")
