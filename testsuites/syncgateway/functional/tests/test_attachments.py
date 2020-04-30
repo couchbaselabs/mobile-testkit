@@ -12,6 +12,7 @@ from keywords import couchbaseserver
 from keywords import document
 from keywords import attachment
 from libraries.testkit.cluster import Cluster
+from utilities.cluster_config_utils import is_ipv6
 
 
 @pytest.mark.syncgateway
@@ -81,7 +82,10 @@ def test_attachment_revpos_when_ancestor_unavailable(params_from_base_test_setup
     # Clear cached rev doc bodys from server and cycle sync_gateway
     sg_util.stop_sync_gateways(cluster_config=cluster_config, url=sg_url)
 
-    cb_server.delete_couchbase_server_cached_rev_bodies(bucket=bucket)
+    ipv6 = False
+    if is_ipv6(cluster_config):
+        ipv6 = True
+    cb_server.delete_couchbase_server_cached_rev_bodies(bucket=bucket, ipv6=ipv6)
     sg_util.start_sync_gateways(cluster_config=cluster_config, url=sg_url, config=sg_conf)
 
     client.add_conflict(

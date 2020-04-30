@@ -30,19 +30,19 @@ echo Generate ROOT CA
 # Generate ROOT CA
 openssl genrsa -out ${ROOT_CA}.key 2048 2>/dev/null
 openssl req -new -x509  -days 3650 -sha256 -key ${ROOT_CA}.key -out ${ROOT_CA}.pem \
--subj '/C=UA/O=My Company/CN=My Company Root CA' 2>/dev/null
+-subj '/C=US/O=couchbase/CN=My Company Root' 2>/dev/null
 
 echo Generate Intermediate
 # Generate intemediate key and sign with ROOT CA
 openssl genrsa -out ${INTERMEDIATE}.key 2048 2>/dev/null
-openssl req -new -key ${INTERMEDIATE}.key -out ${INTERMEDIATE}.csr -subj '/C=UA/O=My Company/CN=My Company Intermediate CA' 2>/dev/null
+openssl req -new -key ${INTERMEDIATE}.key -out ${INTERMEDIATE}.csr -subj '/C=US/O=couchbase/CN=My Company Intermediate CA' 2>/dev/null
 openssl x509 -req -in ${INTERMEDIATE}.csr -CA ${ROOT_CA}.pem -CAkey ${ROOT_CA}.key -CAcreateserial \
 -CAserial rootCA.srl -extfile v3_ca.ext -out ${INTERMEDIATE}.pem -days 365 2>/dev/null
 
 # Generate client key and sign with ROOT CA and INTERMEDIATE KEY
 echo Generate RSA
 openssl genrsa -out ${NODE}.key 2048 2>/dev/null
-openssl req -new -key ${NODE}.key -out ${NODE}.csr -subj "/C=UA/O=My Company/CN=${USERNAME}" 2>/dev/null
+openssl req -new -key ${NODE}.key -out ${NODE}.csr -subj "/C=US/O=couchbase/CN=${USERNAME}" 2>/dev/null
 openssl x509 -req -in ${NODE}.csr -CA ${INTERMEDIATE}.pem -CAkey ${INTERMEDIATE}.key -CAcreateserial \
 -CAserial intermediateCA.srl -out ${NODE}.pem -days 365 -extfile openssl-san.cnf -extensions 'v3_req'
 
@@ -59,27 +59,38 @@ arr_hosts=( $hosts )
 echo Loop through nodes
 for host in "${arr_hosts[@]}"
 do
-	ip=`echo $host|sed 's/\"\([^:]*\):.*/\1/'`
-	# Copy private key and chain file to a node:/opt/couchbase/var/lib/couchbase/inbox
-	echo "Setup Certificate for ${ip}"
-	${SSH} root@${ip} "mkdir ${INBOX}" 2>/dev/null || true
-	${SCP} chain.pem root@${ip}:${INBOX}
-	${SCP} pkey.key root@${ip}:${INBOX}
-	${SSH} root@${ip} "chmod o+rx ${INBOX}${CHAIN}"
-	${SSH} root@${ip} "chmod o+rx ${INBOX}${NODE}.key"
+  # Copy private key and chain file to a node:/opt/couchbase/var/lib/couchbase/inbox
+  echo "Setup Certificate for ${ip}"
 
-	# Upload ROOT CA and activate it
-	curl -s -o /dev/null --data-binary "@./${ROOT_CA}.pem" \
-    	http://${ADMINCRED}@${ip}:8091/controller/uploadClusterCA
-	curl -sX POST http://${ADMINCRED}@${ip}:8091/node/controller/reloadCertificate
-
-	# Enable client cert
-	if ${USE_JSON} ;then
-	    POST_DATA='{"state": "enable","prefixes": [{"path": "subject.cn","prefix": "","delimiter": ""}]}'
-            curl -s -H "Content-Type: application/json" -X POST -d "${POST_DATA}" http://${ADMINCRED}@${ip}:8091/settings/clientCertAuth
-	else
-            curl -s -d "state=enable" -d "delimiter=" -d "path=subject.cn" -d "prefix=" http://${ADMINCRED}@${ip}:8091/settings/clientCertAuth
-        fi
+  if  [[ ${host:1:1} == "[" ]]
+  then
+      ip=`echo $host|sed "s/.*\[//;s/\].*//;"`
+      ip="[${ip}]"
+      new_ip=`echo $ip|sed "s/.*\[//;s/\].*//;"`
+      ${SSH} root@${new_ip} "mkdir ${INBOX}" 2>/dev/null || true
+      ${SCP} chain.pem root@${ip}:${INBOX}
+      ${SCP} pkey.key root@${ip}:${INBOX}
+      ${SSH} root@${new_ip} "chmod o+rx ${INBOX}${CHAIN}"
+      ${SSH} root@${new_ip} "chmod o+rx ${INBOX}${NODE}.key"
+      ip="${CLUSTER}"
+  else
+      ip=`echo $host|sed 's/\"\([^:]*\):.*/\1/'`
+      ${SSH} root@${ip} "mkdir ${INBOX}" 2>/dev/null || true
+      ${SCP} chain.pem root@${ip}:${INBOX}
+      ${SCP} pkey.key root@${ip}:${INBOX}
+      ${SSH} root@${ip} "chmod o+rx ${INBOX}${CHAIN}"
+      ${SSH} root@${ip} "chmod o+rx ${INBOX}${NODE}.key"
+  fi
+  # Upload ROOT CA and activate it
+  curl -s -o /dev/null --data-binary "@./${ROOT_CA}.pem" http://${ADMINCRED}@${ip}:8091/controller/uploadClusterCA
+  curl -sX POST http://${ADMINCRED}@${ip}:8091/node/controller/reloadCertificate
+  # Enable client cert
+  if ${USE_JSON} ;then
+      POST_DATA='{"state": "enable","prefixes": [{"path": "subject.cn","prefix": "","delimiter": ""}]}'
+      curl -s -H "Content-Type: application/json" -X POST -d "${POST_DATA}" http://${ADMINCRED}@${ip}:8091/settings/clientCertAuth
+  else
+      curl -s -d "state=enable" -d "delimiter=" -d "path=subject.cn" -d "prefix=" http://${ADMINCRED}@${ip}:8091/settings/clientCertAuth
+  fi
 done
 
 # Create keystore file and import ROOT/INTERMEDIATE/CLIENT cert

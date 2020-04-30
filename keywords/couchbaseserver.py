@@ -1,6 +1,7 @@
 import time
 import json
 import requests
+import re
 from requests.exceptions import ConnectionError, HTTPError
 from requests import Session
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
@@ -70,7 +71,7 @@ class CouchbaseServer:
     """ Installs Couchbase Server on machine host"""
 
     def __init__(self, url):
-        self.url = url
+        self.url = re.sub(r'[\[\]]', '', url)
         self.cbs_ssl = False
         self.max_retries = 5
 

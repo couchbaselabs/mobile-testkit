@@ -18,12 +18,11 @@ class TestServerAndroid(TestServerBase):
         self.platform = platform
 
         if self.platform == "android":
+            self.download_source = "couchbase-lite-android"
             if community_enabled:
                 apk_name_prefix = "CBLTestServer-Android-{}-community".format(self.version_build)
-                self.download_source = "couchbase-lite-android"
             else:
                 apk_name_prefix = "CBLTestServer-Android-{}-enterprise".format(self.version_build)
-                self.download_source = "couchbase-lite-android-ee"
             if debug_mode:
                 self.apk_name = "{}-debug.apk".format(apk_name_prefix)
             else:
