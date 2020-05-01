@@ -103,20 +103,20 @@ def generate_x509_certs(cluster_config, bucket_name, sg_platform):
     stdout, stderr = proc.communicate()
     print(stdout, stderr)
 
-    # zipping the certificates
+    # # zipping the certificates
     os.chdir(curr_dir)
-    make_archive("certs", "zip", certs_dir)
+    # make_archive("certs", "zip", certs_dir)
 
-    for node in cluster["sync_gateways"]:
-        if sg_platform.lower() != "macos" and sg_platform.lower() != "windows":
-            cmd = ["scp", "certs.zip", "{}@{}:/tmp".format(username, node["ip"])]
-        else:
-            cmd = ["cp", "certs.zip", "/tmp"]
-        print(" ".join(cmd))
-        proc = Popen(cmd, stdout=PIPE, stderr=PIPE)
-        stdout, stderr = proc.communicate()
-        if stdout or stderr:
-            print(stdout, stderr)
+    # for node in cluster["sync_gateways"]:
+    #     if sg_platform.lower() != "macos" and sg_platform.lower() != "windows":
+    #         cmd = ["scp", "certs.zip", "{}@{}:/tmp".format(username, node["ip"])]
+    #     else:
+    #         cmd = ["cp", "certs.zip", "/tmp"]
+    #     print(" ".join(cmd))
+    #     proc = Popen(cmd, stdout=PIPE, stderr=PIPE)
+    #     stdout, stderr = proc.communicate()
+    #     if stdout or stderr:
+    #         print(stdout, stderr)
 
 
 def load_cluster_config_json(cluster_config):

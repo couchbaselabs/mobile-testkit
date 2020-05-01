@@ -19,6 +19,11 @@ def clean_cluster(cluster_config):
     if status != 0:
         raise ProvisioningError("Failed to flush firewall")
 
+    # Reset to ntp time . Required for x509 tests to clock sync for couchbase server and sync gateway
+    status = ansible_runner.run_ansible_playbook("reset-hosts.yml")
+    if status != 0:
+        raise ProvisioningError("Failed to reset hosts")
+
 
 def clear_firewall_rules(cluster_config):
     log_info("Flusing firewall before teardown: {}".format(cluster_config))

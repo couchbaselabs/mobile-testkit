@@ -48,6 +48,9 @@
     is_index_writer: "false"
     sslcert:
     sslkey:
+    x509_auth:
+    x509_certs_dir:
+    cacertpath:
 
   tasks:
   - include: tasks/deploy-sync-gateway-config.yml

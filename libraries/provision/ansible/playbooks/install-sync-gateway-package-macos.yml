@@ -73,20 +73,20 @@
   tasks:
   - include: tasks/install-sg.yml
 
-# Copy certs to /Users/sync_gateway dir
-  - name: Copying certs.zip to /Users/sync_gateway directory
-    shell: cp /tmp/certs.zip /Users/sync_gateway
-    when: x509_auth
+# # Copy certs to /Users/sync_gateway dir
+#   - name: Copying certs.zip to /Users/sync_gateway directory
+#     shell: cp /tmp/certs.zip /Users/sync_gateway
+#     when: x509_auth
 
 # Deleting cert directory if exist
   - name: Deleting /Users/sync_gateway/certs
     shell: rm -rf /Users/sync_gateway/certs/*
     when: x509_auth
 
-# unzip certs.zip
-  - name: Unzipping certs.zip
-    shell: unzip /Users/sync_gateway/certs.zip -d /Users/sync_gateway/certs
-    when: x509_auth
+# # unzip certs.zip
+#   - name: Unzipping certs.zip
+#     shell: unzip /Users/sync_gateway/certs.zip -d /Users/sync_gateway/certs
+#     when: x509_auth
 
 # Deploy non writer sync_gateway configs
 - hosts: sync_gateways
@@ -104,6 +104,8 @@
     keypath:
     username:
     password:
+    x509_auth:
+    x509_certs_dir:
 
   tasks:
   - include: tasks/deploy-sync-gateway-config-macos.yml
