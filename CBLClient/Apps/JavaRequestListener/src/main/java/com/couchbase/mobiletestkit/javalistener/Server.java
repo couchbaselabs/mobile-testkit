@@ -133,7 +133,7 @@ public class Server extends NanoHTTPD {
 			}                
             else {
 				if (body instanceof String) {
-                    return Response.newFixedLengthResponse(Status.OK, "text/plain", ((String) body).getBytes());
+                    return Response.newFixedLengthResponse(Status.OK, "text/plain", ((String) body).getBytes("UTF-8"));
                 }
 				else if (body instanceof RawData) {
                     RawData dataObj = (RawData) body;
