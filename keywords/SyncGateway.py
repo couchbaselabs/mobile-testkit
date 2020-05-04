@@ -570,6 +570,7 @@ class SyncGateway(object):
         )
         sg_conf = os.path.abspath(sg_config.config_path)
         sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
+        cbs_cert_path = os.path.join(os.getcwd(), "certs")
         couchbase_server_primary_node = add_cbs_to_sg_config_server_field(cluster_config)
         bucket_names = get_buckets_from_sync_gateway_config(sg_conf)
 
@@ -588,6 +589,7 @@ class SyncGateway(object):
             "cacertpath": "",
             "x509_auth": False,
             "sg_cert_path": sg_cert_path,
+            "x509_certs_dir": cbs_cert_path,
             "server_port": self.server_port,
             "server_scheme": self.server_scheme,
             "autoimport": "",
@@ -705,6 +707,7 @@ class SyncGateway(object):
         server_port = 8091
         server_scheme = "http"
         sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
+        cbs_cert_path = os.path.join(os.getcwd(), "certs")
         bucket_names = get_buckets_from_sync_gateway_config(sg_conf)
         version, build = version_and_build(sync_gateway_version)
 
@@ -720,6 +723,7 @@ class SyncGateway(object):
             "keypath": "",
             "cacertpath": "",
             "x509_auth": False,
+            "x509_certs_dir": cbs_cert_path,
             "sg_cert_path": sg_cert_path,
             "sync_gateway_config_filepath": sg_conf,
             "server_port": server_port,
@@ -763,7 +767,7 @@ class SyncGateway(object):
 
             if is_x509_auth(cluster_config):
                 playbook_vars[
-                    "certpath"] = '"certpath": "{}/certs/chain.pem",'.format(sg_home_directory)
+                    "certpath"] = '"certpath": "{}/certs "{}/certs/chain.pem",'.format(sg_home_directory)
                 playbook_vars[
                     "keypath"] = '"keypath": "{}/certs/pkey.key",'.format(sg_home_directory)
                 playbook_vars[
