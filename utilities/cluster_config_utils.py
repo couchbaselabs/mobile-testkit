@@ -4,7 +4,7 @@ import os
 import re
 
 from keywords.exceptions import ProvisioningError
-from shutil import copyfile, rmtree, make_archive
+from shutil import copyfile, rmtree
 from subprocess import Popen, PIPE
 from distutils.dir_util import copy_tree
 
@@ -82,7 +82,7 @@ def generate_x509_certs(cluster_config, bucket_name, sg_platform):
             if match:
                 username = match.groups()[0].strip()
                 break
-
+    print(username)
     curr_dir = os.getcwd()
     certs_dir = os.path.join(curr_dir, "certs")
     if os.path.exists(certs_dir):
@@ -103,20 +103,7 @@ def generate_x509_certs(cluster_config, bucket_name, sg_platform):
     stdout, stderr = proc.communicate()
     print(stdout, stderr)
 
-    # # zipping the certificates
     os.chdir(curr_dir)
-    # make_archive("certs", "zip", certs_dir)
-
-    # for node in cluster["sync_gateways"]:
-    #     if sg_platform.lower() != "macos" and sg_platform.lower() != "windows":
-    #         cmd = ["scp", "certs.zip", "{}@{}:/tmp".format(username, node["ip"])]
-    #     else:
-    #         cmd = ["cp", "certs.zip", "/tmp"]
-    #     print(" ".join(cmd))
-    #     proc = Popen(cmd, stdout=PIPE, stderr=PIPE)
-    #     stdout, stderr = proc.communicate()
-    #     if stdout or stderr:
-    #         print(stdout, stderr)
 
 
 def load_cluster_config_json(cluster_config):

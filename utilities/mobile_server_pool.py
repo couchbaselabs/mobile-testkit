@@ -170,7 +170,7 @@ def cleanup_for_blocked_nodes(job_name=None):
         job_name = length_array[0]
         build_id = length_array[1]
         log_info("Releasing node {} for job {}".format(doc_id, job_id))
-        if job_name is not None or not is_jenkins_job_running(job_name, build_id) :
+        if job_name is not None or not is_jenkins_job_running(job_name, build_id):
             doc["prevUser"] = doc["username"]
             doc["username"] = ""
             doc["state"] = "available"
@@ -265,7 +265,7 @@ if __name__ == "__main__":
     (opts, args) = parser.parse_args(arg_parameters)
     if opts.cleanup_nodes and opts.reserve_nodes and opts.release_nodes and opts.get_available_nodes:
         raise Exception("Use either one the flag from --cleanup_nodes or --release-nodes or --reserve-nodes or --get-available-nodes")
-    
+
     elif opts.get_available_nodes:
         get_nodes_available_from_mobile_pool(opts.nodes_os_type, opts.nodes_os_version)
 
@@ -292,7 +292,7 @@ if __name__ == "__main__":
                 pool_json_str += '"ip_to_node_type": {'
                 for node in node_list:
                     pool_json_str += '"{}": "couchbase_servers", '.format(node)
-            
+
                 for sgw_node in sgw_node_list:
                     pool_json_str += '"{}": "sync_gateways", '.format(sgw_node)
                 if opts.load_balancer_nodes:
