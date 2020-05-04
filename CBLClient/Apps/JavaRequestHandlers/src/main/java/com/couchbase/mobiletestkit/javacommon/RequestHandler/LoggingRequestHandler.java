@@ -25,7 +25,7 @@ public class LoggingRequestHandler {
 
         if (directory.isEmpty()) {
             long ts = System.currentTimeMillis() / 1000;
-            directory = RequestHandlerDispatcher.context.getFilesDir().getAbsolutePath() + "/logs_" + ts;
+            directory = RequestHandlerDispatcher.context.getFilesDir().getAbsolutePath() + File.separator + "logs_" + ts;
             Log.i(TAG, "File logging configured at: " + directory);
         }
         LogFileConfiguration config = new LogFileConfiguration(directory);
@@ -109,7 +109,7 @@ public class LoggingRequestHandler {
         String directory = args.get("directory");
         if (directory.isEmpty()) {
             long ts = System.currentTimeMillis() / 1000;
-            directory = RequestHandlerDispatcher.context.getFilesDir().getAbsolutePath() + "/logs_" + ts;
+            directory = RequestHandlerDispatcher.context.getFilesDir().getAbsolutePath() + File.separator + "logs_" + ts;
 
             Log.i(TAG, "File logging configured at: " + directory);
         }

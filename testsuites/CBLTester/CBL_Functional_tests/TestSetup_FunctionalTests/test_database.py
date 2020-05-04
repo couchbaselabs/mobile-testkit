@@ -117,6 +117,10 @@ def test_invalidEncryption(params_from_base_test_setup, password):
     if liteserv_platform == "ios":
         cbl_db1 = db.create(cbl_db_name, db_config_without_password)
         assert "file is not a database" in cbl_db1
+    elif liteserv_platform in ["javaws-macosx", "javaws-msft", "javaws-ubuntu", "javaws-centos"]:
+        with pytest.raises(Exception) as he:
+            db.create(cbl_db_name, db_config_without_password)
+        assert str(he.value).startswith('400 Client Error:  for url:')
     else:
         with pytest.raises(Exception) as he:
             db.create(cbl_db_name, db_config_without_password)
@@ -128,6 +132,11 @@ def test_invalidEncryption(params_from_base_test_setup, password):
         invalid_key_db_config = db_configure.setEncryptionKey(db_config, password=password)
         cbl_db2 = db.create(cbl_db_name, invalid_key_db_config)
         assert "file is not a database" in cbl_db2
+    elif liteserv_platform in ["javaws-macosx", "javaws-msft", "javaws-ubuntu", "javaws-centos"]:
+        with pytest.raises(Exception) as he:
+            invalid_key_db_config = db_configure.setEncryptionKey(db_config, password=password)
+            db.create(cbl_db_name, invalid_key_db_config)
+        assert str(he.value).startswith('400 Client Error:  for url:')
     else:
         with pytest.raises(Exception) as he:
             invalid_key_db_config = db_configure.setEncryptionKey(db_config, password=password)
@@ -176,6 +185,11 @@ def test_updateDBEncryptionKey(params_from_base_test_setup):
     if liteserv_platform == "ios":
         cbl_db1 = db.create(cbl_db_name, db_config)
         assert "file is not a database" in cbl_db1
+    elif liteserv_platform in ["javaws-macosx", "javaws-msft", "javaws-ubuntu", "javaws-centos"]:
+        with pytest.raises(Exception) as he:
+            db.create(cbl_db_name, db_config)
+
+        assert str(he.value).startswith('400 Client Error:  for url:')
     else:
         with pytest.raises(Exception) as he:
             db.create(cbl_db_name, db_config)
@@ -274,6 +288,10 @@ def test_removeDBEncryptionKey(params_from_base_test_setup):
     if liteserv_platform == "ios":
         cbl_db2 = db.create(cbl_db_name, db_config)
         assert "file is not a database" in cbl_db2
+    elif liteserv_platform in ["javaws-macosx", "javaws-msft", "javaws-ubuntu", "javaws-centos"]:
+        with pytest.raises(Exception) as he:
+            db.create(cbl_db_name, db_config)
+        assert str(he.value).startswith('400 Client Error:  for url:')
     else:
         with pytest.raises(Exception) as he:
             db.create(cbl_db_name, db_config)
