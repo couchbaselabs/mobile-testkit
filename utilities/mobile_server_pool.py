@@ -61,10 +61,9 @@ def get_nodes_from_pool_server(num_of_nodes, nodes_os_type, node_os_version, job
                 "and state='available'".format(doc_id)
             query = N1QLQuery(query_str)
             sdk_client.n1ql_query(query)
-        if is_node_reserved:
+        if is_node_reserved and vm_alive:
             pool_list.append(str(doc_id))
-        else:
-            continue
+
         if len(pool_list) == int(num_of_nodes):
             return pool_list
 
