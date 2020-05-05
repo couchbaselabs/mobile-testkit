@@ -1,7 +1,6 @@
 """ Setup for Sync Gateway functional tests """
 
 import pytest
-
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.constants import CLUSTER_CONFIGS_DIR
 from keywords.exceptions import ProvisioningError, FeatureSupportedError
@@ -13,6 +12,7 @@ from libraries.NetworkUtils import NetworkUtils
 from libraries.testkit import cluster
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop, is_x509_auth
 from utilities.cluster_config_utils import get_load_balancer_ip
+from libraries.provision.clean_cluster import clear_firewall_rules
 
 UNSUPPORTED_1_5_0_CC = {
     "test_db_offline_tap_loss_sanity[bucket_online_offline/bucket_online_offline_default_dcp-100]": {
@@ -360,11 +360,14 @@ def params_from_base_suite_setup(request):
         "no_conflicts_enabled": no_conflicts_enabled,
         "sg_platform": sg_platform,
         "ssl_enabled": cbs_ssl,
-        "delta_sync_enabled": delta_sync_enabled
+        "delta_sync_enabled": delta_sync_enabled,
+        "sg_ce": sg_ce
     }
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
 
+    # clean up firewall rules if any ports blocked for server ssl testing
+    clear_firewall_rules(cluster_config)
     # Stop all sync_gateway and sg_accels as test finished
     c = cluster.Cluster(cluster_config)
     c.stop_sg_and_accel()
@@ -392,6 +395,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     sync_gateway_version = params_from_base_suite_setup["sync_gateway_version"]
     sg_platform = params_from_base_suite_setup["sg_platform"]
     delta_sync_enabled = params_from_base_suite_setup["delta_sync_enabled"]
+    sg_ce = params_from_base_suite_setup["sg_ce"]
 
     test_name = request.node.name
 
@@ -429,7 +433,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "sync_gateway_version": sync_gateway_version,
         "sg_platform": sg_platform,
         "ssl_enabled": cbs_ssl,
-        "delta_sync_enabled": delta_sync_enabled
+        "delta_sync_enabled": delta_sync_enabled,
+        "sg_ce": sg_ce
     }
 
     # Code after the yield will execute when each test finishes

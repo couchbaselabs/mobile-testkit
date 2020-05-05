@@ -16,7 +16,6 @@ from utilities.cluster_config_utils import load_cluster_config_json, persist_clu
 @pytest.mark.syncgateway
 @pytest.mark.logging
 @pytest.mark.parametrize("sg_conf_name, x509_cert_auth", [
-    ("log_rotation_new", True),
     ("log_rotation_new", False)
 ])
 def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name, x509_cert_auth):
@@ -778,7 +777,7 @@ def test_rotated_logs_size_limit(params_from_base_test_setup, sg_conf_name):
         unzip_file = zip_file.split(".gz")[0]
         _, stdout, _ = remote_executor.execute("ls -s {} | awk '{}'".format(unzip_file, print_variable))
         log_size = stdout[0].rstrip()
-        assert log_size > 100000, "rotated log size is not created with 100 MB"
+        assert int(log_size) > 100000, "rotated log size is not created with 100 MB"
 
     # Remove generated conf file
     os.remove(temp_conf)

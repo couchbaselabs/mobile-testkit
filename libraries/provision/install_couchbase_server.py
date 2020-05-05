@@ -57,7 +57,7 @@ def install_couchbase_server(cluster_config, couchbase_server_config, cbs_platfo
     log_info(cluster_config)
     log_info(couchbase_server_config)
     with open("{}.json".format(cluster_config)) as f:
-            cluster = json.loads(f.read())
+        cluster = json.loads(f.read())
 
     ansible_runner = AnsibleRunner(cluster_config)
     cluster_keywords = ClusterKeywords(cluster_config)
@@ -65,7 +65,7 @@ def install_couchbase_server(cluster_config, couchbase_server_config, cbs_platfo
     server_url = cluster_topology["couchbase_servers"][0]
     cb_server = CouchbaseServer(server_url)
 
-    log_info(">>> Installing Couchbase Server")
+    log_info(">>> Installing Couchbase Server", str(cb_server) + str(cbs_platform))
     # Install Server
     server_baseurl, server_package_name = couchbase_server_config.get_baseurl_package(cb_server, cbs_platform, cbs_ce=cbs_ce)
     status = ansible_runner.run_ansible_playbook(
@@ -100,7 +100,7 @@ if __name__ == "__main__":
     try:
         cluster_conf = os.environ["CLUSTER_CONFIG"]
     except KeyError as ke:
-        print ("Make sure CLUSTER_CONFIG is defined and pointing to the configuration you would like to provision")
+        print("Make sure CLUSTER_CONFIG is defined and pointing to the configuration you would like to provision")
         raise KeyError("CLUSTER_CONFIG not defined. Unable to provision cluster.")
 
     server_config = CouchbaseServerConfig(

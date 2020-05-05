@@ -13,6 +13,7 @@ import com.couchbase.lite.Replicator;
 import com.couchbase.lite.ReplicatorChange;
 import com.couchbase.lite.ReplicatorChangeListener;
 import com.couchbase.lite.ReplicatorConfiguration;
+import com.couchbase.mobiletestkit.javacommon.util.ConcurrentExecutor;
 
 
 public class ReplicatorRequestHandler {
@@ -43,20 +44,20 @@ public class ReplicatorRequestHandler {
     public ReplicatorChangeListener addChangeListener(Args args) {
         Replicator replicator = args.get("replicator");
         MyReplicatorListener changeListener = new MyReplicatorListener();
-        replicator.addChangeListener(changeListener);
+        replicator.addChangeListener(ConcurrentExecutor.EXECUTOR, changeListener);
         return changeListener;
     }
 
     public void removeChangeListener(Args args) {
         Replicator replicator = args.get("replicator");
         MyReplicatorListener changeListener = args.get("changeListener");
-        replicator.addChangeListener(changeListener);
+        replicator.addChangeListener(ConcurrentExecutor.EXECUTOR, changeListener);
     }
 
     public MyDocumentReplicatorListener addReplicatorEventChangeListener(Args args) {
         Replicator replicator = args.get("replicator");
         MyDocumentReplicatorListener changeListener = new MyDocumentReplicatorListener();
-        ListenerToken token = replicator.addDocumentReplicationListener(changeListener);
+        ListenerToken token = replicator.addDocumentReplicationListener(ConcurrentExecutor.EXECUTOR, changeListener);
         changeListener.setToken(token);
         return changeListener;
     }

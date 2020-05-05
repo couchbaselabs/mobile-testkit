@@ -1,0 +1,16 @@
+  - name: BLOCKPORTS | drop outbound tcp {{ port }}
+    ignore_errors: yes
+    shell: (pfctl -sr; echo "block drop quick proto tcp from any to any port = {{ port }}") | pfctl -ef -
+
+  - name: BLOCKPORTS | drop udp {{ port }}
+    ignore_errors: yes
+    shell: (pfctl -sr; echo "block drop quick proto udp from any to any port = {{ port }}") | pfctl -ef -
+
+  - name: BLOCKPORTS | enabled rules {{ port }}
+    shell: pfctl -sr
+
+  - name: BLOCKPORTS | Verify port {{ port }} is blocked 
+    shell: pfctl -s rules
+    register: output
+    failed_when: output.stdout is not search("port = {{ port }}")
+

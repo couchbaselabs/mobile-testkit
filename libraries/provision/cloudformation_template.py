@@ -172,7 +172,7 @@ def gen_template(config):
     t.add_resource(instanceProfile)
 
     # Couchbase Server Instances
-    for i in xrange(num_couchbase_servers):
+    for i in range(num_couchbase_servers):
         name = "couchbaseserver{}".format(i)
         instance = ec2.Instance(name)
         instance.ImageId = "ami-6d1c2007"  # centos7
@@ -195,7 +195,7 @@ def gen_template(config):
         t.add_resource(instance)
 
     # Sync Gw instances (ubuntu ami)
-    for i in xrange(num_sync_gateway_servers):
+    for i in range(num_sync_gateway_servers):
         name = "syncgateway{}".format(i)
         instance = ec2.Instance(name)
         instance.ImageId = "ami-6d1c2007"  # centos7
@@ -221,7 +221,7 @@ def gen_template(config):
         t.add_resource(instance)
 
     # Gateload instances (ubuntu ami)
-    for i in xrange(num_gateloads):
+    for i in range(num_gateloads):
         name = "gateload{}".format(i)
         instance = ec2.Instance(name)
         instance.ImageId = "ami-6d1c2007"  # centos7
@@ -244,7 +244,7 @@ def gen_template(config):
         t.add_resource(instance)
 
     # Load Balancer instances (ubuntu ami)
-    for i in xrange(num_lbs):
+    for i in range(num_lbs):
         name = "loadbalancer{}".format(i)
         instance = ec2.Instance(name)
         instance.ImageId = "ami-6d1c2007"  # centos7

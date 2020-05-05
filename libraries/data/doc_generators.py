@@ -10,11 +10,11 @@ def random_bool():
 
 
 def random_long():
-    return long(random.choice(range(0, 10000000)))
+    return int(random.choice(list(range(0, 10000000))))
 
 
 def random_int():
-    return random.randint(0, sys.maxint)
+    return random.randint(0, sys.maxsize)
 
 
 def random_float():
@@ -23,7 +23,7 @@ def random_float():
 
 
 def random_string(length):
-    return "".join(random.choice(string.ascii_letters) for _ in xrange(length))
+    return "".join(random.choice(string.ascii_letters) for _ in range(length))
 
 
 def doc_size_byBytes(size):

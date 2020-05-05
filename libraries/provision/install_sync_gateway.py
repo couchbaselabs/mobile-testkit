@@ -11,8 +11,9 @@ from libraries.provision.ansible_runner import AnsibleRunner
 from libraries.testkit.config import Config
 from libraries.testkit.cluster import Cluster
 from keywords.constants import SYNC_GATEWAY_CERT
-from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_revs_limit, sg_ssl_enabled
-from utilities.cluster_config_utils import get_sg_version, get_sg_replicas, get_sg_use_views, get_redact_level, is_ipv6, is_x509_auth, generate_x509_certs, is_delta_sync_enabled
+from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_revs_limit, sg_ssl_enabled,\
+    get_cbs_primary_nodes_str
+from utilities.cluster_config_utils import get_sg_version, get_sg_replicas, get_sg_use_views, get_redact_level, is_x509_auth, generate_x509_certs, is_delta_sync_enabled
 
 
 class SyncGatewayConfig:
@@ -53,7 +54,7 @@ class SyncGatewayConfig:
                                                                     self._build_number,
                                                                     platform_extension)
         else:
-            base_url = "https://latestbuilds.service.couchbase.com/builds/releases/mobile/couchbase-sync-gateway/{}".format(self._version_number)
+            base_url = "http://latestbuilds.service.couchbase.com/builds/releases/mobile/couchbase-sync-gateway/{}".format(self._version_number)
             package_name = "couchbase-{}-{}_{}_x86_64.{}".format(installer,
                                                                  sg_type,
                                                                  self._version_number,
@@ -80,7 +81,7 @@ class SyncGatewayConfig:
         elif "ubuntu" in sg_platform:
             sg_platform_extension = "deb"
         elif "macos" in sg_platform:
-            sg_platform_extension = "tar.gz"
+            sg_platform_extension = "zip"
 
         # Setting SG Accel platform extension
         if "windows" in sa_platform:
@@ -90,7 +91,7 @@ class SyncGatewayConfig:
         elif "ubuntu" in sa_platform:
             sa_platform_extension = "deb"
         elif "macos" in sa_platform:
-            sg_platform_extension = "tar.gz"
+            sg_platform_extension = "zip"
 
         if self._version_number == "1.1.0" or self._build_number == "1.1.1":
             log_info("Version unsupported in provisioning.")
@@ -164,9 +165,10 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
     server_scheme = "http"
 
     if is_cbs_ssl_enabled(cluster_config):
-        server_port = 18091
-        server_scheme = "https"
+        server_port = ""
+        server_scheme = "couchbases"
 
+    couchbase_server_primary_node = get_cbs_primary_nodes_str(cluster_config, couchbase_server_primary_node)
     # Shared vars
     playbook_vars = {
         "sync_gateway_config_filepath": config_path,
@@ -198,7 +200,8 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
             redact_level = get_redact_level(cluster_config)
             playbook_vars["logging"] = '{}, "redaction_level": "{}" {},'.format(logging_config, redact_level, "}")
         except KeyError as ex:
-            log_info("Keyerror in getting logging{}".format(ex.message))
+            log_info("Keyerror in getting logging{}".format(ex))
+
             playbook_vars["logging"] = '{} {},'.format(logging_config, "}")
 
         if get_sg_use_views(cluster_config):
@@ -209,6 +212,8 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
 
         if sg_platform == "macos":
             sg_home_directory = "/Users/sync_gateway"
+        elif sg_platform == "windows":
+                sg_home_directory = "C:\\\\PROGRA~1\\\\Couchbase\\\\Sync Gateway"
         else:
             sg_home_directory = "/home/sync_gateway"
 
@@ -219,10 +224,14 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
                 "keypath"] = '"keypath": "{}/certs/pkey.key",'.format(sg_home_directory)
             playbook_vars[
                 "cacertpath"] = '"cacertpath": "{}/certs/ca.pem",'.format(sg_home_directory)
+            if sg_platform == "windows":
+                playbook_vars["certpath"] = playbook_vars["certpath"].replace("/", "\\\\")
+                playbook_vars["keypath"] = playbook_vars["keypath"].replace("/", "\\\\")
+                playbook_vars["cacertpath"] = playbook_vars["cacertpath"].replace("/", "\\\\")
             playbook_vars["server_scheme"] = "couchbases"
             playbook_vars["server_port"] = ""
             playbook_vars["x509_auth"] = True
-            generate_x509_certs(cluster_config, bucket_names)
+            generate_x509_certs(cluster_config, bucket_names, sg_platform)
         else:
             playbook_vars["username"] = '"username": "{}",'.format(
                 bucket_names[0])
@@ -248,7 +257,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
                 raise ProvisioningError("Failed to block port on SGW")
 
     if is_xattrs_enabled(cluster_config):
-        playbook_vars["autoimport"] = '"import_docs": "continuous",'
+        playbook_vars["autoimport"] = '"import_docs": true,'
         playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
 
     if no_conflicts_enabled(cluster_config):
@@ -292,8 +301,6 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
         playbook_vars["couchbase_sg_accel_package"] = sg_accel_package_name
         playbook_vars["couchbase_server_version"] = sync_gateway_config.get_sg_version_build()
 
-        if is_ipv6(cluster_config):
-            playbook_vars["couchbase_server_primary_node"] = "[{}]".format(couchbase_server_primary_node)
         if sg_platform == "windows":
             status = ansible_runner.run_ansible_playbook(
                 "install-sync-gateway-package-windows.yml",

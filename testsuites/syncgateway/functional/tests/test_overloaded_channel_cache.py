@@ -14,7 +14,6 @@ from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.basicauth
 @pytest.mark.channel
@@ -22,13 +21,12 @@ from utilities.cluster_config_utils import persist_cluster_config_environment_pr
 @pytest.mark.changes
 @pytest.mark.parametrize("sg_conf_name, num_docs, user_channels, filter, limit, x509_cert_auth", [
     ("sync_gateway_channel_cache", 5000, "*", True, 50, False),
-    ("sync_gateway_channel_cache", 1000, "*", True, 50, True),
+    pytest.param("sync_gateway_channel_cache", 1000, "*", True, 50, True, marks=pytest.mark.sanity),
     ("sync_gateway_channel_cache", 1000, "ABC", False, 50, True),
     ("sync_gateway_channel_cache", 1000, "ABC", True, 50, False),
 ])
 def test_overloaded_channel_cache(params_from_base_test_setup, sg_conf_name, num_docs, user_channels,
                                   filter, limit, x509_cert_auth):
-
     """
     The purpose of this test is to verify that channel cache backfill via view queries is working properly.
     It works by doing the following:

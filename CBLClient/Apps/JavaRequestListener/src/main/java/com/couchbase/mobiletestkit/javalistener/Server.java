@@ -1,5 +1,7 @@
 package com.couchbase.mobiletestkit.javalistener;
 
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
@@ -84,19 +86,24 @@ public class Server extends NanoHTTPD {
         Map<String, Object> query = new Gson().fromJson(rawArgs.get("postData"), Map.class);
         if (query != null) {
             for (String key : query.keySet()) {
-                String value = (String) query.get(key);
-                args.put(key, ValueSerializer.deserialize(value, memory));
+                /*
+                while receiving a release method in request
+                no deserialization is needed,
+                the original object memory address is required
+                */
+                if("release".equals(method)){
+                    args.put(key, query.get(key));
+                }
+                else {
+                    String value = (String) query.get(key);
+                    args.put(key, ValueSerializer.deserialize(value, memory));
+                }
             }
-        }
-
-        String releaseObject = rawArgs.get("object");
-        if(releaseObject != null){
-            args.put("releaseObject", releaseObject);
         }
 
         try {
             // Find and invoke the method on the RequestHandler.
-            String body = null;
+            Object body = null;
 
             /*
             deal with request handler type and request method:
@@ -121,12 +128,20 @@ public class Server extends NanoHTTPD {
             body = RequestHandlerDispatcher.handle(handlerType, method_to_call, args);
 
             session.getHeaders();
-            if (body != null) {
-                IStatus status = Status.OK;
-                return Response.newFixedLengthResponse(status, "text/plain", body.getBytes());
-            }
+            if (body == null) {
+				return Response.newFixedLengthResponse(Status.OK, "text/plain", "I-1");
+			}                
             else {
-                return Response.newFixedLengthResponse(Status.OK, "text/plain", "I-1");
+				if (body instanceof String) {
+                    return Response.newFixedLengthResponse(Status.OK, "text/plain", ((String) body).getBytes("UTF-8"));
+                }
+				else if (body instanceof RawData) {
+                    RawData dataObj = (RawData) body;
+                    return Response.newFixedLengthResponse(Status.OK, dataObj.contentType, dataObj.data);
+                }
+				else {
+                    throw new IllegalArgumentException("unrecognized body type: " + body.getClass());
+                }
             }
         }
         catch (Exception e) {

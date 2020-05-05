@@ -11,7 +11,7 @@ from collections import OrderedDict
 
 from requests.exceptions import RequestException
 
-from provisioning_config_parser import hosts_for_tag
+from .provisioning_config_parser import hosts_for_tag
 
 
 def dump_results(test_folder, gateload_results, sync_gateway_results):
@@ -28,15 +28,15 @@ def dump_results(test_folder, gateload_results, sync_gateway_results):
 
 def write_expvars(results_obj, endpoint):
 
-        resp = requests.get("http://{}".format(endpoint), timeout=settings.HTTP_REQ_TIMEOUT)
-        resp.raise_for_status()
-        expvars = resp.json()
+    resp = requests.get("http://{}".format(endpoint), timeout=settings.HTTP_REQ_TIMEOUT)
+    resp.raise_for_status()
+    expvars = resp.json()
 
-        now = "{}".format(datetime.datetime.utcnow())
-        results_obj[now] = {
-            "endpoint": endpoint,
-            "expvars": expvars
-        }
+    now = "{}".format(datetime.datetime.utcnow())
+    results_obj[now] = {
+        "endpoint": endpoint,
+        "expvars": expvars
+    }
 
 
 def log_expvars(cluster_config, folder_name, sleep_time=30):
@@ -113,11 +113,10 @@ def log_expvars(cluster_config, folder_name, sleep_time=30):
 
 
 def wait_for_endpoints_alive_or_raise(endpoints, num_attempts=5):
-
     """
     Wait for the given endpoints to be up or throw an exception
     """
-    for i in xrange(num_attempts):
+    for i in range(num_attempts):
         endpoints_are_up = True
         for endpoint in endpoints:
             endpoint_url = endpoint
@@ -147,7 +146,7 @@ if __name__ == "__main__":
     try:
         main_cluster_config = os.environ["CLUSTER_CONFIG"]
     except KeyError:
-        print ("Make sure CLUSTER_CONFIG is defined and pointing to the configuration you would like to provision")
+        print("Make sure CLUSTER_CONFIG is defined and pointing to the configuration you would like to provision")
         sys.exit(1)
 
     log_expvars(main_cluster_config, ".", sleep_time=5)

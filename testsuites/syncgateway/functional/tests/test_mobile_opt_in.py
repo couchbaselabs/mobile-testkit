@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 
 import pytest
 
@@ -127,7 +127,8 @@ def test_mobile_opt_in(params_from_base_test_setup, sg_conf_name):
     with pytest.raises(HTTPError) as he:
         sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id2, auth=test_auth_session)
     log_info(he.value)
-    assert he.value.message.startswith('404 Client Error: Not Found for url:')
+    resp = str(he.value)
+    assert resp.startswith('404 Client Error: Not Found for url:')
 
     # Create third sg doc with mobile opt in  and update via sdk. Case #3
     doc_id3 = 'mobile_opt_in_sg_doc'
@@ -152,12 +153,14 @@ def test_mobile_opt_in(params_from_base_test_setup, sg_conf_name):
     with pytest.raises(HTTPError) as he:
         sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id4, auth=test_auth_session)
     log_info(he.value)
-    assert he.value.message.startswith('404 Client Error: Not Found for url:')
+    resp = str(he.value)
+    assert resp.startswith('404 Client Error: Not Found for url:')
     # update via SG
     with pytest.raises(HTTPError) as he:
         sg_client.put_doc(url=sg_url, db=sg_db, doc_id=doc_id4, doc_body={'sg_rewrite': 'True'}, rev=rev, auth=test_auth_session)
     log_info(he.value)
-    assert he.value.message.startswith('409 Client Error: Conflict for url:')
+    resp = str(he.value)
+    assert resp.startswith('409 Client Error: Conflict for url:')
     # Create same doc again to verify there is not existing key error covers case #8
     doc_body = document.create_doc(doc_id=doc_id4, channels=['mobileOptIn'], prop_generator=update_non_mobile_prop)
     sg_get_doc4_1 = sg_client.add_doc(url=sg_url, db=sg_db, doc=doc_body, auth=test_auth_session)
@@ -201,7 +204,8 @@ def test_mobile_opt_in(params_from_base_test_setup, sg_conf_name):
     with pytest.raises(HTTPError) as he:
         sg_get_doc7 = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id7, auth=test_auth_session)
     log_info(he.value)
-    assert he.value.message.startswith('404 Client Error: Not Found for url:')
+    resp = str(he.value)
+    assert resp.startswith('404 Client Error: Not Found for url:')
     # TODO : verify _changes that it shows tombstone revisions -> it will happen on 2.0
 
     # Create eighth sdk doc with import disabled and add mobile property and update via sg. Case #7
@@ -216,7 +220,7 @@ def test_mobile_opt_in(params_from_base_test_setup, sg_conf_name):
     with pytest.raises(HTTPError) as he:
         sg_client.add_doc(url=sg_url, db=sg_db, doc=doc_body, auth=test_auth_session)
     log_info(he.value)
-    assert he.value.message.startswith('409 Client Error: Conflict for url:')
+    assert str(he.value).startswith('409 Client Error: Conflict for url:')
     sg_client.update_doc(url=sg_url, db=sg_db, doc_id=doc_id8, number_updates=1, auth=test_auth_session)
     sg_get_doc8 = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id8, auth=test_auth_session)
     assert sg_get_doc8['_rev'].startswith('2-') and sg_get_doc8['_id'] == doc_id8

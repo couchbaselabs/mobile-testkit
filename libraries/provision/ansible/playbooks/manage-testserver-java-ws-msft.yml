@@ -1,0 +1,11 @@
+- name: Windows - Manage Tomcat service which contains Testserver Java WebService
+  hosts: windows
+  vars:
+    service_status:
+
+  tasks:
+  - debug: msg="Manage Tomcat Service"
+  - name: Manage Tomcat Service
+    win_service:
+      name: Tomcat9
+      state: "{{ service_status }}"

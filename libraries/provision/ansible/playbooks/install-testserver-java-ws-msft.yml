@@ -1,0 +1,51 @@
+- name: Windows - Install Testserver Java WebService to Tomcat
+  hosts: windows
+  vars:
+    war_package_name:
+    core_package_name:
+    build_name:
+
+  tasks:
+  - debug: msg="Stop Tomcat Service"
+  - name: Stop Tomcat Service
+    win_service:
+      name: Tomcat9
+      state: stopped
+  
+  - debug: msg="Tomcat home directory is {{ ansible_env.CATALINA_BASE }}"
+  - name: Remove files added by previously installed CouchbaseLite
+    win_shell: |
+      Remove-Item "{{ ansible_env.CATALINA_BASE }}\\lib\\couchbase-lite-java-ee-*.jar"
+      Remove-Item "{{ ansible_env.CATALINA_BASE }}\\lib\\json-*.jar"
+      Remove-Item "{{ ansible_env.CATALINA_BASE }}\\lib\\okhttp-*.jar"
+      Remove-Item "{{ ansible_env.CATALINA_BASE }}\\lib\\okio-*.jar"
+
+  - name: Remove TestServer webapp files
+    win_file:
+      path: "{{ ansible_env.CATALINA_BASE }}\\webapps\\ROOT"
+      state: absent
+
+  - name: Remove TestServer webapp files
+    win_file:
+      path: "{{ ansible_env.CATALINA_BASE }}\\webapps\\ROOT.war"
+      state: absent
+
+  - name: Remove TestServer log files and runtime libaries
+    win_file:
+      path: "{{ ansible_env.CATALINA_BASE }}\\temp\\TestServerTemp"
+      state: absent
+
+  - name: Remove TestServer runtime libaries
+    win_file:
+      path: "{{ ansible_env.CATALINA_BASE }}\\temp\\com.couchbase.lite.java"
+      state: absent
+
+  - name: Remove Tomcat logs
+    win_shell:
+      Remove-Item "{{ ansible_env.CATALINA_BASE }}\\logs\\*.*"
+
+  - debug: msg="Copy TestServer war file"
+  - win_shell: copy C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ build_name }}\{{ war_package_name }}.war "{{ ansible_env.CATALINA_BASE }}\\webapps\\ROOT.war"
+
+  - debug: msg="Copy CouchbaseLite supporting jar files"
+  - win_shell: copy C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ build_name }}\{{ core_package_name }}\lib\*.jar "{{ ansible_env.CATALINA_BASE }}\\lib"

@@ -1,4 +1,4 @@
-ansible==2.2.2.0
+ansible==2.7
 appdirs==1.4.3
 asn1crypto==0.22.0
 astroid==1.4.8
@@ -11,7 +11,7 @@ cffi==1.10.0
 colorama==0.3.3
 configparser==3.5.0
 couchbase==2.2.6
-cryptography==1.8.1
+cryptography==2.8
 docker==2.2.1
 docker-pycreds==0.2.1
 docutils==0.12
@@ -25,14 +25,14 @@ isort==4.2.5
 Jinja2==2.9.5
 jmespath==0.9.0
 lazy-object-proxy==1.2.2
-MarkupSafe==1.0
+MarkupSafe==1.1.1
 mccabe==0.6.1
 netifaces==0.10.4
 olefile==0.44
 packaging==16.8
 paramiko==2.1.5
-Pillow==4.0.0
-py==1.4.31
+Pillow==6.2.0
+py==1.5.1
 pyasn1==0.2.3
 pycodestyle==2.3.1
 pycparser==2.17
@@ -41,7 +41,7 @@ pyflakes==1.5.0
 PyJWT==1.4.0
 pylint==1.6.4
 pyparsing==2.2.0
-pytest==3.0.2
+pytest==4.6.9
 pytest-html==1.10.0
 pytest-timeout==1.0.0
 python-dateutil==2.5.1
@@ -49,7 +49,7 @@ python-ntlm3==1.0.2
 python-vagrant==0.5.14
 pywinrm==0.2.1
 PyYAML==3.12
-requests==2.13.0
+requests==2.19.0
 requests-ntlm==0.3.0
 rsa==3.3
 s3transfer==0.0.1
@@ -59,4 +59,4 @@ troposphere==1.5.0
 websocket-client==0.40.0
 wrapt==1.10.8
 xmltodict==0.10.2
-numpy==1.14.0
+numpy==1.17.4

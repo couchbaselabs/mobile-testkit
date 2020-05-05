@@ -12,7 +12,7 @@ from libraries.provision.ansible_runner import AnsibleRunner
 from libraries.testkit.admin import Admin
 from libraries.testkit.config import Config
 from libraries.testkit.debug import log_request, log_response
-from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, sg_ssl_enabled, is_ipv6
+from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, sg_ssl_enabled
 from utilities.cluster_config_utils import get_revs_limit, get_redact_level, is_delta_sync_enabled, get_sg_platform
 from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version, is_x509_auth, generate_x509_certs
 from keywords.utils import add_cbs_to_sg_config_server_field, log_info
@@ -50,11 +50,10 @@ class SyncGateway:
         if is_x509_auth(cluster_config):
             self.server_port = ""
             self.server_scheme = "couchbases"
-
         self.couchbase_server_primary_node = add_cbs_to_sg_config_server_field(self.cluster_config)
 
     def info(self):
-        r = requests.get(self.url, verify=False)
+        r = requests.get(self.url)
         r.raise_for_status()
         return r.text
 
@@ -105,7 +104,7 @@ class SyncGateway:
                 redact_level = get_redact_level(self.cluster_config)
                 playbook_vars["logging"] = '{}, "redaction_level": "{}" {},'.format(logging_config, redact_level, "}")
             except KeyError as ex:
-                log_info("Keyerror in getting logging{}".format(ex.message))
+                log_info("Keyerror in getting logging{}".format(ex.args))
                 playbook_vars["logging"] = '{} {},'.format(logging_config, "}")
 
             if get_sg_use_views(self.cluster_config):
@@ -116,6 +115,8 @@ class SyncGateway:
 
             if sg_platform == "macos":
                 sg_home_directory = "/Users/sync_gateway"
+            elif sg_platform == "windows":
+                sg_home_directory = "C:\\\\PROGRA~1\\\\Couchbase\\\\Sync Gateway"
             else:
                 sg_home_directory = "/home/sync_gateway"
 
@@ -126,10 +127,14 @@ class SyncGateway:
                     "keypath"] = '"keypath": "{}/certs/pkey.key",'.format(sg_home_directory)
                 playbook_vars[
                     "cacertpath"] = '"cacertpath": "{}/certs/ca.pem",'.format(sg_home_directory)
+                if sg_platform == "windows":
+                    playbook_vars["certpath"] = playbook_vars["certpath"].replace("/", "\\\\")
+                    playbook_vars["keypath"] = playbook_vars["keypath"].replace("/", "\\\\")
+                    playbook_vars["cacertpath"] = playbook_vars["cacertpath"].replace("/", "\\\\")
                 playbook_vars["server_scheme"] = "couchbases"
                 playbook_vars["server_port"] = ""
                 playbook_vars["x509_auth"] = True
-                generate_x509_certs(conf_path, bucket_names)
+                generate_x509_certs(self.cluster_config, bucket_names, sg_platform)
             else:
                 playbook_vars["username"] = '"username": "{}",'.format(
                     bucket_names[0])
@@ -145,7 +150,7 @@ class SyncGateway:
             playbook_vars["sslkey"] = '"SSLKey": "sg_privkey.pem",'
 
         if is_xattrs_enabled(self.cluster_config):
-            playbook_vars["autoimport"] = '"import_docs": "continuous",'
+            playbook_vars["autoimport"] = '"import_docs": true,'
             playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
 
         if no_conflicts_enabled(self.cluster_config):
@@ -182,7 +187,7 @@ class SyncGateway:
 
     def restart(self, config, cluster_config=None):
 
-        if(cluster_config is not None):
+        if cluster_config is not None:
             self.cluster_config = cluster_config
         conf_path = os.path.abspath(config)
         log.info(">>> Restarting sync_gateway with configuration: {}".format(conf_path))
@@ -212,7 +217,7 @@ class SyncGateway:
             "couchbase_server_primary_node": self.couchbase_server_primary_node,
             "delta_sync": ""
         }
-
+        sg_platform = get_sg_platform(self.cluster_config)
         if sg_ssl_enabled(self.cluster_config):
             playbook_vars["sslcert"] = '"SSLCert": "sg_cert.pem",'
             playbook_vars["sslkey"] = '"SSLKey": "sg_privkey.pem",'
@@ -223,7 +228,9 @@ class SyncGateway:
                 redact_level = get_redact_level(self.cluster_config)
                 playbook_vars["logging"] = '{}, "redaction_level": "{}" {},'.format(logging_config, redact_level, "}")
             except KeyError as ex:
-                log_info("Keyerror in getting logging{}".format(ex.message))
+
+                log_info("Keyerror in getting logging{}".format(str(ex)))
+
                 playbook_vars["logging"] = '{} {},'.format(logging_config, "}")
             if get_sg_use_views(self.cluster_config):
                 playbook_vars["sg_use_views"] = '"use_views": true,'
@@ -231,17 +238,28 @@ class SyncGateway:
                 num_replicas = get_sg_replicas(self.cluster_config)
                 playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
 
-            if is_x509_auth(cluster_config):
+            if sg_platform == "macos":
+                sg_home_directory = "/Users/sync_gateway"
+            elif sg_platform == "windows":
+                sg_home_directory = "C:\\\\PROGRA~1\\\\Couchbase\\\\Sync Gateway"
+            else:
+                sg_home_directory = "/home/sync_gateway"
+
+            if is_x509_auth(self.cluster_config):
                 playbook_vars[
-                    "certpath"] = '"certpath": "/home/sync_gateway/certs/chain.pem",'
+                    "certpath"] = '"certpath": "{}/certs/chain.pem",'.format(sg_home_directory)
                 playbook_vars[
-                    "keypath"] = '"keypath": "/home/sync_gateway/certs/pkey.key",'
+                    "keypath"] = '"keypath": "{}/certs/pkey.key",'.format(sg_home_directory)
                 playbook_vars[
-                    "cacertpath"] = '"cacertpath": "/home/sync_gateway/certs/ca.pem",'
+                    "cacertpath"] = '"cacertpath": "{}/certs/ca.pem",'.format(sg_home_directory)
+                if sg_platform == "windows":
+                    playbook_vars["certpath"] = playbook_vars["certpath"].replace("/", "\\\\")
+                    playbook_vars["keypath"] = playbook_vars["keypath"].replace("/", "\\\\")
+                    playbook_vars["cacertpath"] = playbook_vars["cacertpath"].replace("/", "\\\\")
                 playbook_vars["server_scheme"] = "couchbases"
                 playbook_vars["server_port"] = ""
                 playbook_vars["x509_auth"] = True
-                generate_x509_certs(cluster_config, bucket_names)
+                generate_x509_certs(self.cluster_config, bucket_names, sg_platform)
             else:
                 playbook_vars["username"] = '"username": "{}",'.format(
                     bucket_names[0])
@@ -253,7 +271,7 @@ class SyncGateway:
             playbook_vars["password"] = '"password": "password",'
 
         if is_xattrs_enabled(self.cluster_config):
-            playbook_vars["autoimport"] = '"import_docs": "continuous",'
+            playbook_vars["autoimport"] = '"import_docs": true,'
             playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
 
         if no_conflicts_enabled(self.cluster_config):
@@ -268,8 +286,6 @@ class SyncGateway:
         if is_delta_sync_enabled(self.cluster_config) and get_sg_version(self.cluster_config) >= "2.5.0":
             playbook_vars["delta_sync"] = '"delta_sync": { "enabled": true},'
 
-        if is_ipv6(self.cluster_config):
-            playbook_vars["couchbase_server_primary_node"] = "[{}]".format(playbook_vars["couchbase_server_primary_node"])
         if is_cbs_ssl_enabled(self.cluster_config) and get_sg_version(self.cluster_config) >= "1.5.0":
             playbook_vars["server_scheme"] = "couchbases"
             playbook_vars["server_port"] = 11207
@@ -315,7 +331,7 @@ class SyncGateway:
                                continuous=True,
                                use_remote_source=False,
                                channels=None,
-                               async=False,
+                               repl_async=False,
                                use_admin_url=False):
 
         if channels is None:
@@ -338,7 +354,7 @@ class SyncGateway:
             data["filter"] = "sync_gateway/bychannel"
             data["query_params"] = channels
 
-        if async is True:
+        if repl_async is True:
             data["async"] = True
 
         r = requests.post("{}/_replicate".format(sg_url), headers=self._headers, data=json.dumps(data))
@@ -497,7 +513,7 @@ def wait_until_doc_in_changes_feed(sg, db, doc_id):
     max_tries = 10
     sleep_retry_seconds = 1
 
-    for attempt in xrange(max_tries):
+    for attempt in range(max_tries):
         changes_results = sg.admin.get_global_changes(db)
         for changes_result in changes_results:
             if changes_result["id"] == doc_id:
@@ -513,7 +529,7 @@ def wait_until_active_tasks_empty(sg):
     max_tries = 10
     sleep_retry_seconds = 1
 
-    for attempt in xrange(max_tries):
+    for attempt in range(max_tries):
         active_tasks = sg.admin.get_active_tasks()
         if len(active_tasks) == 0:
             return
@@ -527,7 +543,7 @@ def wait_until_active_tasks_non_empty(sg):
     max_tries = 10
     sleep_retry_seconds = 1
 
-    for attempt in xrange(max_tries):
+    for attempt in range(max_tries):
         active_tasks = sg.admin.get_active_tasks()
         if len(active_tasks) > 0:
             return
@@ -545,7 +561,7 @@ def wait_until_doc_sync(sg_user, doc_id):
     max_tries_per_doc = 100
     sleep_retry_per_doc_seconds = 1
 
-    for attempt in xrange(max_tries_per_doc):
+    for attempt in range(max_tries_per_doc):
         try:
             sg_user.get_doc(doc_id)
             # if we got a doc, and no exception was thrown, we're done

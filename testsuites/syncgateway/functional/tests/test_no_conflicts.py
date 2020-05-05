@@ -71,7 +71,7 @@ def test_no_conflicts_enabled(params_from_base_test_setup, sg_conf_name, num_of_
         with pytest.raises(HTTPError) as he:
             sg_client.add_conflict(url=sg_url, db=sg_db, doc_id=doc["id"], parent_revisions=doc["rev"], new_revision="2-foo",
                                    auth=autouser_session)
-        assert he.value.message.startswith('409 Client Error: Conflict for url:')
+        assert str(he.value).startswith('409 Client Error: Conflict for url:')
 
     # 6. Update the docs 1 more time
     sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs, number_updates=1, delay=None, auth=autouser_session, channels=channels)
@@ -134,7 +134,7 @@ def test_no_conflicts_with_revs_limit(params_from_base_test_setup, sg_conf_name,
 
     # 3. Update the docs few times
     prev_revs = []
-    for i in xrange(revs_limit + 5):
+    for i in range(revs_limit + 5):
         update_sg_docs = sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs, number_updates=1, delay=None,
                                                auth=autouser_session, channels=channels)
         rev = update_sg_docs[0]['rev'].split('-')[1]
@@ -145,13 +145,13 @@ def test_no_conflicts_with_revs_limit(params_from_base_test_setup, sg_conf_name,
         with pytest.raises(HTTPError) as he:
             sg_client.add_conflict(url=sg_url, db=sg_db, doc_id=doc["id"], parent_revisions=doc["rev"], new_revision="2-foo",
                                    auth=autouser_session)
-        assert he.value.message.startswith('409 Client Error: Conflict for url:')
+        assert str(he.value).startswith('409 Client Error: Conflict for url:')
 
     # 5. Get number of revisions and verify length is equal to revs_limit set to
     for doc in sg_docs:
         num_of_revs = sg_client.get_revs_num_in_history(url=sg_url, db=sg_db, doc_id=doc["id"], auth=autouser_session)
         assert len(num_of_revs) == revs_limit, "Number of revisions in history is more than revs_limit set in sg config"
-        for i in xrange(4):
+        for i in range(4):
             assert prev_revs[i] not in num_of_revs
 
     # 6. Update the docs 1 more time
@@ -162,7 +162,7 @@ def test_no_conflicts_with_revs_limit(params_from_base_test_setup, sg_conf_name,
     for doc in sg_docs:
         num_of_revs = sg_client.get_revs_num_in_history(url=sg_url, db=sg_db, doc_id=doc["id"], auth=autouser_session)
         assert len(num_of_revs) == revs_limit, "Number of revisions in history is more than revs_limit set in sg config"
-        for i in xrange(5):
+        for i in range(5):
             assert prev_revs[i] not in num_of_revs
 
 
@@ -223,7 +223,7 @@ def test_no_conflicts_update_revs_limit(params_from_base_test_setup, sg_conf_nam
 
     # 3. Update the docs few times
     prev_revs = []
-    for i in xrange(total_updates):
+    for i in range(total_updates):
         update_sg_docs = sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs, number_updates=1, delay=None,
                                                auth=autouser_session, channels=channels)
         rev = update_sg_docs[0]['rev'].split('-')[1]
@@ -233,7 +233,7 @@ def test_no_conflicts_update_revs_limit(params_from_base_test_setup, sg_conf_nam
     for doc in sg_docs:
         num_of_revs = sg_client.get_revs_num_in_history(url=sg_url, db=sg_db, doc_id=doc["id"], auth=autouser_session)
         assert len(num_of_revs) == revs_limit, "Number of revisions in history is more than revs_limit set in sg config"
-        for i in xrange(5):
+        for i in range(5):
             assert prev_revs[i] not in num_of_revs
 
     # 5. Modify the revs_limit to 2
@@ -249,7 +249,7 @@ def test_no_conflicts_update_revs_limit(params_from_base_test_setup, sg_conf_nam
     for doc in sg_docs:
         num_of_revs = sg_client.get_revs_num_in_history(url=sg_url, db=sg_db, doc_id=doc["id"], auth=autouser_session)
         assert len(num_of_revs) == 2, "Number of revisions in history is more than revs_limit set in sg config"
-        for i in xrange(total_updates - reduced_revs_limit):
+        for i in range(total_updates - reduced_revs_limit):
             assert prev_revs[i] not in num_of_revs
 
 
@@ -311,7 +311,7 @@ def test_conflicts_sg_accel_added(params_from_base_test_setup, sg_conf_name, num
 
     # 3. Update the docs few times and get all revisions of updates
     prev_revs = []
-    for i in xrange(total_updates):
+    for i in range(total_updates):
         update_sg_docs = sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs, number_updates=1, delay=None,
                                                auth=autouser_session, channels=channels)
         rev = update_sg_docs[0]['rev'].split('-')[1]
@@ -321,7 +321,7 @@ def test_conflicts_sg_accel_added(params_from_base_test_setup, sg_conf_name, num
     for doc in sg_docs:
         num_of_revs = sg_client.get_revs_num_in_history(url=sg_url, db=sg_db, doc_id=doc["id"], auth=autouser_session)
         assert len(num_of_revs) == revs_limit, "Number of revisions in history is more than revs_limit set in sg config"
-        for i in xrange(additional_updates):
+        for i in range(additional_updates):
             assert prev_revs[i] not in num_of_revs
 
     # 5. Start sg accel
@@ -335,7 +335,7 @@ def test_conflicts_sg_accel_added(params_from_base_test_setup, sg_conf_name, num
     for doc in sg_docs:
         num_of_revs = sg_client.get_revs_num_in_history(url=sg_url, db=sg_db, doc_id=doc["id"], auth=autouser_session)
         assert len(num_of_revs) == revs_limit, "Number of revisions in history is more than revs_limit set in sg config"
-        for i in xrange(additional_updates + new_updates):
+        for i in range(additional_updates + new_updates):
             assert prev_revs[i] not in num_of_revs
 
 
@@ -399,7 +399,7 @@ def test_migrate_conflicts_to_noConflicts(params_from_base_test_setup, sg_conf_n
 
     # 3. Update the docs few times
     prev_revs = []
-    for i in xrange(revs_limit):
+    for i in range(revs_limit):
         update_sg_docs = sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs, number_updates=1, delay=None,
                                                auth=autouser_session, channels=channels)
         rev = update_sg_docs[0]['rev'].split('-')[1]
@@ -424,7 +424,8 @@ def test_migrate_conflicts_to_noConflicts(params_from_base_test_setup, sg_conf_n
         with pytest.raises(HTTPError) as he:
             sg_client.add_conflict(url=sg_url, db=sg_db, doc_id=doc["id"], parent_revisions=doc["rev"], new_revision="2-foo1",
                                    auth=autouser_session)
-        assert he.value.message.startswith('409 Client Error: Conflict for url:')
+        resp = str(he.value)
+        assert resp.startswith('409 Client Error: Conflict for url:')
 
     # 8. update docs few number of times.
     update_sg_docs = sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs, number_updates=additional_updates,
@@ -435,7 +436,7 @@ def test_migrate_conflicts_to_noConflicts(params_from_base_test_setup, sg_conf_n
     for doc in sg_docs:
         num_of_revs = sg_client.get_revs_num_in_history(url=sg_url, db=sg_db, doc_id=doc["id"], auth=autouser_session)
         assert len(num_of_revs) == revs_limit, "Number of revisions in history is more than revs_limit set in sg config"
-        for i in xrange(additional_updates):
+        for i in range(additional_updates):
             assert prev_revs[i] not in num_of_revs
 
 
@@ -524,7 +525,7 @@ def test_concurrent_updates_no_conflicts(params_from_base_test_setup, sg_conf_na
 
     # 3. Update the docs few times
     prev_revs = []
-    for i in xrange(total_updates):
+    for i in range(total_updates):
         update_sg_docs = sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs, number_updates=1, delay=None,
                                                auth=autouser_session, channels=channels)
         rev = update_sg_docs[0]['rev'].split('-')[1]
@@ -535,7 +536,7 @@ def test_concurrent_updates_no_conflicts(params_from_base_test_setup, sg_conf_na
     for doc in sg_docs:
         num_of_revs = sg_client.get_revs_num_in_history(url=sg_url, db=sg_db, doc_id=doc["id"], auth=autouser_session)
         assert len(num_of_revs) == revs_limit, "Number of revisions in history is more than revs_limit set in sg config"
-        for i in xrange(additional_updates):
+        for i in range(additional_updates):
             assert prev_revs[i] not in num_of_revs
 
 
@@ -544,12 +545,12 @@ def sg_doc_updates(sg_client, sg_url, sg_db, sg_docs, number_updates, auth, chan
         try:
             sg_client.update_doc(sg_url, sg_db, doc['id'], number_updates, auth=auth, channels=channels)
         except HTTPError as e:
-            if e.response.status_code == 409 and e.message.startswith('409 Client Error: Conflict for url:'):
+            if str(e).startswith('409 Client Error: Conflict for url:'):
                 log_info("Got conflict with sdk update, skip it")
 
 
 def sdk_bulk_update(sdk_client, sdk_docs, num_of_updates):
-    for doc_id, val in sdk_docs.items():
+    for doc_id, val in list(sdk_docs.items()):
         doc_body = val.value
         doc_body["updated_by_sdk"] = 0
         for i in range(num_of_updates):
@@ -610,7 +611,7 @@ def test_migrate_conflicts_delete_last_rev(params_from_base_test_setup, sg_conf_
 
     # 3. Update the docs few times
     prev_revs = []
-    for i in xrange(25):
+    for i in range(25):
         update_sg_docs = sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs, number_updates=1, delay=None, auth=autouser_session, channels=channels)
         rev = update_sg_docs[0]['rev'].split('-')[1]
         prev_revs.append(rev)
@@ -669,7 +670,7 @@ def test_revs_cache_size(params_from_base_test_setup, sg_conf_name, num_of_docs)
     sg_url = topology["sync_gateways"][0]["public"]
     sg_admin_url = topology["sync_gateways"][0]["admin"]
     sg_db = "db"
-    retrieved_docs = num_of_docs / 2
+    retrieved_docs = num_of_docs // 2
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
 
     if sync_gateway_version < "2.0":

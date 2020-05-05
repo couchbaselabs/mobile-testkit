@@ -8,7 +8,9 @@ import java.util.List;
 import java.util.Map;
 
 import com.couchbase.mobiletestkit.javacommon.Args;
+import com.couchbase.mobiletestkit.javacommon.Context;
 import com.couchbase.mobiletestkit.javacommon.RequestHandlerDispatcher;
+import com.couchbase.mobiletestkit.javacommon.util.ConcurrentExecutor;
 import com.couchbase.mobiletestkit.javacommon.util.Log;
 import com.couchbase.mobiletestkit.javacommon.util.ZipUtils;
 import com.couchbase.lite.Blob;
@@ -44,6 +46,18 @@ public class DatabaseRequestHandler {
         if (config == null) {
             config = new DatabaseConfiguration();
         }
+        String dbDir = config.getDirectory();
+        /*
+        dbDir is obtained from cblite database configuration
+        1. dbDir shouldn't be null unless a bad situation happen.
+        2. while TestServer app running as a daemon service,
+           cblite core sets dbDir "/", which will cause due permission issues.
+           set dbDir to wherever the application context points to
+        */
+        if (dbDir == null || dbDir.equals("/")) {
+            config.setDirectory(RequestHandlerDispatcher.context.getFilesDir().getAbsolutePath());
+        }
+        Log.i(TAG, "database_create directory=" + config.getDirectory());
         return new Database(name, config);
     }
 
@@ -287,11 +301,11 @@ public class DatabaseRequestHandler {
         if (args.contain("docId")) {
             String docId = args.get("docId");
             MyDocumentChangeListener changeListener = new MyDocumentChangeListener();
-            token = database.addDocumentChangeListener(docId, changeListener);
+            token = database.addDocumentChangeListener(docId, ConcurrentExecutor.EXECUTOR, changeListener);
         }
         else {
             MyDatabaseChangeListener changeListener = new MyDatabaseChangeListener();
-            token = database.addChangeListener(changeListener);
+            token = database.addChangeListener(ConcurrentExecutor.EXECUTOR, changeListener);
         }
         return token;
     }
@@ -334,10 +348,12 @@ public class DatabaseRequestHandler {
 
     public String getPreBuiltDb(Args args) throws IOException {
         String dbPath = args.get("dbPath");
-        Context context = CouchbaseLiteServ.getAppContext();
         String dbFileName = new File(dbPath).getName();
         dbFileName = dbFileName.substring(0, dbFileName.lastIndexOf("."));
-        new ZipUtils().unzip(getAsset(dbPath), context.getFilesDir());
+        Context context = RequestHandlerDispatcher.context;
+
+        ZipUtils zipper = new ZipUtils();
+        zipper.unzip(context.getAsset(dbPath), context.getFilesDir());
         return context.getFilesDir().getAbsolutePath() + "/" + dbFileName;
     }
 

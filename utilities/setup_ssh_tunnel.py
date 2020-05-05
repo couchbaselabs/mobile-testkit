@@ -14,9 +14,9 @@ def setup_tunnel(target_host, target_port, remote_hosts_user, remote_hosts, remo
             '-N',
             '-f'
         ]
-        print("Setting up ssh tunnel: {}".format(" ".join(proc_args)))
+        print(("Setting up ssh tunnel: {}".format(" ".join(proc_args))))
         proc = subprocess.Popen(proc_args)
-        print("Running ssh tunnel with process id: {}".format(proc.pid))
+        print(("Running ssh tunnel with process id: {}".format(proc.pid)))
 
 
 def get_remote_hosts_list(remote_hosts_file):
@@ -48,7 +48,7 @@ if __name__ == "__main__":
     # TODO: Validate args
     remote_hosts_list = get_remote_hosts_list(args.remote_hosts_file)
 
-    print('Setting up ssh tunneling for {} ... '.format(remote_hosts_list))
+    print(('Setting up ssh tunneling for {} ... '.format(remote_hosts_list)))
 
     setup_tunnel(
         target_host=args.target_host,

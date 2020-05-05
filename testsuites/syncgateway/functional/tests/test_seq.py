@@ -11,7 +11,6 @@ from keywords.utils import log_info
 from utilities.cluster_config_utils import get_sg_version, persist_cluster_config_environment_prop, copy_to_temp_conf
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.basicauth
 @pytest.mark.channel
@@ -20,10 +19,9 @@ from utilities.cluster_config_utils import get_sg_version, persist_cluster_confi
 @pytest.mark.parametrize("sg_conf_name, num_users, num_docs, num_revisions, x509_cert_auth", [
     ("sync_gateway_default_functional_tests", 10, 500, 1, False),
     ("sync_gateway_default_functional_tests_no_port", 10, 500, 1, True),
-    ("sync_gateway_default_functional_tests_couchbase_protocol_withport_11210", 10, 500, 1, False)
+    pytest.param("sync_gateway_default_functional_tests_couchbase_protocol_withport_11210", 10, 500, 1, False, marks=pytest.mark.sanity)
 ])
 def test_seq(params_from_base_test_setup, sg_conf_name, num_users, num_docs, num_revisions, x509_cert_auth):
-
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
@@ -70,7 +68,7 @@ def test_seq(params_from_base_test_setup, sg_conf_name, num_users, num_docs, num
     time.sleep(5)
 
     user_0_changes = users[0].get_changes(since=0)
-    doc_seq = user_0_changes["results"][num_docs / 2]["seq"]
+    doc_seq = user_0_changes["results"][num_docs // 2]["seq"]
 
     # https://github.com/couchbase/sync_gateway/issues/1475#issuecomment-172426052
     # verify you can issue _changes with since=12313-0::1023.15
@@ -97,5 +95,5 @@ def test_seq(params_from_base_test_setup, sg_conf_name, num_users, num_docs, num
             raise ValueError("Unsupported 'mode' !!")
 
     all_doc_caches = [user.cache for user in users]
-    all_docs = {k: v for cache in all_doc_caches for k, v in cache.items()}
+    all_docs = {k: v for cache in all_doc_caches for k, v in list(cache.items())}
     verify_changes(users, expected_num_docs=num_users * num_docs, expected_num_revisions=num_revisions, expected_docs=all_docs)

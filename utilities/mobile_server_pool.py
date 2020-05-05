@@ -1,4 +1,7 @@
 import sys
+import paramiko
+import time
+
 from requests import Session
 from optparse import OptionParser
 from couchbase.bucket import Bucket
@@ -11,6 +14,28 @@ USERNAME = 'Administrator'
 PASSWORD = 'esabhcuoc'
 BUCKET_NAME = "QE-mobile-pool"
 sdk_client = Bucket("couchbase://{}/{}".format(SERVER_IP, BUCKET_NAME))
+SSH_NUM_RETRIES = 3
+SSH_USERNAME = 'root'
+SSH_PASSWORD = 'couchbase'
+SSH_POLL_INTERVAL = 20
+
+
+def get_nodes_available_from_mobile_pool(nodes_os_type, node_os_version):
+    """
+    Get number of nodes available
+    :param num_of_nodes: No. of nodes one needs
+    :param nodes_os_type: Type of OS for reserve node
+    :param node_os_version: Version of OS for reserve node
+    :param job_name_requesting_node: Name of the job requesting for node
+    :return: list of nodes reserved
+    """
+    # Getting list of available nodes through n1ql query
+    query_str = "select count(*) from `{}` where os='{}' " \
+                "AND os_version='{}' AND state='available'".format(BUCKET_NAME, nodes_os_type, node_os_version)
+    query = N1QLQuery(query_str)
+    for row in sdk_client.n1ql_query(query):
+        count = row["$1"]
+    print(count)
 
 
 def get_nodes_from_pool_server(num_of_nodes, nodes_os_type, node_os_version, job_name_requesting_node):
@@ -30,16 +55,37 @@ def get_nodes_from_pool_server(num_of_nodes, nodes_os_type, node_os_version, job
     for row in sdk_client.n1ql_query(query):
         doc_id = row["id"]
         is_node_reserved = reserve_node(doc_id, job_name_requesting_node)
-        if is_node_reserved:
+        vm_alive = check_vm_alive(doc_id)
+        if not vm_alive:
+            query_str = "update `{}` set state=\"VM_NOT_ALLIVE\" where meta().id='{}' " \
+                "and state='available'".format(doc_id)
+            query = N1QLQuery(query_str)
+            sdk_client.n1ql_query(query)
+        if is_node_reserved and vm_alive:
             pool_list.append(str(doc_id))
-        else:
-            continue
+
         if len(pool_list) == int(num_of_nodes):
             return pool_list
 
     # Not able to allocate all the requested nodes, hence release the node back to the pool
     release_node(pool_list, job_name_requesting_node)
     raise Exception("Not enough free node/s available to satisfy the request")
+
+
+def check_vm_alive(server):
+    num_retries = 0
+    while num_retries <= SSH_NUM_RETRIES:
+        try:
+            ssh = paramiko.SSHClient()
+            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            ssh.connect(hostname=server, username=SSH_USERNAME, password=SSH_PASSWORD)
+            print("Successfully established test ssh connection to {0}. VM is recognized as valid.".format(server))
+            return True
+        except Exception as e:
+            print("Exception occured while trying to establish ssh connection with {0}: {1}".format(server, str(e)))
+            num_retries = num_retries + 1
+            time.sleep(SSH_POLL_INTERVAL)
+            continue
 
 
 def reserve_node(doc_id, job_name, counter=0):
@@ -96,12 +142,15 @@ def release_node(pool_list, job_name):
             raise Exception("Unable to release the node. Release node manually")
 
 
-def cleanup_for_blocked_nodes():
+def cleanup_for_blocked_nodes(job_name=None):
     """
     Go through QE-mobile-pool bucket and release unused block nodes
     :return: void
     """
-    query_str = "select meta().id from `{}`".format(BUCKET_NAME)
+    if job_name is not None:
+        query_str = "select meta().id from `{}` where state=\"booked\" and username=\"{}\"".format(BUCKET_NAME, job_name)
+    else:
+        query_str = "select meta().id from `{}` where state=\"booked\"".format(BUCKET_NAME)
     query = N1QLQuery(query_str)
     release_node_list = []
     for row in sdk_client.n1ql_query(query):
@@ -115,9 +164,12 @@ def cleanup_for_blocked_nodes():
         job_id = doc["username"]
         if job_id == "":
             job_id = "test_job:123"
-        job_name, build_id = job_id.split(":")
+        length_array = []
+        length_array = job_id.split(":")
+        job_name = length_array[0]
+        build_id = length_array[1]
         log_info("Releasing node {} for job {}".format(doc_id, job_id))
-        if not is_jenkins_job_running(job_name, build_id):
+        if job_name is not None or not is_jenkins_job_running(job_name, build_id):
             doc["prevUser"] = doc["username"]
             doc["username"] = ""
             doc["state"] = "available"
@@ -177,12 +229,16 @@ if __name__ == "__main__":
                       help="specify the os version of requested node")
 
     parser.add_option("--job-name",
-                      action="store", dest="job_name", default="test:123",
+                      action="store", dest="job_name",
                       help="specify the job name which is requesting/releasing nodes")
 
     parser.add_option("--reserve-nodes",
                       action="store_true", dest="reserve_nodes", default=False,
                       help="Use this parameter to request to reserve nodes")
+
+    parser.add_option("--get-available-nodes",
+                      action="store_true", dest="get_available_nodes", default=False,
+                      help="Use this parameter to get available nodes")
 
     parser.add_option("--release-nodes",
                       action="store_true", dest="release_nodes", default=False,
@@ -195,13 +251,24 @@ if __name__ == "__main__":
     parser.add_option("--pool-list",
                       action="store", dest="pool_list",
                       help="Pass the list of ips to be release back to QE-mobile-pool.")
+
+    parser.add_option("--sgw-nodes",
+                      action="store", dest="sgw_nodes", default=None,
+                      help="Pass the list of sgw ips to label on pool.json.")
+
+    parser.add_option("--loadbalancer-nodes",
+                      action="store", dest="load_balancer_nodes", default=None,
+                      help="Pass the list of load balancer ips to  label on pool.json")
     arg_parameters = sys.argv[1:]
 
     (opts, args) = parser.parse_args(arg_parameters)
-    if opts.cleanup_nodes and opts.reserve_nodes and opts.release_nodes:
-        raise Exception("Use either one the flag from --cleanup_nodes or --release-nodes or --reserve-nodes")
+    if opts.cleanup_nodes and opts.reserve_nodes and opts.release_nodes and opts.get_available_nodes:
+        raise Exception("Use either one the flag from --cleanup_nodes or --release-nodes or --reserve-nodes or --get-available-nodes")
 
-    if opts.reserve_nodes:
+    elif opts.get_available_nodes:
+        get_nodes_available_from_mobile_pool(opts.nodes_os_type, opts.nodes_os_version)
+
+    elif opts.reserve_nodes:
         log_info("Reserving {} node/s from QE-mobile-pool".format(opts.num_of_nodes))
         node_list = get_nodes_from_pool_server(opts.num_of_nodes, opts.nodes_os_type, opts.nodes_os_version,
                                                opts.job_name)
@@ -210,8 +277,30 @@ if __name__ == "__main__":
             pool_json_str = '{ "ips": ['
             for node in node_list:
                 pool_json_str += '"{}", '.format(node)
+            if opts.sgw_nodes:
+                sgw_node_list = opts.sgw_nodes.strip().split(',')
+                for node in sgw_node_list:
+                    pool_json_str += '"{}", '.format(node)
+            if opts.load_balancer_nodes:
+                lp_node_list = opts.load_balancer_nodes.strip().split(',')
+                for node in lp_node_list:
+                    pool_json_str += '"{}", '.format(node)
             pool_json_str = pool_json_str.rstrip(', ')
-            pool_json_str += "] }"
+            pool_json_str += "],"
+            if opts.sgw_nodes:
+                pool_json_str += '"ip_to_node_type": {'
+                for node in node_list:
+                    pool_json_str += '"{}": "couchbase_servers", '.format(node)
+
+                for sgw_node in sgw_node_list:
+                    pool_json_str += '"{}": "sync_gateways", '.format(sgw_node)
+                if opts.load_balancer_nodes:
+                    for lp_node in lp_node_list:
+                        pool_json_str += '"{}": "load_balancers", '.format(lp_node)
+                pool_json_str = pool_json_str.rstrip(', ')
+                pool_json_str += "},"
+            pool_json_str = pool_json_str.rstrip(', ')
+            pool_json_str += "}"
             fh.write(pool_json_str)
     elif opts.release_nodes:
         try:
@@ -221,6 +310,6 @@ if __name__ == "__main__":
         log_info("Releasing nodes {} back to QE-mobile-pool".format(node_list))
         release_node(node_list, opts.job_name)
     elif opts.cleanup_nodes:
-        cleanup_for_blocked_nodes()
+        cleanup_for_blocked_nodes(opts.job_name)
     else:
-        raise Exception("Use either one the flag from --cleanup_nodes or --release-nodes or --reserve-nodes")
+        raise Exception("Use either one the flag from --cleanup_nodes or --release-nodes or --reserve-nodes or --get-available-nodes ")

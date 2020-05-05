@@ -441,7 +441,9 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
 
     # Start LiteServ and delete any databases
     log_info("Starting TestServer...")
+    log_info(test_name)
     test_name_cp = test_name.replace("/", "-")
+
     if not use_local_testserver:
         if device_enabled:
             testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now()))

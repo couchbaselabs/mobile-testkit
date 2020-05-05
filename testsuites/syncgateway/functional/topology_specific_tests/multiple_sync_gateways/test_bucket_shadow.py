@@ -135,7 +135,7 @@ def test_bucket_shadow_low_revs_limit_repeated_deletes(params_from_base_test_set
     # Repeatedly issue a delete operation for that doc via SG
     # Keep adding tombstone revs to the one and only branch
     rev_id_to_delete = None
-    for i in xrange(100):
+    for i in range(100):
         resp = sc.alice_shadower.delete_doc(doc_id, rev_id_to_delete)
         rev_id_to_delete = resp["rev"]
 
@@ -152,7 +152,6 @@ def test_bucket_shadow_low_revs_limit_repeated_deletes(params_from_base_test_set
 
 
 @pytest.mark.topospecific
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.bucketshadow
 @pytest.mark.channel

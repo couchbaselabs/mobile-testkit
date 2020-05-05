@@ -12,13 +12,12 @@ from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from libraries.testkit import cluster
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.syncgateway
 @pytest.mark.replication
 @pytest.mark.parametrize("num_of_docs, replication_type, file_attachment, continuous", [
     (10, "pull", None, True),
-    (10, "pull", "sample_text.txt", True),
+    pytest.param(10, "pull", "sample_text.txt", True, marks=pytest.mark.sanity),
     (1, "push", "golden_gate_large.jpg", True),
     (10, "push", None, True)
 ])
@@ -97,7 +96,7 @@ def test_delta_sync_replication(params_from_base_test_setup, num_of_docs, replic
     if replication_type == "push":
         doc_ids = db.getDocIds(cbl_db)
         cbl_db_docs = db.getDocuments(cbl_db, doc_ids)
-        for doc_id, doc_body in cbl_db_docs.items():
+        for doc_id, doc_body in list(cbl_db_docs.items()):
             for _ in range(number_of_updates):
                 if file_attachment:
                     mutable_dictionary = dictionary.toMutableDictionary(doc_body)
@@ -107,7 +106,8 @@ def test_delta_sync_replication(params_from_base_test_setup, num_of_docs, replic
                     if liteserv_platform == "android":
                         image_content = blob.createImageContent("/assets/golden_gate_large.jpg")
                         blob_value = blob.create("image/jpeg", stream=image_content)
-                    elif liteserv_platform == "xamarin-android":
+                    elif liteserv_platform in ["xamarin-android", "java-macosx", "java-msft", "java-ubuntu", "java-centos",
+                                               "javaws-macosx", "javaws-msft", "javaws-ubuntu", "javaws-centos"]:
                         image_content = blob.createImageContent("golden_gate_large.jpg")
                         blob_value = blob.create("image/jpeg", stream=image_content)
                     elif liteserv_platform == "ios":
@@ -811,6 +811,7 @@ def test_delta_sync_on_community_edition(params_from_base_test_setup, num_of_doc
     if replication_type == "push":
         doc_ids = db.getDocIds(cbl_db)
         cbl_db_docs = db.getDocuments(cbl_db, doc_ids)
+
         for doc_id, doc_body in cbl_db_docs.items():
             for _ in range(number_of_updates):
                 if file_attachment:
@@ -865,10 +866,10 @@ def update_docs(replication_type, cbl_db, db, sg_client, sg_docs, sg_url, sg_db,
     if replication_type == "push":
         doc_ids = db.getDocIds(cbl_db)
         cbl_db_docs = db.getDocuments(cbl_db, doc_ids)
-        for doc_id, doc_body in cbl_db_docs.items():
+        for doc_id, doc_body in list(cbl_db_docs.items()):
             if string_type == "utf-8":
-                doc_body["new-1"] = unicode(random_string(length=70), "utf-8")
-                doc_body["new-2"] = unicode(random_string(length=70), "utf-8")
+                doc_body["new-1"] = random_string(length=70).encode('utf-8')
+                doc_body["new-2"] = random_string(length=70).encode('utf-8')
             else:
                 doc_body["new-1"] = random_string(length=70)
                 doc_body["new-2"] = random_string(length=30)
@@ -876,7 +877,7 @@ def update_docs(replication_type, cbl_db, db, sg_client, sg_docs, sg_url, sg_db,
     else:
         def property_updater(doc_body):
             if string_type == "utf-8":
-                doc_body['sg_new_update'] = unicode(random_string(length=70), "utf-8")
+                doc_body['sg_new_update'] = random_string(length=70).encode('utf-8')
             else:
                 doc_body["sg_new_update"] = random_string(length=70)
             return doc_body
@@ -888,7 +889,7 @@ def update_larger_doc(replication_type, cbl_db, db, sg_client, sg_docs, sg_url, 
     if replication_type == "push":
         doc_ids = db.getDocIds(cbl_db)
         cbl_db_docs = db.getDocuments(cbl_db, doc_ids)
-        for doc_id, doc_body in cbl_db_docs.items():
+        for doc_id, doc_body in list(cbl_db_docs.items()):
             doc_body["new-1"] = random_string(length=100)
             doc_body["new-2"] = random_string(length=100)
             doc_body["new-3"] = random_string(length=100)

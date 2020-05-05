@@ -32,3 +32,33 @@
 
 - name: SYNC GATEWAY | Print deployed config
   debug: var=out.stdout
+
+# Deleting cert directory if exist
+- name: Deleting C:\PROGRA~1\Couchbase\Sync Gateway\certs directory
+  win_file: 
+    path: C:\PROGRA~1\Couchbase\Sync Gateway\certs
+    state: absent
+  when: x509_auth
+
+- name: SYNC GATEWAY | Create certs directory on sync gateway home directory
+  win_file:
+    path: C:\PROGRA~1\Couchbase\Sync Gateway\certs
+    state: directory
+  when: x509_auth
+
+- name: SYNC GATEWAY | Deploying cert path for x509
+  win_copy: src='{{ x509_certs_dir }}/chain.pem' dest='C:\PROGRA~1\Couchbase\Sync Gateway\certs\chain.pem' force=true
+  when: certpath is defined and x509_auth
+
+- name: SYNC GATEWAY | Deploying keypath for x509
+  win_copy: src='{{ x509_certs_dir }}/pkey.key' dest='C:\PROGRA~1\Couchbase\Sync Gateway\certs\pkey.key' force=true
+  when: keypath is defined and x509_auth
+
+- name: SYNC GATEWAY | Deploying cacertpath for x509
+  win_copy: src='{{ x509_certs_dir }}/ca.pem' dest='C:\PROGRA~1\Couchbase\Sync Gateway\certs\ca.pem' force=true
+  when: cacertpath is defined and x509_auth
+
+
+- name: give full permissions to certs directory
+  win_shell: icacls "C:\PROGRA~1\Couchbase\Sync Gateway\certs" /grant Everyone:F
+  when: x509_auth

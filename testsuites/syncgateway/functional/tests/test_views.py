@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 
 import random
 
@@ -13,12 +13,11 @@ from libraries.testkit.cluster import Cluster
 from utilities.cluster_config_utils import get_sg_version, persist_cluster_config_environment_prop, copy_to_temp_conf
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.views
 @pytest.mark.session
 @pytest.mark.parametrize('sg_conf_name, validate_changes_before_restart, x509_cert_auth', [
-    ('sync_gateway_default_functional_tests', False, False),
+    pytest.param('sync_gateway_default_functional_tests', False, False, marks=pytest.mark.sanity),
     ('sync_gateway_default_functional_tests', True, True),
     ('sync_gateway_default_functional_tests_no_port', False, True),
     ('sync_gateway_default_functional_tests_no_port', True, False)
@@ -90,7 +89,7 @@ def test_view_backfill_for_deletes(params_from_base_test_setup, sg_conf_name,
 
     # Delete half of the docs randomly
     deleted_docs = []
-    for _ in range(num_docs / 2):
+    for _ in range(num_docs // 2):
         random_doc = random.choice(bulk_resp)
         deleted_doc = sg_client.delete_doc(url=sg_url, db=sg_db, doc_id=random_doc['id'], rev=random_doc['rev'], auth=seth_auth)
         deleted_docs.append(deleted_doc)

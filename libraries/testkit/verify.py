@@ -10,8 +10,8 @@ def verify_same_docs(expected_num_docs, doc_dict_one, doc_dict_two):
     assert len(doc_dict_two) == expected_num_docs
 
     # get doc ids
-    ids_one = doc_dict_one.keys()
-    ids_two = doc_dict_two.keys()
+    ids_one = list(doc_dict_one.keys())
+    ids_two = list(doc_dict_two.keys())
 
     # Check keys of the dictionary are the same
     assert set(ids_one) == set(ids_two)
@@ -73,7 +73,7 @@ def verify_docs_removed(users, expected_num_docs, expected_docs):
             errors["invalid_expected_docs_length"] += 1
 
         # Get ids from expected docs
-        expected_doc_ids = expected_docs.keys()
+        expected_doc_ids = list(expected_docs.keys())
 
         # Assert there are no duplicates in expected doc ids
         if len(expected_doc_ids) != len(set(expected_doc_ids)):
@@ -114,7 +114,7 @@ def verify_docs_removed(users, expected_num_docs, expected_docs):
 
         # Print any error that may have occured
         error_count = 0
-        for key, val in errors.items():
+        for key, val in list(errors.items()):
             if val != 0:
                 log_error("<!> VERIFY ERROR - name: {}: occurences: {}".format(key, val))
                 error_count += 1
@@ -191,7 +191,7 @@ def verify_changes(users, expected_num_docs, expected_num_revisions, expected_do
             errors["invalid_expected_docs_length"] += 1
 
         # Get ids from expected docs
-        expected_doc_ids = expected_docs.keys()
+        expected_doc_ids = list(expected_docs.keys())
 
         # Assert there are no duplicates in expected doc ids
         if len(expected_doc_ids) != len(set(expected_doc_ids)):
@@ -264,7 +264,7 @@ def verify_changes(users, expected_num_docs, expected_num_revisions, expected_do
 
         # Print any error that may have occured
         error_count = 0
-        for key, val in errors.items():
+        for key, val in list(errors.items()):
             if val != 0:
                 log_error("<!> VERIFY ERROR - name: {}: occurences: {}".format(key, val))
                 error_count += 1

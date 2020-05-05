@@ -30,11 +30,9 @@ NUM_ENDPOINTS = 13
 @pytest.mark.bulkops
 @pytest.mark.changes
 @pytest.mark.parametrize("sg_conf_name, num_docs, x509_cert_auth", [
-    ("bucket_online_offline/bucket_online_offline_default", 100, True),
     ("bucket_online_offline/bucket_online_offline_default", 100, False)
 ])
 def test_online_default_rest(params_from_base_test_setup, sg_conf_name, num_docs, x509_cert_auth):
-
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
 
@@ -209,7 +207,7 @@ def test_online_to_offline_changes_feed_controlled_close_continuous(params_from_
             elif task_name == "continuous":
                 docs_in_changes = future.result()
                 log_info("DOCS FROM CHANGES")
-                for k, v in docs_in_changes.items():
+                for k, v in list(docs_in_changes.items()):
                     log_info("DFC -> {}:{}".format(k, v))
 
     log_info("Number of docs from _changes ({})".format(len(docs_in_changes)))
@@ -499,7 +497,7 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll(params_from_ba
                     docs_in_changes = e.args[0]["docs"]
                     last_seq_num = e.args[0]["last_seq_num"]
                     log_info("DOCS FROM longpoll")
-                    for k, v in docs_in_changes.items():
+                    for k, v in list(docs_in_changes.items()):
                         log_info("DFC -> {}:{}".format(k, v))
                     log_info("LAST_SEQ_NUM FROM longpoll {}".format(last_seq_num))
 

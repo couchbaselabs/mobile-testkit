@@ -7,7 +7,6 @@ from CBLClient.PeerToPeer import PeerToPeer
 from keywords.utils import get_event_changes, meet_supported_version
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.parametrize("num_of_docs, continuous, replicator_type, attachments, endpoint_type", [
     (10, True, "push_pull", False, "URLEndPoint"),
@@ -16,7 +15,7 @@ from keywords.utils import get_event_changes, meet_supported_version
     (100, False, "push_pull", False, "URLEndPoint"),
     (10, True, "push_pull", False, "MessageEndPoint"),
     (10, False, "push_pull", False, "MessageEndPoint"),
-    (10, False, "push_pull", True, "MessageEndPoint"),
+    pytest.param(10, False, "push_pull", True, "MessageEndPoint", marks=pytest.mark.sanity),
     (100, False, "push_pull", False, "MessageEndPoint"),
 
 ])
@@ -24,7 +23,7 @@ def test_peer_to_peer_replication_eventing_valid_values(params_from_base_test_se
                                                         continuous, replicator_type, attachments, endpoint_type):
     """
         @summary:
-        1. Create docs on client and SG.
+        1. Create docs on client and Server.
         2. Start the server.
         3. Add Listener to replicator and start replication from client.
         4. Verify replication is completed.
@@ -247,7 +246,7 @@ def test_peer_to_peer_replication_delete_event(params_from_base_test_setup, serv
     assert client_docs_count == len(client_doc_ids) + len(server_doc_ids), \
         "Number of docs is not equivalent to number of docs in Client "
 
-    docs_to_delete = random.sample(client_doc_ids + server_doc_ids, (num_of_docs / 10) * 2)
+    docs_to_delete = random.sample(client_doc_ids + server_doc_ids, (num_of_docs // 10) * 2)
     db_obj_server.delete_bulk_docs(database=cbl_db_server, doc_ids=docs_to_delete)
 
     # Starting the replication to replicate deleted docs
