@@ -294,6 +294,7 @@ class Replication(object):
         count = 0
         # Sleep until replicator completely processed
         activity_level = self.getActivitylevel(repl)
+        resp_timestamp = time.time()
         while count < max_times:
             log_info("Activity level: {}".format(activity_level))
             time.sleep(sleep_time)
@@ -306,7 +307,8 @@ class Replication(object):
                     else:
                         time.sleep(sleep_time)
                         break
-            if err_check:
+            cur_timestamp = time.time()
+            if err_check and int(cur_timestamp - resp_timestamp) >= 600:
                 err = self.getError(repl)
                 if err is not None and err != 'nil' and err != -1:
                     raise Exception("Error while replicating", err)
