@@ -35,6 +35,9 @@
     sslcert:
     sslkey:
     logging:
+    cacertpath:
+    x509_auth:
+    x509_certs_dir:
 
   tasks:
   - include: tasks/deploy-sync-gateway-config.yml
@@ -64,6 +67,9 @@
     sslcert:
     sslkey:
     logging:
+    cacertpath:
+    x509_auth:
+    x509_certs_dir:
 
   tasks:
   - include: tasks/deploy-sync-gateway-config.yml

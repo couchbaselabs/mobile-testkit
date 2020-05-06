@@ -13,25 +13,12 @@
       state: stopped
   
   - debug: msg="Tomcat home directory is {{ ansible_env.CATALINA_BASE }}"
-  - name: Remove CouchbaseLite jar file
-    win_file:
-      path: "{{ ansible_env.CATALINA_BASE }}\\lib\\couchbase-lite-java-*.jar"
-      state: absent
-
-  - name: Remove CouchbaseLite supporting json-*.jar file
-    win_file:
-      path: "{{ ansible_env.CATALINA_BASE }}\\lib\\json-*.jar"
-      state: absent
-
-  - name: Remove CouchbaseLite supporting okhttp-*.jar file
-    win_file:
-      path: "{{ ansible_env.CATALINA_BASE }}\\lib\\okhttp-*.jar"
-      state: absent
-
-  - name: Remove CouchbaseLite supporting okio-*.jar file
-    win_file:
-      path: "{{ ansible_env.CATALINA_BASE }}\\lib\\okio-*.jar"
-      state: absent
+  - name: Remove files added by previously installed CouchbaseLite
+    win_shell: |
+      Remove-Item "{{ ansible_env.CATALINA_BASE }}\\lib\\couchbase-lite-java-ee-*.jar"
+      Remove-Item "{{ ansible_env.CATALINA_BASE }}\\lib\\json-*.jar"
+      Remove-Item "{{ ansible_env.CATALINA_BASE }}\\lib\\okhttp-*.jar"
+      Remove-Item "{{ ansible_env.CATALINA_BASE }}\\lib\\okio-*.jar"
 
   - name: Remove TestServer webapp files
     win_file:
@@ -54,9 +41,8 @@
       state: absent
 
   - name: Remove Tomcat logs
-    win_file:
-      path: "{{ ansible_env.CATALINA_BASE }}\\logs\\*.*"
-      state: absent
+    win_shell:
+      Remove-Item "{{ ansible_env.CATALINA_BASE }}\\logs\\*.*"
 
   - debug: msg="Copy TestServer war file"
   - win_shell: copy C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ build_name }}\{{ war_package_name }}.war "{{ ansible_env.CATALINA_BASE }}\\webapps\\ROOT.war"
