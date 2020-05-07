@@ -1,11 +1,12 @@
 - name: Windows - Stop TestServer
+  hosts: windows
   vars:
     log_full_path:
 
   tasks:
-    - debug: msg="Starting the Testserver "
-    -  debug: msg="Copying logs at - {{ log_full_path }}"
-    - name: Start TestServer
+    - debug: msg="Stoping the Testserver "
+    - debug: msg="Copying logs at - {{ log_full_path }}"
+    - name: Stop TestServer
       win_nssm:
         name: TestServer
         application: C:\PROGRA~1\dotnet\dotnet.exe
