@@ -139,8 +139,7 @@ def test_upgrade(params_from_base_test_setup):
     )
 
     doc_obj = Document(base_url)
-    # db.create_bulk_docs(number=num_docs, id_prefix="cbl_filter", db=cbl_db, channels=sg_user_channels, attachments_generator=attachment.generate_2_png_10_10)
-    db.create_bulk_docs(number=num_docs, id_prefix="cbl_filter", db=cbl_db, channels=sg_user_channels)
+    db.create_bulk_docs(number=num_docs, id_prefix="cbl_filter", db=cbl_db, channels=sg_user_channels, attachments_generator=attachment.generate_2_png_10_10)
     doc_ids = db.getDocIds(cbl_db, limit=num_docs)
     added_docs = db.getDocuments(cbl_db, doc_ids)
     log_info("Added {} docs".format(len(added_docs)))
@@ -163,8 +162,7 @@ def test_upgrade(params_from_base_test_setup):
     repl1 = replicator.create(repl_config1)
     replicator.start(repl1)
     replicator.wait_until_replicator_idle(repl1)
-    # sg_client.add_docs(url=sg_admin_url, db=sg_db, number=2, id_prefix="sgw_docs1", channels=sg_user_channels, generator="simple_user", attachments_generator=attachment.generate_2_png_10_10)
-    sg_client.add_docs(url=sg_admin_url, db=sg_db, number=2, id_prefix="sgw_docs1", channels=sg_user_channels, generator="simple_user")
+    sg_client.add_docs(url=sg_admin_url, db=sg_db, number=2, id_prefix="sgw_docs1", channels=sg_user_channels, generator="simple_user", attachments_generator=attachment.generate_2_png_10_10)
     # 3. Start a thread to keep updating docs on CBL
     terminator_doc_id = 'terminator'
     with ProcessPoolExecutor() as up:
@@ -299,7 +297,7 @@ def verify_sg_docs_revision_history(url, db, cbl_db2, num_docs, sg_db, added_doc
     for doc in cbl_docs2:
         if "sgw_docs" in doc:
             num_sg_docs_in_cbldb2 += 1
-            # assert '_attachments' in cbl_docs2[doc], "_attachments does not exist in doc created in sgw"
+            assert '_attachments' in cbl_docs2[doc], "_attachments does not exist in doc created in sgw"
     assert num_sg_docs_in_cbldb2 == 2, "sgw docs are not replicated to cbl db2"
     for doc in sg_docs:
         if "sgw_docs" not in doc['id']:
