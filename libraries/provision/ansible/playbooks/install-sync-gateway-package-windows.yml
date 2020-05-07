@@ -60,6 +60,9 @@
     # hack until mobile-testkit/issues/406 allows any sync gateway to be referenced
     sync_gateway_node: "{{ hostvars[groups.sync_gateways[0]].ansible_host }}"
     is_index_writer: "false"
+    cacertpath:
+    x509_auth:
+    x509_certs_dir:
   tasks:
   - include: tasks/deploy-sync-gateway-config-windows.yml
  
