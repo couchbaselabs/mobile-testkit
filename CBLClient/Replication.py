@@ -292,9 +292,13 @@ class Replication(object):
 
     def wait_until_replicator_idle(self, repl, err_check=True, max_times=150, sleep_time=2):
         count = 0
+        # Load the current replicator config to decide retry strategy
+        repl_config = self.getConfig(repl)
+        isContinous = self.isContinuous(repl_config)
+        log_info("The current replicator sets continuous to {}".format(isContinous))
         # Sleep until replicator completely processed
         activity_level = self.getActivitylevel(repl)
-        resp_timestamp = time.time()
+        begin_timestamp = time.time()
         while count < max_times:
             log_info("Activity level: {}".format(activity_level))
             time.sleep(sleep_time)
@@ -308,10 +312,11 @@ class Replication(object):
                         time.sleep(sleep_time)
                         break
             cur_timestamp = time.time()
-            if err_check and int(cur_timestamp - resp_timestamp) >= 600:
-                err = self.getError(repl)
-                if err is not None and err != 'nil' and err != -1:
-                    raise Exception("Error while replicating", err)
+            if err_check:
+                if not isContinous or (isContinous and (cur_timestamp - begin_timestamp) >= 600):
+                    err = self.getError(repl)
+                    if err is not None and err != 'nil' and err != -1:
+                        raise Exception("Error while replicating", err)
             activity_level = self.getActivitylevel(repl)
             total = self.getTotal(repl)
             completed = self.getCompleted(repl)
