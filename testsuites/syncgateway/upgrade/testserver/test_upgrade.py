@@ -356,7 +356,7 @@ def update_docs(db, cbl_db, added_docs, doc_obj, terminator_doc_id_prefix):
                     log_info("update_docs: doc object is retrieved correctly")
         except Exception:
             log_info(terminator_not_found_msg)
-        """
+
         user_docs_subset_to_update = []
         for _ in range(docs_per_update):
             random_doc_id = random.choice(current_user_doc_ids)
@@ -380,8 +380,8 @@ def update_docs(db, cbl_db, added_docs, doc_obj, terminator_doc_id_prefix):
         for doc_id, doc_body in list(cbl_db_docs_to_update.items()):
             new_doc = db.getDocument(cbl_db, doc_id)
             doc_revs[doc_id] = doc_obj.toMap(new_doc)['numOfUpdates']
-        """
-        time.sleep(20)
+
+        time.sleep(5)
 
 
 def upgrade_server_cluster(servers, primary_server, secondary_server, server_version, server_upgraded_version, server_urls, cluster_config, cbs_platform, toy_build=None):
