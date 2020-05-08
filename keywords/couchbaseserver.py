@@ -14,8 +14,9 @@ import keywords.constants
 from keywords.remoteexecutor import RemoteExecutor
 from keywords.exceptions import CBServerError, ProvisioningError, TimeoutError, RBACUserCreationError
 from keywords.utils import log_r, log_info, log_debug, log_error, hostname_for_url
+from keywords.utils import version_and_build
 from keywords import types
-from utilities.cluster_config_utils import is_x509_auth
+from utilities.cluster_config_utils import is_x509_auth, get_cbs_version
 
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
@@ -224,7 +225,13 @@ class CouchbaseServer:
     def _create_internal_rbac_bucket_user(self, bucketname, cluster_config):
         # Create user with username=bucketname and assign role
         # bucket_admin and cluster_admin
-        roles = "ro_admin,bucket_full_access[{}]".format(bucketname)
+        server_version = get_cbs_version(cluster_config)
+        cbs_version, cbs_build = version_and_build(server_version)
+        if cbs_version >= "6.6.0":
+            roles = "mobile_sync_gateway[{}]".format(bucketname)
+        else:
+            roles = "ro_admin,bucket_full_access[{}]".format(bucketname)
+        
         if is_x509_auth(cluster_config):
             roles = "admin"
         password = 'password'
