@@ -15,9 +15,9 @@ from keywords import document
 
 
 @pytest.mark.syncgateway
-@pytest.mark.changes
 @pytest.mark.session
 @pytest.mark.channel
+@pytest.mark.oscertify
 @pytest.mark.parametrize('sg_conf_name', [
     'sync_gateway_default'
 ])
@@ -108,9 +108,9 @@ def test_channels_view_after_restart(params_from_base_test_setup, sg_conf_name):
 
 @pytest.mark.sanity
 @pytest.mark.syncgateway
-@pytest.mark.changes
 @pytest.mark.basicauth
 @pytest.mark.channel
+@pytest.mark.oscertify
 @pytest.mark.parametrize("sg_conf_name, x509_cert_auth", [
     ("sync_gateway_default", False),
 ])

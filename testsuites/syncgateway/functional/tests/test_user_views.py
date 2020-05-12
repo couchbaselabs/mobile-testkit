@@ -18,9 +18,9 @@ from utilities.cluster_config_utils import persist_cluster_config_environment_pr
 @pytest.mark.views
 @pytest.mark.role
 @pytest.mark.channel
-@pytest.mark.changes
 @pytest.mark.session
 @pytest.mark.attachments
+@pytest.mark.oscertify
 @pytest.mark.parametrize("sg_conf_name, x509_cert_auth", [
     ("user_views/user_views", False),
 ])
