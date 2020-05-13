@@ -617,7 +617,7 @@ def test_string_expiry_as_iso_8601_date(params_from_base_test_setup, sg_conf_nam
 @pytest.mark.ttl
 @pytest.mark.session
 @pytest.mark.parametrize("sg_conf_name", [
-    pytest.param("sync_gateway_default_functional_tests", marks=pytest.mark.oscertify)
+    pytest.param("sync_gateway_default_functional_tests", marks=pytest.mark.oscertify),
     ("sync_gateway_default_functional_tests_no_port"),
     ("sync_gateway_default_functional_tests_couchbase_protocol_withport_11210")
 ])
