@@ -231,7 +231,7 @@ class CouchbaseServer:
             roles = "mobile_sync_gateway[{}]".format(bucketname)
         else:
             roles = "ro_admin,bucket_full_access[{}]".format(bucketname)
-        
+
         if is_x509_auth(cluster_config):
             roles = "admin"
         password = 'password'
