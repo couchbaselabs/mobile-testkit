@@ -81,8 +81,9 @@ def generate_x509_certs(cluster_config, bucket_name, sg_platform):
             match = re.match('remote_user\s*=\s*(\w*)$', line)
             if match:
                 username = match.groups()[0].strip()
+                print(username)
                 break
-    print(username)
+
     curr_dir = os.getcwd()
     certs_dir = os.path.join(curr_dir, "certs")
     if os.path.exists(certs_dir):
