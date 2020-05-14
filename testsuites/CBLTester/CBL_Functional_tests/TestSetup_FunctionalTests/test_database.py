@@ -3,6 +3,11 @@ import time
 
 from CBLClient.Database import Database
 from CBLClient.DatabaseConfiguration import DatabaseConfiguration
+from libraries.testkit import cluster
+from CBLClient.Replication import Replication
+from keywords.MobileRestClient import MobileRestClient
+from CBLClient.Authenticator import Authenticator
+from keywords.utils import log_info
 
 
 @pytest.mark.listener
@@ -362,3 +367,122 @@ def test_copy_prebuilt_database(params_from_base_test_setup, encrypted):
 
     # Cleaning the database , tearing down
     db.deleteDB(cbl_db1)
+
+
+@pytest.mark.listener
+@pytest.mark.dbClose
+@pytest.mark.parametrize("num_of_repl", "live_query_enabled", [
+    (3, False),
+    (3, True)
+])
+def test_db_close_on_replication_live_query_alive(params_from_base_test_setup, num_of_repl, live_query_enabled):
+    """
+        @summary:
+        1. create a db on cbl, have a sgw available
+        2. start number of replicators specified in num_of_repl with the sgw,
+           ensure one of the replicator is push_pull replicator with continues=true
+        3. if live_query_enabled, register a live query to the cbl db, otherwise, skip this step
+        4. close the cbl db
+        5. verify cbl db is closed closed successfully
+    """
+    liteserv_version = params_from_base_test_setup["liteserv_version"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_config = params_from_base_test_setup["sg_config"]
+    base_url = params_from_base_test_setup["base_url"]
+    sg_db = "db"
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    sg_blip_url = params_from_base_test_setup["target_url"]
+
+    if liteserv_version < "2.8.0":
+        pytest.skip('This test supports for a feature from hydrogen(2.8.0)')
+
+    # reset SGW configuration
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
+
+    # 1a. create a db, and add document to the cbl db
+    db = Database(base_url)
+    db_name = "test_close_db_" + str(time.time())
+    log_info("Creating a Database {} at test setup".format(db_name))
+    db_config = db.configure()
+    cbl_db = db.create(db_name, db_config)
+
+    num_of_docs = 1000
+    channel1 = ["Replication-1"]
+    channel2 = ["Replication-2"]
+    channel3 = ["Replication-3"]
+
+    db.create_bulk_docs(num_of_docs, "ch1", db=cbl_db, channels=channel1)
+    db.create_bulk_docs(num_of_docs, "ch2", db=cbl_db, channels=channel2)
+    db.create_bulk_docs(num_of_docs, "ch3", db=cbl_db, channels=channel3)
+
+    # 1b. prepare SGW, create 3 users on 3 different channels and set up connections
+    username1 = "autotest"
+    username2 = "autotest2"
+    username3 = "autotest3"
+    password = "password"
+
+    sg_client = MobileRestClient()
+    sg_client.create_user(sg_admin_url, sg_db, username1, password=password, channels=channel1)
+    cookie1, session_id1 = sg_client.create_session(sg_admin_url, sg_db, username1)
+
+    sg_client.create_user(sg_admin_url, sg_db, username2, password=password, channels=channel2)
+    cookie2, session_id2 = sg_client.create_session(sg_admin_url, sg_db, username2)
+
+    sg_client.create_user(sg_admin_url, sg_db, username3, password=password, channels=channel3)
+    cookie3, session_id3 = sg_client.create_session(sg_admin_url, sg_db, username3)
+
+    # 2. start 3 replicators on 3 different channels, set all continous to True
+    replicator = Replication(base_url)
+    authenticator = Authenticator(base_url)
+
+    replicator_authenticator1 = authenticator.authentication(session_id1, cookie1, authentication_type="session")
+    repl_config1 = replicator.configure(source_db=cbl_db, replicator_authenticator=replicator_authenticator1, target_url=sg_blip_url,
+                                        replication_type="push_pull", continuous=True, channels=channel1)
+    replicator_authenticator2 = authenticator.authentication(session_id2, cookie2, authentication_type="session")
+    repl_config2 = replicator.configure(source_db=cbl_db, replicator_authenticator=replicator_authenticator2, target_url=sg_blip_url,
+                                        replication_type="push", continuous=True, channels=channel2)
+    replicator_authenticator3 = authenticator.authentication(session_id3, cookie3, authentication_type="session")
+    repl_config3 = replicator.configure(source_db=cbl_db, replicator_authenticator=replicator_authenticator3, target_url=sg_blip_url,
+                                        replication_type="pull", continuous=True, channels=channel3)
+
+    # 3. if live_query_enabled, register a live query to the cbl db, otherwise, skip this step
+    # if live_query_enabled:
+    # todo - register a live query here
+
+    # start all replicators
+    repl1 = replicator.create(repl_config1)
+    replicator.start(repl1)
+
+    repl2 = replicator.create(repl_config2)
+    replicator.start(repl2)
+
+    repl3 = replicator.create(repl_config3)
+    replicator.start(repl3)
+
+    log_info(replicator.getActivitylevel(repl1))
+    log_info(replicator.getActivitylevel(repl2))
+    log_info(replicator.getActivitylevel(repl3))
+
+    db.close(cbl_db)
+    # add assertions
+
+
+@pytest.mark.listener
+@pytest.mark.dbDelete
+@pytest.mark.parametrize("num_of_repl", "live_query_enabled", [
+    (1, False),
+    (3, False),
+    (1, True),
+    (3, True)
+])
+def test_db_delete_on_replication_live_query_alive(params_from_base_test_setup):
+    """
+        @summary:
+        1. create a db on cbl, have a sgw available 
+        2. start number of replicators specified in num_of_repl with the sgw, 
+           ensure one of the replicator is push_pull replicator with continues=true
+        3. if live_query_enabled, register a live query to the cbl db, otherwise, skip this step
+        4. delete the cbl db
+        5. verify cbl db is deleted successfully
+    """
