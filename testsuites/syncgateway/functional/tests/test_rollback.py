@@ -17,11 +17,11 @@ from utilities.cluster_config_utils import persist_cluster_config_environment_pr
 
 @pytest.mark.sanity
 @pytest.mark.syncgateway
-@pytest.mark.changes
 @pytest.mark.session
-@pytest.mark.channel
 @pytest.mark.rollback
 @pytest.mark.bulkops
+@pytest.mark.basicsgw
+@pytest.mark.oscertify
 @pytest.mark.parametrize("sg_conf_name, x509_cert_auth", [
     ("sync_gateway_default", False)
 ])

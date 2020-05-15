@@ -18,12 +18,11 @@ from utilities.cluster_config_utils import persist_cluster_config_environment_pr
 
 
 @pytest.mark.syncgateway
-@pytest.mark.onlineoffline
 @pytest.mark.webhooks
 @pytest.mark.basicauth
-@pytest.mark.channel
+@pytest.mark.basicsgw
 @pytest.mark.parametrize("sg_conf_name, num_users, num_channels, num_docs, num_revisions, x509_cert_auth", [
-    pytest.param("webhooks/webhook_offline", 5, 1, 1, 2, True, marks=pytest.mark.sanity),
+    pytest.param("webhooks/webhook_offline", 5, 1, 1, 2, True, marks=[pytest.mark.sanity, pytest.mark.oscertify]),
     ("webhooks/webhook_offline", 5, 1, 1, 2, False)
 ])
 def test_webhooks(params_from_base_test_setup, sg_conf_name, num_users, num_channels, num_docs,
@@ -98,9 +97,10 @@ def test_webhooks(params_from_base_test_setup, sg_conf_name, num_users, num_chan
 
 
 @pytest.mark.syncgateway
-@pytest.mark.xattrs
 @pytest.mark.session
 @pytest.mark.webhooks
+@pytest.mark.basicsgw
+@pytest.mark.oscertify
 @pytest.mark.parametrize('sg_conf_name, filtered', [
     ('webhooks/webhook', False),
     ('webhooks/webhook_filter', True)
