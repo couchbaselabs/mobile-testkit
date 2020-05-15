@@ -19,11 +19,9 @@ from utilities.cluster_config_utils import persist_cluster_config_environment_pr
 @pytest.mark.syncgateway
 @pytest.mark.onlineoffline
 @pytest.mark.basicauth
-@pytest.mark.channel
-@pytest.mark.changes
 @pytest.mark.parametrize("sg_conf_name, num_users, num_docs, num_revisions, x509_cert_auth", [
     pytest.param("bucket_online_offline/db_online_offline_access_all", 5, 100, 10, True, marks=pytest.mark.sanity),
-    ("bucket_online_offline/db_online_offline_access_all", 5, 100, 10, False)
+    pytest.param("bucket_online_offline/db_online_offline_access_all", 5, 100, 10, False, marks=pytest.mark.oscertify)
 ])
 def test_bucket_online_offline_resync_sanity(params_from_base_test_setup, sg_conf_name, num_users, num_docs,
                                              num_revisions, x509_cert_auth):
@@ -161,6 +159,7 @@ def test_bucket_online_offline_resync_sanity(params_from_base_test_setup, sg_con
 # attempt to bring DB _online, expected result _online will succeed, return status 200.
 @pytest.mark.syncgateway
 @pytest.mark.onlineoffline
+@pytest.mark.oscertify
 @pytest.mark.parametrize("sg_conf_name, num_users, num_docs, num_revisions", [
     ("bucket_online_offline/db_online_offline_access_all", 5, 100, 10),
 ])
@@ -347,6 +346,7 @@ def test_bucket_online_offline_resync_with_online(params_from_base_test_setup, s
 # expected result 'state' property with value 'Resyncing' is returned.
 @pytest.mark.syncgateway
 @pytest.mark.onlineoffline
+@pytest.mark.oscertify
 @pytest.mark.parametrize("sg_conf_name, num_users, num_docs, num_revisions", [
     ("bucket_online_offline/db_online_offline_access_all", 5, 100, 10),
 ])

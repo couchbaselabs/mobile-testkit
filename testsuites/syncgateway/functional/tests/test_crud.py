@@ -16,14 +16,13 @@ from utilities.cluster_config_utils import get_sg_version, persist_cluster_confi
 
 
 @pytest.mark.syncgateway
-@pytest.mark.xattrs
-@pytest.mark.changes
 @pytest.mark.session
+@pytest.mark.basicsgw
 @pytest.mark.parametrize('sg_conf_name, deletion_type, x509_cert_auth', [
-    ('sync_gateway_default_functional_tests', 'tombstone', False),
+    pytest.param('sync_gateway_default_functional_tests', 'tombstone', False, marks=pytest.mark.oscertify),
     ('sync_gateway_default_functional_tests', 'purge', True),
     ('sync_gateway_default_functional_tests_no_port', 'tombstone', True),
-    pytest.param('sync_gateway_default_functional_tests_no_port', 'purge', False, marks=pytest.mark.sanity),
+    pytest.param('sync_gateway_default_functional_tests_no_port', 'purge', False, marks=[pytest.mark.sanity, pytest.mark.oscertify]),
     ('sync_gateway_default_functional_tests_couchbase_protocol_withport_11210', 'purge', False)
 ])
 def test_document_resurrection(params_from_base_test_setup, sg_conf_name, deletion_type, x509_cert_auth):
@@ -308,7 +307,8 @@ def test_document_resurrection(params_from_base_test_setup, sg_conf_name, deleti
 
 
 @pytest.mark.syncgateway
-@pytest.mark.xattrs
+@pytest.mark.basicsgw
+@pytest.mark.oscertify
 @pytest.mark.parametrize('sg_conf_name', [
     'sync_gateway_default_functional_tests'
 ])

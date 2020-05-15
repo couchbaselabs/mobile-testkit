@@ -22,6 +22,8 @@ from libraries.provision.ansible_runner import AnsibleRunner
 
 @pytest.mark.syncgateway
 @pytest.mark.logredaction
+@pytest.mark.logging
+@pytest.mark.oscertify
 @pytest.mark.parametrize("sg_conf_name, redaction_level, x509_cert_auth", [
     pytest.param("log_redaction", "partial", False, marks=pytest.mark.sanity),
     ("log_redaction", "none", True)
@@ -84,6 +86,8 @@ def test_log_redaction_config(params_from_base_test_setup, remove_tmp_sg_redacti
 
 @pytest.mark.syncgateway
 @pytest.mark.logredaction
+@pytest.mark.logging
+@pytest.mark.oscertify
 @pytest.mark.parametrize("sg_conf_name, redaction_level, redaction_salt, x509_cert_auth", [
     ("log_redaction", "partial", False, True),
     pytest.param("log_redaction", "none", False, False, marks=pytest.mark.sanity),
@@ -146,11 +150,12 @@ def test_sgCollect1(params_from_base_test_setup, remove_tmp_sg_redaction_logs, s
 
 @pytest.mark.syncgateway
 @pytest.mark.logredaction
+@pytest.mark.logging
 @pytest.mark.parametrize("sg_conf_name, redaction_level, redaction_salt, output_dir, x509_cert_auth", [
     ("log_redaction", "partial", False, False, True),
-    ("log_redaction", None, False, False, False),
+    pytest.param("log_redaction", None, False, False, False, marks=pytest.mark.oscertify),
     ("log_redaction", "partial", True, False, False),
-    ("log_redaction", "partial", True, True, True)
+    pytest.param("log_redaction", "partial", True, True, True, marks=pytest.mark.oscertify)
 ])
 def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_logs, sg_conf_name, redaction_level,
                            redaction_salt, output_dir, x509_cert_auth):
@@ -267,6 +272,8 @@ def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_
 
 @pytest.mark.syncgateway
 @pytest.mark.logredaction
+@pytest.mark.logging
+@pytest.mark.oscertify
 @pytest.mark.parametrize("sg_conf_name, x509_cert_auth", [
     ("log_redaction", False)
 ])

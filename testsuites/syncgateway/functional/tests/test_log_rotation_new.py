@@ -15,6 +15,7 @@ from utilities.cluster_config_utils import load_cluster_config_json, persist_clu
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.logging
+@pytest.mark.oscertify
 @pytest.mark.parametrize("sg_conf_name, x509_cert_auth", [
     ("log_rotation_new", False)
 ])
@@ -123,6 +124,7 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name, 
 
 @pytest.mark.syncgateway
 @pytest.mark.logging
+@pytest.mark.oscertify
 @pytest.mark.parametrize("sg_conf_name", ["log_rotation_new"])
 def test_invalid_logKeys_string(params_from_base_test_setup, sg_conf_name):
     """
@@ -180,6 +182,7 @@ def test_invalid_logKeys_string(params_from_base_test_setup, sg_conf_name):
 
 @pytest.mark.syncgateway
 @pytest.mark.logging
+@pytest.mark.oscertify
 @pytest.mark.parametrize("sg_conf_name", ["log_rotation_new"])
 def test_log_nondefault_logKeys_set(params_from_base_test_setup, sg_conf_name):
     """
@@ -232,6 +235,7 @@ def test_log_nondefault_logKeys_set(params_from_base_test_setup, sg_conf_name):
 
 @pytest.mark.syncgateway
 @pytest.mark.logging
+@pytest.mark.oscertify
 @pytest.mark.parametrize("sg_conf_name", ["log_rotation_new"])
 def test_log_maxage_timestamp_ignored(params_from_base_test_setup, sg_conf_name):
     """
@@ -332,6 +336,7 @@ def test_log_maxage_timestamp_ignored(params_from_base_test_setup, sg_conf_name)
 # https://github.com/couchbase/sync_gateway/issues/2221
 @pytest.mark.syncgateway
 @pytest.mark.logging
+@pytest.mark.oscertify
 @pytest.mark.parametrize("sg_conf_name", ["log_rotation_new"])
 def test_log_rotation_invalid_path(params_from_base_test_setup, sg_conf_name):
     """
@@ -390,6 +395,7 @@ def test_log_rotation_invalid_path(params_from_base_test_setup, sg_conf_name):
 
 @pytest.mark.syncgateway
 @pytest.mark.logging
+@pytest.mark.oscertify
 @pytest.mark.parametrize("sg_conf_name", ["log_rotation_new"])
 def test_log_200mb(params_from_base_test_setup, sg_conf_name):
     """
@@ -478,6 +484,7 @@ def test_log_200mb(params_from_base_test_setup, sg_conf_name):
 # https://github.com/couchbase/sync_gateway/issues/2222
 @pytest.mark.syncgateway
 @pytest.mark.logging
+@pytest.mark.oscertify
 @pytest.mark.parametrize("sg_conf_name", ["log_rotation_new"])
 def test_log_rotation_negative(params_from_base_test_setup, sg_conf_name):
     """
@@ -549,6 +556,7 @@ def test_log_rotation_negative(params_from_base_test_setup, sg_conf_name):
 # https://github.com/couchbase/sync_gateway/issues/2225
 @pytest.mark.syncgateway
 @pytest.mark.logging
+@pytest.mark.oscertify
 @pytest.mark.parametrize("sg_conf_name", ["log_rotation_new"])
 def test_log_maxbackups_0(params_from_base_test_setup, sg_conf_name):
     """
@@ -633,6 +641,7 @@ def test_log_maxbackups_0(params_from_base_test_setup, sg_conf_name):
 
 @pytest.mark.syncgateway
 @pytest.mark.logging
+@pytest.mark.oscertify
 @pytest.mark.parametrize("sg_conf_name", ["log_rotation_new"])
 def test_log_logLevel_invalid(params_from_base_test_setup, sg_conf_name):
     """
@@ -690,6 +699,7 @@ def test_log_logLevel_invalid(params_from_base_test_setup, sg_conf_name):
 
 @pytest.mark.syncgateway
 @pytest.mark.logging
+@pytest.mark.oscertify
 @pytest.mark.parametrize("sg_conf_name", ["log_rotation_new"])
 def test_rotated_logs_size_limit(params_from_base_test_setup, sg_conf_name):
     """
