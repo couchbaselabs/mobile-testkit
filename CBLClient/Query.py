@@ -427,11 +427,11 @@ class Query(object):
 
         return self._client.invokeMethod("query_ftsWithRanking", args)
 
-    def release(self, obj):
-        self._client.release(obj)
-
     def query_arthimetic(self, database):
         args = Args()
         args.setMemoryPointer("database", database)
 
         return self._client.invokeMethod("query_arthimetic", args)
+
+    def release(self, obj):
+        self._client.release(obj)

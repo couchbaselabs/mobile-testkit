@@ -68,3 +68,7 @@ class FeatureSupportedError(Error):
 
 class ConnectionError(Error):
     pass
+
+
+class ChunkedEncodingError(Error):
+    pass

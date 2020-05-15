@@ -12,12 +12,19 @@
 
   - name: BLOCKPORTS | install iptables-services
     shell: yum -y install iptables-services
-    when: iptablesrules|length >= 1
+    when: iptablesrules|length >= 1 and (ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon")
 
   - name: BLOCKPORTS | save iptables after dropping
     shell: service iptables save
     when: iptablesrules|length >= 1
+    when: iptablesrules|length >= 1 and (ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon")
 
   - name: BLOCKPORTS | restart iptables after dropping
     shell: service iptables restart
     when: iptablesrules|length >= 1
+    when: iptablesrules|length >= 1 and (ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon")
+
+  - name: BLOCKPORTS | save iptables after dropping
+    shell: iptables-save
+    when: iptablesrules|length >= 1 and (ansible_distribution == "Ubuntu" or ansible_distribution == "Debian")
+

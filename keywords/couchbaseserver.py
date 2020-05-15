@@ -2,7 +2,7 @@ import time
 import json
 import requests
 import re
-from requests.exceptions import ConnectionError, HTTPError
+from requests.exceptions import ConnectionError, HTTPError, ChunkedEncodingError
 from requests import Session
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 from libraries.provision.ansible_runner import AnsibleRunner
@@ -14,8 +14,9 @@ import keywords.constants
 from keywords.remoteexecutor import RemoteExecutor
 from keywords.exceptions import CBServerError, ProvisioningError, TimeoutError, RBACUserCreationError
 from keywords.utils import log_r, log_info, log_debug, log_error, hostname_for_url
+from keywords.utils import version_and_build
 from keywords import types
-from utilities.cluster_config_utils import is_x509_auth
+from utilities.cluster_config_utils import is_x509_auth, get_cbs_version
 
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
@@ -224,7 +225,13 @@ class CouchbaseServer:
     def _create_internal_rbac_bucket_user(self, bucketname, cluster_config):
         # Create user with username=bucketname and assign role
         # bucket_admin and cluster_admin
-        roles = "ro_admin,bucket_full_access[{}]".format(bucketname)
+        server_version = get_cbs_version(cluster_config)
+        cbs_version, cbs_build = version_and_build(server_version)
+        if cbs_version >= "6.6.0":
+            roles = "mobile_sync_gateway[{}]".format(bucketname)
+        else:
+            roles = "ro_admin,bucket_full_access[{}]".format(bucketname)
+
         if is_x509_auth(cluster_config):
             roles = "admin"
         password = 'password'
@@ -268,18 +275,27 @@ class CouchbaseServer:
         rbac_url = "{}/settings/rbac/users/local/{}".format(self.url, bucketname)
 
         resp = None
-        try:
-            resp = self._session.delete(rbac_url, data=data_user_params, auth=('Administrator', 'password'))
-            log_info("rbac: {}; data user params: {}".format(rbac_url, data_user_params))
-            log_r(resp)
-            resp.raise_for_status()
-        except HTTPError as h:
-            log_info("resp code: {}; error: {}".format(resp, h))
-            if '404 Client Error: Object Not Found for url' in str(h):
-                log_info("RBAC user does not exist, no need to delete RBAC bucket user {}".format(bucketname))
-        except ConnectionError as e:
-            log_info(str(e))
-            log_info("RBAC user does not exist, Catching connection errors here")
+        count = 0
+        max_count = 0
+        server_version = get_server_version(self.host, self.cbs_ssl)
+        if server_version < "7.0.0":
+            max_count = 3
+        while count < max_count:
+            try:
+                resp = self._session.delete(rbac_url, data=data_user_params, auth=('Administrator', 'password'))
+                log_info("rbac: {}; data user params: {}".format(rbac_url, data_user_params))
+                log_r(resp)
+                resp.raise_for_status()
+            except HTTPError as h:
+                log_info("resp code: {}; error: {}".format(resp, h))
+                if '404 Client Error: Object Not Found for url' in str(h):
+                    log_info("RBAC user does not exist, no need to delete RBAC bucket user {}".format(bucketname))
+            except ConnectionError as e:
+                log_info(str(e))
+                log_info("RBAC user does not exist, Catching connection errors here")
+            except ChunkedEncodingError as che:
+                log_info(str(che))
+            count += 1
 
     def _get_mem_total_lowest(self, server_info):
         # Workaround for https://github.com/couchbaselabs/mobile-testkit/issues/709
@@ -813,7 +829,7 @@ class CouchbaseServer:
             base_url = "{}/vulcan/{}".format(cbnas_base_url, build_number)
         elif version.startswith("6.0"):
             base_url = "{}/alice/{}".format(cbnas_base_url, build_number)
-        elif version.startswith("6.5"):
+        elif version.startswith("6.5") or version.startswith("6.6"):
             base_url = "{}/mad-hatter/{}".format(cbnas_base_url, build_number)
         elif version.startswith("7.0"):
             base_url = "{}/cheshire-cat/{}".format(cbnas_base_url, build_number)

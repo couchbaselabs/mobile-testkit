@@ -20,11 +20,10 @@ from keywords import userinfo
 
 
 @pytest.mark.syncgateway
-@pytest.mark.changes
 @pytest.mark.basicauth
-@pytest.mark.channel
+@pytest.mark.basicsgw
 @pytest.mark.parametrize("sg_conf_name, num_docs, num_revisions", [
-    ("sync_gateway_default_functional_tests", 5000, 1),
+    pytest.param("sync_gateway_default_functional_tests", 5000, 1, marks=pytest.mark.oscertify),
     ("sync_gateway_default_functional_tests", 50, 100),
     ("sync_gateway_default_functional_tests_no_port", 5000, 1),
     ("sync_gateway_default_functional_tests_no_port", 50, 100),
@@ -92,11 +91,10 @@ def test_longpoll_changes_parametrized(params_from_base_test_setup, sg_conf_name
 
 
 @pytest.mark.syncgateway
-@pytest.mark.changes
 @pytest.mark.basicauth
-@pytest.mark.channel
+@pytest.mark.basicsgw
 @pytest.mark.parametrize("sg_conf_name, num_docs, num_revisions, x509_cert_auth", [
-    pytest.param("sync_gateway_default_functional_tests", 10, 10, True, marks=pytest.mark.sanity),
+    pytest.param("sync_gateway_default_functional_tests", 10, 10, True, marks=[pytest.mark.sanity, pytest.mark.oscertify]),
     ("sync_gateway_default_functional_tests_no_port", 10, 10, False),
     ("sync_gateway_default_functional_tests_couchbase_protocol_withport_11210", 10, 10, False)
 ])
@@ -168,13 +166,12 @@ def test_longpoll_changes_sanity(params_from_base_test_setup, sg_conf_name, num_
 
 
 @pytest.mark.syncgateway
-@pytest.mark.changes
+@pytest.mark.basicsgw
 @pytest.mark.basicauth
-@pytest.mark.channel
 @pytest.mark.parametrize("sg_conf_name", [
-    "sync_gateway_default_functional_tests",
-    "sync_gateway_default_functional_tests_no_port",
-    "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210"
+    pytest.param("sync_gateway_default_functional_tests", marks=pytest.mark.oscertify),
+    ("sync_gateway_default_functional_tests_no_port"),
+    ("sync_gateway_default_functional_tests_couchbase_protocol_withport_11210")
 ])
 def test_longpoll_awaken_doc_add_update(params_from_base_test_setup, sg_conf_name):
 
@@ -419,14 +416,13 @@ def test_longpoll_awaken_doc_add_update(params_from_base_test_setup, sg_conf_nam
 
 
 @pytest.mark.syncgateway
-@pytest.mark.changes
 @pytest.mark.basicauth
 @pytest.mark.access
-@pytest.mark.channel
+@pytest.mark.basicsgw
 @pytest.mark.parametrize("sg_conf_name", [
-    "sync_gateway_default_functional_tests",
-    "sync_gateway_default_functional_tests_no_port",
-    "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210"
+    ("sync_gateway_default_functional_tests"),
+    pytest.param("sync_gateway_default_functional_tests_no_port", marks=pytest.mark.oscertify),
+    ("sync_gateway_default_functional_tests_couchbase_protocol_withport_11210")
 ])
 def test_longpoll_awaken_channels(params_from_base_test_setup, sg_conf_name):
 
@@ -661,15 +657,13 @@ def test_longpoll_awaken_channels(params_from_base_test_setup, sg_conf_name):
 
 
 @pytest.mark.syncgateway
-@pytest.mark.changes
 @pytest.mark.basicauth
 @pytest.mark.access
 @pytest.mark.role
-@pytest.mark.channel
 @pytest.mark.parametrize("sg_conf_name", [
-    "sync_gateway_default_functional_tests",
-    "sync_gateway_default_functional_tests_no_port",
-    "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210"
+    ("sync_gateway_default_functional_tests"),
+    ("sync_gateway_default_functional_tests_no_port"),
+    pytest.param("sync_gateway_default_functional_tests_couchbase_protocol_withport_11210", marks=pytest.mark.oscertify)
 ])
 def test_longpoll_awaken_roles(params_from_base_test_setup, sg_conf_name):
 
@@ -851,10 +845,10 @@ def test_longpoll_awaken_roles(params_from_base_test_setup, sg_conf_name):
 
 
 @pytest.mark.syncgateway
-@pytest.mark.changes
 @pytest.mark.basicauth
 @pytest.mark.access
-@pytest.mark.channel
+@pytest.mark.basicsgw
+@pytest.mark.oscertify
 @pytest.mark.parametrize("sg_conf_name", [
     "custom_sync/wake_changes_access",
 ])
@@ -969,11 +963,11 @@ def test_longpoll_awaken_via_sync_access(params_from_base_test_setup, sg_conf_na
 
 
 @pytest.mark.syncgateway
-@pytest.mark.changes
 @pytest.mark.basicauth
 @pytest.mark.role
 @pytest.mark.access
-@pytest.mark.channel
+@pytest.mark.oscertify
+@pytest.mark.basicsgw
 @pytest.mark.parametrize("sg_conf_name", [
     "custom_sync/wake_changes_roles",
 ])

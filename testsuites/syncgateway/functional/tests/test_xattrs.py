@@ -1,5 +1,3 @@
-
-
 import random
 import time
 import json
@@ -36,6 +34,7 @@ SDK_OP_SLEEP = 0.05
 @pytest.mark.syncgateway
 @pytest.mark.xattrs
 @pytest.mark.session
+@pytest.mark.oscertify
 @pytest.mark.parametrize('sg_conf_name', [
     'xattrs/old_doc'
 ])
@@ -176,11 +175,10 @@ def test_olddoc_nil(params_from_base_test_setup, sg_conf_name):
 
 @pytest.mark.syncgateway
 @pytest.mark.xattrs
-@pytest.mark.changes
 @pytest.mark.session
 @pytest.mark.parametrize('sg_conf_name, number_users, number_docs_per_user, number_of_updates_per_user', [
     ('xattrs/no_import', 1, 1, 10),
-    ('xattrs/no_import', 100, 10, 10),
+    pytest.param('xattrs/no_import', 100, 10, 10, marks=pytest.mark.oscertify),
     ('xattrs/no_import', 10, 1000, 10)
     # ('xattrs/no_import', 100, 1000, 2)
 ])
@@ -316,6 +314,7 @@ def test_on_demand_doc_processing(params_from_base_test_setup, sg_conf_name, num
 @pytest.mark.syncgateway
 @pytest.mark.xattrs
 @pytest.mark.session
+@pytest.mark.oscertify
 @pytest.mark.parametrize('sg_conf_name, x509_cert_auth', [
     ('xattrs/no_import', False)
 ])
@@ -425,7 +424,7 @@ def test_on_demand_import_of_external_updates(params_from_base_test_setup, sg_co
 @pytest.mark.xattrs
 @pytest.mark.session
 @pytest.mark.parametrize('sg_conf_name, x509_cert_auth', [
-    pytest.param('sync_gateway_default_functional_tests', True, marks=pytest.mark.sanity),
+    pytest.param('sync_gateway_default_functional_tests', True, marks=[pytest.mark.sanity, pytest.mark.oscertify]),
     ('sync_gateway_default_functional_tests_no_port', False),
     ("sync_gateway_default_functional_tests_couchbase_protocol_withport_11210", False)
 ])
@@ -583,9 +582,9 @@ def test_offline_processing_of_external_updates(params_from_base_test_setup, sg_
 @pytest.mark.xattrs
 @pytest.mark.session
 @pytest.mark.parametrize('sg_conf_name', [
-    'sync_gateway_default_functional_tests',
-    'sync_gateway_default_functional_tests_no_port',
-    "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210"
+    ('sync_gateway_default_functional_tests'),
+    ('sync_gateway_default_functional_tests_no_port'),
+    pytest.param("sync_gateway_default_functional_tests_couchbase_protocol_withport_11210", marks=pytest.mark.oscertify)
 ])
 def test_large_initial_import(params_from_base_test_setup, sg_conf_name):
     """ Regression test for https://github.com/couchbase/sync_gateway/issues/2537
@@ -692,12 +691,11 @@ def test_large_initial_import(params_from_base_test_setup, sg_conf_name):
 
 @pytest.mark.syncgateway
 @pytest.mark.xattrs
-@pytest.mark.changes
 @pytest.mark.session
 @pytest.mark.parametrize('sg_conf_name, use_multiple_channels, x509_cert_auth', [
     ('sync_gateway_default_functional_tests', False, True),
     ('sync_gateway_default_functional_tests', True, False),
-    ('sync_gateway_default_functional_tests_no_port', False, True),
+    pytest.param('sync_gateway_default_functional_tests_no_port', False, True, marks=pytest.mark.oscertify),
     ('sync_gateway_default_functional_tests_no_port', True, False)
 ])
 def test_purge(params_from_base_test_setup, sg_conf_name, use_multiple_channels, x509_cert_auth):
@@ -917,12 +915,11 @@ def test_purge(params_from_base_test_setup, sg_conf_name, use_multiple_channels,
 
 @pytest.mark.syncgateway
 @pytest.mark.xattrs
-@pytest.mark.changes
 @pytest.mark.session
 @pytest.mark.parametrize('sg_conf_name', [
-    'sync_gateway_default_functional_tests',
-    'sync_gateway_default_functional_tests_no_port',
-    'sync_gateway_default_functional_tests_couchbase_protocol_withport_11210'
+    pytest.param('sync_gateway_default_functional_tests', marks=pytest.mark.oscertify),
+    ('sync_gateway_default_functional_tests_no_port'),
+    ('sync_gateway_default_functional_tests_couchbase_protocol_withport_11210')
 ])
 def test_sdk_does_not_see_sync_meta(params_from_base_test_setup, sg_conf_name):
     """
@@ -1040,12 +1037,11 @@ def test_sdk_does_not_see_sync_meta(params_from_base_test_setup, sg_conf_name):
 
 @pytest.mark.syncgateway
 @pytest.mark.xattrs
-@pytest.mark.changes
 @pytest.mark.session
 @pytest.mark.parametrize('sg_conf_name', [
-    'sync_gateway_default_functional_tests',
-    'sync_gateway_default_functional_tests_no_port',
-    'sync_gateway_default_functional_tests_couchbase_protocol_withport_11210'
+    ('sync_gateway_default_functional_tests'),
+    pytest.param('sync_gateway_default_functional_tests_no_port', marks=pytest.mark.oscertify),
+    ('sync_gateway_default_functional_tests_couchbase_protocol_withport_11210')
 ])
 def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
     """
@@ -1268,7 +1264,6 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
 
 @pytest.mark.syncgateway
 @pytest.mark.xattrs
-@pytest.mark.changes
 @pytest.mark.session
 @pytest.mark.parametrize(
     'sg_conf_name, number_docs_per_client, number_updates_per_doc_per_client',
@@ -1276,7 +1271,7 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
         ('sync_gateway_default_functional_tests', 10, 10),
         ('sync_gateway_default_functional_tests', 100, 10),
         ('sync_gateway_default_functional_tests_no_port', 100, 10),
-        ('sync_gateway_default_functional_tests', 10, 100),
+        pytest.param('sync_gateway_default_functional_tests', 10, 100, marks=pytest.mark.oscertify),
         ('sync_gateway_default_functional_tests_no_port', 10, 100),
         ('sync_gateway_default_functional_tests', 1, 1000)
     ]
@@ -1530,7 +1525,6 @@ def test_sg_sdk_interop_shared_docs(params_from_base_test_setup,
 
 @pytest.mark.syncgateway
 @pytest.mark.xattrs
-@pytest.mark.changes
 @pytest.mark.session
 @pytest.mark.parametrize(
     'sg_conf_name, number_docs_per_client, number_updates_per_doc_per_client',
@@ -1538,7 +1532,7 @@ def test_sg_sdk_interop_shared_docs(params_from_base_test_setup,
         ('sync_gateway_default_functional_tests', 10, 10),
         ('sync_gateway_default_functional_tests', 100, 10),
         ('sync_gateway_default_functional_tests_no_port', 100, 10),
-        ('sync_gateway_default_functional_tests_couchbase_protocol_withport_11210', 100, 10),
+        pytest.param('sync_gateway_default_functional_tests_couchbase_protocol_withport_11210', 100, 10, marks=pytest.mark.oscertify),
         ('sync_gateway_default_functional_tests', 10, 100),
         ('sync_gateway_default_functional_tests_no_port', 10, 100),
         ('sync_gateway_default_functional_tests', 1, 1000)
@@ -2188,14 +2182,13 @@ def verify_doc_ids_in_sdk_get_multi(response, expected_number_docs, expected_ids
 
 @pytest.mark.syncgateway
 @pytest.mark.xattrs
-@pytest.mark.changes
 @pytest.mark.session
 @pytest.mark.parametrize(
     'sg_conf_name, number_docs_per_client, number_updates_per_doc_per_client',
     [
         ('sync_gateway_default_functional_tests', 10, 10),
         ('sync_gateway_default_functional_tests', 100, 10),
-        ('sync_gateway_default_functional_tests_no_port', 100, 10),
+        pytest.param('sync_gateway_default_functional_tests_no_port', 100, 10, marks=pytest.mark.oscertify),
         ('sync_gateway_default_functional_tests_couchbase_protocol_withport_11210', 100, 10),
         ('sync_gateway_default_functional_tests_couchbase_protocol_withport_11210', 100, 10),
         ('sync_gateway_default_functional_tests', 10, 100),
@@ -2421,6 +2414,7 @@ def test_sg_sdk_interop_shared_updates_from_sg(params_from_base_test_setup,
 
 @pytest.mark.syncgateway
 @pytest.mark.xattrs
+@pytest.mark.oscertify
 @pytest.mark.parametrize('sg_conf_name', [
     'sync_gateway_default_functional_tests'
 ])
@@ -2555,8 +2549,8 @@ def test_purge_and_view_compaction(params_from_base_test_setup, sg_conf_name):
 
 @pytest.mark.syncgateway
 @pytest.mark.xattrs
-@pytest.mark.changes
 @pytest.mark.session
+@pytest.mark.oscertify
 @pytest.mark.parametrize(
     'sg_conf_name, number_docs_per_client, number_updates_per_doc_per_client',
     [
