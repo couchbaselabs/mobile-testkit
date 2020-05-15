@@ -2,7 +2,7 @@ import time
 import json
 import requests
 import re
-from requests.exceptions import ConnectionError, HTTPError
+from requests.exceptions import ConnectionError, HTTPError, ChunkedEncodingError
 from requests import Session
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 from libraries.provision.ansible_runner import AnsibleRunner
@@ -293,6 +293,8 @@ class CouchbaseServer:
             except ConnectionError as e:
                 log_info(str(e))
                 log_info("RBAC user does not exist, Catching connection errors here")
+            except ChunkedEncodingError as che:
+                log_info(str(che))
             count += 1
 
     def _get_mem_total_lowest(self, server_info):
