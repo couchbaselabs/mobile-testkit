@@ -56,7 +56,6 @@ def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_conf
         persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', False)
 
     # Add load balancer prop and check if load balancer IP is available
-    print "sgl_lb after while provisioning cluster is ", sg_lb
     if sg_lb:
         persist_cluster_config_environment_prop(cluster_config, 'sg_lb_enabled', True)
         log_info("Running tests with load balancer enabled: {}".format(get_load_balancer_ip(cluster_config)))
@@ -134,6 +133,7 @@ def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_conf
     cluster_topology = cluster_keywords.get_cluster_topology(cluster_config)
     server_url = cluster_topology["couchbase_servers"][0]
     cb_server = CouchbaseServer(server_url)
+    print("server_url --sri ", server_url)
     server_baseurl, server_package_name = couchbase_server_config.get_baseurl_package(cb_server, cbs_platform, cbs_ce)
 
     log_info(">>> Server package: {0}/{1}".format(server_baseurl, server_package_name))
