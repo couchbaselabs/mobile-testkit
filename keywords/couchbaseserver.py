@@ -275,18 +275,25 @@ class CouchbaseServer:
         rbac_url = "{}/settings/rbac/users/local/{}".format(self.url, bucketname)
 
         resp = None
-        try:
-            resp = self._session.delete(rbac_url, data=data_user_params, auth=('Administrator', 'password'))
-            log_info("rbac: {}; data user params: {}".format(rbac_url, data_user_params))
-            log_r(resp)
-            resp.raise_for_status()
-        except HTTPError as h:
-            log_info("resp code: {}; error: {}".format(resp, h))
-            if '404 Client Error: Object Not Found for url' in str(h):
-                log_info("RBAC user does not exist, no need to delete RBAC bucket user {}".format(bucketname))
-        except ConnectionError as e:
-            log_info(str(e))
-            log_info("RBAC user does not exist, Catching connection errors here")
+        count = 0
+        max_count = 0
+        server_version = get_server_version(self.host, self.cbs_ssl)
+        if server_version < "7.0.0":
+            max_count = 3
+        while count < max_count:
+            try:
+                resp = self._session.delete(rbac_url, data=data_user_params, auth=('Administrator', 'password'))
+                log_info("rbac: {}; data user params: {}".format(rbac_url, data_user_params))
+                log_r(resp)
+                resp.raise_for_status()
+            except HTTPError as h:
+                log_info("resp code: {}; error: {}".format(resp, h))
+                if '404 Client Error: Object Not Found for url' in str(h):
+                    log_info("RBAC user does not exist, no need to delete RBAC bucket user {}".format(bucketname))
+            except ConnectionError as e:
+                log_info(str(e))
+                log_info("RBAC user does not exist, Catching connection errors here")
+            count += 1
 
     def _get_mem_total_lowest(self, server_info):
         # Workaround for https://github.com/couchbaselabs/mobile-testkit/issues/709
