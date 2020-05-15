@@ -5,13 +5,13 @@
 # 3. Installs all pip packages required by this repo
 # 4. Adds custom library paths to your PYTHONPATH
 
-py37version=$(python3.7 -c 'import sys; print("{}.{}.{}".format(sys.version_info.major, sys.version_info.minor, sys.version_info.micro))')
+# py37version=$(python3.7 -c 'import sys; print("{}.{}.{}".format(sys.version_info.major, sys.version_info.minor, sys.version_info.micro))')
 py3version=$(python3 -c 'import sys; print("{}.{}.{}".format(sys.version_info.major, sys.version_info.minor, sys.version_info.micro))')
 py2version=$(python -c 'import sys; print("{}.{}.{}".format(sys.version_info.major, sys.version_info.minor, sys.version_info.micro))')
 
-if [[ $py37version == 3.7.* ]]; then
-    printf "Using Python3 version: %s\n" $py3version
-    PYTHON=python3.7
+if [[ $py3version == 3.7.* ]]; then
+    printf "Using Python3 version: %s\n" $py37version
+    PYTHON=python3
     PIP=pip3
 elif [[ $py3version == 3.6.* ]]; then
     printf "Using Python3 version: %s\n" $py3version
