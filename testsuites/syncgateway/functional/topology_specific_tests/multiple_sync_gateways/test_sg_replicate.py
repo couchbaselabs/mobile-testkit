@@ -16,10 +16,8 @@ from couchbase.bucket import Bucket
 from keywords.MobileRestClient import MobileRestClient
 
 import pytest
-
 import time
 import logging
-
 from keywords.utils import log_info
 from keywords.SyncGateway import sync_gateway_config_path_for_mode, create_sync_gateways
 
@@ -54,6 +52,7 @@ def test_sg_replicate_basic_test(params_from_base_test_setup):
     admin.admin_url = sg1.url
 
     sg1_user, sg2_user = create_sg_users(sg1, sg2, DB1, DB2)
+
 
     if sync_gateway_version >= "2.5.0":
         sg_client = MobileRestClient()
@@ -123,18 +122,42 @@ def test_sg_replicate_basic_test(params_from_base_test_setup):
     # Verify that the doc added to sg2 made it to sg1
     assert_has_doc(sg1_user, doc_id_sg2)
 
-    time.sleep(240)
+    # time.sleep(60)
     if sync_gateway_version >= "2.5.0":
-        expvars = sg_client.get_expvars(sg2.admin.admin_url)
-        assert process_memory_resident < expvars["syncgateway"]["global"]["resource_utilization"]["process_memory_resident"], "process_memory_resident did not get incremented"
-        assert expvars["syncgateway"]["global"]["resource_utilization"]["process_cpu_percent_utilization"] > 0, "process_cpu_percent_utilization did not get incremented"
-        assert system_memory_total < expvars["syncgateway"]["global"]["resource_utilization"]["system_memory_total"], "system_memory_total did not get incremented"
-        assert goroutines_high_watermark < expvars["syncgateway"]["global"]["resource_utilization"]["goroutines_high_watermark"], "goroutines_high_watermark did not get incremented"
-        assert chan_cache_hits < expvars["syncgateway"]["per_db"][DB2]["cache"]["chan_cache_hits"], "chan_cache_hits did not get incremented"
-        assert chan_cache_active_revs < expvars["syncgateway"]["per_db"][DB2]["cache"]["chan_cache_active_revs"], "chan_cache_active_revs did not get incremented"
-        assert chan_cache_num_channels < expvars["syncgateway"]["per_db"][DB2]["cache"]["chan_cache_num_channels"], "chan_cache_num_channels did not get incremented"
-        assert chan_cache_max_entries < expvars["syncgateway"]["per_db"][DB2]["cache"]["chan_cache_max_entries"], "chan_cache_max_entries did not get incremented"
-        assert expvars["syncgateway"]["per_db"][DB2]["cbl_replication_push"]["write_processing_time"] > 0, "write_processing_time did not get incremented"
+        t = 60
+        times = 0
+        time.sleep(t)
+        while times < 3:
+            try:
+                expvars = sg_client.get_expvars(sg2.admin.admin_url)
+                assert process_memory_resident < expvars["syncgateway"]["global"]["resource_utilization"][
+                    "process_memory_resident"], "process_memory_resident did not get incremented"
+                assert expvars["syncgateway"]["global"]["resource_utilization"][
+                           "process_cpu_percent_utilization"] > 0, "process_cpu_percent_utilization did not get incremented"
+                assert system_memory_total < expvars["syncgateway"]["global"]["resource_utilization"][
+                    "system_memory_total"], "system_memory_total did not get incremented"
+                assert goroutines_high_watermark < expvars["syncgateway"]["global"]["resource_utilization"][
+                    "goroutines_high_watermark"], "goroutines_high_watermark did not get incremented"
+                assert chan_cache_hits < expvars["syncgateway"]["per_db"][DB2]["cache"][
+                    "chan_cache_hits"], "chan_cache_hits did not get incremented"
+                assert chan_cache_active_revs < expvars["syncgateway"]["per_db"][DB2]["cache"][
+                    "chan_cache_active_revs"], "chan_cache_active_revs did not get incremented"
+                assert chan_cache_num_channels < expvars["syncgateway"]["per_db"][DB2]["cache"][
+                    "chan_cache_num_channels"], "chan_cache_num_channels did not get incremented"
+                assert chan_cache_max_entries < expvars["syncgateway"]["per_db"][DB2]["cache"][
+                    "chan_cache_max_entries"], "chan_cache_max_entries did not get incremented"
+                assert expvars["syncgateway"]["per_db"][DB2]["cbl_replication_push"][
+                           "write_processing_time"] > 0, "write_processing_time did not get incremented"
+                assert system_memory_total < expvars["syncgateway"]["global"]["resource_utilization"][
+                    "system_memory_total"], "system_memory_total did not get incremented"
+                print(expvars["syncgateway"]["global"]["resource_utilization"]["system_memory_total"])
+                break
+            except AssertionError as error:
+                times = times + 1
+                log_info(times)
+                if times == 3:
+                    raise error
+                time.sleep(t*times)
 
 
 @pytest.mark.topospecific
@@ -270,40 +293,40 @@ def test_sg_replicate_continuous_replication(params_from_base_test_setup):
     assert_does_not_have_doc(sg2_user, doc_id_3)
 
 
-# @pytest.mark.sanity
-# @pytest.mark.syncgateway
-# @pytest.mark.sgreplicate
-# @pytest.mark.usefixtures("setup_2sg_1cbs_suite")
-# def test_sg_replicate_delete_db_replication_in_progress(setup_2sg_1cbs_test):
-#
-#     cluster_config = setup_2sg_1cbs_test["cluster_config"]
-#     log_info("Running 'test_sg_replicate_delete_db_replication_in_progress'")
-#     log_info("Using cluster_config: {}".format(cluster_config))
-#
-#     sg1, sg2 = create_sync_gateways(
-#         cluster_config=cluster_config,
-#         sg_config_path=DEFAULT_CONFIG_PATH
-#     )
-#
-#     # Kick off continuous replication
-#     sg1.start_push_replication(
-#         sg2.admin.admin_url,
-#         DB1,
-#         DB2,
-#         continuous=True,
-#         use_remote_source=True,
-#         use_admin_url=True
-#     )
-#
-#     # Wait until active_tasks is non empty
-#     wait_until_active_tasks_non_empty(sg1)
-#
-#     # Delete the database
-#     sg1.admin.delete_db(DB1)
-#     sg2.admin.delete_db(DB2)
-#
-#     # Query active tasks and make sure the replication is gone
-#     wait_until_active_tasks_empty(sg1)
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.sgreplicate
+@pytest.mark.usefixtures("setup_2sg_1cbs_suite")
+def test_sg_replicate_delete_db_replication_in_progress(setup_2sg_1cbs_test):
+
+    cluster_config = setup_2sg_1cbs_test["cluster_config"]
+    log_info("Running 'test_sg_replicate_delete_db_replication_in_progress'")
+    log_info("Using cluster_config: {}".format(cluster_config))
+
+    sg1, sg2 = create_sync_gateways(
+        cluster_config=cluster_config,
+        sg_config_path=DEFAULT_CONFIG_PATH
+    )
+
+    # Kick off continuous replication
+    sg1.start_push_replication(
+        sg2.admin.admin_url,
+        DB1,
+        DB2,
+        continuous=True,
+        use_remote_source=True,
+        use_admin_url=True
+    )
+
+    # Wait until active_tasks is non empty
+    wait_until_active_tasks_non_empty(sg1)
+
+    # Delete the database
+    sg1.admin.delete_db(DB1)
+    sg2.admin.delete_db(DB2)
+
+    # Query active tasks and make sure the replication is gone
+    wait_until_active_tasks_empty(sg1)
 
 
 @pytest.mark.topospecific
