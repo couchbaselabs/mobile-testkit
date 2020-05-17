@@ -1,5 +1,3 @@
-import time
-
 import pytest
 
 import concurrent.futures
@@ -116,8 +114,6 @@ def test_dcp_reshard_sync_gateway_comes_up(params_from_base_test_setup, sg_conf)
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
 
         futures = dict()
-
-
         log_info(">>> Adding Traun docs")  # ABC, NBC, CBS
         futures[executor.submit(traun.add_docs, 6000)] = "traun"
 
@@ -196,8 +192,6 @@ def test_dcp_reshard_single_sg_accel_goes_down_and_up(params_from_base_test_setu
         for future in concurrent.futures.as_completed(futures):
             tag = futures[future]
             log_info("{} Completed:".format(tag))
-
-    # TODO better way to do this
 
     verify_changes(traun, expected_num_docs=10000, expected_num_revisions=0, expected_docs=traun.cache)
     verify_changes(seth, expected_num_docs=10000, expected_num_revisions=0, expected_docs=seth.cache)

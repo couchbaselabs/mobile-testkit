@@ -53,7 +53,6 @@ def test_sg_replicate_basic_test(params_from_base_test_setup):
 
     sg1_user, sg2_user = create_sg_users(sg1, sg2, DB1, DB2)
 
-
     if sync_gateway_version >= "2.5.0":
         sg_client = MobileRestClient()
         expvars = sg_client.get_expvars(sg2.admin.admin_url)
@@ -130,34 +129,31 @@ def test_sg_replicate_basic_test(params_from_base_test_setup):
         while times < 3:
             try:
                 expvars = sg_client.get_expvars(sg2.admin.admin_url)
-                assert process_memory_resident < expvars["syncgateway"]["global"]["resource_utilization"][
-                    "process_memory_resident"], "process_memory_resident did not get incremented"
-                assert expvars["syncgateway"]["global"]["resource_utilization"][
-                           "process_cpu_percent_utilization"] > 0, "process_cpu_percent_utilization did not get incremented"
-                assert system_memory_total < expvars["syncgateway"]["global"]["resource_utilization"][
-                    "system_memory_total"], "system_memory_total did not get incremented"
-                assert goroutines_high_watermark < expvars["syncgateway"]["global"]["resource_utilization"][
-                    "goroutines_high_watermark"], "goroutines_high_watermark did not get incremented"
-                assert chan_cache_hits < expvars["syncgateway"]["per_db"][DB2]["cache"][
-                    "chan_cache_hits"], "chan_cache_hits did not get incremented"
-                assert chan_cache_active_revs < expvars["syncgateway"]["per_db"][DB2]["cache"][
-                    "chan_cache_active_revs"], "chan_cache_active_revs did not get incremented"
-                assert chan_cache_num_channels < expvars["syncgateway"]["per_db"][DB2]["cache"][
-                    "chan_cache_num_channels"], "chan_cache_num_channels did not get incremented"
-                assert chan_cache_max_entries < expvars["syncgateway"]["per_db"][DB2]["cache"][
-                    "chan_cache_max_entries"], "chan_cache_max_entries did not get incremented"
-                assert expvars["syncgateway"]["per_db"][DB2]["cbl_replication_push"][
-                           "write_processing_time"] > 0, "write_processing_time did not get incremented"
-                assert system_memory_total < expvars["syncgateway"]["global"]["resource_utilization"][
-                    "system_memory_total"], "system_memory_total did not get incremented"
-                print(expvars["syncgateway"]["global"]["resource_utilization"]["system_memory_total"])
+                assert process_memory_resident < expvars["syncgateway"]["global"]["resource_utilization"]["process_memory_resident"], \
+                    "process_memory_resident did not get incremented"
+                assert expvars["syncgateway"]["global"]["resource_utilization"]["process_cpu_percent_utilization"] > 0, \
+                    "process_cpu_percent_utilization did not get incremented"
+                assert system_memory_total < expvars["syncgateway"]["global"]["resource_utilization"]["system_memory_total"], \
+                    "system_memory_total did not get incremented"
+                assert goroutines_high_watermark < expvars["syncgateway"]["global"]["resource_utilization"]["goroutines_high_watermark"], \
+                    "goroutines_high_watermark did not get incremented"
+                assert chan_cache_hits < expvars["syncgateway"]["per_db"][DB2]["cache"]["chan_cache_hits"], \
+                    "chan_cache_hits did not get incremented"
+                assert chan_cache_active_revs < expvars["syncgateway"]["per_db"][DB2]["cache"]["chan_cache_active_revs"], \
+                    "chan_cache_active_revs did not get incremented"
+                assert chan_cache_num_channels < expvars["syncgateway"]["per_db"][DB2]["cache"]["chan_cache_num_channels"], \
+                    "chan_cache_num_channels did not get incremented"
+                assert chan_cache_max_entries < expvars["syncgateway"]["per_db"][DB2]["cache"]["chan_cache_max_entries"], \
+                    "chan_cache_max_entries did not get incremented"
+                assert expvars["syncgateway"]["per_db"][DB2]["cbl_replication_push"]["write_processing_time"] > 0, \
+                    "write_processing_time did not get incremented"
                 break
-            except AssertionError as error:
+            except Exception as error:
                 times = times + 1
                 log_info(times)
                 if times == 3:
                     raise error
-                time.sleep(t*times)
+                time.sleep(t * times)
 
 
 @pytest.mark.topospecific
