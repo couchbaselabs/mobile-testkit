@@ -17,10 +17,9 @@ from keywords.utils import log_r
 @pytest.mark.syncgateway
 @pytest.mark.basicauth
 @pytest.mark.channel
-@pytest.mark.changes
 @pytest.mark.parametrize("sg_conf_name, x509_cert_auth", [
     ("sync_gateway_default_functional_tests", True),
-    pytest.param("sync_gateway_default_functional_tests_no_port", False, marks=pytest.mark.sanity),
+    pytest.param("sync_gateway_default_functional_tests_no_port", False, marks=[pytest.mark.sanity, pytest.mark.oscertify]),
     ("sync_gateway_default_functional_tests_couchbase_protocol_withport_11210", False)
 ])
 def test_multiple_users_multiple_channels(params_from_base_test_setup, sg_conf_name, x509_cert_auth):
@@ -96,11 +95,10 @@ def test_multiple_users_multiple_channels(params_from_base_test_setup, sg_conf_n
 @pytest.mark.basicauth
 @pytest.mark.channel
 @pytest.mark.bulkops
-@pytest.mark.changes
 @pytest.mark.parametrize("sg_conf_name", [
-    "sync_gateway_default_functional_tests",
-    "sync_gateway_default_functional_tests_no_port",
-    "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210"
+    ("sync_gateway_default_functional_tests"),
+    ("sync_gateway_default_functional_tests_no_port"),
+    pytest.param("sync_gateway_default_functional_tests_couchbase_protocol_withport_11210", marks=pytest.mark.oscertify)
 ])
 def test_muliple_users_single_channel(params_from_base_test_setup, sg_conf_name):
 
@@ -164,11 +162,10 @@ def test_muliple_users_single_channel(params_from_base_test_setup, sg_conf_name)
 @pytest.mark.basicauth
 @pytest.mark.channel
 @pytest.mark.bulkops
-@pytest.mark.changes
 @pytest.mark.parametrize("sg_conf_name", [
-    "sync_gateway_default_functional_tests",
-    "sync_gateway_default_functional_tests_no_port",
-    "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210"
+    ("sync_gateway_default_functional_tests"),
+    pytest.param("sync_gateway_default_functional_tests_no_port", marks=pytest.mark.oscertify),
+    ("sync_gateway_default_functional_tests_couchbase_protocol_withport_11210")
 ])
 def test_single_user_multiple_channels(params_from_base_test_setup, sg_conf_name):
 
@@ -224,11 +221,10 @@ def test_single_user_multiple_channels(params_from_base_test_setup, sg_conf_name
 @pytest.mark.syncgateway
 @pytest.mark.basicauth
 @pytest.mark.channel
-@pytest.mark.changes
 @pytest.mark.parametrize("sg_conf_name", [
-    "sync_gateway_default_functional_tests",
-    "sync_gateway_default_functional_tests_no_port",
-    "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210"
+    pytest.param("sync_gateway_default_functional_tests", marks=pytest.mark.oscertify),
+    ("sync_gateway_default_functional_tests_no_port"),
+    ("sync_gateway_default_functional_tests_couchbase_protocol_withport_11210")
 ])
 def test_single_user_single_channel(params_from_base_test_setup, sg_conf_name):
 
@@ -285,6 +281,8 @@ def test_single_user_single_channel(params_from_base_test_setup, sg_conf_name):
 
 
 @pytest.mark.syncgateway
+@pytest.mark.channel
+@pytest.mark.oscertify
 def test_create_invalid_email(params_from_base_test_setup):
     """
     @summary

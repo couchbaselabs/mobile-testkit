@@ -18,6 +18,7 @@ from libraries.testkit.cluster import Cluster
 @pytest.mark.syncgateway
 @pytest.mark.xattrs
 @pytest.mark.session
+@pytest.mark.oscertify
 @pytest.mark.parametrize('sg_conf_name', [
     'xattrs/mobile_opt_in'
 ])
