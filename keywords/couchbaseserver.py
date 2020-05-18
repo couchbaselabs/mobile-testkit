@@ -810,7 +810,7 @@ class CouchbaseServer:
             else:
                 return "couchbase-server-{}-{}-{}-{}.x86_64.rpm".format(edition, version, build_number, cbs_platform)
 
-    def resolve_cb_nas_url(self, version, build_number, cbs_platform="centos8", cbs_ce=False):
+    def resolve_cb_nas_url(self, version, build_number, cbs_platform="centos7", cbs_ce=False):
         """
         Resolve a download URL for couchbase server on the internal VPN download site
         Given:
@@ -844,7 +844,7 @@ class CouchbaseServer:
 
         return base_url, package_name
 
-    def resolve_cb_mobile_url(self, version, cbs_platform="centos8", cbs_ce=False):
+    def resolve_cb_mobile_url(self, version, cbs_platform="centos7", cbs_ce=False):
         """
         Resolve a download URL for the corresponding package to given
         version on http://cbmobile-packages.s3.amazonaws.com (an S3 bucket

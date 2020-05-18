@@ -25,10 +25,10 @@
   - include: tasks/stop-sync-gateway.yml
 
   - include: tasks/deploy-sync-gateway-config.yml
-    when: ansible_distribution == "CentOS" or ansible_distribution == "Ubuntu"
+    when: ansible_distribution == "CentOS" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
 
   - include: tasks/start-sync-gateway.yml
-    when: ansible_distribution == "CentOS" or ansible_distribution == "Ubuntu"
+    when: ansible_distribution == "CentOS" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
 
   - include: tasks/deploy-sync-gateway-config-macos.yml
     when: ansible_distribution == "MacOSX"

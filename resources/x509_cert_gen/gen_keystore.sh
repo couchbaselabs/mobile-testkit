@@ -8,7 +8,7 @@ CHAIN=chain
 CLUSTER=${1:-172.23.123.176}
 USERNAME=${2:-sdkqecertuser}
 SSH_PASSWORD=${3:-couchbase}
-CLUSTER_VERSION=${4:-5.5.0-1979}
+CLUSTER_VERSION=${4:-6.5.0-4959}
 USE_JSON=false
 
 if [[ $CLUSTER_VERSION =~ ^([0-9]+)\.([0-9]+) ]]
