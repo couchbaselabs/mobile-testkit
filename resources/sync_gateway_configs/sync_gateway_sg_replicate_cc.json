@@ -7,9 +7,6 @@
     {{ sslcert }}
     {{ sslkey }}
     {{ logging }}
-    "unsupported":{
-        "stats_log_freq_secs": 10
-    },
     "databases":{
         "db1":{
             {{ autoimport }}

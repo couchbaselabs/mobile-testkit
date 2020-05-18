@@ -153,7 +153,7 @@ def test_sg_replicate_basic_test(params_from_base_test_setup):
                 log_info(times)
                 if times == 3:
                     raise error
-                time.sleep(t * times)
+                time.sleep(t)
 
 
 @pytest.mark.topospecific
