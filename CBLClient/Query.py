@@ -42,6 +42,12 @@ class Query(object):
 
         return self._client.invokeMethod("datasource_database", args)
 
+    def query_select(self, select_result):
+        args = Args()
+        args.setMemoryPointer("select_result", select_result)
+
+        return self._client.invokeMethod("query_select", args)
+
     def query_create(self, select_prop, from_prop, whr_key_prop):
         args = Args()
         args.setString("select_prop", select_prop)
@@ -435,3 +441,20 @@ class Query(object):
 
     def release(self, obj):
         self._client.release(obj)
+
+    def addChangeListener(self, query):
+        args = Args()
+        args.setMemoryPointer("query", query)
+        return self._client.invokeMethod("query_addChangeListener", args)
+
+    def removeChangeListener(self, query, change_listener):
+        args = Args()
+        args.setMemoryPointer("query", query)
+        args.setMemoryPointer("changeListener", change_listener)
+        return self._client.invokeMethod("query_removeChangeListener", args)
+
+    def query_get_live_query_delay_time(self, database):
+        args = Args()
+        args.setMemoryPointer("database", database)
+
+        return self._client.invokeMethod("query_getLiveQueryResponseTime", args)
