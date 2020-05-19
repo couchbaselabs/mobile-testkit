@@ -1077,13 +1077,11 @@ def CBL_offline_test(params_from_base_test_setup, sg_conf_name, num_of_docs):
         raise Exception("{0} failed".format(command))
 
     # 4. Do updates on CBL
-    time.sleep(180)
     db.update_bulk_docs(cbl_db, number_of_updates=number_of_updates)
     replicator.wait_until_replicator_idle(repl)
     replicator.stop(repl)
 
     # 6. CBL comes online( unblock ports)
-    time.sleep(180)
     command = "mode=\"Wi-Fi\" osascript run_scripts/network_link_conditioner.applescript"
     return_val = os.system(command)
     if return_val != 0:
