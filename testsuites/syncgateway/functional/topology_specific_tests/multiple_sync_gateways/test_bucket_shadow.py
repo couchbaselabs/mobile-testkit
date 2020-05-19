@@ -25,7 +25,8 @@ ShadowCluster = namedtuple(
         'admin',
         'alice_shadower',
         'bob_non_shadower',
-    ])
+    ],
+    verbose=False)
 
 
 def init_shadow_cluster(cluster, config_path_shadower, config_path_non_shadower):
