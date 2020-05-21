@@ -6,12 +6,13 @@ import random
 from keywords.MobileRestClient import MobileRestClient
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords import couchbaseserver
-from keywords.utils import log_info
+from keywords.utils import log_info, random_string, compare_docs
 from CBLClient.Database import Database
 from CBLClient.Replication import Replication
 from CBLClient.Document import Document
 from CBLClient.Authenticator import Authenticator
 from concurrent.futures import ThreadPoolExecutor
+from CBLClient.Blob import Blob
 
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords import document, attachment
@@ -3785,6 +3786,114 @@ def test_replication_behavior_with_channelRole_modification(params_from_base_tes
     assert len(cbl_doc_ids) == num_docs, "new docs which created in sgw after role change got replicated to cbl"
     for id in cbl_doc_ids:
         assert "new_role_doc" not in id, "new doc got replicated to cbl"
+
+
+@pytest.mark.listener
+@pytest.mark.replication
+@pytest.mark.parametrize("blob_data_type", [
+    'byte_array',
+    'stream',
+    'file_url'
+])
+def test_blob_contructor_replication(params_from_base_test_setup, blob_data_type):
+    '''
+    @summary:
+    1. Create docs in CBL
+    2. Do push replication
+    3. update docs in CBL with attachment in specified blob type
+    4. Do push replication after docs update
+    5. Verify blob content replicated successfully
+    '''
+    cbl_db = params_from_base_test_setup["source_db"]
+    db = params_from_base_test_setup["db"]
+    base_url = params_from_base_test_setup["base_url"]
+    sg_blip_url = params_from_base_test_setup["target_url"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_config = params_from_base_test_setup["sg_config"]
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    liteserv_platform = params_from_base_test_setup["liteserv_platform"]
+
+    # Reset cluster to ensure no data in system
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
+
+    sg_db = "db"
+    num_of_docs = 100
+    channels = ["ABC"]
+    username = "autotest"
+    password = "password"
+
+    sg_client = MobileRestClient()
+    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channels)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+
+    # 1. Create docs in CBL
+    db.create_bulk_docs(num_of_docs, "cbl_sync", db=cbl_db, channels=channels)
+
+    # 2. Do push replication
+    replicator = Replication(base_url)
+    authenticator = Authenticator(base_url)
+    replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
+    repl = replicator.configure_and_replicate(source_db=cbl_db,
+                                              target_url=sg_blip_url,
+                                              continuous=True,
+                                              replicator_authenticator=replicator_authenticator,
+                                              replication_type="push")
+    replicator.stop(repl)
+
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
+    # Verify database doc counts
+    cbl_doc_count = db.getCount(cbl_db)
+    assert len(sg_docs) == cbl_doc_count, "Expected number of docs does not exist in sync-gateway after replication"
+
+    # 3. update docs in CBL with attachment in specified blob type
+    blob = Blob(base_url)
+
+    doc_ids = db.getDocIds(cbl_db)
+    cbl_db_docs = db.getDocuments(cbl_db, doc_ids)
+    for doc_id, doc_body in list(cbl_db_docs.items()):
+        doc_body["new_field_1"] = random_string(length=30)
+        doc_body["new_field_2"] = random_string(length=80)
+
+        if liteserv_platform == "android":
+            image_location = "/assets/golden_gate_large.jpg"
+        elif liteserv_platform in ["xamarin-android", "java-macosx", "java-msft", "java-ubuntu", "java-centos",
+                                   "javaws-macosx", "javaws-msft", "javaws-ubuntu", "javaws-centos"]:
+            image_location = "golden_gate_large.jpg"
+        elif liteserv_platform == "ios":
+            image_location = "Files/golden_gate_large.jpg"
+        elif liteserv_platform == "net-msft":
+            db_path = db.getPath(cbl_db).rstrip("\\")
+            app_dir = "\\".join(db_path.split("\\")[:-2])
+            image_location = "{}\\Files\\golden_gate_large.jpg".format(app_dir)
+        else:
+            image_location = "Files/golden_gate_large.jpg"
+
+        if blob_data_type == "byte_array":
+            image_byte_array = blob.createImageByteArray(image_location)
+            blob_value = blob.create("image/jpeg", content=image_byte_array)
+        elif blob_data_type == "stream":
+            image_stream = blob.createImageContent(image_location)
+            blob_value = blob.create("image/jpeg", stream=image_stream)
+        elif blob_data_type == "file_url":
+            image_file_url = blob.createImageFileUrl(image_location)
+            blob_value = blob.create("image/jpeg", file_url=image_file_url)
+
+        doc_body["new_field_blob"] = blob_value
+        db.updateDocument(database=cbl_db, data=doc_body, doc_id=doc_id)
+
+    # 4. Do push replication after docs update
+    repl = replicator.configure_and_replicate(source_db=cbl_db,
+                                              target_url=sg_blip_url,
+                                              continuous=True,
+                                              replicator_authenticator=replicator_authenticator,
+                                              replication_type="push")
+
+    replicator.stop(repl)
+
+    # 5. Verify blob content replicated successfully
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
+    compare_docs(cbl_db, db, sg_docs)
 
 
 def update_and_resetCheckPoint(db, cbl_db, replicator, repl, replication_type, repl_config, num_of_updates):

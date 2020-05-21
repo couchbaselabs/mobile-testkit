@@ -31,7 +31,20 @@ class Blob(object):
     def createImageContent(self, image):
         args = Args()
         args.setString("image", image)
+        # this call will return an InputStream object
         return self._client.invokeMethod("blob_createImageContent", args)
+
+    def createImageByteArray(self, image):
+        args = Args()
+        args.setString("image", image)
+        # this call will return a byte array (byte[])
+        return self._client.invokeMethod("blob_createImageByteArray", args)
+
+    def createImageFileUrl(self, image):
+        args = Args()
+        args.setString("image", image)
+        # this call will return an URL generated from a file path
+        return self._client.invokeMethod("blob_createImageFileUrl", args)
 
     def digest(self, obj):
         args = Args()
