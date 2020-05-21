@@ -52,9 +52,6 @@ def test_peer_to_peer_1to1_valid_values(params_from_base_test_setup, server_setu
     repl = peerToPeer_client.configure(host=server_host, server_db_name=db_name_server, client_database=cbl_db_client, continuous=continuous, replication_type=replicator_type, endPointType=endPointType)
     peerToPeer_client.client_start(repl)
     replicator.wait_until_replicator_idle(repl)
-    # time.sleep(60)
-    # print "replication is done  ....."
-    # time.sleep(20)
     total = replicator.getTotal(repl)
     completed = replicator.getCompleted(repl)
     assert total == completed, "replication from client to server did not completed " + str(total) + " not equal to " + str(completed)

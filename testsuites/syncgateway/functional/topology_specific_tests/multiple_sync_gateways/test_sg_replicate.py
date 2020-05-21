@@ -121,7 +121,6 @@ def test_sg_replicate_basic_test(params_from_base_test_setup):
     # Verify that the doc added to sg2 made it to sg1
     assert_has_doc(sg1_user, doc_id_sg2)
 
-    # time.sleep(60)
     if sync_gateway_version >= "2.5.0":
         t = 60
         times = 0
