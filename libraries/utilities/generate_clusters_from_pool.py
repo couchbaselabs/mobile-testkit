@@ -367,7 +367,7 @@ def write_config(config, pool_file, use_docker, sg_windows, sg_accel_windows, sg
         if sg_platform.lower() == "macos":
             f.write("\n\n[sync_gateways:vars]\n")
             f.write("ansible_connection=local\n")
-            f.write("ansible_become_pass=macOSFakePassword\n")
+            f.write("ansible_become_pass=TasRhs_1708\n")
 
         if sg_windows:
             f.write("\n\n[sync_gateways:vars]\n")
@@ -458,6 +458,8 @@ def generate_clusters_from_pool(pool_file, use_docker=False, sg_windows=False,
         ClusterDef("multiple_sg_accels_di", num_sgs=1, num_acs=3, num_cbs=1, num_lgs=0, num_lbs=0),
         ClusterDef("multiple_sync_gateways_cc", num_sgs=2, num_acs=0, num_cbs=1, num_lgs=0, num_lbs=0),
         ClusterDef("multiple_sync_gateways_di", num_sgs=2, num_acs=1, num_cbs=1, num_lgs=0, num_lbs=0),
+        ClusterDef("three_sync_gateways_cc", num_sgs=3, num_acs=0, num_cbs=1, num_lgs=0, num_lbs=0),
+        ClusterDef("four_sync_gateways_cc", num_sgs=4, num_acs=0, num_cbs=1, num_lgs=0, num_lbs=0),
         ClusterDef("load_balancer_cc", num_sgs=2, num_acs=0, num_cbs=1, num_lgs=0, num_lbs=1),
         ClusterDef("load_balancer_di", num_sgs=2, num_acs=1, num_cbs=1, num_lgs=0, num_lbs=1),
         ClusterDef("1sg", num_sgs=1, num_acs=0, num_cbs=0, num_lgs=0, num_lbs=0),
