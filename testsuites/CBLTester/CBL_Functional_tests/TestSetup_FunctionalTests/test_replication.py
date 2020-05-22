@@ -13,6 +13,7 @@ from CBLClient.Document import Document
 from CBLClient.Authenticator import Authenticator
 from concurrent.futures import ThreadPoolExecutor
 from CBLClient.Blob import Blob
+from CBLClient.Dictionary import Dictionary
 
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords import document, attachment
@@ -3818,7 +3819,7 @@ def test_blob_contructor_replication(params_from_base_test_setup, blob_data_type
     c.reset(sg_config_path=sg_config)
 
     sg_db = "db"
-    num_of_docs = 100
+    num_of_docs = 10
     channels = ["ABC"]
     username = "autotest"
     password = "password"
@@ -3826,6 +3827,7 @@ def test_blob_contructor_replication(params_from_base_test_setup, blob_data_type
     sg_client = MobileRestClient()
     sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channels)
     cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+    session = cookie, session_id
 
     # 1. Create docs in CBL
     db.create_bulk_docs(num_of_docs, "cbl_sync", db=cbl_db, channels=channels)
@@ -3848,12 +3850,14 @@ def test_blob_contructor_replication(params_from_base_test_setup, blob_data_type
 
     # 3. update docs in CBL with attachment in specified blob type
     blob = Blob(base_url)
+    dictionary = Dictionary(base_url)
 
     doc_ids = db.getDocIds(cbl_db)
     cbl_db_docs = db.getDocuments(cbl_db, doc_ids)
     for doc_id, doc_body in list(cbl_db_docs.items()):
-        doc_body["new_field_1"] = random_string(length=30)
-        doc_body["new_field_2"] = random_string(length=80)
+        mutable_dictionary = dictionary.toMutableDictionary(doc_body)
+        dictionary.setString(mutable_dictionary, "new_field_string_1", random_string(length=30))
+        dictionary.setString(mutable_dictionary, "new_field_string_2", random_string(length=80))
 
         if liteserv_platform == "android":
             image_location = "/assets/golden_gate_large.jpg"
@@ -3879,8 +3883,9 @@ def test_blob_contructor_replication(params_from_base_test_setup, blob_data_type
             image_file_url = blob.createImageFileUrl(image_location)
             blob_value = blob.create("image/jpeg", file_url=image_file_url)
 
-        doc_body["new_field_blob"] = blob_value
-        db.updateDocument(database=cbl_db, data=doc_body, doc_id=doc_id)
+        dictionary.setBlob(mutable_dictionary, "new_field_blob", blob_value)
+        doc_body_new = dictionary.toMap(mutable_dictionary)
+        db.updateDocument(database=cbl_db, data=doc_body_new, doc_id=doc_id)
 
     # 4. Do push replication after docs update
     repl = replicator.configure_and_replicate(source_db=cbl_db,
@@ -3892,8 +3897,14 @@ def test_blob_contructor_replication(params_from_base_test_setup, blob_data_type
     replicator.stop(repl)
 
     # 5. Verify blob content replicated successfully
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
-    compare_docs(cbl_db, db, sg_docs)
+    # sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
+    doc_ids = db.getDocIds(cbl_db)
+    cbl_db_docs = db.getDocuments(cbl_db, doc_ids)
+    for doc_id, doc_body in list(cbl_db_docs.items()):
+        sg_data = sg_client.get_doc(url=sg_admin_url, db=sg_db, doc_id=doc_id, auth=session)
+        assert "new_field_string_1" in sg_data, "Updated docs failed to get replicated"
+        assert "new_field_string_2" in sg_data, "Updated docs failed to get replicated"
+        assert "new_field_blob" in sg_data, "Updated docs failed to get replicated"
 
 
 def update_and_resetCheckPoint(db, cbl_db, replicator, repl, replication_type, repl_config, num_of_updates):
