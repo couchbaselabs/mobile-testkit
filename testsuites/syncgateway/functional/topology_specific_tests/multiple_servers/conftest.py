@@ -42,6 +42,7 @@ def params_from_base_suite_setup(request):
     sa_installer_type = request.config.getoption("--sa-installer-type")
     delta_sync_enabled = request.config.getoption("--delta-sync")
     sg_platform = request.config.getoption("--sg-platform")
+    cbs_platform = request.config.getoption("--cbs-platform")
     delta_sync_enabled = request.config.getoption("--delta-sync")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
@@ -67,6 +68,7 @@ def params_from_base_suite_setup(request):
     log_info("sa_installer_type: {}".format(sa_installer_type))
     log_info("delta_sync_enabled: {}".format(delta_sync_enabled))
     log_info("sg_platform: {}".format(sg_platform))
+    log_info("cbs_platform: {}".format(cbs_platform))
     log_info("Delta_sync: {}".format(delta_sync_enabled))
 
     # sg-ce is invalid for di mode
@@ -206,7 +208,7 @@ def params_from_base_suite_setup(request):
 
     # Stop all sync_gateway and sg_accels as test finished
     c = cluster.Cluster(cluster_config)
-    c.stop_sg_and_accel()
+    # c.stop_sg_and_accel()
 
     # Delete png files under resources/data
     clear_resources_pngs()
