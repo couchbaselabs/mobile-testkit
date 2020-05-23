@@ -1018,7 +1018,7 @@ def test_CBL_push_pull_with_sgAccel_down(params_from_base_test_setup, sg_conf_na
 @pytest.mark.parametrize("sg_conf_name, num_of_docs", [
     ('listener_tests/listener_tests_no_conflicts', 10)
 ])
-def CBL_offline_test(params_from_base_test_setup, sg_conf_name, num_of_docs):
+def test_CBL_offline_test(params_from_base_test_setup, sg_conf_name, num_of_docs):
     """
         @summary:
         This test is meant to be run locally only, not on jenkins.
