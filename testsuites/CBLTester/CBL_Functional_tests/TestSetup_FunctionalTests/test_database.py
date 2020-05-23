@@ -370,7 +370,6 @@ def test_copy_prebuilt_database(params_from_base_test_setup, encrypted):
     db.deleteDB(cbl_db1)
 
 
-
 @pytest.mark.listener
 @pytest.mark.hydrogen
 def test_db_close_on_active_replicators(params_from_base_test_setup):
@@ -404,7 +403,7 @@ def test_db_close_on_active_replicators(params_from_base_test_setup):
     db_config = db.configure()
     cbl_db = db.create(db_name, db_config)
 
-    num_of_docs = 1000
+    num_of_docs = 100
     channel1 = ["Replication-1"]
     channel2 = ["Replication-2"]
     channel3 = ["Replication-3"]
@@ -436,6 +435,7 @@ def test_db_close_on_active_replicators(params_from_base_test_setup):
     replicator_authenticator1 = authenticator.authentication(session_id1, cookie1, authentication_type="session")
     repl_config1 = replicator.configure(source_db=cbl_db, replicator_authenticator=replicator_authenticator1, target_url=sg_blip_url,
                                         replication_type="push_pull", continuous=True, channels=channel1)
+ 
     replicator_authenticator2 = authenticator.authentication(session_id2, cookie2, authentication_type="session")
     repl_config2 = replicator.configure(source_db=cbl_db, replicator_authenticator=replicator_authenticator2, target_url=sg_blip_url,
                                         replication_type="push", continuous=True, channels=channel2)
@@ -446,10 +446,8 @@ def test_db_close_on_active_replicators(params_from_base_test_setup):
     # start all replicators
     repl1 = replicator.create(repl_config1)
     replicator.start(repl1)
-
     repl2 = replicator.create(repl_config2)
     replicator.start(repl2)
-
     repl3 = replicator.create(repl_config3)
     replicator.start(repl3)
 
@@ -457,8 +455,20 @@ def test_db_close_on_active_replicators(params_from_base_test_setup):
     log_info(replicator.getActivitylevel(repl2))
     log_info(replicator.getActivitylevel(repl3))
 
+    # TODO: need to clarify with dev about close db on replicator state
+    # after clarification, this code suppose to be removed
+    replicator.wait_until_replicator_idle(repl1)
+    replicator.wait_until_replicator_idle(repl2)
+    replicator.wait_until_replicator_idle(repl3)
+
+    log_info(replicator.getActivitylevel(repl1))
+    log_info(replicator.getActivitylevel(repl2))
+    log_info(replicator.getActivitylevel(repl3))
+
     try:
+        log_info("closing database")
         db.close(cbl_db)
+        log_info("database closed successfully")
         assert True
     except KeyError:
         assert False, "closing database with active replicators are failed"
@@ -466,7 +476,7 @@ def test_db_close_on_active_replicators(params_from_base_test_setup):
 
 @pytest.mark.listener
 @pytest.mark.hydrogen
-def test_db_close_on_replication_live_query_alive(params_from_base_test_setup):
+def test_db_close_on_active_replicator_and_live_query(params_from_base_test_setup):
     """
         @summary:
         1. create a db on cbl, have a sgw available
@@ -497,7 +507,7 @@ def test_db_close_on_replication_live_query_alive(params_from_base_test_setup):
     db_config = db.configure()
     cbl_db = db.create(db_name, db_config)
 
-    num_of_docs = 1000
+    num_of_docs = 100
     channel1 = ["Replication-1"]
     channel2 = ["Replication-2"]
 
@@ -536,16 +546,26 @@ def test_db_close_on_replication_live_query_alive(params_from_base_test_setup):
 
     # 3. register a live query to the cbl db
     qy = Query(base_url)
-    # create properties
-    select_result = qy.query_select_result_all_create()
-    query = qy.query_select(select_result)
+    query = qy.query_select_all(cbl_db)
     query_listener = qy.addChangeListener(query)
 
     log_info(replicator.getActivitylevel(repl1))
     log_info(replicator.getActivitylevel(repl2))
 
+    # TODO: need to clarify with dev about close db on replicator state
+    # after clarification, this code suppose to be removed
+    replicator.wait_until_replicator_idle(repl1)
+    replicator.wait_until_replicator_idle(repl2)
+
+    log_info(replicator.getActivitylevel(repl1))
+    log_info(replicator.getActivitylevel(repl2))
+
+    # 4. close the database
+    # 5. verify the database is closed successfully
     try:
+        log_info("closing database")
         db.close(cbl_db)
+        log_info("database is closed successfully")
         assert True
     except KeyError:
         qy.removeChangeListener(query_listener)
@@ -585,7 +605,7 @@ def test_db_delete_on_active_replicators(params_from_base_test_setup):
     db_config = db.configure()
     cbl_db = db.create(db_name, db_config)
 
-    num_of_docs = 1000
+    num_of_docs = 100
     channel1 = ["Replication-1"]
     channel2 = ["Replication-2"]
     channel3 = ["Replication-3"]
@@ -627,10 +647,8 @@ def test_db_delete_on_active_replicators(params_from_base_test_setup):
     # start all replicators
     repl1 = replicator.create(repl_config1)
     replicator.start(repl1)
-
     repl2 = replicator.create(repl_config2)
     replicator.start(repl2)
-
     repl3 = replicator.create(repl_config3)
     replicator.start(repl3)
 
@@ -638,8 +656,20 @@ def test_db_delete_on_active_replicators(params_from_base_test_setup):
     log_info(replicator.getActivitylevel(repl2))
     log_info(replicator.getActivitylevel(repl3))
 
+    # TODO: need to clarify with dev about close db on replicator state
+    # after clarification, this code suppose to be removed
+    replicator.wait_until_replicator_idle(repl1)
+    replicator.wait_until_replicator_idle(repl2)
+    replicator.wait_until_replicator_idle(repl3)
+
+    log_info(replicator.getActivitylevel(repl1))
+    log_info(replicator.getActivitylevel(repl2))
+    log_info(replicator.getActivitylevel(repl3))
+
     try:
+        log_info("deleting database")
         db.deleteDB(cbl_db)
+        log_info("database deleted successfully")
         assert True
     except KeyError:
         assert False, "deleting database with active replicators are failed"
@@ -647,7 +677,7 @@ def test_db_delete_on_active_replicators(params_from_base_test_setup):
 
 @pytest.mark.listener
 @pytest.mark.hydrogen
-def test_db_delete_on_replication_live_query_alive(params_from_base_test_setup):
+def test_db_delete_on_active_replicator_and_live_query(params_from_base_test_setup):
     """
         @summary:
         1. create a db on cbl, have a sgw available
@@ -678,7 +708,7 @@ def test_db_delete_on_replication_live_query_alive(params_from_base_test_setup):
     db_config = db.configure()
     cbl_db = db.create(db_name, db_config)
 
-    num_of_docs = 1000
+    num_of_docs = 100
     channel1 = ["Replication-1"]
     channel2 = ["Replication-2"]
 
@@ -717,16 +747,24 @@ def test_db_delete_on_replication_live_query_alive(params_from_base_test_setup):
 
     # 3. register a live query to the cbl db
     qy = Query(base_url)
-    # create properties
-    select_result = qy.query_select_result_all_create()
-    query = qy.query_select(select_result)
+    query = qy.query_select_all(cbl_db)
     query_listener = qy.addChangeListener(query)
 
     log_info(replicator.getActivitylevel(repl1))
     log_info(replicator.getActivitylevel(repl2))
 
+    # TODO: need to clarify with dev about close db on replicator state
+    # after clarification, this code suppose to be removed
+    replicator.wait_until_replicator_idle(repl1)
+    replicator.wait_until_replicator_idle(repl2)
+
+    log_info(replicator.getActivitylevel(repl1))
+    log_info(replicator.getActivitylevel(repl2))
+
     try:
+        log_info("deleting database")
         db.deleteDB(cbl_db)
+        log_info("database is deleted successfully")
         assert True
     except KeyError:
         qy.removeChangeListener(query_listener)
