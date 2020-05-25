@@ -18,11 +18,10 @@ from keywords import exceptions
 @pytest.mark.session
 @pytest.mark.access
 @pytest.mark.role
-@pytest.mark.channel
 @pytest.mark.backfill
 @pytest.mark.parametrize("sg_conf_name, grant_type, x509_cert_auth", [
     ("custom_sync/access", "CHANNEL-REST", True),
-    pytest.param("custom_sync/access", "CHANNEL-SYNC", False, marks=pytest.mark.sanity),
+    pytest.param("custom_sync/access", "CHANNEL-SYNC", False, marks=[pytest.mark.sanity, pytest.mark.oscertify]),
     ("custom_sync/access", "ROLE-REST", False),
     ("custom_sync/access", "ROLE-SYNC", True),
     ("custom_sync/access", "CHANNEL-TO-ROLE-REST", True),
@@ -219,8 +218,8 @@ def test_backfill_channels_oneshot_changes(params_from_base_test_setup, sg_conf_
 @pytest.mark.session
 @pytest.mark.access
 @pytest.mark.role
-@pytest.mark.channel
 @pytest.mark.backfill
+@pytest.mark.oscertify
 @pytest.mark.parametrize("sg_conf_name, grant_type", [
     ("custom_sync/access", "CHANNEL-REST"),
     ("custom_sync/access", "CHANNEL-SYNC"),

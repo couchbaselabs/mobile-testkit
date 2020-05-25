@@ -18,10 +18,9 @@ from utilities.cluster_config_utils import persist_cluster_config_environment_pr
 @pytest.mark.basicauth
 @pytest.mark.channel
 @pytest.mark.bulkops
-@pytest.mark.changes
 @pytest.mark.parametrize("sg_conf_name, num_docs, user_channels, filter, limit, x509_cert_auth", [
     ("sync_gateway_channel_cache", 5000, "*", True, 50, False),
-    pytest.param("sync_gateway_channel_cache", 1000, "*", True, 50, True, marks=pytest.mark.sanity),
+    pytest.param("sync_gateway_channel_cache", 1000, "*", True, 50, True, marks=[pytest.mark.sanity, pytest.mark.oscertify]),
     ("sync_gateway_channel_cache", 1000, "ABC", False, 50, True),
     ("sync_gateway_channel_cache", 1000, "ABC", True, 50, False),
 ])

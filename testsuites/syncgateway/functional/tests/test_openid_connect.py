@@ -114,9 +114,10 @@ def discover_authenticate_endpoint(sg_url, sg_db, provider, ipv6):
 
 @pytest.mark.syncgateway
 @pytest.mark.oidc
+@pytest.mark.basicsgw
 @pytest.mark.parametrize("sg_conf_name, is_admin_port, expect_signed_id_token", [
     ("sync_gateway_openid_connect", False, True),
-    pytest.param("sync_gateway_openid_connect", True, True, marks=pytest.mark.sanity),
+    pytest.param("sync_gateway_openid_connect", True, True, marks=[pytest.mark.sanity, pytest.mark.oscertify]),
     ("sync_gateway_openid_connect_unsigned", False, False)
 ])
 def test_openidconnect_basic_test(params_from_base_test_setup, sg_conf_name, is_admin_port, expect_signed_id_token):
@@ -233,6 +234,8 @@ def test_openidconnect_basic_test(params_from_base_test_setup, sg_conf_name, is_
 
 @pytest.mark.syncgateway
 @pytest.mark.oidc
+@pytest.mark.oscertify
+@pytest.mark.basicsgw
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_openid_connect"
 ])
@@ -281,6 +284,8 @@ def test_openidconnect_notauthenticated(params_from_base_test_setup, sg_conf_nam
 
 @pytest.mark.syncgateway
 @pytest.mark.oidc
+@pytest.mark.oscertify
+@pytest.mark.basicsgw
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_openid_connect"
 ])
@@ -319,6 +324,8 @@ def test_openidconnect_oidc_challenge_invalid_provider_name(params_from_base_tes
 
 @pytest.mark.syncgateway
 @pytest.mark.oidc
+@pytest.mark.oscertify
+@pytest.mark.basicsgw
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_openid_connect"
 ])
@@ -361,6 +368,8 @@ def test_openidconnect_no_session(params_from_base_test_setup, sg_conf_name):
 
 @pytest.mark.syncgateway
 @pytest.mark.oidc
+@pytest.mark.oscertify
+@pytest.mark.basicsgw
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_openid_connect"
 ])
@@ -430,6 +439,8 @@ def test_openidconnect_expired_token(params_from_base_test_setup, sg_conf_name):
 
 @pytest.mark.syncgateway
 @pytest.mark.oidc
+@pytest.mark.oscertify
+@pytest.mark.basicsgw
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_openid_connect"
 ])
@@ -483,6 +494,8 @@ def test_openidconnect_negative_token_expiry(params_from_base_test_setup, sg_con
 
 @pytest.mark.syncgateway
 @pytest.mark.oidc
+@pytest.mark.oscertify
+@pytest.mark.basicsgw
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_openid_connect"
 ])
@@ -563,6 +576,8 @@ def test_openidconnect_garbage_token(params_from_base_test_setup, sg_conf_name):
 
 @pytest.mark.syncgateway
 @pytest.mark.oidc
+@pytest.mark.oscertify
+@pytest.mark.basicsgw
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_openid_connect"
 ])
@@ -602,6 +617,8 @@ def test_openidconnect_invalid_scope(params_from_base_test_setup, sg_conf_name):
 
 @pytest.mark.syncgateway
 @pytest.mark.oidc
+@pytest.mark.oscertify
+@pytest.mark.basicsgw
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_openid_connect"
 ])
@@ -662,6 +679,8 @@ def test_openidconnect_small_scope(params_from_base_test_setup, sg_conf_name):
 
 @pytest.mark.syncgateway
 @pytest.mark.oidc
+@pytest.mark.oscertify
+@pytest.mark.basicsgw
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_openid_connect"
 ])
@@ -724,6 +743,8 @@ def test_openidconnect_large_scope(params_from_base_test_setup, sg_conf_name):
 
 @pytest.mark.syncgateway
 @pytest.mark.oidc
+@pytest.mark.oscertify
+@pytest.mark.basicsgw
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_openid_connect"
 ])
