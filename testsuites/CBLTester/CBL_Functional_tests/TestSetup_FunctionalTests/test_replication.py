@@ -3874,10 +3874,10 @@ def test_blob_contructor_replication(params_from_base_test_setup, blob_data_type
             image_location = "Files/golden_gate_large.jpg"
 
         if blob_data_type == "byte_array":
-            image_byte_array = blob.createImageByteArray(image_location)
+            image_byte_array = blob.createImageContent(image_location)
             blob_value = blob.create("image/jpeg", content=image_byte_array)
         elif blob_data_type == "stream":
-            image_stream = blob.createImageContent(image_location)
+            image_stream = blob.createImageStream(image_location)
             blob_value = blob.create("image/jpeg", stream=image_stream)
         elif blob_data_type == "file_url":
             image_file_url = blob.createImageFileUrl(image_location)

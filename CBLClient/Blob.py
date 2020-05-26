@@ -31,14 +31,14 @@ class Blob(object):
     def createImageContent(self, image):
         args = Args()
         args.setString("image", image)
-        # this call will return an InputStream object
+        # this call will return an byte array object
         return self._client.invokeMethod("blob_createImageContent", args)
 
-    def createImageByteArray(self, image):
+    def createImageStream(self, image):
         args = Args()
         args.setString("image", image)
-        # this call will return a byte array (byte[])
-        return self._client.invokeMethod("blob_createImageByteArray", args)
+        # this call will return an input stream
+        return self._client.invokeMethod("blob_createImageStream", args)
 
     def createImageFileUrl(self, image):
         args = Args()
