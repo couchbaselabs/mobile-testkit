@@ -376,7 +376,7 @@ def test_db_close_on_active_replicators(params_from_base_test_setup):
     """
         @summary:
         1. create a db on cbl, have a sgw available
-        2. start 3 replicators with the sgw, ensure one of 
+        2. start 3 replicators with the sgw, ensure one of
            the replicator is push_pull replicator with continues=true
         3. close the cbl db
         4. verify cbl db is closed closed successfully
@@ -435,7 +435,7 @@ def test_db_close_on_active_replicators(params_from_base_test_setup):
     replicator_authenticator1 = authenticator.authentication(session_id1, cookie1, authentication_type="session")
     repl_config1 = replicator.configure(source_db=cbl_db, replicator_authenticator=replicator_authenticator1, target_url=sg_blip_url,
                                         replication_type="push_pull", continuous=True, channels=channel1)
- 
+
     replicator_authenticator2 = authenticator.authentication(session_id2, cookie2, authentication_type="session")
     repl_config2 = replicator.configure(source_db=cbl_db, replicator_authenticator=replicator_authenticator2, target_url=sg_blip_url,
                                         replication_type="push", continuous=True, channels=channel2)
@@ -578,7 +578,7 @@ def test_db_delete_on_active_replicators(params_from_base_test_setup):
     """
         @summary:
         1. create a db on cbl, have a sgw available
-        2. start 3 replicators with the sgw, ensure one of 
+        2. start 3 replicators with the sgw, ensure one of
            the replicator is push_pull replicator with continues=true
         3. delete the cbl db
         4. verify cbl db is delete successfully
