@@ -59,12 +59,12 @@ class SyncGatewayConfig:
                                                                  sg_type,
                                                                  self._version_number,
                                                                  platform_extension)
-        if aws:	
-            base_url = "https://cbmobile-packages.s3.amazonaws.com"	
-            package_name = "couchbase-{}-{}_{}-{}_x86_64.{}".format(installer,	
-                                                                    sg_type,	
-                                                                    self._version_number,	
-                                                                    self._build_number,	
+        if aws:
+            base_url = "https://cbmobile-packages.s3.amazonaws.com"
+            package_name = "couchbase-{}-{}_{}-{}_x86_64.{}".format(installer,
+                                                                    sg_type,
+                                                                    self._version_number,
+                                                                    self._build_number,
                                                                     platform_extension)
         return base_url, package_name
 

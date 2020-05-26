@@ -114,9 +114,9 @@ def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_conf
 
 
 def provision_cluster_aws(cluster_config, couchbase_server_config, sync_gateway_config, sg_ssl=False, sg_lb=False, cbs_ssl=False, use_views=False,
-                      xattrs_enabled=False, no_conflicts_enabled=False, delta_sync_enabled=False, number_replicas=0, sg_ce=False,
-                      cbs_platform="centos7", sg_platform="centos", sg_installer_type="msi", sa_platform="centos",
-                      sa_installer_type="msi", cbs_ce=False, aws=False):
+                          xattrs_enabled=False, no_conflicts_enabled=False, delta_sync_enabled=False, number_replicas=0, sg_ce=False,
+                          cbs_platform="centos7", sg_platform="centos", sg_installer_type="msi", sa_platform="centos",
+                          sa_installer_type="msi", cbs_ce=False, aws=False):
 
     if sg_ssl:
         log_info("Enabling SSL on sync gateway")
@@ -176,7 +176,6 @@ def provision_cluster_aws(cluster_config, couchbase_server_config, sync_gateway_
 
     provision_cluster(cluster_config=cluster_conf, couchbase_server_config=server_config,
                       sync_gateway_config=sync_gateway_conf, cbs_platform=opts.cbs_platform, aws=aws)
-
 
 
 if __name__ == "__main__":

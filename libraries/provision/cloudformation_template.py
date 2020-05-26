@@ -100,23 +100,23 @@ def gen_template(config):
                 ToPort="11211",
                 CidrIp="0.0.0.0/0",
             ),
-            ec2.SecurityGroupRule(   # couchbase server	
-                IpProtocol="tcp",	
-                FromPort="11207",	
-                ToPort="11207",	
-                CidrIp="0.0.0.0/0",	
+            ec2.SecurityGroupRule(   # couchbase server
+                IpProtocol="tcp",
+                FromPort="11207",
+                ToPort="11207",
+                CidrIp="0.0.0.0/0",
             ),
-            ec2.SecurityGroupRule(	
-                IpProtocol="tcp",	
-                FromPort="9102",	
-                ToPort="9102",	
-                CidrIp="0.0.0.0/0",	
-            ),	
-            ec2.SecurityGroupRule(	
-                IpProtocol="tcp",	
-                FromPort="19102",	
-                ToPort="19102",	
-                CidrIp="0.0.0.0/0",	
+            ec2.SecurityGroupRule(
+                IpProtocol="tcp",
+                FromPort="9102",
+                ToPort="9102",
+                CidrIp="0.0.0.0/0",
+            ),
+            ec2.SecurityGroupRule(
+                IpProtocol="tcp",
+                FromPort="19102",
+                ToPort="19102",
+                CidrIp="0.0.0.0/0",
             ),
             ec2.SecurityGroupRule(   # couchbase server
                 IpProtocol="tcp",
