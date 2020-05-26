@@ -432,7 +432,7 @@ def params_from_base_suite_setup(request):
             log_info("Restarting sync gateway {}".format(sg_ip))
             sg_obj.restart_sync_gateways(cluster_config=cluster_config, url=sg_ip)
             # Giving time to SG to load all docs into it's cache
-            time.sleep(20)
+            #time.sleep(20)
 
         if mode == "di":
             ac_obj = SyncGateway()
