@@ -370,14 +370,13 @@ def test_copy_prebuilt_database(params_from_base_test_setup, encrypted):
     db.deleteDB(cbl_db1)
 
 
-
 @pytest.mark.listener
 @pytest.mark.hydrogen
 def test_db_close_on_active_replicators(params_from_base_test_setup):
     """
         @summary:
         1. create a db on cbl, have a sgw available
-        2. start 3 replicators with the sgw, ensure one of 
+        2. start 3 replicators with the sgw, ensure one of
            the replicator is push_pull replicator with continues=true
         3. close the cbl db
         4. verify cbl db is closed closed successfully
@@ -558,7 +557,7 @@ def test_db_delete_on_active_replicators(params_from_base_test_setup):
     """
         @summary:
         1. create a db on cbl, have a sgw available
-        2. start 3 replicators with the sgw, ensure one of 
+        2. start 3 replicators with the sgw, ensure one of
            the replicator is push_pull replicator with continues=true
         3. delete the cbl db
         4. verify cbl db is delete successfully

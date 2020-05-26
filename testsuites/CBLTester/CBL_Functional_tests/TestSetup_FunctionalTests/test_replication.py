@@ -6,7 +6,7 @@ import random
 from keywords.MobileRestClient import MobileRestClient
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords import couchbaseserver
-from keywords.utils import log_info, random_string, compare_docs
+from keywords.utils import log_info, random_string
 from CBLClient.Database import Database
 from CBLClient.Replication import Replication
 from CBLClient.Document import Document
