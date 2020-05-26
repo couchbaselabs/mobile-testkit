@@ -6,7 +6,7 @@ import random
 from keywords.MobileRestClient import MobileRestClient
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords import couchbaseserver
-from keywords.utils import log_info, random_string
+from keywords.utils import log_info, random_string, get_embedded_asset_file_path
 from CBLClient.Database import Database
 from CBLClient.Replication import Replication
 from CBLClient.Document import Document
@@ -3859,17 +3859,7 @@ def test_blob_contructor_replication(params_from_base_test_setup, blob_data_type
         dictionary.setString(mutable_dictionary, "new_field_string_1", random_string(length=30))
         dictionary.setString(mutable_dictionary, "new_field_string_2", random_string(length=80))
 
-        if liteserv_platform in ["android", "xamarin-android", "java-macosx", "java-msft", "java-ubuntu", "java-centos",
-                                   "javaws-macosx", "javaws-msft", "javaws-ubuntu", "javaws-centos"]:
-            image_location = "golden_gate_large.jpg"
-        elif liteserv_platform == "ios":
-            image_location = "Files/golden_gate_large.jpg"
-        elif liteserv_platform == "net-msft":
-            db_path = db.getPath(cbl_db).rstrip("\\")
-            app_dir = "\\".join(db_path.split("\\")[:-2])
-            image_location = "{}\\Files\\golden_gate_large.jpg".format(app_dir)
-        else:
-            image_location = "Files/golden_gate_large.jpg"
+        image_location = get_embedded_asset_file_path(liteserv_platform, db, cbl_db, "golden_gate_large.jpg")
 
         if blob_data_type == "byte_array":
             image_byte_array = blob.createImageContent(image_location)
@@ -3895,7 +3885,6 @@ def test_blob_contructor_replication(params_from_base_test_setup, blob_data_type
     replicator.stop(repl)
 
     # 5. Verify blob content replicated successfully
-    # sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
     doc_ids = db.getDocIds(cbl_db)
     cbl_db_docs = db.getDocuments(cbl_db, doc_ids)
     for doc_id, doc_body in list(cbl_db_docs.items()):
