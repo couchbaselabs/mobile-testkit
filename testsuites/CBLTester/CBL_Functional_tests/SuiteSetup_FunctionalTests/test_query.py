@@ -1578,37 +1578,3 @@ def test_query_arthimetic(params_from_base_suite_setup):
 
     qy = Query(base_url)
     qy.query_arthimetic(cbl_db)
-
-
-def test_live_query_response_delay_time(params_from_base_suite_setup):
-    """
-    note: this test case is for android/java only
-    1. call /query_getLiveQueryResponseTime to get delay timer
-    2. validate delay timer is less than 200 millisecond
-    """
-    base_url = params_from_base_suite_setup["base_url"]
-    db = params_from_base_suite_setup["suite_db"]
-    cbl_db = params_from_base_suite_setup["suite_source_db"]
-    liteserv_platform = params_from_base_suite_setup["liteserv_platform"]
-
-    if liteserv_platform in ["ios", "net-msft", "net-uwp", "xamarin-ios", "xamarin-android"]:
-        pytest.skip('This test case is for android/java only')
-
-    channels = ["live-query"]
-    # doc_id = "live-query-doc_0"
-    num_of_docs = 100
-    db.create_bulk_docs(num_of_docs, "live-query-doc", db=cbl_db, channels=channels)
-
-    doc_ids = db.getDocIds(cbl_db)
-    docs = db.getDocuments(cbl_db, doc_ids)
-    seq_num = 1
-    # updates_in_doc = {}
-    for doc_id, doc_body in docs.items():
-        if "live-query-doc" in doc_id:
-            doc_body["sequence_number"] = seq_num
-            db.updateDocument(database=cbl_db, data=doc_body, doc_id=doc_id)
-            seq_num += 1
-
-    qy = Query(base_url)
-    delay_timer = qy.query_get_live_query_delay_time(cbl_db)
-    assert delay_timer < 200, "delay timer cannot be longer than 200 millionsec"
