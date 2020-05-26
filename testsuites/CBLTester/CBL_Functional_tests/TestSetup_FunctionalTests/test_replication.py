@@ -3859,9 +3859,7 @@ def test_blob_contructor_replication(params_from_base_test_setup, blob_data_type
         dictionary.setString(mutable_dictionary, "new_field_string_1", random_string(length=30))
         dictionary.setString(mutable_dictionary, "new_field_string_2", random_string(length=80))
 
-        if liteserv_platform == "android":
-            image_location = "/assets/golden_gate_large.jpg"
-        elif liteserv_platform in ["xamarin-android", "java-macosx", "java-msft", "java-ubuntu", "java-centos",
+        if liteserv_platform in ["android", "xamarin-android", "java-macosx", "java-msft", "java-ubuntu", "java-centos",
                                    "javaws-macosx", "javaws-msft", "javaws-ubuntu", "javaws-centos"]:
             image_location = "golden_gate_large.jpg"
         elif liteserv_platform == "ios":
