@@ -26,7 +26,10 @@
         "manasa": {"password": "pass", "admin_channels": ["manasa"]},
         "sandy": {"password": "pass", "admin_roles": ["sandy"]},
         "admin": {"password": "pass", "admin_roles": ["admin"]},
-        "blake": {"password": "pass", "admin_roles": ["blake"]}
+        "blake": {"password": "pass", "admin_roles": ["blake"]},
+        "adam": {"password": "pass", "admin_roles": ["adam"]},
+        "ben": {"password": "pass", "admin_roles": ["ben"]},
+        "sarath": {"password": "pass", "admin_roles": ["sarath"]}
       },
       "roles": {
         "moderator": {},
