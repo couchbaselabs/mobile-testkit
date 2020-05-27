@@ -43,13 +43,13 @@ def gen_template(config):
             ec2.SecurityGroupRule(
                 IpProtocol="tcp",
                 FromPort="8091",
-                ToPort="8091",
+                ToPort="8096",
                 CidrIp="0.0.0.0/0",
             ),
             ec2.SecurityGroupRule(
                 IpProtocol="tcp",
-                FromPort="8093",
-                ToPort="8093",
+                FromPort="18091",
+                ToPort="18096",
                 CidrIp="0.0.0.0/0",
             ),
             ec2.SecurityGroupRule(   # sync gw user port
@@ -84,12 +84,6 @@ def gen_template(config):
             ),
             ec2.SecurityGroupRule(   # couchbase server
                 IpProtocol="tcp",
-                FromPort="8092",
-                ToPort="8092",
-                CidrIp="0.0.0.0/0",
-            ),
-            ec2.SecurityGroupRule(   # couchbase server
-                IpProtocol="tcp",
                 FromPort="11209",
                 ToPort="11209",
                 CidrIp="0.0.0.0/0",
@@ -104,6 +98,24 @@ def gen_template(config):
                 IpProtocol="tcp",
                 FromPort="11211",
                 ToPort="11211",
+                CidrIp="0.0.0.0/0",
+            ),
+            ec2.SecurityGroupRule(   # couchbase server
+                IpProtocol="tcp",
+                FromPort="11207",
+                ToPort="11207",
+                CidrIp="0.0.0.0/0",
+            ),
+            ec2.SecurityGroupRule(
+                IpProtocol="tcp",
+                FromPort="9102",
+                ToPort="9102",
+                CidrIp="0.0.0.0/0",
+            ),
+            ec2.SecurityGroupRule(
+                IpProtocol="tcp",
+                FromPort="19102",
+                ToPort="19102",
                 CidrIp="0.0.0.0/0",
             ),
             ec2.SecurityGroupRule(   # couchbase server
@@ -204,10 +216,7 @@ def gen_template(config):
 
         # Make syncgateway0 a cache writer, and the rest cache readers
         # See https://github.com/couchbase/sync_gateway/wiki/Distributed-channel-cache-design-notes
-        if i == 0:
-            instance.Tags = Tags(Name=name, Type="syncgateway", CacheType="writer")
-        else:
-            instance.Tags = Tags(Name=name, Type="syncgateway")
+        instance.Tags = Tags(Name=name, Type="syncgateway")
 
         t.add_resource(instance)
 
