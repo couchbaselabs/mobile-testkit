@@ -367,7 +367,7 @@ def write_config(config, pool_file, use_docker, sg_windows, sg_accel_windows, sg
         if sg_platform.lower() == "macos":
             f.write("\n\n[sync_gateways:vars]\n")
             f.write("ansible_connection=local\n")
-            f.write("ansible_become_pass=TasRhs_1708\n")
+            f.write("ansible_become_pass=macOSFakePassword\n")
 
         if sg_windows:
             f.write("\n\n[sync_gateways:vars]\n")
