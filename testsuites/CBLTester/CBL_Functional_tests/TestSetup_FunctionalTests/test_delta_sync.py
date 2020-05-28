@@ -104,22 +104,22 @@ def test_delta_sync_replication(params_from_base_test_setup, num_of_docs, replic
                     dictionary.setString(mutable_dictionary, "new_field_2", random_string(length=80))
 
                     if liteserv_platform == "android":
-                        image_content = blob.createImageContent("/assets/golden_gate_large.jpg")
+                        image_content = blob.createImageStream("/assets/golden_gate_large.jpg")
                         blob_value = blob.create("image/jpeg", stream=image_content)
                     elif liteserv_platform in ["xamarin-android", "java-macosx", "java-msft", "java-ubuntu", "java-centos",
                                                "javaws-macosx", "javaws-msft", "javaws-ubuntu", "javaws-centos"]:
-                        image_content = blob.createImageContent("golden_gate_large.jpg")
+                        image_content = blob.createImageStream("golden_gate_large.jpg")
                         blob_value = blob.create("image/jpeg", stream=image_content)
                     elif liteserv_platform == "ios":
-                        image_content = blob.createImageContent("Files/golden_gate_large.jpg")
-                        blob_value = blob.create("image/jpeg", content=image_content)
+                        image_content = blob.createImageStream("Files/golden_gate_large.jpg")
+                        blob_value = blob.create("image/jpeg", stream=image_content)
                     elif liteserv_platform == "net-msft":
                         db_path = db.getPath(cbl_db).rstrip("\\")
                         app_dir = "\\".join(db_path.split("\\")[:-2])
-                        image_content = blob.createImageContent("{}\\Files\\golden_gate_large.jpg".format(app_dir))
+                        image_content = blob.createImageStream("{}\\Files\\golden_gate_large.jpg".format(app_dir))
                         blob_value = blob.create("image/jpeg", stream=image_content)
                     else:
-                        image_content = blob.createImageContent("Files/golden_gate_large.jpg")
+                        image_content = blob.createImageStream("Files/golden_gate_large.jpg")
                         blob_value = blob.create("image/jpeg", stream=image_content)
                     dictionary.setBlob(mutable_dictionary, "_attachments", blob_value)
                 db.updateDocument(database=cbl_db, data=doc_body, doc_id=doc_id)
