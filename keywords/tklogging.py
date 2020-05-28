@@ -26,7 +26,7 @@ def fetch_sync_gateway_logs(cluster_config, prefix):
         date_time = time.strftime("%Y-%m-%d-%H-%M-%S")
         temp_log_path = "/tmp/{}-{}-sglogs".format(prefix, date_time)
         shutil.make_archive(temp_log_path, "zip", "/tmp/sg_logs")
-        shutil.rmtree("/tmp/sg_logs")
+        shutil.rmtree("/tmp/sg_logs", ignore_errors=True)
 
         # Copy logs to results dir
         zip_file_path = "{}.zip".format(temp_log_path)
