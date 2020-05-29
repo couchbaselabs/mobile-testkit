@@ -665,7 +665,7 @@ def test_non_blocking_custom_conflicts_resolution(params_from_base_test_setup, r
             new_docs_body[doc_id] = [data]
             data = property_updater(data)
             random_value = random_string(length=10, printable=True)
-            data["update_during_CCR"] = random_value + '"'
+            data["update_during_CCR"] = random_value
             db.updateDocument(cbl_db, doc_id=doc_id, data=data)
 
             # Saving the history of update to CBL doc
