@@ -108,7 +108,7 @@ def pytest_addoption(parser):
     parser.addoption("--cluster-config",
                      action="store",
                      help="Provide cluster config to use. Default is base config",
-                     default="base")
+                     default="multiple_sync_gateways")
 
     parser.addoption("--create-db-per-test",
                      action="store",
@@ -266,7 +266,7 @@ def params_from_base_suite_setup(request):
         base_url_list.append("http://{}:{}".format(host, port))
 
     cluster_config = "{}/{}_{}".format(CLUSTER_CONFIGS_DIR, cluster_config_prefix, mode)
-    sg_config = sync_gateway_config_path_for_mode("sync_gateway_default", mode)
+    sg_config = sync_gateway_config_path_for_mode("sync_gateway_sg_replicate", mode)
     no_conflicts_enabled = request.config.getoption("--no-conflicts")
     cluster_utils = ClusterKeywords(cluster_config)
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
