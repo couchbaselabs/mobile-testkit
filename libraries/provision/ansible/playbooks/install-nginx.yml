@@ -7,6 +7,9 @@
     upstream_sync_gatways_admin:
 
   tasks:
+  - name: epel-release | install epel-release for nginx
+    yum: pkg=epel-release state=latest
+
   - name: NGINX | Install nginx
     yum: pkg=nginx state=latest
 
