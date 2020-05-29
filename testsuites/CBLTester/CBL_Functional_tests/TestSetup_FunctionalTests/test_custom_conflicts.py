@@ -665,7 +665,7 @@ def test_non_blocking_custom_conflicts_resolution(params_from_base_test_setup, r
             new_docs_body[doc_id] = [data]
             data = property_updater(data)
             random_value = random_string(length=10, printable=True)
-            data["update_during_CCR"] = random_value
+            data["update_during_CCR"] = random_value + '"'
             db.updateDocument(cbl_db, doc_id=doc_id, data=data)
 
             # Saving the history of update to CBL doc
@@ -697,7 +697,7 @@ def test_non_blocking_custom_conflicts_resolution(params_from_base_test_setup, r
             assert "cbl_random" not in sg_doc, "CCR failed to resolve conflict with delayed local win"
             log_info(cbl_doc["update_during_CCR"] + "resolve conflict with delayed local win" + new_docs_body[doc_id][1][
                 "update_during_CCR"])
-            assert new_docs_body[doc_id][1]["update_during_CCR"].replace('"', '') == cbl_doc[
+            assert new_docs_body[doc_id][1]["update_during_CCR"] == cbl_doc[
                 "update_during_CCR"], "CCR failed to " \
                                       "resolve conflict " \
                                       "with delayed " \
