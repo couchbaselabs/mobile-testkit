@@ -302,6 +302,15 @@ def params_from_base_suite_setup(request):
         persist_cluster_config_environment_prop(cluster_config, 'delta_sync_enabled', False)
 
     try:
+        cbs_platform
+    except NameError:
+        log_info("cbs platform  is not provided, so by default it runs on Centos7")
+        persist_cluster_config_environment_prop(cluster_config, 'cbs_platform', "centos7", False)
+    else:
+        log_info("Running test with cbs platform {}".format(cbs_platform))
+        persist_cluster_config_environment_prop(cluster_config, 'cbs_platform', cbs_platform, False)
+
+    try:
         sg_platform
     except NameError:
         log_info("sg platform  is not provided, so by default it runs on Centos")
