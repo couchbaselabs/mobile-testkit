@@ -198,6 +198,7 @@ def test_online_to_offline_changes_feed_controlled_close_continuous(params_from_
                 log_info("DB OFFLINE")
                 # make sure db_offline returns 200
                 # sync-gateway-db-offline.yml checks for 200
+                time.sleep(30)
                 assert future.result() == 0
             elif task_name == "docs_push":
                 log_info("DONE PUSHING DOCS")
@@ -216,6 +217,7 @@ def test_online_to_offline_changes_feed_controlled_close_continuous(params_from_
 
     # Bring db back online
     status = sg_client.bring_db_online(cluster_conf=cluster_conf, db="db")
+    time.sleep(30)
     assert status == 0
 
     # Get all docs that have been pushed
