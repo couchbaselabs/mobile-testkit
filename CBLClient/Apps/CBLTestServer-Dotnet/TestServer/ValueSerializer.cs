@@ -117,7 +117,8 @@ namespace Couchbase.Lite.Testing
             }
             else if (value.StartsWith("\"") && value.EndsWith("\""))
             {
-                return value.Replace("\"", String.Empty);
+                string st = value.Remove(0, 1);
+                return st.Remove(st.LastIndexOf("\""));
             }
             else if (value.StartsWith("{"))
             {
