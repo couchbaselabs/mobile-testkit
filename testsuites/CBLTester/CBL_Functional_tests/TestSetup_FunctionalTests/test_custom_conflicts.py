@@ -695,10 +695,13 @@ def test_non_blocking_custom_conflicts_resolution(params_from_base_test_setup, r
                                                                           "with delayed local win"
             assert "random" not in cbl_doc, "CCR failed to resolve conflict with delayed local win"
             assert "cbl_random" not in sg_doc, "CCR failed to resolve conflict with delayed local win"
-            assert new_docs_body[doc_id][1]["update_during_CCR"] == cbl_doc["update_during_CCR"], "CCR failed to " \
-                                                                                                  "resolve conflict " \
-                                                                                                  "with delayed " \
-                                                                                                  "local win"
+            log_info(cbl_doc["update_during_CCR"] + "resolve conflict with delayed local win" + new_docs_body[doc_id][1][
+                "update_during_CCR"])
+            assert new_docs_body[doc_id][1]["update_during_CCR"].replace('"', '') == cbl_doc[
+                "update_during_CCR"], "CCR failed to " \
+                                      "resolve conflict " \
+                                      "with delayed " \
+                                      "local win"
     elif replicator_type == "push_pull":
         for sg_doc in sg_docs_content:
             doc_id = sg_doc["_id"]

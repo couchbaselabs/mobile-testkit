@@ -127,6 +127,11 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="delta-sync: Enable delta-sync for sync gateway")
 
+    parser.addoption("--sg-ce", action="store_true",
+                     help="If set, SGW community edition will get picked up , default is enterprise", default=False)
+
+    parser.addoption("--cbs-ce", action="store_true",
+                     help="If set, community edition will get picked up , default is enterprise", default=False)
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -158,6 +163,8 @@ def params_from_base_suite_setup(request):
     number_replicas = request.config.getoption("--number-replicas")
     enable_file_logging = request.config.getoption("--enable-file-logging")
     delta_sync_enabled = request.config.getoption("--delta-sync")
+    cbs_ce = request.config.getoption("--cbs-ce")
+    sg_ce = request.config.getoption("--sg-ce")
 
     enable_encryption = request.config.getoption("--enable-encryption")
     encryption_password = request.config.getoption("--encryption-password")
@@ -181,7 +188,7 @@ def params_from_base_suite_setup(request):
             testserver.install()
 
     base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
-    cluster_config = "{}/three_sync_gateways_{}".format(CLUSTER_CONFIGS_DIR, mode)
+    cluster_config = "{}/four_sync_gateways_{}".format(CLUSTER_CONFIGS_DIR, mode)
     no_conflicts_enabled = request.config.getoption("--no-conflicts")
     cluster_utils = ClusterKeywords(cluster_config)
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
@@ -274,7 +281,9 @@ def params_from_base_suite_setup(request):
                 cluster_config=cluster_config,
                 server_version=server_version,
                 sync_gateway_version=sync_gateway_version,
-                sync_gateway_config=sg_config
+                sync_gateway_config=sg_config,
+                cbs_ce=cbs_ce,
+                sg_ce=sg_ce
             )
         except ProvisioningError:
             logging_helper = Logging()
@@ -333,8 +342,6 @@ def params_from_base_suite_setup(request):
             sg_ip = host_for_url(sg["admin"])
             log_info("Restarting sync gateway {}".format(sg_ip))
             sg_obj.restart_sync_gateways(cluster_config=cluster_config, url=sg_ip)
-            # Giving time to SG to load all docs into it's cache
-            time.sleep(240)
 
         if mode == "di":
             ac_obj = SyncGateway()
@@ -381,7 +388,9 @@ def params_from_base_suite_setup(request):
         "delta_sync_enabled": delta_sync_enabled,
         "enable_file_logging": enable_file_logging,
         "enable_encryption": enable_encryption,
-        "encryption_password": encryption_password
+        "encryption_password": encryption_password,
+        "cbs_ce": cbs_ce,
+        "sg_ce": sg_ce,
     }
     if create_db_per_suite:
         # Delete CBL database
@@ -433,7 +442,11 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     delta_sync_enabled = params_from_base_suite_setup["delta_sync_enabled"]
     encryption_password = params_from_base_suite_setup["encryption_password"]
     enable_encryption = params_from_base_suite_setup["enable_encryption"]
+    cbs_ce = params_from_base_suite_setup["cbs_ce"]
+    sg_ce = params_from_base_suite_setup["sg_ce"]
+
     use_local_testserver = request.config.getoption("--use-local-testserver")
+
     source_db = None
     cbl_db = None
     db_config = None
@@ -513,7 +526,9 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "db_config": db_config,
         "sg_ssl": sg_ssl,
         "delta_sync_enabled": delta_sync_enabled,
-        "enable_file_logging": enable_file_logging
+        "enable_file_logging": enable_file_logging,
+        "cbs_ce": cbs_ce,
+        "sg_ce": sg_ce
     }
 
     log_info("Tearing down test")

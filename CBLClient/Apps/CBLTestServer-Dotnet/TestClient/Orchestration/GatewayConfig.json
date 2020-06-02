@@ -53,7 +53,8 @@
                         "callback_url":"cbl://192.168.1.2:4984/openid_db/_oidc_callback",
                         "client_id":"sync_gateway",
                         "validation_key":"abc123",
-                        "register": true
+                        "register": true,
+                        "disable_callback_state": true
                     }
                 },
                 "default_provider":"testing"

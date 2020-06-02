@@ -41,6 +41,7 @@ def params_from_base_suite_setup(request):
     sg_platform = request.config.getoption("--sg-platform")
     cbs_platform = request.config.getoption("--cbs-platform")
     delta_sync_enabled = request.config.getoption("--delta-sync")
+    cbs_platform = request.config.getoption("--cbs-platform")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
@@ -174,6 +175,15 @@ def params_from_base_suite_setup(request):
     else:
         log_info("Running without delta sync")
         persist_cluster_config_environment_prop(cluster_config, 'delta_sync_enabled', False)
+
+    try:
+        cbs_platform
+    except NameError:
+        log_info("cbs platform  is not provided, so by default it runs on Centos7")
+        persist_cluster_config_environment_prop(cluster_config, 'cbs_platform', "centos7", False)
+    else:
+        log_info("Running test with cbs platform {}".format(cbs_platform))
+        persist_cluster_config_environment_prop(cluster_config, 'cbs_platform', cbs_platform, False)
 
     if sync_gateway_version < "2.0.0" and no_conflicts_enabled:
         pytest.skip("Test cannot run with no-conflicts with sg version < 2.0.0")
