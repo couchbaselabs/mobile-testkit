@@ -308,7 +308,7 @@ def test_bucket_online_offline_resync_with_online(params_from_base_test_setup, s
     time.sleep(30)
 
     status = sg_client.bring_db_online(cluster_conf=cluster_conf, db="db")
-    time.sleep(60)
+    time.sleep(30)
     assert status == 0
     log_info("online request issued !!!!! response status: {}".format(status))
 
