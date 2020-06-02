@@ -44,7 +44,7 @@ class SyncGatewayConfig:
 
     def resolve_sg_sa_mobile_url(self, installer="sync-gateway",
                                  sg_type="enterprise",
-                                 platform_extension="rpm"):
+                                 platform_extension="rpm", aws=False):
         if self._build_number:
             base_url = "http://latestbuilds.service.couchbase.com/builds/latestbuilds/sync_gateway/{}/{}".format(self._version_number,
                                                                                                                  self._build_number)
@@ -59,13 +59,20 @@ class SyncGatewayConfig:
                                                                  sg_type,
                                                                  self._version_number,
                                                                  platform_extension)
+        if aws:
+            base_url = "https://cbmobile-packages.s3.amazonaws.com"
+            package_name = "couchbase-{}-{}_{}-{}_x86_64.{}".format(installer,
+                                                                    sg_type,
+                                                                    self._version_number,
+                                                                    self._build_number,
+                                                                    platform_extension)
         return base_url, package_name
 
     def sync_gateway_base_url_and_package(self, sg_ce=False,
                                           sg_platform="centos",
                                           sg_installer_type="msi",
                                           sa_platform="centos",
-                                          sa_installer_type="msi"):
+                                          sa_installer_type="msi", aws=False):
         # Setting SG platform extension
         if "windows" in sg_platform:
             sg_platform_extension = "msi"
@@ -104,8 +111,8 @@ class SyncGatewayConfig:
                 sg_platform_extension = "exe"
                 sa_platform_extension = "exe"
 
-            base_url, sg_package_name = self.resolve_sg_sa_mobile_url("sync-gateway", sg_type, sg_platform_extension)
-            base_url, accel_package_name = self.resolve_sg_sa_mobile_url("sg-accel", sg_type, sa_platform_extension)
+            base_url, sg_package_name = self.resolve_sg_sa_mobile_url("sync-gateway", sg_type, sg_platform_extension, aws)
+            base_url, accel_package_name = self.resolve_sg_sa_mobile_url("sg-accel", sg_type, sa_platform_extension, aws)
 
         return base_url, sg_package_name, accel_package_name
 
@@ -136,7 +143,7 @@ class SyncGatewayConfig:
 def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
                          sg_platform="centos", sg_installer_type="msi",
                          sa_platform="centos", sa_installer_type="msi",
-                         ipv6=False):
+                         ipv6=False, aws=False):
 
     log_info(sync_gateway_config)
 
@@ -287,7 +294,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
         sync_gateway_base_url, sync_gateway_package_name, sg_accel_package_name = sync_gateway_config.sync_gateway_base_url_and_package(
             sg_ce=sg_ce, sg_platform=sg_platform,
             sg_installer_type=sg_installer_type, sa_platform=sa_platform,
-            sa_installer_type=sa_installer_type)
+            sa_installer_type=sa_installer_type, aws=aws)
 
         playbook_vars["couchbase_sync_gateway_package_base_url"] = sync_gateway_base_url
         playbook_vars["couchbase_sync_gateway_package"] = sync_gateway_package_name

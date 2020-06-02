@@ -16,10 +16,8 @@ from couchbase.bucket import Bucket
 from keywords.MobileRestClient import MobileRestClient
 
 import pytest
-
 import time
 import logging
-
 from keywords.utils import log_info
 from keywords.SyncGateway import sync_gateway_config_path_for_mode, create_sync_gateways
 
@@ -123,18 +121,37 @@ def test_sg_replicate_basic_test(params_from_base_test_setup):
     # Verify that the doc added to sg2 made it to sg1
     assert_has_doc(sg1_user, doc_id_sg2)
 
-    time.sleep(240)
     if sync_gateway_version >= "2.5.0":
-        expvars = sg_client.get_expvars(sg2.admin.admin_url)
-        assert process_memory_resident < expvars["syncgateway"]["global"]["resource_utilization"]["process_memory_resident"], "process_memory_resident did not get incremented"
-        assert expvars["syncgateway"]["global"]["resource_utilization"]["process_cpu_percent_utilization"] > 0, "process_cpu_percent_utilization did not get incremented"
-        assert system_memory_total < expvars["syncgateway"]["global"]["resource_utilization"]["system_memory_total"], "system_memory_total did not get incremented"
-        assert goroutines_high_watermark < expvars["syncgateway"]["global"]["resource_utilization"]["goroutines_high_watermark"], "goroutines_high_watermark did not get incremented"
-        assert chan_cache_hits < expvars["syncgateway"]["per_db"][DB2]["cache"]["chan_cache_hits"], "chan_cache_hits did not get incremented"
-        assert chan_cache_active_revs < expvars["syncgateway"]["per_db"][DB2]["cache"]["chan_cache_active_revs"], "chan_cache_active_revs did not get incremented"
-        assert chan_cache_num_channels < expvars["syncgateway"]["per_db"][DB2]["cache"]["chan_cache_num_channels"], "chan_cache_num_channels did not get incremented"
-        assert chan_cache_max_entries < expvars["syncgateway"]["per_db"][DB2]["cache"]["chan_cache_max_entries"], "chan_cache_max_entries did not get incremented"
-        assert expvars["syncgateway"]["per_db"][DB2]["cbl_replication_push"]["write_processing_time"] > 0, "write_processing_time did not get incremented"
+        t = 60
+        times = 0
+        while times < 4:
+            try:
+                expvars = sg_client.get_expvars(sg2.admin.admin_url)
+                assert process_memory_resident < expvars["syncgateway"]["global"]["resource_utilization"]["process_memory_resident"], \
+                    "process_memory_resident did not get incremented"
+                assert expvars["syncgateway"]["global"]["resource_utilization"]["process_cpu_percent_utilization"] > 0, \
+                    "process_cpu_percent_utilization did not get incremented"
+                assert system_memory_total < expvars["syncgateway"]["global"]["resource_utilization"]["system_memory_total"], \
+                    "system_memory_total did not get incremented"
+                assert goroutines_high_watermark < expvars["syncgateway"]["global"]["resource_utilization"]["goroutines_high_watermark"], \
+                    "goroutines_high_watermark did not get incremented"
+                assert chan_cache_hits < expvars["syncgateway"]["per_db"][DB2]["cache"]["chan_cache_hits"], \
+                    "chan_cache_hits did not get incremented"
+                assert chan_cache_active_revs < expvars["syncgateway"]["per_db"][DB2]["cache"]["chan_cache_active_revs"], \
+                    "chan_cache_active_revs did not get incremented"
+                assert chan_cache_num_channels < expvars["syncgateway"]["per_db"][DB2]["cache"]["chan_cache_num_channels"], \
+                    "chan_cache_num_channels did not get incremented"
+                assert chan_cache_max_entries < expvars["syncgateway"]["per_db"][DB2]["cache"]["chan_cache_max_entries"], \
+                    "chan_cache_max_entries did not get incremented"
+                assert expvars["syncgateway"]["per_db"][DB2]["cbl_replication_push"]["write_processing_time"] > 0, \
+                    "write_processing_time did not get incremented"
+                break
+            except Exception as error:
+                times = times + 1
+                log_info(times)
+                if times == 4:
+                    raise error
+                time.sleep(t)
 
 
 @pytest.mark.topospecific

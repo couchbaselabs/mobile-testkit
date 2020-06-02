@@ -6,7 +6,7 @@ from optparse import OptionParser
 
 import keywords.exceptions
 
-from . import cloudformation_template
+import cloudformation_template
 
 BUCKET_NAME = "cbmobile-bucket"
 BUCKET_FOLDER = "mobile-testkit"
