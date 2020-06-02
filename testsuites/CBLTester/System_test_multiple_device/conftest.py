@@ -1,6 +1,7 @@
 import time
 import datetime
 import pytest
+import pdb
 
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop
 from keywords.utils import host_for_url, clear_resources_pngs
@@ -236,6 +237,10 @@ def params_from_base_suite_setup(request):
     # Changing up_time in days
     up_time = up_time * 24 * 60
     repl_status_check_sleep_time = int(request.config.getoption("--repl-status-check-sleep-time"))
+    no_conflicts_enabled = request.config.getoption("--no-conflicts")
+
+    if sync_gateway_version < "2.7.0":
+        pytest.skip('Does not work with sg < 2.8.0 , so skipping the test')
 
     test_name = request.node.name
     testserver_list = []
@@ -266,18 +271,31 @@ def params_from_base_suite_setup(request):
         base_url_list.append("http://{}:{}".format(host, port))
 
     cluster_config = "{}/{}_{}".format(CLUSTER_CONFIGS_DIR, cluster_config_prefix, mode)
-    sg_config = sync_gateway_config_path_for_mode("sync_gateway_sg_replicate", mode)
-    no_conflicts_enabled = request.config.getoption("--no-conflicts")
+    sg_config = sync_gateway_config_path_for_mode("listener_tests/multiple_sync_gateways", mode)
     cluster_utils = ClusterKeywords(cluster_config)
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
 
-    sg_db = "db"
-    sg_url = cluster_topology["sync_gateways"][0]["public"]
-    sg_ip = host_for_url(sg_url)
-    target_url = "ws://{}:4984/{}".format(sg_ip, sg_db)
-    target_admin_url = "ws://{}:4985/{}".format(sg_ip, sg_db)
-    persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', False)
+    sg_db_list = []
+    target_url_list = []
+    target_admin_url_list = []
+    sg_url_list = []
+    sg_admin_url_list = []
 
+    for idx in list(range(2)):
+        sg_db_list.append("sg_db{}".format(idx + 1))
+        sg_url = cluster_topology["sync_gateways"][idx]["public"]
+        sg_url_list.append(sg_url)
+        sg_ip = host_for_url(sg_url)
+        sg_admin_url = cluster_topology["sync_gateways"][idx]["admin"]
+        sg_admin_url_list.append(sg_admin_url)
+        if sg_ssl:
+            target_url_list.append("wss://{}:4984/{}".format(sg_ip, sg_db_list[idx]))
+            target_admin_url_list.append("wss://{}:4985/{}".format(sg_ip, sg_db_list[idx]))
+        else:
+            target_url_list.append("ws://{}:4984/{}".format(sg_ip, sg_db_list[idx]))
+            target_admin_url_list.append("ws://{}:4985/{}".format(sg_ip, sg_db_list[idx]))
+
+    # pdb.set_trace()
     try:
         server_version
     except NameError:
@@ -325,20 +343,19 @@ def params_from_base_suite_setup(request):
     else:
         log_info("Running without delta sync")
         persist_cluster_config_environment_prop(cluster_config, 'delta_sync_enabled', False)
+
+    if sg_ssl:
+        log_info("Enabling SSL on sync gateway")
+        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', True)
+    else:
+        log_info("Configure sync gateway without SSL")
+        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', False)
+
     # Write the number of replicas to cluster config
     persist_cluster_config_environment_prop(cluster_config, 'number_replicas', number_replicas)
 
     # As cblite jobs run with on Centos platform, adding by default centos to environment config
     persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "centos", False)
-
-    if sg_ssl:
-        log_info("Enabling SSL on sync gateway")
-        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', True)
-        target_url = "wss://{}:4984/{}".format(sg_ip, sg_db)
-        target_admin_url = "wss://{}:4985/{}".format(sg_ip, sg_db)
-
-    if sync_gateway_version < "2.0":
-        pytest.skip('Does not work with sg < 2.0 , so skipping the test')
 
     if not skip_provisioning:
         log_info("Installing Sync Gateway + Couchbase Server + Accels ('di' only)")
@@ -356,7 +373,6 @@ def params_from_base_suite_setup(request):
             raise
 
     # Create CBL databases on all devices
-    sg_admin_url = cluster_topology["sync_gateways"][0]["admin"]
     db_name_list = []
     cbl_db_list = []
     db_obj_list = []
@@ -413,14 +429,12 @@ def params_from_base_suite_setup(request):
         "version_list": version_list,
         "host_list": host_list,
         "port_list": port_list,
-        "target_url": target_url,
-        "sg_ip": sg_ip,
-        "sg_db": sg_db,
-        "sg_url": sg_url,
-        "sg_admin_url": sg_admin_url,
+        "target_url_list": target_url_list,
+        "sg_db_list": sg_db_list,
+        "sg_url_list": sg_url_list,
+        "sg_admin_url_list": sg_admin_url_list,
         "no_conflicts_enabled": no_conflicts_enabled,
         "sync_gateway_version": sync_gateway_version,
-        "target_admin_url": target_admin_url,
         "enable_sample_bucket": enable_sample_bucket,
         "cbl_db_list": cbl_db_list,
         "db_name_list": db_name_list,

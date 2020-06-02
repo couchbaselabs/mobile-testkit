@@ -3,6 +3,7 @@ import time
 import random
 from sys import maxsize
 from threading import Thread
+import pdb
 
 from keywords.MobileRestClient import MobileRestClient
 from CBLClient.Replication import Replication
@@ -17,13 +18,13 @@ from CBLClient.Utils import Utils
 @pytest.mark.listener
 @pytest.mark.replication
 def test_system(params_from_base_suite_setup):
-    sg_db = "db"
-    sg_url = params_from_base_suite_setup["sg_url"]
-    sg_admin_url = params_from_base_suite_setup["sg_admin_url"]
     cluster_config = params_from_base_suite_setup["cluster_config"]
-    sg_blip_url = params_from_base_suite_setup["target_url"]
-    base_url_list = params_from_base_suite_setup["base_url_list"]
+    sg_url_list = params_from_base_suite_setup["sg_url_list"]
+    sg_db_list = params_from_base_suite_setup["sg_db_list"]
+    sg_blip_url_list = params_from_base_suite_setup["target_url_list"]
+    sg_admin_url_list = params_from_base_suite_setup["sg_admin_url_list"]
     sg_config = params_from_base_suite_setup["sg_config"]
+    base_url_list = params_from_base_suite_setup["base_url_list"]
     db_obj_list = params_from_base_suite_setup["db_obj_list"]
     cbl_db_list = params_from_base_suite_setup["cbl_db_list"]
     db_name_list = params_from_base_suite_setup["db_name_list"]
@@ -45,10 +46,10 @@ def test_system(params_from_base_suite_setup):
     query_limit = 1000
     query_offset = 0
 
-    if sync_gateway_version < "2.0.0":
-        pytest.skip('This test cannot run with sg version below 2.0')
-    channels_sg = ["ABC"]
-    username = "autotest"
+    if sync_gateway_version < "2.7.0":
+        pytest.skip('This test cannot run with sg version below 2.8.0')
+    channels_sg_list = [['channel_sg1'], ['channel_sg2']]
+    username_list = ["autotest1", "autotest2"]
     password = "password"
 
     # Create CBL database
@@ -74,8 +75,10 @@ def test_system(params_from_base_suite_setup):
     if not resume_cluster:
         # Reset cluster to ensure no data in system
         cluster.reset(sg_config_path=sg_config)
-        log_info("Using SG ur: {}".format(sg_admin_url))
-        sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg)
+        pdb.set_trace()
+        for sg_admin_url, sg_db, channels_sg, username in zip(sg_admin_url_list, sg_db_list, channels_sg_list, username_list):
+            log_info("Using SG ur: {}".format(sg_admin_url))
+            sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg)
 
         # adding bulk docs to each db
         for cbl_db, db_obj, db_name in zip(cbl_db_list, db_obj_list, db_name_list):
@@ -117,29 +120,37 @@ def test_system(params_from_base_suite_setup):
             log_info("User already exist: {}".format(err))
 
     time.sleep(5)
-    # _check_doc_count(db_obj_list, cbl_db_list)
-    # Configure replication with push_pull for all db
+    # Configure replication with push_pull for each cbl db to all sgw
     replicator_obj_list = []
     replicator_list = []
     for base_url, cbl_db, query, platform in zip(base_url_list, cbl_db_list, query_obj_list, platform_list):
-        repl_obj = Replication(base_url)
-        replicator_obj_list.append(repl_obj)
-        authenticator = Authenticator(base_url)
-        cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, ttl=900000)
-        replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
-        session = cookie, session_id
-        repl_config = repl_obj.configure(cbl_db, sg_blip_url, continuous=True, channels=channels_sg,
-                                         replication_type="push_pull",
-                                         replicator_authenticator=replicator_authenticator)
-        repl = repl_obj.create(repl_config)
-        repl_obj.start(repl)
-        repl_obj.wait_until_replicator_idle(repl, max_times=maxsize, sleep_time=repl_status_check_sleep_time)
-        replicator_list.append(repl)
-        results = query.query_get_docs_limit_offset(cbl_db, limit=query_limit, offset=query_offset)
-        # Query results do not store in memory for dot net, so no need to release memory for dotnet
-        if(platform.lower() != "net-msft" and platform.lower() != "uwp" and platform.lower() != "xamarin-ios" and platform.lower() != "xamarin-android"):
-            _releaseQueryResults(base_url, results)
-
+        sg_replicator_obj_list = []
+        sg_replicator_list = []
+        for sg_admin_url, sg_db, sg_blip_url, username in zip(sg_admin_url_list, sg_db_list, sg_blip_url_list, username_list):
+            repl_obj = Replication(base_url)
+            sg_replicator_obj_list.append(repl_obj)
+            authenticator = Authenticator(base_url)
+            cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, ttl=900000)
+            replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
+            session = cookie, session_id
+            repl_config = repl_obj.configure(cbl_db, sg_blip_url, continuous=True, channels=channels_sg,
+                                             replication_type="push_pull",
+                                             replicator_authenticator=replicator_authenticator)
+            repl = repl_obj.create(repl_config)
+            repl_obj.start(repl)
+            repl_obj.wait_until_replicator_idle(repl, max_times=maxsize, sleep_time=repl_status_check_sleep_time)
+            sg_replicator_list.append(repl)
+            results = query.query_get_docs_limit_offset(cbl_db, limit=query_limit, offset=query_offset)
+            # Query results do not store in memory for dot net, so no need to release memory for dotnet
+            if(platform.lower() != "net-msft" and platform.lower() != "uwp" and platform.lower() != "xamarin-ios" and platform.lower() != "xamarin-android"):
+                _releaseQueryResults(base_url, results)
+        replicator_obj_list.append(sg_replicator_obj_list)
+        replicator_list.append(sg_replicator_list)
+    pdb.set_trace()
+    # configure replication in between sgw 
+    '''
+    TODO: add sg-replicate code here
+    '''
     current_time = datetime.now()
     running_time = current_time + timedelta(minutes=up_time)
 
@@ -156,14 +167,15 @@ def test_system(params_from_base_suite_setup):
         ######################################
         # Checking for docs update on SG side #
         ######################################
-        docs_to_update = random.sample(doc_ids, num_of_docs_to_update)
-        sg_docs = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=list(docs_to_update), auth=session)[0]
-        for sg_doc in sg_docs:
-            sg_doc["id"] = sg_doc["_id"]
-        log_info("Updating {} docs on SG - {}".format(len(docs_to_update),
-                                                      docs_to_update))
-        sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs,
-                              number_updates=num_of_doc_updates, auth=session, channels=channels_sg)
+        for sg_url, sg_db, channels_sg in zip(sg_url_list, sg_db_list, channels_sg_list):
+            docs_to_update = random.sample(doc_ids, num_of_docs_to_update)
+            sg_docs = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=list(docs_to_update), auth=session)[0]
+            for sg_doc in sg_docs:
+                sg_doc["id"] = sg_doc["_id"]
+            log_info("Updating {} docs on SG - {}".format(len(docs_to_update),
+                                                          docs_to_update))
+            sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs,
+                                  number_updates=num_of_doc_updates, auth=session, channels=channels_sg)
 
         # Waiting until replicator finishes on all dbs
         for base_url, repl_obj, repl, cbl_db, query, platform in zip(base_url_list,
@@ -172,6 +184,7 @@ def test_system(params_from_base_suite_setup):
                                                                      cbl_db_list,
                                                                      query_obj_list,
                                                                      platform_list):
+            # inner loop for thread here
             t = Thread(target=_replicaton_status_check, args=(repl_obj, repl, repl_status_check_sleep_time))
             t.start()
             t.join()
