@@ -149,7 +149,17 @@ def test_system(params_from_base_suite_setup):
     pdb.set_trace()
     # configure replication in between sgw 
     '''
-    TODO: add sg-replicate code here
+    TODO: test sg-replicate code here
+    sg1 = cluster.sync_gateways[0]
+    sg2 = cluster.sync_gateways[1]
+
+    sg2.start_replication2(remote_url=sg1.url,
+                           current_db=sg_db_list[1],
+                           remote_db=sg_db_list[0],
+                           continuous=True,
+                           target_user_name=username_list[0],
+                           target_password=password)
+    active_tasks = sg2.admin.get_active_tasks()
     '''
     current_time = datetime.now()
     running_time = current_time + timedelta(minutes=up_time)
@@ -176,18 +186,20 @@ def test_system(params_from_base_suite_setup):
                                                           docs_to_update))
             sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs,
                                   number_updates=num_of_doc_updates, auth=session, channels=channels_sg)
-
+            '''
+            TODO: verify updated docs get replicated to another sg
+            '''
         # Waiting until replicator finishes on all dbs
-        for base_url, repl_obj, repl, cbl_db, query, platform in zip(base_url_list,
-                                                                     replicator_obj_list,
-                                                                     replicator_list,
-                                                                     cbl_db_list,
-                                                                     query_obj_list,
-                                                                     platform_list):
+        for base_url, cbl_db, query, platform in zip(base_url_list,
+                                                     cbl_db_list,
+                                                     query_obj_list,
+                                                     platform_list):
             # inner loop for thread here
-            t = Thread(target=_replicaton_status_check, args=(repl_obj, repl, repl_status_check_sleep_time))
-            t.start()
-            t.join()
+            for repl_obj, repl in zip(replicator_obj_list, replicator_list):
+                t = Thread(target=_replicaton_status_check, args=(repl_obj, repl, repl_status_check_sleep_time))
+                t.start()
+                t.join()
+
             results = query.query_get_docs_limit_offset(cbl_db, limit=query_limit, offset=query_offset)
             # Query results do not store in memory for dot net, so no need to release memory for dotnet
             if(platform.lower() != "net-msft" and platform.lower() != "uwp" and platform.lower() != "xamarin-ios" and platform.lower() != "xamarin-android"):
@@ -198,23 +210,23 @@ def test_system(params_from_base_suite_setup):
         #######################################
         docs_to_update = random.sample(doc_ids, num_of_docs_to_update)
         i = 0
-        for base_url, db_obj, cbl_db, repl_obj, repl, query, platform in zip(base_url_list,
-                                                                             db_obj_list,
-                                                                             cbl_db_list,
-                                                                             replicator_obj_list,
-                                                                             replicator_list,
-                                                                             query_obj_list,
-                                                                             platform_list):
+        for base_url, db_obj, repl, query, platform in zip(base_url_list,
+                                                           db_obj_list,
+                                                           cbl_db_list,
+                                                           query_obj_list,
+                                                           platform_list):
             updates_per_db = len(docs_to_update) // len(db_obj_list)
             log_info("Updating {} docs on {} db - {}".format(updates_per_db,
                                                              db_obj.getName(cbl_db),
                                                              list(docs_to_update)[i: i + updates_per_db]))
             db_obj.update_bulk_docs(cbl_db, num_of_doc_updates, list(docs_to_update)[i: i + updates_per_db])
             i += updates_per_db
+
             # updating docs will affect all dbs as they are synced with SG.
-            t = Thread(target=_replicaton_status_check, args=(repl_obj, repl, repl_status_check_sleep_time))
-            t.start()
-            t.join()
+            for repl_obj, repl in zip(replicator_obj_list, replicator_list):
+                t = Thread(target=_replicaton_status_check, args=(repl_obj, repl, repl_status_check_sleep_time))
+                t.start()
+                t.join()
             results = query.query_get_docs_limit_offset(cbl_db, limit=query_limit, offset=query_offset)
             # Query results do not store in memory for dot net, so no need to release memory for dotnet
             if(platform.lower() != "net-msft" and platform.lower() != "uwp" and platform.lower() != "xamarin-ios" and platform.lower() != "xamarin-android"):
@@ -223,21 +235,23 @@ def test_system(params_from_base_suite_setup):
         ###########################
         # Deleting docs on SG side #
         ###########################
-        docs_to_delete = set(random.sample(doc_ids, num_of_docs_to_delete))
-        sg_docs = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=list(docs_to_delete), auth=session)[0]
-        log_info("Deleting {} docs on SG - {}".format(len(docs_to_delete),
-                                                      docs_to_delete))
-        sg_client.delete_bulk_docs(url=sg_url, db=sg_db,
-                                   docs=sg_docs, auth=session)
-        for base_url, repl_obj, repl, cbl_db, query, platform in zip(base_url_list,
-                                                                     replicator_obj_list,
-                                                                     replicator_list,
-                                                                     cbl_db_list,
-                                                                     query_obj_list,
-                                                                     platform_list):
-            t = Thread(target=_replicaton_status_check, args=(repl_obj, repl, repl_status_check_sleep_time))
-            t.start()
-            t.join()
+        for sg_url, sg_db in zip(sg_url_list, sg_db_list):
+            docs_to_delete = set(random.sample(doc_ids, num_of_docs_to_delete))
+            sg_docs = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=list(docs_to_delete), auth=session)[0]
+            log_info("Deleting {} docs on SG - {}".format(len(docs_to_delete),
+                                                          docs_to_delete))
+            sg_client.delete_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=session)
+            '''
+            TODO: verify deleted docs get replicated to another sg
+            '''
+        for base_url, cbl_db, query, platform in zip(base_url_list,
+                                                     cbl_db_list,
+                                                     query_obj_list,
+                                                     platform_list):
+            for repl_obj, repl in zip(replicator_obj_list, replicator_list):
+                t = Thread(target=_replicaton_status_check, args=(repl_obj, repl, repl_status_check_sleep_time))
+                t.start()
+                t.join()
             results = query.query_get_docs_limit_offset(cbl_db, limit=query_limit, offset=query_offset)
             # Query results do not store in memory for dot net, so no need to release memory for dotnet
             if(platform.lower() != "net-msft" and platform.lower() != "uwp" and platform.lower() != "xamarin-ios" and platform.lower() != "xamarin-android"):
@@ -291,13 +305,11 @@ def test_system(params_from_base_suite_setup):
         #############################
         # Creating docs on CBL side #
         #############################
-        for base_url, db_obj, cbl_db, repl_obj, repl, query, platform in zip(base_url_list,
-                                                                             db_obj_list,
-                                                                             cbl_db_list,
-                                                                             replicator_obj_list,
-                                                                             replicator_list,
-                                                                             query_obj_list,
-                                                                             platform_list):
+        for base_url, db_obj, cbl_db, query, platform in zip(base_url_list, 
+                                                             db_obj_list,
+                                                             cbl_db_list,
+                                                             query_obj_list,
+                                                             platform_list):
             name = db_obj.getName(cbl_db)
             docs_to_create = ["cbl_{}_{}".format(name, doc_id) for doc_id in range(doc_id_for_new_docs, doc_id_for_new_docs + num_of_docs_to_add)]
             added_docs = {}
@@ -322,10 +334,11 @@ def test_system(params_from_base_suite_setup):
             db_obj.saveDocuments(cbl_db, added_docs)
             time.sleep(5)
 
-            # Adding docs will affect all dbs as they are synced with SG.
-            t = Thread(target=_replicaton_status_check, args=(repl_obj, repl, repl_status_check_sleep_time))
-            t.start()
-            t.join()
+            for repl_obj, repl in zip(replicator_obj_list, replicator_list):
+                # Adding docs will affect all dbs as they are synced with SG.
+                t = Thread(target=_replicaton_status_check, args=(repl_obj, repl, repl_status_check_sleep_time))
+                t.start()
+                t.join()
             results = query.query_get_docs_limit_offset(cbl_db, limit=query_limit,
                                                         offset=query_offset)
             # Query results do not store in memory for dot net, so no need to release memory for dotnet
@@ -364,15 +377,14 @@ def _check_doc_count(db_obj_list, cbl_db_list):
 
 def _check_parallel_replication_changes(base_url_list, replicator_obj_list, replicator_list, cbl_db_list, query_obj_list,
                                         repl_status_check_sleep_time, query_limit, platform_list, query_offset):
-    for base_url, repl_obj, repl, cbl_db, query, platform in zip(base_url_list,
-                                                                 replicator_obj_list,
-                                                                 replicator_list,
-                                                                 cbl_db_list,
-                                                                 query_obj_list,
-                                                                 platform_list):
-        t = Thread(target=_replicaton_status_check, args=(repl_obj, repl, repl_status_check_sleep_time))
-        t.start()
-        t.join()
+    for base_url, cbl_db, query, platform in zip(base_url_list,
+                                                 cbl_db_list,
+                                                 query_obj_list,
+                                                 platform_list):
+        for repl_obj, repl in zip(replicator_obj_list, replicator_list):
+            t = Thread(target=_replicaton_status_check, args=(repl_obj, repl, repl_status_check_sleep_time))
+            t.start()
+            t.join()
         results = query.query_get_docs_limit_offset(cbl_db, limit=query_limit, offset=query_offset)
         # Query results do not store in memory for dot net, so no need to release memory for dotnet
         if(platform.lower() != "net-msft" and platform.lower() != "uwp" and platform.lower() != "xamarin-ios" and platform.lower() != "xamarin-android"):
