@@ -2291,6 +2291,7 @@ class MobileRestClient:
     def take_db_offline(self, cluster_conf, db):
         # Take bucket offline
         ansible_runner = AnsibleRunner(cluster_conf)
+        log_info("CLuster", cluster_conf)
         status = ansible_runner.run_ansible_playbook(
             "sync-gateway-db-offline.yml",
             extra_vars={

@@ -190,7 +190,7 @@ def test_online_to_offline_changes_feed_controlled_close_continuous(params_from_
         futures[executor.submit(doc_pusher.add_docs, num_docs)] = "docs_push"
         time.sleep(5)
         futures[executor.submit(sg_client.take_db_offline, cluster_conf, "db")] = "db_offline_task"
-
+        log_info(futures)
         for future in concurrent.futures.as_completed(futures):
             task_name = futures[future]
 
