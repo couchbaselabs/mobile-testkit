@@ -189,15 +189,16 @@ def test_online_to_offline_changes_feed_controlled_close_continuous(params_from_
         futures[executor.submit(seth.start_continuous_changes_tracking, termination_doc_id=None)] = "continuous"
         futures[executor.submit(doc_pusher.add_docs, num_docs)] = "docs_push"
         offline_retries = 0
-        while offline_retries < 8:
+        time_sec = 5
+        while offline_retries < 5:
             try:
                 assert sg_client.take_db_offline(cluster_conf, "db") == 0
                 futures[executor.submit(sg_client.take_db_offline, cluster_conf, "db")] = "db_offline_task"
                 break
             except AssertionError as error:
                 offline_retries = offline_retries + 1
-                time.sleep(50)
-                if offline_retries == 8:
+                time.sleep(time_sec * offline_retries)
+                if offline_retries == 5:
                     raise error
         for future in concurrent.futures.as_completed(futures):
             task_name = futures[future]
