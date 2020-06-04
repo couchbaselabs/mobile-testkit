@@ -1580,7 +1580,7 @@ def test_query_arthimetic(params_from_base_suite_setup):
     qy.query_arthimetic(cbl_db)
 
 
-def test_live_query_response_delay_time(params_from_base_suite_setup):	
+def test_live_query_response_delay_time(params_from_base_suite_setup):
     """
     note: this test case is for android/java only
     1. call /query_getLiveQueryResponseTime to get delay timer

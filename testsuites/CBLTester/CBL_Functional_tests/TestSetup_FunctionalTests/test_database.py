@@ -433,33 +433,15 @@ def test_db_close_on_active_replicators(params_from_base_test_setup):
     authenticator = Authenticator(base_url)
 
     replicator_authenticator1 = authenticator.authentication(session_id1, cookie1, authentication_type="session")
-    repl_config1 = replicator.configure(source_db=cbl_db, replicator_authenticator=replicator_authenticator1, target_url=sg_blip_url,
-                                        replication_type="push_pull", continuous=True, channels=channel1)
+    repl1 = replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator1, target_url=sg_blip_url,
+                                               replication_type="push_pull", continuous=True, channels=channel1)
 
     replicator_authenticator2 = authenticator.authentication(session_id2, cookie2, authentication_type="session")
-    repl_config2 = replicator.configure(source_db=cbl_db, replicator_authenticator=replicator_authenticator2, target_url=sg_blip_url,
-                                        replication_type="push", continuous=True, channels=channel2)
+    repl2 = replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator2, target_url=sg_blip_url,
+                                               replication_type="push", continuous=True, channels=channel2)
     replicator_authenticator3 = authenticator.authentication(session_id3, cookie3, authentication_type="session")
-    repl_config3 = replicator.configure(source_db=cbl_db, replicator_authenticator=replicator_authenticator3, target_url=sg_blip_url,
-                                        replication_type="pull", continuous=True, channels=channel3)
-
-    # start all replicators
-    repl1 = replicator.create(repl_config1)
-    replicator.start(repl1)
-    repl2 = replicator.create(repl_config2)
-    replicator.start(repl2)
-    repl3 = replicator.create(repl_config3)
-    replicator.start(repl3)
-
-    log_info(replicator.getActivitylevel(repl1))
-    log_info(replicator.getActivitylevel(repl2))
-    log_info(replicator.getActivitylevel(repl3))
-
-    # TODO: need to clarify with dev about close db on replicator state
-    # after clarification, this code suppose to be removed
-    replicator.wait_until_replicator_idle(repl1)
-    replicator.wait_until_replicator_idle(repl2)
-    replicator.wait_until_replicator_idle(repl3)
+    repl3 = replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator3, target_url=sg_blip_url,
+                                               replication_type="pull", continuous=True, channels=channel3)
 
     log_info(replicator.getActivitylevel(repl1))
     log_info(replicator.getActivitylevel(repl2))
@@ -475,7 +457,7 @@ def test_db_close_on_active_replicators(params_from_base_test_setup):
 
 
 @pytest.mark.listener
-@pytest.mark.hydrogen
+@pytest.mark.replication
 def test_db_close_on_active_replicator_and_live_query(params_from_base_test_setup):
     """
         @summary:
@@ -531,18 +513,11 @@ def test_db_close_on_active_replicator_and_live_query(params_from_base_test_setu
     authenticator = Authenticator(base_url)
 
     replicator_authenticator1 = authenticator.authentication(session_id1, cookie1, authentication_type="session")
-    repl_config1 = replicator.configure(source_db=cbl_db, replicator_authenticator=replicator_authenticator1, target_url=sg_blip_url,
-                                        replication_type="push_pull", continuous=True, channels=channel1)
+    repl1 = replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator1, target_url=sg_blip_url,
+                                               replication_type="push_pull", continuous=True, channels=channel1)
     replicator_authenticator2 = authenticator.authentication(session_id2, cookie2, authentication_type="session")
-    repl_config2 = replicator.configure(source_db=cbl_db, replicator_authenticator=replicator_authenticator2, target_url=sg_blip_url,
-                                        replication_type="push_pull", continuous=True, channels=channel2)
-
-    # start all replicators
-    repl1 = replicator.create(repl_config1)
-    replicator.start(repl1)
-
-    repl2 = replicator.create(repl_config2)
-    replicator.start(repl2)
+    repl2 = replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator2, target_url=sg_blip_url,
+                                               replication_type="push_pull", continuous=True, channels=channel2)
 
     # 3. register a live query to the cbl db
     qy = Query(base_url)
@@ -552,15 +527,7 @@ def test_db_close_on_active_replicator_and_live_query(params_from_base_test_setu
     log_info(replicator.getActivitylevel(repl1))
     log_info(replicator.getActivitylevel(repl2))
 
-    # TODO: need to clarify with dev about close db on replicator state
-    # after clarification, this code suppose to be removed
-    replicator.wait_until_replicator_idle(repl1)
-    replicator.wait_until_replicator_idle(repl2)
-
-    log_info(replicator.getActivitylevel(repl1))
-    log_info(replicator.getActivitylevel(repl2))
-
-    # 4. close the database
+    # 4. close the database and
     # 5. verify the database is closed successfully
     try:
         log_info("closing database")
@@ -635,32 +602,14 @@ def test_db_delete_on_active_replicators(params_from_base_test_setup):
     authenticator = Authenticator(base_url)
 
     replicator_authenticator1 = authenticator.authentication(session_id1, cookie1, authentication_type="session")
-    repl_config1 = replicator.configure(source_db=cbl_db, replicator_authenticator=replicator_authenticator1, target_url=sg_blip_url,
-                                        replication_type="push_pull", continuous=True, channels=channel1)
+    repl1 = replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator1, target_url=sg_blip_url,
+                                               replication_type="push_pull", continuous=True, channels=channel1)
     replicator_authenticator2 = authenticator.authentication(session_id2, cookie2, authentication_type="session")
-    repl_config2 = replicator.configure(source_db=cbl_db, replicator_authenticator=replicator_authenticator2, target_url=sg_blip_url,
-                                        replication_type="push", continuous=True, channels=channel2)
+    repl2 = replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator2, target_url=sg_blip_url,
+                                               replication_type="push", continuous=True, channels=channel2)
     replicator_authenticator3 = authenticator.authentication(session_id3, cookie3, authentication_type="session")
-    repl_config3 = replicator.configure(source_db=cbl_db, replicator_authenticator=replicator_authenticator3, target_url=sg_blip_url,
-                                        replication_type="pull", continuous=True, channels=channel3)
-
-    # start all replicators
-    repl1 = replicator.create(repl_config1)
-    replicator.start(repl1)
-    repl2 = replicator.create(repl_config2)
-    replicator.start(repl2)
-    repl3 = replicator.create(repl_config3)
-    replicator.start(repl3)
-
-    log_info(replicator.getActivitylevel(repl1))
-    log_info(replicator.getActivitylevel(repl2))
-    log_info(replicator.getActivitylevel(repl3))
-
-    # TODO: need to clarify with dev about close db on replicator state
-    # after clarification, this code suppose to be removed
-    replicator.wait_until_replicator_idle(repl1)
-    replicator.wait_until_replicator_idle(repl2)
-    replicator.wait_until_replicator_idle(repl3)
+    repl3 = replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator3, target_url=sg_blip_url,
+                                               replication_type="pull", continuous=True, channels=channel3)
 
     log_info(replicator.getActivitylevel(repl1))
     log_info(replicator.getActivitylevel(repl2))
@@ -732,31 +681,16 @@ def test_db_delete_on_active_replicator_and_live_query(params_from_base_test_set
     authenticator = Authenticator(base_url)
 
     replicator_authenticator1 = authenticator.authentication(session_id1, cookie1, authentication_type="session")
-    repl_config1 = replicator.configure(source_db=cbl_db, replicator_authenticator=replicator_authenticator1, target_url=sg_blip_url,
-                                        replication_type="push_pull", continuous=True, channels=channel1)
+    repl1 = replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator1, target_url=sg_blip_url,
+                                               replication_type="push_pull", continuous=True, channels=channel1)
     replicator_authenticator2 = authenticator.authentication(session_id2, cookie2, authentication_type="session")
-    repl_config2 = replicator.configure(source_db=cbl_db, replicator_authenticator=replicator_authenticator2, target_url=sg_blip_url,
-                                        replication_type="push_pull", continuous=True, channels=channel2)
-
-    # start all replicators
-    repl1 = replicator.create(repl_config1)
-    replicator.start(repl1)
-
-    repl2 = replicator.create(repl_config2)
-    replicator.start(repl2)
+    repl2 = replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator2, target_url=sg_blip_url,
+                                               replication_type="push_pull", continuous=True, channels=channel2)
 
     # 3. register a live query to the cbl db
     qy = Query(base_url)
     query = qy.query_select_all(cbl_db)
     query_listener = qy.addChangeListener(query)
-
-    log_info(replicator.getActivitylevel(repl1))
-    log_info(replicator.getActivitylevel(repl2))
-
-    # TODO: need to clarify with dev about close db on replicator state
-    # after clarification, this code suppose to be removed
-    replicator.wait_until_replicator_idle(repl1)
-    replicator.wait_until_replicator_idle(repl2)
 
     log_info(replicator.getActivitylevel(repl1))
     log_info(replicator.getActivitylevel(repl2))
