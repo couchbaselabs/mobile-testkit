@@ -420,7 +420,7 @@ def params_from_base_suite_setup(request):
 
         log_info("Loading sample bucket {}".format(enable_sample_bucket))
         server.load_sample_bucket(enable_sample_bucket)
-        time.sleep(60)
+        # we trying 5 times in the rbac bucket user api
         server._create_internal_rbac_bucket_user(enable_sample_bucket, cluster_config=cluster_config)
 
         # Restart SG after the bucket deletion
@@ -432,7 +432,7 @@ def params_from_base_suite_setup(request):
             log_info("Restarting sync gateway {}".format(sg_ip))
             sg_obj.restart_sync_gateways(cluster_config=cluster_config, url=sg_ip)
             # Giving time to SG to load all docs into it's cache
-            time.sleep(240)
+            time.sleep(20)
 
         if mode == "di":
             ac_obj = SyncGateway()

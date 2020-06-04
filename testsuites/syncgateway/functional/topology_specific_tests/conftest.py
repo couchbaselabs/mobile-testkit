@@ -84,3 +84,8 @@ def pytest_addoption(parser):
 
     parser.addoption("--cbs-ce", action="store_true",
                      help="If set, community edition will get picked up , default is enterprise", default=False)
+
+    parser.addoption("--cbs-platform",
+                     action="store",
+                     help="Couchbase Server Platform binary to install (ex. centos or windows)",
+                     default="centos7")

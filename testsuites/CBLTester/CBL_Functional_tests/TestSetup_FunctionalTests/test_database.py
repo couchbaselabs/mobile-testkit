@@ -3,11 +3,11 @@ import time
 
 from CBLClient.Database import Database
 from CBLClient.DatabaseConfiguration import DatabaseConfiguration
-from libraries.testkit import cluster
-from CBLClient.Replication import Replication
-from keywords.MobileRestClient import MobileRestClient
-from CBLClient.Authenticator import Authenticator
 from keywords.utils import log_info
+from libraries.testkit import cluster
+from keywords.MobileRestClient import MobileRestClient
+from CBLClient.Replication import Replication
+from CBLClient.Authenticator import Authenticator
 from CBLClient.Query import Query
 
 
@@ -371,7 +371,7 @@ def test_copy_prebuilt_database(params_from_base_test_setup, encrypted):
 
 
 @pytest.mark.listener
-@pytest.mark.hydrogen
+@pytest.mark.replication
 def test_db_close_on_active_replicators(params_from_base_test_setup):
     """
         @summary:
