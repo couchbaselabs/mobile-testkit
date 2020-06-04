@@ -188,10 +188,17 @@ def test_online_to_offline_changes_feed_controlled_close_continuous(params_from_
         futures = dict()
         futures[executor.submit(seth.start_continuous_changes_tracking, termination_doc_id=None)] = "continuous"
         futures[executor.submit(doc_pusher.add_docs, num_docs)] = "docs_push"
-        time.sleep(500)
-        futures[executor.submit(sg_client.take_db_offline, cluster_conf, "db")] = "db_offline_task"
-        log_info(futures)
-        log_info("Futures debugging _>>>>>>>>>>>>>>>>")
+        offline_retries = 0
+        while offline_retries < 8:
+            try:
+                assert executor.submit(sg_client.take_db_offline, cluster_conf, "db").results() == 0
+                futures[executor.submit(sg_client.take_db_offline, cluster_conf, "db")] = "db_offline_task"
+                break
+            except AssertionError as error:
+                offline_retries = offline_retries + 1
+                time.sleep(50)
+                if offline_retries == 8:
+                    raise error
         for future in concurrent.futures.as_completed(futures):
             task_name = futures[future]
 
@@ -217,7 +224,6 @@ def test_online_to_offline_changes_feed_controlled_close_continuous(params_from_
 
     # Bring db back online
     status = sg_client.bring_db_online(cluster_conf=cluster_conf, db="db")
-    time.sleep(30)
     assert status == 0
 
     # Get all docs that have been pushed
