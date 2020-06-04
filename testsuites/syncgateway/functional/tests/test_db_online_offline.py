@@ -188,9 +188,10 @@ def test_online_to_offline_changes_feed_controlled_close_continuous(params_from_
         futures = dict()
         futures[executor.submit(seth.start_continuous_changes_tracking, termination_doc_id=None)] = "continuous"
         futures[executor.submit(doc_pusher.add_docs, num_docs)] = "docs_push"
-        time.sleep(5)
+        time.sleep(60)
         futures[executor.submit(sg_client.take_db_offline, cluster_conf, "db")] = "db_offline_task"
         log_info(futures)
+        log_info("Futures debugging _>>>>>>>>>>>>>>>>")
         for future in concurrent.futures.as_completed(futures):
             task_name = futures[future]
 
@@ -198,7 +199,7 @@ def test_online_to_offline_changes_feed_controlled_close_continuous(params_from_
                 log_info("DB OFFLINE")
                 # make sure db_offline returns 200
                 # sync-gateway-db-offline.yml checks for 200
-                time.sleep(310)
+                time.sleep(40)
                 assert future.result() == 0
             elif task_name == "docs_push":
                 log_info("DONE PUSHING DOCS")
