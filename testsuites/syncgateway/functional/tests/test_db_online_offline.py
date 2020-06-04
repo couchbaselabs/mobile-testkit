@@ -188,7 +188,7 @@ def test_online_to_offline_changes_feed_controlled_close_continuous(params_from_
         futures = dict()
         futures[executor.submit(seth.start_continuous_changes_tracking, termination_doc_id=None)] = "continuous"
         futures[executor.submit(doc_pusher.add_docs, num_docs)] = "docs_push"
-        time.sleep(60)
+        time.sleep(130)
         futures[executor.submit(sg_client.take_db_offline, cluster_conf, "db")] = "db_offline_task"
         log_info(futures)
         log_info("Futures debugging _>>>>>>>>>>>>>>>>")
