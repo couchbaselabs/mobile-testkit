@@ -191,7 +191,7 @@ def test_online_to_offline_changes_feed_controlled_close_continuous(params_from_
         offline_retries = 0
         while offline_retries < 8:
             try:
-                assert executor.submit(sg_client.take_db_offline, cluster_conf, "db").results() == 0
+                assert sg_client.take_db_offline(cluster_conf, "db") == 0
                 futures[executor.submit(sg_client.take_db_offline, cluster_conf, "db")] = "db_offline_task"
                 break
             except AssertionError as error:
