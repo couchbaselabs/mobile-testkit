@@ -1,1 +1,0 @@
-## Location for client / sync_gateway logs for a test run

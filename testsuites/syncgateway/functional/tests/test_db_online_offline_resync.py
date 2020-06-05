@@ -306,7 +306,7 @@ def test_bucket_online_offline_resync_with_online(params_from_base_test_setup, s
             break
 
     retries = 0
-    while retries < 3:
+    while retries < 8:
         try:
             status = sg_client.bring_db_online(cluster_conf=cluster_conf, db="db")
             assert status == 0
@@ -314,8 +314,8 @@ def test_bucket_online_offline_resync_with_online(params_from_base_test_setup, s
             break
         except AssertionError as error:
             retries = retries + 1
-            time.sleep(30)
-            if retries == 3:
+            time.sleep(10)
+            if retries == 8:
                 raise error
 
     time.sleep(5)
@@ -497,7 +497,7 @@ def test_bucket_online_offline_resync_with_offline(params_from_base_test_setup, 
             break
 
     retries = 0
-    while retries < 3:
+    while retries < 7:
         try:
             status = sg_client.bring_db_online(cluster_conf=cluster_conf, db="db")
             log_info("online request issued !!!!! response status: {}".format(status))
@@ -508,8 +508,8 @@ def test_bucket_online_offline_resync_with_offline(params_from_base_test_setup, 
         except AssertionError as error:
             log_info("Status of db = {}".format(db_info["state"]))
             retries = retries + 1
-            time.sleep(20)
-            if retries == 3:
+            time.sleep(10)
+            if retries == 7:
                 raise error
 
     resync_result = async_resync_result.get()
