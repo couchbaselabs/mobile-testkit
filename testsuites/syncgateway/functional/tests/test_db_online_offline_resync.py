@@ -305,11 +305,18 @@ def test_bucket_online_offline_resync_with_online(params_from_base_test_setup, s
         if resync_occured:
             break
 
-    time.sleep(10)
-
-    status = sg_client.bring_db_online(cluster_conf=cluster_conf, db="db")
-    assert status == 0
-    log_info("online request issued !!!!! response status: {}".format(status))
+    retries = 0
+    while retries < 3:
+        try:
+            status = sg_client.bring_db_online(cluster_conf=cluster_conf, db="db")
+            assert status == 0
+            log_info("online request issued !!!!! response status: {}".format(status))
+            break
+        except AssertionError as error:
+            retries = retries + 1
+            time.sleep(30)
+            if retries == 3:
+                raise error
 
     time.sleep(5)
     db_info = admin.get_db_info("db")
@@ -489,16 +496,21 @@ def test_bucket_online_offline_resync_with_offline(params_from_base_test_setup, 
         if resync_occured:
             break
 
-    time.sleep(10)
-
-    status = sg_client.bring_db_online(cluster_conf=cluster_conf, db="db")
-
-    log_info("online request issued !!!!! response status: {}".format(status))
-
-    time.sleep(5)
-    db_info = admin.get_db_info("db")
-    log_info("Status of db = {}".format(db_info["state"]))
-    assert db_info["state"] == "Online"
+    retries = 0
+    while retries < 3:
+        try:
+            status = sg_client.bring_db_online(cluster_conf=cluster_conf, db="db")
+            log_info("online request issued !!!!! response status: {}".format(status))
+            db_info = admin.get_db_info("db")
+            log_info("Status of db = {}".format(db_info["state"]))
+            assert db_info["state"] == "Online"
+            break
+        except AssertionError as error:
+            log_info("Status of db = {}".format(db_info["state"]))
+            retries = retries + 1
+            time.sleep(20)
+            if retries == 3:
+                raise error
 
     resync_result = async_resync_result.get()
     log_info("resync_changes {}".format(resync_result))
