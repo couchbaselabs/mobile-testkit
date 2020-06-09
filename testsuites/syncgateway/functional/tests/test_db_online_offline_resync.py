@@ -530,7 +530,7 @@ def test_bucket_online_offline_resync_with_offline(params_from_base_test_setup, 
     assert resync_result['payload']['changes'] == num_docs * num_users
     assert resync_result['status_code'] == 200
 
-    #time.sleep(5)
+    # time.sleep(5)
     global_cache = list()
     for user in user_objects:
         global_cache.append(user.cache)
