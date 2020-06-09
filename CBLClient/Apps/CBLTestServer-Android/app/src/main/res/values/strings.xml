@@ -1,4 +1,0 @@
-<resources>
-    <string name="app_name">CBLTestServer2.0</string>
-    <string name="server_running">Running http server @%s:%d</string>
-</resources>
