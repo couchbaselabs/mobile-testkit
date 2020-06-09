@@ -126,26 +126,26 @@ def test_bucket_online_offline_resync_sanity(params_from_base_test_setup, sg_con
 
     num_changes = admin.db_resync(db="db")
     log_info("expecting num_changes {} == num_docs {} * num_users {}".format(num_changes, num_docs, num_users))
-    retries = 5
+    retries = 0
     while retries < 5:
         try:
             assert num_changes['payload']['changes'] == num_docs * num_users
         except AssertionError as error:
             retries = retries + 1
-            time.sleep(2)
+            time.sleep(5)
             if retries == 5:
                 raise error
     # Take "db" online
 
-    db_retries = 0
-    while db_retries < 3:
+    retries = 0
+    while retries < 5:
         try:
             status = sg_client.bring_db_online(cluster_conf=cluster_conf, db="db")
             assert status == 0
         except AssertionError as error:
-            db_retries = db_retries + 1
+            retries = retries + 1
             time.sleep(2)
-            if db_retries == 3:
+            if retries == 5:
                 raise error
 
     global_cache = list()
@@ -298,7 +298,6 @@ def test_bucket_online_offline_resync_with_online(params_from_base_test_setup, s
     except Exception as e:
         log_info("Catch resync exception: {}".format(e))
 
-    time.sleep(1)
     resync_occured = False
 
     for i in range(20):
@@ -415,7 +414,7 @@ def test_bucket_online_offline_resync_with_offline(params_from_base_test_setup, 
     log_info("Update docs")
     in_parallel(user_objects, 'update_docs', num_revisions)
 
-    time.sleep(10)
+    # time.sleep(10)
 
     # Get changes for all users
     in_parallel(user_objects, 'get_changes')
@@ -469,16 +468,20 @@ def test_bucket_online_offline_resync_with_offline(params_from_base_test_setup, 
                                                       cluster_config=cluster_conf)
     assert restart_status == 0
 
-    log_info("Sleeping....")
-    time.sleep(10)
     pool = ThreadPool(processes=1)
-
     log_info("Restarted SG....")
-    time.sleep(5)
 
-    db_info = admin.get_db_info("db")
-    log_info("Status of db = {}".format(db_info["state"]))
-    assert db_info["state"] == "Offline"
+    retries = 0
+    while retries < 5:
+        try:
+            db_info = admin.get_db_info("db")
+            log_info("Status of db = {}".format(db_info["state"]))
+            assert db_info["state"] == "Offline"
+        except AssertionError as error:
+            retries = retries + 1
+            time.sleep(3)
+            if retries == 5:
+                raise error
 
     try:
         async_resync_result = pool.apply_async(admin.db_resync, ("db",))
@@ -486,7 +489,6 @@ def test_bucket_online_offline_resync_with_offline(params_from_base_test_setup, 
     except Exception as e:
         log_info("Catch resync exception: {}".format(e))
 
-    time.sleep(1)
     resync_occured = False
 
     for i in range(20):
@@ -508,16 +510,19 @@ def test_bucket_online_offline_resync_with_offline(params_from_base_test_setup, 
         if resync_occured:
             break
 
-    time.sleep(10)
-
-    status = sg_client.bring_db_online(cluster_conf=cluster_conf, db="db")
-
-    log_info("online request issued !!!!! response status: {}".format(status))
-
-    time.sleep(5)
-    db_info = admin.get_db_info("db")
-    log_info("Status of db = {}".format(db_info["state"]))
-    assert db_info["state"] == "Online"
+    retries = 0
+    while retries < 5:
+        try:
+            status = sg_client.bring_db_online(cluster_conf=cluster_conf, db="db")
+            log_info("online request issued !!!!! response status: {}".format(status))
+            db_info = admin.get_db_info("db")
+            log_info("Status of db = {}".format(db_info["state"]))
+            assert db_info["state"] == "Online"
+        except AssertionError as error:
+            retries = retries + 1
+            time.sleep(3)
+            if retries == 5:
+                raise error
 
     resync_result = async_resync_result.get()
     log_info("resync_changes {}".format(resync_result))
@@ -525,7 +530,7 @@ def test_bucket_online_offline_resync_with_offline(params_from_base_test_setup, 
     assert resync_result['payload']['changes'] == num_docs * num_users
     assert resync_result['status_code'] == 200
 
-    time.sleep(5)
+    #time.sleep(5)
     global_cache = list()
     for user in user_objects:
         global_cache.append(user.cache)
