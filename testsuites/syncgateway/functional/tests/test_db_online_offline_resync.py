@@ -276,7 +276,6 @@ def test_bucket_online_offline_resync_with_online(params_from_base_test_setup, s
                                                       cluster_config=cluster_conf)
     assert restart_status == 0
 
-    # time.sleep(10)
     pool = ThreadPool(processes=1)
 
     log_info("Restarted SG....")
@@ -344,7 +343,6 @@ def test_bucket_online_offline_resync_with_online(params_from_base_test_setup, s
     assert resync_result['payload']['changes'] == num_docs * num_users
     assert resync_result['status_code'] == 200
 
-    # time.sleep(5)
     global_cache = list()
     for user in user_objects:
         global_cache.append(user.cache)
@@ -417,8 +415,6 @@ def test_bucket_online_offline_resync_with_offline(params_from_base_test_setup, 
     # Update docs
     log_info("Update docs")
     in_parallel(user_objects, 'update_docs', num_revisions)
-
-    # time.sleep(10)
 
     # Get changes for all users
     in_parallel(user_objects, 'get_changes')
@@ -536,7 +532,6 @@ def test_bucket_online_offline_resync_with_offline(params_from_base_test_setup, 
     assert resync_result['payload']['changes'] == num_docs * num_users
     assert resync_result['status_code'] == 200
 
-    # time.sleep(5)
     global_cache = list()
     for user in user_objects:
         global_cache.append(user.cache)
