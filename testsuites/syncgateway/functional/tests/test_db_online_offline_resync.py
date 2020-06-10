@@ -510,10 +510,10 @@ def test_bucket_online_offline_resync_with_offline(params_from_base_test_setup, 
         if resync_occured:
             break
 
-    status = sg_client.bring_db_online(cluster_conf=cluster_conf, db="db")
     retries = 0
     while retries < 5:
         try:
+            status = sg_client.bring_db_online(cluster_conf=cluster_conf, db="db")
             log_info("online request issued !!!!! response status: {}".format(status))
             db_info = admin.get_db_info("db")
             log_info("Status of db = {}".format(db_info["state"]))
