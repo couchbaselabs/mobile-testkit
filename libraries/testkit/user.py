@@ -511,6 +511,8 @@ class User:
                         break
 
                 time.sleep(0.1)
+            else:
+                break
 
         return docs, current_seq_num
 
