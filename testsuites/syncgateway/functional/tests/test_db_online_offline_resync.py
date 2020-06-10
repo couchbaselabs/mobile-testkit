@@ -124,20 +124,19 @@ def test_bucket_online_offline_resync_sanity(params_from_base_test_setup, sg_con
                                                       cluster_config=cluster_conf)
     assert restart_status == 0
 
-    num_changes = admin.db_resync(db="db")
-    log_info("expecting num_changes {} == num_docs {} * num_users {}".format(num_changes, num_docs, num_users))
     retries = 0
     while retries < 5:
         try:
+            num_changes = admin.db_resync(db="db")
+            log_info("expecting num_changes {} == num_docs {} * num_users {}".format(num_changes, num_docs, num_users))
             assert num_changes['payload']['changes'] == num_docs * num_users
             break
         except AssertionError as error:
             retries = retries + 1
-            time.sleep(5)
+            time.sleep(3)
             if retries == 5:
                 raise error
     # Take "db" online
-
     retries = 0
     while retries < 5:
         try:
@@ -332,7 +331,7 @@ def test_bucket_online_offline_resync_with_online(params_from_base_test_setup, s
             assert db_info["state"] == "Online"
             break
         except AssertionError as error:
-            time.sleep(3)
+            time.sleep(2)
             retries = retries + 1
             if retries == 5:
                 raise error
@@ -511,10 +510,10 @@ def test_bucket_online_offline_resync_with_offline(params_from_base_test_setup, 
         if resync_occured:
             break
 
+    status = sg_client.bring_db_online(cluster_conf=cluster_conf, db="db")
     retries = 0
     while retries < 5:
         try:
-            status = sg_client.bring_db_online(cluster_conf=cluster_conf, db="db")
             log_info("online request issued !!!!! response status: {}".format(status))
             db_info = admin.get_db_info("db")
             log_info("Status of db = {}".format(db_info["state"]))
