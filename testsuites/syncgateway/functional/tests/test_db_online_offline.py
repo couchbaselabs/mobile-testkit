@@ -188,9 +188,18 @@ def test_online_to_offline_changes_feed_controlled_close_continuous(params_from_
         futures = dict()
         futures[executor.submit(seth.start_continuous_changes_tracking, termination_doc_id=None)] = "continuous"
         futures[executor.submit(doc_pusher.add_docs, num_docs)] = "docs_push"
-        time.sleep(5)
-        futures[executor.submit(sg_client.take_db_offline, cluster_conf, "db")] = "db_offline_task"
-
+        offline_retries = 0
+        time_sec = 10
+        while offline_retries < 10:
+            try:
+                assert sg_client.take_db_offline(cluster_conf, "db") == 0
+                futures[executor.submit(sg_client.take_db_offline, cluster_conf, "db")] = "db_offline_task"
+                break
+            except AssertionError as error:
+                offline_retries = offline_retries + 1
+                time.sleep(time_sec)
+                if offline_retries == 10:
+                    raise error
         for future in concurrent.futures.as_completed(futures):
             task_name = futures[future]
 
@@ -962,7 +971,7 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
 
 # # Scenario 17
 # @pytest.mark.dbonlineoffline
-# def test_db_online_offline_with_invalid_legal_config(cluster, disable_http_retry):
+# def test_db_online_offline_with_invalid_legal_config(cluster, disable_http_time_sec):
 #    cluster.reset("bucket_online_offline/bucket_online_offline_offline_false_cc.json")
 #    admin = Admin(cluster.sync_gateways[0])
 #
