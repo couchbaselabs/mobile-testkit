@@ -130,6 +130,7 @@ def test_bucket_online_offline_resync_sanity(params_from_base_test_setup, sg_con
     while retries < 5:
         try:
             assert num_changes['payload']['changes'] == num_docs * num_users
+            break
         except AssertionError as error:
             retries = retries + 1
             time.sleep(5)
@@ -142,6 +143,7 @@ def test_bucket_online_offline_resync_sanity(params_from_base_test_setup, sg_con
         try:
             status = sg_client.bring_db_online(cluster_conf=cluster_conf, db="db")
             assert status == 0
+            break
         except AssertionError as error:
             retries = retries + 1
             time.sleep(2)
@@ -285,6 +287,7 @@ def test_bucket_online_offline_resync_with_online(params_from_base_test_setup, s
             db_info = admin.get_db_info("db")
             log_info("Status of db = {}".format(db_info["state"]))
             assert db_info["state"] == "Offline"
+            break
         except AssertionError as error:
             time.sleep(2)
             log_info("Sleeping....")
@@ -328,6 +331,7 @@ def test_bucket_online_offline_resync_with_online(params_from_base_test_setup, s
             db_info = admin.get_db_info("db")
             log_info("Status of db = {}".format(db_info["state"]))
             assert db_info["state"] == "Online"
+            break
         except AssertionError as error:
             time.sleep(3)
             retries = retries + 1
