@@ -1197,7 +1197,6 @@ def test_initial_pull_replication_background_apprun(params_from_base_test_setup,
     replicator.start(repl)
     time.sleep(3)  # let replication go for few seconds and then make app go background
     testserver.close_app()
-    # time.sleep(10)  # wait until all replication is done
     replicator.wait_until_replicator_idle(repl)
     testserver.open_app()
     replicator.wait_until_replicator_idle(repl)
@@ -1290,7 +1289,6 @@ def test_push_replication_with_backgroundApp(params_from_base_test_setup, num_do
     time.sleep(3)  # let replication go for few seconds and then make app go background
     testserver.close_app()
     replicator.wait_until_replicator_idle(repl)
-    # time.sleep(10)  # wait until all replication is done
     testserver.open_app()
     replicator.wait_until_replicator_idle(repl)
     # Verify docs replicated to sync_gateway
