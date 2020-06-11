@@ -10,7 +10,7 @@ from couchbase.n1ql import N1QLQuery
 from keywords.utils import log_info
 from couchbase.exceptions import KeyExistsError
 
-SERVER_IP = "172.23.104.162"
+SERVER_IP = "172.23.105.177"
 USERNAME = 'Administrator'
 PASSWORD = 'esabhcuoc'
 BUCKET_NAME = "QE-mobile-pool"
