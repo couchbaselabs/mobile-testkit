@@ -471,7 +471,7 @@ def test_bucket_online_offline_resync_with_offline(params_from_base_test_setup, 
     log_info("Restarted SG....")
 
     retries = 0
-    while retries < 5:
+    while retries < 7:
         try:
             db_info = admin.get_db_info("db")
             log_info("Status of db = {}".format(db_info["state"]))
@@ -479,8 +479,8 @@ def test_bucket_online_offline_resync_with_offline(params_from_base_test_setup, 
             break
         except AssertionError as error:
             retries = retries + 1
-            time.sleep(3)
-            if retries == 5:
+            time.sleep(2)
+            if retries == 7:
                 raise error
 
     try:
@@ -511,7 +511,7 @@ def test_bucket_online_offline_resync_with_offline(params_from_base_test_setup, 
             break
 
     retries = 0
-    while retries < 5:
+    while retries < 7:
         try:
             status = sg_client.bring_db_online(cluster_conf=cluster_conf, db="db")
             log_info("online request issued !!!!! response status: {}".format(status))
@@ -521,8 +521,8 @@ def test_bucket_online_offline_resync_with_offline(params_from_base_test_setup, 
             break
         except AssertionError as error:
             retries = retries + 1
-            time.sleep(3)
-            if retries == 5:
+            time.sleep(2)
+            if retries == 7:
                 raise error
 
     resync_result = async_resync_result.get()
