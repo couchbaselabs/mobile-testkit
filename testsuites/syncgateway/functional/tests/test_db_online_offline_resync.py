@@ -335,7 +335,7 @@ def test_bucket_online_offline_resync_with_online(params_from_base_test_setup, s
             time.sleep(5)
             if retries == 8:
                 raise error
- 
+
     resync_result = async_resync_result.get()
     log_info("resync_changes {}".format(resync_result))
     log_info("expecting num_changes  == num_docs {} * num_users {}".format(num_docs, num_users))
