@@ -4,20 +4,25 @@ import time
 
 from requests import Session
 from optparse import OptionParser
-from couchbase.bucket import Bucket
+from couchbase.cluster import Cluster
+from couchbase.cluster import PasswordAuthenticator
 from couchbase.n1ql import N1QLQuery
 from keywords.utils import log_info
 from couchbase.exceptions import KeyExistsError
 
-SERVER_IP = "172.23.105.177"
+SERVER_IP = "172.23.104.162"
 USERNAME = 'Administrator'
 PASSWORD = 'esabhcuoc'
 BUCKET_NAME = "QE-mobile-pool"
-sdk_client = Bucket("couchbase://{}/{}".format(SERVER_IP, BUCKET_NAME))
 SSH_NUM_RETRIES = 3
 SSH_USERNAME = 'root'
 SSH_PASSWORD = 'couchbase'
 SSH_POLL_INTERVAL = 20
+
+cluster = Cluster('couchbase://{}'.format(SERVER_IP))
+authenticator = PasswordAuthenticator(USERNAME, PASSWORD)
+cluster.authenticate(authenticator)
+sdk_client = cluster.open_bucket(BUCKET_NAME)
 
 
 def get_nodes_available_from_mobile_pool(nodes_os_type, node_os_version):
