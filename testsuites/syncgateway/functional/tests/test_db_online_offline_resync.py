@@ -321,7 +321,7 @@ def test_bucket_online_offline_resync_with_online(params_from_base_test_setup, s
             break
 
     retries = 0
-    while retries < 5:
+    while retries < 8:
         try:
             status = sg_client.bring_db_online(cluster_conf=cluster_conf, db="db")
             assert status == 0
@@ -331,11 +331,11 @@ def test_bucket_online_offline_resync_with_online(params_from_base_test_setup, s
             assert db_info["state"] == "Online"
             break
         except AssertionError as error:
-            time.sleep(2)
             retries = retries + 1
-            if retries == 5:
+            time.sleep(5)
+            if retries == 8:
                 raise error
-
+ 
     resync_result = async_resync_result.get()
     log_info("resync_changes {}".format(resync_result))
     log_info("expecting num_changes  == num_docs {} * num_users {}".format(num_docs, num_users))
@@ -490,7 +490,6 @@ def test_bucket_online_offline_resync_with_offline(params_from_base_test_setup, 
         log_info("Catch resync exception: {}".format(e))
 
     resync_occured = False
-
     for i in range(20):
         db_info = admin.get_db_info("db")
         log_info("Status of db = {}".format(db_info["state"]))
@@ -511,7 +510,7 @@ def test_bucket_online_offline_resync_with_offline(params_from_base_test_setup, 
             break
 
     retries = 0
-    while retries < 7:
+    while retries < 10:
         try:
             status = sg_client.bring_db_online(cluster_conf=cluster_conf, db="db")
             log_info("online request issued !!!!! response status: {}".format(status))
@@ -520,9 +519,10 @@ def test_bucket_online_offline_resync_with_offline(params_from_base_test_setup, 
             assert db_info["state"] == "Online"
             break
         except AssertionError as error:
+            log_info("Status of db = {}".format(db_info["state"]))
             retries = retries + 1
-            time.sleep(2)
-            if retries == 7:
+            time.sleep(3)
+            if retries == 10:
                 raise error
 
     resync_result = async_resync_result.get()
