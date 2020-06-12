@@ -2,7 +2,7 @@ import pytest
 import time
 
 from keywords.MobileRestClient import MobileRestClient
-from keywords.utils import random_string, compare_docs
+from keywords.utils import random_string, compare_docs, get_embedded_asset_file_path
 from CBLClient.Replication import Replication
 from CBLClient.Dictionary import Dictionary
 from CBLClient.Blob import Blob
@@ -96,6 +96,7 @@ def test_delta_sync_replication(params_from_base_test_setup, num_of_docs, replic
     if replication_type == "push":
         doc_ids = db.getDocIds(cbl_db)
         cbl_db_docs = db.getDocuments(cbl_db, doc_ids)
+        image_location = get_embedded_asset_file_path(liteserv_platform, db, cbl_db, "golden_gate_large.jpg")
         for doc_id, doc_body in list(cbl_db_docs.items()):
             for _ in range(number_of_updates):
                 if file_attachment:
@@ -103,24 +104,8 @@ def test_delta_sync_replication(params_from_base_test_setup, num_of_docs, replic
                     dictionary.setString(mutable_dictionary, "new_field_1", random_string(length=30))
                     dictionary.setString(mutable_dictionary, "new_field_2", random_string(length=80))
 
-                    if liteserv_platform == "android":
-                        image_content = blob.createImageStream("/assets/golden_gate_large.jpg")
-                        blob_value = blob.create("image/jpeg", stream=image_content)
-                    elif liteserv_platform in ["xamarin-android", "java-macosx", "java-msft", "java-ubuntu", "java-centos",
-                                               "javaws-macosx", "javaws-msft", "javaws-ubuntu", "javaws-centos"]:
-                        image_content = blob.createImageStream("golden_gate_large.jpg")
-                        blob_value = blob.create("image/jpeg", stream=image_content)
-                    elif liteserv_platform == "ios":
-                        image_content = blob.createImageStream("Files/golden_gate_large.jpg")
-                        blob_value = blob.create("image/jpeg", stream=image_content)
-                    elif liteserv_platform == "net-msft":
-                        db_path = db.getPath(cbl_db).rstrip("\\")
-                        app_dir = "\\".join(db_path.split("\\")[:-2])
-                        image_content = blob.createImageStream("{}\\Files\\golden_gate_large.jpg".format(app_dir))
-                        blob_value = blob.create("image/jpeg", stream=image_content)
-                    else:
-                        image_content = blob.createImageStream("Files/golden_gate_large.jpg")
-                        blob_value = blob.create("image/jpeg", stream=image_content)
+                    image_content = blob.createImageStream(image_location)
+                    blob_value = blob.create("image/jpeg", stream=image_content)
                     dictionary.setBlob(mutable_dictionary, "_attachments", blob_value)
                 db.updateDocument(database=cbl_db, data=doc_body, doc_id=doc_id)
     else:
