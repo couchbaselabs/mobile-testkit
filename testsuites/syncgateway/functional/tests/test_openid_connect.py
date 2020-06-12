@@ -70,7 +70,7 @@ def discover_authenticate_url(sg_url, sg_db, provider, ipv6):
     return url
 
 
-def discover_authenticate_endpoint(sg_url, sg_db, provider, ipv6):
+def discover_authenticate_endpoint(sg_url, sg_db, provider, ipv6, session=None):
     """
     Discover the authenticate endpoint and parameters.
 
@@ -82,7 +82,10 @@ def discover_authenticate_endpoint(sg_url, sg_db, provider, ipv6):
     # make a request to the _oidc_challenge endpoint
     oidc_challenge_url = "{}/{}/_oidc_challenge?provider={}".format(sg_url, sg_db, provider)
     log_info("Invoking _oidc_challenge against: {}".format(oidc_challenge_url))
-    response = requests.get(oidc_challenge_url)
+    if session is not None:
+        response = session.get(oidc_challenge_url)
+    else:
+        response = requests.get(oidc_challenge_url)
 
     # the Www-Authenticate header will look something like this:
     # 'OIDC login="http://localhost:4984/db/_oidc_testing/authorize?client_id=sync_gateway&redirect_uri=http%3A%2F%2Flocalhost%3A4984%2Fdb%2F_oidc_callback&response_type=code&scope=openid+email&state="'
@@ -105,7 +108,10 @@ def discover_authenticate_endpoint(sg_url, sg_db, provider, ipv6):
     oidc_login_url = oidc_login_url.replace("localhost", sg_hostname)
 
     # Fetch the oidc_login_url
-    response = requests.get(oidc_login_url)
+    if session is not None:
+        response = session.get(oidc_login_url)
+    else:
+        response = requests.get(oidc_login_url)
     response.raise_for_status()
     parser = FormActionHTMLParser()
     parser.feed(response.text)
@@ -652,24 +658,20 @@ def test_openidconnect_small_scope(params_from_base_test_setup, sg_conf_name):
     )
 
     # multipart/form data content
-    formdata = {
-        'username': ('', 'testuser'),
-        'authenticated': ('', 'Return a valid authorization code for this user')
-    }
+    payload = {'username': 'alice', 'authenticated': 'Return a valid authorization code for this user' }
 
     # get the authenticate endpoint and query params, should look something like:
     #     authenticate?client_id=sync_gateway&redirect_uri= ...
-    authenticate_endpoint = discover_authenticate_endpoint(sg_url, sg_db, "testsmallscope", cluster.ipv6)
-
+    session = requests.session()
+    authenticate_endpoint = discover_authenticate_endpoint(sg_url, sg_db, "testsmallscope", cluster.ipv6, session)
     # build the full url
     url = "{}/{}/_oidc_testing/{}".format(
         sg_url,
         sg_db,
         authenticate_endpoint
     )
-
     # Make the request to _oidc_testing
-    response = requests.post(url, files=formdata)
+    response = session.post(url, data=payload)
     log_r(response)
 
     # extract the token from the response
