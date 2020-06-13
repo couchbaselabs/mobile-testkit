@@ -658,7 +658,7 @@ def test_openidconnect_small_scope(params_from_base_test_setup, sg_conf_name):
     )
 
     # multipart/form data content
-    payload = {'username': 'alice', 'authenticated': 'Return a valid authorization code for this user' }
+    payload = {'username': 'alice', 'authenticated': 'Return a valid authorization code for this user'}
 
     # get the authenticate endpoint and query params, should look something like:
     #     authenticate?client_id=sync_gateway&redirect_uri= ...
