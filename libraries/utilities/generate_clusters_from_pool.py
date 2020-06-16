@@ -366,8 +366,9 @@ def write_config(config, pool_file, use_docker, sg_windows, sg_accel_windows, sg
 
         if sg_platform.lower() == "macos":
             f.write("\n\n[sync_gateways:vars]\n")
-            f.write("ansible_connection=local\n")
-            f.write("ansible_become_pass=macOSFakePassword\n")
+            f.write("ansible_user=MacOSFakeUser\n")
+            f.write("ansible_password=MacOSFakePassword\n")
+            f.write("ansible_sudo_pass=MacOSFakePassword\n")
 
         if sg_windows:
             f.write("\n\n[sync_gateways:vars]\n")
@@ -384,7 +385,7 @@ def write_config(config, pool_file, use_docker, sg_windows, sg_accel_windows, sg
             f.write("ansible_port=5986\n")
             f.write("ansible_connection=winrm\n")
             f.write("ansible_winrm_server_cert_validation=ignore\n")
-        
+
         # Add support for python3 in ansible
         if cbs_platform == "centos8":
             f.write("\n\n[couchbase_servers:vars]\n")
