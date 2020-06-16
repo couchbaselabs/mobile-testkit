@@ -1,4 +1,3 @@
-"""TODO : uncomment for local test development
 import pytest
 import time
 import random
@@ -15,17 +14,18 @@ from libraries.testkit.admin import Admin
 from keywords.constants import CLUSTER_CONFIGS_DIR
 from requests import HTTPError
 from keywords.utils import log_info, random_string
-from keywords import attachment
+from keywords import attachment, document
 from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ProcessPoolExecutor
 from CBLClient.Dictionary import Dictionary
 from CBLClient.Blob import Blob
-from utilities.cluster_config_utils import copy_sgconf_to_temp, load_cluster_config_json
+from utilities.cluster_config_utils import copy_sgconf_to_temp, load_cluster_config_json, replace_string_on_sgw_config
 
 
 # def setup_syncGateways_with_cbl(cluster_config, base_url, sync_gateway_version, sg_ssl, sg_mode):
-def setup_syncGateways_with_cbl(params_from_base_test_setup, cbl_replication_type, cbl_continuous, cbl_db1, sg_conf_name='listener_tests/multiple_sync_gateways', num_of_docs=10, channels1=None, cluster_config="three_sync_gateways_"):
+def setup_syncGateways_with_cbl(params_from_base_test_setup, cbl_replication_type, cbl_continuous, cbl_db1, sg_conf_name='listener_tests/four_sync_gateways', num_of_docs=10, channels1=None):
 
-    # cluster_config = params_from_base_test_setup["cluster_config"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
     base_url = params_from_base_test_setup["base_url"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     sg_ssl = params_from_base_test_setup["sg_ssl"]
@@ -47,9 +47,11 @@ def setup_syncGateways_with_cbl(params_from_base_test_setup, cbl_replication_typ
         pytest.skip('It does not work with sg < 2.8.0 and cannot work with self signed, so skipping the test')
 
     print("cluster config dir - ", cluster_config)
-    cluster_config = "{}/{}{}".format(CLUSTER_CONFIGS_DIR, cluster_config, sg_mode)
+    # cluster_config = "{}/{}".format(CLUSTER_CONFIGS_DIR, cluster_config)
     c_cluster = cluster.Cluster(config=cluster_config)
+    
     sg_config = sync_gateway_config_path_for_mode(sg_conf_name, sg_mode)
+    
     c_cluster.reset(sg_config_path=sg_config)
     db = Database(base_url)
 
@@ -72,7 +74,7 @@ def setup_syncGateways_with_cbl(params_from_base_test_setup, cbl_replication_typ
     sg_client.create_user(sg2_admin_url, sg_db2, name2, password=password, channels=channels1)
     # Create bulk doc json
 
-    # 2. Create replication authenticator 
+    # 2. Create replication authenticator
     replicator = Replication(base_url)
     cookie, session_id = sg_client.create_session(sg1_admin_url, sg_db1, name1)
     authenticator = Authenticator(base_url)
@@ -396,7 +398,6 @@ def test_sg_replicate_oneactive_2passive(params_from_base_test_setup, setup_cust
     # 6. Verify docs created in cbl2 and cbl3
     replicator.wait_until_replicator_idle(repl3)
     cbl_doc_ids2 = db.getDocIds(cbl_db2)
-    print("cbl db2 docs are ", cbl_doc_ids2)
     count1 = sum('Replication1_' in s for s in cbl_doc_ids2)
     assert count1 == num_of_docs, "all docs do not replicate to cbl db2"
 
@@ -986,10 +987,10 @@ def test_sg_replicate_replications_with_drop_out_one_node(params_from_base_test_
        7. verify rest api active tasks
        9. Verify rest api _replicationstatus
     '''
-
     sg_ssl = params_from_base_test_setup["sg_ssl"]
     base_url = params_from_base_test_setup["base_url"]
     sg_mode = params_from_base_test_setup["mode"]
+    sg_ce = params_from_base_test_setup["sg_ce"]
     # 1.Have 2 sgw nodes , have cbl on each SGW
     cbl_db1 = setup_customized_teardown_test["cbl_db1"]
     cbl_db2 = setup_customized_teardown_test["cbl_db2"]
@@ -1063,6 +1064,12 @@ def test_sg_replicate_replications_with_drop_out_one_node(params_from_base_test_
 
     # 3. verify only one replication runs only one node.
     # TODO:
+    if sg_ce:
+        print("TODO")
+        # TODO: 2 replications should run on each node
+    else:
+        print("TODO")
+        # TODO: 1 replication should run on each node
 
     # 4. Drop one active sgw node
     sg2.stop()
@@ -1107,229 +1114,690 @@ def test_sg_replicate_config_replications_with_opt_out(params_from_base_test_set
     base_url = params_from_base_test_setup["base_url"]
     sg_conf_name = 'listener_tests/four_sync_gateways'
     sg_conf_name2 = 'listener_tests/listener_tests_with_replications'
-    cluster_config1 = 'four_sync_gateways_'
+    sg_conf_name3 = 'listener_tests/listener_tests_with_static_bucket'
+    # cluster_config1 = 'four_sync_gateways_'
     channels3 = ['Replication3']
     sg_client = MobileRestClient()
     authenticator = Authenticator(base_url)
     sg_config = sync_gateway_config_path_for_mode(sg_conf_name2, sg_mode)
+    sg_config3 = sync_gateway_config_path_for_mode(sg_conf_name3, sg_mode)
     # Have 2 sgw nodes , have cbl on each SGW
     cbl_db1 = setup_customized_teardown_test["cbl_db1"]
-    # cbl_db2 = setup_customized_teardown_test["cbl_db2"]
+    cbl_db2 = setup_customized_teardown_test["cbl_db2"]
+    cbl_db3 = setup_customized_teardown_test["cbl_db3"]
 
-    db, num_of_docs, sg_db1, sg_db2, name1, name2, password, channels1, channels2, replicator, replicator_authenticator1, replicator_authenticator2, sg1_blip_url, sg2_blip_url, sg1, sg2, repl1, c_cluster = setup_syncGateways_with_cbl(params_from_base_test_setup, cbl_replication_type="push", cbl_continuous=False, cbl_db1=cbl_db1, sg_conf_name=sg_conf_name, cluster_config=cluster_config1)
+    db, num_of_docs, sg_db1, sg_db2, name1, name2, password, channels1, channels2, replicator, replicator_authenticator1, replicator_authenticator2, sg1_blip_url, sg2_blip_url, sg1, sg2, repl1, c_cluster = setup_syncGateways_with_cbl(params_from_base_test_setup, cbl_replication_type="push", cbl_continuous=False, cbl_db1=cbl_db1, sg_conf_name=sg_conf_name)
 
+    name3 = "autotest3"
     name4 = "autotest4"
     sg_db4 = "sg_db4"
+    sg_db3 = "sg_db3"
+    sg_db = "db"
+    sg3 = c_cluster.sync_gateways[2]
     sg4 = c_cluster.sync_gateways[3]
     sg4_ip = sg4.ip
+    sg3_admin_url = sg3.admin.admin_url
     sg4_admin_url = sg4.admin.admin_url
     sg4_blip_url = "ws://{}:4984/{}".format(sg4_ip, sg_db4)
     if sg_ssl:
         sg4_blip_url = "wss://{}:4984/{}".format(sg4_ip, sg_db4)
+    sg_client.create_user(sg3_admin_url, sg_db3, name3, password=password, channels=channels3)
+    cookie, session_id = sg_client.create_session(sg3_admin_url, sg_db3, name3)
+    user3_session = cookie, session_id
     sg_client.create_user(sg4_admin_url, sg_db4, name4, password=password, channels=channels1)
     cookie, session_id = sg_client.create_session(sg4_admin_url, sg_db4, name4)
     replicator_authenticator4 = authenticator.authentication(session_id, cookie, authentication_type="session")
     
     db.create_bulk_docs(num_of_docs, "Replication1_channel1", db=cbl_db1, channels=channels1)
-    db.create_bulk_docs(num_of_docs, "Replication1_channel2", db=cbl_db1, channels=channels2)
-    db.create_bulk_docs(num_of_docs, "Replication1_channel3", db=cbl_db1, channels=channels3)
+    db.create_bulk_docs(num_of_docs, "Replication1_channel2", db=cbl_db2, channels=channels2)
+    sg_docs = document.create_docs("Replication1_channel3", number=num_of_docs, channels=channels3)
+    sg_client.add_bulk_docs(url=sg3.url, db=sg_db3, docs=sg_docs, auth=user3_session)
     # 1. start 3 replications for 3 nodes
     temp_sg_config, _ = copy_sgconf_to_temp(sg_config, sg_mode)
-    replication_1, _ = setup_replications_on_sgconfig(sg_config, sg_mode, sg4_blip_url, remote_user, remote_password, channels=channels1, continuous=True)
-    replication_2 = setup_replications_on_sgconfig(sg_config, sg_mode, sg4_blip_url, remote_user, remote_password, channels=channels2, continuous=True)
-    replication_3 = setup_replications_on_sgconfig(sg_config, sg_mode, sg4_blip_url, remote_user, remote_password, channels=channels3, continuous=True)
+    replication_1, sgw_repl1 = setup_replications_on_sgconfig(sg4_blip_url, name4, password, channels=channels1, continuous=True)
+    replication_2, _ = setup_replications_on_sgconfig(sg4_blip_url, name4, password, channels=channels2, continuous=True)
+    replication_3, _ = setup_replications_on_sgconfig(sg4_blip_url, name4, password, channels=channels3, continuous=True)
+
+    print("replications 1 -", replication_1)
+    print("replications 2 - ", replication_2)
+    print("replications 3 - ", replication_3)
 
     replications_ids = "{},{},{}".format(replication_1, replication_2, replication_3)
     replications_key = "replications"
-    replace_string = "\"{}\": {}".format(replications_key, replications_ids)
-    with open(temp_sg_config, 'r') as file:
-        filedata = file.read()
-    filedata = filedata.replace('{{ replace_with_replications }}', "{},".format(replace_string))
-    # filedata = filedata.replace('{{ {} }}'.format(replace_for), "{},".format(replace_string))
-    # filedata = filedata.replace('{{ {} }}'.format(replace_for), "{},".format(replace_string))
-    with open(temp_sg_config, 'w') as file:
-        file.write(filedata)
+    replace_string = "\"{}\": {}{}{},".format(replications_key, "{", replications_ids, "}")
 
-    return temp_sg_config
+    temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ replace_with_replications }}", replace_string)
     sg1.restart(config=temp_sg_config, cluster_config=cluster_config)
-    """
+    temp_sg_config, _ = copy_sgconf_to_temp(sg_config3, sg_mode)
+    temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "\"db\"", "sg_db2")
+    sg2.restart(config=temp_sg_config, cluster_config=cluster_config)
 
-    """TODO : uncomment for local test development
-    # 1.create docs with mutlple  channels, channel1, channel2, channel3..
-    db.create_bulk_docs(channel1_docs, "Replication1_channel1", db=cbl_db1, channels=channels1)
-    db.create_bulk_docs(channel2_docs, "Replication1_channel2", db=cbl_db1, channels=channels2)
-    db.create_bulk_docs(channel3_docs, "Replication1_channel3", db=cbl_db1, channels=channels3)
-    # 1. start 3 replications for 3 nodes
-    # TODO: change the api to new api
-    sg1.start_replication(
-        remote_url=sg1.url,
-        direction=direction,
-        filter=
-    )
-    if direction == "pull":
-        sg2.start_replication(
-            remote_url=sg1.url,
-            current_db=sg_db2,
-            remote_db=sg_db1,
+    # 2. Have 3rd node with opt out on sgw-config
+    temp_sg_config, _ = copy_sgconf_to_temp(sg_config, sg_mode)
+    replace_string3 = "\"sgreplicate_enabled\": False,"
+    temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ replace_with_replications }}", replace_string3)
+    temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "\"db\"", "\"sg_db3\"")
+    sg3.restart(config=temp_sg_config, cluster_config=cluster_config)
+    # sg2_blip_url = sg2_blip_url.replace("sg_db2", "db")
+    repl2 = replicator.configure_and_replicate(
+        source_db=cbl_db2, replicator_authenticator=replicator_authenticator2, target_url=sg2_blip_url, 
+        replication_type="push", continuous=True)
+    repl4 = replicator.configure_and_replicate(
+        source_db=cbl_db3, replicator_authenticator=replicator_authenticator4, target_url=sg4_blip_url, 
+        replication_type="pull", continuous=True)
+    active_tasks = sg1.admin.get_sgreplicate2_active_tasks(sg_db)
+    # 3. Verify 3 replications are distributed to first 2 nodes
+    # TODO : Verify only one replication run on each sgw node
+    # TODO : verify replication_status that replications distributed on 2 nodes
+    replicator.wait_until_replicator_idle(repl1)
+    replicator.wait_until_replicator_idle(repl2)
+    sg1.admin.wait_untl_sgw_replication_done(sg_db1, sgw_repl1)
+    replicator.wait_until_replicator_idle(repl4)
+    cbl_doc_ids3 = db.getDocIds(cbl_db3)
+    count = sum('Replication1_' in s for s in cbl_doc_ids3)
+    assert count == num_of_docs, "all docs do not replicate from cbl_db1 to cbl_db3"
+    count2 = sum('Replication2_' in s for s in cbl_doc_ids3)
+    assert count2 == num_of_docs, "all docs do not replicate from cbl_db2 to cbl_db3"
+    count3 = sum('Replication3_' in s for s in cbl_doc_ids3)
+    assert count3 == num_of_docs, "all docs do not replicate from cbl_db1 to cbl_db3"
 
-            direction=direction,
-            continuous=continuous,
-            target_user_name=name1,
-            target_password=password
-        )
-        active_tasks = sg2.admin.get_active_tasks()
-    else:
-        sg1.start_replication(
-            remote_url=sg2.url,
-            current_db=sg_db1,
-            remote_db=sg_db2,
-            direction=direction,
-            continuous=continuous,
-            target_user_name=name2,
-            target_password=password
-        )
-        active_tasks = sg1.admin.get_active_tasks()
-    if continuous:
-        assert len(active_tasks) == 1
-        active_task = active_tasks[0]
-        time.sleep(10)  # TODO : replace with wait for replication idle after we get new API
-        # get the replication id from the active tasks
-        created_replication_id = active_task["replication_id"]
-        if direction == "pull":
-            sg2.stop_replication_by_id(created_replication_id, use_admin_url=True)
-        else:
-            sg1.stop_replication_by_id(created_replication_id, use_admin_url=True)
-    # TODO: wait_until_replication_idle - todo : implement after dev completes
-    # 5. Do pull replication from sg2 -> cbl2
-    replicator.configure_and_replicate(
-        source_db=cbl_db2, replicator_authenticator=replicator_authenticator2, target_url=sg2_blip_url,
-        replication_type="pull", continuous=False
-    )
+    replicator.stop(repl1)
+    replicator.stop(repl2)
+    replicator.stop(repl4)
 
-    # 6. Verify docs created in cbl2
-    cbl_doc_ids2 = db.getDocIds(cbl_db2)
-    count1 = sum('Replication1_' in s for s in cbl_doc_ids2)
-    assert count1 == num_of_docs, "all docs do not replicate to cbl db2"
 
-    """
-
-"""TODO : uncomment for local test development
-def setup_replications_on_sgconfig(remote_sg_url, remote_user, remote_password, direction="push_and_pull", channels=None, continuous=None):
-
-    replication_id = {}
-    repl1 = {}
-    replication_id = "sgw_repl_{}".format(random_string(length=10, digit=True))
-    remote_sg_url = remote_sg_url.replace("://", "://{}:{}@".format(remote_user, remote_password))
-    remote_sg_url = "{}/{}".format(remote_sg_url)
-    repl1['remote'] = '{}'.format(remote_sg_url)
-    repl1['direction'] = 'pull'
-    if continuous:
-        repl1["continuous"] = continuous
-    if channels is not None:
-        repl1["filter"] = "sync_gateway/bychannel"
-        repl1["query_params"] = channels
-    replication_id[replication_id] = repl1
-    return json.dumps(replication_id), temp_sg_config
-    
-"""TODO : uncomment for local test development
-"""@pytest.mark.topospecific
+@pytest.mark.topospecific
 @pytest.mark.syncgateway
 @pytest.mark.sgreplicate
-def test_sg_replicate_update_replication(params_from_base_test_setup, setup_customized_teardown_test):
+@pytest.mark.parametrize("number_of_replications", [
+    (1),
+    (3),
+    (4),
+    (6)
+])
+def test_sg_replicate_distributions_replications(params_from_base_test_setup, setup_customized_teardown_test, number_of_replications):
     '''
        @summary
-       1. set up 2 sgw nodes
-       2. Create docs on cbl db1 , replication sg1 <-> cbl_db1
-       3. create docs on cbl db2, replicaation sg2 <-> cbl_db2
-       4. Start push_pull sg replication with continuous true 
-       5. creating more  docs on sg1, update, deleted docs on sg1
-       6. update the replication  without stopping -> verify throw an error
-            Use Same rest api to update the replication
-       7. update replication from push to pull
-       8. stop replication
-       9. verify not all docs of sg1 get replicated to sg2, 
-       10. Verify all docs of sg2 get replicated to sg1
+       Covered for #67
+       "Have multiple replications
+       1. Set up 4 nodes - 3 active and 1 passive
+        Test with following params for replications:
+        1, 3, 4, 6 
+        Verify rest api to check replications on each node
+        Verify replications run accordingly
+        1. 1 replication - one of the SGW node
+        2. 3 - one on each SGW node 
+        3. 4 - one sgw node should run 2 replications and other sgw nodes should run one on each
+        4. 6 - 2 on each sgw node
     '''
 
-    # 1.Have 2 sgw nodes , have cbl on each SGW
+    sg_ssl = params_from_base_test_setup["sg_ssl"]
+    base_url = params_from_base_test_setup["base_url"]
+    cbl_db1 = setup_customized_teardown_test["cbl_db1"]
+    cbl_db3 = setup_customized_teardown_test["cbl_db3"]
+    # sg_conf_name = 'listener_tests/four_sync_gateways'
+    replicator = Replication(base_url)
+    sg_db4 = "sg_db4"
+    name4 = "autotest4"
+    channels1 = ["Replication1"]
+    channels2 = ["Replication2"]
+    channels3 = ["Replication3"]
+    channels4 = ["Replication4"]
+    channels5 = ["Replication5"]
+    channels6 = ["Replication6"]
+
+    channels_6 = channels1 + channels2 + channels3 + channels4 + channels5 + channels6
+    # sg_client = MobileRestClient()
+    db, num_of_docs, sg_db1, sg_db2, name1, name2, password, _, _, replicator, _, replicator_authenticator2, _, sg2_blip_url, sg1, sg2, repl1, c_cluster = setup_syncGateways_with_cbl(params_from_base_test_setup, cbl_replication_type="push_pull", cbl_continuous=True, cbl_db1=cbl_db1, channels1=channels_6)
+    # authenticator = Authenticator(base_url)
+    sg4, sg_db4, sg4_admin_url, sg4_blip_url = get_sg4(params_from_base_test_setup, c_cluster)
+    replicator_authenticator4 = create_sguser_cbl_authenticator(base_url, sg4_admin_url, sg_db4, name4, password, channels1)
+
+    # Create replications and docs based on parameters passed
+    for x in range(number_of_replications):
+        channel_name = "Replication-{}".format(x)
+        db.create_bulk_docs(num_of_docs, channel_name, db=cbl_db1, channels=[channels_6[x]])
+
+    sgw_repl_id = []
+    for x in range(number_of_replications):
+        replication_channel = []
+        replication_channel.append(channels_6[x])
+        # for channel in channels_6:
+        repl_id_x = sg1.start_replication2(
+            local_db=sg_db1,
+            remote_url=sg4.url,
+            remote_db=sg_db4,
+            remote_user=name4,
+            remote_password=password,
+            direction="push",
+            channels=[channels_6[x]]
+        )
+        sgw_repl_id.append(repl_id_x)
+
+    repl4 = replicator.configure_and_replicate(
+        source_db=cbl_db3, replicator_authenticator=replicator_authenticator4, target_url=sg4_blip_url,
+        replication_type="push_pull", continuous=True)
+    replicator.wait_until_replicator_idle(repl1)
+
+    print("active tasks for sg1<-> replication ", sg1.admin.get_sgreplicate2_active_tasks(sg_db1))
+    active_tasks = sg1.admin.get_sgreplicate2_active_tasks(sg_db1)
+    assert len(active_tasks) == 2, "did not show right number of tasks "
+
+    # 3. verify only one replication runs only one node.
+    print("TODO")
+    # TODO: 1 replication should run on each node
+
+    # 5. Verify both the replications runs on one sgw node of active cluster
+    active_tasks = sg1.admin.get_sgreplicate2_active_tasks(sg_db1)
+    # TODO: Verify replications distributed evenly to all 3 nodes based on parameter
+
+    for x in range(number_of_replications):
+        sg1.admin.wait_untl_sgw_replication_done(sg_db1, sgw_repl_id[x])
+    replicator.wait_until_replicator_idle(repl4)
+    cbl_doc_ids3 = db.getDocIds(cbl_db3)
+    for x in range(number_of_replications):
+        replication_name = "Replication-{}".format(x)
+        count = sum(replication_name in s for s in cbl_doc_ids3)
+        assert_msg = "all docs of replication - {} did not replicate from cbl_db1 to cbl_db3".format(replication_name)
+        assert count == num_of_docs, assert_msg
+
+    replicator.stop(repl1)
+    replicator.stop(repl4)
+
+
+@pytest.mark.topospecific
+@pytest.mark.syncgateway
+@pytest.mark.sgreplicate
+def test_sg_replicate_update_sgw_nodes_in_cluster(params_from_base_test_setup, setup_customized_teardown_test):
+    '''
+       @summary
+       Covered for #68
+       "can have 4 nodes(3 active and 1 passive) first.
+        1. create docs on sg1 and sg2.
+        2. start 3 replications
+        3. update docs - Thread 1
+        4. Remove 3rd active node  - Thread2
+            Verify 2 replications run on 1st node and 1 replication on 2nd node
+        5. Add 3rd node back - Thread2
+            Verify 1 replications run on each node
+        6. Verify all replications completed on passive node(sg4)
+    '''
+
+    base_url = params_from_base_test_setup["base_url"]
+    sg_mode = params_from_base_test_setup["mode"]
     cbl_db1 = setup_customized_teardown_test["cbl_db1"]
     cbl_db2 = setup_customized_teardown_test["cbl_db2"]
-    continuous = True
-    channel1_docs = 5
-    channel2_docs = 7
-    channel3_docs = 8
-    name3 = "autotest3"
+    cbl_db3 = setup_customized_teardown_test["cbl_db3"]
+    sg_conf_name = 'listener_tests/four_sync_gateways'
+    replicator = Replication(base_url)
     name4 = "autotest4"
-    sg_client = MobileRestClient()
+    channels3 = ["Replication3"]
+    sg_config = sync_gateway_config_path_for_mode(sg_conf_name, sg_mode)
 
-    # 1. Set up 2 sgw nodes and have two cbl dbs
-    db, num_of_docs, sg_db1, sg_db2, name1, name2, password, channels1, channels2, replicator, replicator_authenticator1, replicator_authenticator2, sg1_blip_url, sg2_blip_url, sg1, sg2, repl1, _ = setup_syncGateways_with_cbl(params_from_base_test_setup, cbl_replication_type="push", cbl_continuous=True, cbl_db1=cbl_db1)
-    # 2. Create docs on cbl-db1 and have push_pull, continous replication with sg1
+    db, num_of_docs, sg_db1, sg_db2, name1, name2, password, channels1, channels2, replicator, _, replicator_authenticator2, _, sg2_blip_url, sg1, sg2, repl1, c_cluster = setup_syncGateways_with_cbl(params_from_base_test_setup, cbl_replication_type="push_pull", cbl_continuous=True, cbl_db1=cbl_db1)
+    all_channels = channels1 + channels2 + channels3
+    sg3 = c_cluster.sync_gateways[2]
+
+    sg4, sg_db4, sg4_admin_url, sg4_blip_url = get_sg4(params_from_base_test_setup, c_cluster)
+    replicator_authenticator4 = create_sguser_cbl_authenticator(base_url, sg4_admin_url, sg_db4, name4, password, channels1)
+
+    #1. create docs on sg1 and sg2 using cbl_db1 and cbl_db2
     db.create_bulk_docs(num_of_docs, "Replication1", db=cbl_db1, channels=channels1)
-    # 3. create docs on cbl db2, replicaation sg2 <-> cbl_db2
     db.create_bulk_docs(num_of_docs, "Replication2", db=cbl_db2, channels=channels1)
+
+    # Have replication from cbl_db2 to sg2
     repl2 = replicator.configure_and_replicate(
         source_db=cbl_db2, replicator_authenticator=replicator_authenticator2, target_url=sg2_blip_url, 
         replication_type="push_pull", continuous=True)
 
-    # 4. Start push_pull sg replication with continuous true
-    # TODO: change the api to new api
-    sg1.start_replication(
-        remote_url=sg2.url,
-        current_db=sg_db1,
-        remote_db=sg_db2,
-        direction="push",
-        continuous=continuous,
-        target_user_name=name2,
-        target_password=password
-    )
-    sg1.start_replication(
-        remote_url=sg2.url,
-        current_db=sg_db1,
-        remote_db=sg_db2,
-        direction="pull",
-        continuous=continuous,
-        target_user_name=name2,
-        target_password=password
-    )
+    repl4 = replicator.configure_and_replicate(
+        source_db=cbl_db3, replicator_authenticator=replicator_authenticator4, target_url=sg4_blip_url, 
+        replication_type="push_pull", continuous=True)
 
-    # 6. update the replication  without stopping -> verify throw an error
-    # 7. update replication from push to pull
-    active_tasks = sg1.admin.get_active_tasks()
-    replication_id = active_tasks[0]["replication_id"]
-    try:
-        sg1.start_replication(
-            remote_url=sg2.url,
-            current_db=sg_db1,
-            remote_db=sg_db2,
-            direction="pull",
-            continuous=continuous,
-            target_user_name=name2,
-            target_password=password,
-            replication_id=replication_id
+    # 2. start 3 replications
+    sgw_repl_id = []
+    #for x in range(number_of_replications):
+    for channel in all_channels:
+        repl_id_x = sg1.start_replication2(
+            local_db=sg_db1,
+            remote_url=sg4.url,
+            remote_db=sg_db4,
+            remote_user=name4,
+            remote_password=password,
+            direction="push",
+            continuous=True,
+            channels=[channel]
         )
-    except Exception as e:
-        print("Exception from rest API is ", e.message())
+        sgw_repl_id.append(repl_id_x)
 
-    # 5. creating more  docs on sg1, update, deleted docs on sg1
-    db.create_bulk_docs(num_of_docs, "Replication3", db=cbl_db1, channels=channels1)
-    cbl_doc_ids1 = db.getDocIds(cbl_db1)
-    update_list_doc_ids = random.sample(cbl_doc_ids1, 3)
-    db.update_bulk_docs(db, number_of_updates=1, doc_ids=update_list_doc_ids)
-    delete_list_doc_ids = random.sample(cbl_doc_ids1, 2)
-    db.delete_bulk_docs(db, doc_ids=delete_list_doc_ids)
+    # 3. update docs - Thread 1
+    # 4. Remove 3rd active node  - Thread2
+    #    Verify 2 replications run on 1st node and 1 replication on 2nd node
+    # 5. Add 3rd node back - Thread2
+    #    Verify 1 replications run on each node
+    with ThreadPoolExecutor(max_workers=4) as tpe:
+        update_from_cbl_task = tpe.submit(
+            update_docs_until_sgwnode_update, db, cbl_db1
+        )
+        sg2.stop()
+        sg1.admin.get_sgreplicate2_active_tasks(sg_db1)
+        # TODO: Verify 2 replications run on 1st node and 1 replication on 2nd  node
+        sg2.start(sg_config)
+        sg1.admin.get_sgreplicate2_active_tasks(sg_db1)
+        # TODO: Verify 3 replications run on each node
+    
+        db.create_bulk_docs(num_of_docs, "threadStop", db=cbl_db1, channels=channels1)
+        num_iters = update_from_cbl_task.result()
+        # drop_add_sgw_node_task.result()
 
-    # 8. stop replication
-    sg1.stop_replication_by_id(replication_id, use_admin_url=True)
+    # 6. Verify all replications completed on passive node(sg4)
+    cbl_doc_ids = db.getDocIds(cbl_db3)
+    count1 = sum('Replication1_' in s for s in cbl_doc_ids)
+    assert count1 == num_of_docs, "all docs created in cbl db1 did not replicate to cbl db3"
+    cbl_docs = db.getDoucments(cbl_db3, cbl_doc_ids)
+    for doc in cbl_docs:
+        assert doc["updates-cbl"] == num_iters, "docs did not update successfully"
     replicator.wait_until_replicator_idle(repl1)
     replicator.wait_until_replicator_idle(repl2)
-    # 9. verify not all docs of sg1 got replicated to sg2,
+    replicator.wait_until_replicator_idle(repl4)
+    replicator.stop(repl1)
+    replicator.stop(repl2)
+    replicator.stop(repl4)
+
+
+@pytest.mark.topospecific
+@pytest.mark.syncgateway
+@pytest.mark.sgreplicate
+@pytest.mark.parametrize("restart_nodes", [
+    ("active"),
+    ("passive")
+])
+def test_sg_replicate_restart_active_passive_nodes(params_from_base_test_setup, setup_customized_teardown_test, restart_nodes):
+    '''
+       @summary
+       Covered for #69 and #70
+       ""1. Have 4 sg nodes(2 active and 2 passive)
+        2. Create docs in sg1(100 docs ?)
+        3. Start 3 to 4 replications with push_pull and continuous
+        4. updating docs while replication is happening 
+        4. Restart active nodes/passive nodes
+ "
+    '''
+
+    base_url = params_from_base_test_setup["base_url"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_mode = params_from_base_test_setup["mode"]
+    cbl_db1 = setup_customized_teardown_test["cbl_db1"]
+    cbl_db2 = setup_customized_teardown_test["cbl_db2"]
+    cbl_db3 = setup_customized_teardown_test["cbl_db3"]
+    sg_conf_name = 'listener_tests/four_sync_gateways_with_2active_2passive'
+    replicator = Replication(base_url)
+    name4 = "autotest4"
+    channels3 = ["Replication3"]
+    sg_config = sync_gateway_config_path_for_mode(sg_conf_name, sg_mode)
+
+    db, num_of_docs, sg_db1, sg_db2, name1, name2, password, channels1, channels2, replicator, _, replicator_authenticator2, _, sg2_blip_url, sg1, sg2, repl1, c_cluster = setup_syncGateways_with_cbl(params_from_base_test_setup, cbl_replication_type="push_pull", cbl_continuous=True, cbl_db1=cbl_db1)
+    all_channels = channels1 + channels2 + channels3
+    sg3 = c_cluster.sync_gateways[2]
+
+    sg4, sg_db4, sg4_admin_url, sg4_blip_url = get_sg4(params_from_base_test_setup, c_cluster)
+    replicator_authenticator4 = create_sguser_cbl_authenticator(base_url, sg4_admin_url, sg_db4, name4, password, channels1)
+
+    #1. create docs on sg1 and sg2 using cbl_db1 and cbl_db2
+    db.create_bulk_docs(num_of_docs, "Replication1", db=cbl_db1, channels=channels1)
+    db.create_bulk_docs(num_of_docs, "Replication2", db=cbl_db2, channels=channels1)
+
+    # Have replication from cbl_db2 to sg2
+    repl2 = replicator.configure_and_replicate(
+        source_db=cbl_db2, replicator_authenticator=replicator_authenticator2, target_url=sg2_blip_url, 
+        replication_type="push_pull", continuous=True)
+
+    repl4 = replicator.configure_and_replicate(
+        source_db=cbl_db3, replicator_authenticator=replicator_authenticator4, target_url=sg4_blip_url, 
+        replication_type="push_pull", continuous=True)
+
+    # 2. start 3 replications
+    sgw_repl_id = []
+    repl_id_1 = sg1.start_replication2(
+        local_db=sg_db1,
+        remote_url=sg4.url,
+        remote_db=sg_db4,
+        remote_user=name4,
+        remote_password=password,
+        direction="push",
+        channels=[channels1]
+    )
+    repl_id_2 = sg1.start_replication2(
+        local_db=sg_db1,
+        remote_url=sg4.url,
+        remote_db=sg_db4,
+        remote_user=name4,
+        remote_password=password,
+        direction="pull",
+        continuous=True,
+        channels=[channels1]
+    )
+    repl_id_3 = sg1.start_replication2(
+        local_db=sg_db1,
+        remote_url=sg4.url,
+        remote_db=sg_db4,
+        remote_user=name4,
+        remote_password=password,
+        direction="push",
+        continuous=True,
+        channels=[channels1]
+    )
+
+    # 3. update docs - Thread 1
+    # 4. Remove 3rd active node  - Thread2
+    #    Verify 2 replications run on 1st node and 1 replication on 2nd node
+    # 5. Add 3rd node back - Thread2
+    #    Verify 1 replications run on each node
+    with ThreadPoolExecutor(max_workers=4) as tpe:
+        update_from_cbl_task = tpe.submit(
+            update_docs_until_sgwnode_update, db, cbl_db1
+        )
+        if restart_nodes == "active":
+            restart_sg_nodes(sg1, sg2, sg_config, cluster_config)
+        else:
+            restart_sg_nodes(sg3, sg4, sg_config, cluster_config)
+        db.create_bulk_docs(num_of_docs, "threadStop", db=cbl_db1, channels=channels1)
+        num_iters = update_from_cbl_task.result()
+        # drop_add_sgw_node_task.result()
+
+    replicator.wait_until_replicator_idle(repl1)
+    replicator.wait_until_replicator_idle(repl2)
+    replicator.wait_until_replicator_idle(repl4)
+    sg1.admin.wait_untl_sgw_replication_done(sg_db1, repl_id_1)
+    sg1.admin.wait_untl_sgw_replication_done(sg_db1, repl_id_2)
+    sg1.admin.wait_untl_sgw_replication_done(sg_db1, repl_id_3)
+    # 6. Verify all replications completed on passive node(sg4)
+    cbl_doc_ids = db.getDocIds(cbl_db3)
+    count1 = sum('Replication1_' in s for s in cbl_doc_ids)
+    assert count1 == num_of_docs, "all docs created in cbl db1 did not replicate to cbl db3"
+    cbl_docs = db.getDoucments(cbl_db3, cbl_doc_ids)
+    for doc in cbl_docs:
+        assert doc["updates-cbl"] == num_iters, "docs did not update successfully"
+
+    replicator.stop(repl1)
+    replicator.stop(repl2)
+    replicator.stop(repl4)
+
+
+@pytest.mark.topospecific
+@pytest.mark.syncgateway
+@pytest.mark.sgreplicate
+@pytest.mark.parametrize("conflict_resolver_type", [
+    ("localWins"),
+    ("remoteWins")
+])
+def test_sg_replicate_non_default_conflict_resolver(params_from_base_test_setup, setup_customized_teardown_test, conflict_resolver_type):
+    '''
+       @summary
+       Covered for #67
+       "Have multiple replications
+        1. set up 2 sgw nodes
+        2. Create docs on sg1 
+        3. Start push_pull replication with  one shot with default conflict resolver
+        4. update docs on sg2. 
+        5. Then update docs on sg1 
+        6. start push_pull replication with one shot with conflict resolution type = local_wins/remote_wins/lastWriteWins
+        7. if  local_wins : docs updated on sg1 gets replicated to sg2
+           if  remote_wins : docs updated on sg2 gets replicated to sg1
+    '''
+
+    # 1.set up 2 sgw nodes
+    cbl_db1 = setup_customized_teardown_test["cbl_db1"]
+    cbl_db2 = setup_customized_teardown_test["cbl_db2"]
+
+    db, num_of_docs, sg_db1, sg_db2, name1, name2, password, channels1, _, replicator, replicator_authenticator1, replicator_authenticator2, sg1_blip_url, sg2_blip_url, sg1, sg2, repl1, _ = setup_syncGateways_with_cbl(params_from_base_test_setup, cbl_replication_type="push", cbl_continuous=False, cbl_db1=cbl_db1)
+    # 2. Create docs on sg1 
+    db.create_bulk_docs(num_of_docs, "Replication1", db=cbl_db1, channels=channels1)
+
+    # 3. Start push_pull replication with  one shot with default conflict resolver
+    repl_id_1 = sg1.start_replication2(
+        local_db=sg_db1,
+        remote_url=sg2.url,
+        remote_db=sg_db2,
+        remote_user=name1,
+        remote_password=password
+    )
+    sg1.wait_until_sgw_replication_done(db=sg_db1, repl_id=repl_id_1)
+    replicator.configure_and_replicate(
+        source_db=cbl_db2, replicator_authenticator=replicator_authenticator2, target_url=sg2_blip_url
+    )
+    # 4. update docs on sg2 via cbl_db2
+    db.update_bulk_docs(cbl_db2, number_of_updates=3)
+    
+    # 5. Then update docs on sg1  via cbl_db1
+    db.update_bulk_docs(cbl_db1)
+
+    # 6. start push_pull replication with one shot with custom conflict resovler
+    sg1.start_replication2(
+        local_db=sg_db1,
+        remote_url=sg2.url,
+        remote_db=sg_db2,
+        remote_user=name1,
+        remote_password=password,
+        conflict_resolution_type=conflict_resolver_type
+    )
+    
+    #7. if  local_wins : docs updated on sg1 gets replicated to sg2
+    # if  remote_wins : docs updated on sg2 gets replicated to sg1
+
+    # 6. Verify docs created in cbl2
     cbl_doc_ids1 = db.getDocIds(cbl_db1)
     cbl_doc_ids2 = db.getDocIds(cbl_db2)
-    assert len(cbl_doc_ids1) == len(cbl_doc_ids2), "num of docs in sg1(cbl-db1) and sg2(cbl-db2) are same"
-    count1 = sum('Replication2_' in s for s in cbl_doc_ids1)
-    count2 = sum('Replication2_' in s for s in cbl_doc_ids2)
-    assert count1 == count2, "all docs created in sg2(cbl-db2) replicated to sg1(cbl-db1)"
-    """
+    if conflict_resolver_type == "localWins" or conflict_resolver_type == "lastWriteWins":
+        for doc_id in cbl_doc_ids2:
+            doc = db.getDocument(cbl_db2, doc_id)
+            assert doc["updates-cbl"] == 1, "local_win replication did not happen"
+    else:
+        for doc_id in cbl_doc_ids1:
+            doc = db.getDocument(cbl_db1, doc_id)
+            assert doc["updates-cbl"] == 3, "remote_win replication did not happen"
+
+@pytest.mark.topospecific
+@pytest.mark.syncgateway
+@pytest.mark.sgreplicate
+@pytest.mark.parametrize("custom_conflict_type", [
+    ("merge"),
+    # ("delaylocal")
+])
+def test_sg_replicate_custom_conflict_resolve(params_from_base_test_setup, setup_customized_teardown_test, custom_conflict_type):
+    '''
+       @summary
+       Covered for #45
+       "Have multiple replications
+        1. "1. have js function in sgw config to merge local and remote changes on sg1 - on sg2?
+        2. set up 2 sgw nodes
+        3. Create docs on sg1 
+        4. Start push_pull replication with one shot
+        5. update docs on sg2.
+        6. Then update docs on sg1
+        7. Start push_pull replication with one shot
+        8. verify that docs on sg1 and sg2 gets merged into one doc
+
+        See PRD and specs for js function"
+    '''
+
+    # 1.set up 2 sgw nodes
+    cbl_db1 = setup_customized_teardown_test["cbl_db1"]
+    cbl_db2 = setup_customized_teardown_test["cbl_db2"]
+    sg_mode = params_from_base_test_setup["mode"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_conf_name = 'listener_tests/sg_replicate_custom_conflict'
+
+    db, num_of_docs, sg_db1, sg_db2, name1, name2, password, channels1, _, replicator, replicator_authenticator1, replicator_authenticator2, sg1_blip_url, sg2_blip_url, sg1, sg2, repl1, _ = setup_syncGateways_with_cbl(params_from_base_test_setup, cbl_replication_type="push", cbl_continuous=False, cbl_db1=cbl_db1)
+    # 2. Create docs on sg1 
+    db.create_bulk_docs(num_of_docs, "Replication1", db=cbl_db1, channels=channels1)
+
+    # 3. Start push_pull replication with  one shot with default conflict resolver
+    repl_id_1 = sg1.start_replication2(
+        local_db=sg_db1,
+        remote_url=sg2.url,
+        remote_db=sg_db2,
+        remote_user=name1,
+        remote_password=password
+    )
+    sg1.admin.wait_until_sgw_replication_done(db=sg_db1, repl_id=repl_id_1)
+    replicator.configure_and_replicate(
+        source_db=cbl_db2, replicator_authenticator=replicator_authenticator2, target_url=sg2_blip_url
+    )
+    # 4. update docs on sg2 via cbl_db2
+    # db.update_bulk_docs(cbl_db2, key="cbl2-update")
+    
+    # 5. Then update docs on sg1  via cbl_db1
+    db.update_bulk_docs(cbl_db1, key="cbl1-update")
+
+    # Add merge js function to sgw config
+    repl_id = "replication1"
+    custom_conflict_js_function = """function(local, remote) {
+    if (local.body.priority > remote.body.priority) {
+        return {
+            body: local.body,
+            meta: local.meta
+        };
+    } else if (local.body.priority < remote.body.priority) {
+        return {
+            body: remote.body,
+            meta: remote.meta
+        };
+    }
+    return defaultPolicy(local, remote);
+}"""
+    temp_sg_config = update_replication_in_sgw_config(sg_conf_name, sg_mode, repl_remote=sg2.url, repl_remote_db=sg_db2, repl_remote_user=name1, repl_remote_password=password, repl_repl_id=repl_id,
+                                                      repl_direction="push_and_pull", repl_conflict_resolution_type="custom", repl_continuous=None, repl_filter_query_params=None, custom_conflict_js_function=custom_conflict_js_function)
+    sg1.restart(config=temp_sg_config, cluster_config=cluster_config)
+    # 6. start push_pull replication with one shot with custom conflict resovler
+    """sg1.start_replication2(
+        local_db=sg_db1,
+        remote_url=sg2.url,
+        remote_db=sg_db2,
+        remote_user=name1,
+        remote_password=password,
+        conflict_resolution_type="custom"
+    )"""
+    sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id)
+    #7. if  local_wins : docs updated on sg1 gets replicated to sg2
+    # if  remote_wins : docs updated on sg2 gets replicated to sg1
+    
+    # 6. Verify docs created in cbl2
+    # cbl_doc_ids1 = db.getDocIds(cbl_db1)
+    cbl_doc_ids2 = db.getDocIds(cbl_db2)
+    if custom_conflict_type == "merge":
+        for doc_id in cbl_doc_ids2:
+            doc1 = db.getDocument(cbl_db1, doc_id)
+            doc2 = db.getDocument(cbl_db2, doc_id)
+            assert doc1["cbl1-update"] == 1, "merge of local and remote doc did not replicated on cbl db1"
+            assert doc1["cbl2-update"] == 1, "merge of local and remote doc did not replicated on cbl db1"
+            assert doc2["cbl1-update"] == 1, "merge of local and remote doc did not replicated on cbl db2"
+            assert doc2["cbl2-update"] == 1, "merge of local and remote doc did not replicated on cbl db2"
+    elif custom_conflict_type == "local_delay":
+        for doc_id in cbl_doc_ids2:
+            doc = db.getDocument(cbl_db2, doc_id)
+            count = 0
+            while count < 5:
+                try:
+                    doc["cbl1-update"]
+                    assert False, "there is no local win delay happened"
+                except KeyError as ke:
+                    log_info("get the local delay")
+                time.sleep(1)
+            assert doc["cbl1-update"] == 1, "local win doc did not replicate after the delay"
 
 
+def update_replication_in_sgw_config(sg_conf_name, sg_mode, repl_remote, repl_remote_db, repl_remote_user, repl_remote_password, repl_repl_id, repl_direction="push_and_pull", repl_conflict_resolution_type="default", repl_continuous=None, repl_filter_query_params=None, custom_conflict_js_function=None):
+    sg_config = sync_gateway_config_path_for_mode(sg_conf_name, sg_mode)
+    temp_sg_config, _ = copy_sgconf_to_temp(sg_config, sg_mode)
+    if "4984" in repl_remote:
+        if repl_remote_user and repl_remote_password:
+            print("adding some value")
+            remote_url = repl_remote.replace("://", "://{}:{}@".format(repl_remote_user, repl_remote_password))
+            remote_url = "{}/{}".format(remote_url, repl_remote_db)
+        else:
+            raise Exception("No remote node's username and password provided ")
+    temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ repl_remote }}", "\"{}\"".format(remote_url))
+    temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ repl_direction }}", "\"{}\"".format(repl_direction))
+    temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ repl_conflict_resolution_type }}", "\"{}\"".format(repl_conflict_resolution_type))
+    temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ repl_repl_id }}", "\"{}\"".format(repl_repl_id))
+    if repl_continuous is not None:
+        cont = "True"
+        temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ repl_continuous }}", "{},".format(cont))
+    else:
+        temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ repl_continuous }}", "")
+    if repl_filter_query_params is not None:
+        temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ repl_filter_query_params }}", "\"{}\",".format(repl_filter_query_params))
+    else:
+        temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ repl_filter_query_params }}", "")
+    if repl_conflict_resolution_type == "custom":
+        custom_conflict_key = "custom_conflict_resolver"
+        custom_conflict_key_value = "\"{}\":`{}`".format(custom_conflict_key, custom_conflict_js_function)
+        temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ custom_conflict_js_function }}", "{},".format(custom_conflict_key_value))
+    return temp_sg_config
+
+
+def restart_sg_nodes(sg1, sg2, sg_config, cluster_config):
+    sg1.restart(sg_config, cluster_config)
+    sg2.restart(sg_config, cluster_config)
+
+
+def update_docs_until_sgwnode_update(db, cbl_db):
+    num_iters = 0
+    count = 0
+    max_count = 25
+    db.update_all_docs_individually(database=cbl_db)
+    while True and count < max_count:
+        db.update_all_docs_individually(database=cbl_db)
+        num_iters += 1
+        cbl_doc_ids = db.getDocIds(cbl_db)
+        if "threadStop" in cbl_doc_ids:
+            break
+        count += 1
+    return num_iters
+
+
+def setup_replications_on_sgconfig(remote_sg_url, remote_user, remote_password, direction="push_and_pull", channels=None, continuous=None):
+
+    # replication = {}
+    repl1 = {}
+    replication_id = "sgw_repl_{}".format(random_string(length=10, digit=True))
+    remote_sg_url = remote_sg_url.replace("://", "://{}:{}@".format(remote_user, remote_password))
+    # remote_sg_url = "{}/{}".format(remote_sg_url)
+    repl1["remote"] = "{}".format(remote_sg_url)
+    repl1["direction"] = "pull"
+    if continuous:
+        repl1["continuous"] = "True"
+    if channels is not None:
+        repl1["filter"] = "sync_gateway/bychannel"
+        repl1["query_params"] = channels
+    # replication[replication_id] = repl1
+    repl1_string = json.dumps(repl1)
+    repl1_string = repl1_string.replace("\"True\"", "true")
+    print("repl1_string is ", repl1_string)
+    replication_string = "\"{}\": {}".format(replication_id, repl1_string)
+    print("replication_string is ", replication_string)
+    return replication_string, replication_id
+
+
+def get_sg4(params_from_base_test_setup, c_cluster):
+    sg_ssl = params_from_base_test_setup["sg_ssl"]
+    sg_db4 = "sg_db4"
+    sg4 = c_cluster.sync_gateways[3]
+    sg4_ip = sg4.ip
+    # channels3 = channels1 + channels2
+    sg4_admin_url = sg4.admin.admin_url
+    sg4_blip_url = "ws://{}:4984/{}".format(sg4_ip, sg_db4)
+    if sg_ssl:
+        sg4_blip_url = "wss://{}:4984/{}".format(sg4_ip, sg_db4)
+
+    return sg4, sg_db4, sg4_admin_url, sg4_blip_url
+
+
+def create_sguser_cbl_authenticator(base_url, sg_admin_url, sg_db, name, password, channels):
+    sg_client = MobileRestClient()
+    authenticator = Authenticator(base_url)
+    sg_client.create_user(sg_admin_url, sg_db, name, password=password, channels=channels)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, name)
+    replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
+    return replicator_authenticator

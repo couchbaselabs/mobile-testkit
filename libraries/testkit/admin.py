@@ -202,3 +202,33 @@ class Admin:
         log.info("GET {}".format(resp.url))
         resp.raise_for_status()
         return resp.json()
+
+    # GET /_replicationStatus for sg replicate2
+    def get_sgreplicate2_active_tasks(self, db):
+        r = requests.get("{}/{}/_replicationStatus".format(self.admin_url, db), verify=False)
+        log_request(r)
+        log_response(r)
+        r.raise_for_status()
+        resp_data = r.json()
+        return resp_data
+
+    def wait_until_sgw_replication_done(self, db, repl_id, max_times=100):
+        r = requests.get("{}/{}/_replicationStatus/{}".format(self.admin_url, db, repl_id), verify=False)
+        log_request(r)
+        log_response(r)
+        r.raise_for_status()
+        resp_obj = r.json()
+        status = resp_obj["status"]
+        count = 0
+        while count < max_times:
+            if status == "running" or status == "starting" or status == "started":
+                count += 1
+            else:
+                if status == "running":
+                    if resp_obj["docs_read"] < resp_obj["docs_written"] and resp_obj["docs_read"] != 0:
+                        count += 1
+                    else:
+                        break
+
+
+        

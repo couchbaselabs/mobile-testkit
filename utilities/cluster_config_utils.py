@@ -280,4 +280,13 @@ def copy_sgconf_to_temp(sg_conf, mode):
     copyfile(sg_conf, temp_sg_config)
     return temp_sg_config, temp_sg_conf_name
 
+
+def replace_string_on_sgw_config(sg_conf, replace_string, new_string):
+    with open(sg_conf, 'r') as file:
+        filedata = file.read()
+    filedata = filedata.replace(replace_string, new_string)
+    with open(sg_conf, 'w') as file:
+        file.write(filedata)
+    return sg_conf
+
    
