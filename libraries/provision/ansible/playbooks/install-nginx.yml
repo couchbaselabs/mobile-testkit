@@ -7,6 +7,10 @@
     upstream_sync_gatways_admin:
 
   tasks:
+  - name: NGINX | Stop nginx service
+    service: name=nginx state=stopped
+    ignore_errors: yes
+
   - name: SYNC-GATEWAY | kill sync-gateway process
     shell: ps aux | grep sync_gateway | head -1 | awk '{print $2}' | xargs kill -9
     ignore_errors: yes
