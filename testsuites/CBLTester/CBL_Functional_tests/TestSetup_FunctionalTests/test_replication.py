@@ -99,15 +99,13 @@ def test_replication_configuration_valid_values(params_from_base_test_setup, num
     total = replicator.getTotal(repl)
     completed = replicator.getCompleted(repl)
     assert total == completed, "total is not equal to completed"
-    time.sleep(2)  # wait until replication is done
+    replicator.wait_until_replicator_idle
     sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)
     sg_docs = sg_docs["rows"]
 
     # Verify database doc counts
     cbl_doc_count = db.getCount(cbl_db)
     assert len(sg_docs) == cbl_doc_count, "Expected number of docs does not exist in sync-gateway after replication"
-
-    time.sleep(2)
     cbl_doc_ids = db.getDocIds(cbl_db)
     cbl_db_docs = db.getDocuments(cbl_db, cbl_doc_ids)
     count = 0
