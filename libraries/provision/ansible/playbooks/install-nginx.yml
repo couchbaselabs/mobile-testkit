@@ -12,7 +12,7 @@
     ignore_errors: yes
 
   - name: SYNC-GATEWAY | kill sync-gateway process
-    shell: ps aux | grep sync_gateway | head -1 | awk '{print $2}' | xargs kill -9
+    shell: netstat -ano -p | grep "4984" | head -1 | awk '{print $7}' | cut -f 1 -d "/" | xargs kill -9
     ignore_errors: yes
 
   - name: epel-release | install epel-release for nginx
