@@ -327,7 +327,7 @@ class TestServeriOS(TestServerBase):
         """
         1. Flush and close the logfile capturing the LiteServ output
         """
-        self.close_app()
+        # self.close_app()
         # Have to separately copy the simulator logs
         if self.logfile_name and self.device_id:
             home = os.environ['HOME']
