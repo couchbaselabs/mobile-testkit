@@ -782,11 +782,22 @@ def test_rotated_logs_size_limit(params_from_base_test_setup, sg_conf_name):
     for log in SG_LOGS:
         _, stdout, _ = remote_executor.execute("ls -rt /tmp/sg_logs/{}*.gz | head -1".format(log))
         zip_file = stdout[0].rstrip()
-        remote_executor.execute("gunzip {}".format(zip_file))
-        print_variable = "{print $1}"
-        unzip_file = zip_file.split(".gz")[0]
-        _, stdout, _ = remote_executor.execute("ls -s {} | awk '{}'".format(unzip_file, print_variable))
-        log_size = stdout[0].rstrip()
+        if sg_platform != "windows":
+            remote_executor.execute("gunzip {}".format(zip_file))
+            print_variable = "{print $1}"
+            unzip_file = zip_file.split(".gz")[0]
+            _, stdout, _ = remote_executor.execute("ls -s {} | awk '{}'".format(unzip_file, print_variable))
+            log_size = stdout[0].rstrip()
+        else:
+            command = "ls -lrt /tmp/sg_logs/{}".format(zip_file)
+            _, stdout, _ = remote_executor.execute("for /f \"tokens=5\" %a in ('ls -lrt {}') do echo %a".format(zip_file))
+            print("stdout is ", stdout)
+            # stdout = stdout.split(' ')[2]
+            print("stdout from windows command ", stdout[0])
+            print("stdout from windows command ", stdout[1])
+            stdout = stdout[1].split(' ')[2]
+            print("stdout from windows command after the split ", stdout)
+            log_size = stdout
         assert int(log_size) > 100000, "rotated log size is not created with 100 MB"
 
     # Remove generated conf file

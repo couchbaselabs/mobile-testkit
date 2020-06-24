@@ -1,7 +1,6 @@
 ---
 # Delete and create directories
 - hosts: sync_gateways, sg_accels
-  become: yes
   vars:
     directory:
 
