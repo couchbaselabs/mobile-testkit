@@ -789,7 +789,6 @@ def test_rotated_logs_size_limit(params_from_base_test_setup, sg_conf_name):
             _, stdout, _ = remote_executor.execute("ls -s {} | awk '{}'".format(unzip_file, print_variable))
             log_size = stdout[0].rstrip()
         else:
-            command = "ls -lrt /tmp/sg_logs/{}".format(zip_file)
             _, stdout, _ = remote_executor.execute("for /f \"tokens=5\" %a in ('ls -lrt {}') do echo %a".format(zip_file))
             print("stdout is ", stdout)
             # stdout = stdout.split(' ')[2]
