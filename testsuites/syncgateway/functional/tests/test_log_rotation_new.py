@@ -767,36 +767,49 @@ def test_rotated_logs_size_limit(params_from_base_test_setup, sg_conf_name):
         json.dump(data, fp, indent=4)
 
     sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
-    SG_LOGS_FILES_NUM = get_sgLogs_fileNum(SG_LOGS, remote_executor)
+    print("sg_one_url is ", sg_one_url)
+    SG_LOGS_FILES_NUM = get_sgLogs_fileNum(SG_LOGS, remote_executor, sg_platform)
     # ~1M MB will be added to log file after requests
     send_request_to_sgw(sg_one_url, sg_admin_url, remote_executor, sg_platform)
 
     for log in SG_LOGS:
-        _, stdout, _ = remote_executor.execute("ls /tmp/sg_logs/ | grep {} | wc -l".format(log))
-        # A rotated log file should be created with 100MB
-        if (log == "sg_debug" or log == "sg_info") and sg_platform != "windows":
-            assert int(stdout[0].rstrip()) == int(SG_LOGS_FILES_NUM[log]) + 1
+        command = "ls /tmp/sg_logs/ | grep {} | wc -l".format(log)
+        print("command to run is ", command)
+        if sg_platform == "macos":
+            stdout = subprocess.check_output(command, shell=True)
         else:
-            assert stdout[0].rstrip() == SG_LOGS_FILES_NUM[log]
+            _, stdout, _ = remote_executor.execute(command)
+        # A rotated log file should be created with 100MB
+        if (log == "sg_debug" or log == "sg_info"):
+            if sg_platform == "windows":
+                assert stdout[0].rstrip() == SG_LOGS_FILES_NUM[log]
+            elif sg_platform == "macos":
+                assert int(stdout.rstrip()) == int(SG_LOGS_FILES_NUM[log]) + 1
+            else: 
+                assert int(stdout[0].rstrip()) == int(SG_LOGS_FILES_NUM[log]) + 1
 
     for log in SG_LOGS:
-        _, stdout, _ = remote_executor.execute("ls -rt /tmp/sg_logs/{}*.gz | head -1".format(log))
-        zip_file = stdout[0].rstrip()
-        if sg_platform != "windows":
-            remote_executor.execute("gunzip {}".format(zip_file))
-            print_variable = "{print $1}"
-            unzip_file = zip_file.split(".gz")[0]
-            _, stdout, _ = remote_executor.execute("ls -s {} | awk '{}'".format(unzip_file, print_variable))
-            log_size = stdout[0].rstrip()
+        command = "ls -rt /tmp/sg_logs/{}*.gz | head -1".format(log)
+        if sg_platform == "macos":
+            stdout = subprocess.check_output(command, shell=True)
+            stdout = stdout.rstrip().decode("utf-8")
         else:
+            _, stdout, _ = remote_executor.execute(command)
+            stdout = stdout[0].rstrip()
+        zip_file = stdout
+        if sg_platform == "windows":
             _, stdout, _ = remote_executor.execute("for /f \"tokens=5\" %a in ('ls -lrt {}') do echo %a".format(zip_file))
             print("stdout is ", stdout)
-            # stdout = stdout.split(' ')[2]
-            print("stdout from windows command ", stdout[0])
-            print("stdout from windows command ", stdout[1])
             stdout = stdout[1].split(' ')[2]
-            print("stdout from windows command after the split ", stdout)
-            log_size = stdout
+        else:
+            print_variable = "{print $5}"
+            command = "ls -lrt {} | awk '{}'".format(zip_file, print_variable)
+            if sg_platform == "macos":
+                stdout = subprocess.check_output(command, shell=True)
+            else:
+                _, stdout, _ = remote_executor.execute(command)
+                stdout = stdout[0].rstrip()
+        log_size = stdout
         assert int(log_size) > 100000, "rotated log size is not created with 100 MB"
 
     # Remove generated conf file
