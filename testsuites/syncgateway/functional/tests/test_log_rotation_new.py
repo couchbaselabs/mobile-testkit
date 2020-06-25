@@ -767,14 +767,12 @@ def test_rotated_logs_size_limit(params_from_base_test_setup, sg_conf_name):
         json.dump(data, fp, indent=4)
 
     sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
-    print("sg_one_url is ", sg_one_url)
     SG_LOGS_FILES_NUM = get_sgLogs_fileNum(SG_LOGS, remote_executor, sg_platform)
     # ~1M MB will be added to log file after requests
     send_request_to_sgw(sg_one_url, sg_admin_url, remote_executor, sg_platform)
 
     for log in SG_LOGS:
         command = "ls /tmp/sg_logs/ | grep {} | wc -l".format(log)
-        print("command to run is ", command)
         if sg_platform == "macos":
             stdout = subprocess.check_output(command, shell=True)
         else:
@@ -785,7 +783,7 @@ def test_rotated_logs_size_limit(params_from_base_test_setup, sg_conf_name):
                 assert stdout[0].rstrip() == SG_LOGS_FILES_NUM[log]
             elif sg_platform == "macos":
                 assert int(stdout.rstrip()) == int(SG_LOGS_FILES_NUM[log]) + 1
-            else: 
+            else:
                 assert int(stdout[0].rstrip()) == int(SG_LOGS_FILES_NUM[log]) + 1
 
     for log in SG_LOGS:
@@ -799,7 +797,6 @@ def test_rotated_logs_size_limit(params_from_base_test_setup, sg_conf_name):
         zip_file = stdout
         if sg_platform == "windows":
             _, stdout, _ = remote_executor.execute("for /f \"tokens=5\" %a in ('ls -lrt {}') do echo %a".format(zip_file))
-            print("stdout is ", stdout)
             stdout = stdout[1].split(' ')[2]
         else:
             print_variable = "{print $5}"
