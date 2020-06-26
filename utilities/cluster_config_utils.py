@@ -83,7 +83,6 @@ def generate_x509_certs(cluster_config, bucket_name, sg_platform):
                 username = match.groups()[0].strip()
                 print(username)
                 break
-
     curr_dir = os.getcwd()
     certs_dir = os.path.join(curr_dir, "certs")
     if os.path.exists(certs_dir):
