@@ -18,5 +18,5 @@
 
 - name: SYNC GATEWAY | Change the permissions on windows
   become: no
-  win_command: chmod 777 -R {{ directory }}
+  win_shell: chmod 777 -R {{ directory }}
   when: ansible_os_family == "Windows"
