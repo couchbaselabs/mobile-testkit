@@ -240,7 +240,7 @@ def test_longpoll_awaken_doc_add_update(params_from_base_test_setup, sg_conf_nam
 
         # Make sure the changes future is still running and has not exited due to any new changes, the feed should be caught up
         # and waiting
-        
+
         assert not adam_changes_task.done()
         assert not traun_changes_task.done()
         assert not andy_changes_task.done()
