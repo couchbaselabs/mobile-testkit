@@ -63,15 +63,28 @@ class PeerToPeer(object):
         args.setInt("socket", socket)
         return self._client.invokeMethod("peerToPeer_readDataFromClient", args)
 
-    def server_start(self, database, port=5000):
+    def server_start(self, database, port=None):
+        args = Args()
+        args.setMemoryPointer("database", database)
+        if port is not None:
+            args.setInt("port", port)
+        return self._client.invokeMethod("peerToPeer_serverStart", args)
+
+    def message_listener_start(self, database, port=5000):
         args = Args()
         args.setMemoryPointer("database", database)
         args.setInt("port", port)
-        return self._client.invokeMethod("peerToPeer_serverStart", args)
+        return self._client.invokeMethod("peerToPeer_messageEndpointListenerStart", args)
 
-    def server_stop(self, replicatorTcpListener):
+    def get_url_listener_port(self, url_listener):
         args = Args()
-        args.setMemoryPointer("replicatorTcpListener", replicatorTcpListener)
+        args.setMemoryPointer("listener", url_listener)
+        return self._client.invokeMethod("peerToPeer_getListenerPort", args)
+
+    def server_stop(self, url_listener, end_point_type):
+        args = Args()
+        args.setMemoryPointer("listener", url_listener)
+        args.setString("endPointType", end_point_type)
         return self._client.invokeMethod("peerToPeer_serverStop", args)
 
     def configure(self, host, server_db_name, client_database, port=5000, continuous=None, authenticator=None,

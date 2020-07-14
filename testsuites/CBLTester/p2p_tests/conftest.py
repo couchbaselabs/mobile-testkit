@@ -336,16 +336,18 @@ def server_setup(params_from_base_test_setup):
     base_url_list = params_from_base_test_setup["base_url_list"]
     cbl_db_list = params_from_base_test_setup["cbl_db_list"]
     base_url_server = base_url_list[0]
-    peerToPeer_server = PeerToPeer(base_url_server)
     cbl_db_server = cbl_db_list[0]
-    replicator_tcp_listener = peerToPeer_server.server_start(cbl_db_server)
+    peer_to_peer_listener = PeerToPeer(base_url_server)
+    # Need to start and stop listener, if test fails in the middle listener will not be closed.
+    message_url_tcp_listener = peer_to_peer_listener.message_listener_start(cbl_db_server)
     log_info("server starting .....")
     yield {
-        "replicator_tcp_listener": replicator_tcp_listener,
-        "peerToPeer_server": peerToPeer_server,
         "base_url_list": base_url_list,
         "base_url_server": base_url_server,
         "cbl_db_server": cbl_db_server,
-        "cbl_db_list": cbl_db_list
+        "cbl_db_list": cbl_db_list,
+        "message_url_tcp_listener": message_url_tcp_listener,
+        "peer_to_peer_listener": peer_to_peer_listener,
     }
-    peerToPeer_server.server_stop(replicator_tcp_listener)
+    peer_to_peer_listener.server_stop(message_url_tcp_listener, "MessageEndPoint")
+
