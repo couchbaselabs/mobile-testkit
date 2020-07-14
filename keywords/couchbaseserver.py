@@ -184,6 +184,18 @@ class CouchbaseServer:
         if len(bucket_names) != 0:
             raise CBServerError("Failed to delete all of the server buckets!")
 
+        # verify all indexes are deleted
+        count = 0
+        index_url = self.url.replace("8091", "9102")
+        while count < 5:
+            resp = self._session.get("{}/getIndexStatus".format(index_url))
+            resp_obj = resp.json()
+            if "status" not in resp_obj:
+                break
+            else:
+                count += 1
+            time.sleep(60)
+
     def wait_for_ready_state(self):
         """
         Verify all server node is in are in a "healthy" state to avoid sync_gateway startup failures
