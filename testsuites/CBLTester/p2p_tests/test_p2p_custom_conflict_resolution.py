@@ -44,14 +44,23 @@ def test_p2p_local_wins_custom_conflicts(params_from_base_test_setup, server_set
     db_obj_client = db_obj_list[1]
     db_name_server = db_name_list[0]
     server_host = host_list[0]
+    peer_to_peer_server = PeerToPeer(base_url_list[0])
+    message_url_tcp_listener = server_setup["message_url_tcp_listener"]
 
     for liteserv_version in liteserv_versions:
         if liteserv_version < "2.6.0":
             pytest.skip("CCR is supported from 2.6.0 onwards")
 
+    if endpoint_type == "URLEndPoint":
+        peer_to_peer_server.server_stop(message_url_tcp_listener, "MessageEndPoint")
+        replicator_tcp_listener = peer_to_peer_server.server_start(cbl_db_server)
+        url_listener_port = peer_to_peer_server.get_url_listener_port(replicator_tcp_listener)
+    else:
+        url_listener_port = 5000
+
     db_obj_server.create_bulk_docs(num_of_docs, "local_win", db=cbl_db_server, channels=channels)
     # Now set up client
-    repl = peer_to_peer_client.configure(host=server_host, server_db_name=db_name_server, client_database=cbl_db_client,
+    repl = peer_to_peer_client.configure(port=url_listener_port, host=server_host, server_db_name=db_name_server, client_database=cbl_db_client,
                                          continuous=True, replication_type=replicator_type, endPointType=endpoint_type)
     peer_to_peer_client.client_start(repl)
     replicator.wait_until_replicator_idle(repl)
@@ -86,7 +95,7 @@ def test_p2p_local_wins_custom_conflicts(params_from_base_test_setup, server_set
             data["server_random"] = random_string(length=10, printable=True)
             db_obj_server.updateDocument(cbl_db_server, doc_id=doc_id, data=data)
 
-    repl = peer_to_peer_client.configure(host=server_host, server_db_name=db_name_server, client_database=cbl_db_client,
+    repl = peer_to_peer_client.configure(port=url_listener_port, host=server_host, server_db_name=db_name_server, client_database=cbl_db_client,
                                          continuous=True, replication_type=replicator_type, endPointType=endpoint_type,
                                          conflict_resolver="local_wins")
     peer_to_peer_client.client_start(repl)
@@ -123,6 +132,8 @@ def test_p2p_local_wins_custom_conflicts(params_from_base_test_setup, server_set
                                                                                          "conflict with local win"
             assert "server_random" not in client_cbl_doc, "CCR failed to resolve conflict with local win"
             assert "client_random" in server_cbl_doc, "CCR failed to resolve conflict with local win"
+    if endpoint_type == "URLEndPoint":
+        peer_to_peer_server.server_stop(replicator_tcp_listener, endpoint_type)
 
 
 @pytest.mark.listener
@@ -161,14 +172,23 @@ def test_p2p_remote_wins_custom_conflicts(params_from_base_test_setup, server_se
     db_obj_client = db_obj_list[1]
     db_name_server = db_name_list[0]
     server_host = host_list[0]
+    peer_to_peer_server = PeerToPeer(base_url_list[0])
+    message_url_tcp_listener = server_setup["message_url_tcp_listener"]
 
     for liteserv_version in liteserv_versions:
         if liteserv_version < "2.6.0":
             pytest.skip("CCR is supported from 2.6.0 onwards")
 
+    if endpoint_type == "URLEndPoint":
+        peer_to_peer_server.server_stop(message_url_tcp_listener, "MessageEndPoint")
+        replicator_tcp_listener = peer_to_peer_server.server_start(cbl_db_server)
+        url_listener_port = peer_to_peer_server.get_url_listener_port(replicator_tcp_listener)
+    else:
+        url_listener_port = 5000
+
     db_obj_server.create_bulk_docs(num_of_docs, "remote_win", db=cbl_db_server, channels=channels)
     # Now set up client
-    repl = peer_to_peer_client.configure(host=server_host, server_db_name=db_name_server, client_database=cbl_db_client,
+    repl = peer_to_peer_client.configure(port=url_listener_port, host=server_host, server_db_name=db_name_server, client_database=cbl_db_client,
                                          continuous=True, replication_type=replicator_type, endPointType=endpoint_type)
     peer_to_peer_client.client_start(repl)
     replicator.wait_until_replicator_idle(repl)
@@ -203,7 +223,7 @@ def test_p2p_remote_wins_custom_conflicts(params_from_base_test_setup, server_se
             data["server_random"] = random_string(length=10, printable=True)
             db_obj_server.updateDocument(cbl_db_server, doc_id=doc_id, data=data)
 
-    repl = peer_to_peer_client.configure(host=server_host, server_db_name=db_name_server, client_database=cbl_db_client,
+    repl = peer_to_peer_client.configure(port=url_listener_port, host=server_host, server_db_name=db_name_server, client_database=cbl_db_client,
                                          continuous=True, replication_type=replicator_type, endPointType=endpoint_type,
                                          conflict_resolver="remote_wins")
     peer_to_peer_client.client_start(repl)
@@ -227,6 +247,8 @@ def test_p2p_remote_wins_custom_conflicts(params_from_base_test_setup, server_se
                                                                                      "with remote win"
         assert "server_random" in client_cbl_doc, "CCR failed to resolve conflict with remote win"
         assert "client_random" not in client_cbl_doc, "CCR failed to resolve conflict with remote win"
+    if endpoint_type == "URLEndPoint":
+        peer_to_peer_server.server_stop(replicator_tcp_listener, endpoint_type)
 
 
 @pytest.mark.listener
@@ -266,13 +288,23 @@ def test_p2p_merge_wins_custom_conflicts(params_from_base_test_setup, server_set
     db_name_server = db_name_list[0]
     server_host = host_list[0]
 
+    peer_to_peer_server = PeerToPeer(base_url_list[0])
+    message_url_tcp_listener = server_setup["message_url_tcp_listener"]
+
     for liteserv_version in liteserv_versions:
         if liteserv_version < "2.6.0":
             pytest.skip("CCR is supported from 2.6.0 onwards")
 
+    if endpoint_type == "URLEndPoint":
+        peer_to_peer_server.server_stop(message_url_tcp_listener, "MessageEndPoint")
+        replicator_tcp_listener = peer_to_peer_server.server_start(cbl_db_server)
+        url_listener_port = peer_to_peer_server.get_url_listener_port(replicator_tcp_listener)
+    else:
+        url_listener_port = 5000
+
     db_obj_server.create_bulk_docs(num_of_docs, "remote_win", db=cbl_db_server, channels=channels)
     # Now set up client
-    repl = peer_to_peer_client.configure(host=server_host, server_db_name=db_name_server, client_database=cbl_db_client,
+    repl = peer_to_peer_client.configure(port=url_listener_port, host=server_host, server_db_name=db_name_server, client_database=cbl_db_client,
                                          continuous=True, replication_type=replicator_type, endPointType=endpoint_type)
     peer_to_peer_client.client_start(repl)
     replicator.wait_until_replicator_idle(repl)
@@ -307,7 +339,7 @@ def test_p2p_merge_wins_custom_conflicts(params_from_base_test_setup, server_set
             data["server_random"] = random_string(length=10, printable=True)
             db_obj_server.updateDocument(cbl_db_server, doc_id=doc_id, data=data)
 
-    repl = peer_to_peer_client.configure(host=server_host, server_db_name=db_name_server, client_database=cbl_db_client,
+    repl = peer_to_peer_client.configure(port=url_listener_port, host=server_host, server_db_name=db_name_server, client_database=cbl_db_client,
                                          continuous=True, replication_type=replicator_type, endPointType=endpoint_type,
                                          conflict_resolver="merge")
     peer_to_peer_client.client_start(repl)
@@ -345,6 +377,9 @@ def test_p2p_merge_wins_custom_conflicts(params_from_base_test_setup, server_set
                                                                                          "conflict with merge win"
             assert "server_random" in client_cbl_doc, "CCR failed to resolve conflict with merge win"
             assert "client_random" in server_cbl_doc, "CCR failed to resolve conflict with merge win"
+
+    if endpoint_type == "URLEndPoint":
+        peer_to_peer_server.server_stop(replicator_tcp_listener, endpoint_type)
 
 
 @pytest.mark.listener
@@ -384,13 +419,23 @@ def test_p2p_non_blocking_custom_conflicts(params_from_base_test_setup, server_s
     db_name_server = db_name_list[0]
     server_host = host_list[0]
 
+    peer_to_peer_server = PeerToPeer(base_url_list[0])
+    message_url_tcp_listener = server_setup["message_url_tcp_listener"]
+
     for liteserv_version in liteserv_versions:
         if liteserv_version < "2.6.0":
             pytest.skip("CCR is supported from 2.6.0 onwards")
 
+    if endpoint_type == "URLEndPoint":
+        peer_to_peer_server.server_stop(message_url_tcp_listener, "MessageEndPoint")
+        replicator_tcp_listener = peer_to_peer_server.server_start(cbl_db_server)
+        url_listener_port = peer_to_peer_server.get_url_listener_port(replicator_tcp_listener)
+    else:
+        url_listener_port = 5000
+
     db_obj_server.create_bulk_docs(num_of_docs, "remote_win", db=cbl_db_server, channels=channels)
     # Now set up client
-    repl = peer_to_peer_client.configure(host=server_host, server_db_name=db_name_server, client_database=cbl_db_client,
+    repl = peer_to_peer_client.configure(port=url_listener_port, host=server_host, server_db_name=db_name_server, client_database=cbl_db_client,
                                          continuous=True, replication_type=replicator_type, endPointType=endpoint_type)
     peer_to_peer_client.client_start(repl)
     replicator.wait_until_replicator_idle(repl)
@@ -425,7 +470,7 @@ def test_p2p_non_blocking_custom_conflicts(params_from_base_test_setup, server_s
             data["server_random"] = random_string(length=10)
             db_obj_server.updateDocument(cbl_db_server, doc_id=doc_id, data=data)
 
-    repl = peer_to_peer_client.configure(host=server_host, server_db_name=db_name_server, client_database=cbl_db_client,
+    repl = peer_to_peer_client.configure(port=url_listener_port, host=server_host, server_db_name=db_name_server, client_database=cbl_db_client,
                                          continuous=True, replication_type=replicator_type, endPointType=endpoint_type,
                                          conflict_resolver="delayed_local_win")
     peer_to_peer_client.client_start(repl)
@@ -485,3 +530,5 @@ def test_p2p_non_blocking_custom_conflicts(params_from_base_test_setup, server_s
             assert "client_random" in server_cbl_doc, "CCR failed to resolve conflict with delayed local win"
             assert client_cbl_doc["update_during_CCR"] == server_cbl_doc["update_during_CCR"],\
                 "CCR failed to resolve conflict with delayed local win"
+    if endpoint_type == "URLEndPoint":
+        peer_to_peer_server.server_stop(replicator_tcp_listener, endpoint_type)
