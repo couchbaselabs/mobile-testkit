@@ -380,7 +380,10 @@ def test_log_rotation_invalid_path(params_from_base_test_setup, sg_conf_name):
     sg_helper = SyncGateway()
 
     sg_helper.stop_sync_gateways(cluster_config=cluster_conf, url=sg_one_url)
+    
     try:
+        get_sync_gateway_version(sg_ip)
+        print("SYNCgatway stopped")
         sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
     except ProvisioningError:
         sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=sg_conf)
