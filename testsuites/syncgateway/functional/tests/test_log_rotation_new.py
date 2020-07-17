@@ -374,13 +374,10 @@ def test_log_rotation_invalid_path(params_from_base_test_setup, sg_conf_name):
 
     with open(temp_conf, 'w') as fp:
         json.dump(data, fp, indent=4)
-
     # Stop sync_gateways
     log_info(">>> Stopping sync_gateway")
     sg_helper = SyncGateway()
-
     sg_helper.stop_sync_gateways(cluster_config=cluster_conf, url=sg_one_url)
-    
     try:
         get_sync_gateway_version(sg_ip)
         print("SYNCgatway stopped")
@@ -390,7 +387,6 @@ def test_log_rotation_invalid_path(params_from_base_test_setup, sg_conf_name):
         # Remove generated conf file
         os.remove(temp_conf)
         return
-
     # Remove generated conf file
     os.remove(temp_conf)
     pytest.fail("SG shouldn't be started!!!!")
