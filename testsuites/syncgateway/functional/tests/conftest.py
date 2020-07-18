@@ -379,11 +379,6 @@ def params_from_base_suite_setup(request):
     # clean up firewall rules if any ports blocked for server ssl testing
     clear_firewall_rules(cluster_config)
     # Stop all sync_gateway and sg_accels as test finished
-    c = cluster.Cluster(cluster_config)
-    #c.stop_sg_and_accel()
-
-    # Delete png files under resources/data
-    #clear_resources_pngs()
 
 
 # This is called before each test and will yield the dictionary to each test that references the method
