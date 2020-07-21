@@ -8,7 +8,7 @@ from keywords.SyncGateway import (SyncGateway, sync_gateway_config_path_for_mode
                                   validate_sync_gateway_mode, get_sync_gateway_version)
 from keywords.utils import host_for_url
 from keywords.tklogging import Logging
-from keywords.utils import check_xattr_support, log_info, version_is_binary, compare_versions, clear_resources_pngs
+from keywords.utils import check_xattr_support, log_info, version_is_binary, compare_versions
 from libraries.NetworkUtils import NetworkUtils
 from libraries.testkit import cluster
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop, is_x509_auth
@@ -379,11 +379,6 @@ def params_from_base_suite_setup(request):
     # clean up firewall rules if any ports blocked for server ssl testing
     clear_firewall_rules(cluster_config)
     # Stop all sync_gateway and sg_accels as test finished
-    c = cluster.Cluster(cluster_config)
-    c.stop_sg_and_accel()
-
-    # Delete png files under resources/data
-    clear_resources_pngs()
 
 
 # This is called before each test and will yield the dictionary to each test that references the method
