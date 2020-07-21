@@ -22,6 +22,7 @@
             {{ num_index_replicas }}
             {{ delta_sync }}
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
+            "bucket_op_timeout_ms":22,
             "bucket":"data-bucket",
             "username":"data-bucket",
             "password": "password",
