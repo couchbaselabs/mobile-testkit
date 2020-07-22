@@ -368,7 +368,7 @@ def test_log_rotation_invalid_path(params_from_base_test_setup, sg_conf_name):
     data = load_sync_gateway_config(sg_conf, cluster_hosts["couchbase_servers"][0], cluster_conf)
 
     # set non existing logFilePath
-    data['logging']["log_file_path"] = "/12345/1231/131231.log"
+    data['logging']["log_file_path"] = "C:\Program Files\test"
     # create temp config file in the same folder as sg_conf
     temp_conf = "/".join(sg_conf.split('/')[:-2]) + '/temp_conf.json'
 
