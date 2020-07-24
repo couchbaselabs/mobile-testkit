@@ -354,6 +354,7 @@ def test_log_rotation_invalid_path(params_from_base_test_setup, sg_conf_name):
     cluster_helper = ClusterKeywords(cluster_conf)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
+    sg_platform = params_from_base_test_setup["sg_platform"]
     sg_ip = host_for_url(sg_admin_url)
 
     if get_sync_gateway_version(sg_ip)[0] < "2.1":
@@ -368,7 +369,10 @@ def test_log_rotation_invalid_path(params_from_base_test_setup, sg_conf_name):
     data = load_sync_gateway_config(sg_conf, cluster_hosts["couchbase_servers"][0], cluster_conf)
 
     # set non existing logFilePath
-    data['logging']["log_file_path"] = "/12345/1231/131231.log"
+    if sg_platform == "windows":
+        data['logging']["log_file_path"] = "C:\Program Files\test"
+    else:
+        data['logging']["log_file_path"] = "/12345/1231/131231.log"
     # create temp config file in the same folder as sg_conf
     temp_conf = "/".join(sg_conf.split('/')[:-2]) + '/temp_conf.json'
 
