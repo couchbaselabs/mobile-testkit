@@ -25,6 +25,7 @@
       timedatectl set-ntp true
       date
     ignore_errors: True
+    register: ps
     when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian" or ansible_os_family == "Darwin"
 
   - debug: 
