@@ -4,9 +4,17 @@
   tasks:
   - name: OS | Reset the clocks
     become: yes
-    shell: timedatectl set-ntp false | timedatectl set-ntp true
+
+    shell: |
+      timedatectl set-ntp true
+      date
+    register: ps
     ignore_errors: True
     when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian" or ansible_os_family == "Darwin"
+    
+  - debug: 
+      msg: "printing reset clocks std out {{ ps.stdout }}"
+    
 
 
 - hosts: sync_gateways
@@ -14,6 +22,12 @@
   tasks:
   - name: OS | Reset the clocks
     become: yes
-    shell: timedatectl set-ntp false | timedatectl set-ntp true
+    shell: |
+      timedatectl set-ntp true
+      date
     ignore_errors: True
+    register: ps
     when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian" or ansible_os_family == "Darwin"
+
+  - debug: 
+      msg: "printing reset clocks std out {{ ps.stdout }}"
