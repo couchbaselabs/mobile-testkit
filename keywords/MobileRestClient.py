@@ -2363,6 +2363,7 @@ class MobileRestClient:
             body["ticket"] = ticket
         resp = self._session.post("http://{}:4985/_sgcollect_info".format(sg_host), data=json.dumps(body))
         log_r(resp)
+        resp.raise_for_status()
         return resp
 
     def sgCollect_info(self, sg_host, redact_level=None, redact_salt=None, output_directory=None, upload=False, upload_host=None, customer=None, ticket=None):
