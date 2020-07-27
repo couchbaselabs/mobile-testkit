@@ -260,7 +260,11 @@ def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_
     log_info("sg collect is running ........")
     # Minimum of 5 minute sleep time is recommended
     # Refer https://github.com/couchbase/sync_gateway/issues/3669
-    while sg_client.get_sgCollect_status(sg_host) == "running" and count < 60:
+    if sg_platform == "windows":
+        max_count = 120
+    else:
+        max_count = 60
+    while sg_client.get_sgCollect_status(sg_host) == "running" and count < max_count:
         time.sleep(5)
         count += 1
     time.sleep(5)  # sleep until zip files created with sg collect rest end point
