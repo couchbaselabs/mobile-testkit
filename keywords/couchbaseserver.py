@@ -194,7 +194,7 @@ class CouchbaseServer:
         while count < 5:
             resp = self._session.get("{}/getIndexStatus".format(index_url))
             resp_obj = resp.json()
-            print("resp_obj with getINdex status:", resp_obj.json())
+            print("resp_obj with getINdex status:", resp_obj)
             if "status" not in resp_obj:
                 break
             else:
