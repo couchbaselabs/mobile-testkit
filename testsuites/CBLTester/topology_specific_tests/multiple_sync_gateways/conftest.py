@@ -549,8 +549,7 @@ def setup_customized_teardown_test(params_from_base_test_setup):
     cbl_db_name1 = "cbl_db1" + str(time.time())
     cbl_db_name2 = "cbl_db2" + str(time.time())
     cbl_db_name3 = "cbl_db3" + str(time.time())
-    base_url = params_from_base_test_setup["base_url"]
-    db = Database(base_url)
+    db = params_from_base_test_setup["db"]
     db_config = db.configure()
     cbl_db1 = db.create(cbl_db_name1, db_config)
     cbl_db2 = db.create(cbl_db_name2, db_config)
@@ -566,7 +565,23 @@ def setup_customized_teardown_test(params_from_base_test_setup):
         "cbl_db3": cbl_db3,
     }
     log_info("tearing down all 3 dbs")
-    time.sleep(2)
-    db.deleteDB(cbl_db1)
-    db.deleteDB(cbl_db2)
-    db.deleteDB(cbl_db3)
+    path = db.getPath(cbl_db1).rstrip("/\\")
+    path2 = db.getPath(cbl_db2).rstrip("/\\")
+    path3 = db.getPath(cbl_db3).rstrip("/\\")
+    if '\\' in path:
+        path = '\\'.join(path.split('\\')[:-1])
+        path2 = '\\'.join(path2.split('\\')[:-1])
+        path3 = '\\'.join(path3.split('\\')[:-1])
+    else:
+        path = '/'.join(path.split('/')[:-1])
+        path2 = '/'.join(path2.split('/')[:-1])
+        path3 = '/'.join(path3.split('/')[:-1])
+    try:
+        if db.exists(cbl_db_name1, path):
+            db.deleteDB(cbl_db1)
+        if db.exists(cbl_db_name2, path2):
+            db.deleteDB(cbl_db2)
+        if db.exists(cbl_db_name3, path2):
+            db.deleteDB(cbl_db3)
+    except Exception as err:
+        log_info("Exception occurred: {}".format(err))
