@@ -115,7 +115,7 @@ def test_sync_access_sanity(params_from_base_test_setup, sg_conf_name, x509_cert
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     cbs_ce_version = params_from_base_test_setup["cbs_ce"]
-    sg_conf = "test"
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     # sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     log_info("Running 'sync_access_sanity'")
