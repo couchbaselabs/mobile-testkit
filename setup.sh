@@ -5,6 +5,8 @@
 # 3. Installs all pip packages required by this repo
 # 4. Adds custom library paths to your PYTHONPATH
 
+timedatectl set-ntp true
+date 
 # py37version=$(python3.7 -c 'import sys; print("{}.{}.{}".format(sys.version_info.major, sys.version_info.minor, sys.version_info.micro))')
 py3version=$(python3 -c 'import sys; print("{}.{}.{}".format(sys.version_info.major, sys.version_info.minor, sys.version_info.micro))')
 py2version=$(python -c 'import sys; print("{}.{}.{}".format(sys.version_info.major, sys.version_info.minor, sys.version_info.micro))')
