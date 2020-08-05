@@ -63,10 +63,12 @@ class PeerToPeer(object):
         args.setInt("socket", socket)
         return self._client.invokeMethod("peerToPeer_readDataFromClient", args)
 
-    def server_start(self, database, port=0):
+    def server_start(self, database, port=0, basic_auth=None):
         args = Args()
         args.setMemoryPointer("database", database)
         args.setInt("port", port)
+        if basic_auth is not None:
+            args.setMemoryPointer("basic_auth", basic_auth)
         return self._client.invokeMethod("peerToPeer_serverStart", args)
 
     def message_listener_start(self, database, port=5000):
@@ -87,7 +89,7 @@ class PeerToPeer(object):
         return self._client.invokeMethod("peerToPeer_serverStop", args)
 
     def configure(self, host, server_db_name, client_database, port=5000, continuous=None, authenticator=None,
-                  replication_type=None, documentIDs=None, endPointType="MessageEndPoint",
+                  replication_type=None, documentIDs=None, endPointType="MessageEndPoint", basic_auth=None,
                   push_filter=False, pull_filter=False, filter_callback_func='', conflict_resolver=""):
         args = Args()
         args.setString("host", host)
@@ -107,6 +109,8 @@ class PeerToPeer(object):
         if documentIDs is not None:
             args.setArray("documentIDs", documentIDs)
         args.setArray("endPointType", endPointType)
+        if basic_auth is not None:
+            args.setMemoryPointer("basic_auth", basic_auth)
         return self._client.invokeMethod("peerToPeer_configure", args)
 
     def client_start(self, replicator):

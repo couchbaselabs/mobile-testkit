@@ -10,13 +10,13 @@ from keywords import attachment
 from CBLClient.Document import Document
 from CBLClient.Replication import Replication
 from CBLClient.PeerToPeer import PeerToPeer
+from CBLClient.BasicAuthenticator import BasicAuthenticator
+from CBLClient.ListenerAuthenticator import ListenerAuthenticator
 
 
 @pytest.mark.listener
 @pytest.mark.parametrize("num_of_docs, continuous, replicator_type, attachments, endPointType", [
     (10, True, "push_pull", False, "URLEndPoint"),
-    (100, True, "push_pull", True, "MessageEndPoint"),
-    pytest.param(10, True, "push_pull", False, "MessageEndPoint", marks=pytest.mark.sanity),
     (100, False, "push", False, "URLEndPoint"),
 ])
 def test_peer_to_peer_with_basic_auth(params_from_base_test_setup, server_setup, num_of_docs, continuous, replicator_type, endPointType):
@@ -45,32 +45,27 @@ def test_peer_to_peer_with_basic_auth(params_from_base_test_setup, server_setup,
     db_obj_client = db_obj_list[1]
     db_name_server = db_name_list[0]
     peerToPeer_server = PeerToPeer(base_url_list[0])
-    # peerToPeer_server.server_stop(replicator_tcp_listener)
     listener = ListenerAuthenticator(base_url_list[0])
 
     peer_to_peer_server = PeerToPeer(base_url_list[0])
     message_url_tcp_listener = server_setup["message_url_tcp_listener"]
-
-    if endPointType == "URLEndPoint":
-        peer_to_peer_server.server_stop(message_url_tcp_listener, "MessageEndPoint")
-        replicator_tcp_listener = peer_to_peer_server.server_start(cbl_db_server)
-        url_listener_port = peer_to_peer_server.get_url_listener_port(replicator_tcp_listener)
-    else:
-        url_listener_port = 5000
+    peer_to_peer_server.server_stop(message_url_tcp_listener, "MessageEndPoint")
 
     server_host = host_list[0]
     num_of_docs = 50
     listener_auth = listener.create("testkit", "pass")
     replicator_auth = BasicAuthenticator(base_url_client)
     replicator_key = replicator_auth.create("testkit", "pass")
-    replicator_tcp_listener = peerToPeer_server.server_start(cbl_db_server, basic_auth=listener_auth)
+
+    replicator_tcp_listener = peer_to_peer_server.server_start(cbl_db_server, basic_auth=listener_auth)
+    url_listener_port = peer_to_peer_server.get_url_listener_port(replicator_tcp_listener)
 
     db_obj_client.create_bulk_docs(num_of_docs, "replication", db=cbl_db_client, channels=channels, attachments_generator=attachment.generate_png_100_100)
 
     # Now set up client
     repl = peerToPeer_client.configure(port=url_listener_port, host=server_host, server_db_name=db_name_server, client_database=cbl_db_client,
                                        continuous=continuous, replication_type=replicator_type,
-                                       endPointType=endPointType, authenticator=replicator_key)
+                                       endPointType=endPointType, basic_auth=replicator_key)
     peerToPeer_client.client_start(repl)
     replicator.wait_until_replicator_idle(repl)
     total = replicator.getTotal(repl)
@@ -80,5 +75,4 @@ def test_peer_to_peer_with_basic_auth(params_from_base_test_setup, server_setup,
     assert server_docs_count == num_of_docs, "Number of docs is not equivalent to number of docs in server "
     replicator.stop(repl)
     peerToPeer_server.server_stop(replicator_tcp_listener)
-    if endPointType == "URLEndPoint":
-        peer_to_peer_server.server_stop(replicator_tcp_listener, endPointType)
+    peer_to_peer_server.server_stop(replicator_tcp_listener, endPointType)
