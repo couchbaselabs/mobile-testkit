@@ -415,7 +415,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     test_name = request.node.name
     c = cluster.Cluster(cluster_config)
     sg = c.sync_gateways[0]
-    cbs_ip = c.servers[0].ip
+    cbs_ip = c.servers[0].host
 
     try:
         get_sync_gateway_version(sg.ip)
