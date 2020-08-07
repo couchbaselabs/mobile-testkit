@@ -48,6 +48,7 @@ def test_log_redaction_config(params_from_base_test_setup, remove_tmp_sg_redacti
     sg_ip = host_for_url(sg_admin_url)
     sg_db = "db"
     num_of_docs = 10
+    cbs_ce_version = params_from_base_test_setup["cbs_ce"]
 
     if get_sync_gateway_version(sg_ip)[0] < "2.1":
         pytest.skip("log redaction feature not available for version < 2.1 ")
@@ -62,7 +63,7 @@ def test_log_redaction_config(params_from_base_test_setup, remove_tmp_sg_redacti
     persist_cluster_config_environment_prop(temp_cluster_config, 'redactlevel', redaction_level,
                                             property_name_check=False)
 
-    if x509_cert_auth:
+    if x509_cert_auth and not cbs_ce_version:
         persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
 
     cluster = Cluster(config=temp_cluster_config)
