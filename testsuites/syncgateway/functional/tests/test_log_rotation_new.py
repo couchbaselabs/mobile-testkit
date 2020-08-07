@@ -474,10 +474,13 @@ def test_log_200mb(params_from_base_test_setup, sg_conf_name):
             _, stdout, _ = remote_executor.execute(command)
             output = stdout[0].rstrip()
         # A backup file should be created with 200MB
-        if (log == "sg_debug" or log == "sg_info") and sg_platform != "windows" and not sg_ce_version:
-            assert int(output) == int(SG_LOGS_FILES_NUM[log]) + 1
+        if not sg_ce_version:
+            if (log == "sg_debug" or log == "sg_info") and sg_platform != "windows":
+                assert int(output) == int(SG_LOGS_FILES_NUM[log]) + 1
+            else:
+                assert output == SG_LOGS_FILES_NUM[log]
         else:
-            assert output == SG_LOGS_FILES_NUM[log]
+            assert output == SG_LOGS_FILES_NUM[log] + 2
 
     # Remove generated conf file
     os.remove(temp_conf)
