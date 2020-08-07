@@ -1,6 +1,7 @@
 import time
 import datetime
 import pytest
+import pdb
 
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop
 from keywords.utils import host_for_url, clear_resources_pngs
@@ -86,8 +87,8 @@ def pytest_addoption(parser):
     parser.addoption("--no-db-delete", action="store_true",
                      help="Enable System test to start without reseting cluster", default=False)
 
-    parser.addoption("--device", action="store_true",
-                     help="Enable device if you want to run it on device", default=False)
+    parser.addoption("--run-on-device",
+                     help="comma separated cbl run on device or emulator", default=False)
 
     parser.addoption("--community", action="store_true",
                      help="If set, community edition will get picked up , default is enterprise", default=False)
@@ -107,8 +108,13 @@ def pytest_addoption(parser):
 
     parser.addoption("--cluster-config",
                      action="store",
-                     help="Provide cluster config to use. Default is base config",
-                     default="base")
+                     help="Provide cluster config to use. Default is multiple_sync_gateways, configured with 1 cbs and 2 sgw",
+                     default="multiple_sync_gateways")
+    
+    parser.addoption("--sg-config",
+                     action="store",
+                     help="Provide sg config to use. Default is multiple_sync_gateways, specified 2 buckets on cbs",
+                     default="multiple_sync_gateways")
 
     parser.addoption("--create-db-per-test",
                      action="store",
@@ -193,11 +199,13 @@ def params_from_base_suite_setup(request):
     liteserv_versions = request.config.getoption("--liteserv-versions")
     liteserv_hosts = request.config.getoption("--liteserv-hosts")
     liteserv_ports = request.config.getoption("--liteserv-ports")
+    run_on_device = request.config.getoption("--run-on-device")
 
     platform_list = liteserv_platforms.split(',')
     version_list = liteserv_versions.split(',')
     host_list = liteserv_hosts.split(',')
     port_list = liteserv_ports.split(',')
+    device_enabled_list = set_device_enabled(run_on_device)
 
     if len(platform_list) != len(version_list) != len(host_list) != len(port_list):
         raise Exception("Provide equal no. of Parameters for host, port, version and platforms")
@@ -208,7 +216,7 @@ def params_from_base_suite_setup(request):
     server_version = request.config.getoption("--server-version")
     enable_sample_bucket = request.config.getoption("--enable-sample-bucket")
     xattrs_enabled = request.config.getoption("--xattrs")
-    device_enabled = request.config.getoption("--device")
+    
     sg_ssl = request.config.getoption("--sg-ssl")
     resume_cluster = request.config.getoption("--resume-cluster")
     generator = request.config.getoption("--doc-generator")
@@ -216,6 +224,7 @@ def params_from_base_suite_setup(request):
     use_views = request.config.getoption("--use-views")
     number_replicas = request.config.getoption("--number-replicas")
     cluster_config_prefix = request.config.getoption("--cluster-config")
+    sg_config_prefix = request.config.getoption("--sg-config")
     create_db_per_test = request.config.getoption("--create-db-per-test")
     create_db_per_suite = request.config.getoption("--create-db-per-suite")
     enable_rebalance = request.config.getoption("--enable-rebalance")
@@ -236,47 +245,37 @@ def params_from_base_suite_setup(request):
     # Changing up_time in days
     up_time = up_time * 24 * 60
     repl_status_check_sleep_time = int(request.config.getoption("--repl-status-check-sleep-time"))
+    no_conflicts_enabled = request.config.getoption("--no-conflicts")
+
+    if sync_gateway_version < "2.7.0":
+        pytest.skip('Does not work with sg < 2.8.0 , so skipping the test')
 
     test_name = request.node.name
-    testserver_list = []
-    for platform, version, host, port in zip(platform_list,
-                                             version_list,
-                                             host_list,
-                                             port_list):
-        testserver = TestServerFactory.create(platform=platform,
-                                              version_build=version,
-                                              host=host,
-                                              port=port,
-                                              community_enabled=community_enabled)
-
-        if not use_local_testserver:
-            log_info("Downloading TestServer ...")
-            # Download TestServer app
-            testserver.download()
-
-            # Install TestServer app
-            if device_enabled and (platform == "ios" or platform == "android"):
-                testserver.install_device()
-            else:
-                testserver.install()
-
-        testserver_list.append(testserver)
-    base_url_list = []
-    for host, port in zip(host_list, port_list):
-        base_url_list.append("http://{}:{}".format(host, port))
 
     cluster_config = "{}/{}_{}".format(CLUSTER_CONFIGS_DIR, cluster_config_prefix, mode)
-    sg_config = sync_gateway_config_path_for_mode("sync_gateway_default", mode)
-    no_conflicts_enabled = request.config.getoption("--no-conflicts")
+    sg_config = sync_gateway_config_path_for_mode("listener_tests/{}".format(sg_config_prefix), mode)
     cluster_utils = ClusterKeywords(cluster_config)
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
 
-    sg_db = "db"
-    sg_url = cluster_topology["sync_gateways"][0]["public"]
-    sg_ip = host_for_url(sg_url)
-    target_url = "ws://{}:4984/{}".format(sg_ip, sg_db)
-    target_admin_url = "ws://{}:4985/{}".format(sg_ip, sg_db)
-    persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', False)
+    sg_db_list = []
+    target_url_list = []
+    target_admin_url_list = []
+    sg_url_list = []
+    sg_admin_url_list = []
+
+    for idx in list(range(2)):
+        sg_db_list.append("sg_db{}".format(idx + 1))
+        sg_url = cluster_topology["sync_gateways"][idx]["public"]
+        sg_url_list.append(sg_url)
+        sg_ip = host_for_url(sg_url)
+        sg_admin_url = cluster_topology["sync_gateways"][idx]["admin"]
+        sg_admin_url_list.append(sg_admin_url)
+        if sg_ssl:
+            target_url_list.append("wss://{}:4984/{}".format(sg_ip, sg_db_list[idx]))
+            target_admin_url_list.append("wss://{}:4985/{}".format(sg_ip, sg_db_list[idx]))
+        else:
+            target_url_list.append("ws://{}:4984/{}".format(sg_ip, sg_db_list[idx]))
+            target_admin_url_list.append("ws://{}:4985/{}".format(sg_ip, sg_db_list[idx]))
 
     try:
         server_version
@@ -325,20 +324,19 @@ def params_from_base_suite_setup(request):
     else:
         log_info("Running without delta sync")
         persist_cluster_config_environment_prop(cluster_config, 'delta_sync_enabled', False)
+
+    if sg_ssl:
+        log_info("Enabling SSL on sync gateway")
+        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', True)
+    else:
+        log_info("Configure sync gateway without SSL")
+        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', False)
+
     # Write the number of replicas to cluster config
     persist_cluster_config_environment_prop(cluster_config, 'number_replicas', number_replicas)
 
     # As cblite jobs run with on Centos platform, adding by default centos to environment config
     persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "centos", False)
-
-    if sg_ssl:
-        log_info("Enabling SSL on sync gateway")
-        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', True)
-        target_url = "wss://{}:4984/{}".format(sg_ip, sg_db)
-        target_admin_url = "wss://{}:4985/{}".format(sg_ip, sg_db)
-
-    if sync_gateway_version < "2.0":
-        pytest.skip('Does not work with sg < 2.0 , so skipping the test')
 
     if not skip_provisioning:
         log_info("Installing Sync Gateway + Couchbase Server + Accels ('di' only)")
@@ -355,17 +353,46 @@ def params_from_base_suite_setup(request):
             logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=request.node.name)
             raise
 
+    # Prepare CBL clients on devices or emulators
+    testserver_list = []
+    for platform, version, host, port, device_enabled in zip(platform_list,
+                                                             version_list,
+                                                             host_list,
+                                                             port_list,
+                                                             device_enabled_list):
+        testserver = TestServerFactory.create(platform=platform,
+                                              version_build=version,
+                                              host=host,
+                                              port=port,
+                                              community_enabled=community_enabled)
+        if not use_local_testserver:
+            log_info("Downloading TestServer ...")
+            # Download TestServer app
+            testserver.download()
+
+            # Install TestServer app
+            if device_enabled and (platform == "ios" or platform == "android"):
+                testserver.install_device()
+            else:
+                testserver.install()
+
+        testserver_list.append(testserver)
+
+    base_url_list = []
+    for host, port in zip(host_list, port_list):
+        base_url_list.append("http://{}:{}".format(host, port))
+
     # Create CBL databases on all devices
-    sg_admin_url = cluster_topology["sync_gateways"][0]["admin"]
     db_name_list = []
     cbl_db_list = []
     db_obj_list = []
     query_obj_list = []
+
     if create_db_per_suite:
         # Start Test server which needed for suite level set up like query tests
-        for testserver in testserver_list:
-            if not use_local_testserver:
-                log_info("Starting TestServer...")
+        if not use_local_testserver:
+            log_info("Starting TestServer apps...")
+            for testserver, device_enabled in zip(testserver_list, device_enabled_list):
                 test_name_cp = test_name.replace("/", "-")
                 if device_enabled:
                     testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
@@ -374,7 +401,6 @@ def params_from_base_suite_setup(request):
                     testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp,
                                                                    datetime.datetime.now()))
         for base_url, i, liteserv_version in zip(base_url_list, range(len(base_url_list)), version_list):
-
             if enable_file_logging and liteserv_version >= "2.5.0":
                 cbllog = FileLogging(base_url)
                 cbllog.configure(log_level="verbose", max_rotate_count=2,
@@ -413,21 +439,19 @@ def params_from_base_suite_setup(request):
         "version_list": version_list,
         "host_list": host_list,
         "port_list": port_list,
-        "target_url": target_url,
-        "sg_ip": sg_ip,
-        "sg_db": sg_db,
-        "sg_url": sg_url,
-        "sg_admin_url": sg_admin_url,
+        "target_url_list": target_url_list,
+        "sg_db_list": sg_db_list,
+        "sg_url_list": sg_url_list,
+        "sg_admin_url_list": sg_admin_url_list,
         "no_conflicts_enabled": no_conflicts_enabled,
         "sync_gateway_version": sync_gateway_version,
-        "target_admin_url": target_admin_url,
         "enable_sample_bucket": enable_sample_bucket,
+        "base_url_list": base_url_list,
         "cbl_db_list": cbl_db_list,
         "db_name_list": db_name_list,
-        "base_url_list": base_url_list,
         "query_obj_list": query_obj_list,
+        "db_obj_list": db_obj_list,   
         "sg_config": sg_config,
-        "db_obj_list": db_obj_list,
         "device_enabled": device_enabled,
         "generator": generator,
         "resume_cluster": resume_cluster,
@@ -463,3 +487,15 @@ def params_from_base_suite_setup(request):
             log_info("Stopping the test server")
             testserver.stop()
     clear_resources_pngs()
+
+
+def set_device_enabled(run_on_device):
+    device_list = run_on_device.split(',')
+    device_enabled_list = []
+    for device in device_list:
+        if device == "device":
+            device_enabled_list.append(True)
+        else:
+            device_enabled_list.append(False)
+
+    return device_enabled_list

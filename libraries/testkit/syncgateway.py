@@ -357,6 +357,7 @@ class SyncGateway:
         if repl_async is True:
             data["async"] = True
 
+        print("json dumpts for push replication is ", json.dumps(data))
         r = requests.post("{}/_replicate".format(sg_url), headers=self._headers, data=json.dumps(data))
         log_request(r)
         log_response(r)
@@ -398,11 +399,15 @@ class SyncGateway:
                                use_remote_target=False,
                                use_admin_url=False,
                                target_user_name=None,
-                               target_password=None):
+                               target_password=None,
+                               channels=None):
 
         sg_url = self.url
         if use_admin_url:
             sg_url = self.admin.admin_url
+
+        if channels is None:
+            channels = []
 
         if "4984" in source_url:
             if not target_user_name or not target_password:
@@ -416,6 +421,12 @@ class SyncGateway:
             data["target"] = "{}/{}".format(sg_url, target_db)
         else:
             data["target"] = "{}".format(target_db)
+
+        if len(channels) > 0:
+            data["filter"] = "sync_gateway/bychannel"
+            data["query_params"] = channels
+
+        print("json dumps of pull replication is , ", json.dumps(data))
         r = requests.post("{}/_replicate".format(sg_url), headers=self._headers, data=json.dumps(data))
         log_request(r)
         log_response(r)
@@ -514,14 +525,16 @@ class SyncGateway:
         r.raise_for_status()
         return r.json()
 
-    def start_replication2(self, local_db, remote_url, remote_db, remote_user, remote_password, direction="push_and_pull", purge_on_removal=None, continuous=None, channels=None, conflict_resolution_type="default", custom_conflict_resolver=None):
+    def start_replication2(self, local_db, remote_url, remote_db, remote_user, remote_password, direction="pushAndPull", purge_on_removal=None, continuous=False, channels=None, conflict_resolution_type="default", custom_conflict_resolver=None):
         '''
            Required values : remote, direction, conflict_resolution_type
            default values : continuous=false
            optional values : filter
         '''
+        print("Entered into sg replication method ---- ")
         sg_url = self.admin.admin_url
         replication_id = "sgw_repl_{}".format(random_string(length=10, digit=True))
+        print("replication id is ", replication_id)
         if "4984" in remote_url:
             if remote_user and remote_password:
                 print("adding some value")
@@ -534,32 +547,32 @@ class SyncGateway:
             "direction": direction,
             "conflict_resolution_type": conflict_resolution_type
         }
+        data["continuous"] = continuous
         if purge_on_removal:
             data["purge_on_removal"] = purge_on_removal
-        if continuous:
-            data["continuous"] = continuous
         if channels is not None:
             data["filter"] = "sync_gateway/bychannel"
             data["query_params"] = channels
         if conflict_resolution_type == "custom":
             if custom_conflict_resolver is None:
-                raise Exception("conflitct_resolution_type is selected as custom, but did not provide conflict resolver")
+                raise Exception("conflict_resolution_type is selected as custom, but did not provide conflict resolver")
             else:
                 data["custom_conflict_resolver"] = custom_conflict_resolver
+        print("json dumps for sg replication 2 is --", json.dumps(data))
         r = requests.put("{}/{}/_replication/{}".format(sg_url, local_db, replication_id), headers=self._headers, data=json.dumps(data))
+        
         log_request(r)
         log_response(r)
+        print("log infor for r response after replication is ", r)
         r.raise_for_status()
         return replication_id
 
-    """def stop_replication(self, replication_id, db):
-        url = self.admin.admin_url
+    def stop_replication2_by_id(self, replication_id, db):
+        sg_url = self.admin.admin_url
         r = requests.delete("{}/{}/_replication/{}".format(sg_url, db, replication_id))
         log_request(r)
         log_response(r)
         r.raise_for_status()
-        return r.json()"""
-
 
 
     def __repr__(self):
