@@ -35,6 +35,7 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name, 
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
     sg_ip = host_for_url(sg_admin_url)
+    cbs_ce_version = params_from_base_test_setup["cbs_ce"]
 
     log_info("Using cluster_conf: {}".format(cluster_conf))
     log_info("Using sg_conf: {}".format(sg_conf))
@@ -42,7 +43,7 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name, 
     if get_sync_gateway_version(sg_ip)[0] < "2.1":
         pytest.skip("Continuous logging Test NA for SG < 2.1")
 
-    if x509_cert_auth:
+    if x509_cert_auth and not cbs_ce_version:
         temp_cluster_config = copy_to_temp_conf(cluster_conf, mode)
         persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
         cluster_conf = temp_cluster_config

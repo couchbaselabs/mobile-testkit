@@ -111,6 +111,7 @@ def test_sgCollect1(params_from_base_test_setup, remove_tmp_sg_redaction_logs, s
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
     sg_url = cluster_hosts["sync_gateways"][0]["public"]
     sg_ip = host_for_url(sg_admin_url)
+
     sg_db = "db"
     num_of_docs = 10
     user_name = "autotest"
@@ -124,8 +125,9 @@ def test_sgCollect1(params_from_base_test_setup, remove_tmp_sg_redaction_logs, s
     # Modifying log redaction level to partial
     temp_cluster_config = copy_to_temp_conf(cluster_config, mode)
     persist_cluster_config_environment_prop(temp_cluster_config, 'redactlevel', "partial", property_name_check=False)
+    cbs_ce_version = params_from_base_test_setup["cbs_ce"]
 
-    if x509_cert_auth:
+    if x509_cert_auth and not cbs_ce_version:
         persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
 
     cluster = Cluster(config=temp_cluster_config)
