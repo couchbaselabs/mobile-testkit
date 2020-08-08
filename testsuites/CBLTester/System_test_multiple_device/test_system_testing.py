@@ -325,12 +325,11 @@ def test_system(params_from_base_suite_setup):
         ############################
         i = 0
         idx = 0
-        for base_url, db_obj, cbl_db, query, platform, doc_ids in zip(base_url_list,
-                                                                      db_obj_list,
-                                                                      cbl_db_list,
-                                                                      query_obj_list,
-                                                                      platform_list,
-                                                                      doc_ids_list):
+        for base_url, db_obj, cbl_db, query, platform in zip(base_url_list,
+                                                             db_obj_list,
+                                                             cbl_db_list,
+                                                             query_obj_list,
+                                                             platform_list):
             docs_to_delete = set(random.sample(doc_ids, num_of_docs_to_delete))
             docs_to_delete_per_db = len(docs_to_delete) // len(db_obj_list)
             if docs_to_delete_per_db == 0:
@@ -384,7 +383,7 @@ def test_system(params_from_base_suite_setup):
                 data["_id"] = doc_id
                 added_docs[doc_id] = data
                 new_doc_ids.append(doc_id)
-            doc_ids.update(new_doc_ids)
+            doc_ids_list[idx].update(new_doc_ids)
             log_info("creating {} docs on {} - {}".format(len(docs_to_create),
                                                           db_obj.getName(cbl_db),
                                                           new_doc_ids))
