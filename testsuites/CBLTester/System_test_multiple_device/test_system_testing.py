@@ -325,11 +325,12 @@ def test_system(params_from_base_suite_setup):
         ############################
         i = 0
         idx = 0
-        for base_url, db_obj, cbl_db, query, platform in zip(base_url_list,
-                                                             db_obj_list,
-                                                             cbl_db_list,
-                                                             query_obj_list,
-                                                             platform_list):
+        for base_url, db_obj, cbl_db, query, platform, doc_ids in zip(base_url_list,
+                                                                      db_obj_list,
+                                                                      cbl_db_list,
+                                                                      query_obj_list,
+                                                                      platform_list,
+                                                                      doc_ids_list):
             docs_to_delete = set(random.sample(doc_ids, num_of_docs_to_delete))
             docs_to_delete_per_db = len(docs_to_delete) // len(db_obj_list)
             if docs_to_delete_per_db == 0:
