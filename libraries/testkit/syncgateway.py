@@ -357,7 +357,6 @@ class SyncGateway:
         if repl_async is True:
             data["async"] = True
 
-        print("json dumpts for push replication is ", json.dumps(data))
         r = requests.post("{}/_replicate".format(sg_url), headers=self._headers, data=json.dumps(data))
         log_request(r)
         log_response(r)
@@ -426,7 +425,6 @@ class SyncGateway:
             data["filter"] = "sync_gateway/bychannel"
             data["query_params"] = channels
 
-        print("json dumps of pull replication is , ", json.dumps(data))
         r = requests.post("{}/_replicate".format(sg_url), headers=self._headers, data=json.dumps(data))
         log_request(r)
         log_response(r)
@@ -531,10 +529,8 @@ class SyncGateway:
            default values : continuous=false
            optional values : filter
         '''
-        print("Entered into sg replication method ---- ")
         sg_url = self.admin.admin_url
         replication_id = "sgw_repl_{}".format(random_string(length=10, digit=True))
-        print("replication id is ", replication_id)
         if "4984" in remote_url:
             if remote_user and remote_password:
                 print("adding some value")
@@ -558,12 +554,9 @@ class SyncGateway:
                 raise Exception("conflict_resolution_type is selected as custom, but did not provide conflict resolver")
             else:
                 data["custom_conflict_resolver"] = custom_conflict_resolver
-        print("json dumps for sg replication 2 is --", json.dumps(data))
         r = requests.put("{}/{}/_replication/{}".format(sg_url, local_db, replication_id), headers=self._headers, data=json.dumps(data))
-        
         log_request(r)
         log_response(r)
-        print("log infor for r response after replication is ", r)
         r.raise_for_status()
         return replication_id
 

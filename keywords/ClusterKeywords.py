@@ -14,7 +14,7 @@ from keywords.SyncGateway import (verify_sg_accel_version,
 from keywords.utils import (log_info, log_r, version_and_build,
                             version_is_binary, compare_versions)
 from libraries.testkit.cluster import Cluster
-from utilities.cluster_config_utils import is_load_balancer_enabled, get_load_balancer_ip, sg_ssl_enabled
+from utilities.cluster_config_utils import is_load_balancer_enabled, get_load_balancer_ip, sg_ssl_enabled, is_load_balancer_with_two_clusters_enabled
 
 
 class ClusterKeywords:
@@ -82,7 +82,28 @@ class ClusterKeywords:
         # Get load balancer IP
         lb_ip = None
 
-        if is_load_balancer_enabled(cluster_config) and lb_enable:
+        if is_load_balancer_with_two_clusters_enabled(cluster_config) and lb_enable:
+            # If load balancer is defined,
+            # Switch all SG URLs to that of load balancer
+            count = 0
+            total_sgs_count = cluster["environment"]["sgw1_cluster_count"] + cluster["environment"]["sgw2_cluster_count"]
+            for sg in cluster["sync_gateways"]:
+                if count < cluster["environment"]["sgw1_cluster_count"]:
+                    lb1_ip = cluster["load_balancers"][0]["ip"]
+                    if cluster["environment"]["ipv6_enabled"]:
+                        lb1_ip = "[{}]".format(lb1_ip)
+                    public = "http://{}:4984".format(lb1_ip)
+                    admin = "http://{}:4985".format(lb1_ip) 
+                    sg_urls.append({"public": public, "admin": admin})
+                elif count < total_sgs_count:
+                    lb2_ip = cluster["load_balancers"][1]["ip"]
+                    if cluster["environment"]["ipv6_enabled"]:
+                        lb2_ip = "[{}]".format(lb2_ip)
+                    public = "http://{}:4984".format(lb2_ip)
+                    admin = "http://{}:4985".format(lb2_ip)
+                    sg_urls.append({"public": public, "admin": admin})
+                count += 1
+        elif is_load_balancer_enabled(cluster_config) and lb_enable:
             # If load balancer is defined,
             # Switch all SG URLs to that of load balancer
             # lb_enable can be used to override the behavior of adding lb IPs

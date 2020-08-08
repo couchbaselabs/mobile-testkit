@@ -239,7 +239,8 @@ def test_upgrade(params_from_base_test_setup):
                     sync_gateway_version=sync_gateway_upgraded_version,
                     enable_import=enable_import
                 )
-                enable_import = False
+                if sync_gateway_upgraded_version < "2.7.0":
+                    enable_import = False  # with 2.7 and later we can have enable import on all docs
                 # Check Import showing up on all nodes
         repl_config2 = replicator.configure(cbl_db2, sg_blip_url, continuous=True, channels=sg_user_channels, replication_type="push_pull", replicator_authenticator=replicator_authenticator)
         repl2 = replicator.create(repl_config2)
