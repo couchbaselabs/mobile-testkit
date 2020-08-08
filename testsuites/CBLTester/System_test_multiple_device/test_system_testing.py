@@ -197,19 +197,13 @@ def test_system(params_from_base_suite_setup):
             _releaseQueryResults(base_url, results)
         i += 1
 
-    pdb.set_trace()
-    # configure replication in between sgw 
-    # sg1 = cluster.sync_gateways[0]
-    # sg2 = cluster.sync_gateways[1]
-
     sg_repl_1 = sg1.start_replication2(local_db=sg_db_list[0],
                                        remote_url=sg2.url,
                                        remote_db=sg_db_list[1],
-                                       # continuous=True,
+                                       continuous=True,
                                        remote_user=username_list[1],
                                        remote_password=password)
     sg1.admin.wait_until_sgw_replication_done(db=sg_db_list[0], repl_id=sg_repl_1)
-    pdb.set_trace()
 
     current_time = datetime.now()
     running_time = current_time + timedelta(minutes=up_time)
@@ -237,7 +231,8 @@ def test_system(params_from_base_suite_setup):
             sg_client.update_docs(url=sg_url_list[k], db=sg_db_list[k], docs=sg_docs,
                                   number_updates=num_of_doc_updates, auth=session_list[k], channels=channels_sg_list[k])
 
-        log_info("eunice - doc update - sg - update done")
+        sg1.admin.wait_until_sgw_replication_done(db=sg_db_list[0], repl_id=sg_repl_1)
+        log_info("doc update - sg - update done")
         # Waiting until replicator finishes on all dbs
         m = 0
         for base_url, cbl_db, query, platform in zip(base_url_list,
@@ -255,7 +250,7 @@ def test_system(params_from_base_suite_setup):
                 _releaseQueryResults(base_url, results)
             m += 1
 
-        log_info("eunice - doc update - sg - replication done")
+        log_info("doc update - sg - replication done")
         #######################################
         # Checking for doc update on CBL side #
         #######################################
@@ -285,7 +280,9 @@ def test_system(params_from_base_suite_setup):
             if platform.lower() not in ["net-msft", "uwp", "xamarin-ios", "xamarin-android"]:
                 _releaseQueryResults(base_url, results)
             m += 1
-        log_info("eunice - doc update - cbl - done")
+
+        sg1.admin.wait_until_sgw_replication_done(db=sg_db_list[0], repl_id=sg_repl_1)
+        log_info("doc update - cbl - done")
 
         ###########################
         # Deleting docs on SG side #
@@ -302,6 +299,7 @@ def test_system(params_from_base_suite_setup):
             '''
             TODO: verify deleted docs get replicated to another sg
             '''
+        sg1.admin.wait_until_sgw_replication_done(db=sg_db_list[0], repl_id=sg_repl_1)
         m = 0
         for base_url, cbl_db, query, platform in zip(base_url_list,
                                                      cbl_db_list,
@@ -321,7 +319,7 @@ def test_system(params_from_base_suite_setup):
             # Deleting a node from the cluster
             log_info("Rebalance out server: {}".format(server.host))
             primary_server.rebalance_out(server_urls, server)
-        log_info("eunice - doc delete - sg - done")
+        log_info("doc delete - sg - done")
         ############################
         # Deleting docs on CBL side #
         ############################
@@ -351,14 +349,14 @@ def test_system(params_from_base_suite_setup):
             _check_parallel_replication_changes(base_url, cbl_db, query, platform, replicator_list[idx % 2], repl_list[idx % 2],
                                                 repl_status_check_sleep_time, query_limit, query_offset)
             idx += 1
-
+        sg1.admin.wait_until_sgw_replication_done(db=sg_db_list[0], repl_id=sg_repl_1)
         if enable_rebalance:
             # Adding the node back to the cluster
             log_info("Adding Server back {}".format(server.host))
             primary_server.add_node(server, services="kv,index,n1ql")
             log_info("Rebalance in server: {}".format(server.host))
             primary_server.rebalance_in(server_urls, server)
-        log_info("eunice - doc delete - cbl - done")
+        log_info("doc delete - cbl - done")
 
         #############################
         # Creating docs on CBL side #
@@ -404,7 +402,7 @@ def test_system(params_from_base_suite_setup):
                 _releaseQueryResults(base_url, results)
             idx += 1
             time.sleep(5)
-
+        sg1.admin.wait_until_sgw_replication_done(db=sg_db_list[0], repl_id=sg_repl_1)
         doc_id_for_new_docs += num_of_docs_to_add
         # _check_doc_count(db_obj_list, cbl_db_list)
 
