@@ -107,6 +107,8 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name, 
             stdout = subprocess.check_output(command, shell=True)
             assert int(stdout) == 2, "debug log files did not get rotated and incremented when logging is exceeded the size"
         else:
+            if sg_platform == "windows":
+                command = "ls C:\\\\tmp\\\\sg_logs | grep {} | wc -l".format(log)
             _, stdout, _ = remote_executor.execute(command)
             assert stdout[0].rstrip() == str(2)
 
