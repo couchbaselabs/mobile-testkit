@@ -17,7 +17,9 @@
 
 - name: SYNC GATEWAY | Delete sync_gateway empty file {{ file_name }} of size {{ file_size }}
   become: no
-  win_command: rm -rf {{ file_name }}
+  win_file:
+    path: "{{ file_name }}"
+    state: absent
   when: ansible_os_family == "Windows"
 
 - name: SYNC GATEWAY | Create sync_gateway empty file {{ file_name }} of size {{ file_size }}
@@ -28,5 +30,10 @@
 - name: SYNC GATEWAY | Change the permissions on windows
   become: no
   win_command: chmod 777 -R  {{ file_name }}
-  when: ansible_os_family == "Windows"
+  when: ansible_os_family == "Windows" and "ansible_distribution_major_version" == "10"
+
+- name: SYNC GATEWAY | Change the permissions on windows
+  become: no
+  win_command: icacls {{ file_name }} /grant Everyone:F
+  when: ansible_os_family == "Windows" and "ansible_distribution_major_version" == "2012"
 
