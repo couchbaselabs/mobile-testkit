@@ -1,13 +1,8 @@
 
-
-import time
-import random
 import pytest
 
-from concurrent.futures import ThreadPoolExecutor
 from keywords.utils import log_info
 from keywords import attachment
-from CBLClient.Document import Document
 from CBLClient.Replication import Replication
 from CBLClient.PeerToPeer import PeerToPeer
 from CBLClient.BasicAuthenticator import BasicAuthenticator
@@ -34,7 +29,6 @@ def test_peer_to_peer_with_basic_auth(params_from_base_test_setup, server_setup,
     db_obj_list = params_from_base_test_setup["db_obj_list"]
     db_name_list = params_from_base_test_setup["db_name_list"]
     base_url_list = server_setup["base_url_list"]
-    # replicator_tcp_listener = server_setup["replicator_tcp_listener"]
     cbl_db_server = server_setup["cbl_db_server"]
     cbl_db_list = server_setup["cbl_db_list"]
     channels = ["peerToPeer"]
@@ -46,7 +40,6 @@ def test_peer_to_peer_with_basic_auth(params_from_base_test_setup, server_setup,
     cbl_db_client = cbl_db_list[1]
     db_obj_client = db_obj_list[1]
     db_name_server = db_name_list[0]
-    peerToPeer_server = PeerToPeer(base_url_list[0])
     listener = ListenerAuthenticator(base_url_list[0])
 
     peer_to_peer_server = PeerToPeer(base_url_list[0])
@@ -54,6 +47,7 @@ def test_peer_to_peer_with_basic_auth(params_from_base_test_setup, server_setup,
     peer_to_peer_server.server_stop(message_url_tcp_listener, "MessageEndPoint")
 
     server_host = host_list[0]
+
     listener_auth = listener.create("testkit", "pass")
     replicator_auth = BasicAuthenticator(base_url_client)
     replicator_key = replicator_auth.create("testkit", "pass")
@@ -75,7 +69,7 @@ def test_peer_to_peer_with_basic_auth(params_from_base_test_setup, server_setup,
     server_docs_count = db_obj_server.getCount(cbl_db_server)
     assert server_docs_count == num_of_docs, "Number of docs is not equivalent to number of docs in server "
     replicator.stop(repl)
-    peerToPeer_server.server_stop(replicator_tcp_listener, endPointType)
+    peer_to_peer_server.server_stop(replicator_tcp_listener, endPointType)
 
 
 @pytest.mark.listener

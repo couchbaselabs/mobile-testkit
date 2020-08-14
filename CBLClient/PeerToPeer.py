@@ -63,12 +63,15 @@ class PeerToPeer(object):
         args.setInt("socket", socket)
         return self._client.invokeMethod("peerToPeer_readDataFromClient", args)
 
-    def server_start(self, database, port=0, basic_auth=None):
+    def server_start(self, database, port=0, basic_auth=None, tls_disable=True, tls_auth_type=None):
         args = Args()
         args.setMemoryPointer("database", database)
         args.setInt("port", port)
         if basic_auth is not None:
             args.setMemoryPointer("basic_auth", basic_auth)
+        args.setBoolean("tls_enable", tls_disable)
+        if tls_auth_type is not None:
+            args.setString("tls_auth_type", tls_auth_type)
         return self._client.invokeMethod("peerToPeer_serverStart", args)
 
     def message_listener_start(self, database, port=5000):
@@ -90,7 +93,7 @@ class PeerToPeer(object):
 
     def configure(self, host, server_db_name, client_database, port=5000, continuous=None, authenticator=None,
                   replication_type=None, documentIDs=None, endPointType="MessageEndPoint", basic_auth=None,
-                  push_filter=False, pull_filter=False, filter_callback_func='', conflict_resolver=""):
+                  push_filter=False, pull_filter=False, filter_callback_func='', conflict_resolver="", tls_enable=None, tls_disable=True, tls_auth_type=None):
         args = Args()
         args.setString("host", host)
         args.setInt("port", port)
@@ -100,6 +103,7 @@ class PeerToPeer(object):
         args.setBoolean("pull_filter", pull_filter)
         args.setString("filter_callback_func", filter_callback_func)
         args.setString("conflict_resolver", conflict_resolver)
+        args.setBoolean("tls_enable", tls_disable)
         if authenticator is not None:
             args.setMemoryPointer("authenticator", authenticator)
         if replication_type is not None:
@@ -111,6 +115,10 @@ class PeerToPeer(object):
         args.setArray("endPointType", endPointType)
         if basic_auth is not None:
             args.setMemoryPointer("basic_auth", basic_auth)
+        if tls_enable is not None:
+            args.setBoolean("tls_enabler", tls_enable)
+        if tls_auth_type is not None:
+            args.setString("tls_auth_type", tls_auth_type)
         return self._client.invokeMethod("peerToPeer_configure", args)
 
     def client_start(self, replicator):

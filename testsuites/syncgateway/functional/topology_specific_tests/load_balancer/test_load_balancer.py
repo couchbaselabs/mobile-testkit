@@ -109,6 +109,7 @@ def test_sgw_down_with_load_balancer(params_from_base_test_setup, sgw_down_with_
     cbs_cluster = Cluster(config=cluster_config)
 
     sdk_docs, sdk_client = create_docs_via_sdk(cbs_url, cbs_cluster, bucket_name, num_docs)
+    sdk_client.upsert_multi(sdk_docs)
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
         log_info("Starting ...")
