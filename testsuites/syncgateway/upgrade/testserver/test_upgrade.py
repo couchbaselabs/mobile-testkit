@@ -293,7 +293,6 @@ def verify_sg_docs_revision_history(url, db, cbl_db2, num_docs, sg_db, added_doc
             expected_doc_map[doc] = added_docs[doc]["numOfUpdates"] - 1
         else:
             expected_doc_map[doc] = 1
-    print("all cbl_docs 2 are ... ", cbl_docs2)
     for doc in cbl_docs2:
         if "sgw_docs" in doc:
             num_sg_docs_in_cbldb2 += 1

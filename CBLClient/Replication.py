@@ -293,9 +293,9 @@ class Replication(object):
     def wait_until_replicator_idle(self, repl, err_check=True, max_times=150, sleep_time=2):
         count = 0
         idle_count = 0
+        max_idle_count = 3
         # Sleep until replicator completely processed
         activity_level = self.getActivitylevel(repl)
-        log_info("max times is ", max_times)
         while count < max_times:
             log_info("Activity level: {}".format(activity_level))
             log_info("total vs comleted = {} vs {} ".format(self.getCompleted(repl), self.getTotal(repl)))
@@ -310,7 +310,7 @@ class Replication(object):
                     else:
                         idle_count += 1
                         time.sleep(sleep_time)
-                        if idle_count > 1:
+                        if idle_count > max_idle_count:
                             break
             if err_check:
                 err = self.getError(repl)

@@ -229,6 +229,3 @@ class Admin:
                         count += 1
                     else:
                         break
-
-
-        

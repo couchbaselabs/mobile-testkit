@@ -287,5 +287,3 @@ def replace_string_on_sgw_config(sg_conf, replace_string, new_string):
     with open(sg_conf, 'w') as file:
         file.write(filedata)
     return sg_conf
-
-   

@@ -194,7 +194,6 @@ class CouchbaseServer:
         while count < 5:
             resp = self._session.get("{}/getIndexStatus".format(index_url))
             resp_obj = resp.json()
-            print("resp_obj with getINdex status:", resp_obj)
             if "status" not in resp_obj:
                 break
             else:
@@ -796,7 +795,7 @@ class CouchbaseServer:
             connection_str = "couchbase://{}/{}".format(self.host, bucket_name)
         return Bucket(connection_str, password='password')
 
-    def get_package_name(self, version, build_number, cbs_platform="centos8", cbs_ce=False):
+    def get_package_name(self, version, build_number, cbs_platform="centos7", cbs_ce=False):
         """
         Given:
         version - the version without any build number information, eg 4.5.0
