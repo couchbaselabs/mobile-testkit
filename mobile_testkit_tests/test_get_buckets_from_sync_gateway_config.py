@@ -31,7 +31,6 @@ from libraries.provision.install_sync_gateway import get_buckets_from_sync_gatew
     ("sync_gateway_default_cc.json", ['data-bucket']),
     ("sync_gateway_default_di.json", ['data-bucket', 'index-bucket']),
     ("sync_gateway_default_functional_tests_cc.json", ['data-bucket']),
-    ("sync_gateway_default_functional_tests_di.json", ['data-bucket', 'index-bucket']),
     ("sync_gateway_default_functional_tests_revslimit50_cc.json", ['data-bucket']),
     ("sync_gateway_default_functional_tests_revslimit50_di.json", ['data-bucket', 'index-bucket']),
     ("sync_gateway_default_low_revs_cc.json", ['data-bucket']),

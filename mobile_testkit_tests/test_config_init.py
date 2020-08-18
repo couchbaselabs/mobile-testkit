@@ -27,7 +27,6 @@ from libraries.testkit.config import Config
     ("sync_gateway_default_cc.json", ['data-bucket'], "cc"),
     ("sync_gateway_default_di.json", ['data-bucket', 'index-bucket'], "di"),
     ("sync_gateway_default_functional_tests_cc.json", ['data-bucket'], "cc"),
-    ("sync_gateway_default_functional_tests_di.json", ['data-bucket', 'index-bucket'], "di"),
     ("sync_gateway_default_functional_tests_revslimit50_cc.json", ['data-bucket'], "cc"),
     ("sync_gateway_default_functional_tests_revslimit50_di.json", ['data-bucket', 'index-bucket'], "di"),
     ("sync_gateway_default_low_revs_cc.json", ['data-bucket'], "cc"),
