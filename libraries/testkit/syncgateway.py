@@ -360,6 +360,7 @@ class SyncGateway:
         r = requests.post("{}/_replicate".format(sg_url), headers=self._headers, data=json.dumps(data))
         log_request(r)
         log_response(r)
+        print("push replication-------1 status ", r.json)
         r.raise_for_status()
         return r.json()
 
@@ -428,6 +429,7 @@ class SyncGateway:
         r = requests.post("{}/_replicate".format(sg_url), headers=self._headers, data=json.dumps(data))
         log_request(r)
         log_response(r)
+        print("pull replication1 status ", r.json)
         r.raise_for_status()
         return r.json()
 
@@ -523,14 +525,15 @@ class SyncGateway:
         r.raise_for_status()
         return r.json()
 
-    def start_replication2(self, local_db, remote_url, remote_db, remote_user, remote_password, direction="pushAndPull", purge_on_removal=None, continuous=False, channels=None, conflict_resolution_type="default", custom_conflict_resolver=None):
+    def start_replication2(self, local_db, remote_url, remote_db, remote_user, remote_password, direction="pushAndPull", purge_on_removal=None, continuous=False, channels=None, conflict_resolution_type="default", custom_conflict_resolver=None, adhoc=False, delta_sync=False, replication_id=None):
         '''
            Required values : remote, direction, conflict_resolution_type
            default values : continuous=false
            optional values : filter
         '''
         sg_url = self.admin.admin_url
-        replication_id = "sgw_repl_{}".format(random_string(length=10, digit=True))
+        if replication_id is not None:
+            replication_id = "sgw_repl_{}".format(random_string(length=10, digit=True))
         if "4984" in remote_url:
             if remote_user and remote_password:
                 print("adding some value")
@@ -549,12 +552,18 @@ class SyncGateway:
         if channels is not None:
             data["filter"] = "sync_gateway/bychannel"
             data["query_params"] = channels
+        if adhoc:
+            data["adhoc"] = adhoc
+        if delta_sync:
+            data["enable_delta_sync"] = delta_sync
         if conflict_resolution_type == "custom":
             if custom_conflict_resolver is None:
                 raise Exception("conflict_resolution_type is selected as custom, but did not provide conflict resolver")
             else:
                 data["custom_conflict_resolver"] = custom_conflict_resolver
+        print("json ddumps of sg replication 2:", json.dumps(data))
         r = requests.put("{}/{}/_replication/{}".format(sg_url, local_db, replication_id), headers=self._headers, data=json.dumps(data))
+        print("replication response on sGW replication...", r)
         log_request(r)
         log_response(r)
         r.raise_for_status()
@@ -566,7 +575,6 @@ class SyncGateway:
         log_request(r)
         log_response(r)
         r.raise_for_status()
-
 
     def __repr__(self):
         return "SyncGateway: {}:{}\n".format(self.hostname, self.ip)

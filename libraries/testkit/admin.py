@@ -250,5 +250,3 @@ class Admin:
             if "(local)" in repl_body['assigned_node']:
                 count += 1
         return count
-
-        

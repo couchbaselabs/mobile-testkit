@@ -210,8 +210,8 @@ class MobileRestClient:
             "name": name,
             "ttl": ttl
         }
-        if password:	
-            data["password"] = password	
+        if password:
+            data["password"] = password
 
         resp = self._session.post("{}/{}/_session".format(url, db), data=json.dumps(data))
         log_r(resp)
