@@ -4,8 +4,9 @@ import pytest
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.constants import CLUSTER_CONFIGS_DIR
 from keywords.exceptions import ProvisioningError, FeatureSupportedError
-from keywords.SyncGateway import (sync_gateway_config_path_for_mode,
-                                  validate_sync_gateway_mode)
+from keywords.SyncGateway import (SyncGateway, sync_gateway_config_path_for_mode,
+                                  validate_sync_gateway_mode, get_sync_gateway_version)
+from keywords.utils import host_for_url
 from keywords.tklogging import Logging
 from keywords.utils import check_xattr_support, log_info, version_is_binary, compare_versions, clear_resources_pngs
 from libraries.NetworkUtils import NetworkUtils
@@ -407,6 +408,15 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     sg_ce = params_from_base_suite_setup["sg_ce"]
 
     test_name = request.node.name
+    sg_admin_url = cluster_topology["sync_gateways"][0]["admin"]
+    sg_ip = host_for_url(sg_admin_url)
+
+    try:
+        get_sync_gateway_version(sg_ip)
+    except Exception:
+        sg = SyncGateway()
+        log_info("Restarting sync gateway {}".format(sg_ip))
+        sg.restart_sync_gateways(cluster_config=cluster_config, url=sg_ip)
 
     if sg_lb:
         # These tests target one SG node

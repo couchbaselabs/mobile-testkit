@@ -194,6 +194,7 @@ def params_from_base_suite_setup(request):
                 sync_gateway_config=sg_config,
                 race_enabled=race_enabled,
                 cbs_platform=cbs_platform,
+                sg_platform=sg_platform,
                 sg_installer_type=sg_installer_type,
                 sa_installer_type=sa_installer_type,
                 sg_ce=sg_ce,
