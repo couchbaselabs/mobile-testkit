@@ -288,4 +288,7 @@ def replace_string_on_sgw_config(sg_conf, replace_string, new_string):
 def is_load_balancer_with_two_clusters_enabled(cluster_config):
     """ Loads cluster config to see if load balancer is enabled """
     cluster = load_cluster_config_json(cluster_config)
-    return cluster["environment"]["two_sg_cluster_lb_enabled"]
+    try:
+        return cluster["environment"]["two_sg_cluster_lb_enabled"]
+    except KeyError:
+        return False

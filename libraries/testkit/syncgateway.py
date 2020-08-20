@@ -360,7 +360,6 @@ class SyncGateway:
         r = requests.post("{}/_replicate".format(sg_url), headers=self._headers, data=json.dumps(data))
         log_request(r)
         log_response(r)
-        print("push replication-------1 status ", r.json)
         r.raise_for_status()
         return r.json()
 
@@ -429,7 +428,6 @@ class SyncGateway:
         r = requests.post("{}/_replicate".format(sg_url), headers=self._headers, data=json.dumps(data))
         log_request(r)
         log_response(r)
-        print("pull replication1 status ", r.json)
         r.raise_for_status()
         return r.json()
 
@@ -561,9 +559,7 @@ class SyncGateway:
                 raise Exception("conflict_resolution_type is selected as custom, but did not provide conflict resolver")
             else:
                 data["custom_conflict_resolver"] = custom_conflict_resolver
-        print("json ddumps of sg replication 2:", json.dumps(data))
         r = requests.put("{}/{}/_replication/{}".format(sg_url, local_db, replication_id), headers=self._headers, data=json.dumps(data))
-        print("replication response on sGW replication...", r)
         log_request(r)
         log_response(r)
         r.raise_for_status()
