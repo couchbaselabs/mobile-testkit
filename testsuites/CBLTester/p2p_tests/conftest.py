@@ -164,6 +164,7 @@ def params_from_base_suite_setup(request):
             db_name = "{}-{}".format(create_db_per_suite, i + 1)
             log_info("db name for {} is {}".format(base_url, db_name))
             db_name_list.append(db_name)
+            print("DB name list", db_name_list)
             db = Database(base_url)
             query_obj_list.append(Query(base_url))
             db_obj_list.append(db)
@@ -316,11 +317,13 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     if create_db_per_test:
         for testserver, cbl_db, db_obj, base_url, db_name, path in zip(testserver_list, cbl_db_list, db_obj_list, base_url_list, db_name_list, db_path_list):
             try:
-                log_info("Deleting the database {} at the test teardown for base url {}".format(db_obj.getName(cbl_db),
-                                                                                                base_url))
+                # log_info("Deleting the database {} at the test teardown for base url {}".format(db_obj.getName(cbl_db),
+                #                                                                                 base_url))
                 time.sleep(2)
-                if db.exists(db_name, path):
-                    db.deleteDB(cbl_db)
+                # if db.exists(db_name, path):
+                #     print("DB path")
+                #     print(cbl_db)
+                    #db.deleteDB(cbl_db)
                 log_info("Flushing server memory")
                 utils_obj = Utils(base_url)
                 utils_obj.flushMemory()
@@ -349,5 +352,5 @@ def server_setup(params_from_base_test_setup):
         "message_url_tcp_listener": message_url_tcp_listener,
         "peer_to_peer_listener": peer_to_peer_listener,
     }
-    peer_to_peer_listener.server_stop(message_url_tcp_listener, "MessageEndPoint")
+    # peer_to_peer_listener.server_stop(message_url_tcp_listener, "MessageEndPoint")
 

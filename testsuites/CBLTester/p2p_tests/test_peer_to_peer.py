@@ -60,8 +60,8 @@ def test_peer_to_peer_1to1_valid_values(params_from_base_test_setup, server_setu
     # Now set up client
     print(url_listener_port)
     repl = peerToPeer_client.configure(port=url_listener_port, host=server_host, server_db_name=db_name_server,
-                                           client_database=cbl_db_client, continuous=continuous,
-                                           replication_type=replicator_type, endPointType=endPointType)
+                                       client_database=cbl_db_client, continuous=continuous,
+                                       replication_type=replicator_type, endPointType=endPointType)
 
     peerToPeer_client.client_start(repl)
     replicator.wait_until_replicator_idle(repl)

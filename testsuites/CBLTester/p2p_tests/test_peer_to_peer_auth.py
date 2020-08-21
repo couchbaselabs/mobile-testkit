@@ -16,7 +16,7 @@ from CBLClient.ListenerAuthenticator import ListenerAuthenticator
     (10, True, "push_pull", "URLEndPoint"),
     (10, False, "push", "URLEndPoint")
 ])
-def test_peer_to_peer_with_basic_auth(params_from_base_test_setup, server_setup, num_of_docs, continuous, replicator_type,  endPointType):
+def test_peer_to_peer_with_basic_auth(params_from_base_test_setup, server_setup, num_of_docs, continuous, replicator_type, endPointType):
     """
         @summary:
         1. Create docs on client.
@@ -141,4 +141,5 @@ def test_peer_to_peer_with_basic_auth_incorrect_pass(params_from_base_test_setup
     except Exception as he:
         assert 'unauthorized' in str(he)
         peerToPeer_server.server_stop(replicator_tcp_listener, endPointType)
-
+        return
+    assert False, "We need to get unauthorized errors"
