@@ -490,7 +490,7 @@ def test_db_close_on_active_replicator_and_live_query(params_from_base_test_setu
     db_config = db.configure()
     cbl_db = db.create(db_name, db_config)
 
-    num_of_docs = 100
+    num_of_docs = 10000
     channel1 = ["Replication-1"]
     channel2 = ["Replication-2"]
 
@@ -515,10 +515,10 @@ def test_db_close_on_active_replicator_and_live_query(params_from_base_test_setu
 
     replicator_authenticator1 = authenticator.authentication(session_id1, cookie1, authentication_type="session")
     repl1 = replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator1, target_url=sg_blip_url,
-                                               replication_type="push_pull", continuous=True, channels=channel1)
+                                               replication_type="push_pull", continuous=True, channels=channel1, wait_until_idle=False)
     replicator_authenticator2 = authenticator.authentication(session_id2, cookie2, authentication_type="session")
     repl2 = replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator2, target_url=sg_blip_url,
-                                               replication_type="push_pull", continuous=True, channels=channel2)
+                                               replication_type="push_pull", continuous=True, channels=channel2, wait_until_idle=False)
 
     # 3. register a live query to the cbl db
     qy = Query(base_url)
@@ -573,7 +573,7 @@ def test_db_delete_on_active_replicators(params_from_base_test_setup):
     db_config = db.configure()
     cbl_db = db.create(db_name, db_config)
 
-    num_of_docs = 100
+    num_of_docs = 10000
     channel1 = ["Replication-1"]
     channel2 = ["Replication-2"]
     channel3 = ["Replication-3"]
@@ -604,13 +604,13 @@ def test_db_delete_on_active_replicators(params_from_base_test_setup):
 
     replicator_authenticator1 = authenticator.authentication(session_id1, cookie1, authentication_type="session")
     repl1 = replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator1, target_url=sg_blip_url,
-                                               replication_type="push_pull", continuous=True, channels=channel1)
+                                               replication_type="push_pull", continuous=True, channels=channel1, wait_until_idle=False)
     replicator_authenticator2 = authenticator.authentication(session_id2, cookie2, authentication_type="session")
     repl2 = replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator2, target_url=sg_blip_url,
-                                               replication_type="push", continuous=True, channels=channel2)
+                                               replication_type="push", continuous=True, channels=channel2, wait_until_idle=False)
     replicator_authenticator3 = authenticator.authentication(session_id3, cookie3, authentication_type="session")
     repl3 = replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator3, target_url=sg_blip_url,
-                                               replication_type="pull", continuous=True, channels=channel3)
+                                               replication_type="pull", continuous=True, channels=channel3, wait_until_idle=False)
 
     log_info(replicator.getActivitylevel(repl1))
     log_info(replicator.getActivitylevel(repl2))
@@ -658,7 +658,7 @@ def test_db_delete_on_active_replicator_and_live_query(params_from_base_test_set
     db_config = db.configure()
     cbl_db = db.create(db_name, db_config)
 
-    num_of_docs = 100
+    num_of_docs = 10000
     channel1 = ["Replication-1"]
     channel2 = ["Replication-2"]
 
@@ -683,10 +683,10 @@ def test_db_delete_on_active_replicator_and_live_query(params_from_base_test_set
 
     replicator_authenticator1 = authenticator.authentication(session_id1, cookie1, authentication_type="session")
     repl1 = replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator1, target_url=sg_blip_url,
-                                               replication_type="push_pull", continuous=True, channels=channel1)
+                                               replication_type="push_pull", continuous=True, channels=channel1, wait_until_idle=False)
     replicator_authenticator2 = authenticator.authentication(session_id2, cookie2, authentication_type="session")
     repl2 = replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator2, target_url=sg_blip_url,
-                                               replication_type="push_pull", continuous=True, channels=channel2)
+                                               replication_type="push_pull", continuous=True, channels=channel2, wait_until_idle=False)
 
     # 3. register a live query to the cbl db
     qy = Query(base_url)
