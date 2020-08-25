@@ -21,7 +21,8 @@
                   "client_id":"sync_gateway",
                   "validation_key":"R75hfd9lasdwertwerutecw8",
                   "callback_url":"http://localhost:4984/db/_oidc_callback",
-                  "register":true
+                  "register":true,
+                  "disable_callback_state": true
                },
                "testnosessions":{
                   "issuer":"http://localhost:4984/db/_oidc_testing",
@@ -29,7 +30,8 @@
                   "validation_key":"R75hfd9lasdwertwerutecw8",
                   "callback_url":"http://localhost:4984/db/_oidc_callback",
                   "register":true,
-                  "disable_session":true
+                  "disable_session":true,
+                  "disable_callback_state": true
                },
                "testinvalidscope":{
                   "issuer":"http://localhost:4984/db/_oidc_testing",
@@ -37,7 +39,8 @@
                   "validation_key":"R75hfd9lasdwertwerutecw8",
                   "callback_url":"http://localhost:4984/db/_oidc_callback",
                   "register":true,
-                  "scope":["invalid_scope"]
+                  "scope":["invalid_scope"],
+                  "disable_callback_state": true
                },
                "testsmallscope":{
                   "issuer":"http://localhost:4984/db/_oidc_testing",
@@ -53,7 +56,8 @@
                   "validation_key":"R75hfd9lasdwertwerutecw8",
                   "callback_url":"http://localhost:4984/db/_oidc_callback",
                   "register":true,
-                  "scope":["openid", "email", "profile"]
+                  "scope":["openid", "email", "profile"],
+                  "disable_callback_state": true
                }
             }
          },

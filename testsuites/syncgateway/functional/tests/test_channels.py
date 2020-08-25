@@ -61,8 +61,7 @@ def test_channels_view_after_restart(params_from_base_test_setup, sg_conf_name):
     seth_session = client.create_session(
         url=sg_admin_url,
         db=sg_db,
-        name=seth_user_info.name,
-        password=seth_user_info.password
+        name=seth_user_info.name
     )
 
     # Add docs to Sync Gateway
@@ -92,7 +91,7 @@ def test_channels_view_after_restart(params_from_base_test_setup, sg_conf_name):
     # Only check the view querys if in channel cache mode
     if mode == 'cc':
         log_info('Looking for view queries == 1 in expvars')
-        assert expvars['syncGateway_changeCache']['view_queries'] == 1
+        assert expvars['syncGateway_changeCache']['view_queries'] == 3
 
     # Issue a second changes request that shouldn't trigger a view call
     client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=bulk_docs_resp, auth=seth_session)
@@ -103,7 +102,7 @@ def test_channels_view_after_restart(params_from_base_test_setup, sg_conf_name):
     # Only check the view querys if in channel cache mode
     if mode == 'cc':
         log_info('Looking for view queries == 1 in expvars')
-        assert expvars['syncGateway_changeCache']['view_queries'] == 1
+        assert expvars['syncGateway_changeCache']['view_queries'] == 5
 
 
 @pytest.mark.sanity

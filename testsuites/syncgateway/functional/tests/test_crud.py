@@ -121,7 +121,7 @@ def test_document_resurrection(params_from_base_test_setup, sg_conf_name, deleti
     # Create Sync Gateway user
     sg_user_channels = ['NASA', 'NATGEO']
     sg_client.create_user(url=sg_admin_url, db=sg_db, name='seth', password='pass', channels=sg_user_channels)
-    sg_user_auth = sg_client.create_session(url=sg_admin_url, db=sg_db, name='seth', password='pass')
+    sg_user_auth = sg_client.create_session(url=sg_admin_url, db=sg_db, name='seth')
 
     # Create / Add docs from SG
     sg_doc_bodies = document.create_docs(
@@ -357,8 +357,7 @@ def test_verify_changes_purge(params_from_base_test_setup, sg_conf_name):
     test_auth_session = sg_client.create_session(
         url=sg_admin_url,
         db=sg_db,
-        name=auto_user_info.name,
-        password=auto_user_info.password
+        name=auto_user_info.name
     )
 
     def update_prop():

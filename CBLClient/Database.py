@@ -260,7 +260,7 @@ class Database(object):
         args.setArray("doc_ids", doc_ids)
         return self._client.invokeMethod("database_deleteBulkDocs", args)
 
-    def update_bulk_docs(self, database, number_of_updates=1, doc_ids=[]):
+    def update_bulk_docs(self, database, number_of_updates=1, doc_ids=[], key="updates-cbl"):
 
         updated_docs = {}
         if not doc_ids:
@@ -273,9 +273,9 @@ class Database(object):
         for _ in range(number_of_updates):
             for doc in docs:
                 doc_body = docs[doc]
-                if "updates-cbl" not in doc_body:
-                    doc_body["updates-cbl"] = 0
-                doc_body["updates-cbl"] = doc_body["updates-cbl"] + 1
+                if key not in doc_body:
+                    doc_body[key] = 0
+                doc_body[key] = doc_body[key] + 1
                 updated_docs[doc] = doc_body
             self.updateDocuments(database, updated_docs)
 
@@ -331,3 +331,56 @@ class Database(object):
         atts = attachment.load_from_data_dir([attachment_name])
         doc_body["_attachments"] = {atts[0].name: {"data": atts[0].data}}
         return doc_body
+
+    def update_bulk_docs_with_blob(self, database, dictionary, blob, liteserv_platform, number_of_updates=1, doc_ids=[]):
+        updated_docs = {}
+        if not doc_ids:
+            doc_ids = self.getDocIds(database)
+        log_info("updating bulk docs")
+
+        docs = self.getDocuments(database, doc_ids)
+        if len(docs) < 1:
+            raise Exception("cbl docs are empty , cannot update docs")
+        for _ in range(number_of_updates):
+            for doc in docs:
+                doc_body = docs[doc]
+                if "updates-cbl" not in doc_body:
+                    doc_body["updates-cbl"] = 0
+                doc_body["updates-cbl"] = doc_body["updates-cbl"] + 1
+
+                mutable_dictionary = dictionary.toMutableDictionary(doc_body)
+                if liteserv_platform == "android":
+                    image_content = blob.createImageContent("/assets/golden_gate_large.jpg")
+                    blob_value = blob.create("image/jpeg", stream=image_content)
+                elif liteserv_platform in ["xamarin-android", "java-macosx", "java-msft", "java-ubuntu", "java-centos",
+                                           "javaws-macosx", "javaws-msft", "javaws-ubuntu", "javaws-centos"]:
+                    image_content = blob.createImageContent("golden_gate_large.jpg")
+                    blob_value = blob.create("image/jpeg", stream=image_content)
+                elif liteserv_platform == "ios":
+                    image_content = blob.createImageContent("Files/golden_gate_large.jpg")
+                    blob_value = blob.create("image/jpeg", content=image_content)
+                elif liteserv_platform == "net-msft":
+                    db_path = self.getPath(database).rstrip("\\")
+                    app_dir = "\\".join(db_path.split("\\")[:-2])
+                    image_content = blob.createImageContent("{}\\Files\\golden_gate_large.jpg".format(app_dir))
+                    blob_value = blob.create("image/jpeg", stream=image_content)
+                else:
+                    image_content = blob.createImageContent("Files/golden_gate_large.jpg")
+                    blob_value = blob.create("image/jpeg", stream=image_content)
+                dictionary.setBlob(mutable_dictionary, "_attachments", blob_value)
+                updated_docs[doc] = doc_body
+            self.updateDocuments(database, updated_docs)
+
+    def update_bulk_docs_by_deleting_blobs(self, database, doc_ids=[]):
+        updated_docs = {}
+        if not doc_ids:
+            doc_ids = self.getDocIds(database)
+
+        docs = self.getDocuments(database, doc_ids)
+        if len(docs) < 1:
+            raise Exception("cbl docs are empty , cannot update docs")
+        for doc in docs:
+            doc_body = docs[doc]
+            del doc_body["_attachments"]
+            updated_docs[doc] = doc_body
+        self.updateDocuments(database, updated_docs)

@@ -57,7 +57,7 @@ def test_upgrade(params_from_base_test_setup):
         password=sg_user_password,
         channels=sg_user_channels
     )
-    sg_session = client.create_session(url=sg_admin_url, db=sg_db, name=sg_user_name, password=sg_user_password)
+    sg_session = client.create_session(url=sg_admin_url, db=sg_db, name=sg_user_name)
 
     log_info("Starting continuous push pull replication from liteserv to sync gateway")
     repl_one = client.start_replication(

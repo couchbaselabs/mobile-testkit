@@ -131,7 +131,11 @@ class CouchbaseServer:
         if server_major_version >= 5:
             self._delete_internal_rbac_bucket_user(name)
 
-        resp = self._session.delete("{0}/pools/default/buckets/{1}".format(self.url, name))
+        count = 0
+        max_retries = 5
+        while count < max_retries:
+            resp = self._session.delete("{0}/pools/default/buckets/{1}".format(self.url, name))
+            count += 1
         log_r(resp)
         resp.raise_for_status()
 

@@ -39,6 +39,7 @@ def params_from_base_suite_setup(request):
     sa_installer_type = request.config.getoption("--sa-installer-type")
     delta_sync_enabled = request.config.getoption("--delta-sync")
     sg_platform = request.config.getoption("--sg-platform")
+    cbs_platform = request.config.getoption("--cbs-platform")
     delta_sync_enabled = request.config.getoption("--delta-sync")
     cbs_platform = request.config.getoption("--cbs-platform")
 
@@ -65,6 +66,7 @@ def params_from_base_suite_setup(request):
     log_info("sa_installer_type: {}".format(sa_installer_type))
     log_info("delta_sync_enabled: {}".format(delta_sync_enabled))
     log_info("sg_platform: {}".format(sg_platform))
+    log_info("cbs_platform: {}".format(cbs_platform))
     log_info("Delta_sync: {}".format(delta_sync_enabled))
 
     # sg-ce is invalid for di mode
@@ -150,6 +152,15 @@ def params_from_base_suite_setup(request):
     else:
         log_info("Running test with sg platform {}".format(sg_platform))
         persist_cluster_config_environment_prop(cluster_config, 'sg_platform', sg_platform, False)
+
+    try:
+        cbs_platform
+    except NameError:
+        log_info("cbs platform  is not provided, so by default it runs on Centos")
+        persist_cluster_config_environment_prop(cluster_config, 'cbs_platform', "centos7", False)
+    else:
+        log_info("Running test with sg platform {}".format(cbs_platform))
+        persist_cluster_config_environment_prop(cluster_config, 'cbs_platform', cbs_platform, False)
 
     if no_conflicts_enabled:
         log_info("Running with no conflicts")

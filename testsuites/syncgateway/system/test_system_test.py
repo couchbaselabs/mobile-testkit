@@ -556,7 +556,7 @@ def create_users_add_docs_task(user_name,
     user_auth = sg_client.create_session(
         url=sg_admin_url,
         db=sg_db,
-        name=user_name, password=USER_PASSWORD
+        name=user_name
     )
 
     # Start bulk doc creation
