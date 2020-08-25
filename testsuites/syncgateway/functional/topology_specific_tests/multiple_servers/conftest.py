@@ -44,6 +44,7 @@ def params_from_base_suite_setup(request):
     sg_platform = request.config.getoption("--sg-platform")
     delta_sync_enabled = request.config.getoption("--delta-sync")
     cbs_platform = request.config.getoption("--cbs-platform")
+    magma_storage_enabled = request.config.getoption("--magma-storage")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
@@ -175,6 +176,10 @@ def params_from_base_suite_setup(request):
     else:
         log_info("Running test with cbs platform {}".format(cbs_platform))
         persist_cluster_config_environment_prop(cluster_config, 'cbs_platform', cbs_platform, False)
+
+    if magma_storage_enabled:
+        log_info("Running with magma storage")
+        persist_cluster_config_environment_prop(cluster_config, 'magma_storage_enabled', True)
 
     if sync_gateway_version < "2.0.0" and no_conflicts_enabled:
         pytest.skip("Test cannot run with no-conflicts with sg version < 2.0.0")

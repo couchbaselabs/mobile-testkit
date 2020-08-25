@@ -89,3 +89,7 @@ def pytest_addoption(parser):
                      action="store",
                      help="Couchbase Server Platform binary to install (ex. centos or windows)",
                      default="centos7")
+
+    parser.addoption("--magma-storage",
+                     action="store_true",
+                     help="magma-storage: Enable magma storage on couchbase server")
