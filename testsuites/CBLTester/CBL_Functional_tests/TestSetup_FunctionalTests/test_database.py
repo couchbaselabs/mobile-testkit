@@ -476,6 +476,8 @@ def test_db_close_on_active_replicator_and_live_query(params_from_base_test_setu
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_blip_url = params_from_base_test_setup["target_url"]
 
+    pytest.skip('skip this test due to issue CM-485')
+
     if liteserv_version < "2.8.0":
         pytest.skip('This test supports for a feature from hydrogen(2.8.0)')
 
@@ -644,6 +646,7 @@ def test_db_delete_on_active_replicator_and_live_query(params_from_base_test_set
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_blip_url = params_from_base_test_setup["target_url"]
 
+    pytest.skip('skip this test due to issue CM-485')
     if liteserv_version < "2.8.0":
         pytest.skip('This test supports for a feature from hydrogen(2.8.0)')
 
