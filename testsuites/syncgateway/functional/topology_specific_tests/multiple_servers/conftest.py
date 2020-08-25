@@ -179,7 +179,10 @@ def params_from_base_suite_setup(request):
 
     if magma_storage_enabled:
         log_info("Running with magma storage")
-        persist_cluster_config_environment_prop(cluster_config, 'magma_storage_enabled', True)
+        persist_cluster_config_environment_prop(cluster_config, 'magma_storage_enabled', True, False)
+    else:
+        log_info("Running without magma storage")
+        persist_cluster_config_environment_prop(cluster_config, 'magma_storage_enabled', False, False)
 
     if sync_gateway_version < "2.0.0" and no_conflicts_enabled:
         pytest.skip("Test cannot run with no-conflicts with sg version < 2.0.0")

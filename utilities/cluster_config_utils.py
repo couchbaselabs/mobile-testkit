@@ -263,7 +263,7 @@ def is_delta_sync_enabled(cluster_config):
 def is_magma_enabled(cluster_config):
     cluster = load_cluster_config_json(cluster_config)
     try:
-        return cluster["environment"]["magma_enabled"]
+        return cluster["environment"]["magma_storage_enabled"]
     except KeyError:
         return False
 

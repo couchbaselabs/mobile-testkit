@@ -326,7 +326,10 @@ def params_from_base_suite_setup(request):
 
     if magma_storage_enabled:
         log_info("Running with magma storage")
-        persist_cluster_config_environment_prop(cluster_config, 'magma_storage_enabled', True)
+        persist_cluster_config_environment_prop(cluster_config, 'magma_storage_enabled', True, False)
+    else:
+        log_info("Running without magma storage")
+        persist_cluster_config_environment_prop(cluster_config, 'magma_storage_enabled', False, False)
 
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
 
