@@ -135,6 +135,9 @@ class CouchbaseServer:
         max_retries = 5
         while count < max_retries:
             resp = self._session.delete("{0}/pools/default/buckets/{1}".format(self.url, name))
+            if resp.status_code == 200:
+                log_info("delete bucket request has been successfully processed.")
+                break
             count += 1
         log_r(resp)
         resp.raise_for_status()
@@ -301,6 +304,9 @@ class CouchbaseServer:
                 resp = self._session.delete(rbac_url, data=data_user_params, auth=('Administrator', 'password'))
                 log_info("rbac: {}; data user params: {}".format(rbac_url, data_user_params))
                 log_r(resp)
+                if resp.status_code == 200:
+                    log_info("delete internal rbac bucket user request has been successfully processed.")
+                    break
                 resp.raise_for_status()
             except HTTPError as h:
                 log_info("resp code: {}; error: {}".format(resp, h))
