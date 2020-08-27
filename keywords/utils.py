@@ -441,3 +441,15 @@ def get_embedded_asset_file_path(cblite_platform, db, cbl_db, file_name):
         return "{}\\Files\\{}".format(app_dir, file_name)
     else:
         return "Files/{}".format(file_name)
+
+
+def set_device_enabled(run_on_device):
+    device_list = run_on_device.split(',')
+    device_enabled_list = []
+    for device in device_list:
+        if device == "device":
+            device_enabled_list.append(True)
+        else:
+            device_enabled_list.append(False)
+
+    return device_enabled_list
