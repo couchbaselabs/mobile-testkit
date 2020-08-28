@@ -476,7 +476,7 @@ def test_db_close_on_active_replicator_and_live_query(params_from_base_test_setu
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_blip_url = params_from_base_test_setup["target_url"]
 
-    pytest.skip('skip this test due to issue CM-485')
+    # pytest.skip('skip this test due to issue CM-485')
 
     if liteserv_version < "2.8.0":
         pytest.skip('This test supports for a feature from hydrogen(2.8.0)')
@@ -511,6 +511,11 @@ def test_db_close_on_active_replicator_and_live_query(params_from_base_test_setu
     sg_client.create_user(sg_admin_url, sg_db, username2, password=password, channels=channel2)
     cookie2, session_id2 = sg_client.create_session(sg_admin_url, sg_db, username2)
 
+    # 3. register a live query to the cbl db
+    qy = Query(base_url)
+    query = qy.query_selectAll(cbl_db)
+    query_listener = qy.addChangeListener(query)
+
     # 2. start 2 replicators on 2 different channels, set all continous to True
     replicator = Replication(base_url)
     authenticator = Authenticator(base_url)
@@ -521,11 +526,6 @@ def test_db_close_on_active_replicator_and_live_query(params_from_base_test_setu
     replicator_authenticator2 = authenticator.authentication(session_id2, cookie2, authentication_type="session")
     repl2 = replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator2, target_url=sg_blip_url,
                                                replication_type="push_pull", continuous=True, channels=channel2, wait_until_idle=False)
-
-    # 3. register a live query to the cbl db
-    qy = Query(base_url)
-    query = qy.query_select_all(cbl_db)
-    query_listener = qy.addChangeListener(query)
 
     log_info(replicator.getActivitylevel(repl1))
     log_info(replicator.getActivitylevel(repl2))
