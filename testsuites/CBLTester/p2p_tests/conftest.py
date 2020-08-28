@@ -131,8 +131,10 @@ def params_from_base_suite_setup(request):
 
             # Install TestServer app
             if device_enabled and (platform == "ios" or platform == "android"):
+                log_info("install on device")
                 testserver.install_device()
             else:
+                log_info("install on emulator")
                 testserver.install()
 
         testserver_list.append(testserver)
@@ -153,9 +155,11 @@ def params_from_base_suite_setup(request):
                 log_info("Starting TestServer...")
                 test_name_cp = test_name.replace("/", "-")
                 if device_enabled:
+                    log_info("start on device")
                     testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
                                                                           test_name_cp, datetime.datetime.now()))
                 else:
+                    log_info("start on emulator")
                     testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp,
                                                                    datetime.datetime.now()))
         for base_url, i in zip(base_url_list, list(range(len(base_url_list)))):
@@ -266,8 +270,10 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
                                                              test_name_cp,
                                                              datetime.datetime.now())
                 if device_enabled:
+                    log_info("start on device")
                     testserver.start_device(log_filename)
                 else:
+                    log_info("start on emulator")
                     testserver.start(log_filename)
 
         for base_url, i in zip(base_url_list, list(range(len(base_url_list)))):
