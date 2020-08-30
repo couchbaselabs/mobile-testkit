@@ -8,7 +8,7 @@ from CBLClient.PeerToPeer import PeerToPeer
 
 @pytest.mark.listener
 @pytest.mark.parametrize("continuous, replicator_type, endPointType, tls, servercerts", [
-    (True, "push_pull", "URLEndPoint", False, True),
+    (True, "push_pull", "URLEndPoint", False, True)
     (False, "push", "URLEndPoint", False, False),
     (False, "push", "URLEndPoint", False, True),
     (True, "push_pull", "URLEndPoint", False, False),
@@ -164,6 +164,7 @@ def test_peer_to_peer_enable_with_certs_authenticator(params_from_base_test_setu
     peerToPeer_server.server_stop(url_listener, replicator_type)
 
 
+# need to test with out tls enable
 @pytest.mark.listener
 @pytest.mark.parametrize("continuous, replicator_type, endPointType", [
     (True, "push_pull", "URLEndPoint"),
@@ -232,16 +233,18 @@ def test_peer_to_peer_enable_tls_with_any_selfsigned_and_authenticator(params_fr
 
 
 @pytest.mark.listener
-@pytest.mark.parametrize("continuous, replicator_type, endPointType, server_verification_mode", [
-    (True, "push_pull", "MessageEndPoint", True),
-    (False, "push", "URLEndPoint", False),
+@pytest.mark.parametrize("continuous, replicator_type, endPointType, with_certs", [
+    (True, "push_pull", "URLEndPoint", True),
+    (False, "push", "URLEndPoint", True),
+    (True, "push", "URLEndPoint", False),
+    (False, "push_pull", "URLEndPoint", False),
 ])
 def test_peer_to_peer_tls_any_self_signed_certs_create(params_from_base_test_setup, server_setup, continuous, replicator_type,
-                                                endPointType, server_verification_mode):
+                                                endPointType, with_certs):
     """
         @summary:
-        1. Start the server with the self signed certs.
-        2. Start replication with server_verification_mode.
+        1. Start the server with the self signed certs using the create identity api.
+        2. Start replication with AcceptOnlySelfSignedServerCertificate.
         3. Verify replication is completed.
         4. Verify all docs got replicated on server
     """
@@ -270,7 +273,10 @@ def test_peer_to_peer_tls_any_self_signed_certs_create(params_from_base_test_set
     server_host = host_list[0]
     num_of_docs = 50
 
-    url_listener = peerToPeer_server.server_start(cbl_db_server, tls_disable=False, tls_auth_type="self_signed_create")
+    if with_certs:
+        url_listener = peerToPeer_server.server_start(cbl_db_server, tls_disable=False, tls_auth_type="self_signed_create")
+    else:
+        url_listener = peerToPeer_server.server_start(cbl_db_server, tls_disable=False)
     url_listener_port = peer_to_peer_server.get_url_listener_port(url_listener)
 
     db_obj_client.create_bulk_docs(num_of_docs, "replication", db=cbl_db_client, channels=channels,
