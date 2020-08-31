@@ -8,7 +8,7 @@ from CBLClient.PeerToPeer import PeerToPeer
 
 @pytest.mark.listener
 @pytest.mark.parametrize("continuous, replicator_type, endPointType, tls, servercerts", [
-    (True, "push_pull", "URLEndPoint", False, True)
+    (True, "push_pull", "URLEndPoint", False, True),
     (False, "push", "URLEndPoint", False, False),
     (False, "push", "URLEndPoint", False, True),
     (True, "push_pull", "URLEndPoint", False, False),
