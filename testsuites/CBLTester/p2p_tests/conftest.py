@@ -95,7 +95,7 @@ def params_from_base_suite_setup(request):
     version_list = liteserv_versions.split(',')
     host_list = liteserv_hosts.split(',')
     port_list = liteserv_ports.split(',')
-    device_enabled_list = set_device_enabled(run_on_device)
+    device_enabled_list = set_device_enabled(run_on_device, len(platform_list))
 
     if len(platform_list) != len(version_list) != len(host_list) != len(port_list):
         raise Exception("Provide equal no. of Parameters for host, port, version and platforms")

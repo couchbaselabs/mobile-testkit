@@ -443,9 +443,14 @@ def get_embedded_asset_file_path(cblite_platform, db, cbl_db, file_name):
         return "Files/{}".format(file_name)
 
 
-def set_device_enabled(run_on_device):
-    device_list = run_on_device.split(',')
+def set_device_enabled(run_on_device, list_size):
     device_enabled_list = []
+    if run_on_device is None:
+        for i in range(list_size):
+            device_enabled_list.append(False)
+        return device_enabled_list
+
+    device_list = run_on_device.split(',')
     for device in device_list:
         if device == "device":
             device_enabled_list.append(True)
