@@ -352,5 +352,5 @@ def server_setup(params_from_base_test_setup):
         "message_url_tcp_listener": message_url_tcp_listener,
         "peer_to_peer_listener": peer_to_peer_listener,
     }
-    # peer_to_peer_listener.server_stop(message_url_tcp_listener, "MessageEndPoint")
+    peer_to_peer_listener.server_stop(message_url_tcp_listener, "MessageEndPoint")
 

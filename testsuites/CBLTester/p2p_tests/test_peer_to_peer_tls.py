@@ -93,7 +93,9 @@ def test_peer_to_peer_tls_basic_certs(params_from_base_test_setup, server_setup,
             peerToPeer_client.client_start(repl)
             replicator.wait_until_replicator_idle(repl)
         except Exception as he:
-            assert "The certificate does not terminate in a trusted root CA" in str(he)
+            # OR condition Add to support the Android
+            assert "The certificate does not terminate in a trusted root CA" in str(he) or "server TLS certificate untrusted" in str(he)
+        finally:
             peer_to_peer_server.server_stop(replicator_tcp_listener, endPointType)
             return
         assert False, "replicator started with self_signed"
