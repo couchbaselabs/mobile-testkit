@@ -214,39 +214,82 @@ class Admin:
         resp_data = r.json()
         return resp_data
 
-    def wait_until_sgw_replication_done(self, db, repl_id, num_of_expected_read_docs=0, num_of_expected_written_docs=0, max_times=25):
+    def wait_until_sgw_replication_done(self, db, repl_id, read_flag=False, write_flag=False, max_times=25):
 
-        try:
-            count = 0
-            while count < max_times:
-                r = requests.get("{}/{}/_replicationStatus/{}".format(self.admin_url, db, repl_id), verify=False)
-                r.raise_for_status()
-                resp_obj = r.json()
-                status = resp_obj["status"]
-                if status == "starting" or status == "started":
-                    count += 1
-                elif status == "running":
-                    if resp_obj["docs_read"] < num_of_expected_read_docs or resp_obj["docs_written"] < num_of_expected_written_docs:
-                        count += 1
+        read_flag = True
+        write_flag = True
+        read_timeout = False
+        write_timeout = False
+        if read_flag is False:
+            read_timeout = True  # To avoid waiting for read doc count as there is not expectation of read docs
+        if write_flag is False:
+            write_timeout = True  # To avoid waiting for write doc count as there is not expectation of write docs
+        retry_max_count = 5
+        count = 0
+        prev_read_count = 0
+        prev_write_count = 0
+        read_retry_count = 0
+        write_retry_count = 0
+        while count < max_times:
+            r = requests.get("{}/{}/_replicationStatus/{}".format(self.admin_url, db, repl_id), verify=False)
+            r.raise_for_status()
+            resp_obj = r.json()
+            status = resp_obj["status"]
+            if status == "starting" or status == "started":
+                count += 1
+            elif status == "running":
+                if read_flag:
+                    if read_retry_count < retry_max_count:
+                        try:
+                            docs_read_count = resp_obj["docs_read"]
+                            if docs_read_count > prev_read_count:
+                                prev_read_count = docs_read_count
+                                read_retry_count = 0
+                            else:
+                                read_retry_count += 1
+                        except KeyError:
+                            read_retry_count += 1
                     else:
-                        break
-                else:
-                    break
-                time.sleep(1)
-            if count == max_times:
-                raise Exception("docs read or docs written did not get expected value")
-        except HTTPError:
-            return
+                        read_timeout = True
 
-    def get_replications_count(self, db):
+                if write_flag:
+                    print("it is insidde write flag")
+                    if write_retry_count < retry_max_count:
+                        try:
+                            docs_write_count = resp_obj["docs_written"]
+                            print("doc written count is ", docs_write_count)
+                            if docs_write_count > prev_write_count:
+                                prev_write_count = docs_write_count
+                                write_retry_count = 0
+                                print("ddocs write count got incremented")
+                            else:
+                                write_retry_count += 1
+                                print("docss write count ddid not increment")
+                        except KeyError:
+                            write_retry_count += 1
+                    else:
+                        write_timeout = True
+            count += 1
+            time.sleep(1)
+            print("replication still happening andd counting ", count)
+            if read_timeout and write_timeout:
+                break
+        if count == max_times:
+            raise Exception("timeout while waiting for replication to complete on sgw replication")
+
+    def get_replications_count(self, db, expected_count=1):
         r = requests.get("{}/{}/_replication".format(self.admin_url, db), verify=False)
         log_request(r)
         log_response(r)
         r.raise_for_status()
         resp_data = r.json()
         count = 0
-        for repl in resp_data:
-            repl_body = resp_data[repl]
-            if "(local)" in repl_body['assigned_node']:
-                count += 1
+        while count < expected_count:
+            for repl in resp_data:
+                repl_body = resp_data[repl]
+                if "(local)" in repl_body['assigned_node']:
+                    count += 1
+            if count >= expected_count:
+                break
+            time.sleep(1)
         return count

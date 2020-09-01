@@ -915,11 +915,12 @@ def create_docs_via_sdk(cbs_url, cbs_cluster, bucket_name, num_docs):
     return sdk_docs, sdk_client
 
 
-def setup_replications_on_sgconfig(remote_sg_url, sg_db, remote_user, remote_password, direction="pushAndPull", channels=None, continuous=False):
+def setup_replications_on_sgconfig(remote_sg_url, sg_db, remote_user, remote_password, direction="pushAndPull", channels=None, continuous=False, replication_id=None):
 
     # replication = {}
     repl1 = {}
-    replication_id = "sgw_repl_{}".format(random_string(length=10, digit=True))
+    if replication_id is None:
+        replication_id = "sgw_repl_{}".format(random_string(length=10, digit=True))
     remote_sg_url = remote_sg_url.replace("://", "://{}:{}@".format(remote_user, remote_password))
     remote_sg_url = "{}/{}".format(remote_sg_url, sg_db)
     # remote_sg_url = "{}/{}".format(remote_sg_url)

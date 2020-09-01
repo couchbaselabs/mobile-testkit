@@ -44,10 +44,10 @@ def install_nginx(cluster_config):
         for lb in cluster_json["load_balancers"]:
             lb_names.append(lb["name"])
 
-        total_cluster_nodes = cluster_json["environment"]["sgw1_cluster_count"] + cluster_json["environment"]["sgw2_cluster_count"]
+        total_cluster_nodes = cluster_json["environment"]["sgw_cluster1_count"] + cluster_json["environment"]["sgw_cluster2_count"]
         for sg in topology["sync_gateways"]:
             # string http:// to adhere to expected format for nginx.conf
-            if count < cluster_json["environment"]["sgw1_cluster_count"]:
+            if count < cluster_json["environment"]["sgw_cluster1_count"]:
                 ip_port = sg["public"].replace("http://", "")
                 ip_port_admin = sg["admin"].replace("http://", "")
                 upstream_definition += "server {};\n".format(ip_port)
@@ -128,10 +128,10 @@ def install_nginx_for_2_sgw_clusters(cluster_config, cluster1_nodes=2, cluster2_
     upstream_definition2 = ""
     upstream_definition_admin2 = ""
     count = 0
-    total_cluster_nodes = topology["environment"]["sgw1_cluster_count"] + topology["environment"]["sgw2_cluster_count"]
+    total_cluster_nodes = topology["environment"]["sgw_cluster1_count"] + topology["environment"]["sgw_cluster2_count"]
     for sg in topology["sync_gateways"]:
         # string http:// to adhere to expected format for nginx.conf
-        if count < topology["environment"]["sgw1_cluster_count"]:
+        if count < topology["environment"]["sgw_cluster1_count"]:
             ip_port = sg["public"].replace("http://", "")
             ip_port_admin = sg["admin"].replace("http://", "")
             print("sgw1 cluster nginx..", ip_port)

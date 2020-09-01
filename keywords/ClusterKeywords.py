@@ -86,14 +86,14 @@ class ClusterKeywords:
             # If load balancer is defined,
             # Switch all SG URLs to that of load balancer
             count = 0
-            total_sgs_count = cluster["environment"]["sgw1_cluster_count"] + cluster["environment"]["sgw2_cluster_count"]
+            total_sgs_count = cluster["environment"]["sgw_cluster1_count"] + cluster["environment"]["sgw_cluster2_count"]
             for sg in cluster["sync_gateways"]:
-                if count < cluster["environment"]["sgw1_cluster_count"]:
+                if count < cluster["environment"]["sgw_cluster1_count"]:
                     lb1_ip = cluster["load_balancers"][0]["ip"]
                     if cluster["environment"]["ipv6_enabled"]:
                         lb1_ip = "[{}]".format(lb1_ip)
                     public = "http://{}:4984".format(lb1_ip)
-                    admin = "http://{}:4985".format(lb1_ip) 
+                    admin = "http://{}:4985".format(lb1_ip)
                     sg_urls.append({"public": public, "admin": admin})
                 elif count < total_sgs_count:
                     lb2_ip = cluster["load_balancers"][1]["ip"]

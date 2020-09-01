@@ -530,7 +530,7 @@ class SyncGateway:
            optional values : filter
         '''
         sg_url = self.admin.admin_url
-        if replication_id is not None:
+        if replication_id is None:
             replication_id = "sgw_repl_{}".format(random_string(length=10, digit=True))
         if "4984" in remote_url:
             if remote_user and remote_password:
