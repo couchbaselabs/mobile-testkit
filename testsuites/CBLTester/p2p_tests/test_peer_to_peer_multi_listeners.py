@@ -17,10 +17,10 @@ def test_peer_to_peer_many_listeners_replicators(params_from_base_test_setup, se
                                                 endPointType, with_certs):
     """
         @summary:
-        1. Start the server with the self signed certs using the create identity api.
-        2. Start replication with AcceptOnlySelfSignedServerCertificate.
+        1. Start the 100 listeners
+        2. Start 100 replicators on client
         3. Verify replication is completed.
-        4. Verify all docs got replicated on server
+        4. Verify all docs got replicated on listener
     """
     host_list = params_from_base_test_setup["host_list"]
     db_obj_list = params_from_base_test_setup["db_obj_list"]
@@ -38,7 +38,6 @@ def test_peer_to_peer_many_listeners_replicators(params_from_base_test_setup, se
     cbl_db_client = cbl_db_list[1]
     db_obj_client = db_obj_list[1]
     db_name_server = db_name_list[0]
-    peerToPeer_server = PeerToPeer(base_url_list[0])
     peer_to_peer_server = PeerToPeer(base_url_list[0])
     message_url_tcp_listener = server_setup["message_url_tcp_listener"]
     print(message_url_tcp_listener)
@@ -52,7 +51,7 @@ def test_peer_to_peer_many_listeners_replicators(params_from_base_test_setup, se
 
     for i in range(100):
 
-        url_listener = peerToPeer_server.server_start(cbl_db_server, tls_disable=with_certs)
+        url_listener = peer_to_peer_server.server_start(cbl_db_server, tls_disable=with_certs)
         url_listener_port = peer_to_peer_server.get_url_listener_port(url_listener)
         listeners.append(url_listener)
         port_array.append(url_listener_port)
@@ -77,4 +76,4 @@ def test_peer_to_peer_many_listeners_replicators(params_from_base_test_setup, se
         assert server_docs_count == num_of_docs, "Number of docs is not equivalent to number of docs in server "
         replicator.stop(repl)
     for i in range(100):
-        peerToPeer_server.server_stop(listeners[i], replicator_type)
+        peer_to_peer_server.server_stop(listeners[i], replicator_type)
