@@ -10,7 +10,7 @@ from CBLClient.PeerToPeer import PeerToPeer
     # (10, True, "push", True, "MessageEndPoint"),
     (100, False, "push", False, "URLEndPoint"),
 ])
-def test_peer_to_peer_very_peer_is_listener_and_replicator_with_mesh(params_from_base_test_setup, server_setup, num_of_docs, continuous, replicator_type, attachments, endPointType):
+def test_peer_to_peer_mesh_topology(params_from_base_test_setup, server_setup, num_of_docs, continuous, replicator_type, attachments, endPointType):
     """
         @summary: peer1<-> Peer2, Peer1 <->Peer3, Peer2<->peer1, Peer2<->Peer3
         1. Create docs on peer1.
@@ -178,8 +178,3 @@ def test_peer_to_peer_very_peer_is_listener_and_replicator_with_mesh(params_from
     peer_to_peer1.server_stop(peer1_listener, endPointType)
     peer_to_peer2.server_stop(peer2_listener, endPointType)
     peer_to_peer3.server_stop(peer3_listener, endPointType)
-
-
-
-
-
