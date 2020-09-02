@@ -19,4 +19,11 @@
 - name: SYNC GATEWAY | Change the permissions on windows
   become: no
   win_command: chmod 777 -R {{ directory }}
-  when: ansible_os_family == "Windows"
+  when: ansible_os_family == "Windows" and "ansible_distribution_major_version" == "10"
+
+- name: SYNC GATEWAY | Change the permissions on windows
+  become: no
+  win_command: icacls {{ directory }} /grant Everyone:F
+  when: ansible_os_family == "Windows" and "ansible_distribution_major_version" == "2012"
+
+

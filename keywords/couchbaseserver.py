@@ -131,7 +131,14 @@ class CouchbaseServer:
         if server_major_version >= 5:
             self._delete_internal_rbac_bucket_user(name)
 
-        resp = self._session.delete("{0}/pools/default/buckets/{1}".format(self.url, name))
+        count = 0
+        max_retries = 5
+        while count < max_retries:
+            resp = self._session.delete("{0}/pools/default/buckets/{1}".format(self.url, name))
+            if resp.status_code == 200:
+                log_info("delete bucket request has been successfully processed.")
+                break
+            count += 1
         log_r(resp)
         resp.raise_for_status()
 
@@ -183,6 +190,18 @@ class CouchbaseServer:
         bucket_names = self.get_bucket_names()
         if len(bucket_names) != 0:
             raise CBServerError("Failed to delete all of the server buckets!")
+
+        # verify all indexes are deleted
+        count = 0
+        index_url = self.url.replace("8091", "9102")
+        while count < 5:
+            resp = self._session.get("{}/getIndexStatus".format(index_url))
+            resp_obj = resp.json()
+            if "status" not in resp_obj:
+                break
+            else:
+                count += 1
+            time.sleep(60)
 
     def wait_for_ready_state(self):
         """
@@ -285,6 +304,9 @@ class CouchbaseServer:
                 resp = self._session.delete(rbac_url, data=data_user_params, auth=('Administrator', 'password'))
                 log_info("rbac: {}; data user params: {}".format(rbac_url, data_user_params))
                 log_r(resp)
+                if resp.status_code == 200:
+                    log_info("delete internal rbac bucket user request has been successfully processed.")
+                    break
                 resp.raise_for_status()
             except HTTPError as h:
                 log_info("resp code: {}; error: {}".format(resp, h))

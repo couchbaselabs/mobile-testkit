@@ -236,7 +236,6 @@ def test_peer_to_peer_concurrent_replication(params_from_base_test_setup, server
     (100, True, "push", "MessageEndPoint"),
 ])
 def test_peer_to_peer_oneClient_toManyServers(params_from_base_test_setup, num_of_docs, continuous, replicator_type, endPointType):
-    pytest.skip('Setup is unavailable for 1-many or many-1 peer to peer test, will rollback later')
     """
         @summary:
         1. Create docs on client.
@@ -312,7 +311,6 @@ def test_peer_to_peer_oneClient_toManyServers(params_from_base_test_setup, num_o
     (100, True, "pull", "URLEndPoint"),
 ])
 def test_peer_to_peer_oneServer_toManyClients(params_from_base_test_setup, server_setup, num_of_docs, continuous, replicator_type, endPointType):
-    pytest.skip('Setup is unavailable for 1-many or many-1 peer to peer test, will rollback later')
     """
         @summary:
         1. Create docs on server.

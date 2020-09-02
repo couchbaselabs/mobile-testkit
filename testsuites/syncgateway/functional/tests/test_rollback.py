@@ -79,8 +79,7 @@ def test_rollback_server_reset(params_from_base_test_setup, sg_conf_name, x509_c
     seth_session = client.create_session(
         url=sg_admin_url,
         db=sg_db,
-        name=seth_user_info.name,
-        password=seth_user_info.password
+        name=seth_user_info.name
     )
 
     # create a doc that will hash to each vbucket in parallel except for vbucket 66

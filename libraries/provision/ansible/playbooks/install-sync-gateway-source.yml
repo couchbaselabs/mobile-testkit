@@ -124,7 +124,7 @@
     x509_certs_dir:
   tasks:
   - include: tasks/deploy-sync-gateway-config.yml
-  when: ansible_distribution == "CentOS" or ansible_distribution == "Ubuntu"
+  when: ansible_distribution == "CentOS" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
 
   - include: tasks/deploy-sync-gateway-config-macos.yml
   when: ansible_distribution == "MacOSX"

@@ -90,14 +90,12 @@ def test_backfill_channels_oneshot_changes(params_from_base_test_setup, sg_conf_
     admin_session = client.create_session(
         url=sg_admin_url,
         db=sg_db,
-        name=admin_user_info.name,
-        password=admin_user_info.password
+        name=admin_user_info.name
     )
     user_b_session = client.create_session(
         url=sg_admin_url,
         db=sg_db,
-        name=user_b_user_info.name,
-        password=user_b_user_info.password
+        name=user_b_user_info.name
     )
 
     # Create 50 "A" channel docs
@@ -283,8 +281,8 @@ def test_backfill_channels_oneshot_limit_changes(params_from_base_test_setup, sg
         roles=user_b_user_info.roles
     )
 
-    admin_session = client.create_session(url=sg_admin_url, db=sg_db, name=admin_user_info.name, password=admin_user_info.password)
-    user_b_session = client.create_session(url=sg_admin_url, db=sg_db, name=user_b_user_info.name, password=user_b_user_info.password)
+    admin_session = client.create_session(url=sg_admin_url, db=sg_db, name=admin_user_info.name)
+    user_b_session = client.create_session(url=sg_admin_url, db=sg_db, name=user_b_user_info.name)
 
     # Create 50 "A" channel docs
     a_docs = client.add_docs(url=sg_url, db=sg_db, number=50, id_prefix=None, auth=admin_session, channels=["A"])
@@ -512,8 +510,8 @@ def test_awaken_backfill_channels_longpoll_changes_with_limit(params_from_base_t
         roles=user_b_user_info.roles
     )
 
-    admin_session = client.create_session(url=sg_admin_url, db=sg_db, name=admin_user_info.name, password=admin_user_info.password)
-    user_b_session = client.create_session(url=sg_admin_url, db=sg_db, name=user_b_user_info.name, password=user_b_user_info.password)
+    admin_session = client.create_session(url=sg_admin_url, db=sg_db, name=admin_user_info.name)
+    user_b_session = client.create_session(url=sg_admin_url, db=sg_db, name=user_b_user_info.name)
 
     # Create 50 "A" channel docs
     a_docs = client.add_docs(url=sg_url, db=sg_db, number=50, id_prefix=None, auth=admin_session, channels=["A"])
@@ -724,8 +722,7 @@ def test_backfill_channel_grant_to_role_longpoll(params_from_base_test_setup, sg
     pusher_session = client.create_session(
         url=sg_admin_url,
         db=sg_db,
-        name=pusher_info.name,
-        password=pusher_info.password
+        name=pusher_info.name
     )
 
     client.create_user(
@@ -739,8 +736,7 @@ def test_backfill_channel_grant_to_role_longpoll(params_from_base_test_setup, sg
     grantee_session = client.create_session(
         url=sg_admin_url,
         db=sg_db,
-        name=grantee_info.name,
-        password=grantee_info.password
+        name=grantee_info.name
     )
 
     pusher_changes = client.get_changes(url=sg_url, db=sg_db, since=0, auth=pusher_session)

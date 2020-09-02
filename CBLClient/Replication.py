@@ -278,7 +278,7 @@ class Replication(object):
         return self._client.invokeMethod("replicator_changeListenerGetChanges", args)
 
     def configure_and_replicate(self, source_db, replicator_authenticator=None, target_db=None, target_url=None, replication_type="push_pull", continuous=True,
-                                channels=None, err_check=True):
+                                channels=None, err_check=True, wait_until_idle=True):
         if target_db is None:
             repl_config = self.configure(source_db, target_url=target_url, continuous=continuous,
                                          replication_type=replication_type, channels=channels, replicator_authenticator=replicator_authenticator)
@@ -287,15 +287,33 @@ class Replication(object):
                                          replication_type=replication_type, channels=channels, replicator_authenticator=replicator_authenticator)
         repl = self.create(repl_config)
         self.start(repl)
-        self.wait_until_replicator_idle(repl, err_check)
+        if wait_until_idle:
+            self.wait_until_replicator_idle(repl, err_check)
+        else:
+            self.yield_for_replicator_connected(repl)
         return repl
+
+    def yield_for_replicator_connected(self, repl, max_times=5, sleep_time=0.5):
+        count = 0
+        # Sleep until replicator gets connected
+        activity_level = self.getActivitylevel(repl)
+        while count < max_times:
+            time.sleep(sleep_time)
+            if activity_level == "connecting":
+                count += 1
+            else:
+                break
 
     def wait_until_replicator_idle(self, repl, err_check=True, max_times=150, sleep_time=2):
         count = 0
+        idle_count = 0
+        max_idle_count = 3
         # Sleep until replicator completely processed
         activity_level = self.getActivitylevel(repl)
         while count < max_times:
             log_info("Activity level: {}".format(activity_level))
+            log_info("total vs comleted = {} vs {} ".format(self.getCompleted(repl), self.getTotal(repl)))
+            log_info("count is  {}".format(count))
             time.sleep(sleep_time)
             if activity_level == "offline" or activity_level == "connecting" or activity_level == "busy":
                 count += 1
@@ -304,8 +322,10 @@ class Replication(object):
                     if (self.getCompleted(repl) < self.getTotal(repl)) and self.getTotal(repl) != 0:
                         count += 1
                     else:
+                        idle_count += 1
                         time.sleep(sleep_time)
-                        break
+                        if idle_count > max_idle_count:
+                            break
             if err_check:
                 err = self.getError(repl)
                 if err is not None and err != 'nil' and err != -1:

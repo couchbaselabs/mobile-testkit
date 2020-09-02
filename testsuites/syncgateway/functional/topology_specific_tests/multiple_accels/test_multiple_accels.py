@@ -392,8 +392,7 @@ def test_take_all_sgaccels_down(params_from_base_test_setup, sg_conf):
     a_user_session = client.create_session(
         url=sg_admin_url,
         db=sg_db,
-        name=a_user_info.name,
-        password=a_user_info.password
+        name=a_user_info.name
     )
 
     # Shutdown all accel nodes in parallel

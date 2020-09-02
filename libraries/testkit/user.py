@@ -419,96 +419,100 @@ class User:
         return obj
 
     # POST /{db}/_changes?feed=longpoll
-    def start_longpoll_changes_tracking(self, termination_doc_id=None, timeout=10000, loop=True):
+    def start_longpoll_changes_tracking(self, termination_doc_id=None, timeout=10000, loop=True, loop_timeout=600):
 
         previous_seq_num = "-1"
         current_seq_num = "0"
+        start = time.time()
         request_timed_out = True
 
         docs = dict()
         continue_polling = True
 
         while continue_polling:
-            # if the longpoll request times out or there have been changes, issue a new long poll request
-            if request_timed_out or current_seq_num != previous_seq_num:
+            if time.time() - start < loop_timeout:
+                # if the longpoll request times out or there have been changes, issue a new long poll request
+                if request_timed_out or current_seq_num != previous_seq_num:
 
-                previous_seq_num = current_seq_num
+                    previous_seq_num = current_seq_num
 
-                # Android client POST data
-                # {"limit":50,"feed":"longpoll","since":15,"style":"all_docs","heartbeat":300000}
-                # Make sure to use similar parameters in POST
-                params = {
-                    "feed": "longpoll",
-                    "include_docs": True,
-                    "style": "all_docs",
-                    "heartbeat": 300000,
-                    "timeout": timeout,
-                    "since": current_seq_num
-                }
+                    # Android client POST data
+                    # {"limit":50,"feed":"longpoll","since":15,"style":"all_docs","heartbeat":300000}
+                    # Make sure to use similar parameters in POST
+                    params = {
+                        "feed": "longpoll",
+                        "include_docs": True,
+                        "style": "all_docs",
+                        "heartbeat": 300000,
+                        "timeout": timeout,
+                        "since": current_seq_num
+                    }
 
-                data = json.dumps(params)
+                    data = json.dumps(params)
 
-                r = self._session.post("{}/{}/_changes".format(self.target.url, self.db), data=data)
-                log.debug("{0} {1} {2}\n{3}\n{4}".format(
-                    self.name,
-                    r.request.method,
-                    r.request.url,
-                    r.request.headers,
-                    r.request.body))
+                    r = self._session.post("{}/{}/_changes".format(self.target.url, self.db), data=data)
+                    log.debug("{0} {1} {2}\n{3}\n{4}".format(
+                        self.name,
+                        r.request.method,
+                        r.request.url,
+                        r.request.headers,
+                        r.request.body))
 
-                # If call is unsuccessful (ex. db goes offline), return docs
-                if r.status_code != 200:
-                    # HACK: return last sequence number and docs to allow closed connections
-                    raise HTTPError({"docs": docs, "last_seq_num": current_seq_num})
+                    # If call is unsuccessful (ex. db goes offline), return docs
+                    if r.status_code != 200:
+                        # HACK: return last sequence number and docs to allow closed connections
+                        raise HTTPError({"docs": docs, "last_seq_num": current_seq_num})
 
-                obj = r.json()
+                    obj = r.json()
 
-                new_docs = obj["results"]
-                log.debug("CHANGES RESULT: {}".format(obj))
+                    new_docs = obj["results"]
+                    log.debug("CHANGES RESULT: {}".format(obj))
 
-                # Check for duplicates in response doc_ids
-                doc_ids = [doc["doc"]["_id"] for doc in new_docs if not doc["id"].startswith("_user/")]
-                if len(doc_ids) != len(set(doc_ids)):
-                    for item in set(doc_ids):
-                        if doc_ids.count(item) > 1:
-                            log.error("DUPLICATE!!!: {}".format(item))
+                    # Check for duplicates in response doc_ids
+                    doc_ids = [doc["doc"]["_id"] for doc in new_docs if not doc["id"].startswith("_user/")]
+                    if len(doc_ids) != len(set(doc_ids)):
+                        for item in set(doc_ids):
+                            if doc_ids.count(item) > 1:
+                                log.error("DUPLICATE!!!: {}".format(item))
 
-                # HACK - need to figure out a better way to check this
-                if len(new_docs) == 0:
-                    request_timed_out = True
-                else:
-                    for doc in new_docs:
+                    # HACK - need to figure out a better way to check this
+                    if len(new_docs) == 0:
+                        request_timed_out = True
+                    else:
+                        for doc in new_docs:
 
-                        # We are not interested in _user/ docs
-                        if doc["id"].startswith("_user/"):
+                            # We are not interested in _user/ docs
+                            if doc["id"].startswith("_user/"):
+                                continue
+
+                            log.debug("{} DOC FROM LONGPOLL _changes: {}: {}".format(self.name, doc["doc"]["_id"], doc["doc"]["_rev"]))
+
+                            # Stop polling if termination doc is recieved in _changes
+                            if termination_doc_id is not None and doc["id"] == termination_doc_id:
+                                log.debug("Termination doc found")
+                                continue_polling = False
+                                break
+
+                            # Store doc
+                            docs[doc["doc"]["_id"]] = doc["doc"]["_rev"]
+
+                    # Get latest sequence from changes request
+                    current_seq_num = obj["last_seq"]
+
+                    log.debug("SEQ_NUM {}".format(current_seq_num))
+
+                    if loop is False:
+                        if len(new_docs) == 1:
+                            # Hack around the fact that the first call to
+                            # _changes may return an _user docs which will not be stored
                             continue
 
-                        log.debug("{} DOC FROM LONGPOLL _changes: {}: {}".format(self.name, doc["doc"]["_id"], doc["doc"]["_rev"]))
+                        # Exit after one longpoll request that returns docs
+                        break
 
-                        # Stop polling if termination doc is recieved in _changes
-                        if termination_doc_id is not None and doc["id"] == termination_doc_id:
-                            log.debug("Termination doc found")
-                            continue_polling = False
-                            break
-
-                        # Store doc
-                        docs[doc["doc"]["_id"]] = doc["doc"]["_rev"]
-
-                # Get latest sequence from changes request
-                current_seq_num = obj["last_seq"]
-
-                log.debug("SEQ_NUM {}".format(current_seq_num))
-
-                if loop is False:
-                    if len(new_docs) == 1:
-                        # Hack around the fact that the first call to
-                        # _changes may return an _user docs which will not be stored
-                        continue
-
-                    # Exit after one longpoll request that returns docs
-                    break
-
-            time.sleep(0.1)
+                time.sleep(0.1)
+            else:
+                break
 
         return docs, current_seq_num
 
