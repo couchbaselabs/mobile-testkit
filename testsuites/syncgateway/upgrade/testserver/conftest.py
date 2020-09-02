@@ -139,6 +139,10 @@ def pytest_addoption(parser):
                      action="store",
                      help="cbs-upgrade-toybuild: Couchbase server toy build to use")
 
+    parser.addoption("--magma-storage",
+                     action="store_true",
+                     help="magma-storage: Enable magma storage on couchbase server")
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -183,6 +187,8 @@ def params_from_base_suite_setup(request):
     enable_file_logging = request.config.getoption("--enable-file-logging")
     device_enabled = request.config.getoption("--device")
     cbs_toy_build = request.config.getoption("--cbs-upgrade-toybuild")
+    magma_storage_enabled = request.config.getoption("--magma-storage")
+
     test_name = request.node.name
 
     log_info("mode: {}".format(mode))
@@ -323,6 +329,13 @@ def params_from_base_suite_setup(request):
         log_info("Running tests not using views")
         # Disable sg views in cluster configs
         persist_cluster_config_environment_prop(cluster_config, 'sg_use_views', False)
+
+    if magma_storage_enabled:
+        log_info("Running with magma storage")
+        persist_cluster_config_environment_prop(cluster_config, 'magma_storage_enabled', True, False)
+    else:
+        log_info("Running without magma storage")
+        persist_cluster_config_environment_prop(cluster_config, 'magma_storage_enabled', False, False)
 
     persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "centos", False)
 
