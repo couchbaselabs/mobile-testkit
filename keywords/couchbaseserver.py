@@ -16,7 +16,7 @@ from keywords.exceptions import CBServerError, ProvisioningError, TimeoutError, 
 from keywords.utils import log_r, log_info, log_debug, log_error, hostname_for_url
 from keywords.utils import version_and_build
 from keywords import types
-from utilities.cluster_config_utils import is_x509_auth, get_cbs_version
+from utilities.cluster_config_utils import is_x509_auth, get_cbs_version, is_magma_enabled
 
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
@@ -412,7 +412,6 @@ class CouchbaseServer:
 
         server_version = get_server_version(self.host, self.cbs_ssl)
         server_major_version = int(server_version.split(".")[0])
-
         data = {
             "name": name,
             "ramQuotaMB": str(ram_quota_mb),
@@ -420,7 +419,9 @@ class CouchbaseServer:
             "bucketType": "couchbase",
             "flushEnabled": "1"
         }
-
+        if is_magma_enabled(cluster_config):
+            magma_data = {"storageBackend": "magma"}
+            data.update(magma_data)
         if server_major_version <= 4:
             # Create a bucket with password for server_major_version < 5
             # proxyPort should not be passed for 5.0.0 onwards for bucket creation
