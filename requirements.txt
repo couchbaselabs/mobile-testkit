@@ -61,3 +61,4 @@ wrapt==1.10.8
 xmltodict==0.10.2
 numpy==1.17.4
 pytest-rerunfailures==8.0
+pytest-json-report==1.2.1
