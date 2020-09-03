@@ -3,6 +3,7 @@ from keywords import attachment
 from CBLClient.Replication import Replication
 from CBLClient.PeerToPeer import PeerToPeer
 
+
 @pytest.mark.listener
 @pytest.mark.parametrize("num_of_docs, continuous, replicator_type, attachments, endPointType", [
     (10, True, "push_pull", False, "URLEndPoint"),
@@ -10,7 +11,8 @@ from CBLClient.PeerToPeer import PeerToPeer
     # (10, True, "push", True, "MessageEndPoint"),
     (100, False, "push", False, "URLEndPoint"),
 ])
-def test_peer_to_peer_mesh_topology(params_from_base_test_setup, server_setup, num_of_docs, continuous, replicator_type, attachments, endPointType):
+def test_peer_to_peer_mesh_topology(params_from_base_test_setup, server_setup, num_of_docs, continuous, replicator_type,
+                                    attachments, endPointType):
     """
         @summary: peer1<-> Peer2, Peer1 <->Peer3, Peer2<->peer1, Peer2<->Peer3
         1. Create docs on peer1.
@@ -64,29 +66,31 @@ def test_peer_to_peer_mesh_topology(params_from_base_test_setup, server_setup, n
     peer3_listener = peer_to_peer3.server_start(cbl_db_peer3)
     peer3_listener_port = peer_to_peer3.get_url_listener_port(peer3_listener)
 
-
     if attachments:
-        db_obj_peer2.create_bulk_docs(num_of_docs, "replication", db=cbl_db_peer2, channels=channels, attachments_generator=attachment.generate_png_100_100)
+        db_obj_peer2.create_bulk_docs(num_of_docs, "replication", db=cbl_db_peer2, channels=channels,
+                                      attachments_generator=attachment.generate_png_100_100)
     else:
         db_obj_peer2.create_bulk_docs(num_of_docs, "replication", db=cbl_db_peer2, channels=channels)
 
-
     # Peer1 connected peer2 replicator and peer3 replicator
-    peer2_repl1 = peer_to_peer2.configure(port=peer1_listener_port, host=peer1_host, server_db_name=db_name_peer1, client_database=cbl_db_peer2,
+    peer2_repl1 = peer_to_peer2.configure(port=peer1_listener_port, host=peer1_host, server_db_name=db_name_peer1,
+                                          client_database=cbl_db_peer2,
                                           continuous=continuous, replication_type=replicator_type,
                                           endPointType=endPointType)
     peer_to_peer2.client_start(peer2_repl1)
     peer2_replicator.wait_until_replicator_idle(peer2_repl1)
 
-    peer3_repl1 = peer_to_peer3.configure(port=peer1_listener_port, host=peer1_host, server_db_name=db_name_peer1, client_database=cbl_db_peer3,
-                                    continuous=continuous, replication_type=replicator_type,
-                                    endPointType=endPointType)
+    peer3_repl1 = peer_to_peer3.configure(port=peer1_listener_port, host=peer1_host, server_db_name=db_name_peer1,
+                                          client_database=cbl_db_peer3,
+                                          continuous=continuous, replication_type=replicator_type,
+                                          endPointType=endPointType)
     peer_to_peer3.client_start(peer3_repl1)
     peer3_replicator.wait_until_replicator_idle(peer3_repl1)
 
     total = peer2_replicator.getTotal(peer2_repl1)
     completed = peer2_replicator.getCompleted(peer2_repl1)
-    assert total == completed, "replication from peer1 to peer2 did not completed " + str(total) + " not equal to " + str(completed)
+    assert total == completed, "replication from peer1 to peer2 did not completed " + str(
+        total) + " not equal to " + str(completed)
 
     total = peer3_replicator.getTotal(peer3_repl1)
     completed = peer3_replicator.getCompleted(peer3_repl1)
@@ -104,13 +108,15 @@ def test_peer_to_peer_mesh_topology(params_from_base_test_setup, server_setup, n
         db_obj_peer2.create_bulk_docs(num_of_docs, "replication", db=cbl_db_peer2, channels=channels)
 
     # Peer2 connected peer1 replicator and peer3 replicator
-    peer1_repl1 = peer_to_peer1.configure(port=peer2_listener_port, host=peer2_host, server_db_name=db_name_peer2, client_database=cbl_db_peer2,
+    peer1_repl1 = peer_to_peer1.configure(port=peer2_listener_port, host=peer2_host, server_db_name=db_name_peer2,
+                                          client_database=cbl_db_peer2,
                                           continuous=continuous, replication_type=replicator_type,
                                           endPointType=endPointType)
     peer_to_peer1.client_start(peer1_repl1)
     peer1_replicator.wait_until_replicator_idle(peer1_repl1)
 
-    peer3_repl2 = peer_to_peer3.configure(port=peer2_listener_port, host=peer2_host, server_db_name=db_name_peer2, client_database=cbl_db_peer3,
+    peer3_repl2 = peer_to_peer3.configure(port=peer2_listener_port, host=peer2_host, server_db_name=db_name_peer2,
+                                          client_database=cbl_db_peer3,
                                           continuous=continuous, replication_type=replicator_type,
                                           endPointType=endPointType)
     peer_to_peer3.client_start(peer3_repl2)
