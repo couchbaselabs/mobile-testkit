@@ -237,7 +237,7 @@ def test_peer_to_peer_concurrent_replication(params_from_base_test_setup, server
 ])
 def test_peer_to_peer_oneClient_toManyServers(params_from_base_test_setup, num_of_docs, continuous, replicator_type, endPointType):
     """
-        @summary:
+        @summary: star topology
         1. Create docs on client.
         2. Start the server1 and server2
         3. Start replication from client.
@@ -1117,7 +1117,6 @@ def test_default_conflict_scenario_highRevGeneration_wins(params_from_base_test_
 
 def client_start_replicate(peerToPeer_client, db_obj_client, param, server_host, db_name_server, cbl_db_client,
                            continuous, replicator_type, endPointType, port):
-    print("Started Reli******")
     updata_bulk_docs_custom(db_obj_client, database=cbl_db_client, number_of_updates=1, param=param)
 
 
