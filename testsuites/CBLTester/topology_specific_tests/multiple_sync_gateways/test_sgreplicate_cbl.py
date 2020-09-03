@@ -22,7 +22,6 @@ from concurrent.futures import ThreadPoolExecutor
 from utilities.cluster_config_utils import copy_sgconf_to_temp, replace_string_on_sgw_config
 
 
-
 def setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_teardown_test, cbl_replication_type, sg_conf_name='listener_tests/multiple_sync_gateways', num_of_docs=10, channels1=None, sgw_cluster1_sg_config_name=None, sgw_cluster2_sg_config_name=None):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
@@ -178,7 +177,7 @@ def test_sg_replicate_push_pull_replication(params_from_base_test_setup, setup_c
         continuous=continuous
     )
     active_tasks = sg1.admin.get_sgreplicate2_active_tasks(sg_db1)
-    sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id_1, num_of_expected_read_docs=num_of_expected_read_docs, num_of_expected_written_docs=num_of_expected_written_docs)
+    sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id_1, read_flag=True, write_flag=True)
     assert len(active_tasks) == 1
     if continuous:
         active_task = active_tasks[0]
@@ -256,7 +255,6 @@ def test_sg_replicate_replication_with_deltasync(params_from_base_test_setup, se
         source_db=cbl_db2, replicator_authenticator=replicator_authenticator2, target_url=sg2_blip_url)
 
     replicator.wait_until_replicator_idle(repl1)
-    num_of_expected_written_docs = num_of_docs
 
     repl_id_1 = sg1.start_replication2(
         local_db=sg_db1,
