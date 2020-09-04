@@ -144,6 +144,10 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="delta-sync: Enable delta-sync for sync gateway")
 
+    parser.addoption("--magma-storage",
+                     action="store_true",
+                     help="magma-storage: Enable magma storage on couchbase server")
+
     parser.addoption("--cbs-ce", action="store_true",
                      help="If set, community edition will get picked up , default is enterprise", default=False)
 
@@ -180,6 +184,7 @@ def params_from_base_suite_setup(request):
     use_views = request.config.getoption("--use-views")
     number_replicas = request.config.getoption("--number-replicas")
     delta_sync_enabled = request.config.getoption("--delta-sync")
+    magma_storage_enabled = request.config.getoption("--magma-storage")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
@@ -204,7 +209,6 @@ def params_from_base_suite_setup(request):
     log_info("sg_ce: {}".format(sg_ce))
     log_info("sg_ssl: {}".format(sg_ssl))
     log_info("no conflicts enabled {}".format(no_conflicts_enabled))
-    log_info("no_conflicts_enabled: {}".format(no_conflicts_enabled))
     log_info("use_views: {}".format(use_views))
     log_info("number_replicas: {}".format(number_replicas))
     log_info("delta_sync_enabled: {}".format(delta_sync_enabled))
@@ -320,6 +324,13 @@ def params_from_base_suite_setup(request):
         log_info("Running test with sg platform {}".format(sg_platform))
         persist_cluster_config_environment_prop(cluster_config, 'sg_platform', sg_platform, False)
 
+    if magma_storage_enabled:
+        log_info("Running with magma storage")
+        persist_cluster_config_environment_prop(cluster_config, 'magma_storage_enabled', True, False)
+    else:
+        log_info("Running without magma storage")
+        persist_cluster_config_environment_prop(cluster_config, 'magma_storage_enabled', False, False)
+
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
 
     # Skip provisioning if user specifies '--skip-provisoning' or '--sequoia'
@@ -371,7 +382,8 @@ def params_from_base_suite_setup(request):
         "sg_platform": sg_platform,
         "ssl_enabled": cbs_ssl,
         "delta_sync_enabled": delta_sync_enabled,
-        "sg_ce": sg_ce
+        "sg_ce": sg_ce,
+        "cbs_ce": cbs_ce
     }
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
@@ -406,6 +418,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     sg_platform = params_from_base_suite_setup["sg_platform"]
     delta_sync_enabled = params_from_base_suite_setup["delta_sync_enabled"]
     sg_ce = params_from_base_suite_setup["sg_ce"]
+    cbs_ce = params_from_base_suite_setup["cbs_ce"]
 
     test_name = request.node.name
     sg_admin_url = cluster_topology["sync_gateways"][0]["admin"]
@@ -453,7 +466,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "sg_platform": sg_platform,
         "ssl_enabled": cbs_ssl,
         "delta_sync_enabled": delta_sync_enabled,
-        "sg_ce": sg_ce
+        "sg_ce": sg_ce,
+        "cbs_ce": cbs_ce
     }
 
     # Code after the yield will execute when each test finishes
