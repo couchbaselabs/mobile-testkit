@@ -153,7 +153,7 @@ def test_peer_to_peer_enable_with_certs_authenticator(params_from_base_test_setu
                                        client_database=cbl_db_client, continuous=continuous,
                                        replication_type=replicator_type, endPointType=endPointType,
                                        port=url_listener_port, tls_disable=False,
-                                       tls_authenticator=True)
+                                       tls_authenticator=True, server_verification_mode=True)
     peerToPeer_client.client_start(repl)
     replicator.wait_until_replicator_idle(repl)
     total = replicator.getTotal(repl)
