@@ -18,7 +18,8 @@ from utilities.cluster_config_utils import is_ipv6
 @pytest.mark.syncgateway
 @pytest.mark.attachments
 @pytest.mark.basicauth
-@pytest.mark.channel
+@pytest.mark.basicsgw
+@pytest.mark.oscertify
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_default"
 ])
@@ -100,7 +101,8 @@ def test_attachment_revpos_when_ancestor_unavailable(params_from_base_test_setup
 @pytest.mark.syncgateway
 @pytest.mark.attachments
 @pytest.mark.session
-@pytest.mark.channel
+@pytest.mark.basicsgw
+@pytest.mark.oscertify
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_default"
 ])
@@ -183,7 +185,8 @@ def test_attachment_revpos_when_ancestor_unavailable_active_revision_doesnt_shar
 @pytest.mark.syncgateway
 @pytest.mark.attachments
 @pytest.mark.session
-@pytest.mark.channel
+@pytest.mark.basicsgw
+@pytest.mark.oscertify
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_default"
 ])

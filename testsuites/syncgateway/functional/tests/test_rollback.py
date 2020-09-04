@@ -17,11 +17,11 @@ from utilities.cluster_config_utils import persist_cluster_config_environment_pr
 
 @pytest.mark.sanity
 @pytest.mark.syncgateway
-@pytest.mark.changes
 @pytest.mark.session
-@pytest.mark.channel
 @pytest.mark.rollback
 @pytest.mark.bulkops
+@pytest.mark.basicsgw
+@pytest.mark.oscertify
 @pytest.mark.parametrize("sg_conf_name, x509_cert_auth", [
     ("sync_gateway_default", False)
 ])
@@ -79,8 +79,7 @@ def test_rollback_server_reset(params_from_base_test_setup, sg_conf_name, x509_c
     seth_session = client.create_session(
         url=sg_admin_url,
         db=sg_db,
-        name=seth_user_info.name,
-        password=seth_user_info.password
+        name=seth_user_info.name
     )
 
     # create a doc that will hash to each vbucket in parallel except for vbucket 66

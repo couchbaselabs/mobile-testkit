@@ -19,13 +19,11 @@ from keywords import document
 
 @pytest.mark.syncgateway
 @pytest.mark.conflicts
-@pytest.mark.changes
 @pytest.mark.basicauth
-@pytest.mark.channel
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_default_functional_tests",
     "sync_gateway_allow_conflicts",
-    "sync_gateway_default_functional_tests_no_port",
+    pytest.param("sync_gateway_default_functional_tests_no_port", marks=pytest.mark.oscertify),
     "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210"
 ])
 def test_non_winning_revisions(params_from_base_test_setup, sg_conf_name):
@@ -180,11 +178,9 @@ def test_non_winning_revisions(params_from_base_test_setup, sg_conf_name):
 
 @pytest.mark.syncgateway
 @pytest.mark.conflicts
-@pytest.mark.changes
 @pytest.mark.basicauth
-@pytest.mark.channel
 @pytest.mark.parametrize("sg_conf_name, x509_cert_auth", [
-    pytest.param("sync_gateway_default_functional_tests", True, marks=pytest.mark.sanity),
+    pytest.param("sync_gateway_default_functional_tests", True, marks=[pytest.mark.sanity, pytest.mark.oscertify]),
     ("sync_gateway_default_functional_tests", False)
 ])
 def test_winning_conflict_branch_revisions(params_from_base_test_setup, sg_conf_name, x509_cert_auth):
@@ -309,7 +305,7 @@ def test_winning_conflict_branch_revisions(params_from_base_test_setup, sg_conf_
 @pytest.mark.conflicts
 @pytest.mark.parametrize("sg_conf_name, revs_limit", [
     ('sync_gateway_revs_conflict_configurable', 1),
-    ('sync_gateway_revs_conflict_configurable', 19),
+    pytest.param('sync_gateway_revs_conflict_configurable', 19, marks=pytest.mark.oscertify),
     ('sync_gateway_revs_conflict_configurable', 'a'),
     ('sync_gateway_revs_conflict_configurable', -1)
     # TODO : commenting as revs_limit 0 behavior is going to change, existing behavior start sg successfully , but it will change to sg fails
@@ -353,6 +349,7 @@ def test_invalid_revs_limit_with_allow_conflicts(params_from_base_test_setup, sg
 
 @pytest.mark.syncgateway
 @pytest.mark.conflicts
+@pytest.mark.oscertify
 def test_concurrent_attachment_updatesonDoc(params_from_base_test_setup):
     """ @summary
     1. Create a doc

@@ -24,8 +24,8 @@ class ClusterDef:
         )
 
 
-def write_config(config, pool_file, use_docker, sg_windows, sg_accel_windows, sg_platform="centos",
-                 ipv6=False, x509_certs=False):
+def write_config(config, pool_file, use_docker, sg_windows, sg_accel_windows, sg_platform="centos7",
+                 ipv6=False, x509_certs=False, cbs_platform="centos7"):
 
     connection_string = ""
     if use_docker:
@@ -366,8 +366,9 @@ def write_config(config, pool_file, use_docker, sg_windows, sg_accel_windows, sg
 
         if sg_platform.lower() == "macos":
             f.write("\n\n[sync_gateways:vars]\n")
-            f.write("ansible_connection=local\n")
-            f.write("ansible_become_pass=macOSFakePassword\n")
+            f.write("ansible_user=MacOSFakeUser\n")
+            f.write("ansible_password=MacOSFakePassword\n")
+            f.write("ansible_sudo_pass=MacOSFakePassword\n")
 
         if sg_windows:
             f.write("\n\n[sync_gateways:vars]\n")
@@ -384,6 +385,19 @@ def write_config(config, pool_file, use_docker, sg_windows, sg_accel_windows, sg
             f.write("ansible_port=5986\n")
             f.write("ansible_connection=winrm\n")
             f.write("ansible_winrm_server_cert_validation=ignore\n")
+
+        # Add support for python3 in ansible
+        if cbs_platform == "centos8":
+            f.write("\n\n[couchbase_servers:vars]\n")
+            f.write("ansible_python_interpreter=/usr/bin/python3")
+
+        if sg_platform == "centos8":
+            f.write("\n\n[sync_gateways:vars]\n")
+            f.write("ansible_python_interpreter=/usr/bin/python3")
+
+        if cbs_platform == "centos8" and sg_platform == "centos8":
+            f.write("\n\n[pool:vars]\n")
+            f.write("ansible_python_interpreter=/usr/bin/python3")
 
         log_info("Generating {}.json".format(config.name))
 
@@ -438,8 +452,8 @@ def get_hosts(pool_file="resources/pool.json"):
 
 
 def generate_clusters_from_pool(pool_file, use_docker=False, sg_windows=False,
-                                sg_accel_windows=False, sg_platform="centos", ipv6=False,
-                                x509_certs=False):
+                                sg_accel_windows=False, sg_platform="centos7", ipv6=False,
+                                x509_certs=False, cbs_platform="centos7"):
 
     cluster_confs = [
 
@@ -458,6 +472,8 @@ def generate_clusters_from_pool(pool_file, use_docker=False, sg_windows=False,
         ClusterDef("multiple_sg_accels_di", num_sgs=1, num_acs=3, num_cbs=1, num_lgs=0, num_lbs=0),
         ClusterDef("multiple_sync_gateways_cc", num_sgs=2, num_acs=0, num_cbs=1, num_lgs=0, num_lbs=0),
         ClusterDef("multiple_sync_gateways_di", num_sgs=2, num_acs=1, num_cbs=1, num_lgs=0, num_lbs=0),
+        ClusterDef("three_sync_gateways_cc", num_sgs=3, num_acs=0, num_cbs=1, num_lgs=0, num_lbs=0),
+        ClusterDef("four_sync_gateways_cc", num_sgs=4, num_acs=0, num_cbs=1, num_lgs=0, num_lbs=0),
         ClusterDef("load_balancer_cc", num_sgs=2, num_acs=0, num_cbs=1, num_lgs=0, num_lbs=1),
         ClusterDef("load_balancer_di", num_sgs=2, num_acs=1, num_cbs=1, num_lgs=0, num_lbs=1),
         ClusterDef("1sg", num_sgs=1, num_acs=0, num_cbs=0, num_lgs=0, num_lbs=0),
@@ -526,7 +542,7 @@ def generate_clusters_from_pool(pool_file, use_docker=False, sg_windows=False,
     print(("Generating 'resources/cluster_configs/'. Using docker: {}".format(use_docker)))
     for cluster_conf in cluster_confs:
         write_config(cluster_conf, pool_file, use_docker, sg_windows,
-                     sg_accel_windows, sg_platform, ipv6=ipv6, x509_certs=x509_certs)
+                     sg_accel_windows, sg_platform, ipv6=ipv6, x509_certs=x509_certs, cbs_platform=cbs_platform)
 
 
 if __name__ == "__main__":
@@ -548,7 +564,9 @@ if __name__ == "__main__":
 
     parser.add_option("--sg-accel-windows", action="store_true", dest="sg_accel_windows", default=False, help="Use Windows Sync Gateway Accelerator")
 
-    parser.add_option("--sg-platform", action="store", dest="sg_platform", default="centos", help="Provide Sync gateway platform")
+    parser.add_option("--sg-platform", action="store", dest="sg_platform", default="centos7", help="Provide Sync gateway platform")
+
+    parser.add_option("--cbs-platform", action="store", dest="cbs_platform", default="centos7", help="Provide couchbase server platform")
 
     parser.add_option("--ipv6", action="store_true", default=False, help="IPv6 addresses")
 
@@ -561,4 +579,4 @@ if __name__ == "__main__":
 
     generate_clusters_from_pool(opts.pool_file, opts.use_docker, opts.sg_windows,
                                 opts.sg_accel_windows, opts.sg_platform, opts.ipv6,
-                                opts.x509_certs)
+                                opts.x509_certs, opts.cbs_platform)

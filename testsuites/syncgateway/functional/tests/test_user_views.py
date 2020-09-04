@@ -18,9 +18,9 @@ from utilities.cluster_config_utils import persist_cluster_config_environment_pr
 @pytest.mark.views
 @pytest.mark.role
 @pytest.mark.channel
-@pytest.mark.changes
 @pytest.mark.session
 @pytest.mark.attachments
+@pytest.mark.oscertify
 @pytest.mark.parametrize("sg_conf_name, x509_cert_auth", [
     ("user_views/user_views", False),
 ])
@@ -103,8 +103,8 @@ def test_user_views_sanity(params_from_base_test_setup, sg_conf_name, x509_cert_
     assert raghu_user["admin_roles"] == ["Researcher"]
     assert raghu_user["roles"] == ["Researcher"]
 
-    seth_session = client.create_session(url=sg_admin_url, db=sg_db, name="seth", password="pass")
-    raghu_session = client.create_session(url=sg_admin_url, db=sg_db, name="raghu", password="pass")
+    seth_session = client.create_session(url=sg_admin_url, db=sg_db, name="seth")
+    raghu_session = client.create_session(url=sg_admin_url, db=sg_db, name="raghu")
 
     start = time.time()
 

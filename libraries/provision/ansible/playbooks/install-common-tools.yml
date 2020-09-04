@@ -12,6 +12,7 @@
 
   - name: DEPS | install ntp
     yum: pkg=ntp state=latest
+    when: ansible_os_family == "CentOS" and (not ansible_distribution_major_version >= "8.0")
 
   - name: DEPS | install git
     yum: pkg=git state=latest
@@ -54,16 +55,31 @@
 
   - name: DEPS | install python-devel
     yum: pkg=python-devel state=latest
+    when: ansible_os_family == "CentOS" and (not ansible_distribution_major_version >= "8.0")
 
-  - name: DEPS | install pip
+  - name: DEPS | install python3-devel
+    yum: pkg=python3-devel state=latest
+    when: ansible_os_family == "CentOS" and ansible_distribution_major_version >= "8.0"
+
+  - name: DEPS | install python-pip
     yum: pkg=python-pip state=latest
+    when: ansible_os_family == "CentOS" and (not ansible_distribution_major_version >= "8.0")
+
+  - name: DEPS | install python3-pip
+    yum: pkg=python3-pip state=latest
+    when: ansible_os_family == "CentOS" and ansible_distribution_major_version >= "8.0"
 
   - name: DEPS | install nginx
     yum: pkg=nginx state=latest
 
   - name: DEPS | install psutil
     shell: pip install psutil
+    when: ansible_os_family == "CentOS" and (not ansible_distribution_major_version >= "8.0")
     # Remove go, can cause issues with version confusion if multple versions of go are on a machine
+
+  - name: DEPS | install psutil
+    shell: pip3 install psutil
+    when: ansible_os_family == "CentOS" and ansible_distribution_major_version >= "8.0"
 
   - name: DEPS | delete existing go installations
     file: path=/usr/local/go state=absent
@@ -97,13 +113,13 @@
     get_url: url=https://storage.googleapis.com/git-repo-downloads/repo dest=/usr/bin/repo mode=0751
 
   - name: DEPS | download awslogs fowarder
-    get_url: url=https://s3.amazonaws.com/aws-cloudwatch/downloads/latest/awslogs-agent-setup.py dest=/home/centos
+    get_url: url=https://cbmobile-aws.s3.amazonaws.com/awslogs-agent-setup.py dest=/home/centos
 
   - name: DEPS | upload default awslogs forwarder config
     copy: src=files/awslogs_default.conf dest=/home/centos owner=centos group=centos
 
   - name: DEPS | install awslogs forwarder service
-    shell: python awslogs-agent-setup.py --non-interactive --region us-east-1 --configfile /home/centos/awslogs_default.conf
+    shell: python3 awslogs-agent-setup.py --non-interactive --region us-east-1 --configfile /home/centos/awslogs_default.conf
     args:
       chdir: /home/centos
  

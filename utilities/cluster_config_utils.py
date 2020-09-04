@@ -81,8 +81,8 @@ def generate_x509_certs(cluster_config, bucket_name, sg_platform):
             match = re.match('remote_user\s*=\s*(\w*)$', line)
             if match:
                 username = match.groups()[0].strip()
+                print(username)
                 break
-    print(username)
     curr_dir = os.getcwd()
     certs_dir = os.path.join(curr_dir, "certs")
     if os.path.exists(certs_dir):
@@ -260,6 +260,14 @@ def is_delta_sync_enabled(cluster_config):
         return False
 
 
+def is_magma_enabled(cluster_config):
+    cluster = load_cluster_config_json(cluster_config)
+    try:
+        return cluster["environment"]["magma_storage_enabled"]
+    except KeyError:
+        return False
+
+
 def copy_to_temp_conf(cluster_config, mode):
     # Creating temporary cluster config and json files to add configuration dynamically
     temp_cluster_config = "resources/cluster_configs/temp_cluster_config_{}".format(mode)
@@ -270,3 +278,20 @@ def copy_to_temp_conf(cluster_config, mode):
     copyfile(cluster_config, temp_cluster_config)
     copyfile(cluster_config_json, temp_cluster_config_json)
     return temp_cluster_config
+
+
+def copy_sgconf_to_temp(sg_conf, mode):
+    temp_sg_conf_name = "temp_sg_config"
+    temp_sg_config = "resources/sync_gateway_configs/temp_sg_config_{}.json".format(mode)
+    open(temp_sg_config, "w+")
+    copyfile(sg_conf, temp_sg_config)
+    return temp_sg_config, temp_sg_conf_name
+
+
+def replace_string_on_sgw_config(sg_conf, replace_string, new_string):
+    with open(sg_conf, 'r') as file:
+        filedata = file.read()
+    filedata = filedata.replace(replace_string, new_string)
+    with open(sg_conf, 'w') as file:
+        file.write(filedata)
+    return sg_conf

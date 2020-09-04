@@ -14,6 +14,8 @@ from keywords.MobileRestClient import MobileRestClient
 @pytest.mark.syncgateway
 @pytest.mark.sanity
 @pytest.mark.cachemanagement
+@pytest.mark.basicsgw
+@pytest.mark.oscertify
 def test_importDocs_withSharedBucketAccessFalse(params_from_base_test_setup):
     """
     @summary :
@@ -83,6 +85,8 @@ def test_importDocs_withSharedBucketAccessFalse(params_from_base_test_setup):
 @pytest.mark.syncgateway
 @pytest.mark.community
 @pytest.mark.cachemanagement
+@pytest.mark.basicsgw
+@pytest.mark.oscertify
 def test_importDocs_defaultBehavior_withSharedBucketAccessTrue(params_from_base_test_setup):
     """
     @summary :
@@ -148,6 +152,8 @@ def test_importDocs_defaultBehavior_withSharedBucketAccessTrue(params_from_base_
 
 @pytest.mark.syncgateway
 @pytest.mark.cachemanagement
+@pytest.mark.basicsgw
+@pytest.mark.oscertify
 def test_importPartitions_withSharedBucketAccessTrue(params_from_base_test_setup):
     """
     @summary :

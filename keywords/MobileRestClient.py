@@ -210,7 +210,6 @@ class MobileRestClient:
             "name": name,
             "ttl": ttl
         }
-
         if password:
             data["password"] = password
 

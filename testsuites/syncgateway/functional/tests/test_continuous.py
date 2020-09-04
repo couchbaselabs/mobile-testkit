@@ -16,10 +16,9 @@ from utilities.cluster_config_utils import get_sg_version, persist_cluster_confi
 @pytest.mark.syncgateway
 @pytest.mark.changes
 @pytest.mark.basicauth
-@pytest.mark.channel
 @pytest.mark.parametrize("sg_conf_name, num_users, num_docs, num_revisions", [
     ("sync_gateway_default_functional_tests_no_port", 1, 5000, 1),
-    ("sync_gateway_default_functional_tests_couchbase_protocol_withport_11210", 1, 5000, 1),
+    pytest.param("sync_gateway_default_functional_tests_couchbase_protocol_withport_11210", 1, 5000, 1, marks=pytest.mark.oscertify),
     ("sync_gateway_default_functional_tests", 1, 5000, 1),
     ("sync_gateway_default_functional_tests", 50, 5000, 1),
     ("sync_gateway_default_functional_tests", 50, 10, 10),
@@ -91,10 +90,9 @@ def test_continuous_changes_parametrized(params_from_base_test_setup, sg_conf_na
 @pytest.mark.syncgateway
 @pytest.mark.changes
 @pytest.mark.basicauth
-@pytest.mark.channel
 @pytest.mark.parametrize("sg_conf_name, num_docs, num_revisions, x509_cert_auth", [
     ("sync_gateway_default_functional_tests", 10, 10, True),
-    pytest.param("sync_gateway_default_functional_tests_no_port", 10, 10, False, marks=pytest.mark.sanity),
+    pytest.param("sync_gateway_default_functional_tests_no_port", 10, 10, False, marks=[pytest.mark.sanity, pytest.mark.oscertify]),
     ("sync_gateway_default_functional_tests_couchbase_protocol_withport_11210", 10, 10, False)
 ])
 def test_continuous_changes_sanity(params_from_base_test_setup, sg_conf_name, num_docs, num_revisions, x509_cert_auth):

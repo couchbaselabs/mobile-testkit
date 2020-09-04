@@ -17,16 +17,19 @@
       "username":"data-bucket",
       "password": "password",
       "users": {
-        "traun": {"password": "pass", "admin_channels": ["traun"]},
-        "james": {"password": "pass", "admin_channels": ["james"]},
+        "jay": {"password": "pass", "admin_channels": ["jay"]},
+        "eunice": {"password": "pass", "admin_channels": ["eunice"]},
         "pasin": {"password": "pass", "admin_channels": ["pasin"]},
         "jens": {"password": "pass", "admin_channels": ["jens"]},
         "jim": {"password": "pass", "admin_channels": ["jim"]},
         "sridevi": {"password": "pass", "admin_channels": ["sridevi"]},
-        "raghu": {"password": "pass", "admin_channels": ["raghu"]},
-        "mod": {"password": "pass", "admin_roles": ["moderator"]},
+        "manasa": {"password": "pass", "admin_channels": ["manasa"]},
+        "sandy": {"password": "pass", "admin_roles": ["sandy"]},
         "admin": {"password": "pass", "admin_roles": ["admin"]},
-        "hemant": {"password": "pass", "admin_roles": ["admin"]}
+        "blake": {"password": "pass", "admin_roles": ["blake"]},
+        "adam": {"password": "pass", "admin_roles": ["adam"]},
+        "ben": {"password": "pass", "admin_roles": ["ben"]},
+        "sarath": {"password": "pass", "admin_roles": ["sarath"]}
       },
       "roles": {
         "moderator": {},

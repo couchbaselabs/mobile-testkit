@@ -7,6 +7,17 @@
     upstream_sync_gatways_admin:
 
   tasks:
+  - name: NGINX | Stop nginx service
+    service: name=nginx state=stopped
+    ignore_errors: yes
+
+  - name: SYNC-GATEWAY | kill sync-gateway process
+    service: name=sync_gateway state=stopped
+    ignore_errors: yes
+
+  - name: epel-release | install epel-release for nginx
+    yum: pkg=epel-release state=latest
+
   - name: NGINX | Install nginx
     yum: pkg=nginx state=latest
 

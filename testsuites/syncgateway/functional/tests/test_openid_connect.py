@@ -70,7 +70,7 @@ def discover_authenticate_url(sg_url, sg_db, provider, ipv6):
     return url
 
 
-def discover_authenticate_endpoint(sg_url, sg_db, provider, ipv6):
+def discover_authenticate_endpoint(sg_url, sg_db, provider, ipv6, session=None):
     """
     Discover the authenticate endpoint and parameters.
 
@@ -82,7 +82,10 @@ def discover_authenticate_endpoint(sg_url, sg_db, provider, ipv6):
     # make a request to the _oidc_challenge endpoint
     oidc_challenge_url = "{}/{}/_oidc_challenge?provider={}".format(sg_url, sg_db, provider)
     log_info("Invoking _oidc_challenge against: {}".format(oidc_challenge_url))
-    response = requests.get(oidc_challenge_url)
+    if session is not None:
+        response = session.get(oidc_challenge_url)
+    else:
+        response = requests.get(oidc_challenge_url)
 
     # the Www-Authenticate header will look something like this:
     # 'OIDC login="http://localhost:4984/db/_oidc_testing/authorize?client_id=sync_gateway&redirect_uri=http%3A%2F%2Flocalhost%3A4984%2Fdb%2F_oidc_callback&response_type=code&scope=openid+email&state="'
@@ -105,7 +108,10 @@ def discover_authenticate_endpoint(sg_url, sg_db, provider, ipv6):
     oidc_login_url = oidc_login_url.replace("localhost", sg_hostname)
 
     # Fetch the oidc_login_url
-    response = requests.get(oidc_login_url)
+    if session is not None:
+        response = session.get(oidc_login_url)
+    else:
+        response = requests.get(oidc_login_url)
     response.raise_for_status()
     parser = FormActionHTMLParser()
     parser.feed(response.text)
@@ -114,9 +120,10 @@ def discover_authenticate_endpoint(sg_url, sg_db, provider, ipv6):
 
 @pytest.mark.syncgateway
 @pytest.mark.oidc
+@pytest.mark.basicsgw
 @pytest.mark.parametrize("sg_conf_name, is_admin_port, expect_signed_id_token", [
     ("sync_gateway_openid_connect", False, True),
-    pytest.param("sync_gateway_openid_connect", True, True, marks=pytest.mark.sanity),
+    pytest.param("sync_gateway_openid_connect", True, True, marks=[pytest.mark.sanity, pytest.mark.oscertify]),
     ("sync_gateway_openid_connect_unsigned", False, False)
 ])
 def test_openidconnect_basic_test(params_from_base_test_setup, sg_conf_name, is_admin_port, expect_signed_id_token):
@@ -153,86 +160,93 @@ def test_openidconnect_basic_test(params_from_base_test_setup, sg_conf_name, is_
         resp = requests.get(db_url)
         assert resp.status_code == 401, "Expected 401 response"
 
-    # get the authenticate endpoint and query params, should look something like:
-    #     authenticate?client_id=sync_gateway&redirect_uri= ...
-    authenticate_endpoint = discover_authenticate_endpoint(sg_url, sg_db, DEFAULT_PROVIDER, cluster.ipv6)
-
-    # build the full url
-    authenticate_endpoint_url = "{}/{}/_oidc_testing/{}".format(
-        sg_url,
-        sg_db,
-        authenticate_endpoint
-    )
-
-    # Make the request to _oidc_testing
-    # multipart/form data content
-    formdata = {
-        'username': ('', 'testuser'),
-        'authenticated': ('', 'Return a valid authorization code for this user')
-    }
-    authenticate_response = requests.post(authenticate_endpoint_url, files=formdata)
-    set_cookie_response_header = authenticate_response.headers['Set-Cookie']
-    log_r(authenticate_response)
-
-    # extract the token from the response
-    authenticate_response_json = authenticate_response.json()
-    id_token = authenticate_response_json["id_token"]
-    refresh_token = authenticate_response_json["refresh_token"]
-
-    # make sure the id token has the email field in it
-    decoded_id_token = jwt.decode(id_token, verify=False)
-    assert "email" in list(decoded_id_token.keys())
-
-    # make a request using the ID token against the db and expect a 200 response
-    headers = {"Authorization": "Bearer {}".format(id_token)}
-    db_url = "{}/{}".format(sg_url, sg_db)
-    resp = requests.get(db_url, headers=headers)
-    log_r(resp)
-    if expect_signed_id_token:
-        assert resp.status_code == 200, "Expected 200 response for bearer ID token"
-    else:
+    if sg_conf_name == "sync_gateway_openid_connect_unsigned":
+        id_token = "abc.dd"
+        headers = {"Authorization": "Bearer {}".format(id_token)}
+        db_url = "{}/{}".format(sg_url, sg_db)
+        resp = requests.get(db_url, headers=headers)
         assert resp.status_code == 401, "Expected 401 response for bearer ID token"
 
-    # make a request using the cookie against the db and expect a 200 response
-    db_url = "{}/{}".format(sg_url, sg_db)
-    resp = requests.get(db_url, cookies=extract_cookie(set_cookie_response_header))
-    log_r(resp)
-    assert resp.status_code == 200, "Expected 200 response when using session cookie"
+    else:
+        # get the authenticate endpoint and query params, should look something like:
+        #     authenticate?client_id=sync_gateway&redirect_uri= ...
+        authenticate_endpoint = discover_authenticate_endpoint(sg_url, sg_db, DEFAULT_PROVIDER, cluster.ipv6)
 
-    # make a request using the session_id that's sent in the body
-    resp = requests.get(db_url, cookies={"SyncGatewaySession": authenticate_response_json["session_id"]})
-    assert resp.status_code == 200, "Expected 200 response using session_id from body"
+        # build the full url
+        authenticate_endpoint_url = "{}/{}/_oidc_testing/{}".format(
+            sg_url,
+            sg_db,
+            authenticate_endpoint
+        )
 
-    # try to use the refresh token to get a few new id_tokens
-    id_tokens = [id_token]
-    for i in range(3):
+        # Make the request to _oidc_testing
+        # multipart/form data content
+        formdata = {
+            'username': ('', 'testuser'),
+            'authenticated': ('', 'Return a valid authorization code for this user')
+        }
+        authenticate_response = requests.post(authenticate_endpoint_url, files=formdata)
+        set_cookie_response_header = authenticate_response.headers['Set-Cookie']
+        log_r(authenticate_response)
 
-        # This pause is required because according to @ajres:
-        # The id_token will only be unique if the two calls are more than a second apart.
-        # It would be easy to add an atomically incrementing nonce claim to each token to ensure that they are always unique
-        time.sleep(2)
-
-        refresh_token_url = "{}/{}/_oidc_refresh?refresh_token={}&provider={}".format(sg_url, sg_db, refresh_token, "test")
-        authenticate_response = requests.get(refresh_token_url)
+        # extract the token from the response
         authenticate_response_json = authenticate_response.json()
-        id_token_refresh = authenticate_response_json["id_token"]
-        # make sure we get a unique id token each time
-        assert id_token_refresh not in id_tokens
+        id_token = authenticate_response_json["id_token"]
+        refresh_token = authenticate_response_json["refresh_token"]
+
+        # make sure the id token has the email field in it
+        decoded_id_token = jwt.decode(id_token, verify=False)
+        assert "email" in list(decoded_id_token.keys())
 
         # make a request using the ID token against the db and expect a 200 response
-        headers = {"Authorization": "Bearer {}".format(id_token_refresh)}
+        headers = {"Authorization": "Bearer {}".format(id_token)}
+        db_url = "{}/{}".format(sg_url, sg_db)
         resp = requests.get(db_url, headers=headers)
         log_r(resp)
-        if expect_signed_id_token:
-            assert resp.status_code == 200, "Expected 200 response for bearer ID token on refresh"
-        else:
-            assert resp.status_code == 401, "Expected 401 response for bearer ID token on refresh"
+        assert resp.status_code == 200, "Expected 200 response for bearer ID token"
 
-        id_tokens.append(id_token_refresh)
+        # make a request using the cookie against the db and expect a 200 response
+        db_url = "{}/{}".format(sg_url, sg_db)
+        resp = requests.get(db_url, cookies=extract_cookie(set_cookie_response_header))
+        log_r(resp)
+        assert resp.status_code == 200, "Expected 200 response when using session cookie"
+
+        # make a request using the session_id that's sent in the body
+        resp = requests.get(db_url, cookies={"SyncGatewaySession": authenticate_response_json["session_id"]})
+        assert resp.status_code == 200, "Expected 200 response using session_id from body"
+
+        # try to use the refresh token to get a few new id_tokens
+        id_tokens = [id_token]
+        for i in range(3):
+
+            # This pause is required because according to @ajres:
+            # The id_token will only be unique if the two calls are more than a second apart.
+            # It would be easy to add an atomically incrementing nonce claim to each token to ensure that they are always unique
+            time.sleep(2)
+
+            refresh_token_url = "{}/{}/_oidc_refresh?refresh_token={}&provider={}".format(sg_url, sg_db, refresh_token, "test")
+            authenticate_response = requests.get(refresh_token_url)
+            authenticate_response_json = authenticate_response.json()
+            id_token_refresh = authenticate_response_json["id_token"]
+            # make sure we get a unique id token each time
+            assert id_token_refresh not in id_tokens
+
+            # make a request using the ID token against the db and expect a 200 response
+            headers = {"Authorization": "Bearer {}".format(id_token_refresh)}
+            resp = requests.get(db_url, headers=headers)
+            log_r(resp)
+            if expect_signed_id_token:
+                assert resp.status_code == 200, "Expected 200 response for bearer ID token on refresh"
+            else:
+                assert resp.status_code == 401, "Expected 401 response for bearer ID token on refresh"
+
+            id_tokens.append(id_token_refresh)
 
 
 @pytest.mark.syncgateway
 @pytest.mark.oidc
+@pytest.mark.oscertify
+@pytest.mark.basicsgw
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_openid_connect"
 ])
@@ -281,6 +295,8 @@ def test_openidconnect_notauthenticated(params_from_base_test_setup, sg_conf_nam
 
 @pytest.mark.syncgateway
 @pytest.mark.oidc
+@pytest.mark.oscertify
+@pytest.mark.basicsgw
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_openid_connect"
 ])
@@ -319,6 +335,8 @@ def test_openidconnect_oidc_challenge_invalid_provider_name(params_from_base_tes
 
 @pytest.mark.syncgateway
 @pytest.mark.oidc
+@pytest.mark.oscertify
+@pytest.mark.basicsgw
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_openid_connect"
 ])
@@ -361,6 +379,8 @@ def test_openidconnect_no_session(params_from_base_test_setup, sg_conf_name):
 
 @pytest.mark.syncgateway
 @pytest.mark.oidc
+@pytest.mark.oscertify
+@pytest.mark.basicsgw
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_openid_connect"
 ])
@@ -430,6 +450,8 @@ def test_openidconnect_expired_token(params_from_base_test_setup, sg_conf_name):
 
 @pytest.mark.syncgateway
 @pytest.mark.oidc
+@pytest.mark.oscertify
+@pytest.mark.basicsgw
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_openid_connect"
 ])
@@ -483,6 +505,8 @@ def test_openidconnect_negative_token_expiry(params_from_base_test_setup, sg_con
 
 @pytest.mark.syncgateway
 @pytest.mark.oidc
+@pytest.mark.oscertify
+@pytest.mark.basicsgw
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_openid_connect"
 ])
@@ -563,6 +587,8 @@ def test_openidconnect_garbage_token(params_from_base_test_setup, sg_conf_name):
 
 @pytest.mark.syncgateway
 @pytest.mark.oidc
+@pytest.mark.oscertify
+@pytest.mark.basicsgw
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_openid_connect"
 ])
@@ -602,6 +628,8 @@ def test_openidconnect_invalid_scope(params_from_base_test_setup, sg_conf_name):
 
 @pytest.mark.syncgateway
 @pytest.mark.oidc
+@pytest.mark.oscertify
+@pytest.mark.basicsgw
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_openid_connect"
 ])
@@ -630,24 +658,20 @@ def test_openidconnect_small_scope(params_from_base_test_setup, sg_conf_name):
     )
 
     # multipart/form data content
-    formdata = {
-        'username': ('', 'testuser'),
-        'authenticated': ('', 'Return a valid authorization code for this user')
-    }
+    payload = {'username': 'alice', 'authenticated': 'Return a valid authorization code for this user'}
 
     # get the authenticate endpoint and query params, should look something like:
     #     authenticate?client_id=sync_gateway&redirect_uri= ...
-    authenticate_endpoint = discover_authenticate_endpoint(sg_url, sg_db, "testsmallscope", cluster.ipv6)
-
+    session = requests.session()
+    authenticate_endpoint = discover_authenticate_endpoint(sg_url, sg_db, "testsmallscope", cluster.ipv6, session)
     # build the full url
     url = "{}/{}/_oidc_testing/{}".format(
         sg_url,
         sg_db,
         authenticate_endpoint
     )
-
     # Make the request to _oidc_testing
-    response = requests.post(url, files=formdata)
+    response = session.post(url, data=payload)
     log_r(response)
 
     # extract the token from the response
@@ -662,6 +686,8 @@ def test_openidconnect_small_scope(params_from_base_test_setup, sg_conf_name):
 
 @pytest.mark.syncgateway
 @pytest.mark.oidc
+@pytest.mark.oscertify
+@pytest.mark.basicsgw
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_openid_connect"
 ])
@@ -724,6 +750,8 @@ def test_openidconnect_large_scope(params_from_base_test_setup, sg_conf_name):
 
 @pytest.mark.syncgateway
 @pytest.mark.oidc
+@pytest.mark.oscertify
+@pytest.mark.basicsgw
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_openid_connect"
 ])

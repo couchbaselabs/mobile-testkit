@@ -396,12 +396,18 @@ class SyncGateway:
                                target_db,
                                continuous=True,
                                use_remote_target=False,
-                               use_admin_url=False):
+                               use_admin_url=False,
+                               target_user_name=None,
+                               target_password=None):
 
         sg_url = self.url
         if use_admin_url:
             sg_url = self.admin.admin_url
 
+        if "4984" in source_url:
+            if not target_user_name or not target_password:
+                raise Exception("username and password not provided for the source")
+            source_url = source_url.replace("://", "://{}:{}@".format(target_user_name, target_password))
         data = {
             "source": "{}/{}".format(source_url, source_db),
             "continuous": continuous

@@ -426,3 +426,35 @@ def meet_supported_version(version_list, target_version):
             return False
 
     return True
+
+
+def get_embedded_asset_file_path(cblite_platform, db, cbl_db, file_name):
+    log_info("get a file path from embedded resources.")
+    if cblite_platform in ["android", "xamarin-android", "java-macosx", "java-msft", "java-ubuntu", "java-centos",
+                           "javaws-macosx", "javaws-msft", "javaws-ubuntu", "javaws-centos"]:
+        return file_name
+    elif cblite_platform == "ios":
+        return "Files/{}".format(file_name)
+    elif cblite_platform == "net-msft":
+        db_path = db.getPath(cbl_db).rstrip("\\")
+        app_dir = "\\".join(db_path.split("\\")[:-2])
+        return "{}\\Files\\{}".format(app_dir, file_name)
+    else:
+        return "Files/{}".format(file_name)
+
+
+def set_device_enabled(run_on_device, list_size):
+    device_enabled_list = []
+    if run_on_device is None:
+        for i in range(list_size):
+            device_enabled_list.append(False)
+        return device_enabled_list
+
+    device_list = run_on_device.split(',')
+    for device in device_list:
+        if device == "device":
+            device_enabled_list.append(True)
+        else:
+            device_enabled_list.append(False)
+
+    return device_enabled_list

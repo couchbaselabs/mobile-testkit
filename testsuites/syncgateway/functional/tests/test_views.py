@@ -16,8 +16,9 @@ from utilities.cluster_config_utils import get_sg_version, persist_cluster_confi
 @pytest.mark.syncgateway
 @pytest.mark.views
 @pytest.mark.session
+@pytest.mark.basicsgw
 @pytest.mark.parametrize('sg_conf_name, validate_changes_before_restart, x509_cert_auth', [
-    pytest.param('sync_gateway_default_functional_tests', False, False, marks=pytest.mark.sanity),
+    pytest.param('sync_gateway_default_functional_tests', False, False, marks=[pytest.mark.sanity, pytest.mark.oscertify]),
     ('sync_gateway_default_functional_tests', True, True),
     ('sync_gateway_default_functional_tests_no_port', False, True),
     ('sync_gateway_default_functional_tests_no_port', True, False)
@@ -78,8 +79,7 @@ def test_view_backfill_for_deletes(params_from_base_test_setup, sg_conf_name,
     seth_auth = sg_client.create_session(
         url=sg_admin_url,
         db=sg_db,
-        name=seth_user_info.name,
-        password=seth_user_info.password
+        name=seth_user_info.name
     )
 
     # Add 'num_docs' to Sync Gateway

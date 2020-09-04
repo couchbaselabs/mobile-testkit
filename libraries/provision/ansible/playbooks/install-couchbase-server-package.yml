@@ -50,11 +50,11 @@
 
     - name: Install Couchbase Server on Ubuntu
       apt: deb=/tmp/{{ couchbase_server_package_name }} state=present
-      when: ansible_distribution == "Ubuntu"
+      when: ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
 
     - name: Starting CBS for Ubuntu
       service: name=couchbase-server state=started
-      when: ansible_distribution == "Ubuntu"
+      when: ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
 
     - name: Enabling CBS on IPV6 | Stopping CBS
       service: name=couchbase-server state=stopped

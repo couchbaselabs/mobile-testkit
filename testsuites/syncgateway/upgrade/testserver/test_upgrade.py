@@ -162,7 +162,7 @@ def test_upgrade(params_from_base_test_setup):
     repl1 = replicator.create(repl_config1)
     replicator.start(repl1)
     replicator.wait_until_replicator_idle(repl1)
-    sg_added_docs = sg_client.add_docs(url=sg_admin_url, db=sg_db, number=2, id_prefix="sgw_docs1", channels=sg_user_channels, generator="simple_user", attachments_generator=attachment.generate_2_png_10_10)
+    sg_client.add_docs(url=sg_admin_url, db=sg_db, number=2, id_prefix="sgw_docs1", channels=sg_user_channels, generator="simple_user", attachments_generator=attachment.generate_2_png_10_10)
     # 3. Start a thread to keep updating docs on CBL
     terminator_doc_id = 'terminator'
     with ProcessPoolExecutor() as up:
@@ -241,15 +241,19 @@ def test_upgrade(params_from_base_test_setup):
                 )
                 enable_import = False
                 # Check Import showing up on all nodes
-        # set up another replicator to verify attachments replicated after the upgrade
-        repl_config1 = replicator.configure(cbl_db2, sg_blip_url, continuous=True, channels=sg_user_channels, replication_type="push_pull", replicator_authenticator=replicator_authenticator)
-        repl1 = replicator.create(repl_config1)
-        replicator.start(repl1)
+        repl_config2 = replicator.configure(cbl_db2, sg_blip_url, continuous=True, channels=sg_user_channels, replication_type="push_pull", replicator_authenticator=replicator_authenticator)
+        repl2 = replicator.create(repl_config2)
+        replicator.start(repl2)
+        log_info("waiting for the replication to complete")
+        replicator.wait_until_replicator_idle(repl2, max_times=3000)
+        log_info("Trying to create terminator id ....")
         db.create_bulk_docs(number=1, id_prefix=terminator_doc_id, db=cbl_db, channels=sg_user_channels)
         log_info("Waiting for doc updates to complete")
         updated_doc_revs = updates_future.result()
 
+        # set up another replicator to verify attachments replicated after the upgrade
         log_info("Stopping replication between testserver and sync gateway")
+        replicator.stop(repl2)
         replicator.stop(repl)
 
         # 7. Gather CBL docs new revs for verification
@@ -261,7 +265,7 @@ def test_upgrade(params_from_base_test_setup):
                 added_docs[doc_id]["numOfUpdates"] = updated_doc_revs[doc_id]
 
         # 8. Compare rev id, doc body and revision history of all docs on both CBL and SGW
-        verify_sg_docs_revision_history(sg_admin_url, db, cbl_db2, num_docs, sg_db=sg_db, added_docs=added_docs, sg_added_docs=sg_added_docs, terminator=terminator_doc_id)
+        verify_sg_docs_revision_history(sg_admin_url, db, cbl_db2, num_docs + 3, sg_db=sg_db, added_docs=added_docs, terminator=terminator_doc_id)
 
         # 9. If xattrs enabled, validate CBS contains _sync records for each doc
         if upgraded_xattrs_enabled:
@@ -277,10 +281,10 @@ def test_upgrade(params_from_base_test_setup):
                     raise Exception("_sync section found in docs after upgrade")
 
 
-def verify_sg_docs_revision_history(url, db, cbl_db2, num_docs, sg_db, added_docs, sg_added_docs, terminator):
+def verify_sg_docs_revision_history(url, db, cbl_db2, num_docs, sg_db, added_docs, terminator):
     sg_client = MobileRestClient()
     sg_docs = sg_client.get_all_docs(url=url, db=sg_db, include_docs=True)["rows"]
-    cbl_doc_ids2 = db.getDocIds(cbl_db2)
+    cbl_doc_ids2 = db.getDocIds(cbl_db2, limit=num_docs)
     cbl_docs2 = db.getDocuments(cbl_db2, cbl_doc_ids2)
     num_sg_docs_in_cbldb2 = 0
     expected_doc_map = {}
@@ -289,7 +293,6 @@ def verify_sg_docs_revision_history(url, db, cbl_db2, num_docs, sg_db, added_doc
             expected_doc_map[doc] = added_docs[doc]["numOfUpdates"] - 1
         else:
             expected_doc_map[doc] = 1
-
     for doc in cbl_docs2:
         if "sgw_docs" in doc:
             num_sg_docs_in_cbldb2 += 1
