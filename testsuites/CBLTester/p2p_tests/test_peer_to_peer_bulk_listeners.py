@@ -1,6 +1,5 @@
 import pytest
 
-from keywords.utils import log_info
 from keywords import attachment
 from CBLClient.Replication import Replication
 from CBLClient.PeerToPeer import PeerToPeer
@@ -14,7 +13,7 @@ from CBLClient.PeerToPeer import PeerToPeer
     (False, "push_pull", "URLEndPoint", False),
 ])
 def test_peer_to_peer_many_listeners_replicators(params_from_base_test_setup, server_setup, continuous, replicator_type,
-                                                endPointType, with_certs):
+                                                 endPointType, with_certs):
     """
         @summary:
         1. Start the 100 listeners
@@ -62,16 +61,16 @@ def test_peer_to_peer_many_listeners_replicators(params_from_base_test_setup, se
     # Now set up client
     for i in range(100):
         repl = peerToPeer_client.configure(host=server_host, server_db_name=db_name_server,
-                                       client_database=cbl_db_client, continuous=continuous,
-                                       replication_type=replicator_type, endPointType=endPointType,
-                                       port=port_array[i], tls_disable=with_certs, server_verification_mode=with_certs)
+                                           client_database=cbl_db_client, continuous=continuous,
+                                           replication_type=replicator_type, endPointType=endPointType,
+                                           port=port_array[i], tls_disable=with_certs, server_verification_mode=with_certs)
 
         peerToPeer_client.client_start(repl)
         replicator.wait_until_replicator_idle(repl)
         total = replicator.getTotal(repl)
         completed = replicator.getCompleted(repl)
         assert total == completed, "replication from client to server did not completed " + str(
-        total) + " not equal to " + str(completed)
+            total) + " not equal to " + str(completed)
         server_docs_count = db_obj_server.getCount(cbl_db_server)
         assert server_docs_count == num_of_docs, "Number of docs is not equivalent to number of docs in server "
         replicator.stop(repl)

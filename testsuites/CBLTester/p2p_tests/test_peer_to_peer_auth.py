@@ -1,7 +1,6 @@
 
 import pytest
 
-from keywords.utils import log_info
 from keywords import attachment
 from CBLClient.Replication import Replication
 from CBLClient.PeerToPeer import PeerToPeer

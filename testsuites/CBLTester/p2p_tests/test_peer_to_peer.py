@@ -516,9 +516,9 @@ def test_peer_to_peer_delete_docs(params_from_base_test_setup, server_setup, num
 @pytest.mark.listener
 @pytest.mark.parametrize("num_of_docs, continuous, replicator_type, endPointType", [
     pytest.param(10, True, "push_pull", "MessageEndPoint", marks=pytest.mark.sanity),
-    #(10, False, "push_pull", "URLEndPoint"),
+    (10, False, "push_pull", "URLEndPoint"),
     (100, True, "push", "MessageEndPoint"),
-    # (100, True, "push", "URLEndPoint"),
+    (100, True, "push", "URLEndPoint"),
 ])
 def test_peer_to_peer_with_server_down(params_from_base_test_setup, server_setup, num_of_docs, continuous, replicator_type, endPointType):
     """
@@ -534,15 +534,13 @@ def test_peer_to_peer_with_server_down(params_from_base_test_setup, server_setup
     host_list = params_from_base_test_setup["host_list"]
     db_obj_list = params_from_base_test_setup["db_obj_list"]
     db_name_list = params_from_base_test_setup["db_name_list"]
-    base_url_list = server_setup["base_url_list"]
     cbl_db_server = server_setup["cbl_db_server"]
+    base_url_list = server_setup["base_url_list"]
     cbl_db_list = server_setup["cbl_db_list"]
     peer_to_peer_server = PeerToPeer(base_url_list[0])
-    message_url_tcp_listener = server_setup["message_url_tcp_listener"]
     channel = ["peerToPeer"]
 
     base_url_client = base_url_list[1]
-    base_url_server = base_url_list[0]
     replicator = Replication(base_url_client)
 
     peerToPeer_client = PeerToPeer(base_url_client)
@@ -590,7 +588,7 @@ def test_peer_to_peer_with_server_down(params_from_base_test_setup, server_setup
             endPointType,
             url_listener_port
         )
-        # repl = wait_until_replicator_completes.result()
+        repl = wait_until_replicator_completes.result()
         listener = restart_server.result()
     time.sleep(3)
     replicator.wait_until_replicator_idle(repl)
@@ -815,7 +813,6 @@ def test_peer_to_peer_replication_with_databaseEncryption(params_from_base_test_
     host_list = params_from_base_test_setup["host_list"]
     db_obj_list = params_from_base_test_setup["db_obj_list"]
     base_url_list = server_setup["base_url_list"]
-    cbl_db_server = server_setup["cbl_db_server"]
     channel = ["peerToPeer"]
     password = "encryption"
 
@@ -1126,7 +1123,6 @@ def restart_passive_peer(peer_to_peer_server, listener, cbl_db_server, listener_
         # This is require to get the port freed up
         time.sleep(800)
         listener = peer_to_peer_server.server_start(cbl_db_server, port)
-        url_listener_port = peer_to_peer_server.get_url_listener_port(listener)
     else:
         listener = peer_to_peer_server.message_listener_start(cbl_db_server)
     return listener
