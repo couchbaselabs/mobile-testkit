@@ -11,6 +11,7 @@ from libraries.testkit.debug import log_response
 from keywords import cbgtconfig
 from utilities.cluster_config_utils import sg_ssl_enabled
 from requests.exceptions import HTTPError
+from keywords.utils import log_info
 
 import logging
 log = logging.getLogger(settings.LOGGER)
@@ -206,13 +207,24 @@ class Admin:
         return resp.json()
 
     # GET /_replicationStatus for sg replicate2
-    def get_sgreplicate2_active_tasks(self, db):
-        r = requests.get("{}/{}/_replicationStatus".format(self.admin_url, db), verify=False)
-        log_request(r)
-        log_response(r)
-        r.raise_for_status()
-        resp_data = r.json()
-        return resp_data
+    def get_sgreplicate2_active_tasks(self, db, expected_tasks=1):
+        count = 0
+        max_count = 5
+        while True:
+            r = requests.get("{}/{}/_replicationStatus".format(self.admin_url, db), verify=False)
+            log_request(r)
+            log_response(r)
+            r.raise_for_status()
+            resp_data = r.json()
+            active_resp_data = []
+            for repl in resp_data:
+                if "starting" in repl['status'] or "started" in repl['status'] or "running" in repl['status']:
+                    active_resp_data.append(repl)
+            if len(active_resp_data) >= expected_tasks or count >= max_count:
+                break
+            count += 1
+            time.sleep(1)
+        return active_resp_data
 
     def wait_until_sgw_replication_done(self, db, repl_id, read_flag=False, write_flag=False, max_times=25):
 
@@ -253,43 +265,46 @@ class Admin:
                         read_timeout = True
 
                 if write_flag:
-                    print("it is insidde write flag")
                     if write_retry_count < retry_max_count:
                         try:
                             docs_write_count = resp_obj["docs_written"]
-                            print("doc written count is ", docs_write_count)
                             if docs_write_count > prev_write_count:
                                 prev_write_count = docs_write_count
                                 write_retry_count = 0
-                                print("ddocs write count got incremented")
                             else:
                                 write_retry_count += 1
-                                print("docss write count ddid not increment")
                         except KeyError:
                             write_retry_count += 1
                     else:
                         write_timeout = True
+            else:
+                log_info("looks like replication iss stopped")
+                break
             count += 1
             time.sleep(1)
-            print("replication still happening andd counting ", count)
             if read_timeout and write_timeout:
                 break
         if count == max_times:
             raise Exception("timeout while waiting for replication to complete on sgw replication")
 
     def get_replications_count(self, db, expected_count=1):
-        r = requests.get("{}/{}/_replication".format(self.admin_url, db), verify=False)
-        log_request(r)
-        log_response(r)
-        r.raise_for_status()
-        resp_data = r.json()
-        count = 0
-        while count < expected_count:
+        local_count = 0
+        max_count = 5
+        while True:
+            r = requests.get("{}/{}/_replication".format(self.admin_url, db), verify=False)
+            log_request(r)
+            log_response(r)
+            r.raise_for_status()
+            resp_data = r.json()
+            count = 0
             for repl in resp_data:
                 repl_body = resp_data[repl]
                 if "(local)" in repl_body['assigned_node']:
                     count += 1
             if count >= expected_count:
                 break
+            if local_count >= max_count:
+                break
             time.sleep(1)
+            local_count += 1
         return count

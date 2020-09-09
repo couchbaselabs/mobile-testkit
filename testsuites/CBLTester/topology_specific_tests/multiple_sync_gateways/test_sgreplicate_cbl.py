@@ -1,6 +1,5 @@
 import pytest
 import time
-import json
 import os
 
 from keywords.MobileRestClient import MobileRestClient
@@ -134,8 +133,8 @@ def test_sg_replicate_push_pull_replication(params_from_base_test_setup, setup_c
     # 1.Have 2 sgw nodes , have cbl on each SGW
     sgw_cluster1_conf_name = 'listener_tests/sg_replicate_sgw_cluster1'
     sgw_cluster2_conf_name = 'listener_tests/sg_replicate_sgw_cluster2'
-    num_of_expected_read_docs = 0
-    num_of_expected_written_docs = 0
+    write_flag = False
+    read_flag = False
     sg_client = MobileRestClient()
 
     db, num_of_docs, sg_db1, sg_db2, name1, name2, password, channels1, _, replicator, replicator_authenticator1, replicator_authenticator2, sg1_blip_url, sg2_blip_url, sg1, sg2, repl1, _, cbl_db1, cbl_db2 = setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_teardown_test,
@@ -163,9 +162,9 @@ def test_sg_replicate_push_pull_replication(params_from_base_test_setup, setup_c
     replicator.wait_until_replicator_idle(repl2)
 
     if "push" in direction:
-        num_of_expected_written_docs = num_of_docs
+        write_flag = True
     if "pull" in direction:
-        num_of_expected_read_docs = num_of_docs
+        read_flag = True
 
     repl_id_1 = sg1.start_replication2(
         local_db=sg_db1,
@@ -176,16 +175,18 @@ def test_sg_replicate_push_pull_replication(params_from_base_test_setup, setup_c
         direction=direction,
         continuous=continuous
     )
-    active_tasks = sg1.admin.get_sgreplicate2_active_tasks(sg_db1)
-    sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id_1, read_flag=True, write_flag=True)
-    assert len(active_tasks) == 1
+    expected_tasks = 1
+    active_tasks = sg1.admin.get_sgreplicate2_active_tasks(sg_db1, expected_tasks=expected_tasks)
+    sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id_1, read_flag=read_flag, write_flag=write_flag)
+    assert len(active_tasks) == expected_tasks, "number of active tasks is not 1"
     if continuous:
         active_task = active_tasks[0]
         created_replication_id = active_task["replication_id"]
         sg1.stop_replication2_by_id(created_replication_id, sg_db1)
 
-    active_tasks = sg1.admin.get_sgreplicate2_active_tasks(sg_db1)
-    assert len(active_tasks) == 0, "replication with continous or one shot is not stopped"
+    expected_tasks = 0
+    active_tasks = sg1.admin.get_sgreplicate2_active_tasks(sg_db1, expected_tasks=expected_tasks)
+    assert len(active_tasks) == expected_tasks, "replication with continous or one shot is not stopped"
     replicator.wait_until_replicator_idle(repl1)
     replicator.wait_until_replicator_idle(repl2)
     # 6. Verify docs created in cbl2
@@ -213,7 +214,7 @@ def test_sg_replicate_push_pull_replication(params_from_base_test_setup, setup_c
     if attachments:
         if "push" in direction:
             assert expvars['syncgateway']['per_db'][sg_db1]['cbl_replication_push']['attachment_push_bytes'] > sgr2_replication_push_bytes, "push replication bytest is not incrementedd"
-            assert expvars['syncgateway']['per_db'][sg_db1]['cbl_replication_push']['attachment_push_count'] == num_of_docs *  2, "push replication count is  not  equal to number of docs pushed"
+            assert expvars['syncgateway']['per_db'][sg_db1]['cbl_replication_push']['attachment_push_count'] == num_of_docs * 2, "push replication count is  not  equal to number of docs pushed"
         if "pull" in direction:
             assert expvars['syncgateway']['per_db'][sg_db1]['cbl_replication_pull']['attachment_pull_bytes'] > sgr2_replication_pull_bytes, "pull replication bytest is not incremented"
             assert expvars['syncgateway']['per_db'][sg_db1]['cbl_replication_pull']['attachment_pull_count'] == num_of_docs, "pull replication count is  not  equal to number of docs pulled"
@@ -239,7 +240,7 @@ def test_sg_replicate_replication_with_deltasync(params_from_base_test_setup, se
     sgw_cluster1_conf_name = 'listener_tests/sg_replicate_sgw_cluster1'
     sgw_cluster2_conf_name = 'listener_tests/sg_replicate_sgw_cluster2'
     # num_of_expected_read_docs = 0
-    num_of_expected_written_docs = 0
+    # num_of_expected_written_docs = 0
     replication1 = "SGW1_docs"
     continuous = True
     delta_sync = True
@@ -498,7 +499,7 @@ def test_sg_replicate_upsert_replication(params_from_base_test_setup, setup_cust
     sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id, write_flag=True)
     replicator.wait_until_replicator_idle(repl1)
     replicator.wait_until_replicator_idle(repl2)
-    
+
     # 8. Verify docs replicated to CBL1 which created on CBL2
     #    and Verify docs replicated  to  CBL2 which created on CBL1
     cbl_doc_ids1 = db.getDocIds(cbl_db1)
@@ -691,7 +692,7 @@ def test_sg_replicate_2active_1passive(params_from_base_test_setup, setup_custom
         source_db=cbl_db3, replicator_authenticator=replicator_authenticator3, target_url=sg3_blip_url,
         replication_type="push_pull", continuous=True)
 
-    # 4. start replication on sg1 push_pull from sg1<->sg3 
+    # 4. start replication on sg1 push_pull from sg1<->sg3
     sgw_replid_1 = sg1.start_replication2(
         local_db=sg_db1,
         remote_url=sg3.url,
@@ -991,7 +992,7 @@ def test_sg_replicate_with_sg_restart(params_from_base_test_setup, setup_customi
     Replication1 = "Replication1_test2"
     Replication2 = "Replication2_test2"
     sg_conf = sync_gateway_config_path_for_mode(sgw_cluster2_conf_name, sg_mode)
-    num_of_expected_written_docs = 20
+    # num_of_expected_written_docs = 20
     """if reconnect_interval:
         sg_conf_name = 'listener_tests/multiple_sync_gateways' # TODO: updaate with sgw config with reconnect interval
     else:
@@ -1114,8 +1115,9 @@ def test_sg_replicate_multiple_replications_with_filters(params_from_base_test_s
             channels=channel
         )
         repl_id.append(replid)
-    active_tasks = sg1.admin.get_sgreplicate2_active_tasks(sg_db1)
-    assert len(active_tasks) == 4
+    expected_tasks = 4
+    active_tasks = sg1.admin.get_sgreplicate2_active_tasks(sg_db1, expected_tasks=expected_tasks)
+    assert len(active_tasks) == expected_tasks, "number of expected tasks is not 4"
 
     # wait replication to completed in SGW
     i = 0
@@ -1183,9 +1185,9 @@ def test_sg_replicate_remove_channel(params_from_base_test_setup, setup_customiz
     authenticator = Authenticator(base_url)
 
     # Set up 2 sgw nodes and have two cbl dbs
-    db, num_of_docs, sg_db1, sg_db2, _, _, password, channels1, channels2, replicator, replicator_authenticator1, replicator_authenticator2, sg1_blip_url, sg2_blip_url, sg1, sg2, repl1, _, cbl_db1, cbl_db2 = setup_syncGateways_with_cbl(params_from_base_test_setup,
-                                                                                                                                                                                                                                                    setup_customized_teardown_test, cbl_replication_type="push_pull",
-                                                                                                                                                                                                                                                    sgw_cluster1_sg_config_name=sgw_cluster1_conf_name, sgw_cluster2_sg_config_name=sgw_cluster2_conf_name)
+    db, num_of_docs, sg_db1, sg_db2, _, _, password, channels1, channels2, replicator, _, replicator_authenticator2, sg1_blip_url, sg2_blip_url, sg1, sg2, repl1, _, cbl_db1, cbl_db2 = setup_syncGateways_with_cbl(params_from_base_test_setup,
+                                                                                                                                                                                                                    setup_customized_teardown_test, cbl_replication_type="push_pull",
+                                                                                                                                                                                                                    sgw_cluster1_sg_config_name=sgw_cluster1_conf_name, sgw_cluster2_sg_config_name=sgw_cluster2_conf_name)
     replicator.stop(repl1)
     channels = channels1 + channels2 + channels3
     sg_client.create_user(sg1.admin.admin_url, sg_db1, name3, password=password, channels=channels)
@@ -1347,46 +1349,49 @@ def test_sg_replicate_replications_with_drop_out_one_node(params_from_base_test_
         channels=channels1,
         continuous=continuous
     )
-    active_tasks = sg1.admin.get_sgreplicate2_active_tasks(sg_db1)
-    assert len(active_tasks) == 2, "did not show right number of tasks "
+    expected_tasks = 2
+    active_tasks = sg1.admin.get_sgreplicate2_active_tasks(sg_db1, expected_tasks=expected_tasks)
+    assert len(active_tasks) == expected_tasks, "did not show right number of tasks "
 
     # 3. verify only one replication runs only one node.
     if sg_ce:
-        repl_count = sg1.admin.get_replications_count(sg_db1)
-        assert repl_count == 2, "replications count did not get the right number on sg1"
-        repl_count = sg3.admin.get_replications_count(sg_db1)
-        assert repl_count == 2, "replications count did not get the right number on sg3"
+        expected_count = 2
+        repl_count = sg1.admin.get_replications_count(sg_db1, expected_count=expected_count)
+        assert repl_count == expected_count, "replications count did not get the right number on sg1"
+        repl_count = sg3.admin.get_replications_count(sg_db1, expected_count=expected_count)
+        assert repl_count == expected_count, "replications count did not get the right number on sg3"
     else:
-        repl_count = sg1.admin.get_replications_count(sg_db1)
-        assert repl_count == 1, "replications count did not get the right number on sg1"
-        repl_count = sg3.admin.get_replications_count(sg_db1)
-        assert repl_count == 1, "replications count did not get the right number on sg3"
+        expected_count = 2
+        repl_count = sg1.admin.get_replications_count(sg_db1, expected_count=expected_count)
+        assert repl_count == expected_count, "replications count did not get the right number on sg1"
+        repl_count = sg3.admin.get_replications_count(sg_db1, expected_count=expected_count)
+        assert repl_count == expected_count, "replications count did not get the right number on sg3"
 
     # 4. Drop one active sgw node
-    sg1.stop()
+    sg3.stop()
 
     # 5. Verify both the replications runs on one sgw node of active cluster
     expected_count = 2
     # active_tasks = sg3.admin.get_replications_count(sg_db1, expected_count=expected_count)
     # assert len(active_tasks) == expected_count, "replications of sg1 did not move to sg3"
-    local_repl_count = sg3.admin.get_replications_count(sg_db1, expected_count)
+    local_repl_count = sg1.admin.get_replications_count(sg_db1, expected_count)
     assert local_repl_count == expected_count, "replications count did not get the right number on sg3"
 
     # 6. Verify replication completes all docs replicated to destination node
-    db.create_bulk_docs(num_of_docs, Replication3, db=cbl_db3, channels=channels1)
+    db.create_bulk_docs(num_of_docs, Replication3, db=cbl_db1, channels=channels1)
 
     # sg1.admin.get_sgreplicate2_active_tasks(sg_db1, sgw_repl1, num_of_expected_written_docs = num_of_docs * 3)
-    replicator.wait_until_replicator_idle(repl3)
+    replicator.wait_until_replicator_idle(repl1)
     sg1.admin.wait_until_sgw_replication_done(sg_db1, sgw_repl1, write_flag=True)
     sg1.admin.wait_until_sgw_replication_done(sg_db1, sgw_repl2, read_flag=True)
     cbl_doc_ids2 = db.getDocIds(cbl_db2)
-    cbl_doc_ids3 = db.getDocIds(cbl_db3)
+    cbl_doc_ids1 = db.getDocIds(cbl_db1)
     count = sum(Replication1 in s for s in cbl_doc_ids2)
-    assert count == num_of_docs, "all docs do not replicate from cbl_db1 to cbl_db3"
-    count2 = sum(Replication2 in s for s in cbl_doc_ids3)
-    assert count2 == num_of_docs, "all docs do not replicate from cbl_db2 to cbl_db3"
+    assert count == num_of_docs, "all docs do not replicate from cbl_db1 to cbl_db2"
+    count2 = sum(Replication2 in s for s in cbl_doc_ids1)
+    assert count2 == num_of_docs, "all docs do not replicate from cbl_db2 to cbl_db1"
     count3 = sum(Replication3 in s for s in cbl_doc_ids2)
-    assert count3 == num_of_docs, "all docs do not replicate from cbl_db1 to cbl_db3"
+    assert count3 == num_of_docs, "all docs do not replicate from cbl_db1 to cbl_db2"
 
     replicator.stop(repl1)
     replicator.stop(repl2)
@@ -1491,14 +1496,16 @@ def test_sg_replicate_sgwconfig_replications_with_opt_out(params_from_base_test_
         source_db=cbl_db2, replicator_authenticator=replicator_authenticator2, target_url=sg2_blip_url)
     repl3 = replicator.configure_and_replicate(
         source_db=cbl_db3, replicator_authenticator=replicator_authenticator4, target_url=sg4_blip_url)
-    active_tasks = sg1.admin.get_sgreplicate2_active_tasks(sg_db1)
-    assert len(active_tasks) == 3, "did not show right number of tasks "
-    # 3. Verify 3 replications are distributed to first 2 nodes
+    expected_tasks = 3
+    active_tasks = sg1.admin.get_sgreplicate2_active_tasks(sg_db1, expected_tasks=expected_tasks)
+    assert len(active_tasks) == expected_tasks, "did not show right number of tasks "
+    # 3. Verify 3 replications are distributed to first 2 node
     repl_count1 = sg1.admin.get_replications_count(sg_db1)
-    repl_count2 = sg3.admin.get_replications_count(sg_db1)
+    expected_count = 0
+    repl_count2 = sg3.admin.get_replications_count(sg_db1, expected_count=expected_count)
     repl_count3 = sg4.admin.get_replications_count(sg_db1)
     assert repl_count1 == 1 or repl_count1 == 2, "replications count did not get the right number on sg1"
-    assert repl_count2 == 0, "replications count did not get the right number on sg3"
+    assert repl_count2 == expected_count, "replications count did not get the right number on sg3"
     assert repl_count3 == 1 or repl_count3 == 2, "replications count did not get the right number on sg4"
 
     # Verify all replications are completed
@@ -1612,13 +1619,20 @@ def test_sg_replicate_distributions_replications(params_from_base_test_setup, se
         source_db=cbl_db2, replicator_authenticator=replicator_authenticator2, target_url=sg2_blip_url)
     replicator.wait_until_replicator_idle(repl1)
 
-    active_tasks = sg1.admin.get_sgreplicate2_active_tasks(sg_db1)
-    assert len(active_tasks) == number_of_replications, "did not show right number of tasks "
+    active_tasks = sg1.admin.get_sgreplicate2_active_tasks(sg_db1, expected_tasks=number_of_replications)
+    if continuous:
+        assert len(active_tasks) == number_of_replications, "did not show right number of tasks "
+    else:
+        assert len(active_tasks) == 0, "did not show right number of tasks "
 
     # 3. verify only one replication runs only one node.
-    repl_count1 = sg1.admin.get_replications_count(sg_db1)
-    repl_count2 = sg3.admin.get_replications_count(sg_db1)
-    repl_count3 = sg4.admin.get_replications_count(sg_db1)
+    if number_of_replications == 4 or number_of_replications == 6:
+        expected_count = 2
+    else:
+        expected_count = 1
+    repl_count1 = sg1.admin.get_replications_count(sg_db1, expected_count=expected_count)
+    repl_count2 = sg3.admin.get_replications_count(sg_db1, expected_count=expected_count)
+    repl_count3 = sg4.admin.get_replications_count(sg_db1, expected_count=expected_count)
     if number_of_replications == 1:
         assert repl_count1 == 0 or repl_count1 == 1, "replications count did not get the right number on sg1 with number of replications 1"
         assert repl_count2 == 0 or repl_count3 == 1, "replications count did not get the right number on sg3 with number of replications 1"
@@ -1727,20 +1741,22 @@ def test_sg_replicate_update_sgw_nodes_in_cluster(params_from_base_test_setup, s
     # 5. Add 3rd node back - Thread2
     #    Verify 1 replications run on each node
     with ThreadPoolExecutor(max_workers=4) as tpe:
-        update_from_cbl_task = tpe.submit(
+        tpe.submit(
             update_docs_until_sgwnode_update, db, cbl_db1
         )
         sg3.stop()
-        sg_active_tasks = sg1.admin.get_sgreplicate2_active_tasks(sg_db1)
-        assert len(sg_active_tasks) == 3, "stopping one of the sg node stopped some of the active tasks"
-        sg1_repl_count = sg1.admin.get_replications_count(sg_db1)
-        sg4_repl_count = sg4.admin.get_replications_count(sg_db1)
+        expected_tasks = 3
+        sg_active_tasks = sg1.admin.get_sgreplicate2_active_tasks(sg_db1, expected_tasks=expected_tasks)
+        assert len(sg_active_tasks) == expected_tasks, "stopping one of the sg node stopped some of the active tasks"
+        expected_count = 2
+        sg1_repl_count = sg1.admin.get_replications_count(sg_db1, expected_count=expected_count)
+        sg4_repl_count = sg4.admin.get_replications_count(sg_db1, expected_count=expected_count)
         assert sg1_repl_count == 1 or sg1_repl_count == 2, "replications count on first node should have 1 or 2"
         assert sg4_repl_count == 1 or sg4_repl_count == 2, "replications count on sg node4 should have 1 or 2"
 
         sg3.start(sg_config)
-        sg_active_tasks = sg1.admin.get_sgreplicate2_active_tasks(sg_db1)
-        assert len(sg_active_tasks) == 3, "Adding one of the sg node changed number of active replications"
+        sg_active_tasks = sg1.admin.get_sgreplicate2_active_tasks(sg_db1, expected_tasks=expected_tasks)
+        assert len(sg_active_tasks) == expected_tasks, "Adding one of the sg node changed number of active replications"
         sg1_repl_count = sg1.admin.get_replications_count(sg_db1)
         sg3_repl_count = sg4.admin.get_replications_count(sg_db1)
         sg4_repl_count = sg4.admin.get_replications_count(sg_db1)
@@ -1748,17 +1764,22 @@ def test_sg_replicate_update_sgw_nodes_in_cluster(params_from_base_test_setup, s
         assert sg3_repl_count == 1, "Adding 1 node to sgw cluster did not effected replications on sg3"
         assert sg4_repl_count == 1, "Adding 1 node to sgw cluster did not effected replications on sg4"
 
-        db.create_bulk_docs(num_of_docs, "threadStop", db=cbl_db1, channels=channels1)
-        num_iters = update_from_cbl_task.result()
+        db.create_bulk_docs(1, "threadStop", db=cbl_db1, channels=channels1)
+        # num_iters = update_from_cbl_task.result()
         # drop_add_sgw_node_task.result()
 
-    # 6. Verify all replications completed on passive node(sg4)
-    cbl_doc_ids = db.getDocIds(cbl_db3)
+    # 6. Verify all replications completed on passive node(sg2)
+    cbl_doc_ids = db.getDocIds(cbl_db2)
     count1 = sum('Replication1_' in s for s in cbl_doc_ids)
+    replication1_cbl_doc_ids = [s for s in cbl_doc_ids if 'Replication1_' in s]
     assert count1 == num_of_docs, "all docs created in cbl db1 did not replicate to cbl db3"
-    cbl_docs = db.getDocuments(cbl_db3, cbl_doc_ids)
-    for doc in cbl_docs:
-        assert cbl_docs[doc]["updates-cbl"] == num_iters + 1, "docs did not update successfully"
+    cbl_docs2 = db.getDocuments(cbl_db2, replication1_cbl_doc_ids)
+    cbl_docs3 = db.getDocuments(cbl_db3, replication1_cbl_doc_ids)
+    for doc2 in cbl_docs2:
+        print("doc of cbl_docs2 is at the emdt ", cbl_docs2[doc2])
+        print("doc of cbl_docs3 is at the emdt ", cbl_docs3[doc2])
+        # doc3 = d for d in cbl_doc3 if doc2['id'] == d['id']
+        assert cbl_docs2[doc2]["updates-cbl"] == cbl_docs3[doc2]["updates-cbl"], "docs did not update successfully"
     replicator.wait_until_replicator_idle(repl1)
     replicator.wait_until_replicator_idle(repl2)
     replicator.wait_until_replicator_idle(repl4)
@@ -1916,15 +1937,15 @@ def test_sg_replicate_adhoc_replication(params_from_base_test_setup, setup_custo
     # 1.Have 2 sgw nodes , have cbl on each SGW
     sgw_cluster1_conf_name = 'listener_tests/sg_replicate_sgw_cluster1'
     sgw_cluster2_conf_name = 'listener_tests/sg_replicate_sgw_cluster2'
-    sg_mode = params_from_base_test_setup["mode"]
-    cluster_config = params_from_base_test_setup["cluster_config"]
-    sgw_cluster1_sg_config = sync_gateway_config_path_for_mode(sgw_cluster1_conf_name, sg_mode)
-    num_of_expected_read_docs = 0
-    num_of_expected_written_docs = 0
+    # sg_mode = params_from_base_test_setup["mode"]
+    # cluster_config = params_from_base_test_setup["cluster_config"]
+    # sgw_cluster1_sg_config = sync_gateway_config_path_for_mode(sgw_cluster1_conf_name, sg_mode)
+    # num_of_expected_read_docs = 0
+    # num_of_expected_written_docs = 0
     direction = "pushAndPull"
-    continuous = True
+    # continuous = True
     replication1_docs = "Replication1_docs"
-    replication2_docs = "Replication2_docs"
+    # replication2_docs = "Replication2_docs"
 
     db, num_of_docs, sg_db1, sg_db2, name1, name2, password, channels1, _, replicator, replicator_authenticator1, replicator_authenticator2, sg1_blip_url, sg2_blip_url, sg1, sg2, repl1, _, cbl_db1, cbl_db2 = setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_teardown_test,
                                                                                                                                                                                                                                             cbl_replication_type="push", sgw_cluster1_sg_config_name=sgw_cluster1_conf_name,
@@ -1936,7 +1957,7 @@ def test_sg_replicate_adhoc_replication(params_from_base_test_setup, setup_custo
         source_db=cbl_db2, replicator_authenticator=replicator_authenticator2, target_url=sg2_blip_url)
 
     replicator.wait_until_replicator_idle(repl1)
-    num_of_expected_written_docs = num_of_docs
+    # num_of_expected_written_docs = num_of_docs
 
     repl_id_1 = sg1.start_replication2(
         local_db=sg_db1,
@@ -1954,8 +1975,9 @@ def test_sg_replicate_adhoc_replication(params_from_base_test_setup, setup_custo
     cbl_doc_ids2 = db.getDocIds(cbl_db2)
     count1 = sum(replication1_docs in s for s in cbl_doc_ids2)
     assert count1 == num_of_docs, "all docs created in cbl db3 did not replicate to cbl db2"
-    active_tasks = sg1.admin.get_sgreplicate2_active_tasks(sg_db1)
-    assert len(active_tasks) == 0, "replications did not get removed with adhoc true config with one shot replication"
+    expected_tasks = 0
+    active_tasks = sg1.admin.get_sgreplicate2_active_tasks(sg_db1, expected_tasks=expected_tasks)
+    assert len(active_tasks) == expected_tasks, "replications did not get removed with adhoc true config with one shot replication"
 
 
 @pytest.mark.topospecific
@@ -2136,8 +2158,6 @@ def update_docs_until_sgwnode_update(db, cbl_db):
             break
         count += 1
     return num_iters
-
-
 
 
 def get_sg4(params_from_base_test_setup, c_cluster, sg_db="sg_db4"):
