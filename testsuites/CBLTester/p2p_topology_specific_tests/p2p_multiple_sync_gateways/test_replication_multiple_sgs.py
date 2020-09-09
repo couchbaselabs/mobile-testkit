@@ -8,9 +8,7 @@ from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from libraries.testkit.cluster import Cluster
 from libraries.testkit import cluster
 from libraries.testkit.admin import Admin
-from keywords.constants import CLUSTER_CONFIGS_DIR
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
-from CBLClient.Replication import Replication
 from CBLClient.PeerToPeer import PeerToPeer
 
 
@@ -116,8 +114,8 @@ def test_multiple_sgs_with_differrent_revs_limit(params_from_base_test_setup, se
     p2p_replicator = Replication(base_url2)
 
     p2p_repl_config = peer_to_peer_client.configure(port=url_listener_port, host="10.0.0.36", server_db_name=server_cbl_db_name,
-                                       client_database=cbl_db2, continuous=True,
-                                       replication_type="push", endPointType="URLEndPoint")
+                                                    client_database=cbl_db2, continuous=True,
+                                                    replication_type="push", endPointType="URLEndPoint")
 
     peer_to_peer_client.client_start(p2p_repl_config)
     p2p_replicator.wait_until_replicator_idle(p2p_repl_config)
@@ -137,8 +135,8 @@ def test_multiple_sgs_with_differrent_revs_limit(params_from_base_test_setup, se
     repl1 = replicator.configure_and_replicate(
         source_db=cbl_db1, replicator_authenticator=replicator_authenticator1, target_url=sg1_blip_url, replication_type="push")
 
-    # repl2 = replicator2.configure_and_replicate(
-    #     source_db=cbl_db2, replicator_authenticator=replicator_authenticator2, target_url=sg2_blip_url, replication_type="push")
+    repl2 = replicator2.configure_and_replicate(
+        source_db=cbl_db2, replicator_authenticator=replicator_authenticator2, target_url=sg2_blip_url, replication_type="push")
 
     total = p2p_replicator.getTotal(p2p_repl_config)
     completed = p2p_replicator.getCompleted(p2p_repl_config)
@@ -150,9 +148,9 @@ def test_multiple_sgs_with_differrent_revs_limit(params_from_base_test_setup, se
     db2.update_bulk_docs(cbl_db2, number_of_updates=35)
 
     replicator.wait_until_replicator_idle(repl1)
-    # replicator2.wait_until_replicator_idle(repl2)
+    replicator2.wait_until_replicator_idle(repl2)
     replicator.stop(repl1)
-    # replicator2.stop(repl2)
+    replicator2.stop(repl2)
 
     # 4. Get docs from sgs and verify revs_limit is maintained
     sg_docs = sg_client.get_all_docs(url=sg1_url, db=sg_db1, auth=session1)
@@ -182,8 +180,6 @@ def test_multiple_sgs_with_differrent_revs_limit(params_from_base_test_setup, se
     for doc_id in sg_doc_ids:
         revs = sg_client.get_revs_num_in_history(sg2_url, sg_db2, doc_id, auth=session2)
         assert len(revs) == revs_limit2
-
-
 
 
 def create_sync_gateways(cluster_config, sg_config_path):

@@ -330,7 +330,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
                 # if db.exists(db_name, path):
                 #     print("DB path")
                 #     print(cbl_db)
-                    #db.deleteDB(cbl_db)
+                # db.deleteDB(cbl_db)
                 log_info("Flushing server memory")
                 utils_obj = Utils(base_url)
                 utils_obj.flushMemory()
@@ -360,4 +360,3 @@ def server_setup(params_from_base_test_setup):
         "peer_to_peer_listener": peer_to_peer_listener,
     }
     peer_to_peer_listener.server_stop(message_url_tcp_listener, "MessageEndPoint")
-

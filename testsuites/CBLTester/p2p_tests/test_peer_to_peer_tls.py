@@ -1,6 +1,5 @@
 import pytest
 
-from keywords.utils import log_info
 from keywords import attachment
 from CBLClient.Replication import Replication
 from CBLClient.PeerToPeer import PeerToPeer
@@ -20,7 +19,7 @@ def test_peer_to_peer_tls_basic_certs(params_from_base_test_setup, server_setup,
         @summary:
         1. Create docs on server.
         2. Start the server with self signed certs / tls disable
-        3. Start replication from client.with valied self signed/ without self signed/ server verification mode
+        3. Start replication from client.with valid self signed/ without self signed/ server verification mode
         4. Verify replication is completed.
         5. Verify all docs got replicated on server
     """
@@ -62,7 +61,6 @@ def test_peer_to_peer_tls_basic_certs(params_from_base_test_setup, server_setup,
                                            endPointType=endPointType, port=url_listener_port,
                                            tls_disable=False, tls_auth_type="self_signed")
 
-
         peerToPeer_client.client_start(repl)
         replicator.wait_until_replicator_idle(repl)
         total = replicator.getTotal(repl)
@@ -75,10 +73,10 @@ def test_peer_to_peer_tls_basic_certs(params_from_base_test_setup, server_setup,
 
         # Start the server with the replicator verification mode.
         repl2 = peerToPeer_client.configure(host=server_host, server_db_name=db_name_server,
-                                           client_database=cbl_db_client,
-                                           continuous=continuous, replication_type=replicator_type,
-                                           endPointType=endPointType, port=url_listener_port,
-                                           tls_disable=False, tls_auth_type="self_signed", server_verification_mode=True)
+                                            client_database=cbl_db_client,
+                                            continuous=continuous, replication_type=replicator_type,
+                                            endPointType=endPointType, port=url_listener_port,
+                                            tls_disable=False, tls_auth_type="self_signed", server_verification_mode=True)
 
         peerToPeer_client.client_start(repl2)
         replicator.wait_until_replicator_idle(repl2)
@@ -101,7 +99,6 @@ def test_peer_to_peer_tls_basic_certs(params_from_base_test_setup, server_setup,
         assert False, "replicator started with self_signed"
 
 
-
 @pytest.mark.listener
 @pytest.mark.parametrize("continuous, replicator_type, endPointType", [
     (True, "push_pull", "URLEndPoint"),
@@ -112,8 +109,8 @@ def test_peer_to_peer_enable_with_certs_authenticator(params_from_base_test_setu
                                                       endPointType):
     """
         @summary:
-        1. Start the server with the  Root certs with authenticator.
-        2. Start replication with client certs using the authenticator.
+        1. Start the server with the  Root certs with authenticator .
+        2. Start replication with client certs using the authenticator and verify self signed mode.
         3. Verify replication is completed.
         4. Verify all docs got replicated on server
     """
@@ -242,7 +239,7 @@ def test_peer_to_peer_enable_tls_with_any_selfsigned_and_authenticator(params_fr
     (False, "push_pull", "URLEndPoint", False),
 ])
 def test_peer_to_peer_tls_any_self_signed_certs_create(params_from_base_test_setup, server_setup, continuous, replicator_type,
-                                                endPointType, with_certs):
+                                                       endPointType, with_certs):
     """
         @summary:
         1. Start the server with the self signed certs using the create identity api.

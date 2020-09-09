@@ -12,7 +12,7 @@ from CBLClient.ListenerAuthenticator import ListenerAuthenticator
 @pytest.mark.parametrize("num_of_docs, continuous, replicator_type, endPointType", [
     (10, True, "push_pull", "URLEndPoint"),
     (10, False, "push_pull", "URLEndPoint"),
-    (10, True, "push_pull", "URLEndPoint"),
+    (10, True, "push", "URLEndPoint"),
     (10, False, "push", "URLEndPoint")
 ])
 def test_peer_to_peer_with_basic_auth(params_from_base_test_setup, server_setup, num_of_docs, continuous, replicator_type, endPointType):
@@ -82,8 +82,7 @@ def test_peer_to_peer_with_basic_auth_incorrect_pass(params_from_base_test_setup
         1. Create docs on client.
         2. Start the server with username and password.
         3. Start replication from client.
-        4. Verify replication is completed.
-        5. Verify all docs got replicated on server
+        4. Verify replication is failed to start with unauthorized errors.
     """
     host_list = params_from_base_test_setup["host_list"]
     db_name_list = params_from_base_test_setup["db_name_list"]

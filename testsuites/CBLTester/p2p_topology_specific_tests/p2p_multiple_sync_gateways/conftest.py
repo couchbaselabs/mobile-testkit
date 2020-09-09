@@ -494,7 +494,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
             db_config = db.configure()
             db_config2 = db2.configure()
         source_db = db.create(cbl_db, db_config)
-        source_db2 = db2.create(cbl_db2, db_config)
+        source_db2 = db2.create(cbl_db2, db_config2)
         log_info("Getting the database name")
         db_name = db.getName(source_db)
         assert db_name == cbl_db
@@ -527,7 +527,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "base_url2": base_url2,
         "sg_config": sg_config,
         "db": db,
-        "db2":db2,
+        "db2": db2,
         "device_enabled": device_enabled,
         "testserver": testserver,
         "db_config": db_config,
@@ -566,7 +566,6 @@ def setup_customized_teardown_test(params_from_base_test_setup):
     cbl_db1 = db.create(cbl_db_name1, db_config)
     cbl_db2 = db2.create(cbl_db_name2, db_config2)
     cbl_db3 = db.create(cbl_db_name3, db_config)
-
 
     yield{
         "db": db,
