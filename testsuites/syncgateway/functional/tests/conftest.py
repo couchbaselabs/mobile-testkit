@@ -334,6 +334,14 @@ def params_from_base_suite_setup(request):
         log_info("Running without magma storage")
         persist_cluster_config_environment_prop(cluster_config, 'magma_storage_enabled', False, False)
 
+    try:
+        cbs_ce
+    except NameError:
+        log_info("cbs ce flag  is not provided, so by default it runs on Enterprise edition")
+    else:
+        log_info("Running test with CBS edition {}".format(cbs_ce))
+        persist_cluster_config_environment_prop(cluster_config, 'cbs_ce', cbs_ce, False)
+
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
 
     # Skip provisioning if user specifies '--skip-provisoning' or '--sequoia'

@@ -16,7 +16,7 @@ from keywords.exceptions import CBServerError, ProvisioningError, TimeoutError, 
 from keywords.utils import log_r, log_info, log_debug, log_error, hostname_for_url
 from keywords.utils import version_and_build
 from keywords import types
-from utilities.cluster_config_utils import is_x509_auth, get_cbs_version, is_magma_enabled
+from utilities.cluster_config_utils import is_x509_auth, get_cbs_version, is_magma_enabled, is_cbs_ce_enabled
 
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
@@ -246,7 +246,8 @@ class CouchbaseServer:
         # bucket_admin and cluster_admin
         server_version = get_cbs_version(cluster_config)
         cbs_version, cbs_build = version_and_build(server_version)
-        if cbs_version >= "6.6.0":
+        cbs_ce_enabled = is_cbs_ce_enabled(cluster_config)
+        if cbs_version >= "6.6.0" and not cbs_ce_enabled:
             roles = "mobile_sync_gateway[{}]".format(bucketname)
         else:
             roles = "ro_admin,bucket_full_access[{}]".format(bucketname)
