@@ -222,7 +222,7 @@ def test_sg_replicate_push_pull_replication(params_from_base_test_setup, setup_c
             assert expvars['syncgateway']['per_db'][sg_db1]['replications'][repl_id_1]['sgr_num_docs_pushed'] == num_of_docs * 2, "push replication count is  not  equal to number of docs pushed"
     if "pull" in direction:
         assert expvars['syncgateway']['per_db'][sg_db1]['replications'][repl_id_1]['sgr_num_docs_pulled'] == num_of_docs, "pull replication count is  not  equal to number of docs pulled"
-    
+
 
 @pytest.mark.topospecific
 @pytest.mark.syncgateway
