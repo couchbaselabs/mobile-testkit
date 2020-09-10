@@ -4,6 +4,7 @@
   tasks:
   - name: OS | Reset the clocks
     become: yes
+
     shell: |
       timedatectl set-ntp true
       date

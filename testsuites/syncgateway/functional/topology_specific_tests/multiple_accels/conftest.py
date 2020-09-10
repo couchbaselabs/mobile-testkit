@@ -40,6 +40,7 @@ def params_from_base_suite_setup(request):
     sa_installer_type = request.config.getoption("--sa-installer-type")
     delta_sync_enabled = request.config.getoption("--delta-sync")
     sg_platform = request.config.getoption("--sg-platform")
+    magma_storage_enabled = request.config.getoption("--magma-storage")
 
     log_info("server_version: {}".format(server_version))
     log_info("sync_gateway_version: {}".format(sync_gateway_version))
@@ -161,6 +162,13 @@ def params_from_base_suite_setup(request):
     else:
         log_info("Running test with sg platform {}".format(sg_platform))
         persist_cluster_config_environment_prop(cluster_config, 'sg_platform', sg_platform, False)
+
+    if magma_storage_enabled:
+        log_info("Running with magma storage")
+        persist_cluster_config_environment_prop(cluster_config, 'magma_storage_enabled', True, False)
+    else:
+        log_info("Running without magma storage")
+        persist_cluster_config_environment_prop(cluster_config, 'magma_storage_enabled', False, False)
 
     if sync_gateway_version < "2.0.0" and no_conflicts_enabled:
         pytest.skip("Test cannot run with no-conflicts with sg version < 2.0.0")

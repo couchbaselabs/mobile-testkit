@@ -48,6 +48,7 @@ def test_log_redaction_config(params_from_base_test_setup, remove_tmp_sg_redacti
     sg_ip = host_for_url(sg_admin_url)
     sg_db = "db"
     num_of_docs = 10
+    cbs_ce_version = params_from_base_test_setup["cbs_ce"]
 
     if get_sync_gateway_version(sg_ip)[0] < "2.1":
         pytest.skip("log redaction feature not available for version < 2.1 ")
@@ -62,7 +63,7 @@ def test_log_redaction_config(params_from_base_test_setup, remove_tmp_sg_redacti
     persist_cluster_config_environment_prop(temp_cluster_config, 'redactlevel', redaction_level,
                                             property_name_check=False)
 
-    if x509_cert_auth:
+    if x509_cert_auth and not cbs_ce_version:
         persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
 
     cluster = Cluster(config=temp_cluster_config)
@@ -72,7 +73,7 @@ def test_log_redaction_config(params_from_base_test_setup, remove_tmp_sg_redacti
     sg_client = MobileRestClient()
     channels = ["log-redaction"]
     sg_client.create_user(url=sg_admin_url, db=sg_db, name='autotest', password='validkey', channels=channels)
-    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest', password='validkey')
+    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest')
 
     # Create docs with xattrs
     sgdoc_bodies = document.create_docs(doc_id_prefix='sg_docs', number=num_of_docs,
@@ -110,6 +111,7 @@ def test_sgCollect1(params_from_base_test_setup, remove_tmp_sg_redaction_logs, s
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
     sg_url = cluster_hosts["sync_gateways"][0]["public"]
     sg_ip = host_for_url(sg_admin_url)
+
     sg_db = "db"
     num_of_docs = 10
     user_name = "autotest"
@@ -123,8 +125,9 @@ def test_sgCollect1(params_from_base_test_setup, remove_tmp_sg_redaction_logs, s
     # Modifying log redaction level to partial
     temp_cluster_config = copy_to_temp_conf(cluster_config, mode)
     persist_cluster_config_environment_prop(temp_cluster_config, 'redactlevel', "partial", property_name_check=False)
+    cbs_ce_version = params_from_base_test_setup["cbs_ce"]
 
-    if x509_cert_auth:
+    if x509_cert_auth and not cbs_ce_version:
         persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
 
     cluster = Cluster(config=temp_cluster_config)
@@ -134,7 +137,7 @@ def test_sgCollect1(params_from_base_test_setup, remove_tmp_sg_redaction_logs, s
     sg_client = MobileRestClient()
     channels = ["log-redaction"]
     sg_client.create_user(url=sg_admin_url, db=sg_db, name=user_name, password=password, channels=channels)
-    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=user_name, password=password)
+    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=user_name)
 
     # Create docs with xattrs
     sgdoc_bodies = document.create_docs(doc_id_prefix='sg_docs', number=num_of_docs,
@@ -182,6 +185,7 @@ def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_
     password = 'validkey'
     sa_directory = None
     sa_host = None
+    cbs_ce_version = params_from_base_test_setup["cbs_ce"]
     if get_sync_gateway_version(sg_ip)[0] < "2.1":
         pytest.skip("log redaction feature not available for version < 2.1 ")
 
@@ -191,7 +195,7 @@ def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_
     temp_cluster_config = copy_to_temp_conf(cluster_config, mode)
     persist_cluster_config_environment_prop(temp_cluster_config, 'redactlevel', "partial", property_name_check=False)
 
-    if x509_cert_auth:
+    if x509_cert_auth and not cbs_ce_version:
         persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
 
     cluster = Cluster(config=temp_cluster_config)
@@ -216,7 +220,7 @@ def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_
     sg_client = MobileRestClient()
     channels = ["log-redaction"]
     sg_client.create_user(url=sg_admin_url, db=sg_db, name=user_name, password=password, channels=channels)
-    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=user_name, password=password)
+    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=user_name)
 
     # 4. Create docs with xattrs
     sgdoc_bodies = document.create_docs(doc_id_prefix='sg_docs', number=num_of_docs,
@@ -260,7 +264,11 @@ def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_
     log_info("sg collect is running ........")
     # Minimum of 5 minute sleep time is recommended
     # Refer https://github.com/couchbase/sync_gateway/issues/3669
-    while sg_client.get_sgCollect_status(sg_host) == "running" and count < 60:
+    if sg_platform == "windows":
+        max_count = 120
+    else:
+        max_count = 60
+    while sg_client.get_sgCollect_status(sg_host) == "running" and count < max_count:
         time.sleep(5)
         count += 1
     time.sleep(5)  # sleep until zip files created with sg collect rest end point
@@ -296,6 +304,7 @@ def test_sgCollectRestApi_errorMessages(params_from_base_test_setup, remove_tmp_
     sg_ip = host_for_url(sg_admin_url)
     sg_db = "db"
     num_of_docs = 10
+    cbs_ce_version = params_from_base_test_setup["cbs_ce"]
     if get_sync_gateway_version(sg_ip)[0] < "2.1":
         pytest.skip("log redaction feature not available for version < 2.1 ")
 
@@ -305,7 +314,7 @@ def test_sgCollectRestApi_errorMessages(params_from_base_test_setup, remove_tmp_
     temp_cluster_config = copy_to_temp_conf(cluster_config, mode)
     persist_cluster_config_environment_prop(temp_cluster_config, 'redactlevel', "partial", property_name_check=False)
 
-    if x509_cert_auth:
+    if x509_cert_auth and not cbs_ce_version:
         persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
 
     cluster = Cluster(config=temp_cluster_config)
@@ -321,7 +330,7 @@ def test_sgCollectRestApi_errorMessages(params_from_base_test_setup, remove_tmp_
     sg_client = MobileRestClient()
     channels = ["log-redaction"]
     sg_client.create_user(url=sg_admin_url, db=sg_db, name='autotest', password='validkey', channels=channels)
-    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest', password='validkey')
+    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest')
 
     # 4. Create docs with xattrs
     sgdoc_bodies = document.create_docs(doc_id_prefix='sg_docs', number=num_of_docs,
@@ -333,27 +342,32 @@ def test_sgCollectRestApi_errorMessages(params_from_base_test_setup, remove_tmp_
     upload_host = "https://s3.amazonaws.com/cb-customers"
     resp = sg_client.sgCollect_restCall(sg_host, redact_level="partial", upload_host=upload_host)
     log_info("Response Content", resp.content.decode('ascii'))
-    assert "Invalid options used for sgcollect_info: upload must be set to true if upload_host is specified" in resp.content.decode('ascii')
+    assert "Invalid options used for sgcollect_info" in resp.content.decode('ascii'), "assert message for invalid options for sgcollect_info did not match"
+    assert "upload_host" in resp.content.decode('ascii'), "did not get upload_host message in error content"
     customer = "customer-name"
     ticket = "123"
 
     # should throw an error when trying with customer without upload parameter
     resp = sg_client.sgCollect_restCall(sg_host, redact_level="partial", customer=customer)
-    assert "Invalid options used for sgcollect_info: upload must be set to true if customer is specified" in resp.content.decode('ascii')
+    assert "Invalid options used for sgcollect_info:" in resp.content.decode('ascii')
+    assert "customer" in resp.content.decode('ascii')
 
     # should throw an error when trying ticket without upload
     resp = sg_client.sgCollect_restCall(sg_host, redact_level="partial", ticket=ticket)
-    assert "Invalid options used for sgcollect_info: upload must be set to true if ticket is specified" in resp.content.decode('ascii')
+    assert "Invalid options used for sgcollect_info:" in resp.content.decode('ascii')
+    assert "ticket" in resp.content.decode('ascii')
 
     # should throw an error when trying with upload_host, customer and ticket without upload
     resp = sg_client.sgCollect_restCall(sg_host, redact_level="partial", upload_host=upload_host, customer=customer, ticket=ticket)
-    assert "Invalid options used for sgcollect_info: upload must be set to true if upload_host is specified" in resp.content.decode('ascii')
+    assert "Invalid options used for sgcollect_info:" in resp.content.decode('ascii')
+    assert "upload_host" in resp.content.decode('ascii')
 
     # should throw an error when trying with output dir which does not exist
     output_dir = "/abc"
     resp = sg_client.sgCollect_restCall(sg_host, redact_level="partial", output_directory=output_dir)
 
-    assert "Invalid options used for sgcollect_info: no such file or directory:" in resp.content.decode('ascii')
+    assert "Invalid options used for sgcollect_info:" in resp.content.decode('ascii')
+    assert "no such file or directory:" in resp.content.decode('ascii')
 
 
 def verify_log_redaction(cluster_config, log_redaction_level, mode):

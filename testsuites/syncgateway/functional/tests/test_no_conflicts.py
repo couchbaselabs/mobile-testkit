@@ -55,7 +55,7 @@ def test_no_conflicts_enabled(params_from_base_test_setup, sg_conf_name, num_of_
     sg_client = MobileRestClient()
     channels = ["no-conflicts"]
     sg_client.create_user(url=sg_admin_url, db=sg_db, name='autotest', password='pass', channels=channels)
-    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest', password='pass')
+    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest')
     # end of Set up
 
     # 2. Add docs to SG.
@@ -118,7 +118,7 @@ def test_no_conflicts_with_revs_limit(params_from_base_test_setup, sg_conf_name,
     sg_client = MobileRestClient()
     channels = ["no-conflicts"]
     sg_client.create_user(url=sg_admin_url, db=sg_db, name='autotest', password='pass', channels=channels)
-    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest', password='pass')
+    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest')
     # end of Set up
 
     # 1. Enable allow_conflicts = false in SG config with revs_limit
@@ -209,7 +209,7 @@ def test_no_conflicts_update_revs_limit(params_from_base_test_setup, sg_conf_nam
     sg_client = MobileRestClient()
     channels = ["no-conflicts"]
     sg_client.create_user(url=sg_admin_url, db=sg_db, name='autotest', password='pass', channels=channels)
-    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest', password='pass')
+    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest')
     # end of Set up
 
     # 1. Enable allow_conflicts = false in SG config with revs_limit=5
@@ -297,7 +297,7 @@ def test_conflicts_sg_accel_added(params_from_base_test_setup, sg_conf_name, num
     sg_client = MobileRestClient()
     channels = ["no-conflicts"]
     sg_client.create_user(url=sg_admin_url, db=sg_db, name='autotest', password='pass', channels=channels)
-    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest', password='pass')
+    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest')
     # end of Set up
 
     # 1. Enable allow_conflicts = false in SG config with revs_limit
@@ -390,7 +390,7 @@ def test_migrate_conflicts_to_noConflicts(params_from_base_test_setup, sg_conf_n
     sg_client = MobileRestClient()
     channels = ["no-conflicts"]
     sg_client.create_user(url=sg_admin_url, db=sg_db, name='autotest', password='pass', channels=channels)
-    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest', password='pass')
+    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest')
     # end of Set up
 
     # 2. Add docs to SG.
@@ -446,9 +446,8 @@ def test_migrate_conflicts_to_noConflicts(params_from_base_test_setup, sg_conf_n
 @pytest.mark.conflicts
 @pytest.mark.noconflicts
 @pytest.mark.parametrize("sg_conf_name, num_of_docs, revs_limit", [
-    ('sync_gateway_revs_conflict_configurable', 100, 10),
-    ('sync_gateway_revs_conflict_configurable', 100, 10),
-    pytest.param('sync_gateway_revs_conflict_configurable', 1000, 100, marks=pytest.mark.oscertify),
+    pytest.param('sync_gateway_revs_conflict_configurable', 100, 10, marks=pytest.mark.oscertify),
+    ('sync_gateway_revs_conflict_configurable', 1000, 100),
     ('sync_gateway_revs_conflict_configurable', 10, 1000),
 ])
 def test_concurrent_updates_no_conflicts(params_from_base_test_setup, sg_conf_name, num_of_docs, revs_limit):
@@ -489,7 +488,7 @@ def test_concurrent_updates_no_conflicts(params_from_base_test_setup, sg_conf_na
     sg_client = MobileRestClient()
     channels = ["no-conflicts"]
     sg_client.create_user(url=sg_admin_url, db=sg_db, name='autotest', password='pass', channels=channels)
-    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest', password='pass')
+    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest')
 
     temp_cluster_config = copy_to_temp_conf(cluster_config, mode)
     persist_cluster_config_environment_prop(temp_cluster_config, 'revs_limit', revs_limit, property_name_check=False)
@@ -604,7 +603,7 @@ def test_migrate_conflicts_delete_last_rev(params_from_base_test_setup, sg_conf_
     sg_client = MobileRestClient()
     channels = ["no-conflicts"]
     sg_client.create_user(url=sg_admin_url, db=sg_db, name='autotest', password='pass', channels=channels)
-    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest', password='pass')
+    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest')
     # end of Set up
 
     # 2. Add docs to SG.
@@ -686,7 +685,7 @@ def test_revs_cache_size(params_from_base_test_setup, sg_conf_name, num_of_docs)
     sg_client = MobileRestClient()
     channels = ["no-conflicts"]
     sg_client.create_user(url=sg_admin_url, db=sg_db, name='autotest', password='pass', channels=channels)
-    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest', password='pass')
+    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest')
     # end of Set up
 
     # 2. Add docs to SG.

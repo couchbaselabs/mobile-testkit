@@ -4,8 +4,7 @@
 # 2. Installs venv/ in this directory containing a python 2.7 interpreter
 # 3. Installs all pip packages required by this repo
 # 4. Adds custom library paths to your PYTHONPATH
-
-date 
+ 
 # py37version=$(python3.7 -c 'import sys; print("{}.{}.{}".format(sys.version_info.major, sys.version_info.minor, sys.version_info.micro))')
 py3version=$(python3 -c 'import sys; print("{}.{}.{}".format(sys.version_info.major, sys.version_info.minor, sys.version_info.micro))')
 py2version=$(python -c 'import sys; print("{}.{}.{}".format(sys.version_info.major, sys.version_info.minor, sys.version_info.micro))')

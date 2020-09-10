@@ -35,6 +35,7 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name, 
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
     sg_ip = host_for_url(sg_admin_url)
+    cbs_ce_version = params_from_base_test_setup["cbs_ce"]
 
     log_info("Using cluster_conf: {}".format(cluster_conf))
     log_info("Using sg_conf: {}".format(sg_conf))
@@ -42,7 +43,7 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name, 
     if get_sync_gateway_version(sg_ip)[0] < "2.1":
         pytest.skip("Continuous logging Test NA for SG < 2.1")
 
-    if x509_cert_auth:
+    if x509_cert_auth and not cbs_ce_version:
         temp_cluster_config = copy_to_temp_conf(cluster_conf, mode)
         persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
         cluster_conf = temp_cluster_config
@@ -107,6 +108,8 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name, 
             stdout = subprocess.check_output(command, shell=True)
             assert int(stdout) == 2, "debug log files did not get rotated and incremented when logging is exceeded the size"
         else:
+            if sg_platform == "windows":
+                command = "ls C:\\\\tmp\\\\sg_logs | grep {} | wc -l".format(log)
             _, stdout, _ = remote_executor.execute(command)
             assert stdout[0].rstrip() == str(2)
 
@@ -354,6 +357,7 @@ def test_log_rotation_invalid_path(params_from_base_test_setup, sg_conf_name):
     cluster_helper = ClusterKeywords(cluster_conf)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
+    sg_platform = params_from_base_test_setup["sg_platform"]
     sg_ip = host_for_url(sg_admin_url)
 
     if get_sync_gateway_version(sg_ip)[0] < "2.1":
@@ -368,17 +372,18 @@ def test_log_rotation_invalid_path(params_from_base_test_setup, sg_conf_name):
     data = load_sync_gateway_config(sg_conf, cluster_hosts["couchbase_servers"][0], cluster_conf)
 
     # set non existing logFilePath
-    data['logging']["log_file_path"] = "/12345/1231/131231.log"
+    if sg_platform == "windows":
+        data['logging']["log_file_path"] = "C:\Program Files\test"
+    else:
+        data['logging']["log_file_path"] = "/12345/1231/131231.log"
     # create temp config file in the same folder as sg_conf
     temp_conf = "/".join(sg_conf.split('/')[:-2]) + '/temp_conf.json'
 
     with open(temp_conf, 'w') as fp:
         json.dump(data, fp, indent=4)
-
     # Stop sync_gateways
     log_info(">>> Stopping sync_gateway")
     sg_helper = SyncGateway()
-
     sg_helper.stop_sync_gateways(cluster_config=cluster_conf, url=sg_one_url)
     try:
         sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
@@ -387,7 +392,6 @@ def test_log_rotation_invalid_path(params_from_base_test_setup, sg_conf_name):
         # Remove generated conf file
         os.remove(temp_conf)
         return
-
     # Remove generated conf file
     os.remove(temp_conf)
     pytest.fail("SG shouldn't be started!!!!")
@@ -406,7 +410,7 @@ def test_log_200mb(params_from_base_test_setup, sg_conf_name):
     mode = params_from_base_test_setup["mode"]
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     sg_platform = params_from_base_test_setup["sg_platform"]
-
+    sg_ce_version = params_from_base_test_setup["sg_ce"]
     log_info("Using cluster_conf: {}".format(cluster_conf))
     log_info("Using sg_conf: {}".format(sg_conf))
 
@@ -472,10 +476,13 @@ def test_log_200mb(params_from_base_test_setup, sg_conf_name):
             _, stdout, _ = remote_executor.execute(command)
             output = stdout[0].rstrip()
         # A backup file should be created with 200MB
-        if (log == "sg_debug" or log == "sg_info") and sg_platform != "windows":
-            assert int(output) == int(SG_LOGS_FILES_NUM[log]) + 1
+        if not sg_ce_version:
+            if (log == "sg_debug" or log == "sg_info") and sg_platform != "windows":
+                assert int(output) == int(SG_LOGS_FILES_NUM[log]) + 1
+            else:
+                assert output == SG_LOGS_FILES_NUM[log]
         else:
-            assert output == SG_LOGS_FILES_NUM[log]
+            assert output == SG_LOGS_FILES_NUM[log] + 2
 
     # Remove generated conf file
     os.remove(temp_conf)
