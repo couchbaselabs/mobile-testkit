@@ -40,6 +40,7 @@ def parse_junit_result_xml(filepath=""):
 
     if failed_tests:
         failed_tests = transform_and_write_to_file(failed_tests, "failed_tests.conf")
+        print(" or ".join(failed_tests))
 
     if passed_tests:
         passed_tests = transform_and_write_to_file(passed_tests, "passed_tests.conf")
@@ -93,6 +94,8 @@ def parse_testreport_result_xml(filepath=""):
     if passed_tests:
         passed_tests = transform_and_write_to_file(passed_tests, "passed_tests.conf")
     print(" or ".join(failed_tests))
+    file = open("test_failures", "w+")
+    file.write(" or ".join(failed_tests))
     return passed_tests, failed_tests
 
 
