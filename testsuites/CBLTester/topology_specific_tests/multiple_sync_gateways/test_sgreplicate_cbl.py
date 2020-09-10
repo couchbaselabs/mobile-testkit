@@ -143,11 +143,11 @@ def test_sg_replicate_push_pull_replication(params_from_base_test_setup, setup_c
 
     # Get expvars before test starts
     expvars = sg_client.get_expvars(url=sg1.admin.admin_url)
-    if attachments:
+    """if attachments:
         if "push" in direction:
-            sgr2_replication_push_bytes = expvars['syncgateway']['per_db'][sg_db1]['cbl_replication_push']['attachment_push_bytes']
+            sgr2_replication_push_bytes = expvars['syncgateway']['per_db'][sg_db1]['replications'][repl_id_1]['sgr_num_attachment_bytes_pulled']
         if "pull" in direction:
-            sgr2_replication_pull_bytes = expvars['syncgateway']['per_db'][sg_db1]['cbl_replication_push']['attachment_push_bytes']
+            sgr2_replication_pull_bytes = expvars['syncgateway']['per_db'][sg_db1]['replications'][repl_id_1]['sgr_num_attachment_bytes_pulled']"""
     # 2. Add docs in cbl1
     if attachments:
         db.create_bulk_docs(num_of_docs, "sgw1_docs", db=cbl_db1, channels=channels1, attachments_generator=attachment.generate_png_100_100)
@@ -213,12 +213,16 @@ def test_sg_replicate_push_pull_replication(params_from_base_test_setup, setup_c
     expvars = sg_client.get_expvars(url=sg1.admin.admin_url)
     if attachments:
         if "push" in direction:
-            assert expvars['syncgateway']['per_db'][sg_db1]['cbl_replication_push']['attachment_push_bytes'] > sgr2_replication_push_bytes, "push replication bytest is not incrementedd"
-            assert expvars['syncgateway']['per_db'][sg_db1]['cbl_replication_push']['attachment_push_count'] == num_of_docs * 2, "push replication count is  not  equal to number of docs pushed"
+            assert expvars['syncgateway']['per_db'][sg_db1]['replications'][repl_id_1]['sgr_num_attachment_bytes_pushed'] > 0, "push replication bytes is not incrementedd"
+            assert expvars['syncgateway']['per_db'][sg_db1]['replications'][repl_id_1]['sgr_num_attachments_pushed'] == num_of_docs * 2, "push replication count is  not  equal to number of docs pushed"
         if "pull" in direction:
-            assert expvars['syncgateway']['per_db'][sg_db1]['cbl_replication_pull']['attachment_pull_bytes'] > sgr2_replication_pull_bytes, "pull replication bytest is not incremented"
-            assert expvars['syncgateway']['per_db'][sg_db1]['cbl_replication_pull']['attachment_pull_count'] == num_of_docs, "pull replication count is  not  equal to number of docs pulled"
-
+            assert expvars['syncgateway']['per_db'][sg_db1]['replications'][repl_id_1]['sgr_num_attachment_bytes_pulled'] > 0, "pull replication bytes is not incremented"
+            assert expvars['syncgateway']['per_db'][sg_db1]['replications'][repl_id_1]['sgr_num_attachments_pulled'] == num_of_docs, "pull replication count is  not  equal to number of docs pulled"
+    if "push" in direction:
+            assert expvars['syncgateway']['per_db'][sg_db1]['replications'][repl_id_1]['sgr_num_docs_pushed'] == num_of_docs * 2, "push replication count is  not  equal to number of docs pushed"
+    if "pull" in direction:
+        assert expvars['syncgateway']['per_db'][sg_db1]['replications'][repl_id_1]['sgr_num_docs_pulled'] == num_of_docs, "pull replication count is  not  equal to number of docs pulled"
+    
 
 @pytest.mark.topospecific
 @pytest.mark.syncgateway
