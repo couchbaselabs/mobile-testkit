@@ -94,8 +94,10 @@ def parse_testreport_result_xml(filepath=""):
     if passed_tests:
         passed_tests = transform_and_write_to_file(passed_tests, "passed_tests.conf")
     print(" or ".join(failed_tests))
-    file = open("test_failures", "w+")
-    file.write(" or ".join(failed_tests))
+    f_file = open("test_failures", "w+")
+    f_file.write(" or ".join(failed_tests))
+    p_file = open("test_passed", "w+")
+    p_file.write(" or ".join(passed_tests))
     return passed_tests, failed_tests
 
 
