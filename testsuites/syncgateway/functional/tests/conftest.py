@@ -320,6 +320,14 @@ def params_from_base_suite_setup(request):
         log_info("Running test with sg platform {}".format(sg_platform))
         persist_cluster_config_environment_prop(cluster_config, 'sg_platform', sg_platform, False)
 
+    try:
+        cbs_ce
+    except NameError:
+        log_info("cbs ce flag  is not provided, so by default it runs on Enterprise edition")
+    else:
+        log_info("Running test with CBS edition {}".format(cbs_ce))
+        persist_cluster_config_environment_prop(cluster_config, 'cbs_ce', cbs_ce, False)
+
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
 
     # Skip provisioning if user specifies '--skip-provisoning' or '--sequoia'
@@ -371,7 +379,8 @@ def params_from_base_suite_setup(request):
         "sg_platform": sg_platform,
         "ssl_enabled": cbs_ssl,
         "delta_sync_enabled": delta_sync_enabled,
-        "sg_ce": sg_ce
+        "sg_ce": sg_ce,
+        "cbs_ce": cbs_ce
     }
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
@@ -406,6 +415,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     sg_platform = params_from_base_suite_setup["sg_platform"]
     delta_sync_enabled = params_from_base_suite_setup["delta_sync_enabled"]
     sg_ce = params_from_base_suite_setup["sg_ce"]
+    cbs_ce = params_from_base_suite_setup["cbs_ce"]
 
     test_name = request.node.name
     sg_admin_url = cluster_topology["sync_gateways"][0]["admin"]
@@ -453,7 +463,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "sg_platform": sg_platform,
         "ssl_enabled": cbs_ssl,
         "delta_sync_enabled": delta_sync_enabled,
-        "sg_ce": sg_ce
+        "sg_ce": sg_ce,
+        "cbs_ce": cbs_ce
     }
 
     # Code after the yield will execute when each test finishes
