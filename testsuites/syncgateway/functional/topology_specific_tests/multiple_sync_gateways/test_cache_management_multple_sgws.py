@@ -217,7 +217,7 @@ def test_sgw_high_availability(params_from_base_test_setup, setup_basic_sg_conf)
         sg2.stop()
         sg_docs = sg_client.get_all_docs(url=sg1.admin.admin_url, db=sg_db)["rows"]
         diff_docs = num_docs - len(sg_docs)
-        cbs_docs_via_sdk.result()        
+        cbs_docs_via_sdk.result()
 
     sg_docs = sg_client.get_all_docs(url=sg1.admin.admin_url, db=sg_db)["rows"]
     assert len(sg_docs) == num_docs, "not all docs imported from server"

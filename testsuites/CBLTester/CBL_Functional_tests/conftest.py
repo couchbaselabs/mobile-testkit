@@ -490,6 +490,7 @@ def params_from_base_suite_setup(request):
         "create_db_per_test": create_db_per_test,
         "suite_source_db": suite_source_db,
         "suite_cbl_db": suite_cbl_db,
+        "suite_db": suite_db,
         "sg_config": sg_config,
         "testserver": testserver,
         "device_enabled": device_enabled,

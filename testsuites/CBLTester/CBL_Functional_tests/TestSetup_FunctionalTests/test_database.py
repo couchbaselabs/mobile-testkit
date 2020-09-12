@@ -476,8 +476,6 @@ def test_db_close_on_active_replicator_and_live_query(params_from_base_test_setu
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_blip_url = params_from_base_test_setup["target_url"]
 
-    pytest.skip('skip this test due to issue CM-485')
-
     if liteserv_version < "2.8.0":
         pytest.skip('This test supports for a feature from hydrogen(2.8.0)')
 
@@ -524,7 +522,7 @@ def test_db_close_on_active_replicator_and_live_query(params_from_base_test_setu
 
     # 3. register a live query to the cbl db
     qy = Query(base_url)
-    query = qy.query_select_all(cbl_db)
+    query = qy.query_selectAll(cbl_db)
     query_listener = qy.addChangeListener(query)
 
     log_info(replicator.getActivitylevel(repl1))
@@ -646,7 +644,6 @@ def test_db_delete_on_active_replicator_and_live_query(params_from_base_test_set
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_blip_url = params_from_base_test_setup["target_url"]
 
-    pytest.skip('skip this test due to issue CM-485')
     if liteserv_version < "2.8.0":
         pytest.skip('This test supports for a feature from hydrogen(2.8.0)')
 
@@ -693,7 +690,7 @@ def test_db_delete_on_active_replicator_and_live_query(params_from_base_test_set
 
     # 3. register a live query to the cbl db
     qy = Query(base_url)
-    query = qy.query_select_all(cbl_db)
+    query = qy.query_selectAll(cbl_db)
     query_listener = qy.addChangeListener(query)
 
     log_info(replicator.getActivitylevel(repl1))
