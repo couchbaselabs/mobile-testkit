@@ -2,7 +2,7 @@ import time
 import datetime
 import pytest
 
-from keywords.utils import log_info, clear_resources_pngs, set_device_enabled
+from keywords.utils import log_info, clear_resources_pngs
 from keywords.TestServerFactory import TestServerFactory
 from CBLClient.Database import Database
 from CBLClient.Query import Query
@@ -55,6 +55,9 @@ def pytest_addoption(parser):
                      action="store",
                      help="comma separated cbl with value of device or emulator")
 
+    parser.addoption("--device", action="store_true",
+                     help="Enable device if you want to run it on device", default=False)
+
     parser.addoption("--community", action="store_true",
                      help="If set, community edition will get picked up , default is enterprise", default=False)
 
@@ -95,12 +98,12 @@ def params_from_base_suite_setup(request):
     version_list = liteserv_versions.split(',')
     host_list = liteserv_hosts.split(',')
     port_list = liteserv_ports.split(',')
-    device_enabled_list = set_device_enabled(run_on_device, len(platform_list))
 
     if len(platform_list) != len(version_list) != len(host_list) != len(port_list):
         raise Exception("Provide equal no. of Parameters for host, port, version and platforms")
 
     enable_sample_bucket = request.config.getoption("--enable-sample-bucket")
+    device_enabled = request.config.getoption("--device")
     generator = request.config.getoption("--doc-generator")
     no_db_delete = request.config.getoption("--no-db-delete")
     create_db_per_test = request.config.getoption("--create-db-per-test")
@@ -114,11 +117,9 @@ def params_from_base_suite_setup(request):
 
     test_name = request.node.name
     testserver_list = []
-    for platform, version, host, port, device_enabled in zip(platform_list,
-                                                             version_list,
+    for platform, version, host, port in zip(platform_list, version_list,
                                                              host_list,
-                                                             port_list,
-                                                             device_enabled_list):
+                                                             port_list):
         testserver = TestServerFactory.create(platform=platform,
                                               version_build=version,
                                               host=host,
@@ -130,8 +131,7 @@ def params_from_base_suite_setup(request):
             testserver.download()
 
             # Install TestServer app
-            if device_enabled:
-                log_info("install on device")
+            if device_enabled and (platform == "ios" or platform == "android"):
                 testserver.install_device()
             else:
                 log_info("install on emulator")
@@ -150,7 +150,7 @@ def params_from_base_suite_setup(request):
     query_obj_list = []
     if create_db_per_suite:
         # Start Test server which needed for suite level set up like query tests
-        for testserver, device_enabled in zip(testserver_list, device_enabled_list):
+        for testserver in testserver_list:
             if not use_local_testserver:
                 log_info("Starting TestServer...")
                 test_name_cp = test_name.replace("/", "-")
@@ -202,8 +202,8 @@ def params_from_base_suite_setup(request):
         "db_name_list": db_name_list,
         "base_url_list": base_url_list,
         "query_obj_list": query_obj_list,
+        "device_enabled": device_enabled,
         "db_obj_list": db_obj_list,
-        "device_enabled_list": device_enabled_list,
         "generator": generator,
         "create_db_per_test": create_db_per_test,
         "enable_encryption": enable_encryption,
@@ -246,7 +246,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     base_url_list = params_from_base_suite_setup["base_url_list"]
     query_obj_list = params_from_base_suite_setup["query_obj_list"]
     db_obj_list = params_from_base_suite_setup["db_obj_list"]
-    device_enabled_list = params_from_base_suite_setup["device_enabled_list"]
+    device_enabled = params_from_base_suite_setup["device_enabled"]
     generator = params_from_base_suite_setup["generator"]
     create_db_per_test = params_from_base_suite_setup["create_db_per_test"]
     encryption_password = params_from_base_suite_setup["encryption_password"]
@@ -262,7 +262,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         db_obj_list = []
         db_path_list = []
         # Start Test server which needed for per test level
-        for testserver, device_enabled in zip(testserver_list, device_enabled_list):
+        for testserver in testserver_list:
             if not use_local_testserver:
                 log_info("Starting TestServer...")
                 test_name_cp = test_name.replace("/", "-")
@@ -315,6 +315,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "enable_sample_bucket": enable_sample_bucket,
         "cbl_db_list": cbl_db_list,
         "db_name_list": db_name_list,
+        "device_enabled": device_enabled,
         "base_url_list": base_url_list,
         "query_obj_list": query_obj_list,
         "db_obj_list": db_obj_list,
