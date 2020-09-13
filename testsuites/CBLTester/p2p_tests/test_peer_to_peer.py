@@ -516,7 +516,7 @@ def test_peer_to_peer_delete_docs(params_from_base_test_setup, server_setup, num
 @pytest.mark.listener
 @pytest.mark.parametrize("num_of_docs, continuous, replicator_type, endPointType", [
     pytest.param(10, True, "push_pull", "MessageEndPoint", marks=pytest.mark.sanity),
-    (100, False, "push_pull", "URLEndPoint"),
+    (1000, False, "push_pull", "MessageEndPoint"),
     (100, True, "push", "MessageEndPoint"),
     (100, True, "push", "URLEndPoint"),
 ])
@@ -566,23 +566,29 @@ def test_peer_to_peer_with_server_down(params_from_base_test_setup, server_setup
     db_obj_client.create_bulk_docs(num_of_docs, "cbl-peerToPeer", db=cbl_db_client, channels=channel)
 
     # Bring down server when replication happens
+    repl = peerToPeer_client.configure(port=url_listener_port, host=server_host, server_db_name=db_name_server,
+                                       client_database=cbl_db_client, continuous=continuous,
+                                       replication_type=replicator_type, endPointType=endPointType)
+    peerToPeer_client.client_start(repl)
+    listener = restart_passive_peer(peer_to_peer_server,listener,cbl_db_server,endPointType,url_listener_port)
+    replicator.wait_until_replicator_idle(repl)
 
-    with ThreadPoolExecutor(max_workers=4) as tpe:
-        wait_until_replicator_completes = tpe.submit(
-            client_start_replicate,
-            peerToPeer_client, db_obj_client, client_param, server_host,
-            db_name_server, cbl_db_client, continuous, replicator_type, endPointType, url_listener_port
-        )
-        restart_server = tpe.submit(
-            restart_passive_peer,
-            peer_to_peer_server,
-            listener,
-            cbl_db_server,
-            endPointType,
-            url_listener_port
-        )
-        repl = wait_until_replicator_completes.result()
-        listener = restart_server.result()
+    # with ThreadPoolExecutor(max_workers=4) as tpe:
+    #     wait_until_replicator_completes = tpe.submit(
+    #         client_start_replicate,
+    #         peerToPeer_client, db_obj_client, client_param, server_host,
+    #         db_name_server, cbl_db_client, continuous, replicator_type, endPointType, url_listener_port
+    #     )
+    #     restart_server = tpe.submit(
+    #         restart_passive_peer,
+    #         peer_to_peer_server,
+    #         listener,
+    #         cbl_db_server,
+    #         endPointType,
+    #         url_listener_port
+    #     )
+    #     repl = wait_until_replicator_completes.result()
+    #     listener = restart_server.result()
     time.sleep(3)
     replicator.wait_until_replicator_idle(repl)
     replicator.stop(repl)
@@ -745,9 +751,8 @@ def test_peer_to_peer_replication_with_multiple_dbs(params_from_base_test_setup,
     url_listener_ports = []
 
     # Start server for remaining 2 more dbs of server with differrent ports
-    message_url_tcp_listener = server_setup["message_url_tcp_listener"]
     if endPointType == "URLEndPoint":
-        peerToPeer_server.server_stop(message_url_tcp_listener, "MessageEndPoint")
+        # peerToPeer_server.server_stop(message_url_tcp_listener, "MessageEndPoint")
         replicator_tcp_listener = peerToPeer_server.server_start(cbl_db_server)
         url_listener_ports.append(peerToPeer_server.get_url_listener_port(replicator_tcp_listener))
         replicatorTcpListener2 = peerToPeer_server.server_start(cbl_db2_server)
@@ -756,8 +761,8 @@ def test_peer_to_peer_replication_with_multiple_dbs(params_from_base_test_setup,
         url_listener_ports.append(peerToPeer_server.get_url_listener_port(replicatorTcpListener3))
     else:
         url_listener_ports = [5000, 6000, 7000]
-        replicatorTcpListener2 = peerToPeer_server.server_start(cbl_db2_server, 6000)
-        replicatorTcpListener3 = peerToPeer_server.server_start(cbl_db3_server, 7000)
+        replicatorTcpListener2 = peerToPeer_server.message_listener_start(cbl_db2_server, 6000)
+        replicatorTcpListener3 = peerToPeer_server.message_listener_start(cbl_db3_server, 7000)
 
     # Create docs in all 3 dbs in client.
     for i in range(3):
@@ -782,8 +787,10 @@ def test_peer_to_peer_replication_with_multiple_dbs(params_from_base_test_setup,
             assert id in server_cbl_doc_ids, "client docs did not replicate to server for db {}".format(i)
     for i in range(3):
         replicator.stop(repls[i])
+    print(replicatorTcpListener2, replicatorTcpListener3)
     peerToPeer_server.server_stop(replicatorTcpListener2, endPointType)
     peerToPeer_server.server_stop(replicatorTcpListener3, endPointType)
+    print("Stopped the 2 server")
     if endPointType == "URLEndPoint":
         peerToPeer_server.server_stop(replicator_tcp_listener, endPointType)
 
