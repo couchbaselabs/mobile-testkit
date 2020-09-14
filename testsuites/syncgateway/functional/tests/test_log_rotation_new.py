@@ -410,7 +410,6 @@ def test_log_200mb(params_from_base_test_setup, sg_conf_name):
     mode = params_from_base_test_setup["mode"]
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     sg_platform = params_from_base_test_setup["sg_platform"]
-    sg_ce_version = params_from_base_test_setup["sg_ce"]
     log_info("Using cluster_conf: {}".format(cluster_conf))
     log_info("Using sg_conf: {}".format(sg_conf))
 
