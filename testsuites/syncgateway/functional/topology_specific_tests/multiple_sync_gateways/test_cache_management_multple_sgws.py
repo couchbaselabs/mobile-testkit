@@ -122,7 +122,7 @@ def test_sgw_cache_management_multiple_sgws(params_from_base_test_setup):
             pytest.skip('XATTR tests require --xattrs flag')
         sg_conf_name = "sync_gateway_default_functional_tests"
     else:
-        sg_conf_name = "c"
+        sg_conf_name = "xattrs/no_import"
 
     sg_conf_path = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
