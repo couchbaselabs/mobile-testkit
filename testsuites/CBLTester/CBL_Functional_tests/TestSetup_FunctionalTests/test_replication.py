@@ -3896,6 +3896,86 @@ def test_blob_contructor_replication(params_from_base_test_setup, blob_data_type
         assert "new_field_blob" in sg_data, "Updated docs failed to get replicated"
 
 
+def test_replication_pull_from_empty_database(params_from_base_test_setup):
+    '''
+    @summary: This test to validate pull replication on empty database. It should avoid sending deleted(tombstoned) documents.
+    1. create 100 docs in SGW
+    2. delete 10 docs in SGW, verify the 10 docs are in tombstone state
+    3. create a cbl db, but do not create any doc (cbl db is empty)
+    4. create a pull replicator, start replication
+    5. verify SGW stats, cbl_replication_pull.rev_send_count sent to CBL equals to 90
+    6. verify CBL, total number of docs is 90, and verify the doc ids are not belongs to tombstone docs
+    7. delete 15 more docs on SGW
+    8. verify SGW stats, cbl_replication_pull.rev_send_count sent to CBL is still (90 + 15 deleted) 105
+    9. verify CBL deleted docs in step 7 have been removed from CBL db
+    '''
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_config = params_from_base_test_setup["sg_config"]
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    sg_url = params_from_base_test_setup["sg_url"]
+    base_url = params_from_base_test_setup["base_url"]
+    sg_blip_url = params_from_base_test_setup["target_url"]
+    '''
+    liteserv_platform = params_from_base_test_setup["liteserv_platform"]
+    '''
+    # Reset cluster to ensure no data in system
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
+
+    # 1. create 100 docs on SGW
+    sg_db = "db"
+    num_sg_docs = 100
+    channels = ["ABC"]
+    username = "autotest"
+    password = "password"
+
+    sg_client = MobileRestClient()
+    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channels)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+    auth_session = cookie, session_id
+    sg_added_docs = sg_client.add_docs(url=sg_url, db=sg_db, number=num_sg_docs, id_prefix="sg_doc", channels=channels, auth=auth_session, attachments_generator=attachments_generator)
+    sg_added_ids = [row["id"] for row in sg_added_docs]
+
+    # 2. delete 10 docs in SGW, verify the 10 docs are in tombstone state
+    docs_to_delete = sg_added_ids[0:9]
+    sg_client.delete_docs(url=sg_url, db=sg_db, docs=docs_to_delete, auth=auth_session)
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
+    assert len(sg_docs) == 90, "Expected number of docs is incorrect after doc deletion in sync-gateway"
+    for sg_doc in sg_docs:
+        assert sg_doc["id"] not in docs_to_delete, "Deleted"
+    # todo: validate deleted docs are not in sg_docs
+
+    # 3. create a cbl db, but do not create any doc (cbl db is empty)
+    db_obj = Database(base_url)
+    db_config = db_obj.configure()
+    cbl_db = db_obj.create("pull-from-empty-db", db_config)
+
+    # 4. create a pull replicator, start replication
+    replicator = Replication(base_url)
+    authenticator = Authenticator(base_url)
+    replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
+    repl = replicator.configure_and_replicate(source_db=cbl_db,
+                                              target_url=sg_blip_url,
+                                              continuous=True,
+                                              replicator_authenticator=replicator_authenticator,
+                                              replication_type="pull")
+    replicator.stop(repl)
+
+    # 5. verify SGW stats, cbl_replication_pull.rev_send_count sent to CBL equals to 90
+
+    # 6. verify CBL, total number of docs is 90, and verify the doc ids are not belongs to tombstone docs
+
+    # 7. delete 15 more docs on SGW
+    
+    # 8. verify SGW stats, cbl_replication_pull.rev_send_count sent to CBL is still (90 + 15 deleted) 105
+    # 9. verify CBL deleted docs in step 7 have been removed from CBL db
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
+    # Verify database doc counts
+    cbl_doc_count = db.getCount(cbl_db)
+    assert len(sg_docs) == cbl_doc_count, "Expected number of docs does not exist in sync-gateway after replication"
+
+
+
 def update_and_resetCheckPoint(db, cbl_db, replicator, repl, replication_type, repl_config, num_of_updates):
     # update docs in CBL
     db.update_bulk_docs(cbl_db)
