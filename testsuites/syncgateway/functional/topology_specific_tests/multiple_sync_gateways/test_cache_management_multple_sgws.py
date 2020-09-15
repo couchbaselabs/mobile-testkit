@@ -10,6 +10,7 @@ from couchbase.bucket import Bucket
 from keywords.MobileRestClient import MobileRestClient
 from keywords.ClusterKeywords import ClusterKeywords
 from libraries.testkit import cluster
+from concurrent.futures import ThreadPoolExecutor
 
 
 @pytest.mark.syncgateway
@@ -166,3 +167,94 @@ def test_sgw_cache_management_multiple_sgws(params_from_base_test_setup):
         assert sg1_import_count + sg2_import_count == num_docs, "Not all docs imported"
         assert sg1_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_cancel_cas"] == 0, "import cancel cas is not zero on sgw node 1"
         assert sg2_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_cancel_cas"] == 0, "import cancel cas is not zero on sgw node 2"
+
+
+@pytest.mark.topospecific
+@pytest.mark.syncgateway
+@pytest.mark.community
+def test_sgw_high_availability(params_from_base_test_setup, setup_basic_sg_conf):
+    """
+    @summary :
+    1. Start 2 sgw nodes
+    2. Start a thread to write docs via SDK
+    3. Bring down 1 sgw node in main thread
+    4. Wait for 20 secs in thread 1
+    5. Stop writing docs in couchbaase server in thread 1
+    6. Validate all docs written on CBS is imported to SGW
+    7. Verify stats
+        EE - import_cancel_cas =0
+           - import_count = num of docs
+        CE - import_cancel_cas  is not equal to 0
+        import_count + import_cancel_cas = num_docs
+    """
+
+    cluster_config = setup_basic_sg_conf["cluster_config"]
+    cbs_cluster = setup_basic_sg_conf["cbs_cluster"]
+    sg2 = setup_basic_sg_conf["sg2"]
+    sg_ce = params_from_base_test_setup["sg_ce"]
+    xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
+    sg_conf = setup_basic_sg_conf["sg_conf"]
+    sg_db = "db"
+    sg_client = MobileRestClient()
+    if not xattrs_enabled:
+        pytest.skip(' This test require --xattrs flag')
+
+    # 1. Start 2 sgw nodes
+    cluster_utils = ClusterKeywords(cluster_config)
+    cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
+    cluster_utils.reset_cluster(cluster_config=cluster_config, sync_gateway_config=sg_conf)
+
+    num_docs = 100
+    bucket_name = 'data-bucket'
+
+    sg1 = cbs_cluster.sync_gateways[0]
+    cbs_url = cluster_topology['couchbase_servers'][0]
+
+    # 2. Start a thread to write docs via SDK
+    with ThreadPoolExecutor(max_workers=4) as tpe:
+        cbs_docs_via_sdk = tpe.submit(create_doc_via_sdk_individually, cbs_url, cbs_cluster, bucket_name, num_docs)
+        # 3. Bring down 1 sgw node in main thread
+        sg2.stop()
+        sg_docs = sg_client.get_all_docs(url=sg1.admin.admin_url, db=sg_db)["rows"]
+        diff_docs = num_docs - len(sg_docs)
+        cbs_docs_via_sdk.result()
+
+    sg_docs = sg_client.get_all_docs(url=sg1.admin.admin_url, db=sg_db)["rows"]
+    assert len(sg_docs) == num_docs, "not all docs imported from server"
+    sg1_expvars = sg_client.get_expvars(sg1.admin.admin_url)
+    sg1_cancel_cas = sg1_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_cancel_cas"]
+    if sg_ce:
+        log_info("Verify import_cancel_cas is not 0 and import_count + import_cancel_cas = num_docs")
+        sg1_import_count = sg1_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"]
+        assert sg1_import_count + sg1_cancel_cas == num_docs, "import count and cancel cas did not match to num of docs on sg1 node"
+        assert sg1_cancel_cas is not 0, "cancel_ca value is 0 on CE"
+    else:
+        assert sg1_cancel_cas == 0, "cancel_ca value is not 0 on EE"
+        sg1_import_count = sg1_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"]
+        assert sg1_import_count > diff_docs, "Not all docs imported"
+
+
+def create_doc_via_sdk_individually(cbs_url, cbs_cluster, bucket_name, num_docs):
+    for i in range(0, num_docs):
+        doc_name = 'sdk_{}'.format(i)
+        create_docs_via_sdk(cbs_url, cbs_cluster, bucket_name, 1, doc_name=doc_name)
+
+
+@pytest.fixture(scope="function")
+def setup_basic_sg_conf(params_from_base_test_setup):
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+
+    sg_conf_name = "sync_gateway_default_functional_tests"
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    cbs_cluster = cluster.Cluster(cluster_config)
+    sg2 = cbs_cluster.sync_gateways[1]
+
+    yield{
+        "cbs_cluster": cbs_cluster,
+        "sg2": sg2,
+        "mode": mode,
+        "cluster_config": cluster_config,
+        "sg_conf": sg_conf
+    }
+    sg2.restart(config=sg_conf, cluster_config=cluster_config)

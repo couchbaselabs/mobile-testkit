@@ -308,15 +308,8 @@ class Replication(object):
         count = 0
         idle_count = 0
         max_idle_count = 3
-
-        # Load the current replicator config to decide retry strategy
-        repl_config = self.getConfig(repl)
-        isContinous = self.isContinuous(repl_config)
-        log_info("The current replicator sets continuous to {}".format(isContinous))
-
         # Sleep until replicator completely processed
         activity_level = self.getActivitylevel(repl)
-        begin_timestamp = time.time()
         while count < max_times:
             log_info("Activity level: {}".format(activity_level))
             log_info("total vs comleted = {} vs {} ".format(self.getCompleted(repl), self.getTotal(repl)))
@@ -333,16 +326,10 @@ class Replication(object):
                         time.sleep(sleep_time)
                         if idle_count > max_idle_count:
                             break
-
-            cur_timestamp = time.time()
             if err_check:
                 err = self.getError(repl)
                 if err is not None and err != 'nil' and err != -1:
-                    if not isContinous:
-                        raise Exception("Error while replicating", err)
-                    elif ("WebSocket error 1001" not in err) or (cur_timestamp - begin_timestamp) >= 600:
-                        raise Exception("Error while replicating", err)
-
+                    raise Exception("Error while replicating", err)
             activity_level = self.getActivitylevel(repl)
             total = self.getTotal(repl)
             completed = self.getCompleted(repl)
