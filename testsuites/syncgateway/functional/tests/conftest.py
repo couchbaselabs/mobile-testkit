@@ -324,6 +324,13 @@ def params_from_base_suite_setup(request):
         log_info("Running test with sg platform {}".format(sg_platform))
         persist_cluster_config_environment_prop(cluster_config, 'sg_platform', sg_platform, False)
 
+    try:
+        cbs_ce
+    except NameError:
+        log_info("cbs ce flag  is not provided, so by default it runs on Enterprise edition")
+    else:
+        log_info("Running test with CBS edition {}".format(cbs_ce))
+        persist_cluster_config_environment_prop(cluster_config, 'cbs_ce', cbs_ce, False)
     if magma_storage_enabled:
         log_info("Running with magma storage")
         persist_cluster_config_environment_prop(cluster_config, 'magma_storage_enabled', True, False)
