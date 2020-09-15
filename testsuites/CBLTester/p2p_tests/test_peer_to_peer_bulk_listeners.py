@@ -13,7 +13,7 @@ from CBLClient.PeerToPeer import PeerToPeer
     (False, "push_pull", "URLEndPoint", False),
 ])
 def peer_to_peer_many_listeners_replicators(params_from_base_test_setup, server_setup, continuous, replicator_type,
-                                                 endPointType, with_certs):
+                                            endPointType, with_certs):
     """
         @summary:
         1. Start the 100 listeners
@@ -47,9 +47,7 @@ def peer_to_peer_many_listeners_replicators(params_from_base_test_setup, server_
     port_array = []
     repl = []
     listeners = []
-
     for i in range(10):
-
         url_listener = peer_to_peer_server.server_start(cbl_db_server, tls_disable=with_certs)
         url_listener_port = peer_to_peer_server.get_url_listener_port(url_listener)
         listeners.append(url_listener)
