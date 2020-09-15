@@ -712,10 +712,8 @@ def test_delta_sync_larger_than_doc(params_from_base_test_setup, num_of_docs, re
 @pytest.mark.syncgateway
 @pytest.mark.replication
 @pytest.mark.parametrize("num_of_docs, replication_type, file_attachment, continuous", [
-    (10, "pull", None, True),
-    (10, "pull", "sample_text.txt", True),
-    (1, "push", "golden_gate_large.jpg", True),
-    (10, "push", None, True)
+    (10, "pushAndPull", None, True),
+    (10, "pull", "sample_text.txt", True)
 ])
 def test_delta_sync_on_community_edition(params_from_base_test_setup, num_of_docs, replication_type, file_attachment, continuous):
     '''

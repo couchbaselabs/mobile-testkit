@@ -896,7 +896,7 @@ def create_sync_gateways(cluster_config, sg_config_path):
     return sg1, sg2
 
 
-def create_docs_via_sdk(cbs_url, cbs_cluster, bucket_name, num_docs):
+def create_docs_via_sdk(cbs_url, cbs_cluster, bucket_name, num_docs, doc_name='doc_set_two'):
     cbs_host = host_for_url(cbs_url)
     log_info("Adding docs via SDK...")
     if cbs_cluster.ipv6:
@@ -905,7 +905,7 @@ def create_docs_via_sdk(cbs_url, cbs_cluster, bucket_name, num_docs):
         sdk_client = Bucket('couchbase://{}/{}'.format(cbs_host, bucket_name), password='password')
     sdk_client.timeout = 600
 
-    sdk_doc_bodies = document.create_docs('doc_set_two', num_docs)
+    sdk_doc_bodies = document.create_docs(doc_name, num_docs)
     sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
     sdk_client.upsert_multi(sdk_docs)
 
