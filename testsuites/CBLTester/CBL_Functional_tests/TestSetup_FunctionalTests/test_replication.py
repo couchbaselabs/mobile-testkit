@@ -3360,6 +3360,10 @@ def test_doc_removal_from_channel(params_from_base_test_setup):
     assert cbl_ids[0] in sg_doc_ids, "doc A does not exist for the user"
     assert cbl_ids[1] not in sg_doc_ids, "doc B exist for the user"
 
+    # Verify user can only access doc A, but not doc B on CBL side too
+    cbl_doc_ids = db.getDocIds(cbl_db)
+    assert cbl_ids[1] not in cbl_doc_ids, "user on cbl still able to access the doc even after unshare"
+
 
 @pytest.mark.listener
 @pytest.mark.replication

@@ -260,6 +260,23 @@ def is_delta_sync_enabled(cluster_config):
         return False
 
 
+def is_cbs_ce_enabled(cluster_config):
+    """ returns if true if CBS CE is enabled otherwise false """
+    cluster = load_cluster_config_json(cluster_config)
+    try:
+        return cluster["environment"]["cbs_ce"]
+    except KeyError:
+        return False
+
+
+def is_magma_enabled(cluster_config):
+    cluster = load_cluster_config_json(cluster_config)
+    try:
+        return cluster["environment"]["magma_storage_enabled"]
+    except KeyError:
+        return False
+
+
 def copy_to_temp_conf(cluster_config, mode):
     # Creating temporary cluster config and json files to add configuration dynamically
     temp_cluster_config = "resources/cluster_configs/temp_cluster_config_{}".format(mode)
@@ -287,5 +304,3 @@ def replace_string_on_sgw_config(sg_conf, replace_string, new_string):
     with open(sg_conf, 'w') as file:
         file.write(filedata)
     return sg_conf
-
-   
