@@ -93,3 +93,18 @@ def pytest_addoption(parser):
     parser.addoption("--magma-storage",
                      action="store_true",
                      help="magma-storage: Enable magma storage on couchbase server")
+
+    parser.addoption("--exclude-tests", action="store",
+                     help="Value can be 'failed' (or) 'passed' (or) 'failed=<junit_xml_path (or) "
+                     "jenkins_build_url>' (or) 'passed=<junit_xml_path or "
+                     "jenkins_build_url>' (or) 'file=<filename>'")
+
+    parser.addoption("--include-tests", action="store",
+                     help="Value can be 'failed' (or) 'passed' (or) 'failed=<junit_xml_path (or) "
+                     "jenkins_build_url>' (or) 'passed=<junit_xml_path or "
+                     "jenkins_build_url>' (or) 'file=<filename>'")
+
+    parser.addoption("--rerun-tests", action="store",
+                     help="Value can be 'failed' (or) 'passed' (or) 'failed=<junit_xml_path (or) "
+                     "jenkins_build_url>' (or) 'passed=<junit_xml_path or "
+                     "jenkins_build_url>' (or) 'file=<filename>'")

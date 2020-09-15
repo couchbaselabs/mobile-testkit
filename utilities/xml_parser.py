@@ -83,7 +83,7 @@ def parse_testreport_result_xml(filepath=""):
                 tcname = tc.getAttribute("name")
                 if tc.getElementsByTagName("failure") or tc.getElementsByTagName("error"):
                     failed = True
-                    failed_tests.append(tcname.split('[')[0])
+                    failed_tests.append(tcname)
                 else:
                     failed = False
                     passed_tests.append(tcname)

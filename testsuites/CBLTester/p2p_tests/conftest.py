@@ -76,6 +76,21 @@ def pytest_addoption(parser):
                      help="Encryption will be enabled for CBL db",
                      default="password")
 
+    parser.addoption("--exclude-tests", action="store",
+                     help="Value can be 'failed' (or) 'passed' (or) 'failed=<junit_xml_path (or) "
+                     "jenkins_build_url>' (or) 'passed=<junit_xml_path or "
+                     "jenkins_build_url>' (or) 'file=<filename>'")
+
+    parser.addoption("--include-tests", action="store",
+                     help="Value can be 'failed' (or) 'passed' (or) 'failed=<junit_xml_path (or) "
+                     "jenkins_build_url>' (or) 'passed=<junit_xml_path or "
+                     "jenkins_build_url>' (or) 'file=<filename>'")
+
+    parser.addoption("--rerun-tests", action="store",
+                     help="Value can be 'failed' (or) 'passed' (or) 'failed=<junit_xml_path (or) "
+                     "jenkins_build_url>' (or) 'passed=<junit_xml_path or "
+                     "jenkins_build_url>' (or) 'file=<filename>'")
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file

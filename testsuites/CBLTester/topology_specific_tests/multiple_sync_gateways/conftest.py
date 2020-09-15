@@ -133,6 +133,21 @@ def pytest_addoption(parser):
     parser.addoption("--cbs-ce", action="store_true",
                      help="If set, community edition will get picked up , default is enterprise", default=False)
 
+    parser.addoption("--exclude-tests", action="store",
+                     help="Value can be 'failed' (or) 'passed' (or) 'failed=<junit_xml_path (or) "
+                     "jenkins_build_url>' (or) 'passed=<junit_xml_path or "
+                     "jenkins_build_url>' (or) 'file=<filename>'")
+
+    parser.addoption("--include-tests", action="store",
+                     help="Value can be 'failed' (or) 'passed' (or) 'failed=<junit_xml_path (or) "
+                     "jenkins_build_url>' (or) 'passed=<junit_xml_path or "
+                     "jenkins_build_url>' (or) 'file=<filename>'")
+
+    parser.addoption("--rerun-tests", action="store",
+                     help="Value can be 'failed' (or) 'passed' (or) 'failed=<junit_xml_path (or) "
+                     "jenkins_build_url>' (or) 'passed=<junit_xml_path or "
+                     "jenkins_build_url>' (or) 'file=<filename>'")
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file

@@ -151,12 +151,28 @@ def pytest_addoption(parser):
     parser.addoption("--cbs-ce", action="store_true",
                      help="If set, community edition will get picked up , default is enterprise", default=False)
 
+    parser.addoption("--exclude-tests", action="store",
+                     help="Value can be 'failed' (or) 'passed' (or) 'failed=<junit_xml_path (or) "
+                     "jenkins_build_url>' (or) 'passed=<junit_xml_path or "
+                     "jenkins_build_url>' (or) 'file=<filename>'")
+
+    parser.addoption("--include-tests", action="store",
+                     help="Value can be 'failed' (or) 'passed' (or) 'failed=<junit_xml_path (or) "
+                     "jenkins_build_url>' (or) 'passed=<junit_xml_path or "
+                     "jenkins_build_url>' (or) 'file=<filename>'")
+
+    parser.addoption("--rerun-tests", action="store",
+                     help="Value can be 'failed' (or) 'passed' (or) 'failed=<junit_xml_path (or) "
+                     "jenkins_build_url>' (or) 'passed=<junit_xml_path or "
+                     "jenkins_build_url>' (or) 'file=<filename>'")
 
 # This will be called once for the at the beggining of the execution in the 'tests/' directory
 # and will be torn down, (code after the yeild) when all the test session has completed.
 # IMPORTANT: Tests in 'tests/' should be executed in their own test run and should not be
 # run in the same test run with 'topology_specific_tests/'. Doing so will make have unintended
 # side effects due to the session scope
+
+
 @pytest.fixture(scope="session")
 def params_from_base_suite_setup(request):
     log_info("Setting up 'params_from_base_suite_setup' ...")
