@@ -92,7 +92,6 @@ def params_from_base_suite_setup(request):
     liteserv_versions = request.config.getoption("--liteserv-versions")
     liteserv_hosts = request.config.getoption("--liteserv-hosts")
     liteserv_ports = request.config.getoption("--liteserv-ports")
-    run_on_device = request.config.getoption("--run-on-device")
 
     platform_list = liteserv_platforms.split(',')
     version_list = liteserv_versions.split(',')
@@ -117,9 +116,7 @@ def params_from_base_suite_setup(request):
 
     test_name = request.node.name
     testserver_list = []
-    for platform, version, host, port in zip(platform_list, version_list,
-                                                             host_list,
-                                                             port_list):
+    for platform, version, host, port in zip(platform_list, version_list, host_list, port_list):
         testserver = TestServerFactory.create(platform=platform,
                                               version_build=version,
                                               host=host,
@@ -129,7 +126,6 @@ def params_from_base_suite_setup(request):
             log_info("Downloading TestServer ...")
             # Download TestServer app
             testserver.download()
-
             # Install TestServer app
             if device_enabled and (platform == "ios" or platform == "android"):
                 testserver.install_device()
