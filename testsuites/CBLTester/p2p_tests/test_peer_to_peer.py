@@ -516,7 +516,7 @@ def test_peer_to_peer_delete_docs(params_from_base_test_setup, server_setup, num
 @pytest.mark.listener
 @pytest.mark.parametrize("num_of_docs, continuous, replicator_type, endPointType", [
     pytest.param(10, True, "push_pull", "MessageEndPoint", marks=pytest.mark.sanity),
-    (1000, False, "push_pull", "MessageEndPoint"),
+    (10, True, "push_pull", "URLEndPoint"),
     (100, True, "push", "MessageEndPoint"),
     (100, True, "push", "URLEndPoint"),
 ])
@@ -565,30 +565,22 @@ def test_peer_to_peer_with_server_down(params_from_base_test_setup, server_setup
 
     db_obj_client.create_bulk_docs(num_of_docs, "cbl-peerToPeer", db=cbl_db_client, channels=channel)
 
-    # Bring down server when replication happens
-    repl = peerToPeer_client.configure(port=url_listener_port, host=server_host, server_db_name=db_name_server,
-                                       client_database=cbl_db_client, continuous=continuous,
-                                       replication_type=replicator_type, endPointType=endPointType)
-    peerToPeer_client.client_start(repl)
-    listener = restart_passive_peer(peer_to_peer_server,listener,cbl_db_server,endPointType,url_listener_port)
-    replicator.wait_until_replicator_idle(repl)
-
-    # with ThreadPoolExecutor(max_workers=4) as tpe:
-    #     wait_until_replicator_completes = tpe.submit(
-    #         client_start_replicate,
-    #         peerToPeer_client, db_obj_client, client_param, server_host,
-    #         db_name_server, cbl_db_client, continuous, replicator_type, endPointType, url_listener_port
-    #     )
-    #     restart_server = tpe.submit(
-    #         restart_passive_peer,
-    #         peer_to_peer_server,
-    #         listener,
-    #         cbl_db_server,
-    #         endPointType,
-    #         url_listener_port
-    #     )
-    #     repl = wait_until_replicator_completes.result()
-    #     listener = restart_server.result()
+    with ThreadPoolExecutor(max_workers=4) as tpe:
+        wait_until_replicator_completes = tpe.submit(
+            client_start_replicate,
+            peerToPeer_client, db_obj_client, client_param, server_host,
+            db_name_server, cbl_db_client, continuous, replicator_type, endPointType, url_listener_port
+        )
+        restart_server = tpe.submit(
+            restart_passive_peer,
+            peer_to_peer_server,
+            listener,
+            cbl_db_server,
+            endPointType,
+            url_listener_port
+        )
+        repl = wait_until_replicator_completes.result()
+        listener = restart_server.result()
     time.sleep(3)
     replicator.wait_until_replicator_idle(repl)
     replicator.stop(repl)
