@@ -220,7 +220,7 @@ class Admin:
             for repl in resp_data:
                 if "starting" in repl['status'] or "started" in repl['status'] or "running" in repl['status']:
                     active_resp_data.append(repl)
-            if len(active_resp_data) >= expected_tasks or count >= max_count:
+            if len(active_resp_data) == expected_tasks or count >= max_count:
                 break
             count += 1
             time.sleep(1)
