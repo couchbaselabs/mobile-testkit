@@ -12,7 +12,7 @@ from CBLClient.PeerToPeer import PeerToPeer
     (True, "push", "URLEndPoint", False),
     (False, "push_pull", "URLEndPoint", False),
 ])
-def test_peer_to_peer_many_listeners_replicators(params_from_base_test_setup, server_setup, continuous, replicator_type,
+def peer_to_peer_many_listeners_replicators(params_from_base_test_setup, server_setup, continuous, replicator_type,
                                                  endPointType, with_certs):
     """
         @summary:
@@ -48,7 +48,7 @@ def test_peer_to_peer_many_listeners_replicators(params_from_base_test_setup, se
     repl = []
     listeners = []
 
-    for i in range(100):
+    for i in range(10):
 
         url_listener = peer_to_peer_server.server_start(cbl_db_server, tls_disable=with_certs)
         url_listener_port = peer_to_peer_server.get_url_listener_port(url_listener)
@@ -59,7 +59,7 @@ def test_peer_to_peer_many_listeners_replicators(params_from_base_test_setup, se
                                    attachments_generator=attachment.generate_png_100_100)
 
     # Now set up client
-    for i in range(100):
+    for i in range(10):
         repl = peerToPeer_client.configure(host=server_host, server_db_name=db_name_server,
                                            client_database=cbl_db_client, continuous=continuous,
                                            replication_type=replicator_type, endPointType=endPointType,
@@ -74,5 +74,5 @@ def test_peer_to_peer_many_listeners_replicators(params_from_base_test_setup, se
         server_docs_count = db_obj_server.getCount(cbl_db_server)
         assert server_docs_count == num_of_docs, "Number of docs is not equivalent to number of docs in server "
         replicator.stop(repl)
-    for i in range(100):
+    for i in range(10):
         peer_to_peer_server.server_stop(listeners[i], replicator_type)
