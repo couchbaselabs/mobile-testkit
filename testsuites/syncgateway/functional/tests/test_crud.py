@@ -13,6 +13,7 @@ from libraries.testkit.cluster import Cluster
 from keywords.userinfo import UserInfo
 from keywords.exceptions import TimeoutException
 from utilities.cluster_config_utils import get_sg_version, persist_cluster_config_environment_prop, copy_to_temp_conf
+from libraries.testkit import cluster
 
 
 @pytest.mark.syncgateway
@@ -378,6 +379,51 @@ def test_verify_changes_purge(params_from_base_test_setup, sg_conf_name):
         assert False, "Found doc in changes after purging the doc"
     except TimeoutException:
         log_info("Found changes")
+
+
+@pytest.fixture(scope="function")
+def setup_basic_sg_conf(params_from_base_test_setup):
+    sg_ce = params_from_base_test_setup["sg_ce"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+
+    sg_conf_name = 'sync_gateway_default_functional_tests'
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    cbs_cluster = cluster.Cluster(cluster_config)
+    sg1 = cbs_cluster.sync_gateways[0]
+    if not sg_ce:
+        pytest.skip('--sg-ce is not enabled. This test runs only on community edition of sgw')
+
+    yield{
+        "cbs_cluster": cbs_cluster,
+        "sg1": sg1,
+        "mode": mode,
+        "cluster_config": cluster_config
+    }
+    sg1.restart(config=sg_conf, cluster_config=cluster_config)
+
+
+@pytest.mark.syncgateway
+@pytest.mark.community
+@pytest.mark.parametrize("sg_conf_name, x509", [
+    ('sync_gateway_default_functional_tests', True)
+])
+def test_x509_and_server_ssl(params_from_base_test_setup, setup_basic_sg_conf, sg_conf_name, x509):
+    """ @summary:
+    2. Test with  x509 enabled for and ce edition should not support x509 when sync gateway starts
+    """
+
+    # Setup
+    cluster_config = setup_basic_sg_conf["cluster_config"]
+    sg1 = setup_basic_sg_conf["sg1"]
+    mode = setup_basic_sg_conf["mode"]
+
+    temp_cluster_config = copy_to_temp_conf(cluster_config, mode)
+    if x509:
+        persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True, property_name_check=False)
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    status = sg1.restart(config=sg_conf, cluster_config=temp_cluster_config)
+    assert status == 1, "Sync gateway started with x509 or sg_ssl with couchbase server community edition"
 
 
 def verify_sg_deletes(sg_client, sg_url, sg_db, expected_deleted_ids, sg_auth):

@@ -308,7 +308,7 @@ def _upgrade_db(args):
     if base_liteserv_version > upgraded_liteserv_version:
         pytest.skip("Can't upgrade from higher version db to lower version db")
 
-    supported_base_liteserv = ["1.4", "2.0.0", "2.1.5", "2.5.0"]
+    supported_base_liteserv = ["1.4", "2.0.0", "2.1.5", "2.5.0", "2.7.0"]
     db = Database(base_url)
     if encrypted_db:
         if base_liteserv_version < "2.1.5":

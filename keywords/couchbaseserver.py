@@ -16,7 +16,7 @@ from keywords.exceptions import CBServerError, ProvisioningError, TimeoutError, 
 from keywords.utils import log_r, log_info, log_debug, log_error, hostname_for_url
 from keywords.utils import version_and_build
 from keywords import types
-from utilities.cluster_config_utils import is_x509_auth, get_cbs_version
+from utilities.cluster_config_utils import is_x509_auth, get_cbs_version, is_magma_enabled, is_cbs_ce_enabled
 
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
@@ -135,6 +135,9 @@ class CouchbaseServer:
         max_retries = 5
         while count < max_retries:
             resp = self._session.delete("{0}/pools/default/buckets/{1}".format(self.url, name))
+            if resp.status_code == 200:
+                log_info("delete bucket request has been successfully processed.")
+                break
             count += 1
         log_r(resp)
         resp.raise_for_status()
@@ -194,7 +197,6 @@ class CouchbaseServer:
         while count < 5:
             resp = self._session.get("{}/getIndexStatus".format(index_url))
             resp_obj = resp.json()
-            print("resp_obj with getINdex status:", resp_obj)
             if "status" not in resp_obj:
                 break
             else:
@@ -244,7 +246,8 @@ class CouchbaseServer:
         # bucket_admin and cluster_admin
         server_version = get_cbs_version(cluster_config)
         cbs_version, cbs_build = version_and_build(server_version)
-        if cbs_version >= "6.6.0":
+        cbs_ce_enabled = is_cbs_ce_enabled(cluster_config)
+        if cbs_version >= "6.6.0" and not cbs_ce_enabled:
             roles = "mobile_sync_gateway[{}]".format(bucketname)
         else:
             roles = "ro_admin,bucket_full_access[{}]".format(bucketname)
@@ -302,6 +305,9 @@ class CouchbaseServer:
                 resp = self._session.delete(rbac_url, data=data_user_params, auth=('Administrator', 'password'))
                 log_info("rbac: {}; data user params: {}".format(rbac_url, data_user_params))
                 log_r(resp)
+                if resp.status_code == 200:
+                    log_info("delete internal rbac bucket user request has been successfully processed.")
+                    break
                 resp.raise_for_status()
             except HTTPError as h:
                 log_info("resp code: {}; error: {}".format(resp, h))
@@ -407,7 +413,6 @@ class CouchbaseServer:
 
         server_version = get_server_version(self.host, self.cbs_ssl)
         server_major_version = int(server_version.split(".")[0])
-
         data = {
             "name": name,
             "ramQuotaMB": str(ram_quota_mb),
@@ -415,7 +420,9 @@ class CouchbaseServer:
             "bucketType": "couchbase",
             "flushEnabled": "1"
         }
-
+        if is_magma_enabled(cluster_config):
+            magma_data = {"storageBackend": "magma"}
+            data.update(magma_data)
         if server_major_version <= 4:
             # Create a bucket with password for server_major_version < 5
             # proxyPort should not be passed for 5.0.0 onwards for bucket creation
@@ -796,7 +803,7 @@ class CouchbaseServer:
             connection_str = "couchbase://{}/{}".format(self.host, bucket_name)
         return Bucket(connection_str, password='password')
 
-    def get_package_name(self, version, build_number, cbs_platform="centos8", cbs_ce=False):
+    def get_package_name(self, version, build_number, cbs_platform="centos7", cbs_ce=False):
         """
         Given:
         version - the version without any build number information, eg 4.5.0
