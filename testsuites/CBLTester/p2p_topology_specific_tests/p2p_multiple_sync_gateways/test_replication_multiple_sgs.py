@@ -1,9 +1,12 @@
+import time
+
 import pytest
 
 from keywords.MobileRestClient import MobileRestClient
 from CBLClient.Database import Database
 from CBLClient.Replication import Replication
 from CBLClient.Authenticator import Authenticator
+from keywords.utils import log_info
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from libraries.testkit.cluster import Cluster
 from libraries.testkit import cluster
@@ -21,17 +24,15 @@ from CBLClient.PeerToPeer import PeerToPeer
 ])
 def test_multiple_sgs_with_differrent_revs_limit(params_from_base_test_setup, setup_customized_teardown_test, sg_conf_name, num_of_docs):
     """
-        @summary:
-        1. Create 2 DBs in 2 SGS
-        2. Create docs in 2 CBL
-        2. Set up 1 SG with revs limit 30 and SG2 with revs limit 25.
-        3. Do push replication to two SGS(each DB
-        to each SG).
-        4. Do updates on CBL for 35 times.
-        5. Continue push replication to SGs
-        6. Verify that revs maintained on two SGS according to revs_limit.
-        7. exchange DBs of SG and do push replication.
-        8. Verify that revs maintained on two SGS according to revs_limit.
+        @summary:  SG1<->CBL1<->CB2<->SG2
+        1. Start 2 SGS
+        2. Create docs in SG1
+        3. Sg1 connected to CBL
+        4. Verify docs in CB1
+        5. Connect CBL1 with CBl2
+        6. Verify doc in CBL2
+        7. Connect CBL2 with SG2
+        8. Verify docs in SG2
 
     """
     sg_db1 = "sg_db1"
@@ -103,83 +104,106 @@ def test_multiple_sgs_with_differrent_revs_limit(params_from_base_test_setup, se
     server_cbl_db_name = setup_customized_teardown_test["cbl_db_name1"]
     print("cbl_db2", cbl_db2)
     print("cbl_db1", cbl_db1, server_cbl_db_name)
-    db.create_bulk_docs(num_of_docs, "Replication1", db=cbl_db1, channels=channels1)
-    db2.create_bulk_docs(num_of_docs, "Replication2", db=cbl_db2, channels=channels2)
 
-    # . conneting peer to peer server start
-
+    # connecting peer to peer server start
     url_listener = peer_to_peer_server.server_start(cbl_db1)
     url_listener_port = peer_to_peer_server.get_url_listener_port(url_listener)
 
+    # Creating docs in SG
+    sg_added_doc_ids, cbl_added_doc_ids, session = setup_sg_cbl_docs(sg_db=sg_db1,
+                                                                     base_url=base_url, db=db,
+                                                                     cbl_db=cbl_db1, sg_url=sg1_url,
+                                                                     sg_admin_url=sg1_admin_url,
+                                                                     sg_blip_url=sg1_blip_url,
+                                                                     replication_type="push-pull", channels=channels1,
+                                                                     replicator_authenticator_type="basic",
+                                                                     attachments_generator=False)
+
+    cbl_doc_count = db.getCount(cbl_db1)
+    sg_docs = sg_client.get_all_docs(url=sg1_admin_url, db=sg_db1)
+    assert cbl_doc_count == len(sg_docs["rows"]), "Did not get expected number of cbl docs"
+
     p2p_replicator = Replication(base_url2)
-
-    p2p_repl_config = peer_to_peer_client.configure(port=url_listener_port, host="10.0.0.36", server_db_name=server_cbl_db_name,
+    p2p_repl_config = peer_to_peer_client.configure(port=url_listener_port, host="192.168.33.126",
+                                                    server_db_name=server_cbl_db_name,
                                                     client_database=cbl_db2, continuous=True,
-                                                    replication_type="push", endPointType="URLEndPoint")
+                                                    replication_type="push-pull", endPointType="URLEndPoint")
 
+    # start p2p replicator
     peer_to_peer_client.client_start(p2p_repl_config)
     p2p_replicator.wait_until_replicator_idle(p2p_repl_config)
 
-    # 2. Do push replication to two SGS(each DB to each SG)
-    replicator = Replication(base_url)
-    replicator2 = Replication(base_url2)
-    cookie, session_id = sg_client.create_session(sg1_admin_url, sg_db1, name1)
-    session1 = cookie, session_id
-    authenticator = Authenticator(base_url)
-    replicator_authenticator1 = authenticator.authentication(session_id, cookie, authentication_type="session")
+    # Make sure docs are copied to both peers
+    total = p2p_replicator.getTotal(p2p_repl_config)
+    completed = p2p_replicator.getCompleted(p2p_repl_config)
+    print(total, completed)
+    print("DOCS completed")
+    assert total == completed, "replication from client to server did not completed"
+    server_docs_count = db2.getCount(cbl_db2)
+    assert server_docs_count == cbl_doc_count, "Number of docs is not equivalent to number of docs in server"
 
+    # 2. Do push replication to two SGS(each DB to each SG)
+    replicator2 = Replication(base_url2)
     cookie, session_id = sg_client.create_session(sg2_admin_url, sg_db2, name2)
     session2 = cookie, session_id
     authenticator2 = Authenticator(base_url2)
     replicator_authenticator2 = authenticator2.authentication(session_id, cookie, authentication_type="session")
-    repl1 = replicator.configure_and_replicate(
-        source_db=cbl_db1, replicator_authenticator=replicator_authenticator1, target_url=sg1_blip_url, replication_type="push")
 
+    # Start the SG2 replicator
     repl2 = replicator2.configure_and_replicate(
-        source_db=cbl_db2, replicator_authenticator=replicator_authenticator2, target_url=sg2_blip_url, replication_type="push")
+        source_db=cbl_db2, replicator_authenticator=replicator_authenticator2, target_url=sg2_blip_url,
+        replication_type="push-pull")
 
-    total = p2p_replicator.getTotal(p2p_repl_config)
-    completed = p2p_replicator.getCompleted(p2p_repl_config)
-    assert total == completed, "replication from client to server did not completed"
-    server_docs_count = db2.getCount(cbl_db2)
-    assert server_docs_count == num_of_docs, "Number of docs is not equivalent to number of docs in server"
-
-    db.update_bulk_docs(cbl_db1, number_of_updates=35)
-    db2.update_bulk_docs(cbl_db2, number_of_updates=35)
-
-    replicator.wait_until_replicator_idle(repl1)
     replicator2.wait_until_replicator_idle(repl2)
-    replicator.stop(repl1)
+
+    total = replicator2.getTotal(repl2)
+    completed = replicator2.getCompleted(repl2)
+    assert total == completed, "total is not equal to completed"
+    sg2_docs = sg_client.get_all_docs(url=sg2_admin_url, db=sg_db2, include_docs=True)
+    sg2_docs = sg2_docs["rows"]
+
+    # Verify database doc counts
+    cbl2_doc_count = db2.getCount(cbl_db2)
+    assert len(sg2_docs) == cbl2_doc_count, "Expected number of docs does not exist in sync-gateway after replication"
     replicator2.stop(repl2)
 
     # 4. Get docs from sgs and verify revs_limit is maintained
-    sg_docs = sg_client.get_all_docs(url=sg1_url, db=sg_db1, auth=session1)
-    sg_doc_ids = [doc['id'] for doc in sg_docs["rows"]]
-    for doc_id in sg_doc_ids:
-        revs = sg_client.get_revs_num_in_history(sg1_url, sg_db1, doc_id, auth=session1)
-        assert len(revs) == revs_limit1
-
-    sg_docs = sg_client.get_all_docs(url=sg2_url, db=sg_db2, auth=session2)
-    sg_doc_ids = [doc['id'] for doc in sg_docs["rows"]]
-    for doc_id in sg_doc_ids:
-        revs = sg_client.get_revs_num_in_history(sg2_url, sg_db2, doc_id, auth=session2)
-        assert len(revs) == revs_limit2
-
     p2p_replicator.stop(p2p_repl_config)
     peer_to_peer_server.server_stop(url_listener, "URLEndPoint")
 
-    # # 4. Get docs from sgs and verify revs_limit is maintained after switching sgs
-    sg_docs = sg_client.get_all_docs(url=sg1_url, db=sg_db1, auth=session1)
-    sg_doc_ids = [doc['id'] for doc in sg_docs["rows"]]
-    for doc_id in sg_doc_ids:
-        revs = sg_client.get_revs_num_in_history(sg1_url, sg_db1, doc_id, auth=session1)
-        assert len(revs) == revs_limit1
 
-    sg_docs = sg_client.get_all_docs(url=sg2_url, db=sg_db2, auth=session2)
-    sg_doc_ids = [doc['id'] for doc in sg_docs["rows"]]
-    for doc_id in sg_doc_ids:
-        revs = sg_client.get_revs_num_in_history(sg2_url, sg_db2, doc_id, auth=session2)
-        assert len(revs) == revs_limit2
+def setup_sg_cbl_docs(sg_db, base_url, db, cbl_db, sg_url,
+                      sg_admin_url, sg_blip_url, replication_type=None, document_ids=None,
+                      channels=None, replicator_authenticator_type=None, headers=None,
+                      cbl_id_prefix="cbl", sg_id_prefix="sg_doc",
+                      num_cbl_docs=5, num_sg_docs=10, attachments_generator=None):
+
+    sg_client = MobileRestClient()
+
+    db.create_bulk_docs(number=num_cbl_docs, id_prefix=cbl_id_prefix, db=cbl_db, channels=channels, attachments_generator=attachments_generator)
+    cbl_added_doc_ids = db.getDocIds(cbl_db)
+    # Add docs in SG
+    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
+    cookie, session = sg_client.create_session(sg_admin_url, sg_db, "autotest")
+    auth_session = cookie, session
+    sg_added_docs = sg_client.add_docs(url=sg_url, db=sg_db, number=num_sg_docs, id_prefix=sg_id_prefix, channels=channels, auth=auth_session, attachments_generator=attachments_generator)
+    sg_added_ids = [row["id"] for row in sg_added_docs]
+
+    # Start and stop continuous replication
+    replicator = Replication(base_url)
+    authenticator = Authenticator(base_url)
+    replicator_authenticator = authenticator.authentication(username="autotest", password="password", authentication_type=replicator_authenticator_type)
+    log_info("Configuring replicator")
+    repl_config = replicator.configure(cbl_db, target_url=sg_blip_url, replication_type=replication_type, continuous=False,
+                                       documentIDs=document_ids, channels=channels, replicator_authenticator=replicator_authenticator, headers=headers)
+    repl = replicator.create(repl_config)
+    log_info("Starting replicator")
+    replicator.start(repl)
+    log_info("Waiting for replicator to go idle")
+    replicator.wait_until_replicator_idle(repl)
+    replicator.stop(repl)
+
+    return sg_added_ids, cbl_added_doc_ids, auth_session
 
 
 def create_sync_gateways(cluster_config, sg_config_path):

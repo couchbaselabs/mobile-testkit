@@ -181,7 +181,7 @@ def params_from_base_suite_setup(request):
             testserver.install()
 
     base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
-    base_url2 = "http://10.0.0.36:8080"
+    base_url2 = "http://192.168.33.101:8080"
     cluster_config = "{}/multiple_sync_gateways_{}".format(CLUSTER_CONFIGS_DIR, mode)
     no_conflicts_enabled = request.config.getoption("--no-conflicts")
     cluster_utils = ClusterKeywords(cluster_config)
@@ -415,7 +415,7 @@ def params_from_base_suite_setup(request):
 @pytest.fixture(scope="function")
 def params_from_base_test_setup(request, params_from_base_suite_setup):
     base_url = params_from_base_suite_setup["base_url"]
-    base_url2 = "http://10.0.0.131:8080"
+    base_url2 = params_from_base_test_setup["base_url2"]
     cluster_config = params_from_base_suite_setup["cluster_config"]
     xattrs_enabled = params_from_base_suite_setup["xattrs_enabled"]
     liteserv_host = params_from_base_suite_setup["liteserv_host"]
