@@ -1,12 +1,8 @@
-import logging
 
-import signal
-import shutil
 import glob
 import xml.dom.minidom
 from optparse import OptionParser
 import urllib.request
-from http.client import BadStatusLine
 import os
 import urllib
 import sys
