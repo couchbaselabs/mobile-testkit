@@ -3921,6 +3921,8 @@ def test_replication_pull_from_empty_database(params_from_base_test_setup, attac
     sg_url = params_from_base_test_setup["sg_url"]
     base_url = params_from_base_test_setup["base_url"]
     sg_blip_url = params_from_base_test_setup["target_url"]
+    db = params_from_base_test_setup["db"]
+    db_config = params_from_base_test_setup["db_config"]
 
     # Reset cluster to ensure no data in system
     c = cluster.Cluster(config=cluster_config)
@@ -3950,10 +3952,8 @@ def test_replication_pull_from_empty_database(params_from_base_test_setup, attac
         assert sg_doc not in docs_to_delete_1, "Deleted doc should not show on sg doc list"
 
     # 3. create a cbl db, but do not create any doc (cbl db is empty)
-    db_obj = Database(base_url)
-    db_config = db_obj.configure()
     cbl_db_name = "empty-db-" + str(time.time())
-    cbl_db = db_obj.create(cbl_db_name, db_config)
+    cbl_db = db.create(cbl_db_name, db_config)
 
     # 4. create a pull replicator, start replication
     replicator = Replication(base_url)
@@ -3972,8 +3972,8 @@ def test_replication_pull_from_empty_database(params_from_base_test_setup, attac
     # assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["rev_send_count"] == 90, "request_changes_count is incorrect"
 
     # 6. verify CBL, total number of docs is 90, and verify the doc ids are not belongs to tombstone docs
-    cbl_doc_ids = db_obj.getDocIds(cbl_db)
-    cbl_docs = db_obj.getDocuments(cbl_db, cbl_doc_ids)
+    cbl_doc_ids = db.getDocIds(cbl_db)
+    cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
     assert len(cbl_docs) == 90, "The number of docs pull from SGW is incorrect"
     # todo: validate deleted docs are not in cbl_docs
 
@@ -3993,8 +3993,8 @@ def test_replication_pull_from_empty_database(params_from_base_test_setup, attac
     # assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["rev_send_count"] == 105, "request_changes_count is incorrect"
 
     # 9. verify CBL deleted docs in step 7 have been removed from CBL db
-    cbl_doc_ids = db_obj.getDocIds(cbl_db)
-    cbl_docs = db_obj.getDocuments(cbl_db, cbl_doc_ids)
+    cbl_doc_ids = db.getDocIds(cbl_db)
+    cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
     assert len(cbl_docs) == 75, "The number of docs pull from SGW is incorrect"
 
 
