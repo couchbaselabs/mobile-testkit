@@ -176,6 +176,8 @@ def test_sg_replicate_push_pull_replication(params_from_base_test_setup, setup_c
         continuous=continuous
     )
     expected_tasks = 1
+    if not continuous:
+        expected_tasks = 0
     active_tasks = sg1.admin.get_sgreplicate2_active_tasks(sg_db1, expected_tasks=expected_tasks)
     sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id_1, read_flag=read_flag, write_flag=write_flag)
     assert len(active_tasks) == expected_tasks, "number of active tasks is not 1"
@@ -214,12 +216,12 @@ def test_sg_replicate_push_pull_replication(params_from_base_test_setup, setup_c
     if attachments:
         if "push" in direction:
             assert expvars['syncgateway']['per_db'][sg_db1]['replications'][repl_id_1]['sgr_num_attachment_bytes_pushed'] > 0, "push replication bytes is not incrementedd"
-            assert expvars['syncgateway']['per_db'][sg_db1]['replications'][repl_id_1]['sgr_num_attachments_pushed'] == num_of_docs * 2, "push replication count is  not  equal to number of docs pushed"
+            assert expvars['syncgateway']['per_db'][sg_db1]['replications'][repl_id_1]['sgr_num_attachments_pushed'] == num_of_docs, "push replication count is  not  equal to number of docs pushed"
         if "pull" in direction:
             assert expvars['syncgateway']['per_db'][sg_db1]['replications'][repl_id_1]['sgr_num_attachment_bytes_pulled'] > 0, "pull replication bytes is not incremented"
             assert expvars['syncgateway']['per_db'][sg_db1]['replications'][repl_id_1]['sgr_num_attachments_pulled'] == num_of_docs, "pull replication count is  not  equal to number of docs pulled"
     if "push" in direction:
-            assert expvars['syncgateway']['per_db'][sg_db1]['replications'][repl_id_1]['sgr_num_docs_pushed'] == num_of_docs * 2, "push replication count is  not  equal to number of docs pushed"
+            assert expvars['syncgateway']['per_db'][sg_db1]['replications'][repl_id_1]['sgr_num_docs_pushed'] == num_of_docs, "push replication count is  not  equal to number of docs pushed"
     if "pull" in direction:
         assert expvars['syncgateway']['per_db'][sg_db1]['replications'][repl_id_1]['sgr_num_docs_pulled'] == num_of_docs, "pull replication count is  not  equal to number of docs pulled"
 
