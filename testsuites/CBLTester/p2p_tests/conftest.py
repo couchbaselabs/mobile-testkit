@@ -323,7 +323,6 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
             try:
                 # log_info("Deleting the database {} at the test teardown for base url {}".format(db_obj.getName(cbl_db),
                 #                                                                                 base_url))
-                time.sleep(2)
                 # if db.exists(db_name, path):
                 #     print("DB path")
                 #     print(cbl_db)

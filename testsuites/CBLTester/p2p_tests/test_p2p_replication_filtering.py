@@ -51,10 +51,8 @@ def test_p2p_replication_push_pull_filtering(params_from_base_test_setup, server
     db_name_server = db_name_list[0]
     server_host = host_list[0]
     peer_to_peer_server = PeerToPeer(base_url_list[0])
-    message_url_tcp_listener = server_setup["message_url_tcp_listener"]
 
     if endpoint_type == "URLEndPoint":
-        peer_to_peer_server.server_stop(message_url_tcp_listener, "MessageEndPoint")
         replicator_tcp_listener = peer_to_peer_server.server_start(cbl_db_server)
         url_listener_port = peer_to_peer_server.get_url_listener_port(replicator_tcp_listener)
     else:
@@ -183,10 +181,8 @@ def test_p2p_replication_delete(params_from_base_test_setup, server_setup, num_o
 
     server_host = host_list[0]
     peer_to_peer_server = PeerToPeer(base_url_list[0])
-    message_url_tcp_listener = server_setup["message_url_tcp_listener"]
 
     if endpoint_type == "URLEndPoint":
-        peer_to_peer_server.server_stop(message_url_tcp_listener, "MessageEndPoint")
         replicator_tcp_listener = peer_to_peer_server.server_start(cbl_db_server)
         url_listener_port = peer_to_peer_server.get_url_listener_port(replicator_tcp_listener)
     else:
@@ -294,10 +290,8 @@ def test_p2p_filter_retrieval_with_replication_restart(params_from_base_test_set
 
     server_host = host_list[0]
     peer_to_peer_server = PeerToPeer(base_url_list[0])
-    message_url_tcp_listener = server_setup["message_url_tcp_listener"]
 
     if endpoint_type == "URLEndPoint":
-        peer_to_peer_server.server_stop(message_url_tcp_listener, "MessageEndPoint")
         replicator_tcp_listener = peer_to_peer_server.server_start(cbl_db_server)
         url_listener_port = peer_to_peer_server.get_url_listener_port(replicator_tcp_listener)
     else:

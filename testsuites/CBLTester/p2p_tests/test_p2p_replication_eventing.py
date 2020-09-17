@@ -51,10 +51,8 @@ def test_peer_to_peer_replication_eventing_valid_values(params_from_base_test_se
 
     server_host = host_list[0]
     peer_to_peer_server = PeerToPeer(base_url_list[0])
-    message_url_tcp_listener = server_setup["message_url_tcp_listener"]
 
     if endpoint_type == "URLEndPoint":
-        peer_to_peer_server.server_stop(message_url_tcp_listener, "MessageEndPoint")
         replicator_tcp_listener = peer_to_peer_server.server_start(cbl_db_server)
         url_listener_port = peer_to_peer_server.get_url_listener_port(replicator_tcp_listener)
     else:
@@ -153,10 +151,8 @@ def test_peer_to_peer_push_replication_error_event(params_from_base_test_setup, 
 
     server_host = host_list[0]
     peer_to_peer_server = PeerToPeer(base_url_list[0])
-    message_url_tcp_listener = server_setup["message_url_tcp_listener"]
 
     if endpoint_type == "URLEndPoint":
-        peer_to_peer_server.server_stop(message_url_tcp_listener, "MessageEndPoint")
         replicator_tcp_listener = peer_to_peer_server.server_start(cbl_db_server)
         url_listener_port = peer_to_peer_server.get_url_listener_port(replicator_tcp_listener)
     else:
@@ -248,12 +244,8 @@ def test_peer_to_peer_replication_delete_event(params_from_base_test_setup, serv
 
     if meet_supported_version(version_list, "2.5.0") is False:
         pytest.skip("Eventing feature is available only onwards CBL 2.5.0")
-
     peer_to_peer_server = PeerToPeer(base_url_list[0])
-    message_url_tcp_listener = server_setup["message_url_tcp_listener"]
-
     if endpoint_type == "URLEndPoint":
-        peer_to_peer_server.server_stop(message_url_tcp_listener, "MessageEndPoint")
         replicator_tcp_listener = peer_to_peer_server.server_start(cbl_db_server)
         url_listener_port = peer_to_peer_server.get_url_listener_port(replicator_tcp_listener)
     else:

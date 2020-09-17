@@ -45,14 +45,12 @@ def test_p2p_local_wins_custom_conflicts(params_from_base_test_setup, server_set
     db_name_server = db_name_list[0]
     server_host = host_list[0]
     peer_to_peer_server = PeerToPeer(base_url_list[0])
-    message_url_tcp_listener = server_setup["message_url_tcp_listener"]
 
     for liteserv_version in liteserv_versions:
         if liteserv_version < "2.6.0":
             pytest.skip("CCR is supported from 2.6.0 onwards")
 
     if endpoint_type == "URLEndPoint":
-        peer_to_peer_server.server_stop(message_url_tcp_listener, "MessageEndPoint")
         replicator_tcp_listener = peer_to_peer_server.server_start(cbl_db_server)
         url_listener_port = peer_to_peer_server.get_url_listener_port(replicator_tcp_listener)
     else:
@@ -173,14 +171,12 @@ def test_p2p_remote_wins_custom_conflicts(params_from_base_test_setup, server_se
     db_name_server = db_name_list[0]
     server_host = host_list[0]
     peer_to_peer_server = PeerToPeer(base_url_list[0])
-    message_url_tcp_listener = server_setup["message_url_tcp_listener"]
 
     for liteserv_version in liteserv_versions:
         if liteserv_version < "2.6.0":
             pytest.skip("CCR is supported from 2.6.0 onwards")
 
     if endpoint_type == "URLEndPoint":
-        peer_to_peer_server.server_stop(message_url_tcp_listener, "MessageEndPoint")
         replicator_tcp_listener = peer_to_peer_server.server_start(cbl_db_server)
         url_listener_port = peer_to_peer_server.get_url_listener_port(replicator_tcp_listener)
     else:
@@ -287,16 +283,13 @@ def test_p2p_merge_wins_custom_conflicts(params_from_base_test_setup, server_set
     db_obj_client = db_obj_list[1]
     db_name_server = db_name_list[0]
     server_host = host_list[0]
-
     peer_to_peer_server = PeerToPeer(base_url_list[0])
-    message_url_tcp_listener = server_setup["message_url_tcp_listener"]
 
     for liteserv_version in liteserv_versions:
         if liteserv_version < "2.6.0":
             pytest.skip("CCR is supported from 2.6.0 onwards")
 
     if endpoint_type == "URLEndPoint":
-        peer_to_peer_server.server_stop(message_url_tcp_listener, "MessageEndPoint")
         replicator_tcp_listener = peer_to_peer_server.server_start(cbl_db_server)
         url_listener_port = peer_to_peer_server.get_url_listener_port(replicator_tcp_listener)
     else:
@@ -418,16 +411,13 @@ def test_p2p_non_blocking_custom_conflicts(params_from_base_test_setup, server_s
     db_obj_client = db_obj_list[1]
     db_name_server = db_name_list[0]
     server_host = host_list[0]
-
     peer_to_peer_server = PeerToPeer(base_url_list[0])
-    message_url_tcp_listener = server_setup["message_url_tcp_listener"]
 
     for liteserv_version in liteserv_versions:
         if liteserv_version < "2.6.0":
             pytest.skip("CCR is supported from 2.6.0 onwards")
 
     if endpoint_type == "URLEndPoint":
-        peer_to_peer_server.server_stop(message_url_tcp_listener, "MessageEndPoint")
         replicator_tcp_listener = peer_to_peer_server.server_start(cbl_db_server)
         url_listener_port = peer_to_peer_server.get_url_listener_port(replicator_tcp_listener)
     else:
