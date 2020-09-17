@@ -168,9 +168,7 @@ def test_peer_to_peer_concurrent_replication(params_from_base_test_setup, server
     client_param = "client"
     server_param = "server"
     server_host = host_list[0]
-
     peer_to_peer_server = PeerToPeer(base_url_list[0])
-    message_url_tcp_listener = server_setup["message_url_tcp_listener"]
 
     if endPointType == "URLEndPoint":
         replicator_tcp_listener = peer_to_peer_server.server_start(cbl_db_server)
@@ -337,9 +335,7 @@ def test_peer_to_peer_oneServer_toManyClients(params_from_base_test_setup, serve
 
     server_host = host_list[0]
     db_obj_server.create_bulk_docs(num_of_docs, "cbl-peerToPeer", db=cbl_db_server, channels=channel)
-
     peer_to_peer_server = PeerToPeer(base_url_list[0])
-    message_url_tcp_listener = server_setup["message_url_tcp_listener"]
 
     if endPointType == "URLEndPoint":
         replicator_tcp_listener = peer_to_peer_server.server_start(cbl_db_server)
@@ -403,9 +399,7 @@ def test_peer_to_peer_filter_docs_ids(params_from_base_test_setup, server_setup,
 
     server_host = host_list[0]
     db_obj_client.create_bulk_docs(num_of_docs, "cbl-peerToPeer", db=cbl_db_client, channels=channel)
-
     peer_to_peer_server = PeerToPeer(base_url_list[0])
-    message_url_tcp_listener = server_setup["message_url_tcp_listener"]
 
     if endPointType == "URLEndPoint":
         replicator_tcp_listener = peer_to_peer_server.server_start(cbl_db_server)
@@ -466,9 +460,7 @@ def test_peer_to_peer_delete_docs(params_from_base_test_setup, server_setup, num
     db_name_server = db_name_list[0]
     doc_obj_client = Document(base_url_client)
     server_host = host_list[0]
-
     peer_to_peer_server = PeerToPeer(base_url_list[0])
-    message_url_tcp_listener = server_setup["message_url_tcp_listener"]
 
     if endPointType == "URLEndPoint":
         replicator_tcp_listener = peer_to_peer_server.server_start(cbl_db_server)
@@ -995,6 +987,7 @@ def test_default_conflict_scenario_highRevGeneration_wins(params_from_base_test_
     if endPointType == "URLEndPoint":
         peer_to_peer_server.server_stop(replicator_tcp_listener, endPointType)
 
+
 @pytest.mark.listener
 @pytest.mark.parametrize("num_of_docs, continuous, replicator_type, endPointType", [
     pytest.param(10, True, "push_pull", "MessageEndPoint", marks=pytest.mark.sanity),
@@ -1075,6 +1068,7 @@ def test_peer_to_peer_with_server_down(params_from_base_test_setup, server_setup
     assert server_docs_count == num_of_docs, "Number of docs is not equivalent to number of docs in server "
     if endPointType == "URLEndPoint":
         peer_to_peer_server.server_stop(listener, endPointType)
+
 
 def client_start_replicate(peerToPeer_client, db_obj_client, param, server_host, db_name_server, cbl_db_client,
                            continuous, replicator_type, endPointType, port):
