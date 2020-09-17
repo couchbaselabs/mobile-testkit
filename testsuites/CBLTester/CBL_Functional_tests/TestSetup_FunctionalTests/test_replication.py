@@ -3940,9 +3940,8 @@ def test_replication_pull_from_empty_database(params_from_base_test_setup, attac
     cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
     auth_session = cookie, session_id
     sg_added_docs = sg_client.add_docs(url=sg_url, db=sg_db, number=num_sg_docs, id_prefix="sg_doc", channels=channels, auth=auth_session, attachments_generator=attachment_generator)
-    sg_added_ids = [row["id"] for row in sg_added_docs]
 
-    # 2a. delete 10 docs in SGW, 
+    # 2a. delete 10 docs in SGW
     docs_to_delete_1 = sg_added_docs[0:10]
     sg_client.delete_docs(url=sg_url, db=sg_db, docs=docs_to_delete_1, auth=auth_session)
     # 2b. verify the 10 deleted docs are in tombstone state
@@ -3951,9 +3950,14 @@ def test_replication_pull_from_empty_database(params_from_base_test_setup, attac
     for sg_doc in sg_docs:
         assert sg_doc not in docs_to_delete_1, "Deleted doc should not show on sg doc list"
 
-    # 3. create a cbl db, but do not create any doc (cbl db is empty)
+    # 3a. create a cbl db, but do not create any doc (cbl db is empty)
     cbl_db_name = "empty-db-" + str(time.time())
     cbl_db = db.create(cbl_db_name, db_config)
+    # 3b. alternate scenario - create docs on cbl then delete all docs on cbl
+    if cbl_action_before_init_replication:
+        db.create_bulk_docs(db=cbl_db, number=9, id_prefix="pre-repl", channels=channels)
+        cbl_doc_ids = db.getDocIds(cbl_db)
+        db.delete_bulk_docs(cbl_db, cbl_doc_ids)
 
     # 4. create a pull replicator, start replication
     replicator = Replication(base_url)
@@ -3961,21 +3965,25 @@ def test_replication_pull_from_empty_database(params_from_base_test_setup, attac
     replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
     repl = replicator.configure_and_replicate(source_db=cbl_db,
                                               target_url=sg_blip_url,
-                                              continuous=True,
+                                              continuous=False,
                                               replicator_authenticator=replicator_authenticator,
                                               replication_type="pull")
 
     # 5. verify SGW stats, cbl_replication_pull.rev_send_count sent to CBL equals to 90
     expvars = sg_client.get_expvars(sg_admin_url)
-    print("=== test 1 ===")
-    print(expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["rev_send_count"])
-    # assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["rev_send_count"] == 90, "request_changes_count is incorrect"
+    rev_send_count = expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["rev_send_count"]
+    if cbl_action_before_init_replication:
+        assert rev_send_count == 100, "rev_send_count {} is incorrect".format(rev_send_count)
+    else:
+        assert rev_send_count == 90, "rev_send_count {} is incorrect".format(rev_send_count)
 
     # 6. verify CBL, total number of docs is 90, and verify the doc ids are not belongs to tombstone docs
     cbl_doc_ids = db.getDocIds(cbl_db)
     cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
     assert len(cbl_docs) == 90, "The number of docs pull from SGW is incorrect"
-    # todo: validate deleted docs are not in cbl_docs
+    if not cbl_action_before_init_replication:
+        for deleted_sg_doc in docs_to_delete_1:
+            assert deleted_sg_doc["id"] not in cbl_doc_ids, "deleted doc on SGW should not be pulled to CBL"
 
     # 7. delete 15 more docs on SGW
     docs_to_delete_2 = sg_added_docs[10:25]
@@ -3984,13 +3992,13 @@ def test_replication_pull_from_empty_database(params_from_base_test_setup, attac
     assert len(sg_docs) == 75, "Expected number of docs is incorrect after doc deletion in sync-gateway"
 
     # 8. verify SGW stats, cbl_replication_pull.rev_send_count sent to CBL is still (90 + 15 deleted) 105
+    replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
     replicator.stop(repl)
 
     expvars = sg_client.get_expvars(sg_admin_url)
-    print("=== test 2 ===")
-    print(expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["rev_send_count"])
-    # assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["rev_send_count"] == 105, "request_changes_count is incorrect"
+    rev_send_count2 = expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["rev_send_count"]
+    assert rev_send_count2 == 115, "rev_send_count {} is incorrect".format(rev_send_count)
 
     # 9. verify CBL deleted docs in step 7 have been removed from CBL db
     cbl_doc_ids = db.getDocIds(cbl_db)
