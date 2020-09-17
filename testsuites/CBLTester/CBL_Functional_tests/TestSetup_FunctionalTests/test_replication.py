@@ -3903,7 +3903,7 @@ def test_blob_contructor_replication(params_from_base_test_setup, blob_data_type
 ])
 def test_replication_pull_from_empty_database(params_from_base_test_setup, attachment_generator, cbl_action_before_init_replication):
     '''
-    @summary: 
+    @summary:
     This test to validate pull replication on empty database. It should avoid sending deleted(tombstoned) documents.
     1. create 100 docs in SGW
     2. delete 10 docs in SGW, verify the 10 docs are in tombstone state
