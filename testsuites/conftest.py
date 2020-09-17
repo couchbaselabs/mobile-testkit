@@ -2,7 +2,6 @@ from utilities.xml_parser import parse_junit_result_xml
 
 
 def pytest_collection_modifyitems(items, config):
-    # markers_1 = "pytest.mark.abc"
     selected_items = []
     deselected_items = []
 
