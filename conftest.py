@@ -20,20 +20,23 @@ def pytest_runtest_makereport(item, call):
     # be "setup", "call", "teardown"
     setattr(item, "rep_" + rep.when, rep)
 
+
 @pytest.hookimpl(trylast=True)
 def pytest_sessionfinish(session, exitstatus):
     file_path = session.config.getoption("--custom-run")
     merge_xmls(file_path)
-    # os.system('open ' + "results/results.xml")
+
 
 def pytest_addoption(parser):
     parser.addoption("--custom-run",
                      action="store",
                      help="Sync Gateway mode to run the test in, 'cc' for channel cache or 'di' for distributed index")
 
+
 @pytest.hookimpl(tryfirst=True)
 def pytest_configure(config):
     print("Starting the tests .....")
+
 
 def merge_xmls(filepath):
     if filepath.startswith("http://") or filepath.startswith("https://"):
