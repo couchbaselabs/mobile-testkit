@@ -260,6 +260,15 @@ def is_delta_sync_enabled(cluster_config):
         return False
 
 
+def is_cbs_ce_enabled(cluster_config):
+    """ returns if true if CBS CE is enabled otherwise false """
+    cluster = load_cluster_config_json(cluster_config)
+    try:
+        return cluster["environment"]["cbs_ce"]
+    except KeyError:
+        return False
+
+
 def is_magma_enabled(cluster_config):
     cluster = load_cluster_config_json(cluster_config)
     try:

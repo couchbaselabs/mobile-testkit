@@ -410,7 +410,6 @@ def test_log_200mb(params_from_base_test_setup, sg_conf_name):
     mode = params_from_base_test_setup["mode"]
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     sg_platform = params_from_base_test_setup["sg_platform"]
-    sg_ce_version = params_from_base_test_setup["sg_ce"]
     log_info("Using cluster_conf: {}".format(cluster_conf))
     log_info("Using sg_conf: {}".format(sg_conf))
 
@@ -476,13 +475,10 @@ def test_log_200mb(params_from_base_test_setup, sg_conf_name):
             _, stdout, _ = remote_executor.execute(command)
             output = stdout[0].rstrip()
         # A backup file should be created with 200MB
-        if not sg_ce_version:
-            if (log == "sg_debug" or log == "sg_info") and sg_platform != "windows":
-                assert int(output) == int(SG_LOGS_FILES_NUM[log]) + 1
-            else:
-                assert output == SG_LOGS_FILES_NUM[log]
+        if (log == "sg_debug" or log == "sg_info") and sg_platform != "windows":
+            assert int(output) == int(SG_LOGS_FILES_NUM[log]) + 1
         else:
-            assert output == SG_LOGS_FILES_NUM[log] + 2
+            assert output == SG_LOGS_FILES_NUM[log]
 
     # Remove generated conf file
     os.remove(temp_conf)
