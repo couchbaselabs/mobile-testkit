@@ -1,8 +1,8 @@
 import glob
 import sys
+import urllib.request
 import xml
-from datetime import datetime, time
-from xunit import XUnitTestResult
+import xml.dom.minidom
 import pytest
 import os
 
@@ -25,146 +25,64 @@ def pytest_runtest_makereport(item, call):
 
 @pytest.hookimpl(trylast=True)
 def pytest_sessionfinish(session, exitstatus):
-    # file = session.config._htmlfile
-    # invoke the file opening in external tool
-    # os.system('open ' + "reports/test.xml")
+    file_path = session.config.getoption("--custom-run")
+    print(file_path)
+    merge_xmls(file_path)
+    # os.system('open ' + "results/results.xml")
 
-
-
+def pytest_addoption(parser):
+    parser.addoption("--custom-run",
+                     action="store",
+                     help="Sync Gateway mode to run the test in, 'cc' for channel cache or 'di' for distributed index")
 
 @pytest.hookimpl(tryfirst=True)
 def pytest_configure(config):
-    print("reportd data")
-    # to remove environment section
-    # config._metadata = None
-    #
-    # if not os.path.exists('reports'):
-    #     os.makedirs('reports')
-    #
-    # config.option.htmlpath = 'reports/' + datetime.now().strftime("%d-%m-%Y %H-%M-%S") + ".html"
+    print("Starting the tests .....")
 
-def merge_reports(filespath):
-    # log.info("Merging of report files from "+str(filespath):
-    testsuites = {}
-    if not isinstance(filespath, list):
-        filespaths = filespath.split(",")
-    else:
-        filespaths = filespath
-    for filepath in filespaths:
-        xml_files = glob.glob(filepath)
-        if not isinstance(filespath, list) and filespath.find("*"):
-            xml_files.sort(key=os.path.getmtime)
-        for xml_file in xml_files:
-            # log.info("-- " + xml_file + " --")
-            doc = xml.dom.minidom.parse(xml_file)
-            testsuitelem = doc.getElementsByTagName("testsuite")
-            for ts in testsuitelem:
-                tsname = ts.getAttribute("name")
-                tserros = ts.getAttribute("errors")
-                tsfailures = ts.getAttribute("failures")
-                tsskips = ts.getAttribute("skips")
-                tstime = ts.getAttribute("time")
-                tstests = ts.getAttribute("tests")
-                issuite_existed = False
-                tests = {}
-                testsuite = {}
-                # fill testsuite details
-                if tsname in list(testsuites.keys()):
-                    testsuite = testsuites[tsname]
-                    tests = testsuite['tests']
-                else:
-                    testsuite['name'] = tsname
-                testsuite['errors'] = tserros
-                testsuite['failures'] = tsfailures
-                testsuite['skips'] = tsskips
-                testsuite['time'] = tstime
-                testsuite['testcount'] = tstests
-                issuite_existed = False
-                testcaseelem = ts.getElementsByTagName("testcase")
-                # fill test case details
-                for tc in testcaseelem:
-                    testcase = {}
-                    tcname = tc.getAttribute("name")
-                    tctime = tc.getAttribute("time")
-                    tcerror = tc.getElementsByTagName("error")
 
-                    tcname_filtered = filter_fields(tcname)
-
-                    testcase['name'] = tcname
-                    testcase['time'] = tctime
-                    testcase['error'] = ""
-                    if tcerror:
-                        testcase['error']  = str(tcerror[0].firstChild.nodeValue)
-
-                    tests[tcname_filtered] = testcase
-                testsuite['tests'] = tests
-                testsuites[tsname] = testsuite
-
-    # log.info("\nNumber of TestSuites="+str(len(testsuites)))
-    tsindex = 0
-    for tskey in list(testsuites.keys()):
-        tsindex = tsindex+1
-        # log.info("\nTestSuite#"+str(tsindex)+") "+str(tskey)+", Number of Tests="+str(len(testsuites[tskey]['tests'])))
-        pass_count = 0
-        fail_count = 0
-        tests = testsuites[tskey]['tests']
-        xunit = XUnitTestResult()
-        for testname in list(tests.keys()):
-            testcase = tests[testname]
-            tname = testcase['name']
-            ttime = testcase['time']
-            inttime = float(ttime)
-            terrors = testcase['error']
-            tparams = ""
-            if "," in tname:
-                tparams = tname[tname.find(","):]
-                tname = tname[:tname.find(",")]
-
-            if terrors:
-                failed = True
-                fail_count = fail_count + 1
-                xunit.add_test(name=tname, status='fail', time=inttime,
-                               errorType='membase.error', errorMessage=str(terrors), params=tparams
-                               )
-            else:
-                passed = True
-                pass_count = pass_count + 1
-                xunit.add_test(name=tname, time=inttime, params=tparams
-                    )
-
-        str_time = time.strftime("%y-%b-%d_%H-%M-%S", time.localtime())
-        abs_path = os.path.dirname(os.path.abspath(sys.argv[0]))
-        root_log_dir = os.path.join(abs_path, "logs{0}testrunner-{1}".format(os.sep, str_time))
-        if not os.path.exists(root_log_dir):
-            os.makedirs(root_log_dir)
-        logs_folder = os.path.join(root_log_dir, "merged_summary")
+def merge_xmls(filepath):
+    if filepath.startswith("http://") or filepath.startswith("https://"):
+        if filepath.endswith(".xml"):
+            url_path = filepath
+        else:
+            url_path = filepath + "/testReport/api/xml?pretty=true"
+        if not os.path.exists('report_logs'):
+            os.mkdir('report_logs')
+        newfilepath = 'report_logs/' + "_testresult.xml"
         try:
-            os.mkdir(logs_folder)
-        except:
-            pass
-        output_filepath="{0}{2}mergedreport-{1}".format(logs_folder, str_time, os.sep).strip()
+            filedata = urllib.request.urlopen(url_path)
+            print(filedata)
+            datatowrite = filedata.read()
+            file_path = newfilepath
+            with open(file_path, 'wb') as f:
+                f.write(datatowrite)
+        except Exception as ex:
+            print("Error:: " + str(ex) + "! Please check if " +
+                  url_path + " URL is accessible!!")
+            print("Running all the tests instead for now.")
+            return None, None
 
-        xunit.write(output_filepath)
-        xunit.print_summary()
-        # log.info("Summary file is at " + output_filepath+"-"+tsname+".xml")
-    return testsuites
+    doc1 = xml.dom.minidom.parse(file_path)
+    doc2 = xml.dom.minidom.parse("results/results.xml")
+    added_test_count = 0
+    testresultelem = doc1.getElementsByTagName("testsuites")
+    testresultelem2 = doc2.getElementsByTagName("testsuites")
+    testsuitelem = testresultelem[0].getElementsByTagName("testsuite")
+    testsuitelem2 = testresultelem2[0].getElementsByTagName("testsuite")
+    for ts in testsuitelem:
+        testcaseelem = ts.getElementsByTagName("testcase")
+        for tc in testcaseelem:
+            if not (tc.getElementsByTagName("failure") or tc.getElementsByTagName("error")):
+                added_test_count += 1
+                doc2.childNodes[0].childNodes[0].appendChild(tc)
 
-def filter_fields(testname):
-    testwords = testname.split(",")
-    line = ""
-    for fw in testwords:
-        if not fw.startswith("logs_folder") and not fw.startswith("conf_file") \
-                and not fw.startswith("cluster_name:") \
-                and not fw.startswith("ini:") \
-                and not fw.startswith("case_number:") \
-                and not fw.startswith("num_nodes:") \
-                and not fw.startswith("spec:"):
-            if not "\":" in fw or "query:" in fw:
-                #log.info("Replacing : with ={}".format(fw))
-                line = line + fw.replace(":", "=", 1)
-            else:
-                line = line + fw
-            if fw != testwords[-1]:
-                line = line + ","
+    current_test_count = int(testsuitelem2[0].getAttribute("tests")) + added_test_count
+    testsuitelem2[0].setAttribute("tests", str(current_test_count))
+    print(testsuitelem2[0].toxml())
+    doc2.toxml()
+    doc2.writexml(open('results/results.xml', 'w'),
+               indent="  ",
+               addindent="  ",
+               newl='\n')
+    doc2.unlink()
 
-    return line
