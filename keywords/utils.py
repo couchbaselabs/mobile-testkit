@@ -458,3 +458,19 @@ def set_device_enabled(run_on_device, list_size):
             device_enabled_list.append(False)
 
     return device_enabled_list
+
+
+def is_replicator_in_connection_retry(error_msg):
+    # check android
+    if "POSIXErrorDomain,111" in error_msg and "Connection refused" in error_msg and "Android" in error_msg:
+        return True
+    # check java
+    if "CouchbaseLite,11001" in error_msg and "WebSocket connection closed by peer" in error_msg and "Java" in error_msg:
+        return True
+    # check all .net
+    if "POSIXDomain / 111" in error_msg and "Connection refused" in error_msg:
+        return True
+    # check ios
+    if "NSPOSIXErrorDomain" in error_msg and "Connection refused" in error_msg and "Code=61" in error_msg:
+        return True
+    return False

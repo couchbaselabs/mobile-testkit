@@ -4,7 +4,7 @@ import os
 from CBLClient.Client import Client
 from CBLClient.Args import Args
 from CBLClient.Authenticator import Authenticator
-from keywords.utils import log_info
+from keywords.utils import log_info, is_replicator_in_connection_retry
 from utilities.cluster_config_utils import sg_ssl_enabled
 
 
@@ -310,8 +310,8 @@ class Replication(object):
         max_idle_count = 3
 
         # Load the current replicator config to decide retry strategy
-        repl_config = self.getConfig(repl)	
-        isContinous = self.isContinuous(repl_config)	
+        repl_config = self.getConfig(repl)
+        isContinous = self.isContinuous(repl_config)
         log_info("The current replicator sets continuous to {}".format(isContinous))
 
         # Sleep until replicator completely processed
@@ -339,7 +339,9 @@ class Replication(object):
                 if err is not None and err != 'nil' and err != -1:
                     if not isContinous:
                         raise Exception("Error while replicating", err)
-                    elif ("WebSocket error 1001" not in err) or (cur_timestamp - begin_timestamp) >= 600:
+                    if is_replicator_in_connection_retry(err) and (cur_timestamp - begin_timestamp) < 600:
+                        log_info("Replicator connection is retrying, please wait ......")
+                    else:
                         raise Exception("Error while replicating", err)
 
             activity_level = self.getActivitylevel(repl)
