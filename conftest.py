@@ -1,5 +1,3 @@
-import glob
-import sys
 import urllib.request
 import xml
 import xml.dom.minidom
@@ -22,11 +20,9 @@ def pytest_runtest_makereport(item, call):
     # be "setup", "call", "teardown"
     setattr(item, "rep_" + rep.when, rep)
 
-
 @pytest.hookimpl(trylast=True)
 def pytest_sessionfinish(session, exitstatus):
     file_path = session.config.getoption("--custom-run")
-    print(file_path)
     merge_xmls(file_path)
     # os.system('open ' + "results/results.xml")
 
@@ -38,7 +34,6 @@ def pytest_addoption(parser):
 @pytest.hookimpl(tryfirst=True)
 def pytest_configure(config):
     print("Starting the tests .....")
-
 
 def merge_xmls(filepath):
     if filepath.startswith("http://") or filepath.startswith("https://"):
@@ -85,4 +80,3 @@ def merge_xmls(filepath):
                addindent="  ",
                newl='\n')
     doc2.unlink()
-
