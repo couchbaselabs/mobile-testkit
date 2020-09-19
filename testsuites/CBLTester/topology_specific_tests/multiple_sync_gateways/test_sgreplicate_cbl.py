@@ -7,11 +7,10 @@ from CBLClient.Database import Database
 from CBLClient.Replication import Replication
 from CBLClient.Authenticator import Authenticator
 from keywords.SyncGateway import sync_gateway_config_path_for_mode, SyncGateway, setup_replications_on_sgconfig, update_replication_in_sgw_config
-# from libraries.testkit.syncgateway import wait_until_active_tasks_empty
-# from keywords.constants import CLUSTER_CONFIGS_DIR
 from libraries.testkit import cluster
 from libraries.testkit.admin import Admin
-from requests import HTTPError
+# from requests import HTTPError
+from keywords.utils import log_info
 # from keywords.utils import log_info, random_string
 from keywords import attachment, document
 from concurrent.futures import ThreadPoolExecutor
@@ -404,7 +403,7 @@ def test_sg_replicate_withReplicationId_cancel(params_from_base_test_setup, setu
 
     # 9. Create more docs and verify replication does not happen to cbl2
     db.create_bulk_docs(num_of_docs, "Replication2", db=cbl_db1, channels=channels1)
-    sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id, write_flag=True)
+    # sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id, write_flag=True)
     cbl_doc_ids2 = db.getDocIds(cbl_db2)
     count = sum('Replication2_' in s for s in cbl_doc_ids2)
     assert count == 0, "docs replicated to cbl2 though replication is cancelled"
@@ -775,6 +774,7 @@ def test_sg_replicate_channel_filtering_with_attachments(params_from_base_test_s
     db, num_of_docs, sg_db1, sg_db2, name1, name2, password, channels1, channels2, replicator, replicator_authenticator1, replicator_authenticator2, sg1_blip_url, sg2_blip_url, sg1, sg2, repl1, _, cbl_db1, cbl_db2 = setup_syncGateways_with_cbl(params_from_base_test_setup,
                                                                                                                                                                                                                                                     setup_customized_teardown_test, cbl_replication_type="push_pull",
                                                                                                                                                                                                                                                     sgw_cluster1_sg_config_name=sgw_cluster1_conf_name, sgw_cluster2_sg_config_name=sgw_cluster2_conf_name)
+
     # 2. Create docs on cbl-db1 and have push_pull, continous replication with sg1
     #        each with 2 differrent channel, few docs on both channels
     channels3 = channels1 + channels2
@@ -798,7 +798,7 @@ def test_sg_replicate_channel_filtering_with_attachments(params_from_base_test_s
     db.create_bulk_docs(channel2_docs, Replication1_channel2, db=cbl_db1, channels=channels2, attachments_generator=attachment.generate_png_100_100)
     channel3_doc_ids = db.create_bulk_docs(channel3_docs, Replication1_channel3, db=cbl_db1, channels=channels3, attachments_generator=attachment.generate_png_100_100)
 
-    # 4. pull replication from sg1 -> sg2
+    # 4. pushpull replication from sg1 -> sg2
     repl_id_1 = sg1.start_replication2(
         local_db=sg_db1,
         remote_url=sg2.url,
@@ -811,12 +811,11 @@ def test_sg_replicate_channel_filtering_with_attachments(params_from_base_test_s
     )
     # 4. verify docs with channel1 which is filtered in replication should get replicated to cbl_db2
     sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id_1, write_flag=True)
-    time.sleep(60)
+    # time.sleep(60)
     # Do pull replication from sg2 -> cbl2
     repl4 = replicator.configure_and_replicate(
         source_db=cbl_db2, replicator_authenticator=replicator_authenticator4, target_url=sg2_blip_url,
-        replication_type="pull", continuous=True
-    )
+        replication_type="push_pull", continuous=True)
     # Verify docs with attachments are replicated to sgw cluster2
     sg_docs_attachments = sg_client.get_all_docs(url=sg1.url, db=sg_db1, auth=session, include_docs=True)["rows"]
     for doc in sg_docs_attachments:
@@ -840,7 +839,7 @@ def test_sg_replicate_channel_filtering_with_attachments(params_from_base_test_s
     count = sum(Replication1_channel1 in s for s in cbl_doc_ids2)
     assert count == channel1_docs, "all docs with channel1 did not replicate to cbl db2"
     count = sum(Replication1_channel3 in s for s in cbl_doc_ids2)
-    assert count == channel3_docs, "all docs with channel1 and channel2 did not replicate to cbl db2"
+    assert count == channel3_docs, "all docs with channel3 did not replicate to cbl db2"
 
     # 5. Verify docs with channel2 is not accessed by user 2 i.e cbl db2
     count = sum(Replication1_channel2 in s for s in cbl_doc_ids2)
@@ -1359,7 +1358,7 @@ def test_sg_replicate_replications_with_drop_out_one_node(params_from_base_test_
     active_tasks = sg1.admin.get_sgreplicate2_active_tasks(sg_db1, expected_tasks=expected_tasks)
     assert len(active_tasks) == expected_tasks, "did not show right number of tasks "
 
-    # 3. verify only one replication runs only one node.
+    # 3. verify only one replication runs only one node on EE and 2 replications on each on CE 
     if sg_ce:
         expected_count = 2
         repl_count = sg1.admin.get_replications_count(sg_db1, expected_count=expected_count)
@@ -1367,7 +1366,7 @@ def test_sg_replicate_replications_with_drop_out_one_node(params_from_base_test_
         repl_count = sg3.admin.get_replications_count(sg_db1, expected_count=expected_count)
         assert repl_count == expected_count, "replications count did not get the right number on sg3"
     else:
-        expected_count = 2
+        expected_count = 1
         repl_count = sg1.admin.get_replications_count(sg_db1, expected_count=expected_count)
         assert repl_count == expected_count, "replications count did not get the right number on sg1"
         repl_count = sg3.admin.get_replications_count(sg_db1, expected_count=expected_count)
@@ -1894,8 +1893,8 @@ def test_sg_replicate_restart_active_passive_nodes(params_from_base_test_setup, 
             restart_sg_nodes(sg1, sg3, sgw_cluster1_sg_config, cluster_config)
         else:
             restart_sg_nodes(sg2, sg4, sgw_cluster2_sg_config, cluster_config)
-        db.create_bulk_docs(num_of_docs, "threadStop", db=cbl_db1, channels=channels1)
-        num_iters = update_from_cbl_task.result()
+        db.create_bulk_docs(1, "threadStop", db=cbl_db1, channels=channels1)
+        update_from_cbl_task.result()
         # drop_add_sgw_node_task.result()
 
     sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id_1, write_flag=True)
@@ -1904,19 +1903,20 @@ def test_sg_replicate_restart_active_passive_nodes(params_from_base_test_setup, 
     replicator.wait_until_replicator_idle(repl1)
     replicator.wait_until_replicator_idle(repl2)
     replicator.wait_until_replicator_idle(repl4)
-    # REmove it after the test TODO: Testing
-    sg_client = MobileRestClient()
-    sg_docs = sg_client.get_all_docs(url=sg4_admin_url, db=sg_db2)["rows"]
-    for doc in sg_docs:
-        if 'Replication1_' in doc:
-            print("doc of sg_docs of Replication1_", sg_docs[doc])
+
     # 6. Verify all replications completed on passive node(sg4)
-    cbl_doc_ids = db.getDocIds(cbl_db3)
-    count1 = sum('Replication1_' in s for s in cbl_doc_ids)
+    cbl_doc_ids3 = db.getDocIds(cbl_db3)
+    cbl_doc_ids1 = db.getDocIds(cbl_db1)
+    count1 = sum('Replication1_' in s for s in cbl_doc_ids3)
     assert count1 == num_of_docs, "all docs created in cbl db1 did not replicate to cbl db3"
-    cbl_docs = db.getDocuments(cbl_db3, cbl_doc_ids)
-    for doc in cbl_docs:
-        assert cbl_docs[doc]["updates-cbl"] == num_iters + 1, "docs did not update successfully"
+    cbl_docs3 = db.getDocuments(cbl_db3, cbl_doc_ids3)
+    cbl_docs1 = db.getDocuments(cbl_db1, cbl_doc_ids1)
+    for doc in cbl_docs3:
+        try:
+            cbl_docs1[doc]["updates-cbl"]
+            assert cbl_docs3[doc]["updates-cbl"] == cbl_docs1[doc]["updates-cbl"], "docs did not update successfully"
+        except KeyError as e:
+            log_info("skipping the docs which does not have new update")
 
     replicator.stop(repl1)
     replicator.stop(repl2)
