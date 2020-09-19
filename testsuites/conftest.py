@@ -1,6 +1,23 @@
 from utilities.xml_parser import parse_junit_result_xml
 
 
+def pytest_addoption(parser):
+    parser.addoption("--exclude-tests", action="store",
+                     help="Value can be 'failed' (or) 'passed' (or) 'failed=<junit_xml_path (or) "
+                     "jenkins_build_url>' (or) 'passed=<junit_xml_path or "
+                     "jenkins_build_url>' (or) 'file=<filename>'")
+
+    parser.addoption("--include-tests", action="store",
+                     help="Value can be 'failed' (or) 'passed' (or) 'failed=<junit_xml_path (or) "
+                     "jenkins_build_url>' (or) 'passed=<junit_xml_path or "
+                     "jenkins_build_url>' (or) 'file=<filename>'")
+
+    parser.addoption("--rerun-tests", action="store",
+                     help="Value can be 'failed' (or) 'passed' (or) 'failed=<junit_xml_path (or) "
+                     "jenkins_build_url>' (or) 'passed=<junit_xml_path or "
+                     "jenkins_build_url>' (or) 'file=<filename>'")
+
+
 def pytest_collection_modifyitems(items, config):
     selected_items = []
     deselected_items = []
