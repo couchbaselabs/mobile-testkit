@@ -1,12 +1,8 @@
-import logging
 
-import signal
-import shutil
 import glob
 import xml.dom.minidom
 from optparse import OptionParser
 import urllib.request
-from http.client import BadStatusLine
 import os
 import urllib
 import sys
@@ -26,7 +22,7 @@ def parse_junit_result_xml(filepath=""):
         doc = xml.dom.minidom.parse(xml_file)
         testsuitelem = doc.getElementsByTagName("testsuite")
         for ts in testsuitelem:
-            tsname = ts.getAttribute("name")
+            # tsname = ts.getAttribute("name")
             testcaseelem = ts.getElementsByTagName("testcase")
             failed = False
             for tc in testcaseelem:
@@ -82,10 +78,10 @@ def parse_testreport_result_xml(filepath=""):
             for tc in testcaseelem:
                 tcname = tc.getAttribute("name")
                 if tc.getElementsByTagName("failure") or tc.getElementsByTagName("error"):
-                    failed = True
+                    # failed = True
                     failed_tests.append(tcname)
                 else:
-                    failed = False
+                    #  failed = False
                     passed_tests.append(tcname)
 
     if failed_tests:
@@ -142,7 +138,7 @@ def filter_fields(testname):
                 and not fw.startswith("case_number:") \
                 and not fw.startswith("num_nodes:") \
                 and not fw.startswith("spec:"):
-            if not "\":" in fw or "query:" in fw:
+            if "\":" not in fw or "query:" in fw:
                 # log.info("Replacing : with ={}".format(fw))
                 line = line + fw.replace(":", "=", 1)
             else:
