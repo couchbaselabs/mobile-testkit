@@ -202,14 +202,10 @@ def test_peer_to_peer_enable_tls_with_any_selfsigned_and_authenticator(params_fr
 
     server_host = host_list[0]
     num_of_docs = 50
-    # listener = ListenerAuthenticator(base_url_list[0])
-    # listener_auth = listener.listenerCertificateAuthenticator_create
+
     replicator_tcp_listener = peer_to_peer_server.server_start(cbl_db_server, tls_disable=False,
                                                                tls_auth_type="self_signed", tls_authenticator=True)
     url_listener_port = peer_to_peer_server.get_url_listener_port(replicator_tcp_listener)
-
-    # replicator_tls_auth = BasicAuthenticator(base_url_client)
-    # replicator_certs = replicator_tls_auth.tlsAuthenticator_create
 
     db_obj_client.create_bulk_docs(num_of_docs, "replication", db=cbl_db_client, channels=channels,
                                    attachments_generator=attachment.generate_png_100_100)
@@ -229,6 +225,83 @@ def test_peer_to_peer_enable_tls_with_any_selfsigned_and_authenticator(params_fr
     assert server_docs_count == num_of_docs, "Number of docs is not equivalent to number of docs in server "
     replicator.stop(repl)
     peer_to_peer_server.server_stop(replicator_tcp_listener, endPointType)
+
+
+@pytest.mark.listener
+@pytest.mark.parametrize("continuous, replicator_type, endPointType", [
+    (True, "push_pull", "URLEndPoint"),
+    (False, "push", "URLEndPoint"),
+    (True, "push", "URLEndPoint"),
+    (False, "push_pull", "URLEndPoint"),
+])
+def test_peer_to_peer_tls_self_signed_mutiple_clients(params_from_base_test_setup, server_setup, continuous, replicator_type, endPointType):
+    """
+        @summary:
+        1. Start the server with the self signed certs using the create identity api.
+        2. Start replication with AcceptOnlySelfSignedServerCertificate.
+        3. Verify replication is completed.
+        4. Verify all docs got replicated on server
+    """
+    host_list = params_from_base_test_setup["host_list"]
+    db_obj_list = params_from_base_test_setup["db_obj_list"]
+    db_name_list = params_from_base_test_setup["db_name_list"]
+    base_url_list = server_setup["base_url_list"]
+
+    cbl_db_server = server_setup["cbl_db_server"]
+    cbl_db_list = server_setup["cbl_db_list"]
+    channels = ["peerToPeer"]
+    base_url_client = base_url_list[1]
+    replicator = Replication(base_url_client)
+
+    peerToPeer_client = PeerToPeer(base_url_client)
+    db_obj_server = db_obj_list[0]
+    cbl_db_client = cbl_db_list[1]
+    db_obj_client = db_obj_list[1]
+    db_name_server = db_name_list[0]
+    peerToPeer_server = PeerToPeer(base_url_list[0])
+    peer_to_peer_server = PeerToPeer(base_url_list[0])
+    message_url_tcp_listener = server_setup["message_url_tcp_listener"]
+    print(message_url_tcp_listener)
+    peer_to_peer_server.server_stop(message_url_tcp_listener, "MessageEndPoint")
+
+    server_host = host_list[0]
+    num_of_docs = 50
+
+    url_listener = peerToPeer_server.server_start(cbl_db_server, tls_disable=False, tls_auth_type="self_signed_create")
+    url_listener_port = peerToPeer_server.get_url_listener_port(url_listener)
+
+    db_obj_client.create_bulk_docs(num_of_docs, "replication", db=cbl_db_client, channels=channels,
+                                   attachments_generator=attachment.generate_png_100_100)
+
+    # Now set up client
+    repl = peerToPeer_client.configure(host=server_host, server_db_name=db_name_server,
+                                       client_database=cbl_db_client, continuous=continuous,
+                                       replication_type=replicator_type, endPointType=endPointType,
+                                       port=url_listener_port, tls_disable=False,
+                                       server_verification_mode=True)
+    repl2 = peerToPeer_client.configure(host=server_host, server_db_name=db_name_server,
+                                        client_database=cbl_db_client, continuous=continuous,
+                                        replication_type=replicator_type, endPointType=endPointType,
+                                        port=url_listener_port, tls_disable=False,
+                                        server_verification_mode=True)
+
+    peerToPeer_client.client_start(repl)
+    peerToPeer_client.client_start(repl2)
+    replicator.wait_until_replicator_idle(repl)
+    replicator.wait_until_replicator_idle(repl2)
+    total2 = replicator.getTotal(repl)
+    completed2 = replicator.getCompleted(repl)
+    total = replicator.getTotal(repl2)
+    completed = replicator.getCompleted(repl2)
+    assert total == completed, "replication from client to server did not completed " + str(
+        total) + " not equal to " + str(completed)
+    assert total2 == completed2, "replication from client to server did not completed " + str(
+        total2) + " not equal to " + str(completed2)
+    server_docs_count = db_obj_server.getCount(cbl_db_server)
+    assert server_docs_count == num_of_docs, "Number of docs is not equivalent to number of docs in server "
+    replicator.stop(repl)
+    replicator.stop(repl2)
+    peerToPeer_server.server_stop(url_listener, replicator_type)
 
 
 @pytest.mark.listener
