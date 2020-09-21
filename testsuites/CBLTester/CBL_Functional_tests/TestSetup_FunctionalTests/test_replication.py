@@ -44,8 +44,8 @@ def setup_teardown_test(params_from_base_test_setup):
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("num_of_docs, continuous, x509_cert_auth", [
-    (10, True, True),
-    pytest.param(100, True, False, marks=pytest.mark.sanity),
+    pytest.param(10, True, True, marks=pytest.mark.sanity),
+    (100, True, False),
     (1000, True, True)
 ])
 def test_replication_configuration_valid_values(params_from_base_test_setup, num_of_docs, continuous, x509_cert_auth):
@@ -3796,7 +3796,7 @@ def test_replication_behavior_with_channelRole_modification(params_from_base_tes
 @pytest.mark.replication
 @pytest.mark.parametrize("blob_data_type", [
     'byte_array',
-    'stream',
+    pytest.param('stream', marks=pytest.mark.sanity),
     'file_url'
 ])
 def test_blob_contructor_replication(params_from_base_test_setup, blob_data_type):
