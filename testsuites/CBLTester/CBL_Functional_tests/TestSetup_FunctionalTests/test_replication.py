@@ -3907,12 +3907,18 @@ def test_replication_pull_from_empty_database(params_from_base_test_setup, attac
     This test to validate pull replication on empty database. It should avoid sending deleted(tombstoned) documents.
     1. create 100 docs in SGW
     2. delete 10 docs in SGW, verify the 10 docs are in tombstone state
-    3. create a cbl db, but do not create any doc (cbl db is empty)
-    4. create a pull replicator, start replication
-    5. verify SGW stats, cbl_replication_pull.rev_send_count sent to CBL equals to 90
+    3. create a cbl db, based on cbl_action_before_init_replication:
+        if False, do not create any doc (cbl db is empty, absolutely no action before replication, NO tombstone docs get pull)
+        if True, create 9 docs in cbl db, delete these 9 docs (cbl db is empty,  but no longer in initial state, tombstone docs get pull)
+    4. create a onetime pull replicator, start replication
+    5. verify SGW stats, based on cbl_action_before_init_replication:
+        if False, cbl_replication_pull.rev_send_count = 90
+        if True, cbl_replication_pull.rev_send_count = 100
     6. verify CBL, total number of docs is 90, and verify the doc ids are not belongs to tombstone docs
     7. delete 15 more docs on SGW
-    8. verify SGW stats, cbl_replication_pull.rev_send_count sent to CBL is still (90 + 15 deleted) 105
+    8. restart the replication, verify SGW stats, cbl_replication_pull.rev_send_count = 115, regardless cbl_action_before_init_replication:
+        if False, replication will pull 90 + 10 (deleted in first shot) + 15 (deleted in second shot) = 115
+        if True, replication will pull 100 + 15 (deleted in second shot) = 115
     9. verify CBL deleted docs in step 7 have been removed from CBL db
     '''
     cluster_config = params_from_base_test_setup["cluster_config"]
@@ -3991,7 +3997,7 @@ def test_replication_pull_from_empty_database(params_from_base_test_setup, attac
     sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
     assert len(sg_docs) == 75, "Expected number of docs is incorrect after doc deletion in sync-gateway"
 
-    # 8. verify SGW stats, cbl_replication_pull.rev_send_count sent to CBL is still (90 + 15 deleted) 105
+    # 8. restart the replication, verify SGW stats, cbl_replication_pull.rev_send_count = 115, regardless cbl_action_before_init_replication:
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
     replicator.stop(repl)
