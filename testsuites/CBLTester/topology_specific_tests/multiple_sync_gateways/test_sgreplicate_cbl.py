@@ -9,7 +9,7 @@ from CBLClient.Authenticator import Authenticator
 from keywords.SyncGateway import sync_gateway_config_path_for_mode, SyncGateway, setup_replications_on_sgconfig, update_replication_in_sgw_config
 from libraries.testkit import cluster
 from libraries.testkit.admin import Admin
-# from requests import HTTPError
+from requests.exceptions import HTTPError
 from keywords.utils import log_info
 # from keywords.utils import log_info, random_string
 from keywords import attachment, document
@@ -1358,7 +1358,7 @@ def test_sg_replicate_replications_with_drop_out_one_node(params_from_base_test_
     active_tasks = sg1.admin.get_sgreplicate2_active_tasks(sg_db1, expected_tasks=expected_tasks)
     assert len(active_tasks) == expected_tasks, "did not show right number of tasks "
 
-    # 3. verify only one replication runs only one node on EE and 2 replications on each on CE 
+    # 3. verify only one replication runs only one node on EE and 2 replications on each on CE
     if sg_ce:
         expected_count = 2
         repl_count = sg1.admin.get_replications_count(sg_db1, expected_count=expected_count)
@@ -1380,7 +1380,7 @@ def test_sg_replicate_replications_with_drop_out_one_node(params_from_base_test_
     # active_tasks = sg3.admin.get_replications_count(sg_db1, expected_count=expected_count)
     # assert len(active_tasks) == expected_count, "replications of sg1 did not move to sg3"
     local_repl_count = sg1.admin.get_replications_count(sg_db1, expected_count)
-    assert local_repl_count == expected_count, "replications count did not get the right number on sg3"
+    assert local_repl_count == expected_count, "replications count did not get the right number on sg1"
 
     # 6. Verify replication completes all docs replicated to destination node
     db.create_bulk_docs(num_of_docs, Replication3, db=cbl_db1, channels=channels1)
@@ -1965,7 +1965,7 @@ def test_sg_replicate_adhoc_replication(params_from_base_test_setup, setup_custo
     replicator.wait_until_replicator_idle(repl1)
     # num_of_expected_written_docs = num_of_docs
 
-    repl_id_1 = sg1.start_replication2(
+    sg1.start_replication2(
         local_db=sg_db1,
         remote_url=sg2.url,
         remote_db=sg_db2,
@@ -1974,8 +1974,6 @@ def test_sg_replicate_adhoc_replication(params_from_base_test_setup, setup_custo
         direction=direction,
         adhoc=True
     )
-    # active_tasks = sg1.admin.get_sgreplicate2_active_tasks(sg_db1)
-    sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id_1, read_flag=True, write_flag=True)
     replicator.wait_until_replicator_idle(repl2)
     # assert len(active_tasks) == 1
     cbl_doc_ids2 = db.getDocIds(cbl_db2)
@@ -2104,7 +2102,8 @@ def test_sg_replicate_custom_conflict_resolve(params_from_base_test_setup, setup
         remote_url=sg2.url,
         remote_db=sg_db2,
         remote_user=name2,
-        remote_password=password
+        remote_password=password,
+        continuous=True
     )
     sg1.admin.wait_until_sgw_replication_done(db=sg_db1, repl_id=repl_id_1, write_flag=True)
     replicator.configure_and_replicate(
@@ -2126,8 +2125,8 @@ def test_sg_replicate_custom_conflict_resolve(params_from_base_test_setup, setup
     }
     return defaultPolicy(conflict);
 }"""
-    temp_sg_config = update_replication_in_sgw_config(sg_conf_name, sg_mode, repl_remote=sg2.url, repl_remote_db=sg_db2, repl_remote_user=name1, repl_remote_password=password, repl_repl_id=repl_id,
-                                                      repl_direction="push_and_pull", repl_conflict_resolution_type="custom", repl_continuous=None, repl_filter_query_params=None, custom_conflict_js_function=custom_conflict_js_function)
+    temp_sg_config = update_replication_in_sgw_config(sg_conf_name, sg_mode, repl_remote=sg2.url, repl_remote_db=sg_db2, repl_remote_user=name2, repl_remote_password=password, repl_repl_id=repl_id,
+                                                      repl_direction="pushAndPull", repl_conflict_resolution_type="custom", repl_continuous=True, repl_filter_query_params=None, custom_conflict_js_function=custom_conflict_js_function)
     sg1.restart(config=temp_sg_config, cluster_config=cluster_config)
     # 6. start push_pull replication with one shot with custom conflict resovler
     sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id, read_flag=True, write_flag=True)
@@ -2135,15 +2134,17 @@ def test_sg_replicate_custom_conflict_resolve(params_from_base_test_setup, setup
     # if  remote_wins : docs updated on sg2 gets replicated to sg1
 
     # 6. Verify docs created in cbl2
-    # cbl_doc_ids1 = db.getDocIds(cbl_db1)
+    cbl_doc_ids1 = db.getDocIds(cbl_db1)
     cbl_doc_ids2 = db.getDocIds(cbl_db2)
-    for doc_id in cbl_doc_ids2:
-        doc1 = db.getDocument(cbl_db1, doc_id)
-        doc2 = db.getDocument(cbl_db2, doc_id)
-        assert doc1["cbl1-update"] == 1, "merge of local and remote doc did not replicated on cbl db1"
-        assert doc1["cbl2-update"] == 1, "merge of local and remote doc did not replicated on cbl db1"
-        assert doc2["cbl1-update"] == 1, "merge of local and remote doc did not replicated on cbl db2"
-        assert doc2["cbl2-update"] == 1, "merge of local and remote doc did not replicated on cbl db2"
+    cbl_db_docs1 = db.getDocuments(cbl_db1, cbl_doc_ids1)
+    cbl_db_docs2 = db.getDocuments(cbl_db2, cbl_doc_ids2)
+    for doc in cbl_db_docs1:
+        try:
+            cbl_db_docs1[doc]["cbl1-update"]
+            assert cbl_db_docs2[doc]["cbl1-update"] == 1, "merge of local and remote doc did not replicated on cbl db2"
+        except KeyError:
+            assert cbl_db_docs1[doc]["cbl2-update"] == 1, "merge of local and remote doc did not replicated on cbl db1"
+            assert cbl_db_docs2[doc]["cbl2-update"] == 1, "merge of local and remote doc did not replicated on cbl db2"
 
 
 def restart_sg_nodes(sg1, sg2, sg_config, cluster_config):

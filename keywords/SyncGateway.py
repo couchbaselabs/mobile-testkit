@@ -980,8 +980,8 @@ def update_replication_in_sgw_config(sg_conf_name, sg_mode, repl_remote, repl_re
     temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ repl_conflict_resolution_type }}", "\"{}\"".format(repl_conflict_resolution_type))
     temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ repl_repl_id }}", "\"{}\"".format(repl_repl_id))
     if repl_continuous is not None:
-        cont = "True"
-        temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ repl_continuous }}", "{},".format(cont))
+        cont = "true"
+        temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ repl_continuous }}", "\"continuous\": {},".format(cont))
     else:
         temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ repl_continuous }}", "")
     if repl_filter_query_params is not None:

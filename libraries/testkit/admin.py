@@ -289,7 +289,7 @@ class Admin:
 
     def get_replications_count(self, db, expected_count=1):
         local_count = 0
-        max_count = 5
+        max_count = 8
         while True:
             r = requests.get("{}/{}/_replication".format(self.admin_url, db), verify=False)
             log_request(r)
@@ -301,9 +301,7 @@ class Admin:
                 repl_body = resp_data[repl]
                 if "(local)" in repl_body['assigned_node']:
                     count += 1
-            if count >= expected_count:
-                break
-            if local_count >= max_count:
+            if count == expected_count or local_count >= max_count:
                 break
             time.sleep(1)
             local_count += 1
