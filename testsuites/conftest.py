@@ -16,7 +16,6 @@ def pytest_collection_modifyitems(items, config):
     rerun_result_option = config.getoption("--rerun-tests")
     if rerun_result_option:
         result_option = rerun_result_option
-    if result_option:
         result_option = result_option.split("=")
         result_name = result_option[0]
         if len(result_option) == 2:
