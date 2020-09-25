@@ -10,7 +10,7 @@ from libraries.testkit.debug import log_request
 from libraries.testkit.debug import log_response
 from keywords import cbgtconfig
 from utilities.cluster_config_utils import sg_ssl_enabled
-from requests.exceptions import HTTPError
+# from requests.exceptions import HTTPError
 from keywords.utils import log_info
 
 import logging
