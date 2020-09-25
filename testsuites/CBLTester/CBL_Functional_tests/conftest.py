@@ -519,14 +519,12 @@ def params_from_base_suite_setup(request):
         with open(suite_log_zip_file, 'wb') as fh:
             fh.write(zip_data.encode())
             fh.close()
-
     if create_db_per_suite:
         # Delete CBL database
         log_info("Deleting the database {} at the suite teardown".format(create_db_per_suite))
         time.sleep(2)
         suite_db.deleteDB(suite_source_db)
         time.sleep(1)
-
     if create_db_per_suite:
         # Flush all the memory contents on the server app
         log_info("Flushing server memory")
