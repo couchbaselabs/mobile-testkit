@@ -90,7 +90,7 @@ def test_importdocs_false_shared_bucket_access_true(params_from_base_test_setup)
         sg1_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"]
     except KeyError:
         is_import_count_available = 1
-    assert is_import_count_available == 1, "import_count appears on sync gateway node"
+    assert is_import_count_available == 1 or sg1_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"] == 0, "import_count appears on sync gateway node"
 
     # 7. Verify import_count on SGW2 should show the number matches with num of docs
     sg2_import_count = sg2_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"]
