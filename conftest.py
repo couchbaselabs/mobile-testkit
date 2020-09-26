@@ -28,15 +28,10 @@ def pytest_sessionfinish(session, exitstatus):
         rerun_result_option = session.config.getoption("--rerun-tests")
         result_option = rerun_result_option
         result_option = result_option.split("=")
-        custom_rerun_xml_merge(result_option[0])
+        custom_rerun_xml_merge(result_option[1])
 
 
 def pytest_addoption(parser):
-    parser.addoption("--rerun-tests", action="store",
-                     help="Value can be 'failed' (or) 'passed' (or) 'failed=<junit_xml_path (or) "
-                          "jenkins_build_url>' (or) 'passed=<junit_xml_path or "
-                          "jenkins_build_url>' (or) 'file=<filename>'")
-
     parser.addoption("--merge", action="store",
                      help="Merge the report files path pattern, like results/**.xml. e.g.  -m '["
                           "results/***.xml]'",

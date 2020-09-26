@@ -156,7 +156,7 @@ def custom_rerun_xml_merge(filepath):
             url_path = filepath
         else:
             url_path = filepath + "/testReport/api/xml?pretty=true"
-        if not os.path.exists('merge_results'):
+        if not os.path.exists('results'):
             os.mkdir('results')
         newfilepath = 'results/' + "_testresult.xml"
         try:
@@ -171,6 +171,8 @@ def custom_rerun_xml_merge(filepath):
                   url_path + " URL is accessible!!")
             print("Running all the tests instead for now.")
             return None, None
+    else:
+        file_path = filepath
 
     doc1 = xml.dom.minidom.parse(file_path)
     doc2 = xml.dom.minidom.parse("results/results.xml")
