@@ -1,10 +1,4 @@
-import urllib.request
-import xml
-import xml.dom.minidom
 import pytest
-import os
-import uuid
-import glob
 from utilities.xml_parser import custom_rerun_xml_merge, merge_reports
 
 
@@ -30,19 +24,22 @@ def pytest_sessionfinish(session, exitstatus):
     if session.config.getoption("--merge"):
         paths = session.config.getoption("--merge")
         merge_reports(paths)
-    if session.config.getoption("--custom-run"):
-        file_path = session.config.getoption("--custom-run")
-        custom_rerun_xml_merge(file_path)
+    if session.config.getoption("--rerun-tests"):
+        rerun_result_option = session.config.getoption("--rerun-tests")
+        result_option = rerun_result_option
+        result_option = result_option.split("=")
+        custom_rerun_xml_merge(result_option[0])
 
 
 def pytest_addoption(parser):
-    parser.addoption("--custom-run",
-                     action="store",
-                     help="xml file to be merged")
+    parser.addoption("--rerun-tests", action="store",
+                     help="Value can be 'failed' (or) 'passed' (or) 'failed=<junit_xml_path (or) "
+                          "jenkins_build_url>' (or) 'passed=<junit_xml_path or "
+                          "jenkins_build_url>' (or) 'file=<filename>'")
 
     parser.addoption("--merge", action="store",
-                     help="Merge the report files path pattern, like logs/**/.xml. e.g.  -m '["
-                          "logs/**/*.xml]'",
+                     help="Merge the report files path pattern, like results/**.xml. e.g.  -m '["
+                          "results/***.xml]'",
                      default="")
 
 

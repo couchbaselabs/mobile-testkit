@@ -157,8 +157,8 @@ def custom_rerun_xml_merge(filepath):
         else:
             url_path = filepath + "/testReport/api/xml?pretty=true"
         if not os.path.exists('merge_results'):
-            os.mkdir('merge_results')
-        newfilepath = 'merge_results/' + "_testresult.xml"
+            os.mkdir('results')
+        newfilepath = 'results/' + "_testresult.xml"
         try:
             filedata = urllib.request.urlopen(url_path)
             print(filedata)
@@ -173,7 +173,7 @@ def custom_rerun_xml_merge(filepath):
             return None, None
 
     doc1 = xml.dom.minidom.parse(file_path)
-    doc2 = xml.dom.minidom.parse("../results/results.xml")
+    doc2 = xml.dom.minidom.parse("results/results.xml")
     added_test_count = 0
     testresultelem = doc1.getElementsByTagName("testsuites")
     testresultelem2 = doc2.getElementsByTagName("testsuites")
@@ -209,9 +209,9 @@ def merge_reports(filespath):
                 url_path = filepath
             else:
                 url_path = filepath + "/testReport/api/xml?pretty=true"
-        if not os.path.exists('report_logs'):
-            os.mkdir('report_logs')
-        newfilepath = 'report_logs/' + str(uuid.uuid4()) + "_testresult.xml"
+        if not os.path.exists('results'):
+            os.mkdir('results')
+        newfilepath = 'results/' + str(uuid.uuid4()) + "_testresult.xml"
         try:
             print(url_path)
             filedata = urllib.request.urlopen(url_path)
@@ -225,7 +225,7 @@ def merge_reports(filespath):
                   url_path + " URL is accessible!!")
             print("Running all the tests instead for now.")
             return None, None
-    xml_files = glob.glob("report_logs/*.xml")
+    xml_files = glob.glob("results/*.xml")
     errors = 0
     failures = 0
     for xml_file in xml_files:
@@ -297,7 +297,7 @@ def merge_reports(filespath):
                     tests[tcname_filtered] = testcase
     # print(list(tests.keys()))
     testsuite['tests'] = tests
-    output_filepath = 'report_logs/report.xml'
+    output_filepath = 'results/new_results.xml'
     f = open(output_filepath, "w+")
     f.close()
     doc = xml.dom.minidom.Document()
