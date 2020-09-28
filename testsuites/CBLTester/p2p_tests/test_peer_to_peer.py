@@ -302,8 +302,10 @@ def test_peer_to_peer_oneClient_toManyServers(params_from_base_test_setup, num_o
 @pytest.mark.parametrize("num_of_docs, continuous, replicator_type, endPointType", [
     (10, True, "push_pull", "MessageEndPoint"),
     (10, False, "push_pull", "URLEndPoint"),
+    (100, True, "pull", "MessageEndPoint"),
     (100, False, "pull", "MessageEndPoint"),
     (100, True, "pull", "URLEndPoint"),
+    (10, False, "pull", "URLEndPoint"),
 ])
 def test_peer_to_peer_oneServer_toManyClients(params_from_base_test_setup, server_setup, num_of_docs, continuous, replicator_type, endPointType):
     """
