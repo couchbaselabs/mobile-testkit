@@ -266,11 +266,13 @@ def test_peer_to_peer_oneClient_toManyServers(params_from_base_test_setup, num_o
     db_obj_client.create_bulk_docs(num_of_docs, "cbl-peerToPeer", db=cbl_db_client, channels=channel)
 
     if endPointType == "URLEndPoint":
-        replicatorTcpListener1 = peerToPeer_server1.server_start(cbl_db_server1)
-        replicatorTcpListener2 = peerToPeer_server2.server_start(cbl_db_server2)
-        url_listener_port1 = peerToPeer_server1.get_url_listener_port(replicatorTcpListener1)
-        url_listener_port2 = peerToPeer_server2.get_url_listener_port(replicatorTcpListener2)
+        listener1 = peerToPeer_server1.server_start(cbl_db_server1)
+        listener2 = peerToPeer_server2.server_start(cbl_db_server2)
+        url_listener_port1 = peerToPeer_server1.get_url_listener_port(listener1)
+        url_listener_port2 = peerToPeer_server2.get_url_listener_port(listener2)
     else:
+        listener1 = peerToPeer_server1.message_listener_start(cbl_db_server1, 5000)
+        listener2 = peerToPeer_server2.message_listener_start(cbl_db_server2, 5001)
         url_listener_port1 = 5000
         url_listener_port2 = 5001
     log_info("servers starting .....")
@@ -281,8 +283,8 @@ def test_peer_to_peer_oneClient_toManyServers(params_from_base_test_setup, num_o
     repl2 = peerToPeer_client.configure(port=url_listener_port2, host=server2_host, server_db_name=db_name_server2, client_database=cbl_db_client, continuous=continuous, replication_type=replicator_type, endPointType=endPointType)
     peerToPeer_client.client_start(repl2)
 
-    client_replicator.wait_until_replicator_idle(repl1)
     client_replicator.wait_until_replicator_idle(repl2)
+    client_replicator.wait_until_replicator_idle(repl1)
     total = client_replicator.getTotal(repl1)
     completed = client_replicator.getCompleted(repl1)
     assert total == completed, "replication from client to server did not completed " + total + " not equal to " + completed
@@ -292,8 +294,8 @@ def test_peer_to_peer_oneClient_toManyServers(params_from_base_test_setup, num_o
     assert server_docs_count2 == num_of_docs, "Number of docs is not equivalent to number of docs in server2 "
     client_replicator.stop(repl1)
     client_replicator.stop(repl2)
-    peerToPeer_server1.server_stop(replicatorTcpListener1, endPointType)
-    peerToPeer_server2.server_stop(replicatorTcpListener2, endPointType)
+    peerToPeer_server2.server_stop(listener2, endPointType)
+    peerToPeer_server1.server_stop(listener1, endPointType)
 
 
 @pytest.mark.listener
