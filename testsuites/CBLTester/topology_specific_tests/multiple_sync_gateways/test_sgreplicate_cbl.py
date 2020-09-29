@@ -1852,11 +1852,12 @@ def test_sg_replicate_restart_active_passive_nodes(params_from_base_test_setup, 
     # sgw_repl_id = []
     repl_id_1 = sg1.start_replication2(
         local_db=sg_db1,
-        remote_url=sg4.url,
-        remote_db=sg_db4,
-        remote_user=name4,
+        remote_url=sg2.url,
+        remote_db=sg_db2,
+        remote_user=name2,
         remote_password=password,
         direction="push",
+        continuous=True,
         channels=channels1
     )
     repl_id_2 = sg1.start_replication2(
@@ -1897,10 +1898,10 @@ def test_sg_replicate_restart_active_passive_nodes(params_from_base_test_setup, 
         update_from_cbl_task.result()
         # drop_add_sgw_node_task.result()
 
-    sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id_1, write_flag=True)
-    sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id_2, read_flag=True)
-    sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id_3, write_flag=True)
     replicator.wait_until_replicator_idle(repl1)
+    sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id_1, write_flag=True)
+    sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id_3, write_flag=True)
+    sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id_2, read_flag=True)
     replicator.wait_until_replicator_idle(repl2)
     replicator.wait_until_replicator_idle(repl4)
 
@@ -1914,6 +1915,7 @@ def test_sg_replicate_restart_active_passive_nodes(params_from_base_test_setup, 
     for doc in cbl_docs3:
         try:
             cbl_docs1[doc]["updates-cbl"]
+            print("cbl docs1..", doc)
             assert cbl_docs3[doc]["updates-cbl"] == cbl_docs1[doc]["updates-cbl"], "docs did not update successfully"
         except KeyError as e:
             log_info("skipping the docs which does not have new update")

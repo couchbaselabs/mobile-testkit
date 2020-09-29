@@ -235,7 +235,7 @@ class Admin:
             read_timeout = True  # To avoid waiting for read doc count as there is not expectation of read docs
         if write_flag is False:
             write_timeout = True  # To avoid waiting for write doc count as there is not expectation of write docs
-        retry_max_count = 5
+        retry_max_count = 8
         count = 0
         prev_read_count = 0
         prev_write_count = 0
@@ -282,13 +282,14 @@ class Admin:
             count += 1
             time.sleep(1)
             if read_timeout and write_timeout:
+                log_info("read or write timeout happened")
                 break
         if count == max_times:
             raise Exception("timeout while waiting for replication to complete on sgw replication")
 
     def get_replications_count(self, db, expected_count=1):
         local_count = 0
-        max_count = 8
+        max_count = 15
         while True:
             r = requests.get("{}/{}/_replication".format(self.admin_url, db), verify=False)
             log_request(r)
