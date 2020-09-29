@@ -66,6 +66,10 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="Use xattrs for sync meta storage. Only works with Sync Gateway 2.0+ and Couchbase Server 5.0+")
 
+    parser.addoption("--no-conflicts",
+                     action="store_true",
+                     help="If set, allow_conflicts is set to false in sync-gateway config")
+
     parser.addoption("--use-views",
                      action="store_true",
                      help="If set, uses views instead of GSI - SG 2.1 and above only")
@@ -135,9 +139,23 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="delta-sync: Enable delta-sync for sync gateway after upgrade, Only works with Sync Gateway 2.5+ EE along with CBL 2.5+ EE")
 
+    parser.addoption("--upgraded-no-conflicts",
+                     action="store_true",
+                     help="If set, allow_conflicts is set to false in sync-gateway config")
+
     parser.addoption("--stop-replication-before-upgrade",
                      action="store_true",
                      help="stop replication before upgrade , otherwise it won't stop replication")
+
+    parser.addoption("--sgw_cluster1_count",
+                     action="store", type="int",
+                     help="SGW cluster1 node count",
+                     default=2)
+
+    parser.addoption("--sgw_cluster2_count",
+                     action="store", type="int",
+                     help="SGW cluster2 node count",
+                     default=2)
 
     parser.addoption("--cbs-upgrade-toybuild",
                      action="store",
@@ -169,10 +187,8 @@ def params_from_base_suite_setup(request):
     use_views = request.config.getoption("--use-views")
     number_replicas = request.config.getoption("--number-replicas")
     delta_sync_enabled = request.config.getoption("--delta-sync")
-
     server_upgraded_version = request.config.getoption("--server-upgraded-version")
     sync_gateway_upgraded_version = request.config.getoption("--sync-gateway-upgraded-version")
-
     upgraded_cbs_ssl = request.config.getoption("--upgraded-server-ssl")
     upgraded_sg_ssl = request.config.getoption("--upgraded-sg-ssl")
     upgraded_xattrs_enabled = request.config.getoption("--upgraded-xattrs")
@@ -188,6 +204,10 @@ def params_from_base_suite_setup(request):
     device_enabled = request.config.getoption("--device")
     cbs_toy_build = request.config.getoption("--cbs-upgrade-toybuild")
     stop_replication_before_upgrade = request.config.getoption("--stop-replication-before-upgrade")
+    sgw_cluster1_count = request.config.getoption("--sgw_cluster1_count")
+    sgw_cluster2_count = request.config.getoption("--sgw_cluster2_count")
+    no_conflicts_enabled = request.config.getoption("--no-conflicts")
+    upgraded_no_conflicts_enabled = request.config.getoption("--upgraded-no-conflicts")
     test_name = request.node.name
 
     log_info("mode: {}".format(mode))
@@ -218,6 +238,10 @@ def params_from_base_suite_setup(request):
     log_info("device_enabled: {}".format(device_enabled))
     log_info("cbs_toy_build: {}".format(cbs_toy_build))
     log_info("stop replication before upgrade: {}".format(stop_replication_before_upgrade))
+    log_info("sgw_cluster1_count: {}".format(sgw_cluster1_count))
+    log_info("sgw_cluster2_count: {}".format(sgw_cluster2_count))
+    log_info("no_conflicts_enabled: {}".format(no_conflicts_enabled))
+    log_info("upgraded_no_conflicts_enabled: {}".format(upgraded_no_conflicts_enabled))
 
     # if xattrs is specified but the post upgrade SG version doesn't support, don't continue
     if upgraded_xattrs_enabled and version_is_binary(sync_gateway_upgraded_version):
@@ -258,6 +282,11 @@ def params_from_base_suite_setup(request):
     cluster_config = "{}/{}_{}".format(CLUSTER_CONFIGS_DIR, cluster_config, mode)
     log_info("Using '{}' config!".format(cluster_config))
 
+    # Only works with load balancer configs
+    persist_cluster_config_environment_prop(cluster_config, 'two_sg_cluster_lb_enabled', True, property_name_check=False)
+    persist_cluster_config_environment_prop(cluster_config, 'sgw_cluster1_count', sgw_cluster1_count, property_name_check=False)
+    persist_cluster_config_environment_prop(cluster_config, 'sgw_cluster2_count', sgw_cluster2_count, property_name_check=False)
+
     cluster_utils = ClusterKeywords(cluster_config)
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
 
@@ -270,11 +299,6 @@ def params_from_base_suite_setup(request):
     target1_admin_url = "ws://{}:4985/{}".format(sg1_ip, sg_db1)
     target2_url = "ws://{}:4984/{}".format(sg3_ip, sg_db2)
     target2_admin_url = "ws://{}:4985/{}".format(sg3_ip, sg_db2)
-
-    # Only works with load balancer configs
-    persist_cluster_config_environment_prop(cluster_config, 'two_sg_cluster_lb_enabled', True, property_name_check=False)
-    persist_cluster_config_environment_prop(cluster_config, 'sgw1_cluster_count', 2, property_name_check=False)
-    persist_cluster_config_environment_prop(cluster_config, 'sgw2_cluster_count', 2, property_name_check=False)
 
     try:
         server_version
@@ -301,6 +325,12 @@ def params_from_base_suite_setup(request):
             else:
                 log_info("Using document storage for sync meta data")
                 persist_cluster_config_environment_prop(cluster_config, 'xattrs_enabled', False)
+            if no_conflicts_enabled:
+                log_info("Running with no conflicts")
+                persist_cluster_config_environment_prop(cluster_config, 'no_conflicts_enabled', True)
+            else:
+                log_info("Running with allow conflicts")
+                persist_cluster_config_environment_prop(cluster_config, 'no_conflicts_enabled', False)
 
         if sync_gateway_version >= "2.5.0" and server_version >= "5.5.0":
             # if SG pre-upgrade version is 2.5+, set delta sync property, otherwise, don't specify in cluster config
@@ -442,7 +472,11 @@ def params_from_base_suite_setup(request):
         "sg3_ip": sg3_ip,
         "sg_config": sg_config,
         "create_db_per_test": create_db_per_test,
-        "stop_replication_before_upgrade": stop_replication_before_upgrade
+        "stop_replication_before_upgrade": stop_replication_before_upgrade,
+        "sgw_cluster1_count": sgw_cluster1_count,
+        "sgw_cluster2_count": sgw_cluster2_count,
+        "no_conflicts_enabled": no_conflicts_enabled,
+        "upgraded_no_conflicts_enabled": upgraded_no_conflicts_enabled
     }
 
     # Flush all the memory contents on the server app
@@ -499,6 +533,10 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     base_url = params_from_base_suite_setup["base_url"]
     stop_replication_before_upgrade = params_from_base_suite_setup["stop_replication_before_upgrade"]
     use_local_testserver = request.config.getoption("--use-local-testserver")
+    sgw_cluster1_count = params_from_base_suite_setup["sgw_cluster1_count"]
+    sgw_cluster2_count = params_from_base_suite_setup["sgw_cluster2_count"]
+    no_conflicts_enabled = params_from_base_suite_setup["no_conflicts_enabled"]
+    upgraded_no_conflicts_enabled = params_from_base_suite_setup["upgraded_no_conflicts_enabled"]
     test_name = request.node.name
 
     source_db = None
@@ -603,7 +641,11 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "sg_url": sg_url,
         "sg_admin_url": sg_admin_url,
         "cbl_db": cbl_db,
-        "stop_replication_before_upgrade": stop_replication_before_upgrade
+        "stop_replication_before_upgrade": stop_replication_before_upgrade,
+        "sgw_cluster1_count": sgw_cluster1_count,
+        "sgw_cluster2_count": sgw_cluster2_count,
+        "no_conflicts_enabled": no_conflicts_enabled,
+        "upgraded_no_conflicts_enabled": upgraded_no_conflicts_enabled
     }
 
     log_info("Tearing down test")

@@ -4,7 +4,7 @@ import time
 
 from concurrent.futures import ProcessPoolExecutor
 from couchbase.bucket import Bucket
-
+from requests.exceptions import HTTPError
 from keywords.couchbaseserver import verify_server_version
 from keywords.utils import log_info, host_for_url
 from keywords.SyncGateway import (verify_sync_gateway_version,
@@ -20,10 +20,10 @@ from keywords import attachment
 from CBLClient.Authenticator import Authenticator
 from CBLClient.Document import Document
 from CBLClient.Replication import Replication
-from keywords.SyncGateway import sync_gateway_config_path_for_mode
+from keywords.SyncGateway import sync_gateway_config_path_for_mode, setup_sgreplicate1_on_sgconfig, setup_replications_on_sgconfig
 # from libraries.provision.install_nginx import install_nginx_for_2_sgw_clusters
 from utilities.cluster_config_utils import load_cluster_config_json
-from keywords.utils import compare_docs
+# from keywords.utils import compare_docs
 
 
 def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
@@ -50,7 +50,7 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
     """
     cluster_config = params_from_base_test_setup['cluster_config']
     mode = params_from_base_test_setup['mode']
-    server_version = params_from_base_test_setup['server_version']
+    # server_version = params_from_base_test_setup['server_version']
     sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
     server_upgraded_version = params_from_base_test_setup['server_upgraded_version']
     sync_gateway_upgraded_version = params_from_base_test_setup['sync_gateway_upgraded_version']
@@ -60,30 +60,25 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
     use_views = params_from_base_test_setup["use_views"],
     number_replicas = params_from_base_test_setup["number_replicas"],
     delta_sync_enabled = params_from_base_test_setup["delta_sync_enabled"],
+    no_conflicts_enabled = params_from_base_test_setup["no_conflicts_enabled"],
     upgraded_cbs_ssl = params_from_base_test_setup['upgraded_cbs_ssl']
     upgraded_sg_ssl = params_from_base_test_setup['upgraded_sg_ssl']
     upgraded_xattrs_enabled = params_from_base_test_setup['upgraded_xattrs_enabled']
     upgraded_use_views = params_from_base_test_setup['upgraded_use_views']
     upgraded_number_replicas = params_from_base_test_setup['upgraded_number_replicas']
     upgraded_delta_sync_enabled = params_from_base_test_setup['upgraded_delta_sync_enabled']
+    upgraded_no_conflicts_enabled = params_from_base_test_setup['upgraded_no_conflicts_enabled']
     base_url = params_from_base_test_setup["base_url"]
     sg1_blip_url = params_from_base_test_setup["target1_url"]
     sg2_blip_url = params_from_base_test_setup["target2_url"]
     num_docs = int(params_from_base_test_setup['num_docs'])
-    cbs_platform = params_from_base_test_setup['cbs_platform']
-    cbs_toy_build = params_from_base_test_setup['cbs_toy_build']
     stop_replication_before_upgrade = params_from_base_test_setup['stop_replication_before_upgrade']
+    sgw_cluster1_count = params_from_base_test_setup['sgw_cluster1_count']
+    sgw_cluster2_count = params_from_base_test_setup['sgw_cluster2_count']
     cbl_db1 = setup_customized_teardown_test["cbl_db1"]
     cbl_db2 = setup_customized_teardown_test["cbl_db2"]
     cbl_db3 = setup_customized_teardown_test["cbl_db3"]
     db = params_from_base_test_setup["db"]
-    # sg_config = params_from_base_test_setup["sg_config"]
-    # sg1_admin_url = params_from_base_test_setup["sg_admin_url"]
-    # sg_ip = params_from_base_test_setup["sg_ip"]
-
-
-    # sg_conf_name = 'listener_tests/multiple_sync_gateways'
-   # sg_config = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     # update cluster_config with the post upgrade required params
     need_to_redeploy = False
@@ -122,8 +117,15 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
             log_info("Using document storage for sync meta data after upgrade")
             persist_cluster_config_environment_prop(cluster_config, 'xattrs_enabled', False)
 
+        if upgraded_no_conflicts_enabled:
+            log_info("Running with no conflicts after the upgrade")
+            persist_cluster_config_environment_prop(cluster_config, 'no_conflicts_enabled', True)
+        else:
+            log_info("Running with conflicts after the upgrade")
+            persist_cluster_config_environment_prop(cluster_config, 'no_conflicts_enabled', False)
+
     if sync_gateway_upgraded_version >= "2.5.0" and server_upgraded_version >= "5.5.0" and (delta_sync_enabled != upgraded_delta_sync_enabled):
-        # need_to_redeploy = True
+        need_to_redeploy = True
         if upgraded_delta_sync_enabled:
             log_info("Running with delta sync after upgrade")
             persist_cluster_config_environment_prop(cluster_config, 'delta_sync_enabled', True)
@@ -134,133 +136,146 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
     doc_obj = Document(base_url)
     replicator = Replication(base_url)
     authenticator = Authenticator(base_url)
-    sg_user_channels = ["replication_1_channel", "replication_2_channel1", "replication_2_channel2", "replication_2_channel3"]
+    sg_user_channels = ["replication_1_channel", "replication_2_channel1", "replication_2_channel2", "replication_2_channel3", "replication_2_channel4"]
     replication1_channel = ["replication_1_channel"]
     replication2_channel1 = ["replication_2_channel1"]
     replication2_channel2 = ["replication_2_channel2"]
     replication2_channel3 = ["replication_2_channel3"]
+    replication2_channel4 = ["replication_2_channel4"]
     sg1_user_name = "sg1_user"
     sg2_user_name = "sg2_user"
     sg_db1 = "sg_db1"
     sg_db2 = "sg_db2"
     password = "password"
-    SGW_Cluster1_Replication1 = "SGW_Cluster1_Replication1"
-    SGW_Cluster2_Replication1 = "SGW_Cluster2_Replication1"
-    SGW_Cluster1_Replication1_ch1 = "SGW_Cluster1_ch1_Replication1"
-    SGW_Cluster1_Replication1_ch2 = "SGW_Cluster1_ch2_Replication1"
-    SGW_Cluster1_Replication1_ch3 = "SGW_Cluster1_ch3_Replication1"
+    sgw_cluster1_replication1 = "SGW_Cluster1_Replication1"
+    sgw_cluster2_replication1 = "SGW_Cluster2_Replication1"
+    sgw_cluster1_replication1_ch1 = "SGW_Cluster1_ch1_Replication1"
+    sgw_cluster1_replication1_ch2 = "SGW_Cluster1_ch2_Replication1"
+    sgw_cluster1_replication1_ch3 = "SGW_Cluster1_ch3_Replication1"
     channel_list = [replication2_channel1, replication2_channel2, replication2_channel3]
     sgw_cluster1 = []
     sgw_cluster2 = []
+
     # 1. Create user, session and docs on SG
     sg_client = MobileRestClient()
     cluster = Cluster(config=cluster_config)
     sg_obj = SyncGateway()
     # Get actual sync gateway nodes from cluster configs
     json_cluster = load_cluster_config_json(cluster_config)
-    
-    # cluster.reset(sg_config_path=sg_config)
 
-    # Replace string data-bucket on the sg config and redeploy on all 4 nodes. 
+    # Replace string data-bucket on the sg config and redeploy on all 4 nodes.
     # This will set up 2 sgw nodes on one sgw cluster and 2 sgw nodes on second sgw cluster
     sg1_node = json_cluster["sync_gateways"][0]["ip"]
     sg2_node = json_cluster["sync_gateways"][1]["ip"]
     sg3_node = json_cluster["sync_gateways"][2]["ip"]
     sg4_node = json_cluster["sync_gateways"][3]["ip"]
+    sg_node_list = [sg1_node, sg2_node, sg3_node, sg4_node]
+    total_sgs_count = sgw_cluster1_count + sgw_cluster2_count
+    count = 0
+
     sgw_cluster1.append(sg1_node)
     sgw_cluster1.append(sg2_node)
     sgw_cluster2.append(sg3_node)
     sgw_cluster2.append(sg4_node)
     sg1 = cluster.sync_gateways[0]
-    sg2 = cluster.sync_gateways[1]
+    # sg2 = cluster.sync_gateways[1]
     sg3 = cluster.sync_gateways[2]
-    sg4 = cluster.sync_gateways[3]
-    sgw_cluster1_conf_name = 'listener_tests/sg_replicate_sgw_cluster1'
+    # sg4 = cluster.sync_gateways[3]
     sgw_cluster2_conf_name = 'listener_tests/sg_replicate_sgw_cluster2'
     sgw_cluster1_repl2_conf_name = 'listener_tests/sg_replicate_sgw_cluster1'
-    sgw_cluster1_sg_config = sync_gateway_config_path_for_mode(sgw_cluster1_conf_name, mode)
     sgw_cluster2_sg_config = sync_gateway_config_path_for_mode(sgw_cluster2_conf_name, mode)
     sgw_cluster2_repl2_sg_config = sync_gateway_config_path_for_mode(sgw_cluster1_repl2_conf_name, mode)
-    sgw_cluster1_config_path = "{}/{}".format(os.getcwd(), sgw_cluster1_sg_config)
     sgw_cluster1_repl2_config_path = "{}/{}".format(os.getcwd(), sgw_cluster2_repl2_sg_config)
-    sg_obj.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sgw_cluster1_config_path, url=sg1_node,
-                                        sync_gateway_version=sync_gateway_version, enable_import=True)
-    sg_obj.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sgw_cluster1_config_path, url=sg2_node,
-                                        sync_gateway_version=sync_gateway_version, enable_import=True)
-                
     sgw_cluster2_config_path = "{}/{}".format(os.getcwd(), sgw_cluster2_sg_config)
-    sg_obj.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sgw_cluster2_config_path, url=sg3_node,
-                                        sync_gateway_version=sync_gateway_version, enable_import=True)
-    sg_obj.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sgw_cluster2_config_path, url=sg4_node,
-                                        sync_gateway_version=sync_gateway_version, enable_import=True)
 
     # 3. Start replications on SGW cluster1 to SGW cluster2. Will have 2 replications. One push replication and one pull replication
-    sg1.start_push_replication(
-        sg3.admin.admin_url,
-        sg_db1,
-        sg_db2,
-        continuous=True,
-        channels=replication1_channel,
-        use_admin_url=True
-    )
-    sg1.start_pull_replication(
-        sg3.admin.admin_url,
-        sg_db2,
-        sg_db1,
-        continuous=True,
-        use_remote_target=True,
-        channels=replication1_channel,
-        use_admin_url=True
-    )
+    sg_conf_name = 'sync_gateway_sg_replicate1_in_sgwconfig'
+    sg_config = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    temp_sg_config_copy, _ = copy_sgconf_to_temp(sg_config, mode)
+    replication_1, sgw_repl1_id1 = setup_sgreplicate1_on_sgconfig(sg1.admin.admin_url, sg_db1, sg3.admin.admin_url, sg_db2, channels=replication1_channel, continuous=True)
+    replication_2, sgw_repl1_id2 = setup_sgreplicate1_on_sgconfig(sg3.admin.admin_url, sg_db2, sg1.admin.admin_url, sg_db1, channels=replication1_channel, continuous=True)
+    replications_ids = "{},{}".format(replication_1, replication_2)
+    replications_key = "replications"
+    replace_string = "\"{}\": {}{}{},".format(replications_key, "[", replications_ids, "]")
+    temp_sg_config_with_sg1 = replace_string_on_sgw_config(temp_sg_config_copy, "{{ replace_with_sg1_replications }}", replace_string)
+    temp_sg_config = replace_string_on_sgw_config(temp_sg_config_with_sg1, "{{ replace_with_sgreplicate2_replications }}", "")
+    sgw_cluster1_config_path = "{}/{}".format(os.getcwd(), temp_sg_config)
+    for node in sg_node_list:
+        if count < sgw_cluster1_count:
+            sg_obj.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sgw_cluster1_config_path, url=node,
+                                                sync_gateway_version=sync_gateway_version, enable_import=True)
+        elif count < total_sgs_count:
+            sg_obj.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sgw_cluster2_config_path, url=node,
+                                                sync_gateway_version=sync_gateway_version, enable_import=True)
+        else:
+            sg_obj.stop_sync_gateways(cluster_config=cluster_config, url=node)
+        count += 1
 
+    active_tasks = sg1.admin.get_active_tasks()
     num_docs = 10
-    db.create_bulk_docs(number=num_docs, id_prefix=SGW_Cluster1_Replication1, db=cbl_db1, channels=replication1_channel,
+    db.create_bulk_docs(number=num_docs, id_prefix=sgw_cluster1_replication1, db=cbl_db1, channels=replication1_channel,
                         attachments_generator=attachment.generate_2_png_10_10)
+    db.create_bulk_docs(number=num_docs, id_prefix=sgw_cluster1_replication1, db=cbl_db1, channels=replication1_channel)
     doc_ids = db.getDocIds(cbl_db1, limit=num_docs)
     sgw_cluster1_added_docs = db.getDocuments(cbl_db1, doc_ids)
-    log_info("Added {} docs".format(len(doc_ids)))
+    #log_info("Added {} docs on sgw cluster1 sg replicate1".format(doc_ids))
 
-    db.create_bulk_docs(number=num_docs, id_prefix=SGW_Cluster2_Replication1, db=cbl_db2, channels=replication1_channel,
+    db.create_bulk_docs(number=num_docs, id_prefix=sgw_cluster2_replication1, db=cbl_db2, channels=replication1_channel,
                         attachments_generator=attachment.generate_2_png_10_10)
     doc_ids2 = db.getDocIds(cbl_db2, limit=num_docs)
     # sgw_cluster2_added_docs = db.getDocuments(cbl_db2, doc_ids)
-    log_info("Added {} docs".format(len(doc_ids2)))
+    # log_info("Added {} docs on sgw cluster2 sg replicate1".format(len(sgw_cluster2_added_docs)))
 
-    db.create_bulk_docs(number=num_docs, id_prefix=SGW_Cluster1_Replication1_ch1, db=cbl_db1, channels=replication2_channel1,
+    db.create_bulk_docs(number=num_docs, id_prefix=sgw_cluster1_replication1_ch1, db=cbl_db1, channels=replication2_channel1,
                         attachments_generator=attachment.generate_2_png_10_10)
-    db.create_bulk_docs(number=num_docs, id_prefix=SGW_Cluster1_Replication1_ch2, db=cbl_db1, channels=replication2_channel2,
+    db.create_bulk_docs(number=num_docs, id_prefix=sgw_cluster1_replication1_ch2, db=cbl_db1, channels=replication2_channel2,
                         attachments_generator=attachment.generate_2_png_10_10)
-    db.create_bulk_docs(number=num_docs, id_prefix=SGW_Cluster1_Replication1_ch3, db=cbl_db1, channels=replication2_channel3,
+    db.create_bulk_docs(number=num_docs, id_prefix=sgw_cluster1_replication1_ch3, db=cbl_db1, channels=replication2_channel3,
                         attachments_generator=attachment.generate_2_png_10_10)
     # Starting continuous push_pull replication from TestServer to sync gateway cluster1
     log_info("Starting continuous push pull replication from TestServer to sync gateway")
-    print("sg1.ip is ", sg1.ip)
-    print("sg3.ip is ", sg3.ip)
-    repl1, replicator_authenticator1 = create_sgw_sessions_and_configure_replications(sg_client, replicator, authenticator, sg_user_channels,
-                                                                                      sg1, sg1_user_name, sg_db1, cbl_db1, sg1_blip_url)
+    repl1, replicator_authenticator1, session1 = create_sgw_sessions_and_configure_replications(sg_client, replicator, authenticator, sg_user_channels,
+                                                                                                sg1, sg1_user_name, sg_db1, cbl_db1, sg1_blip_url)
 
-    repl2, _ = create_sgw_sessions_and_configure_replications(sg_client, replicator, authenticator, sg_user_channels,
-                                                              sg3, sg2_user_name, sg_db2, cbl_db2, sg2_blip_url)
+    repl2, _, _ = create_sgw_sessions_and_configure_replications(sg_client, replicator, authenticator, sg_user_channels,
+                                                                 sg3, sg2_user_name, sg_db2, cbl_db2, sg2_blip_url)
     # Start 3rd replicator to verify docs with attachments gets replicated after the upgrade for one shot replications from sgw cluster1 to cbl db3
     repl_config3 = replicator.configure(cbl_db3, sg1_blip_url, continuous=False, channels=sg_user_channels, replication_type="push_pull", replicator_authenticator=replicator_authenticator1)
     repl3 = replicator.create(repl_config3)
     replicator.start(repl3)
     replicator.wait_until_replicator_idle(repl3)
-    # repl3 = create_sgw_sessions_and_configure_replications(sg_client, replicator, authenticator, sg_user_channels,
-    #                                                       sg1, sg1_user_name, sg_db1, cbl_db3, sg1_blip_url)
-    sg_client.add_docs(url=sg1.admin.admin_url, db=sg_db1, number=2, id_prefix="sgw_docs3", channels=sg_user_channels, generator="simple_user", attachments_generator=attachment.generate_2_png_10_10)
+    sg_client.add_docs(url=sg1.admin.admin_url, db=sg_db1, number=2, id_prefix="sgw_docs3", channels=replication2_channel4, generator="simple_user", attachments_generator=attachment.generate_2_png_10_10)
     terminator1_doc_id = 'terminator1'
 
+    # Create sg replicate2 in sgw config by using same repl id of sg replicate1 for sg replicate2
     if stop_replication_before_upgrade:
-        active_tasks = sg1.admin.get_active_tasks()
-        replication_id1 = active_tasks[0]["replication_id"]
-        print("replicaation id1 is ", replication_id1)
-        # replication_id2 = active_tasks[1]["replication_id"]
-        # SGW_Cluster1_Replication1_restart_upgrade = "SGW_Cluster1_Replication1_restart_upgrade"
-        sg1.stop_replication_by_id(replication_id1, use_admin_url=True)
-        # sg1.stop_replication_by_id(replication_id2, use_admin_url=True)
-        # db.create_bulk_docs(number=num_docs, id_prefix=SGW_Cluster1_Replication1_restart_upgrade, db=cbl_db1, channels=replication1_channel,
-        #                     attachments_generator=attachment.generate_2_png_10_10)
+        sgw_replication1_id1 = None
+        sgw_replication1_id2 = None
+    else:
+        sgw_replication1_id1 = sgw_repl1_id1
+        sgw_replication1_id2 = sgw_repl1_id2
+    replication_1, sgw_repl1 = setup_replications_on_sgconfig(sg3.url, sg_db2, sg2_user_name, password, direction="push", channels=replication1_channel, continuous=True, replication_id=sgw_replication1_id1)
+    replication_2, sgw_repl2 = setup_replications_on_sgconfig(sg3.url, sg_db2, sg2_user_name, password, direction="pull", channels=replication1_channel, continuous=True, replication_id=sgw_replication1_id2)
+    replications_ids = "{},{}".format(replication_1, replication_2)
+    replications_key = "replications"
+    sgr2_replace_string = "\"{}\": {}{}{},".format(replications_key, "{", replications_ids, "}")
+    temp_sg_config_copy, _ = copy_sgconf_to_temp(sg_config, mode)
+    if stop_replication_before_upgrade:
+        sg1.stop_replication_by_id(sgw_repl1_id1, use_admin_url=True)
+        sg1.stop_replication_by_id(sgw_repl1_id2, use_admin_url=True)
+        temp_sg_config = replace_string_on_sgw_config(temp_sg_config_copy, "{{ replace_with_sg1_replications }}", "")
+    else:
+        temp_sg_config = replace_string_on_sgw_config(temp_sg_config_copy, "{{ replace_with_sg1_replications }}", replace_string)
+
+    temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ replace_with_sgreplicate2_replications }}", sgr2_replace_string)
+    sgw_cluster1_config_path = "{}/{}".format(os.getcwd(), temp_sg_config)
+    # If no conflicts is not enabled then create conflicts on sgw cluster1 and sgw cluster2
+    if not no_conflicts_enabled:
+        sg_docs = sg_client.get_all_docs(url=sg1.url, db=sg_db1, auth=session1)["rows"]
+        for doc in sg_docs:
+            if "sgw_cluster1_replication1" in doc:
+                doc_conflict = sg_client.add_conflict(url=sg1.url, db=sg_db1, doc_id=doc["id"], parent_revisions=doc["rev"],
+                                                      new_revision="2-foo", auth=session1)
 
     with ProcessPoolExecutor() as up:
         # Start updates in background process
@@ -271,24 +286,19 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
 
         # 4. Upgrade SGW one by one on cluster config list
         cluster_util = ClusterKeywords(cluster_config)
-        time.sleep(60)
+        # time.sleep(60)
         topology = cluster_util.get_cluster_topology(cluster_config, lb_enable=False)
         sync_gateways = topology["sync_gateways"]
         sgw_cluster1_list = sync_gateways[:2]
         sgw_cluster2_list = sync_gateways[2:]
-        print("upgrading SGWS cluster1 ....")
-        print("SGW clust list 1 is ,", sgw_cluster1_list)
-        print("SGW clust list is ,", sgw_cluster2_list)
-
         upgrade_sync_gateway(
             sgw_cluster1_list,
             sync_gateway_version,
             sync_gateway_upgraded_version,
-            sgw_cluster1_repl2_config_path,
+            sgw_cluster1_config_path,
             cluster_config
         )
 
-        print("upgrading SGWS cluster2 ....")
         upgrade_sync_gateway(
             sgw_cluster2_list,
             sync_gateway_version,
@@ -296,7 +306,7 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
             sgw_cluster2_config_path,
             cluster_config
         )
-        
+
         # 5. Upgrade CBS one by one on cluster config list
         cluster = Cluster(config=cluster_config)
 
@@ -310,7 +320,7 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
         primary_server = cluster.servers[0]
         secondary_server = cluster.servers[1]
         servers = cluster.servers[1:]
-        ### TODO: Enable after getting upgrade test work
+        #  TODO: Enable after getting upgrade test work
         """upgrade_server_cluster(
             servers,
             primary_server,
@@ -337,7 +347,6 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
             #    - Do not enable import in SG.
             if mode == "cc":
                 enable_import = True
-
             sg_obj = SyncGateway()
             for sg in sgw_cluster1_list:
                 sg_ip = host_for_url(sg["admin"])
@@ -360,13 +369,16 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
                 )
                 # Check Import showing up on all nodes
 
+            print("need to redeploy is done and redeploy is completed")
+
+        print("replication-4 configuration started")
         repl_config4 = replicator.configure(cbl_db3, sg1_blip_url, continuous=True, channels=sg_user_channels, replication_type="push_pull", replicator_authenticator=replicator_authenticator1)
         repl4 = replicator.create(repl_config4)
         replicator.start(repl4)
         # log_info("waiting for the replication to complete")
-        # replicator.wait_until_replicator_idle(repl4, max_times=3000)
+        # replicator.wait_until_replicator_idle(repl4, max_times=3000)"""
         log_info("Trying to create terminator id ....")
-        db.create_bulk_docs(number=1, id_prefix=terminator1_doc_id, db=cbl_db1, channels=sg_user_channels)
+        db.create_bulk_docs(number=1, id_prefix=terminator1_doc_id, db=cbl_db1, channels=replication2_channel4)
         log_info("Waiting for doc updates to complete")
         updated_doc_revs = updates_future.result()
 
@@ -385,7 +397,8 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
                 sgw_cluster1_added_docs[doc_id]["numOfUpdates"] = updated_doc_revs[doc_id]
 
         # 8. Compare rev id, doc body and revision history of all docs on both CBL and SGW
-        # TODO : Enable it once upgrade test done ## verify_sg_docs_revision_history(sg1.admin.admin_url, db, cbl_db3, num_docs + 3, sg_db=sg_db1, added_docs=sgw_cluster1_added_docs, terminator=terminator1_doc_id)
+        # TODO : Enable it once upgrade test done ## 
+        verify_sg_docs_revision_history(sg1.admin.admin_url, db, cbl_db3, num_docs + 3, sg_db=sg_db1, added_docs=sgw_cluster1_added_docs, terminator=terminator1_doc_id)
 
         # 9. If xattrs enabled, validate CBS contains _sync records for each doc
         if upgraded_xattrs_enabled:
@@ -399,9 +412,9 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
             for i in docs_from_sdk:
                 if "_sync" in docs_from_sdk[i].value:
                     raise Exception("_sync section found in docs after upgrade")
-    repl_id = []
+    repl_id = [sgw_repl1, sgw_repl2]
+    print
     for channel in channel_list:
-        print("starting SGW replication 1 for channel -----", channel)
         replid = sg1.start_replication2(
             local_db=sg_db1,
             remote_url=sg3.url,
@@ -412,35 +425,14 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
             continuous=True
         )
         repl_id.append(replid)
-        """print("starting SGW replication 2..... ")
-        sgw_repl_2 = sg1.start_replication2(
-            local_db=sg_db1,
-            remote_url=sg3.url,
-            remote_db=sg_db2,
-            remote_user=sg2_user_name,
-            remote_password=password,
-            channels=replication2_channel2,
-            continuous=True
-        )
-        print("starting SGW replication 3---- ")
-        sgw_repl_3 = sg1.start_replication2(
-            local_db=sg_db1,
-            remote_url=sg3.url,
-            remote_db=sg_db2,
-            remote_user=sg2_user_name,
-            remote_password=password,
-            channels=replication2_channel3,
-            continuous=True
-        )"""
     print(sg1.admin.get_sgreplicate2_active_tasks(sg_db1))
     replicator.wait_until_replicator_idle(repl1, max_times=3000)
     # Wait until all SGW replications are completed
     for replid in repl_id:
-        sg1.admin.wait_until_sgw_replication_done(sg_db1, replid, num_of_expected_written_docs=num_docs, max_times=25) # TODO: change max_times once reads and write bug fixed
-        #sg1.admin.wait_until_sgw_replication_done(sg_db1, sgw_repl_2, num_of_expected_read_docs=num_docs, num_of_expected_written_docs=num_docs, max_times=25) # TODO: change max_times once reads and write bug fixed
-        #sg1.admin.wait_until_sgw_replication_done(sg_db1, sgw_repl_3, num_of_expected_read_docs=num_docs, num_of_expected_written_docs=num_docs, max_times=25) # TODO: change max_times once reads and write bug fixed
+        # time.sleep(30)
+        sg1.admin.wait_until_sgw_replication_done(sg_db1, replid, write_flag=True, max_times=25)  # TODO: change max_times once reads and write bug fixed
 
-    if stop_replication_before_upgrade:
+    """if stop_replication_before_upgrade:
         sgw_repl_upgrade_id = sg1.start_replication2(
             local_db=sg_db1,
             remote_url=sg3.url,
@@ -450,25 +442,30 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
             channels=replication1_channel,
             continuous=True
         )
-        sg1.admin.wait_until_sgw_replication_done(sg_db1, sgw_repl_upgrade_id, num_of_expected_written_docs=num_docs, max_times=25) # TODO: change max_times once reads and write bug fixed
+        # sg1.admin.wait_until_sgw_replication_done(sg_db1, sgw_repl_upgrade_id, num_of_expected_written_docs=num_docs, max_times=25)
+        time.sleep(15)  # TODO: replace with above stmt"""
     replicator.wait_until_replicator_idle(repl2, max_times=3000)
     cbl_doc_ids2 = db.getDocIds(cbl_db2)
-    # if stop_replication_before_upgrade:
-    #     count = sum(SGW_Cluster1_Replication1_restart_upgrade in s for s in cbl_doc_ids2)
-    #    assert count == num_docs, "all docs with replication1 before upgrade did not replicate to cbl db2"
-    count = sum(SGW_Cluster1_Replication1 in s for s in cbl_doc_ids2)
+    count = sum(sgw_cluster1_replication1 in s for s in cbl_doc_ids2)
     assert count == num_docs, "all docs with replication1 channel1 did not replicate to cbl db2"
-    count = sum(SGW_Cluster1_Replication1_ch1 in s for s in cbl_doc_ids2)
+    count = sum(sgw_cluster1_replication1_ch1 in s for s in cbl_doc_ids2)
     assert count == num_docs, "all docs with replication2 channel1 did not replicate to cbl db2"
-    count = sum(SGW_Cluster1_Replication1_ch2 in s for s in cbl_doc_ids2)
+    count = sum(sgw_cluster1_replication1_ch2 in s for s in cbl_doc_ids2)
     assert count == num_docs, "all docs with replication2 channel2 did not replicate to cbl db2"
-    count = sum(SGW_Cluster1_Replication1_ch3 in s for s in cbl_doc_ids2)
+    count = sum(sgw_cluster1_replication1_ch3 in s for s in cbl_doc_ids2)
     assert count == num_docs, "all docs with replication2 channel3 did not replicate to cbl db2"
     # Compare of sg1 docs to sg2docs(via CBL db2)
-    sg_docs = sg_client.get_all_docs(url=sg1.admin.admin_url, db=sg_db1, include_docs=True)["rows"]
-    doc_ids = db.getDocIds(cbl_db2)
-    cbl_db_docs2 = db.getDocuments(cbl_db2, doc_ids)
-    compare_docs(cbl_db2, db, sg_docs)
+    sg_docs1 = sg_client.get_all_docs(url=sg1.admin.admin_url, db=sg_db1, include_docs=True)["rows"]
+
+    for doc in sg_docs1:
+        print("doc of sgdocs1 is :", doc)
+        if "sgw_docs3" not in doc["id"] and "terminator1_0" not in doc["id"]:
+            sg3_doc = sg_client.get_doc(url=sg3.admin.admin_url, db=sg_db2, doc_id=doc['doc']['_id'])
+            print("sg docs 3 at for each doc : ", sg3_doc)
+            if "numOfUpdates" in sg_docs1:
+                assert doc["doc"]["numOfUpdates"] == sg3_doc["numOfUpdates"], "number of updates value is not same on both clusters for {}".format(doc)
+            assert doc["doc"]["_rev"] == sg3_doc["_rev"], "number of updates value is not same on both clusters for {}".format(doc)
+
     replicator.stop(repl1)
     replicator.stop(repl2)
     replicator.stop(repl3)
@@ -553,52 +550,8 @@ def update_docs(db, cbl_db1, cbl_db1_doc_ids, cbl_db2, cbl_db2_doc_ids, doc_obj,
         except Exception:
             log_info(terminator_not_found_msg)
 
-        #update_random_docs(docs_per_update, cbl_db1_doc_ids, db, cbl_db1, doc_obj)
-        print("updating 2nd cluster now")
-        #update_random_docs(docs_per_update, cbl_db2_doc_ids, db, cbl_db2, doc_obj)
-
-        random_doc_ids_list1 = []
-        random_doc_ids_list2 = []
-        print("cbl doc ids list1,", cbl_db1_doc_ids)
-        print("cbl doc ids list2,", cbl_db2_doc_ids)
-        for _ in range(docs_per_update):
-            random_doc_id = random.choice(cbl_db1_doc_ids)
-            random_doc_ids_list1.append(random_doc_id)
-        for _ in range(0, docs_per_update):
-            random_doc_id = random.choice(cbl_db2_doc_ids)
-            random_doc_ids_list2.append(random_doc_id)
-
-        cbl_db_docs_to_update = {}
-        cbl_db_docs_to_update1 = {}
-        print("random doc ids list1,", random_doc_ids_list1)
-        print("random doc ids list2,", random_doc_ids_list2)
-        for doc_id in random_doc_ids_list1:
-            log_info("Updating doc_id: sgw cluster1 {}".format(doc_id))
-            doc_body = doc_obj.toMap(db.getDocument(cbl_db1, doc_id))
-            # numOfUpdates counts how many updates are made to the current document
-            # starting index value from 2, 2 means numOfUpdates = 0, and 3 means numOfUpdates = 1
-            # the current framework take 0 as False and 1 as True, even though an integer type is expected
-            # this is temporary solution to avoid this issue
-            if "numOfUpdates" in doc_body:
-                doc_body["numOfUpdates"] += 1
-            else:
-                doc_body["numOfUpdates"] = 2 + 1
-            cbl_db_docs_to_update[doc_id] = doc_body
-            db.updateDocument(database=cbl_db1, doc_id=doc_id, data=doc_body)
-
-        for doc_id in random_doc_ids_list2:
-            log_info("Updating doc_id: sgw cluster2 {}".format(doc_id))
-            doc_body = doc_obj.toMap(db.getDocument(cbl_db2, doc_id))
-            # numOfUpdates counts how many updates are made to the current document
-            # starting index value from 2, 2 means numOfUpdates = 0, and 3 means numOfUpdates = 1
-            # the current framework take 0 as False and 1 as True, even though an integer type is expected
-            # this is temporary solution to avoid this issue
-            if "numOfUpdates" in doc_body:
-                doc_body["numOfUpdates"] += 1
-            else:
-                doc_body["numOfUpdates"] = 2 + 1
-            cbl_db_docs_to_update1[doc_id] = doc_body
-            db.updateDocument(database=cbl_db2, doc_id=doc_id, data=doc_body)
+        cbl_db_docs_to_update = update_random_docs(docs_per_update, cbl_db1_doc_ids, db, cbl_db1, doc_obj)
+        update_random_docs(docs_per_update, cbl_db2_doc_ids, db, cbl_db2, doc_obj)
 
         for doc_id, doc_body in list(cbl_db_docs_to_update.items()):
             new_doc = db.getDocument(cbl_db1, doc_id)
@@ -610,22 +563,25 @@ def update_docs(db, cbl_db1, cbl_db1_doc_ids, cbl_db2, cbl_db2_doc_ids, doc_obj,
 def update_random_docs(docs_per_update, cbl_doc_ids, db, cbl_db, doc_obj):
     random_doc_ids_list = []
     for _ in range(docs_per_update):
-            random_doc_id = random.choice(cbl_doc_ids)
-            random_doc_ids_list.append(random_doc_id)
+        random_doc_id = random.choice(cbl_doc_ids)
+        random_doc_ids_list.append(random_doc_id)
 
+    cbl_db_docs_to_update = {}
     for doc_id in random_doc_ids_list:
-            log_info("Updating doc_id: {}".format(doc_id))
-            doc_body = doc_obj.toMap(db.getDocument(cbl_db, doc_id))
-            # numOfUpdates counts how many updates are made to the current document
-            # starting index value from 2, 2 means numOfUpdates = 0, and 3 means numOfUpdates = 1
-            # the current framework take 0 as False and 1 as True, even though an integer type is expected
-            # this is temporary solution to avoid this issue
-            if "numOfUpdates" in doc_body:
-                doc_body["numOfUpdates"] += 1
-            else:
-                doc_body["numOfUpdates"] = 2 + 1
-            # cbl_db_docs_to_update[doc_id] = doc_body
-            db.updateDocument(database=cbl_db, doc_id=doc_id, data=doc_body)
+        log_info("Updating doc_id: {}".format(doc_id))
+        doc_body = doc_obj.toMap(db.getDocument(cbl_db, doc_id))
+        # numOfUpdates counts how many updates are made to the current document
+        # starting index value from 2, 2 means numOfUpdates = 0, and 3 means numOfUpdates = 1
+        # the current framework take 0 as False and 1 as True, even though an integer type is expected
+        # this is temporary solution to avoid this issue
+        if "numOfUpdates" in doc_body:
+            doc_body["numOfUpdates"] += 1
+        else:
+            doc_body["numOfUpdates"] = 2
+        cbl_db_docs_to_update[doc_id] = doc_body
+        db.updateDocument(database=cbl_db, doc_id=doc_id, data=doc_body)
+
+    return cbl_db_docs_to_update
 
 
 def upgrade_server_cluster(servers, primary_server, secondary_server, server_version, server_upgraded_version, server_urls, cluster_config, cbs_platform, toy_build=None):
@@ -702,10 +658,11 @@ def upgrade_sync_gateway(sync_gateways, sync_gateway_version, sync_gateway_upgra
 
 
 def create_sgw_sessions_and_configure_replications(sg_client, replicator, authenticator, sg_user_channels, sg, sg_user_name, sg_db, cbl_db, sg_blip_url):
-    
+
     sg_user_password = "password"
     sg_client.create_user(url=sg.admin.admin_url, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels)
     sg_cookie, sg_session = sg_client.create_session(url=sg.admin.admin_url, db=sg_db, name=sg_user_name)
+    session = sg_cookie, sg_session
 
     replicator_authenticator = authenticator.authentication(sg_session, sg_cookie, authentication_type="session")
     repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=sg_user_channels, replication_type="push_pull", replicator_authenticator=replicator_authenticator)
@@ -713,4 +670,4 @@ def create_sgw_sessions_and_configure_replications(sg_client, replicator, authen
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
 
-    return repl, replicator_authenticator
+    return repl, replicator_authenticator, session
