@@ -976,10 +976,9 @@ def test_sg_replicate_with_sg_restart(params_from_base_test_setup, setup_customi
     Replication1 = "Replication1_test2"
     Replication2 = "Replication2_test2"
     sg_conf = sync_gateway_config_path_for_mode(sgw_cluster2_conf_name, sg_mode)
-    """if reconnect_interval:
-        sg_conf_name = 'listener_tests/multiple_sync_gateways' # TODO: updaate with sgw config with reconnect interval
-    else:
-        sg_conf_name = 'listener_tests/multiple_sync_gateways'"""
+    reconnect_interval_time = 0
+    if reconnect_interval:
+        reconnect_interval_time = 1
 
     # 1. Set up 2 sgw nodes and have two cbl dbs
     db, num_of_docs, sg_db1, sg_db2, name1, name2, password, channels1, channels2, replicator, replicator_authenticator1, replicator_authenticator2, sg1_blip_url, sg2_blip_url, sg1, sg2, repl1, c_cluster, cbl_db1, cbl_db2 = setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_teardown_test, cbl_replication_type="push", sgw_cluster1_sg_config_name=sgw_cluster1_conf_name,
@@ -996,7 +995,8 @@ def test_sg_replicate_with_sg_restart(params_from_base_test_setup, setup_customi
         remote_user=name2,
         remote_password=password,
         direction="pushAndPull",
-        continuous=continuous
+        continuous=continuous,
+        max_backoff_time=reconnect_interval_time
     )
     with ThreadPoolExecutor(max_workers=4) as tpe:
         # 4. Update docs on sg1
@@ -1005,7 +1005,7 @@ def test_sg_replicate_with_sg_restart(params_from_base_test_setup, setup_customi
         # 5. restart sg2 While replication is happening
         if reconnect_interval:
             c_cluster.sync_gateways[1].stop()
-            time.sleep(60)  # Need to wait for a minute to restart It is required for the test
+            time.sleep(60)  # Need to wait for a minute to restart It is required for the test as part of reconnect test
         restart_sg = tpe.submit(c_cluster.sync_gateways[1].restart, config=sg_conf, cluster_config=cluster_config)
         cbl_db1_docs.result()
         restart_sg.result()
@@ -1860,15 +1860,23 @@ def test_sg_replicate_restart_active_passive_nodes(params_from_base_test_setup, 
     cbl_doc_ids1 = db.getDocIds(cbl_db1)
     count1 = sum('Replication1_' in s for s in cbl_doc_ids3)
     assert count1 == num_of_docs, "all docs created in cbl db1 did not replicate to cbl db3"
-    cbl_docs3 = db.getDocuments(cbl_db3, cbl_doc_ids3)
-    cbl_docs1 = db.getDocuments(cbl_db1, cbl_doc_ids1)
-    for doc in cbl_docs3:
-        try:
-            cbl_docs1[doc]["updates-cbl"]
-            assert cbl_docs3[doc]["updates-cbl"] == cbl_docs1[doc]["updates-cbl"], "docs did not update successfully"
-        except KeyError as e:
-            log_info("skipping the docs which does not have new update")
-
+    max_count = 5
+    count = 0
+    while count < max_count:
+        replication_successful_flag = True
+        cbl_docs3 = db.getDocuments(cbl_db3, cbl_doc_ids3)
+        cbl_docs1 = db.getDocuments(cbl_db1, cbl_doc_ids1)
+        for doc in cbl_docs3:
+            try:
+                cbl_docs1[doc]["updates-cbl"]
+                if not cbl_docs3[doc]["updates-cbl"] == cbl_docs1[doc]["updates-cbl"]:
+                    time.sleep(1)
+                    count += 1
+                    replication_successful_flag = False
+                    break
+            except KeyError as e:
+                log_info("skipping the docs which does not have new update")
+    assert(replication_successful_flag == True, "updated docs did not replicated successfull from sgw cluster1 to sgw clusster2")
     replicator.stop(repl1)
     replicator.stop(repl2)
     replicator.stop(repl4)
