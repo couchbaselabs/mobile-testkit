@@ -1876,7 +1876,9 @@ def test_sg_replicate_restart_active_passive_nodes(params_from_base_test_setup, 
                     break
             except KeyError as e:
                 log_info("skipping the docs which does not have new update")
-    assert replication_successful_flag is True, "updated docs did not replicated successfull from sgw cluster1 to sgw clusster2"
+        if replication_successful_flag:
+            break
+    assert replication_successful_flag is False, "updated docs did not replicated successfull from sgw cluster1 to sgw clusster2"
     replicator.stop(repl1)
     replicator.stop(repl2)
     replicator.stop(repl4)
