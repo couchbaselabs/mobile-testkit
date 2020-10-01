@@ -7,7 +7,7 @@ from CBLClient.PeerToPeer import PeerToPeer
 @pytest.mark.listener
 @pytest.mark.parametrize("num_of_docs, continuous, replicator_type, attachments, endPointType", [
     (10, True, "push_pull", False, "URLEndPoint"),
-    (100, False, "push", False, "URLEndPoint"),
+    (100, False, "push", False, "URLEndPoint")
 ])
 def test_peer_to_peer_mesh_topology(params_from_base_test_setup, server_setup, num_of_docs, continuous, replicator_type,
                                     attachments, endPointType):
@@ -44,9 +44,11 @@ def test_peer_to_peer_mesh_topology(params_from_base_test_setup, server_setup, n
     db_obj_peer1 = db_obj_list[0]
     db_obj_peer2 = db_obj_list[1]
     db_obj_peer3 = db_obj_list[2]
-    cbl_db_peer1 = cbl_db_list[1]
-    cbl_db_peer2 = cbl_db_list[0]
+
+    cbl_db_peer1 = cbl_db_list[0]
+    cbl_db_peer2 = cbl_db_list[1]
     cbl_db_peer3 = cbl_db_list[2]
+
     db_name_peer1 = db_name_list[0]
     db_name_peer2 = db_name_list[1]
     db_name_peer3 = db_name_list[2]
@@ -65,10 +67,10 @@ def test_peer_to_peer_mesh_topology(params_from_base_test_setup, server_setup, n
     peer3_listener_port = peer_to_peer3.get_url_listener_port(peer3_listener)
 
     if attachments:
-        db_obj_peer2.create_bulk_docs(num_of_docs, "replication", db=cbl_db_peer2, channels=channels,
+        db_obj_peer1.create_bulk_docs(num_of_docs, "p2preplication", db=cbl_db_peer2, channels=channels,
                                       attachments_generator=attachment.generate_png_100_100)
     else:
-        db_obj_peer2.create_bulk_docs(num_of_docs, "replication", db=cbl_db_peer2, channels=channels)
+        db_obj_peer1.create_bulk_docs(num_of_docs, "p2preplication", db=cbl_db_peer2, channels=channels)
 
     # Peer1 connected peer2 replicator and peer3 replicator
     peer2_repl1 = peer_to_peer2.configure(port=peer1_listener_port, host=peer1_host, server_db_name=db_name_peer1,
@@ -100,10 +102,10 @@ def test_peer_to_peer_mesh_topology(params_from_base_test_setup, server_setup, n
 
     # Peer 2 connecting to peer 1 and Peer3
     if attachments:
-        db_obj_peer2.create_bulk_docs(num_of_docs, "replication", db=cbl_db_peer2, channels=channels,
+        db_obj_peer2.create_bulk_docs(num_of_docs, "replication-peer2", db=cbl_db_peer2, channels=channels,
                                       attachments_generator=attachment.generate_png_100_100)
     else:
-        db_obj_peer2.create_bulk_docs(num_of_docs, "replication", db=cbl_db_peer2, channels=channels)
+        db_obj_peer2.create_bulk_docs(num_of_docs, "replication-peer2", db=cbl_db_peer2, channels=channels)
 
     # Peer2 connected peer1 replicator and peer3 replicator
     peer1_repl1 = peer_to_peer1.configure(port=peer2_listener_port, host=peer2_host, server_db_name=db_name_peer2,
@@ -136,10 +138,10 @@ def test_peer_to_peer_mesh_topology(params_from_base_test_setup, server_setup, n
 
     # Peer 3 connecting to peer 1 and Peer2
     if attachments:
-        db_obj_peer3.create_bulk_docs(num_of_docs, "replication", db=cbl_db_peer3, channels=channels,
+        db_obj_peer3.create_bulk_docs(num_of_docs, "replication-peer3", db=cbl_db_peer3, channels=channels,
                                       attachments_generator=attachment.generate_png_100_100)
     else:
-        db_obj_peer3.create_bulk_docs(num_of_docs, "replication", db=cbl_db_peer3, channels=channels)
+        db_obj_peer3.create_bulk_docs(num_of_docs, "replication-peer3", db=cbl_db_peer3, channels=channels)
 
     # Peer2 connected peer1 replicator and peer3 replicator
     peer1_repl2 = peer_to_peer1.configure(port=peer3_listener_port, host=peer3_host, server_db_name=db_name_peer3,
@@ -165,11 +167,6 @@ def test_peer_to_peer_mesh_topology(params_from_base_test_setup, server_setup, n
     completed = peer2_replicator.getCompleted(peer2_repl2)
     assert total == completed, "replication from peer2 to peer3 did not completed " + total + " not equal to " + completed
 
-    server_docs_count1 = db_obj_peer1.getCount(cbl_db_peer1)
-    server_docs_count2 = db_obj_peer2.getCount(cbl_db_peer2)
-    assert server_docs_count1 == num_of_docs * 3, "Number of docs is not equivalent to number of docs in peer1 "
-    assert server_docs_count2 == num_of_docs * 3, "Number of docs is not equivalent to number of docs in peer3 "
-
     peer1_replicator.stop(peer1_repl1)
     peer1_replicator.stop(peer1_repl2)
 
@@ -183,11 +180,17 @@ def test_peer_to_peer_mesh_topology(params_from_base_test_setup, server_setup, n
     peer_to_peer2.server_stop(peer2_listener, endPointType)
     peer_to_peer3.server_stop(peer3_listener, endPointType)
 
+    peer1_docs = db_obj_peer1.getCount(cbl_db_peer1)
+    peer2_docs = db_obj_peer2.getCount(cbl_db_peer2)
+    peer3_docs = db_obj_peer3.getCount(cbl_db_peer3)
+    assert peer1_docs == peer3_docs, "Number of docs is not equivalent to number of docs in peer1 "
+    assert peer2_docs == peer3_docs, "Number of docs is not equivalent to number of docs in peer3 "
+
 
 @pytest.mark.listener
 @pytest.mark.parametrize("num_of_docs, continuous, replicator_type, attachments, endPointType", [
     (10, True, "push_pull", False, "URLEndPoint"),
-    (100, False, "push", False, "URLEndPoint"),
+    (100, False, "pull", False, "URLEndPoint"),
 ])
 def test_peer_to_peer_loop_topology(params_from_base_test_setup, server_setup, num_of_docs, continuous,
                                     replicator_type,
@@ -225,9 +228,11 @@ def test_peer_to_peer_loop_topology(params_from_base_test_setup, server_setup, n
     db_obj_peer1 = db_obj_list[0]
     db_obj_peer2 = db_obj_list[1]
     db_obj_peer3 = db_obj_list[2]
-    cbl_db_peer1 = cbl_db_list[1]
-    cbl_db_peer2 = cbl_db_list[0]
+
+    cbl_db_peer1 = cbl_db_list[0]
+    cbl_db_peer2 = cbl_db_list[1]
     cbl_db_peer3 = cbl_db_list[2]
+
     db_name_peer1 = db_name_list[0]
     db_name_peer2 = db_name_list[1]
     db_name_peer3 = db_name_list[2]
@@ -246,10 +251,10 @@ def test_peer_to_peer_loop_topology(params_from_base_test_setup, server_setup, n
     peer3_listener_port = peer_to_peer3.get_url_listener_port(peer3_listener)
 
     if attachments:
-        db_obj_peer2.create_bulk_docs(num_of_docs, "replication", db=cbl_db_peer2, channels=channels,
+        db_obj_peer1.create_bulk_docs(num_of_docs, "replication1", db=cbl_db_peer1, channels=channels,
                                       attachments_generator=attachment.generate_png_100_100)
     else:
-        db_obj_peer2.create_bulk_docs(num_of_docs, "replication", db=cbl_db_peer2, channels=channels)
+        db_obj_peer1.create_bulk_docs(num_of_docs, "replication1", db=cbl_db_peer1, channels=channels)
 
     # Peer1 connected peer2 replicator
     peer2_repl1 = peer_to_peer2.configure(port=peer1_listener_port, host=peer1_host, server_db_name=db_name_peer1,
@@ -269,10 +274,10 @@ def test_peer_to_peer_loop_topology(params_from_base_test_setup, server_setup, n
 
     # Peer 2 connecting to  Peer3
     if attachments:
-        db_obj_peer2.create_bulk_docs(num_of_docs, "replication", db=cbl_db_peer2, channels=channels,
+        db_obj_peer2.create_bulk_docs(num_of_docs, "replication2", db=cbl_db_peer2, channels=channels,
                                       attachments_generator=attachment.generate_png_100_100)
     else:
-        db_obj_peer2.create_bulk_docs(num_of_docs, "replication", db=cbl_db_peer2, channels=channels)
+        db_obj_peer2.create_bulk_docs(num_of_docs, "replication2", db=cbl_db_peer2, channels=channels)
 
     # Peer2 connected peer1 replicator and peer3 replicator
 
@@ -286,15 +291,15 @@ def test_peer_to_peer_loop_topology(params_from_base_test_setup, server_setup, n
     total = peer3_replicator.getTotal(peer3_repl1)
     completed = peer3_replicator.getCompleted(peer3_repl1)
     assert total == completed, "replication from peer2 to peer3 did not completed " + total + " not equal to " + completed
-    server_docs_count2 = db_obj_peer3.getCount(cbl_db_peer3)
-    assert server_docs_count2 == num_of_docs * 2, "Number of docs is not equivalent to number of docs in peer3 "
+    peer3_docs = db_obj_peer3.getCount(cbl_db_peer3)
+    assert peer3_docs == db_obj_peer2.getCount(cbl_db_peer2), "Number of docs is not equivalent to number of docs in peer3 "
 
     # Peer 3 connecting to peer 1
     if attachments:
-        db_obj_peer3.create_bulk_docs(num_of_docs, "replication", db=cbl_db_peer3, channels=channels,
+        db_obj_peer3.create_bulk_docs(num_of_docs, "replication3", db=cbl_db_peer3, channels=channels,
                                       attachments_generator=attachment.generate_png_100_100)
     else:
-        db_obj_peer3.create_bulk_docs(num_of_docs, "replication", db=cbl_db_peer3, channels=channels)
+        db_obj_peer3.create_bulk_docs(num_of_docs, "replication3", db=cbl_db_peer3, channels=channels)
 
     # Peer2 connected peer1 replicator and peer3 replicator
     peer1_repl1 = peer_to_peer1.configure(port=peer3_listener_port, host=peer3_host, server_db_name=db_name_peer3,
