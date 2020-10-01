@@ -8,16 +8,14 @@ from CBLClient.PeerToPeer import PeerToPeer
 @pytest.mark.listener
 @pytest.mark.parametrize("continuous, replicator_type, endPointType, with_certs", [
     (True, "push_pull", "URLEndPoint", True),
-    (False, "push", "URLEndPoint", True),
-    (True, "push", "URLEndPoint", False),
-    (False, "push_pull", "URLEndPoint", False),
+    (False, "push", "URLEndPoint", True)
 ])
-def peer_to_peer_many_listeners_replicators(params_from_base_test_setup, server_setup, continuous, replicator_type,
+def test_peer_to_peer_many_listeners_replicators(params_from_base_test_setup, server_setup, continuous, replicator_type,
                                             endPointType, with_certs):
     """
         @summary:
-        1. Start the 100 listeners
-        2. Start 100 replicators on client
+        1. Start the 10 listeners
+        2. Start 10 replicators on client
         3. Verify replication is completed.
         4. Verify all docs got replicated on listener
     """
@@ -39,7 +37,6 @@ def peer_to_peer_many_listeners_replicators(params_from_base_test_setup, server_
     db_name_server = db_name_list[0]
     peer_to_peer_server = PeerToPeer(base_url_list[0])
     message_url_tcp_listener = server_setup["message_url_tcp_listener"]
-    print(message_url_tcp_listener)
     peer_to_peer_server.server_stop(message_url_tcp_listener, "MessageEndPoint")
 
     server_host = host_list[0]
