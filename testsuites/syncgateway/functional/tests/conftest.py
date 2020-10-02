@@ -157,6 +157,8 @@ def pytest_addoption(parser):
 # IMPORTANT: Tests in 'tests/' should be executed in their own test run and should not be
 # run in the same test run with 'topology_specific_tests/'. Doing so will make have unintended
 # side effects due to the session scope
+
+
 @pytest.fixture(scope="session")
 def params_from_base_suite_setup(request):
     log_info("Setting up 'params_from_base_suite_setup' ...")
