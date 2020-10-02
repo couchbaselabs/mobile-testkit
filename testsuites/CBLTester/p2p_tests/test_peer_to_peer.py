@@ -1064,9 +1064,9 @@ def test_default_conflict_scenario_highRevGeneration_wins(params_from_base_test_
 
 @pytest.mark.listener
 @pytest.mark.parametrize("num_of_docs, continuous, replicator_type, endPointType", [
+    (100, True, "push", "MessageEndPoint"),
     pytest.param(10, True, "push_pull", "MessageEndPoint", marks=pytest.mark.sanity),
     (10, True, "push_pull", "URLEndPoint"),
-    (100, True, "push", "MessageEndPoint"),
     (100, True, "push", "URLEndPoint"),
 ])
 def test_peer_to_peer_with_server_down(params_from_base_test_setup, server_setup, num_of_docs, continuous, replicator_type, endPointType):
