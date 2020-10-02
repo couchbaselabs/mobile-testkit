@@ -1124,8 +1124,14 @@ def test_peer_to_peer_with_server_down(params_from_base_test_setup, server_setup
             url_listener_port
         )
         repl = wait_until_replicator_completes.result()
-        listener = restart_server.result()
-    time.sleep(3)
+        try:
+            listener = restart_server.result()
+        except Exception as err:
+            if 'Address already in use' in str(err):
+                time.sleep(300)
+                listener = restart_server.result()
+
+    time.sleep(5)
     replicator.wait_until_replicator_idle(repl)
     replicator.stop(repl)
     peer_to_peer_server.server_stop(listener, endPointType)
