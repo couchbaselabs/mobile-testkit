@@ -1128,7 +1128,7 @@ def test_peer_to_peer_with_server_down(params_from_base_test_setup, server_setup
             listener = restart_server.result()
         except Exception as err:
             if 'Address already in use' in str(err):
-                time.sleep(300)
+                time.sleep(500)
                 listener = restart_server.result()
 
     time.sleep(5)

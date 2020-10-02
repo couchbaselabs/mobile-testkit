@@ -10,8 +10,7 @@ from CBLClient.PeerToPeer import PeerToPeer
     (True, "push_pull", "URLEndPoint", True),
     (False, "push", "URLEndPoint", True)
 ])
-def test_peer_to_peer_many_listeners_replicators(params_from_base_test_setup, server_setup, continuous, replicator_type,
-                                            endPointType, with_certs):
+def test_peer_to_peer_many_listeners_replicators(params_from_base_test_setup, server_setup, continuous, replicator_type, endPointType, with_certs):
     """
         @summary:
         1. Start the 10 listeners
