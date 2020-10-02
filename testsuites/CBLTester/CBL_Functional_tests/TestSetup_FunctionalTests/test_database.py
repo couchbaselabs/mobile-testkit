@@ -457,6 +457,7 @@ def test_db_close_on_active_replicators(params_from_base_test_setup):
         assert False, "closing database with active replicators are failed"
 
 
+@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.replication
 def test_db_close_on_active_replicator_and_live_query(params_from_base_test_setup):

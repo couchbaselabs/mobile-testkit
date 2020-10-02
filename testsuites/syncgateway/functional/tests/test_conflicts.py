@@ -202,6 +202,7 @@ def test_winning_conflict_branch_revisions(params_from_base_test_setup, sg_conf_
     topology = params_from_base_test_setup["cluster_topology"]
     mode = params_from_base_test_setup["mode"]
     no_conflicts_enabled = params_from_base_test_setup["no_conflicts_enabled"]
+    cbs_ce_version = params_from_base_test_setup["cbs_ce"]
 
     if no_conflicts_enabled:
         pytest.skip('--no-conflicts is enabled, this test needs to create conflicts, so skipping the test')
@@ -212,7 +213,7 @@ def test_winning_conflict_branch_revisions(params_from_base_test_setup, sg_conf_
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
-    if x509_cert_auth:
+    if x509_cert_auth and not cbs_ce_version:
         temp_cluster_config = copy_to_temp_conf(cluster_config, mode)
         persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
         cluster_config = temp_cluster_config
