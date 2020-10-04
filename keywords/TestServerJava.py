@@ -139,6 +139,13 @@ class TestServerJava(TestServerBase):
             status = self.ansible_runner.run_ansible_playbook("manage-testserver-java-desktop-msft.yml", extra_vars={
                 "service_status": "started"
             })
+        elif self.platform == "java-macosx":
+            # install jar file as a daemon service on macOS and start
+            status = self.ansible_runner.run_ansible_playbook("install-testserver-java-desktop-macos.yml", extra_vars={
+                "package_name": self.package_name,
+                "java_home": os.environ["JAVA_HOME"],
+                "jsvc_home": os.environ["JSVC_HOME"]
+            })
         else:
             # install jar file as a daemon service on non-Windows environment and start
             status = self.ansible_runner.run_ansible_playbook("install-testserver-java-desktop.yml", extra_vars={
@@ -158,6 +165,14 @@ class TestServerJava(TestServerBase):
             # stop TestServerJava Windows Service
             status = self.ansible_runner.run_ansible_playbook("manage-testserver-java-desktop-msft.yml", extra_vars={
                 "service_status": "stopped"
+            })
+        elif self.platform == "java-macosx":
+            # stop TestServerJava Daemon Service
+            status = self.ansible_runner.run_ansible_playbook("manage-testserver-java-desktop-macos.yml", extra_vars={
+                "service_status": "stop",
+                "package_name": self.package_name,
+                "java_home": os.environ["JAVA_HOME"],
+                "jsvc_home": os.environ["JSVC_HOME"]
             })
         else:
             # stop TestServerJava Daemon Service
