@@ -4,7 +4,7 @@ import time
 
 from concurrent.futures import ProcessPoolExecutor
 from couchbase.bucket import Bucket
-from requests.exceptions import HTTPError
+# from requests.exceptions import HTTPError
 from keywords.couchbaseserver import verify_server_version
 from keywords.utils import log_info, host_for_url
 from keywords.SyncGateway import (verify_sync_gateway_version,
@@ -182,10 +182,10 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
     sg3 = cluster.sync_gateways[2]
     # sg4 = cluster.sync_gateways[3]
     sgw_cluster2_conf_name = 'listener_tests/sg_replicate_sgw_cluster2'
-    sgw_cluster1_repl2_conf_name = 'listener_tests/sg_replicate_sgw_cluster1'
+    #  sgw_cluster1_repl2_conf_name = 'listener_tests/sg_replicate_sgw_cluster1'
     sgw_cluster2_sg_config = sync_gateway_config_path_for_mode(sgw_cluster2_conf_name, mode)
-    sgw_cluster2_repl2_sg_config = sync_gateway_config_path_for_mode(sgw_cluster1_repl2_conf_name, mode)
-    sgw_cluster1_repl2_config_path = "{}/{}".format(os.getcwd(), sgw_cluster2_repl2_sg_config)
+    # sgw_cluster2_repl2_sg_config = sync_gateway_config_path_for_mode(sgw_cluster1_repl2_conf_name, mode)
+    # sgw_cluster1_repl2_config_path = "{}/{}".format(os.getcwd(), sgw_cluster2_repl2_sg_config)
     sgw_cluster2_config_path = "{}/{}".format(os.getcwd(), sgw_cluster2_sg_config)
 
     # 3. Start replications on SGW cluster1 to SGW cluster2. Will have 2 replications. One push replication and one pull replication
@@ -211,14 +211,13 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
             sg_obj.stop_sync_gateways(cluster_config=cluster_config, url=node)
         count += 1
 
-    active_tasks = sg1.admin.get_active_tasks()
+    # active_tasks = sg1.admin.get_active_tasks()
     num_docs = 10
     db.create_bulk_docs(number=num_docs, id_prefix=sgw_cluster1_replication1, db=cbl_db1, channels=replication1_channel,
                         attachments_generator=attachment.generate_2_png_10_10)
     db.create_bulk_docs(number=num_docs, id_prefix=sgw_cluster1_replication1, db=cbl_db1, channels=replication1_channel)
     doc_ids = db.getDocIds(cbl_db1, limit=num_docs)
     sgw_cluster1_added_docs = db.getDocuments(cbl_db1, doc_ids)
-    #log_info("Added {} docs on sgw cluster1 sg replicate1".format(doc_ids))
 
     db.create_bulk_docs(number=num_docs, id_prefix=sgw_cluster2_replication1, db=cbl_db2, channels=replication1_channel,
                         attachments_generator=attachment.generate_2_png_10_10)
@@ -274,8 +273,8 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
         sg_docs = sg_client.get_all_docs(url=sg1.url, db=sg_db1, auth=session1)["rows"]
         for doc in sg_docs:
             if "sgw_cluster1_replication1" in doc:
-                doc_conflict = sg_client.add_conflict(url=sg1.url, db=sg_db1, doc_id=doc["id"], parent_revisions=doc["rev"],
-                                                      new_revision="2-foo", auth=session1)
+                sg_client.add_conflict(url=sg1.url, db=sg_db1, doc_id=doc["id"], parent_revisions=doc["rev"],
+                                       new_revision="2-foo", auth=session1)
 
     with ProcessPoolExecutor() as up:
         # Start updates in background process
@@ -397,7 +396,6 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
                 sgw_cluster1_added_docs[doc_id]["numOfUpdates"] = updated_doc_revs[doc_id]
 
         # 8. Compare rev id, doc body and revision history of all docs on both CBL and SGW
-        # TODO : Enable it once upgrade test done ## 
         verify_sg_docs_revision_history(sg1.admin.admin_url, db, cbl_db3, num_docs + 3, sg_db=sg_db1, added_docs=sgw_cluster1_added_docs, terminator=terminator1_doc_id)
 
         # 9. If xattrs enabled, validate CBS contains _sync records for each doc
