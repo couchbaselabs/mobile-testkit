@@ -215,7 +215,7 @@ def test_sg_replicate_push_pull_replication(params_from_base_test_setup, setup_c
             assert expvars['syncgateway']['per_db'][sg_db1]['replications'][repl_id_1]['sgr_num_attachment_bytes_pulled'] > 0, "pull replication bytes is not incremented"
             assert expvars['syncgateway']['per_db'][sg_db1]['replications'][repl_id_1]['sgr_num_attachments_pulled'] == num_of_docs, "pull replication count is  not  equal to number of docs pulled"
     if "push" in direction:
-            assert expvars['syncgateway']['per_db'][sg_db1]['replications'][repl_id_1]['sgr_num_docs_pushed'] == num_of_docs, "push replication count is  not  equal to number of docs pushed"
+        assert expvars['syncgateway']['per_db'][sg_db1]['replications'][repl_id_1]['sgr_num_docs_pushed'] == num_of_docs, "push replication count is  not  equal to number of docs pushed"
     if "pull" in direction:
         assert expvars['syncgateway']['per_db'][sg_db1]['replications'][repl_id_1]['sgr_num_docs_pulled'] == num_of_docs, "pull replication count is  not  equal to number of docs pulled"
 
@@ -1060,8 +1060,8 @@ def test_sg_replicate_multiple_replications_with_filters(params_from_base_test_s
 
     # Set up 2 sgw nodes and have two cbl dbs
     db, num_of_docs, sg_db1, sg_db2, name1, name2, password, channels1, channels2, replicator, replicator_authenticator1, replicator_authenticator2, sg1_blip_url, sg2_blip_url, sg1, sg2, repl1, _, cbl_db1, cbl_db2, _ = setup_syncGateways_with_cbl(params_from_base_test_setup,
-                                                                                                                                                                                                                                              setup_customized_teardown_test, cbl_replication_type="push_pull",
-                                                                                                                                                                                                                                              sgw_cluster1_sg_config_name=sgw_cluster1_conf_name, sgw_cluster2_sg_config_name=sgw_cluster2_conf_name)
+                                                                                                                                                                                                                                                       setup_customized_teardown_test, cbl_replication_type="push_pull",
+                                                                                                                                                                                                                                                       sgw_cluster1_sg_config_name=sgw_cluster1_conf_name, sgw_cluster2_sg_config_name=sgw_cluster2_conf_name)
     channels = channels1 + channels2 + channels3
     channels_list = [channels1, channels2, channels3, channels4]
     sg_client.create_user(sg1.admin.admin_url, sg_db1, name3, password=password, channels=channels)
