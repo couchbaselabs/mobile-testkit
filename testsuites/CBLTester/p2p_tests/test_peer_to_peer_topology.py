@@ -7,7 +7,7 @@ from CBLClient.PeerToPeer import PeerToPeer
 @pytest.mark.listener
 @pytest.mark.parametrize("num_of_docs, continuous, replicator_type, attachments, endPointType", [
     (10, True, "push_pull", False, "URLEndPoint"),
-    (100, False, "pull", False, "URLEndPoint")
+    (100, False, "push_pull", False, "URLEndPoint")
 ])
 def test_peer_to_peer_mesh_topology(params_from_base_test_setup, server_setup, num_of_docs, continuous, replicator_type,
                                     attachments, endPointType):
