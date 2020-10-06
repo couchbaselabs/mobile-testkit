@@ -28,7 +28,7 @@ def pytest_sessionfinish(session, exitstatus):
         rerun_result_option = session.config.getoption("--rerun-tests")
         result_option = rerun_result_option
         result_option = result_option.split("=")
-        custom_rerun_xml_merge(result_option[1])
+        custom_rerun_xml_merge(result_option[1], result_option[0])
 
 
 def pytest_addoption(parser):

@@ -1,4 +1,3 @@
-
 import glob
 import xml.dom.minidom
 from optparse import OptionParser
@@ -150,7 +149,7 @@ def filter_fields(testname):
     return line
 
 
-def custom_rerun_xml_merge(filepath):
+def custom_rerun_xml_merge(filepath, type):
     if filepath.startswith("http://") or filepath.startswith("https://"):
         if filepath.endswith(".xml"):
             url_path = filepath
@@ -184,13 +183,18 @@ def custom_rerun_xml_merge(filepath):
     for ts in testsuitelem:
         testcaseelem = ts.getElementsByTagName("testcase")
         for tc in testcaseelem:
-            if not (tc.getElementsByTagName("failure") or tc.getElementsByTagName("error")):
-                added_test_count += 1
-                doc2.childNodes[0].childNodes[0].appendChild(tc)
+            if type == "fail":
+                if not (tc.getElementsByTagName("failure") or tc.getElementsByTagName("error")):
+                    added_test_count += 1
+                    doc2.childNodes[0].childNodes[0].appendChild(tc)
+            if type == "pass":
+                if tc.getElementsByTagName("failure") or tc.getElementsByTagName("error"):
+                    added_test_count += 1
+                    doc2.childNodes[0].childNodes[0].appendChild(tc)
 
     current_test_count = int(testsuitelem2[0].getAttribute("tests")) + added_test_count
     testsuitelem2[0].setAttribute("tests", str(current_test_count))
-    print(testsuitelem2[0].toxml())
+    # print(testsuitelem2[0].toxml())
     doc2.toxml()
     doc2.writexml(open('results/results.xml', 'w'),
                   indent="  ",
@@ -242,7 +246,6 @@ def merge_reports(filespath):
             tsskips = ts.getAttribute("skips")
             tstime = ts.getAttribute("time")
             tstests = ts.getAttribute("tests")
-
 
             # # fill testsuite details
             if tsname in list(testsuites.keys()):
@@ -317,7 +320,7 @@ def merge_reports(filespath):
     for testname in tests.keys():
         testcase = tests[testname]
         tname = testcase['name']
-        tclass= testcase['classname']
+        tclass = testcase['classname']
         ttime = testcase['time']
         inttime = float(ttime)
         terrors = testcase['error']
@@ -360,6 +363,7 @@ def compare_with_sort(dict, key):
             return True
     return False
 
+
 if __name__ == "__main__":
     usage = """usage: xml_parser.py
        usage: python mobile_server_pool.py
@@ -368,7 +372,8 @@ if __name__ == "__main__":
     parser = OptionParser(usage=usage)
 
     parser.add_option("--xml-file",
-                      action="store", dest="xml_file", default="http://uberjenkins.sc.couchbase.com:8080/job/cen7-sync-gateway-functional-tests-sgreplicate2/lastCompletedBuild/artifact/results/results.xml",
+                      action="store", dest="xml_file",
+                      default="http://uberjenkins.sc.couchbase.com:8080/job/cen7-sync-gateway-functional-tests-sgreplicate2/lastCompletedBuild/artifact/results/results.xml",
                       help="File-path")
     arg_parameters = sys.argv[1:]
 
