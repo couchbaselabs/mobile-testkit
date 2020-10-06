@@ -22,7 +22,6 @@ def parse_junit_result_xml(filepath=""):
         doc = xml.dom.minidom.parse(xml_file)
         testsuitelem = doc.getElementsByTagName("testsuite")
         for ts in testsuitelem:
-            tsname = ts.getAttribute("name")
             testcaseelem = ts.getElementsByTagName("testcase")
             failed = False
             for tc in testcaseelem:
@@ -328,7 +327,6 @@ def merge_reports(filespath):
         tfailure_message = testcase['failure-message']
         terror_message = testcase['error-message']
         file = testcase['file']
-        tparams = ""
         testcase = doc.createElement('testcase')
         testcase.setAttribute('name', tname)
         testcase.setAttribute('classname', tclass)
