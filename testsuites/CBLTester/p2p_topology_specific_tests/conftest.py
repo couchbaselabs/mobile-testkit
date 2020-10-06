@@ -161,11 +161,12 @@ def params_from_base_suite_setup(request):
 
     enable_encryption = request.config.getoption("--enable-encryption")
     encryption_password = request.config.getoption("--encryption-password")
-
+    liteserv_host_list = liteserv_host.split(',')
+    liteserv_ports = liteserv_port.split(',')
     testserver = TestServerFactory.create(platform=liteserv_platform,
                                           version_build=liteserv_version,
-                                          host=liteserv_host,
-                                          port=liteserv_port,
+                                          host=liteserv_host_list[0],
+                                          port=liteserv_ports[0],
                                           community_enabled=community_enabled,
                                           debug_mode=debug_mode)
 
@@ -180,8 +181,8 @@ def params_from_base_suite_setup(request):
         else:
             testserver.install()
 
-    base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
-    base_url2 = "http://192.168.33.101:8080"
+    base_url = "http://{}:{}".format(liteserv_host_list[0], liteserv_ports[0])
+    base_url2 = "http://{}:{}".format(liteserv_host_list[1], liteserv_ports[1])
     cluster_config = "{}/multiple_sync_gateways_{}".format(CLUSTER_CONFIGS_DIR, mode)
     no_conflicts_enabled = request.config.getoption("--no-conflicts")
     cluster_utils = ClusterKeywords(cluster_config)
