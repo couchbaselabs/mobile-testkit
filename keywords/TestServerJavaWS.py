@@ -132,6 +132,13 @@ class TestServerJavaWS(TestServerBase):
                 "core_package_name": self.cbl_core_lib_name,
                 "build_name": self.build_name
             })
+        elif self.platform == "javaws-macosx":
+            # deploy jar/war files to Tomcat on macOS
+            status = self.ansible_runner.run_ansible_playbook("install-testserver-java-ws-macos.yml", extra_vars={
+                "war_package_name": self.package_name,
+                "core_package_name": self.cbl_core_lib_name,
+                "catalina_base": os.environ["CATALINA_BASE"]
+            })
         else:
             # deploy jar/war files to Tomcat on non-Windows
             status = self.ansible_runner.run_ansible_playbook("install-testserver-java-ws.yml", extra_vars={
@@ -152,6 +159,12 @@ class TestServerJavaWS(TestServerBase):
             # start Tomcat Windows Service
             status = self.ansible_runner.run_ansible_playbook("manage-testserver-java-ws-msft.yml", extra_vars={
                 "service_status": "started"
+            })
+        elif self.platform == "javaws-macosx":
+            # start Tomcat Server
+            status = self.ansible_runner.run_ansible_playbook("manage-testserver-java-ws-macos.yml", extra_vars={
+                "service_status": "start",
+                "catalina_base": os.environ["CATALINA_BASE"]
             })
         else:
             # start Tomcat Server
@@ -174,6 +187,12 @@ class TestServerJavaWS(TestServerBase):
             # stop Tomcat Windows Service
             status = self.ansible_runner.run_ansible_playbook("manage-testserver-java-ws-msft.yml", extra_vars={
                 "service_status": "stopped"
+            })
+        elif self.platform == "javaws-macosx":
+            # stop Tomcat Server
+            status = self.ansible_runner.run_ansible_playbook("manage-testserver-java-ws-macos.yml", extra_vars={
+                "service_status": "stop",
+                "catalina_base": os.environ["CATALINA_BASE"]
             })
         else:
             # stop Tomcat Server
