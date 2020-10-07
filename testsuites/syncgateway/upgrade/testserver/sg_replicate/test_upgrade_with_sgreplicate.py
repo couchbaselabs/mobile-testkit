@@ -50,7 +50,7 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
     """
     cluster_config = params_from_base_test_setup['cluster_config']
     mode = params_from_base_test_setup['mode']
-    # server_version = params_from_base_test_setup['server_version']
+    server_version = params_from_base_test_setup['server_version']
     sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
     server_upgraded_version = params_from_base_test_setup['server_upgraded_version']
     sync_gateway_upgraded_version = params_from_base_test_setup['sync_gateway_upgraded_version']
@@ -79,6 +79,8 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
     cbl_db2 = setup_customized_teardown_test["cbl_db2"]
     cbl_db3 = setup_customized_teardown_test["cbl_db3"]
     db = params_from_base_test_setup["db"]
+    cbs_platform = params_from_base_test_setup['cbs_platform']
+    cbs_toy_build = params_from_base_test_setup['cbs_toy_build']
 
     # update cluster_config with the post upgrade required params
     need_to_redeploy = False
@@ -319,8 +321,7 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
         primary_server = cluster.servers[0]
         secondary_server = cluster.servers[1]
         servers = cluster.servers[1:]
-        #  TODO: Enable after getting upgrade test work
-        """upgrade_server_cluster(
+        upgrade_server_cluster(
             servers,
             primary_server,
             secondary_server,
@@ -330,7 +331,7 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
             cluster_config,
             cbs_platform,
             toy_build=cbs_toy_build
-        )"""
+        )
 
         # 6. Restart SGWs after the server upgrade
         sg_obj = SyncGateway()
