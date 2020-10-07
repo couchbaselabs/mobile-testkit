@@ -492,7 +492,7 @@ def test_replication_delete_event(params_from_base_test_setup, num_of_docs):
 @pytest.mark.replication
 @pytest.mark.parametrize("attachment_generator, attachment_file_list", [
     [None, None],
-    [load_from_data_dir, ["Sample_Image_30mb"]],
+    [load_from_data_dir, ["Sample_Image_30mb.jpg"]],
     [generate_2_png_100_100, None],
 ])
 def test_push_replication_for_20mb_doc(params_from_base_test_setup, attachment_generator, attachment_file_list):
