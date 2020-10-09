@@ -1284,6 +1284,37 @@ class MobileRestClient:
 
         return resp_obj
 
+    def update_doc_with_content(self, url, db, doc_id, key, value=0, auth=None, channels=None, property_updater=None, rev=None, doc=None):
+        """
+        Updates a doc on a db a number of times.
+            1. GETs the doc
+            2. It creates/updates the key in the doc
+            3. PUTS the doc
+        """
+
+        auth_type = get_auth_type(auth)
+        if doc is None:
+            doc = self.get_doc(url, db, doc_id, auth)
+
+        if channels is not None:
+            types.verify_is_list(channels)
+            doc["channels"] = channels
+        doc[key] = value
+
+        if auth_type == AuthType.session:
+            resp = self._session.put("{}/{}/{}".format(url, db, doc_id), data=json.dumps(doc, cls=MyEncoder), cookies=dict(SyncGatewaySession=auth[1]))
+        elif auth_type == AuthType.http_basic:
+            resp = self._session.put("{}/{}/{}".format(url, db, doc_id), data=json.dumps(doc, cls=MyEncoder), auth=auth)
+        else:
+            resp = self._session.put("{}/{}/{}".format(url, db, doc_id), data=json.dumps(doc, cls=MyEncoder))
+
+        log_r(resp, info=False)
+        resp.raise_for_status()
+        resp_obj = resp.json()
+        logging.debug(resp)
+
+        return resp_obj
+
     def add_docs(self, url, db, number, id_prefix, auth=None, channels=None, generator=None, attachments_generator=None):
         """
         if id_prefix == None, generate a uuid for each doc

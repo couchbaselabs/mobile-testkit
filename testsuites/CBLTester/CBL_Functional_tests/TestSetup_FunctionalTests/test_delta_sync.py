@@ -845,6 +845,121 @@ def test_delta_sync_on_community_edition(params_from_base_test_setup, num_of_doc
     compare_docs(cbl_db, db, sg_docs)
 
 
+@pytest.mark.listener
+@pytest.mark.syncgateway
+@pytest.mark.replication
+@pytest.mark.parametrize("doc_creation_source, doc_update_source", [
+    ("cbl", "cbl"),
+    ("sgw", "cbl"),
+    ("cbl", "sgw"),
+    ("sgw", "sgw")
+])
+def test_delta_sync_with_no_deltas(params_from_base_test_setup, doc_creation_source, doc_update_source):
+    '''
+    @summary: Testing CBSE-8339
+    1. Create new docs in CBL/ SGW
+    2. Do push_pull one shot replication to SGW
+    3. Update doc on SGW/CBL
+    4. Update doc on SGW/CBL again to have same value as rev-1
+    5. update same doc in SGW/cbl which still has rev-1
+    6. Verify the body of the doc matches with sgw and cbl
+    '''
+    sg_db = "db"
+    sg_url = params_from_base_test_setup["sg_url"]
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_blip_url = params_from_base_test_setup["target_url"]
+    base_url = params_from_base_test_setup["base_url"]
+    db = params_from_base_test_setup["db"]
+    cbl_db = params_from_base_test_setup["source_db"]
+    mode = params_from_base_test_setup["mode"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    sg_config = params_from_base_test_setup["sg_config"]
+    num_of_docs = 1
+
+    if sync_gateway_version < "2.5.0":
+        pytest.skip('This test cannnot run with sg version below 2.5')
+    channels = ["ABC"]
+    username = "autotest"
+    password = "password"
+
+    # Reset cluster to ensure no data in system
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
+    enable_delta_sync(c, sg_config, cluster_config, mode, True)
+
+    sg_client = MobileRestClient()
+    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channels)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+    session = cookie, session_id
+
+    # 1. Create docs in CBL/SGW
+    if doc_creation_source == "cbl":
+        db.create_bulk_docs(num_of_docs, "delta_test", db=cbl_db, channels=channels)
+    else:
+        sg_client.add_docs(url=sg_url, db=sg_db, number=num_of_docs, id_prefix="delta_test", channels=channels, auth=session)
+
+    # 2. Do push_pull one shot replication to SGW
+    replicator = Replication(base_url)
+    authenticator = Authenticator(base_url)
+    replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
+    repl = replicator.configure_and_replicate(source_db=cbl_db,
+                                              target_url=sg_blip_url,
+                                              continuous=False,
+                                              replicator_authenticator=replicator_authenticator,
+                                              replication_type="push_pull")
+
+    # 3. Update doc on SG
+    # 4. Update doc on SG again to have same value as rev-1
+    if doc_update_source == "cbl":
+        doc_ids = db.getDocIds(cbl_db)
+        cbl_docs = db.getDocuments(cbl_db, doc_ids)
+        for doc_id in cbl_docs:
+            data = cbl_docs[doc_id]
+            data["location"] = "germany"
+            db.updateDocument(cbl_db, doc_id=doc_id, data=data)
+        cbl_docs = db.getDocuments(cbl_db, doc_ids)
+        for doc_id in cbl_docs:
+            data = cbl_docs[doc_id]
+            data["location"] = "california"
+            db.updateDocument(cbl_db, doc_id=doc_id, data=data)
+
+    else:
+        sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
+        for doc in sg_docs:
+            sg_client.update_doc_with_content(url=sg_url, db=sg_db, doc_id=doc["id"], key="location", value="germany", auth=session, channels=channels)
+
+        for doc in sg_docs:
+            sg_client.update_doc_with_content(url=sg_url, db=sg_db, doc_id=doc["id"], key="location", value="california", auth=session, channels=channels)
+
+    repl = replicator.configure_and_replicate(source_db=cbl_db,
+                                              target_url=sg_blip_url,
+                                              continuous=True,
+                                              replicator_authenticator=replicator_authenticator,
+                                              replication_type="push_pull")
+
+    # 5. update same doc in cbl/SGW which still has rev-1 . It depends on where it got updated at step3
+    # if updated in cbl at step3, it has to update on SGW at step5
+    # if updated in SGW at step3, it has to upddate on CBL at step5
+    if doc_update_source == "cbl":
+        sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
+        for doc in sg_docs:
+            sg_client.update_doc_with_content(url=sg_url, db=sg_db, doc_id=doc["id"], key="location", value="Arizona", auth=session, channels=channels)
+    else:
+        doc_ids = db.getDocIds(cbl_db)
+        cbl_docs = db.getDocuments(cbl_db, doc_ids)
+        for doc_id in cbl_docs:
+            data = cbl_docs[doc_id]
+            data["location"] = "Arizona"
+            db.updateDocument(cbl_db, doc_id=doc_id, data=data)
+    replicator.wait_until_replicator_idle(repl)
+
+    # 6. Verify the body of the doc matches with sgw and cbl
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
+    compare_docs(cbl_db, db, sg_docs)
+    replicator.stop(repl)
+
+
 def update_docs(replication_type, cbl_db, db, sg_client, sg_docs, sg_url, sg_db, number_of_updates, session, channels, string_type="normal"):
     if replication_type == "push":
         doc_ids = db.getDocIds(cbl_db)

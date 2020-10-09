@@ -37,6 +37,7 @@ def simple():
     data = {
         "date_time_added": str(datetime.datetime.now()),
         "updates": 0,
+        "location": "california",
         "dict": {
             "name": random_string(10),
         },
