@@ -70,6 +70,7 @@ class Config:
             # strip out sync functions `function ... }`
             data = convert_to_valid_json(data)
             # Find all bucket names in config's databases: {}
+            print("data for valid json is --- ", data)
             conf_obj = json.loads(data)
 
             self.discover_mode(conf_obj)
