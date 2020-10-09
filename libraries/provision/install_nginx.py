@@ -134,13 +134,11 @@ def install_nginx_for_2_sgw_clusters(cluster_config, cluster1_nodes=2, cluster2_
         if count < topology["environment"]["sgw_cluster1_count"]:
             ip_port = sg["public"].replace("http://", "")
             ip_port_admin = sg["admin"].replace("http://", "")
-            print("sgw1 cluster nginx..", ip_port)
             upstream_definition1 += "server {};\n".format(ip_port)
             upstream_definition_admin1 += "server {};\n".format(ip_port_admin)
         elif count < total_cluster_nodes:
             ip_port = sg["public"].replace("http://", "")
             ip_port_admin = sg["admin"].replace("http://", "")
-            print("sgw2 cluster  nginx..", ip_port)
             upstream_definition2 += "server {};\n".format(ip_port)
             upstream_definition_admin2 += "server {};\n".format(ip_port_admin)
         count += 1
@@ -181,7 +179,6 @@ if __name__ == "__main__":
     try:
         cluster_conf = os.environ["CLUSTER_CONFIG"]
     except KeyError as ke:
-        print("Make sure CLUSTER_CONFIG is defined and pointing to the configuration you would like to provision")
         raise KeyError("CLUSTER_CONFIG not defined. Unable to provision cluster.")
 
     install_nginx(cluster_conf)

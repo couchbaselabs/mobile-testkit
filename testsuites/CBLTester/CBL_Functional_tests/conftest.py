@@ -165,6 +165,8 @@ def pytest_addoption(parser):
 # runs with this as input parameters in this file
 # This setup will be called once for all tests in the
 # testsuites/CBLTester/CBL_Functional_tests/ directory
+
+
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
 @pytest.fixture(scope="session")
 def params_from_base_suite_setup(request):
@@ -515,10 +517,14 @@ def params_from_base_suite_setup(request):
                 failed_test_list.append(test.rep_call.nodeid)
         zip_data = suite_cbllog.get_logs_in_zip()
         suite_log_zip_file = "Suite_test_log_{}.zip".format(str(time.time()))
-        log_info("Log file for failed Suite tests is: {}".format(suite_log_zip_file))
-        with open(suite_log_zip_file, 'wb') as fh:
-            fh.write(zip_data.encode())
-            fh.close()
+
+        if os.path.exists(suite_log_zip_file):
+            log_info("Log file for failed Suite tests is: {}".format(suite_log_zip_file))
+            with open(suite_log_zip_file, 'wb') as fh:
+                fh.write(zip_data.encode())
+                fh.close()
+        else:
+            log_info("Cannot find log file for failed Suite tests")
 
     if create_db_per_suite:
         # Delete CBL database
@@ -526,7 +532,6 @@ def params_from_base_suite_setup(request):
         time.sleep(2)
         suite_db.deleteDB(suite_source_db)
         time.sleep(1)
-
     if create_db_per_suite:
         # Flush all the memory contents on the server app
         log_info("Flushing server memory")
@@ -682,10 +687,13 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
             os.mkdir(log_directory)
         test_log_zip_file = "{}_{}.zip".format(test_id.split("::")[-1], str(time.time()))
         test_log = os.path.join(log_directory, test_log_zip_file)
-        log_info("Log file for failed test is: {}".format(test_log_zip_file))
-        with open(test_log, 'wb') as fh:
-            fh.write(zip_data.encode())
-            fh.close()
+        if os.path.exists(test_log):
+            log_info("Log file for failed test is: {}".format(test_log_zip_file))
+            with open(test_log, 'wb') as fh:
+                fh.write(zip_data.encode())
+                fh.close()
+        else:
+            log_info("Cannot find log file for failed test")
 
     log_info("Tearing down test")
     if create_db_per_test:

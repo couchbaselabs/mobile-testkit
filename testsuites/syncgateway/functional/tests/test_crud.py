@@ -383,7 +383,6 @@ def test_verify_changes_purge(params_from_base_test_setup, sg_conf_name):
 
 @pytest.fixture(scope="function")
 def setup_basic_sg_conf(params_from_base_test_setup):
-    sg_ce = params_from_base_test_setup["sg_ce"]
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
 
@@ -391,8 +390,6 @@ def setup_basic_sg_conf(params_from_base_test_setup):
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     cbs_cluster = cluster.Cluster(cluster_config)
     sg1 = cbs_cluster.sync_gateways[0]
-    if not sg_ce:
-        pytest.skip('--sg-ce is not enabled. This test runs only on community edition of sgw')
 
     yield{
         "cbs_cluster": cbs_cluster,
@@ -417,8 +414,12 @@ def test_x509_and_server_ssl(params_from_base_test_setup, setup_basic_sg_conf, s
     cluster_config = setup_basic_sg_conf["cluster_config"]
     sg1 = setup_basic_sg_conf["sg1"]
     mode = setup_basic_sg_conf["mode"]
+    sg_ce = params_from_base_test_setup["sg_ce"]
 
     temp_cluster_config = copy_to_temp_conf(cluster_config, mode)
+
+    if not sg_ce:
+        pytest.skip('--sg-ce is not enabled. This test runs only on community edition of sgw')
     if x509:
         persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True, property_name_check=False)
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)

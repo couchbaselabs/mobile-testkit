@@ -933,9 +933,7 @@ def setup_replications_on_sgconfig(remote_sg_url, sg_db, remote_user, remote_pas
     # replication[replication_id] = repl1
     repl1_string = json.dumps(repl1)
     repl1_string = repl1_string.replace("\"True\"", "true")
-    print("repl1_string is ", repl1_string)
     replication_string = "\"{}\": {}".format(replication_id, repl1_string)
-    print("replication_string is ", replication_string)
     return replication_string, replication_id
 
 
@@ -959,9 +957,6 @@ def setup_sgreplicate1_on_sgconfig(source_sg_url, sg_db1, remote_sg_url, sg_db2,
     # replication[replication_id] = repl1
     repl_string = json.dumps(repl)
     repl_string = repl_string.replace("\"True\"", "true")
-    print("repl1_string for sg replication 1is ", repl_string)
-    # replication_string = "\"replications\": [{}]".format(repl1_string)
-    # print("replication_string is ", replication_string)
     return repl_string, replication_id
 
 
@@ -970,7 +965,6 @@ def update_replication_in_sgw_config(sg_conf_name, sg_mode, repl_remote, repl_re
     temp_sg_config, _ = copy_sgconf_to_temp(sg_config, sg_mode)
     if "4984" in repl_remote:
         if repl_remote_user and repl_remote_password:
-            print("adding some value")
             remote_url = repl_remote.replace("://", "://{}:{}@".format(repl_remote_user, repl_remote_password))
             remote_url = "{}/{}".format(remote_url, repl_remote_db)
         else:

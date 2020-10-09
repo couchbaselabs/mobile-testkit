@@ -523,7 +523,7 @@ class SyncGateway:
         r.raise_for_status()
         return r.json()
 
-    def start_replication2(self, local_db, remote_url, remote_db, remote_user, remote_password, direction="pushAndPull", purge_on_removal=None, continuous=False, channels=None, conflict_resolution_type="default", custom_conflict_resolver=None, adhoc=False, delta_sync=False, replication_id=None):
+    def start_replication2(self, local_db, remote_url, remote_db, remote_user, remote_password, direction="pushAndPull", purge_on_removal=None, continuous=False, channels=None, conflict_resolution_type="default", custom_conflict_resolver=None, adhoc=False, delta_sync=False, replication_id=None, max_backoff_time=None):
         '''
            Required values : remote, direction, conflict_resolution_type
            default values : continuous=false
@@ -554,6 +554,8 @@ class SyncGateway:
             data["adhoc"] = adhoc
         if delta_sync:
             data["enable_delta_sync"] = delta_sync
+        if max_backoff_time:
+            data["max_backoff_time"] = max_backoff_time
         if conflict_resolution_type == "custom":
             if custom_conflict_resolver is None:
                 raise Exception("conflict_resolution_type is selected as custom, but did not provide conflict resolver")
