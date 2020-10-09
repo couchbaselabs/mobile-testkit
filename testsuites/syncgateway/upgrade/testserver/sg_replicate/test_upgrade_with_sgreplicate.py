@@ -50,7 +50,6 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
     """
     cluster_config = params_from_base_test_setup['cluster_config']
     mode = params_from_base_test_setup['mode']
-    server_version = params_from_base_test_setup['server_version']
     sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
     server_upgraded_version = params_from_base_test_setup['server_upgraded_version']
     sync_gateway_upgraded_version = params_from_base_test_setup['sync_gateway_upgraded_version']
@@ -79,8 +78,6 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
     cbl_db2 = setup_customized_teardown_test["cbl_db2"]
     cbl_db3 = setup_customized_teardown_test["cbl_db3"]
     db = params_from_base_test_setup["db"]
-    cbs_platform = params_from_base_test_setup['cbs_platform']
-    cbs_toy_build = params_from_base_test_setup['cbs_toy_build']
 
     # update cluster_config with the post upgrade required params
     need_to_redeploy = False
@@ -191,16 +188,25 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
     sgw_cluster2_config_path = "{}/{}".format(os.getcwd(), sgw_cluster2_sg_config)
 
     # 3. Start replications on SGW cluster1 to SGW cluster2. Will have 2 replications. One push replication and one pull replication
+
     sg_conf_name = 'sync_gateway_sg_replicate1_in_sgwconfig'
     sg_config = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     temp_sg_config_copy, _ = copy_sgconf_to_temp(sg_config, mode)
-    replication_1, sgw_repl1_id1 = setup_sgreplicate1_on_sgconfig(sg1.admin.admin_url, sg_db1, sg3.admin.admin_url, sg_db2, channels=replication1_channel, continuous=True)
-    replication_2, sgw_repl1_id2 = setup_sgreplicate1_on_sgconfig(sg3.admin.admin_url, sg_db2, sg1.admin.admin_url, sg_db1, channels=replication1_channel, continuous=True)
+    if sync_gateway_version < "2.8.0":
+        replication_1, sgw_repl1_id1 = setup_sgreplicate1_on_sgconfig(sg1.admin.admin_url, sg_db1, sg3.admin.admin_url, sg_db2, channels=replication1_channel, continuous=True)
+        replication_2, sgw_repl1_id2 = setup_sgreplicate1_on_sgconfig(sg3.admin.admin_url, sg_db2, sg1.admin.admin_url, sg_db1, channels=replication1_channel, continuous=True)
+    else:
+        replication_1, sgw_repl1 = setup_replications_on_sgconfig(sg3.url, sg_db2, sg2_user_name, password, direction="push", channels=replication1_channel, continuous=True, replication_id=sgw_replication1_id1)
+        replication_2, sgw_repl2 = setup_replications_on_sgconfig(sg3.url, sg_db2, sg2_user_name, password, direction="pull", channels=replication1_channel, continuous=True, replication_id=sgw_replication1_id2)
     replications_ids = "{},{}".format(replication_1, replication_2)
     replications_key = "replications"
     replace_string = "\"{}\": {}{}{},".format(replications_key, "[", replications_ids, "]")
-    temp_sg_config_with_sg1 = replace_string_on_sgw_config(temp_sg_config_copy, "{{ replace_with_sg1_replications }}", replace_string)
-    temp_sg_config = replace_string_on_sgw_config(temp_sg_config_with_sg1, "{{ replace_with_sgreplicate2_replications }}", "")
+    if sync_gateway_version < "2.8.0":
+        temp_sg_config_with_sg1 = replace_string_on_sgw_config(temp_sg_config_copy, "{{ replace_with_sg1_replications }}", replace_string)
+        temp_sg_config = replace_string_on_sgw_config(temp_sg_config_with_sg1, "{{ replace_with_sgreplicate2_replications }}", "")
+    else:
+        temp_sg_config_with_sg1 = replace_string_on_sgw_config(temp_sg_config_copy, "{{ replace_with_sg1_replications }}", "")
+        temp_sg_config = replace_string_on_sgw_config(temp_sg_config_with_sg1, "{{ replace_with_sgreplicate2_replications }}", replace_string)
     sgw_cluster1_config_path = "{}/{}".format(os.getcwd(), temp_sg_config)
     for node in sg_node_list:
         if count < sgw_cluster1_count:
@@ -249,27 +255,28 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
     terminator1_doc_id = 'terminator1'
 
     # Create sg replicate2 in sgw config by using same repl id of sg replicate1 for sg replicate2
-    if stop_replication_before_upgrade:
-        sgw_replication1_id1 = None
-        sgw_replication1_id2 = None
-    else:
-        sgw_replication1_id1 = sgw_repl1_id1
-        sgw_replication1_id2 = sgw_repl1_id2
-    replication_1, sgw_repl1 = setup_replications_on_sgconfig(sg3.url, sg_db2, sg2_user_name, password, direction="push", channels=replication1_channel, continuous=True, replication_id=sgw_replication1_id1)
-    replication_2, sgw_repl2 = setup_replications_on_sgconfig(sg3.url, sg_db2, sg2_user_name, password, direction="pull", channels=replication1_channel, continuous=True, replication_id=sgw_replication1_id2)
-    replications_ids = "{},{}".format(replication_1, replication_2)
-    replications_key = "replications"
-    sgr2_replace_string = "\"{}\": {}{}{},".format(replications_key, "{", replications_ids, "}")
-    temp_sg_config_copy, _ = copy_sgconf_to_temp(sg_config, mode)
-    if stop_replication_before_upgrade:
-        sg1.stop_replication_by_id(sgw_repl1_id1, use_admin_url=True)
-        sg1.stop_replication_by_id(sgw_repl1_id2, use_admin_url=True)
-        temp_sg_config = replace_string_on_sgw_config(temp_sg_config_copy, "{{ replace_with_sg1_replications }}", "")
-    else:
-        temp_sg_config = replace_string_on_sgw_config(temp_sg_config_copy, "{{ replace_with_sg1_replications }}", replace_string)
+    if sync_gateway_version < "2.8.0":
+        if stop_replication_before_upgrade:
+            sgw_replication1_id1 = None
+            sgw_replication1_id2 = None
+        else:
+            sgw_replication1_id1 = sgw_repl1_id1
+            sgw_replication1_id2 = sgw_repl1_id2
+        replication_1, sgw_repl1 = setup_replications_on_sgconfig(sg3.url, sg_db2, sg2_user_name, password, direction="push", channels=replication1_channel, continuous=True, replication_id=sgw_replication1_id1)
+        replication_2, sgw_repl2 = setup_replications_on_sgconfig(sg3.url, sg_db2, sg2_user_name, password, direction="pull", channels=replication1_channel, continuous=True, replication_id=sgw_replication1_id2)
+        replications_ids = "{},{}".format(replication_1, replication_2)
+        replications_key = "replications"
+        sgr2_replace_string = "\"{}\": {}{}{},".format(replications_key, "{", replications_ids, "}")
+        temp_sg_config_copy, _ = copy_sgconf_to_temp(sg_config, mode)
+        if stop_replication_before_upgrade:
+            sg1.stop_replication_by_id(sgw_repl1_id1, use_admin_url=True)
+            sg1.stop_replication_by_id(sgw_repl1_id2, use_admin_url=True)
+            temp_sg_config = replace_string_on_sgw_config(temp_sg_config_copy, "{{ replace_with_sg1_replications }}", "")
+        else:
+            temp_sg_config = replace_string_on_sgw_config(temp_sg_config_copy, "{{ replace_with_sg1_replications }}", replace_string)
 
-    temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ replace_with_sgreplicate2_replications }}", sgr2_replace_string)
-    sgw_cluster1_config_path = "{}/{}".format(os.getcwd(), temp_sg_config)
+        temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ replace_with_sgreplicate2_replications }}", sgr2_replace_string)
+        sgw_cluster1_config_path = "{}/{}".format(os.getcwd(), temp_sg_config)
     # If no conflicts is not enabled then create conflicts on sgw cluster1 and sgw cluster2
     if not no_conflicts_enabled:
         sg_docs = sg_client.get_all_docs(url=sg1.url, db=sg_db1, auth=session1)["rows"]
@@ -308,30 +315,16 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
             cluster_config
         )
 
-        # 5. Upgrade CBS one by one on cluster config list
         cluster = Cluster(config=cluster_config)
 
-        if len(cluster.servers) < 2:
-            raise Exception("Please provide at least 3 servers")
+        if len(cluster.servers) < 1:
+            raise Exception("Please provide at least 2 servers")
 
         server_urls = []
         for server in cluster.servers:
             server_urls.append(server.url)
 
         primary_server = cluster.servers[0]
-        secondary_server = cluster.servers[1]
-        servers = cluster.servers[1:]
-        upgrade_server_cluster(
-            servers,
-            primary_server,
-            secondary_server,
-            server_version,
-            server_upgraded_version,
-            server_urls,
-            cluster_config,
-            cbs_platform,
-            toy_build=cbs_toy_build
-        )
 
         # 6. Restart SGWs after the server upgrade
         sg_obj = SyncGateway()
@@ -375,8 +368,6 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
         repl_config4 = replicator.configure(cbl_db3, sg1_blip_url, continuous=True, channels=sg_user_channels, replication_type="push_pull", replicator_authenticator=replicator_authenticator1)
         repl4 = replicator.create(repl_config4)
         replicator.start(repl4)
-        # log_info("waiting for the replication to complete")
-        # replicator.wait_until_replicator_idle(repl4, max_times=3000)"""
         log_info("Trying to create terminator id ....")
         db.create_bulk_docs(number=1, id_prefix=terminator1_doc_id, db=cbl_db1, channels=replication2_channel4)
         log_info("Waiting for doc updates to complete")
@@ -397,7 +388,7 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
                 sgw_cluster1_added_docs[doc_id]["numOfUpdates"] = updated_doc_revs[doc_id]
 
         # 8. Compare rev id, doc body and revision history of all docs on both CBL and SGW
-        verify_sg_docs_revision_history(sg1.admin.admin_url, db, cbl_db3, num_docs + 3, sg_db=sg_db1, added_docs=sgw_cluster1_added_docs, terminator=terminator1_doc_id)
+        verify_sg_docs_revision_history(sg1.admin.admin_url, db, cbl_db3, sg_db=sg_db1, added_docs=sgw_cluster1_added_docs, terminator=terminator1_doc_id)
 
         # 9. If xattrs enabled, validate CBS contains _sync records for each doc
         if upgraded_xattrs_enabled:
@@ -412,7 +403,6 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
                 if "_sync" in docs_from_sdk[i].value:
                     raise Exception("_sync section found in docs after upgrade")
     repl_id = [sgw_repl1, sgw_repl2]
-    print
     for channel in channel_list:
         replid = sg1.start_replication2(
             local_db=sg_db1,
@@ -428,21 +418,8 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
     replicator.wait_until_replicator_idle(repl1, max_times=3000)
     # Wait until all SGW replications are completed
     for replid in repl_id:
-        # time.sleep(30)
         sg1.admin.wait_until_sgw_replication_done(sg_db1, replid, write_flag=True, max_times=25)  # TODO: change max_times once reads and write bug fixed
 
-    """if stop_replication_before_upgrade:
-        sgw_repl_upgrade_id = sg1.start_replication2(
-            local_db=sg_db1,
-            remote_url=sg3.url,
-            remote_db=sg_db2,
-            remote_user=sg2_user_name,
-            remote_password=password,
-            channels=replication1_channel,
-            continuous=True
-        )
-        # sg1.admin.wait_until_sgw_replication_done(sg_db1, sgw_repl_upgrade_id, num_of_expected_written_docs=num_docs, max_times=25)
-        time.sleep(15)  # TODO: replace with above stmt"""
     replicator.wait_until_replicator_idle(repl2, max_times=3000)
     cbl_doc_ids2 = db.getDocIds(cbl_db2)
     count = sum(sgw_cluster1_replication1 in s for s in cbl_doc_ids2)
@@ -470,7 +447,7 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
     replicator.stop(repl3)
 
 
-def verify_sg_docs_revision_history(url, db, cbl_db3, num_docs, sg_db, added_docs, terminator):
+def verify_sg_docs_revision_history(url, db, cbl_db3, sg_db, added_docs, terminator):
     sg_client = MobileRestClient()
     sg_docs = sg_client.get_all_docs(url=url, db=sg_db, include_docs=True)["rows"]
     cbl_doc_ids3 = db.getDocIds(cbl_db3)
