@@ -12,6 +12,10 @@
             "revs_limit": 20,
             {{ sg_use_views }}
             {{ num_index_replicas }}
+            {{ delta_sync }}
+            {{ cacertpath }}
+            {{ certpath }}
+            {{ keypath }}
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket-1",
             "username":"data-bucket-1",
@@ -21,10 +25,13 @@
             {{ autoimport }}
             {{ xattrs }}
             {{ no_conflicts }}
-            "revs_limit": 15,
+            "revs_limit": 20,
             {{ sg_use_views }}
             {{ num_index_replicas }}
             {{ delta_sync }}
+            {{ cacertpath }}
+            {{ certpath }}
+            {{ keypath }}
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket-2",
             "username":"data-bucket-2",

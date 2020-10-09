@@ -1,0 +1,41 @@
+- name: Install Testserver Java Desktop as Daemon Service
+  hosts: testserver
+  vars:
+    package_name:
+    java_home:
+    jsvc_home:
+  environment:
+    JAVA_HOME: "{{ java_home }}"
+    JSVC_HOME: "{{ jsvc_home }}"
+
+  tasks:
+  - debug: msg="JAVA_HOME location is {{ ansible_env.JAVA_HOME }}"
+  - debug: msg="JSVC_HOME location is {{ ansible_env.JSVC_HOME }}"
+
+  - name: Define the log output location
+    stat:
+      path: ~/javatestserver/output
+    register: output_dir
+
+  - name: create the log output directory if not exists
+    file:
+      path: ~/javatestserver/output
+      state: directory
+    when: output_dir.stat.exists == False
+
+  - name: Clean up any prerunning TestServer Java Daemon Service
+    shell: "ps aux | grep jsvc | awk '{print $2}' | xargs kill -9"
+    ignore_errors: yes
+
+  - name: Install and start TestServer Java Daemon Service
+    shell: "~/javatestserver/daemon_manager.sh start ~/javatestserver/{{ package_name }}.jar ~/javatestserver/output {{ ansible_env.JAVA_HOME }} {{ ansible_env.JSVC_HOME }} ~/javatestserver/"
+    when: ansible_distribution_major_version != "6"
+
+  - name: Install and start TestServer Java Daemon Service
+    shell: "~/javatestserver/daemon_manager.sh start ~/javatestserver/{{ package_name }}.jar ~/javatestserver/output {{ ansible_env.JAVA_HOME }} {{ ansible_env.JSVC_HOME }}"
+    when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "6"
+
+  - name: Wait for port 8080 to become open on the host, don't start checking for 2 seconds
+    wait_for:
+      port: 8080
+      delay: 2

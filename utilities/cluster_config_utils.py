@@ -160,10 +160,6 @@ def get_load_balancer_ip(cluster_config):
     """ Loads cluster config to fetch load balancer ip """
     cluster = load_cluster_config_json(cluster_config)
 
-    num_lbs = len(cluster["load_balancers"])
-    if num_lbs != 1:
-        raise ProvisioningError("Expecting exactly 1 load balancer IP in {}".format(cluster_config))
-
     lb_ip = cluster["load_balancers"][0]["ip"]
     return lb_ip
 
@@ -304,3 +300,12 @@ def replace_string_on_sgw_config(sg_conf, replace_string, new_string):
     with open(sg_conf, 'w') as file:
         file.write(filedata)
     return sg_conf
+
+
+def is_load_balancer_with_two_clusters_enabled(cluster_config):
+    """ Loads cluster config to see if load balancer is enabled """
+    cluster = load_cluster_config_json(cluster_config)
+    try:
+        return cluster["environment"]["two_sg_cluster_lb_enabled"]
+    except KeyError:
+        return False
