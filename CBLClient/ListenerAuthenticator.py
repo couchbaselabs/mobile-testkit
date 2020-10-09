@@ -19,8 +19,6 @@ class ListenerAuthenticator(object):
         args = Args()
         args.setString("username", username)
         args.setString("password", password)
-        print(args)
-        print("printing args")
         return self._client.invokeMethod("listenerAuthenticator_create", args)
 
     def listenerCertificateAuthenticator_create(self):
