@@ -196,8 +196,8 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
         replication_1, sgw_repl1_id1 = setup_sgreplicate1_on_sgconfig(sg1.admin.admin_url, sg_db1, sg3.admin.admin_url, sg_db2, channels=replication1_channel, continuous=True)
         replication_2, sgw_repl1_id2 = setup_sgreplicate1_on_sgconfig(sg3.admin.admin_url, sg_db2, sg1.admin.admin_url, sg_db1, channels=replication1_channel, continuous=True)
     else:
-        replication_1, sgw_repl1 = setup_replications_on_sgconfig(sg3.url, sg_db2, sg2_user_name, password, direction="push", channels=replication1_channel, continuous=True, replication_id=sgw_replication1_id1)
-        replication_2, sgw_repl2 = setup_replications_on_sgconfig(sg3.url, sg_db2, sg2_user_name, password, direction="pull", channels=replication1_channel, continuous=True, replication_id=sgw_replication1_id2)
+        replication_1, sgw_repl1 = setup_replications_on_sgconfig(sg3.url, sg_db2, sg2_user_name, password, direction="push", channels=replication1_channel, continuous=True, replication_id=None)
+        replication_2, sgw_repl2 = setup_replications_on_sgconfig(sg3.url, sg_db2, sg2_user_name, password, direction="pull", channels=replication1_channel, continuous=True, replication_id=None)
     replications_ids = "{},{}".format(replication_1, replication_2)
     replications_key = "replications"
     replace_string = "\"{}\": {}{}{},".format(replications_key, "[", replications_ids, "]")
