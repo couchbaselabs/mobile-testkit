@@ -4,7 +4,6 @@ import time
 
 from concurrent.futures import ProcessPoolExecutor
 from couchbase.bucket import Bucket
-# from requests.exceptions import HTTPError
 from keywords.couchbaseserver import verify_server_version
 from keywords.utils import log_info, host_for_url
 from keywords.SyncGateway import (verify_sync_gateway_version,
@@ -21,9 +20,7 @@ from CBLClient.Authenticator import Authenticator
 from CBLClient.Document import Document
 from CBLClient.Replication import Replication
 from keywords.SyncGateway import sync_gateway_config_path_for_mode, setup_sgreplicate1_on_sgconfig, setup_replications_on_sgconfig
-# from libraries.provision.install_nginx import install_nginx_for_2_sgw_clusters
 from utilities.cluster_config_utils import load_cluster_config_json
-# from keywords.utils import compare_docs
 
 
 def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
@@ -177,14 +174,9 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
     sgw_cluster2.append(sg3_node)
     sgw_cluster2.append(sg4_node)
     sg1 = cluster.sync_gateways[0]
-    # sg2 = cluster.sync_gateways[1]
     sg3 = cluster.sync_gateways[2]
-    # sg4 = cluster.sync_gateways[3]
     sgw_cluster2_conf_name = 'listener_tests/sg_replicate_sgw_cluster2'
-    #  sgw_cluster1_repl2_conf_name = 'listener_tests/sg_replicate_sgw_cluster1'
     sgw_cluster2_sg_config = sync_gateway_config_path_for_mode(sgw_cluster2_conf_name, mode)
-    # sgw_cluster2_repl2_sg_config = sync_gateway_config_path_for_mode(sgw_cluster1_repl2_conf_name, mode)
-    # sgw_cluster1_repl2_config_path = "{}/{}".format(os.getcwd(), sgw_cluster2_repl2_sg_config)
     sgw_cluster2_config_path = "{}/{}".format(os.getcwd(), sgw_cluster2_sg_config)
 
     # 3. Start replications on SGW cluster1 to SGW cluster2. Will have 2 replications. One push replication and one pull replication
@@ -200,11 +192,12 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
         replication_2, sgw_repl2 = setup_replications_on_sgconfig(sg3.url, sg_db2, sg2_user_name, password, direction="pull", channels=replication1_channel, continuous=True, replication_id=None)
     replications_ids = "{},{}".format(replication_1, replication_2)
     replications_key = "replications"
-    replace_string = "\"{}\": {}{}{},".format(replications_key, "[", replications_ids, "]")
     if sync_gateway_version < "2.8.0":
+        replace_string = "\"{}\": {}{}{},".format(replications_key, "[", replications_ids, "]")
         temp_sg_config_with_sg1 = replace_string_on_sgw_config(temp_sg_config_copy, "{{ replace_with_sg1_replications }}", replace_string)
         temp_sg_config = replace_string_on_sgw_config(temp_sg_config_with_sg1, "{{ replace_with_sgreplicate2_replications }}", "")
     else:
+        replace_string = "\"{}\": {}{}{},".format(replications_key, "{", replications_ids, "}")
         temp_sg_config_with_sg1 = replace_string_on_sgw_config(temp_sg_config_copy, "{{ replace_with_sg1_replications }}", "")
         temp_sg_config = replace_string_on_sgw_config(temp_sg_config_with_sg1, "{{ replace_with_sgreplicate2_replications }}", replace_string)
     sgw_cluster1_config_path = "{}/{}".format(os.getcwd(), temp_sg_config)
@@ -219,8 +212,6 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
             sg_obj.stop_sync_gateways(cluster_config=cluster_config, url=node)
         count += 1
 
-    # active_tasks = sg1.admin.get_active_tasks()
-    num_docs = 10
     db.create_bulk_docs(number=num_docs, id_prefix=sgw_cluster1_replication1, db=cbl_db1, channels=replication1_channel,
                         attachments_generator=attachment.generate_2_png_10_10)
     db.create_bulk_docs(number=num_docs, id_prefix=sgw_cluster1_replication1, db=cbl_db1, channels=replication1_channel)
@@ -230,9 +221,6 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
     db.create_bulk_docs(number=num_docs, id_prefix=sgw_cluster2_replication1, db=cbl_db2, channels=replication1_channel,
                         attachments_generator=attachment.generate_2_png_10_10)
     doc_ids2 = db.getDocIds(cbl_db2, limit=num_docs)
-    # sgw_cluster2_added_docs = db.getDocuments(cbl_db2, doc_ids)
-    # log_info("Added {} docs on sgw cluster2 sg replicate1".format(len(sgw_cluster2_added_docs)))
-
     db.create_bulk_docs(number=num_docs, id_prefix=sgw_cluster1_replication1_ch1, db=cbl_db1, channels=replication2_channel1,
                         attachments_generator=attachment.generate_2_png_10_10)
     db.create_bulk_docs(number=num_docs, id_prefix=sgw_cluster1_replication1_ch2, db=cbl_db1, channels=replication2_channel2,
@@ -289,12 +277,9 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
         # Start updates in background process
         updates_future = up.submit(update_docs, db, cbl_db1, doc_ids,
                                    cbl_db2, doc_ids2, doc_obj, terminator1_doc_id)
-        # updates_future2 = up.submit(update_docs, db, cbl_db2, sgw_cluster2_added_docs,
-        #                             doc_obj, terminator2_doc_id)
 
         # 4. Upgrade SGW one by one on cluster config list
         cluster_util = ClusterKeywords(cluster_config)
-        # time.sleep(60)
         topology = cluster_util.get_cluster_topology(cluster_config, lb_enable=False)
         sync_gateways = topology["sync_gateways"]
         sgw_cluster1_list = sync_gateways[:2]
@@ -362,9 +347,6 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
                 )
                 # Check Import showing up on all nodes
 
-            print("need to redeploy is done and redeploy is completed")
-
-        print("replication-4 configuration started")
         repl_config4 = replicator.configure(cbl_db3, sg1_blip_url, continuous=True, channels=sg_user_channels, replication_type="push_pull", replicator_authenticator=replicator_authenticator1)
         repl4 = replicator.create(repl_config4)
         replicator.start(repl4)
@@ -414,7 +396,6 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
             continuous=True
         )
         repl_id.append(replid)
-    print(sg1.admin.get_sgreplicate2_active_tasks(sg_db1))
     replicator.wait_until_replicator_idle(repl1, max_times=3000)
     # Wait until all SGW replications are completed
     for replid in repl_id:
@@ -434,10 +415,8 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
     sg_docs1 = sg_client.get_all_docs(url=sg1.admin.admin_url, db=sg_db1, include_docs=True)["rows"]
 
     for doc in sg_docs1:
-        print("doc of sgdocs1 is :", doc)
         if "sgw_docs3" not in doc["id"] and "terminator1_0" not in doc["id"]:
             sg3_doc = sg_client.get_doc(url=sg3.admin.admin_url, db=sg_db2, doc_id=doc['doc']['_id'])
-            print("sg docs 3 at for each doc : ", sg3_doc)
             if "numOfUpdates" in sg_docs1:
                 assert doc["doc"]["numOfUpdates"] == sg3_doc["numOfUpdates"], "number of updates value is not same on both clusters for {}".format(doc)
             assert doc["doc"]["_rev"] == sg3_doc["_rev"], "number of updates value is not same on both clusters for {}".format(doc)
@@ -451,7 +430,6 @@ def verify_sg_docs_revision_history(url, db, cbl_db3, sg_db, added_docs, termina
     sg_client = MobileRestClient()
     sg_docs = sg_client.get_all_docs(url=url, db=sg_db, include_docs=True)["rows"]
     cbl_doc_ids3 = db.getDocIds(cbl_db3)
-    print("cbl doc ids 3 are ...", cbl_doc_ids3)
     cbl_docs3 = db.getDocuments(cbl_db3, cbl_doc_ids3)
     num_sg_docs_in_cbldb3 = 0
     expected_doc_map = {}
@@ -495,14 +473,6 @@ def send_changes_termination_doc(db, cbl_db, terminator_doc_id, terminator_chann
 
 def update_docs(db, cbl_db1, cbl_db1_doc_ids, cbl_db2, cbl_db2_doc_ids, doc_obj, terminator_doc_id_prefix):
     log_info("Starting doc updates")
-    """cbl_db1_doc_ids = []
-    cbl_db2_doc_ids = []
-    for doc in added_docs1:
-        cbl_db1_doc_ids.append(doc)
-
-    for doc in added_docs2:
-        cbl_db2_doc_ids.append(doc)"""
-
     docs_per_update = 3
     doc_revs = {}
     terminator_doc_id = "{}_0".format(terminator_doc_id_prefix)

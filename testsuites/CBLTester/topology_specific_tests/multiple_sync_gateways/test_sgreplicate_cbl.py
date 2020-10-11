@@ -602,6 +602,7 @@ def test_sg_replicate_oneactive_2passive(params_from_base_test_setup, setup_cust
     # 6. Created docs in cbl3
     db.create_bulk_docs(num_of_docs, "Replication3", db=cbl_db3, channels=channels1)
     cbl_doc_ids3 = db.getDocIds(cbl_db3)
+
     # 7. Verify New docs created in sg3 shoulid get replicated to sg1 and sg2 as it is push_pull
     replicator.wait_until_replicator_idle(repl3)
     sg1.admin.wait_until_sgw_replication_done(sg_db1, sgw_replid_1, read_flag=True)
@@ -705,6 +706,7 @@ def test_sg_replicate_2active_1passive(params_from_base_test_setup, setup_custom
         direction="pushAndPull",
         continuous=continuous
     )
+
     # 6. Wait until replication completed on sg1, cbl_db2, cbl_db3 and cbl_db1
     sg1.admin.wait_until_sgw_replication_done(sg_db1, sgw_replid_1, write_flag=True)
     sg2.admin.wait_until_sgw_replication_done(sg_db2, sgw_replid_2, write_flag=True)
@@ -783,7 +785,11 @@ def test_sg_replicate_channel_filtering_with_attachments(params_from_base_test_s
     db.create_bulk_docs(channel2_docs, Replication1_channel2, db=cbl_db1, channels=channels2, attachments_generator=attachment.generate_png_100_100)
     channel3_doc_ids = db.create_bulk_docs(channel3_docs, Replication1_channel3, db=cbl_db1, channels=channels3, attachments_generator=attachment.generate_png_100_100)
 
+    # 3. Start sg-replicate pull/push_pull replication from sg1 <-> sg2 with channel1 with one shot
+    repl_id_1 = sg1.start_replication2(
+        local_db=sg_db1,
         remote_url=sg2.url,
+        remote_db=sg_db2,
         remote_user=name4,
         remote_password=password,
         direction="pushAndPull",
@@ -1008,6 +1014,7 @@ def test_sg_replicate_with_sg_restart(params_from_base_test_setup, setup_customi
         restart_sg.result()
 
     sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id_1, write_flag=True)
+
     # 7. verify all docs got replicated on sg2
     repl2 = replicator.configure_and_replicate(
         source_db=cbl_db2, replicator_authenticator=replicator_authenticator2, target_url=sg2_blip_url,
@@ -1295,6 +1302,7 @@ def test_sg_replicate_replications_with_drop_out_one_node(params_from_base_test_
 
     replicator.wait_until_replicator_idle(repl1)
     replicator.wait_until_replicator_idle(repl2)
+
     # 2. Start 2 replications on cluster 1
     sgw_repl1 = sg1.start_replication2(
         local_db=sg_db1,
