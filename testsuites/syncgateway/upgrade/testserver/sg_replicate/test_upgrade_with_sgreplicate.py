@@ -370,7 +370,7 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
                 sgw_cluster1_added_docs[doc_id]["numOfUpdates"] = updated_doc_revs[doc_id]
 
         # 8. Compare rev id, doc body and revision history of all docs on both CBL and SGW
-        verify_sg_docs_revision_history(sg1.admin.admin_url, db, cbl_db3, num_docs + 3, sg_db=sg_db1, added_docs=sgw_cluster1_added_docs, terminator=terminator1_doc_id)
+        verify_sg_docs_revision_history(sg1.admin.admin_url, sg_db=sg_db1, added_docs=sgw_cluster1_added_docs, terminator=terminator1_doc_id)
 
         # 9. If xattrs enabled, validate CBS contains _sync records for each doc
         if upgraded_xattrs_enabled:
@@ -419,30 +419,23 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
             sg3_doc = sg_client.get_doc(url=sg3.admin.admin_url, db=sg_db2, doc_id=doc['doc']['_id'])
             if "numOfUpdates" in sg_docs1:
                 assert doc["doc"]["numOfUpdates"] == sg3_doc["numOfUpdates"], "number of updates value is not same on both clusters for {}".format(doc)
-            assert doc["doc"]["_rev"] == sg3_doc["_rev"], "number of updates value is not same on both clusters for {}".format(doc)
+            if sync_gateway_version < "2.8.0":
+                assert doc["doc"]["_rev"] == sg3_doc["_rev"], "number of updates value is not same on both clusters for {}".format(doc)
 
     replicator.stop(repl1)
     replicator.stop(repl2)
     replicator.stop(repl3)
 
 
-def verify_sg_docs_revision_history(url, db, cbl_db3, num_docs, sg_db, added_docs, terminator):
+def verify_sg_docs_revision_history(url, sg_db, added_docs, terminator):
     sg_client = MobileRestClient()
     sg_docs = sg_client.get_all_docs(url=url, db=sg_db, include_docs=True)["rows"]
-    cbl_doc_ids3 = db.getDocIds(cbl_db3, limit=num_docs)
-    cbl_docs3 = db.getDocuments(cbl_db3, cbl_doc_ids3)
-    num_sg_docs_in_cbldb3 = 0
     expected_doc_map = {}
     for doc in added_docs:
         if "numOfUpdates" in added_docs[doc]:
             expected_doc_map[doc] = added_docs[doc]["numOfUpdates"] - 1
         else:
             expected_doc_map[doc] = 1
-    for doc in cbl_docs3:
-        if "sgw_docs" in doc:
-            num_sg_docs_in_cbldb3 += 1
-            assert '_attachments' in cbl_docs3[doc], "_attachments does not exist in doc created in sgw"
-    assert num_sg_docs_in_cbldb3 == 2, "sgw docs are not replicated to cbl db3"
     for doc in sg_docs:
         if "sgw_docs" not in doc['id'] and "SGW_Cluster-1-Replication-1" in doc['id']:
             key = doc["doc"]["_id"]
