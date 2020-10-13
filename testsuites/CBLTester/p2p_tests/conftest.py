@@ -79,6 +79,10 @@ def pytest_addoption(parser):
                      help="Encryption will be enabled for CBL db",
                      default="password")
 
+    parser.addoption("--delta-sync",
+                     action="store_true",
+                     help="delta-sync: Enable delta-sync for Server/Listener")
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -108,11 +112,10 @@ def params_from_base_suite_setup(request):
     create_db_per_test = request.config.getoption("--create-db-per-test")
     create_db_per_suite = request.config.getoption("--create-db-per-suite")
     enable_file_logging = request.config.getoption("--enable-file-logging")
-
     community_enabled = request.config.getoption("--community")
-
     enable_encryption = request.config.getoption("--enable-encryption")
     encryption_password = request.config.getoption("--encryption-password")
+    delta_sync_enabled = request.config.getoption("--delta-sync")
 
     test_name = request.node.name
     testserver_list = []
@@ -205,7 +208,8 @@ def params_from_base_suite_setup(request):
         "enable_encryption": enable_encryption,
         "encryption_password": encryption_password,
         "testserver_list": testserver_list,
-        "enable_file_logging": enable_file_logging
+        "enable_file_logging": enable_file_logging,
+        "delta_sync_enabled": delta_sync_enabled
     }
 
     if create_db_per_suite:
@@ -250,6 +254,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     testserver_list = params_from_base_suite_setup["testserver_list"]
     enable_file_logging = params_from_base_suite_setup["enable_file_logging"]
     use_local_testserver = request.config.getoption("--use-local-testserver")
+    delta_sync_enabled = params_from_base_suite_setup["delta_sync_enabled"]
     test_name = request.node.name
 
     if create_db_per_test:
@@ -315,7 +320,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "base_url_list": base_url_list,
         "query_obj_list": query_obj_list,
         "db_obj_list": db_obj_list,
-        "generator": generator
+        "generator": generator,
+        "delta_sync_enabled": delta_sync_enabled
     }
 
     if create_db_per_test:
@@ -346,7 +352,7 @@ def server_setup(params_from_base_test_setup):
     peer_to_peer_listener = PeerToPeer(base_url_server)
     # Need to start and stop listener, if test fails in the middle listener will not be closed.
     message_url_tcp_listener = peer_to_peer_listener.message_listener_start(cbl_db_server)
-    log_info("server starting .....")
+    log_info("Message listener/server/passive peer starting .....")
     yield {
         "base_url_list": base_url_list,
         "base_url_server": base_url_server,
@@ -356,3 +362,22 @@ def server_setup(params_from_base_test_setup):
         "peer_to_peer_listener": peer_to_peer_listener,
     }
     peer_to_peer_listener.server_stop(message_url_tcp_listener, "MessageEndPoint")
+
+
+@pytest.fixture(scope="function")
+def url_listener_setup(params_from_base_test_setup):
+    base_url_list = params_from_base_test_setup["base_url_list"]
+    cbl_db_list = params_from_base_test_setup["cbl_db_list"]
+    delta_sync_enabled = params_from_base_test_setup["delta_sync_enabled"]
+    base_url_server = base_url_list[0]
+    cbl_db_server = cbl_db_list[0]
+    listener = PeerToPeer(base_url_server, delta_sync_enabled)
+    # Need to start and stop listener, if test fails in the middle listener will not be closed.
+    url_listener = listener.message_listener_start(cbl_db_server)
+    log_info("Url listener/server/passive peer starting .....")
+    yield {
+
+        "url_listener": url_listener,
+        "peer_to_peer_listener": listener,
+    }
+    listener.server_stop(url_listener, "URLEndPoint")

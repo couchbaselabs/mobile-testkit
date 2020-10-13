@@ -63,7 +63,7 @@ class PeerToPeer(object):
         args.setInt("socket", socket)
         return self._client.invokeMethod("peerToPeer_readDataFromClient", args)
 
-    def server_start(self, database, port=0, basic_auth=None, tls_disable=True, tls_auth_type="tls", tls_authenticator=False):
+    def server_start(self, database, port=0, basic_auth=None, tls_disable=True, tls_auth_type="tls", tls_authenticator=False, delta_sync=True):
         args = Args()
         args.setMemoryPointer("database", database)
         args.setInt("port", port)
@@ -73,6 +73,7 @@ class PeerToPeer(object):
 
         args.setString("tls_auth_type", tls_auth_type)
         args.setBoolean("tls_authenticator", tls_authenticator)
+        args.setBoolean("enable_delta_sync", delta_sync)
         return self._client.invokeMethod("peerToPeer_serverStart", args)
 
     def message_listener_start(self, database, port=5000):

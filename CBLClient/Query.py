@@ -447,14 +447,12 @@ class Query(object):
         args.setMemoryPointer("changeListener", change_listener)
         return self._client.invokeMethod("query_removeChangeListener", args)
 
-    def query_selectAll(self, database):
+    def query_select_all(self, database):
         args = Args()
         args.setMemoryPointer("database", database)
-
-        return self._client.invokeMethod("query_selectAll", args)
+        return self._client.invokeMethod("query_select_all", args)
 
     def query_get_live_query_delay_time(self, database):
         args = Args()
         args.setMemoryPointer("database", database)
-
         return self._client.invokeMethod("query_getLiveQueryResponseTime", args)
