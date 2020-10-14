@@ -354,7 +354,7 @@ class TestServeriOS(TestServerBase):
         try:
             cur_dir = os.getcwd()
             subprocess.check_output(["osascript", "{}/utilities/sim_close_app.scpt".format(cur_dir)], shell=True)
-        except Exception, e:
+        except Exception as e:
             log_info(str(e))
 
     def open_app(self):
