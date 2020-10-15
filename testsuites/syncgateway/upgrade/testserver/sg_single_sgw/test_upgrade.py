@@ -7,9 +7,7 @@ from couchbase.bucket import Bucket
 
 from keywords.couchbaseserver import verify_server_version
 from keywords.utils import log_info, host_for_url
-from keywords.SyncGateway import (verify_sync_gateway_version,
-                                  verify_sync_gateway_product_info,
-                                  SyncGateway)
+from keywords.SyncGateway import (SyncGateway)
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.MobileRestClient import MobileRestClient
 from keywords.constants import SDK_TIMEOUT
@@ -420,4 +418,3 @@ def upgrade_server_cluster(servers, primary_server, secondary_server, server_ver
     log_info('------------------------------------------')
     log_info('END server cluster upgrade')
     log_info('------------------------------------------')
-

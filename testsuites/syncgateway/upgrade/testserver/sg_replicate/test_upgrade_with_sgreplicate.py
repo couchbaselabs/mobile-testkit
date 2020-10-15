@@ -4,11 +4,8 @@ import time
 
 from concurrent.futures import ProcessPoolExecutor
 from couchbase.bucket import Bucket
-from keywords.couchbaseserver import verify_server_version
 from keywords.utils import log_info, host_for_url
-from keywords.SyncGateway import (verify_sync_gateway_version,
-                                  verify_sync_gateway_product_info,
-                                  SyncGateway)
+from keywords.SyncGateway import (SyncGateway)
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.MobileRestClient import MobileRestClient
 from keywords.constants import SDK_TIMEOUT
@@ -26,24 +23,30 @@ from utilities.cluster_config_utils import load_cluster_config_json
 def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
     """
     @summary
+        Test plan - Bottom of the page
+        https://docs.google.com/spreadsheets/d/1k_tlz3zQSBCI1a9ZS0RDOH6pj3xVTalCoGytQwVqu-M/edit#gid=0
         This test case validates Sync Gateway server to be upgraded
         wihtout replication downtime along with couchbase lite clients
         [test prerequisites]:
         The conftest prepares the test environment,
         the initial (old) versions of SGW and CBS are provisioned at this point
         [test environment configuration]:
-        The test environment setup includes: 2 CBS, 2SGW, and 1 SGW load balancer
+        The test environment setup includes: 2 CBS, 4SGW, and 2 SGW load balancer to balancer two sgw clusters
         The SGW load balancer is configured with nginx
         [test scenarios and steps]:
         1. Create user, session and docs on SG
-        2. Starting continuous push_pull replication between TestServer and SGW
-        3. Start a thread to keep updating docs on CBL
-        4. Upgrade SGW one by one on cluster config list
-        5. Upgrade CBS one by one on cluster config list
-        6. Restart SGWs after the server upgrade
-        7. Gather CBL docs new revs for verification
-        8. Compare rev id, doc body and revision history of all docs on both CBL and SGW
-        9. If xattrs enabled, validate CBS contains _sync records for each doc
+        2. Starting continuous push_pull replication between TestServer(CBL DB1) and SGW cluster1 and also between Testserver(CBL DB2) and SGW cluster2
+        3. Start sg-replicate1 replication for version 2.7.0 and below, otherwise set up sg-replicate2 replication on sgwconfig and deploy the configs
+        4. Start a thread to keep updating docs on CBL
+        5. option to test w/wo stopping replication before SGW upgrade
+        6. Upgrade SGW one by one on cluster config list
+        7. Restart SGWs with sg-replicate1 id and sg-replicate2 id 
+                by having same ids in order to continue upgrade of replications from sg-replicate-1 to sg-replicate2 if sgw version below 2.8.0
+                otherwiser have only sg-replicate2 for 2.8.0 and above
+        8. Once upgrade is completed, create new docs on sgw cluster1
+        9. Create new replication with sg-replicate2 
+        10. Gather CBL docs new revs for verification
+        11. Compare doc body and counts of one of the keys  of all docs on both SGW cluster1 SGW cluster2 are same
     """
     cluster_config = params_from_base_test_setup['cluster_config']
     mode = params_from_base_test_setup['mode']
