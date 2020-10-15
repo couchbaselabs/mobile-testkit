@@ -536,7 +536,7 @@ def test_push_replication_for_20mb_doc(params_from_base_test_setup, attachment_g
                                            generator="simple", attachments_generator=attachment_generator,
                                            attachment_file_list=attachment_file_list)
 
-    if str(attachment_generator) not in "load_from_data_dir":
+    if "load_from_data_dir" not in str(attachment_generator):
         doc_body_4mb = doc_generators.doc_size_byBytes(25000000)  # 25MB data generated
         cbl_db_docs = db.getDocuments(cbl_db, created_docs_ids)
         for doc in cbl_db_docs:
