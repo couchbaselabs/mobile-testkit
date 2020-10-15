@@ -284,7 +284,7 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
         sync_gateways = topology["sync_gateways"]
         sgw_cluster1_list = sync_gateways[:2]
         sgw_cluster2_list = sync_gateways[2:]
-        upgrade_sync_gateway(
+        sg_obj.upgrade_sync_gateway(
             sgw_cluster1_list,
             sync_gateway_version,
             sync_gateway_upgraded_version,
@@ -292,7 +292,7 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
             cluster_config
         )
 
-        upgrade_sync_gateway(
+        sg_obj.upgrade_sync_gateway(
             sgw_cluster2_list,
             sync_gateway_version,
             sync_gateway_upgraded_version,
@@ -345,7 +345,6 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
                     sync_gateway_version=sync_gateway_upgraded_version,
                     enable_import=enable_import
                 )
-                # Check Import showing up on all nodes
 
         repl_config4 = replicator.configure(cbl_db3, sg1_blip_url, continuous=True, channels=sg_user_channels, replication_type="push_pull", replicator_authenticator=replicator_authenticator1)
         repl4 = replicator.create(repl_config4)
@@ -520,79 +519,6 @@ def update_random_docs(docs_per_update, cbl_doc_ids, db, cbl_db, doc_obj):
         db.updateDocument(database=cbl_db, doc_id=doc_id, data=doc_body)
 
     return cbl_db_docs_to_update
-
-
-def upgrade_server_cluster(servers, primary_server, secondary_server, server_version, server_upgraded_version, server_urls, cluster_config, cbs_platform, toy_build=None):
-    log_info('------------------------------------------')
-    log_info('START server cluster upgrade')
-    log_info('------------------------------------------')
-    # Upgrade all servers except the primary server
-    for server in servers:
-        log_info("Checking for the server version: {}".format(server_version))
-        verify_server_version(server.host, server_version)
-        log_info("Rebalance out server: {}".format(server.host))
-        primary_server.rebalance_out(server_urls, server)
-        log_info("Upgrading the server: {}".format(server.host))
-        primary_server.upgrade_server(cluster_config=cluster_config, server_version_build=server_upgraded_version, target=server.host, cbs_platform=cbs_platform, toy_build=toy_build)
-        log_info("Adding the node back to the cluster: {}".format(server.host))
-        primary_server.add_node(server)
-        log_info("Rebalance in server: {}".format(server.host))
-        primary_server.rebalance_in(server_urls, server)
-        log_info("Checking for the server version after the rebalance : {}".format(server_upgraded_version))
-        verify_server_version(server.host, server_upgraded_version)
-        time.sleep(10)
-
-    # Upgrade the primary server
-    primary_server_services = "kv,index,n1ql"
-    log_info("Checking for the primary server version: {}".format(server_version))
-    verify_server_version(primary_server.host, server_version)
-    log_info("Rebalance out primary server: {}".format(primary_server.host))
-    secondary_server.rebalance_out(server_urls, primary_server)
-    log_info("Upgrading the primary server: {}".format(primary_server.host))
-    secondary_server.upgrade_server(cluster_config=cluster_config, server_version_build=server_upgraded_version, target=primary_server.host, cbs_platform=cbs_platform, toy_build=toy_build)
-    log_info("Adding the node back to the cluster for primary server: {}".format(primary_server.host))
-    secondary_server.add_node(primary_server, services=primary_server_services)
-    log_info("Rebalance in primary server: {}".format(primary_server.host))
-    secondary_server.rebalance_in(server_urls, primary_server)
-    log_info("Checking for the primary server version after the rebalance: {}".format(server_upgraded_version))
-    verify_server_version(primary_server.host, server_upgraded_version)
-    log_info("Upgraded all the server nodes in the cluster")
-    log_info('------------------------------------------')
-    log_info('END server cluster upgrade')
-    log_info('------------------------------------------')
-
-
-def upgrade_sync_gateway(sync_gateways, sync_gateway_version, sync_gateway_upgraded_version, sg_conf, cluster_config):
-    log_info('------------------------------------------')
-    log_info('START Sync Gateway cluster upgrade')
-    log_info('------------------------------------------')
-
-    sg_obj = SyncGateway()
-
-    for sg in sync_gateways:
-        sg_ip = host_for_url(sg["admin"])
-        log_info("Checking for sync gateway product info before upgrade")
-        verify_sync_gateway_product_info(sg_ip)
-        log_info("Checking for sync gateway version: {}".format(sync_gateway_version))
-        verify_sync_gateway_version(sg_ip, sync_gateway_version)
-        log_info("Upgrading sync gateway: {}".format(sg_ip))
-        sg_obj.upgrade_sync_gateways(
-            cluster_config=cluster_config,
-            sg_conf=sg_conf,
-            sync_gateway_version=sync_gateway_upgraded_version,
-            url=sg_ip
-        )
-
-        time.sleep(10)
-        log_info("Checking for sync gateway product info after upgrade")
-        verify_sync_gateway_product_info(sg_ip)
-        log_info("Checking for sync gateway version after upgrade: {}".format(sync_gateway_upgraded_version))
-        verify_sync_gateway_version(sg_ip, sync_gateway_upgraded_version)
-
-    log_info("Upgraded all the sync gateway nodes in the cluster")
-    log_info('------------------------------------------')
-    log_info('END Sync Gateway cluster upgrade')
-    log_info('------------------------------------------')
 
 
 def create_sgw_sessions_and_configure_replications(sg_client, replicator, authenticator, sg_user_channels, sg, sg_user_name, sg_db, cbl_db, sg_blip_url):
