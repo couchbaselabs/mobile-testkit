@@ -363,6 +363,7 @@ def write_config(config, pool_file, use_docker, sg_windows, sg_accel_windows, sg
         f.write("ipv6_enabled={}\n".format(ipv6))
         f.write("x509_certs={}\n".format(x509_certs))
         f.write("delta_sync_enabled=False\n")
+        f.write("two_sg_cluster_lb_enabled=False\n")
 
         if sg_platform.lower() == "macos":
             f.write("\n\n[sync_gateways:vars]\n")
@@ -415,7 +416,8 @@ def write_config(config, pool_file, use_docker, sg_windows, sg_accel_windows, sg
                 "sg_lb_enabled": False,
                 "ipv6_enabled": ipv6,
                 "x509_certs": x509_certs,
-                "delta_sync_enabled": False
+                "delta_sync_enabled": False,
+                "two_sg_cluster_lb_enabled": False
             }
         }
 
@@ -475,6 +477,7 @@ def generate_clusters_from_pool(pool_file, use_docker=False, sg_windows=False,
         ClusterDef("three_sync_gateways_cc", num_sgs=3, num_acs=0, num_cbs=1, num_lgs=0, num_lbs=0),
         ClusterDef("four_sync_gateways_cc", num_sgs=4, num_acs=0, num_cbs=1, num_lgs=0, num_lbs=0),
         ClusterDef("load_balancer_cc", num_sgs=2, num_acs=0, num_cbs=1, num_lgs=0, num_lbs=1),
+        ClusterDef("load_balancer_2_cc", num_sgs=4, num_acs=0, num_cbs=2, num_lgs=0, num_lbs=2),
         ClusterDef("load_balancer_di", num_sgs=2, num_acs=1, num_cbs=1, num_lgs=0, num_lbs=1),
         ClusterDef("1sg", num_sgs=1, num_acs=0, num_cbs=0, num_lgs=0, num_lbs=0),
         ClusterDef("2sgs", num_sgs=2, num_acs=0, num_cbs=0, num_lgs=0, num_lbs=0),
