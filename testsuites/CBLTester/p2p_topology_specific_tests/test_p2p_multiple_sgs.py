@@ -44,8 +44,6 @@ def test_multiple_sgs_with_differrent_revs_limit(params_from_base_test_setup, se
     sg_ssl = params_from_base_test_setup["sg_ssl"]
     db = Database(base_url)
     db2 = Database(base_url2)
-    print("DB1", base_url)
-    print("DB2", base_url2)
 
     channels1 = ["Replication1"]
     channels2 = ["Replication2"]
