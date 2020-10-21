@@ -1,5 +1,3 @@
-import time
-
 import pytest
 
 from keywords.MobileRestClient import MobileRestClient
@@ -41,6 +39,7 @@ def test_multiple_sgs_with_differrent_revs_limit(params_from_base_test_setup, se
     cluster_config = params_from_base_test_setup["cluster_config"]
     base_url = params_from_base_test_setup["base_url"]
     base_url2 = params_from_base_test_setup["base_url2"]
+    host_list = params_from_base_test_setup["liteserv_host_list"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     sg_ssl = params_from_base_test_setup["sg_ssl"]
     db = Database(base_url)
@@ -84,7 +83,6 @@ def test_multiple_sgs_with_differrent_revs_limit(params_from_base_test_setup, se
     sg2_ip = sg2.ip
     sg1_url = sg1.url
     sg1_admin_url = sg1.admin.admin_url
-    sg2_url = sg2.url
     sg2_admin_url = sg2.admin.admin_url
     if sg_ssl:
         protocol = "wss"
@@ -123,7 +121,7 @@ def test_multiple_sgs_with_differrent_revs_limit(params_from_base_test_setup, se
     assert cbl_doc_count == len(sg_docs["rows"]), "Did not get expected number of cbl docs"
 
     p2p_replicator = Replication(base_url2)
-    p2p_repl_config = peer_to_peer_client.configure(port=url_listener_port, host="192.168.33.126",
+    p2p_repl_config = peer_to_peer_client.configure(port=url_listener_port, host=host_list[0],
                                                     server_db_name=server_cbl_db_name,
                                                     client_database=cbl_db2, continuous=True,
                                                     replication_type="push-pull", endPointType="URLEndPoint")
@@ -135,8 +133,6 @@ def test_multiple_sgs_with_differrent_revs_limit(params_from_base_test_setup, se
     # Make sure docs are copied to both peers
     total = p2p_replicator.getTotal(p2p_repl_config)
     completed = p2p_replicator.getCompleted(p2p_repl_config)
-    print(total, completed)
-    print("DOCS completed")
     assert total == completed, "replication from client to server did not completed"
     server_docs_count = db2.getCount(cbl_db2)
     assert server_docs_count == cbl_doc_count, "Number of docs is not equivalent to number of docs in server"
@@ -144,7 +140,6 @@ def test_multiple_sgs_with_differrent_revs_limit(params_from_base_test_setup, se
     # 2. Do push replication to two SGS(each DB to each SG)
     replicator2 = Replication(base_url2)
     cookie, session_id = sg_client.create_session(sg2_admin_url, sg_db2, name2)
-    session2 = cookie, session_id
     authenticator2 = Authenticator(base_url2)
     replicator_authenticator2 = authenticator2.authentication(session_id, cookie, authentication_type="session")
 
@@ -206,10 +201,8 @@ def setup_sg_cbl_docs(sg_db, base_url, db, cbl_db, sg_url,
 
 
 def create_sync_gateways(cluster_config, sg_config_path):
-
     cluster = Cluster(config=cluster_config)
     cluster.reset(sg_config_path=sg_config_path)
     sg1 = cluster.sync_gateways[0]
     sg2 = cluster.sync_gateways[1]
-
     return sg1, sg2

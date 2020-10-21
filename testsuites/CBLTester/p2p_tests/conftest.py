@@ -2,7 +2,7 @@ import time
 import datetime
 import pytest
 
-from keywords.utils import log_info, clear_resources_pngs
+from keywords.utils import log_info, clear_resources_pngs, set_device_enabled
 from keywords.TestServerFactory import TestServerFactory
 from CBLClient.Database import Database
 from CBLClient.Query import Query
@@ -55,9 +55,6 @@ def pytest_addoption(parser):
                      action="store",
                      help="comma separated cbl with value of device or emulator")
 
-    parser.addoption("--device", action="store_true",
-                     help="Enable device if you want to run it on device", default=False)
-
     parser.addoption("--community", action="store_true",
                      help="If set, community edition will get picked up , default is enterprise", default=False)
 
@@ -96,17 +93,18 @@ def params_from_base_suite_setup(request):
     liteserv_versions = request.config.getoption("--liteserv-versions")
     liteserv_hosts = request.config.getoption("--liteserv-hosts")
     liteserv_ports = request.config.getoption("--liteserv-ports")
+    run_on_device = request.config.getoption("--run-on-device")
 
     platform_list = liteserv_platforms.split(',')
     version_list = liteserv_versions.split(',')
     host_list = liteserv_hosts.split(',')
     port_list = liteserv_ports.split(',')
+    device_enabled_list = set_device_enabled(run_on_device, len(platform_list))
 
     if len(platform_list) != len(version_list) != len(host_list) != len(port_list):
         raise Exception("Provide equal no. of Parameters for host, port, version and platforms")
 
     enable_sample_bucket = request.config.getoption("--enable-sample-bucket")
-    device_enabled = request.config.getoption("--device")
     generator = request.config.getoption("--doc-generator")
     no_db_delete = request.config.getoption("--no-db-delete")
     create_db_per_test = request.config.getoption("--create-db-per-test")
@@ -130,7 +128,8 @@ def params_from_base_suite_setup(request):
             # Download TestServer app
             testserver.download()
             # Install TestServer app
-            if device_enabled and (platform == "ios" or platform == "android"):
+            if run_on_device:
+                log_info("install on device")
                 testserver.install_device()
             else:
                 log_info("install on emulator")
@@ -153,7 +152,7 @@ def params_from_base_suite_setup(request):
             if not use_local_testserver:
                 log_info("Starting TestServer...")
                 test_name_cp = test_name.replace("/", "-")
-                if device_enabled:
+                if run_on_device:
                     log_info("start on device")
                     testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
                                                                           test_name_cp, datetime.datetime.now()))
@@ -170,7 +169,6 @@ def params_from_base_suite_setup(request):
             db_name = "{}-{}".format(create_db_per_suite, i + 1)
             log_info("db name for {} is {}".format(base_url, db_name))
             db_name_list.append(db_name)
-            print("DB name list", db_name_list)
             db = Database(base_url)
             query_obj_list.append(Query(base_url))
             db_obj_list.append(db)
@@ -201,7 +199,7 @@ def params_from_base_suite_setup(request):
         "db_name_list": db_name_list,
         "base_url_list": base_url_list,
         "query_obj_list": query_obj_list,
-        "device_enabled": device_enabled,
+        "device_enabled_list": device_enabled_list,
         "db_obj_list": db_obj_list,
         "generator": generator,
         "create_db_per_test": create_db_per_test,
@@ -246,7 +244,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     base_url_list = params_from_base_suite_setup["base_url_list"]
     query_obj_list = params_from_base_suite_setup["query_obj_list"]
     db_obj_list = params_from_base_suite_setup["db_obj_list"]
-    device_enabled = params_from_base_suite_setup["device_enabled"]
+    device_enabled_list = params_from_base_suite_setup["device_enabled_list"]
     generator = params_from_base_suite_setup["generator"]
     create_db_per_test = params_from_base_suite_setup["create_db_per_test"]
     encryption_password = params_from_base_suite_setup["encryption_password"]
@@ -263,7 +261,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         db_obj_list = []
         db_path_list = []
         # Start Test server which needed for per test level
-        for testserver in testserver_list:
+        for testserver, device_enabled in zip(testserver_list, device_enabled_list):
             if not use_local_testserver:
                 log_info("Starting TestServer...")
                 test_name_cp = test_name.replace("/", "-")
@@ -316,7 +314,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "enable_sample_bucket": enable_sample_bucket,
         "cbl_db_list": cbl_db_list,
         "db_name_list": db_name_list,
-        "device_enabled": device_enabled,
+        "device_enabled_list": device_enabled_list,
         "base_url_list": base_url_list,
         "query_obj_list": query_obj_list,
         "db_obj_list": db_obj_list,
@@ -327,12 +325,11 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     if create_db_per_test:
         for testserver, cbl_db, db_obj, base_url, db_name, path in zip(testserver_list, cbl_db_list, db_obj_list, base_url_list, db_name_list, db_path_list):
             try:
-                # log_info("Deleting the database {} at the test teardown for base url {}".format(db_obj.getName(cbl_db),
-                #                                                                                 base_url))
-                # if db.exists(db_name, path):
-                #     print("DB path")
-                #     print(cbl_db)
-                # db.deleteDB(cbl_db)
+                if db.exists(db_name, path):
+                    log_info(
+                        "Deleting the database {} at the test teardown for base url {}".format(db_obj.getName(cbl_db),
+                                                                                               base_url))
+                    db.deleteDB(cbl_db)
                 log_info("Flushing server memory")
                 utils_obj = Utils(base_url)
                 utils_obj.flushMemory()

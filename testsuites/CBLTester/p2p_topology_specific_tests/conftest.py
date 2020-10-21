@@ -391,6 +391,7 @@ def params_from_base_suite_setup(request):
         "delta_sync_enabled": delta_sync_enabled,
         "enable_file_logging": enable_file_logging,
         "enable_encryption": enable_encryption,
+        "liteserv_host_list": liteserv_host_list,
         "encryption_password": encryption_password
     }
     if create_db_per_suite:

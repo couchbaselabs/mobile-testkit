@@ -10,6 +10,7 @@ from keywords.utils import log_info
 from CBLClient.Query import Query
 from CBLClient.Database import Database
 
+
 @pytest.mark.listener
 @pytest.mark.parametrize("num_of_docs, replicator_type, attachments, endpoint_type", [
     (10, "push", False, "URLEndPoint"),
