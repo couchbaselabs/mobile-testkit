@@ -14,10 +14,10 @@
     register: st
 
   - name: Start the testsever dc command
-      ansible.windows.win_command: sc delete TestServer
+      win_command: sc delete TestServer
 
   - name: Start the testsever dc command
-      ansible.windows.win_command: sc delete dotnet
+      win_command: sc delete dotnet
 
   - name: Delete any exiting packages
     win_file: 
