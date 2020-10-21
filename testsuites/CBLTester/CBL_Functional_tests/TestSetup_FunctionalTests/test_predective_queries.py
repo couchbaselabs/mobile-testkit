@@ -126,8 +126,9 @@ def test_predictiveQueries_euclideanCosineDistance(params_from_base_test_setup, 
         euclidean_value = result_euclidean_dist[list(result_euclidean_dist.keys())[0]]
         square_euclidean_value = result_square_euclidean_dist[list(result_square_euclidean_dist.keys())[0]]
         consine_distance_value = result_consine_distance[list(result_consine_distance.keys())[0]]
-        assert str(euclidean_result) in str(euclidean_value), "euclidean distance did not get the right value for coordinates {}".format(coordinates)
-        assert square_euclidean_value == squareEuclidean_result, "square euclidean distance did not get the right value for coordinates {}".format(coordinates)
+        assert square_euclidean_value == squareEuclidean_result, "square euclidean distance did not get the right value for coordinates {}".format(
+            coordinates)
+        assert str(euclidean_result) in str(euclidean_value), "euclidean distance did not get the right value for coordinates {} - failing due to CBL-1354".format(coordinates)
         assert str(cosine_result) in str(consine_distance_value), "cosine distance did not get the right value for coordinates"
     else:
         assert not result_euclidean_dist, "euclidean distance did not get the right value for euclidean coordinates {}".format(coordinates)

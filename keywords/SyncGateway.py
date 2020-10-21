@@ -4,6 +4,7 @@ import json
 import requests
 from requests import Session
 from jinja2 import Template
+import time
 import re
 from keywords.constants import SYNC_GATEWAY_CONFIGS, SYNC_GATEWAY_CERT
 from keywords.utils import version_is_binary, add_cbs_to_sg_config_server_field
@@ -553,6 +554,36 @@ class SyncGateway(object):
             )
         if status != 0:
             raise ProvisioningError("Could not restart sync_gateway")
+
+    def upgrade_sync_gateway(self, sync_gateways, sync_gateway_version, sync_gateway_upgraded_version, sg_conf, cluster_config):
+        log_info('------------------------------------------')
+        log_info('START Sync Gateway cluster upgrade')
+        log_info('------------------------------------------')
+
+        for sg in sync_gateways:
+            sg_ip = host_for_url(sg["admin"])
+            log_info("Checking for sync gateway product info before upgrade")
+            verify_sync_gateway_product_info(sg_ip)
+            log_info("Checking for sync gateway version: {}".format(sync_gateway_version))
+            verify_sync_gateway_version(sg_ip, sync_gateway_version)
+            log_info("Upgrading sync gateway: {}".format(sg_ip))
+            self.upgrade_sync_gateways(
+                cluster_config=cluster_config,
+                sg_conf=sg_conf,
+                sync_gateway_version=sync_gateway_upgraded_version,
+                url=sg_ip
+            )
+
+            time.sleep(10) # After upgrading each sync gateway, it need few seconds to get product info
+            log_info("Checking for sync gateway product info after upgrade")
+            verify_sync_gateway_product_info(sg_ip)
+            log_info("Checking for sync gateway version after upgrade: {}".format(sync_gateway_upgraded_version))
+            verify_sync_gateway_version(sg_ip, sync_gateway_upgraded_version)
+
+        log_info("Upgraded all the sync gateway nodes in the cluster")
+        log_info('------------------------------------------')
+        log_info('END Sync Gateway cluster upgrade')
+        log_info('------------------------------------------')
 
     def upgrade_sync_gateways(self, cluster_config, sg_conf, sync_gateway_version, url=None):
         """ Upgrade sync gateways in a cluster. If url is passed, upgrade
