@@ -13,6 +13,12 @@
       path: C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ build_name }}\TestServer.NetCore.dll
     register: st
 
+  - name: Start the testsever dc command
+      ansible.windows.win_command: sc delete TestServer
+
+  - name: Start the testsever dc command
+      ansible.windows.win_command: sc delete dotnet
+
   - name: Delete any exiting packages
     win_file: 
       path: C:\Users\{{ ansible_user }}\Desktop\TestServer\*
