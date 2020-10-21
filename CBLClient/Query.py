@@ -447,7 +447,7 @@ class Query(object):
         args.setMemoryPointer("changeListener", change_listener)
         return self._client.invokeMethod("query_removeChangeListener", args)
 
-    def query_select_all(self, database):
+    def query_selectAll(self, database):
         args = Args()
         args.setMemoryPointer("database", database)
         return self._client.invokeMethod("query_select_all", args)
