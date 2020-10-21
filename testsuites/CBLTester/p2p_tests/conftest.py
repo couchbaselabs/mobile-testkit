@@ -117,7 +117,11 @@ def params_from_base_suite_setup(request):
 
     test_name = request.node.name
     testserver_list = []
-    for platform, version, host, port in zip(platform_list, version_list, host_list, port_list):
+    for platform, version, host, port, device_enabled in zip(platform_list,
+                                                             version_list,
+                                                             host_list,
+                                                             port_list,
+                                                             device_enabled_list):
         testserver = TestServerFactory.create(platform=platform,
                                               version_build=version,
                                               host=host,
@@ -128,7 +132,7 @@ def params_from_base_suite_setup(request):
             # Download TestServer app
             testserver.download()
             # Install TestServer app
-            if run_on_device:
+            if device_enabled:
                 log_info("install on device")
                 testserver.install_device()
             else:
@@ -148,11 +152,11 @@ def params_from_base_suite_setup(request):
     query_obj_list = []
     if create_db_per_suite:
         # Start Test server which needed for suite level set up like query tests
-        for testserver in testserver_list:
+        for testserver, device_enabled in zip(testserver_list, device_enabled_list):
             if not use_local_testserver:
                 log_info("Starting TestServer...")
                 test_name_cp = test_name.replace("/", "-")
-                if run_on_device:
+                if device_enabled:
                     log_info("start on device")
                     testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
                                                                           test_name_cp, datetime.datetime.now()))
