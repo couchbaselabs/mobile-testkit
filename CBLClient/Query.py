@@ -450,11 +450,9 @@ class Query(object):
     def query_selectAll(self, database):
         args = Args()
         args.setMemoryPointer("database", database)
-
         return self._client.invokeMethod("query_selectAll", args)
 
     def query_get_live_query_delay_time(self, database):
         args = Args()
         args.setMemoryPointer("database", database)
-
         return self._client.invokeMethod("query_getLiveQueryResponseTime", args)
