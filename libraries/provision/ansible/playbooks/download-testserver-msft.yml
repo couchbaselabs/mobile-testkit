@@ -21,6 +21,7 @@
       path: C:\Users\{{ ansible_user }}\Desktop\TestServer\*
       state: absent
     when: st.stat.exists == False
+    ignore_errors: yes
 
   - debug:
       msg: "{{ build_name }} already present, skipping download..."
