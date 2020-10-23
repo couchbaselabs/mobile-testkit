@@ -15,6 +15,7 @@
 
   - name: Delete the testsever process
     win_command: sc delete TestServer
+    ignore_errors: yes
 
   - name: Delete any exiting packages
     win_file: 
