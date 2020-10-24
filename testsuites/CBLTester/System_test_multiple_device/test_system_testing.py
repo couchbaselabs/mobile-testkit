@@ -23,10 +23,10 @@ def test_system(params_from_base_suite_setup):
     cluster_config = params_from_base_suite_setup["cluster_config"]
     sg_blip_url = params_from_base_suite_setup["target_url"]
     base_url_list = params_from_base_suite_setup["base_url_list"]
-    sg_config = params_from_base_suite_setup["sg_config"]
+    # sg_config = params_from_base_suite_setup["sg_config"]
     db_obj_list = params_from_base_suite_setup["db_obj_list"]
     cbl_db_list = params_from_base_suite_setup["cbl_db_list"]
-    db_name_list = params_from_base_suite_setup["db_name_list"]
+    # db_name_list = params_from_base_suite_setup["db_name_list"]
     query_obj_list = params_from_base_suite_setup["query_obj_list"]
     sync_gateway_version = params_from_base_suite_setup["sync_gateway_version"]
     resume_cluster = params_from_base_suite_setup["resume_cluster"]
@@ -35,7 +35,7 @@ def test_system(params_from_base_suite_setup):
     num_of_docs = params_from_base_suite_setup["num_of_docs"]
     num_of_doc_updates = params_from_base_suite_setup["num_of_doc_updates"]
     num_of_docs_to_update = params_from_base_suite_setup["num_of_docs_to_update"]
-    num_of_docs_in_itr = params_from_base_suite_setup["num_of_docs_in_itr"]
+    # num_of_docs_in_itr = params_from_base_suite_setup["num_of_docs_in_itr"]
     num_of_docs_to_delete = params_from_base_suite_setup["num_of_docs_to_delete"]
     num_of_docs_to_add = params_from_base_suite_setup["num_of_docs_to_add"]
     up_time = params_from_base_suite_setup["up_time"]
@@ -55,10 +55,10 @@ def test_system(params_from_base_suite_setup):
     sg_client = MobileRestClient()
 
     doc_ids = set()
-    docs_per_db = num_of_docs // len(cbl_db_list)  # Equally distributing docs to db
-    extra_docs = num_of_docs % len(cbl_db_list)  # Docs left after equal distribution
-    num_of_itr_per_db = docs_per_db // num_of_docs_in_itr  # iteration required to add docs in each db
-    extra_docs_in_itr_per_db = docs_per_db % num_of_docs_in_itr  # iteration required to add docs leftover docs per db
+    # docs_per_db = num_of_docs // len(cbl_db_list)  # Equally distributing docs to db
+    # extra_docs = num_of_docs % len(cbl_db_list)  # Docs left after equal distribution
+    # num_of_itr_per_db = docs_per_db // num_of_docs_in_itr  # iteration required to add docs in each db
+    # extra_docs_in_itr_per_db = docs_per_db % num_of_docs_in_itr  # iteration required to add docs leftover docs per db
 
     cluster = Cluster(config=cluster_config)
     if enable_rebalance:
@@ -72,31 +72,7 @@ def test_system(params_from_base_suite_setup):
         servers = cluster.servers[1:]
 
     if not resume_cluster:
-        # Reset cluster to ensure no data in system
-        cluster.reset(sg_config_path=sg_config)
-        log_info("Using SG ur: {}".format(sg_admin_url))
-        sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg)
-
-        # adding bulk docs to each db
-        for cbl_db, db_obj, db_name in zip(cbl_db_list, db_obj_list, db_name_list):
-            log_info("Adding doc on {} db".format(db_name))
-            doc_prefix = "{}_doc".format(db_name)
-            j = 0
-            for j in range(num_of_itr_per_db):
-                ids = db_obj.create_bulk_docs(num_of_docs_in_itr, doc_prefix, db=cbl_db, channels=channels_sg,
-                                              id_start_num=j * num_of_docs_in_itr, generator=generator)
-                doc_ids.update(ids)
-            # adding remaining docs to each db
-            if extra_docs_in_itr_per_db != 0:
-                ids = db_obj.create_bulk_docs(extra_docs_in_itr_per_db, "cbl_{}".format(db_name), db=cbl_db,
-                                              channels=channels_sg, id_start_num=(j + 1) * num_of_docs_in_itr,
-                                              generator=generator)
-                doc_ids.update(ids)
-        # add the extra docs to last db
-        if extra_docs != 0:
-            ids = db_obj.create_bulk_docs(extra_docs, "cbl_{}".format(db_name), db=cbl_db, channels=channels_sg,
-                                          id_start_num=docs_per_db, generator=generator)
-            doc_ids.update(ids)
+        print("nothing")
     else:
         # getting doc ids from the dbs
         # _check_doc_count(db_obj_list, cbl_db_list)

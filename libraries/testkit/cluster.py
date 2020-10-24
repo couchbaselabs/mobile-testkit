@@ -141,8 +141,8 @@ class Cluster:
         assert status == 0, "Failed to delete sg_accel artifacts"
 
         # Delete buckets
-        log_info(">>> Deleting buckets on: {}".format(self.servers[0].url))
-        self.servers[0].delete_buckets()
+        log_info(">>> Not Deleting buckets on: {}".format(self.servers[0].url))
+        # self.servers[0].delete_buckets()
 
         # Parse config and grab bucket names
         config_path_full = os.path.abspath(sg_config_path)
@@ -161,14 +161,14 @@ class Cluster:
 
         log_info(">>> Creating buckets on: {}".format(self.servers[0].url))
         log_info(">>> Creating buckets {}".format(bucket_name_set))
-        self.servers[0].create_buckets(bucket_names=bucket_name_set,
-                                       cluster_config=self._cluster_config,
-                                       ipv6=self.ipv6)
+        # self.servers[0].create_buckets(bucket_names=bucket_name_set,
+        #                                cluster_config=self._cluster_config,
+        #                                ipv6=self.ipv6)
 
         # Wait for server to be in a warmup state to work around
         # https://github.com/couchbase/sync_gateway/issues/1745
-        log_info(">>> Waiting for Server: {} to be in a healthy state".format(self.servers[0].url))
-        self.servers[0].wait_for_ready_state()
+        # log_info(">>> Waiting for Server: {} to be in a healthy state".format(self.servers[0].url))
+        # self.servers[0].wait_for_ready_state()
 
         log_info(">>> Starting sync_gateway with configuration: {}".format(config_path_full))
 
