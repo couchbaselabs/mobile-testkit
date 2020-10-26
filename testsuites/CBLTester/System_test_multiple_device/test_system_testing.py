@@ -131,14 +131,14 @@ def test_system(params_from_base_suite_setup):
         ######################################
         # Checking for docs update on SG side #
         ######################################
-        docs_to_update = random.sample(doc_ids, num_of_docs_to_update)
-        sg_docs = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=list(docs_to_update), auth=session)[0]
+        docs_to_update = num_of_docs_to_update
+        sg_docs = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=list(docs_to_update))[0]
         for sg_doc in sg_docs:
             sg_doc["id"] = sg_doc["_id"]
         log_info("Updating {} docs on SG - {}".format(len(docs_to_update),
                                                       docs_to_update))
         sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs,
-                              number_updates=num_of_doc_updates, auth=session, channels=channels_sg)
+                              number_updates=num_of_doc_updates, channels=channels_sg)
 
         # Waiting until replicator finishes on all dbs
         for base_url, repl_obj, repl, cbl_db, query, platform in zip(base_url_list,
@@ -186,11 +186,11 @@ def test_system(params_from_base_suite_setup):
         # Deleting docs on SG side #
         ###########################
         docs_to_delete = set(random.sample(doc_ids, num_of_docs_to_delete))
-        sg_docs = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=list(docs_to_delete), auth=session)[0]
+        sg_docs = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=list(docs_to_delete))[0]
         log_info("Deleting {} docs on SG - {}".format(len(docs_to_delete),
                                                       docs_to_delete))
         sg_client.delete_bulk_docs(url=sg_url, db=sg_db,
-                                   docs=sg_docs, auth=session)
+                                   docs=sg_docs)
         for base_url, repl_obj, repl, cbl_db, query, platform in zip(base_url_list,
                                                                      replicator_obj_list,
                                                                      replicator_list,
