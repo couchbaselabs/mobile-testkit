@@ -57,7 +57,7 @@ six==1.10.0
 termcolor==1.1.0
 troposphere==1.5.0
 websocket-client==0.40.0
-wrapt==1.10.8
+wrapt==1.12.1
 xmltodict==0.10.2
 numpy==1.17.4
 pytest-rerunfailures==8.0
