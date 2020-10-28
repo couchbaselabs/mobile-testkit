@@ -1248,7 +1248,7 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
     sdk_doc_delete_scratch_pad = list(all_doc_ids)
     for doc_id in all_doc_ids:
         nfe = None
-        with pytest.raises(NotFoundError) as nfe:
+        with pytest.raises(DocumentNotFoundException) as nfe:
             sdk_client.get(doc_id)
         log_info(nfe.value)
         if nfe is not None:
@@ -1660,7 +1660,7 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
         if wait_for_changes.result():
             log_info("Found all docs ...")
         else:
-            raise NotFoundError(
+            raise DocumentNotFoundException(
                 "Could not find all changes in feed for adding docs via SDK before timeout!!")
 
     with ThreadPoolExecutor(max_workers=5) as upsdk_tpe:
@@ -1692,7 +1692,7 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
         if wait_for_changes.result():
             log_info("Found all docs after SDK update ...")
         else:
-            raise NotFoundError(
+            raise DocumentNotFoundException(
                 "Could not find all changes in feed for SDK updated SDK docs before timeout!!")
 
     # update docs by sync-gateway
@@ -1726,7 +1726,7 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
             upsdksg_tpe.submit(changestrack.stop)
         else:
             upsdksg_tpe.submit(changestrack.stop)
-            raise NotFoundError(
+            raise DocumentNotFoundException(
                 "Could not find all changes in feed for SG updated SDK docs via sg before timeout!!")
 
     with ThreadPoolExecutor(max_workers=5) as crsg_tpe:
@@ -1764,7 +1764,7 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
         if wait_for_changes.result():
             log_info("Found all docs ...")
         else:
-            raise NotFoundError(
+            raise DocumentNotFoundException(
                 "Could not find all changes in feed for sg created docs before timeout!!")
 
     # update docs by sync-gateway
@@ -1795,7 +1795,7 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
         if wait_for_changes.result():
             log_info("Found all sg docs for update docs via sg ...")
         else:
-            raise NotFoundError(
+            raise DocumentNotFoundException(
                 "Could not find all changes in feed for update sg docs via sg before timeout!!")
 
     # Update sg docs via SDK
@@ -1829,7 +1829,7 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
             upsgsdk_tpe.submit(changestrack_sg.stop)
         else:
             upsgsdk_tpe.submit(changestrack_sg.stop)
-            raise NotFoundError(
+            raise DocumentNotFoundException(
                 "Could not find all changes in feed for SDK updated sg docs before timeout!!")
 
 
@@ -1990,7 +1990,7 @@ def delete_sdk_docs(client, docs_to_delete):
             print(doc.key)
             docs_to_remove.remove(doc.key)
             deleted_count += 1
-        except NotFoundError:
+        except DocumentNotFoundException:
             # Doc may have been deleted by sync gateway
             log_info('Could not find doc, must have been deleted by SG. Retrying ...')
             docs_to_remove.remove(random_doc_id)
@@ -2070,7 +2070,7 @@ def verify_sdk_deletes(sdk_client, docs_ids_to_verify_deleted):
 
     for doc_id in docs_ids_to_verify_deleted:
         nfe = None
-        with pytest.raises(NotFoundError) as nfe:
+        with pytest.raises(DocumentNotFoundException) as nfe:
             sdk_client.get(doc_id)
         assert nfe is not None
         assert 'The key does not exist on the server' in str(nfe)
