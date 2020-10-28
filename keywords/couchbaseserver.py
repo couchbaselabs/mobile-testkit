@@ -8,7 +8,7 @@ from requests.packages.urllib3.exceptions import InsecureRequestWarning
 from libraries.provision.ansible_runner import AnsibleRunner
 
 from couchbase.bucket import Bucket
-from couchbase.exceptions import CouchbaseError, NotFoundError
+from couchbase.exceptions import CouchbaseException, DocumentNotFoundException
 
 import keywords.constants
 from keywords.remoteexecutor import RemoteExecutor
@@ -459,10 +459,10 @@ class CouchbaseServer:
                     connection_url = "couchbase://{}/{}".format(self.host, name)
                 bucket = Bucket(connection_url, password='password')
                 bucket.get('foo')
-            except NotFoundError:
+            except DocumentNotFoundException:
                 log_info("Key not found error: Bucket is ready!")
                 break
-            except CouchbaseError as e:
+            except CouchbaseException as e:
                 log_info("Error from server: {}, Retrying ...". format(e))
                 time.sleep(1)
                 continue
