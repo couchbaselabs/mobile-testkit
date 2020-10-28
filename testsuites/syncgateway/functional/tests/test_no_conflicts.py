@@ -6,7 +6,7 @@ from libraries.testkit import cluster
 from keywords.MobileRestClient import MobileRestClient
 from keywords import document, attachment
 from requests.exceptions import HTTPError
-from couchbase.exceptions import KeyExistsError
+from couchbase.exceptions import CouchbaseException
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
 from keywords.utils import log_info, host_for_url
 from concurrent.futures import ThreadPoolExecutor
@@ -558,7 +558,7 @@ def sdk_bulk_update(sdk_client, sdk_docs, num_of_updates):
             doc_body["updated_by_sdk"] += 1
             try:
                 sdk_client.upsert(doc_id, doc_body)
-            except KeyExistsError:
+            except CouchbaseException:
                 log_info('CAS mismatch from SDK. Will retry ...')
 
 

@@ -8,7 +8,7 @@ from concurrent.futures import ProcessPoolExecutor
 from concurrent.futures import ThreadPoolExecutor
 
 from couchbase.bucket import Bucket
-from couchbase.exceptions import KeyExistsError, NotFoundError
+from couchbase.exceptions import CouchbaseException, DocumentNotFoundException
 from requests.exceptions import HTTPError
 from keywords.exceptions import ChangesError
 
@@ -892,7 +892,7 @@ def test_purge(params_from_base_test_setup, sg_conf_name, use_multiple_channels,
     sdk_deleted_doc_scratch_pad = list(all_doc_ids)
     for doc_id in all_doc_ids:
         nfe = None
-        with pytest.raises(NotFoundError) as nfe:
+        with pytest.raises(DocumentNotFoundException) as nfe:
             sdk_client.get(doc_id)
         log_info(nfe.value)
         if nfe is not None:
@@ -1921,7 +1921,7 @@ def update_sdk_docs(client, docs_to_update, prop_to_update, number_updates):
                 log_info('Updating: {} from SDK'.format(random_doc_id))
                 cur_cas = doc.cas
                 client.upsert(random_doc_id, doc_body, cas=cur_cas)
-            except KeyExistsError:
+            except CouchbaseException:
                 log_info('CAS mismatch from SDK. Will retry ...')
 
         # SDK and sync gateway do not operate at the same speed.

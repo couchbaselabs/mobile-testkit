@@ -2,7 +2,7 @@ import time
 
 import pytest
 from couchbase.bucket import Bucket
-from couchbase.exceptions import NotFoundError
+from couchbase.exceptions import DocumentNotFoundException
 from requests.exceptions import HTTPError
 
 from keywords import document
@@ -1061,6 +1061,6 @@ def verify_doc_deletion_on_server(doc_id, sdk_client, sg_client, sg_admin_url, s
         assert expired_raw_doc["_sync"]["rev"].startswith("{}-".format(expected_rev))
         assert expired_raw_doc["_deleted"]
     else:
-        with pytest.raises(NotFoundError) as nfe:
+        with pytest.raises(DocumentNotFoundException) as nfe:
             sdk_client.get(doc_id)
         assert "The key does not exist on the server" in str(nfe)

@@ -2,7 +2,7 @@
 
 import pytest
 from requests.exceptions import HTTPError
-from couchbase.exceptions import NotFoundError
+from couchbase.exceptions import DocumentNotFoundException
 from couchbase.bucket import Bucket
 
 from keywords import attachment, document
@@ -455,7 +455,7 @@ def verify_sg_purges(sg_client, sg_url, sg_db, expected_deleted_ids, sg_auth):
 def verify_sdk_deletes(sdk_client, expected_deleted_ids):
     for doc_id in expected_deleted_ids:
         nfe = None
-        with pytest.raises(NotFoundError) as nfe:
+        with pytest.raises(DocumentNotFoundException) as nfe:
             sdk_client.get(doc_id)
         assert nfe is not None
         log_info(str(nfe))
