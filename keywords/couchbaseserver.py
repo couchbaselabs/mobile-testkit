@@ -483,7 +483,7 @@ class CouchbaseServer:
         else:
             connection_url = "couchbase://{}/{}".format(self.host, bucket)
         b = Bucket(connection_url, password='password')
-        b_manager = b.bucket_manager()
+        b_manager = b.QueryIndexManager()
         b_manager.n1ql_index_create_primary(ignore_exists=True)
         cached_rev_doc_ids = []
         for row in b.n1ql_query("SELECT meta(`{}`) FROM `{}`".format(bucket, bucket)):
