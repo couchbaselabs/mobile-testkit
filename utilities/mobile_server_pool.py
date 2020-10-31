@@ -1,12 +1,10 @@
 import sys
 from datetime import timedelta
-
 import paramiko
 import time
-
 from requests import Session
 from optparse import OptionParser
-from couchbase.cluster import PasswordAuthenticator, ClusterTimeoutOptions, ClusterOptions
+from couchbase.cluster import QueryIndexManager, PasswordAuthenticator, ClusterTimeoutOptions, ClusterOptions
 from couchbase.cluster import Cluster
 from keywords.utils import log_info
 from couchbase.exceptions import CouchbaseException
@@ -24,6 +22,8 @@ timeout_options = ClusterTimeoutOptions(kv_timeout=timedelta(seconds=5), query_t
 options = ClusterOptions(PasswordAuthenticator(USERNAME, PASSWORD), timeout_options=timeout_options)
 cluster = Cluster('couchbase://{}'.format(SERVER_IP), options)
 sdk_client = cluster.bucket(BUCKET_NAME).default_collection()
+index_manager = QueryIndexManager(cluster)
+index_manager.create_primary_index(BUCKET_NAME, ignore_exists=True)
 
 
 def get_nodes_available_from_mobile_pool(nodes_os_type, node_os_version):
@@ -96,6 +96,10 @@ def check_vm_alive(server):
 
 
 def reserve_node(doc_id, job_name, counter=0):
+    return True
+
+
+def reserve_node_x(doc_id, job_name, counter=0):
     """
     Reserve a node for a given job
     :param doc_id: Node name to be reserved
