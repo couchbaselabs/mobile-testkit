@@ -398,7 +398,7 @@ def params_from_base_suite_setup(request):
             suite_db_log_files = suite_cbllog.get_directory()
             log_info("Log files available at - {}".format(suite_db_log_files))
         # Create CBL database
-        suite_cbl_db = create_db_per_suite
+        suite_cbl_db = "cbl-test"
         suite_db = Database(base_url)
 
         log_info("Creating a Database {} at the suite setup".format(suite_cbl_db))
@@ -530,13 +530,13 @@ def params_from_base_suite_setup(request):
         # Delete CBL database
         log_info("Deleting the database {} at the suite teardown".format(create_db_per_suite))
         time.sleep(2)
-        suite_db.deleteDB(suite_source_db)
+        # suite_db.deleteDB(suite_source_db)
         time.sleep(1)
     if create_db_per_suite:
         # Flush all the memory contents on the server app
         log_info("Flushing server memory")
-        utils_obj = Utils(base_url)
-        utils_obj.flushMemory()
+        # utils_obj = Utils(base_url)
+        # utils_obj.flushMemory()
         if not use_local_testserver:
             log_info("Stopping the test server per suite")
             testserver.stop()
@@ -616,7 +616,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
                                   max_size=100000 * 512, plain_text=True)
             test_db_log_file = test_cbllog.get_directory()
             log_info("Log files available at - {}".format(test_db_log_file))
-        cbl_db = create_db_per_test + str(time.time())
+        cbl_db = "cbl-test27"
         # Create CBL database
         db = Database(base_url)
 
@@ -625,15 +625,20 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
             db_config = db.configure(password=encryption_password)
         else:
             db_config = db.configure()
+        print("DB CONFIG***********************", db_config)
         source_db = db.create(cbl_db, db_config)
-        log_info("Getting the database name")
+        log_info("Getting the database name SOURCE DB NAME", source_db)
+        log_info("Getting the database name ORIGINAL DB NAME", cbl_db)
         db_name = db.getName(source_db)
         assert db_name == cbl_db
+        print(db.getPath(source_db))
         path = db.getPath(source_db).rstrip("/\\")
+
         if '\\' in path:
             path = '\\'.join(path.split('\\')[:-1])
         else:
             path = '/'.join(path.split('/')[:-1])
+        log_info("Getting the database path", path)
 
     # This dictionary is passed to each test
     yield {
@@ -702,10 +707,10 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         time.sleep(1)
         try:
             if db.exists(cbl_db, path):
-                db.deleteDB(source_db)
-            log_info("Flushing server memory")
+                # db.deleteDB(source_db)
+                log_info("Flushing server memory")
             utils_obj = Utils(base_url)
-            utils_obj.flushMemory()
+            # utils_obj.flushMemory()
             if not use_local_testserver:
                 log_info("Stopping the test server per test")
                 testserver.stop()
