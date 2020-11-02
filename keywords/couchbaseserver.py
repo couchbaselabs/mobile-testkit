@@ -2,6 +2,7 @@ import time
 import json
 import requests
 import re
+from datetime import timedelta
 from requests.exceptions import ConnectionError, HTTPError, ChunkedEncodingError
 from requests import Session
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
@@ -9,7 +10,7 @@ from libraries.provision.ansible_runner import AnsibleRunner
 
 from couchbase.bucket import Bucket
 from couchbase.exceptions import CouchbaseException, DocumentNotFoundException
-
+from couchbase.cluster import QueryIndexManager, PasswordAuthenticator, ClusterTimeoutOptions, ClusterOptions
 import keywords.constants
 from keywords.remoteexecutor import RemoteExecutor
 from keywords.exceptions import CBServerError, ProvisioningError, TimeoutError, RBACUserCreationError
@@ -17,6 +18,7 @@ from keywords.utils import log_r, log_info, log_debug, log_error, hostname_for_u
 from keywords.utils import version_and_build
 from keywords import types
 from utilities.cluster_config_utils import is_x509_auth, get_cbs_version, is_magma_enabled, is_cbs_ce_enabled
+from couchbase.cluster import Cluster
 
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
@@ -475,16 +477,21 @@ class CouchbaseServer:
         _sync:rev:att_doc:34:1-e7fa9a5e6bb25f7a40f36297247ca93e
         """
         if self.cbs_ssl and ipv6:
-            connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(self.host, bucket)
+            connection_url = "couchbases://{}?ssl=no_verify&ipv6=allow".format(self.host)
         elif self.cbs_ssl and not ipv6:
-            connection_url = "couchbases://{}/{}?ssl=no_verify".format(self.host, bucket)
+            connection_url = "couchbases://{}?ssl=no_verify".format(self.host)
         elif not self.cbs_ssl and ipv6:
-            connection_url = "couchbase://{}/{}?ipv6=allow".format(self.host, bucket)
+            connection_url = "couchbase://{}?ipv6=allow".format(self.host)
         else:
-            connection_url = "couchbase://{}/{}".format(self.host, bucket)
-        b = Bucket(connection_url, password='password')
-        b_manager = b.QueryIndexManager()
-        b_manager.n1ql_index_create_primary(ignore_exists=True)
+            connection_url = "couchbase://{}".format(self.host)
+        timeout_options = ClusterTimeoutOptions(kv_timeout=timedelta(seconds=5), query_timeout=timedelta(seconds=10))
+        options = ClusterOptions(PasswordAuthenticator("Administrator", "password"), timeout_options=timeout_options)
+        cluster = Cluster(connection_url, options)
+        b = cluster.bucket(bucket).default_collection()
+        # b = Bucket(connection_url, password='password')
+        # b_manager = b.QueryIndexManager()
+        index_manager = QueryIndexManager(cluster)
+        index_manager.create_primary_index(bucket, ignore_exists=True)
         cached_rev_doc_ids = []
         for row in b.n1ql_query("SELECT meta(`{}`) FROM `{}`".format(bucket, bucket)):
             if row["$1"]["id"].startswith("_sync:rev"):
