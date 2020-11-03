@@ -1635,6 +1635,5 @@ def sdk_connection(cbs_ip, n1ql_query):
     options = ClusterOptions(PasswordAuthenticator(username, password), timeout_options=timeout_options)
     cluster = Cluster('couchbase://{}/{}'.format(cbs_ip), options)
     sdk_client = cluster.bucket(bucket_name)
-    query = cluster.query(n1ql_query)
-    sdk_query_result = sdk_client.n1ql_query(query)
+    sdk_query_result = cluster.query(n1ql_query)
     return sdk_query_result

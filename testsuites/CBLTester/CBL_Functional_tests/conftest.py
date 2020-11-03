@@ -452,9 +452,9 @@ def params_from_base_suite_setup(request):
         cluster = Cluster('couchbase://{}'.format(cbs_ip), options)
         sdk_client = cluster.bucket(enable_sample_bucket)
         log_info("Creating primary index for {}".format(enable_sample_bucket))
+        print(sdk_client)
         n1ql_query = 'create primary index on {}'.format(enable_sample_bucket)
-        query = cluster.query(n1ql_query)
-        sdk_client.n1ql_query(query)
+        cluster.query(n1ql_query)
 
         # Start continuous replication
         repl_obj = Replication(base_url)
