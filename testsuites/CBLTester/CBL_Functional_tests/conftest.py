@@ -30,7 +30,6 @@ from CBLClient.SessionAuthenticator import SessionAuthenticator
 from CBLClient.Utils import Utils
 from CBLClient.ReplicatorConfiguration import ReplicatorConfiguration
 from utilities.cluster_config_utils import get_load_balancer_ip
-from couchbase.bucket import Bucket
 from couchbase.cluster import Cluster
 from couchbase.cluster import QueryIndexManager, PasswordAuthenticator, ClusterTimeoutOptions, ClusterOptions
 
@@ -448,7 +447,7 @@ def params_from_base_suite_setup(request):
         password = "password"
         log_info("Connecting to {}/{} with password {}".format(cbs_ip, enable_sample_bucket, password))
         username = "Administrator"
-        timeout_options = ClusterTimeoutOptions(kv_timeout=timedelta(seconds=5), query_timeout=timedelta(seconds=10))
+        timeout_options = ClusterTimeoutOptions(kv_timeout=timedelta(seconds=5), query_timeout=timedelta(seconds=SDK_TIMEOUT))
         options = ClusterOptions(PasswordAuthenticator(username, password), timeout_options=timeout_options)
         cluster = Cluster('couchbase://{}'.format(cbs_ip), options)
         sdk_client = cluster.bucket(enable_sample_bucket)

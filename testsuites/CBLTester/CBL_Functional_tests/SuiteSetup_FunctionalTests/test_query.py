@@ -1,11 +1,13 @@
 import pytest
-
+from datetime import timedelta
 from keywords.utils import log_info
 from CBLClient.Database import Database
 from CBLClient.Query import Query
 from keywords.utils import host_for_url
 from couchbase.bucket import Bucket
-from couchbase.n1ql import N1QLQuery
+from couchbase.cluster import Cluster
+from couchbase.cluster import QueryIndexManager, PasswordAuthenticator, ClusterTimeoutOptions, ClusterOptions
+
 from operator import itemgetter
 import numpy as np
 
@@ -27,15 +29,20 @@ def test_get_doc_ids(params_from_base_suite_setup):
     db = Database(base_url)
 
     cbs_ip = host_for_url(cbs_url)
-
     log_info("Fetching doc ids from the server")
     bucket_name = "travel-sample"
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
+    # username = "Administrator"
+    # # sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
+    # timeout_options = ClusterTimeoutOptions(kv_timeout=timedelta(seconds=5), query_timeout=timedelta(seconds=10))
+    # options = ClusterOptions(PasswordAuthenticator(username, 'password'), timeout_options=timeout_options)
+    # cluster = Cluster('couchbase://{}/{}'.format(cbs_ip), options)
+    # sdk_client = cluster.bucket(bucket_name)
     n1ql_query = 'select meta().id from `{}` where meta().id not like "_sync%" ORDER BY id'.format(bucket_name)
-    log_info(n1ql_query)
-    query = N1QLQuery(n1ql_query)
+    # log_info(n1ql_query)
+    # query = cluster.query(n1ql_query)
+    sdk_result = sdk_connection(cbs_ip, n1ql_query)
     doc_ids_from_n1ql = []
-    for row in sdk_client.n1ql_query(query):
+    for row in sdk_result:
         doc_ids_from_n1ql.append(row["id"])
 
     log_info("Fetching doc ids from CBL")
@@ -66,16 +73,14 @@ def test_any_operator(params_from_base_suite_setup):
     cbs_url = cluster_topology['couchbase_servers'][0]
 
     cbs_ip = host_for_url(cbs_url)
-
     log_info("Fetching doc ids from the server")
     bucket_name = "travel-sample"
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
     n1ql_query = 'select meta().id from `{}` where type="route" ' \
                  'AND ANY departure IN schedule SATISFIES departure.utc > "23:41:00" END;'.format(bucket_name)
     log_info(n1ql_query)
-    query = N1QLQuery(n1ql_query)
+    sdk_result = sdk_connection(cbs_ip, n1ql_query)
     doc_ids_from_n1ql = []
-    for row in sdk_client.n1ql_query(query):
+    for row in sdk_result:
         doc_ids_from_n1ql.append(row["id"])
 
     # Fetching docs from CBL
@@ -130,13 +135,12 @@ def test_doc_get(params_from_base_suite_setup, doc_id):
     # Get doc from n1ql through query
     log_info("Fetching doc {} from server through n1ql".format(doc_id))
     bucket_name = "travel-sample"
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
     n1ql_query = 'select * from `{}` where meta().id="{}" and meta().id not like "_sync%"'.format(bucket_name, doc_id)
     log_info(n1ql_query)
-    query = N1QLQuery(n1ql_query)
+    sdk_result = sdk_connection(cbs_ip, n1ql_query)
     docs_from_n1ql = []
 
-    for row in sdk_client.n1ql_query(query):
+    for row in sdk_result:
         row[enable_sample_bucket].pop('_sync', None)
         docs_from_n1ql.append(row[enable_sample_bucket])
 
@@ -213,13 +217,13 @@ def test_multiple_selects(params_from_base_suite_setup, select_property1, select
     # Get doc from n1ql through query
     log_info("Fetching docs from server through n1ql")
     bucket_name = "travel-sample"
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
-    n1ql_query = 'select {}, {}, meta().id from `{}` where {}="{}"'.format(select_property1, select_property2, bucket_name, whr_key, whr_val)
+    n1ql_query = 'select {}, {}, meta().id from `{}` where {}="{}"'.format(select_property1, select_property2,
+                                                                        bucket_name, whr_key, whr_val)
     log_info(n1ql_query)
-    query = N1QLQuery(n1ql_query)
+    sdk_result = sdk_connection(cbs_ip, n1ql_query)
     docs_from_n1ql = []
 
-    for row in sdk_client.n1ql_query(query):
+    for row in sdk_result:
         docs_from_n1ql.append(row)
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
@@ -232,7 +236,8 @@ def test_multiple_selects(params_from_base_suite_setup, select_property1, select
 @pytest.mark.parametrize("whr_key1, whr_val1, whr_key2, whr_val2, whr_key3, whr_val3, whr_key4, whr_val4", [
     ("type", "hotel", "country", "United States", "country", "France", "vacancy", True),
 ])
-def test_query_where_and_or(params_from_base_suite_setup, whr_key1, whr_val1, whr_key2, whr_val2, whr_key3, whr_val3, whr_key4, whr_val4):
+def test_query_where_and_or(params_from_base_suite_setup, whr_key1, whr_val1, whr_key2, whr_val2, whr_key3, whr_val3,
+                            whr_key4, whr_val4):
     """ @summary
     Fetches docs with where an/or clause
 
@@ -254,7 +259,8 @@ def test_query_where_and_or(params_from_base_suite_setup, whr_key1, whr_val1, wh
 
     log_info("Fetching docs from CBL through query")
     qy = Query(base_url)
-    result_set = qy.query_where_and_or(source_db, whr_key1, whr_val1, whr_key2, whr_val2, whr_key3, whr_val3, whr_key4, whr_val4)
+    result_set = qy.query_where_and_or(source_db, whr_key1, whr_val1, whr_key2, whr_val2, whr_key3, whr_val3, whr_key4,
+                                       whr_val4)
     docs_from_cbl = []
 
     for docs in result_set:
@@ -263,13 +269,13 @@ def test_query_where_and_or(params_from_base_suite_setup, whr_key1, whr_val1, wh
     # Get doc from n1ql through query
     log_info("Fetching docs from server through n1ql")
     bucket_name = "travel-sample"
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
-    n1ql_query = 'select meta().id from `{}` t where t.{}="{}" and (t.{}="{}" or t.{}="{}") and t.{}={}'.format(bucket_name, whr_key1, whr_val1, whr_key2, whr_val2, whr_key3, whr_val3, whr_key4, whr_val4)
+    n1ql_query = 'select meta().id from `{}` t where t.{}="{}" and (t.{}="{}" or t.{}="{}") and t.{}={}'.format(
+        bucket_name, whr_key1, whr_val1, whr_key2, whr_val2, whr_key3, whr_val3, whr_key4, whr_val4)
     log_info(n1ql_query)
-    query = N1QLQuery(n1ql_query)
+    sdk_result = sdk_connection(cbs_ip, n1ql_query)
     docs_from_n1ql = []
 
-    for row in sdk_client.n1ql_query(query):
+    for row in sdk_result:
         docs_from_n1ql.append(row)
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
@@ -286,7 +292,8 @@ def test_query_where_and_or(params_from_base_suite_setup, whr_key1, whr_val1, wh
     ("type", "landmark", "country", "name", "name", "%eng____r%"),
     ("type", "landmark", "country", "name", "name", "%Eng____r%"),
 ])
-def test_query_pattern_like(params_from_base_suite_setup, whr_key, whr_val, select_property1, select_property2, like_key, like_val):
+def test_query_pattern_like(params_from_base_suite_setup, whr_key, whr_val, select_property1, select_property2,
+                            like_key, like_val):
     """ @summary
     Fetches docs with like clause
 
@@ -318,13 +325,16 @@ def test_query_pattern_like(params_from_base_suite_setup, whr_key, whr_val, sele
     # Get doc from n1ql through query
     log_info("Fetching docs from server through n1ql")
     bucket_name = "travel-sample"
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
-    n1ql_query = 'select meta().id, {}, {} from `{}` t where t.{}="{}"  and t.{} like "{}"'.format(select_property1, select_property2, bucket_name, whr_key, whr_val, like_key, like_val)
+    n1ql_query = 'select meta().id, {}, {} from `{}` t where t.{}="{}"  and t.{} like "{}"'.format(select_property1,
+                                                                                                   select_property2,
+                                                                                                   bucket_name, whr_key,
+                                                                                                   whr_val, like_key,
+                                                                                                   like_val)
     log_info(n1ql_query)
-    query = N1QLQuery(n1ql_query)
+    sdk_result = sdk_connection(cbs_ip, n1ql_query)
     docs_from_n1ql = []
 
-    for row in sdk_client.n1ql_query(query):
+    for row in sdk_result:
         docs_from_n1ql.append(row)
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
@@ -337,7 +347,8 @@ def test_query_pattern_like(params_from_base_suite_setup, whr_key, whr_val, sele
     ("type", "landmark", "country", "name", "name", '\\bEng.*e\\b'),
     ("type", "landmark", "country", "name", "name", "\\beng.*e\\b"),
 ])
-def test_query_pattern_regex(params_from_base_suite_setup, whr_key, whr_val, select_property1, select_property2, regex_key, regex_val):
+def test_query_pattern_regex(params_from_base_suite_setup, whr_key, whr_val, select_property1, select_property2,
+                             regex_key, regex_val):
     """ @summary
     Fetches docs with like clause
 
@@ -370,16 +381,15 @@ def test_query_pattern_regex(params_from_base_suite_setup, whr_key, whr_val, sel
     # Get doc from n1ql through query
     log_info("Fetching docs from server through n1ql")
     bucket_name = "travel-sample"
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
-
     # \ has to be escaped for n1ql
     regex_val_n1ql = regex_val.replace('\\b', '\\\\b')
-    n1ql_query = 'select meta().id, {}, {} from `{}` t where t.{}="{}" and REGEXP_CONTAINS(t.{}, \'{}\')'.format(select_property1, select_property2, bucket_name, whr_key, whr_val, regex_key, regex_val_n1ql)
+    n1ql_query = 'select meta().id, {}, {} from `{}` t where t.{}="{}" and REGEXP_CONTAINS(t.{}, \'{}\')'.format(
+        select_property1, select_property2, bucket_name, whr_key, whr_val, regex_key, regex_val_n1ql)
     log_info("n1ql_query: {}".format(n1ql_query))
-    query = N1QLQuery(n1ql_query)
+    sdk_result = sdk_connection(cbs_ip, n1ql_query)
     docs_from_n1ql = []
 
-    for row in sdk_client.n1ql_query(query):
+    for row in sdk_result:
         docs_from_n1ql.append(row)
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
@@ -421,13 +431,13 @@ def test_query_isNullOrMissing(params_from_base_suite_setup, select_property1, l
     # Get doc from n1ql through query
     log_info("Fetching docs from server through n1ql")
     bucket_name = "travel-sample"
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
-    n1ql_query = 'select meta().id, {} from `{}` t where meta().id not like "_sync%" and (t.{} IS NULL or t.{} IS MISSING) order by "{}" asc limit {}'.format(select_property1, bucket_name, select_property1, select_property1, select_property1, limit)
+    n1ql_query = 'select meta().id, {} from `{}` t where meta().id not like "_sync%" and (t.{} IS NULL or t.{} IS MISSING) order by "{}" asc limit {}'.format(
+        select_property1, bucket_name, select_property1, select_property1, select_property1, limit)
     log_info(n1ql_query)
-    query = N1QLQuery(n1ql_query)
+    sdk_result = sdk_connection(cbs_ip, n1ql_query)
     docs_from_n1ql = []
 
-    for row in sdk_client.n1ql_query(query):
+    for row in sdk_result:
         docs_from_n1ql.append(row)
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
@@ -472,13 +482,14 @@ def test_query_ordering(params_from_base_suite_setup, select_property1, whr_key,
     # Get doc from n1ql through query
     log_info("Fetching docs from server through n1ql")
     bucket_name = "travel-sample"
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
-    n1ql_query = 'select meta().id, {} from `{}` t where t.{} = "{}" order by "{}" asc'.format(select_property1, bucket_name, whr_key, whr_val, select_property1)
+    n1ql_query = 'select meta().id, {} from `{}` t where t.{} = "{}" order by "{}" asc'.format(select_property1,
+                                                                                               bucket_name, whr_key,
+                                                                                               whr_val,
+                                                                                               select_property1)
     log_info(n1ql_query)
-    query = N1QLQuery(n1ql_query)
+    sdk_result = sdk_connection(cbs_ip, n1ql_query)
     docs_from_n1ql = []
-
-    for row in sdk_client.n1ql_query(query):
+    for row in sdk_result:
         docs_from_n1ql.append(row)
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
@@ -524,13 +535,16 @@ def test_query_substring(params_from_base_suite_setup, select_property1, select_
     # Get doc from n1ql through query
     log_info("Fetching docs from server through n1ql")
     bucket_name = "travel-sample"
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
-    n1ql_query = 'select meta().id, {}, UPPER({}) from `{}` t where CONTAINS(t.{}, "{}")'.format(select_property1, select_property2, bucket_name, select_property1, substring)
+    n1ql_query = 'select meta().id, {}, UPPER({}) from `{}` t where CONTAINS(t.{}, "{}")'.format(select_property1,
+                                                                                                 select_property2,
+                                                                                                 bucket_name,
+                                                                                                 select_property1,
+                                                                                                 substring)
     log_info(n1ql_query)
-    query = N1QLQuery(n1ql_query)
+    sdk_result = sdk_connection(cbs_ip, n1ql_query)
     docs_from_n1ql = []
 
-    for row in sdk_client.n1ql_query(query):
+    for row in sdk_result:
         docs_from_n1ql.append(row)
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
@@ -542,7 +556,8 @@ def test_query_substring(params_from_base_suite_setup, select_property1, select_
 @pytest.mark.parametrize("select_property1, whr_key1, whr_val1, whr_key2, whr_val2, equal_to", [
     ("name", "type", "hotel", "country", "France", "Le Clos Fleuri"),
 ])
-def test_query_collation(params_from_base_suite_setup, select_property1, whr_key1, whr_val1, whr_key2, whr_val2, equal_to):
+def test_query_collation(params_from_base_suite_setup, select_property1, whr_key1, whr_val1, whr_key2, whr_val2,
+                         equal_to):
     """ @summary
     Fetches docs using collation
       let collator = Collation.unicode()
@@ -577,24 +592,26 @@ def test_query_collation(params_from_base_suite_setup, select_property1, whr_key
     # Get doc from n1ql through query
     log_info("Fetching docs from server through n1ql")
     bucket_name = "travel-sample"
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
-    n1ql_query = 'select meta().id, {} from `{}` t where t.{}="{}" and t.{} = "{}" and lower(t.{}) = lower("{}")'.format(select_property1, bucket_name, whr_key1, whr_val1, whr_key2, whr_val2, select_property1, equal_to)
+    n1ql_query = 'select meta().id, {} from `{}` t where t.{}="{}" and t.{} = "{}" and lower(t.{}) = lower("{}")'.format(
+        select_property1, bucket_name, whr_key1, whr_val1, whr_key2, whr_val2, select_property1, equal_to)
     log_info(n1ql_query)
-    query = N1QLQuery(n1ql_query)
+    sdk_result = sdk_connection(cbs_ip, n1ql_query)
     docs_from_n1ql = []
 
-    for row in sdk_client.n1ql_query(query):
+    for row in sdk_result:
         docs_from_n1ql.append(row)
-
     assert len(docs_from_cbl) == len(docs_from_n1ql)
     log_info("Found {} docs".format(len(docs_from_cbl)))
     assert sorted(docs_from_cbl, key=itemgetter('id')) == sorted(docs_from_n1ql, key=itemgetter('id'))
     log_info("Doc contents match")
 
 
-@pytest.mark.parametrize("select_property1, select_property2, select_property3, select_property4, select_property5, whr_key1, whr_key2, whr_key3, whr_val1, whr_val2, whr_val3, join_key", [
-    ("name", "callsign", "destinationairport", "stops", "airline", "type", "type", "sourceairport", "route", "airline", "SFO", "airlineid"),
-])
+@pytest.mark.parametrize(
+    "select_property1, select_property2, select_property3, select_property4, select_property5, whr_key1, whr_key2, whr_key3, whr_val1, whr_val2, whr_val3, join_key",
+    [
+        ("name", "callsign", "destinationairport", "stops", "airline", "type", "type", "sourceairport", "route",
+         "airline", "SFO", "airlineid"),
+    ])
 def test_query_join(params_from_base_suite_setup, select_property1,
                     select_property2, select_property3, select_property4,
                     select_property5, whr_key1, whr_key2, whr_key3,
@@ -647,20 +664,19 @@ def test_query_join(params_from_base_suite_setup, select_property1,
     # Get doc from n1ql through query
     log_info("Fetching docs from server through n1ql")
     bucket_name = "travel-sample"
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
-    n1ql_query = 'select distinct airline.{}, airline.{}, route.{}, '\
-        'route.{}, route.{} from `{}` route join `{}` airline '\
-        'on keys route.{} where route.{}="{}" and '\
-        'airline.{} = "{}" and route.{} = "{}"'.format(
-            select_property1, select_property2,
-            select_property3, select_property4,
-            select_property5, bucket_name, bucket_name,
-            join_key, whr_key1, whr_val1, whr_key2, whr_val2,
-            whr_key3, whr_val3)
-    query = N1QLQuery(n1ql_query)
+    n1ql_query = 'select distinct airline.{}, airline.{}, route.{}, ' \
+                 'route.{}, route.{} from `{}` route join `{}` airline ' \
+                 'on keys route.{} where route.{}="{}" and ' \
+                 'airline.{} = "{}" and route.{} = "{}"'.format(
+        select_property1, select_property2,
+        select_property3, select_property4,
+        select_property5, bucket_name, bucket_name,
+        join_key, whr_key1, whr_val1, whr_key2, whr_val2,
+        whr_key3, whr_val3)
+    sdk_result = sdk_connection(cbs_ip, n1ql_query)
     docs_from_n1ql = []
 
-    for row in sdk_client.n1ql_query(query):
+    for row in sdk_result:
         docs_from_n1ql.append(row)
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
@@ -670,9 +686,12 @@ def test_query_join(params_from_base_suite_setup, select_property1,
     log_info("Doc contents match")
 
 
-@pytest.mark.parametrize("select_property1, select_property2, select_property3, whr_key1, whr_key2, whr_val1, whr_val2, join_key1, join_key2, limit", [
-    ("airline", "sourceairport", "country", "country", "stops", "United States", 0, "icao", "destinationairport", 10),
-])
+@pytest.mark.parametrize(
+    "select_property1, select_property2, select_property3, whr_key1, whr_key2, whr_val1, whr_val2, join_key1, join_key2, limit",
+    [
+        ("airline", "sourceairport", "country", "country", "stops", "United States", 0, "icao", "destinationairport",
+         10),
+    ])
 def test_query_inner_join(params_from_base_suite_setup, select_property1,
                           select_property2, select_property3, whr_key1, whr_key2,
                           whr_val1, whr_val2, join_key1, join_key2, limit):
@@ -717,14 +736,14 @@ def test_query_inner_join(params_from_base_suite_setup, select_property1,
     # Get doc from n1ql through query
     log_info("Fetching docs from server through n1ql")
     bucket_name = "travel-sample"
-    n1ql_query = 'select  route.{}, route.{}, airport.{} '\
-        'from `{}` route inner join `{}` airport '\
-        'on airport.{} = route.{} where airport.{}="{}" and '\
-        'route.{} = {} order by route.{} asc limit {}'.format(
-            select_property1, select_property2,
-            select_property3, bucket_name, bucket_name,
-            join_key1, join_key2, whr_key1, whr_val1, whr_key2, whr_val2,
-            select_property1, limit)
+    n1ql_query = 'select  route.{}, route.{}, airport.{} ' \
+                 'from `{}` route inner join `{}` airport ' \
+                 'on airport.{} = route.{} where airport.{}="{}" and ' \
+                 'route.{} = {} order by route.{} asc limit {}'.format(
+        select_property1, select_property2,
+        select_property3, bucket_name, bucket_name,
+        join_key1, join_key2, whr_key1, whr_val1, whr_key2, whr_val2,
+        select_property1, limit)
     log_info(n1ql_query)
 
     assert len(docs_from_cbl) == limit
@@ -800,7 +819,8 @@ def test_query_left_join(params_from_base_suite_setup, select_property, limit):
     # Get doc from n1ql through query
     log_info("Fetching docs from server through n1ql")
     bucket_name = "travel-sample"
-    n1ql_query = 'select airline.*, route.* from `{}` route LEFT JOIN `{}` route ON KEYS route.{} order by route.{} limit {}'.format(bucket_name, bucket_name, select_property, select_property, limit)
+    n1ql_query = 'select airline.*, route.* from `{}` route LEFT JOIN `{}` route ON KEYS route.{} order by route.{} limit {}'.format(
+        bucket_name, bucket_name, select_property, select_property, limit)
     log_info(n1ql_query)
 
     assert len(docs_from_cbl) == limit
@@ -842,7 +862,8 @@ def test_query_left_outer_join(params_from_base_suite_setup, select_property, li
     # Get doc from n1ql through query
     log_info("Fetching docs from server through n1ql")
     bucket_name = "travel-sample"
-    n1ql_query = 'select airline.*, route.* from `{}` route LEFT OUTER JOIN `{}` route ON KEYS route.{} order by route.{} limit {}'.format(bucket_name, bucket_name, select_property, select_property, limit)
+    n1ql_query = 'select airline.*, route.* from `{}` route LEFT OUTER JOIN `{}` route ON KEYS route.{} order by route.{} limit {}'.format(
+        bucket_name, bucket_name, select_property, select_property, limit)
     log_info(n1ql_query)
 
     assert len(docs_from_cbl) == limit
@@ -881,13 +902,12 @@ def test_equal_to(params_from_base_suite_setup, prop, val):
 
     # Get doc from n1ql through query
     bucket_name = "travel-sample"
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
     n1ql_query = 'select meta().id from `{}` where {} = "{}" order by meta().id asc'.format(bucket_name, prop, val)
     log_info(n1ql_query)
-    query = N1QLQuery(n1ql_query)
+    sdk_result = sdk_connection(cbs_ip, n1ql_query)
     docs_from_n1ql = []
 
-    for row in sdk_client.n1ql_query(query):
+    for row in sdk_result:
         docs_from_n1ql.append(row)
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
@@ -928,13 +948,12 @@ def test_not_equal_to(params_from_base_suite_setup, prop, val):
 
     # Get doc from n1ql through query
     bucket_name = "travel-sample"
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
     n1ql_query = 'select meta().id from `{}` where {} != "{}" order by meta().id asc'.format(bucket_name, prop, val)
     log_info(n1ql_query)
-    query = N1QLQuery(n1ql_query)
+    sdk_result = sdk_connection(cbs_ip, n1ql_query)
     docs_from_n1ql = []
 
-    for row in sdk_client.n1ql_query(query):
+    for row in sdk_result:
         docs_from_n1ql.append(row)
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
@@ -974,13 +993,13 @@ def test_greater_than(params_from_base_suite_setup, prop, val):
 
     # Get doc from n1ql through query
     bucket_name = "travel-sample"
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
-    n1ql_query = 'select meta().id from `{}` where {} > {} and meta().id not like "_sync%" order by meta().id asc'.format(bucket_name, prop, val)
+    n1ql_query = 'select meta().id from `{}` where {} > {} and meta().id not like "_sync%" order by meta().id asc'.format(
+        bucket_name, prop, val)
     log_info(n1ql_query)
-    query = N1QLQuery(n1ql_query)
+    sdk_result = sdk_connection(cbs_ip, n1ql_query)
     docs_from_n1ql = []
 
-    for row in sdk_client.n1ql_query(query):
+    for row in sdk_result:
         docs_from_n1ql.append(row)
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
@@ -1020,13 +1039,13 @@ def test_greater_than_or_equal_to(params_from_base_suite_setup, prop, val):
 
     # Get doc from n1ql through query
     bucket_name = "travel-sample"
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
-    n1ql_query = 'select meta().id from `{}` where {} >= {} and meta().id not like "_sync%" order by meta().id asc'.format(bucket_name, prop, val)
+    n1ql_query = 'select meta().id from `{}` where {} >= {} and meta().id not like "_sync%" order by meta().id asc'.format(
+        bucket_name, prop, val)
     log_info(n1ql_query)
-    query = N1QLQuery(n1ql_query)
+    sdk_result = sdk_connection(cbs_ip, n1ql_query)
     docs_from_n1ql = []
 
-    for row in sdk_client.n1ql_query(query):
+    for row in sdk_result:
         docs_from_n1ql.append(row)
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
@@ -1066,13 +1085,12 @@ def test_less_than(params_from_base_suite_setup, prop, val):
 
     # Get doc from n1ql through query
     bucket_name = "travel-sample"
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
     n1ql_query = 'select meta().id from `{}` where {} < {} order by meta().id asc'.format(bucket_name, prop, val)
     log_info(n1ql_query)
-    query = N1QLQuery(n1ql_query)
+    sdk_result = sdk_connection(cbs_ip, n1ql_query)
     docs_from_n1ql = []
 
-    for row in sdk_client.n1ql_query(query):
+    for row in sdk_result:
         docs_from_n1ql.append(row)
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
@@ -1112,13 +1130,12 @@ def test_less_than_or_equal_to(params_from_base_suite_setup, prop, val):
 
     # Get doc from n1ql through query
     bucket_name = "travel-sample"
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
     n1ql_query = 'select meta().id from `{}` where {} <= {} order by meta().id asc'.format(bucket_name, prop, val)
     log_info(n1ql_query)
-    query = N1QLQuery(n1ql_query)
+    sdk_result = sdk_connection(cbs_ip, n1ql_query)
     docs_from_n1ql = []
 
-    for row in sdk_client.n1ql_query(query):
+    for row in sdk_result:
         docs_from_n1ql.append(row)
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
@@ -1158,13 +1175,13 @@ def test_in(params_from_base_suite_setup, prop, val1, val2):
 
     # Get doc from n1ql through query
     bucket_name = "travel-sample"
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
-    n1ql_query = 'select meta().id from `{}` where {} in ["{}", "{}"] order by meta().id asc'.format(bucket_name, prop, val1, val2)
+    n1ql_query = 'select meta().id from `{}` where {} in ["{}", "{}"] order by meta().id asc'.format(bucket_name, prop,
+                                                                                                     val1, val2)
     log_info(n1ql_query)
-    query = N1QLQuery(n1ql_query)
+    sdk_result = sdk_connection(cbs_ip, n1ql_query)
     docs_from_n1ql = []
 
-    for row in sdk_client.n1ql_query(query):
+    for row in sdk_result:
         docs_from_n1ql.append(row)
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
@@ -1204,13 +1221,13 @@ def test_between(params_from_base_suite_setup, prop, val1, val2):
 
     # Get doc from n1ql through query
     bucket_name = "travel-sample"
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
-    n1ql_query = 'select meta().id from `{}` where {} between {} and {} order by meta().id asc'.format(bucket_name, prop, val1, val2)
+    n1ql_query = 'select meta().id from `{}` where {} between {} and {} order by meta().id asc'.format(bucket_name,
+                                                                                                       prop, val1, val2)
     log_info(n1ql_query)
-    query = N1QLQuery(n1ql_query)
+    sdk_result = sdk_connection(cbs_ip, n1ql_query)
     docs_from_n1ql = []
 
-    for row in sdk_client.n1ql_query(query):
+    for row in sdk_result:
         docs_from_n1ql.append(row)
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
@@ -1251,13 +1268,12 @@ def test_is(params_from_base_suite_setup, prop):
 
     # Get doc from n1ql through query
     bucket_name = "travel-sample"
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
     n1ql_query = 'select meta().id from `{}` where {} is null order by meta().id asc'.format(bucket_name, prop)
     log_info(n1ql_query)
-    query = N1QLQuery(n1ql_query)
+    sdk_result = sdk_connection(cbs_ip, n1ql_query)
     docs_from_n1ql = []
 
-    for row in sdk_client.n1ql_query(query):
+    for row in sdk_result:
         docs_from_n1ql.append(row)
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
@@ -1298,13 +1314,13 @@ def test_isnot(params_from_base_suite_setup, prop):
 
     # Get doc from n1ql through query
     bucket_name = "travel-sample"
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
-    n1ql_query = 'select meta().id, {} from `{}` where {} is not null order by meta().id asc'.format(prop, bucket_name, prop)
+    n1ql_query = 'select meta().id, {} from `{}` where {} is not null order by meta().id asc'.format(prop, bucket_name,
+                                                                                                     prop)
     log_info(n1ql_query)
-    query = N1QLQuery(n1ql_query)
+    sdk_result = sdk_connection(cbs_ip, n1ql_query)
     docs_from_n1ql = []
 
-    for row in sdk_client.n1ql_query(query):
+    for row in sdk_result:
         docs_from_n1ql.append(row)
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
@@ -1344,13 +1360,13 @@ def test_not(params_from_base_suite_setup, prop, val1, val2):
 
     # Get doc from n1ql through query
     bucket_name = "travel-sample"
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
-    n1ql_query = 'select meta().id from `{}` where {} not between {} and {} and meta().id not like "_sync%" order by meta().id asc'.format(bucket_name, prop, val1, val2)
+    n1ql_query = 'select meta().id from `{}` where {} not between {} and {} and meta().id not like "_sync%" order by meta().id asc'.format(
+        bucket_name, prop, val1, val2)
     log_info(n1ql_query)
-    query = N1QLQuery(n1ql_query)
+    sdk_result = sdk_connection(cbs_ip, n1ql_query)
     docs_from_n1ql = []
 
-    for row in sdk_client.n1ql_query(query):
+    for row in sdk_result:
         docs_from_n1ql.append(row)
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
@@ -1611,3 +1627,16 @@ def test_live_query_response_delay_time(params_from_base_suite_setup):
     delay_timer = qy.query_get_live_query_delay_time(cbl_db)
     log_info("delay_timer is counted as {}".format(delay_timer))
     assert delay_timer < 200, "delay timer cannot be longer than 200 millionsec"
+
+
+def sdk_connection(cbs_ip, n1ql_query):
+    bucket_name = "travel-sample"
+    username = "Administrator"
+    password = 'password'
+    timeout_options = ClusterTimeoutOptions(kv_timeout=timedelta(seconds=5), query_timeout=timedelta(seconds=10))
+    options = ClusterOptions(PasswordAuthenticator(username, password), timeout_options=timeout_options)
+    cluster = Cluster('couchbase://{}/{}'.format(cbs_ip), options)
+    sdk_client = cluster.bucket(bucket_name)
+    query = cluster.query(n1ql_query)
+    sdk_query_result = sdk_client.n1ql_query(query)
+    return sdk_query_result
