@@ -4,9 +4,8 @@ from keywords.utils import log_info
 from CBLClient.Database import Database
 from CBLClient.Query import Query
 from keywords.utils import host_for_url
-from couchbase.bucket import Bucket
 from couchbase.cluster import Cluster
-from couchbase.cluster import QueryIndexManager, PasswordAuthenticator, ClusterTimeoutOptions, ClusterOptions
+from couchbase.cluster import PasswordAuthenticator, ClusterTimeoutOptions, ClusterOptions
 
 from operator import itemgetter
 import numpy as np
@@ -126,7 +125,6 @@ def test_doc_get(params_from_base_suite_setup, doc_id):
     log_info("Fetching doc {} from CBL through query".format(doc_id))
     qy = Query(base_url)
     result_set = qy.query_get_doc(source_db, doc_id)
-
     docs_from_cbl = []
     if result_set != -1 and result_set is not None:
         for result in result_set:
@@ -218,7 +216,7 @@ def test_multiple_selects(params_from_base_suite_setup, select_property1, select
     log_info("Fetching docs from server through n1ql")
     bucket_name = "travel-sample"
     n1ql_query = 'select {}, {}, meta().id from `{}` where {}="{}"'.format(select_property1, select_property2,
-                                                                        bucket_name, whr_key, whr_val)
+                                                                           bucket_name, whr_key, whr_val)
     log_info(n1ql_query)
     sdk_result = sdk_connection(cbs_ip, n1ql_query)
     docs_from_n1ql = []
@@ -668,11 +666,11 @@ def test_query_join(params_from_base_suite_setup, select_property1,
                  'route.{}, route.{} from `{}` route join `{}` airline ' \
                  'on keys route.{} where route.{}="{}" and ' \
                  'airline.{} = "{}" and route.{} = "{}"'.format(
-        select_property1, select_property2,
-        select_property3, select_property4,
-        select_property5, bucket_name, bucket_name,
-        join_key, whr_key1, whr_val1, whr_key2, whr_val2,
-        whr_key3, whr_val3)
+                     select_property1, select_property2,
+                     select_property3, select_property4,
+                     select_property5, bucket_name, bucket_name,
+                     join_key, whr_key1, whr_val1, whr_key2, whr_val2,
+                     whr_key3, whr_val3)
     sdk_result = sdk_connection(cbs_ip, n1ql_query)
     docs_from_n1ql = []
 
@@ -740,10 +738,10 @@ def test_query_inner_join(params_from_base_suite_setup, select_property1,
                  'from `{}` route inner join `{}` airport ' \
                  'on airport.{} = route.{} where airport.{}="{}" and ' \
                  'route.{} = {} order by route.{} asc limit {}'.format(
-        select_property1, select_property2,
-        select_property3, bucket_name, bucket_name,
-        join_key1, join_key2, whr_key1, whr_val1, whr_key2, whr_val2,
-        select_property1, limit)
+                     select_property1, select_property2,
+                     select_property3, bucket_name, bucket_name,
+                     join_key1, join_key2, whr_key1, whr_val1, whr_key2, whr_val2,
+                     select_property1, limit)
     log_info(n1ql_query)
 
     assert len(docs_from_cbl) == limit
