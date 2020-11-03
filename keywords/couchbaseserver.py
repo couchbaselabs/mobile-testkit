@@ -487,7 +487,7 @@ class CouchbaseServer:
         timeout_options = ClusterTimeoutOptions(kv_timeout=timedelta(seconds=5), query_timeout=timedelta(seconds=10))
         options = ClusterOptions(PasswordAuthenticator("Administrator", "password"), timeout_options=timeout_options)
         cluster = Cluster(connection_url, options)
-        b = cluster.bucket(bucket).default_collection()
+        b = cluster.bucket(bucket)
         # b = Bucket(connection_url, password='password')
         # b_manager = b.QueryIndexManager()
         index_manager = QueryIndexManager(cluster)
@@ -508,13 +508,13 @@ class CouchbaseServer:
         """
 
         if self.cbs_ssl and ipv6:
-            connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(self.host, bucket)
+            connection_url = "couchbases://{}?ssl=no_verify&ipv6=allow".format(self.host)
         elif self.cbs_ssl and not ipv6:
-            connection_url = "couchbases://{}/{}?ssl=no_verify".format(self.host, bucket)
+            connection_url = "couchbases://{}?ssl=no_verify".format(self.host)
         elif not self.cbs_ssl and ipv6:
-            connection_url = "couchbase://{}/{}?ipv6=allow".format(self.host, bucket)
+            connection_url = "couchbase://{}?ipv6=allow".format(self.host)
         else:
-            connection_url = "couchbase://{}/{}".format(self.host, bucket)
+            connection_url = "couchbase://{}".format(self.host)
         b = Bucket(connection_url, password='password')
         b_manager = b.bucket_manager()
         b_manager.n1ql_index_create_primary(ignore_exists=True)

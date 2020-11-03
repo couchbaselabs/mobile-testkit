@@ -39,7 +39,7 @@ def get_nodes_available_from_mobile_pool(nodes_os_type, node_os_version):
     query_str = "select count(*) from `{}` where os='{}' " \
                 "AND os_version='{}' AND state='available'".format(BUCKET_NAME, nodes_os_type, node_os_version)
     query = cluster.query(query_str)
-    for row in sdk_client.n1ql_query(query):
+    for row in query:
         count = row["$1"]
     print(count)
 
@@ -67,7 +67,6 @@ def get_nodes_from_pool_server(num_of_nodes, nodes_os_type, node_os_version, job
             query_str = "update `{}` set state=\"VM_NOT_ALLIVE\" where meta().id='{}' " \
                 "and state='available'".format(doc_id)
             query = cluster.query(query_str)
-            sdk_client.n1ql_query(query)
         if is_node_reserved and vm_alive:
             pool_list.append(str(doc_id))
 
