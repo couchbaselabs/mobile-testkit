@@ -30,15 +30,7 @@ def test_get_doc_ids(params_from_base_suite_setup):
     cbs_ip = host_for_url(cbs_url)
     log_info("Fetching doc ids from the server")
     bucket_name = "travel-sample"
-    # username = "Administrator"
-    # # sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
-    # timeout_options = ClusterTimeoutOptions(kv_timeout=timedelta(seconds=5), query_timeout=timedelta(seconds=10))
-    # options = ClusterOptions(PasswordAuthenticator(username, 'password'), timeout_options=timeout_options)
-    # cluster = Cluster('couchbase://{}/{}'.format(cbs_ip), options)
-    # sdk_client = cluster.bucket(bucket_name)
     n1ql_query = 'select meta().id from `{}` where meta().id not like "_sync%" ORDER BY id'.format(bucket_name)
-    # log_info(n1ql_query)
-    # query = cluster.query(n1ql_query)
     sdk_result = sdk_connection(cbs_ip, n1ql_query)
     doc_ids_from_n1ql = []
     for row in sdk_result:

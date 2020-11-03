@@ -452,15 +452,20 @@ class CouchbaseServer:
                 raise Exception("TIMEOUT while trying to create server buckets.")
             try:
                 if self.cbs_ssl and ipv6:
-                    connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(self.host, name)
+                    connection_url = "couchbases://{}?ssl=no_verify&ipv6=allow".format(self.host)
                 elif self.cbs_ssl and not ipv6:
-                    connection_url = "couchbases://{}/{}?ssl=no_verify".format(self.host, name)
+                    connection_url = "couchbases://{}?ssl=no_verify".format(self.host)
                 elif not self.cbs_ssl and ipv6:
-                    connection_url = "couchbase://{}/{}?ipv6=allow".format(self.host, name)
+                    connection_url = "couchbase://{}?ipv6=allow".format(self.host)
                 else:
-                    connection_url = "couchbase://{}/{}".format(self.host, name)
-                bucket = Bucket(connection_url, password='password')
-                bucket.get('foo')
+                    connection_url = "couchbase://{}".format(self.host)
+                timeout_options = ClusterTimeoutOptions(kv_timeout=timedelta(seconds=5),
+                                                        query_timeout=timedelta(seconds=10))
+                options = ClusterOptions(PasswordAuthenticator("Administrator", "password"),
+                                         timeout_options=timeout_options)
+                cluster = Cluster(connection_url, options)
+                cluster.bucket(name)
+                cluster.get('foo')
             except DocumentNotFoundException:
                 log_info("Key not found error: Bucket is ready!")
                 break
@@ -487,20 +492,18 @@ class CouchbaseServer:
         timeout_options = ClusterTimeoutOptions(kv_timeout=timedelta(seconds=5), query_timeout=timedelta(seconds=10))
         options = ClusterOptions(PasswordAuthenticator("Administrator", "password"), timeout_options=timeout_options)
         cluster = Cluster(connection_url, options)
-        b = cluster.bucket(bucket)
-        # b = Bucket(connection_url, password='password')
-        # b_manager = b.QueryIndexManager()
+        cluster.bucket(bucket)
         index_manager = QueryIndexManager(cluster)
         index_manager.create_primary_index(bucket, ignore_exists=True)
         cached_rev_doc_ids = []
-        for row in b.n1ql_query("SELECT meta(`{}`) FROM `{}`".format(bucket, bucket)):
+        for row in cluster.query("SELECT meta(`{}`) FROM `{}`".format(bucket, bucket)):
             if row["$1"]["id"].startswith("_sync:rev"):
                 cached_rev_doc_ids.append(row["$1"]["id"])
 
         log_info("Found temp rev docs: {}".format(cached_rev_doc_ids))
         for doc_id in cached_rev_doc_ids:
             log_debug("Removing: {}".format(doc_id))
-            b.remove(doc_id)
+            cluster.remove(doc_id)
 
     def get_server_docs_with_prefix(self, bucket, prefix, ipv6=False):
         """
@@ -515,11 +518,14 @@ class CouchbaseServer:
             connection_url = "couchbase://{}?ipv6=allow".format(self.host)
         else:
             connection_url = "couchbase://{}".format(self.host)
-        b = Bucket(connection_url, password='password')
-        b_manager = b.bucket_manager()
-        b_manager.n1ql_index_create_primary(ignore_exists=True)
+        timeout_options = ClusterTimeoutOptions(kv_timeout=timedelta(seconds=5), query_timeout=timedelta(seconds=10))
+        options = ClusterOptions(PasswordAuthenticator("Administrator", "password"), timeout_options=timeout_options)
+        cluster = Cluster(connection_url, options)
+        cluster.bucket(bucket)
+        index_manager = QueryIndexManager(cluster)
+        index_manager.create_primary_index(bucket, ignore_exists=True)
         found_ids = []
-        for row in b.n1ql_query("SELECT meta(`{}`) FROM `{}`".format(bucket, bucket)):
+        for row in cluster.query("SELECT meta(`{}`) FROM `{}`".format(bucket, bucket)):
             log_info(row)
             if row["$1"]["id"].startswith(prefix):
                 found_ids.append(row["$1"]["id"])
@@ -805,10 +811,16 @@ class CouchbaseServer:
     def get_sdk_bucket(self, bucket_name):
         """ Gets an SDK bucket object """
         if self.cbs_ssl:
-            connection_str = "couchbases://{}/{}?ssl=no_verify".format(self.host, bucket_name)
+            connection_str = "couchbases://{}?ssl=no_verify".format(self.host)
         else:
-            connection_str = "couchbase://{}/{}".format(self.host, bucket_name)
-        return Bucket(connection_str, password='password')
+            connection_str = "couchbase://{}".format(self.host)
+            timeout_options = ClusterTimeoutOptions(kv_timeout=timedelta(seconds=5),
+                                                    query_timeout=timedelta(seconds=10))
+            options = ClusterOptions(PasswordAuthenticator("Administrator", "password"),
+                                     timeout_options=timeout_options)
+            cluster = Cluster(connection_str, options)
+            cluster.bucket(bucket_name)
+        return cluster
 
     def get_package_name(self, version, build_number, cbs_platform="centos7", cbs_ce=False):
         """

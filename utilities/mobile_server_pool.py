@@ -24,6 +24,7 @@ cluster = Cluster('couchbase://{}'.format(SERVER_IP), options)
 sdk_client = cluster.bucket(BUCKET_NAME).default_collection()
 index_manager = QueryIndexManager(cluster)
 index_manager.create_primary_index(BUCKET_NAME, ignore_exists=True)
+print(index_manager)
 
 
 def get_nodes_available_from_mobile_pool(nodes_os_type, node_os_version):
@@ -142,6 +143,7 @@ def release_node(pool_list, job_name):
     for node in pool_list:
         result = sdk_client.get(node)
         doc = result.content
+        print(doc, "Doc details")
         if doc["username"] == job_name:
             doc["prevUser"] = doc["username"]
             doc["username"] = ""
