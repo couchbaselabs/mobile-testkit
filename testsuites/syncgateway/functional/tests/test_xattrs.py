@@ -22,7 +22,6 @@ from keywords.utils import host_for_url, log_info
 from libraries.testkit.cluster import Cluster
 from keywords.ChangesTracker import ChangesTracker
 from utilities.cluster_config_utils import get_sg_use_views, get_sg_version, persist_cluster_config_environment_prop, copy_to_temp_conf
-from keywords.constants import SDK_TIMEOUT
 
 # Since sdk is quicker to update docs we need to have it sleep longer
 # between ops to avoid ops heavily weighted to SDK. These gives us more balanced
@@ -106,7 +105,7 @@ def test_olddoc_nil(params_from_base_test_setup, sg_conf_name):
         connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, bucket_name)
     else:
         connection_url = 'couchbase://{}/{}'.format(cbs_ip, bucket_name)
-    sdk_client = Bucket(connection_url, password='password', timeout=SDK_TIMEOUT)
+    sdk_client = Bucket(connection_url, password='password')
     # Create user / session
     user_one_info = UserInfo(name='user1', password='pass', channels=['ABC'], roles=[])
     user_two_info = UserInfo(name='user2', password='pass', channels=['CBS'], roles=[])
@@ -645,7 +644,7 @@ def test_large_initial_import(params_from_base_test_setup, sg_conf_name):
         connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, bucket_name)
     else:
         connection_url = 'couchbase://{}/{}'.format(cbs_ip, bucket_name)
-    sdk_client = Bucket(connection_url, password='password', timeout=30)
+    sdk_client = Bucket(connection_url, password='password')
     # Generate array for each doc doc to give it a larger size
 
     def prop_gen():

@@ -401,7 +401,7 @@ def params_from_base_suite_setup(request):
     clear_firewall_rules(cluster_config)
     # Stop all sync_gateway and sg_accels as test finished
     c = cluster.Cluster(cluster_config)
-    # c.stop_sg_and_accel()
+    c.stop_sg_and_accel()
 
     # Delete png files under resources/data
     clear_resources_pngs()

@@ -2,7 +2,7 @@
 
 import pytest
 from requests.exceptions import HTTPError
-from couchbase.exceptions import DocumentNotFoundException
+
 from couchbase.bucket import Bucket
 
 from keywords import attachment, document
@@ -14,6 +14,7 @@ from keywords.userinfo import UserInfo
 from keywords.exceptions import TimeoutException
 from utilities.cluster_config_utils import get_sg_version, persist_cluster_config_environment_prop, copy_to_temp_conf
 from libraries.testkit import cluster
+from couchbase.exceptions import DocumentNotFoundException
 
 
 @pytest.mark.syncgateway
@@ -459,4 +460,4 @@ def verify_sdk_deletes(sdk_client, expected_deleted_ids):
             sdk_client.get(doc_id)
         assert nfe is not None
         log_info(str(nfe))
-        assert 'The key does not exist on the server' in str(nfe)
+        assert 'DOCUMENT_NOT_FOUND' in str(nfe)
