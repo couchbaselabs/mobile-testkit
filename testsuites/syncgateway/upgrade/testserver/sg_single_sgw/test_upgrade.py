@@ -15,7 +15,6 @@ from keywords import attachment, document
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop
 
 from libraries.testkit.cluster import Cluster
-from keywords import attachment
 from CBLClient.Authenticator import Authenticator
 from CBLClient.Document import Document
 from CBLClient.Replication import Replication
@@ -163,7 +162,7 @@ def test_upgrade(params_from_base_test_setup):
     replicator.start(repl1)
     replicator.wait_until_replicator_idle(repl1)
     sg_client.add_docs(url=sg_admin_url, db=sg_db, number=2, id_prefix="sgw_docs1", channels=sg_user_channels, generator="simple_user", attachments_generator=attachment.generate_2_png_10_10)
-    
+
     # Create docs in CBS cluster
     cluster = Cluster(config=cluster_config)
     if len(cluster.servers) < 2:

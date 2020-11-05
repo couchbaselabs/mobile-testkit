@@ -17,7 +17,6 @@ from keywords.utils import log_r, log_info, log_debug, log_error, hostname_for_u
 from keywords.utils import version_and_build, random_string
 from keywords import types
 from utilities.cluster_config_utils import is_x509_auth, get_cbs_version, is_magma_enabled, is_cbs_ce_enabled
-from keywords.constants import SDK_TIMEOUT
 
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
@@ -988,25 +987,18 @@ class CouchbaseServer:
             log_info("Got an exception while creating a collection{}".format(ex))
         return collection
 
-    def create_doc_with_user_defined_collection(self, connection_url, bucket, scope, collection, doc_id, doc):
-        """Create scope on couchbase server"""
-
-        sdk_client = Bucket(connection_url, password='password', timeout=SDK_TIMEOUT)
-        # sdk_client = cluster.open_bucket(BUCKET_NAME)
-        # b_manager = b.bucket_manager()
-        # b_manager.n1ql_index_create_primary(ignore_exists=True)
-        # cached_rev_doc_ids = []
-        # insert into default:bucket1.scope1.collection1 (KEY, VALUE) VALUES ('default:bucket1.scope1.collection1_id', {'val':1, 'name' : 'default:bucket1.scope1.collection1_name' })
-        insert_query = "INSERT INTO `{}`.`{}`.`{}` (KEY, VALUE) VALUES ('{}', {})".format(bucket, scope, collection, doc_id, doc)
-        print("insert query is ", insert_query)
-        # b.n1ql_query(insert_query)
-        # query = N1QLQuery(insert_query)
-        sdk_client.n1ql_query(insert_query)
-        """for row in b.n1ql_query("SELECT meta(`{}`) FROM `{}`".format(bucket, bucket)):
-        try:
-            resp = self._session.get("{}/pools/default/buckets/{}/collections/{}".format(self.url, bucket, scope), data=data)
-            log_r(resp)
-            resp.raise_for_status()
-        except Exception as ex:
-            log_info("Got an exception while creating a scope{}".format(ex))
-        return collection"""
+    def get_collection_id(self, bucket, scope, collection):
+        """ Get collection id by scope and collection"""
+        col_id = None
+        resp = self._session.get("{}/pools/default/buckets/{}/collections".format(self.url, bucket))
+        log_r(resp)
+        resp.raise_for_status()
+        resp_obj = resp.json()
+        scopes = resp_obj["scopes"]
+        for scope_1 in scopes:
+            if scope_1["name"] == scope:
+                collections = scope_1["collections"]
+                for collection_1 in collections:
+                    if collection_1["name"] == collection:
+                        col_id = collection_1["uid"]
+        return col_id
