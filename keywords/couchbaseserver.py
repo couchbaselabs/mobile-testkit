@@ -447,32 +447,33 @@ class CouchbaseServer:
         # Create client an retry until KeyNotFound error is thrown
         start = time.time()
         time.sleep(5)
-        while True:
-            if time.time() - start > keywords.constants.CLIENT_REQUEST_TIMEOUT:
-                raise Exception("TIMEOUT while trying to create server buckets.")
-            try:
-                if self.cbs_ssl and ipv6:
-                    connection_url = "couchbases://{}?ssl=no_verify&ipv6=allow".format(self.host)
-                elif self.cbs_ssl and not ipv6:
-                    connection_url = "couchbases://{}?ssl=no_verify".format(self.host)
-                elif not self.cbs_ssl and ipv6:
-                    connection_url = "couchbase://{}?ipv6=allow".format(self.host)
-                else:
-                    connection_url = "couchbase://{}".format(self.host)
-                timeout_options = ClusterTimeoutOptions(kv_timeout=timedelta(seconds=5),
-                                                        query_timeout=timedelta(seconds=10))
-                options = ClusterOptions(PasswordAuthenticator("Administrator", "password"),
-                                         timeout_options=timeout_options)
-                cluster = Cluster(connection_url, options)
-                cluster.bucket(name)
-                cluster.get('foo')
-            except DocumentNotFoundException:
-                log_info("Key not found error: Bucket is ready!")
-                break
-            except CouchbaseException as e:
-                log_info("Error from server: {}, Retrying ...". format(e))
-                time.sleep(1)
-                continue
+        # while True:
+            # if time.time() - start > keywords.constants.CLIENT_REQUEST_TIMEOUT:
+            #     raise Exception("TIMEOUT while trying to create server buckets.")
+        try:
+            if self.cbs_ssl and ipv6:
+                connection_url = "couchbases://{}?ssl=no_verify&ipv6=allow".format(self.host)
+            elif self.cbs_ssl and not ipv6:
+                connection_url = "couchbases://{}?ssl=no_verify".format(self.host)
+            elif not self.cbs_ssl and ipv6:
+                connection_url = "couchbase://{}?ipv6=allow".format(self.host)
+            else:
+                connection_url = "couchbase://{}".format(self.host)
+            timeout_options = ClusterTimeoutOptions(kv_timeout=timedelta(seconds=5),
+                                                    query_timeout=timedelta(seconds=10))
+            options = ClusterOptions(PasswordAuthenticator("Administrator", "password"),
+                                     timeout_options=timeout_options)
+            cluster = Cluster(connection_url, options)
+            print("Manasa1")
+            cluster.bucket(name)
+            print("Manasa2")
+            # cluster.get('foo')
+        except DocumentNotFoundException:
+            log_info("Key not found error: Bucket is ready!")
+        except CouchbaseException as e:
+            log_info("Error from server: {}, Retrying ...".format(e))
+            time.sleep(1)
+            # continue
         self.wait_for_ready_state()
         return name
 

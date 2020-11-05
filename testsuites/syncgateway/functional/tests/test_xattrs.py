@@ -2073,7 +2073,7 @@ def verify_sdk_deletes(sdk_client, docs_ids_to_verify_deleted):
         with pytest.raises(DocumentNotFoundException) as nfe:
             sdk_client.get(doc_id)
         assert nfe is not None
-        assert 'The key does not exist on the server' in str(nfe)
+        assert 'DOCUMENT_NOT_FOUND' in str(nfe)
         docs_to_verify_scratchpad.remove(doc_id)
 
     # Verify that all docs have been removed
