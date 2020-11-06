@@ -19,6 +19,9 @@ from keywords.couchbaseserver import get_server_version
 @pytest.mark.collections
 def test_userdefind_collections(params_from_base_test_setup):
     """
+    @summary
+    https://docs.google.com/spreadsheets/d/1TZd0YrDh2lMJldNCst-bR53eE8vok8wWoo1wCHdGDEU/edit#gid=0
+    row #9
     "1. Create docs via sdk with and without attachments on default collections
      2. Create docs via sdk using user defined collections
      3. Verify docs created in default collections are imported to SGW
