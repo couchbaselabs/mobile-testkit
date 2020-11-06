@@ -2,9 +2,6 @@
 
 import pytest
 from requests.exceptions import HTTPError
-
-from couchbase.bucket import Bucket
-
 from keywords import attachment, document
 from keywords.MobileRestClient import MobileRestClient
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
@@ -12,7 +9,7 @@ from keywords.utils import host_for_url, log_info
 from libraries.testkit.cluster import Cluster
 from keywords.userinfo import UserInfo
 from keywords.exceptions import TimeoutException
-from utilities.cluster_config_utils import get_sg_version, persist_cluster_config_environment_prop, copy_to_temp_conf
+from utilities.cluster_config_utils import get_sg_version, persist_cluster_config_environment_prop, copy_to_temp_conf, get_cluster
 from libraries.testkit import cluster
 from couchbase.exceptions import DocumentNotFoundException
 
@@ -112,14 +109,14 @@ def test_document_resurrection(params_from_base_test_setup, sg_conf_name, deleti
     # Initialize clients
     sg_client = MobileRestClient()
     if ssl_enabled and cluster.ipv6:
-        connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(cbs_host, bucket_name)
+        connection_url = "couchbases://{}?ssl=no_verify&ipv6=allow".format(cbs_host)
     elif ssl_enabled and not cluster.ipv6:
-        connection_url = "couchbases://{}/{}?ssl=no_verify".format(cbs_host, bucket_name)
+        connection_url = "couchbases://{}?ssl=no_verify".format(cbs_host)
     elif not ssl_enabled and cluster.ipv6:
-        connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_host, bucket_name)
+        connection_url = "couchbase://{}?ipv6=allow".format(cbs_host)
     else:
-        connection_url = 'couchbase://{}/{}'.format(cbs_host, bucket_name)
-    sdk_client = Bucket(connection_url, password='password')
+        connection_url = 'couchbase://{}'.format(cbs_host)
+    sdk_client = get_cluster(connection_url, bucket_name)
     # Create Sync Gateway user
     sg_user_channels = ['NASA', 'NATGEO']
     sg_client.create_user(url=sg_admin_url, db=sg_db, name='seth', password='pass', channels=sg_user_channels)

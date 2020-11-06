@@ -8,7 +8,6 @@ from requests import Session
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 from libraries.provision.ansible_runner import AnsibleRunner
 
-from couchbase.bucket import Bucket
 from couchbase.exceptions import CouchbaseException, DocumentNotFoundException
 from couchbase.cluster import QueryIndexManager, PasswordAuthenticator, ClusterTimeoutOptions, ClusterOptions
 import keywords.constants
@@ -460,10 +459,7 @@ class CouchbaseServer:
             options = ClusterOptions(PasswordAuthenticator("Administrator", "password"),
                                      timeout_options=timeout_options)
             cluster = Cluster(connection_url, options)
-            print("Manasa1")
             cluster.bucket(name)
-            print("Manasa2")
-            # cluster.get('foo')
         except DocumentNotFoundException:
             log_info("Key not found error: Bucket is ready!")
         except CouchbaseException as e:

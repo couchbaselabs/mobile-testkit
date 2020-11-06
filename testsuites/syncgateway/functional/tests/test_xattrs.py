@@ -1,7 +1,7 @@
 import random
 import time
 import json
-
+from datetime import timedelta
 import pytest
 import concurrent.futures
 from concurrent.futures import ProcessPoolExecutor
@@ -21,7 +21,8 @@ from keywords.userinfo import UserInfo
 from keywords.utils import host_for_url, log_info
 from libraries.testkit.cluster import Cluster
 from keywords.ChangesTracker import ChangesTracker
-from utilities.cluster_config_utils import get_sg_use_views, get_sg_version, persist_cluster_config_environment_prop, copy_to_temp_conf
+from utilities.cluster_config_utils import get_sg_use_views, get_sg_version, persist_cluster_config_environment_prop, copy_to_temp_conf, get_cluster
+
 
 # Since sdk is quicker to update docs we need to have it sleep longer
 # between ops to avoid ops heavily weighted to SDK. These gives us more balanced
@@ -98,14 +99,14 @@ def test_olddoc_nil(params_from_base_test_setup, sg_conf_name):
     sg_client = MobileRestClient()
     cbs_ip = host_for_url(cbs_url)
     if ssl_enabled and cluster.ipv6:
-        connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(cbs_ip, bucket_name)
+        connection_url = "couchbases://{}?ssl=no_verify&ipv6=allow".format(cbs_ip)
     elif ssl_enabled and not cluster.ipv6:
-        connection_url = "couchbases://{}/{}?ssl=no_verify".format(cbs_ip, bucket_name)
+        connection_url = "couchbases://{}?ssl=no_verify".format(cbs_ip)
     elif not ssl_enabled and cluster.ipv6:
-        connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, bucket_name)
+        connection_url = "couchbase://{}?ipv6=allow".format(cbs_ip)
     else:
-        connection_url = 'couchbase://{}/{}'.format(cbs_ip, bucket_name)
-    sdk_client = Bucket(connection_url, password='password')
+        connection_url = 'couchbase://{}'.format(cbs_ip)
+    sdk_client = get_cluster(connection_url, bucket_name)
     # Create user / session
     user_one_info = UserInfo(name='user1', password='pass', channels=['ABC'], roles=[])
     user_two_info = UserInfo(name='user2', password='pass', channels=['CBS'], roles=[])
@@ -221,10 +222,10 @@ def test_on_demand_doc_processing(params_from_base_test_setup, sg_conf_name, num
     sg_client = MobileRestClient()
     # TODO : Add support for ssl enabled once ssl enabled support is merged to master
     if cluster.ipv6:
-        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_host, bucket_name), password='password')
+        url = "couchbase://{}?ipv6=allow".format(cbs_host)
     else:
-        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_host, bucket_name), password='password')
-    sdk_client.timeout = 600
+        url = "couchbase://{}".format(cbs_host)
+    sdk_client = get_cluster(url, bucket_name)
 
     # Create Sync Gateway user
     auth_dict = {}
@@ -248,7 +249,8 @@ def test_on_demand_doc_processing(params_from_base_test_setup, sg_conf_name, num
 
     # Add the docs via
     log_info('Adding docs via SDK ...')
-    sdk_client.upsert_multi(docs_to_add)
+    for k, v in docs_to_add.items():
+        sdk_client.upsert(k, v)
 
     assert len(docs_to_add) == number_users * number_docs_per_user
 
@@ -361,14 +363,14 @@ def test_on_demand_import_of_external_updates(params_from_base_test_setup, sg_co
     sg_client = MobileRestClient()
     cbs_ip = host_for_url(cbs_url)
     if ssl_enabled and cluster.ipv6:
-        connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(cbs_ip, bucket_name)
+        connection_url = "couchbases://{}?ssl=no_verify&ipv6=allow".format(cbs_ip)
     elif ssl_enabled and not cluster.ipv6:
-        connection_url = "couchbases://{}/{}?ssl=no_verify".format(cbs_ip, bucket_name)
+        connection_url = "couchbases://{}?ssl=no_verify".format(cbs_ip)
     elif not ssl_enabled and cluster.ipv6:
-        connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, bucket_name)
+        connection_url = "couchbase://{}?ipv6=allow".format(cbs_ip)
     else:
-        connection_url = 'couchbase://{}/{}'.format(cbs_ip, bucket_name)
-    sdk_client = Bucket(connection_url, password='password')
+        connection_url = 'couchbase://{}'.format(cbs_ip)
+    sdk_client = get_cluster(connection_url, bucket_name)
     # Create user / session
     seth_user_info = UserInfo(name='seth', password='pass', channels=['NASA'], roles=[])
     sg_client.create_user(
@@ -410,7 +412,8 @@ def test_on_demand_import_of_external_updates(params_from_base_test_setup, sg_co
     res_message = str(he.value)
     assert res_message.startswith('409')
 
-    # Following update_doc method will get the doc with on demand processing and update the doc based on rev got from get doc
+    # Following update_doc method will get the doc with on demand processing and update the doc based on rev got from
+    # get doc
     sg_updated_doc = sg_client.update_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=seth_auth)
     sg_updated_rev = sg_updated_doc["rev"]
     assert sg_updated_rev.startswith("3-")
@@ -487,14 +490,14 @@ def test_offline_processing_of_external_updates(params_from_base_test_setup, sg_
 
     cbs_ip = host_for_url(cbs_url)
     if ssl_enabled and cluster.ipv6:
-        connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(cbs_ip, bucket_name)
+        connection_url = "couchbases://{}?ssl=no_verify&ipv6=allow".format(cbs_ip)
     elif ssl_enabled and not cluster.ipv6:
-        connection_url = "couchbases://{}/{}?ssl=no_verify".format(cbs_ip, bucket_name)
+        connection_url = "couchbases://{}?ssl=no_verify".format(cbs_ip)
     elif not ssl_enabled and cluster.ipv6:
-        connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, bucket_name)
+        connection_url = "couchbase://{}?ipv6=allow".format(cbs_ip)
     else:
-        connection_url = 'couchbase://{}/{}'.format(cbs_ip, bucket_name)
-    sdk_client = Bucket(connection_url, password='password')
+        connection_url = 'couchbase://{}'.format(cbs_ip)
+    sdk_client = get_cluster(connection_url, bucket_name)
     # Create user / session
     seth_user_info = UserInfo(name='seth', password='pass', channels=['SG', 'SDK'], roles=[])
     sg_client.create_user(
@@ -540,7 +543,10 @@ def test_offline_processing_of_external_updates(params_from_base_test_setup, sg_
     sdk_doc_bodies = document.create_docs('sdk', number=num_docs_per_client, channels=['SDK'])
     sdk_doc_ids = [doc['_id'] for doc in sdk_doc_bodies]
     sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
-    sdk_docs_resp = sdk_client.upsert_multi(sdk_docs)
+    sdk_docs_resp = []
+    for k, v in sdk_docs.items():
+        sdk_docs_resp.add(sdk_client.upsert(k, v))
+
     assert len(sdk_docs_resp) == num_docs_per_client
 
     # Start Sync Gateway
@@ -637,14 +643,14 @@ def test_large_initial_import(params_from_base_test_setup, sg_conf_name):
     # Connect to server via SDK
     cbs_ip = host_for_url(cbs_url)
     if ssl_enabled and cluster.ipv6:
-        connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(cbs_ip, bucket_name)
+        connection_url = "couchbases://{}?ssl=no_verify&ipv6=allow".format(cbs_ip)
     elif ssl_enabled and not cluster.ipv6:
-        connection_url = "couchbases://{}/{}?ssl=no_verify".format(cbs_ip, bucket_name)
+        connection_url = "couchbases://{}?ssl=no_verify".format(cbs_ip)
     elif not ssl_enabled and cluster.ipv6:
-        connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, bucket_name)
+        connection_url = "couchbase://{}?ipv6=allow".format(cbs_ip)
     else:
-        connection_url = 'couchbase://{}/{}'.format(cbs_ip, bucket_name)
-    sdk_client = Bucket(connection_url, password='password')
+        connection_url = 'couchbase://{}'.format(cbs_ip)
+    bucket_cluster = get_cluster(connection_url, bucket_name)
     # Generate array for each doc doc to give it a larger size
 
     def prop_gen():
@@ -655,7 +661,8 @@ def test_large_initial_import(params_from_base_test_setup, sg_conf_name):
     sdk_doc_ids = [doc['_id'] for doc in sdk_doc_bodies]
     assert len(sdk_doc_ids) == num_docs
     sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
-    sdk_client.upsert_multi(sdk_docs)
+    for k, v in sdk_docs.items():
+        bucket_cluster.upsert(k, v)
 
     # Start Sync Gateway to begin import
     sg_controller.start_sync_gateways(cluster_conf, url=sg_url, config=sg_conf)
@@ -779,19 +786,20 @@ def test_purge(params_from_base_test_setup, sg_conf_name, use_multiple_channels,
     # Connect to server via SDK
     cbs_ip = host_for_url(cbs_url)
     if ssl_enabled and cluster.ipv6:
-        connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(cbs_ip, bucket_name)
+        connection_url = "couchbases://{}?ssl=no_verify&ipv6=allow".format(cbs_ip)
     elif ssl_enabled and not cluster.ipv6:
-        connection_url = "couchbases://{}/{}?ssl=no_verify".format(cbs_ip, bucket_name)
+        connection_url = "couchbases://{}?ssl=no_verify".format(cbs_ip)
     elif not ssl_enabled and cluster.ipv6:
-        connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, bucket_name)
+        connection_url = "couchbase://{}?ipv6=allow".format(cbs_ip)
     else:
-        connection_url = 'couchbase://{}/{}'.format(cbs_ip, bucket_name)
-    sdk_client = Bucket(connection_url, password='password')
+        connection_url = 'couchbase://{}'.format(cbs_ip)
+    sdk_client = get_cluster(connection_url, bucket_name)
     # Create 'number_docs_per_client' docs from SDK
     sdk_doc_bodies = document.create_docs('sdk', number_docs_per_client, channels=seth_user_info.channels)
     sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
     sdk_doc_ids = [doc for doc in sdk_docs]
-    sdk_client.upsert_multi(sdk_docs)
+    for k, v in sdk_docs.items():
+        sdk_client.upsert(k, v)
 
     sg_doc_ids = ['sg_{}'.format(i) for i in range(number_docs_per_client)]
     sdk_doc_ids = ['sdk_{}'.format(i) for i in range(number_docs_per_client)]
@@ -972,14 +980,14 @@ def test_sdk_does_not_see_sync_meta(params_from_base_test_setup, sg_conf_name):
     # Connect to server via SDK
     cbs_ip = host_for_url(cbs_url)
     if ssl_enabled and cluster.ipv6:
-        connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(cbs_ip, bucket_name)
+        connection_url = "couchbases://{}?ssl=no_verify&ipv6=allow".format(cbs_ip)
     elif ssl_enabled and not cluster.ipv6:
-        connection_url = "couchbases://{}/{}?ssl=no_verify".format(cbs_ip, bucket_name)
+        connection_url = "couchbases://{}?ssl=no_verify".format(cbs_ip)
     elif not ssl_enabled and cluster.ipv6:
-        connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, bucket_name)
+        connection_url = "couchbase://{}?ipv6=allow".format(cbs_ip)
     else:
-        connection_url = 'couchbase://{}/{}'.format(cbs_ip, bucket_name)
-    sdk_client = Bucket(connection_url, password='password')
+        connection_url = 'couchbase://{}'.format(cbs_ip)
+    sdk_client = get_cluster(connection_url, bucket_name)
     # Add 'number_of_sg_docs' to Sync Gateway
     sg_doc_bodies = document.create_docs(
         doc_id_prefix='sg_docs',
@@ -1002,7 +1010,7 @@ def test_sdk_does_not_see_sync_meta(params_from_base_test_setup, sg_conf_name):
         doc_ids.remove(doc_key)
 
         # Get the document body
-        doc_body = doc_val.value
+        doc_body = doc_val.content
 
         # Make sure 'sync' property is not present in the document
         assert '_sync' not in doc_body
@@ -1019,7 +1027,7 @@ def test_sdk_does_not_see_sync_meta(params_from_base_test_setup, sg_conf_name):
         for att_file_name, att_doc_id in attachment_name_ids:
 
             att_doc = sdk_client.get(att_doc_id, no_format=True)
-            att_bytes = att_doc.value
+            att_bytes = att_doc.content
 
             local_file_path = '{}/{}'.format(DATA_DIR, att_file_name)
             log_info('Checking that the generated attachment is the same that is store on server: {}'.format(
@@ -1102,21 +1110,22 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
     log_info('Connecting to bucket ...')
     cbs_ip = host_for_url(cbs_url)
     if ssl_enabled and cluster.ipv6:
-        connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(cbs_ip, bucket_name)
+        connection_url = "couchbases://{}?ssl=no_verify&ipv6=allow".format(cbs_ip)
     elif ssl_enabled and not cluster.ipv6:
-        connection_url = "couchbases://{}/{}?ssl=no_verify".format(cbs_ip, bucket_name)
+        connection_url = "couchbases://{}?ssl=no_verify".format(cbs_ip)
     elif not ssl_enabled and cluster.ipv6:
-        connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, bucket_name)
+        connection_url = "couchbase://{}?ipv6=allow".format(cbs_ip)
     else:
-        connection_url = 'couchbase://{}/{}'.format(cbs_ip, bucket_name)
-    sdk_client = Bucket(connection_url, password='password')
+        connection_url = 'couchbase://{}'.format(cbs_ip)
+    sdk_client = get_cluster(connection_url, bucket_name)
 
     # Create docs and add them via sdk
     log_info('Adding docs via sdk ...')
     sdk_doc_bodies = document.create_docs('sdk', number_docs_per_client, content={'foo': 'bar', 'updates': 1}, channels=['sdk'])
     sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
     sdk_doc_ids = [doc for doc in sdk_docs]
-    sdk_client.upsert_multi(sdk_docs)
+    for k, v in sdk_docs:
+        sdk_client.upsert(k, v)
 
     # Create sg user
     log_info('Creating user / session on Sync Gateway ...')
@@ -1170,7 +1179,8 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
             v['content']['updates'] += 1
 
         # Push the updated batch to Couchbase Server
-        sdk_client.upsert_multi(docs)
+        for k, v in sdk_docs.items():
+            sdk_client.upsert(k, v)
 
         # Get docs from Sync Gateway
         sg_docs_to_update, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=sg_doc_ids, auth=seth_session)
@@ -1345,14 +1355,14 @@ def test_sg_sdk_interop_shared_docs(params_from_base_test_setup,
     # Connect to server via SDK
     cbs_ip = host_for_url(cbs_url)
     if ssl_enabled and cluster.ipv6:
-        connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(cbs_ip, bucket_name)
+        connection_url = "couchbases://{}?ssl=no_verify&ipv6=allow".format(cbs_ip)
     elif ssl_enabled and not cluster.ipv6:
-        connection_url = "couchbases://{}/{}?ssl=no_verify".format(cbs_ip, bucket_name)
+        connection_url = "couchbases://{}?ssl=no_verify".format(cbs_ip)
     elif not ssl_enabled and cluster.ipv6:
-        connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, bucket_name)
+        connection_url = "couchbase://{}?ipv6=allow".format(cbs_ip)
     else:
-        connection_url = 'couchbase://{}/{}'.format(cbs_ip, bucket_name)
-    sdk_client = Bucket(connection_url, password='password')
+        connection_url = 'couchbase://{}'.format(cbs_ip)
+    sdk_client = get_cluster(connection_url, bucket_name)
 
     # Inject custom properties into doc template
     def update_props():
@@ -1390,7 +1400,9 @@ def test_sg_sdk_interop_shared_docs(params_from_base_test_setup,
     log_info('Adding {} docs via SDK ...'.format(number_docs_per_client))
     sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
     doc_set_two_ids = [sdk_doc['_id'] for sdk_doc in sdk_doc_bodies]
-    sdk_docs_resp = sdk_client.upsert_multi(sdk_docs)
+    sdk_docs_resp = []
+    for k, v in sdk_docs.items():
+        sdk_docs_resp.add(sdk_client.upsert(k, v))
     assert len(sdk_docs_resp) == number_docs_per_client
 
     # Build list of all doc_ids
@@ -1612,14 +1624,14 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
 
     # Connect to server via SDK
     if ssl_enabled and cluster.ipv6:
-        connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(cbs_ip, bucket_name)
+        connection_url = "couchbases://{}?ssl=no_verify&ipv6=allow".format(cbs_ip)
     elif ssl_enabled and not cluster.ipv6:
-        connection_url = "couchbases://{}/{}?ssl=no_verify".format(cbs_ip, bucket_name)
+        connection_url = "couchbases://{}?ssl=no_verify".format(cbs_ip)
     elif not ssl_enabled and cluster.ipv6:
-        connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, bucket_name)
+        connection_url = "couchbase://{}?ipv6=allow".format(cbs_ip)
     else:
-        connection_url = 'couchbase://{}/{}'.format(cbs_ip, bucket_name)
-    sdk_client = Bucket(connection_url, password='password')
+        connection_url = 'couchbase://{}'.format(cbs_ip)
+    sdk_client = get_cluster(connection_url, bucket_name)
 
     # Inject custom properties into doc template
     def update_props():
@@ -1643,7 +1655,9 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
         log_info('Started adding {} docs via SDK ...'.format(number_docs_per_client))
         sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
         doc_set_ids1 = [sdk_doc['_id'] for sdk_doc in sdk_doc_bodies]
-        sdk_docs_resp = sdk_client.upsert_multi(sdk_docs)
+        sdk_docs_resp = []
+        for k, v in sdk_docs.items():
+            sdk_docs_resp.add(sdk_client.upsert(k, v))
         assert len(sdk_docs_resp) == number_docs_per_client
         assert len(doc_set_ids1) == number_docs_per_client
         log_info("Docs creation via SDK done")
@@ -2265,14 +2279,14 @@ def test_sg_sdk_interop_shared_updates_from_sg(params_from_base_test_setup,
     # Connect to server via SDK
     cbs_ip = host_for_url(cbs_url)
     if ssl_enabled and cluster.ipv6:
-        connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(cbs_ip, bucket_name)
+        connection_url = "couchbases://{}?ssl=no_verify&ipv6=allow".format(cbs_ip)
     elif ssl_enabled and not cluster.ipv6:
-        connection_url = "couchbases://{}/{}?ssl=no_verify".format(cbs_ip, bucket_name)
+        connection_url = "couchbases://{}?ssl=no_verify".format(cbs_ip)
     elif not ssl_enabled and cluster.ipv6:
-        connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, bucket_name)
+        connection_url = "couchbase://{}?ipv6=allow".format(cbs_ip)
     else:
-        connection_url = 'couchbase://{}/{}'.format(cbs_ip, bucket_name)
-    sdk_client = Bucket(connection_url, password='password')
+        connection_url = 'couchbase://{}'.format(cbs_ip)
+    sdk_client = get_cluster(connection_url, bucket_name)
 
     # Inject custom properties into doc template
     def update_props():
@@ -2604,14 +2618,14 @@ def test_stats_logging_import_count(params_from_base_test_setup,
 
     # Connect to server via SDK
     if ssl_enabled and cluster.ipv6:
-        connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(cbs_ip, bucket_name)
+        connection_url = "couchbases://{}?ssl=no_verify&ipv6=allow".format(cbs_ip)
     elif ssl_enabled and not cluster.ipv6:
-        connection_url = "couchbases://{}/{}?ssl=no_verify".format(cbs_ip, bucket_name)
+        connection_url = "couchbases://{}?ssl=no_verify".format(cbs_ip)
     elif not ssl_enabled and cluster.ipv6:
-        connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, bucket_name)
+        connection_url = "couchbase://{}?ipv6=allow".format(cbs_ip)
     else:
-        connection_url = 'couchbase://{}/{}'.format(cbs_ip, bucket_name)
-    sdk_client = Bucket(connection_url, password='password')
+        connection_url = 'couchbase://{}'.format(cbs_ip)
+    sdk_client = get_cluster(connection_url, bucket_name)
 
     # Create / add docs via sdk with
     sdk_doc_bodies = document.create_docs(
@@ -2623,7 +2637,9 @@ def test_stats_logging_import_count(params_from_base_test_setup,
     log_info('Started adding {} docs via SDK as first set...'.format(number_docs_per_client))
     sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
     doc_set_ids1 = [sdk_doc['_id'] for sdk_doc in sdk_doc_bodies]
-    sdk_docs_resp = sdk_client.upsert_multi(sdk_docs)
+    sdk_docs_resp = []
+    for k, v in sdk_docs.items():
+        sdk_docs_resp.add(sdk_client.upsert(k, v))
     assert len(sdk_docs_resp) == number_docs_per_client
     assert len(doc_set_ids1) == number_docs_per_client
     log_info("Docs creation via SDK done")
@@ -2638,7 +2654,9 @@ def test_stats_logging_import_count(params_from_base_test_setup,
     log_info('Started adding {} docs via SDK as second set...'.format(number_docs_per_client))
     sdk_docs_2 = {doc['_id']: doc for doc in sdk_doc_bodies_2}
     doc_set_ids2 = [sdk_doc['_id'] for sdk_doc in sdk_doc_bodies_2]
-    sdk_docs_resp = sdk_client.upsert_multi(sdk_docs_2)
+    sdk_docs_resp = []
+    for k, v in sdk_docs_2.items():
+        sdk_docs_resp.add(sdk_client.upsert(k, v))
     assert len(sdk_docs_resp) == number_docs_per_client
     assert len(doc_set_ids2) == number_docs_per_client
     log_info("Docs creation 2nd set via SDK done")
