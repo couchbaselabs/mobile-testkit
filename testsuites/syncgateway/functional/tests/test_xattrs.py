@@ -1,13 +1,11 @@
 import random
 import time
 import json
-from datetime import timedelta
 import pytest
 import concurrent.futures
 from concurrent.futures import ProcessPoolExecutor
 from concurrent.futures import ThreadPoolExecutor
 
-from couchbase.bucket import Bucket
 from couchbase.exceptions import CouchbaseException, DocumentNotFoundException
 from requests.exceptions import HTTPError
 from keywords.exceptions import ChangesError

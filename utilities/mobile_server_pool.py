@@ -4,8 +4,7 @@ import paramiko
 import time
 from requests import Session
 from optparse import OptionParser
-from couchbase.cluster import QueryIndexManager, PasswordAuthenticator, ClusterTimeoutOptions, ClusterOptions
-from couchbase.cluster import Cluster
+from couchbase.cluster import PasswordAuthenticator, ClusterTimeoutOptions, ClusterOptions, Cluster
 from keywords.utils import log_info
 from couchbase.exceptions import CouchbaseException
 
@@ -21,10 +20,7 @@ SSH_POLL_INTERVAL = 20
 timeout_options = ClusterTimeoutOptions(kv_timeout=timedelta(seconds=5), query_timeout=timedelta(seconds=10))
 options = ClusterOptions(PasswordAuthenticator(USERNAME, PASSWORD), timeout_options=timeout_options)
 cluster = Cluster('couchbase://{}'.format(SERVER_IP), options)
-sdk_client = cluster.bucket(BUCKET_NAME).default_collection()
-index_manager = QueryIndexManager(cluster)
-index_manager.create_primary_index(BUCKET_NAME, ignore_exists=True)
-print(index_manager)
+sdk_client = cluster.bucket(BUCKET_NAME)
 
 
 def get_nodes_available_from_mobile_pool(nodes_os_type, node_os_version):
