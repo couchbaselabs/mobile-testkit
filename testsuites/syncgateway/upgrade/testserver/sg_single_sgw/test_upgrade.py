@@ -166,8 +166,8 @@ def test_upgrade(params_from_base_test_setup):
 
     # Create docs in CBS cluster
     cluster = Cluster(config=cluster_config)
-    if len(cluster.servers) < 3:
-        raise Exception("Please provide at least 3 servers")
+    if len(cluster.servers) < 2:
+        raise Exception("Please provide at least 2 servers")
 
     server_urls = []
     for server in cluster.servers:
