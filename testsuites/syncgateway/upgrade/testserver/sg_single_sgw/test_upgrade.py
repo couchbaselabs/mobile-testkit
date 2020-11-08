@@ -183,12 +183,8 @@ def test_upgrade(params_from_base_test_setup):
     sdk_client = Bucket('couchbase://{}/{}'.format(primary_server.host, bucket_name), password='password', timeout=SDK_TIMEOUT)
     sdk_doc_bodies = document.create_docs('sdk', number=num_sdk_docs, channels=sg_user_channels)
     sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
-    sg_expvars = sg_client.get_expvars(sg_admin_url)
-    import_count = sg_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"]
     sdk_client.upsert_multi(sdk_docs)
-    wait_until_docs_imported_from_server(sg_admin_url, sg_client, sg_db, num_sdk_docs, import_count)
     time.sleep(30)  # to let the docs import from server to sgw
-    sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
     replicator.wait_until_replicator_idle(repl)
     doc_ids = db.getDocIds(cbl_db, limit=num_docs + (num_sdk_docs * 2) + 2)
     added_docs = db.getDocuments(cbl_db, doc_ids)
