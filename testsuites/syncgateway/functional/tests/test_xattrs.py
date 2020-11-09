@@ -1681,7 +1681,7 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
         sdk_docs = sdk_client.get_multi(doc_set_ids1)
         assert len(list(sdk_docs.keys())) == number_docs_per_client
         for doc_id, val in list(sdk_docs.items()):
-            doc_body = val.value
+            doc_body = val.content
             doc_body["updated_by_sdk"] = True
             sdk_client.upsert(doc_id, doc_body)
         # Retry to get changes until expected changes appeared
@@ -2354,7 +2354,7 @@ def test_sg_sdk_interop_shared_updates_from_sg(params_from_base_test_setup,
     sdk_docs = sdk_client.get_multi(sg_doc_ids)
     assert len(list(sdk_docs.keys())) == number_docs_per_client
     for doc_id, val in list(sdk_docs.items()):
-        doc_body = val.value
+        doc_body = val.content
         doc_body["updated_by_sdk2"] = True
         sdk_client.upsert(doc_id, doc_body)
 
