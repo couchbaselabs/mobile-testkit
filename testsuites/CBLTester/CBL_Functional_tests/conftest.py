@@ -31,7 +31,7 @@ from CBLClient.Utils import Utils
 from CBLClient.ReplicatorConfiguration import ReplicatorConfiguration
 from utilities.cluster_config_utils import get_load_balancer_ip
 from couchbase.cluster import Cluster
-from couchbase.cluster import QueryIndexManager, PasswordAuthenticator, ClusterTimeoutOptions, ClusterOptions
+from couchbase.cluster import PasswordAuthenticator, ClusterTimeoutOptions, ClusterOptions
 
 
 def pytest_addoption(parser):
