@@ -5,16 +5,16 @@ import re
 from requests.exceptions import ConnectionError, HTTPError, ChunkedEncodingError
 from requests import Session
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
-from libraries.provision.ansible_runner import AnsibleRunner
-
 from couchbase.bucket import Bucket
+# from couchbase.n1ql import N1QLQuery
 from couchbase.exceptions import CouchbaseError, NotFoundError
 
 import keywords.constants
 from keywords.remoteexecutor import RemoteExecutor
 from keywords.exceptions import CBServerError, ProvisioningError, TimeoutError, RBACUserCreationError
+from libraries.provision.ansible_runner import AnsibleRunner
 from keywords.utils import log_r, log_info, log_debug, log_error, hostname_for_url
-from keywords.utils import version_and_build
+from keywords.utils import version_and_build, random_string
 from keywords import types
 from utilities.cluster_config_utils import is_x509_auth, get_cbs_version, is_magma_enabled, is_cbs_ce_enabled
 
@@ -954,3 +954,51 @@ class CouchbaseServer:
         """ Loads a given sample bucket """
         log_info("Enabling sample bucket {}".format(sample_bucket))
         self.remote_executor.must_execute('sudo /opt/couchbase/bin/cbdocloader -c localhost:8091 -u Administrator -p password -b {} -m 200 -d /opt/couchbase/samples/{}.zip'.format(sample_bucket, sample_bucket))
+
+    def create_scope(self, bucket, scope=None):
+        """ Create scope on couchbase server"""
+
+        if scope is None:
+            scope = "scope_{}".format(random_string(length=10, digit=True))
+        data = {
+            "name": scope
+        }
+        try:
+            resp = self._session.post("{}/pools/default/buckets/{}/collections".format(self.url, bucket), data=data)
+            log_r(resp)
+            resp.raise_for_status()
+        except Exception as ex:
+            log_info("Got an exception while creating a scope{}".format(ex))
+        return scope
+
+    def create_collection(self, bucket, scope, collection=None):
+        """ Create scope on couchbase server"""
+
+        if collection is None:
+            collection = "collection_{}".format(random_string(length=10, digit=True))
+        data = {
+            "name": collection
+        }
+        try:
+            resp = self._session.post("{}/pools/default/buckets/{}/collections/{}".format(self.url, bucket, scope), data=data)
+            log_r(resp)
+            resp.raise_for_status()
+        except Exception as ex:
+            log_info("Got an exception while creating a collection{}".format(ex))
+        return collection
+
+    def get_collection_id(self, bucket, scope, collection):
+        """ Get collection id by scope and collection"""
+        col_id = None
+        resp = self._session.get("{}/pools/default/buckets/{}/collections".format(self.url, bucket))
+        log_r(resp)
+        resp.raise_for_status()
+        resp_obj = resp.json()
+        scopes = resp_obj["scopes"]
+        for scope_1 in scopes:
+            if scope_1["name"] == scope:
+                collections = scope_1["collections"]
+                for collection_1 in collections:
+                    if collection_1["name"] == collection:
+                        col_id = collection_1["uid"]
+        return col_id
