@@ -395,7 +395,7 @@ def test_on_demand_import_of_external_updates(params_from_base_test_setup, sg_co
 
     # Update the document via SDK
     doc_to_update = sdk_client.get(doc_id)
-    doc_body = doc_to_update.value
+    doc_body = doc_to_update.content
     doc_body['updated_via_sdk'] = True
     updated_doc = sdk_client.upsert(doc_id, doc_body)
     log_info('Updated doc: {} via SDK'.format(updated_doc))
@@ -543,7 +543,7 @@ def test_offline_processing_of_external_updates(params_from_base_test_setup, sg_
     sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
     sdk_docs_resp = []
     for k, v in sdk_docs.items():
-        sdk_docs_resp.add(sdk_client.upsert(k, v))
+        sdk_docs_resp.append(sdk_client.upsert(k, v))
 
     assert len(sdk_docs_resp) == num_docs_per_client
 
@@ -1400,7 +1400,7 @@ def test_sg_sdk_interop_shared_docs(params_from_base_test_setup,
     doc_set_two_ids = [sdk_doc['_id'] for sdk_doc in sdk_doc_bodies]
     sdk_docs_resp = []
     for k, v in sdk_docs.items():
-        sdk_docs_resp.add(sdk_client.upsert(k, v))
+        sdk_docs_resp.append(sdk_client.upsert(k, v))
     assert len(sdk_docs_resp) == number_docs_per_client
 
     # Build list of all doc_ids
@@ -1655,7 +1655,7 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
         doc_set_ids1 = [sdk_doc['_id'] for sdk_doc in sdk_doc_bodies]
         sdk_docs_resp = []
         for k, v in sdk_docs.items():
-            sdk_docs_resp.add(sdk_client.upsert(k, v))
+            sdk_docs_resp.append(sdk_client.upsert(k, v))
         assert len(sdk_docs_resp) == number_docs_per_client
         assert len(doc_set_ids1) == number_docs_per_client
         log_info("Docs creation via SDK done")
@@ -2322,7 +2322,7 @@ def test_sg_sdk_interop_shared_updates_from_sg(params_from_base_test_setup,
     sdk_docs = sdk_client.get_multi(sg_doc_ids)
     assert len(list(sdk_docs.keys())) == number_docs_per_client
     for doc_id, val in sdk_docs.items():
-        doc_body = val.value
+        doc_body = val.content
         doc_body["updated_by_sdk"] = True
         sdk_client.upsert(doc_id, doc_body)
 
@@ -2637,7 +2637,7 @@ def test_stats_logging_import_count(params_from_base_test_setup,
     doc_set_ids1 = [sdk_doc['_id'] for sdk_doc in sdk_doc_bodies]
     sdk_docs_resp = []
     for k, v in sdk_docs.items():
-        sdk_docs_resp.add(sdk_client.upsert(k, v))
+        sdk_docs_resp.append(sdk_client.upsert(k, v))
     assert len(sdk_docs_resp) == number_docs_per_client
     assert len(doc_set_ids1) == number_docs_per_client
     log_info("Docs creation via SDK done")
@@ -2654,7 +2654,7 @@ def test_stats_logging_import_count(params_from_base_test_setup,
     doc_set_ids2 = [sdk_doc['_id'] for sdk_doc in sdk_doc_bodies_2]
     sdk_docs_resp = []
     for k, v in sdk_docs_2.items():
-        sdk_docs_resp.add(sdk_client.upsert(k, v))
+        sdk_docs_resp.append(sdk_client.upsert(k, v))
     assert len(sdk_docs_resp) == number_docs_per_client
     assert len(doc_set_ids2) == number_docs_per_client
     log_info("Docs creation 2nd set via SDK done")
