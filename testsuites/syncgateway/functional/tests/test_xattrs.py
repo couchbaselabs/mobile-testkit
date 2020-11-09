@@ -532,7 +532,7 @@ def test_offline_processing_of_external_updates(params_from_base_test_setup, sg_
     assert len(list(sg_docs_via_sdk_get.keys())) == num_docs_per_client
     for doc_id, val in list(sg_docs_via_sdk_get.items()):
         log_info("Updating: '{}' via SDK".format(doc_id))
-        doc_body = val.value
+        doc_body = val.content
         doc_body["updated_by_sdk"] = True
         sdk_client.upsert(doc_id, doc_body)
 
@@ -2180,7 +2180,7 @@ def verify_doc_ids_in_sdk_get_multi(response, expected_number_docs, expected_ids
 
     # Cross off all the doc ids seen in the response from the scratch pad
     for doc_id, value in list(response.items()):
-        assert '_sync' not in value.value
+        assert '_sync' not in value.content
         expected_ids_scratch_pad.remove(doc_id)
 
     # Make sure all doc ids have been found
