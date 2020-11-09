@@ -1122,7 +1122,7 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
     sdk_doc_bodies = document.create_docs('sdk', number_docs_per_client, content={'foo': 'bar', 'updates': 1}, channels=['sdk'])
     sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
     sdk_doc_ids = [doc for doc in sdk_docs]
-    for k, v in sdk_docs:
+    for k, v in sdk_docs.items():
         sdk_client.upsert(k, v)
 
     # Create sg user
