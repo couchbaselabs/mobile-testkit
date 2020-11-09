@@ -99,7 +99,7 @@ def reserve_node(doc_id, job_name, counter=0):
     :return: Bool
     """
     result = sdk_client.get(doc_id)
-    doc = result.content
+    doc = result.value
     curr_cas = result.cas
     # Reserving the ip from the pool and updating the entry in the bucket
     doc["prevUser"] = doc["username"]
@@ -110,7 +110,7 @@ def reserve_node(doc_id, job_name, counter=0):
         return True
     except CouchbaseException as err:
         result = sdk_client.get(doc_id)
-        doc = result.content
+        doc = result.value
         if doc["state"] != "booked" and counter < 5:
             log_info("Attempt to reserve node {} failed due to error {}".format(doc_id, err))
             log_info("Re-try attempt no. {}".format(counter))
