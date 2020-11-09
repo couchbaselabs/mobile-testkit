@@ -1915,7 +1915,7 @@ def update_sdk_docs(client, docs_to_update, prop_to_update, number_updates):
         log_info(random_doc_id)
 
         doc = client.get(random_doc_id)
-        doc_body = doc.value
+        doc_body = doc.content
 
         # Make sure not meta is seen
         assert '_sync' not in doc_body
