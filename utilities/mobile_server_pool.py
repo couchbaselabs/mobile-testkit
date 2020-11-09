@@ -138,7 +138,8 @@ def release_node(pool_list, job_name):
     """
     for node in pool_list:
         result = sdk_client.get(node)
-        doc = result.content
+        print(result.value)
+        doc = result.value
         print(doc, "Doc details")
         if doc["username"] == job_name:
             doc["prevUser"] = doc["username"]
