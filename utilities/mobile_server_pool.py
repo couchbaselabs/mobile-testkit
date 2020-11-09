@@ -90,12 +90,7 @@ def check_vm_alive(server):
             time.sleep(SSH_POLL_INTERVAL)
             continue
 
-
 def reserve_node(doc_id, job_name, counter=0):
-    return True
-
-
-def reserve_node_x(doc_id, job_name, counter=0):
     """
     Reserve a node for a given job
     :param doc_id: Node name to be reserved
