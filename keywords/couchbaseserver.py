@@ -513,9 +513,9 @@ class CouchbaseServer:
         timeout_options = ClusterTimeoutOptions(kv_timeout=timedelta(seconds=5), query_timeout=timedelta(seconds=10))
         options = ClusterOptions(PasswordAuthenticator("Administrator", "password"), timeout_options=timeout_options)
         cluster = Cluster(connection_url, options)
-        cluster.bucket(bucket)
-        index_manager = QueryIndexManager(cluster)
-        index_manager.create_primary_index(bucket, ignore_exists=True)
+        bucket = cluster.bucket(bucket).default_collection()
+        # index_manager = QueryIndexManager(cluster)
+        # index_manager.create_primary_index(bucket, ignore_exists=True)
         found_ids = []
         for row in cluster.query("SELECT meta(`{}`) FROM `{}`".format(bucket, bucket)):
             log_info(row)

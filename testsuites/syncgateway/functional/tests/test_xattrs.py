@@ -149,7 +149,7 @@ def test_olddoc_nil(params_from_base_test_setup, sg_conf_name):
     # Update the channels of each doc to 'NBC'
     for abc_doc_id in abc_doc_ids:
         doc = sdk_client.get(abc_doc_id)
-        doc_body = doc.value
+        doc_body = doc.content
         doc_body['channels'] = user_two_info.channels
         sdk_client.upsert(abc_doc_id, doc_body)
 
@@ -1170,7 +1170,7 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
 
         # Get docs and extract doc_id (key) and doc_body (value.value)
         sdk_docs_resp = sdk_client.get_multi(sdk_doc_ids)
-        docs = {k: v.value for k, v in list(sdk_docs_resp.items())}
+        docs = {k: v.content for k, v in list(sdk_docs_resp.items())}
 
         # update the updates property for every doc
         for _, v in list(docs.items()):
@@ -1472,7 +1472,7 @@ def test_sg_sdk_interop_shared_docs(params_from_base_test_setup,
 
         # Get doc from SDK
         doc_result = sdk_client.get(doc_id)
-        doc_body = doc_result.value
+        doc_body = doc_result.content
 
         log_info('doc: {} -> {}:{}, {}:{}'.format(
             doc_id,
@@ -1816,7 +1816,7 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
         sdk_docs = sdk_client.get_multi(sg_docs)
         assert len(list(sdk_docs.keys())) == number_docs_per_client
         for doc_id, val in list(sdk_docs.items()):
-            doc_body = val.value
+            doc_body = val.content
             doc_body["updated_by_sdk"] = True
             sdk_client.upsert(doc_id, doc_body)
         # Retry to get changes until expected changes appeared

@@ -2,17 +2,15 @@
 
 import pytest
 
-from couchbase.bucket import Bucket
 from requests.exceptions import HTTPError
-
 from keywords import document
-from keywords.constants import SDK_TIMEOUT
 from keywords.MobileRestClient import MobileRestClient
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.SyncGateway import SyncGateway
 from keywords.userinfo import UserInfo
 from keywords.utils import host_for_url, log_info
 from libraries.testkit.cluster import Cluster
+from utilities.cluster_config_utils import get_cluster
 
 
 @pytest.mark.syncgateway
@@ -76,10 +74,10 @@ def test_mobile_opt_in(params_from_base_test_setup, sg_conf_name):
     sg_client = MobileRestClient()
     cbs_ip = host_for_url(cbs_url)
     if cluster.ipv6:
-        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+        connection_url = 'couchbase://{}?ipv6=allow'.format(cbs_ip)
     else:
-        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
-
+        connection_url = 'couchbase://{}'.format(cbs_ip)
+    sdk_client = get_cluster(connection_url, bucket_name)
     # Create user / session
     auto_user_info = UserInfo(name='autotest', password='pass', channels=['mobileOptIn'], roles=[])
     sg_client.create_user(
