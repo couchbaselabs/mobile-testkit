@@ -39,11 +39,11 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
         4. Start a thread to keep updating docs on CBL
         5. option to test w/wo stopping replication before SGW upgrade
         6. Upgrade SGW one by one on cluster config list
-        7. Restart SGWs with sg-replicate1 id and sg-replicate2 id 
+        7. Restart SGWs with sg-replicate1 id and sg-replicate2 id
                 by having same ids in order to continue upgrade of replications from sg-replicate-1 to sg-replicate2 if sgw version below 2.8.0
                 otherwiser have only sg-replicate2 for 2.8.0 and above
         8. Once upgrade is completed, create new docs on sgw cluster1
-        9. Create new replication with sg-replicate2 
+        9. Create new replication with sg-replicate2
         10. Gather CBL docs new revs for verification
         11. Compare doc body and counts of one of the keys  of all docs on both SGW cluster1 SGW cluster2 are same
     """
