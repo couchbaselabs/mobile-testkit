@@ -253,7 +253,7 @@ def test_sg_replicate_replication_with_deltasync(params_from_base_test_setup, se
     continuous = True
     delta_sync = True
     direction = "pushAndPull"
-    name1 = "@utotest!"
+    name1 = "autotest!"
 
     db, num_of_docs, sg_db1, sg_db2, _, name2, _, password, channels1, _, replicator, _, replicator_authenticator2, sg1_blip_url, sg2_blip_url, sg1, sg2, repl1, _, cbl_db1, cbl_db2, _ = setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_teardown_test,
                                                                                                                                                                                                                       cbl_replication_type="push", sgw_cluster1_sg_config_name=sgw_cluster1_conf_name,
@@ -2119,9 +2119,9 @@ def test_sg_replicate_custom_conflict_resolve(params_from_base_test_setup, setup
 @pytest.mark.sgreplicate
 @pytest.mark.parametrize("continuous, direction, attachments, doc_delete_source, delete_sgw_cluster", [
     (False, "pushAndPull", False, "cbl", "sgw1"),
-    (False, "pushAndPull", False, "sdk", "sgw1"),
-    (False, "pushAndPull", False, "cbl", "sgw2"),
-    (False, "pushAndPull", False, "sdk", "sgw2")
+    # (False, "pushAndPull", False, "sdk", "sgw1"),
+    # (False, "pushAndPull", False, "cbl", "sgw2"),
+    # (False, "pushAndPull", False, "sdk", "sgw2")
 ])
 def test_sg_replicate_doc_resurrection(params_from_base_test_setup, setup_customized_teardown_test, continuous, direction, attachments, doc_delete_source, delete_sgw_cluster):
     '''
