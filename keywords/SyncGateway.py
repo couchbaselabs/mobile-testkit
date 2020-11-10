@@ -574,7 +574,7 @@ class SyncGateway(object):
                 url=sg_ip
             )
 
-            time.sleep(10) # After upgrading each sync gateway, it need few seconds to get product info
+            time.sleep(10)  # After upgrading each sync gateway, it need few seconds to get product info
             log_info("Checking for sync gateway product info after upgrade")
             verify_sync_gateway_product_info(sg_ip)
             log_info("Checking for sync gateway version after upgrade: {}".format(sync_gateway_upgraded_version))
@@ -1018,3 +1018,17 @@ def update_replication_in_sgw_config(sg_conf_name, sg_mode, repl_remote, repl_re
         custom_conflict_key_value = "\"{}\":`{}`".format(custom_conflict_key, custom_conflict_js_function)
         temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ custom_conflict_js_function }}", "{}".format(custom_conflict_key_value))
     return temp_sg_config
+
+
+def wait_until_docs_imported_from_server(sg_admin_url, sg_client, sg_db, expected_docs, prev_import_count, timeout=5):
+    sg_expvars = sg_client.get_expvars(sg_admin_url)
+    sg_import_count = sg_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"]
+    count = 0
+    while True:
+        sg_expvars = sg_client.get_expvars(sg_admin_url)
+        sg_import_count = sg_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"]
+        import_count = sg_import_count - prev_import_count
+        if count > timeout or import_count >= expected_docs:
+            break
+        time.sleep(1)
+        count += 1
