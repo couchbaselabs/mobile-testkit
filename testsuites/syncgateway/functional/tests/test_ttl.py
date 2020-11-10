@@ -1,7 +1,6 @@
 import time
 
 import pytest
-from couchbase.bucket import Bucket
 from couchbase.exceptions import DocumentNotFoundException
 from requests.exceptions import HTTPError
 
