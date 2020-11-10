@@ -496,7 +496,7 @@ class CouchbaseServer:
         log_info("Found temp rev docs: {}".format(cached_rev_doc_ids))
         for doc_id in cached_rev_doc_ids:
             log_debug("Removing: {}".format(doc_id))
-            cluster.remove(doc_id)
+            bucket_obj.remove(doc_id)
 
     def get_server_docs_with_prefix(self, bucket, prefix, ipv6=False):
         """

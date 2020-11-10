@@ -3,7 +3,6 @@ import random
 import time
 
 from concurrent.futures import ProcessPoolExecutor
-from couchbase.bucket import Bucket
 from keywords.utils import log_info, host_for_url
 from keywords.SyncGateway import (SyncGateway)
 from keywords.ClusterKeywords import ClusterKeywords
@@ -17,7 +16,7 @@ from CBLClient.Authenticator import Authenticator
 from CBLClient.Document import Document
 from CBLClient.Replication import Replication
 from keywords.SyncGateway import sync_gateway_config_path_for_mode, setup_sgreplicate1_on_sgconfig, setup_replications_on_sgconfig
-from utilities.cluster_config_utils import load_cluster_config_json
+from utilities.cluster_config_utils import load_cluster_config_json, get_cluster
 
 
 def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
@@ -378,7 +377,7 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
         if upgraded_xattrs_enabled:
             # Verify through SDK that there is no _sync property in the doc body
             bucket_name = 'data-bucket-1'
-            sdk_client = Bucket('couchbase://{}/{}'.format(primary_server.host, bucket_name), password='password', timeout=SDK_TIMEOUT)
+            sdk_client = get_cluster('couchbase://{}/'.format(primary_server.host), bucket_name)
             log_info("Fetching docs from SDK")
             docs_from_sdk = sdk_client.get_multi(doc_ids)
 
