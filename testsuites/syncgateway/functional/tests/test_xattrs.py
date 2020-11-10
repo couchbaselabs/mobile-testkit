@@ -1496,6 +1496,8 @@ def test_sg_sdk_interop_shared_docs(params_from_base_test_setup,
         assert int(doc['_rev'].split('-')[0]) > 1
         assert len(doc['_revisions']['ids']) > 1
 
+    print('All doc ids', all_doc_ids)
+
     # Try concurrent deletes from either side
     with ThreadPoolExecutor(max_workers=5) as tpe:
 
@@ -1998,8 +2000,8 @@ def delete_sdk_docs(client, docs_to_delete):
         log_info('Attempting to delete from SDK: {}'.format(random_doc_id))
         try:
             doc = client.remove(random_doc_id)
-            print(doc.key)
-            docs_to_remove.remove(doc.key)
+            print(doc, "docdata")
+            docs_to_remove.remove(random_doc_id)
             deleted_count += 1
         except DocumentNotFoundException:
             # Doc may have been deleted by sync gateway
