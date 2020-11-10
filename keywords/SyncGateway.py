@@ -574,7 +574,7 @@ class SyncGateway(object):
                 url=sg_ip
             )
 
-            time.sleep(10) # After upgrading each sync gateway, it need few seconds to get product info
+            time.sleep(10)  # After upgrading each sync gateway, it need few seconds to get product info
             log_info("Checking for sync gateway product info after upgrade")
             verify_sync_gateway_product_info(sg_ip)
             log_info("Checking for sync gateway version after upgrade: {}".format(sync_gateway_upgraded_version))

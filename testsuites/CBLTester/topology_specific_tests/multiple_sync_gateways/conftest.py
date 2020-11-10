@@ -407,6 +407,7 @@ def params_from_base_suite_setup(request):
         "encryption_password": encryption_password,
         "cbs_ce": cbs_ce,
         "sg_ce": sg_ce,
+        "ssl_enabled": cbs_ssl
     }
     if create_db_per_suite:
         # Delete CBL database
@@ -460,6 +461,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     enable_encryption = params_from_base_suite_setup["enable_encryption"]
     cbs_ce = params_from_base_suite_setup["cbs_ce"]
     sg_ce = params_from_base_suite_setup["sg_ce"]
+    cbs_ssl = params_from_base_suite_setup["ssl_enabled"]
 
     use_local_testserver = request.config.getoption("--use-local-testserver")
 
@@ -544,7 +546,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "delta_sync_enabled": delta_sync_enabled,
         "enable_file_logging": enable_file_logging,
         "cbs_ce": cbs_ce,
-        "sg_ce": sg_ce
+        "sg_ce": sg_ce,
+        "ssl_enabled": cbs_ssl
     }
 
     log_info("Tearing down test")
