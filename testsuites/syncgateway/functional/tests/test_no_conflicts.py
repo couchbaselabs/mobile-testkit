@@ -7,11 +7,9 @@ from keywords.MobileRestClient import MobileRestClient
 from keywords import document, attachment
 from requests.exceptions import HTTPError
 from couchbase.exceptions import CouchbaseException
-from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
+from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf, get_cluster
 from keywords.utils import log_info, host_for_url
 from concurrent.futures import ThreadPoolExecutor
-from couchbase.bucket import Bucket
-from keywords.constants import SDK_TIMEOUT
 
 
 @pytest.mark.syncgateway
@@ -508,9 +506,11 @@ def test_concurrent_updates_no_conflicts(params_from_base_test_setup, sg_conf_na
     cbs_url = topology['couchbase_servers'][0]
     cbs_ip = host_for_url(cbs_url)
     if c.ipv6:
-        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+        connection_url = "couchbase://{}?ipv6=allow".format(cbs_ip)
     else:
-        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+        connection_url = "couchbase://{}".format(cbs_ip)
+    sdk_client = get_cluster(connection_url, bucket_name)
+
     sg_doc_ids = [doc['id'] for doc in sg_docs]
     sdk_docs_resp = sdk_client.get_multi(sg_doc_ids)
 

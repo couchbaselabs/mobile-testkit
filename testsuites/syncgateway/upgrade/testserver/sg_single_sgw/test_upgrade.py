@@ -3,17 +3,13 @@ import random
 import time
 
 from concurrent.futures import ProcessPoolExecutor
-from couchbase.bucket import Bucket
-
 from keywords.couchbaseserver import verify_server_version
 from keywords.utils import log_info, host_for_url
 from keywords.SyncGateway import (SyncGateway)
-from keywords.SyncGateway import wait_until_docs_imported_from_server
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.MobileRestClient import MobileRestClient
-from keywords.constants import SDK_TIMEOUT
 from keywords import attachment, document
-from utilities.cluster_config_utils import persist_cluster_config_environment_prop
+from utilities.cluster_config_utils import persist_cluster_config_environment_prop, get_cluster
 
 from libraries.testkit.cluster import Cluster
 from CBLClient.Authenticator import Authenticator
@@ -180,7 +176,7 @@ def test_upgrade(params_from_base_test_setup):
     num_sdk_docs = 10
     log_info('Adding {} docs via SDK with and without attachments'.format(num_sdk_docs))
     bucket_name = 'data-bucket'
-    sdk_client = Bucket('couchbase://{}/{}'.format(primary_server.host, bucket_name), password='password', timeout=SDK_TIMEOUT)
+    sdk_client = get_cluster('couchbase://{}'.format(primary_server.host), bucket_name)
     sdk_doc_bodies = document.create_docs('sdk', number=num_sdk_docs, channels=sg_user_channels)
     sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
     sdk_client.upsert_multi(sdk_docs)

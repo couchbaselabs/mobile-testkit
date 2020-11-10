@@ -1,8 +1,6 @@
 import time
 
 import pytest
-from couchbase.bucket import Bucket
-
 from keywords import document
 from keywords.MobileRestClient import MobileRestClient
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
@@ -14,7 +12,7 @@ from libraries.testkit.parallelize import in_parallel
 from libraries.testkit.web_server import WebServer
 from keywords.exceptions import TimeoutError
 from keywords.constants import CLIENT_REQUEST_TIMEOUT
-from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
+from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf, get_cluster
 
 
 @pytest.mark.syncgateway
@@ -167,14 +165,14 @@ def test_webhooks_crud(params_from_base_test_setup, sg_conf_name, filtered):
     sg_client = MobileRestClient()
     cbs_ip = host_for_url(cbs_url)
     if ssl_enabled and cluster.ipv6:
-        connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(cbs_ip, bucket_name)
+        connection_url = "couchbases://{}?ssl=no_verify&ipv6=allow".format(cbs_ip)
     elif ssl_enabled and not cluster.ipv6:
-        connection_url = "couchbases://{}/{}?ssl=no_verify".format(cbs_ip, bucket_name)
+        connection_url = "couchbases://{}?ssl=no_verify".format(cbs_ip)
     elif not ssl_enabled and cluster.ipv6:
-        connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, bucket_name)
+        connection_url = "couchbase://{}?ipv6=allow".format(cbs_ip)
     else:
-        connection_url = 'couchbase://{}/{}'.format(cbs_ip, bucket_name)
-    sdk_client = Bucket(connection_url, password='password')
+        connection_url = 'couchbase://{}'.format(cbs_ip)
+    sdk_client = get_cluster(connection_url, bucket_name)
     sg_info = UserInfo('sg_user', 'pass', channels=['shared'], roles=[])
     sdk_info = UserInfo('sdk_user', 'pass', channels=['shared'], roles=[])
     sg_client.create_user(

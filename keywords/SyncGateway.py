@@ -20,10 +20,9 @@ from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, ge
 from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
 from libraries.testkit.cluster import Cluster
 from keywords.utils import host_for_url
-from couchbase.bucket import Bucket
 from keywords import document
 from keywords.utils import random_string
-from utilities.cluster_config_utils import copy_sgconf_to_temp, replace_string_on_sgw_config
+from utilities.cluster_config_utils import copy_sgconf_to_temp, replace_string_on_sgw_config, get_cluster
 
 
 def validate_sync_gateway_mode(mode):
@@ -933,10 +932,10 @@ def create_docs_via_sdk(cbs_url, cbs_cluster, bucket_name, num_docs, doc_name='d
     cbs_host = host_for_url(cbs_url)
     log_info("Adding docs via SDK...")
     if cbs_cluster.ipv6:
-        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(re.sub(r'[\[\]]', '', cbs_host), bucket_name), password='password')
+        connection_url = "couchbase://{}?ipv6=allow".format(re.sub(r'[\[\]]', '', cbs_host))
     else:
-        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_host, bucket_name), password='password')
-    sdk_client.timeout = 600
+        connection_url = 'couchbase://{}'.format(cbs_host)
+    sdk_client = get_cluster(connection_url, bucket_name)
 
     sdk_doc_bodies = document.create_docs(doc_name, num_docs)
     sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}

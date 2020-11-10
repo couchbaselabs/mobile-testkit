@@ -13,10 +13,9 @@ from keywords.SyncGateway import (verify_sg_accel_version,
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.MobileRestClient import MobileRestClient
 from keywords import attachment
-from couchbase.bucket import Bucket
-from keywords.constants import SDK_TIMEOUT
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from requests.exceptions import HTTPError
+from utilities.cluster_config_utils import get_cluster
 
 
 def test_upgrade(params_from_base_test_setup):
@@ -241,7 +240,7 @@ def test_upgrade(params_from_base_test_setup):
         if xattrs_enabled:
             # Verify through SDK that there is no _sync property in the doc body
             bucket_name = 'data-bucket'
-            sdk_client = Bucket('couchbase://{}/{}'.format(primary_server.host, bucket_name), password='password', timeout=SDK_TIMEOUT)
+            sdk_client = get_cluster('couchbase://{}'.format(primary_server.host), bucket_name)
             log_info("Fetching docs from SDK")
             docs_from_sdk = sdk_client.get_multi(doc_ids)
 
