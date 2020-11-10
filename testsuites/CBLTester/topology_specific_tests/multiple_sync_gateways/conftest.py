@@ -20,7 +20,6 @@ from CBLClient.Utils import Utils
 from keywords.TestServerFactory import TestServerFactory
 from keywords.SyncGateway import SyncGateway
 from keywords.constants import RESULTS_DIR
-from keywords.constants import SDK_TIMEOUT
 
 
 def pytest_addoption(parser):
