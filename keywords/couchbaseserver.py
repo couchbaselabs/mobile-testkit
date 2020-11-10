@@ -484,7 +484,8 @@ class CouchbaseServer:
         timeout_options = ClusterTimeoutOptions(kv_timeout=timedelta(seconds=5), query_timeout=timedelta(seconds=10))
         options = ClusterOptions(PasswordAuthenticator("Administrator", "password"), timeout_options=timeout_options)
         cluster = Cluster(connection_url, options)
-        cluster.bucket(bucket)
+        bucket_obj = cluster.bucket(bucket)
+        log_info("default collection created {}".format(bucket_obj))
         index_manager = QueryIndexManager(cluster)
         index_manager.create_primary_index(bucket, ignore_exists=True)
         cached_rev_doc_ids = []
@@ -513,9 +514,10 @@ class CouchbaseServer:
         timeout_options = ClusterTimeoutOptions(kv_timeout=timedelta(seconds=5), query_timeout=timedelta(seconds=10))
         options = ClusterOptions(PasswordAuthenticator("Administrator", "password"), timeout_options=timeout_options)
         cluster = Cluster(connection_url, options)
-        bucket = cluster.bucket(bucket).default_collection()
-        # index_manager = QueryIndexManager(cluster)
-        # index_manager.create_primary_index(bucket, ignore_exists=True)
+        bucket_obj = cluster.bucket(bucket)
+        log_info("default collection created {}".format(bucket_obj))
+        index_manager = QueryIndexManager(cluster)
+        index_manager.create_primary_index(bucket, ignore_exists=True)
         found_ids = []
         for row in cluster.query("SELECT meta(`{}`) FROM `{}`".format(bucket, bucket)):
             log_info(row)

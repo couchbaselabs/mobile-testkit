@@ -2000,7 +2000,7 @@ def delete_sdk_docs(client, docs_to_delete):
         log_info('Attempting to delete from SDK: {}'.format(random_doc_id))
         try:
             doc = client.remove(random_doc_id)
-            print(doc, "docdata")
+            log_info(doc, "docdata")
             docs_to_remove.remove(random_doc_id)
             deleted_count += 1
         except DocumentNotFoundException:
