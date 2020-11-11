@@ -84,10 +84,10 @@ def test_upgrade_cbl(params_from_base_suite_setup):
     sdk_client = get_cluster('couchbase://{}'.format(cbs_ip), cbs_bucket)
     log_info("Creating primary index for {}".format(cbs_bucket))
     n1ql_query = "create primary index index1 on `{}`".format(cbs_bucket)
-    sdk_client.n1ql_query(n1ql_query).execute()
+    sdk_client.query(n1ql_query).execute()
     new_cbl_doc_ids = db.getDocIds(cbl_db, limit=40000)
     cbs_doc_ids = []
-    for row in sdk_client.n1ql_query(get_doc_id_from_cbs_query):
+    for row in sdk_client.query(get_doc_id_from_cbs_query):
         cbs_doc_ids.append(row["id"])
     log_info("cbl_docs {}, cbs_docs {}".format(len(cbs_doc_ids), len(new_cbl_doc_ids)))
     assert sorted(cbs_doc_ids) == sorted(new_cbl_doc_ids), "Total no. of docs are different in CBS and CBL app"
