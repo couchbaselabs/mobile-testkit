@@ -275,10 +275,9 @@ def test_upgrade(params_from_base_test_setup):
             # Verify through SDK that there is no _sync property in the doc body
             log_info("Fetching docs from SDK")
             docs_from_sdk = sdk_client.get_multi(doc_ids)
-
             log_info("Verifying that there is no _sync property in the docs")
             for i in docs_from_sdk:
-                if "_sync" in docs_from_sdk[i].value:
+                if "_sync" in docs_from_sdk[i].content:
                     raise Exception("_sync section found in docs after upgrade")
 
         # 10. Verify docs from cbl_db2 whether docs created on SGW or CBS after the upgrade got replicated to cbl

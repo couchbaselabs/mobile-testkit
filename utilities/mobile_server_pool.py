@@ -22,7 +22,6 @@ options = ClusterOptions(PasswordAuthenticator(USERNAME, PASSWORD), timeout_opti
 cluster = Cluster('couchbase://{}'.format(SERVER_IP), options)
 sdk_client = cluster.bucket(BUCKET_NAME)
 
-
 def get_nodes_available_from_mobile_pool(nodes_os_type, node_os_version):
     """
     Get number of nodes available
@@ -158,12 +157,12 @@ def cleanup_for_blocked_nodes(job_name=None):
         query_str = "select meta().id from `{}` where state=\"booked\"".format(BUCKET_NAME)
     query = cluster.query(query_str)
     release_node_list = []
-    for row in sdk_client.n1ql_query(query):
+    for row in query:
         doc_id = row["id"]
         result = sdk_client.get(doc_id, quiet=True)
         if not result:
             log_info("Can't access the data for node {}".format(doc_id))
-        doc = result.content
+        doc = result.value
         if doc["state"] == "available":
             continue
         job_id = doc["username"]
