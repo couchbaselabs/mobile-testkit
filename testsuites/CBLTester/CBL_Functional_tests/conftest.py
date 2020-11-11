@@ -2,9 +2,7 @@ import os
 import time
 import pytest
 import datetime
-from datetime import timedelta
-from utilities.cluster_config_utils import persist_cluster_config_environment_prop
-from keywords.constants import SDK_TIMEOUT
+from utilities.cluster_config_utils import persist_cluster_config_environment_prop, get_cluster
 from keywords.utils import log_info
 from keywords.utils import host_for_url, clear_resources_pngs
 from keywords.ClusterKeywords import ClusterKeywords
@@ -30,8 +28,6 @@ from CBLClient.SessionAuthenticator import SessionAuthenticator
 from CBLClient.Utils import Utils
 from CBLClient.ReplicatorConfiguration import ReplicatorConfiguration
 from utilities.cluster_config_utils import get_load_balancer_ip
-from couchbase.cluster import Cluster
-from couchbase.cluster import PasswordAuthenticator, ClusterTimeoutOptions, ClusterOptions
 
 
 def pytest_addoption(parser):
@@ -443,18 +439,10 @@ def params_from_base_suite_setup(request):
                 ac_obj.restart_sync_gateways(cluster_config=cluster_config, url=ac_ip)
                 time.sleep(5)
 
-        # Create primary index
-        password = "password"
-        log_info("Connecting to {}/{} with password {}".format(cbs_ip, enable_sample_bucket, password))
-        username = "Administrator"
-        timeout_options = ClusterTimeoutOptions(kv_timeout=timedelta(seconds=5), query_timeout=timedelta(seconds=SDK_TIMEOUT))
-        options = ClusterOptions(PasswordAuthenticator(username, password), timeout_options=timeout_options)
-        cluster = Cluster('couchbase://{}'.format(cbs_ip), options)
-        sdk_client = cluster.bucket(enable_sample_bucket)
-        log_info("Creating primary index for {}".format(enable_sample_bucket))
-        print(sdk_client)
+        sdk_client = get_cluster('couchbase://{}'.format(cbs_ip), enable_sample_bucket)
         n1ql_query = 'create primary index on {}'.format(enable_sample_bucket)
-        cluster.query(n1ql_query)
+        log_info(n1ql_query)
+        sdk_client.query(n1ql_query)
 
         # Start continuous replication
         repl_obj = Replication(base_url)

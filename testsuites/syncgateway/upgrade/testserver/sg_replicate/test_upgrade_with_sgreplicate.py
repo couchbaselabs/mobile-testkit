@@ -377,7 +377,7 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
         if upgraded_xattrs_enabled:
             # Verify through SDK that there is no _sync property in the doc body
             bucket_name = 'data-bucket-1'
-            sdk_client = get_cluster('couchbase://{}/'.format(primary_server.host), bucket_name)
+            sdk_client = get_cluster('couchbase://{}'.format(primary_server.host), bucket_name)
             log_info("Fetching docs from SDK")
             docs_from_sdk = sdk_client.get_multi(doc_ids)
 

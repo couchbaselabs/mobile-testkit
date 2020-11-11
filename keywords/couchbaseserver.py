@@ -15,7 +15,7 @@ from libraries.provision.ansible_runner import AnsibleRunner
 from keywords.utils import log_r, log_info, log_debug, log_error, hostname_for_url
 from keywords.utils import version_and_build, random_string
 from keywords import types
-from utilities.cluster_config_utils import is_x509_auth, get_cbs_version, is_magma_enabled, is_cbs_ce_enabled
+from utilities.cluster_config_utils import is_x509_auth, get_cbs_version, is_magma_enabled, is_cbs_ce_enabled, get_cluster
 from couchbase.cluster import Cluster
 
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
@@ -453,17 +453,13 @@ class CouchbaseServer:
                 connection_url = "couchbase://{}?ipv6=allow".format(self.host)
             else:
                 connection_url = "couchbase://{}".format(self.host)
-            timeout_options = ClusterTimeoutOptions(kv_timeout=timedelta(seconds=5),
-                                                    query_timeout=timedelta(seconds=10))
-            options = ClusterOptions(PasswordAuthenticator("Administrator", "password"),
-                                     timeout_options=timeout_options)
-            cluster = Cluster(connection_url, options)
-            cluster.bucket(name)
+            cluster = get_cluster('couchbase://{}'.format(connection_url), name)
+            log_info(cluster)
         except DocumentNotFoundException:
             log_info("Key not found error: Bucket is ready!")
         except CouchbaseException as e:
-            log_info("Error from server: {}, Retrying ...".format(e))
-            time.sleep(1)
+            log_info("Error from server: {} ...".format(e))
+
         self.wait_for_ready_state()
         return name
 

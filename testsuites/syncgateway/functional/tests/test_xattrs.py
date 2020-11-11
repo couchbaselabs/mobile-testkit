@@ -1496,8 +1496,6 @@ def test_sg_sdk_interop_shared_docs(params_from_base_test_setup,
         assert int(doc['_rev'].split('-')[0]) > 1
         assert len(doc['_revisions']['ids']) > 1
 
-    print('All doc ids', all_doc_ids)
-
     # Try concurrent deletes from either side
     with ThreadPoolExecutor(max_workers=5) as tpe:
 

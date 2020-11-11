@@ -3,7 +3,7 @@ import time
 import datetime
 
 from keywords.utils import log_info
-from utilities.cluster_config_utils import persist_cluster_config_environment_prop
+from utilities.cluster_config_utils import persist_cluster_config_environment_prop, get_cluster
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.couchbaseserver import CouchbaseServer
 from keywords.constants import CLUSTER_CONFIGS_DIR
@@ -14,7 +14,6 @@ from keywords.tklogging import Logging
 from CBLClient.Database import Database
 from CBLClient.FileLogging import FileLogging
 from keywords.utils import host_for_url, clear_resources_pngs
-from couchbase.bucket import Bucket
 
 from CBLClient.Utils import Utils
 from keywords.TestServerFactory import TestServerFactory
@@ -374,7 +373,7 @@ def params_from_base_suite_setup(request):
         # Create primary index
         password = "password"
         log_info("Connecting to {}/{} with password {}".format(cbs_ip, enable_sample_bucket, password))
-        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, enable_sample_bucket), password=password)
+        sdk_client = get_cluster('couchbase://{}'.format(cbs_ip), enable_sample_bucket)
         log_info("Creating primary index for {}".format(enable_sample_bucket))
         n1ql_query = 'create primary index on {}'.format(enable_sample_bucket)
         sdk_client.query(n1ql_query)
