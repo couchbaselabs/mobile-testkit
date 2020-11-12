@@ -453,7 +453,7 @@ class CouchbaseServer:
                 connection_url = "couchbase://{}?ipv6=allow".format(self.host)
             else:
                 connection_url = "couchbase://{}".format(self.host)
-            cluster = get_cluster('couchbase://{}'.format(connection_url), name)
+            cluster = get_cluster(connection_url, name)
             log_info(cluster)
         except DocumentNotFoundException:
             log_info("Key not found error: Bucket is ready!")
