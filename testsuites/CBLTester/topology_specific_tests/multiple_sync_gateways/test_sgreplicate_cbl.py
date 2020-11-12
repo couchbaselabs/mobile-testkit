@@ -253,11 +253,10 @@ def test_sg_replicate_replication_with_deltasync(params_from_base_test_setup, se
     continuous = True
     delta_sync = True
     direction = "pushAndPull"
-    name1 = "autotest!"
 
     db, num_of_docs, sg_db1, sg_db2, _, name2, _, password, channels1, _, replicator, _, replicator_authenticator2, sg1_blip_url, sg2_blip_url, sg1, sg2, repl1, _, cbl_db1, cbl_db2, _ = setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_teardown_test,
                                                                                                                                                                                                                       cbl_replication_type="push", sgw_cluster1_sg_config_name=sgw_cluster1_conf_name,
-                                                                                                                                                                                                                      sgw_cluster2_sg_config_name=sgw_cluster2_conf_name, name1=name1)
+                                                                                                                                                                                                                      sgw_cluster2_sg_config_name=sgw_cluster2_conf_name)
 
     # 2. Add docs in cbl1
     db.create_bulk_docs(num_of_docs, replication1, db=cbl_db1, channels=channels1)
@@ -316,10 +315,9 @@ def test_sg_replicate_invalid_auth(params_from_base_test_setup, setup_customized
     wrong_password = "invalid_password"
     wrong_db = "wrong_db"
 
-    db, num_of_docs, sg_db1, sg_db2, name1, name2, _, password, channels1, _, replicator, replicator_authenticator1, _, sg1_blip_url, _, sg1, sg2, _, _, cbl_db1, _ = setup_syncGateways_with_cbl(params_from_base_test_setup,
-                                                                                                                                                                                                  setup_customized_teardown_test, cbl_replication_type="push",
-                                                                                                                                                                                                  sgw_cluster1_sg_config_name=sgw_cluster1_conf_name,
-                                                                                                                                                                                                  sgw_cluster2_sg_config_name=sgw_cluster2_conf_name)
+    db, num_of_docs, sg_db1, sg_db2, _, name2, _, password, channels1, _, _, _, _, _, _, sg1, sg2, _, _, cbl_db1, _, _ = setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_teardown_test, cbl_replication_type="push",
+                                                                                                                                                     sgw_cluster1_sg_config_name=sgw_cluster1_conf_name,
+                                                                                                                                                     sgw_cluster2_sg_config_name=sgw_cluster2_conf_name)
     # 2. Add docs in cbl1
     db.create_bulk_docs(num_of_docs, "Replication1", db=cbl_db1, channels=channels1)
 
@@ -459,7 +457,8 @@ def test_sg_replicate_upsert_replication(params_from_base_test_setup, setup_cust
         remote_user=name2,
         remote_password=password,
         direction="pushAndPull",
-        continuous=True
+        continuous=True,
+        user_credentials_url=False
     )
     sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id, read_flag=True, write_flag=True)
     replicator.wait_until_replicator_idle(repl1)
@@ -483,7 +482,8 @@ def test_sg_replicate_upsert_replication(params_from_base_test_setup, setup_cust
             remote_password=password,
             direction="push",
             continuous=True,
-            replication_id=repl_id
+            replication_id=repl_id,
+            user_credentials_url=False
         )
         assert False, "Did not get Http error while upserting the replication without stopping"
     except HTTPError:
@@ -499,7 +499,8 @@ def test_sg_replicate_upsert_replication(params_from_base_test_setup, setup_cust
         remote_password=password,
         direction="push",
         continuous=True,
-        replication_id=repl_id
+        replication_id=repl_id,
+        user_credentials_url=False
     )
 
     # 7. Create docs on CBL DB1 and CBL DB2

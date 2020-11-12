@@ -523,7 +523,7 @@ class SyncGateway:
         r.raise_for_status()
         return r.json()
 
-    def start_replication2(self, local_db, remote_url, remote_db, remote_user, remote_password, direction="pushAndPull", purge_on_removal=None, continuous=False, channels=None, conflict_resolution_type="default", custom_conflict_resolver=None, adhoc=False, delta_sync=False, replication_id=None, max_backoff_time=None):
+    def start_replication2(self, local_db, remote_url, remote_db, remote_user, remote_password, direction="pushAndPull", purge_on_removal=None, continuous=False, channels=None, conflict_resolution_type="default", custom_conflict_resolver=None, adhoc=False, delta_sync=False, replication_id=None, max_backoff_time=None, user_credentials_url=True):
         '''
            Required values : remote, direction, conflict_resolution_type
            default values : continuous=false
@@ -534,8 +534,8 @@ class SyncGateway:
             replication_id = "sgw_repl_{}".format(random_string(length=10, digit=True))
         if "4984" in remote_url:
             if remote_user and remote_password:
-                print("adding some value")
-                remote_url = remote_url.replace("://", "://{}:{}@".format(remote_user, remote_password))
+                if user_credentials_url:
+                    remote_url = remote_url.replace("://", "://{}:{}@".format(remote_user, remote_password))
                 remote_url = "{}/{}".format(remote_url, remote_db)
             else:
                 raise Exception("No remote node's username and password provided ")
@@ -561,6 +561,10 @@ class SyncGateway:
                 raise Exception("conflict_resolution_type is selected as custom, but did not provide conflict resolver")
             else:
                 data["custom_conflict_resolver"] = custom_conflict_resolver
+        if user_credentials_url is False:
+            data["username"] = remote_user
+            data["password"] = remote_password
+        print("json dumps for replication is", json.dumps(data))
         r = requests.put("{}/{}/_replication/{}".format(sg_url, local_db, replication_id), headers=self._headers, data=json.dumps(data))
         log_request(r)
         log_response(r)
