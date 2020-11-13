@@ -137,6 +137,11 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="If set, will enable SSL communication between server and Sync Gateway")
 
+    parser.addoption("--cluster-config",
+                     action="store",
+                     help="Provide a custom cluster config",
+                     default="multiple_sync_gateways_")
+
 # This will get called once before the first test that
 # runs with this as input parameters in this file
 # This setup will be called once for all tests in the
@@ -172,6 +177,7 @@ def params_from_base_suite_setup(request):
     cbs_ce = request.config.getoption("--cbs-ce")
     sg_ce = request.config.getoption("--sg-ce")
     cbs_ssl = request.config.getoption("--server-ssl")
+    cluster_config = request.config.getoption("--cluster-config")
 
     enable_encryption = request.config.getoption("--enable-encryption")
     encryption_password = request.config.getoption("--encryption-password")
@@ -195,7 +201,7 @@ def params_from_base_suite_setup(request):
             testserver.install()
 
     base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
-    cluster_config = "{}/four_sync_gateways_{}".format(CLUSTER_CONFIGS_DIR, mode)
+    cluster_config = "{}/{}{}".format(CLUSTER_CONFIGS_DIR, cluster_config, mode)
     no_conflicts_enabled = request.config.getoption("--no-conflicts")
     cluster_utils = ClusterKeywords(cluster_config)
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
