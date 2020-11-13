@@ -476,10 +476,10 @@ class CouchbaseServer:
             connection_url = "couchbase://{}?ipv6=allow".format(self.host)
         else:
             connection_url = "couchbase://{}".format(self.host)
-        timeout_options = ClusterTimeoutOptions(kv_timeout=timedelta(seconds=5), query_timeout=timedelta(seconds=10))
+        timeout_options = ClusterTimeoutOptions(kv_timeout=timedelta(seconds=30), query_timeout=timedelta(seconds=600))
         options = ClusterOptions(PasswordAuthenticator("Administrator", "password"), timeout_options=timeout_options)
         cluster = Cluster(connection_url, options)
-        bucket_obj = cluster.bucket(bucket)
+        bucket_obj = cluster.bucket(bucket).default_collection()
         log_info("default collection created {}".format(bucket_obj))
         index_manager = QueryIndexManager(cluster)
         index_manager.create_primary_index(bucket, ignore_exists=True)
@@ -506,7 +506,7 @@ class CouchbaseServer:
             connection_url = "couchbase://{}?ipv6=allow".format(self.host)
         else:
             connection_url = "couchbase://{}".format(self.host)
-        timeout_options = ClusterTimeoutOptions(kv_timeout=timedelta(seconds=5), query_timeout=timedelta(seconds=10))
+        timeout_options = ClusterTimeoutOptions(kv_timeout=timedelta(seconds=30), query_timeout=timedelta(seconds=600))
         options = ClusterOptions(PasswordAuthenticator("Administrator", "password"), timeout_options=timeout_options)
         cluster = Cluster(connection_url, options)
         bucket_obj = cluster.bucket(bucket)
