@@ -8,7 +8,6 @@ from couchbase.bucket import Bucket
 from keywords.couchbaseserver import verify_server_version
 from keywords.utils import log_info, host_for_url
 from keywords.SyncGateway import (SyncGateway)
-from keywords.SyncGateway import wait_until_docs_imported_from_server
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.MobileRestClient import MobileRestClient
 from keywords.constants import SDK_TIMEOUT
