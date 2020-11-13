@@ -2120,9 +2120,9 @@ def test_sg_replicate_custom_conflict_resolve(params_from_base_test_setup, setup
 @pytest.mark.sgreplicate
 @pytest.mark.parametrize("continuous, direction, attachments, doc_delete_source, delete_sgw_cluster", [
     (False, "pushAndPull", False, "cbl", "sgw1"),
-    # (False, "pushAndPull", False, "sdk", "sgw1"),
-    # (False, "pushAndPull", False, "cbl", "sgw2"),
-    # (False, "pushAndPull", False, "sdk", "sgw2")
+    (False, "pushAndPull", False, "sdk", "sgw1"),
+    (False, "pushAndPull", False, "cbl", "sgw2"),
+    (False, "pushAndPull", False, "sdk", "sgw2")
 ])
 def test_sg_replicate_doc_resurrection(params_from_base_test_setup, setup_customized_teardown_test, continuous, direction, attachments, doc_delete_source, delete_sgw_cluster):
     '''
@@ -2157,7 +2157,6 @@ def test_sg_replicate_doc_resurrection(params_from_base_test_setup, setup_custom
                                                                                                                                                                                                                                                                  sgw_cluster2_sg_config_name=sgw_cluster2_conf_name)
 
     bucket = c_cluster.servers[0].get_bucket_names()
-    print("bucket of cluster is: sri: ", bucket[0])
     # 2. Add docs in cbl1
     if attachments:
         db.create_bulk_docs(num_of_docs, "sgw1_docs", db=cbl_db1, channels=channels1, attachments_generator=attachment.generate_png_100_100)
