@@ -454,7 +454,7 @@ class CouchbaseServer:
             else:
                 connection_url = "couchbase://{}".format(self.host)
             cluster = get_cluster(connection_url, name)
-            log_info(cluster)
+            log_info(connection_url, cluster)
         except DocumentNotFoundException:
             log_info("Key not found error: Bucket is ready!")
         except CouchbaseException as e:
