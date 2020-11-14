@@ -123,11 +123,18 @@ class CouchbaseServer:
         log_info("Found buckets: {}".format(bucket_names))
         return bucket_names
 
-    def delete_bucket(self, name):
+    def delete_bucket(self, name, ipv6=False):
         """ Delete a Couchbase Server bucket with the given 'name' """
         server_version = get_server_version(self.host, self.cbs_ssl)
         server_major_version = int(server_version.split(".")[0])
-
+        if self.cbs_ssl and ipv6:
+            connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(self.host, name)
+        elif self.cbs_ssl and not ipv6:
+            connection_url = "couchbases://{}/{}?ssl=no_verify".format(self.host, name)
+        elif not self.cbs_ssl and ipv6:
+            connection_url = "couchbase://{}/{}?ipv6=allow".format(self.host, name)
+        else:
+            connection_url = "couchbase://{}/{}".format(self.host, name)
         if server_major_version >= 5:
             self._delete_internal_rbac_bucket_user(name)
 
@@ -141,6 +148,8 @@ class CouchbaseServer:
             count += 1
         log_r(resp)
         resp.raise_for_status()
+        b = Bucket(connection_url, password='password')
+        b.n1ql_query("delete from system:prepareds")
 
     def delete_buckets(self):
         """ Deletes all of the buckets on a Couchbase Server.
