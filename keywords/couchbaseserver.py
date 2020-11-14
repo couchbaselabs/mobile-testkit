@@ -481,8 +481,8 @@ class CouchbaseServer:
         cluster = Cluster(connection_url, options)
         bucket_obj = cluster.bucket(bucket).default_collection()
         log_info("default collection created {}".format(bucket_obj))
-        index_manager = QueryIndexManager(cluster)
-        index_manager.create_primary_index(bucket, ignore_exists=True)
+        # index_manager = QueryIndexManager(cluster)
+        # index_manager.create_primary_index(bucket, ignore_exists=True)
         cached_rev_doc_ids = []
         for row in cluster.query("SELECT meta(`{}`) FROM `{}`".format(bucket, bucket)):
             if row["$1"]["id"].startswith("_sync:rev"):
