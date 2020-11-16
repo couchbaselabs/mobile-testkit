@@ -33,6 +33,11 @@ def pytest_addoption(parser):
                      help="Skip cluster provisioning at setup",
                      default=False)
 
+    parser.addoption("--sequoia",
+                     action="store_true",
+                     help="Set up the environment for Sequoia run",
+                     default=False)
+
     parser.addoption("--server-version",
                      action="store",
                      help="server-version: Couchbase Server version to install (ex. 4.5.0 or 4.5.0-2601)")
@@ -181,6 +186,16 @@ def pytest_addoption(parser):
                      default="20",
                      help="Specify the time for replicator to sleep before it polls again for replication status")
 
+    parser.addoption("--bucket-username",
+                     action="store",
+                     default="autotest",
+                     help="Specify the bucket user name")
+
+    parser.addoption("--bucket-userpwd",
+                     action="store",
+                     default="password",
+                     help="Specify the bucket user name password")
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -236,6 +251,9 @@ def params_from_base_suite_setup(request):
     # Changing up_time in days
     up_time = up_time * 24 * 60
     repl_status_check_sleep_time = int(request.config.getoption("--repl-status-check-sleep-time"))
+
+    bucket_username = request.config.getoption("--bucket-username")
+    bucket_userpwd = request.config.getoption("--bucket-userpwd")
 
     test_name = request.node.name
     testserver_list = []
@@ -445,6 +463,8 @@ def params_from_base_suite_setup(request):
         "num_of_doc_updates": num_of_doc_updates,
         "up_time": up_time,
         "repl_status_check_sleep_time": repl_status_check_sleep_time,
+        "bucket_username": bucket_username,
+        "bucket_userpwd": bucket_userpwd
     }
 
     if create_db_per_suite:

@@ -41,6 +41,8 @@ def test_system(params_from_base_suite_setup):
     up_time = params_from_base_suite_setup["up_time"]
     repl_status_check_sleep_time = params_from_base_suite_setup["repl_status_check_sleep_time"]
     platform_list = params_from_base_suite_setup["platform_list"]
+    bucket_username = params_from_base_suite_setup["bucket_username"]
+    bucket_userpwd = params_from_base_suite_setup["bucket_userpwd"]
     doc_id_for_new_docs = num_of_docs
     query_limit = 1000
     query_offset = 0
@@ -101,11 +103,11 @@ def test_system(params_from_base_suite_setup):
         repl_obj = Replication(base_url)
         replicator_obj_list.append(repl_obj)
         authenticator = Authenticator(base_url)
-        # cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, ttl=900000)
-        # replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
+        cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, ttl=900000)
+        replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
         # session = cookie, session_id
         repl_config = repl_obj.configure(cbl_db, sg_blip_url, continuous=True, channels=channels_sg,
-                                         replication_type="push_pull")
+                                         replicator_authenticator=replicator_authenticator, replication_type="push_pull")
         repl = repl_obj.create(repl_config)
         repl_obj.start(repl)
         repl_obj.wait_until_replicator_idle(repl, max_times=maxsize, sleep_time=repl_status_check_sleep_time)
