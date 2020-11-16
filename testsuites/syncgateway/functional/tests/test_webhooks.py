@@ -368,7 +368,7 @@ def update_docs(sg_client, sg_url, sg_db, sg_doc_ids, sg_auth, sdk_client, sdk_d
         for sg_user_doc_id in sg_doc_ids:
             doc = sdk_client.get(sg_user_doc_id)
 
-            doc_body = doc.value
+            doc_body = doc.content
             doc_body['content'] = updated_doc_content
 
             sdk_client.upsert(sg_user_doc_id, doc_body)

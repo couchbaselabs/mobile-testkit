@@ -443,7 +443,7 @@ class CouchbaseServer:
             self._create_internal_rbac_bucket_user(name, cluster_config=cluster_config)
 
         # Create client an retry until KeyNotFound error is thrown
-        time.sleep(5)
+        time.sleep(65)
         try:
             if self.cbs_ssl and ipv6:
                 connection_url = "couchbases://{}?ssl=no_verify&ipv6=allow".format(self.host)
@@ -481,8 +481,8 @@ class CouchbaseServer:
         cluster = Cluster(connection_url, options)
         bucket_obj = cluster.bucket(bucket).default_collection()
         log_info("default collection created {}".format(bucket_obj))
-        # index_manager = QueryIndexManager(cluster)
-        # index_manager.create_primary_index(bucket, ignore_exists=True)
+        index_manager = QueryIndexManager(cluster)
+        index_manager.create_primary_index(bucket, ignore_exists=True)
         cached_rev_doc_ids = []
         for row in cluster.query("SELECT meta(`{}`) FROM `{}`".format(bucket, bucket)):
             if row["$1"]["id"].startswith("_sync:rev"):
@@ -511,8 +511,8 @@ class CouchbaseServer:
         cluster = Cluster(connection_url, options)
         bucket_obj = cluster.bucket(bucket)
         log_info("default collection created {}".format(bucket_obj))
-        index_manager = QueryIndexManager(cluster)
-        index_manager.create_primary_index(bucket, ignore_exists=True)
+        # index_manager = QueryIndexManager(cluster)
+        # index_manager.create_primary_index(bucket, ignore_exists=True)
         found_ids = []
         for row in cluster.query("SELECT meta(`{}`) FROM `{}`".format(bucket, bucket)):
             log_info(row)
