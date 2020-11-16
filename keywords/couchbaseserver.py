@@ -148,8 +148,8 @@ class CouchbaseServer:
             count += 1
         log_r(resp)
         resp.raise_for_status()
-        b = Bucket(connection_url, password='password')
-        b.n1ql_query("delete from system:prepareds")
+        # b = Bucket(connection_url, password='password')
+        # b.n1ql_query("delete from system:prepareds")
 
     def delete_buckets(self):
         """ Deletes all of the buckets on a Couchbase Server.
