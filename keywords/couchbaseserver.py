@@ -127,14 +127,14 @@ class CouchbaseServer:
         """ Delete a Couchbase Server bucket with the given 'name' """
         server_version = get_server_version(self.host, self.cbs_ssl)
         server_major_version = int(server_version.split(".")[0])
-        if self.cbs_ssl and ipv6:
+        """if self.cbs_ssl and ipv6:
             connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(self.host, name)
         elif self.cbs_ssl and not ipv6:
             connection_url = "couchbases://{}/{}?ssl=no_verify".format(self.host, name)
         elif not self.cbs_ssl and ipv6:
             connection_url = "couchbase://{}/{}?ipv6=allow".format(self.host, name)
         else:
-            connection_url = "couchbase://{}/{}".format(self.host, name)
+            connection_url = "couchbase://{}/{}".format(self.host, name)"""
         if server_major_version >= 5:
             self._delete_internal_rbac_bucket_user(name)
 
