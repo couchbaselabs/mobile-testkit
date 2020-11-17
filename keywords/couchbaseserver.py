@@ -202,15 +202,21 @@ class CouchbaseServer:
 
         # verify all indexes are deleted
         count = 0
+        error_count = 0
         index_url = self.url.replace("8091", "9102")
-        while count < 5:
-            resp = self._session.get("{}/getIndexStatus".format(index_url))
-            resp_obj = resp.json()
-            if "status" not in resp_obj:
-                break
-            else:
-                count += 1
-            time.sleep(60)
+        while count < 5 and error_count <= self.max_retries:
+            try:
+                resp = self._session.get("{}/getIndexStatus".format(index_url))
+                resp_obj = resp.json()
+                if "status" not in resp_obj:
+                    break
+                else:
+                    count += 1
+                time.sleep(60)
+            except ConnectionError:
+                log_info("Hit a ConnectionError while trying to get buckets. Retrying ...")
+                error_count += 1
+                time.sleep(1)
 
     def wait_for_ready_state(self):
         """
