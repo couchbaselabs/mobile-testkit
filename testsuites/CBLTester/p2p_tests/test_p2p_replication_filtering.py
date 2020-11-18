@@ -422,7 +422,7 @@ def test_p2p_delete_db_active_replicator_and_live_query(params_from_base_test_se
 
     # 3. register a live query to the cbl db
     qy = Query(base_url_list[0])
-    query = qy.query_select_all(cbl_db_server)
+    query = qy.query_selectAll(cbl_db_server)
     query_listener = qy.addChangeListener(query)
 
     log_info(client_replicator1.getActivitylevel(repl1))
