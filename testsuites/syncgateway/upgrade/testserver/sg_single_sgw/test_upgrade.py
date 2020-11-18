@@ -296,6 +296,8 @@ def test_upgrade(params_from_base_test_setup):
             cbl_doc_ids2 = db.getDocIds(cbl_db2, limit=num_docs + (num_sdk_docs * 4) + 3)
             count1 = sum('sdk_after_upgrade' in s for s in cbl_doc_ids2)
             assert count1 == num_sdk_docs, "docs via sdk after upgrade did not replicate to cbl"
+        else:
+            cbl_doc_ids2 = db.getDocIds(cbl_db2, limit=num_docs + (num_sdk_docs * 3) + 3)
         count2 = sum('sgw_after_upgrade' in s for s in cbl_doc_ids2)
         assert count2 == num_sdk_docs, "docs via SGW after upgrade did not replicate to cbl"
         log_info("Stopping replication between testserver and sync gateway")
