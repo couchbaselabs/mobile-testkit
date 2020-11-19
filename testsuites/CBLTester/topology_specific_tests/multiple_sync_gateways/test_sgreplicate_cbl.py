@@ -15,10 +15,8 @@ from requests.exceptions import HTTPError
 from keywords.utils import host_for_url, log_info, compare_cbl_docs
 from keywords import attachment, document
 from concurrent.futures import ThreadPoolExecutor
-from utilities.cluster_config_utils import copy_sgconf_to_temp, replace_string_on_sgw_config
-from couchbase.bucket import Bucket
+from utilities.cluster_config_utils import copy_sgconf_to_temp, replace_string_on_sgw_config, get_cluster
 from keywords.ClusterKeywords import ClusterKeywords
-from keywords.constants import SDK_TIMEOUT
 
 
 def setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_teardown_test, cbl_replication_type, sg_conf_name='listener_tests/multiple_sync_gateways', num_of_docs=10, channels1=None, sgw_cluster1_sg_config_name=None, sgw_cluster2_sg_config_name=None, name1=None, name2=None, password1=None, password2=None):
@@ -2223,7 +2221,7 @@ def test_sg_replicate_doc_resurrection(params_from_base_test_setup, setup_custom
             connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, cbs_bucket)
         else:
             connection_url = 'couchbase://{}/{}'.format(cbs_ip, cbs_bucket)
-        sdk_client = Bucket(connection_url, password='password', timeout=SDK_TIMEOUT)
+        sdk_client = get_cluster(connection_url, cbs_bucket)
         sdk_client.remove(random_doc_id)
         sdk_client.upsert(random_doc_id, doc_body)
 
