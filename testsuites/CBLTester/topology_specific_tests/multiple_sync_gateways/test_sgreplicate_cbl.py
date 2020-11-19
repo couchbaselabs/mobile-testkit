@@ -1,22 +1,27 @@
 import pytest
 import time
 import os
+import random
 
 from keywords.MobileRestClient import MobileRestClient
 from CBLClient.Database import Database
+from CBLClient.Document import Document
 from CBLClient.Replication import Replication
 from CBLClient.Authenticator import Authenticator
 from keywords.SyncGateway import sync_gateway_config_path_for_mode, SyncGateway, setup_replications_on_sgconfig, update_replication_in_sgw_config
 from libraries.testkit import cluster
 from libraries.testkit.admin import Admin
 from requests.exceptions import HTTPError
-from keywords.utils import log_info
+from keywords.utils import host_for_url, log_info, compare_cbl_docs
 from keywords import attachment, document
 from concurrent.futures import ThreadPoolExecutor
 from utilities.cluster_config_utils import copy_sgconf_to_temp, replace_string_on_sgw_config
+from couchbase.bucket import Bucket
+from keywords.ClusterKeywords import ClusterKeywords
+from keywords.constants import SDK_TIMEOUT
 
 
-def setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_teardown_test, cbl_replication_type, sg_conf_name='listener_tests/multiple_sync_gateways', num_of_docs=10, channels1=None, sgw_cluster1_sg_config_name=None, sgw_cluster2_sg_config_name=None):
+def setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_teardown_test, cbl_replication_type, sg_conf_name='listener_tests/multiple_sync_gateways', num_of_docs=10, channels1=None, sgw_cluster1_sg_config_name=None, sgw_cluster2_sg_config_name=None, name1=None, name2=None, password1=None, password2=None):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     base_url = params_from_base_test_setup["base_url"]
@@ -31,9 +36,14 @@ def setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_te
     sgwgateway = SyncGateway()
 
     channels2 = ["Replication2"]
-    name1 = "autotest1"
-    name2 = "autotest2"
-    password = "password"
+    if name1 is None:
+        name1 = "autotest1"
+    if name2 is None:
+        name2 = "auto_test@"
+    if password1 is None:
+        password1 = "password"
+    if password2 is None:
+        password2 = "password"
     if channels1 is None:
         channels1 = ["Replication1"]
 
@@ -78,8 +88,8 @@ def setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_te
     sg1_blip_url = "{}://{}:4984/{}".format(protocol, sg1_ip, sg_db1)
     sg2_blip_url = "{}://{}:4984/{}".format(protocol, sg2_ip, sg_db2)
 
-    sg_client.create_user(sg1_admin_url, sg_db1, name1, password=password, channels=channels1)
-    sg_client.create_user(sg2_admin_url, sg_db2, name2, password=password, channels=channels1)
+    sg_client.create_user(sg1_admin_url, sg_db1, name1, password=password1, channels=channels1)
+    sg_client.create_user(sg2_admin_url, sg_db2, name2, password=password2, channels=channels1)
     # Create bulk doc json
 
     # 2. Create replication authenticator
@@ -95,7 +105,7 @@ def setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_te
     # Do push replication to from cbl1 to sg1 cbl -> sg1
     repl1 = replicator.configure_and_replicate(
         source_db=cbl_db1, replicator_authenticator=replicator_authenticator1, target_url=sg1_blip_url, replication_type="push_pull", continuous=True)
-    return db, num_of_docs, sg_db1, sg_db2, name1, name2, password, channels1, channels2, replicator, replicator_authenticator1, replicator_authenticator2, sg1_blip_url, sg2_blip_url, sg1, sg2, repl1, c_cluster, cbl_db1, cbl_db2, session1
+    return db, num_of_docs, sg_db1, sg_db2, name1, name2, password1, password2, channels1, channels2, replicator, replicator_authenticator1, replicator_authenticator2, sg1_blip_url, sg2_blip_url, sg1, sg2, repl1, c_cluster, cbl_db1, cbl_db2, session1
 
 
 @pytest.mark.topospecific
@@ -131,9 +141,9 @@ def test_sg_replicate_push_pull_replication(params_from_base_test_setup, setup_c
     read_flag = False
     sg_client = MobileRestClient()
 
-    db, num_of_docs, sg_db1, sg_db2, name1, name2, password, channels1, _, replicator, replicator_authenticator1, replicator_authenticator2, sg1_blip_url, sg2_blip_url, sg1, sg2, repl1, _, cbl_db1, cbl_db2, _ = setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_teardown_test,
-                                                                                                                                                                                                                                               cbl_replication_type="push", sgw_cluster1_sg_config_name=sgw_cluster1_conf_name,
-                                                                                                                                                                                                                                               sgw_cluster2_sg_config_name=sgw_cluster2_conf_name)
+    db, num_of_docs, sg_db1, sg_db2, name1, name2, _, password, channels1, _, replicator, replicator_authenticator1, replicator_authenticator2, sg1_blip_url, sg2_blip_url, sg1, sg2, repl1, _, cbl_db1, cbl_db2, _ = setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_teardown_test,
+                                                                                                                                                                                                                                                  cbl_replication_type="push", sgw_cluster1_sg_config_name=sgw_cluster1_conf_name,
+                                                                                                                                                                                                                                                  sgw_cluster2_sg_config_name=sgw_cluster2_conf_name)
 
     # Get expvars before test starts
     expvars = sg_client.get_expvars(url=sg1.admin.admin_url)
@@ -244,9 +254,9 @@ def test_sg_replicate_replication_with_deltasync(params_from_base_test_setup, se
     delta_sync = True
     direction = "pushAndPull"
 
-    db, num_of_docs, sg_db1, sg_db2, _, name2, password, channels1, _, replicator, _, replicator_authenticator2, sg1_blip_url, sg2_blip_url, sg1, sg2, repl1, _, cbl_db1, cbl_db2, _ = setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_teardown_test,
-                                                                                                                                                                                                                   cbl_replication_type="push", sgw_cluster1_sg_config_name=sgw_cluster1_conf_name,
-                                                                                                                                                                                                                   sgw_cluster2_sg_config_name=sgw_cluster2_conf_name)
+    db, num_of_docs, sg_db1, sg_db2, _, name2, _, password, channels1, _, replicator, _, replicator_authenticator2, sg1_blip_url, sg2_blip_url, sg1, sg2, repl1, _, cbl_db1, cbl_db2, _ = setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_teardown_test,
+                                                                                                                                                                                                                      cbl_replication_type="push", sgw_cluster1_sg_config_name=sgw_cluster1_conf_name,
+                                                                                                                                                                                                                      sgw_cluster2_sg_config_name=sgw_cluster2_conf_name)
 
     # 2. Add docs in cbl1
     db.create_bulk_docs(num_of_docs, replication1, db=cbl_db1, channels=channels1)
@@ -305,10 +315,9 @@ def test_sg_replicate_invalid_auth(params_from_base_test_setup, setup_customized
     wrong_password = "invalid_password"
     wrong_db = "wrong_db"
 
-    db, num_of_docs, sg_db1, sg_db2, name1, name2, password, channels1, _, replicator, replicator_authenticator1, _, sg1_blip_url, _, sg1, sg2, _, _, cbl_db1, _ = setup_syncGateways_with_cbl(params_from_base_test_setup,
-                                                                                                                                                                                               setup_customized_teardown_test, cbl_replication_type="push",
-                                                                                                                                                                                               sgw_cluster1_sg_config_name=sgw_cluster1_conf_name,
-                                                                                                                                                                                               sgw_cluster2_sg_config_name=sgw_cluster2_conf_name)
+    db, num_of_docs, sg_db1, sg_db2, _, name2, _, password, channels1, _, _, _, _, _, _, sg1, sg2, _, _, cbl_db1, _, _ = setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_teardown_test, cbl_replication_type="push",
+                                                                                                                                                     sgw_cluster1_sg_config_name=sgw_cluster1_conf_name,
+                                                                                                                                                     sgw_cluster2_sg_config_name=sgw_cluster2_conf_name)
     # 2. Add docs in cbl1
     db.create_bulk_docs(num_of_docs, "Replication1", db=cbl_db1, channels=channels1)
 
@@ -361,10 +370,11 @@ def test_sg_replicate_withReplicationId_cancel(params_from_base_test_setup, setu
     # 1.Have 2 sgw nodes , have cbl on each SGW
     sgw_cluster1_conf_name = 'listener_tests/sg_replicate_sgw_cluster1'
     sgw_cluster2_conf_name = 'listener_tests/sg_replicate_sgw_cluster2'
+    password2 = "p@ss:ord2"
 
-    db, num_of_docs, sg_db1, sg_db2, _, name2, password, channels1, _, replicator, replicator_authenticator1, replicator_authenticator2, sg1_blip_url, sg2_blip_url, sg1, sg2, repl1, _, cbl_db1, cbl_db2, _ = setup_syncGateways_with_cbl(params_from_base_test_setup,
-                                                                                                                                                                                                                                           setup_customized_teardown_test, cbl_replication_type="push", sgw_cluster1_sg_config_name=sgw_cluster1_conf_name,
-                                                                                                                                                                                                                                           sgw_cluster2_sg_config_name=sgw_cluster2_conf_name)
+    db, num_of_docs, sg_db1, sg_db2, _, name2, _, password, channels1, _, replicator, replicator_authenticator1, replicator_authenticator2, sg1_blip_url, sg2_blip_url, sg1, sg2, repl1, _, cbl_db1, cbl_db2, _ = setup_syncGateways_with_cbl(params_from_base_test_setup,
+                                                                                                                                                                                                                                              setup_customized_teardown_test, cbl_replication_type="push", sgw_cluster1_sg_config_name=sgw_cluster1_conf_name,
+                                                                                                                                                                                                                                              sgw_cluster2_sg_config_name=sgw_cluster2_conf_name, password2=password2)
     # 2. Add docs in cbl1
     db.create_bulk_docs(num_of_docs, "Replication1", db=cbl_db1, channels=channels1)
 
@@ -427,9 +437,10 @@ def test_sg_replicate_upsert_replication(params_from_base_test_setup, setup_cust
     replication2 = "Replication2"
     replication3 = "Replication3"
     replication4 = "Replication4"
+    password2 = "pass /word"
 
-    db, num_of_docs, sg_db1, sg_db2, _, name2, password, channels1, _, replicator, replicator_authenticator1, replicator_authenticator2, sg1_blip_url, sg2_blip_url, sg1, sg2, repl1, _, cbl_db1, cbl_db2, _ = setup_syncGateways_with_cbl(params_from_base_test_setup,
-                                                                                                                                                                                                                                           setup_customized_teardown_test, cbl_replication_type="push", sgw_cluster1_sg_config_name=sgw_cluster1_conf_name, sgw_cluster2_sg_config_name=sgw_cluster2_conf_name)
+    db, num_of_docs, sg_db1, sg_db2, _, name2, _, password, channels1, _, replicator, replicator_authenticator1, replicator_authenticator2, sg1_blip_url, sg2_blip_url, sg1, sg2, repl1, _, cbl_db1, cbl_db2, _ = setup_syncGateways_with_cbl(params_from_base_test_setup,
+                                                                                                                                                                                                                                              setup_customized_teardown_test, cbl_replication_type="push", sgw_cluster1_sg_config_name=sgw_cluster1_conf_name, sgw_cluster2_sg_config_name=sgw_cluster2_conf_name, password2=password2)
     # 2. Add docs in cbl1 and cbl2
     db.create_bulk_docs(num_of_docs, replication1, db=cbl_db1, channels=channels1)
     db.create_bulk_docs(num_of_docs, replication2, db=cbl_db2, channels=channels1)
@@ -446,7 +457,8 @@ def test_sg_replicate_upsert_replication(params_from_base_test_setup, setup_cust
         remote_user=name2,
         remote_password=password,
         direction="pushAndPull",
-        continuous=True
+        continuous=True,
+        user_credentials_url=False
     )
     sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id, read_flag=True, write_flag=True)
     replicator.wait_until_replicator_idle(repl1)
@@ -470,7 +482,8 @@ def test_sg_replicate_upsert_replication(params_from_base_test_setup, setup_cust
             remote_password=password,
             direction="push",
             continuous=True,
-            replication_id=repl_id
+            replication_id=repl_id,
+            user_credentials_url=False
         )
         assert False, "Did not get Http error while upserting the replication without stopping"
     except HTTPError:
@@ -486,7 +499,8 @@ def test_sg_replicate_upsert_replication(params_from_base_test_setup, setup_cust
         remote_password=password,
         direction="push",
         continuous=True,
-        replication_id=repl_id
+        replication_id=repl_id,
+        user_credentials_url=False
     )
 
     # 7. Create docs on CBL DB1 and CBL DB2
@@ -539,10 +553,10 @@ def test_sg_replicate_oneactive_2passive(params_from_base_test_setup, setup_cust
     sg_client = MobileRestClient()
     sgwgateway = SyncGateway()
 
-    db, num_of_docs, sg_db1, sg_db2, _, name2, password, channels1, _, replicator, _, replicator_authenticator2, _, sg2_blip_url, sg1, sg2, repl1, c_cluster, cbl_db1, cbl_db2, _ = setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_teardown_test,
-                                                                                                                                                                                                                cbl_replication_type="push_pull",
-                                                                                                                                                                                                                sg_conf_name=sg_conf_name, sgw_cluster1_sg_config_name=sgw_cluster1_conf_name,
-                                                                                                                                                                                                                sgw_cluster2_sg_config_name=sgw_cluster2_conf_name)
+    db, num_of_docs, sg_db1, sg_db2, _, name2, password1, password2, channels1, _, replicator, _, replicator_authenticator2, _, sg2_blip_url, sg1, sg2, repl1, c_cluster, cbl_db1, cbl_db2, _ = setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_teardown_test,
+                                                                                                                                                                                                                            cbl_replication_type="push_pull",
+                                                                                                                                                                                                                            sg_conf_name=sg_conf_name, sgw_cluster1_sg_config_name=sgw_cluster1_conf_name,
+                                                                                                                                                                                                                            sgw_cluster2_sg_config_name=sgw_cluster2_conf_name)
     sg3 = c_cluster.sync_gateways[2]
     sgw_cluster1_sg_config = sync_gateway_config_path_for_mode(sgw_cluster2_bucket_3, sg_mode)
     sgw_cluster1_config_path = "{}/{}".format(os.getcwd(), sgw_cluster1_sg_config)
@@ -555,7 +569,7 @@ def test_sg_replicate_oneactive_2passive(params_from_base_test_setup, setup_cust
     sg3_blip_url = "ws://{}:4984/{}".format(sg3.ip, sg_db3)
     if sg_ssl:
         sg3_blip_url = "wss://{}:4984/{}".format(sg3.ip, sg_db3)
-    sg_client.create_user(sg3_admin_url, sg_db3, name3, password=password, channels=channels1)
+    sg_client.create_user(sg3_admin_url, sg_db3, name3, password=password1, channels=channels1)
     cookie, session_id = sg_client.create_session(sg3_admin_url, sg_db3, name3)
     replicator_authenticator3 = authenticator.authentication(session_id, cookie, authentication_type="session")
 
@@ -571,7 +585,7 @@ def test_sg_replicate_oneactive_2passive(params_from_base_test_setup, setup_cust
         remote_url=sg2.url,
         remote_db=sg_db2,
         remote_user=name2,
-        remote_password=password,
+        remote_password=password2,
         direction="pushAndPull",
         continuous=continuous
     )
@@ -583,7 +597,7 @@ def test_sg_replicate_oneactive_2passive(params_from_base_test_setup, setup_cust
         remote_url=sg3.url,
         remote_db=sg_db3,
         remote_user=name3,
-        remote_password=password,
+        remote_password=password2,
         direction="pushAndPull",
         continuous=continuous
     )
@@ -657,8 +671,8 @@ def test_sg_replicate_2active_1passive(params_from_base_test_setup, setup_custom
     sgwgateway = SyncGateway()
 
     # 1. Have 3 sgw nodes and have 3 cbl db
-    db, num_of_docs, sg_db1, sg_db2, name1, name2, password, channels1, _, replicator, _, replicator_authenticator2, _, sg2_blip_url, sg1, sg2, repl1, c_cluster, cbl_db1, cbl_db2, _ = setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_teardown_test, cbl_replication_type="push_pull", sg_conf_name=sg_conf_name, sgw_cluster1_sg_config_name=sgw_cluster1_conf_name,
-                                                                                                                                                                                                                    sgw_cluster2_sg_config_name=sgw_cluster2_conf_name)
+    db, num_of_docs, sg_db1, sg_db2, name1, name2, password1, password2, channels1, _, replicator, _, replicator_authenticator2, _, sg2_blip_url, sg1, sg2, repl1, c_cluster, cbl_db1, cbl_db2, _ = setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_teardown_test, cbl_replication_type="push_pull", sg_conf_name=sg_conf_name, sgw_cluster1_sg_config_name=sgw_cluster1_conf_name,
+                                                                                                                                                                                                                                sgw_cluster2_sg_config_name=sgw_cluster2_conf_name)
     sg3 = c_cluster.sync_gateways[2]
     sgw_cluster1_sg_config = sync_gateway_config_path_for_mode(sgw_cluster2_bucket_3, sg_mode)
     sgw_cluster1_config_path = "{}/{}".format(os.getcwd(), sgw_cluster1_sg_config)
@@ -669,7 +683,7 @@ def test_sg_replicate_2active_1passive(params_from_base_test_setup, setup_custom
     sg3_blip_url = "ws://{}:4984/{}".format(sg3.ip, sg_db3)
     if sg_ssl:
         sg3_blip_url = "wss://{}:4984/{}".format(sg3.ip, sg_db3)
-    sg_client.create_user(sg3.admin.admin_url, sg_db3, name3, password=password, channels=channels1)
+    sg_client.create_user(sg3.admin.admin_url, sg_db3, name3, password=password1, channels=channels1)
     cookie, session_id = sg_client.create_session(sg3.admin.admin_url, sg_db3, name3)
     replicator_authenticator3 = authenticator.authentication(session_id, cookie, authentication_type="session")
 
@@ -691,7 +705,7 @@ def test_sg_replicate_2active_1passive(params_from_base_test_setup, setup_custom
         remote_url=sg3.url,
         remote_db=sg_db3,
         remote_user=name3,
-        remote_password=password,
+        remote_password=password1,
         direction="pushAndPull",
         continuous=continuous
     )
@@ -702,7 +716,7 @@ def test_sg_replicate_2active_1passive(params_from_base_test_setup, setup_custom
         remote_url=sg3.url,
         remote_db=sg_db3,
         remote_user=name3,
-        remote_password=password,
+        remote_password=password1,
         direction="pushAndPull",
         continuous=continuous
     )
@@ -758,15 +772,15 @@ def test_sg_replicate_channel_filtering_with_attachments(params_from_base_test_s
     Replication1_channel3 = "cur3_Replication1_channel3"
 
     # 1. Set up 2 sgw nodes and have two cbl dbs
-    db, num_of_docs, sg_db1, sg_db2, name1, name2, password, channels1, channels2, replicator, replicator_authenticator1, replicator_authenticator2, sg1_blip_url, sg2_blip_url, sg1, sg2, repl1, _, cbl_db1, cbl_db2, _ = setup_syncGateways_with_cbl(params_from_base_test_setup,
-                                                                                                                                                                                                                                                       setup_customized_teardown_test, cbl_replication_type="push_pull",
-                                                                                                                                                                                                                                                       sgw_cluster1_sg_config_name=sgw_cluster1_conf_name, sgw_cluster2_sg_config_name=sgw_cluster2_conf_name)
+    db, num_of_docs, sg_db1, sg_db2, name1, name2, password1, password2, channels1, channels2, replicator, replicator_authenticator1, replicator_authenticator2, sg1_blip_url, sg2_blip_url, sg1, sg2, repl1, _, cbl_db1, cbl_db2, _ = setup_syncGateways_with_cbl(params_from_base_test_setup,
+                                                                                                                                                                                                                                                                   setup_customized_teardown_test, cbl_replication_type="push_pull",
+                                                                                                                                                                                                                                                                   sgw_cluster1_sg_config_name=sgw_cluster1_conf_name, sgw_cluster2_sg_config_name=sgw_cluster2_conf_name)
 
     # 2. Create docs on cbl-db1 and have push_pull, continous replication with sg1
     #        each with 2 differrent channel, few docs on both channels
     channels3 = channels1 + channels2
-    sg_client.create_user(sg1.admin.admin_url, sg_db1, name3, password=password, channels=channels3)
-    sg_client.create_user(sg2.admin.admin_url, sg_db2, name4, password=password, channels=channels3)
+    sg_client.create_user(sg1.admin.admin_url, sg_db1, name3, password=password1, channels=channels3)
+    sg_client.create_user(sg2.admin.admin_url, sg_db2, name4, password=password2, channels=channels3)
 
     cookie, session_id = sg_client.create_session(sg1.admin.admin_url, sg_db1, name3)
     session = cookie, session_id
@@ -791,7 +805,7 @@ def test_sg_replicate_channel_filtering_with_attachments(params_from_base_test_s
         remote_url=sg2.url,
         remote_db=sg_db2,
         remote_user=name4,
-        remote_password=password,
+        remote_password=password2,
         direction="pushAndPull",
         channels=channels1,
         continuous=continuous
@@ -881,9 +895,9 @@ def test_sg_replicate_pull_pushPull_channel_filtering(params_from_base_test_setu
     replication3_channel2 = "cur1_Replication3_channel2"
 
     # 1. Set up 2 sgw nodes and have two cbl dbs
-    db, _, sg_db1, sg_db2, _, _, password, channels1, channels2, replicator, _, _, sg1_blip_url, sg2_blip_url, sg1, sg2, repl1, _, cbl_db1, cbl_db2, _ = setup_syncGateways_with_cbl(params_from_base_test_setup,
-                                                                                                                                                                                     setup_customized_teardown_test, cbl_replication_type="push",
-                                                                                                                                                                                     sgw_cluster1_sg_config_name=sgw_cluster1_conf_name, sgw_cluster2_sg_config_name=sgw_cluster2_conf_name)
+    db, _, sg_db1, sg_db2, _, _, _, password, channels1, channels2, replicator, _, _, sg1_blip_url, sg2_blip_url, sg1, sg2, repl1, _, cbl_db1, cbl_db2, _ = setup_syncGateways_with_cbl(params_from_base_test_setup,
+                                                                                                                                                                                        setup_customized_teardown_test, cbl_replication_type="push",
+                                                                                                                                                                                        sgw_cluster1_sg_config_name=sgw_cluster1_conf_name, sgw_cluster2_sg_config_name=sgw_cluster2_conf_name)
     # 2. Create docs on cbl-db1 and have push_pull, continous replication with sg1
     #        each with 2 differrent channel, few docs on both channels
 
@@ -984,8 +998,8 @@ def test_sg_replicate_with_sg_restart(params_from_base_test_setup, setup_customi
         reconnect_interval_time = 1
 
     # 1. Set up 2 sgw nodes and have two cbl dbs
-    db, num_of_docs, sg_db1, sg_db2, name1, name2, password, channels1, channels2, replicator, replicator_authenticator1, replicator_authenticator2, sg1_blip_url, sg2_blip_url, sg1, sg2, repl1, c_cluster, cbl_db1, cbl_db2, _ = setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_teardown_test, cbl_replication_type="push", sgw_cluster1_sg_config_name=sgw_cluster1_conf_name,
-                                                                                                                                                                                                                                                               sgw_cluster2_sg_config_name=sgw_cluster2_conf_name)
+    db, num_of_docs, sg_db1, sg_db2, name1, name2, _, password, channels1, channels2, replicator, replicator_authenticator1, replicator_authenticator2, sg1_blip_url, sg2_blip_url, sg1, sg2, repl1, c_cluster, cbl_db1, cbl_db2, _ = setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_teardown_test, cbl_replication_type="push", sgw_cluster1_sg_config_name=sgw_cluster1_conf_name,
+                                                                                                                                                                                                                                                                  sgw_cluster2_sg_config_name=sgw_cluster2_conf_name)
 
     # 2. Create docs on cbl-db1 and have push_pull, continous replication with sg1
     db.create_bulk_docs(num_of_docs, Replication1, db=cbl_db1, channels=channels1, attachments_generator=attachment.generate_png_100_100)
@@ -1059,9 +1073,9 @@ def test_sg_replicate_multiple_replications_with_filters(params_from_base_test_s
     authenticator = Authenticator(base_url)
 
     # Set up 2 sgw nodes and have two cbl dbs
-    db, num_of_docs, sg_db1, sg_db2, name1, name2, password, channels1, channels2, replicator, replicator_authenticator1, replicator_authenticator2, sg1_blip_url, sg2_blip_url, sg1, sg2, repl1, _, cbl_db1, cbl_db2, _ = setup_syncGateways_with_cbl(params_from_base_test_setup,
-                                                                                                                                                                                                                                                       setup_customized_teardown_test, cbl_replication_type="push_pull",
-                                                                                                                                                                                                                                                       sgw_cluster1_sg_config_name=sgw_cluster1_conf_name, sgw_cluster2_sg_config_name=sgw_cluster2_conf_name)
+    db, num_of_docs, sg_db1, sg_db2, name1, name2, _, password, channels1, channels2, replicator, replicator_authenticator1, replicator_authenticator2, sg1_blip_url, sg2_blip_url, sg1, sg2, repl1, _, cbl_db1, cbl_db2, _ = setup_syncGateways_with_cbl(params_from_base_test_setup,
+                                                                                                                                                                                                                                                          setup_customized_teardown_test, cbl_replication_type="push_pull",
+                                                                                                                                                                                                                                                          sgw_cluster1_sg_config_name=sgw_cluster1_conf_name, sgw_cluster2_sg_config_name=sgw_cluster2_conf_name)
     channels = channels1 + channels2 + channels3
     channels_list = [channels1, channels2, channels3, channels4]
     sg_client.create_user(sg1.admin.admin_url, sg_db1, name3, password=password, channels=channels)
@@ -1162,9 +1176,9 @@ def test_sg_replicate_remove_channel(params_from_base_test_setup, setup_customiz
     authenticator = Authenticator(base_url)
 
     # Set up 2 sgw nodes and have two cbl dbs
-    db, num_of_docs, sg_db1, sg_db2, _, _, password, channels1, channels2, replicator, _, replicator_authenticator2, sg1_blip_url, sg2_blip_url, sg1, sg2, repl1, _, cbl_db1, cbl_db2, _ = setup_syncGateways_with_cbl(params_from_base_test_setup,
-                                                                                                                                                                                                                       setup_customized_teardown_test, cbl_replication_type="push_pull",
-                                                                                                                                                                                                                       sgw_cluster1_sg_config_name=sgw_cluster1_conf_name, sgw_cluster2_sg_config_name=sgw_cluster2_conf_name)
+    db, num_of_docs, sg_db1, sg_db2, _, _, _, password, channels1, channels2, replicator, _, replicator_authenticator2, sg1_blip_url, sg2_blip_url, sg1, sg2, repl1, _, cbl_db1, cbl_db2, _ = setup_syncGateways_with_cbl(params_from_base_test_setup,
+                                                                                                                                                                                                                          setup_customized_teardown_test, cbl_replication_type="push_pull",
+                                                                                                                                                                                                                          sgw_cluster1_sg_config_name=sgw_cluster1_conf_name, sgw_cluster2_sg_config_name=sgw_cluster2_conf_name)
     replicator.stop(repl1)
     channels = channels1 + channels2 + channels3
     sg_client.create_user(sg1.admin.admin_url, sg_db1, name3, password=password, channels=channels)
@@ -1272,9 +1286,9 @@ def test_sg_replicate_replications_with_drop_out_one_node(params_from_base_test_
     sg_client = MobileRestClient()
     sgwgateway = SyncGateway()
     authenticator = Authenticator(base_url)
-    db, num_of_docs, sg_db1, sg_db2, name1, name2, password, _, _, replicator, _, replicator_authenticator2, _, sg2_blip_url, sg1, sg2, repl1, c_cluster, cbl_db1, cbl_db2, _ = setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_teardown_test,
-                                                                                                                                                                                                            cbl_replication_type="push_pull", sg_conf_name=sg_conf_name,
-                                                                                                                                                                                                            channels1=channels3, sgw_cluster1_sg_config_name=sgw_cluster1_conf_name, sgw_cluster2_sg_config_name=sgw_cluster2_conf_name)
+    db, num_of_docs, sg_db1, sg_db2, name1, name2, _, password, _, _, replicator, _, replicator_authenticator2, _, sg2_blip_url, sg1, sg2, repl1, c_cluster, cbl_db1, cbl_db2, _ = setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_teardown_test,
+                                                                                                                                                                                                               cbl_replication_type="push_pull", sg_conf_name=sg_conf_name,
+                                                                                                                                                                                                               channels1=channels3, sgw_cluster1_sg_config_name=sgw_cluster1_conf_name, sgw_cluster2_sg_config_name=sgw_cluster2_conf_name)
     sg3 = c_cluster.sync_gateways[2]
     sgw_cluster1_sg_config = sync_gateway_config_path_for_mode(sgw_cluster1_conf_name, sg_mode)
     sgw_cluster1_config_path = "{}/{}".format(os.getcwd(), sgw_cluster1_sg_config)
@@ -1402,8 +1416,8 @@ def test_sg_replicate_sgwconfig_replications_with_opt_out(params_from_base_test_
     sg_config3 = sync_gateway_config_path_for_mode(sg_conf_name3, sg_mode)
     cbl_db3 = setup_customized_teardown_test["cbl_db3"]
 
-    db, num_of_docs, sg_db1, sg_db2, name1, name2, password, channels1, channels2, replicator, _, replicator_authenticator2, _, sg2_blip_url, sg1, sg2, repl1, c_cluster, cbl_db1, cbl_db2, _ = setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_teardown_test, channels1=channels,
-                                                                                                                                                                                                                            cbl_replication_type="push_pull", sg_conf_name=sg_conf_name, sgw_cluster2_sg_config_name=sgw_cluster2_conf_name)
+    db, num_of_docs, sg_db1, sg_db2, name1, name2, _, password, channels1, channels2, replicator, _, replicator_authenticator2, _, sg2_blip_url, sg1, sg2, repl1, c_cluster, cbl_db1, cbl_db2, _ = setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_teardown_test, channels1=channels,
+                                                                                                                                                                                                                               cbl_replication_type="push_pull", sg_conf_name=sg_conf_name, sgw_cluster2_sg_config_name=sgw_cluster2_conf_name)
 
     name3 = "autotest3"
     name4 = "autotest4"
@@ -1549,10 +1563,10 @@ def test_sg_replicate_distributions_replications(params_from_base_test_setup, se
     channels6 = ["Replication6"]
 
     channels_6 = channels1 + channels2 + channels3 + channels4 + channels5 + channels6
-    db, num_of_docs, sg_db1, sg_db2, name1, name2, password, _, _, replicator, _, replicator_authenticator2, _, sg2_blip_url, sg1, sg2, repl1, c_cluster, cbl_db1, cbl_db2, _ = setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_teardown_test,
-                                                                                                                                                                                                            cbl_replication_type="push_pull", sg_conf_name=sg_conf_name,
-                                                                                                                                                                                                            sgw_cluster1_sg_config_name=sgw_cluster1_conf_name, sgw_cluster2_sg_config_name=sgw_cluster2_conf_name,
-                                                                                                                                                                                                            channels1=channels_6)
+    db, num_of_docs, sg_db1, sg_db2, name1, name2, _, password, _, _, replicator, _, replicator_authenticator2, _, sg2_blip_url, sg1, sg2, repl1, c_cluster, cbl_db1, cbl_db2, _ = setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_teardown_test,
+                                                                                                                                                                                                               cbl_replication_type="push_pull", sg_conf_name=sg_conf_name,
+                                                                                                                                                                                                               sgw_cluster1_sg_config_name=sgw_cluster1_conf_name, sgw_cluster2_sg_config_name=sgw_cluster2_conf_name,
+                                                                                                                                                                                                               channels1=channels_6)
     sg3 = c_cluster.sync_gateways[2]
     sg4 = c_cluster.sync_gateways[3]
     sgw_cluster1_sg_config = sync_gateway_config_path_for_mode(sgw_cluster1_conf_name, sg_mode)
@@ -1661,9 +1675,9 @@ def test_sg_replicate_update_sgw_nodes_in_cluster(params_from_base_test_setup, s
     channels3 = ["Replication3"]
     sg_config = sync_gateway_config_path_for_mode(sg_conf_name, sg_mode)
 
-    db, num_of_docs, sg_db1, sg_db2, name1, name2, password, channels1, channels2, replicator, _, replicator_authenticator2, _, sg2_blip_url, sg1, sg2, repl1, c_cluster, cbl_db1, cbl_db2, _ = setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_teardown_test,
-                                                                                                                                                                                                                            cbl_replication_type="push_pull", sg_conf_name=sg_conf_name,
-                                                                                                                                                                                                                            sgw_cluster1_sg_config_name=sgw_cluster1_conf_name, sgw_cluster2_sg_config_name=sgw_cluster2_conf_name)
+    db, num_of_docs, sg_db1, sg_db2, name1, name2, _, password, channels1, channels2, replicator, _, replicator_authenticator2, _, sg2_blip_url, sg1, sg2, repl1, c_cluster, cbl_db1, cbl_db2, _ = setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_teardown_test,
+                                                                                                                                                                                                                               cbl_replication_type="push_pull", sg_conf_name=sg_conf_name,
+                                                                                                                                                                                                                               sgw_cluster1_sg_config_name=sgw_cluster1_conf_name, sgw_cluster2_sg_config_name=sgw_cluster2_conf_name)
     all_channels = channels1 + channels2 + channels3
     sg3 = c_cluster.sync_gateways[2]
     sgw_cluster1_sg_config = sync_gateway_config_path_for_mode(sgw_cluster1_conf_name, sg_mode)
@@ -1779,9 +1793,9 @@ def test_sg_replicate_restart_active_passive_nodes(params_from_base_test_setup, 
     name4 = "autotest4"
     sg_client = MobileRestClient()
 
-    db, num_of_docs, sg_db1, sg_db2, name1, name2, password, channels1, channels2, replicator, _, replicator_authenticator2, _, sg2_blip_url, sg1, sg2, repl1, c_cluster, cbl_db1, cbl_db2, session1 = setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_teardown_test,
-                                                                                                                                                                                                                                   cbl_replication_type="push_pull", sg_conf_name=sg_conf_name,
-                                                                                                                                                                                                                                   sgw_cluster1_sg_config_name=sgw_cluster1_conf_name, sgw_cluster2_sg_config_name=sgw_cluster2_conf_name)
+    db, num_of_docs, sg_db1, sg_db2, name1, name2, _, password, channels1, channels2, replicator, _, replicator_authenticator2, _, sg2_blip_url, sg1, sg2, repl1, c_cluster, cbl_db1, cbl_db2, session1 = setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_teardown_test,
+                                                                                                                                                                                                                                      cbl_replication_type="push_pull", sg_conf_name=sg_conf_name,
+                                                                                                                                                                                                                                      sgw_cluster1_sg_config_name=sgw_cluster1_conf_name, sgw_cluster2_sg_config_name=sgw_cluster2_conf_name)
     sg3 = c_cluster.sync_gateways[2]
 
     sg4, sg_db4, sg4_admin_url, sg4_blip_url = get_sg4(params_from_base_test_setup, c_cluster, sg_db=sg_db2)
@@ -1910,9 +1924,9 @@ def test_sg_replicate_adhoc_replication(params_from_base_test_setup, setup_custo
     direction = "pushAndPull"
     replication1_docs = "Replication1_docs"
 
-    db, num_of_docs, sg_db1, sg_db2, name1, name2, password, channels1, _, replicator, replicator_authenticator1, replicator_authenticator2, sg1_blip_url, sg2_blip_url, sg1, sg2, repl1, _, cbl_db1, cbl_db2, _ = setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_teardown_test,
-                                                                                                                                                                                                                                               cbl_replication_type="push", sgw_cluster1_sg_config_name=sgw_cluster1_conf_name,
-                                                                                                                                                                                                                                               sgw_cluster2_sg_config_name=sgw_cluster2_conf_name)
+    db, num_of_docs, sg_db1, sg_db2, name1, name2, _, password, channels1, _, replicator, replicator_authenticator1, replicator_authenticator2, sg1_blip_url, sg2_blip_url, sg1, sg2, repl1, _, cbl_db1, cbl_db2, _ = setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_teardown_test,
+                                                                                                                                                                                                                                                  cbl_replication_type="push", sgw_cluster1_sg_config_name=sgw_cluster1_conf_name,
+                                                                                                                                                                                                                                                  sgw_cluster2_sg_config_name=sgw_cluster2_conf_name)
 
     db.create_bulk_docs(num_of_docs, replication1_docs, db=cbl_db1, channels=channels1)
     repl2 = replicator.configure_and_replicate(
@@ -1964,9 +1978,9 @@ def test_sg_replicate_non_default_conflict_resolver(params_from_base_test_setup,
     sgw_cluster1_conf_name = 'listener_tests/sg_replicate_sgw_cluster1'
     sgw_cluster2_conf_name = 'listener_tests/sg_replicate_sgw_cluster2'
 
-    db, num_of_docs, sg_db1, sg_db2, name1, name2, password, channels1, _, replicator, replicator_authenticator1, replicator_authenticator2, sg1_blip_url, sg2_blip_url, sg1, sg2, repl1, _, cbl_db1, cbl_db2, _ = setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_teardown_test,
-                                                                                                                                                                                                                                               cbl_replication_type="push", sgw_cluster1_sg_config_name=sgw_cluster1_conf_name,
-                                                                                                                                                                                                                                               sgw_cluster2_sg_config_name=sgw_cluster2_conf_name)
+    db, num_of_docs, sg_db1, sg_db2, name1, name2, _, password, channels1, _, replicator, replicator_authenticator1, replicator_authenticator2, sg1_blip_url, sg2_blip_url, sg1, sg2, repl1, _, cbl_db1, cbl_db2, _ = setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_teardown_test,
+                                                                                                                                                                                                                                                  cbl_replication_type="push", sgw_cluster1_sg_config_name=sgw_cluster1_conf_name,
+                                                                                                                                                                                                                                                  sgw_cluster2_sg_config_name=sgw_cluster2_conf_name)
     # 2. Create docs on sg1
     db.create_bulk_docs(num_of_docs, "Replication1", db=cbl_db1, channels=channels1)
 
@@ -2044,9 +2058,9 @@ def test_sg_replicate_custom_conflict_resolve(params_from_base_test_setup, setup
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_conf_name = 'listener_tests/sg_replicate_custom_conflict'
 
-    db, num_of_docs, sg_db1, sg_db2, name1, name2, password, channels1, _, replicator, replicator_authenticator1, replicator_authenticator2, sg1_blip_url, sg2_blip_url, sg1, sg2, repl1, _, cbl_db1, cbl_db2, _ = setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_teardown_test,
-                                                                                                                                                                                                                                               cbl_replication_type="push_pull",
-                                                                                                                                                                                                                                               sgw_cluster1_sg_config_name=sgw_cluster1_conf_name, sgw_cluster2_sg_config_name=sgw_cluster2_conf_name)
+    db, num_of_docs, sg_db1, sg_db2, name1, name2, _, password, channels1, _, replicator, replicator_authenticator1, replicator_authenticator2, sg1_blip_url, sg2_blip_url, sg1, sg2, repl1, _, cbl_db1, cbl_db2, _ = setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_teardown_test,
+                                                                                                                                                                                                                                                  cbl_replication_type="push_pull",
+                                                                                                                                                                                                                                                  sgw_cluster1_sg_config_name=sgw_cluster1_conf_name, sgw_cluster2_sg_config_name=sgw_cluster2_conf_name)
     # 2. Create docs on sg1
     db.create_bulk_docs(num_of_docs, "Replication1", db=cbl_db1, channels=channels1)
 
@@ -2099,6 +2113,131 @@ def test_sg_replicate_custom_conflict_resolve(params_from_base_test_setup, setup
         except KeyError:
             assert cbl_db_docs1[doc]["cbl2-update"] == 1, "merge of local and remote doc did not replicated on cbl db1"
             assert cbl_db_docs2[doc]["cbl2-update"] == 1, "merge of local and remote doc did not replicated on cbl db2"
+
+
+@pytest.mark.topospecific
+@pytest.mark.syncgateway
+@pytest.mark.sgreplicate
+@pytest.mark.parametrize("continuous, direction, attachments, doc_delete_source, delete_sgw_cluster", [
+    (False, "pushAndPull", False, "cbl", "sgw1"),
+    (False, "pushAndPull", False, "sdk", "sgw1"),
+    (False, "pushAndPull", False, "cbl", "sgw2"),
+    (False, "pushAndPull", False, "sdk", "sgw2")
+])
+def test_sg_replicate_doc_resurrection(params_from_base_test_setup, setup_customized_teardown_test, continuous, direction, attachments, doc_delete_source, delete_sgw_cluster):
+    '''
+       @summary
+       1.Have 2 sgw nodes , have cbl on each SGW
+       2. Add docs in cbl1
+       3. Do push replication to from cbl1 to sg1 cbl -> sg1
+       4. pull/push/push_pull replication from sg1 -> sg2 with one shot replication
+       5. Do push-pull replication from sg2 -> cbl2
+       6. Delete the doc on cbl1/sdk(data-bucket) and recreate the doc with same doc id
+       7. Start new push_pull replication from sg1 -> sg2
+       8. Verify new recreated doc got pulled to sg2
+    '''
+
+    # 1.Have 2 sgw nodes , have cbl on each SGW
+    sgw_cluster1_conf_name = 'listener_tests/sg_replicate_sgw_cluster1'
+    sgw_cluster2_conf_name = 'listener_tests/sg_replicate_sgw_cluster2'
+    base_url = params_from_base_test_setup["base_url"]
+    ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    cluster_helper = ClusterKeywords(cluster_config)
+    topology = cluster_helper.get_cluster_topology(cluster_config)
+    cbs_url = topology["couchbase_servers"][0]
+    write_flag = False
+    read_flag = False
+    sg_client = MobileRestClient()
+    documentObj = Document(base_url)
+    cbs_ip = host_for_url(cbs_url)
+
+    db, num_of_docs, sg_db1, sg_db2, name1, name2, _, password, channels1, _, replicator, replicator_authenticator1, replicator_authenticator2, sg1_blip_url, sg2_blip_url, sg1, sg2, repl1, c_cluster, cbl_db1, cbl_db2, session1 = setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_teardown_test,
+                                                                                                                                                                                                                                                                 cbl_replication_type="push", sgw_cluster1_sg_config_name=sgw_cluster1_conf_name,
+                                                                                                                                                                                                                                                                 sgw_cluster2_sg_config_name=sgw_cluster2_conf_name)
+
+    bucket = c_cluster.servers[0].get_bucket_names()
+    # 2. Add docs in cbl1
+    if attachments:
+        db.create_bulk_docs(num_of_docs, "sgw1_docs", db=cbl_db1, channels=channels1, attachments_generator=attachment.generate_png_100_100)
+        db.create_bulk_docs(num_of_docs, "sgw2_docs", db=cbl_db2, channels=channels1, attachments_generator=attachment.generate_png_100_100)
+    else:
+        db.create_bulk_docs(num_of_docs, "sgw1_docs", db=cbl_db1, channels=channels1)
+        db.create_bulk_docs(num_of_docs, "sgw2_docs", db=cbl_db2, channels=channels1)
+    repl2 = replicator.configure_and_replicate(
+        source_db=cbl_db2, replicator_authenticator=replicator_authenticator2, target_url=sg2_blip_url)
+
+    replicator.wait_until_replicator_idle(repl1)
+    replicator.wait_until_replicator_idle(repl2)
+
+    if "push" in direction:
+        write_flag = True
+    if "pull" in direction:
+        read_flag = True
+
+    repl_id_1 = sg1.start_replication2(
+        local_db=sg_db1,
+        remote_url=sg2.url,
+        remote_db=sg_db2,
+        remote_user=name2,
+        remote_password=password,
+        direction=direction,
+        continuous=True
+    )
+    sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id_1, read_flag=read_flag, write_flag=write_flag)
+
+    replicator.wait_until_replicator_idle(repl1)
+    replicator.wait_until_replicator_idle(repl2)
+    # Verify docs created in cbl2
+    if "push" in direction:
+        cbl_doc_ids2 = db.getDocIds(cbl_db2)
+        count1 = sum('sgw1_docs_' in s for s in cbl_doc_ids2)
+        assert count1 == num_of_docs, "all docs do not replicate to cbl db2"
+    if "pull" in direction:
+        cbl_doc_ids1 = db.getDocIds(cbl_db1)
+        count2 = sum('sgw2_docs_' in s for s in cbl_doc_ids1)
+        assert count2 == num_of_docs, "all docs do not replicate to cbl db1"
+
+    # 6. Delete the doc on cbl1/sdk(data-bucket) and recreate the doc with same doc id
+    cbl_doc_ids1 = db.getDocIds(cbl_db1)
+    random_doc_id = random.choice(cbl_doc_ids1)
+    doc_body = document.create_doc(doc_id=random_doc_id, content="testing-doc-resurrec", channels=channels1)
+    if doc_delete_source == "cbl":
+        if delete_sgw_cluster == "sgw1":
+            cbl_database = cbl_db1
+        else:
+            cbl_database = cbl_db2
+        db.delete_bulk_docs(cbl_database, doc_ids=[random_doc_id])
+        mutable_doc1 = documentObj.create(random_doc_id, doc_body)
+        db.saveDocument(cbl_database, mutable_doc1)
+    else:
+        if delete_sgw_cluster == "sgw1":
+            cbs_bucket = bucket[0]
+        else:
+            cbs_bucket = bucket[1]
+        if ssl_enabled and c_cluster.ipv6:
+            connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(cbs_ip, cbs_bucket)
+        elif ssl_enabled and not c_cluster.ipv6:
+            connection_url = "couchbases://{}/{}?ssl=no_verify".format(cbs_ip, cbs_bucket)
+        elif not ssl_enabled and c_cluster.ipv6:
+            connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, cbs_bucket)
+        else:
+            connection_url = 'couchbase://{}/{}'.format(cbs_ip, cbs_bucket)
+        sdk_client = Bucket(connection_url, password='password', timeout=SDK_TIMEOUT)
+        sdk_client.remove(random_doc_id)
+        sdk_client.upsert(random_doc_id, doc_body)
+
+    replicator.wait_until_replicator_idle(repl1)
+    sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id_1, write_flag=write_flag)
+    replicator.wait_until_replicator_idle(repl2)
+    cbl_doc_ids2 = db.getDocIds(cbl_db2)
+    cbl_doc_ids1 = db.getDocIds(cbl_db1)
+    compare_cbl_docs(db, cbl_db1, cbl_db2)
+    assert random_doc_id in cbl_doc_ids2, "resurrected doc does not exist on cbl db2"
+    assert random_doc_id in cbl_doc_ids1, "resurrected doc does not exist on cbl db1"
+    sg_doc1 = sg_client.get_doc(url=sg1.url, db=sg_db1, doc_id=random_doc_id, auth=session1)
+    sg_doc2 = sg_client.get_doc(url=sg2.admin.admin_url, db=sg_db2, doc_id=random_doc_id)
+    assert sg_doc1['_rev'] == sg_doc2['_rev'], "revisions of sgw cluster1 and sgw cluster 2 did not match for the doc which resurrected"
 
 
 def restart_sg_nodes(sg1, sg2, sg_config, cluster_config):
