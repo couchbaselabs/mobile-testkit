@@ -41,4 +41,3 @@ def pytest_addoption(parser):
 @pytest.hookimpl(tryfirst=True)
 def pytest_configure(config):
     print("Starting the tests .....")
-

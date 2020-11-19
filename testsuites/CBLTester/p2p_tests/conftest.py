@@ -382,4 +382,3 @@ def url_listener_setup(params_from_base_test_setup):
         "peer_to_peer_listener": listener,
     }
     listener.server_stop(url_listener, "URLEndPoint")
-
