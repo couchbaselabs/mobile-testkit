@@ -561,7 +561,7 @@ class SyncGateway:
                 raise Exception("conflict_resolution_type is selected as custom, but did not provide conflict resolver")
             else:
                 data["custom_conflict_resolver"] = custom_conflict_resolver
-        if user_credentials_url is False:
+        if not user_credentials_url:
             data["username"] = remote_user
             data["password"] = remote_password
         r = requests.put("{}/{}/_replication/{}".format(sg_url, local_db, replication_id), headers=self._headers, data=json.dumps(data))
