@@ -444,6 +444,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     encryption_password = params_from_base_suite_setup["encryption_password"]
     enable_encryption = params_from_base_suite_setup["enable_encryption"]
     use_local_testserver = request.config.getoption("--use-local-testserver")
+    liteserv_host_list = params_from_base_suite_setup["liteserv_host_list"]
     source_db = None
     cbl_db = None
     db_config = None
@@ -532,7 +533,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "db_config": db_config,
         "sg_ssl": sg_ssl,
         "delta_sync_enabled": delta_sync_enabled,
-        "enable_file_logging": enable_file_logging
+        "enable_file_logging": enable_file_logging,
+        "liteserv_host_list" : liteserv_host_list
     }
 
     log_info("Tearing down test")
