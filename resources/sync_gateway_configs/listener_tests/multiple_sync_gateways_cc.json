@@ -25,7 +25,7 @@
             {{ autoimport }}
             {{ xattrs }}
             {{ no_conflicts }}
-            "revs_limit": 25,
+            "revs_limit": 23,
             {{ sg_use_views }}
             {{ num_index_replicas }}
             {{ delta_sync }}
