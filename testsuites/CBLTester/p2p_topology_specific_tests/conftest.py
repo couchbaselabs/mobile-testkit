@@ -2,7 +2,7 @@ import pytest
 import time
 import datetime
 
-from keywords.utils import log_info
+from keywords.utils import log_info, set_device_enabled
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.couchbaseserver import CouchbaseServer
@@ -10,7 +10,7 @@ from keywords.constants import CLUSTER_CONFIGS_DIR
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.exceptions import ProvisioningError
 from keywords.tklogging import Logging
-
+from CBLClient.Query import Query
 from CBLClient.Database import Database
 from CBLClient.FileLogging import FileLogging
 from keywords.utils import host_for_url, clear_resources_pngs
@@ -127,6 +127,15 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="delta-sync: Enable delta-sync for sync gateway")
 
+    parser.addoption("--run-on-device",
+                     action="store",
+                     help="comma separated cbl with value of device or emulator")
+
+    parser.addoption("--no-db-delete", action="store_true",
+                     help="Enable System test to start without reseting cluster", default=False)
+
+
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -138,7 +147,7 @@ def params_from_base_suite_setup(request):
     liteserv_version = request.config.getoption("--liteserv-version")
     liteserv_host = request.config.getoption("--liteserv-host")
     liteserv_port = request.config.getoption("--liteserv-port")
-
+    run_on_device = request.config.getoption("--run-on-device")
     skip_provisioning = request.config.getoption("--skip-provisioning")
     use_local_testserver = request.config.getoption("--use-local-testserver")
     sync_gateway_version = request.config.getoption("--sync-gateway-version")
@@ -163,23 +172,92 @@ def params_from_base_suite_setup(request):
     encryption_password = request.config.getoption("--encryption-password")
     liteserv_host_list = liteserv_host.split(',')
     liteserv_ports = liteserv_port.split(',')
-    testserver = TestServerFactory.create(platform=liteserv_platform,
-                                          version_build=liteserv_version,
-                                          host=liteserv_host_list[0],
-                                          port=liteserv_ports[0],
-                                          community_enabled=community_enabled,
-                                          debug_mode=debug_mode)
+    platform_list = liteserv_platform.split(',')
+    version_list = liteserv_version.split(',')
+    device_enabled_list = set_device_enabled(run_on_device, len(platform_list))
+    no_db_delete = request.config.getoption("--no-db-delete")
 
-    if not use_local_testserver:
-        log_info("Downloading TestServer ...")
-        # Download TestServer app
-        testserver.download()
+    if len(platform_list) != len(version_list) != len(liteserv_host_list) != len(liteserv_ports):
+        raise Exception("Provide equal no. of Parameters for host, port, version and platforms")
 
-        # Install TestServer app
-        if device_enabled:
-            testserver.install_device()
-        else:
-            testserver.install()
+    testserver_list = []
+    test_name = request.node.name
+    for platform, version, host, port, device_enabled in zip(liteserv_platform,
+                                                             liteserv_version,
+                                                             liteserv_host_list,
+                                                             liteserv_ports,
+                                                             device_enabled_list):
+        testserver = TestServerFactory.create(platform=platform,
+                                              version_build=version,
+                                              host=host,
+                                              port=port,
+                                              community_enabled=community_enabled)
+        if not use_local_testserver:
+            log_info("Downloading TestServer ...")
+            # Download TestServer app
+            testserver.download()
+            # Install TestServer app
+            if device_enabled:
+                log_info("install on device")
+                testserver.install_device()
+            else:
+                log_info("install on emulator")
+                testserver.install()
+
+        testserver_list.append(testserver)
+        base_url_list = []
+        for host, port in zip(liteserv_host_list, liteserv_ports):
+            base_url_list.append("http://{}:{}".format(host, port))
+
+        # Create CBL databases on all devices
+        db_name_list = []
+        cbl_db_list = []
+        db_obj_list = []
+        db_path_list = []
+        query_obj_list = []
+        if create_db_per_suite:
+            # Start Test server which needed for suite level set up like query tests
+            for testserver, device_enabled in zip(testserver_list, device_enabled_list):
+                if not use_local_testserver:
+                    log_info("Starting TestServer...")
+                    test_name_cp = test_name.replace("/", "-")
+                    if device_enabled:
+                        log_info("start on device")
+                        testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
+                                                                              test_name_cp, datetime.datetime.now()))
+                    else:
+                        log_info("start on emulator")
+                        testserver.start(
+                            "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp,
+                                                          datetime.datetime.now()))
+            for base_url, i in zip(base_url_list, list(range(len(base_url_list)))):
+                if enable_file_logging and version_list[0] >= "2.5.0":
+                    cbllog = FileLogging(base_url)
+                    cbllog.configure(log_level="verbose", max_rotate_count=2,
+                                     max_size=1000 * 512 * 4, plain_text=True)
+                    log_info("Log files available at - {}".format(cbllog.get_directory()))
+                db_name = "{}-{}".format(create_db_per_suite, i + 1)
+                log_info("db name for {} is {}".format(base_url, db_name))
+                db_name_list.append(db_name)
+                db = Database(base_url)
+                query_obj_list.append(Query(base_url))
+                db_obj_list.append(db)
+
+                log_info("Creating a Database {} at the suite setup".format(db_name))
+                if enable_encryption:
+                    db_config = db.configure(password=encryption_password)
+                else:
+                    db_config = db.configure()
+                cbl_db = db.create(db_name, db_config)
+                cbl_db_list.append(cbl_db)
+                log_info("Getting the database name")
+                assert db.getName(cbl_db) == db_name
+                path = db.getPath(cbl_db).rstrip("/\\")
+                if '\\' in path:
+                    path = '\\'.join(path.split('\\')[:-1])
+                else:
+                    path = '/'.join(path.split('/')[:-1])
+                db_path_list.append(path)
 
     base_url = "http://{}:{}".format(liteserv_host_list[0], liteserv_ports[0])
     base_url2 = "http://{}:{}".format(liteserv_host_list[1], liteserv_ports[1])
@@ -392,7 +470,11 @@ def params_from_base_suite_setup(request):
         "enable_file_logging": enable_file_logging,
         "enable_encryption": enable_encryption,
         "liteserv_host_list": liteserv_host_list,
-        "encryption_password": encryption_password
+        "encryption_password": encryption_password,
+        "testserver_list":testserver_list,
+        "query_obj_list":query_obj_list,
+        "device_enabled_list":device_enabled_list,
+        "base_url_list":base_url_list
     }
     if create_db_per_suite:
         # Delete CBL database
@@ -411,6 +493,26 @@ def params_from_base_suite_setup(request):
         log_info("Stopping the test server per suite")
         testserver.stop()
 
+    if create_db_per_suite:
+        for cbl_db, db_obj, base_url, db_name, path in zip(cbl_db_list, db_obj_list, base_url_list, db_name_list,
+                                                           db_path_list):
+            if not no_db_delete:
+                log_info("Deleting the database {} at the suite teardown".format(db_obj.getName(cbl_db)))
+                time.sleep(2)
+                if db.exists(db_name, path):
+                    db.deleteDB(cbl_db)
+
+        # Flush all the memory contents on the server app
+        for base_url, testserver in zip(base_url_list, testserver_list):
+            try:
+                log_info("Flushing server memory")
+                utils_obj = Utils(base_url)
+                utils_obj.flushMemory()
+                if not use_local_testserver:
+                    log_info("Stopping the test server")
+                    testserver.stop()
+            except Exception as err:
+                log_info("Exception occurred: {}".format(err))
     # Delete png files under resources/data
     clear_resources_pngs()
 
@@ -448,6 +550,10 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     encryption_password = params_from_base_suite_setup["encryption_password"]
     enable_encryption = params_from_base_suite_setup["enable_encryption"]
     use_local_testserver = request.config.getoption("--use-local-testserver")
+    testserver_list = params_from_base_suite_setup["testserver_list"]
+    query_obj_list = params_from_base_suite_setup["query_obj_list"]
+    device_enabled_list = params_from_base_suite_setup["device_enabled_list"]
+    base_url_list = params_from_base_suite_setup["base_url_list"]
     source_db = None
     cbl_db = None
     db_config = None
@@ -502,6 +608,57 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         db_name = db.getName(source_db)
         assert db_name == cbl_db
 
+    if create_db_per_test:
+        db_name_list = []
+        cbl_db_list = []
+        db_obj_list = []
+        db_path_list = []
+        # Start Test server which needed for per test level
+        for testserver, device_enabled in zip(testserver_list, device_enabled_list):
+            if not use_local_testserver:
+                log_info("Starting TestServer...")
+                test_name_cp = test_name.replace("/", "-")
+                log_filename = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR,
+                                                             type(testserver).__name__,
+                                                             test_name_cp,
+                                                             datetime.datetime.now())
+                if device_enabled:
+                    log_info("start on device")
+                    testserver.start_device(log_filename)
+                else:
+                    log_info("start on emulator")
+                    testserver.start(log_filename)
+
+        for base_url, i in zip(base_url_list, list(range(len(base_url_list)))):
+            if enable_file_logging and liteserv_version[0] >= "2.5.0":
+                cbllog = FileLogging(base_url)
+                cbllog.configure(log_level="verbose", max_rotate_count=2,
+                                 max_size=1000 * 512, plain_text=True)
+                log_info("Log files available at - {}".format(cbllog.get_directory()))
+
+            db_name = "{}_{}_{}".format(create_db_per_test, str(time.time()), i + 1)
+            log_info("db name for {} is {}".format(base_url, db_name))
+            db_name_list.append(db_name)
+            db = Database(base_url)
+            query_obj_list.append(Query(base_url))
+            db_obj_list.append(db)
+
+            log_info("Creating a Database {} at the test setup".format(db_name))
+            if enable_encryption:
+                db_config = db.configure(password=encryption_password)
+            else:
+                db_config = db.configure()
+            cbl_db = db.create(db_name, db_config)
+            cbl_db_list.append(cbl_db)
+            log_info("Getting the database name")
+            assert db.getName(cbl_db) == db_name
+            path = db.getPath(cbl_db).rstrip("/\\")
+            if '\\' in path:
+                path = '\\'.join(path.split('\\')[:-1])
+            else:
+                path = '/'.join(path.split('/')[:-1])
+            db_path_list.append(path)
+
     # This dictionary is passed to each test
     yield {
         "cluster_config": cluster_config,
@@ -553,6 +710,23 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         utils_obj.flushMemory()
         utils_obj2 = Utils(base_url2)
         utils_obj2.flushMemory()
+
+    if create_db_per_test:
+        for testserver, cbl_db, db_obj, base_url, db_name, path in zip(testserver_list, cbl_db_list, db_obj_list, base_url_list, db_name_list, db_path_list):
+            try:
+                if db.exists(db_name, path):
+                    log_info(
+                        "Deleting the database {} at the test teardown for base url {}".format(db_obj.getName(cbl_db),
+                                                                                               base_url))
+                    db.deleteDB(cbl_db)
+                log_info("Flushing server memory")
+                utils_obj = Utils(base_url)
+                utils_obj.flushMemory()
+                if not use_local_testserver:
+                    log_info("Stopping the test server per test")
+                    testserver.stop()
+            except Exception as err:
+                log_info("Exception occurred: {}".format(err))
 
 
 @pytest.fixture(scope="function")
