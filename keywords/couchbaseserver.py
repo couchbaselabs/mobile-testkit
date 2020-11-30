@@ -123,18 +123,10 @@ class CouchbaseServer:
         log_info("Found buckets: {}".format(bucket_names))
         return bucket_names
 
-    def delete_bucket(self, name, ipv6=False):
+    def delete_bucket(self, name):
         """ Delete a Couchbase Server bucket with the given 'name' """
         server_version = get_server_version(self.host, self.cbs_ssl)
         server_major_version = int(server_version.split(".")[0])
-        """if self.cbs_ssl and ipv6:
-            connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(self.host, name)
-        elif self.cbs_ssl and not ipv6:
-            connection_url = "couchbases://{}/{}?ssl=no_verify".format(self.host, name)
-        elif not self.cbs_ssl and ipv6:
-            connection_url = "couchbase://{}/{}?ipv6=allow".format(self.host, name)
-        else:
-            connection_url = "couchbase://{}/{}".format(self.host, name)"""
         if server_major_version >= 5:
             self._delete_internal_rbac_bucket_user(name)
 
@@ -148,8 +140,6 @@ class CouchbaseServer:
             count += 1
         log_r(resp)
         resp.raise_for_status()
-        # b = Bucket(connection_url, password='password')
-        # b.n1ql_query("delete from system:prepareds")
 
     def delete_buckets(self):
         """ Deletes all of the buckets on a Couchbase Server.
@@ -204,19 +194,32 @@ class CouchbaseServer:
         count = 0
         error_count = 0
         index_url = self.url.replace("8091", "9102")
-        while count < 5 and error_count <= self.max_retries:
-            try:
-                resp = self._session.get("{}/getIndexStatus".format(index_url))
-                resp_obj = resp.json()
-                if "status" not in resp_obj:
+        while count < 5:
+            resp = self._session.get("{}/getIndexStatus".format(index_url))
+            resp_obj = resp.json()
+            if "status" not in resp_obj:
+                break
+            count += 1
+            time.sleep(60)
+
+        query_url = self.url.replace("8091", "8093")
+        del_pdstmt_query_data = {"statement": "delete from system:prepareds"}
+        verify_pdstmt_query_data = {"statement": "select * from system:prepareds"}
+        resp = self._session.post("{}/query/service".format(query_url), data=del_pdstmt_query_data)
+        resp_obj = resp.json()
+
+        count = 0
+        while count < 5:
+            resp = self._session.post("{}/query/service".format(query_url), data=verify_pdstmt_query_data)
+            resp_obj = resp.json()
+            status = resp_obj["status"]
+            result_count = resp_obj["metrics"]["resultCount"]
+            if status == "success":
+                if result_count == 0:
                     break
-                else:
-                    count += 1
-                time.sleep(60)
-            except ConnectionError:
-                log_info("Hit a ConnectionError while trying to get buckets. Retrying ...")
-                error_count += 1
-                time.sleep(1)
+                count += 1
+                print("counting one more time for prepare statement check", count)
+                time.sleep(15)
 
     def wait_for_ready_state(self):
         """
