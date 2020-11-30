@@ -12,6 +12,7 @@ from keywords.utils import log_info, host_for_url
 from concurrent.futures import ThreadPoolExecutor
 from couchbase.bucket import Bucket
 from keywords.constants import SDK_TIMEOUT
+from keywords import couchbaseserver
 
 
 @pytest.mark.syncgateway
@@ -504,9 +505,12 @@ def test_concurrent_updates_no_conflicts(params_from_base_test_setup, sg_conf_na
 
     # Connect to server via SDK
     log_info('Connecting to bucket ...')
-    bucket_name = 'data-bucket'
+    # bucket_name = 'data-bucket'
     cbs_url = topology['couchbase_servers'][0]
     cbs_ip = host_for_url(cbs_url)
+    cb_server = couchbaseserver.CouchbaseServer(cbs_url)
+    bucket_name = cb_server.get_bucket_names()[0]
+    c.servers[0].delete_bucket(bucket_name)
     if c.ipv6:
         sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
     else:

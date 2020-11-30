@@ -2746,7 +2746,9 @@ def test_replication_1withMultipleBuckets_deleteOneBucket(params_from_base_test_
                                                replication_type="push_pull", continuous=True, channels=channel3)
 
     # 5. Deleted 3rd bucket on CBS.
-    cb_server.delete_bucket(name="data-bucket-3")
+    bucket_name = cb_server.get_bucket_names()[2]
+    # cb_server.delete_bucket(name="data-bucket-3")
+    cb_server.delete_bucket(name=bucket_name)
 
     # 6. Continue replication.
     replicator.wait_until_replicator_idle(repl1)

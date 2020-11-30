@@ -45,7 +45,7 @@ def test_userdefind_collections(params_from_base_test_setup):
     cb_server = couchbaseserver.CouchbaseServer(cbs_url)
     cbs_ip = host_for_url(cbs_url)
     sg_db = "db"
-    bucket = "data-bucket"
+    bucket = cb_server.get_bucket_names()[0]
     channels = ["ABC"]
     num_sdk_docs = 10
 

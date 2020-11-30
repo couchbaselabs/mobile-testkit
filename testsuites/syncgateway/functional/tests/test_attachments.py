@@ -58,7 +58,8 @@ def test_attachment_revpos_when_ancestor_unavailable(params_from_base_test_setup
     sg_url = topology["sync_gateways"][0]["public"]
     sg_url_admin = topology["sync_gateways"][0]["admin"]
     sg_db = "db"
-    bucket = "data-bucket"
+    cb_server = couchbaseserver.CouchbaseServer(cbs_url)
+    bucket = cb_server.get_bucket_names()[0]
 
     log_info("Running 'test_attachment_revpos_when_ancestor_unavailable'")
     log_info("Using cbs_url: {}".format(cbs_url))
@@ -71,7 +72,6 @@ def test_attachment_revpos_when_ancestor_unavailable(params_from_base_test_setup
 
     client = MobileRestClient()
     sg_util = SyncGateway()
-    cb_server = couchbaseserver.CouchbaseServer(cbs_url)
 
     user1 = client.create_user(url=sg_url_admin, db=sg_db, name="user1", password="password", channels=channels_list)
     atts = attachment.load_from_data_dir(["sample_text.txt"])
@@ -139,7 +139,8 @@ def test_attachment_revpos_when_ancestor_unavailable_active_revision_doesnt_shar
     sg_url = topology["sync_gateways"][0]["public"]
     sg_url_admin = topology["sync_gateways"][0]["admin"]
     sg_db = "db"
-    bucket = "data-bucket"
+    cb_server = couchbaseserver.CouchbaseServer(cbs_url)
+    bucket = cb_server.get_bucket_names()[0]
 
     log_info("Running 'test_attachment_revpos_when_ancestor_unavailable_active_revision_doesnt_share_ancestor'")
     log_info("Using cbs_url: {}".format(cbs_url))
@@ -216,7 +217,8 @@ def test_writing_attachment_to_couchbase_server(params_from_base_test_setup, sg_
     sg_url = topology["sync_gateways"][0]["public"]
     sg_url_admin = topology["sync_gateways"][0]["admin"]
     sg_db = "db"
-    bucket = "data-bucket"
+    cb_server = couchbaseserver.CouchbaseServer(cbs_url)
+    bucket = cb_server.get_bucket_names()[0]
 
     log_info("Running 'test_writing_attachment_to_couchbase_server'")
     log_info("Using cbs_url: {}".format(cbs_url))

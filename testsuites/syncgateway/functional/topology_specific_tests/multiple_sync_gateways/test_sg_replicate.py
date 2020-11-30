@@ -14,6 +14,7 @@ from keywords import document
 from keywords.utils import host_for_url
 from couchbase.bucket import Bucket
 from keywords.MobileRestClient import MobileRestClient
+from keywords import couchbaseserver
 
 import pytest
 import time
@@ -523,7 +524,7 @@ def test_sdk_update_with_changes_request(params_from_base_test_setup):
     xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
 
     channel = ['ABC']
-    bucket_name = 'data-bucket-1'
+    # bucket_name = 'data-bucket-1'
     cluster_utils = ClusterKeywords(cluster_config)
     cluster = Cluster(config=cluster_config)
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
@@ -542,6 +543,8 @@ def test_sdk_update_with_changes_request(params_from_base_test_setup):
     sg2 = cluster.sync_gateways[1]
 
     cluster.reset(sg_config_path=config)
+    cb_server = couchbaseserver.CouchbaseServer(cbs_url)
+    bucket_name = cb_server.get_bucket_names()[0]
     status = sg1.restart(config=config, cluster_config=cluster_config)
     assert status == 0, "Syncgateway1 did not start "
     config = sync_gateway_config_path_for_mode("sync_gateways_one_with_import_docs", mode)

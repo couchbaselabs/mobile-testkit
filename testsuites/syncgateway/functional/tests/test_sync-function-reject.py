@@ -48,7 +48,9 @@ def test_attachments_on_docs_rejected_by_sync_function(params_from_base_test_set
     sg_url = topology["sync_gateways"][0]["public"]
     sg_url_admin = topology["sync_gateways"][0]["admin"]
     sg_db = "db"
-    bucket = "data-bucket"
+    # bucket = "data-bucket"
+    cb_server = couchbaseserver.CouchbaseServer(cbs_url)
+    bucket = cb_server.get_bucket_names()[0]
 
     log_info("Running 'test_attachments_on_docs_rejected_by_sync_function'")
     log_info("Using cbs_url: {}".format(cbs_url))
@@ -80,8 +82,6 @@ def test_attachments_on_docs_rejected_by_sync_function(params_from_base_test_set
     with pytest.raises(HTTPError) as he:
         client.add_doc(url=sg_url, db=sg_db, doc=doc_with_att, auth=sg_user_session)
     assert str(he.value).startswith("403 Client Error: Forbidden for url:")
-
-    cb_server = couchbaseserver.CouchbaseServer(cbs_url)
 
     server_att_docs = cb_server.get_server_docs_with_prefix(bucket=bucket, prefix="_sync:att:", ipv6=cluster.ipv6)
     num_att_docs = len(server_att_docs)

@@ -9,6 +9,7 @@ from keywords import document
 from keywords.utils import host_for_url
 from couchbase.bucket import Bucket
 from keywords.MobileRestClient import MobileRestClient
+from keywords import couchbaseserver
 
 
 @pytest.mark.syncgateway
@@ -29,7 +30,7 @@ def test_importDocs_withSharedBucketAccessFalse(params_from_base_test_setup):
 
     sg_db = 'db'
     num_docs = 10
-    bucket_name = 'data-bucket'
+    # bucket_name = 'data-bucket'
     sg_conf_name = "sync_gateway_with_shared_bucket_false"
 
     cluster_conf = params_from_base_test_setup['cluster_config']
@@ -60,6 +61,8 @@ def test_importDocs_withSharedBucketAccessFalse(params_from_base_test_setup):
     # 1. Start CBS and SGW with only enable_shared_bucket_access=false
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
+    cb_server = couchbaseserver.CouchbaseServer(cbs_url)
+    bucket_name = cb_server.get_bucket_names()[0]
     if cluster.ipv6:
         sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_host, bucket_name), password='password')
     else:
@@ -102,7 +105,7 @@ def test_importDocs_defaultBehavior_withSharedBucketAccessTrue(params_from_base_
 
     sg_db = 'db'
     num_docs = 10
-    bucket_name = 'data-bucket'
+    # bucket_name = 'data-bucket'
     sg_conf_name = "xattrs/no_import"
 
     cluster_conf = params_from_base_test_setup['cluster_config']
@@ -129,6 +132,8 @@ def test_importDocs_defaultBehavior_withSharedBucketAccessTrue(params_from_base_
     # 1. Start CBS and SGW with only enable_shared_bucket_access=false
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
+    cb_server = couchbaseserver.CouchbaseServer(cbs_url)
+    bucket_name = cb_server.get_bucket_names()[0]
     if cluster.ipv6:
         sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_host, bucket_name), password='password')
     else:
@@ -168,7 +173,7 @@ def test_importPartitions_withSharedBucketAccessTrue(params_from_base_test_setup
 
     sg_db = 'db'
     num_docs = 10
-    bucket_name = 'data-bucket'
+    # bucket_name = 'data-bucket'
     sg_conf_name = "sync_gateway_default_with_importpartitions"
 
     cluster_conf = params_from_base_test_setup['cluster_config']
@@ -197,6 +202,8 @@ def test_importPartitions_withSharedBucketAccessTrue(params_from_base_test_setup
     # 3. Start SGW
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
+    cb_server = couchbaseserver.CouchbaseServer(cbs_url)
+    bucket_name = cb_server.get_bucket_names()[0]
     if cluster.ipv6:
         sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_host, bucket_name), password='password')
     else:

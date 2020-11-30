@@ -117,9 +117,10 @@ def test_rollback_server_reset(params_from_base_test_setup, sg_conf_name, x509_c
         expected_docs=all_docs,
         auth=seth_session
     )
-
+    # bucket_name = "data-bucket"
     # Delete vbucket and restart server
-    cb_server.delete_vbucket(66, "data-bucket")
+    bucket_name = cb_server.get_bucket_names()[0]
+    cb_server.delete_vbucket(66, bucket_name)
     cb_server.restart()
     max_retries = 50
     count = 0

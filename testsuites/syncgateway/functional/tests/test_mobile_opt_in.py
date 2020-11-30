@@ -13,6 +13,7 @@ from keywords.SyncGateway import SyncGateway
 from keywords.userinfo import UserInfo
 from keywords.utils import host_for_url, log_info
 from libraries.testkit.cluster import Cluster
+from keywords import couchbaseserver
 
 
 @pytest.mark.syncgateway
@@ -47,8 +48,8 @@ def test_mobile_opt_in(params_from_base_test_setup, sg_conf_name):
          verify it succeeds
     """
 
-    bucket_name = 'data-bucket'
     sg_db = 'db'
+    # bucket_name = 'data-bucket'
 
     cluster_conf = params_from_base_test_setup['cluster_config']
     cluster_topology = params_from_base_test_setup['cluster_topology']
@@ -75,6 +76,8 @@ def test_mobile_opt_in(params_from_base_test_setup, sg_conf_name):
     # Create clients
     sg_client = MobileRestClient()
     cbs_ip = host_for_url(cbs_url)
+    cb_server = couchbaseserver.CouchbaseServer(cbs_url)
+    bucket_name = cb_server.get_bucket_names()[0]
     if cluster.ipv6:
         sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
     else:

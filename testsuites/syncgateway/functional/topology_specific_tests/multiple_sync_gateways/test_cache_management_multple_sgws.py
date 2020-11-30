@@ -11,6 +11,7 @@ from keywords.MobileRestClient import MobileRestClient
 from keywords.ClusterKeywords import ClusterKeywords
 from libraries.testkit import cluster
 from concurrent.futures import ThreadPoolExecutor
+from keywords import couchbaseserver
 
 
 @pytest.mark.syncgateway
@@ -30,7 +31,7 @@ def test_importdocs_false_shared_bucket_access_true(params_from_base_test_setup)
 
     sg_db = 'db'
     num_docs = 10
-    bucket_name = 'data-bucket'
+    # bucket_name = 'data-bucket'
     sg_conf_name1 = "import_false"
     sg_conf_name2 = "xattrs/no_import"
 
@@ -58,6 +59,8 @@ def test_importdocs_false_shared_bucket_access_true(params_from_base_test_setup)
     # 2. Have 2 SGWs and have CBS set up  with above configuation on SGW.
     # 3. Have one node as import_docs=false
     cbs_cluster.reset(sg_config_path=sg_conf1)
+    cb_server = couchbaseserver.CouchbaseServer(cbs_url)
+    bucket_name = cb_server.get_bucket_names()[0]
     sg1 = cbs_cluster.sync_gateways[0]
     sg2 = cbs_cluster.sync_gateways[1]
     status = sg1.restart(config=sg_conf1, cluster_config=cluster_conf)
@@ -133,7 +136,7 @@ def test_sgw_cache_management_multiple_sgws(params_from_base_test_setup):
 
     sg_db = "db"
     num_docs = 100
-    bucket_name = 'data-bucket'
+    # bucket_name = 'data-bucket'
 
     client = MobileRestClient()
     c = cluster.Cluster(config=cluster_config)
@@ -141,6 +144,8 @@ def test_sgw_cache_management_multiple_sgws(params_from_base_test_setup):
     sg2 = c.sync_gateways[1]
     cbs_url = cluster_topology['couchbase_servers'][0]
     cbs_cluster = Cluster(config=cluster_config)
+    cb_server = couchbaseserver.CouchbaseServer(cbs_url)
+    bucket_name = cb_server.get_bucket_names()[0]
 
     # 2. Create docs in CBS
     create_docs_via_sdk(cbs_url, cbs_cluster, bucket_name, num_docs)
@@ -205,10 +210,12 @@ def test_sgw_high_availability(params_from_base_test_setup, setup_basic_sg_conf)
     cluster_utils.reset_cluster(cluster_config=cluster_config, sync_gateway_config=sg_conf)
 
     num_docs = 100
-    bucket_name = 'data-bucket'
+    # bucket_name = 'data-bucket'
 
     sg1 = cbs_cluster.sync_gateways[0]
     cbs_url = cluster_topology['couchbase_servers'][0]
+    cb_server = couchbaseserver.CouchbaseServer(cbs_url)
+    bucket_name = cb_server.get_bucket_names()[0]
 
     # 2. Start a thread to write docs via SDK
     with ThreadPoolExecutor(max_workers=4) as tpe:
