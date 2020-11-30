@@ -602,7 +602,7 @@ def setup_customized_teardown_test(params_from_base_test_setup):
             db.deleteDB(cbl_db1)
         if db.exists(cbl_db_name2, path2):
             db.deleteDB(cbl_db2)
-        if db.exists(cbl_db_name3, path2):
+        if db.exists(cbl_db_name3, path3):
             db.deleteDB(cbl_db3)
     except Exception as err:
         log_info("Exception occurred: {}".format(err))
