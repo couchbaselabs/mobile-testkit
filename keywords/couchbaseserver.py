@@ -192,7 +192,6 @@ class CouchbaseServer:
 
         # verify all indexes are deleted
         count = 0
-        error_count = 0
         index_url = self.url.replace("8091", "9102")
         while count < 5:
             resp = self._session.get("{}/getIndexStatus".format(index_url))
