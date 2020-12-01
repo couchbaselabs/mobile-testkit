@@ -6,9 +6,6 @@ from keywords.constants import CLUSTER_CONFIGS_DIR
 from keywords.exceptions import ProvisioningError, FeatureSupportedError
 from keywords.SyncGateway import (sync_gateway_config_path_for_mode,
                                   validate_sync_gateway_mode, get_sync_gateway_version)
-# from keywords.SyncGateway import (SyncGateway, sync_gateway_config_path_for_mode,
-#                                  validate_sync_gateway_mode, get_sync_gateway_version)
-# from keywords.utils import host_for_url
 from keywords.tklogging import Logging
 from keywords.utils import check_xattr_support, log_info, version_is_binary, compare_versions, clear_resources_pngs
 from libraries.NetworkUtils import NetworkUtils
