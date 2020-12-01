@@ -217,7 +217,6 @@ class CouchbaseServer:
                 if result_count == 0:
                     break
                 count += 1
-                print("counting one more time for prepare statement check", count)
                 time.sleep(15)
 
     def wait_for_ready_state(self):
