@@ -552,7 +552,7 @@ def sg_doc_updates(sg_client, sg_url, sg_db, sg_docs, number_updates, auth, chan
 
 def sdk_bulk_update(sdk_client, sdk_docs, num_of_updates):
     for doc_id, val in list(sdk_docs.items()):
-        doc_body = val.value
+        doc_body = val.content
         doc_body["updated_by_sdk"] = 0
         for i in range(num_of_updates):
             doc_body["updated_by_sdk"] += 1
