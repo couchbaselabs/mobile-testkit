@@ -98,7 +98,7 @@ def create_doc(doc_id, content=None, attachments=None, expiry=None, channels=Non
     doc = {}
 
     if doc_id is not None:
-        doc["_id"] = doc_id
+        doc["id"] = doc_id
 
     if expiry is not None:
         doc["_exp"] = expiry
