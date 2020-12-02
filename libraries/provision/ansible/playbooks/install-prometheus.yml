@@ -1,0 +1,10 @@
+  ---
+  - hosts: pool
+    any_errors_fatal: true
+    become: yes
+
+    tasks:
+    - name: DEPS | download Prometheus
+      get_url: url=https://github.com/prometheus/prometheus/releases/download/v2.14.0/prometheus-2.14.0.linux-amd64.tar.gz  dest=/home/centos
+    - name: DEPS | extract Prometheus
+        unarchive: src=/home/centos/prometheus-2.14.0.linux-amd64.tar.gz dest=/usr/local copy=no
