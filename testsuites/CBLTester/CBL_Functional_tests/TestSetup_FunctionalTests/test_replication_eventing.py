@@ -514,8 +514,9 @@ def test_push_replication_for_20mb_doc(params_from_base_test_setup, attachment_g
     liteserv_platform = params_from_base_test_setup["liteserv_platform"]
 
     if sync_gateway_version < "2.5.0" or liteserv_platform == "android":
-        pytest.skip('This test cannnot run with sg version below 2.5 and fails for Andriod as Android device/emulator '
-                    'cannot handle doc with more than 20MB')
+        pytest.skip(
+            "This test cannnot run with sg version below 2.5 and fails for Andriod as Android device/emulator cannot "
+            "handle doc with more than 20MB")
     username = "autotest"
     password = "password"
     channels = ["ABC"]
