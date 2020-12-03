@@ -1,0 +1,32 @@
+{
+    "interface":":4984",
+    "adminInterface": "0.0.0.0:4985",
+    "maxIncomingConnections": 0,
+    "maxFileDescriptors": 90000,
+    "compressResponses": false,
+    "metricsinterface": ":4986",
+    "logging": {
+        "debug": {
+            "enabled": true
+        }
+    },
+    "databases":{
+        "db":{
+            "import_docs": true,
+            "enable_shared_bucket_access": true,
+            "num_index_replicas": 0,
+            {{ username }}
+            {{ password }}
+            "delta_sync": {
+                "enabled": true
+            },
+            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
+            "bucket":"{{ bucket_name }}",
+            "cache": {
+                "channel_cache_max_length": 15000,
+                "channel_cache_min_length": 15000,
+                "channel_cache_expiry": 90
+            }
+        }
+    }
+}

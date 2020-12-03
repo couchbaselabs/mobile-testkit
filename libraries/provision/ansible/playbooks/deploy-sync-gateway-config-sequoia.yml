@@ -1,0 +1,25 @@
+---
+# Deploy non writer sync_gateway configs
+- hosts: sync_gateways
+  any_errors_fatal: true
+  become: yes
+  vars:
+    sync_gateway_config_filepath:
+    couchbase_server_primary_node:
+    sync_gateway_node: "{{ hostvars[groups.sync_gateways[0]].ansible_host }}"
+    username:
+    password:
+    bucket_name:
+    server_scheme:
+    server_port:
+    x509_auth:
+
+  tasks:
+  - include: tasks/deploy-sync-gateway-config.yml
+
+# Launch sync_gateway service
+- hosts: sync_gateways
+  any_errors_fatal: true
+  become: yes
+  tasks:
+  - include: tasks/start-sync-gateway.yml
