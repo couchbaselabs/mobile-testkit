@@ -2414,10 +2414,10 @@ def test_replication_with_privatePublicChannels(params_from_base_test_setup, set
     # 4. verify in CBL , only docs from public channel is replicated
     cbl_doc_ids = db.getDocIds(cbl_db1)
     for doc in sg_docs2:
-        assert doc["_id"] in cbl_doc_ids, "doc with public channel did not replicate to cbl"
+        assert doc["id"] in cbl_doc_ids, "doc with public channel did not replicate to cbl"
 
     for doc in sg_docs:
-        assert doc["_id"] not in cbl_doc_ids, "doc with public channel replicated to cbl"
+        assert doc["id"] not in cbl_doc_ids, "doc with public channel replicated to cbl"
 
     # 5. update docs in cbl
     # Verify updated docs got replicated to sg
