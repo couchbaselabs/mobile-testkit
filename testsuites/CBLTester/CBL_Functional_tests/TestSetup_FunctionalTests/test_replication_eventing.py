@@ -512,10 +512,8 @@ def test_push_replication_for_20mb_doc(params_from_base_test_setup, attachment_g
     cbl_db = params_from_base_test_setup["source_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     liteserv_platform = params_from_base_test_setup["liteserv_platform"]
-    device_enabled = params_from_base_test_setup["device_enabled"]
 
-    if sync_gateway_version < "2.5.0" or liteserv_platform == "android" or liteserv_platform == "xamarine-android" or \
-            ((liteserv_platform == "ios" or liteserv_platform == "xamarin-ios") and device_enabled):
+    if sync_gateway_version < "2.5.0" or liteserv_platform == "android":
         pytest.skip('This test cannnot run with sg version below 2.5 and fails for Andriod as Android device/emulator '
                     'cannot handle doc with more than 20MB')
     username = "autotest"
