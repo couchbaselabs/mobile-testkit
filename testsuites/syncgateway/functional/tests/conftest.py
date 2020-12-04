@@ -4,9 +4,8 @@ import pytest
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.constants import CLUSTER_CONFIGS_DIR
 from keywords.exceptions import ProvisioningError, FeatureSupportedError
-from keywords.SyncGateway import (SyncGateway, sync_gateway_config_path_for_mode,
+from keywords.SyncGateway import (sync_gateway_config_path_for_mode,
                                   validate_sync_gateway_mode, get_sync_gateway_version)
-from keywords.utils import host_for_url
 from keywords.tklogging import Logging
 from keywords.utils import check_xattr_support, log_info, version_is_binary, compare_versions, clear_resources_pngs
 from libraries.NetworkUtils import NetworkUtils
@@ -14,6 +13,7 @@ from libraries.testkit import cluster
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop, is_x509_auth
 from utilities.cluster_config_utils import get_load_balancer_ip
 from libraries.provision.clean_cluster import clear_firewall_rules
+from keywords.couchbaseserver import get_server_version
 
 UNSUPPORTED_1_5_0_CC = {
     "test_db_offline_tap_loss_sanity[bucket_online_offline/bucket_online_offline_default_dcp-100]": {
@@ -340,6 +340,14 @@ def params_from_base_suite_setup(request):
         log_info("Running without magma storage")
         persist_cluster_config_environment_prop(cluster_config, 'magma_storage_enabled', False, False)
 
+    try:
+        cbs_ce
+    except NameError:
+        log_info("cbs ce flag  is not provided, so by default it runs on Enterprise edition")
+    else:
+        log_info("Running test with CBS edition {}".format(cbs_ce))
+        persist_cluster_config_environment_prop(cluster_config, 'cbs_ce', cbs_ce, False)
+
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
 
     # Skip provisioning if user specifies '--skip-provisoning' or '--sequoia'
@@ -392,6 +400,7 @@ def params_from_base_suite_setup(request):
         "ssl_enabled": cbs_ssl,
         "delta_sync_enabled": delta_sync_enabled,
         "sg_ce": sg_ce,
+        "sg_config": sg_config,
         "cbs_ce": cbs_ce
     }
 
@@ -427,18 +436,22 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     sg_platform = params_from_base_suite_setup["sg_platform"]
     delta_sync_enabled = params_from_base_suite_setup["delta_sync_enabled"]
     sg_ce = params_from_base_suite_setup["sg_ce"]
+    sg_config = params_from_base_suite_setup["sg_config"]
     cbs_ce = params_from_base_suite_setup["cbs_ce"]
 
     test_name = request.node.name
-    sg_admin_url = cluster_topology["sync_gateways"][0]["admin"]
-    sg_ip = host_for_url(sg_admin_url)
+    c = cluster.Cluster(cluster_config)
+    sg = c.sync_gateways[0]
+    cbs_ip = c.servers[0].host
 
     try:
-        get_sync_gateway_version(sg_ip)
+        get_sync_gateway_version(sg.ip)
     except Exception:
-        sg = SyncGateway()
-        log_info("Restarting sync gateway {}".format(sg_ip))
-        sg.restart_sync_gateways(cluster_config=cluster_config, url=sg_ip)
+        try:
+            get_server_version(cbs_ip, cbs_ssl=cbs_ssl)
+        except Exception:
+            c.reset(sg_config_path=sg_config)
+        sg.restart(config=sg_config, cluster_config=cluster_config)
 
     if sg_lb:
         # These tests target one SG node
@@ -486,7 +499,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     network_utils.list_connections()
 
     # Verify all sync_gateways and sg_accels are reachable
-    c = cluster.Cluster(cluster_config)
+
     errors = c.verify_alive(mode)
 
     # if the test failed or a node is down, pull logs
