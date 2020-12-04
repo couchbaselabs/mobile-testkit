@@ -1062,4 +1062,4 @@ def verify_doc_deletion_on_server(doc_id, sdk_client, sg_client, sg_admin_url, s
     else:
         with pytest.raises(DocumentNotFoundException) as nfe:
             sdk_client.get(doc_id)
-        assert "The key does not exist on the server" in str(nfe)
+        assert "DocumentNotFoundException" in str(nfe)
