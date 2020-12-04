@@ -246,7 +246,7 @@ def test_upgrade(params_from_base_test_setup):
 
             log_info("Verifying that there is no _sync property in the docs")
             for i in docs_from_sdk:
-                if "_sync" in docs_from_sdk[i].value:
+                if "_sync" in docs_from_sdk[i].content:
                     raise Exception("_sync section found in docs after upgrade")
 
 
