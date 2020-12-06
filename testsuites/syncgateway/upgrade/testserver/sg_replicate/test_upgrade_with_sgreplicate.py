@@ -207,10 +207,10 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
     for node in sg_node_list:
         if count < sgw_cluster1_count:
             sg_obj.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sgw_cluster1_config_path, url=node,
-                                                sync_gateway_version=sync_gateway_version, enable_import=True)
+                                                sync_gateway_version=sync_gateway_version, cb_server=cluster.servers[0], enable_import=True)
         elif count < total_sgs_count:
             sg_obj.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sgw_cluster2_config_path, url=node,
-                                                sync_gateway_version=sync_gateway_version, enable_import=True)
+                                                sync_gateway_version=sync_gateway_version, cb_server=cluster.servers[0], enable_import=True)
         else:
             sg_obj.stop_sync_gateways(cluster_config=cluster_config, url=node)
         count += 1
@@ -336,6 +336,7 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
                     sg_conf=sgw_cluster1_config_path,
                     url=sg_ip,
                     sync_gateway_version=sync_gateway_upgraded_version,
+                    cb_server=cluster.servers[0],
                     enable_import=enable_import
                 )
 
@@ -346,6 +347,7 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
                     sg_conf=sgw_cluster2_config_path,
                     url=sg_ip,
                     sync_gateway_version=sync_gateway_upgraded_version,
+                    cb_server=cluster.servers[0],
                     enable_import=enable_import
                 )
 

@@ -68,13 +68,13 @@ def setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_te
         sgw_cluster1_config_path = "{}/{}".format(os.getcwd(), sgw_cluster1_sg_config)
 
         sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sgw_cluster1_config_path, url=sg1.ip,
-                                                sync_gateway_version=sync_gateway_version, enable_import=True)
+                                                sync_gateway_version=sync_gateway_version, cb_server=c_cluster.servers[0], enable_import=True)
 
     if sgw_cluster2_sg_config_name:
         sgw_cluster2_sg_config = sync_gateway_config_path_for_mode(sgw_cluster2_sg_config_name, sg_mode)
         sgw_cluster2_config_path = "{}/{}".format(os.getcwd(), sgw_cluster2_sg_config)
         sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sgw_cluster2_config_path, url=sg2.ip,
-                                                sync_gateway_version=sync_gateway_version, enable_import=True)
+                                                sync_gateway_version=sync_gateway_version, cb_server=c_cluster.servers[0], enable_import=True)
 
     admin = Admin(sg1)
     admin.admin_url = sg1.url
@@ -561,7 +561,7 @@ def test_sg_replicate_oneactive_2passive(params_from_base_test_setup, setup_cust
     sgw_cluster1_sg_config = sync_gateway_config_path_for_mode(sgw_cluster2_bucket_3, sg_mode)
     sgw_cluster1_config_path = "{}/{}".format(os.getcwd(), sgw_cluster1_sg_config)
     sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sgw_cluster1_config_path, url=sg3.ip,
-                                            sync_gateway_version=sync_gateway_version, enable_import=True)
+                                            sync_gateway_version=sync_gateway_version, cb_server=c_cluster.servers[0], enable_import=True)
     db.create_bulk_docs(num_of_docs, "Replication1", db=cbl_db1, channels=channels1)
     authenticator = Authenticator(base_url)
 
@@ -677,7 +677,7 @@ def test_sg_replicate_2active_1passive(params_from_base_test_setup, setup_custom
     sgw_cluster1_sg_config = sync_gateway_config_path_for_mode(sgw_cluster2_bucket_3, sg_mode)
     sgw_cluster1_config_path = "{}/{}".format(os.getcwd(), sgw_cluster1_sg_config)
     sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sgw_cluster1_config_path, url=sg3.ip,
-                                            sync_gateway_version=sync_gateway_version, enable_import=True)
+                                            sync_gateway_version=sync_gateway_version, cb_server=c_cluster.servers[0], enable_import=True)
     authenticator = Authenticator(base_url)
 
     sg3_blip_url = "ws://{}:4984/{}".format(sg3.ip, sg_db3)
@@ -1293,7 +1293,7 @@ def test_sg_replicate_replications_with_drop_out_one_node(params_from_base_test_
     sgw_cluster1_sg_config = sync_gateway_config_path_for_mode(sgw_cluster1_conf_name, sg_mode)
     sgw_cluster1_config_path = "{}/{}".format(os.getcwd(), sgw_cluster1_sg_config)
     sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sgw_cluster1_config_path, url=sg3.ip,
-                                            sync_gateway_version=sync_gateway_version, enable_import=True)
+                                            sync_gateway_version=sync_gateway_version, cb_server=c_cluster.servers[0], enable_import=True)
 
     channels3 = channels1 + channels2
     sg3_admin_url = sg3.admin.admin_url

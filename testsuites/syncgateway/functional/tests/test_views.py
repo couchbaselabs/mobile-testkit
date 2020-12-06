@@ -11,6 +11,7 @@ from keywords.userinfo import UserInfo
 from keywords.utils import log_info
 from libraries.testkit.cluster import Cluster
 from utilities.cluster_config_utils import get_sg_version, persist_cluster_config_environment_prop, copy_to_temp_conf
+from keywords import couchbaseserver
 
 
 @pytest.mark.syncgateway
@@ -50,6 +51,7 @@ def test_view_backfill_for_deletes(params_from_base_test_setup, sg_conf_name,
     sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
     sg_url = cluster_topology['sync_gateways'][0]['public']
     cbs_url = cluster_topology['couchbase_servers'][0]
+    cb_server = couchbaseserver.CouchbaseServer(cbs_url)
 
     log_info('sg_conf: {}'.format(sg_conf))
     log_info('sg_admin_url: {}'.format(sg_admin_url))
@@ -123,7 +125,7 @@ def test_view_backfill_for_deletes(params_from_base_test_setup, sg_conf_name,
     # Restart Sync Gateway
     sg_controller = SyncGateway()
     sg_controller.stop_sync_gateways(url=sg_url, cluster_config=cluster_conf)
-    sg_controller.start_sync_gateways(url=sg_url, cluster_config=cluster_conf, config=sg_conf)
+    sg_controller.start_sync_gateways(url=sg_url, cb_server=cb_server, cluster_config=cluster_conf, config=sg_conf)
 
     # Verify deletions and inital docs show up in changes feed
     sg_client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=all_docs, auth=seth_auth)

@@ -8,6 +8,7 @@ from keywords.MobileRestClient import MobileRestClient
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.SyncGateway import SyncGateway
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
+from keywords import couchbaseserver
 
 import keywords.exceptions
 from keywords import userinfo
@@ -40,7 +41,8 @@ def test_channels_view_after_restart(params_from_base_test_setup, sg_conf_name):
     sg_admin_url = topology['sync_gateways'][0]['admin']
     sg_db = 'db'
     num_docs = 10000
-
+    cbs_url = topology["couchbase_servers"][0]
+    cb_server = couchbaseserver.CouchbaseServer(cbs_url)
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     cluster = Cluster(cluster_config)
@@ -74,7 +76,7 @@ def test_channels_view_after_restart(params_from_base_test_setup, sg_conf_name):
     # Reset sync gateway to clear channel cache
     sg = SyncGateway()
     sg.stop_sync_gateways(cluster_config=cluster_config, url=sg_url)
-    sg.start_sync_gateways(cluster_config=cluster_config, url=sg_url, config=sg_conf)
+    sg.start_sync_gateways(cluster_config=cluster_config, cb_server=cb_server, url=sg_url, config=sg_conf)
 
     # Add 1 doc to Sync Gateway (to initialize the channel cache)
     doc_bodies = document.create_docs(doc_id_prefix='doc_new', number=1, channels=seth_user_info.channels)

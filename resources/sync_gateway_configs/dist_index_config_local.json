@@ -23,7 +23,7 @@
             {{ keypath }}
             {{ delta_sync }}
             "server":"http://127.0.0.1:8091",
-            "bucket":"data-bucket",
+            {{ bucket_name1 }},
             "channel_index":{
                 "num_shards":16,
                 "server":"http://127.0.0.1:8091",

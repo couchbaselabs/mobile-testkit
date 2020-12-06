@@ -371,7 +371,7 @@ class SyncGateway(object):
         for ac in cluster_obj["sg_accels"]:
             verify_sg_accel_version(ac["ip"], sync_gateway_version)
 
-    def start_sync_gateways(self, cluster_config, url=None, config=None):
+    def start_sync_gateways(self, cluster_config, cb_server, url=None, config=None):
         """Start sync gateways in a cluster. If url is passed,
         start the sync gateway at that url
         """
@@ -383,7 +383,8 @@ class SyncGateway(object):
         config_path = os.path.abspath(config)
         sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
         cbs_cert_path = os.path.join(os.getcwd(), "certs")
-        bucket_names = get_buckets_from_sync_gateway_config(config_path)
+        bucket_names = cb_server.get_bucket_names()
+        # bucket_names = get_buckets_from_sync_gateway_config(config_path)
         couchbase_server_primary_node = add_cbs_to_sg_config_server_field(cluster_config)
         if is_cbs_ssl_enabled(cluster_config):
             self.server_port = ""
@@ -496,6 +497,11 @@ class SyncGateway(object):
         if is_delta_sync_enabled(cluster_config) and get_sg_version(cluster_config) >= "2.5.0":
             playbook_vars["delta_sync"] = '"delta_sync": { "enabled": true},'
 
+        data_bucket_list = ['bucket_name1', 'bucket_name2', 'bucket_name3', 'bucket_name4']
+        i = 0
+        for bucket_name in bucket_names:
+            playbook_vars[data_bucket_list[i]] = '"bucket": "{}",'.format(bucket_name)
+            i += 1
         if url is not None:
             target = hostname_for_url(cluster_config, url)
             log_info("Starting {} sync_gateway.".format(target))
@@ -732,7 +738,7 @@ class SyncGateway(object):
         if status != 0:
             raise Exception("Could not upgrade sync_gateway/sg_accel")
 
-    def redeploy_sync_gateway_config(self, cluster_config, sg_conf, url, sync_gateway_version, enable_import=False):
+    def redeploy_sync_gateway_config(self, cluster_config, sg_conf, url, sync_gateway_version, cb_server, enable_import=False):
         """Deploy an SG config with xattrs enabled
             Will also enable import if enable_import is set to True
             It is used to enable xattrs and import in the SG config"""
@@ -741,7 +747,8 @@ class SyncGateway(object):
         server_scheme = "http"
         sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
         cbs_cert_path = os.path.join(os.getcwd(), "certs")
-        bucket_names = get_buckets_from_sync_gateway_config(sg_conf)
+        #  bucket_names = get_buckets_from_sync_gateway_config(sg_conf)
+        bucket_names = cb_server.get_bucket_names()
         version, build = version_and_build(sync_gateway_version)
 
         if is_cbs_ssl_enabled(cluster_config):
@@ -837,7 +844,12 @@ class SyncGateway(object):
 
         if is_delta_sync_enabled(cluster_config) and version >= "2.5.0":
             playbook_vars["delta_sync"] = '"delta_sync": { "enabled": true},'
-
+ 
+        data_bucket_list = ['bucket_name1', 'bucket_name2', 'bucket_name3', 'bucket_name4']
+        i = 0
+        for bucket_name in bucket_names:
+            playbook_vars[data_bucket_list[i]] = '"bucket": "{}",'.format(bucket_name)
+            i += 1
         # Deploy config
         if url is not None:
             target = hostname_for_url(cluster_config, url)

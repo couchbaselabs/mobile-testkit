@@ -156,7 +156,7 @@ def test_system_test(params_from_base_test_setup):
     # Scenario Actions
     delete_views(cbs_session, cbs_admin_url, bucket_name)
     load_bucket(sdk_client, server_seed_docs)
-    sg_helper.start_sync_gateways(cluster_config, config=sg_conf)
+    sg_helper.start_sync_gateways(cluster_config, cb_server=cb_server, config=sg_conf)
     sg_ip = host_for_url(sg_admin_url)
 
     if get_sync_gateway_version(sg_ip)[0] < "2.1.0":

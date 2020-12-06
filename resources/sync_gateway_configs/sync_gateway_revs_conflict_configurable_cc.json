@@ -23,7 +23,7 @@
             {{ delta_sync }}
             "rev_cache_size": 1000,
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
-            "bucket":"data-bucket"
+            {{ bucket_name1 }}
         }
     }
 }

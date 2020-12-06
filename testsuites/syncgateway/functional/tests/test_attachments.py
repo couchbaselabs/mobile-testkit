@@ -1,4 +1,5 @@
 import pytest
+import time
 
 from requests.exceptions import HTTPError
 
@@ -50,18 +51,18 @@ def test_attachment_revpos_when_ancestor_unavailable(params_from_base_test_setup
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     cluster_helper = ClusterKeywords(cluster_config)
+    time1 = time.time()
     cluster_helper.reset_cluster(cluster_config, sg_conf)
-
+    print("time taken for reset cluster is ", time.time() - time1)
     topology = cluster_helper.get_cluster_topology(cluster_config)
-
     cbs_url = topology["couchbase_servers"][0]
+    cb_server = couchbaseserver.CouchbaseServer(cbs_url)
+    bucket = cb_server.get_bucket_names()[0]
     sg_url = topology["sync_gateways"][0]["public"]
     sg_url_admin = topology["sync_gateways"][0]["admin"]
     sg_db = "db"
-    cb_server = couchbaseserver.CouchbaseServer(cbs_url)
-    bucket = cb_server.get_bucket_names()[0]
 
-    log_info("Running 'test_attachment_revpos_when_ancestor_unavailable'")
+    log_info("`Running 'test_attachment_revpos_when_ancestor_unavailable`'")
     log_info("Using cbs_url: {}".format(cbs_url))
     log_info("Using sg_url: {}".format(sg_url))
     log_info("Using sg_url_admin: {}".format(sg_url_admin))
@@ -87,7 +88,7 @@ def test_attachment_revpos_when_ancestor_unavailable(params_from_base_test_setup
     if is_ipv6(cluster_config):
         ipv6 = True
     cb_server.delete_couchbase_server_cached_rev_bodies(bucket=bucket, ipv6=ipv6)
-    sg_util.start_sync_gateways(cluster_config=cluster_config, url=sg_url, config=sg_conf)
+    sg_util.start_sync_gateways(cluster_config=cluster_config, cb_server=cb_server, url=sg_url, config=sg_conf)
 
     client.add_conflict(
         url=sg_url, db=sg_db,

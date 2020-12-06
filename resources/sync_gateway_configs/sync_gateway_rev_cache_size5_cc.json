@@ -18,7 +18,7 @@
             {{ delta_sync }}
             "rev_cache_size": 5,
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
-            "bucket":"data-bucket",
+            {{ bucket_name1 }},
             "username":"data-bucket",
             "password": "password"
         

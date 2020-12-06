@@ -20,7 +20,7 @@
             {{ delta_sync }}
             "enable_shared_bucket_access": false,
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
-            "bucket":"data-bucket",
+            {{ bucket_name1 }},
             "cache": {
                 "channel_cache":{
                 "max_length": 15000,

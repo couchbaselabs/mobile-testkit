@@ -247,6 +247,7 @@ def test_upgrade(params_from_base_test_setup):
                     sg_conf=sg_conf,
                     url=sg_ip,
                     sync_gateway_version=sync_gateway_upgraded_version,
+                    cb_server=primary_server,
                     enable_import=enable_import
                 )
                 if sync_gateway_upgraded_version < "2.7.0":

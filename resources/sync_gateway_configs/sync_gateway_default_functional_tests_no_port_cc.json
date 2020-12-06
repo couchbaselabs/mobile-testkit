@@ -21,7 +21,7 @@
             {{ keypath }}
             {{ delta_sync }}
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}",
-            "bucket":"data-bucket",
+            {{ bucket_name1 }},
             "username":"data-bucket",
             "password": "password"
         }

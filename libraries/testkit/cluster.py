@@ -13,7 +13,7 @@ from libraries.testkit.admin import Admin
 from libraries.testkit.config import Config
 from libraries.testkit.sgaccel import SgAccel
 from libraries.testkit.syncgateway import SyncGateway
-from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
+#  from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
 from utilities.cluster_config_utils import is_load_balancer_enabled, get_revs_limit, get_redact_level, is_load_balancer_with_two_clusters_enabled
 from utilities.cluster_config_utils import get_load_balancer_ip, no_conflicts_enabled, is_delta_sync_enabled, get_sg_platform
 from utilities.cluster_config_utils import generate_x509_certs, is_x509_auth, get_cbs_primary_nodes_str
@@ -112,10 +112,11 @@ class Cluster:
         self.servers = [CouchbaseServer(url=cb_url) for cb_url in cbs_urls]
         self.sync_gateway_config = None  # will be set to Config object when reset() called
 
-    def reset(self, sg_config_path):
+    def reset(self, sg_config_path, number_of_buckets=1):
 
         ansible_runner = AnsibleRunner(self._cluster_config)
-
+        time0 = time.time()
+        print("time stamp at the begining of resset ", time.time())
         log_info(">>> Reseting cluster ...")
         log_info(">>> CBS SSL enabled: {}".format(self.cbs_ssl))
         log_info(">>> Using xattrs: {}".format(self.xattrs))
@@ -139,20 +140,23 @@ class Cluster:
         log_info(">>> Deleting sg_accel artifacts")
         status = ansible_runner.run_ansible_playbook("delete-sg-accel-artifacts.yml")
         assert status == 0, "Failed to delete sg_accel artifacts"
-
+        time1 = time.time()
+        print("time stamp before delet buckets ", time1 - time0)
         # Delete buckets
         log_info(">>> Deleting buckets on: {}".format(self.servers[0].url))
         self.servers[0].delete_buckets()
-
+        time2 = time.time()
+        print("time stamp before delet buckets ", time2 - time1)
         # Parse config and grab bucket names
         config_path_full = os.path.abspath(sg_config_path)
         config = Config(config_path_full)
         mode = config.get_mode()
-        bucket_name_set = config.get_bucket_name_set()
+        # bucket_name_set = config.get_bucket_name_set()
         sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
         cbs_cert_path = os.path.join(os.getcwd(), "certs")
-        bucket_names = get_buckets_from_sync_gateway_config(sg_config_path)
-
+        #  bucket_names = get_buckets_from_sync_gateway_config(sg_config_path)
+        time3 = time.time()
+        print("time stamp got the buckets ", time3 - time2)
         self.sync_gateway_config = config
 
         is_valid, reason = validate_cluster(self.sync_gateways, self.sg_accels, config)
@@ -160,11 +164,19 @@ class Cluster:
             raise ProvisioningError(reason)
 
         log_info(">>> Creating buckets on: {}".format(self.servers[0].url))
+        bucket_name_set = []
+        bucket_names = []
+        for i in range(number_of_buckets):
+            bucket_name = "data-bucket-{}".format(time.time())
+            bucket_name_set.append(bucket_name)
+            bucket_name_set = list(set(bucket_name_set))
+            bucket_names.append(bucket_name)
         log_info(">>> Creating buckets {}".format(bucket_name_set))
         self.servers[0].create_buckets(bucket_names=bucket_name_set,
                                        cluster_config=self._cluster_config,
                                        ipv6=self.ipv6)
-
+        time4 = time.time()
+        print("time stamp got the buckets ", time4 - time3)
         # Wait for server to be in a warmup state to work around
         # https://github.com/couchbase/sync_gateway/issues/1745
         log_info(">>> Waiting for Server: {} to be in a healthy state".format(self.servers[0].url))
@@ -203,7 +215,11 @@ class Cluster:
             "num_index_replicas": "",
             "sg_use_views": "",
             "couchbase_server_primary_node": couchbase_server_primary_node,
-            "delta_sync": ""
+            "delta_sync": "",
+            "bucket_name1": "",
+            "bucket_name2": "",
+            "bucket_name3": "",
+            "bucket_name4": ""
         }
 
         sg_platform = get_sg_platform(self._cluster_config)
@@ -287,15 +303,21 @@ class Cluster:
         if is_delta_sync_enabled(self._cluster_config) and get_sg_version(self._cluster_config) >= "2.5.0":
             playbook_vars["delta_sync"] = '"delta_sync": { "enabled": true},'
 
+        data_bucket_list = ['bucket_name1', 'bucket_name2', 'bucket_name3', 'bucket_name4']
+        i = 0
+        for bucket_name in bucket_names:
+            playbook_vars[data_bucket_list[i]] = '"bucket": "{}",'.format(bucket_name)
+            i += 1
         # Sleep for a few seconds for the indexes to teardown
-        time.sleep(5)
+        # time.sleep(5)
 
         status = ansible_runner.run_ansible_playbook(
             "start-sync-gateway.yml",
             extra_vars=playbook_vars
         )
         assert status == 0, "Failed to start to Sync Gateway"
-
+        time5 = time.time()
+        print("time stamp after starting the sync gateway ", time5 - time4)
         # HACK - only enable sg_accel for distributed index tests
         # revise this with https://github.com/couchbaselabs/sync-gateway-testcluster/issues/222
         if mode == "di":
@@ -315,6 +337,7 @@ class Cluster:
         else:
             log_info(">>> Running in channel cache")
 
+        print("End of reset method is time taken is ", time.time() -  time0)
         return mode
 
     def restart_services(self):

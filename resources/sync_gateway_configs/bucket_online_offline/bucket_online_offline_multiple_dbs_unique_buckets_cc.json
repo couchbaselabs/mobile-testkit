@@ -21,7 +21,7 @@
             {{ keypath }}
             {{ delta_sync }}
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
-            "bucket":"data-bucket-1"
+            {{ bucket_name1 }}
         },
         "db2":{
             {{ autoimport }}
@@ -37,7 +37,7 @@
             {{ delta_sync }}
             "offline":false,
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
-            "bucket":"data-bucket-2"
+            {{ bucket_name2 }}
         },
         "db3":{
             {{ autoimport }}
@@ -53,7 +53,7 @@
             {{ delta_sync }}
             "offline":false,
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
-            "bucket":"data-bucket-3"
+            {{ bucket_name3 }}
         },
         "db4":{
             {{ autoimport }}
@@ -68,7 +68,7 @@
             {{ keypath }}
             {{ delta_sync }}
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
-            "bucket":"data-bucket-4"
+            {{ bucket_name4 }}
         }
     }
 }

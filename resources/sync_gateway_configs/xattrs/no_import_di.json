@@ -8,7 +8,7 @@
     "cluster_config": {
         "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
         "data_dir":".",
-        "bucket":"data-bucket",
+        {{ bucket_name1 }},
         "username":"data-bucket",
         "password": "password"
     },
@@ -22,7 +22,7 @@
             {{ delta_sync }}
             "enable_shared_bucket_access": true,
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
-            "bucket":"data-bucket",
+            {{ bucket_name1 }},
             "password": "password",
             "channel_index":{
                 "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
