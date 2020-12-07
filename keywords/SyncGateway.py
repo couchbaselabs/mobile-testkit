@@ -397,7 +397,7 @@ class SyncGateway(object):
         couchbase_server_primary_node = get_cbs_primary_nodes_str(cluster_config, couchbase_server_primary_node)
         playbook_vars = {
             "sync_gateway_config_filepath": config_path,
-            "username": "",
+            "username1": "",
             "password": "",
             "certpath": "",
             "keypath": "",
@@ -417,6 +417,8 @@ class SyncGateway(object):
             "delta_sync": ""
         }
         sg_platform = get_sg_platform(cluster_config)
+        username_list = ['username1', 'username2', 'username3', 'username4']
+        i = 0
         if get_sg_version(cluster_config) >= "2.1.0":
             logging_config = '"logging": {"debug": {"enabled": true}'
             try:
@@ -455,13 +457,15 @@ class SyncGateway(object):
                 playbook_vars["x509_auth"] = True
                 generate_x509_certs(cluster_config, bucket_names, sg_platform)
             else:
-                playbook_vars["username"] = '"username": "{}",'.format(
-                    bucket_names[0])
+                for bucket_name in bucket_names:
+                    playbook_vars[username_list[i]] = '"username": "{}",'.format(bucket_name)
+                    i += 1
                 playbook_vars["password"] = '"password": "password",'
         else:
             playbook_vars["logging"] = '"log": ["*"],'
-            playbook_vars["username"] = '"username": "{}",'.format(
-                bucket_names[0])
+            for bucket_name in bucket_names:
+                playbook_vars[username_list[i]] = '"username": "{}",'.format(bucket_name)
+                i += 1
             playbook_vars["password"] = '"password": "password",'
 
         if is_xattrs_enabled(cluster_config):
@@ -757,7 +761,7 @@ class SyncGateway(object):
 
         # Shared vars
         playbook_vars = {
-            "username": "",
+            "username1": "",
             "password": "",
             "certpath": "",
             "keypath": "",
@@ -778,9 +782,8 @@ class SyncGateway(object):
             "no_conflicts": "",
             "delta_sync": ""
         }
-
-        playbook_vars["username"] = '"username": "{}",'.format(bucket_names[0])
-        playbook_vars["password"] = '"password": "password",'
+        username_list = ['username1', 'username2', 'username3', 'username4']
+        i = 0
 
         if version >= "2.1.0":
             logging_config = '"logging": {"debug": {"enabled": true}'
@@ -820,8 +823,17 @@ class SyncGateway(object):
                 playbook_vars["server_port"] = ""
                 playbook_vars["x509_auth"] = True
                 generate_x509_certs(cluster_config, bucket_names, sg_platform)
+            else:
+                for bucket_name in bucket_names:
+                    playbook_vars[username_list[i]] = '"username": "{}",'.format(bucket_name)
+                    i += 1
+                playbook_vars["password"] = '"password": "password",'
         else:
             playbook_vars["logging"] = '"log": ["*"],'
+            for bucket_name in bucket_names:
+                playbook_vars[username_list[i]] = '"username": "{}",'.format(bucket_name)
+                i += 1
+            playbook_vars["password"] = '"password": "password",'
 
         if is_xattrs_enabled(cluster_config):
             playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'

@@ -196,7 +196,7 @@ class Cluster:
         # Start sync-gateway
         playbook_vars = {
             "sync_gateway_config_filepath": config_path_full,
-            "username": "",
+            "username1": "",
             "password": "",
             "certpath": "",
             "keypath": "",
@@ -223,6 +223,8 @@ class Cluster:
         }
 
         sg_platform = get_sg_platform(self._cluster_config)
+        username_list = ['username1', 'username2', 'username3', 'username4']
+        i = 0
         if get_sg_version(self._cluster_config) >= "2.1.0":
             logging_config = '"logging": {"debug": {"enabled": true}'
             try:
@@ -260,13 +262,15 @@ class Cluster:
                 playbook_vars["x509_auth"] = True
                 generate_x509_certs(self._cluster_config, bucket_names, sg_platform)
             else:
-                playbook_vars["username"] = '"username": "{}",'.format(
-                    bucket_names[0])
+                for bucket_name in bucket_names:
+                    playbook_vars[username_list[i]] = '"username": "{}",'.format(bucket_name)
+                    i += 1
                 playbook_vars["password"] = '"password": "password",'
         else:
             playbook_vars["logging"] = '"log": ["*"],'
-            playbook_vars["username"] = '"username": "{}",'.format(
-                bucket_names[0])
+            for bucket_name in bucket_names:
+                playbook_vars[username_list[i]] = '"username": "{}",'.format(bucket_name)
+                i += 1
             playbook_vars["password"] = '"password": "password",'
 
         if self.cbs_ssl and get_sg_version(self._cluster_config) >= "1.5.0":

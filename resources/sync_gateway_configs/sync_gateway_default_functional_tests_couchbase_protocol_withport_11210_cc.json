@@ -14,16 +14,14 @@
             {{ no_conflicts }}
             {{ sg_use_views }}
             {{ num_index_replicas }}
-            {{ username }}
+            {{ username1 }}
             {{ password }}
             {{ cacertpath }}
             {{ certpath }}
             {{ keypath }}
             {{ delta_sync }}
-            "server":"couchbase://{{ couchbase_server_primary_node }}:11210",
-            {{ bucket_name1 }},
-            "username":"data-bucket",
-            "password": "password"
+            {{ bucket_name1 }}
+            "server":"couchbase://{{ couchbase_server_primary_node }}:11210"
         }
     }
 }

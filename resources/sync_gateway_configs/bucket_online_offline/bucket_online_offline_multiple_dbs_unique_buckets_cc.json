@@ -14,7 +14,7 @@
             {{ no_conflicts }}
             {{ sg_use_views }}
             {{ num_index_replicas }}
-            {{ username }}
+            {{ username1 }}
             {{ password }}
             {{ cacertpath }}
             {{ certpath }}
@@ -29,7 +29,7 @@
             {{ no_conflicts }}
             {{ sg_use_views }}
             {{ num_index_replicas }}
-            {{ username }}
+            {{ username1 }}
             {{ password }}
             {{ cacertpath }}
             {{ certpath }}
@@ -45,7 +45,7 @@
             {{ no_conflicts }}
             {{ sg_use_views }}
             {{ num_index_replicas }}
-            {{ username }}
+            {{ username1 }}
             {{ password }}
             {{ cacertpath }}
             {{ certpath }}
@@ -61,7 +61,7 @@
             {{ no_conflicts }}
             {{ sg_use_views }}
             {{ num_index_replicas }}
-            {{ username }}
+            {{ username1 }}
             {{ password }}
             {{ cacertpath }}
             {{ certpath }}

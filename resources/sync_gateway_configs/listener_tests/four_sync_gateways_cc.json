@@ -16,8 +16,8 @@
             {{ certpath }}
             {{ keypath }}
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
-            {{ bucket_name1 }},
-            "username":"data-bucket-1",
+            {{ bucket_name1 }}
+            {{ username1 }}
             "password": "password"
         },
         "sg_db2":{
@@ -32,7 +32,7 @@
             {{ keypath }}
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             {{ bucket_name2 }},
-            "username":"data-bucket-2",
+            {{ username2 }}
             "password": "password"
         },
         "sg_db3":{
@@ -47,7 +47,7 @@
             {{ keypath }}
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             {{ bucket_name3 }},
-            "username":"data-bucket-3",
+            {{ username3 }}
             "password": "password"
         },
         "sg_db4":{
@@ -62,7 +62,7 @@
             {{ keypath }}
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             {{ bucket_name4 }},
-            "username":"data-bucket-4",
+            {{ username4 }}
             "password": "password"
         }
     }

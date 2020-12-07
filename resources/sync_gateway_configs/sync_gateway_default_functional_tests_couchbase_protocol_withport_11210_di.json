@@ -8,8 +8,8 @@
     "cluster_config": {
         "server":"couchbase://{{ couchbase_server_primary_node }}:11210",
         "data_dir":".",
-        {{ bucket_name1 }},
-        "username":"data-bucket",
+        {{ bucket_name1 }}
+        {{ username1 }}
         "password": "password"
     },
     "databases":{
@@ -20,8 +20,8 @@
             {{ num_index_replicas }}
             {{ delta_sync }}
             "server":"couchbase://{{ couchbase_server_primary_node }}:11210",
-            {{ bucket_name1 }},
-            "username":"data-bucket",
+            {{ bucket_name1 }}
+            {{ username1 }}
             "password": "password",
             "channel_index":{
                 "num_shards":16,

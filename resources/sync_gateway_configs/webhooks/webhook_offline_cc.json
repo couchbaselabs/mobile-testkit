@@ -14,7 +14,7 @@
             {{ no_conflicts }}
             {{ sg_use_views }}
             {{ num_index_replicas }}
-            {{ username }}
+            {{ username1 }}
             {{ password }}
             {{ cacertpath }}
             {{ certpath }}
@@ -22,7 +22,7 @@
             {{ delta_sync }}
             "offline":false,
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
-            {{ bucket_name1 }},
+            {{ bucket_name1 }}
             "sync": `function(doc){
                   channel(doc.channels);
                 }`,

@@ -11,14 +11,14 @@
       {{ no_conflicts }}
       {{ sg_use_views }}
       {{ num_index_replicas }}
-      {{ username }}
+      {{ username1 }}
       {{ password }}
       {{ cacertpath }}
       {{ certpath }}
       {{ keypath }}
       {{ delta_sync }}
       "server": "{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
-      "bucket": "data-bucket",
+      {{ bucket_name1 }}
       "unsupported": { "allow_conflicts": false },
       "users": {
         "user_1": {

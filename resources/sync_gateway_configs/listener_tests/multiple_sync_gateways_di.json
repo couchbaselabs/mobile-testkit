@@ -8,8 +8,8 @@
     "cluster_config": {
         "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
         "data_dir":".",
-        {{ bucket_name1 }},
-        "username":"data-bucket-1",
+        {{ bucket_name1 }}
+        {{ username1 }}
         "password": "password"
     },
     {{ sslcert }}
@@ -23,8 +23,8 @@
             {{ num_index_replicas }}
             {{ delta_sync }}
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
-            {{ bucket_name1 }},
-            "username":"data-bucket-1",
+            {{ bucket_name1 }}
+            {{ username1 }}
             "password": "password",
             "channel_index":{
                 "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
@@ -41,7 +41,7 @@
             {{ delta_sync }}
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             {{ bucket_name2 }},
-            "username":"data-bucket-2",
+            {{ username2 }}
             "password": "password",
             {{ no_conflicts }}
             {{ revs_limit }}

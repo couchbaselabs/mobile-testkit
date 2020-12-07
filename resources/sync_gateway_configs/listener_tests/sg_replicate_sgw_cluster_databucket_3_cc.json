@@ -18,7 +18,7 @@
             {{ delta_sync }}
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             {{ bucket_name3 }},
-            "username":"data-bucket-3",
+            {{ username3 }}
             "password": "password"
         }
     }

@@ -11,7 +11,7 @@
         "db":{
             {{ autoimport }}
             {{ xattrs }}
-            {{ username }}
+            {{ username1 }}
             {{ password }}
             {{ cacertpath }}
             {{ certpath }}
