@@ -17,6 +17,13 @@
   tasks:
   - include: tasks/deploy-sync-gateway-config.yml
 
+# Stop sync_gateway service
+- hosts: sync_gateways
+  any_errors_fatal: true
+  become: yes
+  tasks:
+  - include: tasks/stop-sync-gateway.yml
+
 # Launch sync_gateway service
 - hosts: sync_gateways
   any_errors_fatal: true
