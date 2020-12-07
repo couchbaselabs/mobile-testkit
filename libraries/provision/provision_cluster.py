@@ -77,7 +77,6 @@ def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_conf
     cluster_topology = cluster_keywords.get_cluster_topology(cluster_config)
     server_url = cluster_topology["couchbase_servers"][0]
     cb_server = CouchbaseServer(server_url)
-    print("server_url --sri ", server_url)
     server_baseurl, server_package_name = couchbase_server_config.get_baseurl_package(cb_server, cbs_platform, cbs_ce)
 
     log_info(">>> Server package: {0}/{1}".format(server_baseurl, server_package_name))

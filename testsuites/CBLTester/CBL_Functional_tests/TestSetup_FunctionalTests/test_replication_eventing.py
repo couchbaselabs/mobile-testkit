@@ -513,7 +513,7 @@ def test_push_replication_for_20mb_doc(params_from_base_test_setup, attachment_g
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     liteserv_platform = params_from_base_test_setup["liteserv_platform"]
 
-    if sync_gateway_version < "2.5.0" or liteserv_platform == "android":
+    if sync_gateway_version < "2.5.0" or ("load_from_data_dir" in str(attachment_generator) and (liteserv_platform == "xamarin-android" or liteserv_platform == "android")):
         pytest.skip('This test cannnot run with sg version below 2.5 and fails for Andriod as Android device/emulator cannot handle doc with more than 20MB')
     username = "autotest"
     password = "password"
@@ -536,7 +536,7 @@ def test_push_replication_for_20mb_doc(params_from_base_test_setup, attachment_g
                                            generator="simple", attachments_generator=attachment_generator,
                                            attachment_file_list=attachment_file_list)
 
-    if attachment_generator != "load_from_data_dir":
+    if "load_from_data_dir" not in str(attachment_generator):
         doc_body_4mb = doc_generators.doc_size_byBytes(25000000)  # 25MB data generated
         cbl_db_docs = db.getDocuments(cbl_db, created_docs_ids)
         for doc in cbl_db_docs:
@@ -563,4 +563,4 @@ def test_push_replication_for_20mb_doc(params_from_base_test_setup, attachment_g
     # Processing received events
     replicated_event_changes = get_event_changes(doc_repl_event_changes)
     for doc in replicated_event_changes:
-        assert replicated_event_changes[doc]["error_code"] is not None, "Replication failed for large doc"
+        assert replicated_event_changes[doc]["error_code"] is not None or "None", "Replication failed for large doc"

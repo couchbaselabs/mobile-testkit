@@ -319,11 +319,12 @@ class Replication(object):
         begin_timestamp = time.time()
         while count < max_times:
             log_info("Activity level: {}".format(activity_level))
-            log_info("total vs comleted = {} vs {} ".format(self.getCompleted(repl), self.getTotal(repl)))
+            log_info("total vs completed = {} vs {} ".format(self.getCompleted(repl), self.getTotal(repl)))
             log_info("count is  {}".format(count))
             time.sleep(sleep_time)
             if activity_level == "offline" or activity_level == "connecting" or activity_level == "busy":
                 count += 1
+                idle_count = 0
             else:
                 if activity_level == "idle":
                     if (self.getCompleted(repl) < self.getTotal(repl)) and self.getTotal(repl) != 0:

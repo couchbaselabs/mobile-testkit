@@ -7,16 +7,14 @@ from couchbase.bucket import Bucket
 
 from keywords.couchbaseserver import verify_server_version
 from keywords.utils import log_info, host_for_url
-from keywords.SyncGateway import (verify_sync_gateway_version,
-                                  verify_sync_gateway_product_info,
-                                  SyncGateway)
+from keywords.SyncGateway import (SyncGateway)
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.MobileRestClient import MobileRestClient
 from keywords.constants import SDK_TIMEOUT
+from keywords import attachment, document
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop
 
 from libraries.testkit.cluster import Cluster
-from keywords import attachment
 from CBLClient.Authenticator import Authenticator
 from CBLClient.Document import Document
 from CBLClient.Replication import Replication
@@ -139,6 +137,7 @@ def test_upgrade(params_from_base_test_setup):
     )
 
     doc_obj = Document(base_url)
+    sg_obj = SyncGateway()
     db.create_bulk_docs(number=num_docs, id_prefix="cbl_filter", db=cbl_db, channels=sg_user_channels, attachments_generator=attachment.generate_2_png_10_10)
     doc_ids = db.getDocIds(cbl_db, limit=num_docs)
     added_docs = db.getDocuments(cbl_db, doc_ids)
@@ -163,6 +162,32 @@ def test_upgrade(params_from_base_test_setup):
     replicator.start(repl1)
     replicator.wait_until_replicator_idle(repl1)
     sg_client.add_docs(url=sg_admin_url, db=sg_db, number=2, id_prefix="sgw_docs1", channels=sg_user_channels, generator="simple_user", attachments_generator=attachment.generate_2_png_10_10)
+
+    # Create docs in CBS cluster
+    cluster = Cluster(config=cluster_config)
+    if len(cluster.servers) < 2:
+        raise Exception("Please provide at least 2 servers")
+
+    server_urls = []
+    for server in cluster.servers:
+        server_urls.append(server.url)
+
+    primary_server = cluster.servers[0]
+    secondary_server = cluster.servers[1]
+    servers = cluster.servers[1:]
+
+    num_sdk_docs = 10
+    num_sg_docs = 10
+    log_info('Adding {} docs via SDK with and without attachments'.format(num_sdk_docs))
+    bucket_name = 'data-bucket'
+    sdk_client = Bucket('couchbase://{}/{}'.format(primary_server.host, bucket_name), password='password', timeout=SDK_TIMEOUT)
+    sdk_doc_bodies = document.create_docs('sdk', number=num_sdk_docs, channels=sg_user_channels)
+    sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
+    sdk_client.upsert_multi(sdk_docs)
+    time.sleep(30)  # to let the docs import from server to sgw
+    replicator.wait_until_replicator_idle(repl)
+    doc_ids = db.getDocIds(cbl_db, limit=num_docs + (num_sdk_docs * 2) + 2)
+    added_docs = db.getDocuments(cbl_db, doc_ids)
     # 3. Start a thread to keep updating docs on CBL
     terminator_doc_id = 'terminator'
     with ProcessPoolExecutor() as up:
@@ -180,28 +205,14 @@ def test_upgrade(params_from_base_test_setup):
         cluster_util = ClusterKeywords(cluster_config)
         topology = cluster_util.get_cluster_topology(cluster_config, lb_enable=False)
         sync_gateways = topology["sync_gateways"]
-
-        upgrade_sync_gateway(
+        sg_obj.upgrade_sync_gateway(
             sync_gateways,
             sync_gateway_version,
             sync_gateway_upgraded_version,
             sg_conf,
             cluster_config
         )
-
         # 5. Upgrade CBS one by one on cluster config list
-        cluster = Cluster(config=cluster_config)
-        if len(cluster.servers) < 2:
-            raise Exception("Please provide at least 3 servers")
-
-        server_urls = []
-        for server in cluster.servers:
-            server_urls.append(server.url)
-
-        primary_server = cluster.servers[0]
-        secondary_server = cluster.servers[1]
-        servers = cluster.servers[1:]
-
         upgrade_server_cluster(
             servers,
             primary_server,
@@ -215,7 +226,6 @@ def test_upgrade(params_from_base_test_setup):
         )
 
         # 6. Restart SGWs after the server upgrade
-        sg_obj = SyncGateway()
         for sg in sync_gateways:
             sg_ip = host_for_url(sg["admin"])
             log_info("Restarting sync gateway {}".format(sg_ip))
@@ -239,8 +249,10 @@ def test_upgrade(params_from_base_test_setup):
                     sync_gateway_version=sync_gateway_upgraded_version,
                     enable_import=enable_import
                 )
-                enable_import = False
+                if sync_gateway_upgraded_version < "2.7.0":
+                    enable_import = False  # with 2.7 and later we can have enable import on all docs
                 # Check Import showing up on all nodes
+
         repl_config2 = replicator.configure(cbl_db2, sg_blip_url, continuous=True, channels=sg_user_channels, replication_type="push_pull", replicator_authenticator=replicator_authenticator)
         repl2 = replicator.create(repl_config2)
         replicator.start(repl2)
@@ -251,11 +263,6 @@ def test_upgrade(params_from_base_test_setup):
         log_info("Waiting for doc updates to complete")
         updated_doc_revs = updates_future.result()
 
-        # set up another replicator to verify attachments replicated after the upgrade
-        log_info("Stopping replication between testserver and sync gateway")
-        replicator.stop(repl2)
-        replicator.stop(repl)
-
         # 7. Gather CBL docs new revs for verification
         log_info("Gathering the updated revs for verification")
         doc_ids = []
@@ -265,13 +272,11 @@ def test_upgrade(params_from_base_test_setup):
                 added_docs[doc_id]["numOfUpdates"] = updated_doc_revs[doc_id]
 
         # 8. Compare rev id, doc body and revision history of all docs on both CBL and SGW
-        verify_sg_docs_revision_history(sg_admin_url, db, cbl_db2, num_docs + 3, sg_db=sg_db, added_docs=added_docs, terminator=terminator_doc_id)
+        verify_sg_docs_revision_history(sg_admin_url, db, cbl_db2, num_docs + num_sdk_docs + 3, sg_db=sg_db, added_docs=added_docs, terminator=terminator_doc_id)
 
         # 9. If xattrs enabled, validate CBS contains _sync records for each doc
         if upgraded_xattrs_enabled:
             # Verify through SDK that there is no _sync property in the doc body
-            bucket_name = 'data-bucket'
-            sdk_client = Bucket('couchbase://{}/{}'.format(primary_server.host, bucket_name), password='password', timeout=SDK_TIMEOUT)
             log_info("Fetching docs from SDK")
             docs_from_sdk = sdk_client.get_multi(doc_ids)
 
@@ -279,6 +284,26 @@ def test_upgrade(params_from_base_test_setup):
             for i in docs_from_sdk:
                 if "_sync" in docs_from_sdk[i].value:
                     raise Exception("_sync section found in docs after upgrade")
+
+        # 10. Verify docs from cbl_db2 whether docs created on SGW or CBS after the upgrade got replicated to cbl
+        # New code to add docs on SGW and CBS to add new docs
+        sdk_doc_bodies = document.create_docs('sdk_after_upgrade', number=num_sdk_docs, channels=sg_user_channels)
+        sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
+        sdk_client.upsert_multi(sdk_docs)
+        sg_client.add_docs(url=sg_admin_url, db=sg_db, number=num_sg_docs, id_prefix="sgw_after_upgrade", channels=sg_user_channels)
+        replicator.wait_until_replicator_idle(repl2)
+        if upgraded_xattrs_enabled:
+            time.sleep(30)  # to let the docs import from server to sgw
+            cbl_doc_ids2 = db.getDocIds(cbl_db2, limit=num_docs + (num_sdk_docs * 4) + 3)
+            count1 = sum('sdk_after_upgrade' in s for s in cbl_doc_ids2)
+            assert count1 == num_sdk_docs, "docs via sdk after upgrade did not replicate to cbl"
+        else:
+            cbl_doc_ids2 = db.getDocIds(cbl_db2, limit=num_docs + (num_sdk_docs * 3) + 3)
+        count2 = sum('sgw_after_upgrade' in s for s in cbl_doc_ids2)
+        assert count2 == num_sg_docs, "docs via SGW after upgrade did not replicate to cbl"
+        log_info("Stopping replication between testserver and sync gateway")
+        replicator.stop(repl2)
+        replicator.stop(repl)
 
 
 def verify_sg_docs_revision_history(url, db, cbl_db2, num_docs, sg_db, added_docs, terminator):
@@ -418,37 +443,4 @@ def upgrade_server_cluster(servers, primary_server, secondary_server, server_ver
     log_info("Upgraded all the server nodes in the cluster")
     log_info('------------------------------------------')
     log_info('END server cluster upgrade')
-    log_info('------------------------------------------')
-
-
-def upgrade_sync_gateway(sync_gateways, sync_gateway_version, sync_gateway_upgraded_version, sg_conf, cluster_config):
-    log_info('------------------------------------------')
-    log_info('START Sync Gateway cluster upgrade')
-    log_info('------------------------------------------')
-
-    sg_obj = SyncGateway()
-
-    for sg in sync_gateways:
-        sg_ip = host_for_url(sg["admin"])
-        log_info("Checking for sync gateway product info before upgrade")
-        verify_sync_gateway_product_info(sg_ip)
-        log_info("Checking for sync gateway version: {}".format(sync_gateway_version))
-        verify_sync_gateway_version(sg_ip, sync_gateway_version)
-        log_info("Upgrading sync gateway: {}".format(sg_ip))
-        sg_obj.upgrade_sync_gateways(
-            cluster_config=cluster_config,
-            sg_conf=sg_conf,
-            sync_gateway_version=sync_gateway_upgraded_version,
-            url=sg_ip
-        )
-
-        time.sleep(10)
-        log_info("Checking for sync gateway product info after upgrade")
-        verify_sync_gateway_product_info(sg_ip)
-        log_info("Checking for sync gateway version after upgrade: {}".format(sync_gateway_upgraded_version))
-        verify_sync_gateway_version(sg_ip, sync_gateway_upgraded_version)
-
-    log_info("Upgraded all the sync gateway nodes in the cluster")
-    log_info('------------------------------------------')
-    log_info('END Sync Gateway cluster upgrade')
     log_info('------------------------------------------')

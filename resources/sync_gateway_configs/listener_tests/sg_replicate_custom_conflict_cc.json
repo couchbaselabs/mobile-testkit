@@ -1,0 +1,34 @@
+{
+    "interface":":4984",
+    "adminInterface": "0.0.0.0:4985",
+    {{ sslcert }}
+    {{ sslkey }}
+    {{ logging }}
+    "databases":{
+        "sg_db1":{
+            {{ autoimport }}
+            {{ xattrs }}
+            {{ no_conflicts }}
+            {{ sg_use_views }}
+            {{ num_index_replicas }}
+            {{ cacertpath }}
+            {{ certpath }}
+            {{ keypath }}
+            {{ delta_sync }}
+            "replications": {
+                {{ repl_repl_id }}: {
+                "remote": "{{ repl_remote }}",
+                "direction": {{ repl_direction }},
+                "conflict_resolution_type": {{ repl_conflict_resolution_type }},
+                {{ repl_continuous }}
+                {{ repl_filter_query_params }}
+                {{ custom_conflict_js_function }}
+                }
+            },
+            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
+            "bucket":"data-bucket-1",
+            "username":"data-bucket-1",
+            "password":"password"
+        }
+    }
+}

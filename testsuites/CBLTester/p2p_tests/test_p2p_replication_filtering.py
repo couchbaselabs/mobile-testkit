@@ -1,11 +1,14 @@
 import random
-
+import time
 import pytest
 
 from keywords.utils import add_new_fields_to_doc, meet_supported_version
 from keywords import attachment
 from CBLClient.Replication import Replication
 from CBLClient.PeerToPeer import PeerToPeer
+from keywords.utils import log_info
+from CBLClient.Query import Query
+from CBLClient.Database import Database
 
 
 @pytest.mark.listener
@@ -29,10 +32,14 @@ def test_p2p_replication_push_pull_filtering(params_from_base_test_setup, server
         4. Verify replication is completed.
         5. Verify all docs got replicated on server
     """
+    version_list = params_from_base_test_setup["version_list"]
+    if meet_supported_version(version_list, "2.5.0") is False:
+        pytest.skip("Filtering feature is available only onwards CBL 2.5.0")
+
     host_list = params_from_base_test_setup["host_list"]
     db_obj_list = params_from_base_test_setup["db_obj_list"]
     db_name_list = params_from_base_test_setup["db_name_list"]
-    version_list = params_from_base_test_setup["version_list"]
+
     base_url_list = server_setup["base_url_list"]
     cbl_db_server = server_setup["cbl_db_server"]
     cbl_db_list = server_setup["cbl_db_list"]
@@ -45,11 +52,15 @@ def test_p2p_replication_push_pull_filtering(params_from_base_test_setup, server
     cbl_db_client = cbl_db_list[1]
     db_obj_client = db_obj_list[1]
     db_name_server = db_name_list[0]
-
-    if meet_supported_version(version_list, "2.5.0") is False:
-        pytest.skip("Filtering feature is available only onwards CBL 2.5.0")
-
     server_host = host_list[0]
+    peer_to_peer_server = PeerToPeer(base_url_list[0])
+
+    if endpoint_type == "URLEndPoint":
+        replicator_tcp_listener = peer_to_peer_server.server_start(cbl_db_server)
+        url_listener_port = peer_to_peer_server.get_url_listener_port(replicator_tcp_listener)
+    else:
+        url_listener_port = 5000
+
     if attachments:
         db_obj_client.create_bulk_docs(num_of_docs, "replication", db=cbl_db_client, channels=channels,
                                        attachments_generator=attachment.generate_png_100_100)
@@ -57,7 +68,7 @@ def test_p2p_replication_push_pull_filtering(params_from_base_test_setup, server
         db_obj_client.create_bulk_docs(num_of_docs, "replication", db=cbl_db_client, channels=channels)
 
     # Now set up client
-    repl_config = p2p_client.configure(host=server_host, server_db_name=db_name_server,
+    repl_config = p2p_client.configure(port=url_listener_port, host=server_host, server_db_name=db_name_server,
                                        client_database=cbl_db_client, continuous=False,
                                        replication_type="push_pull", endPointType=endpoint_type)
     replicator.start(repl_config)
@@ -93,7 +104,7 @@ def test_p2p_replication_push_pull_filtering(params_from_base_test_setup, server
 
     # 4. The replication will have filter for newly added field
     # Docs with new_field_1 value to true will only be replicated, others will be rejected by filter method
-    repl_config = p2p_client.configure(host=server_host, server_db_name=db_name_server,
+    repl_config = p2p_client.configure(port=url_listener_port, host=server_host, server_db_name=db_name_server,
                                        client_database=cbl_db_client, continuous=False,
                                        replication_type=replicator_type, endPointType=endpoint_type,
                                        push_filter=push_filter, pull_filter=pull_filter,
@@ -130,6 +141,9 @@ def test_p2p_replication_push_pull_filtering(params_from_base_test_setup, server
                 assert "new_field_1" not in client_docs[doc_id] or "new_field_2" not in client_docs[doc_id] or \
                        "new_field_3" not in client_docs[doc_id], "updated key found in doc. Pull filter is not working"
 
+    if endpoint_type == "URLEndPoint":
+        peer_to_peer_server.server_stop(replicator_tcp_listener, endpoint_type)
+
 
 @pytest.mark.listener
 @pytest.mark.parametrize("num_of_docs, attachments, endpoint_type", [
@@ -148,10 +162,12 @@ def test_p2p_replication_delete(params_from_base_test_setup, server_setup, num_o
         4. Delete few docs on both server and client and replicate them using delete filter
         5. Verify that deleted docs on server doesn't get deleted on client and vice versa because of delete filter
     """
+    version_list = params_from_base_test_setup["version_list"]
+    if meet_supported_version(version_list, "2.5.0") is False:
+        pytest.skip("Filtering feature is available only onwards CBL 2.5.0")
     host_list = params_from_base_test_setup["host_list"]
     db_obj_list = params_from_base_test_setup["db_obj_list"]
     db_name_list = params_from_base_test_setup["db_name_list"]
-    version_list = params_from_base_test_setup["version_list"]
     base_url_list = server_setup["base_url_list"]
     cbl_db_server = server_setup["cbl_db_server"]
     cbl_db_list = server_setup["cbl_db_list"]
@@ -166,10 +182,15 @@ def test_p2p_replication_delete(params_from_base_test_setup, server_setup, num_o
     db_obj_client = db_obj_list[1]
     db_name_server = db_name_list[0]
 
-    if meet_supported_version(version_list, "2.5.0") is False:
-        pytest.skip("Filtering feature is available only onwards CBL 2.5.0")
-
     server_host = host_list[0]
+    peer_to_peer_server = PeerToPeer(base_url_list[0])
+
+    if endpoint_type == "URLEndPoint":
+        replicator_tcp_listener = peer_to_peer_server.server_start(cbl_db_server)
+        url_listener_port = peer_to_peer_server.get_url_listener_port(replicator_tcp_listener)
+    else:
+        url_listener_port = 5000
+
     # 1. Create docs on client and server.
     if attachments:
         db_obj_client.create_bulk_docs(num_of_docs, "client_replication", db=cbl_db_client, channels=channels,
@@ -182,7 +203,7 @@ def test_p2p_replication_delete(params_from_base_test_setup, server_setup, num_o
 
     # Now set up client
     # 2. Start the server and start replication from client with push and pull.
-    repl_config = p2p_client.configure(host=server_host, server_db_name=db_name_server,
+    repl_config = p2p_client.configure(port=url_listener_port, host=server_host, server_db_name=db_name_server,
                                        client_database=cbl_db_client, continuous=False,
                                        replication_type="push_pull", endPointType=endpoint_type)
     replicator.start(repl_config)
@@ -210,7 +231,7 @@ def test_p2p_replication_delete(params_from_base_test_setup, server_setup, num_o
     db_obj_server.delete_bulk_docs(database=cbl_db_server, doc_ids=server_doc_ids_to_delete)
     db_obj_client.delete_bulk_docs(database=cbl_db_client, doc_ids=client_doc_ids_to_delete)
 
-    repl_config = p2p_client.configure(host=server_host, server_db_name=db_name_server,
+    repl_config = p2p_client.configure(port=url_listener_port, host=server_host, server_db_name=db_name_server,
                                        client_database=cbl_db_client, continuous=False,
                                        push_filter=True, pull_filter=True, filter_callback_func='deleted',
                                        replication_type='push_pull', endPointType=endpoint_type)
@@ -229,6 +250,8 @@ def test_p2p_replication_delete(params_from_base_test_setup, server_setup, num_o
     for doc_id in server_doc_ids:
         if doc_id in server_doc_ids_to_delete:
             assert doc_id in client_doc_ids
+    if endpoint_type == "URLEndPoint":
+        peer_to_peer_server.server_stop(replicator_tcp_listener, endpoint_type)
 
 
 @pytest.mark.listener
@@ -249,10 +272,12 @@ def test_p2p_filter_retrieval_with_replication_restart(params_from_base_test_set
         4. Add new fields to docs and restart the replication with the same configuration.
         5. Verify that docs with "new_field_1" to true only got replicated to other side.
     """
+    version_list = params_from_base_test_setup["version_list"]
+    if meet_supported_version(version_list, "2.5.0") is False:
+        pytest.skip("Filtering feature is available only onwards CBL 2.5.0")
     host_list = params_from_base_test_setup["host_list"]
     db_obj_list = params_from_base_test_setup["db_obj_list"]
     db_name_list = params_from_base_test_setup["db_name_list"]
-    version_list = params_from_base_test_setup["version_list"]
     base_url_list = server_setup["base_url_list"]
     cbl_db_server = server_setup["cbl_db_server"]
     cbl_db_list = server_setup["cbl_db_list"]
@@ -266,10 +291,15 @@ def test_p2p_filter_retrieval_with_replication_restart(params_from_base_test_set
     db_obj_client = db_obj_list[1]
     db_name_server = db_name_list[0]
 
-    if meet_supported_version(version_list, "2.5.0") is False:
-        pytest.skip("Filtering feature is available only onwards CBL 2.5.0")
-
     server_host = host_list[0]
+    peer_to_peer_server = PeerToPeer(base_url_list[0])
+
+    if endpoint_type == "URLEndPoint":
+        replicator_tcp_listener = peer_to_peer_server.server_start(cbl_db_server)
+        url_listener_port = peer_to_peer_server.get_url_listener_port(replicator_tcp_listener)
+    else:
+        url_listener_port = 5000
+
     # 1. Create docs on client and server.
     if attachments:
         db_obj_client.create_bulk_docs(num_of_docs, "client_replication", db=cbl_db_client, channels=channels,
@@ -282,7 +312,7 @@ def test_p2p_filter_retrieval_with_replication_restart(params_from_base_test_set
 
     # Now set up client
     # 2. Start the server and start replication from client with push and pull.
-    repl_config = p2p_client.configure(host=server_host, server_db_name=db_name_server,
+    repl_config = p2p_client.configure(port=url_listener_port, host=server_host, server_db_name=db_name_server,
                                        client_database=cbl_db_client, continuous=False,
                                        push_filter=True, pull_filter=True, filter_callback_func='boolean',
                                        replication_type="push_pull", endPointType=endpoint_type)
@@ -331,3 +361,79 @@ def test_p2p_filter_retrieval_with_replication_restart(params_from_base_test_set
             assert "new_field_1" not in client_docs[doc_id] and "new_field_2" not in client_docs[doc_id] and\
                    "new_field_3" not in client_docs[doc_id], "Filter didn't stop replication of docs with" \
                                                              " new_field_1 to False"
+    if endpoint_type == "URLEndPoint":
+        peer_to_peer_server.server_stop(replicator_tcp_listener, endpoint_type)
+
+
+@pytest.mark.listener
+@pytest.mark.hydrogen
+def test_p2p_delete_db_active_replicator_and_live_query(params_from_base_test_setup):
+    """
+        @summary:
+        1. create a db on cbls
+        2. start 2 replicators, ensure one of the replicator is push_pull replicator with continues=true
+        3. if live_query_enabled, register a live query to the cbl db, otherwise, skip this step
+        4. close the cbl db
+        5. verify cbl db is closed closed successfully
+    """
+    base_url_list = params_from_base_test_setup["base_url_list"]
+    host_list = params_from_base_test_setup["host_list"]
+    cbl_db_list = params_from_base_test_setup["cbl_db_list"]
+    db_obj_list = params_from_base_test_setup["db_obj_list"]
+    channel = ["peerToPeer"]
+    base_url_client2 = base_url_list[2]
+    base_url_client1 = base_url_list[1]
+    client_replicator1 = Replication(base_url_client1)
+    client_replicator2 = Replication(base_url_client2)
+
+    peerToPeer_client1 = PeerToPeer(base_url_client1)
+    peerToPeer_client2 = PeerToPeer(base_url_client2)
+
+    cbl_db_server = cbl_db_list[0]
+    cbl_db_client1 = cbl_db_list[1]
+    cbl_db_client2 = cbl_db_list[2]
+    db_obj_server = db_obj_list[0]
+
+    # 1a. create a db, and add document to the cbl db. Creating new DB
+    db = Database(base_url_list[0])
+    db_name = "test_delete_db_" + str(time.time())
+    log_info("Creating a Database {} at test setup".format(db_name))
+    db_config = db.configure()
+    cbl_db = db.create(db_name, db_config)
+
+    server_host = host_list[0]
+    num_of_docs = 10000
+    # 1a. create a db, and add document to the cbl db
+    db_obj_server.create_bulk_docs(num_of_docs, "cbl-peerToPeer", db=cbl_db, channels=channel)
+    peer_to_peer_server = PeerToPeer(base_url_list[0])
+
+    listener = peer_to_peer_server.server_start(cbl_db)
+    url_listener_port = peer_to_peer_server.get_url_listener_port(listener)
+
+    # 2 Now set up replicator on the server/listener DB
+    repl1 = peerToPeer_client1.configure(port=url_listener_port, host=server_host, server_db_name=db_name,
+                                         client_database=cbl_db_client1, continuous=True,
+                                         replication_type="pull_push", endPointType="URLEndPoint")
+    peerToPeer_client1.client_start(repl1)
+    repl2 = peerToPeer_client2.configure(port=url_listener_port, host=server_host, server_db_name=db_name,
+                                         client_database=cbl_db_client2, continuous=True,
+                                         replication_type="pull_push", endPointType="URLEndPoint")
+    peerToPeer_client2.client_start(repl2)
+
+    # 3. register a live query to the cbl db
+    qy = Query(base_url_list[0])
+    query = qy.query_selectAll(cbl_db_server)
+    query_listener = qy.addChangeListener(query)
+
+    log_info(client_replicator1.getActivitylevel(repl1))
+    log_info(client_replicator2.getActivitylevel(repl2))
+
+    try:
+        log_info("deleting database")
+        db.deleteDB(cbl_db)
+        log_info("database is deleted successfully")
+        assert True
+    except KeyError:
+        qy.removeChangeListener(query_listener)
+        assert False, "deleting database with active replicators are failed"
+    peer_to_peer_server.server_stop(listener, "URLEndPoint")
