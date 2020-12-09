@@ -306,6 +306,23 @@ def compare_docs(cbl_db, db, docs_dict):
         assert deep_dict_compare(doc["doc"], cbl_db_docs[key]), "mismatch in the dictionary"
 
 
+def compare_cbl_docs(db, cbl_db1, cbl_db2):
+    doc_ids1 = db.getDocIds(cbl_db1)
+    cbl_db_docs1 = db.getDocuments(cbl_db1, doc_ids1)
+    doc_ids2 = db.getDocIds(cbl_db2)
+    cbl_db_docs2 = db.getDocuments(cbl_db2, doc_ids2)
+    for doc in cbl_db_docs1:
+        try:
+            del cbl_db_docs1[doc]["_id"]
+        except KeyError:
+            log_info("Ignoring id verification on cbl db1")
+        try:
+            del cbl_db_docs2[doc]["_id"]
+        except KeyError:
+            log_info("Ignoring id verification on cbl db2")
+        assert deep_dict_compare(cbl_db_docs1[doc], cbl_db_docs2[doc]), "mismatch in the dictionary"
+
+
 def compare_generic_types(object1, object2, isPredictiveResult=False):
     """
     @summary:
@@ -458,3 +475,19 @@ def set_device_enabled(run_on_device, list_size):
             device_enabled_list.append(False)
 
     return device_enabled_list
+
+
+def is_replicator_in_connection_retry(error_msg):
+    # check android
+    if "POSIXErrorDomain,111" in error_msg and "Connection refused" in error_msg and "Android" in error_msg:
+        return True
+    # check java
+    if "CouchbaseLite,11001" in error_msg and "WebSocket connection closed by peer" in error_msg and "Java" in error_msg:
+        return True
+    # check all .net
+    if "POSIXDomain / 111" in error_msg and "Connection refused" in error_msg:
+        return True
+    # check ios
+    if "NSPOSIXErrorDomain" in error_msg and "Connection refused" in error_msg and "Code=61" in error_msg:
+        return True
+    return False

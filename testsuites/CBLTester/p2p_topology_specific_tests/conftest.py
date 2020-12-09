@@ -127,27 +127,11 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="delta-sync: Enable delta-sync for sync gateway")
 
-    parser.addoption("--sg-ce", action="store_true",
-                     help="If set, SGW community edition will get picked up , default is enterprise", default=False)
-
-    parser.addoption("--cbs-ce", action="store_true",
-                     help="If set, community edition will get picked up , default is enterprise", default=False)
-
-    parser.addoption("--server-ssl",
-                     action="store_true",
-                     help="If set, will enable SSL communication between server and Sync Gateway")
-
-    parser.addoption("--cluster-config",
-                     action="store",
-                     help="Provide a custom cluster config",
-                     default="multiple_sync_gateways_")
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
 # This setup will be called once for all tests in the
 # testsuites/CBLTester/topology_sync_gateways/multiple_sync_gateways directory
-
-
 @pytest.fixture(scope="session")
 def params_from_base_suite_setup(request):
     liteserv_platform = request.config.getoption("--liteserv-platform")
@@ -174,18 +158,15 @@ def params_from_base_suite_setup(request):
     number_replicas = request.config.getoption("--number-replicas")
     enable_file_logging = request.config.getoption("--enable-file-logging")
     delta_sync_enabled = request.config.getoption("--delta-sync")
-    cbs_ce = request.config.getoption("--cbs-ce")
-    sg_ce = request.config.getoption("--sg-ce")
-    cbs_ssl = request.config.getoption("--server-ssl")
-    cluster_config = request.config.getoption("--cluster-config")
 
     enable_encryption = request.config.getoption("--enable-encryption")
     encryption_password = request.config.getoption("--encryption-password")
-
+    liteserv_host_list = liteserv_host.split(',')
+    liteserv_ports = liteserv_port.split(',')
     testserver = TestServerFactory.create(platform=liteserv_platform,
                                           version_build=liteserv_version,
-                                          host=liteserv_host,
-                                          port=liteserv_port,
+                                          host=liteserv_host_list[0],
+                                          port=liteserv_ports[0],
                                           community_enabled=community_enabled,
                                           debug_mode=debug_mode)
 
@@ -200,8 +181,9 @@ def params_from_base_suite_setup(request):
         else:
             testserver.install()
 
-    base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
-    cluster_config = "{}/{}{}".format(CLUSTER_CONFIGS_DIR, cluster_config, mode)
+    base_url = "http://{}:{}".format(liteserv_host_list[0], liteserv_ports[0])
+    base_url2 = "http://{}:{}".format(liteserv_host_list[1], liteserv_ports[1])
+    cluster_config = "{}/multiple_sync_gateways_{}".format(CLUSTER_CONFIGS_DIR, mode)
     no_conflicts_enabled = request.config.getoption("--no-conflicts")
     cluster_utils = ClusterKeywords(cluster_config)
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
@@ -271,15 +253,6 @@ def params_from_base_suite_setup(request):
         log_info("Running without delta sync")
         persist_cluster_config_environment_prop(cluster_config, 'delta_sync_enabled', False)
 
-    if cbs_ssl:
-        log_info("Running tests with cbs <-> sg ssl enabled")
-        # Enable ssl in cluster configs
-        persist_cluster_config_environment_prop(cluster_config, 'cbs_ssl_enabled', True)
-    else:
-        log_info("Running tests with cbs <-> sg ssl disabled")
-        # Disable ssl in cluster configs
-        persist_cluster_config_environment_prop(cluster_config, 'cbs_ssl_enabled', False)
-
     # As cblite jobs run with on Centos platform, adding by default centos to environment config
     persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "centos", False)
 
@@ -303,9 +276,7 @@ def params_from_base_suite_setup(request):
                 cluster_config=cluster_config,
                 server_version=server_version,
                 sync_gateway_version=sync_gateway_version,
-                sync_gateway_config=sg_config,
-                cbs_ce=cbs_ce,
-                sg_ce=sg_ce
+                sync_gateway_config=sg_config
             )
         except ProvisioningError:
             logging_helper = Logging()
@@ -324,6 +295,8 @@ def params_from_base_suite_setup(request):
 
     suite_source_db = None
     suite_cbl_db = None
+    suite_cbl_db2 = None
+    suite_source_db2 = None
     if create_db_per_suite:
         if enable_file_logging and liteserv_version >= "2.5.0":
             cbllog = FileLogging(base_url)
@@ -332,14 +305,19 @@ def params_from_base_suite_setup(request):
             log_info("Log files available at - {}".format(cbllog.get_directory()))
         # Create CBL database
         suite_cbl_db = create_db_per_suite
+        suite_cbl_db2 = create_db_per_suite
         suite_db = Database(base_url)
+        suite_db2 = Database(base_url2)
 
         log_info("Creating a Database {} at the suite setup".format(suite_cbl_db))
         if enable_encryption:
             db_config = suite_db.configure(password=encryption_password)
+            db_config2 = suite_db2.configure(password=encryption_password)
         else:
             db_config = suite_db.configure()
+            db_config2 = suite_db2.configure()
         suite_source_db = suite_db.create(suite_cbl_db, db_config)
+        suite_source_db2 = suite_db.create(suite_cbl_db2, db_config2)
         log_info("Getting the database name")
         db_name = suite_db.getName(suite_source_db)
         assert db_name == suite_cbl_db
@@ -398,10 +376,13 @@ def params_from_base_suite_setup(request):
         "no_conflicts_enabled": no_conflicts_enabled,
         "sync_gateway_version": sync_gateway_version,
         "base_url": base_url,
+        "base_url2": base_url2,
         "enable_sample_bucket": enable_sample_bucket,
         "create_db_per_test": create_db_per_test,
         "suite_source_db": suite_source_db,
         "suite_cbl_db": suite_cbl_db,
+        "suite_cbl_db2": suite_cbl_db2,
+        "suite_source_db2": suite_source_db2,
         "sg_config": sg_config,
         "testserver": testserver,
         "device_enabled": device_enabled,
@@ -410,16 +391,15 @@ def params_from_base_suite_setup(request):
         "delta_sync_enabled": delta_sync_enabled,
         "enable_file_logging": enable_file_logging,
         "enable_encryption": enable_encryption,
-        "encryption_password": encryption_password,
-        "cbs_ce": cbs_ce,
-        "sg_ce": sg_ce,
-        "ssl_enabled": cbs_ssl
+        "liteserv_host_list": liteserv_host_list,
+        "encryption_password": encryption_password
     }
     if create_db_per_suite:
         # Delete CBL database
         log_info("Deleting the database {} at the suite teardown".format(create_db_per_suite))
         time.sleep(2)
         suite_db.deleteDB(suite_source_db)
+        suite_db2.deleteDB(suite_source_db2)
         time.sleep(1)
 
     # Flush all the memory contents on the server app
@@ -438,6 +418,7 @@ def params_from_base_suite_setup(request):
 @pytest.fixture(scope="function")
 def params_from_base_test_setup(request, params_from_base_suite_setup):
     base_url = params_from_base_suite_setup["base_url"]
+    base_url2 = params_from_base_suite_setup["base_url2"]
     cluster_config = params_from_base_suite_setup["cluster_config"]
     xattrs_enabled = params_from_base_suite_setup["xattrs_enabled"]
     liteserv_host = params_from_base_suite_setup["liteserv_host"]
@@ -447,6 +428,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     target_admin_url = params_from_base_suite_setup["target_admin_url"]
     suite_source_db = params_from_base_suite_setup["suite_source_db"]
     suite_cbl_db = params_from_base_suite_setup["suite_cbl_db"]
+    suite_cbl_db2 = params_from_base_suite_setup["suite_cbl_db2"]
     test_name = request.node.name
     cluster_topology = params_from_base_suite_setup["cluster_topology"]
     mode = params_from_base_suite_setup["mode"]
@@ -465,12 +447,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     delta_sync_enabled = params_from_base_suite_setup["delta_sync_enabled"]
     encryption_password = params_from_base_suite_setup["encryption_password"]
     enable_encryption = params_from_base_suite_setup["enable_encryption"]
-    cbs_ce = params_from_base_suite_setup["cbs_ce"]
-    sg_ce = params_from_base_suite_setup["sg_ce"]
-    cbs_ssl = params_from_base_suite_setup["ssl_enabled"]
-
     use_local_testserver = request.config.getoption("--use-local-testserver")
-
     source_db = None
     cbl_db = None
     db_config = None
@@ -508,15 +485,19 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
                              max_size=1000 * 512, plain_text=True)
             log_info("Log files available at - {}".format(cbllog.get_directory()))
         cbl_db = create_db_per_test + str(time.time())
+        cbl_db2 = create_db_per_test + str(time.time())
         # Create CBL database
         db = Database(base_url)
-
+        db2 = Database(base_url2)
         log_info("Creating a Database {} at test setup".format(cbl_db))
         if enable_encryption:
             db_config = db.configure(password=encryption_password)
+            db_config2 = db2.configure(password=encryption_password)
         else:
             db_config = db.configure()
+            db_config2 = db2.configure()
         source_db = db.create(cbl_db, db_config)
+        source_db2 = db2.create(cbl_db2, db_config2)
         log_info("Getting the database name")
         db_name = db.getName(source_db)
         assert db_name == cbl_db
@@ -539,21 +520,23 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "no_conflicts_enabled": no_conflicts_enabled,
         "sync_gateway_version": sync_gateway_version,
         "source_db": source_db,
+        "source_db2": source_db2,
         "cbl_db": cbl_db,
+        "cbl_db2": cbl_db2,
         "suite_source_db": suite_source_db,
         "suite_cbl_db": suite_cbl_db,
+        "suite_cbl_db2": suite_cbl_db2,
         "base_url": base_url,
+        "base_url2": base_url2,
         "sg_config": sg_config,
         "db": db,
+        "db2": db2,
         "device_enabled": device_enabled,
         "testserver": testserver,
         "db_config": db_config,
         "sg_ssl": sg_ssl,
         "delta_sync_enabled": delta_sync_enabled,
-        "enable_file_logging": enable_file_logging,
-        "cbs_ce": cbs_ce,
-        "sg_ce": sg_ce,
-        "ssl_enabled": cbs_ssl
+        "enable_file_logging": enable_file_logging
     }
 
     log_info("Tearing down test")
@@ -562,11 +545,14 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         log_info("Deleting the database {} at test teardown".format(create_db_per_test))
         time.sleep(1)
         db.deleteDB(source_db)
+        db2.deleteDB(source_db2)
 
     if flush_memory_per_test:
         log_info("Flushing server memory")
         utils_obj = Utils(base_url)
         utils_obj.flushMemory()
+        utils_obj2 = Utils(base_url2)
+        utils_obj2.flushMemory()
 
 
 @pytest.fixture(scope="function")
@@ -574,14 +560,19 @@ def setup_customized_teardown_test(params_from_base_test_setup):
     cbl_db_name1 = "cbl_db1" + str(time.time())
     cbl_db_name2 = "cbl_db2" + str(time.time())
     cbl_db_name3 = "cbl_db3" + str(time.time())
-    db = params_from_base_test_setup["db"]
+    base_url = params_from_base_test_setup["base_url"]
+    base_url2 = params_from_base_test_setup["base_url2"]
+    db = Database(base_url)
     db_config = db.configure()
+    db2 = Database(base_url2)
+    db_config2 = db2.configure()
     cbl_db1 = db.create(cbl_db_name1, db_config)
-    cbl_db2 = db.create(cbl_db_name2, db_config)
+    cbl_db2 = db2.create(cbl_db_name2, db_config2)
     cbl_db3 = db.create(cbl_db_name3, db_config)
 
     yield{
         "db": db,
+        "db2": db2,
         "cbl_db_name1": cbl_db_name1,
         "cbl_db_name2": cbl_db_name2,
         "cbl_db_name3": cbl_db_name3,
@@ -590,23 +581,7 @@ def setup_customized_teardown_test(params_from_base_test_setup):
         "cbl_db3": cbl_db3,
     }
     log_info("tearing down all 3 dbs")
-    path = db.getPath(cbl_db1).rstrip("/\\")
-    path2 = db.getPath(cbl_db2).rstrip("/\\")
-    path3 = db.getPath(cbl_db3).rstrip("/\\")
-    if '\\' in path:
-        path = '\\'.join(path.split('\\')[:-1])
-        path2 = '\\'.join(path2.split('\\')[:-1])
-        path3 = '\\'.join(path3.split('\\')[:-1])
-    else:
-        path = '/'.join(path.split('/')[:-1])
-        path2 = '/'.join(path2.split('/')[:-1])
-        path3 = '/'.join(path3.split('/')[:-1])
-    try:
-        if db.exists(cbl_db_name1, path):
-            db.deleteDB(cbl_db1)
-        if db.exists(cbl_db_name2, path2):
-            db.deleteDB(cbl_db2)
-        if db.exists(cbl_db_name3, path3):
-            db.deleteDB(cbl_db3)
-    except Exception as err:
-        log_info("Exception occurred: {}".format(err))
+    time.sleep(2)
+    db.deleteDB(cbl_db1)
+    db2.deleteDB(cbl_db2)
+    db.deleteDB(cbl_db3)

@@ -30,10 +30,12 @@ def test_peer_to_peer_replication_eventing_valid_values(params_from_base_test_se
         5. Verify all docs got replicated on server.
         6. Verify event listener captures all replication event and there are no error in captured events.
     """
+    version_list = params_from_base_test_setup["version_list"]
+    if meet_supported_version(version_list, "2.5.0") is False:
+        pytest.skip("Eventing feature is available only onwards CBL 2.5.0")
     host_list = params_from_base_test_setup["host_list"]
     db_obj_list = params_from_base_test_setup["db_obj_list"]
     db_name_list = params_from_base_test_setup["db_name_list"]
-    version_list = params_from_base_test_setup["version_list"]
     base_url_list = server_setup["base_url_list"]
     cbl_db_server = server_setup["cbl_db_server"]
     cbl_db_list = server_setup["cbl_db_list"]
@@ -48,9 +50,13 @@ def test_peer_to_peer_replication_eventing_valid_values(params_from_base_test_se
     db_name_server = db_name_list[0]
 
     server_host = host_list[0]
+    peer_to_peer_server = PeerToPeer(base_url_list[0])
 
-    if meet_supported_version(version_list, "2.5.0") is False:
-        pytest.skip("Eventing feature is available only onwards CBL 2.5.0")
+    if endpoint_type == "URLEndPoint":
+        replicator_tcp_listener = peer_to_peer_server.server_start(cbl_db_server)
+        url_listener_port = peer_to_peer_server.get_url_listener_port(replicator_tcp_listener)
+    else:
+        url_listener_port = 5000
 
     if attachments:
         client_doc_ids = db_obj_client.create_bulk_docs(num_of_docs, "client_doc", db=cbl_db_client,
@@ -67,7 +73,7 @@ def test_peer_to_peer_replication_eventing_valid_values(params_from_base_test_se
 
     # Now set up client
 
-    repl = peer_to_peer_client.configure(host=server_host, server_db_name=db_name_server, client_database=cbl_db_client,
+    repl = peer_to_peer_client.configure(port=url_listener_port, host=server_host, server_db_name=db_name_server, client_database=cbl_db_client,
                                          continuous=continuous, replication_type=replicator_type,
                                          endPointType=endpoint_type)
     repl_listener = peer_to_peer_client.addReplicatorEventChangeListener(repl)
@@ -102,6 +108,8 @@ def test_peer_to_peer_replication_eventing_valid_values(params_from_base_test_se
     assert sorted(pull_docs) == sorted(
         server_doc_ids), "Replication event pull docs are not equal to expected no. of docs to be pulled"
     assert len(error_docs) == 0, "Error found in replication events {}".format(error_docs)
+    if endpoint_type == "URLEndPoint":
+        peer_to_peer_server.server_stop(replicator_tcp_listener, endpoint_type)
 
 
 @pytest.mark.listener
@@ -121,10 +129,13 @@ def test_peer_to_peer_push_replication_error_event(params_from_base_test_setup, 
     4. Replicate using push replication and capture events with replication event listener
     5. Verify event listener capture error events for conflict.
     """
+    version_list = params_from_base_test_setup["version_list"]
+    if meet_supported_version(version_list, "2.5.0") is False:
+        pytest.skip("Eventing feature is available only onwards CBL 2.5.0")
     host_list = params_from_base_test_setup["host_list"]
     db_obj_list = params_from_base_test_setup["db_obj_list"]
     db_name_list = params_from_base_test_setup["db_name_list"]
-    version_list = params_from_base_test_setup["version_list"]
+
     base_url_list = server_setup["base_url_list"]
     cbl_db_server = server_setup["cbl_db_server"]
     cbl_db_list = server_setup["cbl_db_list"]
@@ -139,16 +150,20 @@ def test_peer_to_peer_push_replication_error_event(params_from_base_test_setup, 
     db_name_server = db_name_list[0]
 
     server_host = host_list[0]
+    peer_to_peer_server = PeerToPeer(base_url_list[0])
 
-    if meet_supported_version(version_list, "2.5.0") is False:
-        pytest.skip("Eventing feature is available only onwards CBL 2.5.0")
+    if endpoint_type == "URLEndPoint":
+        replicator_tcp_listener = peer_to_peer_server.server_start(cbl_db_server)
+        url_listener_port = peer_to_peer_server.get_url_listener_port(replicator_tcp_listener)
+    else:
+        url_listener_port = 5000
 
     client_doc_ids = db_obj_client.create_bulk_docs(num_of_docs, "client_doc", db=cbl_db_client,
                                                     channels=channels)
     server_doc_ids = db_obj_server.create_bulk_docs(num_of_docs, "server_doc", db=cbl_db_server,
                                                     channels=channels)
     # Now set up client
-    repl = peer_to_peer_client.configure(host=server_host, server_db_name=db_name_server, client_database=cbl_db_client,
+    repl = peer_to_peer_client.configure(port=url_listener_port, host=server_host, server_db_name=db_name_server, client_database=cbl_db_client,
                                          replication_type="push_pull", endPointType=endpoint_type)
     peer_to_peer_client.client_start(repl)
     replicator.wait_until_replicator_idle(repl)
@@ -166,7 +181,7 @@ def test_peer_to_peer_push_replication_error_event(params_from_base_test_setup, 
     db_obj_server.update_bulk_docs(database=cbl_db_server, number_of_updates=2, doc_ids=client_doc_ids)
 
     # replication and waiting for conflict to create error event
-    repl = peer_to_peer_client.configure(host=server_host, server_db_name=db_name_server, client_database=cbl_db_client,
+    repl = peer_to_peer_client.configure(port=url_listener_port, host=server_host, server_db_name=db_name_server, client_database=cbl_db_client,
                                          replication_type="push", endPointType=endpoint_type)
     repl_listener = peer_to_peer_client.addReplicatorEventChangeListener(repl)
     peer_to_peer_client.client_start(repl)
@@ -187,6 +202,8 @@ def test_peer_to_peer_push_replication_error_event(params_from_base_test_setup, 
         if "client_doc" in doc:
             assert client_docs[doc]["updates-cbl"] == 1, \
                 "Conflict error didn't stop replication of docs properly.\n {}".format(doc)
+    if endpoint_type == "URLEndPoint":
+        peer_to_peer_server.server_stop(replicator_tcp_listener, endpoint_type)
 
 
 @pytest.mark.listener
@@ -227,13 +244,19 @@ def test_peer_to_peer_replication_delete_event(params_from_base_test_setup, serv
 
     if meet_supported_version(version_list, "2.5.0") is False:
         pytest.skip("Eventing feature is available only onwards CBL 2.5.0")
+    peer_to_peer_server = PeerToPeer(base_url_list[0])
+    if endpoint_type == "URLEndPoint":
+        replicator_tcp_listener = peer_to_peer_server.server_start(cbl_db_server)
+        url_listener_port = peer_to_peer_server.get_url_listener_port(replicator_tcp_listener)
+    else:
+        url_listener_port = 5000
 
     client_doc_ids = db_obj_client.create_bulk_docs(num_of_docs, "client_doc", db=cbl_db_client,
                                                     channels=channels)
     server_doc_ids = db_obj_server.create_bulk_docs(num_of_docs, "server_doc", db=cbl_db_server,
                                                     channels=channels)
     # Now set up client
-    repl = peer_to_peer_client.configure(host=server_host, server_db_name=db_name_server,
+    repl = peer_to_peer_client.configure(port=url_listener_port, host=server_host, server_db_name=db_name_server,
                                          client_database=cbl_db_client, replication_type="push_pull",
                                          endPointType=endpoint_type)
     peer_to_peer_client.client_start(repl)
@@ -264,3 +287,5 @@ def test_peer_to_peer_replication_delete_event(params_from_base_test_setup, serv
     server_docs_count = db_obj_server.getCount(cbl_db_server)
     client_docs_count = db_obj_client.getCount(cbl_db_client)
     assert server_docs_count == client_docs_count, "Server and Client doesn't have equal no. of docs"
+    if endpoint_type == "URLEndPoint":
+        peer_to_peer_server.server_stop(replicator_tcp_listener, endpoint_type)
