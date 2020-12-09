@@ -127,7 +127,6 @@ class CouchbaseServer:
         """ Delete a Couchbase Server bucket with the given 'name' """
         server_version = get_server_version(self.host, self.cbs_ssl)
         server_major_version = int(server_version.split(".")[0])
-
         if server_major_version >= 5:
             self._delete_internal_rbac_bucket_user(name)
 
@@ -199,9 +198,26 @@ class CouchbaseServer:
             resp_obj = resp.json()
             if "status" not in resp_obj:
                 break
-            else:
-                count += 1
+            count += 1
             time.sleep(60)
+
+        query_url = self.url.replace("8091", "8093")
+        del_pdstmt_query_data = {"statement": "delete from system:prepareds"}
+        verify_pdstmt_query_data = {"statement": "select * from system:prepareds"}
+        resp = self._session.post("{}/query/service".format(query_url), data=del_pdstmt_query_data)
+        resp_obj = resp.json()
+
+        count = 0
+        while count < 5:
+            resp = self._session.post("{}/query/service".format(query_url), data=verify_pdstmt_query_data)
+            resp_obj = resp.json()
+            status = resp_obj["status"]
+            result_count = resp_obj["metrics"]["resultCount"]
+            if status == "success":
+                if result_count == 0:
+                    break
+                count += 1
+                time.sleep(15)
 
     def wait_for_ready_state(self):
         """
@@ -337,8 +353,8 @@ class CouchbaseServer:
                 # only use it if it's lower than previous low
                 mem_total_lowest = mem_total
 
-        if mem_total_lowest is None:
-            raise ProvisioningError("All nodes reported 0MB of RAM available")
+        """if mem_total_lowest is None:
+            raise ProvisioningError("All nodes reported 0MB of RAM available")"""
 
         return mem_total_lowest
 
@@ -346,11 +362,18 @@ class CouchbaseServer:
         """
         Call the Couchbase REST API to get the total memory available on the machine. RAM returned is in mb
         """
-        resp = self._session.get("{}/pools/default".format(self.url))
-        resp.raise_for_status()
-        resp_json = resp.json()
-
-        mem_total_lowest = self._get_mem_total_lowest(resp_json)
+        count = 0
+        mem_total_lowest = None
+        while count < 5 and mem_total_lowest is None:
+            resp = self._session.get("{}/pools/default".format(self.url))
+            resp.raise_for_status()
+            resp_json = resp.json()
+            log_info("resp_json of get_total_ram mb : ", resp_json)
+            mem_total_lowest = self._get_mem_total_lowest(resp_json)
+            time.sleep(5)
+            count += 1
+        if mem_total_lowest is None:
+            raise ProvisioningError("All nodes reported 0MB of RAM available")
 
         total_avail_ram_mb = int(mem_total_lowest / (1024 * 1024))
         log_info("total_avail_ram_mb: {}".format(total_avail_ram_mb))
