@@ -8,6 +8,7 @@ from libraries.testkit.syncgateway import wait_until_doc_in_changes_feed
 from libraries.testkit.syncgateway import wait_until_docs_sync
 from libraries.testkit.syncgateway import assert_does_not_have_doc
 from libraries.testkit.syncgateway import assert_has_doc
+from libraries.testkit.prometheous import verify_stat_on_prometheous
 from keywords.ClusterKeywords import ClusterKeywords
 from requests import HTTPError
 from keywords import document
@@ -37,6 +38,7 @@ def test_sg_replicate_basic_test(params_from_base_test_setup):
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    prometheus_enabled = params_from_base_test_setup["prometheus_enabled"]
 
     log_info("Running 'test_sg_replicate_basic_test'")
     log_info("Using cluster_config: {}".format(cluster_config))
@@ -152,6 +154,15 @@ def test_sg_replicate_basic_test(params_from_base_test_setup):
                 if times == 4:
                     raise error
                 time.sleep(t)
+    if prometheus_enabled and sync_gateway_version >= "2.8.0":
+        verify_stat_on_prometheous("sgw_resource_utilization_system_memory_total", expvars["syncgateway"]["global"]["resource_utilization"]["system_memory_total"])
+        verify_stat_on_prometheous("sgw_cache_chan_cache_max_entries", expvars["syncgateway"]["per_db"][DB2]["cache"]["chan_cache_max_entries"])
+        verify_stat_on_prometheous("sgw_gsi_views_allDocs_count",
+                                   expvars["syncgateway"]["per_db"][DB2]["cache"]["chan_cache_max_entries"])
+
+
+
+
 
 
 @pytest.mark.topospecific

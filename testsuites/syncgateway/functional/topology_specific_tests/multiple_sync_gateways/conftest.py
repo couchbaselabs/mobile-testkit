@@ -225,14 +225,15 @@ def params_from_base_suite_setup(request):
            "xattrs_enabled": xattrs_enabled,
            "sg_platform": sg_platform,
            "sync_gateway_version": sync_gateway_version,
-           "sg_ce": sg_ce
+           "sg_ce": sg_ce,
+           "prometheus_enabled": prometheus_enabled
            }
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
 
     # Stop all sync_gateway and sg_accels as test finished
     c = cluster.Cluster(cluster_config)
-    c.stop_sg_and_accel()
+    # c.stop_sg_and_accel()
 
     # Delete png files under resources/data
     clear_resources_pngs()
@@ -253,6 +254,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     sg_platform = params_from_base_suite_setup["sg_platform"]
     sync_gateway_version = params_from_base_suite_setup["sync_gateway_version"]
     sg_ce = params_from_base_suite_setup["sg_ce"]
+    prometheus_enabled = params_from_base_suite_setup["prometheus_enabled"]
 
     test_name = request.node.name
     log_info("Setting up test '{}'".format(test_name))
@@ -263,7 +265,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
            "xattrs_enabled": xattrs_enabled,
            "sg_platform": sg_platform,
            "sync_gateway_version": sync_gateway_version,
-           "sg_ce": sg_ce
+           "sg_ce": sg_ce,
+           "prometheus_enabled":prometheus_enabled
            }
 
     # Code after the yeild will execute when each test finishes
