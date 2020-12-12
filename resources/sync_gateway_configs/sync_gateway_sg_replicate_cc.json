@@ -4,7 +4,7 @@
     "maxIncomingConnections": 0,
     "maxFileDescriptors": 90000,
     "compressResponses": false,
-    "metricsInterface": ":4986",
+    {{ prometheous }}
     {{ sslcert }}
     {{ sslkey }}
     {{ logging }}
