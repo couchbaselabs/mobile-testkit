@@ -219,6 +219,19 @@ class CouchbaseServer:
                 count += 1
                 time.sleep(15)
 
+    def flush_bucket(self, bucket_name):
+        """ Flush a given bucket data"""
+        log_info("Flushing bucket {}".format(bucket_name))
+
+        resp = None
+        try:
+            resp = self._session.post("{}/pools/default/buckets/{}/controller/doFlush".format(self.url, bucket_name))
+            log_r(resp)
+            resp.raise_for_status()
+        except HTTPError as h:
+            log_info("resp code: {}; resp text: {}; error: {}".format(resp, resp.json(), h))
+            raise
+
     def wait_for_ready_state(self):
         """
         Verify all server node is in are in a "healthy" state to avoid sync_gateway startup failures

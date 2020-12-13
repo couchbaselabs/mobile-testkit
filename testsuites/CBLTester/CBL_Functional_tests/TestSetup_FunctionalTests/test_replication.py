@@ -6,6 +6,7 @@ import random
 from keywords.MobileRestClient import MobileRestClient
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords import couchbaseserver
+from keywords.couchbaseserver import CouchbaseServer
 from keywords.utils import log_info, random_string, get_embedded_asset_file_path
 from CBLClient.Database import Database
 from CBLClient.Replication import Replication
@@ -15,7 +16,7 @@ from concurrent.futures import ThreadPoolExecutor
 from CBLClient.Blob import Blob
 from CBLClient.Dictionary import Dictionary
 
-from keywords.SyncGateway import sync_gateway_config_path_for_mode
+from keywords.SyncGateway import sync_gateway_config_path_for_mode, SyncGateway
 from keywords import document, attachment
 from libraries.testkit import cluster
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
@@ -4021,6 +4022,153 @@ def test_replication_pull_from_empty_database(params_from_base_test_setup, attac
     cbl_doc_ids = db.getDocIds(cbl_db)
     cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
     assert len(cbl_docs) == 75, "The number of docs pull from SGW is incorrect"
+
+
+def test_replication_stop_requested_on_replicator_busy(params_from_base_test_setup):
+    """
+    @summary: to verify no crash if stop replication requested while replicator is still busy
+        1. Create a bigger chuck of docs on SGW
+        2. Start replication 
+        3. Send a replicator stop request, ensure the request is sent while replicator is busy
+        4. Verify the replicator status, ensure there is no crash
+    """
+    sg_db = "db"
+    sg_url = params_from_base_test_setup["sg_url"]
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    sg_blip_url = params_from_base_test_setup["target_url"]
+    base_url = params_from_base_test_setup["base_url"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_config = params_from_base_test_setup["sg_config"]
+    cbl_db = params_from_base_test_setup["source_db"]
+    channels = ["replication-channel"]
+
+    num_of_docs = 1000
+    sg_client = MobileRestClient()
+
+    # Modify sync-gateway config
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
+
+    # 1. Add docs to SG.
+    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest")
+    session = cookie, session_id
+    sg_docs = document.create_docs(doc_id_prefix='sg_docs', number=num_of_docs, channels=channels)
+    sg_docs = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=session)
+    assert len(sg_docs) == num_of_docs
+
+    # 2. Pull replication to CBL
+    replicator = Replication(base_url)
+    authenticator = Authenticator(base_url)
+    replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
+    repl_config = replicator.configure(source_db=cbl_db,
+                                       target_url=sg_blip_url,
+                                       continuous=True,
+                                       channels=channels,
+                                       replicator_authenticator=replicator_authenticator,
+                                       replication_type="pull")
+    repl = replicator.create(repl_config)
+    replicator.start(repl)
+
+    # 3. Stop replicator while it's busy or still connecting
+    if replicator.getActivitylevel(repl) == "busy" or replicator.getActivitylevel(repl) == "connecting":
+        replicator.stop(repl)
+
+    # 4. Validate completed count, ensure there is no crash
+    total = replicator.getTotal(repl)
+    completed = replicator.getCompleted(repl)
+    assert total >= completed, "total is less than completed"
+
+
+def test_replication_flush_checkpoint_no_crash(params_from_base_test_setup):
+    """
+    @summary: to verify no crash if checkpoint data gets flush
+        1. add docs to the db on SGW
+        2. start a one-shot pull replicator that the CBL db will pull the the docs on SGW db
+        3. stop sync gateway service
+        4. flush the bucket on CBS which has sync gateway checkpoint data
+        5. start sync gateway service
+        6. start a pull replicator, to verify there is no crash
+    """
+    sg_db = "db"
+    sg_url = params_from_base_test_setup["sg_url"]
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_blip_url = params_from_base_test_setup["target_url"]
+    base_url = params_from_base_test_setup["base_url"]
+    sg_config = params_from_base_test_setup["sg_config"]
+    db = params_from_base_test_setup["db"]
+    cbl_db = params_from_base_test_setup["source_db"]
+    cbs_url = params_from_base_test_setup["cbs_url"]
+
+    channels = ["*"]
+    sg_client = MobileRestClient()
+    num_of_docs = 10
+
+    # Modify sync-gateway config
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
+
+    # 1. Add docs to SG.
+    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest")
+    session = cookie, session_id
+    sg_docs = document.create_docs(doc_id_prefix='sg_docs', number=num_of_docs, channels=channels)
+    sg_docs = sg_client.add_bulk_docs(url=sg_admin_url, db=sg_db, docs=sg_docs, auth=session)
+    assert len(sg_docs) == num_of_docs
+
+    # 2. Pull replication to CBL
+    replicator = Replication(base_url)
+    authenticator = Authenticator(base_url)
+    replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
+    repl_config = replicator.configure(source_db=cbl_db,
+                                       target_url=sg_blip_url,
+                                       continuous=False,
+                                       channels=channels,
+                                       replicator_authenticator=replicator_authenticator,
+                                       replication_type="pull")
+    repl = replicator.create(repl_config)
+    replicator.start(repl)
+    replicator.wait_until_replicator_idle(repl)
+    total = replicator.getTotal(repl)
+    completed = replicator.getCompleted(repl)
+    assert total == completed, "total is not equal to completed"
+    replicator.stop(repl)
+
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
+    cbl_doc_count = db.getCount(cbl_db)
+    assert len(sg_docs) == cbl_doc_count, "Expected number of docs does not exist in sync-gateway after replication"
+
+    # 3. Stop sync gateway service
+    sg = SyncGateway()
+    sg.stop_sync_gateways(cluster_config=cluster_config, url=sg_url)
+
+    # 4. Flush bucket on cbs server
+    cbs = CouchbaseServer(cbs_url)
+    cbs.flush_bucket("travel-sample")
+
+    # 5. Start sync gateway service
+    sg.start_sync_gateways(cluster_config=cluster_config, url=sg_url, config=sg_config)
+
+    # 6. Start a pull replicator, to verify there is no crash
+    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest")
+    replicator = Replication(base_url)
+    authenticator = Authenticator(base_url)
+    replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
+    repl_config = replicator.configure(source_db=cbl_db,
+                                       target_url=sg_blip_url,
+                                       continuous=False,
+                                       channels=channels,
+                                       replicator_authenticator=replicator_authenticator,
+                                       replication_type="pull")
+    repl = replicator.create(repl_config)
+    replicator.start(repl)
+    replicator.wait_until_replicator_idle(repl)
+    total = replicator.getTotal(repl)
+    completed = replicator.getCompleted(repl)
+    assert total == completed, "total is not equal to completed"
+    replicator.stop(repl)
 
 
 def update_and_resetCheckPoint(db, cbl_db, replicator, repl, replication_type, repl_config, num_of_updates):
