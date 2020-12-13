@@ -238,9 +238,9 @@ def test_sgw_high_availability(params_from_base_test_setup, setup_basic_sg_conf)
         sg1_import_count = sg1_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"]
         assert sg1_import_count > diff_docs, "Not all docs imported"
     if prometheus_enabled and sync_gateway_version >= "2.8.0":
-        verify_stat_on_prometheous("sgw_shared_bucket_import_import_count",
+        assert(verify_stat_on_prometheous("sgw_shared_bucket_import_import_count"),
                                    sg1_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"])
-        verify_stat_on_prometheous("sgw_gsi_views_allDocs_count", num_docs)
+        assert(verify_stat_on_prometheous("sgw_gsi_views_allDocs_count"), num_docs)
         authenticator = Authenticator(sg1.admin.admin_url)
         replicator = Replication(sg1.admin.admin_url)
         replicator_authenticator = authenticator.authentication(username="invalid_username", password="invalid_password",
@@ -248,8 +248,6 @@ def test_sgw_high_availability(params_from_base_test_setup, setup_basic_sg_conf)
         expvars = sg_client.get_expvars(sg1.admin.admin_url)
         assert expvars["syncgateway"]["per_db"][sg_db]["security"][
                    "auth_failed_count"] > 0, "auth failed count is not incremented"
-
-
 
 
 def create_doc_via_sdk_individually(cbs_url, cbs_cluster, bucket_name, num_docs):
