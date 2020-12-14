@@ -4028,7 +4028,7 @@ def test_replication_stop_requested_on_replicator_busy(params_from_base_test_set
     """
     @summary: to verify no crash if stop replication requested while replicator is still busy
         1. Create a bigger chuck of docs on SGW
-        2. Start replication 
+        2. Start replication
         3. Send a replicator stop request, ensure the request is sent while replicator is busy
         4. Verify the replicator status, ensure there is no crash
     """
@@ -4042,7 +4042,7 @@ def test_replication_stop_requested_on_replicator_busy(params_from_base_test_set
     cbl_db = params_from_base_test_setup["source_db"]
     channels = ["replication-channel"]
 
-    num_of_docs = 1000
+    num_of_docs = 10000
     sg_client = MobileRestClient()
 
     # Modify sync-gateway config
@@ -4069,7 +4069,7 @@ def test_replication_stop_requested_on_replicator_busy(params_from_base_test_set
                                        replication_type="pull")
     repl = replicator.create(repl_config)
     replicator.start(repl)
-
+    time.sleep(2)
     # 3. Stop replicator while it's busy or still connecting
     if replicator.getActivitylevel(repl) == "busy" or replicator.getActivitylevel(repl) == "connecting":
         replicator.stop(repl)
