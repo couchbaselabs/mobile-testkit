@@ -142,6 +142,11 @@ def pytest_addoption(parser):
                      help="Provide a custom cluster config",
                      default="multiple_sync_gateways_")
 
+    parser.addoption("--prometheus-enable",
+                     action="store",
+                     help="Starts the prometheus metrics",
+                     default=False)
+
 # This will get called once before the first test that
 # runs with this as input parameters in this file
 # This setup will be called once for all tests in the
@@ -203,6 +208,8 @@ def params_from_base_suite_setup(request):
     base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
     cluster_config = "{}/{}{}".format(CLUSTER_CONFIGS_DIR, cluster_config, mode)
     no_conflicts_enabled = request.config.getoption("--no-conflicts")
+    print(cluster_config)
+    print("*"*20)
     cluster_utils = ClusterKeywords(cluster_config)
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
 
@@ -468,6 +475,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     cbs_ce = params_from_base_suite_setup["cbs_ce"]
     sg_ce = params_from_base_suite_setup["sg_ce"]
     cbs_ssl = params_from_base_suite_setup["ssl_enabled"]
+    prometheus_enable = request.config.getoption("--prometheus-enable")
 
     use_local_testserver = request.config.getoption("--use-local-testserver")
 
@@ -553,7 +561,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "enable_file_logging": enable_file_logging,
         "cbs_ce": cbs_ce,
         "sg_ce": sg_ce,
-        "ssl_enabled": cbs_ssl
+        "ssl_enabled": cbs_ssl,
+        "prometheus_enable": prometheus_enable
     }
 
     log_info("Tearing down test")

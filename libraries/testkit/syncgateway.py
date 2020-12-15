@@ -164,6 +164,9 @@ class SyncGateway:
         if is_delta_sync_enabled(self.cluster_config) and get_sg_version(self.cluster_config) >= "2.5.0":
             playbook_vars["delta_sync"] = '"delta_sync": { "enabled": true},'
 
+        if get_sg_version(self.cluster_config) >= "2.8.0":
+            playbook_vars["prometheous"] = '"metricsInterface": ":4986",'
+
         if is_cbs_ssl_enabled(self.cluster_config) and get_sg_version(self.cluster_config) >= "1.5.0":
             playbook_vars["server_scheme"] = "couchbases"
             playbook_vars["server_port"] = 11207
@@ -285,6 +288,9 @@ class SyncGateway:
 
         if is_delta_sync_enabled(self.cluster_config) and get_sg_version(self.cluster_config) >= "2.5.0":
             playbook_vars["delta_sync"] = '"delta_sync": { "enabled": true},'
+
+        if get_sg_version(self.cluster_config) >= "2.8.0":
+            playbook_vars["prometheous"] = '"metricsInterface": ":4986",'
 
         if is_cbs_ssl_enabled(self.cluster_config) and get_sg_version(self.cluster_config) >= "1.5.0":
             playbook_vars["server_scheme"] = "couchbases"

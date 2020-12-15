@@ -9,6 +9,7 @@ from couchbase.cluster import PasswordAuthenticator
 from couchbase.n1ql import N1QLQuery
 from keywords.utils import log_info
 from couchbase.exceptions import KeyExistsError
+import requests
 
 SERVER_IP = "172.23.104.162"
 USERNAME = 'Administrator'
@@ -19,6 +20,10 @@ SSH_USERNAME = 'root'
 SSH_PASSWORD = 'couchbase'
 SSH_POLL_INTERVAL = 20
 
+r = requests.get("{}{}".format("http://localhost:9090/api/v1/query?query=", "sgw_resource_utilization_system_memory_total"))
+r.raise_for_status()
+resp_data = r.json()
+print(resp_data["data"]["result"][0]["value"][0])
 cluster = Cluster('couchbase://{}'.format(SERVER_IP))
 authenticator = PasswordAuthenticator(USERNAME, PASSWORD)
 cluster.authenticate(authenticator)
