@@ -2,8 +2,6 @@ import requests
 from requests import HTTPError
 from libraries.testkit.debug import log_request, log_response
 
-
-
 def start_prometheous():
     pass
 

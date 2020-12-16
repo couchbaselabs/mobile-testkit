@@ -12,8 +12,6 @@ from keywords.ClusterKeywords import ClusterKeywords
 from libraries.testkit import cluster
 from concurrent.futures import ThreadPoolExecutor
 from libraries.testkit.prometheous import verify_stat_on_prometheous
-from CBLClient.Authenticator import Authenticator
-from CBLClient.Replication import Replication
 
 
 @pytest.mark.syncgateway
@@ -219,7 +217,7 @@ def test_sgw_high_availability(params_from_base_test_setup, setup_basic_sg_conf)
     with ThreadPoolExecutor(max_workers=4) as tpe:
         cbs_docs_via_sdk = tpe.submit(create_doc_via_sdk_individually, cbs_url, cbs_cluster, bucket_name, num_docs)
         # 3. Bring down 1 sgw node in main thread
-        # sg2.stop()
+        sg2.stop()
         sg_docs = sg_client.get_all_docs(url=sg1.admin.admin_url, db=sg_db)["rows"]
         diff_docs = num_docs - len(sg_docs)
         cbs_docs_via_sdk.result()

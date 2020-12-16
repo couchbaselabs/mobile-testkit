@@ -18,8 +18,8 @@ from libraries.testkit.prometheous import verify_stat_on_prometheous
 @pytest.mark.replication
 @pytest.mark.parametrize("num_of_docs, replication_type, file_attachment, continuous", [
     (10, "pull", None, True),
-    # pytest.param(10, "pull", "sample_text.txt", True, marks=pytest.mark.sanity),
-    # (1, "push", "golden_gate_large.jpg", True),
+    pytest.param(10, "pull", "sample_text.txt", True, marks=pytest.mark.sanity),
+    (1, "push", "golden_gate_large.jpg", True),
     (10, "push", None, True)
 ])
 def test_delta_sync_replication(params_from_base_test_setup, num_of_docs, replication_type, file_attachment, continuous):
