@@ -291,8 +291,7 @@ def test_replication_configuration_with_push_replication(params_from_base_test_s
                 assert (verify_stat_on_prometheous("sgw_replication_push_attachment_push_count"),
                         expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_push"]["attachment_push_count"])
         if prometheus_enable and sync_gateway_version >= "2.8.0":
-            assert (verify_stat_on_prometheous("sgw_database_num_doc_writes"),
-                    expvars["syncgateway"]["per_db"][sg_db]["database"]["num_doc_writes"])
+            assert (verify_stat_on_prometheous("sgw_database_num_doc_writes"), expvars["syncgateway"]["per_db"][sg_db]["database"]["num_doc_writes"])
 
 
 @pytest.mark.listener
