@@ -1343,8 +1343,10 @@ def test_replication_wrong_blip(params_from_base_test_setup):
     with pytest.raises(Exception) as ex:
         replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channels, replicator_authenticator=replicator_authenticator)
     ex_data = str(ex.value)
-    if liteserv_platform == "ios":
-        assert "Invalid scheme for URLEndpoint url (ht2tp" in ex_data
+
+    if liteserv_platform == "ios" or liteserv_platform.startswith("javaws-"):
+        assert "Invalid scheme for URLEndpoint url" in ex_data
+        assert "ht2tp" in ex_data
         assert "must be either 'ws:' or 'wss:'" in ex_data
     else:
         assert ex_data.startswith('400 Client Error: Bad Request for url:')

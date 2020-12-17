@@ -247,7 +247,7 @@ class Database(object):
             else:
                 doc_id = "{}_{}".format(id_prefix, i)
 
-            doc_body["_id"] = doc_id
+            doc_body["id"] = doc_id
             added_docs[doc_id] = doc_body
         self.saveDocuments(db, added_docs)
         return list(added_docs.keys())

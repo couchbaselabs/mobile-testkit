@@ -79,7 +79,7 @@ def update_prop_generator():
     return {"updates": 0}
 
 
-def create_doc(doc_id, content=None, attachments=None, expiry=None, channels=None, prop_generator=None):
+def create_doc(doc_id, content=None, attachments=None, expiry=None, channels=None, prop_generator=None, cbl=False):
     """
     Keyword that creates a document body as a list for use with Add Doc keyword
     return result format:
@@ -98,7 +98,10 @@ def create_doc(doc_id, content=None, attachments=None, expiry=None, channels=Non
     doc = {}
 
     if doc_id is not None:
-        doc["_id"] = doc_id
+        if cbl:
+            doc["id"] = doc_id
+        else:
+            doc["_id"] = doc_id
 
     if expiry is not None:
         doc["_exp"] = expiry
