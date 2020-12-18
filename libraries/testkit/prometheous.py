@@ -1,10 +1,10 @@
 import requests
 from requests import HTTPError
 from libraries.testkit.debug import log_request, log_response
-import os
 import subprocess
 import sys
 import yaml
+
 
 def start_prometheous(sg_ip):
     prometheous_file = "libraries/provision/ansible/playbooks/prometheous.yml"
@@ -54,6 +54,3 @@ def download_prometheous(self):
 def install(self):
     subprocess.check_call([sys.executable, '-m', 'brew', 'install',
                            'prometheous'])
-
-
-

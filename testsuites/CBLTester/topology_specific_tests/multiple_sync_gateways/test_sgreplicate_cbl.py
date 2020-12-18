@@ -230,13 +230,11 @@ def test_sg_replicate_push_pull_replication(params_from_base_test_setup, setup_c
     if "push" in direction:
         assert expvars['syncgateway']['per_db'][sg_db1]['replications'][repl_id_1]['sgr_num_docs_pushed'] == num_of_docs, "push replication count is  not  equal to number of docs pushed"
         if prometheus_enable and sync_gateway_version >= "2.8.0":
-            assert (verify_stat_on_prometheous("sgw_replication_sgr_num_docs_pushed"),
-                    expvars['syncgateway']['per_db'][sg_db1]['replications'][repl_id_1]['sgr_num_docs_pushed'])
+            assert verify_stat_on_prometheous("sgw_replication_sgr_num_docs_pushed"), expvars['syncgateway']['per_db'][sg_db1]['replications'][repl_id_1]['sgr_num_docs_pushed']
     if "pull" in direction:
         assert expvars['syncgateway']['per_db'][sg_db1]['replications'][repl_id_1]['sgr_num_docs_pulled'] == num_of_docs, "pull replication count is  not  equal to number of docs pulled"
         if prometheus_enable and sync_gateway_version >= "2.8.0":
-            assert (verify_stat_on_prometheous("sgw_replication_sgr_num_docs_pulled"), expvars['syncgateway']['per_db'][sg_db1]['replications'][repl_id_1]['sgr_num_docs_pulled'])
-
+            assert verify_stat_on_prometheous("sgw_replication_sgr_num_docs_pulled"), expvars['syncgateway']['per_db'][sg_db1]['replications'][repl_id_1]['sgr_num_docs_pulled']
 
 
 @pytest.mark.topospecific

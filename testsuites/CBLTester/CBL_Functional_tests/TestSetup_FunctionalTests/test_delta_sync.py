@@ -127,17 +127,15 @@ def test_delta_sync_replication(params_from_base_test_setup, num_of_docs, replic
     if replication_type == "push":
         assert expvars['syncgateway']['per_db'][sg_db]['delta_sync']['delta_push_doc_count'] == num_of_docs, "delta push replication count is not right"
         if prometheus_enable and sync_gateway_version >= "2.8.0":
-            assert (verify_stat_on_prometheous("sgw_delta_sync_delta_push_doc_count"),
-                    expvars['syncgateway']['per_db'][sg_db]['delta_sync']['delta_push_doc_count'])
-            assert(verify_stat_on_prometheous("sgw_gsi_views_access_count"), expvars['syncgateway']['per_db'][sg_db]['gsi_views']['access_query_count'])
+            assert verify_stat_on_prometheous("sgw_delta_sync_delta_push_doc_count"), expvars['syncgateway']['per_db'][sg_db]['delta_sync']['delta_push_doc_count']
+            assert verify_stat_on_prometheous("sgw_gsi_views_access_count"), expvars['syncgateway']['per_db'][sg_db]['gsi_views']['access_query_count']
     else:
         assert expvars['syncgateway']['per_db'][sg_db]['delta_sync']['delta_pull_replication_count'] == 2, "delta pull replication count is not right"
         assert expvars['syncgateway']['per_db'][sg_db]['delta_sync']['deltas_requested'] == num_of_docs * 2, "delta pull requested is not equal to number of docs"
         assert expvars['syncgateway']['per_db'][sg_db]['delta_sync']['deltas_sent'] == num_of_docs * 2, "delta pull sent is not equal to number of docs"
         if prometheus_enable and sync_gateway_version >= "2.8.0":
-            assert (verify_stat_on_prometheous("sgw_delta_sync_delta_pull_replication_count"),
-                    expvars['syncgateway']['per_db'][sg_db]['delta_sync']['delta_pull_replication_count'])
-            assert(verify_stat_on_prometheous("sgw_gsi_views_access_count"), expvars['syncgateway']['per_db'][sg_db]['gsi_views']['access_query_count'])
+            assert verify_stat_on_prometheous("sgw_delta_sync_delta_pull_replication_count"), expvars['syncgateway']['per_db'][sg_db]['delta_sync']['delta_pull_replication_count']
+            assert verify_stat_on_prometheous("sgw_gsi_views_access_count"), expvars['syncgateway']['per_db'][sg_db]['gsi_views']['access_query_count']
 
     doc_reads_bytes2, doc_writes_bytes2 = get_net_stats(sg_client, sg_admin_url)
     if replication_type == "push":

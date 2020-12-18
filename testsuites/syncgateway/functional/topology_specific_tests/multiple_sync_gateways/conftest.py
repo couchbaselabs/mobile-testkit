@@ -233,7 +233,7 @@ def params_from_base_suite_setup(request):
 
     # Stop all sync_gateway and sg_accels as test finished
     c = cluster.Cluster(cluster_config)
-    # c.stop_sg_and_accel()
+    c.stop_sg_and_accel()
 
     # Delete png files under resources/data
     clear_resources_pngs()
@@ -266,7 +266,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
            "sg_platform": sg_platform,
            "sync_gateway_version": sync_gateway_version,
            "sg_ce": sg_ce,
-           "prometheus_enabled":prometheus_enabled
+           "prometheus_enabled": prometheus_enabled
            }
 
     # Code after the yeild will execute when each test finishes
