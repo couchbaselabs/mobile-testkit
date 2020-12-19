@@ -24,12 +24,13 @@ def test_transactions_insert_replace_remove_rollback(params_from_base_test_setup
     1. Insert a transaction with 3 or more docs
     2. replication from server to SGW and to CBL
     3. Verify all docs in transactions are pulled to CBL
-    4. replace the transaction with new content
-    5. Verify doc is replicated to cbl whiich commited in transaction
-    6. Delete the transaction
-    7. Verify doc is removed in cbl
-    8. Rollback the transaction
-    9. Verify rollback docs are not replicated to cbl
+    4. replace the docs in transaction with new content
+    5. Verify all docs is replicated to cbl which is updated in transaction
+    6. Delete one of the doc from transaction
+    7. Verify doc is removed in cbl after the replication
+    8. Have some doc operations i.e insert couple of docs and send rollback operation in same transaction
+    9. Verify rollback operations roll back all docs which are planned to insert at step#7 and doc operations at step 7 do not get replicated to cbl
+    # Trasanction app : https://github.com/couchbaselabs/productivitynautomation/blob/master/transaction-performer/src/main/java/com/couchbase/transaction.java
     '''
 
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
@@ -76,6 +77,11 @@ def test_transactions_insert_replace_remove_rollback(params_from_base_test_setup
     transactions_app_dir = "resources/data/transaction-performer.jar"
     doc_body = document.create_doc(doc_id=doc_id, content="doc1", channels=channels)
     data = json.dumps(doc_body)
+    # java transaction sample command usage : 
+    # java -cp <Relative location to this Jar> com.couchbase.transaction  clusterIp=<YourClusterIp> operationDocids=<operation-docid seperated by commas> doccontent=<json body as string with single quotes enclosed>\n"
+    # example: java -cp transaction-performer.jar com.couchbase.transaction clusterip=192.168.33.10 bucket=data-bucket-1608172398.613448 operationDocids=insert-doc1,replace-doc8,remove-doc9 doccontent='{"_id": "transaction-sync-id2", "content": "doc3", "channels": ["TRANSACTIONS"]}'
+    # To make it simple on transaction app, doc content will same, in transaction app, it updates 2 keys with doc id, but all other content is same as sent from here
+
     cmd = "java -cp {} com.couchbase.transaction clusterip={} operationdocids={} bucket={} doccontent='{}'".format(transactions_app_dir, c.servers[0].host, opt_doc_ids, bucket, data)
     subprocess.check_output(cmd, shell=True)
 
@@ -106,8 +112,8 @@ def test_transactions_insert_replace_remove_rollback(params_from_base_test_setup
         assert("_updated" in doc_body1["id"])
         assert("_updated" in doc_body1["content"])
 
-    # 6. Delete the transaction
-    # 7. Verify doc is removed in cbl
+    # 6. Delete one of the doc from transaction
+    # 7. Verify doc is removed in cbl after the replication
     list_deleted_ids = random.sample(orig_cbl_doc_ids, 2)
     delete_ids = ""
     for rep_id in list_deleted_ids:
@@ -123,8 +129,8 @@ def test_transactions_insert_replace_remove_rollback(params_from_base_test_setup
         else:
             assert id in cbl_doc_ids, "doc from transaction is removed though it is not removed from transaction"
 
-    # 8. Rollback the transaction
-    # 9. Verify rollback docs are not replicated to cbl
+    # 8. Have some doc operations i.e insert couple of docs and send rollback operation in same transaction
+    # 9. Verify rollback operations roll back all docs which are planned to insert at step#7 and doc operations at step 7 do not get replicated to cbl
     doc_ids = ""
     for i in range(0, num_of_docs):
         doc_id = "txn_id_" + str(time.time())
@@ -203,8 +209,6 @@ def test_transactions_with_latest_updates(params_from_base_test_setup):
     subprocess.check_output(cmd, shell=True)
 
     # 3. Transaction updates (edits) a series of documents in this order  (A->A',B-> B',C-> C')  At the exact same time, CBL starts pulling docs via SGW.
-    # replace_doc_body = document.create_doc(doc_id=doc_id, content="updated_doc", channels=channels, cbl=True)
-    # replace_data = json.dumps(replace_doc_body)
     opt_doc_ids = doc_ids.replace("txn_id_", "replace-txn_id_")
     cmd = "java -cp {} com.couchbase.transaction clusterip={} operationdocids={} bucket={}".format(transactions_app_dir, c.servers[0].host, opt_doc_ids, bucket)
     subprocess.check_output(cmd, shell=True)
@@ -295,7 +299,7 @@ def test_transactions_with_tombstoned_docs(params_from_base_test_setup):
     with ThreadPoolExecutor(max_workers=2) as tpe:
         shell_cmd_task = tpe.submit(shell_process, cmd)
 
-        # 4. Replicate from SGW to CBL
+        # Replicate from SGW to CBL
         replicator = Replication(base_url)
         sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels)
         _, _, repl = replicator.create_session_configure_replicate(
@@ -303,6 +307,8 @@ def test_transactions_with_tombstoned_docs(params_from_base_test_setup):
         replicator.wait_until_replicator_idle(repl)
         shell_cmd_task.result()
 
+    # 3. CBL must eventually see A’. B’(tombstoned) and C’ (not in particular order)
+    # It is also possible that CBL sees any combination of A, A’,B, B’ (tombstoned) ,C,C’ before it eventually sees A’,B’ and C’ - It just depends on when the updates happen relative to when CBL is syncing.
     cbl_doc_ids = db.getDocIds(cbl_db)
     cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
     assert removable_id not in cbl_doc_ids, "tombstoned doc in transaction is not tombstoned in cbl"
@@ -323,8 +329,8 @@ def test_transactions_with_simultaneous_doc_updates_docresurrection(params_from_
     1: Insert a series of documents (A, B, C) in a transaction.
     2. Start replication from SGW to CBL.
     3. Updates (edits ) a series of documents in this order (A->A',B-> B',C-> C') in a transaction . At the exact same time, CBL also edits the same document B -> B”
-    4. Indeterminate: The resulting state could be (A,B”,C) or (A’,B’,C’).It depends on when the B” comes in during transaction update ."
-    5. Now have doc resurrect for document B
+     Indeterminate: The resulting state could be (A,B”,C) or (A’,B’,C’).It depends on when the B” comes in during transaction update ."
+    4. Do doc resurrection of one of the doc in transaction and verify resureccted doc replicated to cbl
     '''
 
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
