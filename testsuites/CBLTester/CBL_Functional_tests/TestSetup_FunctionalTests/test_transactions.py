@@ -19,6 +19,8 @@ import pytest
 def test_transactions_insert_replace_remove_rollback(params_from_base_test_setup):
     '''
     @summary:
+    https://docs.google.com/spreadsheets/d/1YWP_iwYz9B3ej_ksLf-XKsLj4RnbuSigf7hp0BPYv0w/edit#gid=0
+    Covered #7, #8, #10, #12
     1. Insert a transaction with 3 or more docs
     2. replication from server to SGW and to CBL
     3. Verify all docs in transactions are pulled to CBL
@@ -145,6 +147,8 @@ def test_transactions_insert_replace_remove_rollback(params_from_base_test_setup
 def test_transactions_with_latest_updates(params_from_base_test_setup):
     '''
     @summary:
+    https://docs.google.com/spreadsheets/d/1YWP_iwYz9B3ej_ksLf-XKsLj4RnbuSigf7hp0BPYv0w/edit#gid=0
+    Covered #13
     1. Inserts a series of documents (A, B, C) in a transaction
     2. CBL is not syncing as yet. SGW does import
     3. Transaction updates (edits) a series of documents in this order  (A->A',B-> B',C-> C')  At the exact same time, CBL starts pulling docs via SGW.
@@ -228,6 +232,8 @@ def test_transactions_with_latest_updates(params_from_base_test_setup):
 def test_transactions_with_tombstoned_docs(params_from_base_test_setup):
     '''
     @summary:
+    https://docs.google.com/spreadsheets/d/1YWP_iwYz9B3ej_ksLf-XKsLj4RnbuSigf7hp0BPYv0w/edit#gid=0
+    Covered #14
     1. Insert a series of documents (A, B, C) in a transaction . CBL is not syncing as yet. SGW does import
     2. Update (edits) a series of documents in this order (A->A',B-> B' (tombstoned) ,C-> C') in a transaction At the exact same time, CBL starts pulling docs via SGW.
     3. CBL must eventually see A’. B’(tombstoned) and C’ (not in particular order)
@@ -312,6 +318,8 @@ def test_transactions_with_tombstoned_docs(params_from_base_test_setup):
 def test_transactions_with_simultaneous_doc_updates_docresurrection(params_from_base_test_setup):
     '''
     @summary:
+    https://docs.google.com/spreadsheets/d/1YWP_iwYz9B3ej_ksLf-XKsLj4RnbuSigf7hp0BPYv0w/edit#gid=0
+    Covered #15, #16
     1: Insert a series of documents (A, B, C) in a transaction.
     2. Start replication from SGW to CBL.
     3. Updates (edits ) a series of documents in this order (A->A',B-> B',C-> C') in a transaction . At the exact same time, CBL also edits the same document B -> B”
