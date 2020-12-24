@@ -504,6 +504,7 @@ def params_from_base_suite_setup(request):
         "suite_db_log_files": suite_db_log_files,
         "enable_encryption": enable_encryption,
         "encryption_password": encryption_password,
+        "cbs_url": cbs_url,
         "cbs_ce": cbs_ce,
         "sg_ce": sg_ce,
         "cbl_ce": cbl_ce
@@ -575,6 +576,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     cbl_log_decoder_build = params_from_base_suite_setup["cbl_log_decoder_build"]
     encryption_password = params_from_base_suite_setup["encryption_password"]
     enable_encryption = params_from_base_suite_setup["enable_encryption"]
+    cbs_url = params_from_base_suite_setup["cbs_url"]
     use_local_testserver = request.config.getoption("--use-local-testserver")
     cbl_ce = params_from_base_suite_setup["cbl_ce"]
     cbs_ce = params_from_base_suite_setup["cbs_ce"]
@@ -672,6 +674,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "enable_encryption": enable_encryption,
         "encryption_password": encryption_password,
         "enable_file_logging": enable_file_logging,
+        "cbs_url": cbs_url,
         "test_cbllog": test_cbllog,
         "cbs_ce": cbs_ce,
         "sg_ce": sg_ce,

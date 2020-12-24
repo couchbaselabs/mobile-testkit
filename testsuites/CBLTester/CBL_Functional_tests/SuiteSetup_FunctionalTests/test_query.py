@@ -1561,6 +1561,39 @@ def test_getDoc_withLocale(params_from_base_suite_setup, doc_id_prefix):
     assert len(docs_from_cbl) == 5, "Results for locale with - did not return 5 records"
 
 
+@pytest.mark.parametrize("doc_id_prefix", [
+    ("doc_with_no_data_1")
+])
+def test_getDoc_withNoData(params_from_base_suite_setup, doc_id_prefix):
+    """ @summary
+    1. Add a doc with doc_id = Meta.id and data = empty dictionary
+    2. Fetch the doc
+    3.run the below query
+        Query query = QueryBuilder
+            .select(SelectResult.all())
+            .from(DataSource.database(database))
+            .where((Meta.id).equalTo(doc_id));
+    """
+    base_url = params_from_base_suite_setup["base_url"]
+    database = Database(base_url)
+    qy = Query(base_url)
+
+    # Create docs with empty data
+    db = database.create("db_name")
+    documents = dict()
+
+    data = {}
+    doc_id = "{}_{}".format(doc_id_prefix, 0)
+    documents[doc_id] = data
+    database.saveDocuments(db, documents)
+
+    result_set = qy.query_get_doc(db, doc_id)
+    docs_from_cbl = []
+    for docs in result_set:
+        docs_from_cbl.append(docs)
+    assert len(docs_from_cbl) == 1, "Results for doc with empty data - did not return the record"
+
+
 def test_query_arthimetic(params_from_base_suite_setup):
     """
         @summary:
