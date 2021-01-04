@@ -77,7 +77,7 @@ def test_transactions_insert_replace_remove_rollback(params_from_base_test_setup
     transactions_app_dir = "resources/data/transaction-performer.jar"
     doc_body = document.create_doc(doc_id=doc_id, content="doc1", channels=channels)
     data = json.dumps(doc_body)
-    # java transaction sample command usage : 
+    # java transaction sample command usage :
     # java -cp <Relative location to this Jar> com.couchbase.transaction  clusterIp=<YourClusterIp> operationDocids=<operation-docid seperated by commas> doccontent=<json body as string with single quotes enclosed>\n"
     # example: java -cp transaction-performer.jar com.couchbase.transaction clusterip=192.168.33.10 bucket=data-bucket-1608172398.613448 operationDocids=insert-doc1,replace-doc8,remove-doc9 doccontent='{"_id": "transaction-sync-id2", "content": "doc3", "channels": ["TRANSACTIONS"]}'
     # To make it simple on transaction app, doc content will same, in transaction app, it updates 2 keys with doc id, but all other content is same as sent from here
