@@ -31,7 +31,7 @@ netifaces==0.10.4
 olefile==0.44
 packaging==16.8
 paramiko==2.1.5
-Pillow==6.2.0
+Pillow==7.1.0
 py==1.5.1
 pyasn1==0.2.3
 pycodestyle==2.3.1
