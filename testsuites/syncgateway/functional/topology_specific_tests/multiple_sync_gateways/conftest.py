@@ -8,10 +8,11 @@ from keywords.tklogging import Logging
 from keywords.utils import log_info, check_xattr_support, version_is_binary, clear_resources_pngs
 
 from keywords.exceptions import ProvisioningError, FeatureSupportedError
-
+from keywords.utils import host_for_url
 from libraries.testkit import cluster
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop
 from utilities.cluster_config_utils import get_load_balancer_ip
+from libraries.testkit import prometheus
 
 
 # This will be called once for the at the beggining of the execution of each .py file
@@ -220,6 +221,15 @@ def params_from_base_suite_setup(request):
         expected_sync_gateway_version=sync_gateway_version
     )
 
+    if prometheus_enabled:
+        if not prometheus.is_prometheus_installed:
+            prometheus.install_prometheus
+
+        cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
+        sg_url = cluster_topology["sync_gateways"][0]["public"]
+        sg_ip = host_for_url(sg_url)
+        prometheus_pid = prometheus.start_prometheus(sg_ip)
+
     yield {"cluster_config": cluster_config,
            "mode": mode,
            "xattrs_enabled": xattrs_enabled,
@@ -237,6 +247,7 @@ def params_from_base_suite_setup(request):
 
     # Delete png files under resources/data
     clear_resources_pngs()
+    prometheus.stop_prometheus(prometheus_pid)
 
 
 # This is called before each test and will yield the dictionary to each test that references the method

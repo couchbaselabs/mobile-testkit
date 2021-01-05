@@ -414,7 +414,7 @@ class SyncGateway(object):
             "num_index_replicas": "",
             "couchbase_server_primary_node": couchbase_server_primary_node,
             "delta_sync": "",
-            "prometheous": ""
+            "prometheus": ""
         }
         sg_platform = get_sg_platform(cluster_config)
         if get_sg_version(cluster_config) >= "2.1.0":
@@ -498,7 +498,7 @@ class SyncGateway(object):
             playbook_vars["delta_sync"] = '"delta_sync": { "enabled": true},'
 
         if get_sg_version(cluster_config) >= "2.8.0":
-            playbook_vars["prometheous"] = '"metricsInterface": ":4986",'
+            playbook_vars["prometheus"] = '"metricsInterface": ":4986",'
 
         if url is not None:
             target = hostname_for_url(cluster_config, url)

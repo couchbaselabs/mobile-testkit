@@ -19,7 +19,7 @@ from utilities.cluster_config_utils import copy_sgconf_to_temp, replace_string_o
 from couchbase.bucket import Bucket
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.constants import SDK_TIMEOUT
-from libraries.testkit.prometheous import verify_stat_on_prometheous
+from libraries.testkit.prometheus import verify_stat_on_prometheus
 
 
 def setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_teardown_test, cbl_replication_type, sg_conf_name='listener_tests/multiple_sync_gateways', num_of_docs=10, channels1=None, sgw_cluster1_sg_config_name=None, sgw_cluster2_sg_config_name=None, name1=None, name2=None, password1=None, password2=None):
@@ -230,11 +230,11 @@ def test_sg_replicate_push_pull_replication(params_from_base_test_setup, setup_c
     if "push" in direction:
         assert expvars['syncgateway']['per_db'][sg_db1]['replications'][repl_id_1]['sgr_num_docs_pushed'] == num_of_docs, "push replication count is  not  equal to number of docs pushed"
         if prometheus_enable and sync_gateway_version >= "2.8.0":
-            assert verify_stat_on_prometheous("sgw_replication_sgr_num_docs_pushed"), expvars['syncgateway']['per_db'][sg_db1]['replications'][repl_id_1]['sgr_num_docs_pushed']
+            assert verify_stat_on_prometheus("sgw_replication_sgr_num_docs_pushed"), expvars['syncgateway']['per_db'][sg_db1]['replications'][repl_id_1]['sgr_num_docs_pushed']
     if "pull" in direction:
         assert expvars['syncgateway']['per_db'][sg_db1]['replications'][repl_id_1]['sgr_num_docs_pulled'] == num_of_docs, "pull replication count is  not  equal to number of docs pulled"
         if prometheus_enable and sync_gateway_version >= "2.8.0":
-            assert verify_stat_on_prometheous("sgw_replication_sgr_num_docs_pulled"), expvars['syncgateway']['per_db'][sg_db1]['replications'][repl_id_1]['sgr_num_docs_pulled']
+            assert verify_stat_on_prometheus("sgw_replication_sgr_num_docs_pulled"), expvars['syncgateway']['per_db'][sg_db1]['replications'][repl_id_1]['sgr_num_docs_pulled']
 
 
 @pytest.mark.topospecific
