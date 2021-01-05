@@ -14,7 +14,7 @@ from CBLClient.Authenticator import Authenticator
 from concurrent.futures import ThreadPoolExecutor
 from CBLClient.Blob import Blob
 from CBLClient.Dictionary import Dictionary
-
+from libraries.testkit.prometheous import verify_stat_on_prometheous
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords import document, attachment
 from libraries.testkit import cluster
@@ -162,6 +162,7 @@ def test_replication_configuration_with_pull_replication(params_from_base_test_s
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    prometheus_enable = params_from_base_test_setup["prometheus_enable"]
 
     if sync_gateway_version < "2.0.0":
         pytest.skip('This test cannot run with sg version below 2.0')
@@ -211,6 +212,8 @@ def test_replication_configuration_with_pull_replication(params_from_base_test_s
         if attachments_generator is not None:
             assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["attachment_pull_count"] == 20, "attachment_pull_count did not get incremented"
             assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["attachment_pull_bytes"] > 0, "attachment_pull_bytes did not get incremented"
+            if prometheus_enable and sync_gateway_version >= "2.8.0":
+                assert verify_stat_on_prometheous("sgw_replication_pull_attachment_pull_count"), expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["attachment_pull_count"]
 
 
 @pytest.mark.listener
@@ -241,6 +244,7 @@ def test_replication_configuration_with_push_replication(params_from_base_test_s
     cbl_db = params_from_base_test_setup["source_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     mode = params_from_base_test_setup["mode"]
+    prometheus_enable = params_from_base_test_setup["prometheus_enable"]
 
     if sync_gateway_version < "2.0.0":
         pytest.skip('This test cannot run with sg version below 2.0')
@@ -283,6 +287,10 @@ def test_replication_configuration_with_push_replication(params_from_base_test_s
         if attachments_generator is not None:
             assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_push"]["attachment_push_count"] == 30, "attachment_push_count did not get incremented"
             assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_push"]["attachment_push_bytes"] > 0, "attachment_push_bytes did not get incremented"
+            if prometheus_enable and sync_gateway_version >= "2.8.0":
+                assert verify_stat_on_prometheous("sgw_replication_push_attachment_push_count"), expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_push"]["attachment_push_count"]
+        if prometheus_enable and sync_gateway_version >= "2.8.0":
+            assert verify_stat_on_prometheous("sgw_database_num_doc_writes"), expvars["syncgateway"]["per_db"][sg_db]["database"]["num_doc_writes"]
 
 
 @pytest.mark.listener
@@ -374,6 +382,7 @@ def test_replication_push_replication_invalid_authentication(params_from_base_te
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    prometheus_enable = params_from_base_test_setup["prometheus_enable"]
 
     if sync_gateway_version < "2.0.0":
         pytest.skip('This test cannot run with sg version below 2.0')
@@ -408,6 +417,8 @@ def test_replication_push_replication_invalid_authentication(params_from_base_te
         expvars = sg_client.get_expvars(sg_admin_url)
         assert expvars["syncgateway"]["per_db"][sg_db]["security"]["auth_failed_count"] > 0, "auth failed count is not incremented"
         assert expvars["syncgateway"]["per_db"][sg_db]["security"]["total_auth_time"] > 0, "total_auth_time is not incremented"
+    if prometheus_enable and sync_gateway_version >= "2.8.0":
+        assert verify_stat_on_prometheous("sgw_security_auth_failed_count"), expvars["syncgateway"]["per_db"][sg_db]["security"]["auth_failed_count"]
 
 
 @pytest.mark.listener
@@ -436,6 +447,7 @@ def test_replication_configuration_with_filtered_doc_ids(params_from_base_test_s
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    prometheus_enable = params_from_base_test_setup["prometheus_enable"]
 
     if mode == "di":
         pytest.skip('Filter doc ids does not work with di modes')
@@ -509,6 +521,8 @@ def test_replication_configuration_with_filtered_doc_ids(params_from_base_test_s
     if sync_gateway_version >= "2.5.0":
         expvars = sg_client.get_expvars(sg_admin_url)
         assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["num_pull_repl_total_one_shot"] == 2, "num_pull_repl_total_one_shot did not get incremented"
+    if prometheus_enable and sync_gateway_version >= "2.8.0":
+        assert verify_stat_on_prometheous("sgw_replication_pull_num_pull_repl_total_one_shot"), expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["num_pull_repl_total_one_shot"]
 
 
 @pytest.mark.listener

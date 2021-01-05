@@ -160,6 +160,11 @@ def pytest_addoption(parser):
                      help="Encryption will be enabled for CBL db",
                      default="password")
 
+    parser.addoption("--prometheus-enable",
+                     action="store",
+                     help="Starts the prometheus metrics",
+                     default=False)
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -179,7 +184,7 @@ def params_from_base_suite_setup(request):
     use_local_testserver = request.config.getoption("--use-local-testserver")
     sync_gateway_version = request.config.getoption("--sync-gateway-version")
     mode = request.config.getoption("--mode")
-
+    prometheus_enable = request.config.getoption("--prometheus-enable")
     server_version = request.config.getoption("--server-version")
     enable_sample_bucket = request.config.getoption("--enable-sample-bucket")
     xattrs_enabled = request.config.getoption("--xattrs")
@@ -201,6 +206,7 @@ def params_from_base_suite_setup(request):
     enable_file_logging = request.config.getoption("--enable-file-logging")
     cbl_log_decoder_platform = request.config.getoption("--cbl-log-decoder-platform")
     cbl_log_decoder_build = request.config.getoption("--cbl-log-decoder-build")
+    prometheus_enable = request.config.getoption("--prometheus-enable")
 
     enable_encryption = request.config.getoption("--enable-encryption")
     encryption_password = request.config.getoption("--encryption-password")
@@ -506,7 +512,8 @@ def params_from_base_suite_setup(request):
         "encryption_password": encryption_password,
         "cbs_ce": cbs_ce,
         "sg_ce": sg_ce,
-        "cbl_ce": cbl_ce
+        "cbl_ce": cbl_ce,
+        "prometheus_enable": prometheus_enable
     }
 
     if request.node.testsfailed != 0 and enable_file_logging and create_db_per_suite is not None:
@@ -579,6 +586,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     cbl_ce = params_from_base_suite_setup["cbl_ce"]
     cbs_ce = params_from_base_suite_setup["cbs_ce"]
     sg_ce = params_from_base_suite_setup["sg_ce"]
+    prometheus_enable = request.config.getoption("--prometheus-enable")
 
     source_db = None
     test_name_cp = test_name.replace("/", "-")
@@ -675,7 +683,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "test_cbllog": test_cbllog,
         "cbs_ce": cbs_ce,
         "sg_ce": sg_ce,
-        "cbl_ce": cbl_ce
+        "cbl_ce": cbl_ce,
+        "prometheus_enable": prometheus_enable
     }
 
     if request.node.rep_call.failed and enable_file_logging and create_db_per_test is not None:

@@ -287,6 +287,9 @@ class Cluster:
         if is_delta_sync_enabled(self._cluster_config) and get_sg_version(self._cluster_config) >= "2.5.0":
             playbook_vars["delta_sync"] = '"delta_sync": { "enabled": true},'
 
+        if get_sg_version(self._cluster_config) >= "2.8.0":
+            playbook_vars["prometheous"] = '"metricsInterface": ":4986",'
+
         # Sleep for a few seconds for the indexes to teardown
         time.sleep(5)
 

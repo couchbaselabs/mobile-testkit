@@ -11,6 +11,7 @@ from keywords.MobileRestClient import MobileRestClient
 from keywords.ClusterKeywords import ClusterKeywords
 from libraries.testkit import cluster
 from concurrent.futures import ThreadPoolExecutor
+from libraries.testkit.prometheous import verify_stat_on_prometheous
 
 
 @pytest.mark.syncgateway
@@ -196,6 +197,8 @@ def test_sgw_high_availability(params_from_base_test_setup, setup_basic_sg_conf)
     sg_conf = setup_basic_sg_conf["sg_conf"]
     sg_db = "db"
     sg_client = MobileRestClient()
+    prometheus_enabled = params_from_base_test_setup["prometheus_enabled"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     if not xattrs_enabled:
         pytest.skip(' This test require --xattrs flag')
 
@@ -232,6 +235,9 @@ def test_sgw_high_availability(params_from_base_test_setup, setup_basic_sg_conf)
         assert sg1_cancel_cas == 0, "cancel_ca value is not 0 on EE"
         sg1_import_count = sg1_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"]
         assert sg1_import_count > diff_docs, "Not all docs imported"
+        if prometheus_enabled and sync_gateway_version >= "2.8.0":
+            assert verify_stat_on_prometheous("sgw_shared_bucket_import_import_count"), sg1_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"]
+            assert verify_stat_on_prometheous("sgw_gsi_views_allDocs_count"), num_docs
 
 
 def create_doc_via_sdk_individually(cbs_url, cbs_cluster, bucket_name, num_docs):

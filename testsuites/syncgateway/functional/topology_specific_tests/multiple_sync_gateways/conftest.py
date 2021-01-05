@@ -43,6 +43,7 @@ def params_from_base_suite_setup(request):
     delta_sync_enabled = request.config.getoption("--delta-sync")
     cbs_platform = request.config.getoption("--cbs-platform")
     magma_storage_enabled = request.config.getoption("--magma-storage")
+    prometheus_enabled = request.config.getoption("--prometheus-enable")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
@@ -67,6 +68,7 @@ def params_from_base_suite_setup(request):
     log_info("sa_installer_type: {}".format(sa_installer_type))
     log_info("sg_platform: {}".format(sg_platform))
     log_info("delta_sync_enabled: {}".format(delta_sync_enabled))
+    log_info("prometheus_enabled: {}".format(prometheus_enabled))
 
     # sg-ce is invalid for di mode
     if mode == "di" and sg_ce:
@@ -223,7 +225,8 @@ def params_from_base_suite_setup(request):
            "xattrs_enabled": xattrs_enabled,
            "sg_platform": sg_platform,
            "sync_gateway_version": sync_gateway_version,
-           "sg_ce": sg_ce
+           "sg_ce": sg_ce,
+           "prometheus_enabled": prometheus_enabled
            }
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
@@ -251,6 +254,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     sg_platform = params_from_base_suite_setup["sg_platform"]
     sync_gateway_version = params_from_base_suite_setup["sync_gateway_version"]
     sg_ce = params_from_base_suite_setup["sg_ce"]
+    prometheus_enabled = params_from_base_suite_setup["prometheus_enabled"]
 
     test_name = request.node.name
     log_info("Setting up test '{}'".format(test_name))
@@ -261,7 +265,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
            "xattrs_enabled": xattrs_enabled,
            "sg_platform": sg_platform,
            "sync_gateway_version": sync_gateway_version,
-           "sg_ce": sg_ce
+           "sg_ce": sg_ce,
+           "prometheus_enabled": prometheus_enabled
            }
 
     # Code after the yeild will execute when each test finishes

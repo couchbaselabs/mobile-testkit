@@ -93,3 +93,7 @@ def pytest_addoption(parser):
     parser.addoption("--magma-storage",
                      action="store_true",
                      help="magma-storage: Enable magma storage on couchbase server")
+
+    parser.addoption("--prometheus-enable",
+                     action="store",
+                     help="prometheus-enable:Start prometheous metrics on SyncGateway")
