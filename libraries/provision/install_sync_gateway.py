@@ -191,7 +191,8 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
         "sg_use_views": "",
         "revs_limit": "",
         "couchbase_server_primary_node": couchbase_server_primary_node,
-        "delta_sync": ""
+        "delta_sync": "",
+        "prometheous": ""
     }
 
     if get_sg_version(cluster_config) >= "2.1.0":
