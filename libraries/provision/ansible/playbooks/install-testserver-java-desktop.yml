@@ -7,6 +7,23 @@
   - debug: msg="JAVA_HOME location is {{ ansible_env.JAVA_HOME }}"
   - debug: msg="JSVC_HOME location is {{ ansible_env.JSVC_HOME }}"
 
+  - name: Delete any cblite2 filed generated in previous tests
+    file:
+      path: ~/javatestserver/*.cblite2
+      state: absent
+    ignore_errors: yes
+
+  - name: check /tmp/TestServerTemp directory exists
+    stat:
+      path: /tmp/TestServerTemp
+    register: testserver_tmp
+
+  - name: delete previously catched cblite2 files
+    file:
+      path: /tmp/TestServerTemp
+      state: absent
+    when: testserver_tmp.stat.exists == True
+
   - name: Define the log output location
     stat:
       path: ~/javatestserver/output
