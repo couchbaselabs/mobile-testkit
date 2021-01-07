@@ -91,7 +91,9 @@ class SyncGateway:
             "num_index_replicas": "",
             "sg_use_views": "",
             "couchbase_server_primary_node": self.couchbase_server_primary_node,
-            "delta_sync": ""
+            "delta_sync": "",
+            "prometheus": ""
+
         }
 
         if sg_ssl_enabled(self.cluster_config):
@@ -218,7 +220,8 @@ class SyncGateway:
             "num_index_replicas": "",
             "sg_use_views": "",
             "couchbase_server_primary_node": self.couchbase_server_primary_node,
-            "delta_sync": ""
+            "delta_sync": "",
+            "prometheus": ""
         }
         sg_platform = get_sg_platform(self.cluster_config)
         if sg_ssl_enabled(self.cluster_config):

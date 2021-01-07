@@ -65,7 +65,8 @@ class SgAccel:
             "sslkey": "",
             "logging": "",
             "couchbase_server_primary_node": couchbase_server_primary_node,
-            "delta_sync": ""
+            "delta_sync": "",
+            "prometheus": ""
         }
 
         if get_sg_version(self.cluster_config) >= "2.1.0":
