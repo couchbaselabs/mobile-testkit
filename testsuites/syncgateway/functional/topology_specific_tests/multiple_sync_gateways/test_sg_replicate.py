@@ -8,7 +8,7 @@ from libraries.testkit.syncgateway import wait_until_doc_in_changes_feed
 from libraries.testkit.syncgateway import wait_until_docs_sync
 from libraries.testkit.syncgateway import assert_does_not_have_doc
 from libraries.testkit.syncgateway import assert_has_doc
-from libraries.testkit.prometheous import verify_stat_on_prometheous
+from libraries.testkit.prometheus import verify_stat_on_prometheus
 from keywords.ClusterKeywords import ClusterKeywords
 from requests import HTTPError
 from keywords import document
@@ -155,12 +155,12 @@ def test_sg_replicate_basic_test(params_from_base_test_setup):
                     raise error
                 time.sleep(t)
     if prometheus_enabled and sync_gateway_version >= "2.8.0":
-        assert verify_stat_on_prometheous("sgw_resource_utilization_system_memory_total"), expvars["syncgateway"]["global"]["resource_utilization"]["system_memory_total"]
-        assert verify_stat_on_prometheous("sgw_cache_chan_cache_max_entries"), expvars["syncgateway"]["per_db"][DB2]["cache"]["chan_cache_max_entries"]
-        assert verify_stat_on_prometheous("sgw_gsi_views_allDocs_count"), expvars["syncgateway"]["per_db"][DB2]["cache"]["chan_cache_max_entries"]
+        assert verify_stat_on_prometheus("sgw_resource_utilization_system_memory_total"), expvars["syncgateway"]["global"]["resource_utilization"]["system_memory_total"]
+        assert verify_stat_on_prometheus("sgw_cache_chan_cache_max_entries"), expvars["syncgateway"]["per_db"][DB2]["cache"]["chan_cache_max_entries"]
+        assert verify_stat_on_prometheus("sgw_gsi_views_allDocs_count"), expvars["syncgateway"]["per_db"][DB2]["cache"]["chan_cache_max_entries"]
         replication_id = replication_result["replication_id"]
         expvars = sg_client.get_expvars(sg1.admin.admin_url)
-        assert verify_stat_on_prometheous("sgw_replication_sgr_num_docs_pushed"), expvars["syncgateway"]["per_replication"][replication_id]["sgr_num_docs_pushed"]
+        assert verify_stat_on_prometheus("sgw_replication_sgr_num_docs_pushed"), expvars["syncgateway"]["per_replication"][replication_id]["sgr_num_docs_pushed"]
 
 
 @pytest.mark.topospecific

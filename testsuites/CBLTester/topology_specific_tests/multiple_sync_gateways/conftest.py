@@ -22,6 +22,7 @@ from keywords.TestServerFactory import TestServerFactory
 from keywords.SyncGateway import SyncGateway
 from keywords.constants import RESULTS_DIR
 from keywords.constants import SDK_TIMEOUT
+from libraries.testkit import prometheus
 
 
 def pytest_addoption(parser):
@@ -186,6 +187,7 @@ def params_from_base_suite_setup(request):
 
     enable_encryption = request.config.getoption("--enable-encryption")
     encryption_password = request.config.getoption("--encryption-password")
+    prometheus_enable = request.config.getoption("--prometheus-enable")
 
     testserver = TestServerFactory.create(platform=liteserv_platform,
                                           version_build=liteserv_version,
@@ -386,6 +388,10 @@ def params_from_base_suite_setup(request):
         n1ql_query = 'create primary index on {}'.format(enable_sample_bucket)
         query = N1QLQuery(n1ql_query)
         sdk_client.n1ql_query(query)
+    if prometheus_enable:
+        if not prometheus.is_prometheus_installed:
+            prometheus.install_prometheus
+        prometheus_pid = prometheus.start_prometheus(sg_ip)
 
     yield {
         "cluster_config": cluster_config,
@@ -438,6 +444,7 @@ def params_from_base_suite_setup(request):
 
     # Delete png files under resources/data
     clear_resources_pngs()
+    prometheus.stop_prometheus(prometheus_pid)
 
 
 @pytest.fixture(scope="function")

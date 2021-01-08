@@ -191,7 +191,8 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
         "sg_use_views": "",
         "revs_limit": "",
         "couchbase_server_primary_node": couchbase_server_primary_node,
-        "delta_sync": ""
+        "delta_sync": "",
+        "prometheus": ""
     }
 
     if get_sg_version(cluster_config) >= "2.1.0":
@@ -277,7 +278,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
         playbook_vars["delta_sync"] = '"delta_sync": { "enabled": true},'
 
     if get_sg_version(cluster_config) >= "2.8.0":
-        playbook_vars["prometheous"] = '"metricsInterface": ":4986",'
+        playbook_vars["prometheus"] = '"metricsInterface": ":4986",'
 
     # Install Sync Gateway via Source or Package
     if sync_gateway_config.commit is not None:
