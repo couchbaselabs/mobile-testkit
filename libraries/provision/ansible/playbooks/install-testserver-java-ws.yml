@@ -11,6 +11,12 @@
     shell: "{{ ansible_env.CATALINA_BASE }}/bin/catalina.sh stop 30 -force"
     ignore_errors: yes
 
+  - name: Delete any cblite2 filed generated in previous tests
+    file:
+      path: ~/*.cblite2
+      state: absent
+    ignore_errors: yes
+
   - name: Collect CouchbaseLite jar and supporting files
     find:
       paths: "{{ ansible_env.CATALINA_BASE }}/lib"
@@ -56,6 +62,19 @@
       path: "{{ item.path }}"
       state: absent
     with_items: "{{ tomcat_log.files }}"
+
+  - name: Remove cblite2 files
+    find:
+      paths: "{{ ansible_env.CATALINA_BASE }}"
+      patterns: '*.cblite2'
+      recurse: True
+    register: cblite2_files
+  
+  - name: remove cblite2 filed cached at tomcat root
+    file:
+      path: "{{ item.path }}"
+      state: absent
+    with_items: "{{ cblite2_files.files }}"
 
   - name: Collect CouchbaseLite jar and supporting files in package to be installed
     find:
