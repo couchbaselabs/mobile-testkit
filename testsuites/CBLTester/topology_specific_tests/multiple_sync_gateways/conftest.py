@@ -445,7 +445,7 @@ def params_from_base_suite_setup(request):
     # Delete png files under resources/data
     clear_resources_pngs()
     if prometheus_enable:
-    	prometheus.stop_prometheus(prometheus_pid)
+        prometheus.stop_prometheus(prometheus_pid)
 
 
 @pytest.fixture(scope="function")

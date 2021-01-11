@@ -17,7 +17,7 @@ from keywords import attachment, document
 from concurrent.futures import ThreadPoolExecutor
 from utilities.cluster_config_utils import copy_sgconf_to_temp, replace_string_on_sgw_config
 from keywords.ClusterKeywords import ClusterKeywords
-from keywords.constants import SDK_TIMEOUT
+from keywords.couchbaseserver import get_sdk_client_with_bucket
 from libraries.testkit.prometheus import verify_stat_on_prometheus
 
 
