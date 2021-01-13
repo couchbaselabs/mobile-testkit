@@ -9,7 +9,7 @@ import signal
 
 def start_prometheus(sg_ip):
     prometheus_file = os.getcwd() + "/libraries/provision/ansible/playbooks/prometheus.yml"
-    commd = "sed -i -e 's/192.168.33.12/" + sg_ip + "/g' " + prometheus_file
+    commd = "sed -i -e 's/promotheus_sg_ip/" + sg_ip + "/g' " + prometheus_file
     subprocess.run([commd], shell=True)
     config_param = "--config.file=" + prometheus_file
     subprocess.Popen(["prometheus", config_param])
@@ -17,7 +17,7 @@ def start_prometheus(sg_ip):
 
 def stop_prometheus(sg_ip):
     prometheus_file = os.getcwd() + "/libraries/provision/ansible/playbooks/prometheus.yml"
-    commd = "sed -i -e 's/" + sg_ip + "/192.168.33.12/g' " + prometheus_file
+    commd = "sed -i -e 's/" + sg_ip + "/promotheus_sg_ip/g' " + prometheus_file
     subprocess.run([commd], shell=True)
     for line in os.popen("ps ax | grep prometheus | grep -v grep"):
         fields = line.split()
