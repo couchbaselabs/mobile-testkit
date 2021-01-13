@@ -3,25 +3,25 @@ from requests import HTTPError
 from libraries.testkit.debug import log_request, log_response
 import subprocess
 from sys import platform
-import yaml
 import os
 import signal
 
 
 def start_prometheus(sg_ip):
-    prometheus_file = "libraries/provision/ansible/playbooks/prometheus.yml"
-    with open(prometheus_file) as fp:
-        data = yaml.full_load(fp)
-        data["scrape_configs"]["static_configs"]["target"] = {sg_ip: 4986}
-    # Replace the SG_IP value in the prometheus_file
-    with open(prometheus_file, 'w') as file:
-        yaml.dump(data, file)
-    # Start the premetheous in the separate process
-    pid = subprocess.Popen(["prometheus", "--config.file=libraries/provision/ansible/playbooks/prometheus.yml"], creationflags=subprocess.DETACHED_PROCESS)
-    return pid
+    prometheus_file = os.getcwd() + "/libraries/provision/ansible/playbooks/prometheus.yml"
+    commd = "sed -i -e 's/192.168.33.12/" + sg_ip + "/g' " + prometheus_file
+    subprocess.run([commd], shell=True)
+    config_param = "--config.file=" + prometheus_file
+    subprocess.Popen(["prometheus", config_param])
 
 
-def stop_prometheus(pid):
+def stop_prometheus(sg_ip):
+    prometheus_file = os.getcwd() + "/libraries/provision/ansible/playbooks/prometheus.yml"
+    commd = "sed -i -e 's/" + sg_ip + "/192.168.33.12/g' " + prometheus_file
+    subprocess.run([commd], shell=True)
+    for line in os.popen("ps ax | grep prometheus | grep -v grep"):
+        fields = line.split()
+        pid = fields[0]
     os.kill(int(pid), signal.SIGKILL)
 
 

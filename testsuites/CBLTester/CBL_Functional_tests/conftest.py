@@ -481,7 +481,7 @@ def params_from_base_suite_setup(request):
     if prometheus_enable:
         if not prometheus.is_prometheus_installed:
             prometheus.install_prometheus
-        prometheus_pid = prometheus.start_prometheus(sg_ip)
+        prometheus.start_prometheus(sg_ip)
 
     yield {
         "cluster_config": cluster_config,
@@ -554,7 +554,8 @@ def params_from_base_suite_setup(request):
             testserver.stop()
     # Delete png files under resources/data
     clear_resources_pngs()
-    prometheus.stop_prometheus(prometheus_pid)
+    if prometheus_enable:
+        prometheus.stop_prometheus(sg_ip)
 
 
 @pytest.fixture(scope="function")
