@@ -389,8 +389,8 @@ def params_from_base_suite_setup(request):
         query = N1QLQuery(n1ql_query)
         sdk_client.n1ql_query(query)
     if prometheus_enable:
-        if not prometheus.is_prometheus_installed:
-            prometheus.install_prometheus
+        if not prometheus.is_prometheus_installed():
+            prometheus.install_prometheus()
         prometheus.start_prometheus(sg_ip)
 
     yield {

@@ -27,8 +27,8 @@ def stop_prometheus(sg_ip):
 
 def is_prometheus_installed():
     try:
-        subprocess.run(['prometheus --version'], check=True, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
-    except subprocess.CalledProcessError:
+        subprocess.run(['prometheus --version'], check=True, shell=True)
+    except:
         return False
     return True
 

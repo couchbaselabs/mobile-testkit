@@ -222,9 +222,8 @@ def params_from_base_suite_setup(request):
     )
 
     if prometheus_enabled:
-        if not prometheus.is_prometheus_installed:
-            prometheus.install_prometheus
-
+        if not prometheus.is_prometheus_installed():
+            prometheus.install_prometheus()
         cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
         sg_url = cluster_topology["sync_gateways"][0]["public"]
         sg_ip = host_for_url(sg_url)
