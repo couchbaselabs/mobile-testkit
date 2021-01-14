@@ -1032,11 +1032,8 @@ class CouchbaseServer:
             "replicaNumber": 0
         }
         resp = self._session.post("{}/pools/default/buckets/{}".format(self.url, bucket), data=data)
-        print("response for the post call is ", resp)
         log_r(resp)
         resp.raise_for_status()
-        # resp_obj = resp.json()
-        # return resp_obj
 
     def rebalance_server(self, cluster_servers):
         # Now hit the rebalance rest api
