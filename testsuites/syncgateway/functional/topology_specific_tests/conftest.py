@@ -96,4 +96,4 @@ def pytest_addoption(parser):
 
     parser.addoption("--prometheus-enable",
                      action="store",
-                     help="prometheus-enable:Start prometheous metrics on SyncGateway")
+                     help="prometheus-enable:Start prometheus metrics on SyncGateway")

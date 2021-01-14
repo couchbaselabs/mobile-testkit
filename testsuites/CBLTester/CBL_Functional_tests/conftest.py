@@ -32,6 +32,7 @@ from CBLClient.ReplicatorConfiguration import ReplicatorConfiguration
 from utilities.cluster_config_utils import get_load_balancer_ip
 from couchbase.bucket import Bucket
 from couchbase.n1ql import N1QLQuery
+from libraries.testkit import prometheus
 
 
 def pytest_addoption(parser):
@@ -477,6 +478,10 @@ def params_from_base_suite_setup(request):
         repl_obj.wait_until_replicator_idle(repl, max_times=3000)
         log_info("Stopping replication")
         repl_obj.stop(repl)
+    if prometheus_enable:
+        if not prometheus.is_prometheus_installed:
+            prometheus.install_prometheus
+        prometheus.start_prometheus(sg_ip)
 
     yield {
         "cluster_config": cluster_config,
@@ -549,6 +554,8 @@ def params_from_base_suite_setup(request):
             testserver.stop()
     # Delete png files under resources/data
     clear_resources_pngs()
+    if prometheus_enable:
+        prometheus.stop_prometheus(sg_ip)
 
 
 @pytest.fixture(scope="function")

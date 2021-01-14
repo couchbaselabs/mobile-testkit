@@ -10,4 +10,4 @@ scrape_configs:
     metrics_path: /_metrics
     static_configs:
       - targets:
-          - "{{sg_ip}}":4986
+          - promotheus_sg_ip:4986
