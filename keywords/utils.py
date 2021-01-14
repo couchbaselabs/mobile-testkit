@@ -83,7 +83,7 @@ def version_and_build(full_version):
         return version_parts[0], None
 
 
-def host_for_url(url):
+def  ohost_for_url(url):
     """ Takes a url in the form of http://192.168.33.10:4985
     and returns an host in the form 192.168.33.10
     """
@@ -344,7 +344,10 @@ def compare_generic_types(object1, object2, isPredictiveResult=False):
     elif isinstance(object1, int) and isinstance(object2, int):
         return object1 == object2
     elif isinstance(object1, float) and isinstance(object2, float):
-        return object1 == object2
+        if isPredictiveResult:
+            return object1 - object2 < 0.2
+        else:
+            return object1 == object2
     elif isinstance(object1, float) and isinstance(object2, int):
         if isPredictiveResult:
             return abs(object1 - object2) < 100
