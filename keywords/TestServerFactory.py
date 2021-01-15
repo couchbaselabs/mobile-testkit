@@ -38,16 +38,16 @@ class TestServerFactory:
         TestServerFactory.validate_port(port)
 
         if platform == "android" or platform == "xamarin-android":
-            return TestServerAndroid(version_build, host, port, debug_mode, platform=platform)
+            return TestServerAndroid(version_build, host, port, community_enabled=community_enabled, debug_mode=debug_mode, platform=platform)
         elif platform == "ios" or platform == "xamarin-ios":
             return TestServeriOS(version_build, host, port, community_enabled=community_enabled, debug_mode=debug_mode, platform=platform)
         elif platform == "net-mono":
             return TestServerNetMono(version_build, host, port)
         elif platform == "net-msft" or platform == "net-uwp":
-            return TestServerNetMsft(version_build, host, port, platform=platform)
+            return TestServerNetMsft(version_build, host, port, platform=platform, community_enabled=community_enabled)
         elif platform in ["java-macosx", "java-msft", "java-ubuntu", "java-centos"]:
-            return TestServerJava(version_build, host, port, debug_mode, platform=platform)
+            return TestServerJava(version_build, host, port, debug_mode, platform=platform, community_enabled=community_enabled)
         elif platform in ["javaws-macosx", "javaws-msft", "javaws-ubuntu", "javaws-centos"]:
-            return TestServerJavaWS(version_build, host, port, debug_mode, platform=platform)
+            return TestServerJavaWS(version_build, host, port, debug_mode, platform=platform, community_enabled=community_enabled)
         else:
             raise NotImplementedError("Test server does not support this version")
