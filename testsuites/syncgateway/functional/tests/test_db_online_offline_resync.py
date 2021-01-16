@@ -28,6 +28,7 @@ def test_bucket_online_offline_resync_sanity(params_from_base_test_setup, sg_con
 
     cluster_conf = params_from_base_test_setup["cluster_config"]
     test_mode = params_from_base_test_setup["mode"]
+    sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
 
     if test_mode == "di":
         pytest.skip("Unsupported feature in distributed index")
@@ -123,19 +124,27 @@ def test_bucket_online_offline_resync_sanity(params_from_base_test_setup, sg_con
     restart_status = cluster.sync_gateways[0].restart(sg_restart_config,
                                                       cluster_config=cluster_conf)
     assert restart_status == 0
-
+    resync_status = admin.db_resync(db="db")
     retries = 0
-    while retries < 5:
-        try:
-            num_changes = admin.db_resync(db="db")
-            log_info("expecting num_changes {} == num_docs {} * num_users {}".format(num_changes, num_docs, num_users))
-            assert num_changes['payload']['changes'] == num_docs * num_users
-            break
-        except AssertionError as error:
+    if sync_gateway_version < "3.0.0":
+        while retries < 5:
+            try:
+                num_changes = admin.db_resync(db="db")
+                log_info("expecting num_changes {} == num_docs {} * num_users {}".format(num_changes, num_docs, num_users))
+                assert num_changes['payload']['changes'] == num_docs * num_users
+                break
+            except AssertionError as error:
+                retries = retries + 1
+                time.sleep(3)
+                if retries == 5:
+                    raise error
+    else:
+        while resync_status != "stopped" and retries < 5:
+            resync_status = admin.db_get_resync_status(db="db")
             retries = retries + 1
-            time.sleep(3)
-            if retries == 5:
-                raise error
+            time.sleep(2)
+        log_info("expecting num_changes {} == num_docs {} * num_users {}".format(resync_status, num_docs, num_users))
+        assert resync_status['payload']['docs_changed'] == num_docs * num_users, "docs_changed did not match with total docs of all users"
     # Take "db" online
     retries = 0
     while retries < 5:
