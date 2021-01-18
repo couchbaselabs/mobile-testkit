@@ -22,6 +22,7 @@ def start_sg_accel(c, sg_conf):
 
 
 @pytest.mark.sanity
+@pytest.mark.ce_sanity
 @pytest.mark.listener
 @pytest.mark.noconflicts
 @pytest.mark.replication
