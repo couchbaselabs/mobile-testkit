@@ -190,6 +190,7 @@ def test_bucket_online_offline_resync_with_online(params_from_base_test_setup, s
 
     cluster_conf = params_from_base_test_setup["cluster_config"]
     test_mode = params_from_base_test_setup["mode"]
+    sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
 
     if test_mode == "di":
         pytest.skip("Unsupported feature in distributed index")
@@ -308,6 +309,23 @@ def test_bucket_online_offline_resync_with_online(params_from_base_test_setup, s
     except Exception as e:
         log_info("Catch resync exception: {}".format(e))
 
+    resync_result = async_resync_result.get()
+    if sync_gateway_version < "3.0.0":
+        log_info("resync_changes {}".format(resync_result))
+        log_info("expecting num_changes  == num_docs {} * num_users {}".format(num_docs, num_users))
+        assert resync_result['payload']['changes'] == num_docs * num_users
+        assert resync_result['status_code'] == 200
+    else:
+        retries = 0
+        resync_result = admin.db_get_resync_status(db="db")
+        while resync_result != "stopped" and retries < 5:
+            resync_result = admin.db_get_resync_status(db="db")
+            print("resync_result is ", resync_result)
+            retries = retries + 1
+            time.sleep(2)
+        log_info("expecting num_changes  == num_docs {} * num_users {}".format(num_docs, num_users))
+        assert resync_result['payload']['docs_changed'] == num_docs * num_users
+        assert resync_result['status_code'] == 200
     resync_occured = False
 
     for i in range(20):
@@ -344,12 +362,6 @@ def test_bucket_online_offline_resync_with_online(params_from_base_test_setup, s
             time.sleep(5)
             if retries == 8:
                 raise error
-
-    resync_result = async_resync_result.get()
-    log_info("resync_changes {}".format(resync_result))
-    log_info("expecting num_changes  == num_docs {} * num_users {}".format(num_docs, num_users))
-    assert resync_result['payload']['changes'] == num_docs * num_users
-    assert resync_result['status_code'] == 200
 
     global_cache = list()
     for user in user_objects:
