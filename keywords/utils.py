@@ -345,7 +345,7 @@ def compare_generic_types(object1, object2, isPredictiveResult=False):
         return object1 == object2
     elif isinstance(object1, float) and isinstance(object2, float):
         if isPredictiveResult:
-            return (object1 - object2) < 0.001
+            return (object1 - object2) < 0.1
         else:
             return object1 == object2
     elif isinstance(object1, float) and isinstance(object2, int):
