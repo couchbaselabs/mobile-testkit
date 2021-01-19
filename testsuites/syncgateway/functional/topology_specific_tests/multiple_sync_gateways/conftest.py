@@ -227,7 +227,7 @@ def params_from_base_suite_setup(request):
         cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
         sg_url = cluster_topology["sync_gateways"][0]["public"]
         sg_ip = host_for_url(sg_url)
-        prometheus.start_prometheus(sg_ip)
+        prometheus.start_prometheus(sg_ip, sg_ssl)
 
     yield {"cluster_config": cluster_config,
            "mode": mode,
@@ -247,7 +247,7 @@ def params_from_base_suite_setup(request):
     # Delete png files under resources/data
     clear_resources_pngs()
     if prometheus_enabled:
-        prometheus.stop_prometheus(sg_ip)
+        prometheus.stop_prometheus(sg_ip, sg_ssl)
 
 
 # This is called before each test and will yield the dictionary to each test that references the method
