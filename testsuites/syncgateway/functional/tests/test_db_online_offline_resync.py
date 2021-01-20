@@ -563,12 +563,6 @@ def test_bucket_online_offline_resync_with_offline(params_from_base_test_setup, 
             if retries == 10:
                 raise error
 
-    """resync_result = async_resync_result.get()
-    log_info("resync_changes {}".format(resync_result))
-    log_info("expecting num_changes  == num_docs {} * num_users {}".format(num_docs, num_users))
-    assert resync_result['payload']['changes'] == num_docs * num_users
-    assert resync_result['status_code'] == 200"""
-
     global_cache = list()
     for user in user_objects:
         global_cache.append(user.cache)
