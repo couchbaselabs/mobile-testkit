@@ -124,7 +124,6 @@ def test_bucket_online_offline_resync_sanity(params_from_base_test_setup, sg_con
     restart_status = cluster.sync_gateways[0].restart(sg_restart_config,
                                                       cluster_config=cluster_conf)
     assert restart_status == 0
-    resync_status = admin.db_resync(db="db")
     retries = 0
     if sync_gateway_version < "3.0.0":
         while retries < 5:
@@ -139,6 +138,7 @@ def test_bucket_online_offline_resync_sanity(params_from_base_test_setup, sg_con
                 if retries == 5:
                     raise error
     else:
+        resync_status = admin.db_resync(db="db")
         while resync_status != "stopped" and retries < 5:
             resync_status = admin.db_get_resync_status(db="db")
             retries = retries + 1
@@ -309,25 +309,8 @@ def test_bucket_online_offline_resync_with_online(params_from_base_test_setup, s
     except Exception as e:
         log_info("Catch resync exception: {}".format(e))
 
-    if sync_gateway_version < "3.0.0":
-        resync_result = async_resync_result.get()
-        log_info("resync_changes {}".format(resync_result))
-        log_info("expecting num_changes  == num_docs {} * num_users {}".format(num_docs, num_users))
-        assert resync_result['payload']['changes'] == num_docs * num_users
-        assert resync_result['status_code'] == 200
-    else:
-        retries = 0
-        resync_result = admin.db_get_resync_status(db="db")
-        while resync_result != "stopped" and retries < 5:
-            resync_result = admin.db_get_resync_status(db="db")
-            print("resync_result is ", resync_result)
-            retries = retries + 1
-            time.sleep(2)
-        log_info("expecting num_changes  == num_docs {} * num_users {}".format(num_docs, num_users))
-        assert resync_result['payload']['docs_changed'] == num_docs * num_users
-        assert resync_result['status_code'] == 200
+    verify_resync_changes(sync_gateway_version, async_resync_result, num_docs, num_users, admin)
     resync_occured = False
-
     for i in range(20):
         db_info = admin.get_db_info("db")
         log_info("Status of db = {}".format(db_info["state"]))
@@ -510,23 +493,8 @@ def test_bucket_online_offline_resync_with_offline(params_from_base_test_setup, 
         log_info("resync issued !!!!!!")
     except Exception as e:
         log_info("Catch resync exception: {}".format(e))
-    if sync_gateway_version < "3.0.0":
-        resync_result = async_resync_result.get()
-        log_info("resync_changes {}".format(resync_result))
-        log_info("expecting num_changes  == num_docs {} * num_users {}".format(num_docs, num_users))
-        assert resync_result['payload']['changes'] == num_docs * num_users
-        assert resync_result['status_code'] == 200
-    else:
-        retries = 0
-        resync_result = admin.db_get_resync_status(db="db")
-        while resync_result != "stopped" and retries < 5:
-            resync_result = admin.db_get_resync_status(db="db")
-            print("resync_result is ", resync_result)
-            retries = retries + 1
-            time.sleep(2)
-        log_info("expecting num_changes  == num_docs {} * num_users {}".format(num_docs, num_users))
-        assert resync_result['payload']['docs_changed'] == num_docs * num_users
-        assert resync_result['status_code'] == 200
+
+    verify_resync_changes(sync_gateway_version, async_resync_result, num_docs, num_users, admin)
     resync_occured = False
     for i in range(20):
         db_info = admin.get_db_info("db")
@@ -576,3 +544,22 @@ def test_bucket_online_offline_resync_with_offline(params_from_base_test_setup, 
     log_info("Main test duration: {}".format(end - init_completed))
     log_info("Test setup time: {}".format(init_completed - start))
     log_info("Total Time taken: {}s".format(end - start))
+
+
+def verify_resync_changes(sync_gateway_version, async_resync_result, num_docs, num_users, admin):
+    if sync_gateway_version < "3.0.0":
+        resync_result = async_resync_result.get()
+        log_info("resync_changes {}".format(resync_result))
+        log_info("expecting num_changes  == num_docs {} * num_users {}".format(num_docs, num_users))
+        assert resync_result['payload']['changes'] == num_docs * num_users
+        assert resync_result['status_code'] == 200
+    else:
+        retries = 0
+        resync_result = admin.db_get_resync_status(db="db")
+        while resync_result != "stopped" and retries < 5:
+            resync_result = admin.db_get_resync_status(db="db")
+            retries = retries + 1
+            time.sleep(2)
+        log_info("expecting num_changes  == num_docs {} * num_users {}".format(num_docs, num_users))
+        assert resync_result['payload']['docs_changed'] == num_docs * num_users
+        assert resync_result['status_code'] == 200
