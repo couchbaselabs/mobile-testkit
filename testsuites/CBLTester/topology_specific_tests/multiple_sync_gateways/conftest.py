@@ -389,9 +389,9 @@ def params_from_base_suite_setup(request):
         query = N1QLQuery(n1ql_query)
         sdk_client.n1ql_query(query)
     if prometheus_enable:
-        if not prometheus.is_prometheus_installed:
-            prometheus.install_prometheus
-        prometheus.start_prometheus(sg_ip)
+        if not prometheus.is_prometheus_installed():
+            prometheus.install_prometheus()
+        prometheus.start_prometheus(sg_ip, sg_ssl)
 
     yield {
         "cluster_config": cluster_config,
@@ -445,7 +445,7 @@ def params_from_base_suite_setup(request):
     # Delete png files under resources/data
     clear_resources_pngs()
     if prometheus_enable:
-        prometheus.stop_prometheus(sg_ip)
+        prometheus.stop_prometheus(sg_ip, sg_ssl)
 
 
 @pytest.fixture(scope="function")
