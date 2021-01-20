@@ -16,7 +16,7 @@ from keywords.utils import log_info
 @pytest.mark.parametrize("password", [
     pytest.param("auto-password", marks=pytest.mark.sanity),
     ("auto password"),
-    ("validpassword"),
+    pytest.param("validpassword", marks=pytest.mark.ce_sanity),
 ])
 def test_mask_password_in_logs(params_from_base_test_setup, password):
     """

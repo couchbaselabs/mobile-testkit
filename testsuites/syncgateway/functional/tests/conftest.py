@@ -7,13 +7,15 @@ from keywords.exceptions import ProvisioningError, FeatureSupportedError
 from keywords.SyncGateway import (sync_gateway_config_path_for_mode,
                                   validate_sync_gateway_mode, get_sync_gateway_version)
 from keywords.tklogging import Logging
-from keywords.utils import check_xattr_support, log_info, version_is_binary, compare_versions, clear_resources_pngs
+from keywords.utils import check_xattr_support, log_info, version_is_binary, compare_versions, clear_resources_pngs, host_for_url
 from libraries.NetworkUtils import NetworkUtils
 from libraries.testkit import cluster
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop, is_x509_auth
 from utilities.cluster_config_utils import get_load_balancer_ip
 from libraries.provision.clean_cluster import clear_firewall_rules
 from keywords.couchbaseserver import get_server_version
+from libraries.testkit import prometheus
+
 
 UNSUPPORTED_1_5_0_CC = {
     "test_db_offline_tap_loss_sanity[bucket_online_offline/bucket_online_offline_default_dcp-100]": {
@@ -151,6 +153,10 @@ def pytest_addoption(parser):
     parser.addoption("--cbs-ce", action="store_true",
                      help="If set, community edition will get picked up , default is enterprise", default=False)
 
+    parser.addoption("--prometheus-enable",
+                     action="store",
+                     help="prometheus-enable:Start prometheus metrics on SyncGateway")
+
 
 # This will be called once for the at the beggining of the execution in the 'tests/' directory
 # and will be torn down, (code after the yeild) when all the test session has completed.
@@ -187,6 +193,7 @@ def params_from_base_suite_setup(request):
     number_replicas = request.config.getoption("--number-replicas")
     delta_sync_enabled = request.config.getoption("--delta-sync")
     magma_storage_enabled = request.config.getoption("--magma-storage")
+    prometheus_enabled = request.config.getoption("--prometheus-enable")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
@@ -388,6 +395,14 @@ def params_from_base_suite_setup(request):
     cluster_utils = ClusterKeywords(cluster_config)
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
 
+    if prometheus_enabled:
+        if not prometheus.is_prometheus_installed():
+            prometheus.install_prometheus()
+        cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
+        sg_url = cluster_topology["sync_gateways"][0]["public"]
+        sg_ip = host_for_url(sg_url)
+        prometheus.start_prometheus(sg_ip, sg_ssl)
+
     yield {
         "sync_gateway_version": sync_gateway_version,
         "cluster_config": cluster_config,
@@ -401,10 +416,14 @@ def params_from_base_suite_setup(request):
         "delta_sync_enabled": delta_sync_enabled,
         "sg_ce": sg_ce,
         "sg_config": sg_config,
-        "cbs_ce": cbs_ce
+        "cbs_ce": cbs_ce,
+        "prometheus_enabled": prometheus_enabled
     }
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
+
+    if prometheus_enabled:
+        prometheus.stop_prometheus(sg_ip, sg_ssl)
 
     # clean up firewall rules if any ports blocked for server ssl testing
     clear_firewall_rules(cluster_config)

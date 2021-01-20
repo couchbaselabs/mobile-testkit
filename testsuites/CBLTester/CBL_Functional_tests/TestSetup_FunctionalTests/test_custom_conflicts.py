@@ -15,7 +15,7 @@ from testsuites.CBLTester.CBL_Functional_tests.TestSetup_FunctionalTests.test_de
 @pytest.mark.custom_conflict
 @pytest.mark.replication
 @pytest.mark.parametrize("replicator_type", [
-    ("pull"),
+    pytest.param("pull", marks=pytest.mark.ce_sanity),
     pytest.param("push_pull", marks=pytest.mark.sanity)
 ])
 def test_local_wins_custom_conflicts(params_from_base_test_setup, replicator_type):

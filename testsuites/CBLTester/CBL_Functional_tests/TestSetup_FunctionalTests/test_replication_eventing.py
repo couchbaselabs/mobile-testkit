@@ -12,7 +12,7 @@ from libraries.data import doc_generators
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("num_of_docs", [
-    (10),
+    pytest.param(10, marks=pytest.mark.ce_sanity),
     pytest.param(100, marks=pytest.mark.sanity),
     (1000),
 ])
