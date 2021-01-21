@@ -10,6 +10,7 @@ from keywords.ClusterKeywords import ClusterKeywords
 from keywords import couchbaseserver, document
 from CBLClient.Document import Document
 from concurrent.futures import ThreadPoolExecutor
+from utilities.cluster_config_utils import get_cbs_version
 import pytest
 
 
@@ -34,8 +35,10 @@ def test_transactions_insert_replace_remove_rollback(params_from_base_test_setup
     '''
 
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
-    if not xattrs_enabled:
-        pytest.skip('this test require --xattrs flag')
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    server_version = get_cbs_version(cluster_config)
+    if not xattrs_enabled or server_version < "6.6.1":
+        pytest.skip('this test require --xattrs flag and server version should be equal or above 6.6.1')
     cluster_config = params_from_base_test_setup["cluster_config"]
     base_url = params_from_base_test_setup["base_url"]
     sg_config = params_from_base_test_setup["sg_config"]
@@ -163,9 +166,10 @@ def test_transactions_with_latest_updates(params_from_base_test_setup):
     '''
 
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
-    if not xattrs_enabled:
-        pytest.skip('this test require --xattrs flag')
     cluster_config = params_from_base_test_setup["cluster_config"]
+    server_version = get_cbs_version(cluster_config)
+    if not xattrs_enabled or server_version < "6.6.1":
+        pytest.skip('this test require --xattrs flag and server version should be equal or above 6.6.1')
     base_url = params_from_base_test_setup["base_url"]
     sg_config = params_from_base_test_setup["sg_config"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
@@ -177,7 +181,10 @@ def test_transactions_with_latest_updates(params_from_base_test_setup):
     cluster_servers = topology["couchbase_servers"]
     cbs_one_url = cluster_servers[0]
     cb_server = couchbaseserver.CouchbaseServer(cbs_one_url)
+    server_version = get_cbs_version(cluster_config)
 
+    if server_version < "6.6.1":
+        pytest.skip("Cannot support server below 6.6.1 ")
     sg_db = "db"
     username = "autotest"
     password = "password"
@@ -246,9 +253,10 @@ def test_transactions_with_tombstoned_docs(params_from_base_test_setup):
     '''
 
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
-    if not xattrs_enabled:
-        pytest.skip('this test require --xattrs flag')
     cluster_config = params_from_base_test_setup["cluster_config"]
+    server_version = get_cbs_version(cluster_config)
+    if not xattrs_enabled or server_version < "6.6.1":
+        pytest.skip('this test require --xattrs flag and server version should be equal or above 6.6.1')
     base_url = params_from_base_test_setup["base_url"]
     sg_config = params_from_base_test_setup["sg_config"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
@@ -260,7 +268,10 @@ def test_transactions_with_tombstoned_docs(params_from_base_test_setup):
     cluster_servers = topology["couchbase_servers"]
     cbs_one_url = cluster_servers[0]
     cb_server = couchbaseserver.CouchbaseServer(cbs_one_url)
+    server_version = get_cbs_version(cluster_config)
 
+    if server_version < "6.6.1":
+        pytest.skip("Cannot support server below 6.6.1 ")
     sg_db = "db"
     username = "autotest"
     password = "password"
@@ -334,9 +345,10 @@ def test_transactions_with_simultaneous_doc_updates_docresurrection(params_from_
     '''
 
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
-    if not xattrs_enabled:
-        pytest.skip('this test require --xattrs flag')
     cluster_config = params_from_base_test_setup["cluster_config"]
+    server_version = get_cbs_version(cluster_config)
+    if not xattrs_enabled or server_version < "6.6.1":
+        pytest.skip('this test require --xattrs flag and server version should be equal or above 6.6.1')
     base_url = params_from_base_test_setup["base_url"]
     sg_config = params_from_base_test_setup["sg_config"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
@@ -348,7 +360,10 @@ def test_transactions_with_simultaneous_doc_updates_docresurrection(params_from_
     cluster_servers = topology["couchbase_servers"]
     cbs_one_url = cluster_servers[0]
     cb_server = couchbaseserver.CouchbaseServer(cbs_one_url)
+    server_version = get_cbs_version(cluster_config)
 
+    if server_version < "6.6.1":
+        pytest.skip("Cannot support server below 6.6.1 ")
     sg_db = "db"
     username = "autotest"
     password = "password"
