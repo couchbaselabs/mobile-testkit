@@ -2,6 +2,7 @@ import pytest
 import random
 import time
 from collections import OrderedDict
+import datetime
 
 from couchbase.bucket import Bucket
 from couchbase.n1ql import N1QLQuery
@@ -14,6 +15,8 @@ from keywords.constants import SDK_TIMEOUT
 from keywords.couchbaseserver import CouchbaseServer
 from keywords.utils import log_info
 from libraries.testkit.cluster import Cluster
+from keywords.TestServerFactory import TestServerFactory
+from keywords.constants import RESULTS_DIR
 from testsuites.CBLTester.CBL_Functional_tests.SuiteSetup_FunctionalTests.test_query import test_get_doc_ids, \
     test_any_operator, test_doc_get, test_get_docs_with_limit_offset, test_multiple_selects, test_query_where_and_or, \
     test_query_pattern_like, test_query_pattern_regex, test_query_isNullOrMissing, test_query_ordering, \
@@ -352,3 +355,69 @@ def _upgrade_db(args):
     cbl_db = db.create(upgrade_cbl_db_name, db_config)
     assert isinstance(cbl_db, MemoryPointer), "Failed to migrate db from previous version of CBL"
     return cbl_db, upgrade_cbl_db_name
+
+
+@pytest.mark.listener
+@pytest.mark.upgrade_test
+def test_upgrade_cbl(params_from_base_suite_setup):
+    base_url = params_from_base_suite_setup["base_url"]
+    cbl_db = "upgrade_db" + str(time.time())
+    # Create CBL database
+    db = Database(base_url)
+
+    log_info("Creating a Database {}".format(cbl_db))
+    source_db = db.create(cbl_db)
+
+    upgraded_liteserv_version = params_from_base_suite_setup["upgraded_liteserv_version"]
+    liteserv_platform = params_from_base_suite_setup["liteserv_platform"]
+    liteserv_host = params_from_base_suite_setup["liteserv_host"]
+    liteserv_port = params_from_base_suite_setup["liteserv_port"]
+    debug_mode = params_from_base_suite_setup["debug_mode"]
+    device_enabled = params_from_base_suite_setup["device_enabled"]
+    community_enabled = params_from_base_suite_setup["community_enabled"]
+    testserver = params_from_base_suite_setup["testserver"]
+    test_name_cp = params_from_base_suite_setup["test_name_cp"]
+    channels_sg = ["ABC"]
+    # Create CBL database
+    db.create_bulk_docs(20, "cbl-upgrade-docs", db=source_db, channels=channels_sg)
+
+    time.sleep(2)
+    base_cbl_doc_count = db.getCount(source_db)
+    testserver2 = TestServerFactory.create(platform=liteserv_platform,
+                                          version_build=upgraded_liteserv_version,
+                                          host=liteserv_host,
+                                          port=liteserv_port,
+                                          community_enabled=community_enabled,
+                                          debug_mode=debug_mode)
+    log_info("Downloading TestServer ...")
+    # Download TestServer app
+    testserver2.download()
+
+    log_info("Installing TestServer ...")
+    # Install TestServer app
+    if device_enabled:
+        testserver2.install_device()
+    else:
+        testserver2.install()
+
+    if device_enabled:
+        testserver2.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
+                                                              test_name_cp,
+                                                              datetime.datetime.now()))
+    else:
+        testserver2.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
+                                                       test_name_cp,
+                                                       datetime.datetime.now()))
+
+    db = Database(base_url)
+    source_db = db.create(cbl_db)
+    upgraded_cbl_doc_count = db.getCount(source_db)
+    cbl_doc_ids = db.getDocIds(source_db)
+    cbl_db_docs = db.getDocuments(source_db, cbl_doc_ids)
+    db.create_bulk_docs(2, "cbl-upgrade-docs_new", db=source_db, channels=channels_sg)
+    assert upgraded_cbl_doc_count == base_cbl_doc_count, " Number of docs count is not matching"
+    upgraded_cbl_doc_count = db.getCount(source_db)
+    assert upgraded_cbl_doc_count > base_cbl_doc_count, " Number of docs count is not matching"
+    log_info("*" * 20)
+    log_info(cbl_db_docs)
+
