@@ -37,7 +37,7 @@ def test_transactions_insert_replace_remove_rollback(params_from_base_test_setup
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
     cluster_config = params_from_base_test_setup["cluster_config"]
     server_version = get_cbs_version(cluster_config)
-    if not xattrs_enabled and server_version < "6.6.1":
+    if not xattrs_enabled or server_version < "6.6.1":
         pytest.skip('this test require --xattrs flag and server version should be equal or above 6.6.1')
     cluster_config = params_from_base_test_setup["cluster_config"]
     base_url = params_from_base_test_setup["base_url"]
@@ -168,7 +168,7 @@ def test_transactions_with_latest_updates(params_from_base_test_setup):
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
     cluster_config = params_from_base_test_setup["cluster_config"]
     server_version = get_cbs_version(cluster_config)
-    if not xattrs_enabled and server_version < "6.6.1":
+    if not xattrs_enabled or server_version < "6.6.1":
         pytest.skip('this test require --xattrs flag and server version should be equal or above 6.6.1')
     base_url = params_from_base_test_setup["base_url"]
     sg_config = params_from_base_test_setup["sg_config"]
@@ -255,7 +255,7 @@ def test_transactions_with_tombstoned_docs(params_from_base_test_setup):
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
     cluster_config = params_from_base_test_setup["cluster_config"]
     server_version = get_cbs_version(cluster_config)
-    if not xattrs_enabled and server_version < "6.6.1":
+    if not xattrs_enabled or server_version < "6.6.1":
         pytest.skip('this test require --xattrs flag and server version should be equal or above 6.6.1')
     base_url = params_from_base_test_setup["base_url"]
     sg_config = params_from_base_test_setup["sg_config"]
@@ -347,7 +347,7 @@ def test_transactions_with_simultaneous_doc_updates_docresurrection(params_from_
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
     cluster_config = params_from_base_test_setup["cluster_config"]
     server_version = get_cbs_version(cluster_config)
-    if not xattrs_enabled and server_version < "6.6.1":
+    if not xattrs_enabled or server_version < "6.6.1":
         pytest.skip('this test require --xattrs flag and server version should be equal or above 6.6.1')
     base_url = params_from_base_test_setup["base_url"]
     sg_config = params_from_base_test_setup["sg_config"]
