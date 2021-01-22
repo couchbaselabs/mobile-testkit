@@ -414,8 +414,9 @@ def test_upgrade_cbl(params_from_base_suite_setup):
     upgraded_cbl_doc_count = db.getCount(source_db)
     cbl_doc_ids = db.getDocIds(source_db)
     cbl_db_docs = db.getDocuments(source_db, cbl_doc_ids)
-    db.create_bulk_docs(2, "cbl-upgrade-docs_new", db=source_db, channels=channels_sg)
     assert upgraded_cbl_doc_count == base_cbl_doc_count, " Number of docs count is not matching"
+    # Create few more docs and make sure the after upgrade we still create docs
+    db.create_bulk_docs(2, "cbl-upgrade-docs_new", db=source_db, channels=channels_sg)
     upgraded_cbl_doc_count = db.getCount(source_db)
     assert upgraded_cbl_doc_count > base_cbl_doc_count, " Number of docs count is not matching"
     log_info("*" * 20)
