@@ -391,7 +391,6 @@ def test_log_content_verification(params_from_base_test_setup, remove_tmp_sg_red
     sg_conf_name = "sync_gateway_default"
     sg_db = "db"
     num_of_docs = 10
-    # cbs_ce_version = params_from_base_test_setup["cbs_ce"]
     if get_sync_gateway_version(sg_ip)[0] < "2.1":
         pytest.skip("log redaction feature not available for version < 2.1 ")
 
@@ -406,13 +405,13 @@ def test_log_content_verification(params_from_base_test_setup, remove_tmp_sg_red
     if cluster["environment"]["ipv6_enabled"]:
         sg_host = "[{}]".format(sg_host)
 
-    # 3. Create user in sync_gateway
+    # Create user in sync_gateway
     sg_client = MobileRestClient()
     channels = ["logging"]
     sg_client.create_user(url=sg_admin_url, db=sg_db, name='autotest', password='password', channels=channels)
     autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest')
 
-    # 4. Create docs with xattrs
+    # Create docs with xattrs
     sgdoc_bodies = document.create_docs(doc_id_prefix='sg_docs', number=num_of_docs,
                                         attachments_generator=attachment.generate_2_png_10_10, channels=channels)
     sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sgdoc_bodies, auth=autouser_session)
