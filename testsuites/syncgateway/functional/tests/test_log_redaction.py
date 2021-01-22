@@ -418,8 +418,7 @@ def test_log_content_verification(params_from_base_test_setup, remove_tmp_sg_red
     assert len(sgdoc_bodies) == num_of_docs
 
     resp = sg_client.sgCollect_info(sg_host)
-    if resp["status"] != "started":
-        assert False, "sg collect did not started"
+    assert resp["status"] == "started", "sg collect did not started"
     count = 0
     log_info("sg collect is running ........")
     # Minimum of 5 minute sleep time is recommended
