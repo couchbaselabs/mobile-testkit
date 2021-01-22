@@ -149,11 +149,11 @@ def params_from_base_suite_setup(request):
     test_name = request.node.name
     if enable_upgrade_app:
         testserver = TestServerFactory.create(platform=liteserv_platform,
-                                          version_build=base_liteserv_version,
-                                          host=liteserv_host,
-                                          port=liteserv_port,
-                                          community_enabled=community_enabled,
-                                          debug_mode=debug_mode)
+                                              version_build=base_liteserv_version,
+                                              host=liteserv_host,
+                                              port=liteserv_port,
+                                              community_enabled=community_enabled,
+                                              debug_mode=debug_mode)
     else:
         testserver = TestServerFactory.create(platform=liteserv_platform,
                                               version_build=upgraded_liteserv_version,
@@ -350,7 +350,7 @@ def params_from_base_suite_setup(request):
         "utils_obj": utils_obj,
         "community_enabled": community_enabled,
         "debug_mode": debug_mode,
-        "testserver":  testserver,
+        "testserver": testserver,
         "test_name_cp": test_name_cp
     }
 

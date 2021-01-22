@@ -359,7 +359,7 @@ def _upgrade_db(args):
 
 @pytest.mark.listener
 @pytest.mark.upgrade_test
-def test_upgrade_cbl(params_from_base_suite_setup):
+def test_upgrade_testsever_app(params_from_base_suite_setup):
     base_url = params_from_base_suite_setup["base_url"]
     cbl_db = "upgrade_db" + str(time.time())
     # Create CBL database
@@ -384,11 +384,11 @@ def test_upgrade_cbl(params_from_base_suite_setup):
     time.sleep(2)
     base_cbl_doc_count = db.getCount(source_db)
     testserver2 = TestServerFactory.create(platform=liteserv_platform,
-                                          version_build=upgraded_liteserv_version,
-                                          host=liteserv_host,
-                                          port=liteserv_port,
-                                          community_enabled=community_enabled,
-                                          debug_mode=debug_mode)
+                                           version_build=upgraded_liteserv_version,
+                                           host=liteserv_host,
+                                           port=liteserv_port,
+                                           community_enabled=community_enabled,
+                                           debug_mode=debug_mode)
     log_info("Downloading TestServer ...")
     # Download TestServer app
     testserver2.download()
@@ -402,12 +402,12 @@ def test_upgrade_cbl(params_from_base_suite_setup):
 
     if device_enabled:
         testserver2.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
-                                                              test_name_cp,
-                                                              datetime.datetime.now()))
+                                                               test_name_cp,
+                                                               datetime.datetime.now()))
     else:
         testserver2.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
-                                                       test_name_cp,
-                                                       datetime.datetime.now()))
+                                                        test_name_cp,
+                                                        datetime.datetime.now()))
 
     db = Database(base_url)
     source_db = db.create(cbl_db)
@@ -421,4 +421,3 @@ def test_upgrade_cbl(params_from_base_suite_setup):
     assert upgraded_cbl_doc_count > base_cbl_doc_count, " Number of docs count is not matching"
     log_info("*" * 20)
     log_info(cbl_db_docs)
-
