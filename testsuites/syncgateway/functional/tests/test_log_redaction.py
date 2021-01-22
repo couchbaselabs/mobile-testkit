@@ -615,7 +615,7 @@ def verify_all_logs_in_sgcollectzip(zip_file_name=None):
     sgcollect_zip_directory = sgcollect_zip_filename.split(".zip")[0]
     grep_command = "grep -E '(?:hostname: |hostname = |Host Name:(?:\s)*)(.*)' {}/*/sync_gateway.log".format(sgcollect_zip_directory)
     result_command = subprocess.check_output(grep_command, shell=True)
-    assert result_command == "kernel.hostname = localhost.localdomain", "did not get the right string from sync_gateway log file"
+    assert result_command.decode('utf-8').strip() == "kernel.hostname = localhost.localdomain", "did not get the right string from sync_gateway log file"
 
 
 @pytest.fixture(scope="function")
