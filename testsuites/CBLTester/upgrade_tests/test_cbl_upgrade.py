@@ -397,14 +397,11 @@ def test_upgrade_testsever_app(params_from_base_suite_setup):
     # Install TestServer app
     if device_enabled:
         testserver2.install_device()
-    else:
-        testserver2.install()
-
-    if device_enabled:
         testserver2.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
                                                                test_name_cp,
                                                                datetime.datetime.now()))
     else:
+        testserver2.install()
         testserver2.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
                                                         test_name_cp,
                                                         datetime.datetime.now()))
