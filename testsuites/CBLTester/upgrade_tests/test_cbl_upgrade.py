@@ -311,7 +311,7 @@ def _upgrade_db(args):
     if base_liteserv_version > upgraded_liteserv_version:
         pytest.skip("Can't upgrade from higher version db to lower version db")
 
-    supported_base_liteserv = ["1.4", "2.0.0", "2.1.5", "2.5.0", "2.7.0"]
+    supported_base_liteserv = ["1.4", "2.0.0", "2.1.5", "2.5.0", "2.7.0", "2.7.1"]
     db = Database(base_url)
     if encrypted_db:
         if base_liteserv_version < "2.1.5":
@@ -411,10 +411,11 @@ def test_upgrade_testsever_app(params_from_base_suite_setup):
     upgraded_cbl_doc_count = db.getCount(source_db)
     cbl_doc_ids = db.getDocIds(source_db)
     cbl_db_docs = db.getDocuments(source_db, cbl_doc_ids)
-    assert upgraded_cbl_doc_count == base_cbl_doc_count, " Number of docs count is not matching"
+    assert upgraded_cbl_doc_count == 20, " Number of docs count is not matching"
     # Create few more docs and make sure the after upgrade we still create docs
     db.create_bulk_docs(2, "cbl-upgrade-docs_new", db=source_db, channels=channels_sg)
     upgraded_cbl_doc_count = db.getCount(source_db)
     assert upgraded_cbl_doc_count > base_cbl_doc_count, " Number of docs count is not matching"
-    log_info("*" * 20)
-    log_info(cbl_db_docs)
+    #
+    # log_info("*" * 20)
+    # log_info(cbl_db_docs, upgraded_cbl_doc_count)
