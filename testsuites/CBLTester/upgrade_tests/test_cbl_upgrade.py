@@ -380,8 +380,6 @@ def test_upgrade_testsever_app(params_from_base_suite_setup):
     channels_sg = ["ABC"]
     # Create CBL database
     db.create_bulk_docs(20, "cbl-upgrade-docs", db=source_db, channels=channels_sg)
-
-    time.sleep(2)
     base_cbl_doc_count = db.getCount(source_db)
     testserver2 = TestServerFactory.create(platform=liteserv_platform,
                                            version_build=upgraded_liteserv_version,
@@ -416,6 +414,3 @@ def test_upgrade_testsever_app(params_from_base_suite_setup):
     db.create_bulk_docs(2, "cbl-upgrade-docs_new", db=source_db, channels=channels_sg)
     upgraded_cbl_doc_count = db.getCount(source_db)
     assert upgraded_cbl_doc_count > base_cbl_doc_count, " Number of docs count is not matching"
-    #
-    # log_info("*" * 20)
-    # log_info(cbl_db_docs, upgraded_cbl_doc_count)
