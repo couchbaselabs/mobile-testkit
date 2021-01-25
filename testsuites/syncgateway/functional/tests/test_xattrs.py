@@ -40,7 +40,7 @@ SDK_OP_SLEEP = 0.05
     'xattrs/old_doc'
 ])
 def test_olddoc_nil(params_from_base_test_setup, sg_conf_name):
-    """ Regression test for - https://github.com/couchbase/sync_gateway/issues/2565
+    """ Regression test added for - https://github.com/couchbase/sync_gateway/issues/2565
 
     Using the custom sync function:
         function(doc, oldDoc) {
