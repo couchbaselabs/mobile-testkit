@@ -1,27 +1,25 @@
 {
     "interface":":4984",
     "adminInterface": "0.0.0.0:4985",
-    "maxIncomingConnections": 0,
-    "maxFileDescriptors": 90000,
-    "compressResponses": false,
     {{ sslcert }}
     {{ sslkey }}
     {{ logging }}
     "databases":{
-        "db":{
+        "sg_db1":{
+            "sgreplicate_enabled": false,
+            {{ autoimport }}
+            {{ xattrs }}
             {{ no_conflicts }}
             {{ sg_use_views }}
             {{ num_index_replicas }}
-            {{ username1 }}
-            {{ password }}
             {{ cacertpath }}
             {{ certpath }}
             {{ keypath }}
             {{ delta_sync }}
+            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             {{ bucket_name1 }}
-            "enable_shared_bucket_access": true,
-            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}"
+            {{ username1 }}
+            "password":"password"
         }
     }
 }
-

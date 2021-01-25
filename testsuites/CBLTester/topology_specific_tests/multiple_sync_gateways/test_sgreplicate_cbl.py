@@ -19,6 +19,7 @@ from utilities.cluster_config_utils import copy_sgconf_to_temp, replace_string_o
 from couchbase.bucket import Bucket
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.constants import SDK_TIMEOUT
+# from keywords import couchbaseserver
 
 
 def setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_teardown_test, cbl_replication_type, sg_conf_name='listener_tests/multiple_sync_gateways', num_of_docs=10, channels1=None, sgw_cluster1_sg_config_name=None, sgw_cluster2_sg_config_name=None, name1=None, name2=None, password1=None, password2=None):
@@ -39,7 +40,7 @@ def setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_te
     if name1 is None:
         name1 = "autotest1"
     if name2 is None:
-        name2 = "auto_test@"
+        name2 = "auto_test"
     if password1 is None:
         password1 = "password"
     if password2 is None:
@@ -68,13 +69,13 @@ def setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_te
         sgw_cluster1_config_path = "{}/{}".format(os.getcwd(), sgw_cluster1_sg_config)
 
         sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sgw_cluster1_config_path, url=sg1.ip,
-                                                sync_gateway_version=sync_gateway_version, cb_server=c_cluster.servers[0], enable_import=True)
+                                                sync_gateway_version=sync_gateway_version, enable_import=True)
 
     if sgw_cluster2_sg_config_name:
         sgw_cluster2_sg_config = sync_gateway_config_path_for_mode(sgw_cluster2_sg_config_name, sg_mode)
         sgw_cluster2_config_path = "{}/{}".format(os.getcwd(), sgw_cluster2_sg_config)
         sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sgw_cluster2_config_path, url=sg2.ip,
-                                                sync_gateway_version=sync_gateway_version, cb_server=c_cluster.servers[0], enable_import=True)
+                                                sync_gateway_version=sync_gateway_version, enable_import=True)
 
     admin = Admin(sg1)
     admin.admin_url = sg1.url
@@ -677,7 +678,7 @@ def test_sg_replicate_2active_1passive(params_from_base_test_setup, setup_custom
     sgw_cluster1_sg_config = sync_gateway_config_path_for_mode(sgw_cluster2_bucket_3, sg_mode)
     sgw_cluster1_config_path = "{}/{}".format(os.getcwd(), sgw_cluster1_sg_config)
     sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sgw_cluster1_config_path, url=sg3.ip,
-                                            sync_gateway_version=sync_gateway_version, cb_server=c_cluster.servers[0], enable_import=True)
+                                            sync_gateway_version=sync_gateway_version, enable_import=True)
     authenticator = Authenticator(base_url)
 
     sg3_blip_url = "ws://{}:4984/{}".format(sg3.ip, sg_db3)
@@ -1446,18 +1447,18 @@ def test_sg_replicate_sgwconfig_replications_with_opt_out(params_from_base_test_
 
     temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ replace_with_replications }}", replace_string)
     temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "\"db\"", "\"sg_db1\"")
-    sg1.restart(config=temp_sg_config, cluster_config=cluster_config)
-    sg2.restart(config=sg_config2, cluster_config=cluster_config)
+    sg1.restart(config=temp_sg_config, cluster=c_cluster, cluster_config=cluster_config)
+    sg2.restart(config=sg_config2, cluster=c_cluster, cluster_config=cluster_config)
 
     # 2. Have 3rd node with opt out on sgw-config
     temp_sg_config, _ = copy_sgconf_to_temp(sg_config, sg_mode)
     replace_string3 = "\"sgreplicate_enabled\": false,"
     temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ replace_with_replications }}", replace_string3)
     temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "\"db\"", "\"sg_db1\"")
-    sg3.restart(config=temp_sg_config, cluster_config=cluster_config)
+    sg3.restart(config=temp_sg_config, cluster=c_cluster, cluster_config=cluster_config)
 
     #  Have 4th node with regular config
-    sg4.restart(config=sg_config3, cluster_config=cluster_config)
+    sg4.restart(config=sg_config3, cluster=c_cluster, cluster_config=cluster_config)
 
     # Create users with new config
     sg_client.create_user(sg3_admin_url, sg_db1, name3, password=password, channels=channels)
@@ -1570,9 +1571,9 @@ def test_sg_replicate_distributions_replications(params_from_base_test_setup, se
     sg3 = c_cluster.sync_gateways[2]
     sg4 = c_cluster.sync_gateways[3]
     sgw_cluster1_sg_config = sync_gateway_config_path_for_mode(sgw_cluster1_conf_name, sg_mode)
-    sg3.restart(config=sgw_cluster1_sg_config, cluster_config=cluster_config)
+    sg3.restart(config=sgw_cluster1_sg_config, cluster=c_cluster, cluster_config=cluster_config)
     sg4, sg_db4, sg4_admin_url, sg4_blip_url = get_sg4(params_from_base_test_setup, c_cluster, sg_db=sg_db1)
-    sg4.restart(config=sgw_cluster1_sg_config, cluster_config=cluster_config)
+    sg4.restart(config=sgw_cluster1_sg_config, cluster=c_cluster, cluster_config=cluster_config)
 
     # Create replications and docs based on parameters passed
     for x in range(number_of_replications):
@@ -1674,6 +1675,12 @@ def test_sg_replicate_update_sgw_nodes_in_cluster(params_from_base_test_setup, s
     name4 = "autotest4"
     channels3 = ["Replication3"]
     sg_config = sync_gateway_config_path_for_mode(sg_conf_name, sg_mode)
+    # cluster_helper = ClusterKeywords(cluster_config)
+    # topology = cluster_helper.get_cluster_topology(cluster_config)
+
+    # cluster_servers = topology["couchbase_servers"]
+    # cbs_one_url = cluster_servers[0]
+    # cb_server = couchbaseserver.CouchbaseServer(cbs_one_url)
 
     db, num_of_docs, sg_db1, sg_db2, name1, name2, _, password, channels1, channels2, replicator, _, replicator_authenticator2, _, sg2_blip_url, sg1, sg2, repl1, c_cluster, cbl_db1, cbl_db2, _ = setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_teardown_test,
                                                                                                                                                                                                                                cbl_replication_type="push_pull", sg_conf_name=sg_conf_name,
@@ -1683,7 +1690,7 @@ def test_sg_replicate_update_sgw_nodes_in_cluster(params_from_base_test_setup, s
     sgw_cluster1_sg_config = sync_gateway_config_path_for_mode(sgw_cluster1_conf_name, sg_mode)
     sg3.restart(config=sgw_cluster1_sg_config, cluster_config=cluster_config)
     sg4, sg_db4, sg4_admin_url, sg4_blip_url = get_sg4(params_from_base_test_setup, c_cluster, sg_db=sg_db1)
-    sg4.restart(config=sgw_cluster1_sg_config, cluster_config=cluster_config)
+    sg4.restart(config=sgw_cluster1_sg_config, cluster=c_cluster, cluster_config=cluster_config)
 
     replicator_authenticator4, _ = create_sguser_cbl_authenticator(base_url, sg4_admin_url, sg_db4, name4, password, channels1)
 
@@ -1734,7 +1741,7 @@ def test_sg_replicate_update_sgw_nodes_in_cluster(params_from_base_test_setup, s
         assert sg1_repl_count == 1 or sg1_repl_count == 2, "replications count on first node should have 1 or 2"
         assert sg4_repl_count == 1 or sg4_repl_count == 2, "replications count on sg node4 should have 1 or 2"
 
-        sg3.start(sg_config)
+        sg3.start(sg_config, cluster=c_cluster)
         sg_active_tasks = sg1.admin.get_sgreplicate2_active_tasks(sg_db1, expected_tasks=expected_tasks)
         assert len(sg_active_tasks) == expected_tasks, "Adding one of the sg node changed number of active replications"
         sg1_repl_count = sg1.admin.get_replications_count(sg_db1)

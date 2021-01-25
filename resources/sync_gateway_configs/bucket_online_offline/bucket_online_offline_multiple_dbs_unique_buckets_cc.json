@@ -20,8 +20,8 @@
             {{ certpath }}
             {{ keypath }}
             {{ delta_sync }}
-            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             {{ bucket_name1 }}
+            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}"
         },
         "db2":{
             {{ autoimport }}
@@ -35,9 +35,9 @@
             {{ certpath }}
             {{ keypath }}
             {{ delta_sync }}
-            "offline":false,
-            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             {{ bucket_name2 }}
+            "offline":false,
+            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}"
         },
         "db3":{
             {{ autoimport }}
@@ -51,9 +51,9 @@
             {{ certpath }}
             {{ keypath }}
             {{ delta_sync }}
-            "offline":false,
-            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             {{ bucket_name3 }}
+            "offline":false,
+            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}"
         },
         "db4":{
             {{ autoimport }}
@@ -67,8 +67,8 @@
             {{ certpath }}
             {{ keypath }}
             {{ delta_sync }}
-            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             {{ bucket_name4 }}
+            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}"
         }
     }
 }

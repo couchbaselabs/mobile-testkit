@@ -100,6 +100,8 @@ def test_bucket_shadow_low_revs_limit_repeated_deletes(params_from_base_test_set
     cluster_helper = ClusterKeywords(cluster_config)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config)
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
+    # cbs_url = cluster_hosts["couchbase_servers"][0]
+    # cb_server = couchbaseserver.CouchbaseServer(cbs_url)
     sg_ip = host_for_url(sg_admin_url)
 
     if mode == "di" or xattrs_enabled or get_sync_gateway_version(sg_ip)[0] > "2.0":
@@ -146,8 +148,9 @@ def test_bucket_shadow_low_revs_limit_repeated_deletes(params_from_base_test_set
     assert len(errors) == 0
 
     # Restart Shadow SG
+    # cb_server = cluster.servers[0]
     sc.shadower_sg.stop()
-    sc.shadower_sg.start(default_config_path_shadower_low_revs)
+    sc.shadower_sg.start(default_config_path_shadower_low_revs, cluster)
 
 
 @pytest.mark.topospecific
@@ -205,7 +208,8 @@ def test_bucket_shadow_low_revs_limit(params_from_base_test_setup):
     sc.bob_non_shadower.update_doc(doc_id, content=fake_doc_content, num_revision=1)
 
     # Bring SG shadower back up
-    sc.shadower_sg.start(default_config_path_shadower_low_revs)
+    # cb_server = cluster.servers[0]
+    sc.shadower_sg.start(default_config_path_shadower_low_revs, cluster)
 
     # Look for panics
     time.sleep(5)  # Give tap feed a chance to initialize
@@ -287,7 +291,8 @@ def test_bucket_shadow_multiple_sync_gateways(params_from_base_test_setup):
     sc.bob_non_shadower.delete_doc(doc_id_will_delete)
 
     # Bring SG shadower back up
-    sc.shadower_sg.start(default_config_path_shadower)
+    # cb_server = cluster.servers[0]
+    sc.shadower_sg.start(default_config_path_shadower, cluster)
     time.sleep(5)  # Give tap feed a chance to initialize
 
     # Verify SG shadower comes up without panicking, given writes from non-shadower during downtime.

@@ -70,6 +70,7 @@ class Config:
             # strip out sync functions `function ... }`
             data = convert_to_valid_json(data)
             # Find all bucket names in config's databases: {}
+            print("sridevi --- data after converting to valid json is ", data)
             conf_obj = json.loads(data)
 
             self.discover_mode(conf_obj)
@@ -94,6 +95,7 @@ class Config:
     def discover_bucket_name_set(self, conf_obj):
 
         bucket_names_from_config = []
+        print("sridevi --- config obj is ", conf_obj)
         # Add CBGT buckets
         if "cluster_config" in list(conf_obj.keys()):
             bucket_names_from_config.append(conf_obj["cluster_config"]["bucket"])
@@ -212,3 +214,11 @@ def escape_json_value(raw_value):
     # See http://stackoverflow.com/questions/983451/where-can-i-find-a-list-of-escape-characters-required-for-my-json-ajax-return-ty
 
     return escaped
+
+
+def get_no_of_buckets_from_sgw_config(conf_path):
+    with open(conf_path, "r") as config:
+        data = config.read()
+        events = re.findall("{{ bucket_name", string=data)
+        print("eventss are ", events)
+        return len(events)

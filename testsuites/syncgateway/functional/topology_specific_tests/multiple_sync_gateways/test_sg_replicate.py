@@ -225,6 +225,12 @@ def test_sg_replicate_continuous_replication(params_from_base_test_setup):
     log_info("Using cluster_config: {}".format(cluster_config))
 
     config = sync_gateway_config_path_for_mode("sync_gateway_sg_replicate", mode)
+    cluster_helper = ClusterKeywords(cluster_config)
+    topology = cluster_helper.get_cluster_topology(cluster_config)
+
+    cluster_servers = topology["couchbase_servers"]
+    cbs_one_url = cluster_servers[0]
+    cb_server = couchbaseserver.CouchbaseServer(cbs_one_url)
     sg1, sg2 = create_sync_gateways(
         cluster_config=cluster_config,
         sg_config_path=config
@@ -260,7 +266,7 @@ def test_sg_replicate_continuous_replication(params_from_base_test_setup):
 
     # Restart target
     config = sync_gateway_config_path_for_mode("sync_gateway_sg_replicate", mode)
-    sg2.start(config=config)
+    sg2.start(config=config, cb_server=cb_server)
 
     # Wait til all docs sync to target
     wait_until_docs_sync(sg2_user, [doc_id, doc_id_2])

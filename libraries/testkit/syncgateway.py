@@ -18,6 +18,7 @@ from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, ge
 from keywords.utils import add_cbs_to_sg_config_server_field, log_info, random_string
 from keywords.constants import SYNC_GATEWAY_CERT
 from keywords.exceptions import ProvisioningError
+# from libraries.testkit.cluster import Cluster
 
 log = logging.getLogger(libraries.testkit.settings.LOGGER)
 
@@ -64,11 +65,19 @@ class SyncGateway:
         )
         return status
 
-    def start(self, config):
+    def start(self, config, cluster):
         conf_path = os.path.abspath(config)
         log.info(">>> Starting sync_gateway with configuration: {}".format(conf_path))
         sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
-        bucket_names = get_buckets_from_sync_gateway_config(conf_path)
+        # bucket_names = get_buckets_from_sync_gateway_config(conf_path)
+        # cluster_helper = ClusterKeywords(self.cluster_config)
+        # cluster_topology = cluster_helper.get_cluster_topology(self.cluster_config)
+        # couchbase_server_url = cluster_topology["couchbase_servers"][0]
+
+        # cb_server = CouchbaseServer(couchbase_server_url)
+        # cluster = Cluster(config=self.cluster_config)
+        cb_server = cluster.servers[0]
+        bucket_names = cb_server.get_bucket_names()
         sg_platform = get_sg_platform(self.cluster_config)
 
         playbook_vars = {
@@ -93,7 +102,8 @@ class SyncGateway:
             "couchbase_server_primary_node": self.couchbase_server_primary_node,
             "delta_sync": ""
         }
-
+        username_list = ['username1', 'username2', 'username3', 'username4']
+        i = 0
         if sg_ssl_enabled(self.cluster_config):
             playbook_vars["sslcert"] = '"SSLCert": "sg_cert.pem",'
             playbook_vars["sslkey"] = '"SSLKey": "sg_privkey.pem",'
@@ -136,13 +146,16 @@ class SyncGateway:
                 playbook_vars["x509_auth"] = True
                 generate_x509_certs(self.cluster_config, bucket_names, sg_platform)
             else:
-                playbook_vars["username"] = '"username": "{}",'.format(
-                    bucket_names[0])
+                for bucket_name in bucket_names:
+                    print("sridevvi -- now adding username for ", bucket_name)
+                    playbook_vars[username_list[i]] = '"username": "{}",'.format(bucket_name)
+                    i += 1
                 playbook_vars["password"] = '"password": "password",'
         else:
             playbook_vars["logging"] = '"log": ["*"],'
-            playbook_vars["username"] = '"username": "{}",'.format(
-                bucket_names[0])
+            for bucket_name in bucket_names:
+                playbook_vars[username_list[i]] = '"username": "{}",'.format(bucket_name)
+                i += 1
             playbook_vars["password"] = '"password": "password",'
 
         if sg_ssl_enabled(self.cluster_config):
@@ -164,6 +177,12 @@ class SyncGateway:
         if is_delta_sync_enabled(self.cluster_config) and get_sg_version(self.cluster_config) >= "2.5.0":
             playbook_vars["delta_sync"] = '"delta_sync": { "enabled": true},'
 
+        data_bucket_list = ['bucket_name1', 'bucket_name2', 'bucket_name3', 'bucket_name4']
+        i = 0
+        for bucket_name in bucket_names:
+            print("sridevvi -- now adding bucket name in start method of lower syncgateway for ", bucket_name)
+            playbook_vars[data_bucket_list[i]] = '"bucket": "{}",'.format(bucket_name)
+            i += 1
         if is_cbs_ssl_enabled(self.cluster_config) and get_sg_version(self.cluster_config) >= "1.5.0":
             playbook_vars["server_scheme"] = "couchbases"
             playbook_vars["server_port"] = 11207
@@ -185,15 +204,17 @@ class SyncGateway:
         )
         return status
 
-    def restart(self, config, cluster_config=None):
+    def restart(self, config, cluster, cluster_config=None):
 
         if cluster_config is not None:
             self.cluster_config = cluster_config
         conf_path = os.path.abspath(config)
         log.info(">>> Restarting sync_gateway with configuration: {}".format(conf_path))
         sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
-        bucket_names = get_buckets_from_sync_gateway_config(conf_path)
-
+        # bucket_names = get_buckets_from_sync_gateway_config(conf_path)
+        # cluster = Cluster(config=cluster_config)
+        cb_server = cluster.servers[0]
+        bucket_names = cb_server.get_bucket_names()
         playbook_vars = {
             "sync_gateway_config_filepath": conf_path,
             "server_port": self.server_port,
@@ -217,6 +238,8 @@ class SyncGateway:
             "couchbase_server_primary_node": self.couchbase_server_primary_node,
             "delta_sync": ""
         }
+        username_list = ['username1', 'username2', 'username3', 'username4']
+        i = 0
         sg_platform = get_sg_platform(self.cluster_config)
         if sg_ssl_enabled(self.cluster_config):
             playbook_vars["sslcert"] = '"SSLCert": "sg_cert.pem",'
@@ -261,13 +284,17 @@ class SyncGateway:
                 playbook_vars["x509_auth"] = True
                 generate_x509_certs(self.cluster_config, bucket_names, sg_platform)
             else:
-                playbook_vars["username"] = '"username": "{}",'.format(
-                    bucket_names[0])
+                for bucket_name in bucket_names:
+                    print("sridevvi -- now adding username in restart for ", bucket_name)
+                    playbook_vars[username_list[i]] = '"username": "{}",'.format(bucket_name)
+                    i += 1
                 playbook_vars["password"] = '"password": "password",'
         else:
             playbook_vars["logging"] = '"log": ["*"],'
-            playbook_vars["username"] = '"username": "{}",'.format(
-                bucket_names[0])
+            for bucket_name in bucket_names:
+                print("sridevvi -- now adding username username in restart for ", bucket_name)
+                playbook_vars[username_list[i]] = '"username": "{}",'.format(bucket_name)
+                i += 1
             playbook_vars["password"] = '"password": "password",'
 
         if is_xattrs_enabled(self.cluster_config):
@@ -286,6 +313,12 @@ class SyncGateway:
         if is_delta_sync_enabled(self.cluster_config) and get_sg_version(self.cluster_config) >= "2.5.0":
             playbook_vars["delta_sync"] = '"delta_sync": { "enabled": true},'
 
+        data_bucket_list = ['bucket_name1', 'bucket_name2', 'bucket_name3', 'bucket_name4']
+        i = 0
+        for bucket_name in bucket_names:
+            print("sridevvi -- now adding bucket name in restart method of lower syncgateway for ", bucket_name)
+            playbook_vars[data_bucket_list[i]] = '"bucket": "{}",'.format(bucket_name)
+            i += 1
         if is_cbs_ssl_enabled(self.cluster_config) and get_sg_version(self.cluster_config) >= "1.5.0":
             playbook_vars["server_scheme"] = "couchbases"
             playbook_vars["server_port"] = 11207

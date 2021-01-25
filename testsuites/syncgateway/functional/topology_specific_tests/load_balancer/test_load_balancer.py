@@ -138,6 +138,8 @@ def sgw_down_with_load_balancer_teardown(params_from_base_test_setup):
     mode = params_from_base_test_setup["mode"]
     c = cluster.Cluster(config=cluster_config)
     sg1 = c.sync_gateways[0]
+    # cbs_one_url = c.servers[0]
+    # cb_server = couchbaseserver.CouchbaseServer(cbs_one_url)
     sg_conf_name = "xattrs/no_import"
     sg_conf_path = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
@@ -147,4 +149,4 @@ def sgw_down_with_load_balancer_teardown(params_from_base_test_setup):
         "sg_conf_path": sg_conf_path
     }
 
-    sg1.start(sg_conf_path)
+    sg1.start(sg_conf_path, c)

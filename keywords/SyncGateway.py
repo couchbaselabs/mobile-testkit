@@ -17,13 +17,15 @@ from keywords.exceptions import ProvisioningError, Error
 from libraries.provision.ansible_runner import AnsibleRunner
 from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_redact_level, get_sg_platform
 from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version, sg_ssl_enabled, get_cbs_version, is_delta_sync_enabled
-from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
+# from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
 from libraries.testkit.cluster import Cluster
 from keywords.utils import host_for_url
 from couchbase.bucket import Bucket
 from keywords import document
 from keywords.utils import random_string
 from utilities.cluster_config_utils import copy_sgconf_to_temp, replace_string_on_sgw_config
+# from keywords.ClusterKeywords import ClusterKeywords
+# from keywords.couchbaseserver import CouchbaseServer
 
 
 def validate_sync_gateway_mode(mode):
@@ -218,8 +220,11 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config):
 
     with open(sg_conf) as default_conf:
         template = Template(default_conf.read())
-        config_path = os.path.abspath(sg_conf)
-        bucket_names = get_buckets_from_sync_gateway_config(config_path)
+        # config_path = os.path.abspath(sg_conf)
+        # bucket_names = get_buckets_from_sync_gateway_config(config_path)
+        cluster = Cluster(config=cluster_config)
+        cb_server = cluster.servers[0]
+        bucket_names = cb_server.get_bucket_names()
         sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
         cbs_cert_path = os.path.join(os.getcwd(), "certs")
         if is_xattrs_enabled(cluster_config):
@@ -250,6 +255,10 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config):
         delta_sync_prop = ""
 
         sg_platform = get_sg_platform(cluster_config)
+        # username_list = ['username1', 'username2', 'username3', 'username4']
+        data_bucket_props = ['', '', '', '']
+        user_name_props = ['', '', '', '']
+        # i = 0
         if get_sg_version(cluster_config) >= "2.1.0":
             logging_config = '"logging": {"debug": {"enabled": true}'
             try:
@@ -285,9 +294,22 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config):
                 generate_x509_certs(cluster_config, bucket_names, sg_platform)
             else:
                 logging_prop = '"log": ["*"],'
-            username = '"username": "{}",'.format(bucket_names[0])
+                i = 0
+                for bucket_name in bucket_names:
+                    print("sridevvi -- now adding username for ", bucket_name)
+                    user_name_props[i] = '"username": "{}",'.format(bucket_name)
+                    i += 1
+            # username = '"username": "{}",'.format(bucket_names[0])
             password = '"password": "password",'
 
+        else:
+            logging_prop = '"log": ["*"],'
+            i = 0
+            for bucket_name in bucket_names:
+                print("sridevvi -- now adding username for ", bucket_name)
+                user_name_props[i] = '"username": "{}",'.format(bucket_name)
+                i += 1
+            password = '"password": "password",'
         couchbase_server_primary_node = add_cbs_to_sg_config_server_field(cluster_config)
         couchbase_server_primary_node = get_cbs_primary_nodes_str(cluster_config, couchbase_server_primary_node)
 
@@ -306,6 +328,14 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config):
         if is_delta_sync_enabled(cluster_config) and get_sg_version(cluster_config) >= "2.5.0":
             delta_sync_prop = '"delta_sync": { "enabled": true},'
 
+        # data_bucket_list = ['bucket_name1', 'bucket_name2', 'bucket_name3', 'bucket_name4']
+        i = 0
+        for bucket_name in bucket_names:
+            print("sridevvi -- now adding bucket name for ", bucket_name)
+            data_bucket_props[i] = '"bucket": "{}",'.format(bucket_name)
+            i += 1
+        print("user anme props is ", user_name_props)
+        print("data_bucket props is ", data_bucket_props)
         temp = template.render(
             couchbase_server_primary_node=couchbase_server_primary_node,
             is_index_writer="false",
@@ -320,7 +350,10 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config):
             keypath=keypath_prop,
             cacertpath=cacertpath_prop,
             x509_auth=x509_auth_prop,
-            username=username,
+            username1=user_name_props[0],
+            username2=user_name_props[1],
+            username3=user_name_props[2],
+            username4=user_name_props[3],
             password=password,
             x509_certs_dir=cbs_cert_path,
             sg_cert_path=sg_cert_path,
@@ -328,7 +361,11 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config):
             sslkey=sslkey_prop,
             no_conflicts=no_conflicts_prop,
             revs_limit=revs_limit_prop,
-            delta_sync=delta_sync_prop
+            delta_sync=delta_sync_prop,
+            bucket_name1=data_bucket_props[0],
+            bucket_name2=data_bucket_props[1],
+            bucket_name3=data_bucket_props[2],
+            bucket_name4=data_bucket_props[3]
         )
         data = json.loads(temp)
 
@@ -371,7 +408,7 @@ class SyncGateway(object):
         for ac in cluster_obj["sg_accels"]:
             verify_sg_accel_version(ac["ip"], sync_gateway_version)
 
-    def start_sync_gateways(self, cluster_config, cb_server, url=None, config=None):
+    def start_sync_gateways(self, cluster_config, url=None, config=None):
         """Start sync gateways in a cluster. If url is passed,
         start the sync gateway at that url
         """
@@ -383,6 +420,8 @@ class SyncGateway(object):
         config_path = os.path.abspath(config)
         sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
         cbs_cert_path = os.path.join(os.getcwd(), "certs")
+        cluster = Cluster(config=cluster_config)
+        cb_server = cluster.servers[0]
         bucket_names = cb_server.get_bucket_names()
         # bucket_names = get_buckets_from_sync_gateway_config(config_path)
         couchbase_server_primary_node = add_cbs_to_sg_config_server_field(cluster_config)
@@ -458,6 +497,7 @@ class SyncGateway(object):
                 generate_x509_certs(cluster_config, bucket_names, sg_platform)
             else:
                 for bucket_name in bucket_names:
+                    print("sridevvi -- now adding username for ", bucket_name)
                     playbook_vars[username_list[i]] = '"username": "{}",'.format(bucket_name)
                     i += 1
                 playbook_vars["password"] = '"password": "password",'
@@ -504,6 +544,7 @@ class SyncGateway(object):
         data_bucket_list = ['bucket_name1', 'bucket_name2', 'bucket_name3', 'bucket_name4']
         i = 0
         for bucket_name in bucket_names:
+            print("sridevvi -- now adding bucket name for ", bucket_name)
             playbook_vars[data_bucket_list[i]] = '"bucket": "{}",'.format(bucket_name)
             i += 1
         if url is not None:
@@ -615,8 +656,13 @@ class SyncGateway(object):
         sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
         cbs_cert_path = os.path.join(os.getcwd(), "certs")
         couchbase_server_primary_node = add_cbs_to_sg_config_server_field(cluster_config)
-        bucket_names = get_buckets_from_sync_gateway_config(sg_conf)
-
+        # bucket_names = get_buckets_from_sync_gateway_config(sg_conf)
+        # cluster_helper = ClusterKeywords(cluster_config)
+        # cluster_topology = cluster_helper.get_cluster_topology(cluster_config)
+        # couchbase_server_url = cluster_topology["couchbase_servers"][0]
+        cluster = Cluster(config=cluster_config)
+        cb_server = cluster.servers[0]
+        bucket_names = cb_server.get_bucket_names()
         if is_x509_auth(cluster_config) or is_cbs_ssl_enabled(cluster_config):
             self.server_port = ""
             self.server_scheme = "couchbases"
@@ -644,7 +690,8 @@ class SyncGateway(object):
             "couchbase_server_primary_node": couchbase_server_primary_node,
             "delta_sync": ""
         }
-
+        username_list = ['username1', 'username2', 'username3', 'username4']
+        i = 0
         sync_gateway_base_url, sync_gateway_package_name, sg_accel_package_name = sg_config.sync_gateway_base_url_and_package()
 
         playbook_vars["couchbase_sync_gateway_package_base_url"] = sync_gateway_base_url
@@ -696,11 +743,17 @@ class SyncGateway(object):
                 playbook_vars["x509_auth"] = True
                 generate_x509_certs(cluster_config, bucket_names, sg_platform)
             else:
-                playbook_vars["username"] = '"username": "{}",'.format(
-                    bucket_names[0])
+                for bucket_name in bucket_names:
+                    print("sridevvi -- now adding username in upgrade sgws for ", bucket_name)
+                    playbook_vars[username_list[i]] = '"username": "{}",'.format(bucket_name)
+                    i += 1
                 playbook_vars["password"] = '"password": "password",'
         else:
             playbook_vars["logging"] = '"log": ["*"],'
+            for bucket_name in bucket_names:
+                playbook_vars[username_list[i]] = '"username": "{}",'.format(bucket_name)
+                i += 1
+            playbook_vars["password"] = '"password": "password",'
 
         if is_xattrs_enabled(cluster_config) and cbs_version >= "5.0.0":
             playbook_vars["autoimport"] = '"import_docs": true,'
@@ -720,7 +773,12 @@ class SyncGateway(object):
 
         if is_delta_sync_enabled(cluster_config) and version >= "2.5.0":
             playbook_vars["delta_sync"] = '"delta_sync": { "enabled": true},'
-
+        data_bucket_list = ['bucket_name1', 'bucket_name2', 'bucket_name3', 'bucket_name4']
+        i = 0
+        for bucket_name in bucket_names:
+            print("sridevvi -- now adding bucket name in upgrade SGWs for ", bucket_name)
+            playbook_vars[data_bucket_list[i]] = '"bucket": "{}",'.format(bucket_name)
+            i += 1
         if url is not None:
             target = hostname_for_url(cluster_config, url)
             log_info("Upgrading sync_gateway/sg_accel on {} ...".format(target))
@@ -742,7 +800,7 @@ class SyncGateway(object):
         if status != 0:
             raise Exception("Could not upgrade sync_gateway/sg_accel")
 
-    def redeploy_sync_gateway_config(self, cluster_config, sg_conf, url, sync_gateway_version, cb_server, enable_import=False):
+    def redeploy_sync_gateway_config(self, cluster_config, sg_conf, url, sync_gateway_version, enable_import=False):
         """Deploy an SG config with xattrs enabled
             Will also enable import if enable_import is set to True
             It is used to enable xattrs and import in the SG config"""
@@ -752,6 +810,8 @@ class SyncGateway(object):
         sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
         cbs_cert_path = os.path.join(os.getcwd(), "certs")
         #  bucket_names = get_buckets_from_sync_gateway_config(sg_conf)
+        cluster = Cluster(config=cluster_config)
+        cb_server = cluster.servers[0]
         bucket_names = cb_server.get_bucket_names()
         version, build = version_and_build(sync_gateway_version)
 
@@ -856,7 +916,7 @@ class SyncGateway(object):
 
         if is_delta_sync_enabled(cluster_config) and version >= "2.5.0":
             playbook_vars["delta_sync"] = '"delta_sync": { "enabled": true},'
- 
+
         data_bucket_list = ['bucket_name1', 'bucket_name2', 'bucket_name3', 'bucket_name4']
         i = 0
         for bucket_name in bucket_names:

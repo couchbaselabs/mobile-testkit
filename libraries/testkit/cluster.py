@@ -10,7 +10,7 @@ from keywords.exceptions import ProvisioningError
 from keywords.utils import log_info, add_cbs_to_sg_config_server_field
 from libraries.provision.ansible_runner import AnsibleRunner
 from libraries.testkit.admin import Admin
-from libraries.testkit.config import Config
+from libraries.testkit.config import Config, get_no_of_buckets_from_sgw_config
 from libraries.testkit.sgaccel import SgAccel
 from libraries.testkit.syncgateway import SyncGateway
 #  from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
@@ -112,7 +112,7 @@ class Cluster:
         self.servers = [CouchbaseServer(url=cb_url) for cb_url in cbs_urls]
         self.sync_gateway_config = None  # will be set to Config object when reset() called
 
-    def reset(self, sg_config_path, number_of_buckets=1):
+    def reset(self, sg_config_path):
 
         ansible_runner = AnsibleRunner(self._cluster_config)
         time0 = time.time()
@@ -141,12 +141,12 @@ class Cluster:
         status = ansible_runner.run_ansible_playbook("delete-sg-accel-artifacts.yml")
         assert status == 0, "Failed to delete sg_accel artifacts"
         time1 = time.time()
-        print("time stamp before delet buckets ", time1 - time0)
+        print("time stamp before delete buckets ", time1 - time0)
         # Delete buckets
         log_info(">>> Deleting buckets on: {}".format(self.servers[0].url))
         self.servers[0].delete_buckets()
         time2 = time.time()
-        print("time stamp before delet buckets ", time2 - time1)
+        print("time stamp before delete buckets ", time2 - time1)
         # Parse config and grab bucket names
         config_path_full = os.path.abspath(sg_config_path)
         config = Config(config_path_full)
@@ -154,7 +154,9 @@ class Cluster:
         # bucket_name_set = config.get_bucket_name_set()
         sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
         cbs_cert_path = os.path.join(os.getcwd(), "certs")
-        #  bucket_names = get_buckets_from_sync_gateway_config(sg_config_path)
+        # bucket_names = get_buckets_from_sync_gateway_config(sg_config_path)
+        number_of_buckets = get_no_of_buckets_from_sgw_config(sg_config_path)
+        print("number of bucket names are ", number_of_buckets)
         time3 = time.time()
         print("time stamp got the buckets ", time3 - time2)
         self.sync_gateway_config = config
@@ -169,10 +171,12 @@ class Cluster:
         for i in range(number_of_buckets):
             bucket_name = "data-bucket-{}".format(time.time())
             bucket_name_set.append(bucket_name)
-            bucket_name_set = list(set(bucket_name_set))
+            # bucket_name_set = list(set(bucket_name_set))
             bucket_names.append(bucket_name)
+            print("Trying to create bucket name ", bucket_name)
         log_info(">>> Creating buckets {}".format(bucket_name_set))
-        self.servers[0].create_buckets(bucket_names=bucket_name_set,
+        log_info(">>> Creating bucket names list {}".format(bucket_names))
+        self.servers[0].create_buckets(bucket_names=bucket_names,
                                        cluster_config=self._cluster_config,
                                        ipv6=self.ipv6)
         time4 = time.time()
@@ -197,6 +201,9 @@ class Cluster:
         playbook_vars = {
             "sync_gateway_config_filepath": config_path_full,
             "username1": "",
+            "username2": "",
+            "username3": "",
+            "username4": "",
             "password": "",
             "certpath": "",
             "keypath": "",
@@ -341,7 +348,7 @@ class Cluster:
         else:
             log_info(">>> Running in channel cache")
 
-        print("End of reset method is time taken is ", time.time() -  time0)
+        print("End of reset method is time taken is ", time.time() - time0)
         return mode
 
     def restart_services(self):

@@ -20,11 +20,11 @@
             {{ certpath }}
             {{ keypath }}
             {{ delta_sync }}
+            {{ bucket_name1 }}
             "allow_conflicts": false,
             "revs_limit": 5,
             "rev_cache_size": 1000,
-            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
-            {{ bucket_name1 }}
+            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}"
         }
     }
 }

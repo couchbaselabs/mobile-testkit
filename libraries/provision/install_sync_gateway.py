@@ -1,6 +1,7 @@
 import os
 import re
 import sys
+import time
 from optparse import OptionParser
 
 from keywords.ClusterKeywords import ClusterKeywords
@@ -8,7 +9,7 @@ from keywords.couchbaseserver import CouchbaseServer
 from keywords.exceptions import ProvisioningError
 from keywords.utils import log_info, log_warn, add_cbs_to_sg_config_server_field
 from libraries.provision.ansible_runner import AnsibleRunner
-from libraries.testkit.config import Config
+from libraries.testkit.config import Config, get_no_of_buckets_from_sgw_config
 from libraries.testkit.cluster import Cluster
 from keywords.constants import SYNC_GATEWAY_CERT
 from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_revs_limit, sg_ssl_enabled,\
@@ -150,8 +151,14 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
     if sync_gateway_config.build_flags != "":
         log_warn("\n\n!!! WARNING: You are building with flags: {} !!!\n\n".format(sync_gateway_config.build_flags))
 
-    bucket_names = get_buckets_from_sync_gateway_config(
-        sync_gateway_config.config_path)
+    cluster_helper = ClusterKeywords(cluster_config)
+    cluster_topology = cluster_helper.get_cluster_topology(cluster_config)
+    couchbase_server_url = cluster_topology["couchbase_servers"][0]
+
+    cb_server = CouchbaseServer(couchbase_server_url)
+    # bucket_names = cb_server.get_bucket_names()
+    # bucket_names = get_buckets_from_sync_gateway_config(sync_gateway_config.config_path)
+
     cbs_cert_path = os.path.join(os.getcwd(), "certs")
     ansible_runner = AnsibleRunner(cluster_config)
     config_path = os.path.abspath(sync_gateway_config.config_path)
@@ -159,7 +166,10 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
     couchbase_server_primary_node = add_cbs_to_sg_config_server_field(cluster_config)
     # Create buckets unless the user explicitly asked to skip this step
     if not sync_gateway_config.skip_bucketcreation:
+        bucket_names = get_no_of_buckets_from_sgw_config(sync_gateway_config.config_path)
+        print("sridevi----bucketnamess are ", bucket_names)
         create_server_buckets(cluster_config, sync_gateway_config)
+    bucket_names = cb_server.get_bucket_names()
 
     server_port = 8091
     server_scheme = "http"
@@ -172,7 +182,6 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
     # Shared vars
     playbook_vars = {
         "sync_gateway_config_filepath": config_path,
-        "username": "",
         "password": "",
         "certpath": "",
         "keypath": "",
@@ -193,7 +202,8 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
         "couchbase_server_primary_node": couchbase_server_primary_node,
         "delta_sync": ""
     }
-
+    username_list = ['username1', 'username2', 'username3', 'username4']
+    i = 0
     if get_sg_version(cluster_config) >= "2.1.0":
         logging_config = '"logging": {"debug": {"enabled": true}'
         try:
@@ -233,14 +243,21 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
             playbook_vars["x509_auth"] = True
             generate_x509_certs(cluster_config, bucket_names, sg_platform)
         else:
-            playbook_vars["username"] = '"username": "{}",'.format(
-                bucket_names[0])
+            for bucket_name in bucket_names:
+                playbook_vars[username_list[i]] = '"username": "{}",'.format(bucket_name)
+                i += 1
             playbook_vars["password"] = '"password": "password",'
     else:
         playbook_vars["logging"] = '"log": ["*"],'
-        playbook_vars["username"] = '"username": "{}",'.format(
-            bucket_names[0])
+        for bucket_name in bucket_names:
+            playbook_vars[username_list[i]] = '"username": "{}",'.format(bucket_name)
+            i += 1
         playbook_vars["password"] = '"password": "password",'
+    data_bucket_list = ['bucket_name1', 'bucket_name2', 'bucket_name3', 'bucket_name4']
+    i = 0
+    for bucket_name in bucket_names:
+        playbook_vars[data_bucket_list[i]] = '"bucket": "{}",'.format(bucket_name)
+        i += 1
 
     if is_cbs_ssl_enabled(cluster_config) and get_sg_version(cluster_config) >= "1.5.0":
         playbook_vars["server_scheme"] = "couchbases"
@@ -362,8 +379,15 @@ def create_server_buckets(cluster_config, sync_gateway_config):
     cb_server.delete_buckets()
 
     # find bucket names from sg config
-    bucket_names = get_buckets_from_sync_gateway_config(sync_gateway_config.config_path)
-
+    # bucket_name_set = []
+    bucket_names = []
+    # bucket_names = get_buckets_from_sync_gateway_config(sync_gateway_config.config_path)
+    number_of_buckets = get_no_of_buckets_from_sgw_config(sync_gateway_config.config_path)
+    for i in range(number_of_buckets):
+        bucket_name = "data-bucket-{}".format(time.time())
+        # bucket_name_set.append(bucket_name)
+        # bucket_name_set = list(set(bucket_name_set))
+        bucket_names.append(bucket_name)
     # create couchbase server buckets
     cb_server.create_buckets(bucket_names=bucket_names,
                              cluster_config=cluster_config,

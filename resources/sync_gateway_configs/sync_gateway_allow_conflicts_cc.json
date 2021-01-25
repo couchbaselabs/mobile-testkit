@@ -19,9 +19,9 @@
             {{ certpath }}
             {{ keypath }}
             {{ delta_sync }}
-            "allow_conflicts": true,
-            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             {{ bucket_name1 }}
+            "allow_conflicts": true,
+            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}"
         }
     }
 }

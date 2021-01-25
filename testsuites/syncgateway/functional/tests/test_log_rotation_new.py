@@ -52,8 +52,8 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name, 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
 
-    cbs_url = cluster_hosts["couchbase_servers"][0]
-    cb_server = couchbaseserver.CouchbaseServer(cbs_url)
+    # cbs_url = cluster_hosts["couchbase_servers"][0]
+    # cb_server = couchbaseserver.CouchbaseServer(cbs_url)
     # Stop sync_gateways
     log_info(">>> Stopping sync_gateway")
     sg_helper = SyncGateway()
@@ -97,7 +97,7 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name, 
         sg_helper.create_empty_file(cluster_config=cluster_conf, url=sg_one_url, file_name=file_name, file_size=file_size)
 
     # iterate 5 times to verify that every time we get new backup file with ~100MB
-    sg_helper.start_sync_gateways(cluster_config=cluster_conf, cb_server=cb_server, url=sg_one_url, config=temp_conf)
+    sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
 
     log_info("Start sending bunch of requests to syncgatway to have more logs")
     send_request_to_sgw(sg_one_url, sg_admin_url, remote_executor, sg_platform)
@@ -122,7 +122,7 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name, 
         file_size = 100 * 1024 * 1024
         sg_helper.create_empty_file(cluster_config=cluster_conf, url=sg_one_url, file_name=file_name, file_size=file_size)
 
-    sg_helper.start_sync_gateways(cluster_config=cluster_conf, cb_server=cb_server, url=sg_one_url, config=sg_conf)
+    sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=sg_conf)
 
     # Remove generated conf file
     os.remove(temp_conf)
@@ -161,7 +161,7 @@ def test_invalid_logKeys_string(params_from_base_test_setup, sg_conf_name):
     # read sample sg_conf
     sg_one_url = cluster_hosts["sync_gateways"][0]["public"]
 
-    data = load_sync_gateway_config(sg_conf, cluster_hosts["couchbase_servers"][0], cluster_conf)
+    data = load_sync_gateway_config(sg_conf, cluster_hosts["couchbase_servers"][0], cluster_conf, cb_server=cb_server)
 
     # set logKeys as string in config file
     data['logging']["console"]["log_keys"] = "ABCD"
@@ -221,7 +221,7 @@ def test_log_nondefault_logKeys_set(params_from_base_test_setup, sg_conf_name):
     cb_server = couchbaseserver.CouchbaseServer(cbs_url)
     # read sample sg_conf
     sg_one_url = cluster_hosts["sync_gateways"][0]["public"]
-    data = load_sync_gateway_config(sg_conf, cluster_hosts["couchbase_servers"][0], cluster_conf)
+    data = load_sync_gateway_config(sg_conf, cluster_hosts["couchbase_servers"][0], cluster_conf, cb_server=cb_server)
 
     # "FAKE" not valid area in logging
     data['logging']["console"]["log_keys"] = ["HTTP", "FAKE"]
@@ -302,7 +302,7 @@ def test_log_maxage_timestamp_ignored(params_from_base_test_setup, sg_conf_name)
         sg_helper.create_empty_file(cluster_config=cluster_conf, url=sg_one_url, file_name=file_name, file_size=file_size)
 
     # Read sample sg_conf
-    data = load_sync_gateway_config(sg_conf, cluster_hosts["couchbase_servers"][0], cluster_conf)
+    data = load_sync_gateway_config(sg_conf, cluster_hosts["couchbase_servers"][0], cluster_conf, cb_server=cb_server)
 
     # Set maxage to the minimum possible number for each log section
     for log in SG_LOGS_MAXAGE:
@@ -380,7 +380,7 @@ def test_log_rotation_invalid_path(params_from_base_test_setup, sg_conf_name):
     cbs_url = cluster_hosts["couchbase_servers"][0]
     cb_server = couchbaseserver.CouchbaseServer(cbs_url)
     # read sample sg_conf
-    data = load_sync_gateway_config(sg_conf, cluster_hosts["couchbase_servers"][0], cluster_conf)
+    data = load_sync_gateway_config(sg_conf, cluster_hosts["couchbase_servers"][0], cluster_conf, cb_server=cb_server)
 
     # set non existing logFilePath
     if sg_platform == "windows":
@@ -460,7 +460,7 @@ def test_log_200mb(params_from_base_test_setup, sg_conf_name):
         sg_helper.create_empty_file(cluster_config=cluster_conf, url=sg_one_url, file_name=file_name, file_size=file_size)
 
     # read sample sg_conf
-    data = load_sync_gateway_config(sg_conf, cluster_hosts["couchbase_servers"][0], cluster_conf)
+    data = load_sync_gateway_config(sg_conf, cluster_hosts["couchbase_servers"][0], cluster_conf, cb_server=cb_server)
 
     # Set maxsize
     for log in SG_LOGS:
@@ -532,7 +532,7 @@ def test_log_rotation_negative(params_from_base_test_setup, sg_conf_name):
     cbs_url = cluster_hosts["couchbase_servers"][0]
     cb_server = couchbaseserver.CouchbaseServer(cbs_url)
     # Read sample sg_conf
-    data = load_sync_gateway_config(sg_conf, cluster_hosts["couchbase_servers"][0], cluster_conf)
+    data = load_sync_gateway_config(sg_conf, cluster_hosts["couchbase_servers"][0], cluster_conf, cb_server=cb_server)
 
     # set negative values for rotation section
     SG_LOGS = ['sg_debug', 'sg_info', 'sg_warn', 'sg_error']
@@ -619,7 +619,7 @@ def test_log_maxbackups_0(params_from_base_test_setup, sg_conf_name):
     sg_helper.create_directory(cluster_config=cluster_conf, url=sg_one_url, dir_name="/tmp/sg_logs")
 
     # Read sample sg_conf
-    data = load_sync_gateway_config(sg_conf, cluster_hosts["couchbase_servers"][0], cluster_conf)
+    data = load_sync_gateway_config(sg_conf, cluster_hosts["couchbase_servers"][0], cluster_conf, cb_server=cb_server)
 
     # Generate log file with almost 1MB
     SG_LOGS = ['sg_debug', 'sg_error', 'sg_info', 'sg_warn']
@@ -687,7 +687,7 @@ def test_log_logLevel_invalid(params_from_base_test_setup, sg_conf_name):
     cbs_url = cluster_hosts["couchbase_servers"][0]
     cb_server = couchbaseserver.CouchbaseServer(cbs_url)
     # read sample sg_conf
-    data = load_sync_gateway_config(sg_conf, cluster_hosts["couchbase_servers"][0], cluster_conf)
+    data = load_sync_gateway_config(sg_conf, cluster_hosts["couchbase_servers"][0], cluster_conf, cb_server=cb_server)
 
     # 'debugFake' invalid value for logLevel
     data['logging']["console"]["log_level"] = "debugFake"
@@ -772,7 +772,7 @@ def test_rotated_logs_size_limit(params_from_base_test_setup, sg_conf_name):
         sg_helper.create_empty_file(cluster_config=cluster_conf, url=sg_one_url, file_name=file_name, file_size=file_size)
 
     # read sample sg_conf
-    data = load_sync_gateway_config(sg_conf, cluster_hosts["couchbase_servers"][0], cluster_conf)
+    data = load_sync_gateway_config(sg_conf, cluster_hosts["couchbase_servers"][0], cluster_conf, cb_server=cb_server)
 
     # Set maxsize
     for log in SG_LOGS:

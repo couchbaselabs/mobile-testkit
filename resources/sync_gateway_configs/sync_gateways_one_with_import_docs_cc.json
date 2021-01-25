@@ -28,7 +28,7 @@
             {{ delta_sync }}
             "import_backup_old_rev": true,
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
-            {{ bucket_name2 }},
+            {{ bucket_name2 }}
             {{ username2 }}
             "password": "password"
         }

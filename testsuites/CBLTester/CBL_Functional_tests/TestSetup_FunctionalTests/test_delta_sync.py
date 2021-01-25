@@ -1024,6 +1024,7 @@ def verify_delta_stats_counts(sg_client, sg_admin_url, replication_type, sg_db, 
 def enable_delta_sync(c, sg_config, cluster_config, mode, delta_sync_enabled):
     temp_cluster_config = copy_to_temp_conf(cluster_config, mode)
     persist_cluster_config_environment_prop(temp_cluster_config, 'delta_sync_enabled', delta_sync_enabled)
-    status = c.sync_gateways[0].restart(config=sg_config, cluster_config=temp_cluster_config)
+    # cb_server = c.servers[0]
+    status = c.sync_gateways[0].restart(config=sg_config, cluster=c, cluster_config=temp_cluster_config)
     assert status == 0, "Sync_gateway did not start"
     time.sleep(10)

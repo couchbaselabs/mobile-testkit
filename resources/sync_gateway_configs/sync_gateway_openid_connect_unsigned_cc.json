@@ -74,13 +74,13 @@
         {{ certpath }}
         {{ keypath }}
         {{ delta_sync }}
+        {{ bucket_name1 }}
         "unsupported": {
             "oidc_test_provider":{
                 "enabled":true
             }
         },
-         "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
-         {{ bucket_name1 }}
+         "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}"
       }
    }
 }

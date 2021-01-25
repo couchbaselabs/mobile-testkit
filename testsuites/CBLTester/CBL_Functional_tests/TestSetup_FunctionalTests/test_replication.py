@@ -1976,7 +1976,12 @@ def test_default_conflict_withConflicts_and_sgOffline(params_from_base_test_setu
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
     no_conflicts_enabled = params_from_base_test_setup["no_conflicts_enabled"]
+    # cluster_helper = ClusterKeywords(cluster_config)
+    # topology = cluster_helper.get_cluster_topology(cluster_config)
 
+    # cluster_servers = topology["couchbase_servers"]
+    # cbs_one_url = cluster_servers[0]
+    # cb_server = couchbaseserver.CouchbaseServer(cbs_one_url)
     channels = ["replication-channel"]
     num_of_docs = 10
     username = "autotest"
@@ -2025,7 +2030,7 @@ def test_default_conflict_withConflicts_and_sgOffline(params_from_base_test_setu
     db.cbl_delete_bulk_docs(cbl_db)
 
     # 7 . Start sg and wait until replication is idle
-    status = c.sync_gateways[0].start(sg_config)
+    status = c.sync_gateways[0].start(sg_config, c)
     assert status == 0, "sync_gateway did not start"
     count = 0
     while replicator.getActivitylevel(repl) == "offline" and count < 10:
