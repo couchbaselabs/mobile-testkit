@@ -18,6 +18,7 @@ from utilities.scan_logs import scan_for_pattern, unzip_log_files
 from keywords.MobileRestClient import MobileRestClient
 from keywords import document, attachment
 from libraries.provision.ansible_runner import AnsibleRunner
+from keywords.remoteexecutor import RemoteExecutor
 
 
 @pytest.mark.syncgateway
@@ -391,8 +392,8 @@ def test_log_content_verification(params_from_base_test_setup, remove_tmp_sg_red
     sg_conf_name = "sync_gateway_default"
     sg_db = "db"
     num_of_docs = 10
-    if get_sync_gateway_version(sg_ip)[0] < "2.1":
-        pytest.skip("log redaction feature not available for version < 2.1 ")
+    if get_sync_gateway_version(sg_ip)[0] < "2.8.1":
+        pytest.skip("This feature is not available for version below 2.8.1 ")
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
@@ -432,7 +433,14 @@ def test_log_content_verification(params_from_base_test_setup, remove_tmp_sg_red
         count += 1
     time.sleep(5)  # sleep until zip files created with sg collect rest end point
     pull_redacted_zip_file(cluster_config, sg_platform)
-    verify_all_logs_in_sgcollectzip()
+    if sg_platform == "windows":
+        json_cluster = load_cluster_config_json(cluster_config)
+        sghost_username = json_cluster["sync_gateways:vars"]["ansible_user"]
+        sghost_password = json_cluster["sync_gateways:vars"]["ansible_password"]
+        remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip, sg_platform, sghost_username, sghost_password)
+    else:
+        remote_executor = RemoteExecutor(cluster["sync_gateways"][0]["ip"])
+    verify_all_logs_in_sgcollectzip(remote_executor)
 
 
 def verify_log_redaction(cluster_config, log_redaction_level, mode):
@@ -591,7 +599,7 @@ def log_verification_withsgCollect(redaction_level, user, password, zip_file_nam
     assert os.path.isfile(nonredacted_file_name), "non redacted zip file is not generated"
 
 
-def verify_all_logs_in_sgcollectzip(zip_file_name=None):
+def verify_all_logs_in_sgcollectzip(remote_executor, zip_file_name=None):
     if zip_file_name is None:
         command = "ls /tmp/sg_redaction_logs/sg1/*.zip | awk -F'.zip' '{print $1}' | grep -o '[^/]*$'"
         zip_file_name = subprocess.check_output(command, shell=True)
@@ -613,7 +621,9 @@ def verify_all_logs_in_sgcollectzip(zip_file_name=None):
     sgcollect_zip_directory = sgcollect_zip_filename.split(".zip")[0]
     grep_command = "grep -E '(?:hostname: |hostname = |Host Name:(?:\s)*)(.*)' {}/*/sync_gateway.log".format(sgcollect_zip_directory)
     result_command = subprocess.check_output(grep_command, shell=True)
-    assert result_command.decode('utf-8').strip() == "kernel.hostname = localhost.localdomain", "did not get the right string from sync_gateway log file"
+    _, stdout, _ = remote_executor.execute("hostname")
+    assert_hostname = result_command.decode('utf-8').strip() == "kernel.hostname = {}".format(stdout[0].rstrip())
+    assert (result_command.decode('utf-8').strip() == "kernel.hostname = localhost.localdomain" or assert_hostname), "did not get the right string from sync_gateway log file"
 
 
 @pytest.fixture(scope="function")
