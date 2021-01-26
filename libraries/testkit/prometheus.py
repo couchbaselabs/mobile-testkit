@@ -7,18 +7,24 @@ import os
 import signal
 
 
-def start_prometheus(sg_ip):
+def start_prometheus(sg_ip, ssl=False):
     prometheus_file = os.getcwd() + "/libraries/provision/ansible/playbooks/prometheus.yml"
     commd = "sed -i -e 's/promotheus_sg_ip/" + sg_ip + "/g' " + prometheus_file
     subprocess.run([commd], shell=True)
+    if ssl:
+        commd = "sed -i -e 's/http/https/g' " + prometheus_file
+        subprocess.run([commd], shell=True)
     config_param = "--config.file=" + prometheus_file
     subprocess.Popen(["prometheus", config_param])
 
 
-def stop_prometheus(sg_ip):
+def stop_prometheus(sg_ip, ssl=False):
     prometheus_file = os.getcwd() + "/libraries/provision/ansible/playbooks/prometheus.yml"
     commd = "sed -i -e 's/" + sg_ip + "/promotheus_sg_ip/g' " + prometheus_file
     subprocess.run([commd], shell=True)
+    if ssl:
+        commd = "sed -i -e 's/https/http/g' " + prometheus_file
+        subprocess.run([commd], shell=True)
     for line in os.popen("ps ax | grep prometheus | grep -v grep"):
         fields = line.split()
         pid = fields[0]
@@ -27,8 +33,8 @@ def stop_prometheus(sg_ip):
 
 def is_prometheus_installed():
     try:
-        subprocess.run(['prometheus --version'], check=True, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
-    except subprocess.CalledProcessError:
+        subprocess.run(['prometheus --version'], check=True, shell=True)
+    except:
         return False
     return True
 

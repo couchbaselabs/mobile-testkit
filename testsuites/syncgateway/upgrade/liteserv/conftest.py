@@ -12,7 +12,6 @@ from keywords.SyncGateway import (sync_gateway_config_path_for_mode,
 from keywords.tklogging import Logging
 from keywords.utils import check_xattr_support, log_info, version_is_binary, clear_resources_pngs
 from libraries.NetworkUtils import NetworkUtils
-from libraries.testkit import cluster
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop
 from keywords.exceptions import LogScanningError
 from libraries.provision.ansible_runner import AnsibleRunner
@@ -424,15 +423,9 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     network_utils = NetworkUtils()
     network_utils.list_connections()
 
-    # Verify all sync_gateways and sg_accels are reachable
-    c = cluster.Cluster(cluster_config)
-    errors = c.verify_alive(mode)
-
     # Fetch logs
     logging_helper = Logging()
     logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=test_name)
-
-    assert len(errors) == 0
 
     # Scan logs
     # SG logs for panic, data race
