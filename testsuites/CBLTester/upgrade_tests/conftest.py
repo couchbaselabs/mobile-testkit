@@ -56,17 +56,17 @@ def pytest_addoption(parser):
                      default="password",
                      help="Provide password for encrypted db")
 
-    parser.addoption("--liteserv-host",
-                     action="store",
-                     help="liteserv-host: the host to start liteserv on")
-
-    parser.addoption("--liteserv-platform",
+    parser.addoption("--second-liteserv-platform",
                      action="store",
                      help="liteserv-platform: the platform to assign to the liteserv")
 
-    parser.addoption("--liteserv-host",
+    parser.addoption("--second-liteserv-host",
                      action="store",
                      help="liteserv-host: the host to start liteserv on")
+
+    parser.addoption("--second-liteserv-version",
+                     action="store",
+                     help="liteserv-version: the version to download / install for the liteserv")
 
     parser.addoption("--liteserv-port",
                      action="store",
