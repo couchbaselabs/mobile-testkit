@@ -361,7 +361,6 @@ def params_from_base_suite_setup(request):
         "utils_obj": utils_obj,
         "community_enabled": community_enabled,
         "debug_mode": debug_mode,
-        "testserver": testserver,
         "test_name_cp": test_name_cp,
         "sg_url": sg_url,
         "second_liteserv_host": second_liteserv_host,

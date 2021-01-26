@@ -467,14 +467,12 @@ def test_switch_dbs_with_two_cbl_platforms(params_from_base_suite_setup):
 
     cbl_db_name = "upgrade_db" + str(time.time())
     # Create CBL database
-
     log_info("Creating a Database {}".format(cbl_db_name))
     cbl_db_obj = db.create(cbl_db_name)
 
     c = cluster.Cluster(config=cluster_config)
     sg_config = sync_gateway_config_path_for_mode("custom_sync/grant_access_one", mode)
     c.reset(sg_config_path=sg_config)
-
     channels = ["ABC"]
 
     sg_client = MobileRestClient()
@@ -517,7 +515,6 @@ def test_switch_dbs_with_two_cbl_platforms(params_from_base_suite_setup):
     for doc in cbl_doc_ids:
         assert doc in sg_ids
     prebuilt_db_path = db.getPath(cbl_db_obj)
-
     log_info("prebuilt_db_path", prebuilt_db_path)
 
     testserver2 = TestServerFactory.create(platform=second_liteserv_platform,
@@ -546,7 +543,6 @@ def test_switch_dbs_with_two_cbl_platforms(params_from_base_suite_setup):
     db = Database(base_url)
     temp_db_name = "temp_db_name"
     cbl2_db_obj = db.create(temp_db_name)
-    # upgraded_cbl_doc_count = db.getCount(cbl2_db_obj)
 
     new_db_path = db.getPath(cbl2_db_obj)
     db.deleteDB(cbl2_db_obj)
@@ -560,7 +556,6 @@ def test_switch_dbs_with_two_cbl_platforms(params_from_base_suite_setup):
                                        channels=channels)
 
     second_cbl_doc_count = db.getCount(new_cbl_db_obj)
-
     repl = replicator.create(repl_config)
     log_info("Starting replicator")
     replicator.start(repl)
@@ -569,3 +564,4 @@ def test_switch_dbs_with_two_cbl_platforms(params_from_base_suite_setup):
         repl) == 0, "Replicator getCompleted doc should be zero, it shouldn't start from zero"
     assert second_cbl_doc_count == cbl_doc_count, "After moving the DBs docs are updating "
     replicator.stop(repl)
+    testserver2.stop()
