@@ -365,13 +365,10 @@ def test_upgrade_testsever_app(params_from_base_suite_setup):
     """
         @summary:
         Added to address issues like CBL-1406
-        1. Create docs in SG
-        2. Verify CBL docs got replicated to SG
-        3. Verify sg docs not replicated to CBL
-        4. Start second CBL (use different platform)
-        5. Copy DB from 1st CBL to 2nd CBL
-        6. Start the same SG replicator
-        7. Verify docs are not replicated again in the 2nd CBL
+        1. Create docs in cbl
+        2. Upgrade the cbl to any new version
+        3. Verify that doc count is marching with before the upgrade
+        4. Verify after the upgrade we are able to add more docs
 
     """
 
