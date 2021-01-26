@@ -60,6 +60,14 @@ def pytest_addoption(parser):
                      action="store",
                      help="liteserv-host: the host to start liteserv on")
 
+    parser.addoption("--liteserv-platform",
+                     action="store",
+                     help="liteserv-platform: the platform to assign to the liteserv")
+
+    parser.addoption("--liteserv-host",
+                     action="store",
+                     help="liteserv-host: the host to start liteserv on")
+
     parser.addoption("--liteserv-port",
                      action="store",
                      help="liteserv-port: the port to assign to liteserv")
@@ -145,6 +153,9 @@ def params_from_base_suite_setup(request):
     delta_sync_enabled = request.config.getoption("--delta-sync")
     enable_file_logging = request.config.getoption("--enable-file-logging")
     enable_upgrade_app = request.config.getoption("--enable-upgrade-app")
+    second_liteserv_host = request.config.getoption("--sencond-liteserv-host")
+    second_liteserv_version = request.config.getoption("--second-liteserv-version")
+    second_liteserv_platform = request.config.getoption("--second-iteserv-platform")
 
     test_name = request.node.name
     if enable_upgrade_app:
@@ -351,13 +362,17 @@ def params_from_base_suite_setup(request):
         "community_enabled": community_enabled,
         "debug_mode": debug_mode,
         "testserver": testserver,
-        "test_name_cp": test_name_cp
+        "test_name_cp": test_name_cp,
+        "sg_url": sg_url,
+        "second_liteserv_host": second_liteserv_host,
+        "second_liteserv_version": second_liteserv_version,
+        "second_liteserv_platform": second_liteserv_platform
     }
 
     # Flush all the memory contents on the server app
     log_info("Flushing server memory")
     utils_obj.flushMemory()
-    log_info("Stopping the test server per suite")
-    testserver.stop()
-    # Delete png files under resources/data
+    # log_info("Stopping the test server per suite")
+    # testserver.stop()
+    # # Delete png files under resources/data
     clear_resources_pngs()
