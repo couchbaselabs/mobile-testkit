@@ -372,7 +372,7 @@ def params_from_base_suite_setup(request):
     # Flush all the memory contents on the server app
     log_info("Flushing server memory")
     utils_obj.flushMemory()
-    # log_info("Stopping the test server per suite")
-    # testserver.stop()
-    # # Delete png files under resources/data
+    log_info("Stopping the test server per suite")
+    testserver.stop()
+    # Delete png files under resources/data
     clear_resources_pngs()
