@@ -569,4 +569,3 @@ def test_switch_dbs_with_two_cbl_platforms(params_from_base_suite_setup):
         repl) == 0, "Replicator getCompleted doc should be zero, it shouldn't start from zero"
     assert second_cbl_doc_count == cbl_doc_count, "After moving the DBs docs are updating "
     replicator.stop(repl)
-
