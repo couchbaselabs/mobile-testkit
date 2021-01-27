@@ -21,7 +21,10 @@ def get_file_paths_with_extension(directory, extension):
 def unzip_log_files(directory):
     """ Scan directory recursively for .zip files and unzip them to a folder with the same name """
 
-    zip_files = get_file_paths_with_extension(directory, '.zip')
+    if '.zip' not in directory:
+        zip_files = get_file_paths_with_extension(directory, '.zip')
+    else:
+        zip_files = [directory]
     for zip_file in zip_files:
         zip_file_extract_dir = zip_file.replace('.zip', '')
         log_info('Unzipping: {}'.format(zip_file))

@@ -10,7 +10,7 @@ from libraries.provision.ansible_runner import AnsibleRunner
 
 
 class TestServerJavaWS(TestServerBase):
-    def __init__(self, version_build, host, port, community_enabled=None, debug_mode=False, platform="javaws-centos"):
+    def __init__(self, version_build, host, port, debug_mode=None, platform="javaws-centos", community_enabled=None):
         super(TestServerJavaWS, self).__init__(version_build, host, port)
         self.platform = platform
         self.released_version = {
@@ -20,18 +20,29 @@ class TestServerJavaWS(TestServerBase):
         self.version_build = version_build
         self.version, self.build = version_and_build(self.version_build)
 
+        if community_enabled:
+            self.build_type = "community"
+        else:
+            self.build_type = "enterprise"
         if self.build is None:
-            self.package_name = "CBLTestServer-Java-WS-{}-enterprise".format(self.version)
+            self.package_name = "CBLTestServer-Java-WS-{}-{}".format(self.build_type, self.version)
             self.download_url = "{}/couchbase-lite-java/{}/{}.war".format(RELEASED_BUILDS, self.version, self.package_name)
-            self.cbl_core_lib_name = "couchbase-lite-java-ee-{}".format(self.version)
+            if community_enabled:
+                self.cbl_core_lib_name = "couchbase-lite-java-{}".format(self.version)
+            else:
+                self.cbl_core_lib_name = "couchbase-lite-java-ee-{}".format(self.version)
+
             self.download_corelib_url = "{}/couchbase-lite-java/{}/{}/{}.zip".format(RELEASED_BUILDS, self.version, self.build, self.cbl_core_lib_name)
         else:
-            self.package_name = "CBLTestServer-Java-WS-{}-enterprise".format(self.version_build)
+            self.package_name = "CBLTestServer-Java-WS-{}-{}".format(self.version_build, self.build_type)
             self.download_url = "{}/couchbase-lite-java/{}/{}/{}.war".format(LATEST_BUILDS, self.version, self.build, self.package_name)
-            self.cbl_core_lib_name = "couchbase-lite-java-ee-{}-{}".format(self.version, self.build)
+            if community_enabled:
+                self.cbl_core_lib_name = "couchbase-lite-java-{}-{}".format(self.version, self.build)
+            else:
+                self.cbl_core_lib_name = "couchbase-lite-java-ee-{}-{}".format(self.version, self.build)
             self.download_corelib_url = "{}/couchbase-lite-java/{}/{}/{}.zip".format(LATEST_BUILDS, self.version, self.build, self.cbl_core_lib_name)
 
-        self.build_name = "TestServer-java-WS-{}".format(self.version_build)
+        self.build_name = "TestServer-java-WS-{}-{}".format(self.build_type, self.version_build)
 
         log_info("package_name: {}".format(self.package_name))
         log_info("download_url: {}".format(self.download_url))

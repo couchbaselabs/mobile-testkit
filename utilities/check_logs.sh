@@ -5,19 +5,19 @@ SGA_LOG_FILE="/home/sg_accel/logs/sg_accel_error.log"
 SYS_LOG="/var/log/messages"
 
 # Check OOM logs in sys log
-if [ -f $SYS_LOG ]; then
-	OUT=$(grep -i "Out of memory: Kill process" $SYS_LOG | grep -i sync_gateway)
-	if [ ! -z "$OUT" ]; then
-		echo "Found Out of memory errors for sync_gateway in $SYS_LOG"
-		exit 1
-	fi
+# if [ -f $SYS_LOG ]; then
+# 	OUT=$(grep -i "Out of memory: Kill process" $SYS_LOG | grep -i sync_gateway)
+# 	if [ ! -z "$OUT" ]; then
+# 		echo "Found Out of memory errors for sync_gateway in $SYS_LOG"
+# 		exit 1
+# 	fi
 
-	OUT=$(grep -i "Out of memory: Kill process" $SYS_LOG | grep -i sg_accel)
-	if [ ! -z "$OUT" ]; then
-		echo "Found Out of memory errors for sg_accel in $SYS_LOG"
-		exit 1
-	fi
-fi
+# 	OUT=$(grep -i "Out of memory: Kill process" $SYS_LOG | grep -i sg_accel)
+# 	if [ ! -z "$OUT" ]; then
+# 		echo "Found Out of memory errors for sg_accel in $SYS_LOG"
+# 		exit 1
+# 	fi
+# fi
 
 # Array of error keys we look for in SG/SGAccel logs
 SG_ERRORS=('panic:' 'data race' 'SIGSEGV' 'nil pointer dereference')

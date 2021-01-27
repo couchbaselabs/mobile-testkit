@@ -1026,6 +1026,40 @@ class CouchbaseServer:
                         col_id = collection_1["uid"]
         return col_id
 
+    def disable_replicas(self, bucket):
+        """ Disable replicas which needed for transaction app testing"""
+        data = {
+            "replicaNumber": 0
+        }
+        resp = self._session.post("{}/pools/default/buckets/{}".format(self.url, bucket), data=data)
+        log_r(resp)
+        resp.raise_for_status()
+
+    def rebalance_server(self, cluster_servers):
+        # Now hit the rebalance rest api
+        known_nodes = "knownNodes="
+        for server in cluster_servers:
+            if "https" in server:
+                server = server.replace("https://", "")
+                server = server.replace(":18091", "")
+            else:
+                server = server.replace("http://", "")
+                server = server.replace(":8091", "")
+            known_nodes += "ns_1@{},".format(server)
+
+        # Add server_to_remove to ejected_node
+        data = known_nodes
+        resp = self._session.post(
+            "{}/controller/rebalance".format(self.url),
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+            data=data
+        )
+        log_r(resp)
+        resp.raise_for_status()
+
+        self._wait_for_rebalance_complete()
+        return True
+
 
 def get_sdk_client_with_bucket(ssl_enabled, cluster, cbs_ip, cbs_bucket):
     if ssl_enabled and cluster.ipv6:
