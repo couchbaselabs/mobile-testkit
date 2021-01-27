@@ -4,6 +4,7 @@
     {{ sslcert }}
     {{ sslkey }}
     {{ logging }}
+    {{ prometheus }}
     "databases":{
         "sg_db1":{
             {{ autoimport }}

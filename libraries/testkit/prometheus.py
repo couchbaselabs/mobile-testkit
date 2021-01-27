@@ -28,7 +28,8 @@ def stop_prometheus(sg_ip, ssl=False):
     for line in os.popen("ps ax | grep prometheus | grep -v grep"):
         fields = line.split()
         pid = fields[0]
-    os.kill(int(pid), signal.SIGKILL)
+        if pid:
+            os.kill(int(pid), signal.SIGKILL)
 
 
 def is_prometheus_installed():
