@@ -56,6 +56,10 @@ def pytest_addoption(parser):
                      default="password",
                      help="Provide password for encrypted db")
 
+    parser.addoption("--liteserv-host",
+                     action="store",
+                     help="liteserv-host: the host to start liteserv on")
+
     parser.addoption("--second-liteserv-platform",
                      action="store",
                      help="liteserv-platform: the platform to assign to the liteserv")
@@ -153,9 +157,9 @@ def params_from_base_suite_setup(request):
     delta_sync_enabled = request.config.getoption("--delta-sync")
     enable_file_logging = request.config.getoption("--enable-file-logging")
     enable_upgrade_app = request.config.getoption("--enable-upgrade-app")
-    second_liteserv_host = request.config.getoption("--sencond-liteserv-host")
+    second_liteserv_host = request.config.getoption("--second-liteserv-host")
     second_liteserv_version = request.config.getoption("--second-liteserv-version")
-    second_liteserv_platform = request.config.getoption("--second-iteserv-platform")
+    second_liteserv_platform = request.config.getoption("--second-liteserv-platform")
 
     test_name = request.node.name
     if enable_upgrade_app:
