@@ -434,12 +434,11 @@ def test_switch_dbs_with_two_cbl_platforms(params_from_base_suite_setup):
         @summary:
         Added to address issues like CBL-1515
         1. Create docs in SG
-        2. Verify CBL docs got replicated to SG
-        3. Verify sg docs not replicated to CBL
-        4. Start second CBL (use different platform)
-        5. Copy DB from 1st CBL to 2nd CBL
-        6. Start the same SG replicator
-        7. Verify docs are not replicated again in the 2nd CBL
+        2. Verify sg docs replicated to CBL
+        3. Start second CBL (use different platform)
+        4. Copy DB from 1st CBL to 2nd CBL
+        5. Start the same SG replicator
+        6. Verify docs are not replicated again in the 2nd CBL
 
     """
     sg_db = "db"
@@ -477,7 +476,7 @@ def test_switch_dbs_with_two_cbl_platforms(params_from_base_suite_setup):
 
     sg_client = MobileRestClient()
 
-    # Add docs in SG
+    # 1. Add docs in SG
     sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
     cookie, session = sg_client.create_session(sg_admin_url, sg_db, "autotest")
     auth_session = cookie, session
@@ -489,18 +488,11 @@ def test_switch_dbs_with_two_cbl_platforms(params_from_base_suite_setup):
     # 2. Pull replication to CBL
     authenticator = Authenticator(base_url)
     replicator_authenticator = authenticator.authentication(session, cookie, authentication_type="session")
+    repl = replicator.configure_and_replicate(
+        source_db=cbl_db_obj, replicator_authenticator=replicator_authenticator, target_url=sg_blip_url,
+        replication_type="pull", continuous=True, channels=channels)
 
-    repl_config = replicator.configure(cbl_db_obj, target_url=sg_blip_url, replication_type="pull",
-                                       continuous=True, replicator_authenticator=replicator_authenticator,
-                                       channels=channels)
-    repl = replicator.create(repl_config)
-    log_info("Starting replicator")
-    replicator.start(repl)
-    log_info("Waiting for replicator to go idle")
-    replicator.wait_until_replicator_idle(repl)
     log_info(replicator.getCompleted(repl), "replicator getCompleted should be 20")
-    replicator.stop(repl)
-
     sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db)
 
     # Verify database doc counts
@@ -517,6 +509,7 @@ def test_switch_dbs_with_two_cbl_platforms(params_from_base_suite_setup):
     prebuilt_db_path = db.getPath(cbl_db_obj)
     log_info("prebuilt_db_path", prebuilt_db_path)
 
+    # 3. Start second CBL (use different platform)
     testserver2 = TestServerFactory.create(platform=second_liteserv_platform,
                                            version_build=second_liteserv_version,
                                            host=second_liteserv_host,
@@ -539,27 +532,24 @@ def test_switch_dbs_with_two_cbl_platforms(params_from_base_suite_setup):
         testserver2.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver2).__name__,
                                                         test_name_cp,
                                                         datetime.datetime.now()))
-
+    # 4. Copy DB from 1st CBL to 2nd CBL
     db = Database(base_url)
     temp_db_name = "temp_db_name"
     cbl2_db_obj = db.create(temp_db_name)
-
     new_db_path = db.getPath(cbl2_db_obj)
     db.deleteDB(cbl2_db_obj)
     assert "Copied" == utils_obj.copy_files(prebuilt_db_path, new_db_path)
     new_cbl_db_obj = db.create(cbl_db_name)
 
+    # 5. Start the same SG replicator
     authenticator = Authenticator(base_url)
     replicator_authenticator = authenticator.authentication(session, cookie, authentication_type="session")
-    repl_config = replicator.configure(new_cbl_db_obj, target_url=sg_blip_url, replication_type="pull",
-                                       continuous=True, replicator_authenticator=replicator_authenticator,
-                                       channels=channels)
-
     second_cbl_doc_count = db.getCount(new_cbl_db_obj)
-    repl = replicator.create(repl_config)
-    log_info("Starting replicator")
-    replicator.start(repl)
-    replicator.wait_until_replicator_idle(repl)
+    repl = replicator.configure_and_replicate(
+        source_db=new_cbl_db_obj, replicator_authenticator=replicator_authenticator, target_url=sg_blip_url,
+        replication_type="pull", continuous=True, channels=channels)
+
+    # 6. Verify docs are not replicated again in the 2nd CBL
     assert replicator.getCompleted(
         repl) == 0, "Replicator getCompleted doc should be zero, it shouldn't start from zero"
     assert second_cbl_doc_count == cbl_doc_count, "After moving the DBs docs are updating "
