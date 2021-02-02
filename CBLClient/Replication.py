@@ -29,7 +29,7 @@ class Replication(object):
                   replication_type="push_pull", continuous=False,
                   push_filter=False, pull_filter=False, channels=None,
                   documentIDs=None, replicator_authenticator=None,
-                  headers=None, filter_callback_func='', conflict_resolver=""):
+                  headers=None, filter_callback_func='', conflict_resolver="", heartbeat=""):
         args = Args()
         args.setMemoryPointer("source_db", source_db)
         args.setBoolean("continuous", continuous)
@@ -37,6 +37,8 @@ class Replication(object):
         args.setBoolean("pull_filter", pull_filter)
         args.setString("filter_callback_func", filter_callback_func)
         args.setString("conflict_resolver", conflict_resolver)
+        if heartbeat != "":
+            args.setString("heartbeat", heartbeat)
         if channels is not None:
             args.setArray("channels", channels)
 
@@ -278,13 +280,13 @@ class Replication(object):
         return self._client.invokeMethod("replicator_changeListenerGetChanges", args)
 
     def configure_and_replicate(self, source_db, replicator_authenticator=None, target_db=None, target_url=None, replication_type="push_pull", continuous=True,
-                                channels=None, err_check=True, wait_until_idle=True):
+                                channels=None, err_check=True, wait_until_idle=True, heartbeat=""):
         if target_db is None:
             repl_config = self.configure(source_db, target_url=target_url, continuous=continuous,
-                                         replication_type=replication_type, channels=channels, replicator_authenticator=replicator_authenticator)
+                                         replication_type=replication_type, channels=channels, replicator_authenticator=replicator_authenticator, heartbeat=heartbeat)
         else:
             repl_config = self.configure(source_db, target_db=target_db, continuous=continuous,
-                                         replication_type=replication_type, channels=channels, replicator_authenticator=replicator_authenticator)
+                                         replication_type=replication_type, channels=channels, replicator_authenticator=replicator_authenticator, heartbeat=heartbeat)
         repl = self.create(repl_config)
         self.start(repl)
         if wait_until_idle:

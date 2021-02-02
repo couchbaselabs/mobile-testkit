@@ -54,8 +54,9 @@ http {
             proxy_http_version      1.1;
             keepalive_requests      1000;
             keepalive_timeout       600s;
-            proxy_send_timeout      600s;
-            proxy_read_timeout      600s;
+            {{ proxy_socket_keepalive}}
+            {{ proxy_send_timeout }}
+            {{ proxy_read_timeout }}
             proxy_set_header        Upgrade $http_upgrade;
             proxy_set_header        Connection "Upgrade";
         }

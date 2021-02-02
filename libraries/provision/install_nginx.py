@@ -6,7 +6,7 @@ from utilities.cluster_config_utils import is_load_balancer_with_two_clusters_en
 from utilities.cluster_config_utils import load_cluster_config_json
 
 
-def install_nginx(cluster_config):
+def install_nginx(cluster_config, customize_proxy=False):
     """
     Deploys nginx to nodes with the load_balancer tag
 
@@ -93,13 +93,25 @@ def install_nginx(cluster_config):
         log_info("Upstream definition: {}".format(upstream_definition))
         log_info("Upstream definition admin: {}".format(upstream_definition_admin))
 
-        status = ansible_runner.run_ansible_playbook(
-            "install-nginx.yml",
-            extra_vars={
-                "upstream_sync_gatways": upstream_definition,
-                "upstream_sync_gatways_admin": upstream_definition_admin
-            }
-        )
+        if customize_proxy:
+            status = ansible_runner.run_ansible_playbook(
+                "install-nginx.yml",
+                extra_vars={
+                    "upstream_sync_gatways": upstream_definition,
+                    "upstream_sync_gatways_admin": upstream_definition_admin,
+                    "proxy_send_timeout": "proxy_send_timeout 60s;",
+                    "proxy_read_timeout": "proxy_read_timeout 60s;",
+                    "proxy_socket_keepalive": "proxy_socket_keepalive on;"
+                }
+            )
+        else:
+            status = ansible_runner.run_ansible_playbook(
+                "install-nginx.yml",
+                extra_vars={
+                    "upstream_sync_gatways": upstream_definition,
+                    "upstream_sync_gatways_admin": upstream_definition_admin
+                }
+            )
 
         assert status == 0, "Failed to install nginx! on lb1"
 

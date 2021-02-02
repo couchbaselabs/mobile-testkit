@@ -40,6 +40,11 @@ def pytest_addoption(parser):
                      action="store",
                      help="Sync Gateway mode to run the test in, 'cc' for channel cache or 'di' for distributed index")
 
+    parser.addoption("--cluster-config",
+                     action="store",
+                     help="Cluster config name, default is base",
+                     default="base")
+
     parser.addoption("--skip-provisioning",
                      action="store_true",
                      help="Skip cluster provisioning at setup",
@@ -185,6 +190,7 @@ def params_from_base_suite_setup(request):
     use_local_testserver = request.config.getoption("--use-local-testserver")
     sync_gateway_version = request.config.getoption("--sync-gateway-version")
     mode = request.config.getoption("--mode")
+    cluster_config_name = request.config.getoption("--cluster-config")
     server_version = request.config.getoption("--server-version")
     enable_sample_bucket = request.config.getoption("--enable-sample-bucket")
     xattrs_enabled = request.config.getoption("--xattrs")
@@ -243,9 +249,9 @@ def params_from_base_suite_setup(request):
         if sg_lb:
             cluster_config = "{}/ci_lb_{}".format(CLUSTER_CONFIGS_DIR, mode)
     else:
-        cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, mode)
+        cluster_config = "{}/{}_{}".format(CLUSTER_CONFIGS_DIR, cluster_config_name, mode)
         if sg_lb:
-            cluster_config = "{}/base_lb_{}".format(CLUSTER_CONFIGS_DIR, mode)
+            cluster_config = "{}/{}_lb_{}".format(CLUSTER_CONFIGS_DIR, cluster_config_name, mode)
 
     cluster_utils = ClusterKeywords(cluster_config)
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
