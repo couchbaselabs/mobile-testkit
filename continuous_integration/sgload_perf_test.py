@@ -22,24 +22,24 @@ ScriptEnv = collections.namedtuple(
     'ScriptEnv',
     'remote_user',
     'pools_json'
-    + 'sg_deploy_type'
-    + 'install_deps_flag'
-    + 'cluster_config'
-    + 'provision_or_reset'
-    + 'couchbase_server_version'
-    + 'sync_gateway_version'
-    + 'sync_gateway_commit'
-    + 'sync_gateway_config_file'
-    + 'sgload_num_readers'
-    + 'sgload_num_writers'
-    + 'sgload_num_updaters'
-    + 'sgload_num_revs_per_doc'
-    + 'sgload_num_docs'
-    + 'sgload_num_channels'
-    + 'sgload_batch_size'
-    + 'sgload_writer_delay_ms'
-    + 'sgload_log_level'
-    + 'influxdb_host',
+    # + 'sg_deploy_type'
+    # + 'install_deps_flag'
+    # + 'cluster_config'
+    # + 'provision_or_reset'
+    # + 'couchbase_server_version'
+    # + 'sync_gateway_version'
+    # + 'sync_gateway_commit'
+    # + 'sync_gateway_config_file'
+    # + 'sgload_num_readers'
+    # + 'sgload_num_writers'
+    # + 'sgload_num_updaters'
+    # + 'sgload_num_revs_per_doc'
+    # + 'sgload_num_docs'
+    # + 'sgload_num_channels'
+    # + 'sgload_batch_size'
+    # + 'sgload_writer_delay_ms'
+    # + 'sgload_log_level'
+    # + 'influxdb_host',
 )
 
 RESOURCES_POOL_FILENAME = "resources/pool.json"
