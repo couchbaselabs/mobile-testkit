@@ -143,6 +143,11 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="magma-storage: Enable magma storage on couchbase server")
 
+    parser.addoption("--hide-product-version",
+                     action="store_true",
+                     help="Hides SGW product version when you hit SGW url",
+                     default=False)
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -188,6 +193,7 @@ def params_from_base_suite_setup(request):
     device_enabled = request.config.getoption("--device")
     cbs_toy_build = request.config.getoption("--cbs-upgrade-toybuild")
     magma_storage_enabled = request.config.getoption("--magma-storage")
+    hide_product_version = request.config.getoption("--hide-product-version")
 
     test_name = request.node.name
 
@@ -218,6 +224,7 @@ def params_from_base_suite_setup(request):
     log_info("liteserv_platform: {}".format(liteserv_platform))
     log_info("device_enabled: {}".format(device_enabled))
     log_info("cbs_toy_build: {}".format(cbs_toy_build))
+    log_info("hide_product_version: {}".format(hide_product_version))
 
     # if xattrs is specified but the post upgrade SG version doesn't support, don't continue
     if upgraded_xattrs_enabled and version_is_binary(sync_gateway_upgraded_version):
@@ -336,6 +343,13 @@ def params_from_base_suite_setup(request):
     else:
         log_info("Running without magma storage")
         persist_cluster_config_environment_prop(cluster_config, 'magma_storage_enabled', False, False)
+
+    if hide_product_version:
+        log_info("Suppress the SGW product Version")
+        persist_cluster_config_environment_prop(cluster_config, 'hide_product_version', True)
+    else:
+        log_info("Running without suppress SGW product Version")
+        persist_cluster_config_environment_prop(cluster_config, 'hide_product_version', False)
 
     persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "centos", False)
 

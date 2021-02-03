@@ -421,7 +421,7 @@ class SyncGateway(object):
             "couchbase_server_primary_node": couchbase_server_primary_node,
             "delta_sync": "",
             "prometheus": "",
-            "hide_prod_version": ""
+            "hide_product_version": ""
         }
         sg_platform = get_sg_platform(cluster_config)
         if get_sg_version(cluster_config) >= "2.1.0":
@@ -508,7 +508,7 @@ class SyncGateway(object):
             playbook_vars["prometheus"] = '"metricsInterface": ":4986",'
 
         if is_hide_prod_version_enabled(cluster_config) and get_sg_version(cluster_config) >= "2.8.1":
-            playbook_vars["hide_prod_version"] = '"hide_product_version": true,'
+            playbook_vars["hide_product_version"] = '"hide_product_version": true,'
 
         if url is not None:
             target = hostname_for_url(cluster_config, url)
@@ -648,7 +648,7 @@ class SyncGateway(object):
             "couchbase_server_primary_node": couchbase_server_primary_node,
             "delta_sync": "",
             "prometheus": "",
-            "hide_prod_version": ""
+            "hide_product_version": ""
         }
 
         sync_gateway_base_url, sync_gateway_package_name, sg_accel_package_name = sg_config.sync_gateway_base_url_and_package()
@@ -731,7 +731,7 @@ class SyncGateway(object):
             playbook_vars["prometheus"] = '"metricsInterface": ":4986",'
 
         if is_hide_prod_version_enabled(cluster_config) and get_sg_version(cluster_config) >= "2.8.1":
-            playbook_vars["hide_prod_version"] = '"hide_product_version": true,'
+            playbook_vars["hide_product_version"] = '"hide_product_version": true,'
 
         if url is not None:
             target = hostname_for_url(cluster_config, url)
@@ -793,7 +793,7 @@ class SyncGateway(object):
             "no_conflicts": "",
             "delta_sync": "",
             "prometheus": "",
-            "hide_prod_version": ""
+            "hide_product_version": ""
         }
 
         playbook_vars["username"] = '"username": "{}",'.format(bucket_names[0])
@@ -866,7 +866,7 @@ class SyncGateway(object):
             playbook_vars["prometheus"] = '"metricsInterface": ":4986",'
 
         if is_hide_prod_version_enabled(cluster_config) and get_sg_version(cluster_config) >= "2.8.1":
-            playbook_vars["hide_prod_version"] = '"hide_product_version": true,'
+            playbook_vars["hide_product_version"] = '"hide_product_version": true,'
 
         # Deploy config
         if url is not None:

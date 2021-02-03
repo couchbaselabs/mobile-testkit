@@ -185,6 +185,7 @@ def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_
     password = 'validkey'
     sa_directory = None
     sa_host = None
+    salt_value = None
     cbs_ce_version = params_from_base_test_setup["cbs_ce"]
     if get_sync_gateway_version(sg_ip)[0] < "2.1":
         pytest.skip("log redaction feature not available for version < 2.1 ")
@@ -275,7 +276,7 @@ def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_
 
     pull_redacted_zip_file(temp_cluster_config, sg_platform, directory, sa_directory)
     # Verify files got redacted in sg collected files
-    log_verification_withsgCollect(redaction_level, user_name, password)
+    log_verification_withsgCollect(redaction_level, user_name, password, redaction_salt=salt_value)
 
 
 @pytest.mark.syncgateway
@@ -568,7 +569,19 @@ def verify_udTags_in_zippedFile(zip_file_name):
                 assert False, "Hashing failed for Line: " + key
 
 
-def log_verification_withsgCollect(redaction_level, user, password, zip_file_name=None):
+def verify_saltvalue_in_redacted_zip_file(zip_file_name, salt_value):
+    if os.path.isdir("/tmp/sg_redaction_logs"):
+
+        redacted_zip_file = "/tmp/sg_redaction_logs/sg1/{}-redacted.zip".format(zip_file_name)
+        zipgrep_command = "zipgrep -n -o \"{}\" ".format(salt_value)
+        command = zipgrep_command + redacted_zip_file + r" | cut -f2 -d/ | cut -f1 -d\<"
+
+        line_num_output = subprocess.check_output(command, shell=True)
+        ln_output_list = line_num_output.splitlines()
+        assert len(ln_output_list) == 0, "salt value shows up in the log files{}".format(line_num_output)
+
+
+def log_verification_withsgCollect(redaction_level, user, password, zip_file_name=None, redaction_salt=None):
     if zip_file_name is None:
         if redaction_level is None:
             command = "ls /tmp/sg_redaction_logs/sg1/*.zip | awk -F'.zip' '{print $1}' | grep -o '[^/]*$'"
@@ -582,10 +595,11 @@ def log_verification_withsgCollect(redaction_level, user, password, zip_file_nam
     nonredacted_file_name = "/tmp/sg_redaction_logs/sg1/{}.zip".format(zip_file_name)
     if redaction_level == "partial":
         assert os.path.isfile(redacted_file_name), "redacted file is not generated"
-
         verify_udTags_in_zippedFile(zip_file_name)
         verify_pattern_redacted(redacted_file_name, user)
         verify_pattern_redacted(redacted_file_name, password)
+        if redaction_salt is not None:
+            verify_saltvalue_in_redacted_zip_file(zip_file_name, redaction_salt)
     else:
         assert not os.path.isfile(redacted_file_name), "redacted file is generated for redaction level None"
     assert os.path.isfile(nonredacted_file_name), "non redacted zip file is not generated"
