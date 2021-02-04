@@ -185,7 +185,6 @@ def params_from_base_suite_setup(request):
     use_local_testserver = request.config.getoption("--use-local-testserver")
     sync_gateway_version = request.config.getoption("--sync-gateway-version")
     mode = request.config.getoption("--mode")
-    prometheus_enable = request.config.getoption("--prometheus-enable")
     server_version = request.config.getoption("--server-version")
     enable_sample_bucket = request.config.getoption("--enable-sample-bucket")
     xattrs_enabled = request.config.getoption("--xattrs")
@@ -481,7 +480,7 @@ def params_from_base_suite_setup(request):
     if prometheus_enable:
         if not prometheus.is_prometheus_installed:
             prometheus.install_prometheus
-        prometheus.start_prometheus(sg_ip)
+        prometheus.start_prometheus(sg_ip, sg_ssl)
 
     yield {
         "cluster_config": cluster_config,
@@ -555,7 +554,7 @@ def params_from_base_suite_setup(request):
     # Delete png files under resources/data
     clear_resources_pngs()
     if prometheus_enable:
-        prometheus.stop_prometheus(sg_ip)
+        prometheus.stop_prometheus(sg_ip, sg_ssl)
 
 
 @pytest.fixture(scope="function")

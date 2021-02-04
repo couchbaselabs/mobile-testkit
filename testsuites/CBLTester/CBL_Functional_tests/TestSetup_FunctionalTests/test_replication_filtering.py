@@ -12,7 +12,7 @@ from libraries.testkit import cluster
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("num_of_docs", [
-    10,
+    pytest.param(10, marks=pytest.mark.ce_sanity),
     pytest.param(100, marks=pytest.mark.sanity),
     1000
 ])
@@ -36,7 +36,7 @@ def test_replication_push_filtering(params_from_base_test_setup, num_of_docs):
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
 
     if sync_gateway_version < "2.5.0":
-        pytest.skip('This test cannnot run with sg version below 2.5')
+        pytest.skip('This test cannot run with sg version below 2.5')
     channels = ["ABC"]
     username = "autotest"
     password = "password"

@@ -132,6 +132,16 @@ class Admin:
         result['payload'] = resp.json()
         return result
 
+    # GET /{db}/_resync
+    def db_get_resync_status(self, db):
+        result = dict()
+        resp = requests.get("{0}/{1}/_resync".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False)
+        log.info("GET {}".format(resp.url))
+        resp.raise_for_status()
+        result['status_code'] = resp.status_code
+        result['payload'] = resp.json()
+        return result
+
     # POST /{db}/_online
     def bring_db_online(self, db, delay=None):
         data = {}

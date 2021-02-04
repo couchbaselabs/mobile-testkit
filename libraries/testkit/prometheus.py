@@ -2,33 +2,47 @@ import requests
 from requests import HTTPError
 from libraries.testkit.debug import log_request, log_response
 import subprocess
+from subprocess import PIPE
 from sys import platform
 import os
 import signal
 
 
-def start_prometheus(sg_ip):
+def kill_prometheus_process():
+    command = ['pgrep', 'prometheus']
+    result = subprocess.run(command, stdout=PIPE, stderr=PIPE, universal_newlines=True)
+    pid = result.stdout
+    if pid:
+        os.kill(int(pid), signal.SIGKILL)
+
+
+def start_prometheus(sg_ip, ssl=False):
+    # Interrupted executions might leave the stale processes
+    kill_prometheus_process()
     prometheus_file = os.getcwd() + "/libraries/provision/ansible/playbooks/prometheus.yml"
     commd = "sed -i -e 's/promotheus_sg_ip/" + sg_ip + "/g' " + prometheus_file
     subprocess.run([commd], shell=True)
+    if ssl:
+        commd = "sed -i -e 's/http/https/g' " + prometheus_file
+        subprocess.run([commd], shell=True)
     config_param = "--config.file=" + prometheus_file
     subprocess.Popen(["prometheus", config_param])
 
 
-def stop_prometheus(sg_ip):
+def stop_prometheus(sg_ip, ssl=False):
     prometheus_file = os.getcwd() + "/libraries/provision/ansible/playbooks/prometheus.yml"
     commd = "sed -i -e 's/" + sg_ip + "/promotheus_sg_ip/g' " + prometheus_file
     subprocess.run([commd], shell=True)
-    for line in os.popen("ps ax | grep prometheus | grep -v grep"):
-        fields = line.split()
-        pid = fields[0]
-    os.kill(int(pid), signal.SIGKILL)
+    if ssl:
+        commd = "sed -i -e 's/https/http/g' " + prometheus_file
+        subprocess.run([commd], shell=True)
+    kill_prometheus_process()
 
 
 def is_prometheus_installed():
     try:
-        subprocess.run(['prometheus --version'], check=True, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
-    except subprocess.CalledProcessError:
+        subprocess.run(['prometheus --version'], check=True, shell=True)
+    except:
         return False
     return True
 

@@ -9,7 +9,7 @@ from libraries.provision.ansible_runner import AnsibleRunner
 
 class TestServerJava(TestServerBase):
 
-    def __init__(self, version_build, host, port, community_enabled=None, debug_mode=False, platform="java-centos"):
+    def __init__(self, version_build, host, port, debug_mode=None, platform="java-centos", community_enabled=None):
         super(TestServerJava, self).__init__(version_build, host, port)
 
         self.platform = platform
@@ -19,15 +19,19 @@ class TestServerJava(TestServerBase):
 
         self.version_build = version_build
         self.version, self.build = version_and_build(self.version_build)
-
-        if self.build is None:
-            self.package_name = "CBLTestServer-Java-Desktop-{}-enterprise".format(self.version)
-            self.download_url = "{}/couchbase-lite-java/{}/{}.zip".format(RELEASED_BUILDS, self.version, self.package_name)
+        if community_enabled:
+            self.package_name = "CBLTestServer-Java-Desktop-{}-community".format(self.version_build)
         else:
             self.package_name = "CBLTestServer-Java-Desktop-{}-enterprise".format(self.version_build)
-            self.download_url = "{}/couchbase-lite-java/{}/{}/{}.zip".format(LATEST_BUILDS, self.version, self.build, self.package_name)
 
-        self.build_name = "TestServer-java-{}".format(self.version_build)
+        if self.build is None:
+            self.download_url = "{}/couchbase-lite-java/{}/{}.zip".format(RELEASED_BUILDS, self.version, self.package_name)
+        else:
+            self.download_url = "{}/couchbase-lite-java/{}/{}/{}.zip".format(LATEST_BUILDS, self.version, self.build, self.package_name)
+        if community_enabled:
+            self.build_name = "TestServer-java-community-{}".format(self.version_build)
+        else:
+            self.build_name = "TestServer-java-{}".format(self.version_build)
 
         log_info("package_name: {}".format(self.package_name))
         log_info("download_url: {}".format(self.download_url))
@@ -88,7 +92,7 @@ class TestServerJava(TestServerBase):
 
     def download(self, version_build=None):
         """
-        Downloads the TestServer-Java-Desktop-{version}-enterprise.jar package
+        Downloads the TestServer-Java-Desktop-{version}-enterprise/Community.jar package
         from latestbuild to the remote Linux or Windows machine
         :params: download_url, package_name, build_name
         :return: nothing
