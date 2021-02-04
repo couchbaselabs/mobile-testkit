@@ -37,11 +37,11 @@ def test_replication_with_concurrencyControl_sameDocId_createUpdate(params_from_
     c.reset(sg_config_path=sg_config)
 
     # 1. Create document id = doc1 as doc1a instance
-    doc_body = document.create_doc(doc_id=doc_id, content="doc1", channels=channel)
+    doc_body = document.create_doc(doc_id=doc_id, content="doc1", channels=channel, cbl=True)
     mutable_doc1 = documentObj.create(doc_id, doc_body)
 
     # 2. Create document id = doc1 as doc1b instance
-    doc_body2 = document.create_doc(doc_id=doc_id, content="doc2", channels=channel)
+    doc_body2 = document.create_doc(doc_id=doc_id, content="doc2", channels=channel, cbl=True)
     mutable_doc2 = documentObj.create(doc_id, doc_body2)
     db.saveDocumentWithConcurrency(cbl_db, mutable_doc1, concurrencyType)
     db.saveDocumentWithConcurrency(cbl_db, mutable_doc2, concurrencyType)
@@ -108,7 +108,7 @@ def test_replication_with_concurrencyControl_deleteSameDocId(params_from_base_te
     c.reset(sg_config_path=sg_config)
 
     # 1. Create document id = doc1 as doc1a instance
-    doc_body = document.create_doc(doc_id=doc_id, content="doc1", channels=channel)
+    doc_body = document.create_doc(doc_id=doc_id, content="doc1", channels=channel, cbl=True)
     mutable_doc1 = documentObj.create(doc_id, doc_body)
     db.saveDocument(cbl_db, mutable_doc1)
 
@@ -185,7 +185,7 @@ def test_replication_with_concurrencyControl_sgCBL_sameDocId(params_from_base_te
     cbl_doc_ids = db.getDocIds(cbl_db)
     cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
     # 3. Create document id = doc1 as doc1a instance
-    doc_body = document.create_doc(doc_id=doc_id, content="doc1", channels=channel)
+    doc_body = document.create_doc(doc_id=doc_id, content="doc1", channels=channel, cbl=True)
     mutable_doc = documentObj.create(doc_id, doc_body)
 
     db.saveDocumentWithConcurrency(cbl_db, mutable_doc, concurrencyType)

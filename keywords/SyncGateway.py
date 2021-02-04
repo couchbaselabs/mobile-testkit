@@ -4,6 +4,7 @@ import json
 import requests
 from requests import Session
 from jinja2 import Template
+import time
 import re
 from keywords.constants import SYNC_GATEWAY_CONFIGS, SYNC_GATEWAY_CERT
 from keywords.utils import version_is_binary, add_cbs_to_sg_config_server_field
@@ -21,6 +22,8 @@ from libraries.testkit.cluster import Cluster
 from keywords.utils import host_for_url
 from couchbase.bucket import Bucket
 from keywords import document
+from keywords.utils import random_string
+from utilities.cluster_config_utils import copy_sgconf_to_temp, replace_string_on_sgw_config
 
 
 def validate_sync_gateway_mode(mode):
@@ -410,7 +413,8 @@ class SyncGateway(object):
             "sg_use_views": "",
             "num_index_replicas": "",
             "couchbase_server_primary_node": couchbase_server_primary_node,
-            "delta_sync": ""
+            "delta_sync": "",
+            "prometheus": ""
         }
         sg_platform = get_sg_platform(cluster_config)
         if get_sg_version(cluster_config) >= "2.1.0":
@@ -493,6 +497,9 @@ class SyncGateway(object):
         if is_delta_sync_enabled(cluster_config) and get_sg_version(cluster_config) >= "2.5.0":
             playbook_vars["delta_sync"] = '"delta_sync": { "enabled": true},'
 
+        if get_sg_version(cluster_config) >= "2.8.0":
+            playbook_vars["prometheus"] = '"metricsInterface": ":4986",'
+
         if url is not None:
             target = hostname_for_url(cluster_config, url)
             log_info("Starting {} sync_gateway.".format(target))
@@ -552,6 +559,36 @@ class SyncGateway(object):
         if status != 0:
             raise ProvisioningError("Could not restart sync_gateway")
 
+    def upgrade_sync_gateway(self, sync_gateways, sync_gateway_version, sync_gateway_upgraded_version, sg_conf, cluster_config):
+        log_info('------------------------------------------')
+        log_info('START Sync Gateway cluster upgrade')
+        log_info('------------------------------------------')
+
+        for sg in sync_gateways:
+            sg_ip = host_for_url(sg["admin"])
+            log_info("Checking for sync gateway product info before upgrade")
+            verify_sync_gateway_product_info(sg_ip)
+            log_info("Checking for sync gateway version: {}".format(sync_gateway_version))
+            verify_sync_gateway_version(sg_ip, sync_gateway_version)
+            log_info("Upgrading sync gateway: {}".format(sg_ip))
+            self.upgrade_sync_gateways(
+                cluster_config=cluster_config,
+                sg_conf=sg_conf,
+                sync_gateway_version=sync_gateway_upgraded_version,
+                url=sg_ip
+            )
+
+            time.sleep(10)  # After upgrading each sync gateway, it need few seconds to get product info
+            log_info("Checking for sync gateway product info after upgrade")
+            verify_sync_gateway_product_info(sg_ip)
+            log_info("Checking for sync gateway version after upgrade: {}".format(sync_gateway_upgraded_version))
+            verify_sync_gateway_version(sg_ip, sync_gateway_upgraded_version)
+
+        log_info("Upgraded all the sync gateway nodes in the cluster")
+        log_info('------------------------------------------')
+        log_info('END Sync Gateway cluster upgrade')
+        log_info('------------------------------------------')
+
     def upgrade_sync_gateways(self, cluster_config, sg_conf, sync_gateway_version, url=None):
         """ Upgrade sync gateways in a cluster. If url is passed, upgrade
             the sync gateway at that url
@@ -570,6 +607,7 @@ class SyncGateway(object):
         )
         sg_conf = os.path.abspath(sg_config.config_path)
         sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
+        cbs_cert_path = os.path.join(os.getcwd(), "certs")
         couchbase_server_primary_node = add_cbs_to_sg_config_server_field(cluster_config)
         bucket_names = get_buckets_from_sync_gateway_config(sg_conf)
 
@@ -588,6 +626,7 @@ class SyncGateway(object):
             "cacertpath": "",
             "x509_auth": False,
             "sg_cert_path": sg_cert_path,
+            "x509_certs_dir": cbs_cert_path,
             "server_port": self.server_port,
             "server_scheme": self.server_scheme,
             "autoimport": "",
@@ -597,7 +636,8 @@ class SyncGateway(object):
             "sg_use_views": "",
             "num_index_replicas": "",
             "couchbase_server_primary_node": couchbase_server_primary_node,
-            "delta_sync": ""
+            "delta_sync": "",
+            "prometheus": ""
         }
 
         sync_gateway_base_url, sync_gateway_package_name, sg_accel_package_name = sg_config.sync_gateway_base_url_and_package()
@@ -676,6 +716,9 @@ class SyncGateway(object):
         if is_delta_sync_enabled(cluster_config) and version >= "2.5.0":
             playbook_vars["delta_sync"] = '"delta_sync": { "enabled": true},'
 
+        if get_sg_version(cluster_config) >= "2.8.0":
+            playbook_vars["prometheus"] = '"metricsInterface": ":4986",'
+
         if url is not None:
             target = hostname_for_url(cluster_config, url)
             log_info("Upgrading sync_gateway/sg_accel on {} ...".format(target))
@@ -705,6 +748,7 @@ class SyncGateway(object):
         server_port = 8091
         server_scheme = "http"
         sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
+        cbs_cert_path = os.path.join(os.getcwd(), "certs")
         bucket_names = get_buckets_from_sync_gateway_config(sg_conf)
         version, build = version_and_build(sync_gateway_version)
 
@@ -720,6 +764,7 @@ class SyncGateway(object):
             "keypath": "",
             "cacertpath": "",
             "x509_auth": False,
+            "x509_certs_dir": cbs_cert_path,
             "sg_cert_path": sg_cert_path,
             "sync_gateway_config_filepath": sg_conf,
             "server_port": server_port,
@@ -732,7 +777,8 @@ class SyncGateway(object):
             "revs_limit": "",
             "xattrs": "",
             "no_conflicts": "",
-            "delta_sync": ""
+            "delta_sync": "",
+            "prometheus": ""
         }
 
         playbook_vars["username"] = '"username": "{}",'.format(bucket_names[0])
@@ -763,7 +809,7 @@ class SyncGateway(object):
 
             if is_x509_auth(cluster_config):
                 playbook_vars[
-                    "certpath"] = '"certpath": "{}/certs/chain.pem",'.format(sg_home_directory)
+                    "certpath"] = '"certpath": "{}/certs "{}/certs/chain.pem",'.format(sg_home_directory)
                 playbook_vars[
                     "keypath"] = '"keypath": "{}/certs/pkey.key",'.format(sg_home_directory)
                 playbook_vars[
@@ -800,6 +846,9 @@ class SyncGateway(object):
 
         if is_delta_sync_enabled(cluster_config) and version >= "2.5.0":
             playbook_vars["delta_sync"] = '"delta_sync": { "enabled": true},'
+
+        if get_sg_version(cluster_config) >= "2.8.0":
+            playbook_vars["prometheus"] = '"metricsInterface": ":4986",'
 
         # Deploy config
         if url is not None:
@@ -892,7 +941,7 @@ def create_sync_gateways(cluster_config, sg_config_path):
     return sg1, sg2
 
 
-def create_docs_via_sdk(cbs_url, cbs_cluster, bucket_name, num_docs):
+def create_docs_via_sdk(cbs_url, cbs_cluster, bucket_name, num_docs, doc_name='doc_set_two'):
     cbs_host = host_for_url(cbs_url)
     log_info("Adding docs via SDK...")
     if cbs_cluster.ipv6:
@@ -901,9 +950,97 @@ def create_docs_via_sdk(cbs_url, cbs_cluster, bucket_name, num_docs):
         sdk_client = Bucket('couchbase://{}/{}'.format(cbs_host, bucket_name), password='password')
     sdk_client.timeout = 600
 
-    sdk_doc_bodies = document.create_docs('doc_set_two', num_docs)
+    sdk_doc_bodies = document.create_docs(doc_name, num_docs)
     sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
     sdk_client.upsert_multi(sdk_docs)
 
     log_info("Adding docs done on CBS")
     return sdk_docs, sdk_client
+
+
+def setup_replications_on_sgconfig(remote_sg_url, sg_db, remote_user, remote_password, direction="pushAndPull", channels=None, continuous=False, replication_id=None):
+
+    # replication = {}
+    repl1 = {}
+    if replication_id is None:
+        replication_id = "sgw_repl_{}".format(random_string(length=10, digit=True))
+    remote_sg_url = remote_sg_url.replace("://", "://{}:{}@".format(remote_user, remote_password))
+    remote_sg_url = "{}/{}".format(remote_sg_url, sg_db)
+    # remote_sg_url = "{}/{}".format(remote_sg_url)
+    repl1["remote"] = "{}".format(remote_sg_url)
+    repl1["direction"] = direction
+    repl1["continuous"] = continuous
+    if channels is not None:
+        repl1["filter"] = "sync_gateway/bychannel"
+        repl1["query_params"] = channels
+    # replication[replication_id] = repl1
+    repl1_string = json.dumps(repl1)
+    repl1_string = repl1_string.replace("\"True\"", "true")
+    replication_string = "\"{}\": {}".format(replication_id, repl1_string)
+    return replication_string, replication_id
+
+
+def setup_sgreplicate1_on_sgconfig(source_sg_url, sg_db1, remote_sg_url, sg_db2, channels=None, continuous=False):
+
+    # replication = {}
+    repl = {}
+    replication_id = "sgw_repl_{}".format(random_string(length=10, digit=True))
+    # source_sg_url = source_sg_url.replace("://", "://{}:{}@".format(remote_user, remote_password))
+    source_sg_url = "{}/{}".format(source_sg_url, sg_db1)
+    # remote_sg_url = remote_sg_url.replace("://", "://{}:{}@".format(remote_user, remote_password))
+    remote_sg_url = "{}/{}".format(remote_sg_url, sg_db2)
+    # remote_sg_url = "{}/{}".format(remote_sg_url)
+    repl["replication_id"] = "{}".format(replication_id)
+    repl["source"] = "{}".format(source_sg_url)
+    repl["target"] = "{}".format(remote_sg_url)
+    repl["continuous"] = continuous
+    if channels is not None:
+        repl["filter"] = "sync_gateway/bychannel"
+        repl["query_params"] = channels
+    # replication[replication_id] = repl1
+    repl_string = json.dumps(repl)
+    repl_string = repl_string.replace("\"True\"", "true")
+    return repl_string, replication_id
+
+
+def update_replication_in_sgw_config(sg_conf_name, sg_mode, repl_remote, repl_remote_db, repl_remote_user, repl_remote_password, repl_repl_id, repl_direction="push_and_pull", repl_conflict_resolution_type="default", repl_continuous=None, repl_filter_query_params=None, custom_conflict_js_function=None):
+    sg_config = sync_gateway_config_path_for_mode(sg_conf_name, sg_mode)
+    temp_sg_config, _ = copy_sgconf_to_temp(sg_config, sg_mode)
+    if "4984" in repl_remote:
+        if repl_remote_user and repl_remote_password:
+            remote_url = repl_remote.replace("://", "://{}:{}@".format(repl_remote_user, repl_remote_password))
+            remote_url = "{}/{}".format(remote_url, repl_remote_db)
+        else:
+            raise Exception("No remote node's username and password provided ")
+    temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ repl_remote }}", "{}".format(remote_url))
+    temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ repl_direction }}", "\"{}\"".format(repl_direction))
+    temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ repl_conflict_resolution_type }}", "\"{}\"".format(repl_conflict_resolution_type))
+    temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ repl_repl_id }}", "\"{}\"".format(repl_repl_id))
+    if repl_continuous is not None:
+        cont = "true"
+        temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ repl_continuous }}", "\"continuous\": {},".format(cont))
+    else:
+        temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ repl_continuous }}", "")
+    if repl_filter_query_params is not None:
+        temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ repl_filter_query_params }}", "\"{}\",".format(repl_filter_query_params))
+    else:
+        temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ repl_filter_query_params }}", "")
+    if repl_conflict_resolution_type == "custom":
+        custom_conflict_key = "custom_conflict_resolver"
+        custom_conflict_key_value = "\"{}\":`{}`".format(custom_conflict_key, custom_conflict_js_function)
+        temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ custom_conflict_js_function }}", "{}".format(custom_conflict_key_value))
+    return temp_sg_config
+
+
+def wait_until_docs_imported_from_server(sg_admin_url, sg_client, sg_db, expected_docs, prev_import_count, timeout=5):
+    sg_expvars = sg_client.get_expvars(sg_admin_url)
+    sg_import_count = sg_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"]
+    count = 0
+    while True:
+        sg_expvars = sg_client.get_expvars(sg_admin_url)
+        sg_import_count = sg_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"]
+        import_count = sg_import_count - prev_import_count
+        if count > timeout or import_count >= expected_docs:
+            break
+        time.sleep(1)
+        count += 1

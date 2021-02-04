@@ -2,6 +2,7 @@ import requests
 import json
 import concurrent.futures
 import os
+import time
 
 from libraries.testkit.user import User
 from libraries.testkit import settings
@@ -9,6 +10,7 @@ from libraries.testkit.debug import log_request
 from libraries.testkit.debug import log_response
 from keywords import cbgtconfig
 from utilities.cluster_config_utils import sg_ssl_enabled
+from keywords.utils import log_info
 
 import logging
 log = logging.getLogger(settings.LOGGER)
@@ -130,6 +132,16 @@ class Admin:
         result['payload'] = resp.json()
         return result
 
+    # GET /{db}/_resync
+    def db_get_resync_status(self, db):
+        result = dict()
+        resp = requests.get("{0}/{1}/_resync".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False)
+        log.info("GET {}".format(resp.url))
+        resp.raise_for_status()
+        result['status_code'] = resp.status_code
+        result['payload'] = resp.json()
+        return result
+
     # POST /{db}/_online
     def bring_db_online(self, db, delay=None):
         data = {}
@@ -202,3 +214,105 @@ class Admin:
         log.info("GET {}".format(resp.url))
         resp.raise_for_status()
         return resp.json()
+
+    # GET /_replicationStatus for sg replicate2
+    def get_sgreplicate2_active_tasks(self, db, expected_tasks=1):
+        count = 0
+        max_count = 5
+        while True:
+            r = requests.get("{}/{}/_replicationStatus".format(self.admin_url, db), verify=False)
+            log_request(r)
+            log_response(r)
+            r.raise_for_status()
+            resp_data = r.json()
+            active_resp_data = []
+            for repl in resp_data:
+                if "starting" in repl['status'] or "started" in repl['status'] or "running" in repl['status']:
+                    active_resp_data.append(repl)
+            if len(active_resp_data) == expected_tasks or count >= max_count:
+                break
+            count += 1
+            time.sleep(1)
+        return active_resp_data
+
+    def wait_until_sgw_replication_done(self, db, repl_id, read_flag=False, write_flag=False, max_times=25):
+
+        read_flag = True
+        write_flag = True
+        read_timeout = False
+        write_timeout = False
+        if read_flag is False:
+            read_timeout = True  # To avoid waiting for read doc count as there is not expectation of read docs
+        if write_flag is False:
+            write_timeout = True  # To avoid waiting for write doc count as there is not expectation of write docs
+        retry_max_count = 8
+        count = 0
+        prev_read_count = 0
+        prev_write_count = 0
+        read_retry_count = 0
+        write_retry_count = 0
+        while count < max_times:
+            r = requests.get("{}/{}/_replicationStatus/{}".format(self.admin_url, db, repl_id), verify=False)
+            r.raise_for_status()
+            resp_obj = r.json()
+            status = resp_obj["status"]
+            if status == "starting" or status == "started":
+                count += 1
+            elif status == "running":
+                if read_flag:
+                    if read_retry_count < retry_max_count:
+                        try:
+                            docs_read_count = resp_obj["docs_read"]
+                            if docs_read_count > prev_read_count:
+                                prev_read_count = docs_read_count
+                                read_retry_count = 0
+                            else:
+                                read_retry_count += 1
+                        except KeyError:
+                            read_retry_count += 1
+                    else:
+                        read_timeout = True
+
+                if write_flag:
+                    if write_retry_count < retry_max_count:
+                        try:
+                            docs_write_count = resp_obj["docs_written"]
+                            if docs_write_count > prev_write_count:
+                                prev_write_count = docs_write_count
+                                write_retry_count = 0
+                            else:
+                                write_retry_count += 1
+                        except KeyError:
+                            write_retry_count += 1
+                    else:
+                        write_timeout = True
+            else:
+                log_info("looks like replication iss stopped")
+                break
+            count += 1
+            time.sleep(1)
+            if read_timeout and write_timeout:
+                log_info("read or write timeout happened")
+                break
+        if count == max_times:
+            raise Exception("timeout while waiting for replication to complete on sgw replication")
+
+    def get_replications_count(self, db, expected_count=1):
+        local_count = 0
+        max_count = 15
+        while True:
+            r = requests.get("{}/{}/_replication".format(self.admin_url, db), verify=False)
+            log_request(r)
+            log_response(r)
+            r.raise_for_status()
+            resp_data = r.json()
+            count = 0
+            for repl in resp_data:
+                repl_body = resp_data[repl]
+                if "(local)" in repl_body['assigned_node']:
+                    count += 1
+            if count == expected_count or local_count >= max_count:
+                break
+            time.sleep(1)
+            local_count += 1
+        return count

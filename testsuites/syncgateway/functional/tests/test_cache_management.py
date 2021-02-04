@@ -14,6 +14,8 @@ from keywords.MobileRestClient import MobileRestClient
 @pytest.mark.syncgateway
 @pytest.mark.sanity
 @pytest.mark.cachemanagement
+@pytest.mark.basicsgw
+@pytest.mark.oscertify
 def test_importDocs_withSharedBucketAccessFalse(params_from_base_test_setup):
     """
     @summary :
@@ -75,7 +77,7 @@ def test_importDocs_withSharedBucketAccessFalse(params_from_base_test_setup):
     assert len(all_changes_total["results"]) == 0
 
     # 4. if Xattrs=true i.e if import_docs=true, Verify warn_count incremented on stats
-    if xattrs_enabled:
+    if xattrs_enabled and sync_gateway_version < "3.0.0":
         expvars = sg_client.get_expvars(sg_admin_url)
         assert initial_warn_count < expvars["syncgateway"]["global"]["resource_utilization"]["warn_count"], "warn_count did not increment"
 
@@ -83,6 +85,8 @@ def test_importDocs_withSharedBucketAccessFalse(params_from_base_test_setup):
 @pytest.mark.syncgateway
 @pytest.mark.community
 @pytest.mark.cachemanagement
+@pytest.mark.basicsgw
+@pytest.mark.oscertify
 def test_importDocs_defaultBehavior_withSharedBucketAccessTrue(params_from_base_test_setup):
     """
     @summary :
@@ -148,6 +152,8 @@ def test_importDocs_defaultBehavior_withSharedBucketAccessTrue(params_from_base_
 
 @pytest.mark.syncgateway
 @pytest.mark.cachemanagement
+@pytest.mark.basicsgw
+@pytest.mark.oscertify
 def test_importPartitions_withSharedBucketAccessTrue(params_from_base_test_setup):
     """
     @summary :

@@ -2,21 +2,22 @@ import time
 import json
 import requests
 import re
-from requests.exceptions import ConnectionError, HTTPError
+from requests.exceptions import ConnectionError, HTTPError, ChunkedEncodingError
 from requests import Session
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
-from libraries.provision.ansible_runner import AnsibleRunner
-
 from couchbase.bucket import Bucket
+# from couchbase.n1ql import N1QLQuery
 from couchbase.exceptions import CouchbaseError, NotFoundError
 
 import keywords.constants
 from keywords.remoteexecutor import RemoteExecutor
-from keywords.exceptions import CBServerError, ProvisioningError, TimeoutError, RBACUserCreationError, RBACUserDeletionError
+from keywords.exceptions import CBServerError, ProvisioningError, TimeoutError, RBACUserCreationError
+from libraries.provision.ansible_runner import AnsibleRunner
 from keywords.utils import log_r, log_info, log_debug, log_error, hostname_for_url, host_for_url
+from keywords.utils import version_and_build, random_string
 from keywords import types
-from utilities.cluster_config_utils import is_x509_auth
-
+from utilities.cluster_config_utils import is_x509_auth, get_cbs_version, is_magma_enabled, is_cbs_ce_enabled
+from keywords.constants import SDK_TIMEOUT
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 
@@ -126,11 +127,17 @@ class CouchbaseServer:
         """ Delete a Couchbase Server bucket with the given 'name' """
         server_version = get_server_version(self.host, self.cbs_ssl)
         server_major_version = int(server_version.split(".")[0])
-
         if server_major_version >= 5:
             self._delete_internal_rbac_bucket_user(name)
 
-        resp = self._session.delete("{0}/pools/default/buckets/{1}".format(self.url, name))
+        count = 0
+        max_retries = 5
+        while count < max_retries:
+            resp = self._session.delete("{0}/pools/default/buckets/{1}".format(self.url, name))
+            if resp.status_code == 200:
+                log_info("delete bucket request has been successfully processed.")
+                break
+            count += 1
         log_r(resp)
         resp.raise_for_status()
 
@@ -183,6 +190,35 @@ class CouchbaseServer:
         if len(bucket_names) != 0:
             raise CBServerError("Failed to delete all of the server buckets!")
 
+        # verify all indexes are deleted
+        count = 0
+        index_url = self.url.replace("8091", "9102")
+        while count < 5:
+            resp = self._session.get("{}/getIndexStatus".format(index_url))
+            resp_obj = resp.json()
+            if "status" not in resp_obj:
+                break
+            count += 1
+            time.sleep(60)
+
+        query_url = self.url.replace("8091", "8093")
+        del_pdstmt_query_data = {"statement": "delete from system:prepareds"}
+        verify_pdstmt_query_data = {"statement": "select * from system:prepareds"}
+        resp = self._session.post("{}/query/service".format(query_url), data=del_pdstmt_query_data)
+        resp_obj = resp.json()
+
+        count = 0
+        while count < 5:
+            resp = self._session.post("{}/query/service".format(query_url), data=verify_pdstmt_query_data)
+            resp_obj = resp.json()
+            status = resp_obj["status"]
+            result_count = resp_obj["metrics"]["resultCount"]
+            if status == "success":
+                if result_count == 0:
+                    break
+                count += 1
+                time.sleep(15)
+
     def wait_for_ready_state(self):
         """
         Verify all server node is in are in a "healthy" state to avoid sync_gateway startup failures
@@ -224,7 +260,14 @@ class CouchbaseServer:
     def _create_internal_rbac_bucket_user(self, bucketname, cluster_config):
         # Create user with username=bucketname and assign role
         # bucket_admin and cluster_admin
-        roles = "ro_admin,bucket_full_access[{}]".format(bucketname)
+        server_version = get_cbs_version(cluster_config)
+        cbs_version, cbs_build = version_and_build(server_version)
+        cbs_ce_enabled = is_cbs_ce_enabled(cluster_config)
+        if cbs_version >= "6.6.0" and not cbs_ce_enabled:
+            roles = "mobile_sync_gateway[{}]".format(bucketname)
+        else:
+            roles = "ro_admin,bucket_full_access[{}]".format(bucketname)
+
         if is_x509_auth(cluster_config):
             roles = "admin"
         password = 'password'
@@ -268,18 +311,30 @@ class CouchbaseServer:
         rbac_url = "{}/settings/rbac/users/local/{}".format(self.url, bucketname)
 
         resp = None
-        try:
-            resp = self._session.delete(rbac_url, data=data_user_params, auth=('Administrator', 'password'))
-            log_info("rbac: {}; data user params: {}".format(rbac_url, data_user_params))
-            log_r(resp)
-            resp.raise_for_status()
-        except HTTPError as h:
-            log_info("resp code: {}; error: {}".format(resp, h))
-            if '404 Client Error: Object Not Found for url' in str(h):
-                log_info("RBAC user does not exist, no need to delete RBAC bucket user {}".format(bucketname))
-        except ConnectionError as e:
-            log_info(str(e))
-            log_info("RBAC user does not exist, Catching connection errors here")
+        count = 0
+        max_count = 0
+        server_version = get_server_version(self.host, self.cbs_ssl)
+        if server_version < "7.0.0":
+            max_count = 3
+        while count < max_count:
+            try:
+                resp = self._session.delete(rbac_url, data=data_user_params, auth=('Administrator', 'password'))
+                log_info("rbac: {}; data user params: {}".format(rbac_url, data_user_params))
+                log_r(resp)
+                if resp.status_code == 200:
+                    log_info("delete internal rbac bucket user request has been successfully processed.")
+                    break
+                resp.raise_for_status()
+            except HTTPError as h:
+                log_info("resp code: {}; error: {}".format(resp, h))
+                if '404 Client Error: Object Not Found for url' in str(h):
+                    log_info("RBAC user does not exist, no need to delete RBAC bucket user {}".format(bucketname))
+            except ConnectionError as e:
+                log_info(str(e))
+                log_info("RBAC user does not exist, Catching connection errors here")
+            except ChunkedEncodingError as che:
+                log_info(str(che))
+            count += 1
 
     def _get_mem_total_lowest(self, server_info):
         # Workaround for https://github.com/couchbaselabs/mobile-testkit/issues/709
@@ -298,8 +353,8 @@ class CouchbaseServer:
                 # only use it if it's lower than previous low
                 mem_total_lowest = mem_total
 
-        if mem_total_lowest is None:
-            raise ProvisioningError("All nodes reported 0MB of RAM available")
+        """if mem_total_lowest is None:
+            raise ProvisioningError("All nodes reported 0MB of RAM available")"""
 
         return mem_total_lowest
 
@@ -307,11 +362,18 @@ class CouchbaseServer:
         """
         Call the Couchbase REST API to get the total memory available on the machine. RAM returned is in mb
         """
-        resp = self._session.get("{}/pools/default".format(self.url))
-        resp.raise_for_status()
-        resp_json = resp.json()
-
-        mem_total_lowest = self._get_mem_total_lowest(resp_json)
+        count = 0
+        mem_total_lowest = None
+        while count < 5 and mem_total_lowest is None:
+            resp = self._session.get("{}/pools/default".format(self.url))
+            resp.raise_for_status()
+            resp_json = resp.json()
+            log_info("resp_json of get_total_ram mb : ", resp_json)
+            mem_total_lowest = self._get_mem_total_lowest(resp_json)
+            time.sleep(5)
+            count += 1
+        if mem_total_lowest is None:
+            raise ProvisioningError("All nodes reported 0MB of RAM available")
 
         total_avail_ram_mb = int(mem_total_lowest / (1024 * 1024))
         log_info("total_avail_ram_mb: {}".format(total_avail_ram_mb))
@@ -374,7 +436,6 @@ class CouchbaseServer:
 
         server_version = get_server_version(self.host, self.cbs_ssl)
         server_major_version = int(server_version.split(".")[0])
-
         data = {
             "name": name,
             "ramQuotaMB": str(ram_quota_mb),
@@ -382,7 +443,9 @@ class CouchbaseServer:
             "bucketType": "couchbase",
             "flushEnabled": "1"
         }
-
+        if is_magma_enabled(cluster_config):
+            magma_data = {"storageBackend": "magma"}
+            data.update(magma_data)
         if server_major_version <= 4:
             # Create a bucket with password for server_major_version < 5
             # proxyPort should not be passed for 5.0.0 onwards for bucket creation
@@ -814,7 +877,7 @@ class CouchbaseServer:
             base_url = "{}/vulcan/{}".format(cbnas_base_url, build_number)
         elif version.startswith("6.0"):
             base_url = "{}/alice/{}".format(cbnas_base_url, build_number)
-        elif version.startswith("6.5"):
+        elif version.startswith("6.5") or version.startswith("6.6"):
             base_url = "{}/mad-hatter/{}".format(cbnas_base_url, build_number)
         elif version.startswith("7.0"):
             base_url = "{}/cheshire-cat/{}".format(cbnas_base_url, build_number)
@@ -838,6 +901,7 @@ class CouchbaseServer:
         """
         released_versions = {
             "6.5.0": "4960",
+            "6.0.3": "2893",
             "5.5.0": "2958",
             "5.1.0": "5552",
             "5.0.1": "5003",
@@ -927,3 +991,98 @@ class CouchbaseServer:
             connection_url = 'couchbase://{}/{}'.format(cbs_ip, bucket_name)
         sdk_client = Bucket(connection_url, password='password')
         return sdk_client
+
+    def create_scope(self, bucket, scope=None):
+        """ Create scope on couchbase server"""
+
+        if scope is None:
+            scope = "scope_{}".format(random_string(length=10, digit=True))
+        data = {
+            "name": scope
+        }
+        try:
+            resp = self._session.post("{}/pools/default/buckets/{}/collections".format(self.url, bucket), data=data)
+            log_r(resp)
+            resp.raise_for_status()
+        except Exception as ex:
+            log_info("Got an exception while creating a scope{}".format(ex))
+        return scope
+
+    def create_collection(self, bucket, scope, collection=None):
+        """ Create scope on couchbase server"""
+
+        if collection is None:
+            collection = "collection_{}".format(random_string(length=10, digit=True))
+        data = {
+            "name": collection
+        }
+        try:
+            resp = self._session.post("{}/pools/default/buckets/{}/collections/{}".format(self.url, bucket, scope), data=data)
+            log_r(resp)
+            resp.raise_for_status()
+        except Exception as ex:
+            log_info("Got an exception while creating a collection{}".format(ex))
+        return collection
+
+    def get_collection_id(self, bucket, scope, collection):
+        """ Get collection id by scope and collection"""
+        col_id = None
+        resp = self._session.get("{}/pools/default/buckets/{}/collections".format(self.url, bucket))
+        log_r(resp)
+        resp.raise_for_status()
+        resp_obj = resp.json()
+        scopes = resp_obj["scopes"]
+        for scope_1 in scopes:
+            if scope_1["name"] == scope:
+                collections = scope_1["collections"]
+                for collection_1 in collections:
+                    if collection_1["name"] == collection:
+                        col_id = collection_1["uid"]
+        return col_id
+
+    def disable_replicas(self, bucket):
+        """ Disable replicas which needed for transaction app testing"""
+        data = {
+            "replicaNumber": 0
+        }
+        resp = self._session.post("{}/pools/default/buckets/{}".format(self.url, bucket), data=data)
+        log_r(resp)
+        resp.raise_for_status()
+
+    def rebalance_server(self, cluster_servers):
+        # Now hit the rebalance rest api
+        known_nodes = "knownNodes="
+        for server in cluster_servers:
+            if "https" in server:
+                server = server.replace("https://", "")
+                server = server.replace(":18091", "")
+            else:
+                server = server.replace("http://", "")
+                server = server.replace(":8091", "")
+            known_nodes += "ns_1@{},".format(server)
+
+        # Add server_to_remove to ejected_node
+        data = known_nodes
+        resp = self._session.post(
+            "{}/controller/rebalance".format(self.url),
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+            data=data
+        )
+        log_r(resp)
+        resp.raise_for_status()
+
+        self._wait_for_rebalance_complete()
+        return True
+
+
+def get_sdk_client_with_bucket(ssl_enabled, cluster, cbs_ip, cbs_bucket):
+    if ssl_enabled and cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(cbs_ip, cbs_bucket)
+    elif ssl_enabled and not cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify".format(cbs_ip, cbs_bucket)
+    elif not ssl_enabled and cluster.ipv6:
+        connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, cbs_bucket)
+    else:
+        connection_url = 'couchbase://{}/{}'.format(cbs_ip, cbs_bucket)
+    sdk_client = Bucket(connection_url, password='password', timeout=SDK_TIMEOUT)
+    return sdk_client

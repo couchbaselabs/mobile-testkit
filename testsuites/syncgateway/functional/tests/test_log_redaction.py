@@ -14,14 +14,17 @@ from keywords.utils import log_info, host_for_url
 from libraries.testkit.cluster import Cluster
 from utilities.cluster_config_utils import load_cluster_config_json
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
-from utilities.scan_logs import scan_for_pattern
+from utilities.scan_logs import scan_for_pattern, unzip_log_files
 from keywords.MobileRestClient import MobileRestClient
 from keywords import document, attachment
 from libraries.provision.ansible_runner import AnsibleRunner
+from keywords.remoteexecutor import RemoteExecutor
 
 
 @pytest.mark.syncgateway
 @pytest.mark.logredaction
+@pytest.mark.logging
+@pytest.mark.oscertify
 @pytest.mark.parametrize("sg_conf_name, redaction_level, x509_cert_auth", [
     pytest.param("log_redaction", "partial", False, marks=pytest.mark.sanity),
     ("log_redaction", "none", True)
@@ -46,6 +49,7 @@ def test_log_redaction_config(params_from_base_test_setup, remove_tmp_sg_redacti
     sg_ip = host_for_url(sg_admin_url)
     sg_db = "db"
     num_of_docs = 10
+    cbs_ce_version = params_from_base_test_setup["cbs_ce"]
 
     if get_sync_gateway_version(sg_ip)[0] < "2.1":
         pytest.skip("log redaction feature not available for version < 2.1 ")
@@ -60,7 +64,7 @@ def test_log_redaction_config(params_from_base_test_setup, remove_tmp_sg_redacti
     persist_cluster_config_environment_prop(temp_cluster_config, 'redactlevel', redaction_level,
                                             property_name_check=False)
 
-    if x509_cert_auth:
+    if x509_cert_auth and not cbs_ce_version:
         persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
 
     cluster = Cluster(config=temp_cluster_config)
@@ -70,7 +74,7 @@ def test_log_redaction_config(params_from_base_test_setup, remove_tmp_sg_redacti
     sg_client = MobileRestClient()
     channels = ["log-redaction"]
     sg_client.create_user(url=sg_admin_url, db=sg_db, name='autotest', password='validkey', channels=channels)
-    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest', password='validkey')
+    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest')
 
     # Create docs with xattrs
     sgdoc_bodies = document.create_docs(doc_id_prefix='sg_docs', number=num_of_docs,
@@ -84,6 +88,8 @@ def test_log_redaction_config(params_from_base_test_setup, remove_tmp_sg_redacti
 
 @pytest.mark.syncgateway
 @pytest.mark.logredaction
+@pytest.mark.logging
+@pytest.mark.oscertify
 @pytest.mark.parametrize("sg_conf_name, redaction_level, redaction_salt, x509_cert_auth", [
     ("log_redaction", "partial", False, True),
     pytest.param("log_redaction", "none", False, False, marks=pytest.mark.sanity),
@@ -106,6 +112,7 @@ def test_sgCollect1(params_from_base_test_setup, remove_tmp_sg_redaction_logs, s
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
     sg_url = cluster_hosts["sync_gateways"][0]["public"]
     sg_ip = host_for_url(sg_admin_url)
+
     sg_db = "db"
     num_of_docs = 10
     user_name = "autotest"
@@ -119,8 +126,9 @@ def test_sgCollect1(params_from_base_test_setup, remove_tmp_sg_redaction_logs, s
     # Modifying log redaction level to partial
     temp_cluster_config = copy_to_temp_conf(cluster_config, mode)
     persist_cluster_config_environment_prop(temp_cluster_config, 'redactlevel', "partial", property_name_check=False)
+    cbs_ce_version = params_from_base_test_setup["cbs_ce"]
 
-    if x509_cert_auth:
+    if x509_cert_auth and not cbs_ce_version:
         persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
 
     cluster = Cluster(config=temp_cluster_config)
@@ -130,7 +138,7 @@ def test_sgCollect1(params_from_base_test_setup, remove_tmp_sg_redaction_logs, s
     sg_client = MobileRestClient()
     channels = ["log-redaction"]
     sg_client.create_user(url=sg_admin_url, db=sg_db, name=user_name, password=password, channels=channels)
-    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=user_name, password=password)
+    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=user_name)
 
     # Create docs with xattrs
     sgdoc_bodies = document.create_docs(doc_id_prefix='sg_docs', number=num_of_docs,
@@ -146,11 +154,12 @@ def test_sgCollect1(params_from_base_test_setup, remove_tmp_sg_redaction_logs, s
 
 @pytest.mark.syncgateway
 @pytest.mark.logredaction
+@pytest.mark.logging
 @pytest.mark.parametrize("sg_conf_name, redaction_level, redaction_salt, output_dir, x509_cert_auth", [
     ("log_redaction", "partial", False, False, True),
-    ("log_redaction", None, False, False, False),
+    pytest.param("log_redaction", None, False, False, False, marks=pytest.mark.oscertify),
     ("log_redaction", "partial", True, False, False),
-    ("log_redaction", "partial", True, True, True)
+    pytest.param("log_redaction", "partial", True, True, True, marks=pytest.mark.oscertify)
 ])
 def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_logs, sg_conf_name, redaction_level,
                            redaction_salt, output_dir, x509_cert_auth):
@@ -177,6 +186,7 @@ def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_
     password = 'validkey'
     sa_directory = None
     sa_host = None
+    cbs_ce_version = params_from_base_test_setup["cbs_ce"]
     if get_sync_gateway_version(sg_ip)[0] < "2.1":
         pytest.skip("log redaction feature not available for version < 2.1 ")
 
@@ -186,7 +196,7 @@ def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_
     temp_cluster_config = copy_to_temp_conf(cluster_config, mode)
     persist_cluster_config_environment_prop(temp_cluster_config, 'redactlevel', "partial", property_name_check=False)
 
-    if x509_cert_auth:
+    if x509_cert_auth and not cbs_ce_version:
         persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
 
     cluster = Cluster(config=temp_cluster_config)
@@ -211,7 +221,7 @@ def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_
     sg_client = MobileRestClient()
     channels = ["log-redaction"]
     sg_client.create_user(url=sg_admin_url, db=sg_db, name=user_name, password=password, channels=channels)
-    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=user_name, password=password)
+    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=user_name)
 
     # 4. Create docs with xattrs
     sgdoc_bodies = document.create_docs(doc_id_prefix='sg_docs', number=num_of_docs,
@@ -255,7 +265,11 @@ def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_
     log_info("sg collect is running ........")
     # Minimum of 5 minute sleep time is recommended
     # Refer https://github.com/couchbase/sync_gateway/issues/3669
-    while sg_client.get_sgCollect_status(sg_host) == "running" and count < 60:
+    if sg_platform == "windows":
+        max_count = 120
+    else:
+        max_count = 60
+    while sg_client.get_sgCollect_status(sg_host) == "running" and count < max_count:
         time.sleep(5)
         count += 1
     time.sleep(5)  # sleep until zip files created with sg collect rest end point
@@ -267,6 +281,8 @@ def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_
 
 @pytest.mark.syncgateway
 @pytest.mark.logredaction
+@pytest.mark.logging
+@pytest.mark.oscertify
 @pytest.mark.parametrize("sg_conf_name, x509_cert_auth", [
     ("log_redaction", False)
 ])
@@ -289,6 +305,7 @@ def test_sgCollectRestApi_errorMessages(params_from_base_test_setup, remove_tmp_
     sg_ip = host_for_url(sg_admin_url)
     sg_db = "db"
     num_of_docs = 10
+    cbs_ce_version = params_from_base_test_setup["cbs_ce"]
     if get_sync_gateway_version(sg_ip)[0] < "2.1":
         pytest.skip("log redaction feature not available for version < 2.1 ")
 
@@ -298,7 +315,7 @@ def test_sgCollectRestApi_errorMessages(params_from_base_test_setup, remove_tmp_
     temp_cluster_config = copy_to_temp_conf(cluster_config, mode)
     persist_cluster_config_environment_prop(temp_cluster_config, 'redactlevel', "partial", property_name_check=False)
 
-    if x509_cert_auth:
+    if x509_cert_auth and not cbs_ce_version:
         persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
 
     cluster = Cluster(config=temp_cluster_config)
@@ -314,7 +331,7 @@ def test_sgCollectRestApi_errorMessages(params_from_base_test_setup, remove_tmp_
     sg_client = MobileRestClient()
     channels = ["log-redaction"]
     sg_client.create_user(url=sg_admin_url, db=sg_db, name='autotest', password='validkey', channels=channels)
-    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest', password='validkey')
+    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest')
 
     # 4. Create docs with xattrs
     sgdoc_bodies = document.create_docs(doc_id_prefix='sg_docs', number=num_of_docs,
@@ -326,27 +343,104 @@ def test_sgCollectRestApi_errorMessages(params_from_base_test_setup, remove_tmp_
     upload_host = "https://s3.amazonaws.com/cb-customers"
     resp = sg_client.sgCollect_restCall(sg_host, redact_level="partial", upload_host=upload_host)
     log_info("Response Content", resp.content.decode('ascii'))
-    assert "Invalid options used for sgcollect_info: upload must be set to true if upload_host is specified" in resp.content.decode('ascii')
+    assert "Invalid options used for sgcollect_info" in resp.content.decode('ascii'), "assert message for invalid options for sgcollect_info did not match"
+    assert "upload_host" in resp.content.decode('ascii'), "did not get upload_host message in error content"
     customer = "customer-name"
     ticket = "123"
 
     # should throw an error when trying with customer without upload parameter
     resp = sg_client.sgCollect_restCall(sg_host, redact_level="partial", customer=customer)
-    assert "Invalid options used for sgcollect_info: upload must be set to true if customer is specified" in resp.content.decode('ascii')
+    assert "Invalid options used for sgcollect_info:" in resp.content.decode('ascii')
+    assert "customer" in resp.content.decode('ascii')
 
     # should throw an error when trying ticket without upload
     resp = sg_client.sgCollect_restCall(sg_host, redact_level="partial", ticket=ticket)
-    assert "Invalid options used for sgcollect_info: upload must be set to true if ticket is specified" in resp.content.decode('ascii')
+    assert "Invalid options used for sgcollect_info:" in resp.content.decode('ascii')
+    assert "ticket" in resp.content.decode('ascii')
 
     # should throw an error when trying with upload_host, customer and ticket without upload
     resp = sg_client.sgCollect_restCall(sg_host, redact_level="partial", upload_host=upload_host, customer=customer, ticket=ticket)
-    assert "Invalid options used for sgcollect_info: upload must be set to true if upload_host is specified" in resp.content.decode('ascii')
+    assert "Invalid options used for sgcollect_info:" in resp.content.decode('ascii')
+    assert "upload_host" in resp.content.decode('ascii')
 
     # should throw an error when trying with output dir which does not exist
     output_dir = "/abc"
     resp = sg_client.sgCollect_restCall(sg_host, redact_level="partial", output_directory=output_dir)
 
-    assert "Invalid options used for sgcollect_info: no such file or directory:" in resp.content.decode('ascii')
+    assert "Invalid options used for sgcollect_info:" in resp.content.decode('ascii')
+    assert "no such file or directory:" in resp.content.decode('ascii')
+
+
+@pytest.mark.syncgateway
+@pytest.mark.logredaction
+@pytest.mark.logging
+def test_log_content_verification(params_from_base_test_setup, remove_tmp_sg_redaction_logs):
+    """
+    @summary
+    1. Verify all the log files on sgcollect zip file exist after unzip
+    2. Verify content of sync_gateway.log
+    """
+
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+    cluster_helper = ClusterKeywords(cluster_config)
+    cluster_hosts = cluster_helper.get_cluster_topology(cluster_config)
+    sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
+    sg_url = cluster_hosts["sync_gateways"][0]["public"]
+    sg_platform = params_from_base_test_setup["sg_platform"]
+    sg_ip = host_for_url(sg_admin_url)
+    sg_conf_name = "sync_gateway_default"
+    sg_db = "db"
+    num_of_docs = 10
+    if get_sync_gateway_version(sg_ip)[0] < "2.8.1":
+        pytest.skip("This feature is not available for version below 2.8.1 ")
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+
+    cluster = Cluster(config=cluster_config)
+    cluster.reset(sg_config_path=sg_conf)
+
+    # Get sync_gateway host
+    cluster = load_cluster_config_json(cluster_config)
+    sg_host = cluster["sync_gateways"][0]["ip"]
+    if cluster["environment"]["ipv6_enabled"]:
+        sg_host = "[{}]".format(sg_host)
+
+    # Create user in sync_gateway
+    sg_client = MobileRestClient()
+    channels = ["logging"]
+    sg_client.create_user(url=sg_admin_url, db=sg_db, name='autotest', password='password', channels=channels)
+    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest')
+
+    # Create docs with xattrs
+    sgdoc_bodies = document.create_docs(doc_id_prefix='sg_docs', number=num_of_docs,
+                                        attachments_generator=attachment.generate_2_png_10_10, channels=channels)
+    sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sgdoc_bodies, auth=autouser_session)
+    assert len(sgdoc_bodies) == num_of_docs
+
+    resp = sg_client.sgCollect_info(sg_host)
+    assert resp["status"] == "started", "sg collect did not started"
+    count = 0
+    log_info("sg collect is running ........")
+    # Minimum of 5 minute sleep time is recommended
+    # Refer https://github.com/couchbase/sync_gateway/issues/3669
+    if sg_platform == "windows":
+        max_count = 120
+    else:
+        max_count = 60
+    while sg_client.get_sgCollect_status(sg_host) == "running" and count < max_count:
+        time.sleep(5)
+        count += 1
+    time.sleep(5)  # sleep until zip files created with sg collect rest end point
+    pull_redacted_zip_file(cluster_config, sg_platform)
+    if sg_platform == "windows":
+        json_cluster = load_cluster_config_json(cluster_config)
+        sghost_username = json_cluster["sync_gateways:vars"]["ansible_user"]
+        sghost_password = json_cluster["sync_gateways:vars"]["ansible_password"]
+        remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip, sg_platform, sghost_username, sghost_password)
+    else:
+        remote_executor = RemoteExecutor(cluster["sync_gateways"][0]["ip"])
+    verify_all_logs_in_sgcollectzip(remote_executor)
 
 
 def verify_log_redaction(cluster_config, log_redaction_level, mode):
@@ -503,6 +597,33 @@ def log_verification_withsgCollect(redaction_level, user, password, zip_file_nam
     else:
         assert not os.path.isfile(redacted_file_name), "redacted file is generated for redaction level None"
     assert os.path.isfile(nonredacted_file_name), "non redacted zip file is not generated"
+
+
+def verify_all_logs_in_sgcollectzip(remote_executor, zip_file_name=None):
+    if zip_file_name is None:
+        command = "ls /tmp/sg_redaction_logs/sg1/*.zip | awk -F'.zip' '{print $1}' | grep -o '[^/]*$'"
+        zip_file_name = subprocess.check_output(command, shell=True)
+        zip_file_name = zip_file_name.rstrip()
+        if isinstance(zip_file_name, (bytes, bytearray)):
+            zip_file_name = zip_file_name.decode()
+    sgcollect_zip_filename = "/tmp/sg_redaction_logs/sg1/{}.zip".format(zip_file_name)
+    file_list_sgcollect_zip = ['expvars.json', 'pprof_block.pb.gz', 'pprof_goroutine.pb.gz', 'pprof_heap.pb.gz', 'pprof_mutex.pb.gz', 'pprof_profile.pb.gz',
+                               'sg_debug.log', 'sg_error.log', 'sg_info.log', 'sg_stats.log', 'sg_warn.log', 'sgcollect_info_options.log', 'sync_gateway', 'sync_gateway.json',
+                               'sync_gateway.log', 'sync_gateway_access.log', 'sync_gateway_error.log', 'syslog.tar.gz', 'systemd_journal.gz']
+    for file in file_list_sgcollect_zip:
+        bracket_command = "\"{}\""
+        find_command = "find {} -type f -exec sh -c 'unzip -l {} | grep -q {}' \\; -print | wc -l".format(sgcollect_zip_filename, bracket_command, file)
+        result_command = subprocess.check_output(find_command, shell=True)
+        assert int(result_command.decode('utf-8').strip()) == 1, "{} do not exist".format(file)
+
+    # unzip file
+    unzip_log_files(sgcollect_zip_filename)
+    sgcollect_zip_directory = sgcollect_zip_filename.split(".zip")[0]
+    grep_command = "grep -E '(?:hostname: |hostname = |Host Name:(?:\s)*)(.*)' {}/*/sync_gateway.log".format(sgcollect_zip_directory)
+    result_command = subprocess.check_output(grep_command, shell=True)
+    _, stdout, _ = remote_executor.execute("hostname")
+    assert_hostname = result_command.decode('utf-8').strip() == "kernel.hostname = {}".format(stdout[0].rstrip())
+    assert (result_command.decode('utf-8').strip() == "kernel.hostname = localhost.localdomain" or assert_hostname), "did not get the right string from sync_gateway log file"
 
 
 @pytest.fixture(scope="function")

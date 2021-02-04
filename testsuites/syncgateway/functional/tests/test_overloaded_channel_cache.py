@@ -18,10 +18,9 @@ from utilities.cluster_config_utils import persist_cluster_config_environment_pr
 @pytest.mark.basicauth
 @pytest.mark.channel
 @pytest.mark.bulkops
-@pytest.mark.changes
 @pytest.mark.parametrize("sg_conf_name, num_docs, user_channels, filter, limit, x509_cert_auth", [
     ("sync_gateway_channel_cache", 5000, "*", True, 50, False),
-    pytest.param("sync_gateway_channel_cache", 1000, "*", True, 50, True, marks=pytest.mark.sanity),
+    pytest.param("sync_gateway_channel_cache", 1000, "*", True, 50, True, marks=[pytest.mark.sanity, pytest.mark.oscertify]),
     ("sync_gateway_channel_cache", 1000, "ABC", False, 50, True),
     ("sync_gateway_channel_cache", 1000, "ABC", True, 50, False),
 ])
@@ -45,6 +44,7 @@ def test_overloaded_channel_cache(params_from_base_test_setup, sg_conf_name, num
 
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    cbs_ce_version = params_from_base_test_setup["cbs_ce"]
 
     if mode == "di":
         pytest.skip("Unsupported feature in distributed index")
@@ -59,7 +59,7 @@ def test_overloaded_channel_cache(params_from_base_test_setup, sg_conf_name, num
     log_info("Using filter: {}".format(filter))
     log_info("Using limit: {}".format(limit))
 
-    if x509_cert_auth:
+    if x509_cert_auth and not cbs_ce_version:
         temp_cluster_config = copy_to_temp_conf(cluster_conf, mode)
         persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
         cluster_conf = temp_cluster_config

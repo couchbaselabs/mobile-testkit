@@ -110,6 +110,10 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="delta-sync: Enable delta-sync for sync gateway")
 
+    parser.addoption("--enable-upgrade-app",
+                     action="store_true",
+                     help="based on this conditions we install the old test server app first them new version of the app")
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -140,14 +144,24 @@ def params_from_base_suite_setup(request):
     number_replicas = request.config.getoption("--number-replicas")
     delta_sync_enabled = request.config.getoption("--delta-sync")
     enable_file_logging = request.config.getoption("--enable-file-logging")
+    enable_upgrade_app = request.config.getoption("--enable-upgrade-app")
 
     test_name = request.node.name
-    testserver = TestServerFactory.create(platform=liteserv_platform,
-                                          version_build=upgraded_liteserv_version,
-                                          host=liteserv_host,
-                                          port=liteserv_port,
-                                          community_enabled=community_enabled,
-                                          debug_mode=debug_mode)
+    if enable_upgrade_app:
+        testserver = TestServerFactory.create(platform=liteserv_platform,
+                                              version_build=base_liteserv_version,
+                                              host=liteserv_host,
+                                              port=liteserv_port,
+                                              community_enabled=community_enabled,
+                                              debug_mode=debug_mode)
+    else:
+        testserver = TestServerFactory.create(platform=liteserv_platform,
+                                              version_build=upgraded_liteserv_version,
+                                              host=liteserv_host,
+                                              port=liteserv_port,
+                                              community_enabled=community_enabled,
+                                              debug_mode=debug_mode)
+
     log_info("Downloading TestServer ...")
     # Download TestServer app
     testserver.download()
@@ -333,7 +347,11 @@ def params_from_base_suite_setup(request):
         "suite_db_log_files": suite_db_log_files,
         "db_password": db_password,
         "encrypted_db": encrypted_db,
-        "utils_obj": utils_obj
+        "utils_obj": utils_obj,
+        "community_enabled": community_enabled,
+        "debug_mode": debug_mode,
+        "testserver": testserver,
+        "test_name_cp": test_name_cp
     }
 
     # Flush all the memory contents on the server app

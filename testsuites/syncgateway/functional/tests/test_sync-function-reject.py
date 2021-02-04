@@ -16,7 +16,8 @@ from keywords import attachment
 @pytest.mark.syncgateway
 @pytest.mark.attachments
 @pytest.mark.session
-@pytest.mark.channel
+@pytest.mark.sync
+@pytest.mark.oscertify
 @pytest.mark.parametrize("sg_conf_name", [
     "reject_all"
 ])

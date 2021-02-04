@@ -6,7 +6,7 @@
   tasks:
   - include: tasks/stop-sync-gateway.yml
     become: yes
-    when: ansible_distribution == "CentOS" or ansible_distribution == "Ubuntu" or ansible_distribution == "MacOSX"
+    when: ansible_distribution == "CentOS" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian" or ansible_distribution == "MacOSX"
 
   - include: tasks/stop-sync-gateway-windows.yml
     when: ansible_os_family == "Windows"
@@ -14,7 +14,7 @@
   # Delete logs and .pindex files
   - include: tasks/delete-sync-gateway-artifacts.yml
     become: yes
-    when: ansible_distribution == "CentOS" or ansible_distribution == "Ubuntu"
+    when: ansible_distribution == "CentOS" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
 
   - include: tasks/delete-sync-gateway-artifacts-windows.yml
     when: ansible_os_family == "Windows"
@@ -35,11 +35,14 @@
     sslcert:
     sslkey:
     logging:
+    cacertpath:
+    x509_auth:
+    x509_certs_dir:
 
   tasks:
   - include: tasks/deploy-sync-gateway-config.yml
     become: yes
-    when: ansible_distribution == "CentOS" or ansible_distribution == "Ubuntu"
+    when: ansible_distribution == "CentOS" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
 
   - include: tasks/deploy-sync-gateway-config-macos.yml
     become: yes
@@ -64,11 +67,14 @@
     sslcert:
     sslkey:
     logging:
+    cacertpath:
+    x509_auth:
+    x509_certs_dir:
 
   tasks:
   - include: tasks/deploy-sync-gateway-config.yml
     become: yes
-    when: ansible_distribution == "CentOS" or ansible_distribution == "Ubuntu"
+    when: ansible_distribution == "CentOS" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
 
   - include: tasks/deploy-sync-gateway-config-macos.yml
     when: ansible_distribution == "MacOSX"
@@ -86,7 +92,7 @@
   tasks:
   - include: tasks/start-sync-gateway.yml
     become: yes
-    when: ansible_distribution == "CentOS" or ansible_distribution == "Ubuntu"
+    when: ansible_distribution == "CentOS" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
 
   - include: tasks/start-sync-gateway-macos.yml
     when: ansible_os_family == "Darwin"

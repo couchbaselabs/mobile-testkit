@@ -4,6 +4,7 @@
     "maxIncomingConnections": 0,
     "maxFileDescriptors": 90000,
     "compressResponses": false,
+    {{ prometheus }}
     {{ sslcert }}
     {{ sslkey }}
     {{ logging }}
@@ -21,7 +22,8 @@
             {{ keypath }}
             {{ delta_sync }}
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
-            "bucket":"data-bucket"
+            "bucket":"data-bucket",
+            "bucket_op_timeout_ms": 5000
         }
     }
 }

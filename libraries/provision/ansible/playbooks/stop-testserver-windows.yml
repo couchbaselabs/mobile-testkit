@@ -2,12 +2,12 @@
   hosts: windows
   vars:
     log_full_path:
-    custom_cbl_log_dir: C:\PROGRA~1\dotnet\TextLogging
 
   tasks:
-    - include: tasks/stop-fetch-windows-cbl-logs.yml
-
-    - name: Delete log file
-      win_file:
-        path: C:\PROGRA~1\dotnet\TextLogging
-        state: absent
+    - debug: msg="Stoping the Testserver "
+    - debug: msg="Copying logs at - {{ log_full_path }}"
+    - name: Stop TestServer
+      win_nssm:
+        name: TestServer
+        application: C:\PROGRA~1\dotnet\dotnet.exe
+        state: stopped

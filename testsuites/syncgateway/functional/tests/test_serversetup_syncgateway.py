@@ -161,7 +161,7 @@ def test_sgw_server_et_alternative_address(params_from_base_test_setup):
         i = i + 1
         command = "curl -v -X PUT -u Administrator:password "\
             "{}/node/controller/setupAlternateAddresses/external "\
-            "-d hostname={}{} -d mgmt=9000 -d kv=9050".format(server.url, cb_ip_series, i)
+            "-d hostname={}{} -d mgmt=8091 -d kv=11210 -d mgmtSSL=18091 -d kvSSL=11207 -d n1ql=8093 -d n1qlSSL=18093 -d capi=8092 -d capiSSL=18092".format(server.url, cb_ip_series, i)
         os.system(command)
 
     sg_helper = SyncGateway()

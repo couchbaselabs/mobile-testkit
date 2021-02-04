@@ -25,7 +25,7 @@ class ValueSerializer(object):
             bool_val = bool(value)
             return "true" if bool_val else "false"
         elif isinstance(value, int):
-            if value < 1000000:
+            if value < 1000000 and value > -1000000:
                 number = int(value)
                 return "I" + str(number)
             return "L" + str(value)

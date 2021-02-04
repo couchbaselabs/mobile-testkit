@@ -306,6 +306,23 @@ def compare_docs(cbl_db, db, docs_dict):
         assert deep_dict_compare(doc["doc"], cbl_db_docs[key]), "mismatch in the dictionary"
 
 
+def compare_cbl_docs(db, cbl_db1, cbl_db2):
+    doc_ids1 = db.getDocIds(cbl_db1)
+    cbl_db_docs1 = db.getDocuments(cbl_db1, doc_ids1)
+    doc_ids2 = db.getDocIds(cbl_db2)
+    cbl_db_docs2 = db.getDocuments(cbl_db2, doc_ids2)
+    for doc in cbl_db_docs1:
+        try:
+            del cbl_db_docs1[doc]["_id"]
+        except KeyError:
+            log_info("Ignoring id verification on cbl db1")
+        try:
+            del cbl_db_docs2[doc]["_id"]
+        except KeyError:
+            log_info("Ignoring id verification on cbl db2")
+        assert deep_dict_compare(cbl_db_docs1[doc], cbl_db_docs2[doc]), "mismatch in the dictionary"
+
+
 def compare_generic_types(object1, object2, isPredictiveResult=False):
     """
     @summary:
@@ -426,3 +443,51 @@ def meet_supported_version(version_list, target_version):
             return False
 
     return True
+
+
+def get_embedded_asset_file_path(cblite_platform, db, cbl_db, file_name):
+    log_info("get a file path from embedded resources.")
+    if cblite_platform in ["android", "xamarin-android", "java-macosx", "java-msft", "java-ubuntu", "java-centos",
+                           "javaws-macosx", "javaws-msft", "javaws-ubuntu", "javaws-centos"]:
+        return file_name
+    elif cblite_platform == "ios":
+        return "Files/{}".format(file_name)
+    elif cblite_platform == "net-msft":
+        db_path = db.getPath(cbl_db).rstrip("\\")
+        app_dir = "\\".join(db_path.split("\\")[:-2])
+        return "{}\\Files\\{}".format(app_dir, file_name)
+    else:
+        return "Files/{}".format(file_name)
+
+
+def set_device_enabled(run_on_device, list_size):
+    device_enabled_list = []
+    if run_on_device is None:
+        for i in range(list_size):
+            device_enabled_list.append(False)
+        return device_enabled_list
+
+    device_list = run_on_device.split(',')
+    for device in device_list:
+        if device == "device":
+            device_enabled_list.append(True)
+        else:
+            device_enabled_list.append(False)
+
+    return device_enabled_list
+
+
+def is_replicator_in_connection_retry(error_msg):
+    # check android
+    if "POSIXErrorDomain,111" in error_msg and "Connection refused" in error_msg and "Android" in error_msg:
+        return True
+    # check java
+    if "CouchbaseLite,11001" in error_msg and "WebSocket connection closed by peer" in error_msg and "Java" in error_msg:
+        return True
+    # check all .net
+    if "POSIXDomain / 111" in error_msg and "Connection refused" in error_msg:
+        return True
+    # check ios
+    if "NSPOSIXErrorDomain" in error_msg and "Connection refused" in error_msg and "Code=61" in error_msg:
+        return True
+    return False

@@ -39,7 +39,10 @@ def params_from_base_suite_setup(request):
     sa_installer_type = request.config.getoption("--sa-installer-type")
     delta_sync_enabled = request.config.getoption("--delta-sync")
     sg_platform = request.config.getoption("--sg-platform")
+    cbs_platform = request.config.getoption("--cbs-platform")
     delta_sync_enabled = request.config.getoption("--delta-sync")
+    cbs_platform = request.config.getoption("--cbs-platform")
+    magma_storage_enabled = request.config.getoption("--magma-storage")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
@@ -64,6 +67,7 @@ def params_from_base_suite_setup(request):
     log_info("sa_installer_type: {}".format(sa_installer_type))
     log_info("delta_sync_enabled: {}".format(delta_sync_enabled))
     log_info("sg_platform: {}".format(sg_platform))
+    log_info("cbs_platform: {}".format(cbs_platform))
     log_info("Delta_sync: {}".format(delta_sync_enabled))
 
     # sg-ce is invalid for di mode
@@ -150,6 +154,15 @@ def params_from_base_suite_setup(request):
         log_info("Running test with sg platform {}".format(sg_platform))
         persist_cluster_config_environment_prop(cluster_config, 'sg_platform', sg_platform, False)
 
+    try:
+        cbs_platform
+    except NameError:
+        log_info("cbs platform  is not provided, so by default it runs on Centos")
+        persist_cluster_config_environment_prop(cluster_config, 'cbs_platform', "centos7", False)
+    else:
+        log_info("Running test with sg platform {}".format(cbs_platform))
+        persist_cluster_config_environment_prop(cluster_config, 'cbs_platform', cbs_platform, False)
+
     if no_conflicts_enabled:
         log_info("Running with no conflicts")
         persist_cluster_config_environment_prop(cluster_config, 'no_conflicts_enabled', True)
@@ -163,6 +176,22 @@ def params_from_base_suite_setup(request):
     else:
         log_info("Running without delta sync")
         persist_cluster_config_environment_prop(cluster_config, 'delta_sync_enabled', False)
+
+    try:
+        cbs_platform
+    except NameError:
+        log_info("cbs platform  is not provided, so by default it runs on Centos7")
+        persist_cluster_config_environment_prop(cluster_config, 'cbs_platform', "centos7", False)
+    else:
+        log_info("Running test with cbs platform {}".format(cbs_platform))
+        persist_cluster_config_environment_prop(cluster_config, 'cbs_platform', cbs_platform, False)
+
+    if magma_storage_enabled:
+        log_info("Running with magma storage")
+        persist_cluster_config_environment_prop(cluster_config, 'magma_storage_enabled', True, False)
+    else:
+        log_info("Running without magma storage")
+        persist_cluster_config_environment_prop(cluster_config, 'magma_storage_enabled', False, False)
 
     if sync_gateway_version < "2.0.0" and no_conflicts_enabled:
         pytest.skip("Test cannot run with no-conflicts with sg version < 2.0.0")
@@ -181,8 +210,10 @@ def params_from_base_suite_setup(request):
                 sync_gateway_version=sync_gateway_version,
                 sync_gateway_config=sg_config,
                 race_enabled=race_enabled,
+                cbs_platform=cbs_platform,
                 sg_ce=sg_ce,
                 cbs_ce=cbs_ce,
+                sg_platform=sg_platform,
                 sg_installer_type=sg_installer_type,
                 sa_installer_type=sa_installer_type
             )
@@ -243,5 +274,3 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     if collect_logs or request.node.rep_call.failed or len(errors) != 0:
         logging_helper = Logging()
         logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=test_name)
-
-    assert len(errors) == 0

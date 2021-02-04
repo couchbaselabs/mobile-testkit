@@ -1,5 +1,3 @@
-
-
 import random
 import time
 import json
@@ -36,6 +34,7 @@ SDK_OP_SLEEP = 0.05
 @pytest.mark.syncgateway
 @pytest.mark.xattrs
 @pytest.mark.session
+@pytest.mark.oscertify
 @pytest.mark.parametrize('sg_conf_name', [
     'xattrs/old_doc'
 ])
@@ -124,15 +123,13 @@ def test_olddoc_nil(params_from_base_test_setup, sg_conf_name):
     user_one_auth = sg_client.create_session(
         url=sg_admin_url,
         db=sg_db,
-        name=user_one_info.name,
-        password=user_one_info.password
+        name=user_one_info.name
     )
 
     user_two_auth = sg_client.create_session(
         url=sg_admin_url,
         db=sg_db,
-        name=user_two_info.name,
-        password=user_two_info.password
+        name=user_two_info.name
     )
 
     abc_docs = document.create_docs(doc_id_prefix="abc_docs", number=num_docs, channels=user_one_info.channels)
@@ -176,11 +173,10 @@ def test_olddoc_nil(params_from_base_test_setup, sg_conf_name):
 
 @pytest.mark.syncgateway
 @pytest.mark.xattrs
-@pytest.mark.changes
 @pytest.mark.session
 @pytest.mark.parametrize('sg_conf_name, number_users, number_docs_per_user, number_of_updates_per_user', [
     ('xattrs/no_import', 1, 1, 10),
-    ('xattrs/no_import', 100, 10, 10),
+    pytest.param('xattrs/no_import', 100, 10, 10, marks=pytest.mark.oscertify),
     ('xattrs/no_import', 10, 1000, 10)
     # ('xattrs/no_import', 100, 1000, 2)
 ])
@@ -244,7 +240,7 @@ def test_on_demand_doc_processing(params_from_base_test_setup, sg_conf_name, num
     for user_name in user_names:
         user_channels = ['{}_chan'.format(user_name)]
         sg_client.create_user(url=sg_admin_url, db=sg_db, name=user_name, password='pass', channels=user_channels)
-        auth_dict[user_name] = sg_client.create_session(url=sg_admin_url, db=sg_db, name=user_name, password='pass')
+        auth_dict[user_name] = sg_client.create_session(url=sg_admin_url, db=sg_db, name=user_name)
         docs = document.create_docs('{}_doc'.format(user_name), number=number_docs_per_user, channels=user_channels, prop_generator=update_props)
         for doc in docs:
             docs_to_add[doc['_id']] = doc
@@ -316,6 +312,7 @@ def test_on_demand_doc_processing(params_from_base_test_setup, sg_conf_name, num
 @pytest.mark.syncgateway
 @pytest.mark.xattrs
 @pytest.mark.session
+@pytest.mark.oscertify
 @pytest.mark.parametrize('sg_conf_name, x509_cert_auth', [
     ('xattrs/no_import', False)
 ])
@@ -386,8 +383,7 @@ def test_on_demand_import_of_external_updates(params_from_base_test_setup, sg_co
     seth_auth = sg_client.create_session(
         url=sg_admin_url,
         db=sg_db,
-        name=seth_user_info.name,
-        password=seth_user_info.password
+        name=seth_user_info.name
     )
 
     doc_id = 'test_doc'
@@ -425,7 +421,7 @@ def test_on_demand_import_of_external_updates(params_from_base_test_setup, sg_co
 @pytest.mark.xattrs
 @pytest.mark.session
 @pytest.mark.parametrize('sg_conf_name, x509_cert_auth', [
-    pytest.param('sync_gateway_default_functional_tests', True, marks=pytest.mark.sanity),
+    pytest.param('sync_gateway_default_functional_tests', True, marks=[pytest.mark.sanity, pytest.mark.oscertify]),
     ('sync_gateway_default_functional_tests_no_port', False),
     ("sync_gateway_default_functional_tests_couchbase_protocol_withport_11210", False)
 ])
@@ -470,12 +466,13 @@ def test_offline_processing_of_external_updates(params_from_base_test_setup, sg_
     sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
     sg_url = cluster_topology['sync_gateways'][0]['public']
     cbs_url = cluster_topology['couchbase_servers'][0]
+    cbs_ce_version = params_from_base_test_setup["cbs_ce"]
 
     log_info('sg_conf: {}'.format(sg_conf))
     log_info('sg_admin_url: {}'.format(sg_admin_url))
     log_info('sg_url: {}'.format(sg_url))
     log_info('cbs_url: {}'.format(cbs_url))
-    if x509_cert_auth:
+    if x509_cert_auth and not cbs_ce_version:
         temp_cluster_config = copy_to_temp_conf(cluster_conf, mode)
         persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
         cluster_conf = temp_cluster_config
@@ -512,8 +509,7 @@ def test_offline_processing_of_external_updates(params_from_base_test_setup, sg_
     seth_auth = sg_client.create_session(
         url=sg_admin_url,
         db=sg_db,
-        name=seth_user_info.name,
-        password=seth_user_info.password
+        name=seth_user_info.name
     )
 
     # Add docs
@@ -583,9 +579,9 @@ def test_offline_processing_of_external_updates(params_from_base_test_setup, sg_
 @pytest.mark.xattrs
 @pytest.mark.session
 @pytest.mark.parametrize('sg_conf_name', [
-    'sync_gateway_default_functional_tests',
-    'sync_gateway_default_functional_tests_no_port',
-    "sync_gateway_default_functional_tests_couchbase_protocol_withport_11210"
+    ('sync_gateway_default_functional_tests'),
+    ('sync_gateway_default_functional_tests_no_port'),
+    pytest.param("sync_gateway_default_functional_tests_couchbase_protocol_withport_11210", marks=pytest.mark.oscertify)
 ])
 def test_large_initial_import(params_from_base_test_setup, sg_conf_name):
     """ Regression test for https://github.com/couchbase/sync_gateway/issues/2537
@@ -692,12 +688,11 @@ def test_large_initial_import(params_from_base_test_setup, sg_conf_name):
 
 @pytest.mark.syncgateway
 @pytest.mark.xattrs
-@pytest.mark.changes
 @pytest.mark.session
 @pytest.mark.parametrize('sg_conf_name, use_multiple_channels, x509_cert_auth', [
     ('sync_gateway_default_functional_tests', False, True),
     ('sync_gateway_default_functional_tests', True, False),
-    ('sync_gateway_default_functional_tests_no_port', False, True),
+    pytest.param('sync_gateway_default_functional_tests_no_port', False, True, marks=pytest.mark.oscertify),
     ('sync_gateway_default_functional_tests_no_port', True, False)
 ])
 def test_purge(params_from_base_test_setup, sg_conf_name, use_multiple_channels, x509_cert_auth):
@@ -769,8 +764,7 @@ def test_purge(params_from_base_test_setup, sg_conf_name, use_multiple_channels,
     seth_auth = sg_client.create_session(
         url=sg_admin_url,
         db=sg_db,
-        name=seth_user_info.name,
-        password=seth_user_info.password
+        name=seth_user_info.name
     )
 
     # Create 'number_docs_per_client' docs from Sync Gateway
@@ -917,12 +911,11 @@ def test_purge(params_from_base_test_setup, sg_conf_name, use_multiple_channels,
 
 @pytest.mark.syncgateway
 @pytest.mark.xattrs
-@pytest.mark.changes
 @pytest.mark.session
 @pytest.mark.parametrize('sg_conf_name', [
-    'sync_gateway_default_functional_tests',
-    'sync_gateway_default_functional_tests_no_port',
-    'sync_gateway_default_functional_tests_couchbase_protocol_withport_11210'
+    pytest.param('sync_gateway_default_functional_tests', marks=pytest.mark.oscertify),
+    ('sync_gateway_default_functional_tests_no_port'),
+    ('sync_gateway_default_functional_tests_couchbase_protocol_withport_11210')
 ])
 def test_sdk_does_not_see_sync_meta(params_from_base_test_setup, sg_conf_name):
     """
@@ -975,7 +968,7 @@ def test_sdk_does_not_see_sync_meta(params_from_base_test_setup, sg_conf_name):
     # Create sg user
     sg_client = MobileRestClient()
     sg_client.create_user(url=sg_admin_url, db=sg_db, name='seth', password='pass', channels=['shared'])
-    seth_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='seth', password='pass')
+    seth_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='seth')
 
     # Connect to server via SDK
     cbs_ip = host_for_url(cbs_url)
@@ -1040,12 +1033,11 @@ def test_sdk_does_not_see_sync_meta(params_from_base_test_setup, sg_conf_name):
 
 @pytest.mark.syncgateway
 @pytest.mark.xattrs
-@pytest.mark.changes
 @pytest.mark.session
 @pytest.mark.parametrize('sg_conf_name', [
-    'sync_gateway_default_functional_tests',
-    'sync_gateway_default_functional_tests_no_port',
-    'sync_gateway_default_functional_tests_couchbase_protocol_withport_11210'
+    ('sync_gateway_default_functional_tests'),
+    pytest.param('sync_gateway_default_functional_tests_no_port', marks=pytest.mark.oscertify),
+    ('sync_gateway_default_functional_tests_couchbase_protocol_withport_11210')
 ])
 def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
     """
@@ -1131,7 +1123,7 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
     log_info('Creating user / session on Sync Gateway ...')
     sg_client = MobileRestClient()
     sg_client.create_user(url=sg_admin_url, db=sg_db, name='seth', password='pass', channels=['sg', 'sdk'])
-    seth_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='seth', password='pass')
+    seth_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='seth')
 
     # Create / add docs to sync gateway
     log_info('Adding docs Sync Gateway ...')
@@ -1268,7 +1260,6 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
 
 @pytest.mark.syncgateway
 @pytest.mark.xattrs
-@pytest.mark.changes
 @pytest.mark.session
 @pytest.mark.parametrize(
     'sg_conf_name, number_docs_per_client, number_updates_per_doc_per_client',
@@ -1276,7 +1267,7 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
         ('sync_gateway_default_functional_tests', 10, 10),
         ('sync_gateway_default_functional_tests', 100, 10),
         ('sync_gateway_default_functional_tests_no_port', 100, 10),
-        ('sync_gateway_default_functional_tests', 10, 100),
+        pytest.param('sync_gateway_default_functional_tests', 10, 100, marks=pytest.mark.oscertify),
         ('sync_gateway_default_functional_tests_no_port', 10, 100),
         ('sync_gateway_default_functional_tests', 1, 1000)
     ]
@@ -1350,7 +1341,7 @@ def test_sg_sdk_interop_shared_docs(params_from_base_test_setup,
     # Create sg user
     sg_client = MobileRestClient()
     sg_client.create_user(url=sg_admin_url, db=sg_db, name='seth', password='pass', channels=['shared'])
-    seth_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='seth', password='pass')
+    seth_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='seth')
 
     # Connect to server via SDK
     cbs_ip = host_for_url(cbs_url)
@@ -1530,7 +1521,6 @@ def test_sg_sdk_interop_shared_docs(params_from_base_test_setup,
 
 @pytest.mark.syncgateway
 @pytest.mark.xattrs
-@pytest.mark.changes
 @pytest.mark.session
 @pytest.mark.parametrize(
     'sg_conf_name, number_docs_per_client, number_updates_per_doc_per_client',
@@ -1538,7 +1528,7 @@ def test_sg_sdk_interop_shared_docs(params_from_base_test_setup,
         ('sync_gateway_default_functional_tests', 10, 10),
         ('sync_gateway_default_functional_tests', 100, 10),
         ('sync_gateway_default_functional_tests_no_port', 100, 10),
-        ('sync_gateway_default_functional_tests_couchbase_protocol_withport_11210', 100, 10),
+        pytest.param('sync_gateway_default_functional_tests_couchbase_protocol_withport_11210', 100, 10, marks=pytest.mark.oscertify),
         ('sync_gateway_default_functional_tests', 10, 100),
         ('sync_gateway_default_functional_tests_no_port', 10, 100),
         ('sync_gateway_default_functional_tests', 1, 1000)
@@ -1601,10 +1591,10 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
 
     sg_client = MobileRestClient()
     sg_client.create_user(url=sg_admin_url, db=sg_db, name='autosdkuser', password='pass', channels=['shared'])
-    autosdkuser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autosdkuser', password='pass')
+    autosdkuser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autosdkuser')
 
     sg_client.create_user(url=sg_admin_url, db=sg_db, name='autosguser', password='pass', channels=['sg-shared'])
-    autosguser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autosguser', password='pass')
+    autosguser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autosguser')
 
     log_info('Num docs per client: {}'.format(number_docs_per_client))
     log_info('Num updates per doc per client: {}'.format(number_updates_per_doc_per_client))
@@ -2188,14 +2178,13 @@ def verify_doc_ids_in_sdk_get_multi(response, expected_number_docs, expected_ids
 
 @pytest.mark.syncgateway
 @pytest.mark.xattrs
-@pytest.mark.changes
 @pytest.mark.session
 @pytest.mark.parametrize(
     'sg_conf_name, number_docs_per_client, number_updates_per_doc_per_client',
     [
         ('sync_gateway_default_functional_tests', 10, 10),
         ('sync_gateway_default_functional_tests', 100, 10),
-        ('sync_gateway_default_functional_tests_no_port', 100, 10),
+        pytest.param('sync_gateway_default_functional_tests_no_port', 100, 10, marks=pytest.mark.oscertify),
         ('sync_gateway_default_functional_tests_couchbase_protocol_withport_11210', 100, 10),
         ('sync_gateway_default_functional_tests_couchbase_protocol_withport_11210', 100, 10),
         ('sync_gateway_default_functional_tests', 10, 100),
@@ -2272,7 +2261,7 @@ def test_sg_sdk_interop_shared_updates_from_sg(params_from_base_test_setup,
     # Create sg user
     sg_client = MobileRestClient()
     sg_client.create_user(url=sg_admin_url, db=sg_db, name='autotest', password='pass', channels=['shared'])
-    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest', password='pass')
+    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest')
 
     # Connect to server via SDK
     cbs_ip = host_for_url(cbs_url)
@@ -2321,7 +2310,7 @@ def test_sg_sdk_interop_shared_updates_from_sg(params_from_base_test_setup,
     # Update docs via SDK
     sdk_docs = sdk_client.get_multi(sg_doc_ids)
     assert len(list(sdk_docs.keys())) == number_docs_per_client
-    for doc_id, val in list(sdk_docs.items()):
+    for doc_id, val in sdk_docs.items():
         doc_body = val.value
         doc_body["updated_by_sdk"] = True
         sdk_client.upsert(doc_id, doc_body)
@@ -2368,7 +2357,6 @@ def test_sg_sdk_interop_shared_updates_from_sg(params_from_base_test_setup,
     # Get branched revision tree via _changes with include docs
     docs_changes = sg_client.get_changes_style_all_docs(url=sg_url, db=sg_db, auth=autouser_session, include_docs=True)
     doc_changes_in_changes = [change["changes"] for change in docs_changes["results"]]
-
     # Iterate through all docs and verify branched revisions appear in changes feed, verify previous revisions
     # which created before branched revisions does not show up in changes feed
     for docs in doc_changes_in_changes[1:]:  # skip first item in list as first item has user information, but not doc information
@@ -2421,6 +2409,7 @@ def test_sg_sdk_interop_shared_updates_from_sg(params_from_base_test_setup,
 
 @pytest.mark.syncgateway
 @pytest.mark.xattrs
+@pytest.mark.oscertify
 @pytest.mark.parametrize('sg_conf_name', [
     'sync_gateway_default_functional_tests'
 ])
@@ -2481,8 +2470,7 @@ def test_purge_and_view_compaction(params_from_base_test_setup, sg_conf_name):
     test_auth_session = sg_client.create_session(
         url=sg_admin_url,
         db=sg_db,
-        name=auto_user_info.name,
-        password=auto_user_info.password
+        name=auto_user_info.name
     )
 
     def update_prop():
@@ -2555,8 +2543,8 @@ def test_purge_and_view_compaction(params_from_base_test_setup, sg_conf_name):
 
 @pytest.mark.syncgateway
 @pytest.mark.xattrs
-@pytest.mark.changes
 @pytest.mark.session
+@pytest.mark.oscertify
 @pytest.mark.parametrize(
     'sg_conf_name, number_docs_per_client, number_updates_per_doc_per_client',
     [

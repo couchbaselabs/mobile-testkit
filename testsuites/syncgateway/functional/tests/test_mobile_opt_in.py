@@ -18,6 +18,7 @@ from libraries.testkit.cluster import Cluster
 @pytest.mark.syncgateway
 @pytest.mark.xattrs
 @pytest.mark.session
+@pytest.mark.oscertify
 @pytest.mark.parametrize('sg_conf_name', [
     'xattrs/mobile_opt_in'
 ])
@@ -92,8 +93,7 @@ def test_mobile_opt_in(params_from_base_test_setup, sg_conf_name):
     test_auth_session = sg_client.create_session(
         url=sg_admin_url,
         db=sg_db,
-        name=auto_user_info.name,
-        password=auto_user_info.password
+        name=auto_user_info.name
     )
 
     def update_mobile_prop():

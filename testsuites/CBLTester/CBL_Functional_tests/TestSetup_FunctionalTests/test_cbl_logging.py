@@ -15,7 +15,7 @@ log_level_dict = {
 @pytest.mark.listener
 @pytest.mark.database
 @pytest.mark.parametrize("log_level, plain_text, max_size, max_rotate_count", [
-    ("debug", False, 0, 0),
+    pytest.param("verbose", True, 1000 * 512 * 1000, 1000, marks=pytest.mark.ce_sanity),
     ("verbose", False, 0, 0),
     ("info", False, 0, 0),
     ("warning", False, 0, 0),

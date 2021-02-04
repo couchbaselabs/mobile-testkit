@@ -84,3 +84,16 @@ def pytest_addoption(parser):
 
     parser.addoption("--cbs-ce", action="store_true",
                      help="If set, community edition will get picked up , default is enterprise", default=False)
+
+    parser.addoption("--cbs-platform",
+                     action="store",
+                     help="Couchbase Server Platform binary to install (ex. centos or windows)",
+                     default="centos7")
+
+    parser.addoption("--magma-storage",
+                     action="store_true",
+                     help="magma-storage: Enable magma storage on couchbase server")
+
+    parser.addoption("--prometheus-enable",
+                     action="store",
+                     help="prometheus-enable:Start prometheus metrics on SyncGateway")

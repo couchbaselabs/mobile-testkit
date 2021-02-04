@@ -1,5 +1,5 @@
 - name: Download Testserver Java WebService Package
-  hosts: testserver-ws
+  hosts: testserver
   vars:
     testserver_download_url:
     cblite_download_url:

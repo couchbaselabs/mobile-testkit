@@ -32,6 +32,7 @@ from CBLClient.ReplicatorConfiguration import ReplicatorConfiguration
 from utilities.cluster_config_utils import get_load_balancer_ip
 from couchbase.bucket import Bucket
 from couchbase.n1ql import N1QLQuery
+from libraries.testkit import prometheus
 
 
 def pytest_addoption(parser):
@@ -160,11 +161,18 @@ def pytest_addoption(parser):
                      help="Encryption will be enabled for CBL db",
                      default="password")
 
+    parser.addoption("--prometheus-enable",
+                     action="store",
+                     help="Starts the prometheus metrics",
+                     default=False)
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
 # This setup will be called once for all tests in the
 # testsuites/CBLTester/CBL_Functional_tests/ directory
+
+
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
 @pytest.fixture(scope="session")
 def params_from_base_suite_setup(request):
@@ -177,7 +185,6 @@ def params_from_base_suite_setup(request):
     use_local_testserver = request.config.getoption("--use-local-testserver")
     sync_gateway_version = request.config.getoption("--sync-gateway-version")
     mode = request.config.getoption("--mode")
-
     server_version = request.config.getoption("--server-version")
     enable_sample_bucket = request.config.getoption("--enable-sample-bucket")
     xattrs_enabled = request.config.getoption("--xattrs")
@@ -199,6 +206,7 @@ def params_from_base_suite_setup(request):
     enable_file_logging = request.config.getoption("--enable-file-logging")
     cbl_log_decoder_platform = request.config.getoption("--cbl-log-decoder-platform")
     cbl_log_decoder_build = request.config.getoption("--cbl-log-decoder-build")
+    prometheus_enable = request.config.getoption("--prometheus-enable")
 
     enable_encryption = request.config.getoption("--enable-encryption")
     encryption_password = request.config.getoption("--encryption-password")
@@ -420,7 +428,7 @@ def params_from_base_suite_setup(request):
 
         log_info("Loading sample bucket {}".format(enable_sample_bucket))
         server.load_sample_bucket(enable_sample_bucket)
-        time.sleep(60)
+        # we trying 5 times in the rbac bucket user api
         server._create_internal_rbac_bucket_user(enable_sample_bucket, cluster_config=cluster_config)
 
         # Restart SG after the bucket deletion
@@ -432,7 +440,7 @@ def params_from_base_suite_setup(request):
             log_info("Restarting sync gateway {}".format(sg_ip))
             sg_obj.restart_sync_gateways(cluster_config=cluster_config, url=sg_ip)
             # Giving time to SG to load all docs into it's cache
-            time.sleep(240)
+            time.sleep(20)
 
         if mode == "di":
             ac_obj = SyncGateway()
@@ -469,6 +477,10 @@ def params_from_base_suite_setup(request):
         repl_obj.wait_until_replicator_idle(repl, max_times=3000)
         log_info("Stopping replication")
         repl_obj.stop(repl)
+    if prometheus_enable:
+        if not prometheus.is_prometheus_installed:
+            prometheus.install_prometheus
+        prometheus.start_prometheus(sg_ip, sg_ssl)
 
     yield {
         "cluster_config": cluster_config,
@@ -490,6 +502,7 @@ def params_from_base_suite_setup(request):
         "create_db_per_test": create_db_per_test,
         "suite_source_db": suite_source_db,
         "suite_cbl_db": suite_cbl_db,
+        "suite_db": suite_db,
         "sg_config": sg_config,
         "testserver": testserver,
         "device_enabled": device_enabled,
@@ -503,7 +516,8 @@ def params_from_base_suite_setup(request):
         "encryption_password": encryption_password,
         "cbs_ce": cbs_ce,
         "sg_ce": sg_ce,
-        "cbl_ce": cbl_ce
+        "cbl_ce": cbl_ce,
+        "prometheus_enable": prometheus_enable
     }
 
     if request.node.testsfailed != 0 and enable_file_logging and create_db_per_suite is not None:
@@ -514,10 +528,14 @@ def params_from_base_suite_setup(request):
                 failed_test_list.append(test.rep_call.nodeid)
         zip_data = suite_cbllog.get_logs_in_zip()
         suite_log_zip_file = "Suite_test_log_{}.zip".format(str(time.time()))
-        log_info("Log file for failed Suite tests is: {}".format(suite_log_zip_file))
-        with open(suite_log_zip_file, 'wb') as fh:
-            fh.write(zip_data.encode())
-            fh.close()
+
+        if os.path.exists(suite_log_zip_file):
+            log_info("Log file for failed Suite tests is: {}".format(suite_log_zip_file))
+            with open(suite_log_zip_file, 'wb') as fh:
+                fh.write(zip_data.encode())
+                fh.close()
+        else:
+            log_info("Cannot find log file for failed Suite tests")
 
     if create_db_per_suite:
         # Delete CBL database
@@ -525,7 +543,6 @@ def params_from_base_suite_setup(request):
         time.sleep(2)
         suite_db.deleteDB(suite_source_db)
         time.sleep(1)
-
     if create_db_per_suite:
         # Flush all the memory contents on the server app
         log_info("Flushing server memory")
@@ -536,6 +553,8 @@ def params_from_base_suite_setup(request):
             testserver.stop()
     # Delete png files under resources/data
     clear_resources_pngs()
+    if prometheus_enable:
+        prometheus.stop_prometheus(sg_ip, sg_ssl)
 
 
 @pytest.fixture(scope="function")
@@ -573,6 +592,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     cbl_ce = params_from_base_suite_setup["cbl_ce"]
     cbs_ce = params_from_base_suite_setup["cbs_ce"]
     sg_ce = params_from_base_suite_setup["sg_ce"]
+    prometheus_enable = request.config.getoption("--prometheus-enable")
 
     source_db = None
     test_name_cp = test_name.replace("/", "-")
@@ -669,7 +689,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "test_cbllog": test_cbllog,
         "cbs_ce": cbs_ce,
         "sg_ce": sg_ce,
-        "cbl_ce": cbl_ce
+        "cbl_ce": cbl_ce,
+        "prometheus_enable": prometheus_enable
     }
 
     if request.node.rep_call.failed and enable_file_logging and create_db_per_test is not None:
@@ -681,10 +702,13 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
             os.mkdir(log_directory)
         test_log_zip_file = "{}_{}.zip".format(test_id.split("::")[-1], str(time.time()))
         test_log = os.path.join(log_directory, test_log_zip_file)
-        log_info("Log file for failed test is: {}".format(test_log_zip_file))
-        with open(test_log, 'wb') as fh:
-            fh.write(zip_data.encode())
-            fh.close()
+        if os.path.exists(test_log):
+            log_info("Log file for failed test is: {}".format(test_log_zip_file))
+            with open(test_log, 'wb') as fh:
+                fh.write(zip_data.encode())
+                fh.close()
+        else:
+            log_info("Cannot find log file for failed test")
 
     log_info("Tearing down test")
     if create_db_per_test:

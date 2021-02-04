@@ -119,9 +119,12 @@
     couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
     sync_gateway_node: "{{ hostvars[groups.sync_gateways[0]].ansible_host }}"
     is_index_writer: "false"
+    cacertpath:
+    x509_auth:
+    x509_certs_dir:
   tasks:
   - include: tasks/deploy-sync-gateway-config.yml
-  when: ansible_distribution == "CentOS" or ansible_distribution == "Ubuntu"
+  when: ansible_distribution == "CentOS" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
 
   - include: tasks/deploy-sync-gateway-config-macos.yml
   when: ansible_distribution == "MacOSX"

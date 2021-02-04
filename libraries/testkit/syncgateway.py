@@ -15,7 +15,7 @@ from libraries.testkit.debug import log_request, log_response
 from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, sg_ssl_enabled
 from utilities.cluster_config_utils import get_revs_limit, get_redact_level, is_delta_sync_enabled, get_sg_platform
 from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version, is_x509_auth, generate_x509_certs
-from keywords.utils import add_cbs_to_sg_config_server_field, log_info
+from keywords.utils import add_cbs_to_sg_config_server_field, log_info, random_string
 from keywords.constants import SYNC_GATEWAY_CERT
 from keywords.exceptions import ProvisioningError
 
@@ -91,7 +91,9 @@ class SyncGateway:
             "num_index_replicas": "",
             "sg_use_views": "",
             "couchbase_server_primary_node": self.couchbase_server_primary_node,
-            "delta_sync": ""
+            "delta_sync": "",
+            "prometheus": ""
+
         }
 
         if sg_ssl_enabled(self.cluster_config):
@@ -164,6 +166,9 @@ class SyncGateway:
         if is_delta_sync_enabled(self.cluster_config) and get_sg_version(self.cluster_config) >= "2.5.0":
             playbook_vars["delta_sync"] = '"delta_sync": { "enabled": true},'
 
+        if get_sg_version(self.cluster_config) >= "2.8.0":
+            playbook_vars["prometheus"] = '"metricsInterface": ":4986",'
+
         if is_cbs_ssl_enabled(self.cluster_config) and get_sg_version(self.cluster_config) >= "1.5.0":
             playbook_vars["server_scheme"] = "couchbases"
             playbook_vars["server_port"] = 11207
@@ -215,7 +220,8 @@ class SyncGateway:
             "num_index_replicas": "",
             "sg_use_views": "",
             "couchbase_server_primary_node": self.couchbase_server_primary_node,
-            "delta_sync": ""
+            "delta_sync": "",
+            "prometheus": ""
         }
         sg_platform = get_sg_platform(self.cluster_config)
         if sg_ssl_enabled(self.cluster_config):
@@ -285,6 +291,9 @@ class SyncGateway:
 
         if is_delta_sync_enabled(self.cluster_config) and get_sg_version(self.cluster_config) >= "2.5.0":
             playbook_vars["delta_sync"] = '"delta_sync": { "enabled": true},'
+
+        if get_sg_version(self.cluster_config) >= "2.8.0":
+            playbook_vars["prometheus"] = '"metricsInterface": ":4986",'
 
         if is_cbs_ssl_enabled(self.cluster_config) and get_sg_version(self.cluster_config) >= "1.5.0":
             playbook_vars["server_scheme"] = "couchbases"
@@ -396,12 +405,22 @@ class SyncGateway:
                                target_db,
                                continuous=True,
                                use_remote_target=False,
-                               use_admin_url=False):
+                               use_admin_url=False,
+                               target_user_name=None,
+                               target_password=None,
+                               channels=None):
 
         sg_url = self.url
         if use_admin_url:
             sg_url = self.admin.admin_url
 
+        if channels is None:
+            channels = []
+
+        if "4984" in source_url:
+            if not target_user_name or not target_password:
+                raise Exception("username and password not provided for the source")
+            source_url = source_url.replace("://", "://{}:{}@".format(target_user_name, target_password))
         data = {
             "source": "{}/{}".format(source_url, source_db),
             "continuous": continuous
@@ -410,6 +429,11 @@ class SyncGateway:
             data["target"] = "{}/{}".format(sg_url, target_db)
         else:
             data["target"] = "{}".format(target_db)
+
+        if len(channels) > 0:
+            data["filter"] = "sync_gateway/bychannel"
+            data["query_params"] = channels
+
         r = requests.post("{}/_replicate".format(sg_url), headers=self._headers, data=json.dumps(data))
         log_request(r)
         log_response(r)
@@ -464,6 +488,103 @@ class SyncGateway:
         r.raise_for_status()
         resp_data = r.json()
         return resp_data["total_rows"]
+
+    def start_replication(self,
+                          remote_url,
+                          current_db,
+                          remote_db,
+                          direction="push",
+                          continuous=True,
+                          channels=None,
+                          target_user_name=None,
+                          target_password=None,
+                          replication_id=None):
+
+        sg_url = self.admin.admin_url
+        if "4984" in remote_url:
+            if not target_user_name or not target_password:
+                raise Exception("username and password not provided for the source")
+            remote_url = remote_url.replace("://", "://{}:{}@".format(target_user_name, target_password))
+        if direction == "push":
+            source_url = self.url
+            source_url = source_url.replace("4984", "4985")
+            data = {
+                "source": "{}/{}".format(source_url, current_db),
+                "continuous": continuous,
+                "target": "{}/{}".format(remote_url, remote_db)
+            }
+        else:
+            # remote_url = remote_url.replace("4984", "4985")
+            # target_url = self.admin.admin_url
+            data = {
+                "source": "{}/{}".format(remote_url, remote_db),
+                "continuous": continuous,
+                "target": "{}/{}".format(self.admin.admin_url, current_db)
+            }
+        if channels is not None:
+            data["filter"] = "sync_gateway/bychannel"
+            data["query_params"] = channels
+        if replication_id is not None:
+            data["replication_id"] = replication_id
+        r = requests.post("{}/_replicate".format(sg_url), headers=self._headers, data=json.dumps(data))
+        log_request(r)
+        log_response(r)
+        r.raise_for_status()
+        return r.json()
+
+    def start_replication2(self, local_db, remote_url, remote_db, remote_user, remote_password, direction="pushAndPull", purge_on_removal=None, continuous=False, channels=None, conflict_resolution_type="default", custom_conflict_resolver=None, adhoc=False, delta_sync=False, replication_id=None, max_backoff_time=None, user_credentials_url=True):
+        '''
+           Required values : remote, direction, conflict_resolution_type
+           default values : continuous=false
+           optional values : filter
+        '''
+        sg_url = self.admin.admin_url
+        if replication_id is None:
+            replication_id = "sgw_repl_{}".format(random_string(length=10, digit=True))
+        if "4984" in remote_url:
+            if remote_user and remote_password:
+                if user_credentials_url:
+                    remote_url = remote_url.replace("://", "://{}:{}@".format(remote_user, remote_password))
+                remote_url = "{}/{}".format(remote_url, remote_db)
+            else:
+                raise Exception("No remote node's username and password provided ")
+        data = {
+            "remote": remote_url,
+            "direction": direction,
+            "conflict_resolution_type": conflict_resolution_type
+        }
+        data["continuous"] = continuous
+        if purge_on_removal:
+            data["purge_on_removal"] = purge_on_removal
+        if channels is not None:
+            data["filter"] = "sync_gateway/bychannel"
+            data["query_params"] = channels
+        if adhoc:
+            data["adhoc"] = adhoc
+        if delta_sync:
+            data["enable_delta_sync"] = delta_sync
+        if max_backoff_time:
+            data["max_backoff_time"] = max_backoff_time
+        if conflict_resolution_type == "custom":
+            if custom_conflict_resolver is None:
+                raise Exception("conflict_resolution_type is selected as custom, but did not provide conflict resolver")
+            else:
+                data["custom_conflict_resolver"] = custom_conflict_resolver
+        if not user_credentials_url:
+            data["username"] = remote_user
+            data["password"] = remote_password
+        r = requests.put("{}/{}/_replication/{}".format(sg_url, local_db, replication_id), headers=self._headers, data=json.dumps(data))
+        log_request(r)
+        log_response(r)
+        r.raise_for_status()
+        return replication_id
+
+    def stop_replication2_by_id(self, replication_id, db):
+        sg_url = self.admin.admin_url
+        r = requests.delete("{}/{}/_replication/{}".format(sg_url, db, replication_id))
+        log_request(r)
+        log_response(r)
+        r.raise_for_status()
 
     def __repr__(self):
         return "SyncGateway: {}:{}\n".format(self.hostname, self.ip)

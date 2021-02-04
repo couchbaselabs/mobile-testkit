@@ -6,17 +6,20 @@ import random
 from keywords.MobileRestClient import MobileRestClient
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords import couchbaseserver
-from keywords.utils import log_info
+from keywords.utils import log_info, random_string, get_embedded_asset_file_path
 from CBLClient.Database import Database
 from CBLClient.Replication import Replication
 from CBLClient.Document import Document
 from CBLClient.Authenticator import Authenticator
 from concurrent.futures import ThreadPoolExecutor
-
+from CBLClient.Blob import Blob
+from CBLClient.Dictionary import Dictionary
+from libraries.testkit.prometheus import verify_stat_on_prometheus
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords import document, attachment
 from libraries.testkit import cluster
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
+from keywords.attachment import generate_2_png_100_100
 
 
 @pytest.fixture(scope="function")
@@ -41,8 +44,8 @@ def setup_teardown_test(params_from_base_test_setup):
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("num_of_docs, continuous, x509_cert_auth", [
-    (10, True, True),
-    pytest.param(100, True, False, marks=pytest.mark.sanity),
+    pytest.param(10, True, True, marks=pytest.mark.sanity),
+    pytest.param(100, True, False, marks=pytest.mark.ce_sanity),
     (1000, True, True)
 ])
 def test_replication_configuration_valid_values(params_from_base_test_setup, num_of_docs, continuous, x509_cert_auth):
@@ -159,6 +162,7 @@ def test_replication_configuration_with_pull_replication(params_from_base_test_s
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    prometheus_enable = params_from_base_test_setup["prometheus_enable"]
 
     if sync_gateway_version < "2.0.0":
         pytest.skip('This test cannot run with sg version below 2.0')
@@ -208,6 +212,8 @@ def test_replication_configuration_with_pull_replication(params_from_base_test_s
         if attachments_generator is not None:
             assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["attachment_pull_count"] == 20, "attachment_pull_count did not get incremented"
             assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["attachment_pull_bytes"] > 0, "attachment_pull_bytes did not get incremented"
+            if prometheus_enable and sync_gateway_version >= "2.8.0":
+                assert verify_stat_on_prometheus("sgw_replication_pull_attachment_pull_count"), expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["attachment_pull_count"]
 
 
 @pytest.mark.listener
@@ -238,6 +244,7 @@ def test_replication_configuration_with_push_replication(params_from_base_test_s
     cbl_db = params_from_base_test_setup["source_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     mode = params_from_base_test_setup["mode"]
+    prometheus_enable = params_from_base_test_setup["prometheus_enable"]
 
     if sync_gateway_version < "2.0.0":
         pytest.skip('This test cannot run with sg version below 2.0')
@@ -280,6 +287,10 @@ def test_replication_configuration_with_push_replication(params_from_base_test_s
         if attachments_generator is not None:
             assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_push"]["attachment_push_count"] == 30, "attachment_push_count did not get incremented"
             assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_push"]["attachment_push_bytes"] > 0, "attachment_push_bytes did not get incremented"
+            if prometheus_enable and sync_gateway_version >= "2.8.0":
+                assert verify_stat_on_prometheus("sgw_replication_push_attachment_push_count"), expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_push"]["attachment_push_count"]
+        if prometheus_enable and sync_gateway_version >= "2.8.0":
+            assert verify_stat_on_prometheus("sgw_database_num_doc_writes"), expvars["syncgateway"]["per_db"][sg_db]["database"]["num_doc_writes"]
 
 
 @pytest.mark.listener
@@ -371,6 +382,7 @@ def test_replication_push_replication_invalid_authentication(params_from_base_te
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    prometheus_enable = params_from_base_test_setup["prometheus_enable"]
 
     if sync_gateway_version < "2.0.0":
         pytest.skip('This test cannot run with sg version below 2.0')
@@ -405,6 +417,8 @@ def test_replication_push_replication_invalid_authentication(params_from_base_te
         expvars = sg_client.get_expvars(sg_admin_url)
         assert expvars["syncgateway"]["per_db"][sg_db]["security"]["auth_failed_count"] > 0, "auth failed count is not incremented"
         assert expvars["syncgateway"]["per_db"][sg_db]["security"]["total_auth_time"] > 0, "total_auth_time is not incremented"
+    if prometheus_enable and sync_gateway_version >= "2.8.0":
+        assert verify_stat_on_prometheus("sgw_security_auth_failed_count"), expvars["syncgateway"]["per_db"][sg_db]["security"]["auth_failed_count"]
 
 
 @pytest.mark.listener
@@ -433,6 +447,7 @@ def test_replication_configuration_with_filtered_doc_ids(params_from_base_test_s
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    prometheus_enable = params_from_base_test_setup["prometheus_enable"]
 
     if mode == "di":
         pytest.skip('Filter doc ids does not work with di modes')
@@ -506,6 +521,8 @@ def test_replication_configuration_with_filtered_doc_ids(params_from_base_test_s
     if sync_gateway_version >= "2.5.0":
         expvars = sg_client.get_expvars(sg_admin_url)
         assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["num_pull_repl_total_one_shot"] == 2, "num_pull_repl_total_one_shot did not get incremented"
+    if prometheus_enable and sync_gateway_version >= "2.8.0":
+        assert verify_stat_on_prometheus("sgw_replication_pull_num_pull_repl_total_one_shot"), expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["num_pull_repl_total_one_shot"]
 
 
 @pytest.mark.listener
@@ -1077,13 +1094,11 @@ def CBL_offline_test(params_from_base_test_setup, sg_conf_name, num_of_docs):
         raise Exception("{0} failed".format(command))
 
     # 4. Do updates on CBL
-    time.sleep(180)
     db.update_bulk_docs(cbl_db, number_of_updates=number_of_updates)
     replicator.wait_until_replicator_idle(repl)
     replicator.stop(repl)
 
     # 6. CBL comes online( unblock ports)
-    time.sleep(180)
     command = "mode=\"Wi-Fi\" osascript run_scripts/network_link_conditioner.applescript"
     return_val = os.system(command)
     if return_val != 0:
@@ -1342,8 +1357,10 @@ def test_replication_wrong_blip(params_from_base_test_setup):
     with pytest.raises(Exception) as ex:
         replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channels, replicator_authenticator=replicator_authenticator)
     ex_data = str(ex.value)
-    if liteserv_platform == "ios":
-        assert "Invalid scheme for URLEndpoint url (ht2tp" in ex_data
+
+    if liteserv_platform == "ios" or liteserv_platform.startswith("javaws-"):
+        assert "Invalid scheme for URLEndpoint url" in ex_data
+        assert "ht2tp" in ex_data
         assert "must be either 'ws:' or 'wss:'" in ex_data
     else:
         assert ex_data.startswith('400 Client Error: Bad Request for url:')
@@ -3360,6 +3377,10 @@ def test_doc_removal_from_channel(params_from_base_test_setup):
     assert cbl_ids[0] in sg_doc_ids, "doc A does not exist for the user"
     assert cbl_ids[1] not in sg_doc_ids, "doc B exist for the user"
 
+    # Verify user can only access doc A, but not doc B on CBL side too
+    cbl_doc_ids = db.getDocIds(cbl_db)
+    assert cbl_ids[1] not in cbl_doc_ids, "user on cbl still able to access the doc even after unshare"
+
 
 @pytest.mark.listener
 @pytest.mark.replication
@@ -3785,6 +3806,235 @@ def test_replication_behavior_with_channelRole_modification(params_from_base_tes
     assert len(cbl_doc_ids) == num_docs, "new docs which created in sgw after role change got replicated to cbl"
     for id in cbl_doc_ids:
         assert "new_role_doc" not in id, "new doc got replicated to cbl"
+
+
+@pytest.mark.listener
+@pytest.mark.replication
+@pytest.mark.parametrize("blob_data_type", [
+    pytest.param('byte_array', marks=pytest.mark.ce_sanity),
+    pytest.param('stream', marks=pytest.mark.sanity),
+    'file_url'
+])
+def test_blob_contructor_replication(params_from_base_test_setup, blob_data_type):
+    '''
+    @summary:
+    1. Create docs in CBL
+    2. Do push replication
+    3. update docs in CBL with attachment in specified blob type
+    4. Do push replication after docs update
+    5. Verify blob content replicated successfully
+    '''
+    cbl_db = params_from_base_test_setup["source_db"]
+    db = params_from_base_test_setup["db"]
+    base_url = params_from_base_test_setup["base_url"]
+    sg_blip_url = params_from_base_test_setup["target_url"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_config = params_from_base_test_setup["sg_config"]
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    liteserv_platform = params_from_base_test_setup["liteserv_platform"]
+
+    # Reset cluster to ensure no data in system
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
+
+    sg_db = "db"
+    num_of_docs = 10
+    channels = ["ABC"]
+    username = "autotest"
+    password = "password"
+
+    sg_client = MobileRestClient()
+    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channels)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+    session = cookie, session_id
+
+    # 1. Create docs in CBL
+    db.create_bulk_docs(num_of_docs, "cbl_sync", db=cbl_db, channels=channels)
+
+    # 2. Do push replication
+    replicator = Replication(base_url)
+    authenticator = Authenticator(base_url)
+    replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
+    repl = replicator.configure_and_replicate(source_db=cbl_db,
+                                              target_url=sg_blip_url,
+                                              continuous=True,
+                                              replicator_authenticator=replicator_authenticator,
+                                              replication_type="push")
+    replicator.stop(repl)
+
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
+    # Verify database doc counts
+    cbl_doc_count = db.getCount(cbl_db)
+    assert len(sg_docs) == cbl_doc_count, "Expected number of docs does not exist in sync-gateway after replication"
+
+    # 3. update docs in CBL with attachment in specified blob type
+    blob = Blob(base_url)
+    dictionary = Dictionary(base_url)
+
+    doc_ids = db.getDocIds(cbl_db)
+    cbl_db_docs = db.getDocuments(cbl_db, doc_ids)
+    for doc_id, doc_body in list(cbl_db_docs.items()):
+        mutable_dictionary = dictionary.toMutableDictionary(doc_body)
+        dictionary.setString(mutable_dictionary, "new_field_string_1", random_string(length=30))
+        dictionary.setString(mutable_dictionary, "new_field_string_2", random_string(length=80))
+
+        image_location = get_embedded_asset_file_path(liteserv_platform, db, cbl_db, "golden_gate_large.jpg")
+
+        if blob_data_type == "byte_array":
+            image_byte_array = blob.createImageContent(image_location)
+            blob_value = blob.create("image/jpeg", content=image_byte_array)
+        elif blob_data_type == "stream":
+            image_stream = blob.createImageStream(image_location)
+            blob_value = blob.create("image/jpeg", stream=image_stream)
+        elif blob_data_type == "file_url":
+            image_file_url = blob.createImageFileUrl(image_location)
+            blob_value = blob.create("image/jpeg", file_url=image_file_url)
+
+        dictionary.setBlob(mutable_dictionary, "new_field_blob", blob_value)
+        doc_body_new = dictionary.toMap(mutable_dictionary)
+        db.updateDocument(database=cbl_db, data=doc_body_new, doc_id=doc_id)
+
+    # 4. Do push replication after docs update
+    repl = replicator.configure_and_replicate(source_db=cbl_db,
+                                              target_url=sg_blip_url,
+                                              continuous=True,
+                                              replicator_authenticator=replicator_authenticator,
+                                              replication_type="push")
+
+    replicator.stop(repl)
+
+    # 5. Verify blob content replicated successfully
+    doc_ids = db.getDocIds(cbl_db)
+    cbl_db_docs = db.getDocuments(cbl_db, doc_ids)
+    for doc_id, doc_body in list(cbl_db_docs.items()):
+        sg_data = sg_client.get_doc(url=sg_admin_url, db=sg_db, doc_id=doc_id, auth=session)
+        assert "new_field_string_1" in sg_data, "Updated docs failed to get replicated"
+        assert "new_field_string_2" in sg_data, "Updated docs failed to get replicated"
+        assert "new_field_blob" in sg_data, "Updated docs failed to get replicated"
+
+
+@pytest.mark.parametrize("attachment_generator, cbl_action_before_init_replication", [
+    [None, False],
+    [generate_2_png_100_100, True]
+])
+def test_replication_pull_from_empty_database(params_from_base_test_setup, attachment_generator, cbl_action_before_init_replication):
+    '''
+    @summary:
+    This test to validate pull replication on empty database. It should avoid sending deleted(tombstoned) documents.
+    1. create 50 docs in SGW
+    2. delete 10 docs in SGW
+    3. add another 50 docs in SGW, verify SGW doc counts and the 10 docs are in tombstone state
+    4. create a cbl db, if input param cbl_action_before_init_replication:
+        False, do nothing (cbl db is empty, absolutely no action before replication, NO tombstone docs get pull)
+        True, create 9 docs in cbl db, delete these 9 docs (cbl db is empty, but no longer in initial state, tombstone docs get pull)
+    5. create a onetime pull replicator, start replication
+    6. verify SGW stats, if cbl_action_before_init_replication:
+        False, cbl_replication_pull.rev_send_count = 90
+        True, cbl_replication_pull.rev_send_count = 100
+    7. verify CBL, total number of docs is 90, and verify the doc ids are not belongs to tombstone docs
+    8. delete 15 more docs on SGW
+    9. restart the replication, verify SGW stats, if cbl_action_before_init_replication:
+        False, cbl_replication_pull.rev_send_count = 105 (90 + 15 deleted in the second time)
+        True, cbl_replication_pull.rev_send_count = 115 (100 + 15 deleted in the second time)
+    10. verify CBL deleted docs in step 8 have been removed from CBL db
+    '''
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_config = params_from_base_test_setup["sg_config"]
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    sg_url = params_from_base_test_setup["sg_url"]
+    base_url = params_from_base_test_setup["base_url"]
+    sg_blip_url = params_from_base_test_setup["target_url"]
+    db = params_from_base_test_setup["db"]
+    db_config = params_from_base_test_setup["db_config"]
+
+    # Reset cluster to ensure no data in system
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
+
+    sg_db = "db"
+    num_sg_docs = 50
+    channels = ["ABC"]
+    username = "autotest"
+    password = "password"
+
+    sg_client = MobileRestClient()
+    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channels)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+    auth_session = cookie, session_id
+
+    # 1. create 50 docs on SGW
+    sg_added_docs = sg_client.add_docs(url=sg_url, db=sg_db, number=num_sg_docs, id_prefix="sg_doc_a", channels=channels, auth=auth_session, attachments_generator=attachment_generator)
+
+    # 2. delete 10 docs in SGW
+    docs_to_delete_1 = sg_added_docs[0:10]
+    sg_client.delete_docs(url=sg_url, db=sg_db, docs=docs_to_delete_1, auth=auth_session)
+
+    # 3. add another 50 docs in SGW
+    sg_added_docs_2 = sg_client.add_docs(url=sg_url, db=sg_db, number=num_sg_docs, id_prefix="sg_doc_b", channels=channels, auth=auth_session, attachments_generator=attachment_generator)
+
+    # 3b. verify the 10 deleted docs are in tombstone state
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
+    assert len(sg_docs) == 90, "Expected number of docs is incorrect after doc deletion in sync-gateway"
+    for sg_doc in sg_docs:
+        assert sg_doc not in docs_to_delete_1, "Deleted doc should not show on sg doc list"
+
+    # 4a. create a cbl db, but do not create any doc (cbl db is empty)
+    cbl_db_name = "empty-db-" + str(time.time())
+    cbl_db = db.create(cbl_db_name, db_config)
+    # 4b. alternate scenario - create docs on cbl then delete all docs on cbl
+    if cbl_action_before_init_replication:
+        db.create_bulk_docs(db=cbl_db, number=9, id_prefix="pre-repl", channels=channels)
+        cbl_doc_ids = db.getDocIds(cbl_db)
+        db.delete_bulk_docs(cbl_db, cbl_doc_ids)
+
+    # 5. create a pull replicator, start replication
+    replicator = Replication(base_url)
+    authenticator = Authenticator(base_url)
+    replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
+    repl = replicator.configure_and_replicate(source_db=cbl_db,
+                                              target_url=sg_blip_url,
+                                              continuous=False,
+                                              replicator_authenticator=replicator_authenticator,
+                                              replication_type="pull")
+
+    # 6. verify SGW stats, cbl_replication_pull.rev_send_count sent to CBL equals to 90
+    expvars = sg_client.get_expvars(sg_admin_url)
+    rev_send_count = expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["rev_send_count"]
+    if cbl_action_before_init_replication:
+        assert rev_send_count == 100, "rev_send_count {} is incorrect".format(rev_send_count)
+    else:
+        assert rev_send_count == 90, "rev_send_count {} is incorrect".format(rev_send_count)
+
+    # 7. verify CBL, total number of docs is 90, and verify the doc ids are not belongs to tombstone docs
+    cbl_doc_ids = db.getDocIds(cbl_db)
+    cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
+    assert len(cbl_docs) == 90, "The number of docs pull from SGW is incorrect"
+    if not cbl_action_before_init_replication:
+        for deleted_sg_doc in docs_to_delete_1:
+            assert deleted_sg_doc["id"] not in cbl_doc_ids, "deleted doc on SGW should not be pulled to CBL"
+
+    # 8. delete 15 more docs on SGW
+    docs_to_delete_2 = sg_added_docs_2[0:15]
+    sg_client.delete_docs(url=sg_url, db=sg_db, docs=docs_to_delete_2, auth=auth_session)
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
+    assert len(sg_docs) == 75, "Expected number of docs is incorrect after doc deletion in sync-gateway"
+
+    # 9. restart the replication, verify SGW stats, cbl_replication_pull.rev_send_count = 115, regardless cbl_action_before_init_replication:
+    replicator.start(repl)
+    replicator.wait_until_replicator_idle(repl)
+    replicator.stop(repl)
+
+    expvars = sg_client.get_expvars(sg_admin_url)
+    rev_send_count2 = expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["rev_send_count"]
+    if not cbl_action_before_init_replication:
+        assert rev_send_count2 == 105, "rev_send_count {} is incorrect".format(rev_send_count2)
+    else:
+        assert rev_send_count2 == 115, "rev_send_count {} is incorrect".format(rev_send_count2)
+
+    # 10. verify CBL deleted docs in step 7 have been removed from CBL db
+    cbl_doc_ids = db.getDocIds(cbl_db)
+    cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
+    assert len(cbl_docs) == 75, "The number of docs pull from SGW is incorrect"
 
 
 def update_and_resetCheckPoint(db, cbl_db, replicator, repl, replication_type, repl_config, num_of_updates):

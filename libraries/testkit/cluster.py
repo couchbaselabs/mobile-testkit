@@ -14,7 +14,7 @@ from libraries.testkit.config import Config
 from libraries.testkit.sgaccel import SgAccel
 from libraries.testkit.syncgateway import SyncGateway
 from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
-from utilities.cluster_config_utils import is_load_balancer_enabled, get_revs_limit, get_redact_level
+from utilities.cluster_config_utils import is_load_balancer_enabled, get_revs_limit, get_redact_level, is_load_balancer_with_two_clusters_enabled
 from utilities.cluster_config_utils import get_load_balancer_ip, no_conflicts_enabled, is_delta_sync_enabled, get_sg_platform
 from utilities.cluster_config_utils import generate_x509_certs, is_x509_auth, get_cbs_primary_nodes_str
 from keywords.constants import SYNC_GATEWAY_CERT
@@ -48,7 +48,24 @@ class Cluster:
 
         # Get load balancer IP
         lb_ip = None
-        if is_load_balancer_enabled(self._cluster_config):
+        if is_load_balancer_with_two_clusters_enabled(self._cluster_config):
+            # If load balancer is defined,
+            # Switch all SG URLs to that of load balancer
+            count = 0
+            total_sgs_count = cluster["environment"]["sgw_cluster1_count"] + cluster["environment"]["sgw_cluster2_count"]
+            for sg in cluster["sync_gateways"]:
+                if count < cluster["environment"]["sgw_cluster1_count"]:
+                    lb1_ip = cluster["load_balancers"][0]["ip"]
+                    if cluster["environment"]["ipv6_enabled"]:
+                        lb1_ip = "[{}]".format(lb1_ip)
+                    sgs.append({"name": sg["name"], "ip": lb1_ip})
+                elif count < total_sgs_count:
+                    lb2_ip = cluster["load_balancers"][1]["ip"]
+                    if cluster["environment"]["ipv6_enabled"]:
+                        lb2_ip = "[{}]".format(lb2_ip)
+                    sgs.append({"name": sg["name"], "ip": lb2_ip})
+                count += 1
+        elif is_load_balancer_enabled(self._cluster_config):
             # If load balancer is defined,
             # Switch all SG URLs to that of load balancer
             lb_ip = get_load_balancer_ip(self._cluster_config)
@@ -186,7 +203,8 @@ class Cluster:
             "num_index_replicas": "",
             "sg_use_views": "",
             "couchbase_server_primary_node": couchbase_server_primary_node,
-            "delta_sync": ""
+            "delta_sync": "",
+            "prometheus": ""
         }
 
         sg_platform = get_sg_platform(self._cluster_config)
@@ -269,6 +287,9 @@ class Cluster:
 
         if is_delta_sync_enabled(self._cluster_config) and get_sg_version(self._cluster_config) >= "2.5.0":
             playbook_vars["delta_sync"] = '"delta_sync": { "enabled": true},'
+
+        if get_sg_version(self._cluster_config) >= "2.8.0":
+            playbook_vars["prometheus"] = '"metricsInterface": ":4986",'
 
         # Sleep for a few seconds for the indexes to teardown
         time.sleep(5)

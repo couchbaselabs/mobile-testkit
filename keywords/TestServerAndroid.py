@@ -18,12 +18,11 @@ class TestServerAndroid(TestServerBase):
         self.platform = platform
 
         if self.platform == "android":
+            self.download_source = "couchbase-lite-android"
             if community_enabled:
                 apk_name_prefix = "CBLTestServer-Android-{}-community".format(self.version_build)
-                self.download_source = "couchbase-lite-android"
             else:
                 apk_name_prefix = "CBLTestServer-Android-{}-enterprise".format(self.version_build)
-                self.download_source = "couchbase-lite-android-ee"
             if debug_mode:
                 self.apk_name = "{}-debug.apk".format(apk_name_prefix)
             else:
@@ -76,6 +75,13 @@ class TestServerAndroid(TestServerBase):
 
         apk_path = "{}/{}".format(BINARY_DIR, self.apk_name)
         self.device_enabled = False
+
+        try:
+            log_info("remove the app before install, to ensure sandbox gets cleaned.")
+            self.remove()
+        except Exception as e:
+            log_info("remove the app before install didn't go success, but still continue ......")
+
         log_info("Installing: {}".format(apk_path))
 
         # If and apk is installed, attempt to remove it and reinstall.
@@ -83,7 +89,6 @@ class TestServerAndroid(TestServerBase):
         max_retries = 1
         count = 0
         while True:
-
             if count > max_retries:
                 raise LiteServError(".apk install failed!")
             try:
@@ -114,6 +119,12 @@ class TestServerAndroid(TestServerBase):
         self.device_enabled = True
         self.device_option = "-d"
         apk_path = "{}/{}".format(BINARY_DIR, self.apk_name)
+
+        try:
+            log_info("remove the app on device before install, to ensure sandbox gets cleaned.")
+            self.remove()
+        except Exception as e:
+            log_info("remove the app before install didn't go success, but still continue ......")
 
         log_info("Installing: {}".format(apk_path))
 
@@ -149,7 +160,7 @@ class TestServerAndroid(TestServerBase):
         """Removes the Test Server application from the running device
         """
         output = subprocess.check_output(["adb", "uninstall", self.installed_package_name])
-        if output.strip() != "Success":
+        if output.strip() != "Success" and output.strip() != b"Success":
             log_info(output)
             raise LiteServError("Error. Could not remove app.")
 

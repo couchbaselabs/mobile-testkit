@@ -67,6 +67,7 @@ def load_sync_gateway_config(sync_gateway_config, mode, server_url, xattrs_enabl
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.logging
+@pytest.mark.oscertify
 @pytest.mark.parametrize("sg_conf_name, x509_cert_auth", [
     ("log_rotation", True)
 ])
@@ -83,6 +84,7 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name, 
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
     sg_ip = host_for_url(sg_admin_url)
+    cbs_ce_version = params_from_base_test_setup["cbs_ce"]
 
     if get_sync_gateway_version(sg_ip)[0] > "2.0":
         pytest.skip("Test NA for SG  > 2.0")
@@ -92,7 +94,7 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name, 
     log_info("Using cluster_conf: {}".format(cluster_conf))
     log_info("Using sg_conf: {}".format(sg_conf))
 
-    if x509_cert_auth:
+    if x509_cert_auth and not cbs_ce_version:
         temp_cluster_config = copy_to_temp_conf(cluster_conf, mode)
         persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
         cluster_conf = temp_cluster_config
@@ -150,6 +152,7 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name, 
 
 @pytest.mark.syncgateway
 @pytest.mark.logging
+@pytest.mark.oscertify
 @pytest.mark.parametrize("sg_conf_name", ["log_rotation"])
 def test_log_logKeys_string(params_from_base_test_setup, sg_conf_name):
     """Negative test to verify that we are not able start SG when
@@ -207,6 +210,7 @@ def test_log_logKeys_string(params_from_base_test_setup, sg_conf_name):
 
 @pytest.mark.syncgateway
 @pytest.mark.logging
+@pytest.mark.oscertify
 @pytest.mark.parametrize("sg_conf_name", ["log_rotation"])
 def test_log_nondefault_logKeys_set(params_from_base_test_setup, sg_conf_name):
     """Test to verify non default logKeys with any invalid area.
@@ -259,6 +263,7 @@ def test_log_nondefault_logKeys_set(params_from_base_test_setup, sg_conf_name):
 
 @pytest.mark.syncgateway
 @pytest.mark.logging
+@pytest.mark.oscertify
 @pytest.mark.parametrize("sg_conf_name", ["log_rotation"])
 def test_log_maxage_10_timestamp_ignored(params_from_base_test_setup, sg_conf_name):
     """Test to verify SG continues to wrile logs in the same file even when
@@ -331,6 +336,7 @@ def test_log_maxage_10_timestamp_ignored(params_from_base_test_setup, sg_conf_na
 # https://github.com/couchbase/sync_gateway/issues/2221
 @pytest.mark.syncgateway
 @pytest.mark.logging
+@pytest.mark.oscertify
 @pytest.mark.parametrize("sg_conf_name", ["log_rotation"])
 def test_log_rotation_invalid_path(params_from_base_test_setup, sg_conf_name):
     """Test to check that SG is not started with invalid logFilePath.
@@ -389,6 +395,7 @@ def test_log_rotation_invalid_path(params_from_base_test_setup, sg_conf_name):
 
 @pytest.mark.syncgateway
 @pytest.mark.logging
+@pytest.mark.oscertify
 @pytest.mark.skip(reason="This causes paramiko to timeout intermittently. Need to revisit.")
 @pytest.mark.parametrize("sg_conf_name", ["log_rotation"])
 def test_log_200mb(params_from_base_test_setup, sg_conf_name):
@@ -453,6 +460,7 @@ def test_log_200mb(params_from_base_test_setup, sg_conf_name):
 
 @pytest.mark.syncgateway
 @pytest.mark.logging
+@pytest.mark.oscertify
 @pytest.mark.parametrize("sg_conf_name", ["log_rotation"])
 def test_log_number_backups(params_from_base_test_setup, sg_conf_name):
     """Test to check general behaviour for number of backups.
@@ -515,6 +523,7 @@ def test_log_number_backups(params_from_base_test_setup, sg_conf_name):
 # https://github.com/couchbase/sync_gateway/issues/2222
 @pytest.mark.syncgateway
 @pytest.mark.logging
+@pytest.mark.oscertify
 @pytest.mark.parametrize("sg_conf_name", ["log_rotation"])
 def test_log_rotation_negative(params_from_base_test_setup, sg_conf_name):
     """Test log rotation with negative values for:
@@ -581,6 +590,7 @@ def test_log_rotation_negative(params_from_base_test_setup, sg_conf_name):
 # https://github.com/couchbase/sync_gateway/issues/2225
 @pytest.mark.syncgateway
 @pytest.mark.logging
+@pytest.mark.oscertify
 @pytest.mark.parametrize("sg_conf_name", ["log_rotation"])
 def test_log_maxbackups_0(params_from_base_test_setup, sg_conf_name):
     """Test with maxbackups=0 that means do not limit the number of backups
@@ -644,6 +654,7 @@ def test_log_maxbackups_0(params_from_base_test_setup, sg_conf_name):
 
 @pytest.mark.syncgateway
 @pytest.mark.logging
+@pytest.mark.oscertify
 @pytest.mark.parametrize("sg_conf_name", ["log_rotation"])
 def test_log_logLevel_invalid(params_from_base_test_setup, sg_conf_name):
     """Run SG with non existing logLevel value

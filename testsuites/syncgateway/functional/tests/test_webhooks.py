@@ -18,12 +18,11 @@ from utilities.cluster_config_utils import persist_cluster_config_environment_pr
 
 
 @pytest.mark.syncgateway
-@pytest.mark.onlineoffline
 @pytest.mark.webhooks
 @pytest.mark.basicauth
-@pytest.mark.channel
+@pytest.mark.basicsgw
 @pytest.mark.parametrize("sg_conf_name, num_users, num_channels, num_docs, num_revisions, x509_cert_auth", [
-    pytest.param("webhooks/webhook_offline", 5, 1, 1, 2, True, marks=pytest.mark.sanity),
+    pytest.param("webhooks/webhook_offline", 5, 1, 1, 2, True, marks=[pytest.mark.sanity, pytest.mark.oscertify]),
     ("webhooks/webhook_offline", 5, 1, 1, 2, False)
 ])
 def test_webhooks(params_from_base_test_setup, sg_conf_name, num_users, num_channels, num_docs,
@@ -41,7 +40,7 @@ def test_webhooks(params_from_base_test_setup, sg_conf_name, num_users, num_chan
 
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
-
+    cbs_ce_version = params_from_base_test_setup["cbs_ce"]
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     log_info("Running 'test_webhooks'")
@@ -50,7 +49,7 @@ def test_webhooks(params_from_base_test_setup, sg_conf_name, num_users, num_chan
     log_info("Using num_channels: {}".format(num_channels))
     log_info("Using num_docs: {}".format(num_docs))
     log_info("Using num_revisions: {}".format(num_revisions))
-    if x509_cert_auth:
+    if x509_cert_auth and not cbs_ce_version:
         temp_cluster_config = copy_to_temp_conf(cluster_conf, mode)
         persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
         cluster_conf = temp_cluster_config
@@ -98,9 +97,10 @@ def test_webhooks(params_from_base_test_setup, sg_conf_name, num_users, num_chan
 
 
 @pytest.mark.syncgateway
-@pytest.mark.xattrs
 @pytest.mark.session
 @pytest.mark.webhooks
+@pytest.mark.basicsgw
+@pytest.mark.oscertify
 @pytest.mark.parametrize('sg_conf_name, filtered', [
     ('webhooks/webhook', False),
     ('webhooks/webhook_filter', True)
@@ -187,8 +187,7 @@ def test_webhooks_crud(params_from_base_test_setup, sg_conf_name, filtered):
     sg_auth = sg_client.create_session(
         url=sg_admin_url,
         db=sg_db,
-        name=sg_info.name,
-        password=sg_info.password
+        name=sg_info.name
     )
 
     # Create sg docs
@@ -332,7 +331,8 @@ def add_docs(sg_client, sg_url, sg_db, sg_docs, sg_auth, sdk_client, sdk_docs, n
 
     if xattrs:
         log_info('Adding sdk docs ...')
-        sdk_client.upsert_multi(sdk_docs)
+        for sdk_doc in sdk_docs:
+            sdk_client.upsert(sdk_doc, sdk_docs[sdk_doc])
 
 
 def update_docs(sg_client, sg_url, sg_db, sg_doc_ids, sg_auth, sdk_client, sdk_doc_ids, updated_doc_content, xattrs):
@@ -407,7 +407,8 @@ def delete_docs(sg_client, sg_url, sg_db, sg_doc_ids, sg_auth, sdk_client, sdk_d
 
     if xattrs:
         # Delete all sg docs from sdk
-        sdk_client.remove_multi(sg_doc_ids)
+        for sg_docid in sg_doc_ids:
+            sdk_client.remove(sg_docid)
 
 
 def poll_for_webhook_data(webhook_server, expected_doc_ids, expected_num_revs, expected_content, deleted=False):
@@ -418,7 +419,6 @@ def poll_for_webhook_data(webhook_server, expected_doc_ids, expected_num_revs, e
         if time.time() - start > CLIENT_REQUEST_TIMEOUT:
             webhook_server.stop()
             raise TimeoutError('Timed out waiting for webhook events!!')
-
         # Get web hook sent data and build a dictionary
         expected_docs_scratch_pad = list(expected_doc_ids)
 
