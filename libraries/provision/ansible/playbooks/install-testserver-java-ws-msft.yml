@@ -44,6 +44,21 @@
     win_shell:
       Remove-Item "{{ ansible_env.CATALINA_BASE }}\\logs\\*.*"
 
+  - name: Remove cached cblite2 files
+    win_shell:
+      Remove-Item -path "{{ ansible_env.CATALINA_BASE }}\\*.cblite2" -Recurse -Force -EA SilentlyContinue -Verbose
+    ignore_errors: yes
+
+  - name: Remove previously generated crash mdmp files
+    win_shell:
+      Remove-Item -path "{{ ansible_env.CATALINA_BASE }}\\*.mdmp" -Recurse -Force -EA SilentlyContinue -Verbose
+    ignore_errors: yes
+
+  - name: Remove previously generated crash log files
+    win_shell:
+      Remove-Item -path "{{ ansible_env.CATALINA_BASE }}\\*.log" -Recurse -Force -EA SilentlyContinue -Verbose
+    ignore_errors: yes
+
   - debug: msg="Copy TestServer war file"
   - win_shell: copy C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ build_name }}\{{ war_package_name }}.war "{{ ansible_env.CATALINA_BASE }}\\webapps\\ROOT.war"
 

@@ -16,8 +16,7 @@ from keywords.utils import log_r, log_info, log_debug, log_error, hostname_for_u
 from keywords.utils import version_and_build, random_string
 from keywords import types
 from utilities.cluster_config_utils import is_x509_auth, get_cbs_version, is_magma_enabled, is_cbs_ce_enabled, get_cluster
-from couchbase.cluster import Cluster
-
+from keywords.constants import SDK_TIMEOUT
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 
@@ -1033,3 +1032,50 @@ class CouchbaseServer:
                     if collection_1["name"] == collection:
                         col_id = collection_1["uid"]
         return col_id
+
+    def disable_replicas(self, bucket):
+        """ Disable replicas which needed for transaction app testing"""
+        data = {
+            "replicaNumber": 0
+        }
+        resp = self._session.post("{}/pools/default/buckets/{}".format(self.url, bucket), data=data)
+        log_r(resp)
+        resp.raise_for_status()
+
+    def rebalance_server(self, cluster_servers):
+        # Now hit the rebalance rest api
+        known_nodes = "knownNodes="
+        for server in cluster_servers:
+            if "https" in server:
+                server = server.replace("https://", "")
+                server = server.replace(":18091", "")
+            else:
+                server = server.replace("http://", "")
+                server = server.replace(":8091", "")
+            known_nodes += "ns_1@{},".format(server)
+
+        # Add server_to_remove to ejected_node
+        data = known_nodes
+        resp = self._session.post(
+            "{}/controller/rebalance".format(self.url),
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+            data=data
+        )
+        log_r(resp)
+        resp.raise_for_status()
+
+        self._wait_for_rebalance_complete()
+        return True
+
+
+def get_sdk_client_with_bucket(ssl_enabled, cluster, cbs_ip, cbs_bucket):
+    if ssl_enabled and cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(cbs_ip, cbs_bucket)
+    elif ssl_enabled and not cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify".format(cbs_ip, cbs_bucket)
+    elif not ssl_enabled and cluster.ipv6:
+        connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, cbs_bucket)
+    else:
+        connection_url = 'couchbase://{}/{}'.format(cbs_ip, cbs_bucket)
+    sdk_client = Bucket(connection_url, password='password', timeout=SDK_TIMEOUT)
+    return sdk_client

@@ -203,7 +203,8 @@ class Cluster:
             "num_index_replicas": "",
             "sg_use_views": "",
             "couchbase_server_primary_node": couchbase_server_primary_node,
-            "delta_sync": ""
+            "delta_sync": "",
+            "prometheus": ""
         }
 
         sg_platform = get_sg_platform(self._cluster_config)
@@ -286,6 +287,9 @@ class Cluster:
 
         if is_delta_sync_enabled(self._cluster_config) and get_sg_version(self._cluster_config) >= "2.5.0":
             playbook_vars["delta_sync"] = '"delta_sync": { "enabled": true},'
+
+        if get_sg_version(self._cluster_config) >= "2.8.0":
+            playbook_vars["prometheus"] = '"metricsInterface": ":4986",'
 
         # Sleep for a few seconds for the indexes to teardown
         time.sleep(5)

@@ -19,13 +19,18 @@ class TestServerNetMsft(TestServerWinBase):
         if version_build <= "2.1.0":
             raise Exception("No .net based app available to download for 2.1.0 or below at latestbuild. Use nuget package to create app.")
         if self.platform == "net-msft":
-            self.binary_path = "TestServer-Net-{}\\TestServer.NetCore.dll".format(self.version_build)
-            if self.build is None:
-                self.download_url = "{}/couchbase-lite-net/{}/TestServer.NetCore.zip".format(RELEASED_BUILDS, self.version)
+            if community_enabled:
+                self.build_name = "TestServer-Net-community-{}".format(self.version_build)
+                self.binary_path = "TestServer-Net-community-{}\\TestServer.NetCore.dll".format(self.version_build)
+                self.package_name = "TestServer.NetCore-community.zip"
             else:
-                self.download_url = "{}/couchbase-lite-net/{}/{}/TestServer.NetCore.zip".format(LATEST_BUILDS, self.version, self.build)
-            self.package_name = "TestServer.NetCore.zip"
-            self.build_name = "TestServer-Net-{}".format(self.version_build)
+                self.build_name = "TestServer-Net-{}".format(self.version_build)
+                self.binary_path = "TestServer-Net-{}\\TestServer.NetCore.dll".format(self.version_build)
+                self.package_name = "TestServer.NetCore.zip"
+            if self.build is None:
+                self.download_url = "{}/couchbase-lite-net/{}/{}".format(RELEASED_BUILDS, self.version, self.package_name)
+            else:
+                self.download_url = "{}/couchbase-lite-net/{}/{}/{}".format(LATEST_BUILDS, self.version, self.build, self.package_name)
         else:
             self.binary_path = "TestServer-UWP-{}\\run.ps1".format(self.version_build)
             if self.build is None:

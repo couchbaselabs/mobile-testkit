@@ -24,7 +24,7 @@
             "bucket":"data-bucket",
             "sync": `function(doc,oldDoc){
                     if (doc.channels[0] == "channel-0") {
-                        channel([doc.channels,"channel_x"]);
+                        channel([doc.channels[0],"channel_x"]);
                     } }`,
             "offline":true
         }

@@ -19,7 +19,8 @@ from CBLClient.Utils import Utils
 from keywords.TestServerFactory import TestServerFactory
 from keywords.SyncGateway import SyncGateway
 from keywords.constants import RESULTS_DIR
-
+from keywords.constants import SDK_TIMEOUT
+from libraries.testkit import prometheus
 
 def pytest_addoption(parser):
     parser.addoption("--mode",
@@ -139,6 +140,11 @@ def pytest_addoption(parser):
                      help="Provide a custom cluster config",
                      default="multiple_sync_gateways_")
 
+    parser.addoption("--prometheus-enable",
+                     action="store",
+                     help="Starts the prometheus metrics",
+                     default=False)
+
 # This will get called once before the first test that
 # runs with this as input parameters in this file
 # This setup will be called once for all tests in the
@@ -178,6 +184,7 @@ def params_from_base_suite_setup(request):
 
     enable_encryption = request.config.getoption("--enable-encryption")
     encryption_password = request.config.getoption("--encryption-password")
+    prometheus_enable = request.config.getoption("--prometheus-enable")
 
     testserver = TestServerFactory.create(platform=liteserv_platform,
                                           version_build=liteserv_version,
@@ -377,6 +384,10 @@ def params_from_base_suite_setup(request):
         log_info("Creating primary index for {}".format(enable_sample_bucket))
         n1ql_query = 'create primary index on {}'.format(enable_sample_bucket)
         sdk_client.query(n1ql_query)
+    if prometheus_enable:
+        if not prometheus.is_prometheus_installed():
+            prometheus.install_prometheus()
+        prometheus.start_prometheus(sg_ip, sg_ssl)
 
     yield {
         "cluster_config": cluster_config,
@@ -429,6 +440,8 @@ def params_from_base_suite_setup(request):
 
     # Delete png files under resources/data
     clear_resources_pngs()
+    if prometheus_enable:
+        prometheus.stop_prometheus(sg_ip, sg_ssl)
 
 
 @pytest.fixture(scope="function")
@@ -464,6 +477,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     cbs_ce = params_from_base_suite_setup["cbs_ce"]
     sg_ce = params_from_base_suite_setup["sg_ce"]
     cbs_ssl = params_from_base_suite_setup["ssl_enabled"]
+    prometheus_enable = request.config.getoption("--prometheus-enable")
 
     use_local_testserver = request.config.getoption("--use-local-testserver")
 
@@ -549,7 +563,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "enable_file_logging": enable_file_logging,
         "cbs_ce": cbs_ce,
         "sg_ce": sg_ce,
-        "ssl_enabled": cbs_ssl
+        "ssl_enabled": cbs_ssl,
+        "prometheus_enable": prometheus_enable
     }
 
     log_info("Tearing down test")
