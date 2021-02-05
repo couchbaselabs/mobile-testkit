@@ -5,6 +5,7 @@
     {{ sslkey }}
     {{ logging }}
     {{ hide_product_version }}
+    {{ prometheus }}
     "databases":{
         "sg_db2":{
             {{ autoimport }}
