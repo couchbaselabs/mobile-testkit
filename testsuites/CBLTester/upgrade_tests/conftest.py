@@ -126,6 +126,11 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="based on this conditions we install the old test server app first them new version of the app")
 
+    parser.addoption("--hide-product-version",
+                     action="store_true",
+                     help="Hides SGW product version when you hit SGW url",
+                     default=False)
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -157,6 +162,7 @@ def params_from_base_suite_setup(request):
     delta_sync_enabled = request.config.getoption("--delta-sync")
     enable_file_logging = request.config.getoption("--enable-file-logging")
     enable_upgrade_app = request.config.getoption("--enable-upgrade-app")
+    hide_product_version = request.config.getoption("--hide-product-version")
     second_liteserv_host = request.config.getoption("--second-liteserv-host")
     second_liteserv_version = request.config.getoption("--second-liteserv-version")
     second_liteserv_platform = request.config.getoption("--second-liteserv-platform")
@@ -271,6 +277,13 @@ def params_from_base_suite_setup(request):
     else:
         log_info("Running without delta sync")
         persist_cluster_config_environment_prop(cluster_config, 'delta_sync_enabled', False)
+
+    if hide_product_version:
+        log_info("Suppress the SGW product Version")
+        persist_cluster_config_environment_prop(cluster_config, 'hide_product_version', True)
+    else:
+        log_info("Running without suppress SGW product Version")
+        persist_cluster_config_environment_prop(cluster_config, 'hide_product_version', False)
 
     # As cblite jobs run with on Centos platform, adding by default centos to environment config
     persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "centos", False)

@@ -166,6 +166,11 @@ def pytest_addoption(parser):
                      help="Starts the prometheus metrics",
                      default=False)
 
+    parser.addoption("--hide-product-version",
+                     action="store_true",
+                     help="Hides SGW product version when you hit SGW url",
+                     default=False)
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -207,9 +212,9 @@ def params_from_base_suite_setup(request):
     cbl_log_decoder_platform = request.config.getoption("--cbl-log-decoder-platform")
     cbl_log_decoder_build = request.config.getoption("--cbl-log-decoder-build")
     prometheus_enable = request.config.getoption("--prometheus-enable")
-
     enable_encryption = request.config.getoption("--enable-encryption")
     encryption_password = request.config.getoption("--encryption-password")
+    hide_product_version = request.config.getoption("--hide-product-version")
 
     test_name = request.node.name
 
@@ -338,6 +343,13 @@ def params_from_base_suite_setup(request):
     else:
         log_info("Running without delta sync")
         persist_cluster_config_environment_prop(cluster_config, 'delta_sync_enabled', False)
+
+    if hide_product_version:
+        log_info("Suppress the SGW product Version")
+        persist_cluster_config_environment_prop(cluster_config, 'hide_product_version', True)
+    else:
+        log_info("Running without suppress SGW product Version")
+        persist_cluster_config_environment_prop(cluster_config, 'hide_product_version', False)
 
     # As cblite jobs run with on Centos platform, adding by default centos to environment config
     persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "centos", False)

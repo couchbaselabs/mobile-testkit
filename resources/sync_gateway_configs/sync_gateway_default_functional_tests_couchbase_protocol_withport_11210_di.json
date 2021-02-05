@@ -5,6 +5,7 @@
     "maxFileDescriptors": 90000,
     "compressResponses": false,
     {{ logging }}
+    {{ hide_product_version }}
     "cluster_config": {
         "server":"couchbase://{{ couchbase_server_primary_node }}:11210",
         "data_dir":".",

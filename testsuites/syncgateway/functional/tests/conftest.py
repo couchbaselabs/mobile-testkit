@@ -157,6 +157,10 @@ def pytest_addoption(parser):
                      action="store",
                      help="prometheus-enable:Start prometheus metrics on SyncGateway")
 
+    parser.addoption("--hide-product-version",
+                     action="store_true",
+                     help="Hides SGW product version when you hit SGW url",
+                     default=False)
 
 # This will be called once for the at the beggining of the execution in the 'tests/' directory
 # and will be torn down, (code after the yeild) when all the test session has completed.
@@ -194,6 +198,7 @@ def params_from_base_suite_setup(request):
     delta_sync_enabled = request.config.getoption("--delta-sync")
     magma_storage_enabled = request.config.getoption("--magma-storage")
     prometheus_enabled = request.config.getoption("--prometheus-enable")
+    hide_product_version = request.config.getoption("--hide-product-version")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
@@ -221,6 +226,7 @@ def params_from_base_suite_setup(request):
     log_info("use_views: {}".format(use_views))
     log_info("number_replicas: {}".format(number_replicas))
     log_info("delta_sync_enabled: {}".format(delta_sync_enabled))
+    log_info("hide_product_version: {}".format(hide_product_version))
 
     # sg-ce is invalid for di mode
     if mode == "di" and sg_ce:
@@ -354,6 +360,13 @@ def params_from_base_suite_setup(request):
     else:
         log_info("Running test with CBS edition {}".format(cbs_ce))
         persist_cluster_config_environment_prop(cluster_config, 'cbs_ce', cbs_ce, False)
+
+    if hide_product_version:
+        log_info("Suppress the SGW product Version")
+        persist_cluster_config_environment_prop(cluster_config, 'hide_product_version', True)
+    else:
+        log_info("Running without suppress SGW product Version")
+        persist_cluster_config_environment_prop(cluster_config, 'hide_product_version', False)
 
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
 

@@ -5,6 +5,7 @@
   "maxFileDescriptors": 90000,
   "compressResponses": false,
   {{ logging }}
+  {{ hide_product_version }}
   "replications": [
     {
       "replication_id": "continuous",
