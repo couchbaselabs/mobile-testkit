@@ -2,6 +2,7 @@
     "interface":":4984",
     "adminInterface": "0.0.0.0:4985",
     {{ logging }}
+    {{ hide_product_version }}
     "cluster_config": {
         "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
         "data_dir":".",

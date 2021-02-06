@@ -161,6 +161,11 @@ def pytest_addoption(parser):
                      action="store",
                      help="cbs-upgrade-toybuild: Couchbase server toy build to use")
 
+    parser.addoption("--hide-product-version",
+                     action="store_true",
+                     help="Hides SGW product version when you hit SGW url",
+                     default=False)
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -208,6 +213,7 @@ def params_from_base_suite_setup(request):
     sgw_cluster2_count = request.config.getoption("--sgw_cluster2_count")
     no_conflicts_enabled = request.config.getoption("--no-conflicts")
     upgraded_no_conflicts_enabled = request.config.getoption("--upgraded-no-conflicts")
+    hide_product_version = request.config.getoption("--hide-product-version")
     test_name = request.node.name
 
     log_info("mode: {}".format(mode))
@@ -242,6 +248,7 @@ def params_from_base_suite_setup(request):
     log_info("sgw_cluster2_count: {}".format(sgw_cluster2_count))
     log_info("no_conflicts_enabled: {}".format(no_conflicts_enabled))
     log_info("upgraded_no_conflicts_enabled: {}".format(upgraded_no_conflicts_enabled))
+    log_info("hide_product_version: {}".format(hide_product_version))
 
     # if xattrs is specified but the post upgrade SG version doesn't support, don't continue
     if upgraded_xattrs_enabled and version_is_binary(sync_gateway_upgraded_version):
@@ -368,6 +375,13 @@ def params_from_base_suite_setup(request):
         log_info("Running tests not using views")
         # Disable sg views in cluster configs
         persist_cluster_config_environment_prop(cluster_config, 'sg_use_views', False)
+
+    if hide_product_version:
+        log_info("Suppress the SGW product Version")
+        persist_cluster_config_environment_prop(cluster_config, 'hide_product_version', True)
+    else:
+        log_info("Running without suppress SGW product Version")
+        persist_cluster_config_environment_prop(cluster_config, 'hide_product_version', False)
 
     persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "centos", False)
 
