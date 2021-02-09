@@ -243,6 +243,7 @@ class CouchbaseServer:
             resp_obj = resp.json()
 
             all_nodes_healthy = True
+            print("nodes from resp_obj ",resp_obj)
             for node in resp_obj["nodes"]:
                 if node["status"] != "healthy":
                     all_nodes_healthy = False
