@@ -61,14 +61,14 @@ def test_get_buckets_from_sync_gateway_config_template_vars():
     "log": ["CRUD+", "Cache+", "HTTP+", "Changes+"],
     "cluster_config": {
         "server":"http://{{ couchbase_server_primary_node }}:8091",
-        {{ bucket_name1 }}
+        "bucket":"data-bucket",
         "data_dir":"."
     },
     "databases":{
         "db":{
             "feed_type":"DCPSHARD",
             "server":"http://{{ couchbase_server_primary_node }}:8091",
-            {{ bucket_name1 }}
+            "bucket":"data-bucket",
             "channel_index":{
                 "num_shards":16,
                 "server":"http://{{ couchbase_server_primary_node }}:8091",

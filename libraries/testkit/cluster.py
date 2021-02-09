@@ -226,7 +226,7 @@ class Cluster:
             "bucket_name1": "",
             "bucket_name2": "",
             "bucket_name3": "",
-            "bucket_name4": ""
+            "bucket_name4": "",
             "prometheus": "",
             "hide_product_version": ""
         }

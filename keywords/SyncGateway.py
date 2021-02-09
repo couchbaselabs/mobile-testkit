@@ -370,7 +370,7 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config):
             bucket_name1=data_bucket_props[0],
             bucket_name2=data_bucket_props[1],
             bucket_name3=data_bucket_props[2],
-            bucket_name4=data_bucket_props[3]
+            bucket_name4=data_bucket_props[3],
             hide_prod_version=hide_prod_version_prop
         )
         data = json.loads(temp)
