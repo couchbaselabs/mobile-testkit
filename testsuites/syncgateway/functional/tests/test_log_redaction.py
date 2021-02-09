@@ -14,10 +14,11 @@ from keywords.utils import log_info, host_for_url
 from libraries.testkit.cluster import Cluster
 from utilities.cluster_config_utils import load_cluster_config_json
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
-from utilities.scan_logs import scan_for_pattern
+from utilities.scan_logs import scan_for_pattern, unzip_log_files
 from keywords.MobileRestClient import MobileRestClient
 from keywords import document, attachment
 from libraries.provision.ansible_runner import AnsibleRunner
+from keywords.remoteexecutor import RemoteExecutor
 
 
 @pytest.mark.syncgateway
@@ -185,6 +186,7 @@ def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_
     password = 'validkey'
     sa_directory = None
     sa_host = None
+    salt_value = None
     cbs_ce_version = params_from_base_test_setup["cbs_ce"]
     if get_sync_gateway_version(sg_ip)[0] < "2.1":
         pytest.skip("log redaction feature not available for version < 2.1 ")
@@ -275,7 +277,7 @@ def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_
 
     pull_redacted_zip_file(temp_cluster_config, sg_platform, directory, sa_directory)
     # Verify files got redacted in sg collected files
-    log_verification_withsgCollect(redaction_level, user_name, password)
+    log_verification_withsgCollect(redaction_level, user_name, password, redaction_salt=salt_value)
 
 
 @pytest.mark.syncgateway
@@ -368,6 +370,78 @@ def test_sgCollectRestApi_errorMessages(params_from_base_test_setup, remove_tmp_
 
     assert "Invalid options used for sgcollect_info:" in resp.content.decode('ascii')
     assert "no such file or directory:" in resp.content.decode('ascii')
+
+
+@pytest.mark.syncgateway
+@pytest.mark.logredaction
+@pytest.mark.logging
+def test_log_content_verification(params_from_base_test_setup, remove_tmp_sg_redaction_logs):
+    """
+    @summary
+    1. Verify all the log files on sgcollect zip file exist after unzip
+    2. Verify content of sync_gateway.log
+    """
+
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+    cluster_helper = ClusterKeywords(cluster_config)
+    cluster_hosts = cluster_helper.get_cluster_topology(cluster_config)
+    sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
+    sg_url = cluster_hosts["sync_gateways"][0]["public"]
+    sg_platform = params_from_base_test_setup["sg_platform"]
+    sg_ip = host_for_url(sg_admin_url)
+    sg_conf_name = "sync_gateway_default"
+    sg_db = "db"
+    num_of_docs = 10
+    if get_sync_gateway_version(sg_ip)[0] < "2.8.1":
+        pytest.skip("This feature is not available for version below 2.8.1 ")
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+
+    cluster = Cluster(config=cluster_config)
+    cluster.reset(sg_config_path=sg_conf)
+
+    # Get sync_gateway host
+    cluster = load_cluster_config_json(cluster_config)
+    sg_host = cluster["sync_gateways"][0]["ip"]
+    if cluster["environment"]["ipv6_enabled"]:
+        sg_host = "[{}]".format(sg_host)
+
+    # Create user in sync_gateway
+    sg_client = MobileRestClient()
+    channels = ["logging"]
+    sg_client.create_user(url=sg_admin_url, db=sg_db, name='autotest', password='password', channels=channels)
+    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest')
+
+    # Create docs with xattrs
+    sgdoc_bodies = document.create_docs(doc_id_prefix='sg_docs', number=num_of_docs,
+                                        attachments_generator=attachment.generate_2_png_10_10, channels=channels)
+    sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sgdoc_bodies, auth=autouser_session)
+    assert len(sgdoc_bodies) == num_of_docs
+
+    resp = sg_client.sgCollect_info(sg_host)
+    assert resp["status"] == "started", "sg collect did not started"
+    count = 0
+    log_info("sg collect is running ........")
+    # Minimum of 5 minute sleep time is recommended
+    # Refer https://github.com/couchbase/sync_gateway/issues/3669
+    if sg_platform == "windows":
+        max_count = 120
+    else:
+        max_count = 60
+    while sg_client.get_sgCollect_status(sg_host) == "running" and count < max_count:
+        time.sleep(5)
+        count += 1
+    time.sleep(5)  # sleep until zip files created with sg collect rest end point
+    pull_redacted_zip_file(cluster_config, sg_platform)
+    if sg_platform == "windows":
+        json_cluster = load_cluster_config_json(cluster_config)
+        sghost_username = json_cluster["sync_gateways:vars"]["ansible_user"]
+        sghost_password = json_cluster["sync_gateways:vars"]["ansible_password"]
+        remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip, sg_platform, sghost_username, sghost_password)
+    else:
+        remote_executor = RemoteExecutor(cluster["sync_gateways"][0]["ip"])
+    verify_all_logs_in_sgcollectzip(remote_executor)
 
 
 def verify_log_redaction(cluster_config, log_redaction_level, mode):
@@ -503,7 +577,19 @@ def verify_udTags_in_zippedFile(zip_file_name):
                 assert False, "Hashing failed for Line: " + key
 
 
-def log_verification_withsgCollect(redaction_level, user, password, zip_file_name=None):
+def verify_saltvalue_in_redacted_zip_file(zip_file_name, salt_value):
+    if os.path.isdir("/tmp/sg_redaction_logs"):
+
+        redacted_zip_file = "/tmp/sg_redaction_logs/sg1/{}-redacted.zip".format(zip_file_name)
+        zipgrep_command = "zipgrep -n -o \"{}\" ".format(salt_value)
+        command = zipgrep_command + redacted_zip_file + r" | cut -f2 -d/ | cut -f1 -d\<"
+
+        line_num_output = subprocess.check_output(command, shell=True)
+        ln_output_list = line_num_output.splitlines()
+        assert len(ln_output_list) == 0, "salt value shows up in the log files{}".format(line_num_output)
+
+
+def log_verification_withsgCollect(redaction_level, user, password, zip_file_name=None, redaction_salt=None):
     if zip_file_name is None:
         if redaction_level is None:
             command = "ls /tmp/sg_redaction_logs/sg1/*.zip | awk -F'.zip' '{print $1}' | grep -o '[^/]*$'"
@@ -517,13 +603,41 @@ def log_verification_withsgCollect(redaction_level, user, password, zip_file_nam
     nonredacted_file_name = "/tmp/sg_redaction_logs/sg1/{}.zip".format(zip_file_name)
     if redaction_level == "partial":
         assert os.path.isfile(redacted_file_name), "redacted file is not generated"
-
         verify_udTags_in_zippedFile(zip_file_name)
         verify_pattern_redacted(redacted_file_name, user)
         verify_pattern_redacted(redacted_file_name, password)
+        if redaction_salt is not None:
+            verify_saltvalue_in_redacted_zip_file(zip_file_name, redaction_salt)
     else:
         assert not os.path.isfile(redacted_file_name), "redacted file is generated for redaction level None"
     assert os.path.isfile(nonredacted_file_name), "non redacted zip file is not generated"
+
+
+def verify_all_logs_in_sgcollectzip(remote_executor, zip_file_name=None):
+    if zip_file_name is None:
+        command = "ls /tmp/sg_redaction_logs/sg1/*.zip | awk -F'.zip' '{print $1}' | grep -o '[^/]*$'"
+        zip_file_name = subprocess.check_output(command, shell=True)
+        zip_file_name = zip_file_name.rstrip()
+        if isinstance(zip_file_name, (bytes, bytearray)):
+            zip_file_name = zip_file_name.decode()
+    sgcollect_zip_filename = "/tmp/sg_redaction_logs/sg1/{}.zip".format(zip_file_name)
+    file_list_sgcollect_zip = ['expvars.json', 'pprof_block.pb.gz', 'pprof_goroutine.pb.gz', 'pprof_heap.pb.gz', 'pprof_mutex.pb.gz', 'pprof_profile.pb.gz',
+                               'sg_debug.log', 'sg_error.log', 'sg_info.log', 'sg_stats.log', 'sg_warn.log', 'sgcollect_info_options.log', 'sync_gateway', 'sync_gateway.json',
+                               'sync_gateway.log', 'sync_gateway_access.log', 'sync_gateway_error.log', 'syslog.tar.gz', 'systemd_journal.gz']
+    for file in file_list_sgcollect_zip:
+        bracket_command = "\"{}\""
+        find_command = "find {} -type f -exec sh -c 'unzip -l {} | grep -q {}' \\; -print | wc -l".format(sgcollect_zip_filename, bracket_command, file)
+        result_command = subprocess.check_output(find_command, shell=True)
+        assert int(result_command.decode('utf-8').strip()) == 1, "{} do not exist".format(file)
+
+    # unzip file
+    unzip_log_files(sgcollect_zip_filename)
+    sgcollect_zip_directory = sgcollect_zip_filename.split(".zip")[0]
+    grep_command = "grep -E '(?:hostname: |hostname = |Host Name:(?:\s)*)(.*)' {}/*/sync_gateway.log".format(sgcollect_zip_directory)
+    result_command = subprocess.check_output(grep_command, shell=True)
+    _, stdout, _ = remote_executor.execute("hostname")
+    assert_hostname = result_command.decode('utf-8').strip() == "kernel.hostname = {}".format(stdout[0].rstrip())
+    assert (result_command.decode('utf-8').strip() == "kernel.hostname = localhost.localdomain" or assert_hostname), "did not get the right string from sync_gateway log file"
 
 
 @pytest.fixture(scope="function")

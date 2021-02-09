@@ -60,6 +60,18 @@ def pytest_addoption(parser):
                      action="store",
                      help="liteserv-host: the host to start liteserv on")
 
+    parser.addoption("--second-liteserv-platform",
+                     action="store",
+                     help="liteserv-platform: the platform to assign to the liteserv")
+
+    parser.addoption("--second-liteserv-host",
+                     action="store",
+                     help="liteserv-host: the host to start liteserv on")
+
+    parser.addoption("--second-liteserv-version",
+                     action="store",
+                     help="liteserv-version: the version to download / install for the liteserv")
+
     parser.addoption("--liteserv-port",
                      action="store",
                      help="liteserv-port: the port to assign to liteserv")
@@ -110,6 +122,15 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="delta-sync: Enable delta-sync for sync gateway")
 
+    parser.addoption("--enable-upgrade-app",
+                     action="store_true",
+                     help="based on this conditions we install the old test server app first them new version of the app")
+
+    parser.addoption("--hide-product-version",
+                     action="store_true",
+                     help="Hides SGW product version when you hit SGW url",
+                     default=False)
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -140,14 +161,28 @@ def params_from_base_suite_setup(request):
     number_replicas = request.config.getoption("--number-replicas")
     delta_sync_enabled = request.config.getoption("--delta-sync")
     enable_file_logging = request.config.getoption("--enable-file-logging")
+    enable_upgrade_app = request.config.getoption("--enable-upgrade-app")
+    hide_product_version = request.config.getoption("--hide-product-version")
+    second_liteserv_host = request.config.getoption("--second-liteserv-host")
+    second_liteserv_version = request.config.getoption("--second-liteserv-version")
+    second_liteserv_platform = request.config.getoption("--second-liteserv-platform")
 
     test_name = request.node.name
-    testserver = TestServerFactory.create(platform=liteserv_platform,
-                                          version_build=upgraded_liteserv_version,
-                                          host=liteserv_host,
-                                          port=liteserv_port,
-                                          community_enabled=community_enabled,
-                                          debug_mode=debug_mode)
+    if enable_upgrade_app:
+        testserver = TestServerFactory.create(platform=liteserv_platform,
+                                              version_build=base_liteserv_version,
+                                              host=liteserv_host,
+                                              port=liteserv_port,
+                                              community_enabled=community_enabled,
+                                              debug_mode=debug_mode)
+    else:
+        testserver = TestServerFactory.create(platform=liteserv_platform,
+                                              version_build=upgraded_liteserv_version,
+                                              host=liteserv_host,
+                                              port=liteserv_port,
+                                              community_enabled=community_enabled,
+                                              debug_mode=debug_mode)
+
     log_info("Downloading TestServer ...")
     # Download TestServer app
     testserver.download()
@@ -243,6 +278,13 @@ def params_from_base_suite_setup(request):
         log_info("Running without delta sync")
         persist_cluster_config_environment_prop(cluster_config, 'delta_sync_enabled', False)
 
+    if hide_product_version:
+        log_info("Suppress the SGW product Version")
+        persist_cluster_config_environment_prop(cluster_config, 'hide_product_version', True)
+    else:
+        log_info("Running without suppress SGW product Version")
+        persist_cluster_config_environment_prop(cluster_config, 'hide_product_version', False)
+
     # As cblite jobs run with on Centos platform, adding by default centos to environment config
     persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "centos", False)
 
@@ -333,7 +375,14 @@ def params_from_base_suite_setup(request):
         "suite_db_log_files": suite_db_log_files,
         "db_password": db_password,
         "encrypted_db": encrypted_db,
-        "utils_obj": utils_obj
+        "utils_obj": utils_obj,
+        "community_enabled": community_enabled,
+        "debug_mode": debug_mode,
+        "test_name_cp": test_name_cp,
+        "sg_url": sg_url,
+        "second_liteserv_host": second_liteserv_host,
+        "second_liteserv_version": second_liteserv_version,
+        "second_liteserv_platform": second_liteserv_platform
     }
 
     # Flush all the memory contents on the server app

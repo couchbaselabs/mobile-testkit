@@ -5,6 +5,7 @@
     "maxFileDescriptors": 90000,
     "compressResponses": false,
     {{ logging }}
+    {{ hide_product_version }}
     {{ sslcert }}
     {{ sslkey }}
     "databases":{
@@ -27,17 +28,15 @@
                   channel(doc.channels);
                 }`,
             "event_handlers": {
+               "max_processes": 500,
+               "wait_for_process": "600000",
                "document_changed":[{
                     "handler": "webhook",
-                    "max_processes": 500,
-                    "wait_for_process": "600000",
                     "url": "http://{{ webhook_ip }}:8080",
                     "timeout": 60
                 }],
                "db_state_changed":[{
                    "handler":"webhook",
-                   "max_processes": 500,
-                   "wait_for_process": "600000",
                    "url":"http://{{ webhook_ip }}:8080",
                    "timeout":60
                 }]

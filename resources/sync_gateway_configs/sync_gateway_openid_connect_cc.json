@@ -1,5 +1,6 @@
 {
     {{ logging }}
+    {{ hide_product_version }}
    "compressResponses": false,
    "AdminInterface":"0.0.0.0:4985",
    {{ sslcert }}

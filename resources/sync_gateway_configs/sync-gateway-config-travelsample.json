@@ -1,6 +1,7 @@
 {
   "interface":":4984",
   {{ logging }}
+  {{ hide_product_version }}
   {{ sslcert }}
   {{ sslkey }}
   "databases": {

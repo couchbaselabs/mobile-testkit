@@ -8,10 +8,11 @@ from keywords.tklogging import Logging
 from keywords.utils import log_info, check_xattr_support, version_is_binary, clear_resources_pngs
 
 from keywords.exceptions import ProvisioningError, FeatureSupportedError
-
+from keywords.utils import host_for_url
 from libraries.testkit import cluster
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop
 from utilities.cluster_config_utils import get_load_balancer_ip
+from libraries.testkit import prometheus
 
 
 # This will be called once for the at the beggining of the execution of each .py file
@@ -43,6 +44,8 @@ def params_from_base_suite_setup(request):
     delta_sync_enabled = request.config.getoption("--delta-sync")
     cbs_platform = request.config.getoption("--cbs-platform")
     magma_storage_enabled = request.config.getoption("--magma-storage")
+    prometheus_enabled = request.config.getoption("--prometheus-enable")
+    hide_product_version = request.config.getoption("--hide-product-version")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
@@ -67,6 +70,8 @@ def params_from_base_suite_setup(request):
     log_info("sa_installer_type: {}".format(sa_installer_type))
     log_info("sg_platform: {}".format(sg_platform))
     log_info("delta_sync_enabled: {}".format(delta_sync_enabled))
+    log_info("prometheus_enabled: {}".format(prometheus_enabled))
+    log_info("hide_product_version: {}".format(hide_product_version))
 
     # sg-ce is invalid for di mode
     if mode == "di" and sg_ce:
@@ -182,6 +187,13 @@ def params_from_base_suite_setup(request):
         log_info("Running without magma storage")
         persist_cluster_config_environment_prop(cluster_config, 'magma_storage_enabled', False, False)
 
+    if hide_product_version:
+        log_info("Suppress the SGW product Version")
+        persist_cluster_config_environment_prop(cluster_config, 'hide_product_version', True)
+    else:
+        log_info("Running without suppress SGW product Version")
+        persist_cluster_config_environment_prop(cluster_config, 'hide_product_version', False)
+
     if sync_gateway_version < "2.0.0" and no_conflicts_enabled:
         pytest.skip("Test cannot run with no-conflicts with sg version < 2.0.0")
 
@@ -218,12 +230,21 @@ def params_from_base_suite_setup(request):
         expected_sync_gateway_version=sync_gateway_version
     )
 
+    if prometheus_enabled:
+        if not prometheus.is_prometheus_installed():
+            prometheus.install_prometheus()
+        cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
+        sg_url = cluster_topology["sync_gateways"][0]["public"]
+        sg_ip = host_for_url(sg_url)
+        prometheus.start_prometheus(sg_ip, sg_ssl)
+
     yield {"cluster_config": cluster_config,
            "mode": mode,
            "xattrs_enabled": xattrs_enabled,
            "sg_platform": sg_platform,
            "sync_gateway_version": sync_gateway_version,
-           "sg_ce": sg_ce
+           "sg_ce": sg_ce,
+           "prometheus_enabled": prometheus_enabled
            }
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
@@ -234,6 +255,8 @@ def params_from_base_suite_setup(request):
 
     # Delete png files under resources/data
     clear_resources_pngs()
+    if prometheus_enabled:
+        prometheus.stop_prometheus(sg_ip, sg_ssl)
 
 
 # This is called before each test and will yield the dictionary to each test that references the method
@@ -251,6 +274,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     sg_platform = params_from_base_suite_setup["sg_platform"]
     sync_gateway_version = params_from_base_suite_setup["sync_gateway_version"]
     sg_ce = params_from_base_suite_setup["sg_ce"]
+    prometheus_enabled = params_from_base_suite_setup["prometheus_enabled"]
 
     test_name = request.node.name
     log_info("Setting up test '{}'".format(test_name))
@@ -261,7 +285,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
            "xattrs_enabled": xattrs_enabled,
            "sg_platform": sg_platform,
            "sync_gateway_version": sync_gateway_version,
-           "sg_ce": sg_ce
+           "sg_ce": sg_ce,
+           "prometheus_enabled": prometheus_enabled
            }
 
     # Code after the yeild will execute when each test finishes
@@ -275,5 +300,3 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     if collect_logs or request.node.rep_call.failed or len(errors) != 0:
         logging_helper = Logging()
         logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=test_name)
-
-    assert len(errors) == 0

@@ -12,7 +12,6 @@ from keywords.SyncGateway import (sync_gateway_config_path_for_mode,
 from keywords.tklogging import Logging
 from keywords.utils import check_xattr_support, log_info, version_is_binary, clear_resources_pngs
 from libraries.NetworkUtils import NetworkUtils
-from libraries.testkit import cluster
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop
 from keywords.exceptions import LogScanningError
 from libraries.provision.ansible_runner import AnsibleRunner
@@ -139,6 +138,11 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="magma-storage: Enable magma storage on couchbase server")
 
+    parser.addoption("--hide-product-version",
+                     action="store_true",
+                     help="Hides SGW product version when you hit SGW url",
+                     default=False)
+
 
 # This will be called once for the at the beggining of the execution in the 'tests/' directory
 # and will be torn down, (code after the yeild) when all the test session has completed.
@@ -173,6 +177,7 @@ def params_from_base_suite_setup(request):
     number_replicas = request.config.getoption("--number-replicas")
     delta_sync_enabled = request.config.getoption("--delta-sync")
     magma_storage_enabled = request.config.getoption("--magma-storage")
+    hide_product_version = request.config.getoption("--hide-product-version")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_upgraded_version, sync_gateway_upgraded_version)
@@ -197,6 +202,7 @@ def params_from_base_suite_setup(request):
     log_info("use_views: {}".format(use_views))
     log_info("number_replicas: {}".format(number_replicas))
     log_info("delta_sync_enabled: {}".format(delta_sync_enabled))
+    log_info("hide_product_version: {}".format(hide_product_version))
 
     # Make sure mode for sync_gateway is supported ('cc' or 'di')
     validate_sync_gateway_mode(mode)
@@ -268,6 +274,13 @@ def params_from_base_suite_setup(request):
     else:
         log_info("Running without magma storage")
         persist_cluster_config_environment_prop(cluster_config, 'magma_storage_enabled', False, False)
+
+    if hide_product_version:
+        log_info("Suppress the SGW product Version")
+        persist_cluster_config_environment_prop(cluster_config, 'hide_product_version', True)
+    else:
+        log_info("Running without suppress SGW product Version")
+        persist_cluster_config_environment_prop(cluster_config, 'hide_product_version', False)
 
     # SGW upgrade job run with on Centos platform, adding by default centos to environment config
     persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "centos", False)
@@ -424,15 +437,9 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     network_utils = NetworkUtils()
     network_utils.list_connections()
 
-    # Verify all sync_gateways and sg_accels are reachable
-    c = cluster.Cluster(cluster_config)
-    errors = c.verify_alive(mode)
-
     # Fetch logs
     logging_helper = Logging()
     logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=test_name)
-
-    assert len(errors) == 0
 
     # Scan logs
     # SG logs for panic, data race

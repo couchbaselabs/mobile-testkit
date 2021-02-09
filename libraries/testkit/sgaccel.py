@@ -7,6 +7,7 @@ import libraries.testkit.settings
 from libraries.provision.ansible_runner import AnsibleRunner
 from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_revs_limit
 from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version, get_redact_level, is_delta_sync_enabled
+from utilities.cluster_config_utils import is_hide_prod_version_enabled
 from keywords.utils import add_cbs_to_sg_config_server_field, log_info
 from keywords.constants import SYNC_GATEWAY_CERT
 from utilities.cluster_config_utils import sg_ssl_enabled
@@ -65,7 +66,9 @@ class SgAccel:
             "sslkey": "",
             "logging": "",
             "couchbase_server_primary_node": couchbase_server_primary_node,
-            "delta_sync": ""
+            "delta_sync": "",
+            "prometheus": "",
+            "hide_product_version": ""
         }
 
         if get_sg_version(self.cluster_config) >= "2.1.0":
@@ -103,6 +106,12 @@ class SgAccel:
 
         if is_delta_sync_enabled(self.cluster_config) and get_sg_version(self.cluster_config) >= "2.5.0":
             playbook_vars["delta_sync"] = '"delta_sync": { "enabled": true},'
+
+        if get_sg_version(self.cluster_config) >= "2.8.0":
+            playbook_vars["prometheus"] = '"metricsInterface": ":4986",'
+
+        if is_hide_prod_version_enabled(self.cluster_config) and get_sg_version(self.cluster_config) >= "2.8.1":
+            playbook_vars["hide_product_version"] = '"hide_product_version": true,'
 
         if is_cbs_ssl_enabled(self.cluster_config) and get_sg_version(self.cluster_config) >= "1.5.0":
             playbook_vars["server_scheme"] = "couchbases"

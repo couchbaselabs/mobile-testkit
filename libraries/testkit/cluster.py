@@ -16,7 +16,7 @@ from libraries.testkit.syncgateway import SyncGateway
 #  from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
 from utilities.cluster_config_utils import is_load_balancer_enabled, get_revs_limit, get_redact_level, is_load_balancer_with_two_clusters_enabled
 from utilities.cluster_config_utils import get_load_balancer_ip, no_conflicts_enabled, is_delta_sync_enabled, get_sg_platform
-from utilities.cluster_config_utils import generate_x509_certs, is_x509_auth, get_cbs_primary_nodes_str
+from utilities.cluster_config_utils import generate_x509_certs, is_x509_auth, get_cbs_primary_nodes_str, is_hide_prod_version_enabled
 from keywords.constants import SYNC_GATEWAY_CERT
 from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version
 
@@ -227,6 +227,8 @@ class Cluster:
             "bucket_name2": "",
             "bucket_name3": "",
             "bucket_name4": ""
+            "prometheus": "",
+            "hide_product_version": ""
         }
 
         sg_platform = get_sg_platform(self._cluster_config)
@@ -319,6 +321,12 @@ class Cluster:
         for bucket_name in bucket_names:
             playbook_vars[data_bucket_list[i]] = '"bucket": "{}",'.format(bucket_name)
             i += 1
+        if get_sg_version(self._cluster_config) >= "2.8.0":
+            playbook_vars["prometheus"] = '"metricsInterface": ":4986",'
+
+        if is_hide_prod_version_enabled(self._cluster_config) and get_sg_version(self._cluster_config) >= "2.8.1":
+            playbook_vars["hide_product_version"] = '"hide_product_version": true,'
+
         # Sleep for a few seconds for the indexes to teardown
         # time.sleep(5)
 

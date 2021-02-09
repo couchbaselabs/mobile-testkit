@@ -7,6 +7,7 @@
     {{ sslcert }}
     {{ sslkey }}
     {{ logging }}
+    {{ hide_product_version }}
     "databases":{
         "db":{
             {{ no_conflicts }}

@@ -80,7 +80,7 @@ def test_importDocs_withSharedBucketAccessFalse(params_from_base_test_setup):
     assert len(all_changes_total["results"]) == 0
 
     # 4. if Xattrs=true i.e if import_docs=true, Verify warn_count incremented on stats
-    if xattrs_enabled:
+    if xattrs_enabled and sync_gateway_version < "3.0.0":
         expvars = sg_client.get_expvars(sg_admin_url)
         assert initial_warn_count < expvars["syncgateway"]["global"]["resource_utilization"]["warn_count"], "warn_count did not increment"
 

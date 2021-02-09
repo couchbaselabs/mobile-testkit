@@ -5,6 +5,7 @@
     "maxFileDescriptors": 90000,
     "compressResponses": false,
     {{ logging }}
+    {{ hide_product_version }}
     "cluster_config": {
         "server":"http://127.0.0.1:8091",
         "data_dir":".",

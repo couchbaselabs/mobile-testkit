@@ -18,6 +18,7 @@ from libraries.provision.ansible_runner import AnsibleRunner
 from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_redact_level, get_sg_platform
 from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version, sg_ssl_enabled, get_cbs_version, is_delta_sync_enabled
 # from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
+from utilities.cluster_config_utils import is_hide_prod_version_enabled
 from libraries.testkit.cluster import Cluster
 from keywords.utils import host_for_url
 from couchbase.bucket import Bucket
@@ -57,7 +58,7 @@ def get_sync_gateway_version(host):
     if sg_ssl_enabled(cluster_config):
         sg_scheme = "https"
 
-    resp = requests.get("{}://{}:4984".format(sg_scheme, host), verify=False)
+    resp = requests.get("{}://{}:4985".format(sg_scheme, host), verify=False)
     log_r(resp)
     resp.raise_for_status()
     resp_obj = resp.json()
@@ -253,6 +254,7 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config):
         sslcert_prop = ""
         sslkey_prop = ""
         delta_sync_prop = ""
+        hide_prod_version_prop = ""
 
         sg_platform = get_sg_platform(cluster_config)
         # username_list = ['username1', 'username2', 'username3', 'username4']
@@ -336,6 +338,9 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config):
             i += 1
         print("user anme props is ", user_name_props)
         print("data_bucket props is ", data_bucket_props)
+        if is_hide_prod_version_enabled(cluster_config) and get_sg_version(cluster_config) >= "2.8.1":
+            hide_prod_version_prop = '"hide_product_version": true,'
+
         temp = template.render(
             couchbase_server_primary_node=couchbase_server_primary_node,
             is_index_writer="false",
@@ -366,6 +371,7 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config):
             bucket_name2=data_bucket_props[1],
             bucket_name3=data_bucket_props[2],
             bucket_name4=data_bucket_props[3]
+            hide_prod_version=hide_prod_version_prop
         )
         data = json.loads(temp)
 
@@ -453,7 +459,9 @@ class SyncGateway(object):
             "sg_use_views": "",
             "num_index_replicas": "",
             "couchbase_server_primary_node": couchbase_server_primary_node,
-            "delta_sync": ""
+            "delta_sync": "",
+            "prometheus": "",
+            "hide_product_version": ""
         }
         sg_platform = get_sg_platform(cluster_config)
         username_list = ['username1', 'username2', 'username3', 'username4']
@@ -547,6 +555,12 @@ class SyncGateway(object):
             print("sridevvi -- now adding bucket name for ", bucket_name)
             playbook_vars[data_bucket_list[i]] = '"bucket": "{}",'.format(bucket_name)
             i += 1
+        if get_sg_version(cluster_config) >= "2.8.0":
+            playbook_vars["prometheus"] = '"metricsInterface": ":4986",'
+
+        if is_hide_prod_version_enabled(cluster_config) and get_sg_version(cluster_config) >= "2.8.1":
+            playbook_vars["hide_product_version"] = '"hide_product_version": true,'
+
         if url is not None:
             target = hostname_for_url(cluster_config, url)
             log_info("Starting {} sync_gateway.".format(target))
@@ -688,7 +702,9 @@ class SyncGateway(object):
             "sg_use_views": "",
             "num_index_replicas": "",
             "couchbase_server_primary_node": couchbase_server_primary_node,
-            "delta_sync": ""
+            "delta_sync": "",
+            "prometheus": "",
+            "hide_product_version": ""
         }
         username_list = ['username1', 'username2', 'username3', 'username4']
         i = 0
@@ -779,6 +795,13 @@ class SyncGateway(object):
             print("sridevvi -- now adding bucket name in upgrade SGWs for ", bucket_name)
             playbook_vars[data_bucket_list[i]] = '"bucket": "{}",'.format(bucket_name)
             i += 1
+
+        if get_sg_version(cluster_config) >= "2.8.0":
+            playbook_vars["prometheus"] = '"metricsInterface": ":4986",'
+
+        if is_hide_prod_version_enabled(cluster_config) and get_sg_version(cluster_config) >= "2.8.1":
+            playbook_vars["hide_product_version"] = '"hide_product_version": true,'
+
         if url is not None:
             target = hostname_for_url(cluster_config, url)
             log_info("Upgrading sync_gateway/sg_accel on {} ...".format(target))
@@ -840,7 +863,9 @@ class SyncGateway(object):
             "revs_limit": "",
             "xattrs": "",
             "no_conflicts": "",
-            "delta_sync": ""
+            "delta_sync": "",
+            "prometheus": "",
+            "hide_product_version": ""
         }
         username_list = ['username1', 'username2', 'username3', 'username4']
         i = 0
@@ -922,6 +947,12 @@ class SyncGateway(object):
         for bucket_name in bucket_names:
             playbook_vars[data_bucket_list[i]] = '"bucket": "{}",'.format(bucket_name)
             i += 1
+        if get_sg_version(cluster_config) >= "2.8.0":
+            playbook_vars["prometheus"] = '"metricsInterface": ":4986",'
+
+        if is_hide_prod_version_enabled(cluster_config) and get_sg_version(cluster_config) >= "2.8.1":
+            playbook_vars["hide_product_version"] = '"hide_product_version": true,'
+
         # Deploy config
         if url is not None:
             target = hostname_for_url(cluster_config, url)

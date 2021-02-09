@@ -14,6 +14,7 @@ from libraries.testkit.config import Config
 from libraries.testkit.debug import log_request, log_response
 from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, sg_ssl_enabled
 from utilities.cluster_config_utils import get_revs_limit, get_redact_level, is_delta_sync_enabled, get_sg_platform
+from utilities.cluster_config_utils import is_hide_prod_version_enabled
 from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version, is_x509_auth, generate_x509_certs
 from keywords.utils import add_cbs_to_sg_config_server_field, log_info, random_string
 from keywords.constants import SYNC_GATEWAY_CERT
@@ -100,7 +101,10 @@ class SyncGateway:
             "num_index_replicas": "",
             "sg_use_views": "",
             "couchbase_server_primary_node": self.couchbase_server_primary_node,
-            "delta_sync": ""
+            "delta_sync": "",
+            "prometheus": "",
+            "hide_product_version": ""
+
         }
         username_list = ['username1', 'username2', 'username3', 'username4']
         i = 0
@@ -183,6 +187,12 @@ class SyncGateway:
             print("sridevvi -- now adding bucket name in start method of lower syncgateway for ", bucket_name)
             playbook_vars[data_bucket_list[i]] = '"bucket": "{}",'.format(bucket_name)
             i += 1
+        if get_sg_version(self.cluster_config) >= "2.8.0":
+            playbook_vars["prometheus"] = '"metricsInterface": ":4986",'
+
+        if is_hide_prod_version_enabled(self.cluster_config) and get_sg_version(self.cluster_config) >= "2.8.1":
+            playbook_vars["hide_product_version"] = '"hide_product_version": true,'
+
         if is_cbs_ssl_enabled(self.cluster_config) and get_sg_version(self.cluster_config) >= "1.5.0":
             playbook_vars["server_scheme"] = "couchbases"
             playbook_vars["server_port"] = 11207
@@ -236,7 +246,9 @@ class SyncGateway:
             "num_index_replicas": "",
             "sg_use_views": "",
             "couchbase_server_primary_node": self.couchbase_server_primary_node,
-            "delta_sync": ""
+            "delta_sync": "",
+            "prometheus": "",
+            "hide_product_version": ""
         }
         username_list = ['username1', 'username2', 'username3', 'username4']
         i = 0
@@ -319,6 +331,12 @@ class SyncGateway:
             print("sridevvi -- now adding bucket name in restart method of lower syncgateway for ", bucket_name)
             playbook_vars[data_bucket_list[i]] = '"bucket": "{}",'.format(bucket_name)
             i += 1
+        if get_sg_version(self.cluster_config) >= "2.8.0":
+            playbook_vars["prometheus"] = '"metricsInterface": ":4986",'
+
+        if is_hide_prod_version_enabled(cluster_config) and get_sg_version(cluster_config) >= "2.8.1":
+            playbook_vars["hide_product_version"] = '"hide_product_version": true,'
+
         if is_cbs_ssl_enabled(self.cluster_config) and get_sg_version(self.cluster_config) >= "1.5.0":
             playbook_vars["server_scheme"] = "couchbases"
             playbook_vars["server_port"] = 11207

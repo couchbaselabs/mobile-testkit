@@ -5,6 +5,8 @@
     "maxFileDescriptors": 90000,
     "compressResponses": false,
     {{ logging }}
+    {{ hide_product_version }}
+    {{ prometheus }}
     "cluster_config": {
         "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
         "data_dir":".",

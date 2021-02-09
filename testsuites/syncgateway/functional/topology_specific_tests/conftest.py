@@ -93,3 +93,12 @@ def pytest_addoption(parser):
     parser.addoption("--magma-storage",
                      action="store_true",
                      help="magma-storage: Enable magma storage on couchbase server")
+
+    parser.addoption("--prometheus-enable",
+                     action="store",
+                     help="prometheus-enable:Start prometheus metrics on SyncGateway")
+
+    parser.addoption("--hide-product-version",
+                     action="store_true",
+                     help="Hides SGW product version when you hit SGW url",
+                     default=False)

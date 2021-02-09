@@ -12,8 +12,8 @@ from libraries.provision.ansible_runner import AnsibleRunner
 from libraries.testkit.config import Config, get_no_of_buckets_from_sgw_config
 from libraries.testkit.cluster import Cluster
 from keywords.constants import SYNC_GATEWAY_CERT
-from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_revs_limit, sg_ssl_enabled,\
-    get_cbs_primary_nodes_str
+from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_revs_limit, sg_ssl_enabled
+from utilities.cluster_config_utils import is_hide_prod_version_enabled, get_cbs_primary_nodes_str
 from utilities.cluster_config_utils import get_sg_version, get_sg_replicas, get_sg_use_views, get_redact_level, is_x509_auth, generate_x509_certs, is_delta_sync_enabled
 
 
@@ -200,7 +200,9 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
         "sg_use_views": "",
         "revs_limit": "",
         "couchbase_server_primary_node": couchbase_server_primary_node,
-        "delta_sync": ""
+        "delta_sync": "",
+        "prometheus": "",
+        "hide_product_version": ""
     }
     username_list = ['username1', 'username2', 'username3', 'username4']
     i = 0
@@ -292,6 +294,12 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
 
     if is_delta_sync_enabled(cluster_config) and get_sg_version(cluster_config) >= "2.5.0":
         playbook_vars["delta_sync"] = '"delta_sync": { "enabled": true},'
+
+    if get_sg_version(cluster_config) >= "2.8.0":
+        playbook_vars["prometheus"] = '"metricsInterface": ":4986",'
+
+    if is_hide_prod_version_enabled(cluster_config) and get_sg_version(cluster_config) >= "2.8.1":
+            playbook_vars["hide_product_version"] = '"hide_product_version": true,'
 
     # Install Sync Gateway via Source or Package
     if sync_gateway_config.commit is not None:

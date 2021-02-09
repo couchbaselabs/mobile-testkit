@@ -4,16 +4,18 @@ import pytest
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.constants import CLUSTER_CONFIGS_DIR
 from keywords.exceptions import ProvisioningError, FeatureSupportedError
-from keywords.SyncGateway import (SyncGateway, sync_gateway_config_path_for_mode,
+from keywords.SyncGateway import (sync_gateway_config_path_for_mode,
                                   validate_sync_gateway_mode, get_sync_gateway_version)
-from keywords.utils import host_for_url
 from keywords.tklogging import Logging
-from keywords.utils import check_xattr_support, log_info, version_is_binary, compare_versions, clear_resources_pngs
+from keywords.utils import check_xattr_support, log_info, version_is_binary, compare_versions, clear_resources_pngs, host_for_url
 from libraries.NetworkUtils import NetworkUtils
 from libraries.testkit import cluster
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop, is_x509_auth
 from utilities.cluster_config_utils import get_load_balancer_ip
 from libraries.provision.clean_cluster import clear_firewall_rules
+from keywords.couchbaseserver import get_server_version
+from libraries.testkit import prometheus
+
 
 UNSUPPORTED_1_5_0_CC = {
     "test_db_offline_tap_loss_sanity[bucket_online_offline/bucket_online_offline_default_dcp-100]": {
@@ -151,6 +153,14 @@ def pytest_addoption(parser):
     parser.addoption("--cbs-ce", action="store_true",
                      help="If set, community edition will get picked up , default is enterprise", default=False)
 
+    parser.addoption("--prometheus-enable",
+                     action="store",
+                     help="prometheus-enable:Start prometheus metrics on SyncGateway")
+
+    parser.addoption("--hide-product-version",
+                     action="store_true",
+                     help="Hides SGW product version when you hit SGW url",
+                     default=False)
 
 # This will be called once for the at the beggining of the execution in the 'tests/' directory
 # and will be torn down, (code after the yeild) when all the test session has completed.
@@ -187,6 +197,8 @@ def params_from_base_suite_setup(request):
     number_replicas = request.config.getoption("--number-replicas")
     delta_sync_enabled = request.config.getoption("--delta-sync")
     magma_storage_enabled = request.config.getoption("--magma-storage")
+    prometheus_enabled = request.config.getoption("--prometheus-enable")
+    hide_product_version = request.config.getoption("--hide-product-version")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
@@ -214,6 +226,7 @@ def params_from_base_suite_setup(request):
     log_info("use_views: {}".format(use_views))
     log_info("number_replicas: {}".format(number_replicas))
     log_info("delta_sync_enabled: {}".format(delta_sync_enabled))
+    log_info("hide_product_version: {}".format(hide_product_version))
 
     # sg-ce is invalid for di mode
     if mode == "di" and sg_ce:
@@ -340,6 +353,21 @@ def params_from_base_suite_setup(request):
         log_info("Running without magma storage")
         persist_cluster_config_environment_prop(cluster_config, 'magma_storage_enabled', False, False)
 
+    try:
+        cbs_ce
+    except NameError:
+        log_info("cbs ce flag  is not provided, so by default it runs on Enterprise edition")
+    else:
+        log_info("Running test with CBS edition {}".format(cbs_ce))
+        persist_cluster_config_environment_prop(cluster_config, 'cbs_ce', cbs_ce, False)
+
+    if hide_product_version:
+        log_info("Suppress the SGW product Version")
+        persist_cluster_config_environment_prop(cluster_config, 'hide_product_version', True)
+    else:
+        log_info("Running without suppress SGW product Version")
+        persist_cluster_config_environment_prop(cluster_config, 'hide_product_version', False)
+
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
 
     # Skip provisioning if user specifies '--skip-provisoning' or '--sequoia'
@@ -380,6 +408,14 @@ def params_from_base_suite_setup(request):
     cluster_utils = ClusterKeywords(cluster_config)
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
 
+    if prometheus_enabled:
+        if not prometheus.is_prometheus_installed():
+            prometheus.install_prometheus()
+        cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
+        sg_url = cluster_topology["sync_gateways"][0]["public"]
+        sg_ip = host_for_url(sg_url)
+        prometheus.start_prometheus(sg_ip, sg_ssl)
+
     yield {
         "sync_gateway_version": sync_gateway_version,
         "cluster_config": cluster_config,
@@ -392,10 +428,15 @@ def params_from_base_suite_setup(request):
         "ssl_enabled": cbs_ssl,
         "delta_sync_enabled": delta_sync_enabled,
         "sg_ce": sg_ce,
-        "cbs_ce": cbs_ce
+        "sg_config": sg_config,
+        "cbs_ce": cbs_ce,
+        "prometheus_enabled": prometheus_enabled
     }
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
+
+    if prometheus_enabled:
+        prometheus.stop_prometheus(sg_ip, sg_ssl)
 
     # clean up firewall rules if any ports blocked for server ssl testing
     clear_firewall_rules(cluster_config)
@@ -427,18 +468,22 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     sg_platform = params_from_base_suite_setup["sg_platform"]
     delta_sync_enabled = params_from_base_suite_setup["delta_sync_enabled"]
     sg_ce = params_from_base_suite_setup["sg_ce"]
+    sg_config = params_from_base_suite_setup["sg_config"]
     cbs_ce = params_from_base_suite_setup["cbs_ce"]
 
     test_name = request.node.name
-    sg_admin_url = cluster_topology["sync_gateways"][0]["admin"]
-    sg_ip = host_for_url(sg_admin_url)
+    c = cluster.Cluster(cluster_config)
+    sg = c.sync_gateways[0]
+    cbs_ip = c.servers[0].host
 
     try:
-        get_sync_gateway_version(sg_ip)
+        get_sync_gateway_version(sg.ip)
     except Exception:
-        sg = SyncGateway()
-        log_info("Restarting sync gateway {}".format(sg_ip))
-        sg.restart_sync_gateways(cluster_config=cluster_config, url=sg_ip)
+        try:
+            get_server_version(cbs_ip, cbs_ssl=cbs_ssl)
+        except Exception:
+            c.reset(sg_config_path=sg_config)
+        sg.restart(config=sg_config, cluster_config=cluster_config)
 
     if sg_lb:
         # These tests target one SG node
@@ -486,12 +531,10 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     network_utils.list_connections()
 
     # Verify all sync_gateways and sg_accels are reachable
-    c = cluster.Cluster(cluster_config)
+
     errors = c.verify_alive(mode)
 
     # if the test failed or a node is down, pull logs
     if collect_logs or request.node.rep_call.failed or len(errors) != 0:
         logging_helper = Logging()
         logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=test_name)
-
-    assert len(errors) == 0

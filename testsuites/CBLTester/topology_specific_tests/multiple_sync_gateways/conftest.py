@@ -22,6 +22,7 @@ from keywords.TestServerFactory import TestServerFactory
 from keywords.SyncGateway import SyncGateway
 from keywords.constants import RESULTS_DIR
 from keywords.constants import SDK_TIMEOUT
+from libraries.testkit import prometheus
 
 
 def pytest_addoption(parser):
@@ -142,6 +143,16 @@ def pytest_addoption(parser):
                      help="Provide a custom cluster config",
                      default="multiple_sync_gateways_")
 
+    parser.addoption("--prometheus-enable",
+                     action="store",
+                     help="Starts the prometheus metrics",
+                     default=False)
+
+    parser.addoption("--hide-product-version",
+                     action="store_true",
+                     help="Hides SGW product version when you hit SGW url",
+                     default=False)
+
 # This will get called once before the first test that
 # runs with this as input parameters in this file
 # This setup will be called once for all tests in the
@@ -178,9 +189,10 @@ def params_from_base_suite_setup(request):
     sg_ce = request.config.getoption("--sg-ce")
     cbs_ssl = request.config.getoption("--server-ssl")
     cluster_config = request.config.getoption("--cluster-config")
-
     enable_encryption = request.config.getoption("--enable-encryption")
     encryption_password = request.config.getoption("--encryption-password")
+    prometheus_enable = request.config.getoption("--prometheus-enable")
+    hide_product_version = request.config.getoption("--hide-product-version")
 
     testserver = TestServerFactory.create(platform=liteserv_platform,
                                           version_build=liteserv_version,
@@ -279,6 +291,13 @@ def params_from_base_suite_setup(request):
         log_info("Running tests with cbs <-> sg ssl disabled")
         # Disable ssl in cluster configs
         persist_cluster_config_environment_prop(cluster_config, 'cbs_ssl_enabled', False)
+
+    if hide_product_version:
+        log_info("Suppress the SGW product Version")
+        persist_cluster_config_environment_prop(cluster_config, 'hide_product_version', True)
+    else:
+        log_info("Running without suppress SGW product Version")
+        persist_cluster_config_environment_prop(cluster_config, 'hide_product_version', False)
 
     # As cblite jobs run with on Centos platform, adding by default centos to environment config
     persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "centos", False)
@@ -381,6 +400,10 @@ def params_from_base_suite_setup(request):
         n1ql_query = 'create primary index on {}'.format(enable_sample_bucket)
         query = N1QLQuery(n1ql_query)
         sdk_client.n1ql_query(query)
+    if prometheus_enable:
+        if not prometheus.is_prometheus_installed():
+            prometheus.install_prometheus()
+        prometheus.start_prometheus(sg_ip, sg_ssl)
 
     yield {
         "cluster_config": cluster_config,
@@ -433,6 +456,8 @@ def params_from_base_suite_setup(request):
 
     # Delete png files under resources/data
     clear_resources_pngs()
+    if prometheus_enable:
+        prometheus.stop_prometheus(sg_ip, sg_ssl)
 
 
 @pytest.fixture(scope="function")
@@ -468,7 +493,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     cbs_ce = params_from_base_suite_setup["cbs_ce"]
     sg_ce = params_from_base_suite_setup["sg_ce"]
     cbs_ssl = params_from_base_suite_setup["ssl_enabled"]
-
+    prometheus_enable = request.config.getoption("--prometheus-enable")
     use_local_testserver = request.config.getoption("--use-local-testserver")
 
     source_db = None
@@ -553,7 +578,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "enable_file_logging": enable_file_logging,
         "cbs_ce": cbs_ce,
         "sg_ce": sg_ce,
-        "ssl_enabled": cbs_ssl
+        "ssl_enabled": cbs_ssl,
+        "prometheus_enable": prometheus_enable
     }
 
     log_info("Tearing down test")

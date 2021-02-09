@@ -16,10 +16,11 @@ from keywords.utils import host_for_url, log_info, compare_cbl_docs
 from keywords import attachment, document
 from concurrent.futures import ThreadPoolExecutor
 from utilities.cluster_config_utils import copy_sgconf_to_temp, replace_string_on_sgw_config
-from couchbase.bucket import Bucket
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.constants import SDK_TIMEOUT
 # from keywords import couchbaseserver
+from keywords.couchbaseserver import get_sdk_client_with_bucket
+from libraries.testkit.prometheus import verify_stat_on_prometheus
 
 
 def setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_teardown_test, cbl_replication_type, sg_conf_name='listener_tests/multiple_sync_gateways', num_of_docs=10, channels1=None, sgw_cluster1_sg_config_name=None, sgw_cluster2_sg_config_name=None, name1=None, name2=None, password1=None, password2=None):
@@ -138,9 +139,11 @@ def test_sg_replicate_push_pull_replication(params_from_base_test_setup, setup_c
     # 1.Have 2 sgw nodes , have cbl on each SGW
     sgw_cluster1_conf_name = 'listener_tests/sg_replicate_sgw_cluster1'
     sgw_cluster2_conf_name = 'listener_tests/sg_replicate_sgw_cluster2'
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     write_flag = False
     read_flag = False
     sg_client = MobileRestClient()
+    prometheus_enable = params_from_base_test_setup["prometheus_enable"]
 
     db, num_of_docs, sg_db1, sg_db2, name1, name2, _, password, channels1, _, replicator, replicator_authenticator1, replicator_authenticator2, sg1_blip_url, sg2_blip_url, sg1, sg2, repl1, _, cbl_db1, cbl_db2, _ = setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_teardown_test,
                                                                                                                                                                                                                                                   cbl_replication_type="push", sgw_cluster1_sg_config_name=sgw_cluster1_conf_name,
@@ -148,11 +151,6 @@ def test_sg_replicate_push_pull_replication(params_from_base_test_setup, setup_c
 
     # Get expvars before test starts
     expvars = sg_client.get_expvars(url=sg1.admin.admin_url)
-    """if attachments:
-        if "push" in direction:
-            sgr2_replication_push_bytes = expvars['syncgateway']['per_db'][sg_db1]['replications'][repl_id_1]['sgr_num_attachment_bytes_pulled']
-        if "pull" in direction:
-            sgr2_replication_pull_bytes = expvars['syncgateway']['per_db'][sg_db1]['replications'][repl_id_1]['sgr_num_attachment_bytes_pulled']"""
     # 2. Add docs in cbl1
     if attachments:
         db.create_bulk_docs(num_of_docs, "sgw1_docs", db=cbl_db1, channels=channels1, attachments_generator=attachment.generate_png_100_100)
@@ -227,8 +225,12 @@ def test_sg_replicate_push_pull_replication(params_from_base_test_setup, setup_c
             assert expvars['syncgateway']['per_db'][sg_db1]['replications'][repl_id_1]['sgr_num_attachments_pulled'] == num_of_docs, "pull replication count is  not  equal to number of docs pulled"
     if "push" in direction:
         assert expvars['syncgateway']['per_db'][sg_db1]['replications'][repl_id_1]['sgr_num_docs_pushed'] == num_of_docs, "push replication count is  not  equal to number of docs pushed"
+        if prometheus_enable and sync_gateway_version >= "2.8.0":
+            assert verify_stat_on_prometheus("sgw_replication_sgr_num_docs_pushed"), expvars['syncgateway']['per_db'][sg_db1]['replications'][repl_id_1]['sgr_num_docs_pushed']
     if "pull" in direction:
         assert expvars['syncgateway']['per_db'][sg_db1]['replications'][repl_id_1]['sgr_num_docs_pulled'] == num_of_docs, "pull replication count is  not  equal to number of docs pulled"
+        if prometheus_enable and sync_gateway_version >= "2.8.0":
+            assert verify_stat_on_prometheus("sgw_replication_sgr_num_docs_pulled"), expvars['syncgateway']['per_db'][sg_db1]['replications'][repl_id_1]['sgr_num_docs_pulled']
 
 
 @pytest.mark.topospecific
@@ -1402,6 +1404,7 @@ def test_sg_replicate_sgwconfig_replications_with_opt_out(params_from_base_test_
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_ssl = params_from_base_test_setup["sg_ssl"]
     base_url = params_from_base_test_setup["base_url"]
+    ssl_enabled = params_from_base_test_setup["ssl_enabled"]
     sg_conf_name = 'listener_tests/four_sync_gateways'
     sg_conf_name2 = 'listener_tests/listener_tests_with_replications'
     sgw_cluster2_conf_name = 'listener_tests/sg_replicate_sgw_cluster2'
@@ -1463,7 +1466,6 @@ def test_sg_replicate_sgwconfig_replications_with_opt_out(params_from_base_test_
     # Create users with new config
     sg_client.create_user(sg3_admin_url, sg_db1, name3, password=password, channels=channels)
     cookie, session_id = sg_client.create_session(sg3_admin_url, sg_db1, name3)
-    user3_session = cookie, session_id
     sg_client.create_user(sg4_admin_url, sg_db1, name4, password=password, channels=channels)
     cookie, session_id = sg_client.create_session(sg4_admin_url, sg_db1, name4)
     replicator_authenticator4 = authenticator.authentication(session_id, cookie, authentication_type="session")
@@ -1471,10 +1473,15 @@ def test_sg_replicate_sgwconfig_replications_with_opt_out(params_from_base_test_
     # Now create docs on all sg nodes
     db.create_bulk_docs(num_of_docs, replication1_channel1, db=cbl_db1, channels=channels1)
     db.create_bulk_docs(num_of_docs, replication1_channel2, db=cbl_db2, channels=channels2)
-    sg_docs = document.create_docs(replication1_channel3, number=num_of_docs, channels=channels3)
-    sg_client.add_bulk_docs(url=sg3.url, db=sg_db1, docs=sg_docs, auth=user3_session)
-    sg_docs4 = document.create_docs(replication1_channel4, number=num_of_docs, channels=channels3)
-    sg_client.add_bulk_docs(url=sg4.url, db=sg_db1, docs=sg_docs4, auth=user3_session)
+    sdk_doc_bodies = document.create_docs(replication1_channel3, number=num_of_docs, channels=channels3)
+    bucket = c_cluster.servers[0].get_bucket_names()
+    cbs_ip = c_cluster.servers[0].host
+    sdk_client = get_sdk_client_with_bucket(ssl_enabled, c_cluster, cbs_ip, bucket[0])
+    sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
+    sdk_client.upsert_multi(sdk_docs)
+    sdk_doc_bodies4 = document.create_docs(replication1_channel4, number=num_of_docs, channels=channels3)
+    sdk_docs4 = {doc['_id']: doc for doc in sdk_doc_bodies4}
+    sdk_client.upsert_multi(sdk_docs4)
 
     repl2 = replicator.configure_and_replicate(
         source_db=cbl_db2, replicator_authenticator=replicator_authenticator2, target_url=sg2_blip_url)
@@ -1793,6 +1800,7 @@ def test_sg_replicate_restart_active_passive_nodes(params_from_base_test_setup, 
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_mode = params_from_base_test_setup["mode"]
     cbl_db3 = setup_customized_teardown_test["cbl_db3"]
+    ssl_enabled = params_from_base_test_setup["ssl_enabled"]
     sgw_cluster1_conf_name = 'listener_tests/sg_replicate_sgw_cluster1'
     sgw_cluster2_conf_name = 'listener_tests/sg_replicate_sgw_cluster2'
     sg_conf_name = 'listener_tests/four_sync_gateways'
@@ -1902,6 +1910,27 @@ def test_sg_replicate_restart_active_passive_nodes(params_from_base_test_setup, 
             break
         time.sleep(1)
         count += 1
+    assert replication_successful_flag is True, "updated docs did not replicated successfull from sgw cluster1 to sgw cluster2"
+    # Verification via sdk
+    sg_docs_ids_from_sg4 = [row["id"] for row in sg4_docs]
+    bucket = c_cluster.servers[0].get_bucket_names()
+    cbs_ip = c_cluster.servers[0].host
+    sdk_client1 = get_sdk_client_with_bucket(ssl_enabled, c_cluster, cbs_ip, bucket[0])
+    sdk_client2 = get_sdk_client_with_bucket(ssl_enabled, c_cluster, cbs_ip, bucket[1])
+    docs_via_sdk_get = sdk_client2.get_multi(sg_docs_ids_from_sg4)
+    replication_successful_flag = True
+    for doc_id, val in docs_via_sdk_get.items():
+        doc_body = val.value
+        sdk_doc_id1 = sdk_client1.get(doc_id)
+        sdk1_doc_body = sdk_doc_id1.value
+        try:
+            doc_body["updates-cbl"]
+            if doc_body["updates-cbl"] != sdk1_doc_body["updates-cbl"]:
+                replication_successful_flag = False
+        except KeyError as e:
+            log_info("skipping the docs which does not have new update")
+        if replication_successful_flag is False:
+            break
     assert replication_successful_flag is True, "updated docs did not replicated successfull from sgw cluster1 to sgw cluster2"
     replicator.stop(repl1)
     replicator.stop(repl2)
@@ -2222,15 +2251,7 @@ def test_sg_replicate_doc_resurrection(params_from_base_test_setup, setup_custom
             cbs_bucket = bucket[0]
         else:
             cbs_bucket = bucket[1]
-        if ssl_enabled and c_cluster.ipv6:
-            connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(cbs_ip, cbs_bucket)
-        elif ssl_enabled and not c_cluster.ipv6:
-            connection_url = "couchbases://{}/{}?ssl=no_verify".format(cbs_ip, cbs_bucket)
-        elif not ssl_enabled and c_cluster.ipv6:
-            connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, cbs_bucket)
-        else:
-            connection_url = 'couchbase://{}/{}'.format(cbs_ip, cbs_bucket)
-        sdk_client = Bucket(connection_url, password='password', timeout=SDK_TIMEOUT)
+        sdk_client = get_sdk_client_with_bucket(ssl_enabled, c_cluster, cbs_ip, cbs_bucket)
         sdk_client.remove(random_doc_id)
         sdk_client.upsert(random_doc_id, doc_body)
 

@@ -4,6 +4,7 @@
     {{ sslcert }}
     {{ sslkey }}
     {{ logging }}
+    {{ hide_product_version }}
     "databases":{
         "db":{
             {{ autoimport }}
