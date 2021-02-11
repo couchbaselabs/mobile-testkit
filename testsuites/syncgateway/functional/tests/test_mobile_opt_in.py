@@ -331,10 +331,16 @@ def test_non_mobile_ignore_count(params_from_base_test_setup, sg_conf_name):
     assert non_mobile_ignore_count == 1, "non_mobile_ignore_count did not get expected count"
     command = "grep 'Cache: changeCache' /tmp/sg_logs/sg_info.log | wc -l"
     command1 = "grep 'does not have valid sync data' /tmp/sg_logs/sg_info.log | wc -l"
-    _, stdout, _ = remote_executor.execute(command)
-    log1_num = int(stdout[0])
-    _, stdout, _ = remote_executor.execute(command1)
-    log2_num = int(stdout[0])
+    if sg_platform == "macos":
+        stdout = subprocess.check_output(command, shell=True)
+        log1_num = int(stdout)
+        stdout = subprocess.check_output(command1, shell=True)
+        log2_num = int(stdout)
+    else:
+        _, stdout, _ = remote_executor.execute(command)
+        log1_num = int(stdout[0])
+        _, stdout, _ = remote_executor.execute(command1)
+        log2_num = int(stdout[0])
 
     # 3. Create another document('abc') on CBS and verify it is not imported and verify that info logs generate the log
     #    “Cache: changeCache: Doc “abc” does not have valid sync data”
