@@ -2,6 +2,7 @@
 
 import pytest
 import subprocess
+import time
 
 from couchbase.bucket import Bucket
 from requests.exceptions import HTTPError
@@ -328,6 +329,12 @@ def test_non_mobile_ignore_count(params_from_base_test_setup, sg_conf_name):
     sg_expvars = sg_client.get_expvars(url=sg_admin_url)
     non_mobile_ignore_count = sg_expvars["syncgateway"]["per_db"][sg_db]["cache"]["non_mobile_ignored_count"]
     assert non_mobile_ignore_count == 1, "non_mobile_ignore_count did not get expected count"
+    command = "grep 'Cache: changeCache' /tmp/sg_logs/sg_info.log | wc -l"
+    command1 = "grep 'does not have valid sync data' /tmp/sg_logs/sg_info.log | wc -l"
+    _, stdout, _ = remote_executor.execute(command)
+    log1_num = int(stdout[0])
+    _, stdout, _ = remote_executor.execute(command1)
+    log2_num = int(stdout[0])
 
     # 3. Create another document('abc') on CBS and verify it is not imported and verify that info logs generate the log
     #    “Cache: changeCache: Doc “abc” does not have valid sync data”
@@ -335,34 +342,41 @@ def test_non_mobile_ignore_count(params_from_base_test_setup, sg_conf_name):
     doc = document.create_doc(doc_id=doc_id2, channels=['non_mobile_ignore'])
     sdk_client.upsert(doc_id2, doc)
 
-    command = "grep 'Cache: changeCache' /tmp/sg_logs/sg_info.log | wc -l"
-    command1 = "grep 'does not have valid sync data' /tmp/sg_logs/sg_info.log | wc -l"
     if sg_platform == "macos":
         stdout = subprocess.check_output(command, shell=True)
-        assert int(stdout) == 1, "did not find the expected match on sg info logs"
-        print("stdout for platform is ", int(stdout))
+        assert int(stdout) == 1 + log1_num, "did not find the expected match on sg info logs"
         stdout = subprocess.check_output(command1, shell=True)
-        assert int(stdout) == 1, "did not find the expected match on sg info logs"
+        assert int(stdout) == 1 + log2_num, "did not find the expected match on sg info logs"
     else:
         if sg_platform == "windows":
             command = "grep 'Cache: changeCache' C:\\\\tmp\\\\sg_logs\sg_info.log | wc -l"
             command1 = "grep 'does not have valid sync data' C:\\\\tmp\\\\sg_logs\sg_info.log | wc -l"
         _, stdout, _ = remote_executor.execute(command)
-        assert int(stdout[0]) > 0, "did not find the expected match on sg info logs"
-        log1_num = int(stdout[0])
+        assert int(stdout[0]) == 1 + log1_num, "did not find the expected match on sg info logs"
         _, stdout, _ = remote_executor.execute(command1)
-        log2_num = int(stdout[0])
-        assert int(stdout[0]) > 0, "did not find the expected match on sg info log"
+        assert int(stdout[0]) == 1 + log2_num, "did not find the expected match on sg info log"
 
     # 4. Verify “non_mobile_ignored_count” is 1 on _expvar end point
-    sg_expvars = sg_client.get_expvars(url=sg_admin_url)
-    non_mobile_ignore_count = sg_expvars["syncgateway"]["per_db"][sg_db]["cache"]["non_mobile_ignored_count"]
+    count = 0
+    retry_count = 5
+    while count < retry_count:
+        sg_expvars = sg_client.get_expvars(url=sg_admin_url)
+        non_mobile_ignore_count = sg_expvars["syncgateway"]["per_db"][sg_db]["cache"]["non_mobile_ignored_count"]
+        if non_mobile_ignore_count == 2:
+            break
+        else:
+            time.sleep(1)
+            count += 1
     assert non_mobile_ignore_count == 2, "non_mobile_ignore_count did not get expected count"
 
     # 6. Restart SGW , Verify “non_mobile_ignored_count” is 0
     status = cluster.sync_gateways[0].restart(config=sg_config, cluster_config=cluster_config)
     assert status == 0, "Syncgateway did not start after adding revs_limit  with no conflicts mode "
 
+    _, stdout, _ = remote_executor.execute(command)
+    log1_num = int(stdout[0])
+    _, stdout, _ = remote_executor.execute(command1)
+    log2_num = int(stdout[0])
     # 7. Create document('def') and verify info logs show the message “Cache: changeCache: Doc “def” does not have valid sync data”
     #    verify “non_mobile_ignored_count” is 1
     doc_id3 = 'non_mobile_ignore_3'
