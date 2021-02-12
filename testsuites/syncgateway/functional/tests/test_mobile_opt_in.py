@@ -398,9 +398,9 @@ def test_non_mobile_ignore_count(params_from_base_test_setup, sg_conf_name):
 
     if sg_platform == "macos":
         stdout = subprocess.check_output(command, shell=True)
-        assert int(stdout) == 1, "did not find the expected match on sg info logs"
+        assert int(stdout) == 1 + log1_num, "did not find the expected match on sg info logs"
         stdout = subprocess.check_output(command1, shell=True)
-        assert int(stdout) == 1, "did not find the expected match on sg info logs"
+        assert int(stdout) == 1 + log2_num, "did not find the expected match on sg info logs"
     else:
         _, stdout, _ = remote_executor.execute(command)
         assert int(stdout[0]) == 1 + log1_num, "did not find the expected match on sg info logs"
