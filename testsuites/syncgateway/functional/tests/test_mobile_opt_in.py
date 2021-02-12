@@ -380,10 +380,16 @@ def test_non_mobile_ignore_count(params_from_base_test_setup, sg_conf_name):
     status = cluster.sync_gateways[0].restart(config=sg_config, cluster_config=cluster_config)
     assert status == 0, "Syncgateway did not start after adding revs_limit  with no conflicts mode "
 
-    _, stdout, _ = remote_executor.execute(command)
-    log1_num = int(stdout[0])
-    _, stdout, _ = remote_executor.execute(command1)
-    log2_num = int(stdout[0])
+    if sg_platform == "macos":
+        stdout = subprocess.check_output(command, shell=True)
+        log1_num = int(stdout)
+        stdout = subprocess.check_output(command1, shell=True)
+        log2_num = int(stdout)
+    else:
+        _, stdout, _ = remote_executor.execute(command)
+        log1_num = int(stdout[0])
+        _, stdout, _ = remote_executor.execute(command1)
+        log2_num = int(stdout[0])
     # 7. Create document('def') and verify info logs show the message “Cache: changeCache: Doc “def” does not have valid sync data”
     #    verify “non_mobile_ignored_count” is 1
     doc_id3 = 'non_mobile_ignore_3'
