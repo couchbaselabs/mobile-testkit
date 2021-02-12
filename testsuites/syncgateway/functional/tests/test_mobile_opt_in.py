@@ -397,6 +397,7 @@ def test_non_mobile_ignore_count(params_from_base_test_setup, sg_conf_name):
     sdk_client.upsert(doc_id3, doc)
 
     if sg_platform == "macos":
+        time.sleep(2)
         stdout = subprocess.check_output(command, shell=True)
         assert int(stdout) == 1 + log1_num, "did not find the expected match on sg info logs"
         stdout = subprocess.check_output(command1, shell=True)
