@@ -138,6 +138,11 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="magma-storage: Enable magma storage on couchbase server")
 
+    parser.addoption("--hide-product-version",
+                     action="store_true",
+                     help="Hides SGW product version when you hit SGW url",
+                     default=False)
+
 
 # This will be called once for the at the beggining of the execution in the 'tests/' directory
 # and will be torn down, (code after the yeild) when all the test session has completed.
@@ -172,6 +177,7 @@ def params_from_base_suite_setup(request):
     number_replicas = request.config.getoption("--number-replicas")
     delta_sync_enabled = request.config.getoption("--delta-sync")
     magma_storage_enabled = request.config.getoption("--magma-storage")
+    hide_product_version = request.config.getoption("--hide-product-version")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_upgraded_version, sync_gateway_upgraded_version)
@@ -196,6 +202,7 @@ def params_from_base_suite_setup(request):
     log_info("use_views: {}".format(use_views))
     log_info("number_replicas: {}".format(number_replicas))
     log_info("delta_sync_enabled: {}".format(delta_sync_enabled))
+    log_info("hide_product_version: {}".format(hide_product_version))
 
     # Make sure mode for sync_gateway is supported ('cc' or 'di')
     validate_sync_gateway_mode(mode)
@@ -267,6 +274,13 @@ def params_from_base_suite_setup(request):
     else:
         log_info("Running without magma storage")
         persist_cluster_config_environment_prop(cluster_config, 'magma_storage_enabled', False, False)
+
+    if hide_product_version:
+        log_info("Suppress the SGW product Version")
+        persist_cluster_config_environment_prop(cluster_config, 'hide_product_version', True)
+    else:
+        log_info("Running without suppress SGW product Version")
+        persist_cluster_config_environment_prop(cluster_config, 'hide_product_version', False)
 
     # SGW upgrade job run with on Centos platform, adding by default centos to environment config
     persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "centos", False)

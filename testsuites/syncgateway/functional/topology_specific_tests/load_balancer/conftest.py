@@ -43,6 +43,7 @@ def params_from_base_suite_setup(request):
     delta_sync_enabled = request.config.getoption("--delta-sync")
     cbs_platform = request.config.getoption("--cbs-platform")
     magma_storage_enabled = request.config.getoption("--magma-storage")
+    hide_product_version = request.config.getoption("--hide-product-version")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
@@ -192,6 +193,13 @@ def params_from_base_suite_setup(request):
     else:
         log_info("Running without magma storage")
         persist_cluster_config_environment_prop(cluster_config, 'magma_storage_enabled', False, False)
+
+    if hide_product_version:
+        log_info("Suppress the SGW product Version")
+        persist_cluster_config_environment_prop(cluster_config, 'hide_product_version', True)
+    else:
+        log_info("Running without suppress SGW product Version")
+        persist_cluster_config_environment_prop(cluster_config, 'hide_product_version', False)
 
     if sync_gateway_version < "2.0.0" and no_conflicts_enabled:
         pytest.skip("Test cannot run with no-conflicts with sg version < 2.0.0")

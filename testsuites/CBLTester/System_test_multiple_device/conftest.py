@@ -181,6 +181,11 @@ def pytest_addoption(parser):
                      default="20",
                      help="Specify the time for replicator to sleep before it polls again for replication status")
 
+    parser.addoption("--hide-product-version",
+                     action="store_true",
+                     help="Hides SGW product version when you hit SGW url",
+                     default=False)
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -232,6 +237,7 @@ def params_from_base_suite_setup(request):
     num_of_docs_in_itr = int(request.config.getoption("--num-of-docs-in-itr"))
     num_of_docs_to_delete = int(request.config.getoption("--num-of-docs-to-delete"))
     num_of_docs_to_add = int(request.config.getoption("--num-of-docs-to-add"))
+    hide_product_version = request.config.getoption("--hide-product-version")
     up_time = int(request.config.getoption("--up-time"))
     # Changing up_time in days
     up_time = up_time * 24 * 60
@@ -328,6 +334,12 @@ def params_from_base_suite_setup(request):
     # Write the number of replicas to cluster config
     persist_cluster_config_environment_prop(cluster_config, 'number_replicas', number_replicas)
 
+    if hide_product_version:
+        log_info("Suppress the SGW product Version")
+        persist_cluster_config_environment_prop(cluster_config, 'hide_product_version', True)
+    else:
+        log_info("Running without suppress SGW product Version")
+        persist_cluster_config_environment_prop(cluster_config, 'hide_product_version', False)
     # As cblite jobs run with on Centos platform, adding by default centos to environment config
     persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "centos", False)
 
@@ -445,6 +457,7 @@ def params_from_base_suite_setup(request):
         "num_of_doc_updates": num_of_doc_updates,
         "up_time": up_time,
         "repl_status_check_sleep_time": repl_status_check_sleep_time,
+        "hide_product_version": hide_product_version
     }
 
     if create_db_per_suite:
