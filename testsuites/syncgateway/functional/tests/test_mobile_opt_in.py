@@ -265,9 +265,10 @@ def test_non_mobile_ignore_count(params_from_base_test_setup, sg_conf_name):
     mode = params_from_base_test_setup['mode']
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
     sg_platform = params_from_base_test_setup['sg_platform']
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
 
     # This test should only run when using xattr meta storage
-    if xattrs_enabled:
+    if xattrs_enabled or sync_gateway_version < "3.0":
         pytest.skip('Cannot run with --xattrs flag')
 
     sg_config = sync_gateway_config_path_for_mode(sg_conf_name, mode)
