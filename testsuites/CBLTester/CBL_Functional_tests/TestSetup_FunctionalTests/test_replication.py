@@ -1134,8 +1134,8 @@ def CBL_offline_test(params_from_base_test_setup, sg_conf_name, num_of_docs):
 @pytest.mark.replication
 @pytest.mark.backgroundapp
 @pytest.mark.parametrize("num_docs, need_attachments, replication_after_backgroundApp", [
-    (1000, True, False),
-    (1000, False, False),
+    (100, True, False),
+    (100, False, False),
     # (10000, False, True), # TODO : Not yet supported by Test server app
     # (1000, True, True) # TODO: Not yet supported by Test server app
 ])
@@ -1161,8 +1161,8 @@ def test_initial_pull_replication_background_apprun(params_from_base_test_setup,
     testserver = params_from_base_test_setup["testserver"]
     sg_config = params_from_base_test_setup["sg_config"]
 
-    c = cluster.Cluster(config=cluster_config)
-    c.reset(sg_config_path=sg_config)
+    # c = cluster.Cluster(config=cluster_config)
+    # c.reset(sg_config_path=sg_config)
 
     # No command to push the app to background on device, so avoid test to run on ios device and no app for .net
     if liteserv_platform.lower() == "net-msft" or liteserv_platform.lower() == "net-uwp" or ((liteserv_platform.lower() != "ios" or liteserv_platform.lower() != "xamarin-ios") and device_enabled):
@@ -1172,20 +1172,20 @@ def test_initial_pull_replication_background_apprun(params_from_base_test_setup,
         pytest.skip('This test cannot run as a Java application')
 
     client = MobileRestClient()
-    client.create_user(sg_admin_url, sg_db, "testuser", password="password", channels=["ABC", "NBC"])
-    cookie, session_id = client.create_session(sg_admin_url, sg_db, "testuser")
+    client.create_user(sg_admin_url, sg_db, "testuser9", password="password", channels=["ABC", "NBC"])
+    cookie, session_id = client.create_session(sg_admin_url, sg_db, "testuser9")
     session = cookie, session_id
     # Add 'number_of_sg_docs' to Sync Gateway
     bulk_docs_resp = []
     if need_attachments:
         sg_doc_bodies = document.create_docs(
-            doc_id_prefix="seeded_doc",
+            doc_id_prefix="seeded_doc+00",
             number=num_docs,
             attachments_generator=attachment.generate_2_png_10_10,
             channels=["ABC"]
         )
     else:
-        sg_doc_bodies = document.create_docs(doc_id_prefix='seeded_doc', number=num_docs, channels=["ABC"])
+        sg_doc_bodies = document.create_docs(doc_id_prefix='seeded_doc+00', number=num_docs, channels=["ABC"])
     # if adding bulk docs with huge attachment more than 5000 fails
     for x in range(0, len(sg_doc_bodies), 100000):
         chunk_docs = sg_doc_bodies[x:x + 100000]
@@ -1210,10 +1210,11 @@ def test_initial_pull_replication_background_apprun(params_from_base_test_setup,
 
     repl = replicator.create(repl_config)
     replicator.start(repl)
+    print("close app")
     time.sleep(3)  # let replication go for few seconds and then make app go background
-    testserver.close_app()
-    time.sleep(10)  # wait until all replication is done
-    testserver.open_app()
+    # testserver.close_app()
+    time.sleep(30)  # wait until all replication is done
+    # testserver.open_app()
     replicator.wait_until_replicator_idle(repl)
     # Verify docs replicated to client
     cbl_doc_ids = db.getDocIds(cbl_db)
@@ -1231,7 +1232,7 @@ def test_initial_pull_replication_background_apprun(params_from_base_test_setup,
 @pytest.mark.backgroundapp
 @pytest.mark.parametrize("num_docs, need_attachments, replication_after_backgroundApp", [
     (100, True, False),
-    (10000, False, False),
+    (1000, False, False),
     # (1000000, False, False)  you can run this locally if needed, jenkins cannot run more than 15 mins
 ])
 def test_push_replication_with_backgroundApp(params_from_base_test_setup, num_docs, need_attachments,
@@ -1259,8 +1260,8 @@ def test_push_replication_with_backgroundApp(params_from_base_test_setup, num_do
     sg_url = params_from_base_test_setup["sg_url"]
     channels = ["ABC"]
 
-    c = cluster.Cluster(config=cluster_config)
-    c.reset(sg_config_path=sg_config)
+    # c = cluster.Cluster(config=cluster_config)
+    # c.reset(sg_config_path=sg_config)
 
     # No command to push the app to background on device, so avoid test to run on ios device and no app for .net
     if liteserv_platform.lower() == "net-msft" or liteserv_platform.lower() == "net-uwp" or ((liteserv_platform.lower() != "ios" or liteserv_platform.lower() != "xamarin-ios") and device_enabled):
@@ -1270,7 +1271,7 @@ def test_push_replication_with_backgroundApp(params_from_base_test_setup, num_do
         pytest.skip('This test cannot run as a Java application')
 
     client = MobileRestClient()
-    client.create_user(sg_admin_url, sg_db, "testuser", password="password", channels=channels)
+    # client.create_user(sg_admin_url, sg_db, "testuser", password="password", channels=channels)
     cookie, session_id = client.create_session(sg_admin_url, sg_db, "testuser")
     session = cookie, session_id
 
@@ -1301,10 +1302,11 @@ def test_push_replication_with_backgroundApp(params_from_base_test_setup, num_do
 
     repl = replicator.create(repl_config)
     replicator.start(repl)
-    time.sleep(3)  # let replication go for few seconds and then make app go background
-    testserver.close_app()
+    time.sleep(13)  # let replication go for few seconds and then make app go background
+    # testserver.close_app()
+    print("close app")
     time.sleep(10)  # wait until all replication is done
-    testserver.open_app()
+    # testserver.open_app()
     replicator.wait_until_replicator_idle(repl)
     # Verify docs replicated to sync_gateway
     sg_docs = client.get_all_docs(url=sg_url, db=sg_db, auth=session)
@@ -3207,8 +3209,7 @@ def test_CBL_SG_replication_with_rev_messages(params_from_base_test_setup, sg_co
 @pytest.mark.parametrize(
     'replicator_authenticator',
     [
-        ('basic'),
-        ('session')
+        ('basic')
     ]
 )
 def test_replication_push_replication_guest_enabled(params_from_base_test_setup, replicator_authenticator):
@@ -3658,28 +3659,30 @@ def test_channel_update_replication(params_from_base_test_setup):
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_blip_url = params_from_base_test_setup["target_url"]
     base_url = params_from_base_test_setup["base_url"]
+
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_config = params_from_base_test_setup["sg_config"]
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
 
-    username = "autotest"
+    username = "autotestk9609998"
     password = "password"
-    num_docs = 10
+    num_docs = 1
 
-    if sync_gateway_version < "2.5.0":
-        pytest.skip('This test cannot run with sg version below 2.5.0')
+    # if sync_gateway_version < "2.5.0":
+    #     pytest.skip('This test cannot run with sg version below 2.5.0')
 
-    c = cluster.Cluster(config=cluster_config)
-    c.reset(sg_config_path=sg_config)
+    # c = cluster.Cluster(config=cluster_config)
+    # c.reset(sg_config_path=sg_config)
 
     abc_channels = ["ABC", "DEF"]
     xyz_channels = ["xyz"]
 
     sg_client = MobileRestClient()
-    authenticator = Authenticator(base_url)
-    replicator = Replication(base_url)
+
+    print(base_url, "base url **********")
+    print(sg_blip_url, "*******989")
 
     # 1. Create user.
     sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=abc_channels)
@@ -3687,10 +3690,18 @@ def test_channel_update_replication(params_from_base_test_setup):
     session = cookie, session_id
 
     # 2. Create docs on SGW.
-    sg_client.add_docs(url=sg_admin_url, db=sg_db, number=num_docs, id_prefix="role_doc",
+    sg_client.add_docs(url=sg_admin_url, db=sg_db, number=num_docs, id_prefix="kg6010998",
                        channels=abc_channels, auth=session)
 
     # 3. Do pull replication from SGW.
+    print(base_url, "base url ********** 30 sec")
+    print(sg_blip_url, "*******989")
+    # time.sleep(30)
+
+    authenticator = Authenticator(base_url)
+    replicator = Replication(base_url)
+    # sg_blip_url = "ws://127.0.0.1:4984/db"
+    sg_blip_url = "ws://localhost:4984/db"
     replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
     repl = replicator.configure_and_replicate(source_db=cbl_db,
                                               target_url=sg_blip_url,
@@ -3704,7 +3715,7 @@ def test_channel_update_replication(params_from_base_test_setup):
     cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
     assert len(cbl_docs) == num_docs, "Docs did not get replicated to CBL"
 
-    # 5. update the user to a differrent channel  to something while replication is happening .
+    # 5. update the user to a different channel  to something while replication is happening .
     sg_client.update_user(url=sg_admin_url, db=sg_db, name=username, channels=xyz_channels)
 
     # 6. Add new docs to SGW.

@@ -3,6 +3,8 @@ import random
 import time
 from collections import OrderedDict
 import datetime
+import shutil
+import os
 
 from couchbase.bucket import Bucket
 from couchbase.n1ql import N1QLQuery
@@ -18,6 +20,7 @@ from libraries.testkit.cluster import Cluster
 from keywords.TestServerFactory import TestServerFactory
 from keywords.constants import RESULTS_DIR
 from libraries.testkit import cluster
+from CBLClient.Utils import Utils
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from testsuites.CBLTester.CBL_Functional_tests.SuiteSetup_FunctionalTests.test_query import test_get_doc_ids, \
     test_any_operator, test_doc_get, test_get_docs_with_limit_offset, test_multiple_selects, test_query_where_and_or, \
@@ -100,7 +103,6 @@ def test_upgrade_cbl(params_from_base_suite_setup):
         cbs_doc_ids.append(row["id"])
     log_info("cbl_docs {}, cbs_docs {}".format(len(cbs_doc_ids), len(new_cbl_doc_ids)))
     assert sorted(cbs_doc_ids) == sorted(new_cbl_doc_ids), "Total no. of docs are different in CBS and CBL app"
-
     # Running selected Query tests
     # Runing Query tests
     params_for_query_tests = {"cluster_config": cluster_config,
@@ -353,6 +355,7 @@ def _upgrade_db(args):
 
     log_info("Copying db of CBL-{} to CBL-{}".format(base_liteserv_version, upgraded_liteserv_version))
     prebuilt_db_path = db.get_pre_built_db(prebuilt_db_path)
+    utils_obj = Utils(base_url)
     assert "Copied" == utils_obj.copy_files(prebuilt_db_path, new_db_path)
     cbl_db = db.create(upgrade_cbl_db_name, db_config)
     assert isinstance(cbl_db, MemoryPointer), "Failed to migrate db from previous version of CBL"
@@ -368,7 +371,7 @@ def test_upgrade_testsever_app(params_from_base_suite_setup):
         Added to address issues like CBL-1406
         1. Create docs in cbl
         2. Upgrade the cbl to any new version
-        3. Verify that doc count is marching with before the upgrade
+        3. Verify that doc count is matching with before the upgrade
         4. Verify after the upgrade we are able to add more docs
 
     """
@@ -394,6 +397,7 @@ def test_upgrade_testsever_app(params_from_base_suite_setup):
     # Create CBL database
     db.create_bulk_docs(20, "cbl-upgrade-docs", db=source_db, channels=channels_sg)
     base_cbl_doc_count = db.getCount(source_db)
+    testserver.stop()
     testserver2 = TestServerFactory.create(platform=liteserv_platform,
                                            version_build=upgraded_liteserv_version,
                                            host=liteserv_host,
@@ -452,12 +456,12 @@ def test_switch_dbs_with_two_cbl_platforms(params_from_base_suite_setup):
     debug_mode = params_from_base_suite_setup["debug_mode"]
     device_enabled = params_from_base_suite_setup["device_enabled"]
     community_enabled = params_from_base_suite_setup["community_enabled"]
-    second_liteserv_host = params_from_base_suite_setup["sencond_liteserv_host"]
+    second_liteserv_host = params_from_base_suite_setup["second_liteserv_host"]
     second_liteserv_version = params_from_base_suite_setup["second_liteserv_version"]
     second_liteserv_platform = params_from_base_suite_setup["second_liteserv_platform"]
-    utils_obj = params_from_base_suite_setup["utils_obj"]
+     # utils_obj = params_from_base_suite_setup["utils_obj"]
     test_name_cp = params_from_base_suite_setup["test_name_cp"]
-
+    testserver = params_from_base_suite_setup["testserver"]
     base_url = params_from_base_suite_setup["base_url"]
     # Create CBL database
     db = Database(base_url)
@@ -465,93 +469,122 @@ def test_switch_dbs_with_two_cbl_platforms(params_from_base_suite_setup):
         pytest.skip('This test cannot run with sg version below 2.0')
 
     cbl_db_name = "upgrade_db" + str(time.time())
-    # Create CBL database
+    # # Create CBL database
     log_info("Creating a Database {}".format(cbl_db_name))
-    cbl_db_obj = db.create(cbl_db_name)
+    db_config = db.configure()
+    cbl_db_obj = db.create(cbl_db_name, db_config)
+    first_db_path = db.getPath(cbl_db_obj)
+    print(first_db_path)
+    log_info("prebuilt_db_path", first_db_path)
 
-    c = cluster.Cluster(config=cluster_config)
-    sg_config = sync_gateway_config_path_for_mode("custom_sync/grant_access_one", mode)
-    c.reset(sg_config_path=sg_config)
-    channels = ["ABC"]
+    # c = cluster.Cluster(config=cluster_config)
+    # sg_config = sync_gateway_config_path_for_mode("custom_sync/grant_access_one", mode)
+    # c.reset(sg_config_path=sg_config)
+    channels = ["ABCS"]
 
     sg_client = MobileRestClient()
 
-    # 1. Add docs in SG
-    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
-    cookie, session = sg_client.create_session(sg_admin_url, sg_db, "autotest")
+    # # # 1. Add docs in SG
+    # sg_client.create_user(sg_admin_url, sg_db, "autotest23", password="password", channels=channels)
+    cookie, session = sg_client.create_session(sg_admin_url, sg_db, "autotest23")
     auth_session = cookie, session
-    sg_client.add_docs(url=sg_url, db=sg_db, number=20, id_prefix="sg_id_prefix",
-                       channels=channels, auth=auth_session)
+    # sg_client.add_docs(url=sg_url, db=sg_db, number=20, id_prefix="sg_id_prefix020-",
+    #                    channels=channels, auth=auth_session)
+    #
+    # # Start and stop continuous replication
+    # replicator = Replication(base_url)
+    # # 2. Pull replication to CBL
+    # authenticator = Authenticator(base_url)
+    # replicator_authenticator = authenticator.authentication(session, cookie, authentication_type="session")
+    # repl = replicator.configure_and_replicate(
+    #     source_db=cbl_db_obj, replicator_authenticator=replicator_authenticator, target_url=sg_blip_url,
+    #     replication_type="pull", continuous=True, channels=channels)
+    #
+    # log_info(replicator.getCompleted(repl), "replicator getCompleted should be 20")
+    # sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db)
+    #
+    # # Verify database doc counts
+    # cbl_doc_count = db.getCount(cbl_db_obj)
+    # cbl_doc_ids = db.getDocIds(cbl_db_obj)
+    #
+    # assert len(sg_docs["rows"]) == 20, "Number of sg docs is not equal to total number of cbl docs and sg docs"
+    # assert cbl_doc_count == 20, "Did not get expected number of cbl docs"
+    #
+    # # Check that all doc ids in SG are also present in CBL
+    # sg_ids = [row["id"] for row in sg_docs["rows"]]
+    # for doc in cbl_doc_ids:
+    #     assert doc in sg_ids
+    #
+    # db_path = db.getPath(cbl_db_obj)
+    # print(db_path)
 
-    # Start and stop continuous replication
-    replicator = Replication(base_url)
-    # 2. Pull replication to CBL
-    authenticator = Authenticator(base_url)
-    replicator_authenticator = authenticator.authentication(session, cookie, authentication_type="session")
-    repl = replicator.configure_and_replicate(
-        source_db=cbl_db_obj, replicator_authenticator=replicator_authenticator, target_url=sg_blip_url,
-        replication_type="pull", continuous=True, channels=channels)
 
-    log_info(replicator.getCompleted(repl), "replicator getCompleted should be 20")
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db)
 
-    # Verify database doc counts
-    cbl_doc_count = db.getCount(cbl_db_obj)
-    cbl_doc_ids = db.getDocIds(cbl_db_obj)
-
-    assert len(sg_docs["rows"]) == 20, "Number of sg docs is not equal to total number of cbl docs and sg docs"
-    assert cbl_doc_count == 20, "Did not get expected number of cbl docs"
-
-    # Check that all doc ids in SG are also present in CBL
-    sg_ids = [row["id"] for row in sg_docs["rows"]]
-    for doc in cbl_doc_ids:
-        assert doc in sg_ids
-    prebuilt_db_path = db.getPath(cbl_db_obj)
-    log_info("prebuilt_db_path", prebuilt_db_path)
-
-    # 3. Start second CBL (use different platform)
-    testserver2 = TestServerFactory.create(platform=second_liteserv_platform,
-                                           version_build=second_liteserv_version,
-                                           host=second_liteserv_host,
-                                           port=liteserv_port,
-                                           community_enabled=community_enabled,
-                                           debug_mode=debug_mode)
-    log_info("Downloading TestServer ...")
-    # Download TestServer app
-    testserver2.download()
-
-    log_info("Installing TestServer ...")
-    # Install TestServer app
-    if device_enabled:
-        testserver2.install_device()
-        testserver2.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver2).__name__,
-                                                               test_name_cp,
-                                                               datetime.datetime.now()))
-    else:
-        testserver2.install()
-        testserver2.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver2).__name__,
-                                                        test_name_cp,
-                                                        datetime.datetime.now()))
-    # 4. Copy DB from 1st CBL to 2nd CBL
+    # replicator.stop(repl)
+    # assert 2==7, "cvbjnkml,;'"
+    # # 3. Start second CBL (use different platform)
+    # testserver2 = TestServerFactory.create(platform=second_liteserv_platform,
+    #                                        version_build=second_liteserv_version,
+    #                                        host=second_liteserv_host,
+    #                                        port=liteserv_port,
+    #                                        community_enabled=community_enabled,
+    #                                        debug_mode=debug_mode)
+    # log_info("Downloading TestServer ...")
+    # # Download TestServer app
+    # testserver2.download()
+    #
+    # log_info("Installing TestServer ...")
+    # # Install TestServer app
+    # if device_enabled:
+    #     testserver2.install_device()
+    #     testserver2.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver2).__name__,
+    #                                                            test_name_cp,
+    #                                                            datetime.datetime.now()))
+    # else:
+    #     testserver2.install()
+    #     testserver2.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver2).__name__,
+    #                                                     test_name_cp,
+    #                                                     datetime.datetime.now()))
+    # # 4. Copy DB from 1st CBL to 2nd CBL
+    base_url = "http://{}:{}".format(second_liteserv_host, liteserv_port)
     db = Database(base_url)
     temp_db_name = "temp_db_name"
     cbl2_db_obj = db.create(temp_db_name)
     new_db_path = db.getPath(cbl2_db_obj)
+    print(new_db_path)
+
+    delimiter = "/"
+
+    new_db_path = "{}".format(delimiter).join(new_db_path.split(delimiter)[:-2]) + \
+                  "{}{}.cblite2".format(delimiter, "upgrade_cbl_db_name")
+    base_directory = "{}".format(delimiter).join(new_db_path.split(delimiter)[:-2])
+    log_info("new_db_path", new_db_path)
     db.deleteDB(cbl2_db_obj)
+    utils_obj = Utils(base_url)
+    prebuilt_db_path = db.get_pre_built_db("db.cblite2.zip")
     assert "Copied" == utils_obj.copy_files(prebuilt_db_path, new_db_path)
-    new_cbl_db_obj = db.create(cbl_db_name)
+
+    new_cbl_db_obj = db.create("upgrade_cbl_db_name")
 
     # 5. Start the same SG replicator
     authenticator = Authenticator(base_url)
-    replicator_authenticator = authenticator.authentication(session, cookie, authentication_type="session")
     second_cbl_doc_count = db.getCount(new_cbl_db_obj)
+    # sg_client.add_docs(url=sg_url, db=sg_db, number=20, id_prefix="sg_id2_prefix",
+    #                    channels=channels, auth=auth_session)
+    # Start and stop continuous replication
+    replicator = Replication(base_url)
+    # 2. Pull replication to CBL
+    replicator_authenticator = authenticator.authentication(session, cookie, authentication_type="session")
     repl = replicator.configure_and_replicate(
         source_db=new_cbl_db_obj, replicator_authenticator=replicator_authenticator, target_url=sg_blip_url,
         replication_type="pull", continuous=True, channels=channels)
 
     # 6. Verify docs are not replicated again in the 2nd CBL
-    assert replicator.getCompleted(
-        repl) == 0, "Replicator getCompleted doc should be zero, it shouldn't start from zero"
-    assert second_cbl_doc_count == cbl_doc_count, "After moving the DBs docs are updating "
+    print(replicator.getCompleted(repl))
+    # assert replicator.getCompleted(
+    #     repl) == 20, "Replicator getCompleted doc should be zero, it shouldn't start from zero"
+    # assert second_cbl_doc_count == cbl_doc_count * 2, "After moving the DBs docs are updating "
+    print(second_cbl_doc_count)
+    print("Stopping Replicator")
     replicator.stop(repl)
-    testserver2.stop()
+    # testserver2.stop()
