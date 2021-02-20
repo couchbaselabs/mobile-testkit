@@ -13,7 +13,7 @@ class Client(object):
         self.base_url = base_url
         self.session = Session()
 
-    def invokeMethod(self, method, args=None):
+    def invokeMethod(self, method, args=None, ignore_deserialize=False):
         resp = Response()
         try:
             # Create body from args.
@@ -35,6 +35,8 @@ class Client(object):
 
             if responseCode == 200:
                 result = resp.content
+                if ignore_deserialize:
+                    return result
                 if isinstance(result, bytes):
                     result = result.decode('utf8', 'ignore')
                 if len(result) < 25:
@@ -45,7 +47,7 @@ class Client(object):
             if resp.content:
                 cont = resp.content
                 if isinstance(resp.content, bytes):
-                    cont = resp.content.decode('utf8', 'ignore')
+                    cont = resp.content.decode('utf8')
                 raise Exception(str(err) + cont)
             else:
                 raise Exception(str(err))
