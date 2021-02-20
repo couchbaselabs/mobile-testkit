@@ -164,7 +164,7 @@ def verify_changes(users, expected_num_docs, expected_num_revisions, expected_do
                 changes_result["rev"] = result["doc"]["_rev"]
                 changes_result["updates"] = result["doc"]["updates"]
                 changes_results.append(changes_result)
-        print("After change results ", change_results)
+        print("After change results ", results)
         # Check expected_num_docs matches number of changes results
         if expected_num_docs != len(changes_results):
             log_error("{0} -> {1} expected_num_docs != {2} len(changes_results)".format(user.name, expected_num_docs, len(changes_results)))
