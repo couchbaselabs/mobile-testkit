@@ -1,6 +1,7 @@
 from keywords.utils import log_info
 from keywords.utils import log_error
 from keywords.utils import log_warn
+from datetime import datetime
 
 
 def verify_same_docs(expected_num_docs, doc_dict_one, doc_dict_two):
@@ -153,6 +154,7 @@ def verify_changes(users, expected_num_docs, expected_num_revisions, expected_do
 
     for user in user_list:
         print("Now Serving the user ", user)
+        print("time is :", datetime.now())
         changes = user.get_changes(include_docs=True)
         results = changes["results"]
 
@@ -164,7 +166,7 @@ def verify_changes(users, expected_num_docs, expected_num_revisions, expected_do
                 changes_result["rev"] = result["doc"]["_rev"]
                 changes_result["updates"] = result["doc"]["updates"]
                 changes_results.append(changes_result)
-        print("After change results ", results)
+        print("After change results ")
         # Check expected_num_docs matches number of changes results
         if expected_num_docs != len(changes_results):
             log_error("{0} -> {1} expected_num_docs != {2} len(changes_results)".format(user.name, expected_num_docs, len(changes_results)))
