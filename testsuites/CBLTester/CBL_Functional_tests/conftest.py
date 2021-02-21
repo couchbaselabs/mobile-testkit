@@ -1,7 +1,7 @@
-import os
 import time
 import pytest
 import datetime
+import zipfile, io, os
 
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop
 from keywords.constants import SDK_TIMEOUT
@@ -516,13 +516,15 @@ def params_from_base_suite_setup(request):
             if test.rep_call.failed:
                 failed_test_list.append(test.rep_call.nodeid)
         zip_data = suite_cbllog.get_logs_in_zip()
-        suite_log_zip_file = "Suite_test_log_{}.zip".format(str(time.time()))
+        suite_log_zip_file = "Suite_test_log_{}.zip"
 
         if os.path.exists(suite_log_zip_file):
             log_info("Log file for failed Suite tests is: {}".format(suite_log_zip_file))
-            with open(suite_log_zip_file, 'wb') as fh:
-                fh.write(zip_data.encode())
-                fh.close()
+            target_zip = zipfile.ZipFile(suite_log_zip_file, 'w')
+            with zipfile.ZipFile(io.BytesIO(zip_data)) as thezip:
+                for zipinfo in thezip.infolist():
+                    target_zip.writestr(zipinfo.filename, thezip.read(zipinfo.filename))
+            target_zip.close()
         else:
             log_info("Cannot find log file for failed Suite tests")
 
@@ -682,18 +684,19 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         test_id = request.node.nodeid
         log_info("\n Collecting logs for failed test: {}".format(test_id))
         zip_data = test_cbllog.get_logs_in_zip()
-        log_directory = "results"
+        log_directory = "results/logs"
         if not os.path.exists(log_directory):
             os.mkdir(log_directory)
-        test_log_zip_file = "{}_{}.zip".format(test_id.split("::")[-1], str(time.time()))
+        test_log_zip_file = "{}.zip".format(test_id.split("::")[-1])
         test_log = os.path.join(log_directory, test_log_zip_file)
-        if os.path.exists(test_log):
-            log_info("Log file for failed test is: {}".format(test_log_zip_file))
-            with open(test_log, 'wb') as fh:
-                fh.write(zip_data.encode())
-                fh.close()
-        else:
-            log_info("Cannot find log file for failed test")
+        if not os.path.exists(test_log):
+            target_zip = zipfile.ZipFile(test_log, 'w')
+            with zipfile.ZipFile(io.BytesIO(zip_data)) as thezip:
+                for zipinfo in thezip.infolist():
+                    with thezip.open(zipinfo) as thefile:
+                        print(zipinfo.filename)
+                        target_zip.writestr(zipinfo.filename, thezip.read(zipinfo.filename))
+            target_zip.close()
 
     log_info("Tearing down test")
     if create_db_per_test:
