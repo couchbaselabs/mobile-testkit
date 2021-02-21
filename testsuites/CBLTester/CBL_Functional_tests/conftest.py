@@ -342,8 +342,8 @@ def params_from_base_suite_setup(request):
         log_info("Running without delta sync")
         persist_cluster_config_environment_prop(cluster_config, 'delta_sync_enabled', False)
 
-    # As cblite jobs run with on Centos platform, adding by default centos to environment config
-    persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "centos", False)
+        # As cblite jobs run with on Centos platform, adding by default centos to environment config
+        persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "centos", False)
 
     if hide_product_version:
         log_info("Suppress the SGW product Version")
@@ -490,10 +490,10 @@ def params_from_base_suite_setup(request):
         repl_obj.wait_until_replicator_idle(repl, max_times=3000)
         log_info("Stopping replication")
         repl_obj.stop(repl)
-        if prometheus_enable:
-            if not prometheus.is_prometheus_installed:
-                prometheus.install_prometheus
-            prometheus.start_prometheus(sg_ip, sg_ssl)
+    if prometheus_enable:
+        if not prometheus.is_prometheus_installed:
+            prometheus.install_prometheus
+        prometheus.start_prometheus(sg_ip, sg_ssl)
 
     yield {
         "cluster_config": cluster_config,
