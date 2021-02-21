@@ -47,7 +47,7 @@ class Client(object):
             if resp.content:
                 cont = resp.content
                 if isinstance(resp.content, bytes):
-                    cont = resp.content.decode('utf8')
+                    cont = resp.content.decode('utf8', 'ignore')
                 raise Exception(str(err) + cont)
             else:
                 raise Exception(str(err))

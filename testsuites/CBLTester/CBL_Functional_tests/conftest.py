@@ -32,6 +32,7 @@ from CBLClient.ReplicatorConfiguration import ReplicatorConfiguration
 from utilities.cluster_config_utils import get_load_balancer_ip
 from couchbase.bucket import Bucket
 from couchbase.n1ql import N1QLQuery
+from libraries.testkit import prometheus
 
 
 def pytest_addoption(parser):
@@ -160,7 +161,15 @@ def pytest_addoption(parser):
                      help="Encryption will be enabled for CBL db",
                      default="password")
 
+    parser.addoption("--prometheus-enable",
+                     action="store",
+                     help="Starts the prometheus metrics",
+                     default=False)
 
+    parser.addoption("--hide-product-version",
+                     action="store_true",
+                     help="Hides SGW product version when you hit SGW url",
+                     default=False)
 # This will get called once before the first test that
 # runs with this as input parameters in this file
 # This setup will be called once for all tests in the
@@ -179,7 +188,6 @@ def params_from_base_suite_setup(request):
     use_local_testserver = request.config.getoption("--use-local-testserver")
     sync_gateway_version = request.config.getoption("--sync-gateway-version")
     mode = request.config.getoption("--mode")
-
     server_version = request.config.getoption("--server-version")
     enable_sample_bucket = request.config.getoption("--enable-sample-bucket")
     xattrs_enabled = request.config.getoption("--xattrs")
@@ -201,9 +209,10 @@ def params_from_base_suite_setup(request):
     enable_file_logging = request.config.getoption("--enable-file-logging")
     cbl_log_decoder_platform = request.config.getoption("--cbl-log-decoder-platform")
     cbl_log_decoder_build = request.config.getoption("--cbl-log-decoder-build")
-
+    prometheus_enable = request.config.getoption("--prometheus-enable")
     enable_encryption = request.config.getoption("--enable-encryption")
     encryption_password = request.config.getoption("--encryption-password")
+    hide_product_version = request.config.getoption("--hide-product-version")
 
     test_name = request.node.name
 
@@ -335,6 +344,13 @@ def params_from_base_suite_setup(request):
 
     # As cblite jobs run with on Centos platform, adding by default centos to environment config
     persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "centos", False)
+
+    if hide_product_version:
+        log_info("Suppress the SGW product Version")
+        persist_cluster_config_environment_prop(cluster_config, 'hide_product_version', True)
+    else:
+        log_info("Running without suppress SGW product Version")
+        persist_cluster_config_environment_prop(cluster_config, 'hide_product_version', False)
 
     # Write the number of replicas to cluster config
     persist_cluster_config_environment_prop(cluster_config, 'number_replicas', number_replicas)
@@ -472,6 +488,11 @@ def params_from_base_suite_setup(request):
         log_info("Stopping replication")
         repl_obj.stop(repl)
 
+        if prometheus_enable:
+            if not prometheus.is_prometheus_installed:
+                prometheus.install_prometheus
+            prometheus.start_prometheus(sg_ip, sg_ssl)
+
     yield {
         "cluster_config": cluster_config,
         "mode": mode,
@@ -506,7 +527,8 @@ def params_from_base_suite_setup(request):
         "encryption_password": encryption_password,
         "cbs_ce": cbs_ce,
         "sg_ce": sg_ce,
-        "cbl_ce": cbl_ce
+        "cbl_ce": cbl_ce,
+        "prometheus_enable": prometheus_enable
     }
 
     if request.node.testsfailed != 0 and enable_file_logging and create_db_per_suite is not None:
@@ -544,6 +566,8 @@ def params_from_base_suite_setup(request):
             testserver.stop()
     # Delete png files under resources/data
     clear_resources_pngs()
+    if prometheus_enable:
+        prometheus.stop_prometheus(sg_ip, sg_ssl)
 
 
 @pytest.fixture(scope="function")
@@ -581,6 +605,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     cbl_ce = params_from_base_suite_setup["cbl_ce"]
     cbs_ce = params_from_base_suite_setup["cbs_ce"]
     sg_ce = params_from_base_suite_setup["sg_ce"]
+    prometheus_enable = request.config.getoption("--prometheus-enable")
 
     source_db = None
     test_name_cp = test_name.replace("/", "-")
@@ -677,7 +702,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "test_cbllog": test_cbllog,
         "cbs_ce": cbs_ce,
         "sg_ce": sg_ce,
-        "cbl_ce": cbl_ce
+        "cbl_ce": cbl_ce,
+        "prometheus_enable": prometheus_enable
     }
 
     if request.node.rep_call.failed and enable_file_logging and create_db_per_test is not None:

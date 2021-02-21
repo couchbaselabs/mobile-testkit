@@ -80,5 +80,4 @@ class FileLogging(object):
     def get_logs_in_zip(self):
         args = Args()
         file = self._client.invokeMethod("logging_getLogsInZip", args, True)
-        print("manasafile")
         return file
