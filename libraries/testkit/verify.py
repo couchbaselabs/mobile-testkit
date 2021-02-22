@@ -157,7 +157,7 @@ def verify_changes(users, expected_num_docs, expected_num_revisions, expected_do
         print("time is :", datetime.now())
         changes = user.get_changes(include_docs=True)
         results = changes["results"]
-
+        print("time after get_changes is :", datetime.now())
         changes_results = list()
         for result in results:
             changes_result = dict()
