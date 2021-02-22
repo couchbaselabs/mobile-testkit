@@ -167,6 +167,7 @@ def verify_changes(users, expected_num_docs, expected_num_revisions, expected_do
                 changes_result["updates"] = result["doc"]["updates"]
                 changes_results.append(changes_result)
         print("After change results ")
+        print("time is :", datetime.now())
         # Check expected_num_docs matches number of changes results
         if expected_num_docs != len(changes_results):
             log_error("{0} -> {1} expected_num_docs != {2} len(changes_results)".format(user.name, expected_num_docs, len(changes_results)))
@@ -187,6 +188,7 @@ def verify_changes(users, expected_num_docs, expected_num_revisions, expected_do
 
             errors["unexpected_changes_length"] += 1
         print("After condition expected_num_docs != len(changes_results)")
+        print("time is :", datetime.now())
         # Check number of expected num docs matched number of expected doc ids
         if expected_num_docs != len(expected_docs):
             log_error("{0} -> {1} expected_num_docs != {2} len(expected_docs)".format(user.name, expected_num_docs, len(expected_docs)))
@@ -250,6 +252,7 @@ def verify_changes(users, expected_num_docs, expected_num_revisions, expected_do
                 log_error("{0} -> expected_num_revisions {1} does not match number of updates {2}".format(user.name, expected_num_revisions, result["updates"]))
                 errors["unexpected_num_updates"] += 1
         print("Before for loop of change_results ")
+        print("time is :", datetime.now())
         # Allow printing updates even if changes feed length is 0
         if len(changes_results) == 0:
             updates = 0
