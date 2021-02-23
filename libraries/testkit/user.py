@@ -407,8 +407,9 @@ class User:
             params["filter"] = filter
 
         data = json.dumps(params)
-        print("time is :", datetime.now())
+        print("time before _changes post call is :", datetime.now())
         r = self._session.post("{}/{}/_changes".format(self.target.url, self.db), data=data, timeout=settings.HTTP_REQ_TIMEOUT)
+        print("time after _changes post call is :", datetime.now())
         log.debug("{0} POST {1}".format(self.name, r.url))
         r.raise_for_status()
 
