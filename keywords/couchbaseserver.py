@@ -206,10 +206,10 @@ class CouchbaseServer:
         resp = self._session.post("{}/query/service".format(query_url), data=del_pdstmt_query_data)
         resp_obj = resp.json()
         # add verification to make sure all indexes cleared by checking system indexes
-        # del_indexstmt_query_data = {"statement": "delete from system:indexes"}
+        del_indexstmt_query_data = {"statement": "delete from system:indexes"}
         verify_indexstmt_query_data = {"statement": "select * from system:indexes"}
-        # resp = self._session.post("{}/query/service".format(query_url), data=del_indexstmt_query_data)
-        # resp_obj = resp.json()
+        resp = self._session.post("{}/query/service".format(query_url), data=del_indexstmt_query_data)
+        resp_obj = resp.json()
 
         count = 0
         while count < 5:
