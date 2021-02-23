@@ -79,4 +79,4 @@ class FileLogging(object):
 
     def get_logs_in_zip(self):
         args = Args()
-        return self._client.invokeMethod("logging_getLogsInZip", args)
+        return self._client.invokeMethod("logging_getLogsInZip", args, True)

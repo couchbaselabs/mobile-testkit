@@ -428,7 +428,7 @@ def test_upgrade_testsever_app(params_from_base_suite_setup):
 
 
 @pytest.mark.listener
-@pytest.mark.upgrade_test
+@pytest.mark.upgrade_test2
 def test_switch_dbs_with_two_cbl_platforms(params_from_base_suite_setup):
     """
         @summary:

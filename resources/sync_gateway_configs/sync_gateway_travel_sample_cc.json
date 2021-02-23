@@ -4,7 +4,6 @@
     "maxIncomingConnections": 0,
     "maxFileDescriptors": 90000,
     "compressResponses": false,
-    "hide_product_version": true,
     {{ prometheus }}
     {{ logging }}
     {{ hide_product_version }}
