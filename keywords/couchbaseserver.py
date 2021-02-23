@@ -742,11 +742,14 @@ class CouchbaseServer:
         count = 0
         max_retries = 5
         while count < max_retries:
-            resp = self._session.post(
-                "{}/controller/setRecoveryType".format(self.url),
-                headers={"Content-Type": "application/x-www-form-urlencoded"},
-                data=data
-            )
+            try:
+                resp = self._session.post(
+                    "{}/controller/setRecoveryType".format(self.url),
+                    headers={"Content-Type": "application/x-www-form-urlencoded"},
+                    data=data
+                )
+            except HTTPError:
+                log_info("Got http error while trying to recover the server, so trying one more time")
             if resp.status_code == 200:
                 break
             count += 1
