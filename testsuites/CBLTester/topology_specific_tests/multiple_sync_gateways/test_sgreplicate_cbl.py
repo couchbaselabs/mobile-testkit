@@ -2250,6 +2250,7 @@ def test_sg_replicate_doc_resurrection(params_from_base_test_setup, setup_custom
     replicator.wait_until_replicator_idle(repl1)
     sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id_1, write_flag=write_flag)
     replicator.wait_until_replicator_idle(repl2)
+    time.sleep(10)
     cbl_doc_ids2 = db.getDocIds(cbl_db2)
     cbl_doc_ids1 = db.getDocIds(cbl_db1)
     compare_cbl_docs(db, cbl_db1, cbl_db2)
