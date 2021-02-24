@@ -1,7 +1,9 @@
 import time
 import pytest
 import datetime
-import zipfile, io, os
+import zipfile
+import os
+import io
 
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop
 from keywords.constants import SDK_TIMEOUT
@@ -718,9 +720,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
             target_zip = zipfile.ZipFile(test_log, 'w')
             with zipfile.ZipFile(io.BytesIO(zip_data)) as thezip:
                 for zipinfo in thezip.infolist():
-                    with thezip.open(zipinfo) as thefile:
-                        print(zipinfo.filename)
-                        target_zip.writestr(zipinfo.filename, thezip.read(zipinfo.filename))
+                    target_zip.writestr(zipinfo.filename, thezip.read(zipinfo.filename))
             target_zip.close()
 
     log_info("Tearing down test")
