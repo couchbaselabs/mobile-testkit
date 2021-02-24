@@ -907,6 +907,7 @@ class CouchbaseServer:
         Return the base_url of the package download URL (everything except the filename)
         """
         released_versions = {
+            "6.6.1": "9216",
             "6.6.0": "7924",
             "6.5.0": "4960",
             "6.0.3": "2893",
