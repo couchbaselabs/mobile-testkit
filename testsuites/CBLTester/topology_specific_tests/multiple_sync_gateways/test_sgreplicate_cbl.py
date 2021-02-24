@@ -2247,6 +2247,7 @@ def test_sg_replicate_doc_resurrection(params_from_base_test_setup, setup_custom
         sdk_client.remove(random_doc_id)
         sdk_client.upsert(random_doc_id, doc_body)
 
+    print("random doc id is ", random_doc_id)
     replicator.wait_until_replicator_idle(repl1)
     sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id_1, write_flag=write_flag)
     replicator.wait_until_replicator_idle(repl2)
