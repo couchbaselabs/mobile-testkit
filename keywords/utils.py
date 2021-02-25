@@ -415,6 +415,7 @@ def deep_dict_compare(object1, object2, isPredictiveResult=False):
     if len(object1) != len(object2):
         log_info("lengths of sgw object and cbl object are different {} --- {}".format(len(object1), len(object2)))
         log_info("keys of object 1 and object2 {}\n---{}".format(list(object1.keys()), list(object2.keys())))
+        log_info("object1 values {} and object2 values {} ", object1, object2)
         return False
 
     for k in object1.keys():
