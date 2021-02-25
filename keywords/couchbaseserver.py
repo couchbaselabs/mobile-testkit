@@ -741,11 +741,14 @@ class CouchbaseServer:
         count = 0
         max_retries = 5
         while count < max_retries:
-            resp = self._session.post(
-                "{}/controller/setRecoveryType".format(self.url),
-                headers={"Content-Type": "application/x-www-form-urlencoded"},
-                data=data
-            )
+            try:
+                resp = self._session.post(
+                    "{}/controller/setRecoveryType".format(self.url),
+                    headers={"Content-Type": "application/x-www-form-urlencoded"},
+                    data=data
+                )
+            except HTTPError:
+                log_info("Got http error while trying to recover the server, so trying one more time")
             if resp.status_code == 200:
                 break
             count += 1
@@ -904,6 +907,7 @@ class CouchbaseServer:
         Return the base_url of the package download URL (everything except the filename)
         """
         released_versions = {
+            "6.6.1": "9216",
             "6.6.0": "7924",
             "6.5.0": "4960",
             "6.0.3": "2893",
