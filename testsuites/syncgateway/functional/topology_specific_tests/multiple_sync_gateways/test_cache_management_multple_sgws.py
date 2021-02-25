@@ -223,7 +223,7 @@ def test_sgw_high_availability(params_from_base_test_setup, setup_basic_sg_conf)
         cbs_docs_via_sdk.result()
 
     retries = 0
-    while retries < 5:
+    while retries < 10:
         sg_docs = sg_client.get_all_docs(url=sg1.admin.admin_url, db=sg_db)["rows"]
         if len(sg_docs) == num_docs:
             break
