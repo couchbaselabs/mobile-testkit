@@ -139,7 +139,7 @@ def test_bucket_online_offline_resync_sanity(params_from_base_test_setup, sg_con
                     raise error
     else:
         resync_status = admin.db_resync(db="db")
-        while resync_status != "stopped" and retries < 5:
+        while resync_status != "stopped" and retries < 50:
             resync_status = admin.db_get_resync_status(db="db")
             retries = retries + 1
             time.sleep(2)
@@ -556,7 +556,7 @@ def verify_resync_changes(sync_gateway_version, async_resync_result, num_docs, n
     else:
         retries = 0
         resync_result = admin.db_get_resync_status(db="db")
-        while resync_result != "stopped" and retries < 5:
+        while resync_result != "stopped" and retries < 50:
             resync_result = admin.db_get_resync_status(db="db")
             retries = retries + 1
             time.sleep(2)
