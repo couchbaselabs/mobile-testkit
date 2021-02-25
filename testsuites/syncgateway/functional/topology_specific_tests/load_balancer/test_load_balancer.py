@@ -1,5 +1,6 @@
 import concurrent.futures
 import pytest
+import time
 
 from keywords.utils import log_info
 from keywords.MobileRestClient import MobileRestClient
@@ -21,6 +22,7 @@ def test_load_balance_sanity(params_from_base_test_setup):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    sg_platform = params_from_base_test_setup["sg_platform"]
 
     sg_conf_name = "sync_gateway_default_functional_tests"
     sg_conf_path = sync_gateway_config_path_for_mode(sg_conf_name, mode)
@@ -53,7 +55,10 @@ def test_load_balance_sanity(params_from_base_test_setup):
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
         log_info("Starting ...")
-        ct_task = executor.submit(ct.start, timeout=180000)
+        if sg_platform == "macos":
+            ct_task = executor.submit(ct.start, timeout=120000)
+        else:
+            ct_task = executor.submit(ct.start)
         log_info("Adding docs ...")
         docs = client.add_docs(lb_url, sg_db, num_docs, "test_doc", channels=channels, auth=session)
         assert len(docs) == num_docs
@@ -124,8 +129,14 @@ def test_sgw_down_with_load_balancer(params_from_base_test_setup, sgw_down_with_
     # 6. Try to retrieve docs using changes API
     #    a . Retry changes API until all changes show up or timeout happens
     # 7. All expected changes should appear
-    changes = client.get_changes(url=lb_url, db=sg_db, auth=None, since=0)
-    assert len(changes["results"]) == num_docs
+    retries = 0
+    while retries < 5:
+        changes = client.get_changes(url=lb_url, db=sg_db, auth=None, since=0)
+        if len(changes["results"]) == num_docs:
+            break
+        retries = retries + 1
+        time.sleep(2)
+    assert len(changes["results"]) == num_docs, "results in changes did not match with num of docs"
 
 
 @pytest.fixture(scope='function')

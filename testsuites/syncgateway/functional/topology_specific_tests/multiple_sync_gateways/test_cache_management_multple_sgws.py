@@ -222,7 +222,13 @@ def test_sgw_high_availability(params_from_base_test_setup, setup_basic_sg_conf)
         diff_docs = num_docs - len(sg_docs)
         cbs_docs_via_sdk.result()
 
-    sg_docs = sg_client.get_all_docs(url=sg1.admin.admin_url, db=sg_db)["rows"]
+    retries = 0
+    while retries < 5:
+        sg_docs = sg_client.get_all_docs(url=sg1.admin.admin_url, db=sg_db)["rows"]
+        if len(sg_docs) == num_docs:
+            break
+        retries = retries + 1
+        time.sleep(2)
     assert len(sg_docs) == num_docs, "not all docs imported from server"
     sg1_expvars = sg_client.get_expvars(sg1.admin.admin_url)
     sg1_cancel_cas = sg1_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_cancel_cas"]
