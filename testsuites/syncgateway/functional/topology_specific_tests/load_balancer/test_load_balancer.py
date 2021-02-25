@@ -56,7 +56,7 @@ def test_load_balance_sanity(params_from_base_test_setup):
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
         log_info("Starting ...")
         if sg_platform == "macos":
-            ct_task = executor.submit(ct.start, timeout=120000)
+            ct_task = executor.submit(ct.start, timeout=180000)
         else:
             ct_task = executor.submit(ct.start)
         log_info("Adding docs ...")
@@ -130,7 +130,7 @@ def test_sgw_down_with_load_balancer(params_from_base_test_setup, sgw_down_with_
     #    a . Retry changes API until all changes show up or timeout happens
     # 7. All expected changes should appear
     retries = 0
-    while retries < 5:
+    while retries < 10:
         changes = client.get_changes(url=lb_url, db=sg_db, auth=None, since=0)
         if len(changes["results"]) == num_docs:
             break
