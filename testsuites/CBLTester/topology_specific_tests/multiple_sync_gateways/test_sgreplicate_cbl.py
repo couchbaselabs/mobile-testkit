@@ -2148,7 +2148,7 @@ def test_sg_replicate_custom_conflict_resolve(params_from_base_test_setup, setup
 @pytest.mark.sgreplicate
 @pytest.mark.parametrize("continuous, direction, attachments, doc_delete_source, delete_sgw_cluster", [
     (False, "pushAndPull", False, "cbl", "sgw1"),
-    (False, "pushAndPull", False, "sdk", "sgw1"),
+    (False, "push", False, "sdk", "sgw1"),
     (False, "pushAndPull", False, "cbl", "sgw2"),
     (False, "pushAndPull", False, "sdk", "sgw2")
 ])
@@ -2249,7 +2249,7 @@ def test_sg_replicate_doc_resurrection(params_from_base_test_setup, setup_custom
 
     print("random doc id is ", random_doc_id)
     replicator.wait_until_replicator_idle(repl1)
-    sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id_1, write_flag=write_flag)
+    sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id_1, read_flag=read_flag, write_flag=write_flag)
     replicator.wait_until_replicator_idle(repl2)
     time.sleep(120)
     cbl_doc_ids2 = db.getDocIds(cbl_db2)
