@@ -2148,7 +2148,7 @@ def test_sg_replicate_custom_conflict_resolve(params_from_base_test_setup, setup
 @pytest.mark.sgreplicate
 @pytest.mark.parametrize("continuous, direction, attachments, doc_delete_source, delete_sgw_cluster", [
     (False, "pushAndPull", False, "cbl", "sgw1"),
-    (False, "push", False, "sdk", "sgw1"),
+    (False, "pushAndPull", False, "sdk", "sgw1"),
     (False, "pushAndPull", False, "cbl", "sgw2"),
     (False, "pushAndPull", False, "sdk", "sgw2")
 ])
@@ -2158,7 +2158,7 @@ def test_sg_replicate_doc_resurrection(params_from_base_test_setup, setup_custom
        1.Have 2 sgw nodes , have cbl on each SGW
        2. Add docs in cbl1
        3. Do push replication to from cbl1 to sg1 cbl -> sg1
-       4. pull/push/push_pull replication from sg1 -> sg2 with one shot replication
+       4. pull/push/push_pull replication from sg1 -> sg2 with continuous replication
        5. Do push-pull replication from sg2 -> cbl2
        6. Delete the doc on cbl1/sdk(data-bucket) and recreate the doc with same doc id
        7. Start new push_pull replication from sg1 -> sg2
