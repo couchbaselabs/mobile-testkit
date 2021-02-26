@@ -130,7 +130,7 @@ def test_sgw_down_with_load_balancer(params_from_base_test_setup, sgw_down_with_
     #    a . Retry changes API until all changes show up or timeout happens
     # 7. All expected changes should appear
     retries = 0
-    while retries < 10:
+    while retries < 20:
         changes = client.get_changes(url=lb_url, db=sg_db, auth=None, since=0)
         if len(changes["results"]) == num_docs:
             break
