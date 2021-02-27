@@ -244,7 +244,8 @@ def params_from_base_suite_setup(request):
            "sg_platform": sg_platform,
            "sync_gateway_version": sync_gateway_version,
            "sg_ce": sg_ce,
-           "prometheus_enabled": prometheus_enabled
+           "prometheus_enabled": prometheus_enabled,
+           "sg_ssl": sg_ssl
            }
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
@@ -275,6 +276,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     sync_gateway_version = params_from_base_suite_setup["sync_gateway_version"]
     sg_ce = params_from_base_suite_setup["sg_ce"]
     prometheus_enabled = params_from_base_suite_setup["prometheus_enabled"]
+    sg_ssl = params_from_base_suite_setup["sg_ssl"]
 
     test_name = request.node.name
     log_info("Setting up test '{}'".format(test_name))
@@ -286,7 +288,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
            "sg_platform": sg_platform,
            "sync_gateway_version": sync_gateway_version,
            "sg_ce": sg_ce,
-           "prometheus_enabled": prometheus_enabled
+           "prometheus_enabled": prometheus_enabled,
+           "sg_ssl": sg_ssl
            }
 
     # Code after the yeild will execute when each test finishes

@@ -9,6 +9,7 @@ from libraries.testkit.syncgateway import wait_until_docs_sync
 from libraries.testkit.syncgateway import assert_does_not_have_doc
 from libraries.testkit.syncgateway import assert_has_doc
 from libraries.testkit.prometheus import verify_stat_on_prometheus
+from keywords.remoteexecutor import RemoteExecutor
 from keywords.ClusterKeywords import ClusterKeywords
 from requests import HTTPError
 from keywords import document
@@ -39,6 +40,7 @@ def test_sg_replicate_basic_test(params_from_base_test_setup):
     mode = params_from_base_test_setup["mode"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     prometheus_enabled = params_from_base_test_setup["prometheus_enabled"]
+    sg_ssl = params_from_base_test_setup["sg_ssl"]
 
     log_info("Running 'test_sg_replicate_basic_test'")
     log_info("Using cluster_config: {}".format(cluster_config))
@@ -49,7 +51,7 @@ def test_sg_replicate_basic_test(params_from_base_test_setup):
         cluster_config=cluster_config,
         sg_config_path=config
     )
-
+    print(sg1)
     admin = Admin(sg1)
     admin.admin_url = sg1.url
 
@@ -161,6 +163,14 @@ def test_sg_replicate_basic_test(params_from_base_test_setup):
         replication_id = replication_result["replication_id"]
         expvars = sg_client.get_expvars(sg1.admin.admin_url)
         assert verify_stat_on_prometheus("sgw_replication_sgr_num_docs_pushed"), expvars["syncgateway"]["per_replication"][replication_id]["sgr_num_docs_pushed"]
+        cluster = Cluster(config=cluster_config)
+        remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip)
+        if sg_ssl:
+            _, stdout, _ = remote_executor.execute("curl -k https://localhost:4986/_metrics")
+            assert "go_gc_duration_seconds" in stdout[0]
+        else:
+            _, stdout, _ = remote_executor.execute("curl -k http://localhost:4986/_metrics")
+            assert "go_gc_duration_seconds" in stdout[0]
 
 
 @pytest.mark.topospecific
@@ -169,7 +179,7 @@ def test_sg_replicate_basic_test(params_from_base_test_setup):
 @pytest.mark.channel
 @pytest.mark.basicauth
 @pytest.mark.changes
-def test_sg_replicate_basic_test_channels(params_from_base_test_setup):
+def sg_replicate_basic_test_channels(params_from_base_test_setup):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
