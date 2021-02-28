@@ -51,7 +51,6 @@ def test_sg_replicate_basic_test(params_from_base_test_setup):
         cluster_config=cluster_config,
         sg_config_path=config
     )
-    print(sg1)
     admin = Admin(sg1)
     admin.admin_url = sg1.url
 
