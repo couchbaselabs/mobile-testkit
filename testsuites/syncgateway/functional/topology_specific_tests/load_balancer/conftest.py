@@ -237,7 +237,7 @@ def params_from_base_suite_setup(request):
         expected_sync_gateway_version=sync_gateway_version
     )
 
-    yield {"cluster_config": cluster_config, "mode": mode}
+    yield {"cluster_config": cluster_config, "mode": mode, "sg_platform": sg_platform}
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
 
@@ -262,10 +262,12 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
 
     cluster_config = params_from_base_suite_setup["cluster_config"]
     mode = params_from_base_suite_setup["mode"]
+    sg_platform = params_from_base_suite_setup["sg_platform"]
 
     yield {
         "cluster_config": cluster_config,
-        "mode": mode
+        "mode": mode,
+        "sg_platform": sg_platform
     }
 
     log_info("Tearing down test '{}'".format(test_name))
