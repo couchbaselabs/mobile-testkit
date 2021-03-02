@@ -162,7 +162,7 @@ def test_sg_replicate_basic_test(params_from_base_test_setup):
         replication_id = replication_result["replication_id"]
         expvars = sg_client.get_expvars(sg1.admin.admin_url)
         assert verify_stat_on_prometheus("sgw_replication_sgr_num_docs_pushed"), expvars["syncgateway"]["per_replication"][replication_id]["sgr_num_docs_pushed"]
-    else:
+    if not prometheus_enabled and sync_gateway_version >= "2.8.0":
         cluster = Cluster(config=cluster_config)
         remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip)
         if sg_ssl:
