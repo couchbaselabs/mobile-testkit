@@ -2,22 +2,11 @@ import pytest
 import time
 
 from keywords.MobileRestClient import MobileRestClient
-from keywords.ClusterKeywords import ClusterKeywords
-from keywords import couchbaseserver
-from keywords.utils import log_info, random_string, get_embedded_asset_file_path
+from keywords.utils import log_info
 from CBLClient.Database import Database
 from CBLClient.Replication import Replication
-from CBLClient.Document import Document
 from CBLClient.Authenticator import Authenticator
-from concurrent.futures import ThreadPoolExecutor
-from CBLClient.Blob import Blob
-from CBLClient.Dictionary import Dictionary
-from libraries.testkit.prometheus import verify_stat_on_prometheus
-from keywords.SyncGateway import sync_gateway_config_path_for_mode
-from keywords import document, attachment
 from libraries.testkit import cluster
-from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
-from keywords.attachment import generate_2_png_100_100
 
 
 @pytest.fixture(scope="function")
