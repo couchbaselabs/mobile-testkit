@@ -1,7 +1,6 @@
 from keywords.utils import log_info
 from keywords.utils import log_error
 from keywords.utils import log_warn
-from datetime import datetime
 
 
 def verify_same_docs(expected_num_docs, doc_dict_one, doc_dict_two):
@@ -153,11 +152,8 @@ def verify_changes(users, expected_num_docs, expected_num_revisions, expected_do
         raise Exception("Make sure 'expected_docs' is a dictionary")
 
     for user in user_list:
-        print("Now Serving the user ", user)
-        print("time is :", datetime.now())
         changes = user.get_changes(include_docs=True)
         results = changes["results"]
-        print("time after get_changes is :", datetime.now())
         changes_results = list()
         for result in results:
             changes_result = dict()
@@ -166,8 +162,6 @@ def verify_changes(users, expected_num_docs, expected_num_revisions, expected_do
                 changes_result["rev"] = result["doc"]["_rev"]
                 changes_result["updates"] = result["doc"]["updates"]
                 changes_results.append(changes_result)
-        print("After change results ")
-        print("time is :", datetime.now())
         # Check expected_num_docs matches number of changes results
         if expected_num_docs != len(changes_results):
             log_error("{0} -> {1} expected_num_docs != {2} len(changes_results)".format(user.name, expected_num_docs, len(changes_results)))
@@ -187,8 +181,6 @@ def verify_changes(users, expected_num_docs, expected_num_revisions, expected_do
                     log_info("Duplicate id {}".format(i))
 
             errors["unexpected_changes_length"] += 1
-        print("After condition expected_num_docs != len(changes_results)")
-        print("time is :", datetime.now())
         # Check number of expected num docs matched number of expected doc ids
         if expected_num_docs != len(expected_docs):
             log_error("{0} -> {1} expected_num_docs != {2} len(expected_docs)".format(user.name, expected_num_docs, len(expected_docs)))
@@ -251,8 +243,6 @@ def verify_changes(users, expected_num_docs, expected_num_revisions, expected_do
             if expected_num_revisions != result["updates"]:
                 log_error("{0} -> expected_num_revisions {1} does not match number of updates {2}".format(user.name, expected_num_revisions, result["updates"]))
                 errors["unexpected_num_updates"] += 1
-        print("Before for loop of change_results ")
-        print("time is :", datetime.now())
         # Allow printing updates even if changes feed length is 0
         if len(changes_results) == 0:
             updates = 0
