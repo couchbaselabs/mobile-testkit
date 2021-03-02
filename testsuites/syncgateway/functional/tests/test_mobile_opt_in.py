@@ -1,6 +1,8 @@
 
 
 import pytest
+import subprocess
+import time
 
 from couchbase.bucket import Bucket
 from requests.exceptions import HTTPError
@@ -13,6 +15,8 @@ from keywords.SyncGateway import SyncGateway
 from keywords.userinfo import UserInfo
 from keywords.utils import host_for_url, log_info
 from libraries.testkit.cluster import Cluster
+from keywords.remoteexecutor import RemoteExecutor
+from utilities.cluster_config_utils import load_cluster_config_json
 
 
 @pytest.mark.syncgateway
@@ -233,3 +237,181 @@ def test_mobile_opt_in(params_from_base_test_setup, sg_conf_name):
     # sg_client.update_doc(url=sg_url, db=sg_db, doc_id=doc_id8, number_updates=1, auth=test_auth_session)
     sg_get_doc9 = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id9, auth=test_auth_session)
     assert sg_get_doc9['_rev'].startswith('1-') and sg_get_doc9['_id'] == doc_id9
+
+
+@pytest.mark.parametrize('sg_conf_name', [
+    'log_rotation_new'
+])
+def test_non_mobile_ignore_count(params_from_base_test_setup, sg_conf_name):
+    """
+    Scenario: Enable mobile opt in sync function in sync-gateway configuration file
+    1. Create doc in CBS with xattrs off and verify doc is not imported
+    2. Verify “non_mobile_ignored_count” is 0 on _expvar end point
+    3. Create another document('abc') on CBS and verify it is not imported and verify that info logs generate the log
+        “Cache: changeCache: Doc “abc” does not have valid sync data”
+    4. Verify “non_mobile_ignored_count” is 1 on _expvar end point
+    5. Create another document('xyz') and verify log is generated and “non_mobile_ignored_count” is 2
+    6. Restart SGW , Verify “non_mobile_ignored_count” is 0
+    7. Create document('def') and verify info logs show the message “Cache: changeCache: Doc “def” does not have valid sync data”
+       verify “non_mobile_ignored_count” is 1
+    8. Verify warn_count is 0
+    """
+
+    bucket_name = 'data-bucket'
+    sg_db = 'db'
+
+    cluster_config = params_from_base_test_setup['cluster_config']
+    cluster_topology = params_from_base_test_setup['cluster_topology']
+    mode = params_from_base_test_setup['mode']
+    xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+    sg_platform = params_from_base_test_setup['sg_platform']
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+
+    # This test should only run when using xattr meta storage
+    if xattrs_enabled or sync_gateway_version < "3.0":
+        pytest.skip('Cannot run with --xattrs flag')
+
+    sg_config = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
+    sg_url = cluster_topology['sync_gateways'][0]['public']
+    cbs_url = cluster_topology['couchbase_servers'][0]
+
+    log_info('sg_conf: {}'.format(sg_config))
+    log_info('sg_admin_url: {}'.format(sg_admin_url))
+    log_info('sg_url: {}'.format(sg_url))
+    log_info('cbs_url: {}'.format(cbs_url))
+
+    cluster = Cluster(config=cluster_config)
+    cluster.reset(sg_config_path=sg_config)
+
+    # Create clients
+    sg_client = MobileRestClient()
+    cbs_ip = host_for_url(cbs_url)
+    if cluster.ipv6:
+        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+    else:
+        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+
+    # Create user / session
+    auto_user_info = UserInfo(name='autotest', password='pass', channels=['mobileOptIn'], roles=[])
+    sg_client.create_user(
+        url=sg_admin_url,
+        db=sg_db,
+        name=auto_user_info.name,
+        password=auto_user_info.password,
+        channels=auto_user_info.channels
+    )
+
+    test_auth_session = sg_client.create_session(
+        url=sg_admin_url,
+        db=sg_db,
+        name=auto_user_info.name
+    )
+
+    if sg_platform == "windows":
+        json_cluster = load_cluster_config_json(cluster_config)
+        sghost_username = json_cluster["sync_gateways:vars"]["ansible_user"]
+        sghost_password = json_cluster["sync_gateways:vars"]["ansible_password"]
+        remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip, sg_platform, sghost_username, sghost_password)
+    else:
+        remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip)
+
+    # 1. Create doc in CBS with xattrs off and verify doc is not imported
+    doc_id1 = 'non_mobile_ignore_1'
+    doc = document.create_doc(doc_id=doc_id1, channels=['non_mobile_ignore'])
+    sdk_client.upsert(doc_id1, doc)
+    try:
+        sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id1, auth=test_auth_session)
+        assert False, "doc imported to sync gateway with xttars on"
+    except HTTPError as e:
+        log_info("Got the Http error".format(e))
+
+    # 2. Verify “non_mobile_ignored_count” is 0 on _expvar end point
+    sg_expvars = sg_client.get_expvars(url=sg_admin_url)
+    non_mobile_ignore_count = sg_expvars["syncgateway"]["per_db"][sg_db]["cache"]["non_mobile_ignored_count"]
+    assert non_mobile_ignore_count == 1, "non_mobile_ignore_count did not get expected count"
+    command = "grep 'Cache: changeCache' /tmp/sg_logs/sg_info.log | wc -l"
+    command1 = "grep 'does not have valid sync data' /tmp/sg_logs/sg_info.log | wc -l"
+    if sg_platform == "macos":
+        stdout = subprocess.check_output(command, shell=True)
+        log1_num = int(stdout)
+        stdout = subprocess.check_output(command1, shell=True)
+        log2_num = int(stdout)
+    else:
+        _, stdout, _ = remote_executor.execute(command)
+        log1_num = int(stdout[0])
+        _, stdout, _ = remote_executor.execute(command1)
+        log2_num = int(stdout[0])
+
+    # 3. Create another document('abc') on CBS and verify it is not imported and verify that info logs generate the log
+    #    “Cache: changeCache: Doc “abc” does not have valid sync data”
+    doc_id2 = 'non_mobile_ignore_2'
+    doc = document.create_doc(doc_id=doc_id2, channels=['non_mobile_ignore'])
+    sdk_client.upsert(doc_id2, doc)
+
+    if sg_platform == "macos":
+        time.sleep(2)
+        stdout = subprocess.check_output(command, shell=True)
+        assert int(stdout) == 1 + log1_num, "did not find the expected match on sg info logs"
+        stdout = subprocess.check_output(command1, shell=True)
+        assert int(stdout) == 1 + log2_num, "did not find the expected match on sg info logs"
+    else:
+        if sg_platform == "windows":
+            command = "grep 'Cache: changeCache' C:\\\\tmp\\\\sg_logs\sg_info.log | wc -l"
+            command1 = "grep 'does not have valid sync data' C:\\\\tmp\\\\sg_logs\sg_info.log | wc -l"
+        _, stdout, _ = remote_executor.execute(command)
+        assert int(stdout[0]) == 1 + log1_num, "did not find the expected match on sg info logs"
+        _, stdout, _ = remote_executor.execute(command1)
+        assert int(stdout[0]) == 1 + log2_num, "did not find the expected match on sg info log"
+
+    # 4. Verify “non_mobile_ignored_count” is 1 on _expvar end point
+    count = 0
+    retry_count = 5
+    while count < retry_count:
+        sg_expvars = sg_client.get_expvars(url=sg_admin_url)
+        non_mobile_ignore_count = sg_expvars["syncgateway"]["per_db"][sg_db]["cache"]["non_mobile_ignored_count"]
+        if non_mobile_ignore_count == 2:
+            break
+        else:
+            time.sleep(1)
+            count += 1
+    assert non_mobile_ignore_count == 2, "non_mobile_ignore_count did not get expected count"
+
+    # 6. Restart SGW , Verify “non_mobile_ignored_count” is 0
+    status = cluster.sync_gateways[0].restart(config=sg_config, cluster_config=cluster_config)
+    assert status == 0, "Syncgateway did not start after adding revs_limit  with no conflicts mode "
+
+    if sg_platform == "macos":
+        stdout = subprocess.check_output(command, shell=True)
+        log1_num = int(stdout)
+        stdout = subprocess.check_output(command1, shell=True)
+        log2_num = int(stdout)
+    else:
+        _, stdout, _ = remote_executor.execute(command)
+        log1_num = int(stdout[0])
+        _, stdout, _ = remote_executor.execute(command1)
+        log2_num = int(stdout[0])
+    # 7. Create document('def') and verify info logs show the message “Cache: changeCache: Doc “def” does not have valid sync data”
+    #    verify “non_mobile_ignored_count” is 1
+    doc_id3 = 'non_mobile_ignore_3'
+    doc = document.create_doc(doc_id=doc_id3, channels=['non_mobile_ignore'])
+    sdk_client.upsert(doc_id3, doc)
+
+    if sg_platform == "macos":
+        time.sleep(2)
+        stdout = subprocess.check_output(command, shell=True)
+        assert int(stdout) == 1 + log1_num, "did not find the expected match on sg info logs"
+        stdout = subprocess.check_output(command1, shell=True)
+        assert int(stdout) == 1 + log2_num, "did not find the expected match on sg info logs"
+    else:
+        _, stdout, _ = remote_executor.execute(command)
+        assert int(stdout[0]) == 1 + log1_num, "did not find the expected match on sg info logs"
+        _, stdout, _ = remote_executor.execute(command1)
+        assert int(stdout[0]) == 1 + log2_num, "did not find the expected match on sg info log"
+
+    sg_expvars = sg_client.get_expvars(url=sg_admin_url)
+    non_mobile_ignore_count = sg_expvars["syncgateway"]["per_db"][sg_db]["cache"]["non_mobile_ignored_count"]
+    assert non_mobile_ignore_count == 1, "non_mobile_ignore_count did not get expected count"
+
+    # 8. Verify warn_count is 0
+    assert sg_expvars["syncgateway"]["global"]["resource_utilization"]["warn_count"] == 0, "warn_count is not 0"
