@@ -24,6 +24,8 @@ def test_reserve_property(params_from_base_test_setup):
     channel = ["Replication-1"]
     doc_id = "doc_1"
     documentObj = Document(base_url)
+    
+    # Creating a doucment with _id
     doc_body = document.create_doc(doc_id=doc_id, content="doc1", channels=channel, expiry=2,
                                    attachments=attachment.generate_2_png_10_10())
     doc1 = documentObj.create(doc_id, doc_body)
@@ -31,7 +33,7 @@ def test_reserve_property(params_from_base_test_setup):
         "Did not throw the unsupported reserve property error"
 
     # This is added to catch the
-    doc_body = document.create_doc(doc_id="doc_2", content="doc2", channels=channel, cbl=False, expiry=2,
+    doc_body = document.create_doc(doc_id="doc_2", content="doc2", channels=channel, cbl=True, expiry=2,
                                    attachments=attachment.generate_2_png_10_10())
     doc2 = documentObj.create("doc_2", doc_body)
     db.saveDocument(cbl_db, doc2)
