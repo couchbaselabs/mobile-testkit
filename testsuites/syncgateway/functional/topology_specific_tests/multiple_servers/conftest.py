@@ -47,6 +47,7 @@ def params_from_base_suite_setup(request):
     cbs_platform = request.config.getoption("--cbs-platform")
     magma_storage_enabled = request.config.getoption("--magma-storage")
     hide_product_version = request.config.getoption("--hide-product-version")
+    prometheus_enabled = request.config.getoption("--prometheus-enable")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
@@ -74,6 +75,7 @@ def params_from_base_suite_setup(request):
     log_info("cbs_platform: {}".format(cbs_platform))
     log_info("Delta_sync: {}".format(delta_sync_enabled))
     log_info("hide_product_version: {}".format(hide_product_version))
+    log_info("prometheus_enabled: {}".format(prometheus_enabled))
 
     # sg-ce is invalid for di mode
     if mode == "di" and sg_ce:

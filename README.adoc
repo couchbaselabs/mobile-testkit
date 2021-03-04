@@ -40,7 +40,7 @@ under Docker] wiki page.
 If you are on OSX El Capitan, you must install python via brew rather than using the system python due to https://github.com/pypa/pip/issues/3165[Pip issue 3165].
 
 ```
-$ brew install python
+$ brew install python@3.7
 ```
 
 After you install it, you should see that the python installed via brew is the default python:
@@ -56,7 +56,7 @@ Python 2.7.10
 
 On MacOSX
 ```
-$ brew install libcouchbase
+$ brew install libcouchbase@2
 ```
 
 On CentOS7

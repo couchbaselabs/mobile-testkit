@@ -11,6 +11,7 @@ from CBLClient.Query import Query
 from CBLClient.Database import Database
 
 
+@pytest.mark.p2p
 @pytest.mark.listener
 @pytest.mark.parametrize("num_of_docs, replicator_type, attachments, endpoint_type", [
     (10, "push", False, "URLEndPoint"),
@@ -145,6 +146,7 @@ def test_p2p_replication_push_pull_filtering(params_from_base_test_setup, server
         peer_to_peer_server.server_stop(replicator_tcp_listener, endpoint_type)
 
 
+@pytest.mark.p2p
 @pytest.mark.listener
 @pytest.mark.parametrize("num_of_docs, attachments, endpoint_type", [
     [10, False, "URLEndPoint"],
@@ -254,6 +256,7 @@ def test_p2p_replication_delete(params_from_base_test_setup, server_setup, num_o
         peer_to_peer_server.server_stop(replicator_tcp_listener, endpoint_type)
 
 
+@pytest.mark.p2p
 @pytest.mark.listener
 @pytest.mark.parametrize("num_of_docs, attachments, endpoint_type", [
     [10, False, "URLEndPoint"],
@@ -365,6 +368,7 @@ def test_p2p_filter_retrieval_with_replication_restart(params_from_base_test_set
         peer_to_peer_server.server_stop(replicator_tcp_listener, endpoint_type)
 
 
+@pytest.mark.p2p
 @pytest.mark.listener
 @pytest.mark.hydrogen
 def test_p2p_delete_db_active_replicator_and_live_query(params_from_base_test_setup):
