@@ -789,9 +789,10 @@ class CouchbaseServer:
     def stop(self):
         """Stops a running Couchbase Server via 'service couchbase-server stop'"""
 
-        command = "sudo service couchbase-server stop"
-        self.remote_executor.must_execute(command)
-        self._verify_stopped()
+        print("Not stopping")
+        # command = "sudo service couchbase-server stop"
+        # self.remote_executor.must_execute(command)
+        # self._verify_stopped()
 
     def delete_vbucket(self, vbucket_number, bucket_name):
         """ Deletes a vbucket file for a number and bucket"""

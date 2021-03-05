@@ -158,8 +158,8 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
     sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
     couchbase_server_primary_node = add_cbs_to_sg_config_server_field(cluster_config)
     # Create buckets unless the user explicitly asked to skip this step
-    if not sync_gateway_config.skip_bucketcreation:
-        create_server_buckets(cluster_config, sync_gateway_config)
+    # if sync_gateway_config.skip_bucketcreation:
+    #     create_server_buckets(cluster_config, sync_gateway_config)
 
     server_port = 8091
     server_scheme = "http"
@@ -367,7 +367,9 @@ def create_server_buckets(cluster_config, sync_gateway_config):
 
     # delete existing buckets
     cb_server = CouchbaseServer(couchbase_server_url)
-    cb_server.delete_buckets()
+
+
+    # cb_server.delete_buckets()
 
     # find bucket names from sg config
     bucket_names = get_buckets_from_sync_gateway_config(sync_gateway_config.config_path)
