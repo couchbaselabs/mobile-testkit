@@ -13,7 +13,7 @@ import keywords.constants
 from keywords.remoteexecutor import RemoteExecutor
 from keywords.exceptions import CBServerError, ProvisioningError, TimeoutError, RBACUserCreationError
 from libraries.provision.ansible_runner import AnsibleRunner
-from keywords.utils import log_r, log_info, log_debug, log_error, hostname_for_url, host_for_url
+from keywords.utils import log_r, log_info, log_debug, log_error, hostname_for_url
 from keywords.utils import version_and_build, random_string
 from keywords import types
 from utilities.cluster_config_utils import is_x509_auth, get_cbs_version, is_magma_enabled, is_cbs_ce_enabled
@@ -773,13 +773,12 @@ class CouchbaseServer:
 
         # TODO reset Quota
 
-    def start(self, custom_port=False):
+    def start(self):
         """Starts a running Couchbase Server via 'service couchbase-server start'"""
 
         command = "sudo service couchbase-server start"
         self.remote_executor.must_execute(command)
-        if not custom_port:
-            self.wait_for_ready_state()
+        self.wait_for_ready_state()
 
     def _verify_stopped(self):
         """Polls until the server url is unreachable"""
@@ -1004,19 +1003,6 @@ class CouchbaseServer:
         """ Loads a given sample bucket """
         log_info("Enabling sample bucket {}".format(sample_bucket))
         self.remote_executor.must_execute('sudo /opt/couchbase/bin/cbdocloader -c localhost:8091 -u Administrator -p password -b {} -m 200 -d /opt/couchbase/samples/{}.zip'.format(sample_bucket, sample_bucket))
-
-    def get_bucket_connection(self, cbs_url, bucket_name, ssl_enabled, cluster):
-        cbs_ip = host_for_url(cbs_url)
-        if ssl_enabled and cluster.ipv6:
-            connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(cbs_ip, bucket_name)
-        elif ssl_enabled and not cluster.ipv6:
-            connection_url = "couchbases://{}/{}?ssl=no_verify".format(cbs_ip, bucket_name)
-        elif not ssl_enabled and cluster.ipv6:
-            connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, bucket_name)
-        else:
-            connection_url = 'couchbase://{}/{}'.format(cbs_ip, bucket_name)
-        sdk_client = Bucket(connection_url, password='password')
-        return sdk_client
 
     def create_scope(self, bucket, scope=None):
         """ Create scope on couchbase server"""
