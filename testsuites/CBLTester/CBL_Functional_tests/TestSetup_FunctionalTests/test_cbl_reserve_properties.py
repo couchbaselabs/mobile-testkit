@@ -24,6 +24,8 @@ def test_reserve_property(params_from_base_test_setup):
     channel = ["Replication-1"]
     doc_id = "doc_1"
     documentObj = Document(base_url)
+    
+    # Creating a doucment with _id
     doc_body = document.create_doc(doc_id=doc_id, content="doc1", channels=channel, expiry=2,
                                    attachments=attachment.generate_2_png_10_10())
     doc1 = documentObj.create(doc_id, doc_body)
