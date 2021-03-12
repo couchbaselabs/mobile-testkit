@@ -222,7 +222,6 @@ def params_from_base_suite_setup(request):
     hide_product_version = request.config.getoption("--hide-product-version")
     skip_couchbase_provision = request.config.getoption("--skip-couchbase-provision")
 
-
     test_name = request.node.name
 
     testserver = TestServerFactory.create(platform=liteserv_platform,

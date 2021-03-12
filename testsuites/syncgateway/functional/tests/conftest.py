@@ -162,9 +162,8 @@ def pytest_addoption(parser):
                      help="Hides SGW product version when you hit SGW url",
                      default=False)
 
-    parser.addoption("--skip-couchbase-provision",
-                      action="store_true",
-                      help="skip the bucketcreation step")
+    parser.addoption("--skip-couchbase-provision", action="store_true",
+                     help="skip the bucketcreation step")
 
 
 # This will be called once for the at the beggining of the execution in the 'tests/' directory
