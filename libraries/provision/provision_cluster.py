@@ -25,7 +25,7 @@ from utilities.cluster_config_utils import get_load_balancer_ip
 def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_config, sg_ssl=False, sg_lb=False, cbs_ssl=False, use_views=False,
                       xattrs_enabled=False, no_conflicts_enabled=False, delta_sync_enabled=False, number_replicas=0, sg_ce=False,
                       cbs_platform="centos7", sg_platform="centos", sg_installer_type="msi", sa_platform="centos",
-                      sa_installer_type="msi", cbs_ce=False, aws=False):
+                      sa_installer_type="msi", cbs_ce=False, aws=False, skip_couchbase_provision=False):
 
     log_info("\n>>> Cluster info:\n")
     server_version = "{}-{}".format(couchbase_server_config.version, couchbase_server_config.build)
@@ -85,12 +85,13 @@ def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_conf
     # Reset previous installs
     clean_cluster(cluster_config)
     # Install server package
-    # log_info("Installing Couchbase Server")
-    # install_couchbase_server.install_couchbase_server(
-    #     cluster_config=cluster_config,
-    #     couchbase_server_config=couchbase_server_config,
-    #     cbs_platform=cbs_platform, cbs_ce=cbs_ce
-    # )
+    if not skip_couchbase_provision:
+        log_info("Installing Couchbase Server")
+        install_couchbase_server.install_couchbase_server(
+            cluster_config=cluster_config,
+            couchbase_server_config=couchbase_server_config,
+            cbs_platform=cbs_platform, cbs_ce=cbs_ce
+        )
 
     # Install sync_gateway
     log_info("Installing Sync Gateway")
@@ -115,7 +116,7 @@ def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_conf
 def provision_cluster_aws(cluster_config, couchbase_server_config, sync_gateway_config, sg_ssl=False, sg_lb=False, cbs_ssl=False, use_views=False,
                           xattrs_enabled=False, no_conflicts_enabled=False, delta_sync_enabled=False, number_replicas=0, sg_ce=False,
                           cbs_platform="centos7", sg_platform="centos", sg_installer_type="msi", sa_platform="centos",
-                          sa_installer_type="msi", cbs_ce=False, aws=False):
+                          sa_installer_type="msi", cbs_ce=False, aws=False, skip_couchbase_provision=False):
 
     if sg_ssl:
         log_info("Enabling SSL on sync gateway")

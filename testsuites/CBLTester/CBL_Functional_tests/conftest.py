@@ -172,6 +172,10 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="Hides SGW product version when you hit SGW url",
                      default=False)
+
+    parser.add_option("--skip-bucketcreation",
+                      action="store_true",
+                      help="skip the bucketcreation step")
 # This will get called once before the first test that
 # runs with this as input parameters in this file
 # This setup will be called once for all tests in the
@@ -215,6 +219,8 @@ def params_from_base_suite_setup(request):
     enable_encryption = request.config.getoption("--enable-encryption")
     encryption_password = request.config.getoption("--encryption-password")
     hide_product_version = request.config.getoption("--hide-product-version")
+    skip_bucketcreation = request.config.getoption("--skip-bucketcreation")
+
 
     test_name = request.node.name
 
