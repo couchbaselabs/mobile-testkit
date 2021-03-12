@@ -4,6 +4,7 @@ import os
 import random
 import string
 import re
+import socket
 from keywords.exceptions import FeatureSupportedError
 from keywords.constants import DATA_DIR
 from utilities.cluster_config_utils import get_cbs_servers, get_sg_version
@@ -494,3 +495,10 @@ def is_replicator_in_connection_retry(error_msg):
     if "NSPOSIXErrorDomain" in error_msg and "Connection refused" in error_msg and "Code=61" in error_msg:
         return True
     return False
+
+
+def get_local_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(("8.8.8.8", 80))
+    local_ip = s.getsockname()[0]
+    return local_ip
