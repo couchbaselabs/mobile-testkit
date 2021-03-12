@@ -173,9 +173,10 @@ def pytest_addoption(parser):
                      help="Hides SGW product version when you hit SGW url",
                      default=False)
 
-    parser.add_option("--skip-bucketcreation",
-                      action="store_true",
-                      help="skip the bucketcreation step")
+    parser.addoption("--skip-couchbase-provision",
+                     action="store_true",
+                     help="skip the bucketcreation step")
+
 # This will get called once before the first test that
 # runs with this as input parameters in this file
 # This setup will be called once for all tests in the
@@ -219,7 +220,7 @@ def params_from_base_suite_setup(request):
     enable_encryption = request.config.getoption("--enable-encryption")
     encryption_password = request.config.getoption("--encryption-password")
     hide_product_version = request.config.getoption("--hide-product-version")
-    skip_bucketcreation = request.config.getoption("--skip-bucketcreation")
+    skip_couchbase_provision = request.config.getoption("--skip-couchbase-provision")
 
 
     test_name = request.node.name
@@ -380,7 +381,8 @@ def params_from_base_suite_setup(request):
                 sync_gateway_version=sync_gateway_version,
                 sync_gateway_config=sg_config,
                 cbs_ce=cbs_ce,
-                sg_ce=sg_ce
+                sg_ce=sg_ce,
+                skip_couchbase_provision=skip_couchbase_provision
             )
         except ProvisioningError:
             logging_helper = Logging()
