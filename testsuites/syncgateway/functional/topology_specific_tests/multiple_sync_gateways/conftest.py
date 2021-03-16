@@ -46,6 +46,7 @@ def params_from_base_suite_setup(request):
     magma_storage_enabled = request.config.getoption("--magma-storage")
     prometheus_enabled = request.config.getoption("--prometheus-enable")
     hide_product_version = request.config.getoption("--hide-product-version")
+    skip_couchbase_provision = request.config.getoption("--skip-couchbase-provision")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
@@ -217,6 +218,7 @@ def params_from_base_suite_setup(request):
                 sg_platform=sg_platform,
                 sg_installer_type=sg_installer_type,
                 sa_installer_type=sa_installer_type,
+                skip_couchbase_provision=skip_couchbase_provision
             )
         except ProvisioningError:
             logging_helper = Logging()
