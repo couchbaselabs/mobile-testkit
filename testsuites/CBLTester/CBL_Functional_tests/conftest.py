@@ -175,7 +175,7 @@ def pytest_addoption(parser):
 
     parser.addoption("--skip-couchbase-provision",
                      action="store_true",
-                     help="skip the bucketcreation step")
+                     help="skip the couchbase provision step")
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
