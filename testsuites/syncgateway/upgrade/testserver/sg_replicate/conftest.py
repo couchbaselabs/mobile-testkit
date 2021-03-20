@@ -166,6 +166,10 @@ def pytest_addoption(parser):
                      help="Hides SGW product version when you hit SGW url",
                      default=False)
 
+    parser.addoption("--skip-couchbase-provision",
+                     action="store_true",
+                     help="skip the couchbase provision step")
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -214,6 +218,7 @@ def params_from_base_suite_setup(request):
     no_conflicts_enabled = request.config.getoption("--no-conflicts")
     upgraded_no_conflicts_enabled = request.config.getoption("--upgraded-no-conflicts")
     hide_product_version = request.config.getoption("--hide-product-version")
+    skip_couchbase_provision = request.config.getoption("--skip-couchbase-provision")
     test_name = request.node.name
 
     log_info("mode: {}".format(mode))
@@ -398,7 +403,8 @@ def params_from_base_suite_setup(request):
                 cluster_config=cluster_config,
                 server_version=server_version,
                 sync_gateway_version=sync_gateway_version,
-                sync_gateway_config=sg_config
+                sync_gateway_config=sg_config,
+                skip_couchbase_provision=skip_couchbase_provision
             )
         except ProvisioningError:
             logging_helper = Logging()
@@ -550,6 +556,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     sgw_cluster2_count = params_from_base_suite_setup["sgw_cluster2_count"]
     no_conflicts_enabled = params_from_base_suite_setup["no_conflicts_enabled"]
     upgraded_no_conflicts_enabled = params_from_base_suite_setup["upgraded_no_conflicts_enabled"]
+
     test_name = request.node.name
 
     source_db = None

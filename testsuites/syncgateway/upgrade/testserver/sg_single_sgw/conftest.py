@@ -148,6 +148,10 @@ def pytest_addoption(parser):
                      help="Hides SGW product version when you hit SGW url",
                      default=False)
 
+    parser.addoption("--skip-couchbase-provision",
+                     action="store_true",
+                     help="skip the couchbase provision step")
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -194,6 +198,7 @@ def params_from_base_suite_setup(request):
     cbs_toy_build = request.config.getoption("--cbs-upgrade-toybuild")
     magma_storage_enabled = request.config.getoption("--magma-storage")
     hide_product_version = request.config.getoption("--hide-product-version")
+    skip_couchbase_provision = request.config.getoption("--skip-couchbase-provision")
 
     test_name = request.node.name
 
@@ -366,7 +371,8 @@ def params_from_base_suite_setup(request):
                 cluster_config=cluster_config,
                 server_version=server_version,
                 sync_gateway_version=sync_gateway_version,
-                sync_gateway_config=sg_config
+                sync_gateway_config=sg_config,
+                skip_couchbase_provision=skip_couchbase_provision
             )
         except ProvisioningError:
             logging_helper = Logging()
