@@ -29,16 +29,10 @@ def test_predictiveQueries_basicInputOutput(params_from_base_test_setup, doc_gen
     base_url = params_from_base_test_setup["base_url"]
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
-    sg_config = params_from_base_test_setup["sg_config"]
-    cluster_config = params_from_base_test_setup["cluster_config"]
     liteserv_version = params_from_base_test_setup["liteserv_version"]
 
     if liteserv_version < "2.5.0":
         pytest.skip('This test cannnot run with CBL version below 2.5')
-
-    # Reset cluster to ensure no data in system
-    c = cluster.Cluster(config=cluster_config)
-    c.reset(sg_config_path=sg_config)
 
     # Register model
     modelName = "EchoModel"

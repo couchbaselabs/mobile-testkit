@@ -29,7 +29,8 @@ class Replication(object):
                   replication_type="push_pull", continuous=False,
                   push_filter=False, pull_filter=False, channels=None,
                   documentIDs=None, replicator_authenticator=None,
-                  headers=None, filter_callback_func='', conflict_resolver='', heartbeat=''):
+                  headers=None, filter_callback_func='', conflict_resolver='',
+                  heartbeat=None, max_retries=None, max_retry_wait_time=None):
         args = Args()
         args.setMemoryPointer("source_db", source_db)
         args.setBoolean("continuous", continuous)
@@ -37,8 +38,16 @@ class Replication(object):
         args.setBoolean("pull_filter", pull_filter)
         args.setString("filter_callback_func", filter_callback_func)
         args.setString("conflict_resolver", conflict_resolver)
-        if heartbeat != "":
+
+        if max_retries is not None:
+            args.setString("max_retries", max_retries)
+
+        if max_retry_wait_time is not None:
+            args.setString("max_retry_wait_time", max_retry_wait_time)
+
+        if heartbeat is not None:
             args.setString("heartbeat", heartbeat)
+
         if channels is not None:
             args.setArray("channels", channels)
 
@@ -359,13 +368,17 @@ class Replication(object):
                 raise Exception("total is less than completed")
 
     def create_session_configure_replicate(self, baseUrl, sg_admin_url, sg_db, username, password,
-                                           channels, sg_client, cbl_db, sg_blip_url, replication_type=None, continuous=True):
+                                           channels, sg_client, cbl_db, sg_blip_url, replication_type=None,
+                                           continuous=True, max_retries=None, max_retry_wait_time=None):
 
         authenticator = Authenticator(baseUrl)
         cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
         session = cookie, session_id
         replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
-        repl_config = self.configure(cbl_db, sg_blip_url, continuous=continuous, channels=channels, replication_type=replication_type, replicator_authenticator=replicator_authenticator)
+        repl_config = self.configure(cbl_db, sg_blip_url, continuous=continuous, channels=channels,
+                                     replication_type=replication_type,
+                                     replicator_authenticator=replicator_authenticator,
+                                     max_retries=max_retries, max_retry_wait_time=max_retry_wait_time)
         repl = self.create(repl_config)
         self.start(repl)
         self.wait_until_replicator_idle(repl)
