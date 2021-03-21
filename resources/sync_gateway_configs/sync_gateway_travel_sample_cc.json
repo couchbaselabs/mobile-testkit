@@ -6,6 +6,7 @@
     "compressResponses": false,
     {{ prometheus }}
     {{ logging }}
+    {{ hide_product_version }}
     {{ sslcert }}
     {{ sslkey }}
     "databases":{

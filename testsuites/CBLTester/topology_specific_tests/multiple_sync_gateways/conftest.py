@@ -181,10 +181,10 @@ def params_from_base_suite_setup(request):
     sg_ce = request.config.getoption("--sg-ce")
     cbs_ssl = request.config.getoption("--server-ssl")
     cluster_config = request.config.getoption("--cluster-config")
-
     enable_encryption = request.config.getoption("--enable-encryption")
     encryption_password = request.config.getoption("--encryption-password")
     prometheus_enable = request.config.getoption("--prometheus-enable")
+    hide_product_version = request.config.getoption("--hide-product-version")
 
     testserver = TestServerFactory.create(platform=liteserv_platform,
                                           version_build=liteserv_version,
@@ -283,6 +283,13 @@ def params_from_base_suite_setup(request):
         log_info("Running tests with cbs <-> sg ssl disabled")
         # Disable ssl in cluster configs
         persist_cluster_config_environment_prop(cluster_config, 'cbs_ssl_enabled', False)
+
+    if hide_product_version:
+        log_info("Suppress the SGW product Version")
+        persist_cluster_config_environment_prop(cluster_config, 'hide_product_version', True)
+    else:
+        log_info("Running without suppress SGW product Version")
+        persist_cluster_config_environment_prop(cluster_config, 'hide_product_version', False)
 
     # As cblite jobs run with on Centos platform, adding by default centos to environment config
     persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "centos", False)
@@ -478,7 +485,6 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     sg_ce = params_from_base_suite_setup["sg_ce"]
     cbs_ssl = params_from_base_suite_setup["ssl_enabled"]
     prometheus_enable = request.config.getoption("--prometheus-enable")
-
     use_local_testserver = request.config.getoption("--use-local-testserver")
 
     source_db = None

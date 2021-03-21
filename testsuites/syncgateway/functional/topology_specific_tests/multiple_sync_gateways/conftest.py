@@ -45,6 +45,7 @@ def params_from_base_suite_setup(request):
     cbs_platform = request.config.getoption("--cbs-platform")
     magma_storage_enabled = request.config.getoption("--magma-storage")
     prometheus_enabled = request.config.getoption("--prometheus-enable")
+    hide_product_version = request.config.getoption("--hide-product-version")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
@@ -70,6 +71,7 @@ def params_from_base_suite_setup(request):
     log_info("sg_platform: {}".format(sg_platform))
     log_info("delta_sync_enabled: {}".format(delta_sync_enabled))
     log_info("prometheus_enabled: {}".format(prometheus_enabled))
+    log_info("hide_product_version: {}".format(hide_product_version))
 
     # sg-ce is invalid for di mode
     if mode == "di" and sg_ce:
@@ -185,6 +187,13 @@ def params_from_base_suite_setup(request):
         log_info("Running without magma storage")
         persist_cluster_config_environment_prop(cluster_config, 'magma_storage_enabled', False, False)
 
+    if hide_product_version:
+        log_info("Suppress the SGW product Version")
+        persist_cluster_config_environment_prop(cluster_config, 'hide_product_version', True)
+    else:
+        log_info("Running without suppress SGW product Version")
+        persist_cluster_config_environment_prop(cluster_config, 'hide_product_version', False)
+
     if sync_gateway_version < "2.0.0" and no_conflicts_enabled:
         pytest.skip("Test cannot run with no-conflicts with sg version < 2.0.0")
 
@@ -235,7 +244,8 @@ def params_from_base_suite_setup(request):
            "sg_platform": sg_platform,
            "sync_gateway_version": sync_gateway_version,
            "sg_ce": sg_ce,
-           "prometheus_enabled": prometheus_enabled
+           "prometheus_enabled": prometheus_enabled,
+           "sg_ssl": sg_ssl
            }
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
@@ -266,6 +276,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     sync_gateway_version = params_from_base_suite_setup["sync_gateway_version"]
     sg_ce = params_from_base_suite_setup["sg_ce"]
     prometheus_enabled = params_from_base_suite_setup["prometheus_enabled"]
+    sg_ssl = params_from_base_suite_setup["sg_ssl"]
 
     test_name = request.node.name
     log_info("Setting up test '{}'".format(test_name))
@@ -277,7 +288,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
            "sg_platform": sg_platform,
            "sync_gateway_version": sync_gateway_version,
            "sg_ce": sg_ce,
-           "prometheus_enabled": prometheus_enabled
+           "prometheus_enabled": prometheus_enabled,
+           "sg_ssl": sg_ssl
            }
 
     # Code after the yeild will execute when each test finishes

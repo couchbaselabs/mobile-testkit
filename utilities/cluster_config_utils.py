@@ -60,7 +60,7 @@ def persist_cluster_config_environment_prop(cluster_config, property_name, value
     if property_name_check is True:
         valid_props = ["cbs_ssl_enabled", "xattrs_enabled", "sg_lb_enabled", "sync_gateway_version", "server_version",
                        "no_conflicts_enabled", "sync_gateway_ssl", "sg_use_views", "number_replicas",
-                       "delta_sync_enabled", "x509_certs"]
+                       "delta_sync_enabled", "x509_certs", "hide_product_version"]
         if property_name not in valid_props:
             raise ProvisioningError("Make sure the property you are trying to change is one of: {}".format(valid_props))
 
@@ -316,5 +316,15 @@ def is_load_balancer_with_two_clusters_enabled(cluster_config):
     cluster = load_cluster_config_json(cluster_config)
     try:
         return cluster["environment"]["two_sg_cluster_lb_enabled"]
+    except KeyError:
+        return False
+
+
+def is_hide_prod_version_enabled(cluster_config):
+    """ Loads cluster config to see if hide_prod_version is enabled """
+
+    cluster = load_cluster_config_json(cluster_config)
+    try:
+        return cluster["environment"]["hide_product_version"]
     except KeyError:
         return False
