@@ -483,7 +483,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
             get_server_version(cbs_ip, cbs_ssl=cbs_ssl)
         except Exception:
             c.reset(sg_config_path=sg_config)
-        sg.restart(config=sg_config, cluster_config=cluster_config)
+        sg.restart(config=sg_config, cluster=c, cluster_config=cluster_config)
 
     if sg_lb:
         # These tests target one SG node

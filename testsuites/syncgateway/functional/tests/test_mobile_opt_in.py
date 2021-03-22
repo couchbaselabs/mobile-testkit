@@ -215,7 +215,8 @@ def test_mobile_opt_in(params_from_base_test_setup, sg_conf_name):
     sg_conf_name = "xattrs/mobile_opt_in_no_import"
     sg_no_import_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     sg_util = SyncGateway()
-    sg_util.start_sync_gateways(cluster_config=cluster_conf, cb_server=cb_server, url=sg_url, config=sg_no_import_conf)
+    # sg_util.start_sync_gateways(cluster_config=cluster_conf, cb_server=cb_server, url=sg_url, config=sg_no_import_conf)
+    sg_util.start_sync_gateways(cluster_config=cluster_conf, url=sg_url, config=sg_no_import_conf)
 
     doc_id8 = 'mobile_opt_in_sg_rewrite_with_importdisabled'
     doc_body = document.create_doc(doc_id=doc_id8, channels=['mobileOptIn'], prop_generator=update_mobile_prop)
