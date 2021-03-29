@@ -4040,9 +4040,10 @@ def test_replication_pull_from_empty_database(params_from_base_test_setup, attac
 
 @pytest.mark.listener
 @pytest.mark.replication
-@pytest.mark.parametrize("num_of_docs, continuous, replication_type" [
-    pytest.param(500, True, "push"),
-    pytest.param(500, True, "pull-push")
+@pytest.mark.parametrize("num_of_docs, continuous, replication_type", [
+    (500, True, 'push')
+    # (500, True, 'pull')
+    # (500, True, 'pull-push')
 ])
 def test_replication_basic_retries(params_from_base_test_setup, num_of_docs, continuous, replication_type):
     """
@@ -4068,7 +4069,8 @@ def test_replication_basic_retries(params_from_base_test_setup, num_of_docs, con
     if sync_gateway_version < "2.0.0":
         pytest.skip('This test cannot run with sg version below 2.0')
     channels_sg = ["ABC"]
-    username = "autotest"
+    import random
+    username = "autotest" + str(random.random())
     password = "password"
 
     # Create CBL database
@@ -4093,7 +4095,7 @@ def test_replication_basic_retries(params_from_base_test_setup, num_of_docs, con
     completed = replicator.getCompleted(repl)
     assert total == completed, "total is not equal to completed"
     # wait until replication is done
-    replicator.wait_until_replicator_idle(repl, max_times=default_sleep*2, sleep_time=60)
+    replicator.wait_until_replicator_idle(repl, max_times=default_sleep*2, sleep_time=30)
     sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)
     sg_docs = sg_docs["rows"]
 
