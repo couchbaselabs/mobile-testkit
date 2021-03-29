@@ -315,7 +315,7 @@ class Replication(object):
             else:
                 break
 
-    def wait_until_replicator_idle(self, repl, err_check=True, max_times=150, sleep_time=2):
+    def wait_until_replicator_idle(self, repl, err_check=True, max_times=150, sleep_time=2, max_timeout=600):
         count = 0
         idle_count = 0
         max_idle_count = 3

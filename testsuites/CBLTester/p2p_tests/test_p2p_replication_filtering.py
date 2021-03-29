@@ -71,7 +71,7 @@ def test_p2p_replication_push_pull_filtering(params_from_base_test_setup, server
     # Now set up client
     repl_config = p2p_client.configure(port=url_listener_port, host=server_host, server_db_name=db_name_server,
                                        client_database=cbl_db_client, continuous=False,
-                                       replication_type="push_pull", endPointType=endpoint_type)
+                                       replication_type=replicator_type, endPointType=endpoint_type)
     replicator.start(repl_config)
     replicator.wait_until_replicator_idle(repl_config)
     total = replicator.getTotal(repl_config)
