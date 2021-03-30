@@ -2,6 +2,7 @@ import os
 import sys
 from flask import Flask
 from optparse import OptionParser
+from flask import render_template
 
 app = Flask(__name__, static_url_path='')
 
@@ -36,7 +37,8 @@ def webhook_filter():
 
 
 if __name__ == '__main__':
-    usage = """ usage: host_sgw_jscode.py --start --stop"""
+
+    usage = """ usage: host_sgw_jscode.py --start --sslstart --stop"""
 
     parser = OptionParser(usage=usage)
 
@@ -48,6 +50,10 @@ if __name__ == '__main__':
                       action="store_true", dest="stop", default=False,
                       help="will stop hosting the jscode")
 
+    parser.add_option("--sslstart",
+                      action="store_true", dest="sslstart", default=False,
+                      help="will start the hosting the jscode")
+
     arg_parameters = sys.argv[1:]
     (opts, args) = parser.parse_args(arg_parameters)
     if opts.start and opts.stop:
@@ -55,7 +61,10 @@ if __name__ == '__main__':
 
     if opts.start:
         app.run(host='0.0.0.0', port=5007)
-    
+
     if opts.stop:
         command = "kill $(ps aux | grep 'host_sgw_jscode.py --start' | awk '{print $2}')"
         os.system(command)
+
+    if opts.sslstart:
+        app.run(host='0.0.0.0', port=5007, ssl_context='adhoc')
