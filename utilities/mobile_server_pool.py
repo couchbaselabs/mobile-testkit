@@ -22,6 +22,7 @@ options = ClusterOptions(PasswordAuthenticator(USERNAME, PASSWORD), timeout_opti
 cluster = Cluster('couchbase://{}'.format(SERVER_IP), options)
 sdk_client = cluster.bucket(BUCKET_NAME)
 
+
 def get_nodes_available_from_mobile_pool(nodes_os_type, node_os_version):
     """
     Get number of nodes available

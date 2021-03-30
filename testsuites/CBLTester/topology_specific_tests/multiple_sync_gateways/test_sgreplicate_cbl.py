@@ -1,3 +1,4 @@
+
 import pytest
 import time
 import os
@@ -15,7 +16,7 @@ from requests.exceptions import HTTPError
 from keywords.utils import host_for_url, log_info, compare_cbl_docs
 from keywords import attachment, document
 from concurrent.futures import ThreadPoolExecutor
-from utilities.cluster_config_utils import copy_sgconf_to_temp, replace_string_on_sgw_config, get_cluster
+from utilities.cluster_config_utils import copy_sgconf_to_temp, replace_string_on_sgw_config
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.couchbaseserver import get_sdk_client_with_bucket
 from libraries.testkit.prometheus import verify_stat_on_prometheus
@@ -2243,15 +2244,6 @@ def test_sg_replicate_doc_resurrection(params_from_base_test_setup, setup_custom
             cbs_bucket = bucket[0]
         else:
             cbs_bucket = bucket[1]
-<<<<<<< HEAD
-        if ssl_enabled and c_cluster.ipv6:
-            connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(cbs_ip, cbs_bucket)
-        elif ssl_enabled and not c_cluster.ipv6:
-            connection_url = "couchbases://{}/{}?ssl=no_verify".format(cbs_ip, cbs_bucket)
-        elif not ssl_enabled and c_cluster.ipv6:
-            connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, cbs_bucket)
-        else:
-            connection_url = 'couchbase://{}/{}'.format(cbs_ip, cbs_bucket)
         sdk_client = get_sdk_client_with_bucket(ssl_enabled, c_cluster, cbs_ip, cbs_bucket)
         sdk_client.remove(random_doc_id)
         sdk_client.upsert(random_doc_id, doc_body)

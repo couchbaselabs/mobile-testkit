@@ -7,7 +7,6 @@ from keywords.utils import log_info, host_for_url
 from keywords.SyncGateway import (SyncGateway)
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.MobileRestClient import MobileRestClient
-from keywords.constants import SDK_TIMEOUT
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop, replace_string_on_sgw_config, copy_sgconf_to_temp
 
 from libraries.testkit.cluster import Cluster

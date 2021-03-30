@@ -7,7 +7,7 @@ from requests.exceptions import ConnectionError, HTTPError, ChunkedEncodingError
 from requests import Session
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 from couchbase.exceptions import CouchbaseException, DocumentNotFoundException
-from couchbase.cluster import QueryIndexManager, PasswordAuthenticator, ClusterTimeoutOptions, ClusterOptions
+from couchbase.cluster import QueryIndexManager, PasswordAuthenticator, ClusterTimeoutOptions, ClusterOptions, Cluster
 import keywords.constants
 from keywords.remoteexecutor import RemoteExecutor
 from keywords.exceptions import CBServerError, ProvisioningError, TimeoutError, RBACUserCreationError
@@ -16,7 +16,6 @@ from keywords.utils import log_r, log_info, log_debug, log_error, hostname_for_u
 from keywords.utils import version_and_build, random_string
 from keywords import types
 from utilities.cluster_config_utils import is_x509_auth, get_cbs_version, is_magma_enabled, is_cbs_ce_enabled, get_cluster
-from keywords.constants import SDK_TIMEOUT
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 
@@ -1087,5 +1086,8 @@ def get_sdk_client_with_bucket(ssl_enabled, cluster, cbs_ip, cbs_bucket):
         connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, cbs_bucket)
     else:
         connection_url = 'couchbase://{}/{}'.format(cbs_ip, cbs_bucket)
-    sdk_client = Bucket(connection_url, password='password', timeout=SDK_TIMEOUT)
+    timeout_options = ClusterTimeoutOptions(kv_timeout=timedelta(seconds=30), query_timeout=timedelta(seconds=600))
+    options = ClusterOptions(PasswordAuthenticator("Administrator", "password"), timeout_options=timeout_options)
+    cluster = Cluster(connection_url, options)
+    sdk_client = cluster.bucket(cbs_bucket)
     return sdk_client

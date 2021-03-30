@@ -19,8 +19,8 @@ from CBLClient.Utils import Utils
 from keywords.TestServerFactory import TestServerFactory
 from keywords.SyncGateway import SyncGateway
 from keywords.constants import RESULTS_DIR
-from keywords.constants import SDK_TIMEOUT
 from libraries.testkit import prometheus
+
 
 def pytest_addoption(parser):
     parser.addoption("--mode",

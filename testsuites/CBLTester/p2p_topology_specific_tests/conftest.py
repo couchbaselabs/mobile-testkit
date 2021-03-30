@@ -534,7 +534,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "sg_ssl": sg_ssl,
         "delta_sync_enabled": delta_sync_enabled,
         "enable_file_logging": enable_file_logging,
-        "liteserv_host_list" : liteserv_host_list
+        "liteserv_host_list": liteserv_host_list
     }
 
     log_info("Tearing down test")

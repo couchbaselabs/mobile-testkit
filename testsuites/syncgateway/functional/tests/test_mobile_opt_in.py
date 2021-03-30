@@ -1,5 +1,4 @@
 
-
 import pytest
 import subprocess
 import time
@@ -286,9 +285,10 @@ def test_non_mobile_ignore_count(params_from_base_test_setup, sg_conf_name):
     sg_client = MobileRestClient()
     cbs_ip = host_for_url(cbs_url)
     if cluster.ipv6:
-        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+        connection_url = 'couchbase://{}/{}?ipv6=allow'.format(cbs_ip, bucket_name)
     else:
-        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+        connection_url = 'couchbase://{}/{}'.format(cbs_ip, bucket_name)
+    sdk_client = get_cluster(connection_url, bucket_name)
 
     # Create user / session
     auto_user_info = UserInfo(name='autotest', password='pass', channels=['mobileOptIn'], roles=[])
