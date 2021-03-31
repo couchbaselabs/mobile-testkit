@@ -318,9 +318,10 @@ def test_webhooks_crud(params_from_base_test_setup, sg_conf_name, filtered):
 @pytest.mark.webhooks
 def test_webhook_filter_external_js(params_from_base_test_setup, setup_webserver):
     """
-    "1. Create valid js function  for import filter in the file which sgw can read
+    "1. Create valid js function  for import filter and host it in local machine to access jscode with http url
     webhook filter : add doc.type if doc has data with webhook filter value, otherwise add doc.type is ignore
-    2. Start sync gateway
+    2. Create sgw config and point the webhook filter jsfunction to the webhook function hosted in the localmachine and can be accessed by http url
+    Start sync gateway
     3. Verify SGW starts sucessfully
     4. create docs in SDK few docs with data as webhook_filter and some without non_webhook_filter data
     5. Verfiy webhook events generated and the docs with webhook filter should have in in the events
@@ -420,9 +421,10 @@ def test_webhook_filter_external_js(params_from_base_test_setup, setup_webserver
 @pytest.mark.webhooks
 def test_webhook_filter_external_https_js(params_from_base_test_setup, setup_webserver_jssslon):
     """
-    "1. Create valid js function  for import filter in the file which sgw can read
+    "1. Create valid js function  for import filter and host it in local machine to access jscode with https url
     webhook filter : add doc.type if doc has data with webhook filter value, otherwise add doc.type is ignore
-    2. Start sync gateway
+    2. Create sgw config and point the webhook filter jsfunction to the webhook function hosted in the localmachine and can be accessed by https url
+    Start sync gateway
     3. Verify SGW starts sucessfully
     4. create docs in SDK few docs with data as webhook_filter and some without non_webhook_filter data
     5. Verfiy webhook events generated and the docs with webhook filter should have in in the events

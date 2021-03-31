@@ -2127,7 +2127,7 @@ def test_sg_replicate_custom_conflict_resolve(params_from_base_test_setup, setup
         }
         return defaultPolicy(conflict);
         }"""
-    
+
     temp_sg_config = update_replication_in_sgw_config(sg_conf_name, sg_mode, repl_remote=sg2.url, repl_remote_db=sg_db2, repl_remote_user=name2, repl_remote_password=password, repl_repl_id=repl_id,
                                                       repl_direction="pushAndPull", repl_conflict_resolution_type="custom", repl_continuous=True, repl_filter_query_params=None, custom_conflict_js_function=custom_conflict_js_function)
     sg1.restart(config=temp_sg_config, cluster_config=cluster_config)
@@ -2135,9 +2135,7 @@ def test_sg_replicate_custom_conflict_resolve(params_from_base_test_setup, setup
     sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id, read_flag=True, write_flag=True)
     # 7. if  local_wins : docs updated on sg1 gets replicated to sg2
     # if  remote_wins : docs updated on sg2 gets replicated to sg1
-
-    
-    # 6. Verify docs created in cbl2
+    # Verify docs created in cbl2
     cbl_doc_ids1 = db.getDocIds(cbl_db1)
     cbl_doc_ids2 = db.getDocIds(cbl_db2)
     cbl_db_docs1 = db.getDocuments(cbl_db1, cbl_doc_ids1)

@@ -74,12 +74,9 @@ def test_local_jsfunc_path(params_from_base_test_setup, sg_conf_name, js_type):
     bucket = cluster.servers[0].get_bucket_names()[0]
     sdk_client = get_sdk_client_with_bucket(ssl_enabled, cluster, cbs_ip, bucket)
     if js_type == "sync_function":
-        # content = "function\(doc, oldDoc\)\{\
-        #            throw\(\{forbidden: \\\"read only!\\\"\}\)\
-        #            }"
-        content = """function(doc, oldDoc){
-                    throw({forbidden: "read only!"})
-                }"""
+        content = "function\(doc, oldDoc\)\{\
+                    throw\(\{forbidden: \\\"read only!\\\"\}\)\
+                    }"
         js_func_key = "\"sync\":\""
     elif js_type == "import_filter":
         content = "function\(doc\)\{ return doc.type == \\\"mobile\\\"\}"
@@ -154,7 +151,6 @@ def test_local_jsfunc_path(params_from_base_test_setup, sg_conf_name, js_type):
 
 @pytest.mark.syncgateway
 @pytest.mark.sync
-@pytest.mark.oscertify
 @pytest.mark.parametrize("invalid_js_code, invalid_jsfile_path", [
     (True, False),
     (False, True)
@@ -191,6 +187,7 @@ def test_invalid_jsfunc(params_from_base_test_setup, invalid_js_code, invalid_js
     sg_ip = cluster.sync_gateways[0].ip
 
     if invalid_js_code:
+        # having additional semicolons for function(doc)
         content = "function\(doc, oldDoc\;\;\)\{\
                 throw\(\{forbidden: \\\"read only!\\\"\}\)\
                 }"
@@ -198,12 +195,13 @@ def test_invalid_jsfunc(params_from_base_test_setup, invalid_js_code, invalid_js
         content = "function\(doc, oldDoc\)\{\
                 throw\(\{forbidden: \\\"read only!\\\"\}\)\
                 }"
+    file_name = "jsfile.js"
     if invalid_jsfile_path:
-        file_name = "jsfile2.js"
-    else:
-        file_name = "jsfile.js"
+        invalid_file_name = "jsfile2.js"
     path = create_files_with_content(content, sg_platform, sg_ip, file_name, cluster_config)
     path = "\"sync\":\"" + path + "\","
+    if invalid_jsfile_path:
+        path = path.replace(file_name, invalid_file_name)
     temp_sg_config, _ = copy_sgconf_to_temp(sg_conf, mode)
     temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ replace_with_js }}", path)
     cluster.reset(sg_config_path=temp_sg_config)
@@ -323,10 +321,9 @@ def test_invalid_external_jspath(params_from_base_test_setup, setup_jsserver):
 
 @pytest.mark.syncgateway
 @pytest.mark.sync
-@pytest.mark.oscertify
 @pytest.mark.parametrize("sg_conf_name, default_values, filter_type", [
     ("custom_sync/sync_gateway_externalize_js", False, "sync_function"),
-    ("custom_sync/sync_gateway_externalize_js", True, "import_filter"),
+    pytest.param("custom_sync/sync_gateway_externalize_js", True, "import_filter", marks=pytest.mark.oscertify)
 ])
 def test_envVariables_on_sgw_config(params_from_base_test_setup, setup_env_variables, sg_conf_name, default_values, filter_type):
     """
@@ -379,7 +376,8 @@ def test_envVariables_on_sgw_config(params_from_base_test_setup, setup_env_varia
     else:
         environment_string = """[Service]
         Environment="bucketuser=""" + bucket_names[0] + """"
-        Environment="jsfunc=""" + js_content
+        Environment="jsfunc=""" + js_content + """"
+        """
 
     environment_file = os.path.abspath(ENVIRONMENT_FILE)
     environmentFileWriter = open(environment_file, "w")
@@ -474,7 +472,6 @@ def test_envVariables_on_sgw_config(params_from_base_test_setup, setup_env_varia
 
 @pytest.mark.syncgateway
 @pytest.mark.sync
-@pytest.mark.oscertify
 @pytest.mark.parametrize("sg_conf_name", [
     "custom_sync/sync_gateway_externalize_js"
 ])
@@ -507,12 +504,16 @@ def test_envVariables_withoutvalues(params_from_base_test_setup, sg_conf_name):
     db_resp = admin.get_db_config(sg_db)
     # if environment variables are not set, it should set to empty value on the config
     assert db_resp['sync'] == "", "Sync gateway service getting wrong environment variables"
-    assert db_resp['username'] == "", "Sync gateway service getting wrong environment variables"
+    try:
+        db_resp['username']
+        assert db_resp['username'] == "", "Sync gateway service getting wrong environment variables"
+        assert False, "username is still showing up though there is no environment variable defined"
+    except KeyError as ex:
+        assert True, "Got expected key error"
 
 
 @pytest.mark.syncgateway
 @pytest.mark.sync
-@pytest.mark.oscertify
 def test_jscode_envvariables_path(params_from_base_test_setup, setup_env_variables):
     """
     This test is combination of expternal jscode(local file) with environment varibles set up
@@ -566,7 +567,8 @@ def test_jscode_envvariables_path(params_from_base_test_setup, setup_env_variabl
         """
     else:
         environment_string = """[Service]
-        Environment="tempjs=""" + tempjs
+        Environment="tempjs=""" + tempjs + """"
+        """
 
     environment_file = os.path.abspath(ENVIRONMENT_FILE)
     environmentFileWriter = open(environment_file, "w")

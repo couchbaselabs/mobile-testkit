@@ -2,7 +2,6 @@ import os
 import sys
 from flask import Flask
 from optparse import OptionParser
-from flask import render_template
 
 app = Flask(__name__, static_url_path='')
 
