@@ -23,6 +23,7 @@ from keywords.couchbaseserver import get_sdk_client_with_bucket
 from libraries.provision.ansible_runner import AnsibleRunner
 from keywords.constants import ENVIRONMENT_FILE
 from libraries.testkit.admin import Admin
+# from concurrent.futures import ProcessPoolExecutor
 
 
 @pytest.mark.syncgateway
@@ -66,13 +67,14 @@ def test_local_jsfunc_path(params_from_base_test_setup, sg_conf_name, js_type):
 
     cluster = Cluster(config=cluster_config)
 
-    sg_ip = cluster.sync_gateways[0].ip
+    # sg_ip = cluster.sync_gateways[0].ip
+    sg_hostname = cluster.sync_gateways[0].hostname
 
     # Create and set up sdk client
     cbs_ip = cluster.servers[0].host
     bucket = cluster.servers[0].get_bucket_names()[0]
     sdk_client = get_sdk_client_with_bucket(ssl_enabled, cluster, cbs_ip, bucket)
-    if sg_platform == "windows":
+    """if sg_platform == "windows":
         if js_type == "sync_function":
             content = "function\(doc, oldDoc\)\{throw\(\{forbidden: \"read only!\" \}\)\}"
             js_func_key = "\"sync\":\""
@@ -88,8 +90,32 @@ def test_local_jsfunc_path(params_from_base_test_setup, sg_conf_name, js_type):
         elif js_type == "import_filter":
             content = "function\(doc\)\{ return doc.type == \\\"mobile\\\"\}"
             js_func_key = "\"import_filter\":\""
+    """
+    if js_type == "sync_function":
+        content = """function(doc, oldDoc){throw({forbidden: "read only!" })}"""
+        js_func_key = "\"sync\":\""
+    elif js_type == "import_filter":
+        content = """function(doc){ return doc.type == "mobile" }"""
+        js_func_key = "\"import_filter\":\""
     file_name = "jsfile.js"
-    path = create_files_with_content(content, sg_platform, sg_ip, file_name, cluster_config)
+    path = create_files_with_content(content, sg_platform, sg_hostname, file_name, cluster_config)
+    """path = "/tmp/" + file_name
+    if sg_platform == "windows":
+        path = "C:\\\\tmp\\\\" + file_name
+
+    environment_file = os.path.abspath(ENVIRONMENT_FILE)
+    environmentFileWriter = open(environment_file, "w")
+    environmentFileWriter.write(content)
+    environmentFileWriter.close()
+    playbook_vars = {
+        "file_to_copy": environment_file,
+        "destination_file": file_name
+    }
+    ansible_runner.run_ansible_playbook(
+        "copy_files_to_nodes.yml",
+        extra_vars=playbook_vars,
+        subset=sg_hostname
+    ) """
     path = js_func_key + path + "\","
     temp_sg_config, _ = copy_sgconf_to_temp(sg_conf, mode)
     temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ replace_with_js }}", path)
@@ -191,24 +217,22 @@ def test_invalid_jsfunc(params_from_base_test_setup, invalid_js_code, invalid_js
     channel = ["sgw-env-var"]
     sg_client = MobileRestClient()
     cluster = Cluster(config=cluster_config)
-    sg_ip = cluster.sync_gateways[0].ip
+    # sg_ip = cluster.sync_gateways[0].ip
+    sg_hostname = cluster.sync_gateways[0].hostname
 
     if invalid_js_code:
         # having additional semicolons for function(doc)
-        content = "function\(doc, oldDoc\;\;\)\{\
-                throw\(\{forbidden: \\\"read only!\\\"\}\)\
-                }"
+        content = """function(doc, oldDoc;;){throw({forbidden: "read only!" })}"""
     else:
-        content = "function\(doc, oldDoc\)\{\
-                throw\(\{forbidden: \\\"read only!\\\"\}\)\
-                }"
+        content = """function(doc, oldDoc){throw({forbidden: "read only!" })}"""
     file_name = "jsfile.js"
     if invalid_jsfile_path:
         invalid_file_name = "jsfile2.js"
-    path = create_files_with_content(content, sg_platform, sg_ip, file_name, cluster_config)
+    path = create_files_with_content(content, sg_platform, sg_hostname, file_name, cluster_config)
     path = "\"sync\":\"" + path + "\","
     if invalid_jsfile_path:
         path = path.replace(file_name, invalid_file_name)
+
     temp_sg_config, _ = copy_sgconf_to_temp(sg_conf, mode)
     temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ replace_with_js }}", path)
     cluster.reset(sg_config_path=temp_sg_config)
@@ -287,6 +311,16 @@ def test_invalid_external_jspath(params_from_base_test_setup, setup_jsserver):
     path = js_func_key + path + "\","
     temp_sg_config, _ = copy_sgconf_to_temp(sg_conf, mode)
     temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ replace_with_js }}", path)
+    with ProcessPoolExecutor() as mp:
+        sgrestart = mp.submit(sg.restart, temp_sg_config, cluster_config)
+        print("waiting for 60 seconds")
+        print(time.time())
+        time.sleep(60)
+        print("after 60 seconds")
+        print(time.time())
+    sgrestart.result(timeout=120)
+
+    """ """
     Stop = Event()
     p = Thread(target=sg.restart, args=(temp_sg_config, cluster_config))
     p.start()
@@ -305,7 +339,7 @@ def test_invalid_external_jspath(params_from_base_test_setup, setup_jsserver):
     Stop.set()
     print(time.time())
     # If thread is still active
-    """ """
+
     if p.is_alive():
         print("running... let's kill it...")
 
@@ -322,7 +356,6 @@ def test_invalid_external_jspath(params_from_base_test_setup, setup_jsserver):
     except ConnectionError:
         log_info("Expected to have sync gateway fail to start")
     # assert False, "sync gateway started successfully with invalid jscode path"
-
 """
 
 
@@ -560,8 +593,7 @@ def test_jscode_envvariables_path(params_from_base_test_setup, setup_env_variabl
     sg_client = MobileRestClient()
 
     cluster = Cluster(config=cluster_config)
-
-    sg_ip = cluster.sync_gateways[0].ip
+    sg_hostname = cluster.sync_gateways[0].hostname
     # Set up environment variables
     tempjs = "jsfile.js"
     tempjs_str = "$tempjs"
@@ -593,10 +625,14 @@ def test_jscode_envvariables_path(params_from_base_test_setup, setup_env_variabl
     cbs_ip = cluster.servers[0].host
     bucket = cluster.servers[0].get_bucket_names()[0]
     sdk_client = get_sdk_client_with_bucket(ssl_enabled, cluster, cbs_ip, bucket)
-    content = "function\(doc\)\{ return doc.type == \\\"mobile\\\"\}"
+    # content = "function\(doc\)\{ return doc.type == \\\"mobile\\\"\}"
+    content = """function(doc, oldDoc){throw({forbidden: "read only!" })}"""
     js_func_key = "\"import_filter\":\""
     file_name = "jsfile.js"
-    path = create_files_with_content(content, sg_platform, sg_ip, file_name, cluster_config)
+    path = "/tmp/" + file_name
+    if sg_platform == "windows":
+        path = "C:\\\\tmp\\\\" + file_name
+    path = create_files_with_content(content, sg_platform, sg_hostname, file_name, cluster_config)
     path = js_func_key + path + "\","
     sgw_config_js_path = path.replace(file_name, tempjs_str)
     temp_sg_config, _ = copy_sgconf_to_temp(sg_conf, mode)
