@@ -285,9 +285,9 @@ def test_non_mobile_ignore_count(params_from_base_test_setup, sg_conf_name):
     sg_client = MobileRestClient()
     cbs_ip = host_for_url(cbs_url)
     if cluster.ipv6:
-        connection_url = 'couchbase://{}/{}?ipv6=allow'.format(cbs_ip, bucket_name)
+        connection_url = 'couchbase://{}?ipv6=allow'.format(cbs_ip)
     else:
-        connection_url = 'couchbase://{}/{}'.format(cbs_ip, bucket_name)
+        connection_url = 'couchbase://{}'.format(cbs_ip)
     sdk_client = get_cluster(connection_url, bucket_name)
 
     # Create user / session
