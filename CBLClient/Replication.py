@@ -351,7 +351,7 @@ class Replication(object):
                 if err is not None and err != 'nil' and err != -1:
                     if not isContinous:
                         raise Exception("Error while replicating", err)
-                    if is_replicator_in_connection_retry(err) and (cur_timestamp - begin_timestamp) < 600:
+                    if is_replicator_in_connection_retry(err) and (cur_timestamp - begin_timestamp) < max_timeout:
                         log_info("Replicator connection is retrying, please wait ......")
                     else:
                         raise Exception("Error while replicating", err)

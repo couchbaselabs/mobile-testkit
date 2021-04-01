@@ -1078,10 +1078,10 @@ def test_default_conflict_scenario_highRevGeneration_wins(params_from_base_test_
 @pytest.mark.p2p
 @pytest.mark.listener
 @pytest.mark.parametrize("num_of_docs, continuous, replicator_type, endPointType", [
-    (100, True, "push", "MessageEndPoint"),
+    # (100, True, "push", "MessageEndPoint"),
     # pytest.param(10, True, "push_pull", "MessageEndPoint", marks=pytest.mark.sanity),
     #(10, True, "push_pull", "URLEndPoint"),
-    #(100, True, "push", "URLEndPoint"),
+    (100, True, "push", "URLEndPoint"),
 ])
 def test_peer_to_peer_with_server_down(params_from_base_test_setup, server_setup, num_of_docs, continuous, replicator_type, endPointType):
     """
@@ -1243,8 +1243,9 @@ def test_peer_to_peer_url_retries(params_from_base_test_setup, url_listener_setu
         1. Create docs on client & Server.
         2. Start the server.
         3. Start replication from client.
-        4. Verify replication is completed.
-        5. Verify all docs got replicated on server
+        4. Restart the server
+        5. Verify replication is completed.
+        6. Verify all docs got replicated on server
     """
     host_list = params_from_base_test_setup["host_list"]
     db_obj_list = params_from_base_test_setup["db_obj_list"]
@@ -1273,7 +1274,7 @@ def test_peer_to_peer_url_retries(params_from_base_test_setup, url_listener_setu
 
     # # Now set up client
     # repl = peerToPeer_client.configure(port=url_listener_port, host=server_host, server_db_name=db_name_server,
-    #                                    client_database=cbl_db_client, continuous=continuous, retries=3,
+    #                                    client_database=cbl_db_client, continuous=continuous, retries=20,
     #                                    replication_type=replicator_type, endPointType=endPointType, max_timeout=10)
     repl = peerToPeer_client.configure(port=url_listener_port, host=server_host, server_db_name=db_name_server,
                                        client_database=cbl_db_client, continuous=continuous,
@@ -1286,7 +1287,6 @@ def test_peer_to_peer_url_retries(params_from_base_test_setup, url_listener_setu
     time.sleep(5)
     print("starting again")
     url_listener = peer_to_peer_server.server_start(cbl_db_server, url_listener_port)
-    time.sleep(5)
     print(peer_to_peer_server.get_url_listener_port(url_listener))
     print("connecting", url_listener)
     time.sleep(5)
