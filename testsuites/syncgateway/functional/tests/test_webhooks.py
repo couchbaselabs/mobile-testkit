@@ -316,6 +316,7 @@ def test_webhooks_crud(params_from_base_test_setup, sg_conf_name, filtered):
 
 @pytest.mark.syncgateway
 @pytest.mark.webhooks
+@pytest.mark.oscertify
 def test_webhook_filter_external_js(params_from_base_test_setup, setup_webserver):
     """
     "1. Create valid js function  for import filter and host it in local machine to access jscode with http url
@@ -503,7 +504,7 @@ def test_webhook_filter_external_https_js(params_from_base_test_setup, setup_web
     sdk_client.upsert_multi(sdk_docs)
 
     count = 0
-    retries = 5
+    retries = 10
     while count < retries:
         data = webhook_server.get_data()
         # Remove unwanted data from the response

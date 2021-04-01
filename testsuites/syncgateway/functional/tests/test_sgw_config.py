@@ -27,9 +27,8 @@ from libraries.testkit.admin import Admin
 
 @pytest.mark.syncgateway
 @pytest.mark.sync
-@pytest.mark.oscertify
 @pytest.mark.parametrize("sg_conf_name, js_type", [
-    ("custom_sync/sync_gateway_externalize_js", "sync_function"),
+    pytest.param("custom_sync/sync_gateway_externalize_js", "sync_function", marks=pytest.mark.oscertify),
     ("custom_sync/sync_gateway_externalize_js", "import_filter")
 ])
 def test_local_jsfunc_path(params_from_base_test_setup, sg_conf_name, js_type):
@@ -73,14 +72,22 @@ def test_local_jsfunc_path(params_from_base_test_setup, sg_conf_name, js_type):
     cbs_ip = cluster.servers[0].host
     bucket = cluster.servers[0].get_bucket_names()[0]
     sdk_client = get_sdk_client_with_bucket(ssl_enabled, cluster, cbs_ip, bucket)
-    if js_type == "sync_function":
-        content = "function\(doc, oldDoc\)\{\
-                    throw\(\{forbidden: \\\"read only!\\\"\}\)\
-                    }"
-        js_func_key = "\"sync\":\""
-    elif js_type == "import_filter":
-        content = "function\(doc\)\{ return doc.type == \\\"mobile\\\"\}"
-        js_func_key = "\"import_filter\":\""
+    if sg_platform == "windows":
+        if js_type == "sync_function":
+            content = "function\(doc, oldDoc\)\{throw\(\{forbidden: \"read only!\" \}\)\}"
+            js_func_key = "\"sync\":\""
+        elif js_type == "import_filter":
+            content = "function\(doc\)\{ return doc.type == \\\"mobile\\\" \}"
+            js_func_key = "\"import_filter\":\""
+    else:
+        if js_type == "sync_function":
+            content = "function\(doc, oldDoc\)\{\
+                        throw\(\{forbidden: \\\"read only!\\\"\}\)\
+                        \}"
+            js_func_key = "\"sync\":\""
+        elif js_type == "import_filter":
+            content = "function\(doc\)\{ return doc.type == \\\"mobile\\\"\}"
+            js_func_key = "\"import_filter\":\""
     file_name = "jsfile.js"
     path = create_files_with_content(content, sg_platform, sg_ip, file_name, cluster_config)
     path = js_func_key + path + "\","
@@ -366,7 +373,7 @@ def test_envVariables_on_sgw_config(params_from_base_test_setup, setup_env_varia
         jsfunc = "\"import_filter\":" + "\"$jsfunc\","
 
     if sg_platform == "windows":
-        environment_string = """[String[]] $v = @("bucketuser=""" + bucket_names[0] + """", "jsfunc=\"""" + js_content + """\")
+        environment_string = """[String[]] $v = @("bucketuser=""" + bucket_names[0] + """", "jsfunc=""" + js_content + """\")
         Set-ItemProperty HKLM:SYSTEM\CurrentControlSet\Services\SyncGateway -Name Environment -Value $v
         """
     elif sg_platform == "macos":
