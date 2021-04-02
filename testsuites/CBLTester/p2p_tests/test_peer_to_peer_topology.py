@@ -4,6 +4,7 @@ from CBLClient.Replication import Replication
 from CBLClient.PeerToPeer import PeerToPeer
 
 
+@pytest.mark.p2p
 @pytest.mark.listener
 @pytest.mark.parametrize("num_of_docs, continuous, replicator_type, attachments, endPointType", [
     (10, True, "push_pull", False, "URLEndPoint"),
@@ -187,6 +188,7 @@ def test_peer_to_peer_mesh_topology(params_from_base_test_setup, server_setup, n
     assert peer2_docs == peer3_docs, "Number of docs is not equivalent to number of docs in peer3 "
 
 
+@pytest.mark.p2p
 @pytest.mark.listener
 @pytest.mark.parametrize("num_of_docs, continuous, replicator_type, attachments, endPointType", [
     (10, True, "push_pull", False, "URLEndPoint"),

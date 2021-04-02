@@ -7,6 +7,7 @@ from CBLClient.PeerToPeer import PeerToPeer
 from keywords.utils import get_event_changes, meet_supported_version
 
 
+@pytest.mark.p2p
 @pytest.mark.listener
 @pytest.mark.parametrize("num_of_docs, continuous, replicator_type, attachments, endpoint_type", [
     (10, True, "push_pull", False, "URLEndPoint"),
@@ -112,6 +113,7 @@ def test_peer_to_peer_replication_eventing_valid_values(params_from_base_test_se
         peer_to_peer_server.server_stop(replicator_tcp_listener, endpoint_type)
 
 
+@pytest.mark.p2p
 @pytest.mark.listener
 @pytest.mark.parametrize("num_of_docs, endpoint_type", [
     (10, "URLEndPoint"),
@@ -206,6 +208,7 @@ def test_peer_to_peer_push_replication_error_event(params_from_base_test_setup, 
         peer_to_peer_server.server_stop(replicator_tcp_listener, endpoint_type)
 
 
+@pytest.mark.p2p
 @pytest.mark.listener
 @pytest.mark.parametrize("num_of_docs, endpoint_type", [
     (10, "URLEndPoint"),

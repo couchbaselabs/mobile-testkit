@@ -448,7 +448,6 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll(params_from_ba
 
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
-    sg_platform = params_from_base_test_setup["sg_platform"]
 
     if mode == "di":
         pytest.skip("Offline tests not supported in Di mode -- see https://github.com/couchbase/sync_gateway/issues/2423#issuecomment-300841425")
@@ -473,14 +472,9 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll(params_from_ba
     with concurrent.futures.ThreadPoolExecutor(max_workers=libraries.testkit.settings.MAX_REQUEST_WORKERS) as executor:
         futures = dict()
         futures[executor.submit(seth.start_longpoll_changes_tracking, termination_doc_id=None)] = "polling"
-        #  For windows, request is too slow, so have _offline request to start before creating docs
-        if sg_platform == "windows":
-            futures[executor.submit(sg_client.take_db_offline, cluster_conf, "db")] = "db_offline_task"
         time.sleep(5)
         futures[executor.submit(doc_pusher.add_docs, num_docs, bulk)] = "docs_push"
-        if sg_platform != "windows":
-            futures[executor.submit(sg_client.take_db_offline, cluster_conf, "db")] = "db_offline_task"
-
+        futures[executor.submit(sg_client.take_db_offline, cluster_conf, "db")] = "db_offline_task"
         for future in concurrent.futures.as_completed(futures):
             task_name = futures[future]
 
@@ -531,7 +525,6 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll(params_from_ba
     status = sg_client.bring_db_online(cluster_conf=cluster_conf, db="db")
     assert status == 0
 
-    #
     # Get all docs that have been pushed
     # Verify that changes returns all of them
     all_docs = doc_pusher.get_all_docs()

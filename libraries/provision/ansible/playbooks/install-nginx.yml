@@ -5,6 +5,10 @@
   vars:
     upstream_sync_gatways:
     upstream_sync_gatways_admin:
+    keepalive_timeout: "keepalive_timeout 600s;"
+    proxy_send_timeout: "proxy_send_timeout 600s;"
+    proxy_read_timeout: "proxy_read_timeout 600s;"
+    proxy_socket_keepalive: "proxy_socket_keepalive off;"
 
   tasks:
   - name: NGINX | Stop nginx service
