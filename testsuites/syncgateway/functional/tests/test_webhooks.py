@@ -340,17 +340,13 @@ def test_webhook_filter_external_js(params_from_base_test_setup, setup_webserver
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     cluster_helper = ClusterKeywords(cluster_config)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config)
-    sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
     sg_url = cluster_hosts["sync_gateways"][0]["public"]
-    username = "autotest"
-    password = "password"
     sg_db = "db"
     channel = ["sgw-env-var"]
     sdk_non_webhook = "sdk_non_webhook"
     sdk_webhook = "sdk_webhook"
     sdk_webhook_docs = 7
     sdk_non_webhook_docs = 4
-    sg_client = MobileRestClient()
 
     cluster = Cluster(config=cluster_config)
 
@@ -379,9 +375,6 @@ def test_webhook_filter_external_js(params_from_base_test_setup, setup_webserver
     log_info("Using sg_url_admin: {}".format(sg_url_admin))
     log_info("Using sg_db: {}".format(sg_db))
     log_info("Using bucket: {}".format(bucket))
-
-    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channel)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
 
     # webhook_filter verification
     def update_webhook_prop():
@@ -420,7 +413,7 @@ def test_webhook_filter_external_js(params_from_base_test_setup, setup_webserver
 
 @pytest.mark.syncgateway
 @pytest.mark.webhooks
-def test_webhook_filter_external_https_js(params_from_base_test_setup, setup_webserver_jssslon):
+def test_webhook_filter_external_https_js(params_from_base_test_setup, setup_webserver_js_sslon):
     """
     "1. Create valid js function  for import filter and host it in local machine to access jscode with https url
     webhook filter : add doc.type if doc has data with webhook filter value, otherwise add doc.type is ignore
@@ -428,14 +421,14 @@ def test_webhook_filter_external_https_js(params_from_base_test_setup, setup_web
     Start sync gateway
     3. Verify SGW starts sucessfully
     4. create docs in SDK few docs with data as webhook_filter and some without non_webhook_filter data
-    5. Verfiy webhook events generated and the docs with webhook filter should have in in the events
+    5. Verify webhook events generated and the docs with webhook filter should have in in the events
     """
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
-    webhook_server = setup_webserver_jssslon["webhook_server"]
+    webhook_server = setup_webserver_js_sslon["webhook_server"]
     sg_conf_name = "webhooks/webhook_filter_external_js"
 
     if sync_gateway_version < "3.0.0":
@@ -443,17 +436,13 @@ def test_webhook_filter_external_https_js(params_from_base_test_setup, setup_web
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     cluster_helper = ClusterKeywords(cluster_config)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config)
-    sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
     sg_url = cluster_hosts["sync_gateways"][0]["public"]
-    username = "autotest"
-    password = "password"
     sg_db = "db"
     channel = ["sgw-env-var"]
     sdk_non_webhook = "sdk_non_webhook"
     sdk_webhook = "sdk_webhook"
     sdk_webhook_docs = 7
     sdk_non_webhook_docs = 4
-    sg_client = MobileRestClient()
 
     cluster = Cluster(config=cluster_config)
 
@@ -482,10 +471,6 @@ def test_webhook_filter_external_https_js(params_from_base_test_setup, setup_web
     log_info("Using sg_url_admin: {}".format(sg_url_admin))
     log_info("Using sg_db: {}".format(sg_db))
     log_info("Using bucket: {}".format(bucket))
-
-    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channel)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
-    # user_session = cookie, session_id
 
     # webhook_filter verification
     def update_webhook_prop():
@@ -535,7 +520,7 @@ def setup_webserver():
 
 
 @pytest.fixture(scope="function")
-def setup_webserver_jssslon():
+def setup_webserver_js_sslon():
     webhook_server = WebServer()
     process = subprocess.Popen(args=["nohup", "python", "libraries/utilities/host_sgw_jscode.py", "--sslstart", "&"], stdout=subprocess.PIPE)
     yield{
