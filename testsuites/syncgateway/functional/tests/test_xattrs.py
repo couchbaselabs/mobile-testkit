@@ -1175,7 +1175,7 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
         # update the updates property for every doc
         for _, v in list(docs.items()):
             print(v['content']['updates'])
-            v['content']['updates'] += 1
+            v['content']['updates'] = 1 + v['content']['updates']
 
         # Push the updated batch to Couchbase Server
         # for k, v in sdk_docs.items():
