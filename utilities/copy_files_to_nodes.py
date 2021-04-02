@@ -1,7 +1,6 @@
+import os
 from keywords.constants import ENVIRONMENT_FILE
 from libraries.provision.ansible_runner import AnsibleRunner
-# import subprocess
-import os
 
 
 def create_files_with_content(content, sg_platform, sg_hostname, file_name, cluster_conf, path=None):

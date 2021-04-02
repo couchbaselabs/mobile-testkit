@@ -2,10 +2,7 @@ import pytest
 import time
 import os
 import requests
-# import multiprocessing
 import subprocess
-# from threading import Thread
-# from threading import Event
 from requests.exceptions import HTTPError
 
 from keywords.utils import log_info, get_local_ip
