@@ -133,7 +133,7 @@ def test_syncgateway_with_customPort_couchbaseServer(params_from_base_test_setup
 
 @pytest.mark.syncgateway
 @pytest.mark.server
-def test_sgw_server_et_alternative_address(params_from_base_test_setup):
+def test_sgw_server_et_alternative_address(params_from_base_test_setup, setup_alternative_address):
     """
         @summary:
         1.Assign an alternate address on the server and ports
@@ -147,23 +147,13 @@ def test_sgw_server_et_alternative_address(params_from_base_test_setup):
     cluster_topology = params_from_base_test_setup["cluster_topology"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+    cluster = setup_alternative_address["cluster"]
+    cluster_conf = setup_alternative_address["cluster_config"]
 
-    cb_ip_series = "10.63.34.4"
     sg_client = MobileRestClient()
     sg_db = 'db'
 
-    cluster_conf = params_from_base_test_setup["cluster_config"]
-    cluster = Cluster(config=cluster_conf)
-
     cluster.reset(sg_config_path=sg_conf)
-    i = 0
-    for server in cluster.servers:
-        i = i + 1
-        command = "curl -v -X PUT -u Administrator:password "\
-            "{}/node/controller/setupAlternateAddresses/external "\
-            "-d hostname={}{} -d mgmt=8091 -d kv=11210 -d mgmtSSL=18091 -d kvSSL=11207 -d n1ql=8093 -d n1qlSSL=18093 -d capi=8092 -d capiSSL=18092".format(server.url, cb_ip_series, i)
-        os.system(command)
-
     sg_helper = SyncGateway()
     with open("{}.json".format(cluster_conf)) as f:
         cluster_json = json.loads(f.read())
@@ -197,3 +187,28 @@ def test_sgw_server_et_alternative_address(params_from_base_test_setup):
             else:
                 time.sleep(1)
     assert expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"] == 1, "import_count is not incremented"
+
+
+@pytest.fixture(scope="function")
+def setup_alternative_address(params_from_base_test_setup):
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    cluster = Cluster(config=cluster_config)
+    cb_ip_series = "10.63.34.4"
+
+    i = 0
+    for server in cluster.servers:
+        i = i + 1
+        command = "curl -v -X PUT -u Administrator:password "\
+            "{}/node/controller/setupAlternateAddresses/external "\
+            "-d hostname={}{} -d mgmt=8091 -d kv=11210 -d mgmtSSL=18091 -d kvSSL=11207 -d n1ql=8093 -d n1qlSSL=18093 -d capi=8092 -d capiSSL=18092".format(server.url, cb_ip_series, i)
+        os.system(command)
+    yield{
+        "cluster_config": cluster_config,
+        "cluster": cluster
+    }
+
+    for server in cluster.servers:
+        i = i + 1
+        command = "curl -v -X DELETE -u Administrator:password "\
+            "{}/node/controller/setupAlternateAddresses/external ".format(server.url, cb_ip_series, i)
+        os.system(command)
