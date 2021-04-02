@@ -8,6 +8,7 @@ from CBLClient.BasicAuthenticator import BasicAuthenticator
 from CBLClient.ListenerAuthenticator import ListenerAuthenticator
 
 
+@pytest.mark.p2p
 @pytest.mark.listener
 @pytest.mark.parametrize("num_of_docs, continuous, replicator_type, endPointType", [
     (10, True, "push_pull", "URLEndPoint"),
@@ -71,6 +72,7 @@ def test_peer_to_peer_with_basic_auth(params_from_base_test_setup, server_setup,
     peer_to_peer_server.server_stop(replicator_tcp_listener, endPointType)
 
 
+@pytest.mark.p2p
 @pytest.mark.listener
 @pytest.mark.parametrize("continuous, replicator_type, endPointType", [
     (True, "push_pull", "URLEndPoint")

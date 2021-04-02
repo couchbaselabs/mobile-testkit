@@ -5,6 +5,7 @@ from CBLClient.Replication import Replication
 from CBLClient.PeerToPeer import PeerToPeer
 
 
+@pytest.mark.p2p
 @pytest.mark.listener
 @pytest.mark.parametrize("continuous, replicator_type, endPointType, with_certs", [
     (True, "push_pull", "URLEndPoint", True),

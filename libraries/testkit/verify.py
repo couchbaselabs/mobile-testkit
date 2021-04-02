@@ -152,10 +152,8 @@ def verify_changes(users, expected_num_docs, expected_num_revisions, expected_do
         raise Exception("Make sure 'expected_docs' is a dictionary")
 
     for user in user_list:
-
         changes = user.get_changes(include_docs=True)
         results = changes["results"]
-
         changes_results = list()
         for result in results:
             changes_result = dict()
@@ -164,7 +162,6 @@ def verify_changes(users, expected_num_docs, expected_num_revisions, expected_do
                 changes_result["rev"] = result["doc"]["_rev"]
                 changes_result["updates"] = result["doc"]["updates"]
                 changes_results.append(changes_result)
-
         # Check expected_num_docs matches number of changes results
         if expected_num_docs != len(changes_results):
             log_error("{0} -> {1} expected_num_docs != {2} len(changes_results)".format(user.name, expected_num_docs, len(changes_results)))
@@ -184,7 +181,6 @@ def verify_changes(users, expected_num_docs, expected_num_revisions, expected_do
                     log_info("Duplicate id {}".format(i))
 
             errors["unexpected_changes_length"] += 1
-
         # Check number of expected num docs matched number of expected doc ids
         if expected_num_docs != len(expected_docs):
             log_error("{0} -> {1} expected_num_docs != {2} len(expected_docs)".format(user.name, expected_num_docs, len(expected_docs)))
@@ -247,7 +243,6 @@ def verify_changes(users, expected_num_docs, expected_num_revisions, expected_do
             if expected_num_revisions != result["updates"]:
                 log_error("{0} -> expected_num_revisions {1} does not match number of updates {2}".format(user.name, expected_num_revisions, result["updates"]))
                 errors["unexpected_num_updates"] += 1
-
         # Allow printing updates even if changes feed length is 0
         if len(changes_results) == 0:
             updates = 0
