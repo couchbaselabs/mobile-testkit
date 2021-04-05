@@ -128,22 +128,22 @@ def test_sync_access_sanity(params_from_base_test_setup, sg_conf_name, x509_cert
     cluster.reset(sg_config_path=sg_conf)
     admin = Admin(cluster.sync_gateways[0])
 
-    seth = admin.register_user(target=cluster.sync_gateways[0], db="db", name="seth", password="password")
+    mobile_user = admin.register_user(target=cluster.sync_gateways[0], db="db", name="mobile", password="password")
 
     # Push some ABC docs
     abc_doc_pusher = admin.register_user(target=cluster.sync_gateways[0], db="db", name="abc_doc_pusher", password="password", channels=["ABC"])
     abc_doc_pusher.add_docs(num_docs)
 
-    # Create access doc pusher and grant access Seth to ABC channel
+    # Create access doc pusher and grant access Mobile user to ABC channel
     access_doc_pusher = admin.register_user(target=cluster.sync_gateways[0], db="db", name="access_doc_pusher", password="password", channels=["access"])
     access_doc_pusher.add_doc(doc_id="access_doc", content={"grant_access": "true"})
 
     # Allow docs to backfill
     time.sleep(5)
 
-    verify_changes(seth, expected_num_docs=num_docs, expected_num_revisions=0, expected_docs=abc_doc_pusher.cache)
+    verify_changes(mobile_user, expected_num_docs=num_docs, expected_num_revisions=0, expected_docs=abc_doc_pusher.cache)
 
-    # Remove seth from ABC
+    # Remove mobile user from ABC
     access_doc_pusher.update_doc(doc_id="access_doc", content={"grant_access": "false"})
 
     # Push more ABC docs
@@ -151,8 +151,8 @@ def test_sync_access_sanity(params_from_base_test_setup, sg_conf_name, x509_cert
 
     time.sleep(10)
 
-    # Verify seth sees no abc_docs
-    verify_changes(seth, expected_num_docs=0, expected_num_revisions=0, expected_docs={})
+    # Verify mobile user sees no abc_docs
+    verify_changes(mobile_user, expected_num_docs=0, expected_num_revisions=0, expected_docs={})
 
 
 @pytest.mark.syncgateway

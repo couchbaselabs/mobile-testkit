@@ -2,6 +2,8 @@ import pytest
 import time
 import os
 import random
+import subprocess
+
 
 from keywords.MobileRestClient import MobileRestClient
 from CBLClient.Database import Database
@@ -12,7 +14,7 @@ from keywords.SyncGateway import sync_gateway_config_path_for_mode, SyncGateway,
 from libraries.testkit import cluster
 from libraries.testkit.admin import Admin
 from requests.exceptions import HTTPError
-from keywords.utils import host_for_url, log_info, compare_cbl_docs
+from keywords.utils import host_for_url, log_info, compare_cbl_docs, get_local_ip
 from keywords import attachment, document
 from concurrent.futures import ThreadPoolExecutor
 from utilities.cluster_config_utils import copy_sgconf_to_temp, replace_string_on_sgw_config
@@ -2059,10 +2061,11 @@ def test_sg_replicate_non_default_conflict_resolver(params_from_base_test_setup,
 @pytest.mark.topospecific
 @pytest.mark.syncgateway
 @pytest.mark.sgreplicate
-@pytest.mark.parametrize("custom_conflict_type", [
-    ("merge")
+@pytest.mark.parametrize("custom_conflict_type, external_js", [
+    ("merge", False),
+    ("merge", True)
 ])
-def test_sg_replicate_custom_conflict_resolve(params_from_base_test_setup, setup_customized_teardown_test, custom_conflict_type):
+def test_sg_replicate_custom_conflict_resolve(params_from_base_test_setup, setup_customized_teardown_test, setup_jsserver, custom_conflict_type, external_js):
     '''
        @summary
        Covered for #45
@@ -2113,14 +2116,18 @@ def test_sg_replicate_custom_conflict_resolve(params_from_base_test_setup, setup
 
     # Add merge js function to sgw config
     repl_id = "replication1"
-    custom_conflict_js_function = """function (conflict) {
-    if (conflict.LocalDocument.priority > conflict.RemoteDocument.priority) {
-        return conflict.LocalDocument;
-    } else if (conflict.LocalDocument.priority < conflict.RemoteDocument.priority) {
-        return conflict.RemoteDocument;
-    }
-    return defaultPolicy(conflict);
-}"""
+    if external_js:
+        custom_conflict_js_function = "http://{}:5007/conflictResolver".format(get_local_ip())
+    else:
+        custom_conflict_js_function = """function (conflict) {
+        if (conflict.LocalDocument.priority > conflict.RemoteDocument.priority) {
+            return conflict.LocalDocument;
+        } else if (conflict.LocalDocument.priority < conflict.RemoteDocument.priority) {
+            return conflict.RemoteDocument;
+        }
+        return defaultPolicy(conflict);
+        }"""
+
     temp_sg_config = update_replication_in_sgw_config(sg_conf_name, sg_mode, repl_remote=sg2.url, repl_remote_db=sg_db2, repl_remote_user=name2, repl_remote_password=password, repl_repl_id=repl_id,
                                                       repl_direction="pushAndPull", repl_conflict_resolution_type="custom", repl_continuous=True, repl_filter_query_params=None, custom_conflict_js_function=custom_conflict_js_function)
     sg1.restart(config=temp_sg_config, cluster_config=cluster_config)
@@ -2128,8 +2135,7 @@ def test_sg_replicate_custom_conflict_resolve(params_from_base_test_setup, setup
     sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id, read_flag=True, write_flag=True)
     # 7. if  local_wins : docs updated on sg1 gets replicated to sg2
     # if  remote_wins : docs updated on sg2 gets replicated to sg1
-
-    # 6. Verify docs created in cbl2
+    # Verify docs created in cbl2
     cbl_doc_ids1 = db.getDocIds(cbl_db1)
     cbl_doc_ids2 = db.getDocIds(cbl_db2)
     cbl_db_docs1 = db.getDocuments(cbl_db1, cbl_doc_ids1)
@@ -2300,3 +2306,12 @@ def create_sguser_cbl_authenticator(base_url, sg_admin_url, sg_db, name, passwor
     session = cookie, session_id
     replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
     return replicator_authenticator, session
+
+
+@pytest.fixture(scope="function")
+def setup_jsserver():
+    process = subprocess.Popen(args=["nohup", "python", "libraries/utilities/host_sgw_jscode.py", "--start", "&"], stdout=subprocess.PIPE)
+    yield{
+        "process": process
+    }
+    process.kill()

@@ -1,0 +1,8 @@
+# Remove env variables on on Mac
+- name: SYNC GATEWAY | replace setenv to unsetenv in env_file
+  become: yes
+  shell: sed 's/setenv/unsetenv/g' /Users/{{ ansible_user }}/test_env_file.sh > /Users/{{ ansible_user }}/test_unsetenv_file.sh
+
+- name: SYNC GATEWAY | run the shell script to unset env variables
+  become: yes
+  shell: sh /Users/{{ ansible_user }}/test_unsetenv_file.sh
