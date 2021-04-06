@@ -97,7 +97,7 @@ class PeerToPeer(object):
                   replication_type=None, documentIDs=None, endPointType="MessageEndPoint", basic_auth=None,
                   push_filter=False, pull_filter=False, filter_callback_func='', conflict_resolver="", tls_disable=True,
                   tls_auth_type="tls", tls_authenticator=False, server_verification_mode=False, retries=None,
-                  max_timeout=None):
+                  max_timeout_interval=None):
         args = Args()
         args.setString("host", host)
         args.setInt("port", port)
@@ -123,8 +123,8 @@ class PeerToPeer(object):
             args.setBoolean("tls_disable", tls_disable)
         if retries is not None:
             args.setBoolean("max_retries", retries)
-        if max_timeout is not None:
-            args.setBoolean("max_timeout", max_timeout)
+        if max_timeout_interval is not None:
+            args.setBoolean("max_timeout", max_timeout_interval)
 
         args.setString("tls_auth_type", tls_auth_type)
         args.setBoolean("tls_authenticator", tls_authenticator)
