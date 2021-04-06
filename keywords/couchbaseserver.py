@@ -1079,13 +1079,13 @@ class CouchbaseServer:
 
 def get_sdk_client_with_bucket(ssl_enabled, cluster, cbs_ip, cbs_bucket):
     if ssl_enabled and cluster.ipv6:
-        connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(cbs_ip, cbs_bucket)
+        connection_url = "couchbases://{}?ssl=no_verify&ipv6=allow".format(cbs_ip)
     elif ssl_enabled and not cluster.ipv6:
-        connection_url = "couchbases://{}/{}?ssl=no_verify".format(cbs_ip, cbs_bucket)
+        connection_url = "couchbases://{}?ssl=no_verify".format(cbs_ip)
     elif not ssl_enabled and cluster.ipv6:
-        connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, cbs_bucket)
+        connection_url = "couchbase://{}?ipv6=allow".format(cbs_ip)
     else:
-        connection_url = 'couchbase://{}/{}'.format(cbs_ip, cbs_bucket)
+        connection_url = 'couchbase://{}'.format(cbs_ip)
     timeout_options = ClusterTimeoutOptions(kv_timeout=timedelta(seconds=30), query_timeout=timedelta(seconds=600))
     options = ClusterOptions(PasswordAuthenticator("Administrator", "password"), timeout_options=timeout_options)
     cluster = Cluster(connection_url, options)
