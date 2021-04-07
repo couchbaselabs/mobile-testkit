@@ -1,4 +1,4 @@
-ansible==2.7
+ansible==2.7.17
 appdirs==1.4.3
 asn1crypto==0.22.0
 astroid==1.4.8
