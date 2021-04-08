@@ -2251,13 +2251,13 @@ def test_sg_replicate_doc_resurrection(params_from_base_test_setup, setup_custom
             cbs_bucket = bucket[1]
         sdk_client = get_sdk_client_with_bucket(ssl_enabled, c_cluster, cbs_ip, cbs_bucket)
         sdk_client.remove(random_doc_id)
+        time.sleep(6)
         sdk_client.upsert(random_doc_id, doc_body)
 
     print("random doc id is ", random_doc_id)
     replicator.wait_until_replicator_idle(repl1)
     sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id_1, read_flag=read_flag, write_flag=write_flag)
     replicator.wait_until_replicator_idle(repl2)
-    time.sleep(120)
     cbl_doc_ids2 = db.getDocIds(cbl_db2)
     cbl_doc_ids1 = db.getDocIds(cbl_db1)
     compare_cbl_docs(db, cbl_db1, cbl_db2)
