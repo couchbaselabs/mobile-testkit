@@ -7,6 +7,7 @@ from keywords.utils import random_string, log_info
 from testsuites.CBLTester.CBL_Functional_tests.TestSetup_FunctionalTests.test_delta_sync import property_updater
 
 
+@pytest.mark.p2p
 @pytest.mark.listener
 @pytest.mark.custom_conflict
 @pytest.mark.replication
@@ -134,6 +135,7 @@ def test_p2p_local_wins_custom_conflicts(params_from_base_test_setup, server_set
         peer_to_peer_server.server_stop(replicator_tcp_listener, endpoint_type)
 
 
+@pytest.mark.p2p
 @pytest.mark.listener
 @pytest.mark.custom_conflict
 @pytest.mark.replication
@@ -247,6 +249,7 @@ def test_p2p_remote_wins_custom_conflicts(params_from_base_test_setup, server_se
         peer_to_peer_server.server_stop(replicator_tcp_listener, endpoint_type)
 
 
+@pytest.mark.p2p
 @pytest.mark.listener
 @pytest.mark.custom_conflict
 @pytest.mark.replication
@@ -375,6 +378,7 @@ def test_p2p_merge_wins_custom_conflicts(params_from_base_test_setup, server_set
         peer_to_peer_server.server_stop(replicator_tcp_listener, endpoint_type)
 
 
+@pytest.mark.p2p
 @pytest.mark.listener
 @pytest.mark.custom_conflict
 @pytest.mark.replication
