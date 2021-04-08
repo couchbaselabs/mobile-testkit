@@ -127,7 +127,7 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="delta-sync: Enable delta-sync for sync gateway")
 
-    parser.addoption("--enable_cbs_developer_preview",
+    parser.addoption("--enable-cbs-developer-preview",
                      action="store_true",
                      help="Enabling CBS developer preview",
                      default=False)
@@ -166,7 +166,7 @@ def params_from_base_suite_setup(request):
     delta_sync_enabled = request.config.getoption("--delta-sync")
     enable_encryption = request.config.getoption("--enable-encryption")
     encryption_password = request.config.getoption("--encryption-password")
-    enable_cbs_developer_preview = request.config.getoption("--enable_cbs_developer_preview")
+    enable_cbs_developer_preview = request.config.getoption("--enable-cbs-developer-preview")
 
     liteserv_host_list = liteserv_host.split(',')
     liteserv_ports = liteserv_port.split(',')

@@ -126,7 +126,7 @@ def pytest_addoption(parser):
                      help="Hides SGW product version when you hit SGW url",
                      default=False)
 
-    parser.addoption("--enable_cbs_developer_preview",
+    parser.addoption("--enable-cbs-developer-preview",
                      action="store_true",
                      help="Enabling CBS developer preview",
                      default=False)

@@ -131,7 +131,7 @@ def pytest_addoption(parser):
                      help="Hides SGW product version when you hit SGW url",
                      default=False)
 
-    parser.addoption("--enable_cbs_developer_preview",
+    parser.addoption("--enable-cbs-developer-preview",
                      action="store_true",
                      help="Enabling CBS developer preview",
                      default=False)
@@ -172,7 +172,7 @@ def params_from_base_suite_setup(request):
     second_liteserv_host = request.config.getoption("--second-liteserv-host")
     second_liteserv_version = request.config.getoption("--second-liteserv-version")
     second_liteserv_platform = request.config.getoption("--second-liteserv-platform")
-    enable_cbs_developer_preview = request.config.getoption("--enable_cbs_developer_preview")
+    enable_cbs_developer_preview = request.config.getoption("--enable-cbs-developer-preview")
 
     test_name = request.node.name
     if enable_upgrade_app:

@@ -46,7 +46,7 @@ def params_from_base_suite_setup(request):
     magma_storage_enabled = request.config.getoption("--magma-storage")
     prometheus_enabled = request.config.getoption("--prometheus-enable")
     hide_product_version = request.config.getoption("--hide-product-version")
-    enable_cbs_developer_preview = request.config.getoption("--enable_cbs_developer_preview")
+    enable_cbs_developer_preview = request.config.getoption("--enable-cbs-developer-preview")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
