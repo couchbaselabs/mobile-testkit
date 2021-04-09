@@ -1178,11 +1178,11 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
             v['content']['updates'] = 1 + v['content']['updates']
 
         # Push the updated batch to Couchbase Server
-        for k, v in docs.items():
-            print(k, v)
-            time.sleep(3)
-            print(sdk_client.upsert(k, v))
-            print("upsert" * 10)
+        # for k, v in docs.items():
+        #     print(k, v)
+        #     time.sleep(3)
+        #     print(sdk_client.upsert(k, v))
+        #     print("upsert" * 10)
 
         print(sdk_client.upsert_multi(docs))
         time.sleep(13)
@@ -1235,7 +1235,7 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
     all_docs_from_sdk = sdk_client.get_multi(all_doc_ids)
     assert len(all_docs_from_sdk) == number_docs_per_client * 2
     for doc_id, value in list(all_docs_from_sdk.items()):
-        assert '_sync' not in value.value
+        assert '_sync' not in value.content
         assert value.value['content']['updates'] == number_updates + 1
 
     # Delete the sync gateway docs
