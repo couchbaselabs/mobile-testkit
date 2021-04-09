@@ -124,11 +124,17 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="delta-sync: Enable delta-sync for sync gateway")
 
+    parser.addoption("--enable-cbs-developer-preview",
+                     action="store_true",
+                     help="Enabling CBS developer preview",
+                     default=False)
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
 # This setup will be called once for all tests in the
 # testsuites/CBLTester/topology_sync_gateways/multiple_sync_gateways directory
+
+
 @pytest.fixture(scope="session")
 def params_from_base_suite_setup(request):
     liteserv_platform = request.config.getoption("--liteserv-platform")
@@ -155,9 +161,10 @@ def params_from_base_suite_setup(request):
     number_replicas = request.config.getoption("--number-replicas")
     enable_file_logging = request.config.getoption("--enable-file-logging")
     delta_sync_enabled = request.config.getoption("--delta-sync")
-
     enable_encryption = request.config.getoption("--enable-encryption")
     encryption_password = request.config.getoption("--encryption-password")
+    enable_cbs_developer_preview = request.config.getoption("--enable-cbs-developer-preview")
+
     liteserv_host_list = liteserv_host.split(',')
     liteserv_ports = liteserv_port.split(',')
     testserver = TestServerFactory.create(platform=liteserv_platform,
@@ -249,6 +256,13 @@ def params_from_base_suite_setup(request):
     else:
         log_info("Running without delta sync")
         persist_cluster_config_environment_prop(cluster_config, 'delta_sync_enabled', False)
+
+    if enable_cbs_developer_preview:
+        log_info("Enable CBS developer preview")
+        persist_cluster_config_environment_prop(cluster_config, 'cbs_developer_preview', True)
+    else:
+        log_info("Running without CBS developer preview")
+        persist_cluster_config_environment_prop(cluster_config, 'cbs_developer_preview', False)
 
     # As cblite jobs run with on Centos platform, adding by default centos to environment config
     persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "centos", False)

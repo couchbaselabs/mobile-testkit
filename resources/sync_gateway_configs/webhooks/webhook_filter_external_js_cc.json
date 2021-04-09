@@ -1,13 +1,10 @@
 {
     "interface":":4984",
     "adminInterface": "0.0.0.0:4985",
-    "maxIncomingConnections": 0,
-    "maxFileDescriptors": 90000,
-    "compressResponses": false,
-    {{ logging }}
-    {{ hide_product_version }}
     {{ sslcert }}
     {{ sslkey }}
+    {{ logging }}
+    {{ hide_product_version }}
     "databases":{
         "db":{
             {{ autoimport }}
@@ -21,16 +18,22 @@
             {{ certpath }}
             {{ keypath }}
             {{ delta_sync }}
+            "unsupported": {
+                "remote_config_tls_skip_verify": true
+            },
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket",
-            "sync":
-            `function(doc, oldDoc){
-                if (doc.content && doc.content.grant_access == "true") {
-                    access("mobile", "ABC")
-                }
-                channel(doc.channels);
-            }`
+            "event_handlers": {
+               "document_changed":[{
+                    "handler": "webhook",
+                    {{ webhook_filter }}
+                    "url": "http://{{ webhook_ip }}:8080"
+                }],
+               "db_state_changed":[{
+                   "handler":"webhook",
+                   "url":"http://{{ webhook_ip }}:8080"
+                }]
+            }
         }
     }
 }
-

@@ -198,16 +198,32 @@ class CouchbaseServer:
                 break
             count += 1
             time.sleep(60)
-
         query_url = self.url.replace("8091", "8093")
         del_pdstmt_query_data = {"statement": "delete from system:prepareds"}
         verify_pdstmt_query_data = {"statement": "select * from system:prepareds"}
         resp = self._session.post("{}/query/service".format(query_url), data=del_pdstmt_query_data)
         resp_obj = resp.json()
+        # add verification to make sure all indexes cleared by checking system indexes
+        del_indexstmt_query_data = {"statement": "delete from system:indexes"}
+        verify_indexstmt_query_data = {"statement": "select * from system:indexes"}
+        resp = self._session.post("{}/query/service".format(query_url), data=del_indexstmt_query_data)
+        resp_obj = resp.json()
 
         count = 0
         while count < 5:
             resp = self._session.post("{}/query/service".format(query_url), data=verify_pdstmt_query_data)
+            resp_obj = resp.json()
+            status = resp_obj["status"]
+            result_count = resp_obj["metrics"]["resultCount"]
+            if status == "success":
+                if result_count == 0:
+                    break
+                count += 1
+                time.sleep(15)
+
+        count = 0
+        while count < 5:
+            resp = self._session.post("{}/query/service".format(query_url), data=verify_indexstmt_query_data)
             resp_obj = resp.json()
             status = resp_obj["status"]
             result_count = resp_obj["metrics"]["resultCount"]
