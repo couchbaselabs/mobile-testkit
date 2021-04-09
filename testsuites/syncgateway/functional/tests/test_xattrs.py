@@ -1236,7 +1236,7 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
     assert len(all_docs_from_sdk) == number_docs_per_client * 2
     for doc_id, value in list(all_docs_from_sdk.items()):
         assert '_sync' not in value.content
-        assert value.value['content']['updates'] == number_updates + 1
+        assert value.content['content']['updates'] == number_updates + 1
 
     # Delete the sync gateway docs
     log_info("Deleting 'sg_*' docs from Sync Gateway  ...")
