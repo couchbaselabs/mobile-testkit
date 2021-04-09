@@ -367,8 +367,14 @@ def params_from_base_suite_setup(request):
             logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=request.node.name)
             raise
 
-    # Create CBL databases on all devices
+    # update sgw urls to meet the runtime settings
+    cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
+    sg_url = cluster_topology["sync_gateways"][0]["public"]
+    log_info("sg_url: {}".format(sg_url))
     sg_admin_url = cluster_topology["sync_gateways"][0]["admin"]
+    log_info("sg_admin_url: {}".format(sg_admin_url))
+
+    # Create CBL databases on all devices
     db_name_list = []
     cbl_db_list = []
     db_obj_list = []
