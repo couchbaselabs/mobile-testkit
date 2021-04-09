@@ -172,6 +172,12 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="Hides SGW product version when you hit SGW url",
                      default=False)
+
+    parser.addoption("--enable-cbs-developer-preview",
+                     action="store_true",
+                     help="Enabling CBS developer preview",
+                     default=False)
+
 # This will get called once before the first test that
 # runs with this as input parameters in this file
 # This setup will be called once for all tests in the
@@ -215,6 +221,7 @@ def params_from_base_suite_setup(request):
     enable_encryption = request.config.getoption("--enable-encryption")
     encryption_password = request.config.getoption("--encryption-password")
     hide_product_version = request.config.getoption("--hide-product-version")
+    enable_cbs_developer_preview = request.config.getoption("--enable-cbs-developer-preview")
 
     test_name = request.node.name
 
@@ -350,6 +357,13 @@ def params_from_base_suite_setup(request):
     else:
         log_info("Running without suppress SGW product Version")
         persist_cluster_config_environment_prop(cluster_config, 'hide_product_version', False)
+
+    if enable_cbs_developer_preview:
+        log_info("Enable CBS developer preview")
+        persist_cluster_config_environment_prop(cluster_config, 'cbs_developer_preview', True)
+    else:
+        log_info("Running without CBS developer preview")
+        persist_cluster_config_environment_prop(cluster_config, 'cbs_developer_preview', False)
 
     # As cblite jobs run with on Centos platform, adding by default centos to environment config
     persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "centos", False)
