@@ -1180,7 +1180,12 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
         # Push the updated batch to Couchbase Server
         for k, v in docs.items():
             print(k, v)
-            sdk_client.upsert(k, v)
+            time.sleep(3)
+            print(sdk_client.upsert(k, v))
+            print("upsert" * 10)
+
+        print(sdk_client.upsert_multi(docs))
+        time.sleep(13)
 
         # Get docs from Sync Gateway
         sg_docs_to_update, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=sg_doc_ids, auth=seth_session)
