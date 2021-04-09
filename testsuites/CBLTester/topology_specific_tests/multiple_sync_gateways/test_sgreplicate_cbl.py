@@ -2164,7 +2164,7 @@ def test_sg_replicate_doc_resurrection(params_from_base_test_setup, setup_custom
        1.Have 2 sgw nodes , have cbl on each SGW
        2. Add docs in cbl1
        3. Do push replication to from cbl1 to sg1 cbl -> sg1
-       4. pull/push/push_pull replication from sg1 -> sg2 with one shot replication
+       4. pull/push/push_pull replication from sg1 -> sg2 with continuous replication
        5. Do push-pull replication from sg2 -> cbl2
        6. Delete the doc on cbl1/sdk(data-bucket) and recreate the doc with same doc id
        7. Start new push_pull replication from sg1 -> sg2
@@ -2251,10 +2251,13 @@ def test_sg_replicate_doc_resurrection(params_from_base_test_setup, setup_custom
             cbs_bucket = bucket[1]
         sdk_client = get_sdk_client_with_bucket(ssl_enabled, c_cluster, cbs_ip, cbs_bucket)
         sdk_client.remove(random_doc_id)
+        replicator.wait_until_replicator_idle(repl1)
+        sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id_1, read_flag=read_flag, write_flag=write_flag)
+        replicator.wait_until_replicator_idle(repl2)
         sdk_client.upsert(random_doc_id, doc_body)
 
     replicator.wait_until_replicator_idle(repl1)
-    sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id_1, write_flag=write_flag)
+    sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id_1, read_flag=read_flag, write_flag=write_flag)
     replicator.wait_until_replicator_idle(repl2)
     cbl_doc_ids2 = db.getDocIds(cbl_db2)
     cbl_doc_ids1 = db.getDocIds(cbl_db1)
