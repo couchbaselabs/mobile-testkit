@@ -191,6 +191,7 @@ def pytest_addoption(parser):
                      help="Enabling CBS developer preview",
                      default=False)
 
+
 # This will get called once before the first test that
 # runs with this as input parameters in this file
 # This setup will be called once for all tests in the
@@ -289,6 +290,12 @@ def params_from_base_suite_setup(request):
     target_admin_url = "ws://{}:4985/{}".format(sg_ip, sg_db)
     persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', False)
 
+    if sg_ssl:
+        log_info("Enabling SSL on sync gateway")
+        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', True)
+        target_url = "wss://{}:4984/{}".format(sg_ip, sg_db)
+        target_admin_url = "wss://{}:4985/{}".format(sg_ip, sg_db)
+
     try:
         server_version
     except NameError:
@@ -348,12 +355,6 @@ def params_from_base_suite_setup(request):
     # As cblite jobs run with on Centos platform, adding by default centos to environment config
     persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "centos", False)
 
-    if sg_ssl:
-        log_info("Enabling SSL on sync gateway")
-        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', True)
-        target_url = "wss://{}:4984/{}".format(sg_ip, sg_db)
-        target_admin_url = "wss://{}:4985/{}".format(sg_ip, sg_db)
-
     if enable_cbs_developer_preview:
         log_info("Enable CBS developer preview")
         persist_cluster_config_environment_prop(cluster_config, 'cbs_developer_preview', True)
@@ -380,10 +381,11 @@ def params_from_base_suite_setup(request):
             raise
 
     # update sgw urls to meet the runtime settings
-    cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
-    sg_url = cluster_topology["sync_gateways"][0]["public"]
+    cluster_helper = ClusterKeywords(cluster_config)
+    cluster_hosts = cluster_helper.get_cluster_topology(cluster_config=cluster_config)
+    sg_url = cluster_hosts["sync_gateways"][0]["public"]
     log_info("sg_url: {}".format(sg_url))
-    sg_admin_url = cluster_topology["sync_gateways"][0]["admin"]
+    sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
     log_info("sg_admin_url: {}".format(sg_admin_url))
 
     # Create CBL databases on all devices
