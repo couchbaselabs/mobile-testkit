@@ -186,6 +186,10 @@ def pytest_addoption(parser):
                      help="Hides SGW product version when you hit SGW url",
                      default=False)
 
+    parser.addoption("--enable-cbs-developer-preview",
+                     action="store_true",
+                     help="Enabling CBS developer preview",
+                     default=False)
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -239,6 +243,7 @@ def params_from_base_suite_setup(request):
     num_of_docs_to_add = int(request.config.getoption("--num-of-docs-to-add"))
     hide_product_version = request.config.getoption("--hide-product-version")
     up_time = int(request.config.getoption("--up-time"))
+    enable_cbs_developer_preview = request.config.getoption("--enable-cbs-developer-preview")
     # Changing up_time in days
     up_time = up_time * 24 * 60
     repl_status_check_sleep_time = int(request.config.getoption("--repl-status-check-sleep-time"))
@@ -348,6 +353,13 @@ def params_from_base_suite_setup(request):
         persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', True)
         target_url = "wss://{}:4984/{}".format(sg_ip, sg_db)
         target_admin_url = "wss://{}:4985/{}".format(sg_ip, sg_db)
+
+    if enable_cbs_developer_preview:
+        log_info("Enable CBS developer preview")
+        persist_cluster_config_environment_prop(cluster_config, 'cbs_developer_preview', True)
+    else:
+        log_info("Running without CBS developer preview")
+        persist_cluster_config_environment_prop(cluster_config, 'cbs_developer_preview', False)
 
     if sync_gateway_version < "2.0":
         pytest.skip('Does not work with sg < 2.0 , so skipping the test')
