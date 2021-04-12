@@ -43,9 +43,12 @@ def test_local_jsfunc_path(params_from_base_test_setup, sg_conf_name, js_type):
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     sg_platform = params_from_base_test_setup["sg_platform"]
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+    xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
 
     if sync_gateway_version < "3.0.0":
         pytest.skip("this feature not available below 3.0.0")
+    if not xattrs_enabled and js_type == "import_filter":
+        pytest.skip("Test require --xattrs flag")
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     cluster_helper = ClusterKeywords(cluster_config)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config)
@@ -294,9 +297,13 @@ def test_envVariables_on_sgw_config(params_from_base_test_setup, setup_env_varia
     cluster = setup_env_variables["cluster"]
     ansible_runner = setup_env_variables["ansible_runner"]
     sg_hostname = setup_env_variables["sg_hostname"]
+    xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
 
     if sync_gateway_version < "3.0.0":
         pytest.skip("this feature not available below 3.0.0")
+
+    if not xattrs_enabled and filter_type == "import_filter":
+        pytest.skip("Test require --xattrs flag")
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     cluster_helper = ClusterKeywords(cluster_config)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config)
@@ -487,10 +494,11 @@ def test_jscode_envvariables_path(params_from_base_test_setup, setup_env_variabl
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
     ansible_runner = setup_env_variables["ansible_runner"]
     sg_hostname = setup_env_variables["sg_hostname"]
+    xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
     sg_conf_name = "custom_sync/sync_gateway_externalize_js"
 
-    if sync_gateway_version < "3.0.0":
-        pytest.skip("this feature not available below 3.0.0")
+    if sync_gateway_version < "3.0.0" or not xattrs_enabled:
+        pytest.skip("this feature not available below 3.0.0 or xattrs not enabled")
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     cluster_helper = ClusterKeywords(cluster_config)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config)
