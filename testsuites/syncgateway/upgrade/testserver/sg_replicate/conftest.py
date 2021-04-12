@@ -166,6 +166,11 @@ def pytest_addoption(parser):
                      help="Hides SGW product version when you hit SGW url",
                      default=False)
 
+    parser.addoption("--enable-cbs-developer-preview",
+                     action="store_true",
+                     help="Enabling CBS developer preview",
+                     default=False)
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -214,6 +219,7 @@ def params_from_base_suite_setup(request):
     no_conflicts_enabled = request.config.getoption("--no-conflicts")
     upgraded_no_conflicts_enabled = request.config.getoption("--upgraded-no-conflicts")
     hide_product_version = request.config.getoption("--hide-product-version")
+    enable_cbs_developer_preview = request.config.getoption("--enable-cbs-developer-preview")
     test_name = request.node.name
 
     log_info("mode: {}".format(mode))
@@ -249,6 +255,7 @@ def params_from_base_suite_setup(request):
     log_info("no_conflicts_enabled: {}".format(no_conflicts_enabled))
     log_info("upgraded_no_conflicts_enabled: {}".format(upgraded_no_conflicts_enabled))
     log_info("hide_product_version: {}".format(hide_product_version))
+    log_info("enable_cbs_developer_preview: {}".format(enable_cbs_developer_preview))
 
     # if xattrs is specified but the post upgrade SG version doesn't support, don't continue
     if upgraded_xattrs_enabled and version_is_binary(sync_gateway_upgraded_version):
@@ -382,6 +389,13 @@ def params_from_base_suite_setup(request):
     else:
         log_info("Running without suppress SGW product Version")
         persist_cluster_config_environment_prop(cluster_config, 'hide_product_version', False)
+
+    if enable_cbs_developer_preview:
+        log_info("Enable CBS developer preview")
+        persist_cluster_config_environment_prop(cluster_config, 'cbs_developer_preview', True)
+    else:
+        log_info("Running without CBS developer preview")
+        persist_cluster_config_environment_prop(cluster_config, 'cbs_developer_preview', False)
 
     persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "centos", False)
 
