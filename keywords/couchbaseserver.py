@@ -1101,7 +1101,7 @@ def get_sdk_client_with_bucket(ssl_enabled, cluster, cbs_ip, cbs_bucket):
         connection_url = "couchbase://{}?ipv6=allow".format(cbs_ip)
     else:
         connection_url = 'couchbase://{}'.format(cbs_ip)
-    timeout_options = ClusterTimeoutOptions(kv_timeout=timedelta(seconds=30), query_timeout=timedelta(seconds=600))
+    timeout_options = ClusterTimeoutOptions(kv_timeout=timedelta(seconds=30), query_timeout=timedelta(seconds=100))
     options = ClusterOptions(PasswordAuthenticator("Administrator", "password"), timeout_options=timeout_options)
     cluster = Cluster(connection_url, options)
     sdk_client = cluster.bucket(cbs_bucket)
