@@ -352,7 +352,7 @@ def server_setup(params_from_base_test_setup):
     cbl_db_server = cbl_db_list[0]
     peer_to_peer_listener = PeerToPeer(base_url_server)
     # Need to start and stop listener, if test fails in the middle listener will not be closed.
-    message_url_tcp_listener = peer_to_peer_listener.message_listener_start(cbl_db_server)
+    message_url_tcp_listener = peer_to_peer_listener.message_listener_start(cbl_db_server, 5000)
     log_info("Message listener/server/passive peer starting .....")
     yield {
         "base_url_list": base_url_list,
