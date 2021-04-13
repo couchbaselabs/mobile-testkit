@@ -480,7 +480,6 @@ class CouchbaseServer:
             self._create_internal_rbac_bucket_user(name, cluster_config=cluster_config)
 
         # Create client an retry until KeyNotFound error is thrown
-        time.sleep(65)
         try:
             if self.cbs_ssl and ipv6:
                 connection_url = "couchbases://{}?ssl=no_verify&ipv6=allow".format(self.host)
@@ -543,7 +542,7 @@ class CouchbaseServer:
             connection_url = "couchbase://{}?ipv6=allow".format(self.host)
         else:
             connection_url = "couchbase://{}".format(self.host)
-        timeout_options = ClusterTimeoutOptions(kv_timeout=timedelta(seconds=30), query_timeout=timedelta(seconds=600))
+        timeout_options = ClusterTimeoutOptions(kv_timeout=timedelta(seconds=30), query_timeout=timedelta(seconds=100))
         options = ClusterOptions(PasswordAuthenticator("Administrator", "password"), timeout_options=timeout_options)
         cluster = Cluster(connection_url, options)
         bucket_obj = cluster.bucket(bucket)
