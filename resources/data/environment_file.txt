@@ -1,0 +1,1 @@
+function(doc, oldDoc){throw({forbidden: "read only!" })}

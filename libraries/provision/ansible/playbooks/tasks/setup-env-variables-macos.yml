@@ -1,0 +1,16 @@
+# Setting up env variables on sync gateway hosts
+- name: SYNC GATEWAY | copying environment file for service on macos
+  become: yes
+  template: src={{ environment_file }} dest=/Users/{{ ansible_user }}/test_env_file.sh
+
+- name: SYNC GATEWAY | source the environmentfile
+  become: yes
+  shell: launchctl unload /Library/LaunchDaemons/com.couchbase.mobile.sync_gateway.plist
+
+- name: SYNC GATEWAY | source the environmentfile
+  become: yes
+  shell: sh /Users/{{ ansible_user }}/test_env_file.sh
+
+- name: SYNC GATEWAY | source the environmentfile
+  become: yes
+  shell: launchctl load /Library/LaunchDaemons/com.couchbase.mobile.sync_gateway.plist

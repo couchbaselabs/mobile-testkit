@@ -5,8 +5,7 @@ import zipfile
 import os
 import io
 
-from utilities.cluster_config_utils import persist_cluster_config_environment_prop
-from keywords.constants import SDK_TIMEOUT
+from utilities.cluster_config_utils import persist_cluster_config_environment_prop, get_cluster
 from keywords.utils import log_info
 from keywords.utils import host_for_url, clear_resources_pngs
 from keywords.ClusterKeywords import ClusterKeywords
@@ -32,8 +31,6 @@ from CBLClient.SessionAuthenticator import SessionAuthenticator
 from CBLClient.Utils import Utils
 from CBLClient.ReplicatorConfiguration import ReplicatorConfiguration
 from utilities.cluster_config_utils import get_load_balancer_ip
-from couchbase.bucket import Bucket
-from couchbase.n1ql import N1QLQuery
 from libraries.testkit import prometheus
 
 
@@ -172,12 +169,17 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="Hides SGW product version when you hit SGW url",
                      default=False)
+
+    parser.addoption("--enable-cbs-developer-preview",
+                     action="store_true",
+                     help="Enabling CBS developer preview",
+                     default=False)
+
+
 # This will get called once before the first test that
 # runs with this as input parameters in this file
 # This setup will be called once for all tests in the
 # testsuites/CBLTester/CBL_Functional_tests/ directory
-
-
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
 @pytest.fixture(scope="session")
 def params_from_base_suite_setup(request):
@@ -215,6 +217,7 @@ def params_from_base_suite_setup(request):
     enable_encryption = request.config.getoption("--enable-encryption")
     encryption_password = request.config.getoption("--encryption-password")
     hide_product_version = request.config.getoption("--hide-product-version")
+    enable_cbs_developer_preview = request.config.getoption("--enable-cbs-developer-preview")
 
     test_name = request.node.name
 
@@ -351,6 +354,13 @@ def params_from_base_suite_setup(request):
         log_info("Running without suppress SGW product Version")
         persist_cluster_config_environment_prop(cluster_config, 'hide_product_version', False)
 
+    if enable_cbs_developer_preview:
+        log_info("Enable CBS developer preview")
+        persist_cluster_config_environment_prop(cluster_config, 'cbs_developer_preview', True)
+    else:
+        log_info("Running without CBS developer preview")
+        persist_cluster_config_environment_prop(cluster_config, 'cbs_developer_preview', False)
+
     # As cblite jobs run with on Centos platform, adding by default centos to environment config
     persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "centos", False)
 
@@ -463,16 +473,10 @@ def params_from_base_suite_setup(request):
                 ac_obj.restart_sync_gateways(cluster_config=cluster_config, url=ac_ip)
                 time.sleep(5)
 
-        # Create primary index
-        password = "password"
-        log_info("Connecting to {}/{} with password {}".format(cbs_ip, enable_sample_bucket, password))
-        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, enable_sample_bucket),
-                            password=password,
-                            timeout=SDK_TIMEOUT)
-        log_info("Creating primary index for {}".format(enable_sample_bucket))
+        sdk_client = get_cluster('couchbase://{}'.format(cbs_ip), enable_sample_bucket)
         n1ql_query = 'create primary index on {}'.format(enable_sample_bucket)
-        query = N1QLQuery(n1ql_query)
-        sdk_client.n1ql_query(query)
+        log_info(n1ql_query)
+        sdk_client.query(n1ql_query)
 
         # Start continuous replication
         repl_obj = Replication(base_url)

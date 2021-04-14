@@ -1,0 +1,15 @@
+---
+- hosts: sync_gateways
+  vars:
+    file_to_copy:
+    destination_file:
+
+  tasks:
+  - name: SYNC GATEWAY | copying file to sgw nodes on linux flavors and mac
+    become: yes
+    template: src={{ file_to_copy }} dest={{ destination_file }}
+    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian" or ansible_distribution == "MacOSX"
+
+  - name: SYNC GATEWAY | copying file to sgw nodes on windows
+    win_template: src="{{ file_to_copy }}" dest="{{ destination_file }}"
+    when: ansible_os_family == "Windows"

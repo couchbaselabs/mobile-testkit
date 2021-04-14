@@ -7,6 +7,7 @@
     couchbase_server_package_base_url:
     couchbase_server_package_name:
     ipv6_enabled:
+    cbs_dp_preview:
     couchbase_server_package_url: "{{ couchbase_server_package_base_url }}/{{ couchbase_server_package_name }}"
 
 
@@ -212,3 +213,7 @@
     - name: COUCHBASE SERVER | Enable auto failover (3.X to 5.X) | configure IPv6
       shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli setting-autofailover -c [{{ couchbase_server_primary_node }}]:{{ couchbase_server_admin_port }} --user={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --enable-auto-failover=1 --auto-failover-timeout=30"
       when: "{{ cb_major_version['stdout'] | search('\\b[3-5]\\b')}} and ipv6_enabled"
+
+    - name: COUCHBASE SERVER | Enable developer preview (6.X and up)
+      shell: yes | {{ couchbase_server_home_path }}/bin/couchbase-cli enable-developer-preview --enable -c localhost:{{ couchbase_server_admin_port }} -u {{ couchbase_server_admin }} -p {{ couchbase_server_password }}
+      when:  "(not {{ cb_major_version['stdout'] | search('\\b[1-5]\\b') }}) and {{ cbs_dp_preview }}"

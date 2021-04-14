@@ -2985,7 +2985,10 @@ def test_resetCheckpointFailure(params_from_base_test_setup):
     liteserv_platform = params_from_base_test_setup["liteserv_platform"]
     liteserv_version = params_from_base_test_setup["liteserv_version"]
     if liteserv_version < "2.1":
-        pytest.skip('database encryption feature not available with version < 2.1')
+        pytest.skip('resetCheckpointFailure feature not available with version < 2.1')
+
+    if liteserv_version >= "3.0":
+        pytest.skip('resetCheckpointFailure API has been deprecated in 2.8 and removed in 3.0')
 
     if(liteserv_platform.lower() == "ios"):
         pytest.skip('ResetCheckPoint API does not throw exception in iOS if replicator is not stopped, so skipping test')

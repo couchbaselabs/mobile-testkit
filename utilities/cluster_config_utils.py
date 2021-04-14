@@ -2,11 +2,12 @@ import configparser
 import json
 import os
 import re
-
+from datetime import timedelta
 from keywords.exceptions import ProvisioningError
 from shutil import copyfile, rmtree
 from subprocess import Popen, PIPE
 from distutils.dir_util import copy_tree
+from couchbase.cluster import PasswordAuthenticator, ClusterTimeoutOptions, ClusterOptions, Cluster
 
 
 class CustomConfigParser(configparser.RawConfigParser):
@@ -35,6 +36,14 @@ class CustomConfigParser(configparser.RawConfigParser):
             fp.write("\n")
 
 
+def get_cluster(url, bucket_name):
+    timeout_options = ClusterTimeoutOptions(kv_timeout=timedelta(seconds=30), query_timeout=timedelta(seconds=300))
+    options = ClusterOptions(PasswordAuthenticator("Administrator", "password"), timeout_options=timeout_options)
+    cluster = Cluster(url, options)
+    cluster = cluster.bucket(bucket_name)
+    return cluster.default_collection()
+
+
 def persist_cluster_config_environment_prop(cluster_config, property_name, value, property_name_check=True):
     """ Loads the cluster_config and sets
 
@@ -51,7 +60,7 @@ def persist_cluster_config_environment_prop(cluster_config, property_name, value
     if property_name_check is True:
         valid_props = ["cbs_ssl_enabled", "xattrs_enabled", "sg_lb_enabled", "sync_gateway_version", "server_version",
                        "no_conflicts_enabled", "sync_gateway_ssl", "sg_use_views", "number_replicas",
-                       "delta_sync_enabled", "x509_certs", "hide_product_version"]
+                       "delta_sync_enabled", "x509_certs", "hide_product_version", "cbs_developer_preview"]
         if property_name not in valid_props:
             raise ProvisioningError("Make sure the property you are trying to change is one of: {}".format(valid_props))
 
