@@ -4,6 +4,7 @@ import os
 import random
 import string
 import re
+import socket
 from keywords.exceptions import FeatureSupportedError
 from keywords.constants import DATA_DIR
 from utilities.cluster_config_utils import get_cbs_servers, get_sg_version
@@ -413,9 +414,13 @@ def deep_dict_compare(object1, object2, isPredictiveResult=False):
     """
     retval = True
     if len(object1) != len(object2):
-        log_info("lengths of sgw object and cbl object are different {} --- {}".format(len(object1), len(object2)))
-        log_info("keys of object 1 and object2 {}\n---{}".format(list(object1.keys()), list(object2.keys())))
-        return False
+        if "stub" in object1:
+            del object1["stub"]
+            del object1["revpos"]
+        else:
+            log_info("lengths of sgw object and cbl object are different {} --- {}".format(len(object1), len(object2)))
+            log_info("keys of object 1 and object2 {}\n---{}".format(list(object1.keys()), list(object2.keys())))
+            return False
 
     for k in object1.keys():
         obj1 = object1[k]
@@ -494,3 +499,10 @@ def is_replicator_in_connection_retry(error_msg):
     if "NSPOSIXErrorDomain" in error_msg and "Connection refused" in error_msg and "Code=61" in error_msg:
         return True
     return False
+
+
+def get_local_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(("8.8.8.8", 80))
+    local_ip = s.getsockname()[0]
+    return local_ip

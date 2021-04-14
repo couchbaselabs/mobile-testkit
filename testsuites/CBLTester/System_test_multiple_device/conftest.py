@@ -190,6 +190,11 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="skip the couchbase provision step")
 
+    parser.addoption("--enable-cbs-developer-preview",
+                     action="store_true",
+                     help="Enabling CBS developer preview",
+                     default=False)
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -244,6 +249,7 @@ def params_from_base_suite_setup(request):
     hide_product_version = request.config.getoption("--hide-product-version")
     skip_couchbase_provision = request.config.getoption("--skip-couchbase-provision")
     up_time = int(request.config.getoption("--up-time"))
+    enable_cbs_developer_preview = request.config.getoption("--enable-cbs-developer-preview")
     # Changing up_time in days
     up_time = up_time * 24 * 60
     repl_status_check_sleep_time = int(request.config.getoption("--repl-status-check-sleep-time"))
@@ -288,6 +294,12 @@ def params_from_base_suite_setup(request):
     target_url = "ws://{}:4984/{}".format(sg_ip, sg_db)
     target_admin_url = "ws://{}:4985/{}".format(sg_ip, sg_db)
     persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', False)
+
+    if sg_ssl:
+        log_info("Enabling SSL on sync gateway")
+        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', True)
+        target_url = "wss://{}:4984/{}".format(sg_ip, sg_db)
+        target_admin_url = "wss://{}:4985/{}".format(sg_ip, sg_db)
 
     try:
         server_version
@@ -348,11 +360,12 @@ def params_from_base_suite_setup(request):
     # As cblite jobs run with on Centos platform, adding by default centos to environment config
     persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "centos", False)
 
-    if sg_ssl:
-        log_info("Enabling SSL on sync gateway")
-        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', True)
-        target_url = "wss://{}:4984/{}".format(sg_ip, sg_db)
-        target_admin_url = "wss://{}:4985/{}".format(sg_ip, sg_db)
+    if enable_cbs_developer_preview:
+        log_info("Enable CBS developer preview")
+        persist_cluster_config_environment_prop(cluster_config, 'cbs_developer_preview', True)
+    else:
+        log_info("Running without CBS developer preview")
+        persist_cluster_config_environment_prop(cluster_config, 'cbs_developer_preview', False)
 
     if sync_gateway_version < "2.0":
         pytest.skip('Does not work with sg < 2.0 , so skipping the test')
@@ -373,8 +386,15 @@ def params_from_base_suite_setup(request):
             logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=request.node.name)
             raise
 
+    # update sgw urls to meet the runtime settings
+    cluster_helper = ClusterKeywords(cluster_config)
+    cluster_hosts = cluster_helper.get_cluster_topology(cluster_config=cluster_config)
+    sg_url = cluster_hosts["sync_gateways"][0]["public"]
+    log_info("sg_url: {}".format(sg_url))
+    sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
+    log_info("sg_admin_url: {}".format(sg_admin_url))
+
     # Create CBL databases on all devices
-    sg_admin_url = cluster_topology["sync_gateways"][0]["admin"]
     db_name_list = []
     cbl_db_list = []
     db_obj_list = []

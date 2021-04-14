@@ -73,7 +73,8 @@ def install_couchbase_server(cluster_config, couchbase_server_config, cbs_platfo
         extra_vars={
             "couchbase_server_package_base_url": server_baseurl,
             "couchbase_server_package_name": server_package_name,
-            "ipv6_enabled": cluster["environment"]["ipv6_enabled"]
+            "ipv6_enabled": cluster["environment"]["ipv6_enabled"],
+            "cbs_dp_preview": cluster["environment"]["cbs_developer_preview"]
         }
     )
     if status != 0:

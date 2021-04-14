@@ -1,0 +1,17 @@
+---
+- hosts: sync_gateways
+  any_errors_fatal: true
+  vars:
+    environment_file:
+
+  tasks:
+  - include: tasks/remove-env-variables.yml
+    become: yes
+    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
+
+  - include: tasks/remove-env-variables-macos.yml
+    become: yes
+    when: ansible_distribution == "MacOSX"
+
+  - include: tasks/remove-env-variables-windows.yml
+    when: ansible_os_family == "Windows"

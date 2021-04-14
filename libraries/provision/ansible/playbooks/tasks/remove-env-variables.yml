@@ -1,0 +1,14 @@
+# Remove env variables on sync gateway hosts on Linux
+- name: SYNC GATEWAY | Remove environment variables for service on Linux
+  become: yes
+  file: 
+    path=/etc/systemd/system/sync_gateway.service.d 
+    state=absent
+  when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat"
+
+
+# Relaod systemctl daemon
+- name: SYNC GATEWAY | systemctl daemon relaod on centos
+  become: yes
+  shell: systemctl daemon-reload
+  when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat"

@@ -46,6 +46,7 @@ def params_from_base_suite_setup(request):
     hide_product_version = request.config.getoption("--hide-product-version")
     prometheus_enabled = request.config.getoption("--prometheus-enable")
     skip_couchbase_provision = request.config.getoption("--skip-couchbase-provision")
+    enable_cbs_developer_preview = request.config.getoption("--enable-cbs-developer-preview")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
@@ -73,6 +74,7 @@ def params_from_base_suite_setup(request):
     log_info("cbs_platform: {}".format(cbs_platform))
     log_info("Delta_sync: {}".format(delta_sync_enabled))
     log_info("prometheus_enabled: {}".format(prometheus_enabled))
+    log_info("enable_cbs_developer_preview: {}".format(enable_cbs_developer_preview))
 
     # sg-ce is invalid for di mode
     if mode == "di" and sg_ce:
@@ -203,6 +205,13 @@ def params_from_base_suite_setup(request):
     else:
         log_info("Running without suppress SGW product Version")
         persist_cluster_config_environment_prop(cluster_config, 'hide_product_version', False)
+
+    if enable_cbs_developer_preview:
+        log_info("Enable CBS developer preview")
+        persist_cluster_config_environment_prop(cluster_config, 'cbs_developer_preview', True)
+    else:
+        log_info("Running without CBS developer preview")
+        persist_cluster_config_environment_prop(cluster_config, 'cbs_developer_preview', False)
 
     if sync_gateway_version < "2.0.0" and no_conflicts_enabled:
         pytest.skip("Test cannot run with no-conflicts with sg version < 2.0.0")

@@ -152,6 +152,11 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="skip the couchbase provision step")
 
+    parser.addoption("--enable-cbs-developer-preview",
+                     action="store_true",
+                     help="Enabling CBS developer preview",
+                     default=False)
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -199,6 +204,7 @@ def params_from_base_suite_setup(request):
     magma_storage_enabled = request.config.getoption("--magma-storage")
     hide_product_version = request.config.getoption("--hide-product-version")
     skip_couchbase_provision = request.config.getoption("--skip-couchbase-provision")
+    enable_cbs_developer_preview = request.config.getoption("--enable-cbs-developer-preview")
 
     test_name = request.node.name
 
@@ -230,6 +236,7 @@ def params_from_base_suite_setup(request):
     log_info("device_enabled: {}".format(device_enabled))
     log_info("cbs_toy_build: {}".format(cbs_toy_build))
     log_info("hide_product_version: {}".format(hide_product_version))
+    log_info("enable_cbs_developer_preview: {}".format(enable_cbs_developer_preview))
 
     # if xattrs is specified but the post upgrade SG version doesn't support, don't continue
     if upgraded_xattrs_enabled and version_is_binary(sync_gateway_upgraded_version):
@@ -355,6 +362,13 @@ def params_from_base_suite_setup(request):
     else:
         log_info("Running without suppress SGW product Version")
         persist_cluster_config_environment_prop(cluster_config, 'hide_product_version', False)
+
+    if enable_cbs_developer_preview:
+        log_info("Enable CBS developer preview")
+        persist_cluster_config_environment_prop(cluster_config, 'cbs_developer_preview', True)
+    else:
+        log_info("Running without CBS developer preview")
+        persist_cluster_config_environment_prop(cluster_config, 'cbs_developer_preview', False)
 
     persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "centos", False)
 

@@ -105,3 +105,8 @@ def pytest_addoption(parser):
 
     parser.addoption("--skip-couchbase-provision", action="store_true",
                      help="skip the couchbase provision step")
+
+    parser.addoption("--enable-cbs-developer-preview",
+                     action="store_true",
+                     help="Enabling CBS developer preview",
+                     default=False)

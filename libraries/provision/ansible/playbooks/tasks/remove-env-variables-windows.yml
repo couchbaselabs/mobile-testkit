@@ -1,0 +1,4 @@
+# Remove env variables on sync gateway hosts on Linux
+- name: SYNC GATEWAY | Remove environment variables for service on Windows
+  win_command: powershell.exe -ExecutionPolicy ByPass Remove-ItemProperty HKLM:SYSTEM\CurrentControlSet\Services\SyncGateway -Name "Environment"
+
