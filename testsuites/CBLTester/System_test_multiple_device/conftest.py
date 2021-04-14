@@ -248,7 +248,7 @@ def params_from_base_suite_setup(request):
     num_of_docs_to_delete = int(request.config.getoption("--num-of-docs-to-delete"))
     num_of_docs_to_add = int(request.config.getoption("--num-of-docs-to-add"))
     hide_product_version = request.config.getoption("--hide-product-version")
-    up_time = int(request.config.getoption("--up-time"))
+    up_time = float(request.config.getoption("--up-time"))
     enable_cbs_developer_preview = request.config.getoption("--enable-cbs-developer-preview")
     # Changing up_time in days
     up_time = up_time * 24 * 60
