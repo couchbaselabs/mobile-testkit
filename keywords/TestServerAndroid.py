@@ -38,6 +38,7 @@ class TestServerAndroid(TestServerBase):
             self.activity_name = self.installed_package_name + "/md53466f247b9f9d18ced632d20bd2e0d5c.MainActivity"
 
         self.device_option = "-e"
+        self.serial_number = ""
 
     def download(self, version_build=None):
         """
@@ -118,6 +119,8 @@ class TestServerAndroid(TestServerBase):
 
         self.device_enabled = True
         self.device_option = "-d"
+        if self.serial_number != "":
+            self.device_option = "-s {}".format(self.serial_number)
         apk_path = "{}/{}".format(BINARY_DIR, self.apk_name)
 
         try:
@@ -137,7 +140,7 @@ class TestServerAndroid(TestServerBase):
             if count > max_retries:
                 raise LiteServError(".apk install failed!")
             try:
-                output = subprocess.check_output(["adb", "-d", "install", "-r", apk_path])
+                output = subprocess.check_output(["adb", self.device_option, "install", "-r", apk_path])
                 break
             except Exception as e:
                 if "INSTALL_FAILED_ALREADY_EXISTS" in e.args[0] or "INSTALL_FAILED_UPDATE_INCOMPATIBLE" in e.message:
@@ -150,7 +153,7 @@ class TestServerAndroid(TestServerBase):
                     # Install succeeded, continue
                     break
 
-        output = subprocess.check_output(["adb", "-d", "shell", "pm", "list", "packages"])
+        output = subprocess.check_output(["adb", self.device_option, "shell", "pm", "list", "packages"])
         if self.installed_package_name not in output.decode():
             raise LiteServError("Failed to install package: {}".format(output))
 
@@ -210,14 +213,14 @@ class TestServerAndroid(TestServerBase):
         """
 
         # Clear adb buffer
-        subprocess.check_call(["adb", "-d", "logcat", "-c"])
+        subprocess.check_call(["adb", self.device_option, "logcat", "-c"])
 
         # Start redirecting adb output to the logfile
         self.logfile = open(logfile_name, "w+")
-        self.process = subprocess.Popen(args=["adb", "-d", "logcat"], stdout=self.logfile)
+        self.process = subprocess.Popen(args=["adb", self.device_option, "logcat"], stdout=self.logfile)
 
         output = subprocess.check_output([
-            "adb", "-d", "shell", "am", "start", "-n", self.activity_name,
+            "adb", self.device_option, "shell", "am", "start", "-n", self.activity_name,
             "--es", "username", "none",
             "--es", "password", "none",
             "--ei", "listen_port", str(self.port),
@@ -230,7 +233,7 @@ class TestServerAndroid(TestServerBase):
         """ Verify that app is launched with adb command
         """
         if self.device_enabled:
-            output = subprocess.check_output(["adb", "-d", "shell", "pidof", self.installed_package_name, "|", "wc", "-l"])
+            output = subprocess.check_output(["adb", self.device_option, "shell", "pidof", self.installed_package_name, "|", "wc", "-l"])
         else:
             output = subprocess.check_output(["adb", "-e", "shell", "pidof", self.installed_package_name, "|", "wc", "-l"])
         log_info("output for running activity {}".format(output))
@@ -261,15 +264,21 @@ class TestServerAndroid(TestServerBase):
 
     def close_app(self):
         if self.device_enabled:
-            output = subprocess.check_output(["adb", "-d", "shell", "input", "keyevent ", "3"])
+            self.device_option = "-d"
+            if self.serial_number != "":
+                self.device_option = "-s {}".format(self.serial_number)
+            output = subprocess.check_output(["adb", self.device_option, "shell", "input", "keyevent ", "3"])
         else:
             output = subprocess.check_output(["adb", "-e", "shell", "input", "keyevent ", "3"])
         log_info(output)
 
     def open_app(self):
         if self.device_enabled:
+            self.device_option = "-d"
+            if self.serial_number != "":
+                self.device_option = "-s {}".format(self.serial_number)
             output = subprocess.check_output([
-                "adb", "-d", "shell", "am", "start", "-n", self.activity_name,
+                "adb",self.device_option, "shell", "am", "start", "-n", self.activity_name,
                 "--es", "username", "none", "--es", "password", "none", "--ei",
                 "listen_port",
                 str(self.port)

@@ -58,6 +58,10 @@ def pytest_addoption(parser):
                      action="store",
                      help="liteserv-ports: the ports to assign to liteserv")
 
+    parser.addoption("--liteserv-android-serial-numbers",
+                     action="store",
+                     help="liteserv-android-serial-numbers: the android device serial numbers")
+
     parser.addoption("--enable-sample-bucket",
                      action="store",
                      help="enable-sample-bucket: Enable a sample server bucket")
@@ -203,6 +207,7 @@ def params_from_base_suite_setup(request):
     liteserv_versions = request.config.getoption("--liteserv-versions")
     liteserv_hosts = request.config.getoption("--liteserv-hosts")
     liteserv_ports = request.config.getoption("--liteserv-ports")
+    liteserv_android_serial_number = request.config.getoption("--liteserv-android-serial-numbers")
 
     platform_list = liteserv_platforms.split(',')
     version_list = liteserv_versions.split(',')
@@ -251,6 +256,7 @@ def params_from_base_suite_setup(request):
 
     test_name = request.node.name
     testserver_list = []
+    android_device_idx = 0
     for platform, version, host, port in zip(platform_list,
                                              version_list,
                                              host_list,
@@ -268,6 +274,9 @@ def params_from_base_suite_setup(request):
 
             # Install TestServer app
             if device_enabled and (platform == "ios" or platform == "android"):
+                if platform == "android" and len(liteserv_android_serial_number) != 0:
+                    testserver.serial_number = liteserv_android_serial_number[android_device_idx]
+                    android_device_idx += 1
                 testserver.install_device()
             else:
                 testserver.install()
