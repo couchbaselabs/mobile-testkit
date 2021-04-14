@@ -414,9 +414,13 @@ def deep_dict_compare(object1, object2, isPredictiveResult=False):
     """
     retval = True
     if len(object1) != len(object2):
-        log_info("lengths of sgw object and cbl object are different {} --- {}".format(len(object1), len(object2)))
-        log_info("keys of object 1 and object2 {}\n---{}".format(list(object1.keys()), list(object2.keys())))
-        return False
+        if "stub" in object1:
+            del object1["stub"]
+            del object1["revpos"]
+        else:
+            log_info("lengths of sgw object and cbl object are different {} --- {}".format(len(object1), len(object2)))
+            log_info("keys of object 1 and object2 {}\n---{}".format(list(object1.keys()), list(object2.keys())))
+            return False
 
     for k in object1.keys():
         obj1 = object1[k]

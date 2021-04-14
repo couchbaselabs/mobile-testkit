@@ -357,7 +357,6 @@ def test_webhook_filter_external_js(params_from_base_test_setup, setup_webserver
     temp_sg_config, _ = copy_sgconf_to_temp(sg_conf, mode)
     temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ webhook_filter }}", path)
     cluster.reset(sg_config_path=temp_sg_config)
-    webhook_server.start()
 
     topology = cluster_helper.get_cluster_topology(cluster_config)
 
@@ -429,7 +428,7 @@ def test_webhook_filter_external_https_js(params_from_base_test_setup, setup_web
     sg_conf_name = "webhooks/webhook_filter_external_js"
 
     if sync_gateway_version < "3.0.0":
-        pytest.skip("this feature not available below 3.0.0")
+        pytest.skip('this feature not available below 3.0.0')
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     cluster_helper = ClusterKeywords(cluster_config)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config)
@@ -453,7 +452,6 @@ def test_webhook_filter_external_https_js(params_from_base_test_setup, setup_web
     temp_sg_config, _ = copy_sgconf_to_temp(sg_conf, mode)
     temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ webhook_filter }}", path)
     cluster.reset(sg_config_path=temp_sg_config)
-    webhook_server.start()
 
     topology = cluster_helper.get_cluster_topology(cluster_config)
 
@@ -507,6 +505,7 @@ def test_webhook_filter_external_https_js(params_from_base_test_setup, setup_web
 @pytest.fixture(scope="function")
 def setup_webserver():
     webhook_server = WebServer()
+    webhook_server.start()
     process = subprocess.Popen(args=["nohup", "python", "libraries/utilities/host_sgw_jscode.py", "--start", "&"], stdout=subprocess.PIPE)
     yield{
         "webhook_server": webhook_server
@@ -519,6 +518,7 @@ def setup_webserver():
 @pytest.fixture(scope="function")
 def setup_webserver_js_sslon():
     webhook_server = WebServer()
+    webhook_server.start()
     process = subprocess.Popen(args=["nohup", "python", "libraries/utilities/host_sgw_jscode.py", "--sslstart", "&"], stdout=subprocess.PIPE)
     yield{
         "webhook_server": webhook_server

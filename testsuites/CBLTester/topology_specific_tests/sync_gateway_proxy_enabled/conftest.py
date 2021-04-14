@@ -73,6 +73,7 @@ def params_from_base_suite_setup(request):
     encryption_password = request.config.getoption("--encryption-password")
     prometheus_enable = request.config.getoption("--prometheus-enable")
     hide_product_version = request.config.getoption("--hide-product-version")
+    enable_cbs_developer_preview = request.config.getoption("--enable-cbs-developer-preview")
     sg_ssl = ""
 
     test_name = request.node.name
@@ -165,6 +166,13 @@ def params_from_base_suite_setup(request):
     else:
         log_info("Running without suppress SGW product Version")
         persist_cluster_config_environment_prop(cluster_config, 'hide_product_version', False)
+
+    if enable_cbs_developer_preview:
+        log_info("Enable CBS developer preview")
+        persist_cluster_config_environment_prop(cluster_config, 'cbs_developer_preview', True)
+    else:
+        log_info("Running without CBS developer preview")
+        persist_cluster_config_environment_prop(cluster_config, 'cbs_developer_preview', False)
 
     # As cblite jobs run with on Centos platform, adding by default centos to environment config
     persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "centos", False)
