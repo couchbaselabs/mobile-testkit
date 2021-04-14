@@ -8,11 +8,10 @@ from keywords import couchbaseserver
 from keywords import document
 from libraries.testkit.cluster import Cluster
 from keywords.utils import host_for_url, log_info
-from couchbase.bucket import Bucket
-from keywords.constants import SDK_TIMEOUT
 from keywords.remoteexecutor import RemoteExecutor
 from keywords.SyncGateway import wait_until_docs_imported_from_server
 from keywords.couchbaseserver import get_server_version
+from utilities.cluster_config_utils import get_cluster
 
 
 @pytest.mark.syncgateway
@@ -59,14 +58,14 @@ def test_userdefind_collections(params_from_base_test_setup):
 
     # 1. Create docs via sdk with and without attachments on default collections
     if ssl_enabled and cluster.ipv6:
-        connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(cbs_ip, bucket)
+        connection_url = "couchbases://{}?ssl=no_verify&ipv6=allow".format(cbs_ip)
     elif ssl_enabled and not cluster.ipv6:
-        connection_url = "couchbases://{}/{}?ssl=no_verify".format(cbs_ip, bucket)
+        connection_url = "couchbases://{}?ssl=no_verify".format(cbs_ip)
     elif not ssl_enabled and cluster.ipv6:
-        connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, bucket)
+        connection_url = "couchbase://{}?ipv6=allow".format(cbs_ip)
     else:
-        connection_url = 'couchbase://{}/{}'.format(cbs_ip, bucket)
-    sdk_client = Bucket(connection_url, password='password', timeout=SDK_TIMEOUT)
+        connection_url = "couchbase://{}".format(cbs_ip)
+    sdk_client = get_cluster(connection_url, bucket)
     sdk_doc_bodies = document.create_docs('sdk_default', number=num_sdk_docs, channels=channels)
     sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
     sdk_client.upsert_multi(sdk_docs)

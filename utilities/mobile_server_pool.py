@@ -1,14 +1,12 @@
 import sys
+from datetime import timedelta
 import paramiko
 import time
-
 from requests import Session
 from optparse import OptionParser
-from couchbase.cluster import Cluster
-from couchbase.cluster import PasswordAuthenticator
-from couchbase.n1ql import N1QLQuery
+from couchbase.cluster import PasswordAuthenticator, ClusterTimeoutOptions, ClusterOptions, Cluster
 from keywords.utils import log_info
-from couchbase.exceptions import KeyExistsError
+from couchbase.exceptions import CouchbaseException
 
 SERVER_IP = "172.23.104.162"
 USERNAME = 'Administrator'
@@ -19,10 +17,10 @@ SSH_USERNAME = 'root'
 SSH_PASSWORD = 'couchbase'
 SSH_POLL_INTERVAL = 20
 
-cluster = Cluster('couchbase://{}'.format(SERVER_IP))
-authenticator = PasswordAuthenticator(USERNAME, PASSWORD)
-cluster.authenticate(authenticator)
-sdk_client = cluster.open_bucket(BUCKET_NAME)
+timeout_options = ClusterTimeoutOptions(kv_timeout=timedelta(seconds=5), query_timeout=timedelta(seconds=10))
+options = ClusterOptions(PasswordAuthenticator(USERNAME, PASSWORD), timeout_options=timeout_options)
+cluster = Cluster('couchbase://{}'.format(SERVER_IP), options)
+sdk_client = cluster.bucket(BUCKET_NAME)
 
 
 def get_nodes_available_from_mobile_pool(nodes_os_type, node_os_version):
@@ -37,8 +35,8 @@ def get_nodes_available_from_mobile_pool(nodes_os_type, node_os_version):
     # Getting list of available nodes through n1ql query
     query_str = "select count(*) from `{}` where os='{}' " \
                 "AND os_version='{}' AND state='available'".format(BUCKET_NAME, nodes_os_type, node_os_version)
-    query = N1QLQuery(query_str)
-    for row in sdk_client.n1ql_query(query):
+    query = cluster.query(query_str)
+    for row in query:
         count = row["$1"]
     print(count)
 
@@ -55,17 +53,17 @@ def get_nodes_from_pool_server(num_of_nodes, nodes_os_type, node_os_version, job
     # Getting list of available nodes through n1ql query
     query_str = "select meta().id from `{}` where os='{}' " \
                 "AND os_version='{}' AND state='available'".format(BUCKET_NAME, nodes_os_type, node_os_version)
-    query = N1QLQuery(query_str)
+    query = cluster.query(query_str)
     pool_list = []
-    for row in sdk_client.n1ql_query(query):
+    for row in query:
         doc_id = row["id"]
+        print(doc_id, "doc id")
         is_node_reserved = reserve_node(doc_id, job_name_requesting_node)
         vm_alive = check_vm_alive(doc_id)
         if not vm_alive:
             query_str = "update `{}` set state=\"VM_NOT_ALLIVE\" where meta().id='{}' " \
                 "and state='available'".format(doc_id)
-            query = N1QLQuery(query_str)
-            sdk_client.n1ql_query(query)
+            query = cluster.query(query_str)
         if is_node_reserved and vm_alive:
             pool_list.append(str(doc_id))
 
@@ -111,7 +109,7 @@ def reserve_node(doc_id, job_name, counter=0):
     try:
         sdk_client.replace(doc_id, doc, cas=curr_cas)
         return True
-    except KeyExistsError as err:
+    except CouchbaseException as err:
         result = sdk_client.get(doc_id)
         doc = result.value
         if doc["state"] != "booked" and counter < 5:
@@ -136,7 +134,9 @@ def release_node(pool_list, job_name):
     """
     for node in pool_list:
         result = sdk_client.get(node)
+        print(result.value)
         doc = result.value
+        print(doc, "Doc details")
         if doc["username"] == job_name:
             doc["prevUser"] = doc["username"]
             doc["username"] = ""
@@ -156,9 +156,9 @@ def cleanup_for_blocked_nodes(job_name=None):
         query_str = "select meta().id from `{}` where state=\"booked\" and username=\"{}\"".format(BUCKET_NAME, job_name)
     else:
         query_str = "select meta().id from `{}` where state=\"booked\"".format(BUCKET_NAME)
-    query = N1QLQuery(query_str)
+    query = cluster.query(query_str)
     release_node_list = []
-    for row in sdk_client.n1ql_query(query):
+    for row in query:
         doc_id = row["id"]
         result = sdk_client.get(doc_id, quiet=True)
         if not result:
