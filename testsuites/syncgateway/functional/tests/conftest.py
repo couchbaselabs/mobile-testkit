@@ -211,7 +211,6 @@ def params_from_base_suite_setup(request):
     skip_couchbase_provision = request.config.getoption("--skip-couchbase-provision")
     enable_cbs_developer_preview = request.config.getoption("--enable-cbs-developer-preview")
 
-
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
 
