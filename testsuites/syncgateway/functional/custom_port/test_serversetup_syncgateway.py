@@ -13,6 +13,7 @@ from keywords.exceptions import ProvisioningError
 from keywords import document
 from keywords.MobileRestClient import MobileRestClient
 from libraries.provision.install_sync_gateway import get_buckets_from_sync_gateway_config
+from utilities.cluster_config_utils import get_cbs_servers
 
 
 @pytest.fixture(scope="function")
@@ -77,7 +78,8 @@ def test_syncgateway_with_customPort_couchbaseServer(params_from_base_test_setup
     for server in cluster.servers:
         cb_server = couchbaseserver.CouchbaseServer(server.url)
         cb_server.stop()
-        remote_executor = RemoteExecutor(host_for_url(server.url))
+        cbs_target = host_for_url(server.url)
+        remote_executor = RemoteExecutor(cbs_target)
         command = "cp /opt/couchbase/etc/couchbase/static_config /opt/couchbase/etc/couchbase/static_config.bak" \
             "&& cp /opt/couchbase/var/lib/couchbase/config/config.dat /opt/couchbase/var/lib/couchbase/config/config.dat.bak"
         remote_executor.execute(command)
@@ -120,12 +122,18 @@ def test_syncgateway_with_customPort_couchbaseServer(params_from_base_test_setup
     remote_executor.execute(command)
     sg_helper = SyncGateway()
     sgws = cluster["sync_gateways"]
+    cbs_ips = get_cbs_servers(cluster_conf)
     for sg in sgws:
         sgw_remote_executor = RemoteExecutor(sg["ip"])
         if ssl_enabled:
-            command = "sed -i 's/11207/{}/g' /home/sync_gateway/sync_gateway.json".format(memcached_ssl_port)
+            command = "sed -i 's/:11207//g' /home/sync_gateway/sync_gateway.json".format(memcached_ssl_port)
         else:
-            command = "sed -i 's/8091/{}/g' /home/sync_gateway/sync_gateway.json".format(custom_port)
+            command = "sed -i 's/:8091//g' /home/sync_gateway/sync_gateway.json".format(custom_port)
+        for cbs_ip in cbs_ips:
+            if ssl_enabled:
+                command = "sed -i 's/{}/{}:{}/g' /home/sync_gateway/sync_gateway.json".format(cbs_ip, cbs_ip, memcached_ssl_port)
+            else:
+                command = "sed -i 's/{}/{}:{}/g' /home/sync_gateway/sync_gateway.json".format(cbs_ip, cbs_ip, custom_port)
         sgw_remote_executor.execute(command)
 
     sg_helper.restart_sync_gateways(cluster_conf)
