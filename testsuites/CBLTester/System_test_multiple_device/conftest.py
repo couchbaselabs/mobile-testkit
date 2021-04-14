@@ -207,12 +207,13 @@ def params_from_base_suite_setup(request):
     liteserv_versions = request.config.getoption("--liteserv-versions")
     liteserv_hosts = request.config.getoption("--liteserv-hosts")
     liteserv_ports = request.config.getoption("--liteserv-ports")
-    liteserv_android_serial_number = request.config.getoption("--liteserv-android-serial-numbers")
+    liteserv_android_serial_numbers = request.config.getoption("--liteserv-android-serial-numbers")
 
     platform_list = liteserv_platforms.split(',')
     version_list = liteserv_versions.split(',')
     host_list = liteserv_hosts.split(',')
     port_list = liteserv_ports.split(',')
+    liteserv_android_serial_number = liteserv_android_serial_numbers.split(',')
 
     if len(platform_list) != len(version_list) != len(host_list) != len(port_list):
         raise Exception("Provide equal no. of Parameters for host, port, version and platforms")
