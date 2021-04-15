@@ -141,7 +141,7 @@ def test_syncgateway_with_customPort_couchbaseServer(params_from_base_test_setup
 
 @pytest.mark.syncgateway
 @pytest.mark.server
-def test_sgw_server_et_alternative_address(params_from_base_test_setup, setup_alternative_address):
+def test_sgw_server_alternative_address(params_from_base_test_setup, setup_alternative_address):
     """
         @summary:
         1.Assign an alternate address on the server and ports

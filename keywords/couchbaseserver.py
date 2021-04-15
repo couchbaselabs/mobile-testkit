@@ -1013,14 +1013,17 @@ class CouchbaseServer:
     def get_bucket_connection(self, cbs_url, bucket_name, ssl_enabled, cluster):
         cbs_ip = host_for_url(cbs_url)
         if ssl_enabled and cluster.ipv6:
-            connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(cbs_ip, bucket_name)
+            connection_url = "couchbases://{}?ssl=no_verify&ipv6=allow".format(cbs_ip)
         elif ssl_enabled and not cluster.ipv6:
-            connection_url = "couchbases://{}/{}?ssl=no_verify".format(cbs_ip, bucket_name)
+            connection_url = "couchbases://{}?ssl=no_verify".format(cbs_ip)
         elif not ssl_enabled and cluster.ipv6:
-            connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, bucket_name)
+            connection_url = "couchbase://{}?ipv6=allow".format(cbs_ip)
         else:
-            connection_url = 'couchbase://{}/{}'.format(cbs_ip, bucket_name)
-        sdk_client = Bucket(connection_url, password='password')
+            connection_url = 'couchbase://{}/{}'.format(cbs_ip)
+        timeout_options = ClusterTimeoutOptions(kv_timeout=timedelta(seconds=30), query_timeout=timedelta(seconds=100))
+        options = ClusterOptions(PasswordAuthenticator("Administrator", "password"), timeout_options=timeout_options)
+        cluster = Cluster(connection_url, options)
+        sdk_client = cluster.bucket(bucket_name)
         return sdk_client
 
     def create_scope(self, bucket, scope=None):
