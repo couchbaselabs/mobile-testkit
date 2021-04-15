@@ -1444,7 +1444,7 @@ def test_multiple_property_fts(params_from_base_suite_setup, prop1, prop2, val, 
     if result_set != -1 and result_set is not None:
         for result in result_set:
             docs_from_cbl.append(result)
-            log_info(result)
+            # log_info(result)
     assert 0 < len(docs_from_cbl) <= limit
 
 
@@ -1623,7 +1623,7 @@ def sdk_connection(cbs_ip, n1ql_query):
     bucket_name = "travel-sample"
     username = "Administrator"
     password = 'password'
-    timeout_options = ClusterTimeoutOptions(kv_timeout=timedelta(seconds=5), query_timeout=timedelta(seconds=10))
+    timeout_options = ClusterTimeoutOptions(kv_timeout=timedelta(seconds=5), query_timeout=timedelta(seconds=200))
     options = ClusterOptions(PasswordAuthenticator(username, password), timeout_options=timeout_options)
     cluster = Cluster('couchbase://{}'.format(cbs_ip), options)
     cluster.bucket(bucket_name)
