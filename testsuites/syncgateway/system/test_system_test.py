@@ -3,7 +3,7 @@ import random
 import time
 
 from concurrent.futures import ProcessPoolExecutor, as_completed
-from couchbase.bucket import Bucket
+from utilities.cluster_config_utils import get_cluster
 from requests import Session
 from requests.exceptions import HTTPError
 
@@ -143,8 +143,7 @@ def test_system_test(params_from_base_test_setup):
     cbs_session.auth = ('Administrator', 'password')
 
     log_info('Seeding {} with {} docs'.format(cbs_ip, server_seed_docs))
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=300)
-
+    sdk_client = get_cluster('couchbase://{}'.format(cbs_ip), bucket_name)
     # Stop SG before loading the server
     lb_url = topology['sync_gateways'][0]['public']
     sg_admin_url = topology['sync_gateways'][0]['admin']

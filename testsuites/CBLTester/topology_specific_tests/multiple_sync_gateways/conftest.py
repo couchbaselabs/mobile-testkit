@@ -3,7 +3,7 @@ import time
 import datetime
 
 from keywords.utils import log_info
-from utilities.cluster_config_utils import persist_cluster_config_environment_prop
+from utilities.cluster_config_utils import persist_cluster_config_environment_prop, get_cluster
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.couchbaseserver import CouchbaseServer
 from keywords.constants import CLUSTER_CONFIGS_DIR
@@ -14,15 +14,13 @@ from keywords.tklogging import Logging
 from CBLClient.Database import Database
 from CBLClient.FileLogging import FileLogging
 from keywords.utils import host_for_url, clear_resources_pngs
-from couchbase.bucket import Bucket
-from couchbase.n1ql import N1QLQuery
 
 from CBLClient.Utils import Utils
 from keywords.TestServerFactory import TestServerFactory
 from keywords.SyncGateway import SyncGateway
 from keywords.constants import RESULTS_DIR
-from keywords.constants import SDK_TIMEOUT
 from libraries.testkit import prometheus
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -274,11 +272,10 @@ def params_from_base_suite_setup(request):
         # Create primary index
         password = "password"
         log_info("Connecting to {}/{} with password {}".format(cbs_ip, enable_sample_bucket, password))
-        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, enable_sample_bucket), password=password, timeout=SDK_TIMEOUT)
+        sdk_client = get_cluster('couchbase://{}'.format(cbs_ip), enable_sample_bucket)
         log_info("Creating primary index for {}".format(enable_sample_bucket))
         n1ql_query = 'create primary index on {}'.format(enable_sample_bucket)
-        query = N1QLQuery(n1ql_query)
-        sdk_client.n1ql_query(query)
+        sdk_client.query(n1ql_query)
     if prometheus_enable:
         if not prometheus.is_prometheus_installed():
             prometheus.install_prometheus()
