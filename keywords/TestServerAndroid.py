@@ -140,7 +140,7 @@ class TestServerAndroid(TestServerBase):
             if count > max_retries:
                 raise LiteServError(".apk install failed!")
             try:
-                command = self.add_device_option(["adb", "install", "-r", apk_path])
+                command = self.set_device_option(["adb", "install", "-r", apk_path])
                 output = subprocess.check_output(command)
                 break
             except Exception as e:
