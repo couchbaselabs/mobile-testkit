@@ -21,7 +21,7 @@ def log_info(message, is_verify=False):
         message = "  > {}".format(message)
     try:
         print(str(message))
-    except UnicodeDecodeError:
+    except UnicodeEncodeError:
         print(message.decode())
     logging.info(message)
 
