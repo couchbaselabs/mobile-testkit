@@ -1444,7 +1444,7 @@ def test_multiple_property_fts(params_from_base_suite_setup, prop1, prop2, val, 
     if result_set != -1 and result_set is not None:
         for result in result_set:
             docs_from_cbl.append(result)
-            # log_info(result)
+            log_info(result)
     assert 0 < len(docs_from_cbl) <= limit
 
 
