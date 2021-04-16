@@ -1623,7 +1623,8 @@ def sdk_connection(cbs_ip, n1ql_query):
     bucket_name = "travel-sample"
     username = "Administrator"
     password = 'password'
-    timeout_options = ClusterTimeoutOptions(kv_timeout=timedelta(seconds=5), query_timeout=timedelta(seconds=200))
+
+    timeout_options = ClusterTimeoutOptions(kv_timeout=timedelta(seconds=20), query_timeout=timedelta(seconds=30))
     options = ClusterOptions(PasswordAuthenticator(username, password), timeout_options=timeout_options)
     cluster = Cluster('couchbase://{}'.format(cbs_ip), options)
     cluster.bucket(bucket_name)
