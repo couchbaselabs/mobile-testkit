@@ -22,7 +22,7 @@ def log_info(message, is_verify=False):
     try:
         print(str(message))
     except UnicodeEncodeError:
-        print(message.decode())
+        print(str(message).decode())
     logging.info(message)
 
 
