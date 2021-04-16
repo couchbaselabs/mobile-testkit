@@ -1216,7 +1216,7 @@ def test_peer_to_peer_retries(params_from_base_test_setup, server_setup, num_of_
         print(replicator.status(repl), "getActivitylevel")
         print(replicator.getActivitylevel(repl), "getActivitylevel")
         print(replicator.getError(repl))
-        time.sleep(18)
+        # time.sleep()
         time.sleep(3)
 
     #
@@ -1271,7 +1271,7 @@ def test_peer_to_peer_url_retries2(params_from_base_test_setup, url_listener_set
     db_name_server = db_name_list[0]
     peer_to_peer_server = PeerToPeer(base_url_server)
 
-    url_listener_port = 6002
+    url_listener_port = 9979
 
     server_host = host_list[0]
 
@@ -1279,8 +1279,9 @@ def test_peer_to_peer_url_retries2(params_from_base_test_setup, url_listener_set
     db_obj_client.create_bulk_docs(num_of_docs, "replication", db=cbl_db_client, channels=channels)
 
     peer_to_peer_server.server_stop(url_listener, endPointType)
+
     # # Now set up client
-    repl = peerToPeer_client.configure(port=url_listener_port, host="10.90.90", server_db_name=db_name_server,
+    repl = peerToPeer_client.configure(port=url_listener_port, host=server_host, server_db_name=db_name_server,
                                        client_database=cbl_db_client, continuous=continuous,
                                        replication_type=replicator_type, endPointType=endPointType)
 
@@ -1291,7 +1292,7 @@ def test_peer_to_peer_url_retries2(params_from_base_test_setup, url_listener_set
         print(replicator.status(repl), "getActivitylevel")
         print(replicator.getActivitylevel(repl), "getActivitylevel")
         print(replicator.getError(repl))
-        time.sleep(18)
+
         time.sleep(3)
 
 
