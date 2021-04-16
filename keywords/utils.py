@@ -10,6 +10,7 @@ from keywords.constants import DATA_DIR
 from utilities.cluster_config_utils import get_cbs_servers, get_sg_version
 
 
+
 # TODO: Use python logging hooks instead of wrappers - https://github.com/couchbaselabs/mobile-testkit/issues/686
 def log_info(message, is_verify=False):
     # pytest will capture stdout / stderr
@@ -18,8 +19,10 @@ def log_info(message, is_verify=False):
 
     if is_verify:
         message = "  > {}".format(message)
-
-    print(message)
+    try:
+        print(str(message))
+    except UnicodeDecodeError:
+        print(message.decode())
     logging.info(message)
 
 
