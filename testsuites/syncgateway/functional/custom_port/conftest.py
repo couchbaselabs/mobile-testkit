@@ -162,11 +162,6 @@ def pytest_addoption(parser):
                      help="Hides SGW product version when you hit SGW url",
                      default=False)
 
-    parser.addoption("--enable-cbs-developer-preview",
-                     action="store_true",
-                     help="Enabling CBS developer preview",
-                     default=False)
-
 # This will be called once for the at the beggining of the execution in the 'tests/' directory
 # and will be torn down, (code after the yeild) when all the test session has completed.
 # IMPORTANT: Tests in 'tests/' should be executed in their own test run and should not be
@@ -204,7 +199,6 @@ def params_from_base_suite_setup(request):
     magma_storage_enabled = request.config.getoption("--magma-storage")
     prometheus_enabled = request.config.getoption("--prometheus-enable")
     hide_product_version = request.config.getoption("--hide-product-version")
-    enable_cbs_developer_preview = request.config.getoption("--enable-cbs-developer-preview")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
@@ -233,7 +227,6 @@ def params_from_base_suite_setup(request):
     log_info("number_replicas: {}".format(number_replicas))
     log_info("delta_sync_enabled: {}".format(delta_sync_enabled))
     log_info("hide_product_version: {}".format(hide_product_version))
-    log_info("enable_cbs_developer_preview: {}".format(enable_cbs_developer_preview))
 
     # sg-ce is invalid for di mode
     if mode == "di" and sg_ce:
@@ -374,13 +367,6 @@ def params_from_base_suite_setup(request):
     else:
         log_info("Running without suppress SGW product Version")
         persist_cluster_config_environment_prop(cluster_config, 'hide_product_version', False)
-
-    if enable_cbs_developer_preview:
-        log_info("Enable CBS developer preview")
-        persist_cluster_config_environment_prop(cluster_config, 'cbs_developer_preview', True)
-    else:
-        log_info("Running without CBS developer preview")
-        persist_cluster_config_environment_prop(cluster_config, 'cbs_developer_preview', False)
 
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
 

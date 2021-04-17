@@ -7,7 +7,6 @@
     couchbase_server_package_base_url:
     couchbase_server_package_name:
     ipv6_enabled:
-    cbs_dp_preview:
     couchbase_server_package_url: "{{ couchbase_server_package_base_url }}/{{ couchbase_server_package_name }}"
 
 
@@ -17,7 +16,7 @@
     # 512 reserved for query service
     couchbase_server_index_ram: 512
     couchbase_server_cluster_ram: "{{((ansible_memtotal_mb|int)*0.8)|int - 512 }}"
-    couchbase_server_admin_port: 8091
+    couchbase_server_admin_port: "{{ couchbase_server_admin_port }}"
     protocol: http://
     couchbase_server_home_path: /opt/couchbase
 
@@ -37,69 +36,6 @@
     - debug: msg="Downloading Couchbase server v. {{ couchbase_server_package_url }}"
     - debug: msg="IPv6 Enabled - {{ ipv6_enabled }}"
 
-    # Remove Couchbase Server
-    - include: tasks/remove-couchbase-server.yml
-    - include: tasks/clean-users.yml
-
-    # Download and install
-    - name: COUCHBASE SERVER | Download couchbase server
-      get_url: url={{ couchbase_server_package_url }} dest=/tmp/{{ couchbase_server_package_name }}
-
-    - name: Install Couchbase Server on CentOS
-      yum: name=/tmp/{{ couchbase_server_package_name }} state=present
-      when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat"
-
-    - name: Install Couchbase Server on Ubuntu
-      apt: deb=/tmp/{{ couchbase_server_package_name }} state=present
-      when: ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
-
-    - name: Starting CBS for Ubuntu
-      service: name=couchbase-server state=started
-      when: ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
-
-    - name: Enabling CBS on IPV6 | Stopping CBS
-      service: name=couchbase-server state=stopped
-      when: ipv6_enabled
-
-    - name: Enabling CBS on IPV6 | Enabling IPv6 in static_config
-      shell: echo "{ipv6, true}." >> /opt/couchbase/etc/couchbase/static_config
-      when: ipv6_enabled
-
-    - name: Enabling CBS on IPV6 | Deleting config.dat
-      file:
-        path: /opt/couchbase/var/lib/couchbase/config/config.dat
-        state: absent
-      when: ipv6_enabled
-
-    - name: Enabling CBS on IPV6 | Starting CBS
-      service: name=couchbase-server state=started
-      when: ipv6_enabled
-
-    # Change system settings for Couchbase Server
-    - name: COUCHBASE SERVER | raise max file descriptors
-      copy: src=files/security-nofiles-limit.conf dest=/etc/security/limits.d/20-nofiles.conf owner=root group=root mode=0644
-
-    - name: COUCHBASE SERVER | Enabled Transparent Huge Pages
-      shell: echo 'for i in /sys/kernel/mm/*transparent_hugepage/enabled; do echo never > $i; done' >> /etc/rc.local
-      when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7"
-
-    - name: COUCHBASE SERVER | Disable Transparent Huge Pages
-      shell: echo 'for i in /sys/kernel/mm/*transparent_hugepage/defrag; do echo never > $i; done' >> /etc/rc.local
-      when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7"
-
-    - name: COUCHBASE SERVER | Enabled Transparent Huge Pages again
-      shell: for i in /sys/kernel/mm/*transparent_hugepage/enabled; do echo never > $i; done
-      when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7"
-
-    # Start via init scipt if running CBS 4.0.0 or 4.1.0 on CentOS 7.2 due to https://issues.couchbase.com/browse/MB-17193
-    - name: COUCHBASE SERVER | Start Couchbase Service (Hack around 7.2 and CBS 4.1.0 issue)
-      shell: /opt/couchbase/etc/couchbase_init.d start
-      when: ansible_distribution == 'CentOS' and (ansible_distribution_version == '7.2.1511' and (couchbase_server_package_name == 'couchbase-server-enterprise-4.1.0-5005-centos7.x86_64.rpm' or couchbase_server_package_name == 'couchbase-server-enterprise-4.0.0-4051-centos7.x86_64.rpm'))
-
-    - name: COUCHBASE SERVER | Restart Couchbase Service
-      service: name=couchbase-server state=restarted
-      when: ansible_distribution == 'CentOS' and (not ansible_distribution_version == '7.2.1511' or (not couchbase_server_package_name == 'couchbase-server-enterprise-4.1.0-5005-centos7.x86_64.rpm' and not couchbase_server_package_name == 'couchbase-server-enterprise-4.0.0-4051-centos7.x86_64.rpm'))
-
     # Configure
     - debug: msg="Couchbase cluster RAM {{ couchbase_server_cluster_ram }}"
     - debug: msg="Couchbase bucket RAM {{ couchbase_server_bucket_ram }}"
@@ -113,11 +49,7 @@
       register: cb_full_version
 
     - name: COUCHBASE SERVER | Wait for node to be listening on port 8091
-      wait_for: port=8091 delay=5 timeout=60
-
-    - name: Setting IP family of the cluster
-      shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli ip-family  --set --ipv6 -c [{{ couchbase_server_node }}]:{{ couchbase_server_admin_port }} -u={{ couchbase_server_admin }} --password={{ couchbase_server_password }}"
-      when: "'6.5' in couchbase_server_package_name and ipv6_enabled"
+      wait_for: port="{{ couchbase_server_admin_port }}" delay=5 timeout=60
 
     - name: COUCHBASE SERVER | Configure cluster settings (3.0.X and 3.1.X)
       shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli cluster-init -c {{ couchbase_server_node }}:{{ couchbase_server_admin_port }} --user={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --cluster-port={{couchbase_server_admin_port}} --cluster-ramsize={{ couchbase_server_cluster_ram }}"
@@ -156,19 +88,15 @@
       when: "(not {{ cb_major_version['stdout'] | search('\\b[1-5]\\b') }}) and not ipv6_enabled"
 
     - name: COUCHBASE SERVER | Initialize primary node (6.X and up)| configure IPv6
-      shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli node-init -c [{{ couchbase_server_node }}]:{{ couchbase_server_admin_port }} -u={{ couchbase_server_admin }} --password={{ couchbase_server_password }}"
+      shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli node-init -c [{{ couchbase_server_node }}]:{{ couchbase_server_admin_port }} -u={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --node-init-hostname={{ couchbase_server_node }}"
       when: "(not {{ cb_major_version['stdout'] | search('\\b[1-5]\\b') }}) and ipv6_enabled"
 
     - name: COUCHBASE SERVER | Wait for node to be listening on port 8091
-      wait_for: port=8091 delay=5 timeout=60
-
+      wait_for: port="{{ couchbase_server_admin_port }}" delay=5 timeout=60
+  
     - set_fact:
         protocol: ""
       when: "( {{ cb_major_version['stdout'] | search('\\b[1-4]\\b') }} ) or ( '5.0.0' in cb_full_version.stdout )"
-
-    - name: COUCHBASE SERVER | Join additional cluster nodes | configure IPv6
-      shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli server-add -c {{ protocol }}://[{{ couchbase_server_primary_node }}]:{{ couchbase_server_admin_port }} -u={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --server-add={{ protocol }}://[{{ couchbase_server_node }}]:{{ couchbase_server_admin_port }} --server-add-username={{ couchbase_server_admin }} --server-add-password={{ couchbase_server_password }}"
-      when: "not (couchbase_server_node == couchbase_server_primary_node ) and (not {{ cb_major_version['stdout'] | search('\\b[1-5]\\b') }}) and ipv6_enabled"
 
     - name: COUCHBASE SERVER | Join additional cluster nodes | configure IPv4
       shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli server-add -c {{ protocol }}{{ couchbase_server_primary_node }}:{{ couchbase_server_admin_port }} -u={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --server-add={{ protocol }}{{ couchbase_server_node }}:{{ couchbase_server_admin_port }} --server-add-username={{ couchbase_server_admin }} --server-add-password={{ couchbase_server_password }}"
@@ -213,7 +141,3 @@
     - name: COUCHBASE SERVER | Enable auto failover (3.X to 5.X) | configure IPv6
       shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli setting-autofailover -c [{{ couchbase_server_primary_node }}]:{{ couchbase_server_admin_port }} --user={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --enable-auto-failover=1 --auto-failover-timeout=30"
       when: "{{ cb_major_version['stdout'] | search('\\b[3-5]\\b')}} and ipv6_enabled"
-
-    - name: COUCHBASE SERVER | Enable developer preview (6.X and up)
-      shell: yes | {{ couchbase_server_home_path }}/bin/couchbase-cli enable-developer-preview --enable -c localhost:{{ couchbase_server_admin_port }} -u {{ couchbase_server_admin }} -p {{ couchbase_server_password }}
-      when:  "(not {{ cb_major_version['stdout'] | search('\\b[1-5]\\b') }}) and {{ cbs_dp_preview }}"

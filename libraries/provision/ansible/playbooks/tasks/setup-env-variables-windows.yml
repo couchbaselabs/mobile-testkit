@@ -1,0 +1,19 @@
+# Setting up env variables on sync gateway hosts
+- name: ENV VARIABLES | setting up environment variables for service on centos
+  win_file:
+    path: C:\setup_env_var.ps1
+    state: touch
+
+- name: ENV VARIABLES | Check if C:\setup_env_var.ps1 is present on Windows
+  win_stat:
+    path: 'C:\setup_env_var.ps1'
+  register: ev
+  
+- name: ENV VARIABLES | Copy env_var file to C:\setup_env_var.ps1
+  win_template:
+    src: "{{ environment_file }}"
+    dest: 'C:\setup_env_var.ps1'
+  when: ev.stat.exists
+
+- name: ENV VARIABLES | Run C:\setup_env_var.ps1
+  win_command: powershell.exe -ExecutionPolicy ByPass -File C:\setup_env_var.ps1

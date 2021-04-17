@@ -2959,7 +2959,6 @@ def test_resetCheckpointWithPurge(params_from_base_test_setup, replication_type,
     # Reset checkpoint and do replication again from sg to cbl
     # Verify all docs are back
     replicator.resetCheckPoint(repl)
-    replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
     assert db.getCount(cbl_db) == num_of_docs, "Docs that got purged in CBL did not got back after resetCheckpoint"
     replicator.stop(repl)
@@ -2986,7 +2985,10 @@ def test_resetCheckpointFailure(params_from_base_test_setup):
     liteserv_platform = params_from_base_test_setup["liteserv_platform"]
     liteserv_version = params_from_base_test_setup["liteserv_version"]
     if liteserv_version < "2.1":
-        pytest.skip('database encryption feature not available with version < 2.1')
+        pytest.skip('resetCheckpointFailure feature not available with version < 2.1')
+
+    if liteserv_version >= "3.0":
+        pytest.skip('resetCheckpointFailure API has been deprecated in 2.8 and removed in 3.0')
 
     if(liteserv_platform.lower() == "ios"):
         pytest.skip('ResetCheckPoint API does not throw exception in iOS if replicator is not stopped, so skipping test')
@@ -4121,12 +4123,12 @@ def update_and_resetCheckPoint(db, cbl_db, replicator, repl, replication_type, r
 
     # Reset checkpoint and do replication again from sg to cbl
     # Verify all docs are back
-    replicator.resetCheckPoint(repl)
+
     if replication_type == "one_way":
         replicator.setReplicatorType(repl_config, "pull")
         repl = replicator.create(repl_config)
 
-    replicator.start(repl)
+    replicator.resetCheckPoint(repl)
     replicator.wait_until_replicator_idle(repl)
     replicator.stop(repl)
 

@@ -648,7 +648,6 @@ def test_peer_to_peer_resetCheckPoint(params_from_base_test_setup, server_setup,
 
     # call reset api and restart client request and replication
     replicator.resetCheckPoint(repl)
-    replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
     assert db_obj_client.getCount(cbl_db_client) == num_of_docs, "Docs that got purged in client did not got it back from server after resetcheckpoint api"
     assert db_obj_server.getCount(cbl_db_server) == num_of_docs, "docs got purged in server after resetcheckpoint"

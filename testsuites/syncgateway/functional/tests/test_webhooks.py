@@ -1,20 +1,21 @@
 import time
-
 import pytest
-from couchbase.bucket import Bucket
-
+import subprocess
 from keywords import document
 from keywords.MobileRestClient import MobileRestClient
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.userinfo import UserInfo
-from keywords.utils import host_for_url, log_info
+from keywords.utils import host_for_url, log_info, get_local_ip
 from libraries.testkit.admin import Admin
 from libraries.testkit.cluster import Cluster
 from libraries.testkit.parallelize import in_parallel
 from libraries.testkit.web_server import WebServer
 from keywords.exceptions import TimeoutError
 from keywords.constants import CLIENT_REQUEST_TIMEOUT
-from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
+from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf, get_cluster
+from keywords.ClusterKeywords import ClusterKeywords
+from keywords.couchbaseserver import get_sdk_client_with_bucket
+from utilities.cluster_config_utils import copy_sgconf_to_temp, replace_string_on_sgw_config
 
 
 @pytest.mark.syncgateway
@@ -167,14 +168,14 @@ def test_webhooks_crud(params_from_base_test_setup, sg_conf_name, filtered):
     sg_client = MobileRestClient()
     cbs_ip = host_for_url(cbs_url)
     if ssl_enabled and cluster.ipv6:
-        connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(cbs_ip, bucket_name)
+        connection_url = "couchbases://{}?ssl=no_verify&ipv6=allow".format(cbs_ip)
     elif ssl_enabled and not cluster.ipv6:
-        connection_url = "couchbases://{}/{}?ssl=no_verify".format(cbs_ip, bucket_name)
+        connection_url = "couchbases://{}?ssl=no_verify".format(cbs_ip)
     elif not ssl_enabled and cluster.ipv6:
-        connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, bucket_name)
+        connection_url = "couchbase://{}?ipv6=allow".format(cbs_ip)
     else:
-        connection_url = 'couchbase://{}/{}'.format(cbs_ip, bucket_name)
-    sdk_client = Bucket(connection_url, password='password')
+        connection_url = 'couchbase://{}'.format(cbs_ip)
+    sdk_client = get_cluster(connection_url, bucket_name)
     sg_info = UserInfo('sg_user', 'pass', channels=['shared'], roles=[])
     sdk_info = UserInfo('sdk_user', 'pass', channels=['shared'], roles=[])
     sg_client.create_user(
@@ -310,6 +311,222 @@ def test_webhooks_crud(params_from_base_test_setup, sg_conf_name, filtered):
     webhook_server.stop()
 
 
+@pytest.mark.syncgateway
+@pytest.mark.webhooks
+@pytest.mark.oscertify
+def test_webhook_filter_external_js(params_from_base_test_setup, setup_webserver):
+    """
+    "1. Create valid js function  for import filter and host it in local machine to access jscode with http url
+    webhook filter : add doc.type if doc has data with webhook filter value, otherwise add doc.type is ignore
+    2. Create sgw config and point the webhook filter jsfunction to the webhook function hosted in the localmachine and can be accessed by http url
+    Start sync gateway
+    3. Verify SGW starts sucessfully
+    4. create docs in SDK few docs with data as webhook_filter and some without non_webhook_filter data
+    5. Verfiy webhook events generated and the docs with webhook filter should have in in the events
+    """
+
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+    webhook_server = setup_webserver["webhook_server"]
+    sg_conf_name = "webhooks/webhook_filter_external_js"
+
+    if sync_gateway_version < "3.0.0":
+        pytest.skip("this feature not available below 3.0.0")
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    cluster_helper = ClusterKeywords(cluster_config)
+    cluster_hosts = cluster_helper.get_cluster_topology(cluster_config)
+    sg_url = cluster_hosts["sync_gateways"][0]["public"]
+    sg_db = "db"
+    channel = ["sgw-env-var"]
+    sdk_non_webhook = "sdk_non_webhook"
+    sdk_webhook = "sdk_webhook"
+    sdk_webhook_docs = 7
+    sdk_non_webhook_docs = 4
+
+    cluster = Cluster(config=cluster_config)
+
+    # Create and set up sdk client
+    cbs_ip = cluster.servers[0].host
+    bucket = cluster.servers[0].get_bucket_names()[0]
+    sdk_client = get_sdk_client_with_bucket(ssl_enabled, cluster, cbs_ip, bucket)
+    js_func_key = "\"filter\":\""
+    path = "http://{}:5007/webhookFilter".format(get_local_ip())
+    path = js_func_key + path + "\","
+    temp_sg_config, _ = copy_sgconf_to_temp(sg_conf, mode)
+    temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ webhook_filter }}", path)
+    cluster.reset(sg_config_path=temp_sg_config)
+
+    topology = cluster_helper.get_cluster_topology(cluster_config)
+
+    cbs_url = topology["couchbase_servers"][0]
+    sg_url = topology["sync_gateways"][0]["public"]
+    sg_url_admin = topology["sync_gateways"][0]["admin"]
+    sg_db = "db"
+
+    log_info("Running 'test_attachment_revpos_when_ancestor_unavailable'")
+    log_info("Using cbs_url: {}".format(cbs_url))
+    log_info("Using sg_url: {}".format(sg_url))
+    log_info("Using sg_url_admin: {}".format(sg_url_admin))
+    log_info("Using sg_db: {}".format(sg_db))
+    log_info("Using bucket: {}".format(bucket))
+
+    # webhook_filter verification
+    def update_webhook_prop():
+        return {'updates': 0, 'data': 'webhook_filter'}
+
+    def update_non_webhook_prop():
+        return {'updates': 0, 'data': 'non_webhook_filter'}
+    log_info('Adding {} docs via SDK ...')
+    sdk_doc_bodies = document.create_docs(sdk_webhook, number=sdk_webhook_docs, content={"data": "webhook_filter"}, channels=channel, prop_generator=update_webhook_prop)
+    sdk_doc_ids1 = [doc['_id'] for doc in sdk_doc_bodies]
+    sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
+    sdk_client.upsert_multi(sdk_docs)
+
+    sdk_doc_bodies = document.create_docs(sdk_non_webhook, number=sdk_non_webhook_docs, content={"data": "non_webhook_filter"}, channels=channel)
+    sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
+    sdk_client.upsert_multi(sdk_docs)
+
+    count = 0
+    retries = 5
+    while count < retries:
+        data = webhook_server.get_data()
+        # Remove unwanted data from the response
+        for item in data:
+            if "_id" not in item:
+                data.remove(item)
+
+        posted_webhook_events_ids = [item['_id'] for item in data]
+        if len(posted_webhook_events_ids) < len(sdk_doc_ids1):
+            time.sleep(2)
+            count += 1
+            continue
+        else:
+            break
+    assert len(posted_webhook_events_ids) == len(sdk_doc_ids1)
+
+
+@pytest.mark.syncgateway
+@pytest.mark.webhooks
+def test_webhook_filter_external_https_js(params_from_base_test_setup, setup_webserver_js_sslon):
+    """
+    "1. Create valid js function  for import filter and host it in local machine to access jscode with https url
+    webhook filter : add doc.type if doc has data with webhook filter value, otherwise add doc.type is ignore
+    2. Create sgw config and point the webhook filter jsfunction to the webhook function hosted in the localmachine and can be accessed by https url
+    Start sync gateway
+    3. Verify SGW starts sucessfully
+    4. create docs in SDK few docs with data as webhook_filter and some without non_webhook_filter data
+    5. Verify webhook events generated and the docs with webhook filter should have in in the events
+    """
+
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+    webhook_server = setup_webserver_js_sslon["webhook_server"]
+    sg_conf_name = "webhooks/webhook_filter_external_js"
+
+    if sync_gateway_version < "3.0.0":
+        pytest.skip('this feature not available below 3.0.0')
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    cluster_helper = ClusterKeywords(cluster_config)
+    cluster_hosts = cluster_helper.get_cluster_topology(cluster_config)
+    sg_url = cluster_hosts["sync_gateways"][0]["public"]
+    sg_db = "db"
+    channel = ["sgw-env-var"]
+    sdk_non_webhook = "sdk_non_webhook"
+    sdk_webhook = "sdk_webhook"
+    sdk_webhook_docs = 7
+    sdk_non_webhook_docs = 4
+
+    cluster = Cluster(config=cluster_config)
+
+    # Create and set up sdk client
+    cbs_ip = cluster.servers[0].host
+    bucket = cluster.servers[0].get_bucket_names()[0]
+    sdk_client = get_sdk_client_with_bucket(ssl_enabled, cluster, cbs_ip, bucket)
+    js_func_key = "\"filter\":\""
+    path = "https://{}:5007/webhookFilter".format(get_local_ip())
+    path = js_func_key + path + "\","
+    temp_sg_config, _ = copy_sgconf_to_temp(sg_conf, mode)
+    temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ webhook_filter }}", path)
+    cluster.reset(sg_config_path=temp_sg_config)
+
+    topology = cluster_helper.get_cluster_topology(cluster_config)
+
+    cbs_url = topology["couchbase_servers"][0]
+    sg_url = topology["sync_gateways"][0]["public"]
+    sg_url_admin = topology["sync_gateways"][0]["admin"]
+    sg_db = "db"
+
+    log_info("Running 'test_attachment_revpos_when_ancestor_unavailable'")
+    log_info("Using cbs_url: {}".format(cbs_url))
+    log_info("Using sg_url: {}".format(sg_url))
+    log_info("Using sg_url_admin: {}".format(sg_url_admin))
+    log_info("Using sg_db: {}".format(sg_db))
+    log_info("Using bucket: {}".format(bucket))
+
+    # webhook_filter verification
+    def update_webhook_prop():
+        return {'updates': 0, 'data': 'webhook_filter'}
+
+    def update_non_webhook_prop():
+        return {'updates': 0, 'data': 'non_webhook_filter'}
+    log_info('Adding {} docs via SDK ...')
+    sdk_doc_bodies = document.create_docs(sdk_webhook, number=sdk_webhook_docs, content={"data": "webhook_filter"}, channels=channel, prop_generator=update_webhook_prop)
+    sdk_doc_ids1 = [doc['_id'] for doc in sdk_doc_bodies]
+    sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
+    sdk_client.upsert_multi(sdk_docs)
+
+    sdk_doc_bodies = document.create_docs(sdk_non_webhook, number=sdk_non_webhook_docs, content={"data": "non_webhook_filter"}, channels=channel)
+    sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
+    sdk_client.upsert_multi(sdk_docs)
+
+    count = 0
+    retries = 10
+    while count < retries:
+        data = webhook_server.get_data()
+        # Remove unwanted data from the response
+        for item in data:
+            if "_id" not in item:
+                data.remove(item)
+
+        posted_webhook_events_ids = [item['_id'] for item in data]
+        if len(posted_webhook_events_ids) < len(sdk_doc_ids1):
+            time.sleep(2)
+            count += 1
+            continue
+        else:
+            break
+    assert len(posted_webhook_events_ids) == len(sdk_doc_ids1)
+
+
+@pytest.fixture(scope="function")
+def setup_webserver():
+    webhook_server = WebServer()
+    webhook_server.start()
+    process = subprocess.Popen(args=["nohup", "python", "libraries/utilities/host_sgw_jscode.py", "--start", "&"], stdout=subprocess.PIPE)
+    yield{
+        "webhook_server": webhook_server
+    }
+
+    webhook_server.stop()
+    process.kill()
+
+
+@pytest.fixture(scope="function")
+def setup_webserver_js_sslon():
+    webhook_server = WebServer()
+    webhook_server.start()
+    process = subprocess.Popen(args=["nohup", "python", "libraries/utilities/host_sgw_jscode.py", "--sslstart", "&"], stdout=subprocess.PIPE)
+    yield{
+        "webhook_server": webhook_server
+    }
+    webhook_server.stop()
+    process.kill()
+
+
 def add_docs(sg_client, sg_url, sg_db, sg_docs, sg_auth, sdk_client, sdk_docs, num_docs_per_client, xattrs):
     """ Add docs
     if in xattr mode:
@@ -370,7 +587,7 @@ def update_docs(sg_client, sg_url, sg_db, sg_doc_ids, sg_auth, sdk_client, sdk_d
         for sg_user_doc_id in sg_doc_ids:
             doc = sdk_client.get(sg_user_doc_id)
 
-            doc_body = doc.value
+            doc_body = doc.content
             doc_body['content'] = updated_doc_content
 
             sdk_client.upsert(sg_user_doc_id, doc_body)
