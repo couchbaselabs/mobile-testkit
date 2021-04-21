@@ -1,7 +1,6 @@
 import json
 import os
 import pytest
-import subprocess
 
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.remoteexecutor import RemoteExecutor
@@ -78,7 +77,7 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name, 
     sg_helper.create_directory(cluster_config=cluster_conf, url=sg_one_url, dir_name="/tmp/sg_logs")
 
     SG_LOGS = ['sg_debug', 'sg_info', 'sg_warn']
-    if sg_platform == "windows":
+    if sg_platform == "windows" or sg_platform == "macos":
         json_cluster = load_cluster_config_json(cluster_conf)
         sghost_username = json_cluster["sync_gateways:vars"]["ansible_user"]
         sghost_password = json_cluster["sync_gateways:vars"]["ansible_password"]
@@ -104,14 +103,11 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name, 
         file_name = "/tmp/sg_logs/{}.log".format(log)
         command = "ls /tmp/sg_logs/ | grep {} | wc -l".format(log)
         log_info("Checking for files for {}".format(file_name))
-        if sg_platform == "macos":
-            stdout = subprocess.check_output(command, shell=True)
-            assert int(stdout) == 2, "debug log files did not get rotated and incremented when logging is exceeded the size"
-        else:
-            if sg_platform == "windows":
-                command = "ls C:\\\\tmp\\\\sg_logs | grep {} | wc -l".format(log)
-            _, stdout, _ = remote_executor.execute(command)
-            assert stdout[0].rstrip() == str(2)
+
+        if sg_platform == "windows":
+            command = "ls C:\\\\tmp\\\\sg_logs | grep {} | wc -l".format(log)
+        _, stdout, _ = remote_executor.execute(command)
+        assert stdout[0].strip() == str(2)
 
         sg_helper.stop_sync_gateways(cluster_config=cluster_conf, url=sg_one_url)
 
@@ -264,7 +260,7 @@ def test_log_maxage_timestamp_ignored(params_from_base_test_setup, sg_conf_name)
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
-    if sg_platform == "windows":
+    if sg_platform == "windows" or sg_platform == "macos":
         json_cluster = load_cluster_config_json(cluster_conf)
         sghost_username = json_cluster["sync_gateways:vars"]["ansible_user"]
         sghost_password = json_cluster["sync_gateways:vars"]["ansible_password"]
@@ -315,22 +311,15 @@ def test_log_maxage_timestamp_ignored(params_from_base_test_setup, sg_conf_name)
     for log in SG_LOGS_MAXAGE:
         file_name = "/tmp/sg_logs/{}.log".format(log)
         command = "sudo touch -d \"{} days ago\" {}".format(SG_LOGS_MAXAGE[log], file_name)
-        if sg_platform == "macos":
-            os.system(command)
-        else:
-            remote_executor.execute(command)
+        remote_executor.execute(command)
 
     sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
 
     for log in SG_LOGS_MAXAGE:
         # Verify that new log file was not created
         command = "ls /tmp/sg_logs/ | grep {} | wc -l".format(log)
-        if sg_platform == "macos":
-            os_output = subprocess.check_output(command, shell=True)
-            assert os_output == SG_LOGS_FILES_NUM[log]
-        else:
-            _, stdout, _ = remote_executor.execute(command)
-            assert stdout[0].rstrip() == SG_LOGS_FILES_NUM[log]
+        _, stdout, _ = remote_executor.execute(command)
+        assert stdout[0].strip() == SG_LOGS_FILES_NUM[log]
 
     # Remove generated conf file
     os.remove(temp_conf)
@@ -423,7 +412,7 @@ def test_log_200mb(params_from_base_test_setup, sg_conf_name):
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
-    if sg_platform == "windows":
+    if sg_platform == "windows" or sg_platform == "macos":
         json_cluster = load_cluster_config_json(cluster_conf)
         sghost_username = json_cluster["sync_gateways:vars"]["ansible_user"]
         sghost_password = json_cluster["sync_gateways:vars"]["ansible_password"]
@@ -468,12 +457,8 @@ def test_log_200mb(params_from_base_test_setup, sg_conf_name):
 
     for log in SG_LOGS:
         command = "ls /tmp/sg_logs/ | grep {} | wc -l".format(log)
-        if sg_platform == "macos":
-            stdout = subprocess.check_output(command, shell=True)
-            output = stdout
-        else:
-            _, stdout, _ = remote_executor.execute(command)
-            output = stdout[0].rstrip()
+        _, stdout, _ = remote_executor.execute(command)
+        output = stdout[0].strip()
         # A backup file should be created with 200MB
         if (log == "sg_debug" or log == "sg_info") and sg_platform != "windows":
             assert int(output) == int(SG_LOGS_FILES_NUM[log]) + 1
@@ -731,7 +716,7 @@ def test_rotated_logs_size_limit(params_from_base_test_setup, sg_conf_name):
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
-    if sg_platform == "windows":
+    if sg_platform == "windows" or sg_platform == "macos":
         json_cluster = load_cluster_config_json(cluster_conf)
         sghost_username = json_cluster["sync_gateways:vars"]["ansible_user"]
         sghost_password = json_cluster["sync_gateways:vars"]["ansible_password"]
@@ -776,27 +761,18 @@ def test_rotated_logs_size_limit(params_from_base_test_setup, sg_conf_name):
 
     for log in SG_LOGS:
         command = "ls /tmp/sg_logs/ | grep {} | wc -l".format(log)
-        if sg_platform == "macos":
-            stdout = subprocess.check_output(command, shell=True)
-        else:
-            _, stdout, _ = remote_executor.execute(command)
+        _, stdout, _ = remote_executor.execute(command)
         # A rotated log file should be created with 100MB
         if (log == "sg_debug" or log == "sg_info"):
             if sg_platform == "windows":
-                assert stdout[0].rstrip() == SG_LOGS_FILES_NUM[log]
-            elif sg_platform == "macos":
-                assert int(stdout.rstrip()) == int(SG_LOGS_FILES_NUM[log]) + 1
+                assert stdout[0].strip() == SG_LOGS_FILES_NUM[log]
             else:
-                assert int(stdout[0].rstrip()) == int(SG_LOGS_FILES_NUM[log]) + 1
+                assert int(stdout[0].strip()) == int(SG_LOGS_FILES_NUM[log]) + 1
 
     for log in SG_LOGS:
         command = "ls -rt /tmp/sg_logs/{}*.gz | head -1".format(log)
-        if sg_platform == "macos":
-            stdout = subprocess.check_output(command, shell=True)
-            stdout = stdout.rstrip().decode("utf-8")
-        else:
-            _, stdout, _ = remote_executor.execute(command)
-            stdout = stdout[0].rstrip()
+        _, stdout, _ = remote_executor.execute(command)
+        stdout = stdout[0].strip()
         zip_file = stdout
         if sg_platform == "windows":
             _, stdout, _ = remote_executor.execute("for /f \"tokens=5\" %a in ('ls -lrt {}') do echo %a".format(zip_file))
@@ -804,11 +780,8 @@ def test_rotated_logs_size_limit(params_from_base_test_setup, sg_conf_name):
         else:
             print_variable = "{print $5}"
             command = "ls -lrt {} | awk '{}'".format(zip_file, print_variable)
-            if sg_platform == "macos":
-                stdout = subprocess.check_output(command, shell=True)
-            else:
-                _, stdout, _ = remote_executor.execute(command)
-                stdout = stdout[0].rstrip()
+            _, stdout, _ = remote_executor.execute(command)
+            stdout = stdout[0].strip()
         log_size = stdout
         assert int(log_size) > 100000, "rotated log size is not created with 100 MB"
 
@@ -820,12 +793,8 @@ def get_sgLogs_fileNum(SG_LOGS_MAXAGE, remote_executor, sg_platform="centos"):
     SG_LOGS_FILES_NUM = {}
     for log in SG_LOGS_MAXAGE:
         command = "ls /tmp/sg_logs/ | grep {} | wc -l".format(log)
-        if sg_platform == "macos":
-            stdout = subprocess.check_output(command, shell=True)
-            SG_LOGS_FILES_NUM[log] = stdout
-        else:
-            _, stdout, _ = remote_executor.execute(command)
-            SG_LOGS_FILES_NUM[log] = stdout[0].rstrip()
+        _, stdout, _ = remote_executor.execute(command)
+        SG_LOGS_FILES_NUM[log] = stdout[0].strip()
 
     return SG_LOGS_FILES_NUM
 

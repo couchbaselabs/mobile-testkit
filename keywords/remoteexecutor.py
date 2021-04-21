@@ -49,7 +49,10 @@ class RemoteExecutor:
             command = "cmd /c " + command
             stdin, stdout, stderr = self.client.exec_command(command, timeout=60)
         else:
-            self.client.connect(self.host, username=self.username, banner_timeout=REMOTE_EXECUTOR_TIMEOUT)
+            if self.sg_platform == "macos":
+                self.client.connect(self.host, username=self.username, password=self.password, banner_timeout=REMOTE_EXECUTOR_TIMEOUT)
+            else:
+                self.client.connect(self.host, username=self.username, banner_timeout=REMOTE_EXECUTOR_TIMEOUT)
             # get_pty=True is required for sudo commands
             stdin, stdout, stderr = self.client.exec_command(command, get_pty=True)
 
