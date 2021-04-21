@@ -18,8 +18,10 @@ def log_info(message, is_verify=False):
 
     if is_verify:
         message = "  > {}".format(message)
-
-    print(message)
+    try:
+        print(str(message))
+    except UnicodeEncodeError:
+        print(str(message).encode())
     logging.info(message)
 
 
