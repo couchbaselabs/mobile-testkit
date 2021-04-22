@@ -2958,7 +2958,6 @@ def test_resetCheckpointWithPurge(params_from_base_test_setup, replication_type,
     # Reset checkpoint and do replication again from sg to cbl
     # Verify all docs are back
     replicator.resetCheckPoint(repl)
-    replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
     assert db.getCount(cbl_db) == num_of_docs, "Docs that got purged in CBL did not got back after resetCheckpoint"
     replicator.stop(repl)
@@ -4051,12 +4050,12 @@ def update_and_resetCheckPoint(db, cbl_db, replicator, repl, replication_type, r
 
     # Reset checkpoint and do replication again from sg to cbl
     # Verify all docs are back
-    replicator.resetCheckPoint(repl)
+
     if replication_type == "one_way":
         replicator.setReplicatorType(repl_config, "pull")
         repl = replicator.create(repl_config)
 
-    replicator.start(repl)
+    replicator.resetCheckPoint(repl)
     replicator.wait_until_replicator_idle(repl)
     replicator.stop(repl)
 
