@@ -754,13 +754,18 @@ def test_rotated_logs_size_limit(params_from_base_test_setup, sg_conf_name):
     with open(temp_conf, 'w') as fp:
         json.dump(data, fp, indent=4)
 
+    if sg_platform == "windows":
+        sg_logs_dir = "C:\\\\tmp\\\\sg_logs"
+    else:
+        sg_logs_dir = "/tmp/sg_logs"
+
     sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
-    SG_LOGS_FILES_NUM = get_sgLogs_fileNum(SG_LOGS, remote_executor, sg_platform)
+    SG_LOGS_FILES_NUM = get_sgLogs_fileNum(SG_LOGS, remote_executor, sg_platform, sg_logs_dir)
     # ~1M MB will be added to log file after requests
     send_request_to_sgw(sg_one_url, sg_admin_url, remote_executor, sg_platform)
 
     for log in SG_LOGS:
-        command = "ls /tmp/sg_logs/ | grep {} | wc -l".format(log)
+        command = "ls {} | grep {} | wc -l".format(sg_logs_dir, log)
         _, stdout, _ = remote_executor.execute(command)
         # A rotated log file should be created with 100MB
         if (log == "sg_debug" or log == "sg_info"):
@@ -770,13 +775,16 @@ def test_rotated_logs_size_limit(params_from_base_test_setup, sg_conf_name):
                 assert int(stdout[0].strip()) == int(SG_LOGS_FILES_NUM[log]) + 1
 
     for log in SG_LOGS:
-        command = "ls -rt /tmp/sg_logs/{}*.gz | head -1".format(log)
+        if sg_platform == "windows":
+            command = "ls -rt {} | grep {} | grep log.gz | head -1".format(sg_logs_dir, log)
+        else:
+            command = "ls -rt {}/{}*.gz | head -1".format(sg_logs_dir, log)
         _, stdout, _ = remote_executor.execute(command)
         stdout = stdout[0].strip()
         zip_file = stdout
         if sg_platform == "windows":
-            _, stdout, _ = remote_executor.execute("for /f \"tokens=5\" %a in ('ls -lrt {}') do echo %a".format(zip_file))
-            stdout = stdout[1].split(' ')[2]
+            _, stdout, _ = remote_executor.execute("ls -lrt {}\\\\{}".format(sg_logs_dir, zip_file))
+            stdout = stdout[0].split(' ')[4]
         else:
             print_variable = "{print $5}"
             command = "ls -lrt {} | awk '{}'".format(zip_file, print_variable)
@@ -789,10 +797,10 @@ def test_rotated_logs_size_limit(params_from_base_test_setup, sg_conf_name):
     os.remove(temp_conf)
 
 
-def get_sgLogs_fileNum(SG_LOGS_MAXAGE, remote_executor, sg_platform="centos"):
+def get_sgLogs_fileNum(SG_LOGS_MAXAGE, remote_executor, sg_platform="centos", sg_logs_dir="/tmp/sg_logs/"):
     SG_LOGS_FILES_NUM = {}
     for log in SG_LOGS_MAXAGE:
-        command = "ls /tmp/sg_logs/ | grep {} | wc -l".format(log)
+        command = "ls {} | grep {} | wc -l".format(sg_logs_dir, log)
         _, stdout, _ = remote_executor.execute(command)
         SG_LOGS_FILES_NUM[log] = stdout[0].strip()
 
@@ -807,8 +815,12 @@ def send_request_to_sgw(sg_one_url, sg_admin_url, remote_executor, sg_platform="
         os.system(command)
 
     elif sg_platform == "macos":
-        os.system("for ((i=1;i <= 3200;i += 1)); do curl -s http://localhost:4984/ABCD/ > /dev/null; done")
-        os.system("for ((i=1;i <= 2000;i += 1)); do curl -s -H 'Accept: text/plain' http://localhost:4985/db/ > /dev/null; done")
+        # os.system("for ((i=1;i <= 3200;i += 1)); do curl -s http://localhost:4984/ABCD/ > /dev/null; done")
+        # os.system("for ((i=1;i <= 2000;i += 1)); do curl -s -H 'Accept: text/plain' http://localhost:4985/db/ > /dev/null; done")
+        command = "for ((i=1;i <= 2000;i += 1)); do curl -s {}/ABCD/ > /dev/null; done".format(sg_one_url)
+        os.system(command)
+        command = "for ((i=1;i <= 2000;i += 1)); do curl -s -H 'Accept: application/json' {}/db/ > /dev/null; done".format(sg_admin_url)
+        os.system(command)
     else:
         remote_executor.execute(
             "for ((i=1;i <= 3200;i += 1)); do curl -s http://localhost:4984/ABCD/ > /dev/null; done")
