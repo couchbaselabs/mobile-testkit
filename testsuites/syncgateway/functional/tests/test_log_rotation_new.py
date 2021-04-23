@@ -769,7 +769,7 @@ def test_rotated_logs_size_limit(params_from_base_test_setup, sg_conf_name):
         _, stdout, _ = remote_executor.execute(command)
         # A rotated log file should be created with 100MB
         if (log == "sg_debug" or log == "sg_info"):
-            if sg_platform == "windows":
+            if sg_platform == "windows" or sg_platform == "macos":
                 assert stdout[0].strip() == SG_LOGS_FILES_NUM[log]
             else:
                 assert int(stdout[0].strip()) == int(SG_LOGS_FILES_NUM[log]) + 1
@@ -815,9 +815,9 @@ def send_request_to_sgw(sg_one_url, sg_admin_url, remote_executor, sg_platform="
         os.system(command)
 
     elif sg_platform == "macos":
-        command = "for ((i=1;i <= 3200;i += 1)); do curl -s {}/ABCD/ > /dev/null; done".format(sg_one_url)
+        command = "for ((i=1;i <= 2000;i += 1)); do curl -s {}/ABCD/ > /dev/null; done".format(sg_one_url)
         os.system(command)
-        command = "for ((i=1;i <= 3200;i += 1)); do curl -s -H 'Accept: application/json' {}/db/ > /dev/null; done".format(sg_admin_url)
+        command = "for ((i=1;i <= 2000;i += 1)); do curl -s -H 'Accept: application/json' {}/db/ > /dev/null; done".format(sg_admin_url)
         os.system(command)
     else:
         remote_executor.execute(
