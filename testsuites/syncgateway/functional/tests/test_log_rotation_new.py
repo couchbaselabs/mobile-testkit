@@ -815,11 +815,9 @@ def send_request_to_sgw(sg_one_url, sg_admin_url, remote_executor, sg_platform="
         os.system(command)
 
     elif sg_platform == "macos":
-        # os.system("for ((i=1;i <= 3200;i += 1)); do curl -s http://localhost:4984/ABCD/ > /dev/null; done")
-        # os.system("for ((i=1;i <= 2000;i += 1)); do curl -s -H 'Accept: text/plain' http://localhost:4985/db/ > /dev/null; done")
         command = "for ((i=1;i <= 3200;i += 1)); do curl -s {}/ABCD/ > /dev/null; done".format(sg_one_url)
         os.system(command)
-        command = "for ((i=1;i <= 2000;i += 1)); do curl -s -H 'Accept: application/json' {}/db/ > /dev/null; done".format(sg_admin_url)
+        command = "for ((i=1;i <= 3200;i += 1)); do curl -s -H 'Accept: application/json' {}/db/ > /dev/null; done".format(sg_admin_url)
         os.system(command)
     else:
         remote_executor.execute(
