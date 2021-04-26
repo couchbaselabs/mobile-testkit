@@ -1205,18 +1205,18 @@ def test_peer_to_peer_retries(params_from_base_test_setup, server_setup, num_of_
     # peer_to_peer_server.server_stop(message_listener, endPointType)
     # Now set up client
     repl = peerToPeer_client.configure(port=url_listener_port, host=server_host, server_db_name=db_name_server,
-                                       client_database=cbl_db_client, continuous=continuous, max_timeout_interval=20,
-                                       replication_type=replicator_type, endPointType=endPointType)
+                                       client_database=cbl_db_client, continuous=continuous, max_timeout_interval=10,
+                                       replication_type=replicator_type, endPointType=endPointType, retries=3)
 
     peerToPeer_client.client_start(repl)
-
-    for i in range(6):
+    repl_change_listener = replicator.addChangeListener(repl)
+    for i in range(4):
         print(replicator.getActivitylevel(repl), "getActivitylevel")
         print(replicator.status(repl), "getActivitylevel")
-        print(replicator.getActivitylevel(repl), "getActivitylevel")
-        print(replicator.getError(repl))
+        print(replicator.getChangesCount(repl_change_listener))
+        print("****"*i*3)
         # time.sleep()
-        time.sleep(3)
+        time.sleep(i*3)
 
     #
     #
@@ -1258,7 +1258,7 @@ def test_peer_to_peer_url_retries2(params_from_base_test_setup, url_listener_set
     base_url_list = url_listener_setup["base_url_list"]
     cbl_db_server = url_listener_setup["cbl_db_server"]
     cbl_db_list = url_listener_setup["cbl_db_list"]
-    url_listener = url_listener_setup["url_listener"]
+    # url_listener = url_listener_setup["url_listener"]
     channels = ["peerToPeer"]
     base_url_client = base_url_list[1]
     replicator = Replication(base_url_client)
@@ -1270,29 +1270,32 @@ def test_peer_to_peer_url_retries2(params_from_base_test_setup, url_listener_set
     db_name_server = db_name_list[0]
     peer_to_peer_server = PeerToPeer(base_url_server)
 
-    url_listener_port = 9979
+    url_listener_port = 6000
 
     server_host = host_list[0]
 
     db_obj_server.create_bulk_docs(num_of_docs, "cbl-peerToPeer", db=cbl_db_server, channels=channels)
     db_obj_client.create_bulk_docs(num_of_docs, "replication", db=cbl_db_client, channels=channels)
 
-    peer_to_peer_server.server_stop(url_listener, endPointType)
-
     # # Now set up client
     repl = peerToPeer_client.configure(port=url_listener_port, host=server_host, server_db_name=db_name_server,
-                                       client_database=cbl_db_client, continuous=continuous,
-                                       replication_type=replicator_type, endPointType=endPointType)
+                                       client_database=cbl_db_client, continuous=continuous,  max_timeout_interval=20,
+                                       replication_type=replicator_type, endPointType=endPointType, retries=4)
+    repl_change_listener = replicator.addChangeListener(repl)
 
     peerToPeer_client.client_start(repl)
-
+    timeouts = 1
     for i in range(6):
-        print(replicator.getActivitylevel(repl), "getActivitylevel")
+        if timeouts < 10:
+            timeouts = timeouts*2
+        print(timeouts)
         print(replicator.status(repl), "getActivitylevel")
         print(replicator.getActivitylevel(repl), "getActivitylevel")
+        print(replicator.getChangesCount(repl_change_listener))
         print(replicator.getError(repl))
 
-        time.sleep(3)
+        time.sleep(timeouts)
+    assert replicator.getActivitylevel(repl), "stopped"
 
 
 

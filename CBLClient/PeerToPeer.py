@@ -122,9 +122,9 @@ class PeerToPeer(object):
         if tls_disable is not None:
             args.setBoolean("tls_disable", tls_disable)
         if retries is not None:
-            args.setBoolean("max_retries", retries)
+            args.setString("max_retries", retries)
         if max_timeout_interval is not None:
-            args.setBoolean("max_timeout", max_timeout_interval)
+            args.setString("max_timeout", max_timeout_interval)
 
         args.setString("tls_auth_type", tls_auth_type)
         args.setBoolean("tls_authenticator", tls_authenticator)

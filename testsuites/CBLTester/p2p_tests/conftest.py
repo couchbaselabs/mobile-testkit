@@ -352,17 +352,17 @@ def server_setup(params_from_base_test_setup):
     cbl_db_server = cbl_db_list[0]
     peer_to_peer_listener = PeerToPeer(base_url_server)
     # Need to start and stop listener, if test fails in the middle listener will not be closed.
-    message_url_tcp_listener = peer_to_peer_listener.message_listener_start(cbl_db_server, 5000)
+    # message_url_tcp_listener = peer_to_peer_listener.message_listener_start(cbl_db_server, 5000)
     log_info("Message listener/server/passive peer starting .....")
     yield {
         "base_url_list": base_url_list,
         "base_url_server": base_url_server,
         "cbl_db_server": cbl_db_server,
         "cbl_db_list": cbl_db_list,
-        "message_url_tcp_listener": message_url_tcp_listener,
+        # "message_url_tcp_listener": message_url_tcp_listener,
         "peer_to_peer_listener": peer_to_peer_listener,
     }
-    peer_to_peer_listener.server_stop(message_url_tcp_listener, "MessageEndPoint")
+    # peer_to_peer_listener.server_stop(message_url_tcp_listener, "MessageEndPoint")
 
 
 @pytest.fixture(scope="function")
@@ -374,11 +374,11 @@ def url_listener_setup(params_from_base_test_setup):
     cbl_db_server = cbl_db_list[0]
     listener = PeerToPeer(base_url_server)
     # Need to start and stop listener, if test fails in the middle listener will not be closed.
-    url_listener = listener.server_start(cbl_db_server, 9979)
+    # url_listener = listener.server_start(cbl_db_server, 6000)
     log_info("Url listener/server/passive peer starting .....")
     yield {
 
-        "url_listener": url_listener,
+        # "url_listener": url_listener,
         "peer_to_peer_listener": listener,
         "base_url_list": base_url_list,
         "base_url_server": base_url_server,
