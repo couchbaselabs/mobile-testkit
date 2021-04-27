@@ -18,7 +18,7 @@ from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
 from keywords.couchbaseserver import get_sdk_client_with_bucket
 from libraries.provision.ansible_runner import AnsibleRunner
 from keywords.constants import ENVIRONMENT_FILE
-from libraries.testkit.admin import Admin
+# from libraries.testkit.admin import Admin
 from concurrent.futures import ProcessPoolExecutor
 
 
