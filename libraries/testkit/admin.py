@@ -245,7 +245,7 @@ class Admin:
             read_timeout = True  # To avoid waiting for read doc count as there is not expectation of read docs
         if write_flag is False:
             write_timeout = True  # To avoid waiting for write doc count as there is not expectation of write docs
-        retry_max_count = 12
+        retry_max_count = 20
         count = 0
         prev_read_count = 0
         prev_write_count = 0

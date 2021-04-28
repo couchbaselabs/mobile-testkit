@@ -15,7 +15,8 @@ from keywords.SyncGateway import sync_gateway_config_path_for_mode, SyncGateway,
 from libraries.testkit import cluster
 from libraries.testkit.admin import Admin
 from requests.exceptions import HTTPError
-from keywords.utils import host_for_url, log_info, compare_cbl_docs, get_local_ip
+# from keywords.utils import host_for_url, log_info, compare_cbl_docs, get_local_ip
+from keywords.utils import host_for_url, log_info, compare_cbl_docs
 from keywords import attachment, document
 from concurrent.futures import ThreadPoolExecutor
 from utilities.cluster_config_utils import copy_sgconf_to_temp, replace_string_on_sgw_config
@@ -2105,7 +2106,7 @@ def test_sg_replicate_custom_conflict_resolve(params_from_base_test_setup, setup
         remote_password=password,
         continuous=True
     )
-    sg1.admin.wait_until_sgw_replication_done(db=sg_db1, repl_id=repl_id_1, write_flag=True)
+    sg1.admin.wait_until_sgw_replication_done(db=sg_db1, repl_id=repl_id_1, write_flag=True, max_times=35)
     replicator.configure_and_replicate(
         source_db=cbl_db2, replicator_authenticator=replicator_authenticator2, target_url=sg2_blip_url
     )
