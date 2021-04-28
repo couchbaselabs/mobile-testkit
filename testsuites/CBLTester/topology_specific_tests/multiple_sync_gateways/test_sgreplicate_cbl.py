@@ -2118,7 +2118,8 @@ def test_sg_replicate_custom_conflict_resolve(params_from_base_test_setup, setup
     # Add merge js function to sgw config
     repl_id = "replication1"
     if external_js:
-        custom_conflict_js_function = "http://{}:5007/conflictResolver".format(get_local_ip())
+        jscode_external_ip = "172.23.104.165"
+        custom_conflict_js_function = "http://{}:5007/conflictResolver".format(jscode_external_ip)
     else:
         custom_conflict_js_function = """function (conflict) {
         if (conflict.LocalDocument.priority > conflict.RemoteDocument.priority) {
