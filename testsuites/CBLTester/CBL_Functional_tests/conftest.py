@@ -5,8 +5,7 @@ import zipfile
 import os
 import io
 
-from utilities.cluster_config_utils import persist_cluster_config_environment_prop
-from keywords.constants import SDK_TIMEOUT
+from utilities.cluster_config_utils import persist_cluster_config_environment_prop, get_cluster
 from keywords.utils import log_info
 from keywords.utils import host_for_url, clear_resources_pngs
 from keywords.ClusterKeywords import ClusterKeywords
@@ -32,8 +31,6 @@ from CBLClient.SessionAuthenticator import SessionAuthenticator
 from CBLClient.Utils import Utils
 from CBLClient.ReplicatorConfiguration import ReplicatorConfiguration
 from utilities.cluster_config_utils import get_load_balancer_ip
-from couchbase.bucket import Bucket
-from couchbase.n1ql import N1QLQuery
 from libraries.testkit import prometheus
 
 
@@ -187,8 +184,6 @@ def pytest_addoption(parser):
 # runs with this as input parameters in this file
 # This setup will be called once for all tests in the
 # testsuites/CBLTester/CBL_Functional_tests/ directory
-
-
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
 @pytest.fixture(scope="session")
 def params_from_base_suite_setup(request):
@@ -484,16 +479,10 @@ def params_from_base_suite_setup(request):
                 ac_obj.restart_sync_gateways(cluster_config=cluster_config, url=ac_ip)
                 time.sleep(5)
 
-        # Create primary index
-        password = "password"
-        log_info("Connecting to {}/{} with password {}".format(cbs_ip, enable_sample_bucket, password))
-        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, enable_sample_bucket),
-                            password=password,
-                            timeout=SDK_TIMEOUT)
-        log_info("Creating primary index for {}".format(enable_sample_bucket))
+        sdk_client = get_cluster('couchbase://{}'.format(cbs_ip), enable_sample_bucket)
         n1ql_query = 'create primary index on {}'.format(enable_sample_bucket)
-        query = N1QLQuery(n1ql_query)
-        sdk_client.n1ql_query(query)
+        log_info(n1ql_query)
+        sdk_client.query(n1ql_query)
 
         # Start continuous replication
         repl_obj = Replication(base_url)

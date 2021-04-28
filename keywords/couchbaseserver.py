@@ -2,22 +2,20 @@ import time
 import json
 import requests
 import re
+from datetime import timedelta
 from requests.exceptions import ConnectionError, HTTPError, ChunkedEncodingError
 from requests import Session
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
-from couchbase.bucket import Bucket
-# from couchbase.n1ql import N1QLQuery
-from couchbase.exceptions import CouchbaseError, NotFoundError
-
+from couchbase.exceptions import CouchbaseException, DocumentNotFoundException
+from couchbase.cluster import QueryIndexManager, PasswordAuthenticator, ClusterTimeoutOptions, ClusterOptions, Cluster
 import keywords.constants
 from keywords.remoteexecutor import RemoteExecutor
 from keywords.exceptions import CBServerError, ProvisioningError, TimeoutError, RBACUserCreationError
 from libraries.provision.ansible_runner import AnsibleRunner
-from keywords.utils import log_r, log_info, log_debug, log_error, hostname_for_url
+from keywords.utils import log_r, log_info, log_debug, log_error, hostname_for_url, host_for_url
 from keywords.utils import version_and_build, random_string
 from keywords import types
-from utilities.cluster_config_utils import is_x509_auth, get_cbs_version, is_magma_enabled, is_cbs_ce_enabled
-from keywords.constants import SDK_TIMEOUT
+from utilities.cluster_config_utils import is_x509_auth, get_cbs_version, is_magma_enabled, is_cbs_ce_enabled, get_cluster
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 
@@ -482,29 +480,22 @@ class CouchbaseServer:
             self._create_internal_rbac_bucket_user(name, cluster_config=cluster_config)
 
         # Create client an retry until KeyNotFound error is thrown
-        start = time.time()
-        time.sleep(5)
-        while True:
-            if time.time() - start > keywords.constants.CLIENT_REQUEST_TIMEOUT:
-                raise Exception("TIMEOUT while trying to create server buckets.")
-            try:
-                if self.cbs_ssl and ipv6:
-                    connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(self.host, name)
-                elif self.cbs_ssl and not ipv6:
-                    connection_url = "couchbases://{}/{}?ssl=no_verify".format(self.host, name)
-                elif not self.cbs_ssl and ipv6:
-                    connection_url = "couchbase://{}/{}?ipv6=allow".format(self.host, name)
-                else:
-                    connection_url = "couchbase://{}/{}".format(self.host, name)
-                bucket = Bucket(connection_url, password='password')
-                bucket.get('foo')
-            except NotFoundError:
-                log_info("Key not found error: Bucket is ready!")
-                break
-            except CouchbaseError as e:
-                log_info("Error from server: {}, Retrying ...". format(e))
-                time.sleep(1)
-                continue
+        try:
+            if self.cbs_ssl and ipv6:
+                connection_url = "couchbases://{}?ssl=no_verify&ipv6=allow".format(self.host)
+            elif self.cbs_ssl and not ipv6:
+                connection_url = "couchbases://{}?ssl=no_verify".format(self.host)
+            elif not self.cbs_ssl and ipv6:
+                connection_url = "couchbase://{}?ipv6=allow".format(self.host)
+            else:
+                connection_url = "couchbase://{}".format(self.host)
+            cluster = get_cluster(connection_url, name)
+            log_info(connection_url, cluster)
+        except DocumentNotFoundException:
+            log_info("Key not found error: Bucket is ready!")
+        except CouchbaseException as e:
+            log_info("Error from server: {} ...".format(e))
+
         self.wait_for_ready_state()
         return name
 
@@ -514,25 +505,29 @@ class CouchbaseServer:
         _sync:rev:att_doc:34:1-e7fa9a5e6bb25f7a40f36297247ca93e
         """
         if self.cbs_ssl and ipv6:
-            connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(self.host, bucket)
+            connection_url = "couchbases://{}?ssl=no_verify&ipv6=allow".format(self.host)
         elif self.cbs_ssl and not ipv6:
-            connection_url = "couchbases://{}/{}?ssl=no_verify".format(self.host, bucket)
+            connection_url = "couchbases://{}?ssl=no_verify".format(self.host)
         elif not self.cbs_ssl and ipv6:
-            connection_url = "couchbase://{}/{}?ipv6=allow".format(self.host, bucket)
+            connection_url = "couchbase://{}?ipv6=allow".format(self.host)
         else:
-            connection_url = "couchbase://{}/{}".format(self.host, bucket)
-        b = Bucket(connection_url, password='password')
-        b_manager = b.bucket_manager()
-        b_manager.n1ql_index_create_primary(ignore_exists=True)
+            connection_url = "couchbase://{}".format(self.host)
+        timeout_options = ClusterTimeoutOptions(kv_timeout=timedelta(seconds=30), query_timeout=timedelta(seconds=600))
+        options = ClusterOptions(PasswordAuthenticator("Administrator", "password"), timeout_options=timeout_options)
+        cluster = Cluster(connection_url, options)
+        bucket_obj = cluster.bucket(bucket)
+        log_info("default collection created {}".format(bucket_obj))
+        index_manager = QueryIndexManager(cluster)
+        index_manager.create_primary_index(bucket, ignore_exists=True)
         cached_rev_doc_ids = []
-        for row in b.n1ql_query("SELECT meta(`{}`) FROM `{}`".format(bucket, bucket)):
+        for row in cluster.query("SELECT meta(`{}`) FROM `{}`".format(bucket, bucket)):
             if row["$1"]["id"].startswith("_sync:rev"):
                 cached_rev_doc_ids.append(row["$1"]["id"])
 
         log_info("Found temp rev docs: {}".format(cached_rev_doc_ids))
         for doc_id in cached_rev_doc_ids:
             log_debug("Removing: {}".format(doc_id))
-            b.remove(doc_id)
+            bucket_obj.remove(doc_id)
 
     def get_server_docs_with_prefix(self, bucket, prefix, ipv6=False):
         """
@@ -540,18 +535,22 @@ class CouchbaseServer:
         """
 
         if self.cbs_ssl and ipv6:
-            connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(self.host, bucket)
+            connection_url = "couchbases://{}?ssl=no_verify&ipv6=allow".format(self.host)
         elif self.cbs_ssl and not ipv6:
-            connection_url = "couchbases://{}/{}?ssl=no_verify".format(self.host, bucket)
+            connection_url = "couchbases://{}?ssl=no_verify".format(self.host)
         elif not self.cbs_ssl and ipv6:
-            connection_url = "couchbase://{}/{}?ipv6=allow".format(self.host, bucket)
+            connection_url = "couchbase://{}?ipv6=allow".format(self.host)
         else:
-            connection_url = "couchbase://{}/{}".format(self.host, bucket)
-        b = Bucket(connection_url, password='password')
-        b_manager = b.bucket_manager()
-        b_manager.n1ql_index_create_primary(ignore_exists=True)
+            connection_url = "couchbase://{}".format(self.host)
+        timeout_options = ClusterTimeoutOptions(kv_timeout=timedelta(seconds=30), query_timeout=timedelta(seconds=100))
+        options = ClusterOptions(PasswordAuthenticator("Administrator", "password"), timeout_options=timeout_options)
+        cluster = Cluster(connection_url, options)
+        bucket_obj = cluster.bucket(bucket)
+        log_info("default collection created {}".format(bucket_obj))
+        index_manager = QueryIndexManager(cluster)
+        index_manager.create_primary_index(bucket, ignore_exists=True)
         found_ids = []
-        for row in b.n1ql_query("SELECT meta(`{}`) FROM `{}`".format(bucket, bucket)):
+        for row in cluster.query("SELECT meta(`{}`) FROM `{}`".format(bucket, bucket)):
             log_info(row)
             if row["$1"]["id"].startswith(prefix):
                 found_ids.append(row["$1"]["id"])
@@ -773,12 +772,13 @@ class CouchbaseServer:
 
         # TODO reset Quota
 
-    def start(self):
+    def start(self, custom_port=False):
         """Starts a running Couchbase Server via 'service couchbase-server start'"""
 
         command = "sudo service couchbase-server start"
         self.remote_executor.must_execute(command)
-        self.wait_for_ready_state()
+        if not custom_port:
+            self.wait_for_ready_state()
 
     def _verify_stopped(self):
         """Polls until the server url is unreachable"""
@@ -845,10 +845,16 @@ class CouchbaseServer:
     def get_sdk_bucket(self, bucket_name):
         """ Gets an SDK bucket object """
         if self.cbs_ssl:
-            connection_str = "couchbases://{}/{}?ssl=no_verify".format(self.host, bucket_name)
+            connection_str = "couchbases://{}?ssl=no_verify".format(self.host)
         else:
-            connection_str = "couchbase://{}/{}".format(self.host, bucket_name)
-        return Bucket(connection_str, password='password')
+            connection_str = "couchbase://{}".format(self.host)
+            timeout_options = ClusterTimeoutOptions(kv_timeout=timedelta(seconds=5),
+                                                    query_timeout=timedelta(seconds=10))
+            options = ClusterOptions(PasswordAuthenticator("Administrator", "password"),
+                                     timeout_options=timeout_options)
+            cluster = Cluster(connection_str, options)
+            cluster.bucket(bucket_name)
+        return cluster
 
     def get_package_name(self, version, build_number, cbs_platform="centos7", cbs_ce=False):
         """
@@ -1004,6 +1010,22 @@ class CouchbaseServer:
         log_info("Enabling sample bucket {}".format(sample_bucket))
         self.remote_executor.must_execute('sudo /opt/couchbase/bin/cbdocloader -c localhost:8091 -u Administrator -p password -b {} -m 200 -d /opt/couchbase/samples/{}.zip'.format(sample_bucket, sample_bucket))
 
+    def get_bucket_connection(self, cbs_url, bucket_name, ssl_enabled, cluster):
+        cbs_ip = host_for_url(cbs_url)
+        if ssl_enabled and cluster.ipv6:
+            connection_url = "couchbases://{}?ssl=no_verify&ipv6=allow".format(cbs_ip)
+        elif ssl_enabled and not cluster.ipv6:
+            connection_url = "couchbases://{}?ssl=no_verify".format(cbs_ip)
+        elif not ssl_enabled and cluster.ipv6:
+            connection_url = "couchbase://{}?ipv6=allow".format(cbs_ip)
+        else:
+            connection_url = 'couchbase://{}/{}'.format(cbs_ip)
+        timeout_options = ClusterTimeoutOptions(kv_timeout=timedelta(seconds=30), query_timeout=timedelta(seconds=100))
+        options = ClusterOptions(PasswordAuthenticator("Administrator", "password"), timeout_options=timeout_options)
+        cluster = Cluster(connection_url, options)
+        sdk_client = cluster.bucket(bucket_name)
+        return sdk_client
+
     def create_scope(self, bucket, scope=None):
         """ Create scope on couchbase server"""
 
@@ -1089,12 +1111,15 @@ class CouchbaseServer:
 
 def get_sdk_client_with_bucket(ssl_enabled, cluster, cbs_ip, cbs_bucket):
     if ssl_enabled and cluster.ipv6:
-        connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(cbs_ip, cbs_bucket)
+        connection_url = "couchbases://{}?ssl=no_verify&ipv6=allow".format(cbs_ip)
     elif ssl_enabled and not cluster.ipv6:
-        connection_url = "couchbases://{}/{}?ssl=no_verify".format(cbs_ip, cbs_bucket)
+        connection_url = "couchbases://{}?ssl=no_verify".format(cbs_ip)
     elif not ssl_enabled and cluster.ipv6:
-        connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, cbs_bucket)
+        connection_url = "couchbase://{}?ipv6=allow".format(cbs_ip)
     else:
-        connection_url = 'couchbase://{}/{}'.format(cbs_ip, cbs_bucket)
-    sdk_client = Bucket(connection_url, password='password', timeout=SDK_TIMEOUT)
+        connection_url = 'couchbase://{}'.format(cbs_ip)
+    timeout_options = ClusterTimeoutOptions(kv_timeout=timedelta(seconds=30), query_timeout=timedelta(seconds=100))
+    options = ClusterOptions(PasswordAuthenticator("Administrator", "password"), timeout_options=timeout_options)
+    cluster = Cluster(connection_url, options)
+    sdk_client = cluster.bucket(cbs_bucket)
     return sdk_client

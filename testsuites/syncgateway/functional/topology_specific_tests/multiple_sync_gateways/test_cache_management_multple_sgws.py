@@ -70,7 +70,6 @@ def test_importdocs_false_shared_bucket_access_true(params_from_base_test_setup)
         sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_host, bucket_name), password='password')
     else:
         sdk_client = Bucket('couchbase://{}/{}'.format(cbs_host, bucket_name), password='password')
-    sdk_client.timeout = 600
 
     # 4. Create docs in CBs
     sdk_doc_bodies = document.create_docs('doc_set_two', num_docs, channels=['shared'])

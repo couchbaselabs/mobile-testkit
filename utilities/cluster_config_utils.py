@@ -2,11 +2,12 @@ import configparser
 import json
 import os
 import re
-
+from datetime import timedelta
 from keywords.exceptions import ProvisioningError
 from shutil import copyfile, rmtree
 from subprocess import Popen, PIPE
 from distutils.dir_util import copy_tree
+from couchbase.cluster import PasswordAuthenticator, ClusterTimeoutOptions, ClusterOptions, Cluster
 
 
 class CustomConfigParser(configparser.RawConfigParser):
@@ -33,6 +34,14 @@ class CustomConfigParser(configparser.RawConfigParser):
                     key = "=".join((key, str(value).replace('\n', '\n\t')))
                 fp.write("%s\n" % (key))
             fp.write("\n")
+
+
+def get_cluster(url, bucket_name):
+    timeout_options = ClusterTimeoutOptions(kv_timeout=timedelta(seconds=30), query_timeout=timedelta(seconds=300))
+    options = ClusterOptions(PasswordAuthenticator("Administrator", "password"), timeout_options=timeout_options)
+    cluster = Cluster(url, options)
+    cluster = cluster.bucket(bucket_name)
+    return cluster.default_collection()
 
 
 def persist_cluster_config_environment_prop(cluster_config, property_name, value, property_name_check=True):

@@ -3,16 +3,13 @@ import random
 import time
 from collections import OrderedDict
 import datetime
-
-from couchbase.bucket import Bucket
-from couchbase.n1ql import N1QLQuery
 from CBLClient.Database import Database
 from CBLClient.Authenticator import Authenticator
 from CBLClient.MemoryPointer import MemoryPointer
 from CBLClient.Replication import Replication
 from keywords.MobileRestClient import MobileRestClient
-from keywords.constants import SDK_TIMEOUT
 from keywords.couchbaseserver import CouchbaseServer
+from utilities.cluster_config_utils import get_cluster
 from keywords.utils import log_info
 from libraries.testkit.cluster import Cluster
 from keywords.TestServerFactory import TestServerFactory
@@ -89,14 +86,13 @@ def test_upgrade_cbl(params_from_base_suite_setup):
     server = CouchbaseServer(server_url)
     server._create_internal_rbac_bucket_user(cbs_bucket, cluster_config=cluster_config)
     log_info("Connecting to {}/{} with password {}".format(cbs_ip, cbs_bucket, password))
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, cbs_bucket), password=password, timeout=SDK_TIMEOUT)
+    sdk_client = get_cluster('couchbase://{}'.format(cbs_ip), cbs_bucket)
     log_info("Creating primary index for {}".format(cbs_bucket))
     n1ql_query = "create primary index index1 on `{}`".format(cbs_bucket)
-    query = N1QLQuery(n1ql_query)
-    sdk_client.n1ql_query(query).execute()
+    sdk_client.query(n1ql_query).execute()
     new_cbl_doc_ids = db.getDocIds(cbl_db, limit=40000)
     cbs_doc_ids = []
-    for row in sdk_client.n1ql_query(get_doc_id_from_cbs_query):
+    for row in sdk_client.query(get_doc_id_from_cbs_query):
         cbs_doc_ids.append(row["id"])
     log_info("cbl_docs {}, cbs_docs {}".format(len(cbs_doc_ids), len(new_cbl_doc_ids)))
     assert sorted(cbs_doc_ids) == sorted(new_cbl_doc_ids), "Total no. of docs are different in CBS and CBL app"
