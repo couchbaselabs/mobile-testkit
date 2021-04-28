@@ -1035,7 +1035,7 @@ class CouchbaseServer:
             "name": scope
         }
         try:
-            resp = self._session.post("{}/pools/default/buckets/{}/collections".format(self.url, bucket), data=data)
+            resp = self._session.post("{}/pools/default/buckets/{}/scopes".format(self.url, bucket), data=data)
             log_r(resp)
             resp.raise_for_status()
         except Exception as ex:
@@ -1051,7 +1051,7 @@ class CouchbaseServer:
             "name": collection
         }
         try:
-            resp = self._session.post("{}/pools/default/buckets/{}/collections/{}".format(self.url, bucket, scope), data=data)
+            resp = self._session.post("{}/pools/default/buckets/{}/scopes/{}/collections".format(self.url, bucket, scope), data=data)
             log_r(resp)
             resp.raise_for_status()
         except Exception as ex:
@@ -1061,7 +1061,7 @@ class CouchbaseServer:
     def get_collection_id(self, bucket, scope, collection):
         """ Get collection id by scope and collection"""
         col_id = None
-        resp = self._session.get("{}/pools/default/buckets/{}/collections".format(self.url, bucket))
+        resp = self._session.get("{}/pools/default/buckets/{}/scopes".format(self.url, bucket))
         log_r(resp)
         resp.raise_for_status()
         resp_obj = resp.json()
