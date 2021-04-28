@@ -15,7 +15,6 @@ from keywords.SyncGateway import sync_gateway_config_path_for_mode, SyncGateway,
 from libraries.testkit import cluster
 from libraries.testkit.admin import Admin
 from requests.exceptions import HTTPError
-# from keywords.utils import host_for_url, log_info, compare_cbl_docs, get_local_ip
 from keywords.utils import host_for_url, log_info, compare_cbl_docs
 from keywords import attachment, document
 from concurrent.futures import ThreadPoolExecutor
@@ -2067,7 +2066,7 @@ def test_sg_replicate_non_default_conflict_resolver(params_from_base_test_setup,
     ("merge", False),
     ("merge", True)
 ])
-def test_sg_replicate_custom_conflict_resolve(params_from_base_test_setup, setup_customized_teardown_test, setup_jsserver, custom_conflict_type, external_js):
+def test_sg_replicate_custom_conflict_resolve(params_from_base_test_setup, setup_customized_teardown_test, custom_conflict_type, external_js):
     '''
        @summary
        Covered for #45
@@ -2119,6 +2118,7 @@ def test_sg_replicate_custom_conflict_resolve(params_from_base_test_setup, setup
     # Add merge js function to sgw config
     repl_id = "replication1"
     if external_js:
+        # hosted js code statically as data center vms cannot reach mac machines , if these is not reachable, you need to restart js code
         jscode_external_ip = "172.23.104.165"
         custom_conflict_js_function = "http://{}:5007/conflictResolver".format(jscode_external_ip)
     else:
