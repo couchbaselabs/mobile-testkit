@@ -470,6 +470,7 @@ def test_envVariables_withoutvalues(params_from_base_test_setup):
     except Exception as he:
         log_info(str(he))
         log_info("Expected to have sync gateway fail to start")
+    sg.restart(orig_sg_conf, cluster_config)
 
 
 @pytest.mark.syncgateway
