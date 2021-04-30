@@ -51,7 +51,7 @@ pywinrm==0.2.1
 PyYAML==3.12
 requests==2.19.0
 requests-ntlm==0.3.0
-rsa==3.3
+rsa==4.7
 s3transfer==0.0.1
 six==1.10.0
 termcolor==1.1.0
