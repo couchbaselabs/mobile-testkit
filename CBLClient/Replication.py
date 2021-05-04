@@ -43,7 +43,7 @@ class Replication(object):
             args.setString("max_retries", max_retries)
 
         if max_retry_wait_time is not None:
-            args.setString("max_retry_wait_time", max_retry_wait_time)
+            args.setString("max_timeout", max_retry_wait_time)
 
         if heartbeat is not None:
             args.setString("heartbeat", heartbeat)

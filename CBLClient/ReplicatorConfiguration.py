@@ -24,6 +24,11 @@ class ReplicatorConfiguration(object):
         args.setMemoryPointer("source_db", source_db)
         args.setString("replication_type", replication_type)
         args.setBoolean("continuous", continuous)
+
+        if retries is not None:
+            args.setString("max_retries", retries)
+        if max_timeout_interval is not None:
+            args.setString("max_timeout", max_timeout_interval)
         if channels is not None:
             args.setArray("channels", channels)
         if documentIDs is not None:
@@ -42,11 +47,6 @@ class ReplicatorConfiguration(object):
         cluster_config = os.environ["CLUSTER_CONFIG"]
         if sg_ssl_enabled(cluster_config):
             args.setString("pinnedservercert", "sg_cert")
-
-        if retries is not None:
-            args.setString("max_retries", retries)
-        if max_timeout_interval is not None:
-            args.setString("max_timeout", max_timeout_interval)
 
 
     def builderCreate(self, source_db, target_db=None, target_url=None):
