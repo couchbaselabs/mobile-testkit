@@ -1,16 +1,16 @@
-# Reset the hosts to the state which test requires
-- hosts: sync_gateways
+- hosts: couchbase_servers
 
   tasks:
   - name: OS | Reset the clocks
     become: yes
+
     shell: |
       timedatectl set-ntp true
       date
-    ignore_errors: True
     register: ps
+    ignore_errors: True
     when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian" or ansible_os_family == "Darwin"
 
-  - debug: 
+  - debug:
       msg: "printing reset clocks std out {{ ps.stdout }}"
     when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian" or ansible_os_family == "Darwin"

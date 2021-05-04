@@ -170,6 +170,10 @@ def pytest_addoption(parser):
                      help="Hides SGW product version when you hit SGW url",
                      default=False)
 
+    parser.addoption("--skip-couchbase-provision",
+                     action="store_true",
+                     help="skip the couchbase provision step")
+
     parser.addoption("--enable-cbs-developer-preview",
                      action="store_true",
                      help="Enabling CBS developer preview",
@@ -217,6 +221,7 @@ def params_from_base_suite_setup(request):
     enable_encryption = request.config.getoption("--enable-encryption")
     encryption_password = request.config.getoption("--encryption-password")
     hide_product_version = request.config.getoption("--hide-product-version")
+    skip_couchbase_provision = request.config.getoption("--skip-couchbase-provision")
     enable_cbs_developer_preview = request.config.getoption("--enable-cbs-developer-preview")
 
     test_name = request.node.name
@@ -384,7 +389,8 @@ def params_from_base_suite_setup(request):
                 sync_gateway_version=sync_gateway_version,
                 sync_gateway_config=sg_config,
                 cbs_ce=cbs_ce,
-                sg_ce=sg_ce
+                sg_ce=sg_ce,
+                skip_couchbase_provision=skip_couchbase_provision
             )
         except ProvisioningError:
             logging_helper = Logging()
