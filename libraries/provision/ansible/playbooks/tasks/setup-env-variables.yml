@@ -2,14 +2,11 @@
 - name: SYNC GATEWAY | setting up environment variables for service on centos
   become: yes
   file: path=/etc/systemd/system/sync_gateway.service.d state=directory
-  when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat"
 
 - name: SYNC GATEWAY | copying environment file for service on centos
   become: yes
   template: src={{ environment_file }} dest=/etc/systemd/system/sync_gateway.service.d/override.conf
-  when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat"
 
 - name: SYNC GATEWAY | systemctl daemon relaod on centos
   become: yes
   shell: systemctl daemon-reload
-  when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat"

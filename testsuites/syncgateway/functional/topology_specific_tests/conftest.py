@@ -103,6 +103,9 @@ def pytest_addoption(parser):
                      help="Hides SGW product version when you hit SGW url",
                      default=False)
 
+    parser.addoption("--skip-couchbase-provision", action="store_true",
+                     help="skip the couchbase provision step")
+
     parser.addoption("--enable-cbs-developer-preview",
                      action="store_true",
                      help="Enabling CBS developer preview",

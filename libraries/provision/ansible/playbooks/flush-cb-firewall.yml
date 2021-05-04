@@ -1,0 +1,8 @@
+- hosts: couchbase_servers
+
+  tasks:
+  - name: OS | Flush Firewall on Centos
+    become: yes
+    command: iptables --flush
+    ignore_errors: True
+    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"

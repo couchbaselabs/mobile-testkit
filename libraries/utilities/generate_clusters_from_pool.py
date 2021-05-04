@@ -432,6 +432,14 @@ def write_config(config, pool_file, use_docker, sg_windows, sg_accel_windows, sg
                 }
             }
             cluster_dict.update(sg_dict)
+        if sg_platform.lower() == "macos":
+            sg_dict = {
+                "sync_gateways:vars": {
+                    "ansible_user": "MacOSFakeUser",
+                    "ansible_password": "MacOSFakePassword"
+                }
+            }
+            cluster_dict.update(sg_dict)
         with open(cluster_json_file, "w") as f_json:
             f_json.write(json.dumps(cluster_dict, indent=4))
 
