@@ -62,7 +62,7 @@ if __name__ == '__main__':
         app.run(host='0.0.0.0', port=5007)
 
     if opts.stop:
-        command = "kill $(ps aux | grep 'host_sgw_jscode.py --start' | awk '{print $2}')"
+        command = "kill $(ps aux | grep 'host_sgw_jscode.py' | awk '{print $2}')"
         os.system(command)
 
     if opts.sslstart:
