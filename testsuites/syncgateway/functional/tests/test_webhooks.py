@@ -507,7 +507,7 @@ def setup_webserver():
     webhook_server = WebServer()
     try:
         webhook_server.start()
-    except OSError as error :
+    except OSError as error:
         log_info("webserver address is in use, so stopping the server")
         webhook_server.stop()
         webhook_server.start()
@@ -525,7 +525,7 @@ def setup_webserver_js_sslon():
     webhook_server = WebServer()
     try:
         webhook_server.start()
-    except OSError as error :
+    except OSError as error:
         log_info("webserver address is in use, so stopping the server")
         webhook_server.stop()
         webhook_server.start()
