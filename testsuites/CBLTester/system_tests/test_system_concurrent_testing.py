@@ -317,7 +317,7 @@ def process_per_cbl_client(sg_params, cbl_params, test_params, doc_ids):
                 else:
                     data = simple()
                 data["channels"] = sg_channels
-                data["_id"] = doc_id
+                data["id"] = doc_id
                 added_docs[doc_id] = data
                 new_doc_ids.append(doc_id)
             doc_ids.update(new_doc_ids)
