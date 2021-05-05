@@ -127,7 +127,7 @@ def test_sg_replicate_basic_test(params_from_base_test_setup):
     if sync_gateway_version >= "2.5.0":
         t = 60
         times = 0
-        while times < 4:
+        while times < 8:
             try:
                 expvars = sg_client.get_expvars(sg2.admin.admin_url)
                 assert process_memory_resident < expvars["syncgateway"]["global"]["resource_utilization"]["process_memory_resident"], \
