@@ -576,16 +576,20 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         source_db2 = db.create(cbl_db2, db_config)
         log_info("Getting the database name")
         db_name = db.getName(source_db)
+        print("db_name is ", db_name)
         assert db_name == cbl_db
         path = db.getPath(source_db).rstrip("/\\")
         path2 = db.getPath(source_db2).rstrip("/\\")
+        print("db path of db1:", path)
+        print("db path of db2:", path2)
         if '\\' in path:
             path = '\\'.join(path.split('\\')[:-1])
             path2 = '\\'.join(path2.split('\\')[:-1])
         else:
             path = '/'.join(path.split('/')[:-1])
             path2 = '/'.join(path2.split('/')[:-1])
-
+        print("db path of db1:", path)
+        print("db path of db2:", path2)
     # This dictionary is passed to each test
     yield {
         "cluster_config": cluster_config,
