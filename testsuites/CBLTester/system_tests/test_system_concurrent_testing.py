@@ -168,14 +168,14 @@ def process_per_cbl_client(sg_params, cbl_params, test_params, doc_ids):
     up_time = test_params["up_time"]
     repl_status_check_sleep_time = test_params["repl_status_check_sleep_time"]
     num_of_docs_to_update = test_params["num_of_docs_to_update"]
-    num_of_docs_to_delete = test_params["num_of_docs_to_delete"] 
+    num_of_docs_to_delete = test_params["num_of_docs_to_delete"]
     num_of_docs_to_add = test_params["num_of_docs_to_add"]
     doc_id_for_new_docs = test_params["num_of_docs"]
     # num_of_docs = test_params["num_of_docs"]
     # num_of_docs_in_itr = test_params["num_of_docs_in_itr"]
     # num_of_itr_per_db = test_params["num_of_itr_per_db"]
     # extra_docs_in_itr_per_db = test_params["extra_docs_in_itr_per_db"]
-    num_of_doc_updates = test_params["num_of_doc_updates"] 
+    num_of_doc_updates = test_params["num_of_doc_updates"]
     generator = test_params["generator"]
 
     # pulling sync gateway paramters
@@ -215,9 +215,9 @@ def process_per_cbl_client(sg_params, cbl_params, test_params, doc_ids):
         x = 1
         while running_time - current_time > timedelta(0):
 
-            _log_system_test(thread_name, 'iteration start', '*' * 20)
+            _log_system_test(thread_name, 'iteration start', '*' * 42)
             _log_system_test(thread_name, 'iteration start', "Starting iteration no. {} of system testing".format(x))
-            _log_system_test(thread_name, 'iteration start', '*' * 20)
+            _log_system_test(thread_name, 'iteration start', '*' * 42)
             x += 1
 
             #######################################
@@ -231,7 +231,7 @@ def process_per_cbl_client(sg_params, cbl_params, test_params, doc_ids):
             sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs,
                                   number_updates=num_of_doc_updates, auth=session, channels=sg_channels)
 
-            # Waiting until replicator finishes on all dbs
+            # Waiting until replicator finishes
             _replicaton_status_check(thread_name, repl_obj, repl, repl_status_check_sleep_time)
             results = query.query_get_docs_limit_offset(cbl_db, limit=query_limit, offset=query_offset)
             # Query results do not store in memory for dot net, so no need to release memory for dotnet
@@ -244,7 +244,7 @@ def process_per_cbl_client(sg_params, cbl_params, test_params, doc_ids):
             docs_to_update = random.sample(doc_ids, num_of_docs_to_update)
             updates_per_db = len(docs_to_update)
             _log_system_test("Thread {}".format(db_name),
-                             "docs update on SG", 
+                             "docs update on CBL",
                              "Updating {} docs on {} db - {}".format(updates_per_db, db_obj.getName(cbl_db), list(docs_to_update)))
             db_obj.update_bulk_docs(cbl_db, num_of_doc_updates, list(docs_to_update))
 
@@ -261,7 +261,7 @@ def process_per_cbl_client(sg_params, cbl_params, test_params, doc_ids):
             docs_to_delete = set(random.sample(doc_ids, num_of_docs_to_delete))
             sg_docs = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=list(docs_to_delete), auth=session)[0]
             _log_system_test("Thread {}".format(db_name),
-                             "docs deleting on SG", 
+                             "docs deleting on SG",
                              "Deleting {} docs on SG - {}".format(len(docs_to_delete), docs_to_delete))
             sg_client.delete_bulk_docs(url=sg_url, db=sg_db,
                                        docs=sg_docs, auth=session)
@@ -322,12 +322,11 @@ def process_per_cbl_client(sg_params, cbl_params, test_params, doc_ids):
                 new_doc_ids.append(doc_id)
             doc_ids.update(new_doc_ids)
             _log_system_test("Thread {}".format(db_name),
-                             "docs deleting on CBL",
+                             "docs creating on CBL",
                              "creating {} docs on {} - {}".format(len(docs_to_create), db_obj.getName(cbl_db), new_doc_ids))
             db_obj.saveDocuments(cbl_db, added_docs)
             time.sleep(5)
 
-            # Adding docs will affect all dbs as they are synced with SG.
             _replicaton_status_check(thread_name, repl_obj, repl, repl_status_check_sleep_time)
             results = query.query_get_docs_limit_offset(cbl_db, limit=query_limit,
                                                         offset=query_offset)
