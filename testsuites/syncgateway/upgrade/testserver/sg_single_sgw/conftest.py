@@ -639,13 +639,14 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         log_info("Deleting the database {} at test teardown".format(create_db_per_test))
         time.sleep(1)
         try:
+            """
             if db.exists(cbl_db, path):
                 db.deleteDB(source_db)
             if db.exists(cbl_db2, path2):
                 db.deleteDB(source_db2)
             log_info("Flushing server memory")
             utils_obj = Utils(base_url)
-            utils_obj.flushMemory()
+            utils_obj.flushMemory() """
             log_info("Stopping the test server per test")
             if not use_local_testserver:
                 testserver.stop()
@@ -676,6 +677,6 @@ def setup_customized_teardown_test(params_from_base_test_setup):
         "cbl_db3": cbl_db3,
     }
     log_info("Tearing down test")
-    # db.deleteDB(cbl_db1)
-    # db.deleteDB(cbl_db2)
-    # db.deleteDB(cbl_db3)
+    db.deleteDB(cbl_db1)
+    db.deleteDB(cbl_db2)
+    db.deleteDB(cbl_db3)
