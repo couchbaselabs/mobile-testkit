@@ -504,13 +504,13 @@ def test_webhook_filter_external_https_js(params_from_base_test_setup, setup_web
 
 @pytest.fixture(scope="function")
 def setup_webserver():
-    webhook_server = WebServer()
     try:
-        webhook_server.start()
+        webhook_server = WebServer()
     except OSError as error:
         log_info("webserver address is in use, so stopping the server")
         webhook_server.stop()
-        webhook_server.start()
+        webhook_server = WebServer()
+    webhook_server.start()
     process = subprocess.Popen(args=["nohup", "python", "libraries/utilities/host_sgw_jscode.py", "--start", "&"], stdout=subprocess.PIPE)
     yield{
         "webhook_server": webhook_server
@@ -524,11 +524,12 @@ def setup_webserver():
 def setup_webserver_js_sslon():
     webhook_server = WebServer()
     try:
-        webhook_server.start()
+        webhook_server = WebServer()
     except OSError as error:
         log_info("webserver address is in use, so stopping the server")
         webhook_server.stop()
-        webhook_server.start()
+        webhook_server = WebServer()
+    webhook_server.start()
     process = subprocess.Popen(args=["nohup", "python", "libraries/utilities/host_sgw_jscode.py", "--sslstart", "&"], stdout=subprocess.PIPE)
     yield{
         "webhook_server": webhook_server
