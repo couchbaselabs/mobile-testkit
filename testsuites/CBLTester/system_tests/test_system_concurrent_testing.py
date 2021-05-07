@@ -327,6 +327,7 @@ def process_per_cbl_client(sg_params, cbl_params, test_params, doc_ids):
             db_obj.saveDocuments(cbl_db, added_docs)
             time.sleep(5)
 
+            repl_obj.wait_until_replicator_idle(repl, max_times=maxsize, sleep_time=5)
             _replicaton_status_check(thread_name, repl_obj, repl, repl_status_check_sleep_time)
             results = query.query_get_docs_limit_offset(cbl_db, limit=query_limit,
                                                         offset=query_offset)
