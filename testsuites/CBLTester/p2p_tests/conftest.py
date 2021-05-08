@@ -214,26 +214,26 @@ def params_from_base_suite_setup(request):
         "delta_sync_enabled": delta_sync_enabled
     }
 
-    # if create_db_per_suite:
-    #     for cbl_db, db_obj, base_url, db_name, path in zip(cbl_db_list, db_obj_list, base_url_list, db_name_list, db_path_list):
-    #         if not no_db_delete:
-    #             log_info("Deleting the database {} at the suite teardown".format(db_obj.getName(cbl_db)))
-    #             time.sleep(2)
-    #             if db.exists(db_name, path):
-    #                 db.deleteDB(cbl_db)
-    #
-    #     # Flush all the memory contents on the server app
-    #     for base_url, testserver in zip(base_url_list, testserver_list):
-    #         try:
-    #             log_info("Flushing server memory")
-    #             utils_obj = Utils(base_url)
-    #             utils_obj.flushMemory()
-    #             if not use_local_testserver:
-    #                 log_info("Stopping the test server")
-    #                 testserver.stop()
-    #         except Exception as err:
-    #             log_info("Exception occurred: {}".format(err))
-    # clear_resources_pngs()
+    if create_db_per_suite:
+        for cbl_db, db_obj, base_url, db_name, path in zip(cbl_db_list, db_obj_list, base_url_list, db_name_list, db_path_list):
+            if not no_db_delete:
+                log_info("Deleting the database {} at the suite teardown".format(db_obj.getName(cbl_db)))
+                time.sleep(2)
+                if db.exists(db_name, path):
+                    db.deleteDB(cbl_db)
+
+        # Flush all the memory contents on the server app
+        for base_url, testserver in zip(base_url_list, testserver_list):
+            try:
+                log_info("Flushing server memory")
+                utils_obj = Utils(base_url)
+                utils_obj.flushMemory()
+                if not use_local_testserver:
+                    log_info("Stopping the test server")
+                    testserver.stop()
+            except Exception as err:
+                log_info("Exception occurred: {}".format(err))
+    clear_resources_pngs()
 
 
 @pytest.fixture(scope="function")
@@ -326,22 +326,22 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "delta_sync_enabled": delta_sync_enabled
     }
 
-    # if create_db_per_test:
-    #     for testserver, cbl_db, db_obj, base_url, db_name, path in zip(testserver_list, cbl_db_list, db_obj_list, base_url_list, db_name_list, db_path_list):
-    #         try:
-    #             if db.exists(db_name, path):
-    #                 log_info(
-    #                     "Deleting the database {} at the test teardown for base url {}".format(db_obj.getName(cbl_db),
-    #                                                                                            base_url))
-    #                 db.deleteDB(cbl_db)
-    #             log_info("Flushing server memory")
-    #             utils_obj = Utils(base_url)
-    #             utils_obj.flushMemory()
-    #             if not use_local_testserver:
-    #                 log_info("Stopping the test server per test")
-    #                 testserver.stop()
-    #         except Exception as err:
-    #             log_info("Exception occurred: {}".format(err))
+    if create_db_per_test:
+        for testserver, cbl_db, db_obj, base_url, db_name, path in zip(testserver_list, cbl_db_list, db_obj_list, base_url_list, db_name_list, db_path_list):
+            try:
+                if db.exists(db_name, path):
+                    log_info(
+                        "Deleting the database {} at the test teardown for base url {}".format(db_obj.getName(cbl_db),
+                                                                                               base_url))
+                    db.deleteDB(cbl_db)
+                log_info("Flushing server memory")
+                utils_obj = Utils(base_url)
+                utils_obj.flushMemory()
+                if not use_local_testserver:
+                    log_info("Stopping the test server per test")
+                    testserver.stop()
+            except Exception as err:
+                log_info("Exception occurred: {}".format(err))
 
 
 @pytest.fixture(scope="function")
@@ -352,17 +352,17 @@ def server_setup(params_from_base_test_setup):
     cbl_db_server = cbl_db_list[0]
     peer_to_peer_listener = PeerToPeer(base_url_server)
     # Need to start and stop listener, if test fails in the middle listener will not be closed.
-    # message_url_tcp_listener = peer_to_peer_listener.message_listener_start(cbl_db_server, 5000)
+    message_url_tcp_listener = peer_to_peer_listener.message_listener_start(cbl_db_server)
     log_info("Message listener/server/passive peer starting .....")
     yield {
         "base_url_list": base_url_list,
         "base_url_server": base_url_server,
         "cbl_db_server": cbl_db_server,
         "cbl_db_list": cbl_db_list,
-        # "message_url_tcp_listener": message_url_tcp_listener,
+        "message_url_tcp_listener": message_url_tcp_listener,
         "peer_to_peer_listener": peer_to_peer_listener,
     }
-    # peer_to_peer_listener.server_stop(message_url_tcp_listener, "MessageEndPoint")
+    peer_to_peer_listener.server_stop(message_url_tcp_listener, "MessageEndPoint")
 
 
 @pytest.fixture(scope="function")
@@ -374,7 +374,7 @@ def url_listener_setup(params_from_base_test_setup):
     cbl_db_server = cbl_db_list[0]
     listener = PeerToPeer(base_url_server)
     # Need to start and stop listener, if test fails in the middle listener will not be closed.
-    # url_listener = listener.server_start(cbl_db_server, 6000)
+    url_listener = listener.server_start(cbl_db_server, 6000)
     log_info("Url listener/server/passive peer starting .....")
     yield {
 
@@ -385,4 +385,4 @@ def url_listener_setup(params_from_base_test_setup):
         "cbl_db_server": cbl_db_server,
         "cbl_db_list": cbl_db_list,
     }
-    # listener.server_stop(url_listener, "URLEndPoint")
+    listener.server_stop(url_listener, "URLEndPoint")
