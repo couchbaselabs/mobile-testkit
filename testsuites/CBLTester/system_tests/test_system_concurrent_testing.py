@@ -230,13 +230,16 @@ def process_per_cbl_client(sg_params, cbl_params, test_params, doc_ids):
             _log_system_test(thread_name, 'docs update on SG', "Updating {} docs on SG - {}".format(len(docs_to_update), docs_to_update))
             sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs,
                                   number_updates=num_of_doc_updates, auth=session, channels=sg_channels)
+            # repl_obj.wait_until_replicator_idle(repl, max_times=maxsize, sleep_time=repl_status_check_sleep_time)
 
             # Waiting until replicator finishes
             _replicaton_status_check(thread_name, repl_obj, repl, repl_status_check_sleep_time)
+            '''
             results = query.query_get_docs_limit_offset(cbl_db, limit=query_limit, offset=query_offset)
             # Query results do not store in memory for dot net, so no need to release memory for dotnet
             if platform.lower() not in ("net-msft", "uwp", "xamarin-ios", "xamarin-android"):
                 _releaseQueryResults(base_url, results)
+            '''
 
             #######################################
             # Checking for doc update on CBL side #
@@ -247,13 +250,17 @@ def process_per_cbl_client(sg_params, cbl_params, test_params, doc_ids):
                              "docs update on CBL",
                              "Updating {} docs on {} db - {}".format(updates_per_db, db_obj.getName(cbl_db), list(docs_to_update)))
             db_obj.update_bulk_docs(cbl_db, num_of_doc_updates, list(docs_to_update))
+            time.sleep(5)
+            # repl_obj.wait_until_replicator_idle(repl, max_times=maxsize, sleep_time=repl_status_check_sleep_time)
 
             # updating docs will affect all dbs as they are synced with SG.
             _replicaton_status_check(thread_name, repl_obj, repl, repl_status_check_sleep_time)
+            '''
             results = query.query_get_docs_limit_offset(cbl_db, limit=query_limit, offset=query_offset)
             # Query results do not store in memory for dot net, so no need to release memory for dotnet
             if platform.lower() not in ("net-msft", "uwp", "xamarin-ios", "xamarin-android"):
                 _releaseQueryResults(base_url, results)
+            '''
 
             ###########################
             # Deleting docs on SG side #
@@ -265,12 +272,15 @@ def process_per_cbl_client(sg_params, cbl_params, test_params, doc_ids):
                              "Deleting {} docs on SG - {}".format(len(docs_to_delete), docs_to_delete))
             sg_client.delete_bulk_docs(url=sg_url, db=sg_db,
                                        docs=sg_docs, auth=session)
+            # repl_obj.wait_until_replicator_idle(repl, max_times=maxsize, sleep_time=repl_status_check_sleep_time)
 
             _replicaton_status_check(thread_name, repl_obj, repl, repl_status_check_sleep_time)
+            '''
             results = query.query_get_docs_limit_offset(cbl_db, limit=query_limit, offset=query_offset)
             # Query results do not store in memory for dot net, so no need to release memory for dotnet
             if platform.lower() not in ("net-msft", "uwp", "xamarin-ios", "xamarin-android"):
                 _releaseQueryResults(base_url, results)
+            '''
             time.sleep(5)
             # _check_doc_count(db_obj_list, cbl_db_list)
             # removing ids of deleted doc from the list
@@ -285,8 +295,11 @@ def process_per_cbl_client(sg_params, cbl_params, test_params, doc_ids):
                              "docs deleting on CBL",
                              "deleting {} docs from {} db - {}".format(docs_to_delete_per_db, db_obj.getName(cbl_db), list(docs_to_delete)))
             db_obj.delete_bulk_docs(cbl_db, list(docs_to_delete))
-
             time.sleep(5)
+            # repl_obj.wait_until_replicator_idle(repl, max_times=maxsize, sleep_time=repl_status_check_sleep_time)
+
+            _replicaton_status_check(thread_name, repl_obj, repl, repl_status_check_sleep_time)
+            '''
             results = query.query_get_docs_limit_offset(cbl_db, limit=query_limit,
                                                         offset=query_offset)
             # Query results do not store in memory for dot net, so no need to release memory for dotnet
@@ -296,6 +309,7 @@ def process_per_cbl_client(sg_params, cbl_params, test_params, doc_ids):
             # Deleting docs will affect all dbs as they are synced with SG.
             _check_parallel_replication_changes(thread_name, base_url, repl_obj, repl, cbl_db, query,
                                                 repl_status_check_sleep_time, query_limit, platform, query_offset)
+            '''
             # _check_doc_count(db_obj_list, cbl_db_list)
             # removing ids of deleted doc from the list
             doc_ids = doc_ids - docs_to_delete
@@ -326,15 +340,16 @@ def process_per_cbl_client(sg_params, cbl_params, test_params, doc_ids):
                              "creating {} docs on {} - {}".format(len(docs_to_create), db_obj.getName(cbl_db), new_doc_ids))
             db_obj.saveDocuments(cbl_db, added_docs)
             time.sleep(5)
+            # repl_obj.wait_until_replicator_idle(repl, max_times=maxsize, sleep_time=repl_status_check_sleep_time)
 
-            repl_obj.wait_until_replicator_idle(repl, max_times=maxsize, sleep_time=5)
             _replicaton_status_check(thread_name, repl_obj, repl, repl_status_check_sleep_time)
+            '''
             results = query.query_get_docs_limit_offset(cbl_db, limit=query_limit,
                                                         offset=query_offset)
             # Query results do not store in memory for dot net, so no need to release memory for dotnet
             if platform.lower() not in ("net-msft", "uwp", "xamarin-ios", "xamarin-android"):
                 _releaseQueryResults(base_url, results)
-
+            '''
             time.sleep(5)
             doc_id_for_new_docs += num_of_docs_to_add
             # _check_doc_count(db_obj_list, cbl_db_list)
@@ -358,7 +373,7 @@ def process_per_cbl_client(sg_params, cbl_params, test_params, doc_ids):
 
 
 def _replicaton_status_check(thread_name, repl_obj, replicator, repl_status_check_sleep_time=2):
-    repl_obj.wait_until_replicator_idle(replicator, max_times=maxsize, sleep_time=repl_status_check_sleep_time)
+    # repl_obj.wait_until_replicator_idle(replicator, max_times=maxsize, sleep_time=repl_status_check_sleep_time)
     total = repl_obj.getTotal(replicator)
     completed = repl_obj.getCompleted(replicator)
     _log_system_test(thread_name, "_replicaton_status_check", "total: {}".format(total))
