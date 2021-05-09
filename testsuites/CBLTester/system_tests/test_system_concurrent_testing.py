@@ -234,12 +234,11 @@ def process_per_cbl_client(sg_params, cbl_params, test_params, doc_ids):
 
             # Waiting until replicator finishes
             _replicaton_status_check(thread_name, repl_obj, repl, repl_status_check_sleep_time)
-            '''
+
             results = query.query_get_docs_limit_offset(cbl_db, limit=query_limit, offset=query_offset)
             # Query results do not store in memory for dot net, so no need to release memory for dotnet
             if platform.lower() not in ("net-msft", "uwp", "xamarin-ios", "xamarin-android"):
                 _releaseQueryResults(base_url, results)
-            '''
 
             #######################################
             # Checking for doc update on CBL side #
@@ -255,12 +254,11 @@ def process_per_cbl_client(sg_params, cbl_params, test_params, doc_ids):
 
             # updating docs will affect all dbs as they are synced with SG.
             _replicaton_status_check(thread_name, repl_obj, repl, repl_status_check_sleep_time)
-            '''
+
             results = query.query_get_docs_limit_offset(cbl_db, limit=query_limit, offset=query_offset)
             # Query results do not store in memory for dot net, so no need to release memory for dotnet
             if platform.lower() not in ("net-msft", "uwp", "xamarin-ios", "xamarin-android"):
                 _releaseQueryResults(base_url, results)
-            '''
 
             ###########################
             # Deleting docs on SG side #
@@ -275,12 +273,11 @@ def process_per_cbl_client(sg_params, cbl_params, test_params, doc_ids):
             # repl_obj.wait_until_replicator_idle(repl, max_times=maxsize, sleep_time=repl_status_check_sleep_time)
 
             _replicaton_status_check(thread_name, repl_obj, repl, repl_status_check_sleep_time)
-            '''
             results = query.query_get_docs_limit_offset(cbl_db, limit=query_limit, offset=query_offset)
             # Query results do not store in memory for dot net, so no need to release memory for dotnet
             if platform.lower() not in ("net-msft", "uwp", "xamarin-ios", "xamarin-android"):
                 _releaseQueryResults(base_url, results)
-            '''
+
             time.sleep(5)
             # _check_doc_count(db_obj_list, cbl_db_list)
             # removing ids of deleted doc from the list
@@ -299,17 +296,13 @@ def process_per_cbl_client(sg_params, cbl_params, test_params, doc_ids):
             # repl_obj.wait_until_replicator_idle(repl, max_times=maxsize, sleep_time=repl_status_check_sleep_time)
 
             _replicaton_status_check(thread_name, repl_obj, repl, repl_status_check_sleep_time)
-            '''
+
             results = query.query_get_docs_limit_offset(cbl_db, limit=query_limit,
                                                         offset=query_offset)
             # Query results do not store in memory for dot net, so no need to release memory for dotnet
             if platform.lower() not in ("net-msft", "uwp", "xamarin-ios", "xamarin-android"):
                 _releaseQueryResults(base_url, results)
 
-            # Deleting docs will affect all dbs as they are synced with SG.
-            _check_parallel_replication_changes(thread_name, base_url, repl_obj, repl, cbl_db, query,
-                                                repl_status_check_sleep_time, query_limit, platform, query_offset)
-            '''
             # _check_doc_count(db_obj_list, cbl_db_list)
             # removing ids of deleted doc from the list
             doc_ids = doc_ids - docs_to_delete
@@ -343,13 +336,13 @@ def process_per_cbl_client(sg_params, cbl_params, test_params, doc_ids):
             # repl_obj.wait_until_replicator_idle(repl, max_times=maxsize, sleep_time=repl_status_check_sleep_time)
 
             _replicaton_status_check(thread_name, repl_obj, repl, repl_status_check_sleep_time)
-            '''
+
             results = query.query_get_docs_limit_offset(cbl_db, limit=query_limit,
                                                         offset=query_offset)
             # Query results do not store in memory for dot net, so no need to release memory for dotnet
             if platform.lower() not in ("net-msft", "uwp", "xamarin-ios", "xamarin-android"):
                 _releaseQueryResults(base_url, results)
-            '''
+
             time.sleep(5)
             doc_id_for_new_docs += num_of_docs_to_add
             # _check_doc_count(db_obj_list, cbl_db_list)
@@ -386,15 +379,6 @@ def _check_doc_count(db_obj_list, cbl_db_list):
     log_info("Doc count is - {}".format(new_docs_count))
     if len(new_docs_count) != 1:
         assert 0, "Doc count in all DBs are not equal"
-
-
-def _check_parallel_replication_changes(thread_name, base_url, repl_obj, repl, cbl_db, query,
-                                        repl_status_check_sleep_time, query_limit, platform, query_offset):
-    _replicaton_status_check(thread_name, repl_obj, repl, repl_status_check_sleep_time)
-    results = query.query_get_docs_limit_offset(cbl_db, limit=query_limit, offset=query_offset)
-    # Query results do not store in memory for dot net, so no need to release memory for dotnet
-    if platform.lower() not in ("net-msft", "uwp", "xamarin-ios", "xamarin-android"):
-        _releaseQueryResults(base_url, results)
 
 
 def _releaseQueryResults(base_url, results):
