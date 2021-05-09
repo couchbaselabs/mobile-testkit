@@ -407,7 +407,7 @@ def params_from_base_suite_setup(request):
     testkit_db_obj_list = []
     query_obj_list = []
     # Start Test server which needed for suite level set up like query tests
-    for testserver in testserver_list:
+    for testserver, platform in zip(testserver_list, platform_list):
         if not use_local_testserver:
             log_info("Starting TestServer...")
             test_name_cp = test_name.replace("/", "-")
