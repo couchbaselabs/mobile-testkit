@@ -373,7 +373,7 @@ def process_per_cbl_client(sg_params, cbl_params, test_params, doc_ids):
 
 
 def _replicaton_status_check(thread_name, repl_obj, replicator, repl_status_check_sleep_time=2):
-    # repl_obj.wait_until_replicator_idle(replicator, max_times=maxsize, sleep_time=repl_status_check_sleep_time)
+    repl_obj.wait_until_replicator_idle(replicator, max_times=maxsize, sleep_time=repl_status_check_sleep_time)
     total = repl_obj.getTotal(replicator)
     completed = repl_obj.getCompleted(replicator)
     _log_system_test(thread_name, "_replicaton_status_check", "total: {}".format(total))
