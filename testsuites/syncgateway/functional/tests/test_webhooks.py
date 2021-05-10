@@ -352,7 +352,8 @@ def test_webhook_filter_external_js(params_from_base_test_setup, setup_webserver
     bucket = cluster.servers[0].get_bucket_names()[0]
     sdk_client = get_sdk_client_with_bucket(ssl_enabled, cluster, cbs_ip, bucket)
     js_func_key = "\"filter\":\""
-    path = "http://{}:5007/webhookFilter".format(get_local_ip())
+    jscode_external_ip = "172.23.104.165"
+    path = "http://{}:5007/webhookFilter".format(jscode_external_ip)
     path = js_func_key + path + "\","
     temp_sg_config, _ = copy_sgconf_to_temp(sg_conf, mode)
     temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ webhook_filter }}", path)
@@ -447,7 +448,8 @@ def test_webhook_filter_external_https_js(params_from_base_test_setup, setup_web
     bucket = cluster.servers[0].get_bucket_names()[0]
     sdk_client = get_sdk_client_with_bucket(ssl_enabled, cluster, cbs_ip, bucket)
     js_func_key = "\"filter\":\""
-    path = "https://{}:5007/webhookFilter".format(get_local_ip())
+    jscode_external_ip = "172.23.104.165"
+    path = "https://{}:5007/webhookFilter".format(jscode_external_ip)
     path = js_func_key + path + "\","
     temp_sg_config, _ = copy_sgconf_to_temp(sg_conf, mode)
     temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ webhook_filter }}", path)
