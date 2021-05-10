@@ -48,7 +48,6 @@ class ReplicatorConfiguration(object):
         if sg_ssl_enabled(cluster_config):
             args.setString("pinnedservercert", "sg_cert")
 
-
     def builderCreate(self, source_db, target_db=None, target_url=None):
         args = Args()
         args.setMemoryPointer("sourceDb", source_db)

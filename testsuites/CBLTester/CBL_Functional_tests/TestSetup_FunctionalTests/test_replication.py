@@ -212,17 +212,17 @@ def test_replication_configuration_with_pull_replication(params_from_base_test_s
 
     if sync_gateway_version >= "2.5.0":
         expvars = sg_client.get_expvars(sg_admin_url)
-        assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"][
-                   "request_changes_count"] == 1, "request_changes_count did not get incremented"
-        assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"][
-                   "request_changes_time"] > 0, "request_changes_time did not get incremented"
-        assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"][
-                   "num_pull_repl_since_zero"] == 1, "num_pull_repl_since_zero did not get incremented"
+        assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["request_changes_count"] == 1, \
+            "request_changes_count did not get incremented "
+        assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["request_changes_time"] > 0, \
+            "request_changes_time did not get incremented"
+        assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["num_pull_repl_since_zero"] == 1, \
+            "num_pull_repl_since_zero did not get incremented"
         if attachments_generator is not None:
-            assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"][
-                       "attachment_pull_count"] == 20, "attachment_pull_count did not get incremented"
-            assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"][
-                       "attachment_pull_bytes"] > 0, "attachment_pull_bytes did not get incremented"
+            assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["attachment_pull_count"] == 20, \
+                "attachment_pull_count did not get incremented"
+            assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["attachment_pull_bytes"] > 0, \
+                "attachment_pull_bytes did not get incremented"
             if prometheus_enable and sync_gateway_version >= "2.8.0":
                 assert verify_stat_on_prometheus("sgw_replication_pull_attachment_pull_count"), \
                     expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["attachment_pull_count"]
@@ -296,18 +296,18 @@ def test_replication_configuration_with_push_replication(params_from_base_test_s
 
     if sync_gateway_version >= "2.5.0":
         expvars = sg_client.get_expvars(sg_admin_url)
-        assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_push"][
-                   "doc_push_count"] == 5, "doc_push_count did not get incremented"
-        assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_push"][
-                   "sync_function_time"] > 0, "sync_function_time is not incremented"
-        assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_push"][
-                   "sync_function_count"] > 0, "sync_function_count is not incremented"
+        assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_push"]["doc_push_count"] == 5, \
+            "doc_push_count did not get incremented"
+        assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_push"]["sync_function_time"] > 0, \
+            "sync_function_time is not incremented"
+        assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_push"]["sync_function_count"] > 0, \
+            "sync_function_count is not incremented"
 
         if attachments_generator is not None:
-            assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_push"][
-                       "attachment_push_count"] == 30, "attachment_push_count did not get incremented"
-            assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_push"][
-                       "attachment_push_bytes"] > 0, "attachment_push_bytes did not get incremented"
+            assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_push"]["attachment_push_count"] == 30, \
+                "attachment_push_count did not get incremented"
+            assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_push"]["attachment_push_bytes"] > 0, \
+                "attachment_push_bytes did not get incremented"
             if prometheus_enable and sync_gateway_version >= "2.8.0":
                 assert verify_stat_on_prometheus("sgw_replication_push_attachment_push_count"), \
                     expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_push"]["attachment_push_count"]
@@ -328,7 +328,6 @@ def test_replication_push_replication_without_authentication(params_from_base_te
 
     """
     sg_db = "db"
-
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_blip_url = params_from_base_test_setup["target_url"]
@@ -443,10 +442,10 @@ def test_replication_push_replication_invalid_authentication(params_from_base_te
     replicator.stop(repl)
     if sync_gateway_version >= "2.5.0":
         expvars = sg_client.get_expvars(sg_admin_url)
-        assert expvars["syncgateway"]["per_db"][sg_db]["security"][
-                   "auth_failed_count"] > 0, "auth failed count is not incremented"
-        assert expvars["syncgateway"]["per_db"][sg_db]["security"][
-                   "total_auth_time"] > 0, "total_auth_time is not incremented"
+        assert expvars["syncgateway"]["per_db"][sg_db]["security"]["auth_failed_count"] > 0, \
+            "auth failed count is not incremented"
+        assert expvars["syncgateway"]["per_db"][sg_db]["security"]["total_auth_time"] > 0, \
+            "total_auth_time is not incremented"
     if prometheus_enable and sync_gateway_version >= "2.8.0":
         assert verify_stat_on_prometheus("sgw_security_auth_failed_count"), \
             expvars["syncgateway"]["per_db"][sg_db]["security"]["auth_failed_count"]
@@ -555,8 +554,8 @@ def test_replication_configuration_with_filtered_doc_ids(params_from_base_test_s
 
     if sync_gateway_version >= "2.5.0":
         expvars = sg_client.get_expvars(sg_admin_url)
-        assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"][
-                   "num_pull_repl_total_one_shot"] == 2, "num_pull_repl_total_one_shot did not get incremented"
+        assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["num_pull_repl_total_one_shot"] == 2, \
+            "num_pull_repl_total_one_shot did not get incremented"
     if prometheus_enable and sync_gateway_version >= "2.8.0":
         assert verify_stat_on_prometheus("sgw_replication_pull_num_pull_repl_total_one_shot"), \
             expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["num_pull_repl_total_one_shot"]
@@ -1755,10 +1754,10 @@ def test_default_conflict_scenario_highRevID_wins(params_from_base_test_setup, h
 
     if highrevId_source == 'cbl':
         for doc in cbl_docs:
-            assert cbl_docs[doc][
-                       "updates-cbl"] == 2, "higher revision id on CBL did not win with conflict resolution in cbl"
-            assert cbl_docs[doc][
-                       "updates"] == 0, "higher revision id on CBL did not win with conflict resolution in cbl"
+            assert cbl_docs[doc]["updates-cbl"] == 2, \
+                "higher revision id on CBL did not win with conflict resolution in cbl"
+            assert cbl_docs[doc]["updates"] == 0, \
+                "higher revision id on CBL did not win with conflict resolution in cbl"
     if highrevId_source == 'sg':
         for doc in cbl_docs:
             assert cbl_docs[doc]["updates"] == 1, "higher revision id on SG did not win with conflict resolution in cbl"
@@ -3594,6 +3593,7 @@ def test_doc_removal_with_multipleChannels(params_from_base_test_setup, setup_cu
     #    doc a with channel_A, channel_B ;
     #    docb with channel_B ,
     #    docc with Channel_A, channel_B, channel_C
+    sg_docs = document.create_docs(doc_id_prefix='sg_docs-A', number=num_of_docs, channels=doc_channel_1)
     sg_docs_A = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=session_A)
 
     sg_docs = document.create_docs(doc_id_prefix='sg_docs-B', number=num_of_docs, channels=doc_channel_2)
@@ -4253,7 +4253,6 @@ def test_replication_with_custom_retries(params_from_base_test_setup, num_of_doc
     sg_config = params_from_base_test_setup["sg_config"]
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
-    mode = params_from_base_test_setup["mode"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
 
     if sync_gateway_version < "2.0.0":
@@ -4346,7 +4345,6 @@ def test_replication_with_custom_timeout(params_from_base_test_setup, num_of_doc
     sg_config = params_from_base_test_setup["sg_config"]
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
-    mode = params_from_base_test_setup["mode"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
 
     if sync_gateway_version < "2.0.0":
@@ -4368,7 +4366,6 @@ def test_replication_with_custom_timeout(params_from_base_test_setup, num_of_doc
     sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg)
     authenticator = Authenticator(base_url)
     cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
-    session = cookie, session_id
     replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
 
     repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=False, channels=channels_sg, max_retry_wait_time=wait_time,
@@ -4430,7 +4427,6 @@ def test_replication_reset_retires(params_from_base_test_setup, num_of_docs, con
     sg_config = params_from_base_test_setup["sg_config"]
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
-    mode = params_from_base_test_setup["mode"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
 
     if sync_gateway_version < "2.0.0":
@@ -4452,7 +4448,6 @@ def test_replication_reset_retires(params_from_base_test_setup, num_of_docs, con
     sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg)
     authenticator = Authenticator(base_url)
     cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
-    session = cookie, session_id
     replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
 
     repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=continuous, channels=channels_sg,

@@ -14,7 +14,7 @@ from CBLClient.PeerToPeer import PeerToPeer
 @pytest.mark.listener
 @pytest.mark.parametrize("num_of_docs, continuous, replicator_type, attachments, endPointType", [
     (10, True, "push_pull", False, "URLEndPoint"),
-    (100, True, "push", True, "MessageEndPoint"),
+    (100, True, "push_pull", True, "MessageEndPoint"),
     pytest.param(10, True, "push_pull", False, "MessageEndPoint", marks=pytest.mark.sanity),
     (100, False, "push", False, "URLEndPoint"),
 ])
@@ -1165,8 +1165,8 @@ def test_peer_to_peer_with_server_down(params_from_base_test_setup, server_setup
 @pytest.mark.p2p
 @pytest.mark.listener
 @pytest.mark.parametrize("num_of_docs, continuous, replicator_type, endPointType, retries, interval", [
-    (100, True, "push", "MessageEndPoint", 5, 9),
-    (1000, True, "pull-push", "MessageEndPoint", 3, 8),
+    (1000, True, "push", "MessageEndPoint", 9, 9),
+    (1000, True, "pull-push", "MessageEndPoint", 13, 8),
     (1000, True, "pull", "MessageEndPoint", 9, 20)
 ])
 def test_peer_to_peer_tries(params_from_base_test_setup, num_of_docs, continuous, replicator_type, endPointType, retries, interval):
@@ -1197,22 +1197,20 @@ def test_peer_to_peer_tries(params_from_base_test_setup, num_of_docs, continuous
     db_name_server = db_name_list[0]
     peer_to_peer_server = PeerToPeer(base_url_server)
 
-    url_listener_port = 6009
+    url_listener_port = 9000
     server_host = host_list[0]
-    total_time = interval * retries
 
     db_obj_server.create_bulk_docs(num_of_docs, "cbl-peerToPeer", db=cbl_db_server, channels=channels)
     db_obj_client.create_bulk_docs(num_of_docs, "replication", db=cbl_db_client, channels=channels)
-
     # # Now set up client
     repl = peerToPeer_client.configure(port=url_listener_port, host=server_host, server_db_name=db_name_server,
                                        client_database=cbl_db_client, continuous=continuous, retries=retries,
                                        replication_type=replicator_type, endPointType=endPointType, max_timeout_interval=interval)
 
     peerToPeer_client.client_start(repl)
-    time.sleep(18)
+    time.sleep((retries - 4) * interval)
     message_url_tcp_listener = peer_to_peer_server.message_listener_start(cbl_db_server, url_listener_port)
-
+    time.sleep(3)
     replicator.wait_until_replicator_idle(repl)
     total = replicator.getTotal(repl)
 
