@@ -1,6 +1,6 @@
 import time
 import pytest
-import subprocess
+# import subprocess
 from keywords import document
 from keywords.MobileRestClient import MobileRestClient
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
@@ -512,7 +512,7 @@ def setup_webserver():
     # process = subprocess.Popen(args=["nohup", "python", "libraries/utilities/host_sgw_jscode.py", "--start", "&"], stdout=subprocess.PIPE)
     yield{
         "webhook_server": webhook_server
-    } 
+    }
 
     webhook_server.stop()
     # process.kill()
@@ -525,7 +525,7 @@ def setup_webserver_js_sslon():
     # process = subprocess.Popen(args=["nohup", "python", "libraries/utilities/host_sgw_jscode.py", "--sslstart", "&"], stdout=subprocess.PIPE)
     yield{
         "webhook_server": webhook_server
-    } 
+    }
     webhook_server.stop()
     # process.kill()
 
