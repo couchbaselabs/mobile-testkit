@@ -18,7 +18,31 @@ class TestServerNetMsft(TestServerWinBase):
 
         if version_build <= "2.1.0":
             raise Exception("No .net based app available to download for 2.1.0 or below at latestbuild. Use nuget package to create app.")
-        if self.platform == "net-msft":
+
+        if self.platform == "c-msft":
+            if community_enabled:
+                build_tag_name = "TestServer-Net-C-community"
+            else:
+                build_tag_name = "TestServer-Net-C"
+            self.build_name = "{}-{}".format(build_tag_name, self.version_build)
+            self.binary_path = "{}-{}\\TestServer.NetCore.dll".format(build_tag_name, self.version_build)
+            self.package_name = "{}.zip".format(build_tag_name)
+            if self.build is None:
+                self.download_url = "{}/couchbase-lite-c/{}/{}".format(RELEASED_BUILDS, self.version, self.package_name)
+            else:
+                self.download_url = "{}/couchbase-lite-c/{}/{}/{}".format(LATEST_BUILDS, self.version, self.build, self.package_name)
+        elif self.platform == "c-uwp":
+            self.binary_path = "TestServer-C-UWP-{}\\run.ps1".format(self.version_build)
+            if self.build is None:
+                self.download_url = "{}/couchbase-lite-c/{}/TestServer.C.UWP.zip".format(RELEASED_BUILDS, self.version)
+            else:
+                self.download_url = "{}/couchbase-lite-c/{}/{}/TestServer.C.UWP.zip".format(LATEST_BUILDS, self.version,
+                                                                                            self.build)
+            self.package_name = "TestServer.C.UWP.zip"
+            self.stop_binary_path = "TestServer-C-UWP-{}\\stop.ps1".format(self.version_build)
+            self.build_name = "TestServer-C-UWP-{}".format(self.version_build)
+
+        elif self.platform == "net-msft":
             if community_enabled:
                 self.build_name = "TestServer-Net-community-{}".format(self.version_build)
                 self.binary_path = "TestServer-Net-community-{}\\TestServer.NetCore.dll".format(self.version_build)

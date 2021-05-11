@@ -31,6 +31,11 @@ class TestServerAndroid(TestServerBase):
             self.device_enabled = False
             self.installed_package_name = "com.couchbase.TestServerApp"
             self.activity_name = self.installed_package_name + "/com.couchbase.CouchbaseLiteServ.MainActivity"
+        elif self.platform == "c-android":
+            # Cpp-android
+            self.package_name = self.apk_name = "TestServer.Android.C.apk"
+            self.installed_package_name = "TestServer.Android.C"
+            self.activity_name = self.installed_package_name + "/com.couchbase.CouchbaseLiteServ.MainActivity"
         else:
             # Xamarin-android
             self.package_name = self.apk_name = "TestServer.Android.apk"
