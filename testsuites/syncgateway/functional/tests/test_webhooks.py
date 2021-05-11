@@ -5,7 +5,8 @@ from keywords import document
 from keywords.MobileRestClient import MobileRestClient
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.userinfo import UserInfo
-from keywords.utils import host_for_url, log_info, get_local_ip
+# from keywords.utils import host_for_url, log_info, get_local_ip
+from keywords.utils import host_for_url, log_info
 from libraries.testkit.admin import Admin
 from libraries.testkit.cluster import Cluster
 from libraries.testkit.parallelize import in_parallel

@@ -5,7 +5,8 @@ import requests
 import subprocess
 from requests.exceptions import HTTPError
 
-from keywords.utils import log_info, get_local_ip
+# from keywords.utils import log_info, get_local_ip
+from keywords.utils import log_info
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.MobileRestClient import MobileRestClient
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
@@ -256,8 +257,9 @@ def test_invalid_external_jspath(params_from_base_test_setup, setup_jsserver):
 
     # Create and set up sdk client
     sg = cluster.sync_gateways[0]
+    jscode_external_ip = "172.23.104.165"
     js_func_key = "\"import_filter\":\""
-    path = "http://{}:5007/invalid_jsfunc".format(get_local_ip())
+    path = "http://{}:5007/invalid_jsfunc".format(jscode_external_ip)
     path = js_func_key + path + "\","
     temp_sg_config, _ = copy_sgconf_to_temp(sg_conf, mode)
     temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ replace_with_js }}", path)
