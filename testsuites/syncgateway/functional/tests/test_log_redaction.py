@@ -623,7 +623,7 @@ def verify_all_logs_in_sgcollectzip(remote_executor, zip_file_name=None):
     sgcollect_zip_filename = "/tmp/sg_redaction_logs/sg1/{}.zip".format(zip_file_name)
     file_list_sgcollect_zip = ['expvars.json', 'pprof_block.pb.gz', 'pprof_goroutine.pb.gz', 'pprof_heap.pb.gz', 'pprof_mutex.pb.gz', 'pprof_profile.pb.gz',
                                'sg_debug.log', 'sg_error.log', 'sg_info.log', 'sg_stats.log', 'sg_warn.log', 'sgcollect_info_options.log', 'sync_gateway', 'sync_gateway.json',
-                               'sync_gateway.log', 'sync_gateway_access.log', 'sync_gateway_error.log', 'syslog.tar.gz', 'systemd_journal.gz']
+                               'sync_gateway.log', 'sync_gateway_error.log', 'syslog.tar.gz', 'systemd_journal.gz']
     for file in file_list_sgcollect_zip:
         bracket_command = "\"{}\""
         find_command = "find {} -type f -exec sh -c 'unzip -l {} | grep -q {}' \\; -print | wc -l".format(sgcollect_zip_filename, bracket_command, file)
