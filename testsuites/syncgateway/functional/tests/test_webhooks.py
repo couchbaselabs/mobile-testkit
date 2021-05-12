@@ -315,7 +315,7 @@ def test_webhooks_crud(params_from_base_test_setup, sg_conf_name, filtered):
 @pytest.mark.syncgateway
 @pytest.mark.webhooks
 @pytest.mark.oscertify
-def test_webhook_filter_external_js(params_from_base_test_setup, setup_webserver):
+def test_webhook_filter_external_js(params_from_base_test_setup):
     """
     "1. Create valid js function  for import filter and host it in local machine to access jscode with http url
     webhook filter : add doc.type if doc has data with webhook filter value, otherwise add doc.type is ignore
@@ -374,6 +374,9 @@ def test_webhook_filter_external_js(params_from_base_test_setup, setup_webserver
     log_info("Using sg_db: {}".format(sg_db))
     log_info("Using bucket: {}".format(bucket))
 
+    webhook_server = WebServer()
+    webhook_server.start()
+
     # webhook_filter verification
     def update_webhook_prop():
         return {'updates': 0, 'data': 'webhook_filter'}
@@ -407,6 +410,8 @@ def test_webhook_filter_external_js(params_from_base_test_setup, setup_webserver
         else:
             break
     assert len(posted_webhook_events_ids) == len(sdk_doc_ids1)
+    # Stop webhook server
+    webhook_server.stop()
 
 
 @pytest.mark.syncgateway
