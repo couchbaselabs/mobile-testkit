@@ -35,75 +35,16 @@ class TestServerCpp(TestServerBase):
         log_info("build_name: {}".format(self.build_name))
         log_info("self.platform = {}".format(self.platform))
 
-        '''
-        generate ansible config file base on platform format
-        '''
-        if self.platform == "javaws-msft":
-            # java ws on Windows platform
-            if "LITESERV_MSFT_HOST_USER" not in os.environ:
-                raise LiteServError(
-                    "Make sure you define 'LITESERV_MSFT_HOST_USER' as the windows user for the host you are targeting")
-
-            if "LITESERV_MSFT_HOST_PASSWORD" not in os.environ:
-                raise LiteServError(
-                    "Make sure you define 'LITESERV_MSFT_HOST_PASSWORD' as the windows user for the host you are targeting")
-
-            # Create config for TestServer Windows host
-            ansible_testserver_target_lines = [
-                "[windows]",
-                "win1 ansible_host={}".format(host),
-                "[windows:vars]",
-                "ansible_user={}".format(os.environ["LITESERV_MSFT_HOST_USER"]),
-                "ansible_password={}".format(os.environ["LITESERV_MSFT_HOST_PASSWORD"]),
-                "ansible_port=5985",
-                "ansible_connection=winrm",
-                "# The following is necessary for Python 2.7.9+ when using default WinRM self-signed certificates:",
-                "ansible_winrm_server_cert_validation=ignore"
-            ]
-        else:
-            # java ws on non-Windows platform
-            if "TESTSERVER_HOST_USER" not in os.environ:
-                raise LiteServError(
-                    "Make sure you define 'TESTSERVER_HOST_USER' as the user for the host you are targeting")
-
-            if "TESTSERVER_HOST_PASSWORD" not in os.environ:
-                raise LiteServError(
-                    "Make sure you define 'TESTSERVER_HOST_PASSWORD' as the user for the host you are targeting")
-
-            # Create config for TestServer non-Windows host
-            ansible_testserver_target_lines = [
-                "[testserver]",
-                "testserver ansible_host={}".format(host),
-                "[testserver:vars]",
-                "ansible_user={}".format(os.environ["TESTSERVER_HOST_USER"]),
-                "ansible_password={}".format(os.environ["TESTSERVER_HOST_PASSWORD"])
-            ]
-
-        ansible_testserver_target_string = "\n".join(ansible_testserver_target_lines)
-        log_info("Writing: {}".format(ansible_testserver_target_string))
-        config_location = "resources/liteserv_configs/{}".format(self.platform)
-
-        with open(config_location, "w") as f:
-            f.write(ansible_testserver_target_string)
-        self.ansible_runner = AnsibleRunner(config=config_location)
 
     def download(self, version_build=None):
         """
-        1. Downloads CBLTestServer-Java-WS-2.7.0-94-enterprise.war package
-        from latestbuild to the remote Linux or Windows machine
-        2. Downloads CouchbaseLite Java Core library couchbase-lite-java-ee-2.7.0-94.zip,
-        extracts the package and removes the zip
-        :params: testserver_download_url, cblite_download_url, war_package_name, core_package_name, build_name
-        :return: nothing
+         TODO: once we know the steps add it
         """
 
-        if self.platform == "javaws-msft":
+        if self.platform == "c-msft":
             # download war file to a remote Windows server machine
-            status = self.ansible_runner.run_ansible_playbook("download-testserver-java-ws-msft.yml", extra_vars={
+            status = self.ansible_runner.run_ansible_playbook("download-testserver-c.yml", extra_vars={
                 "testserver_download_url": self.download_url,
-                "cblite_download_url": self.download_corelib_url,
-                "war_package_name": self.package_name,
-                "core_package_name": self.cbl_core_lib_name,
                 "build_name": self.build_name
             })
         if status == 0:
@@ -112,25 +53,17 @@ class TestServerCpp(TestServerBase):
             raise LiteServError("Failed to download Test server on remote machine")
 
     def install(self):
-        if self.platform == "javaws-msft":
-            # deploy jar/war files to Tomcat on Windows
-            status = self.ansible_runner.run_ansible_playbook("install-testserver-java-ws-msft.yml", extra_vars={
-                "war_package_name": self.package_name,
-                "core_package_name": self.cbl_core_lib_name,
-                "build_name": self.build_name
-            })
-        elif self.platform == "javaws-macosx":
+        if self.platform == "c-macosx":
             # deploy jar/war files to Tomcat on macOS
-            status = self.ansible_runner.run_ansible_playbook("install-testserver-java-ws-macos.yml", extra_vars={
-                "war_package_name": self.package_name,
-                "core_package_name": self.cbl_core_lib_name,
-                "catalina_base": os.environ["CATALINA_BASE"]
+            status = self.ansible_runner.run_ansible_playbook("install-testserver-c-macosx.yml", extra_vars={
+                "binary_path": self.binary_path,
+                "version_build": self.version_build
             })
         else:
             # deploy jar/war files to Tomcat on non-Windows
-            status = self.ansible_runner.run_ansible_playbook("install-testserver-java-ws.yml", extra_vars={
-                "war_package_name": self.package_name,
-                "core_package_name": self.cbl_core_lib_name
+            status = self.ansible_runner.run_ansible_playbook("install-testserver-c-linux.yml", extra_vars={
+                "binary_path": self.binary_path,
+                "version_build": self.version_build
             })
 
         if status == 0:
@@ -143,14 +76,12 @@ class TestServerCpp(TestServerBase):
 
     def start(self, logfile_name):
         if self.platform == "c-macosx":
-            # start Tomcat Server
-            status = self.ansible_runner.run_ansible_playbook("manage-testserver-java-ws-macos.yml", extra_vars={
+            status = self.ansible_runner.run_ansible_playbook("start-testserver-c-macosx.yml", extra_vars={
                 "service_status": "start",
                 "catalina_base": os.environ["CATALINA_BASE"]
             })
-        else:
-            # start Tomcat Server
-            status = self.ansible_runner.run_ansible_playbook("manage-testserver-java-ws.yml", extra_vars={
+
+            status = self.ansible_runner.run_ansible_playbook("start-testserver-c-linux.yml", extra_vars={
                 "service_status": "start"
             })
 
@@ -165,20 +96,14 @@ class TestServerCpp(TestServerBase):
         raise NotImplementedError()
 
     def stop(self):
-        if self.platform == "javaws-msft":
+        if self.platform == "c-macosx":
             # stop Tomcat Windows Service
-            status = self.ansible_runner.run_ansible_playbook("manage-testserver-java-ws-msft.yml", extra_vars={
+            status = self.ansible_runner.run_ansible_playbook("stop-testserver--c-macos.yml", extra_vars={
                 "service_status": "stopped"
-            })
-        elif self.platform == "javaws-macosx":
-            # stop Tomcat Server
-            status = self.ansible_runner.run_ansible_playbook("manage-testserver-java-ws-macos.yml", extra_vars={
-                "service_status": "stop",
-                "catalina_base": os.environ["CATALINA_BASE"]
             })
         else:
             # stop Tomcat Server
-            status = self.ansible_runner.run_ansible_playbook("manage-testserver-java-ws.yml", extra_vars={
+            status = self.ansible_runner.run_ansible_playbook("stop-testserver-c-linux.yml", extra_vars={
                 "service_status": "stop"
             })
 
