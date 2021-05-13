@@ -1,0 +1,19 @@
+- name: Windows - Start TestServer
+  hosts: windows
+  vars:
+    binary_path:
+    version_build:
+
+  tasks:
+    - win_stat:
+       path: C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ binary_path }}
+      register: st
+
+    - debug: msg="Starting the Testserver "
+    - name: Start TestServer
+      win_nssm:
+        name: TestServer
+        application: C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ binary_path }}\testserver.exe
+        state: started
+        stdout_file: C:\Users\{{ ansible_user }}\Desktop\TestServer\TestServer-Net-{{ version_build }}\TestServer.log
+        stderr_file: C:\Users\{{ ansible_user }}\Desktop\TestServer\TestServer-Net-{{ version_build }}\TestServer.log

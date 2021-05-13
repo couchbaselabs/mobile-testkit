@@ -46,7 +46,7 @@ class TestServerFactory:
                                  platform=platform)
         elif platform == "net-mono":
             return TestServerNetMono(version_build, host, port)
-        elif platform == "net-msft" or platform == "net-uwp" or platform == "c-msft":
+        elif platform == "net-msft" or platform == "net-uwp" or platform == "c-msft" or platform == "c-uwp":
             return TestServerNetMsft(version_build, host, port, platform=platform, community_enabled=community_enabled)
         elif platform in ["java-macosx", "java-msft", "java-ubuntu", "java-centos"]:
             return TestServerJava(version_build, host, port, debug_mode, platform=platform,

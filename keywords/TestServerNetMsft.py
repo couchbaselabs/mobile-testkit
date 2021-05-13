@@ -108,6 +108,17 @@ class TestServerNetMsft(TestServerWinBase):
                     "version_build": self.version_build
                 }
             )
+        elif self.platform == "c-msft":
+            self.logfile = logfile_name
+            log_info("Starting Test server {}".format(self.binary_path))
+            # Start Testserver via Ansible on remote machine
+            status = self.ansible_runner.run_ansible_playbook(
+                "start-testserver-c-msft.yml",
+                extra_vars={
+                    "binary_path": self.binary_path,
+                    "version_build": self.version_build
+                }
+            )
         else:
             # net-uwp
             log_info("Starting Test server UWP {}".format(self.binary_path))
