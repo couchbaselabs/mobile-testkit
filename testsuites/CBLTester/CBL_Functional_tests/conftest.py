@@ -236,7 +236,7 @@ def params_from_base_suite_setup(request):
     if not use_local_testserver:
         log_info("Downloading TestServer ...")
         # Download TestServer app
-        testserver.download()
+        # testserver.download()
 
         # Install TestServer app
         if device_enabled:
