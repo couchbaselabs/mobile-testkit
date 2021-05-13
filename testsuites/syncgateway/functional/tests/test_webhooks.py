@@ -330,7 +330,7 @@ def test_webhook_filter_external_js(params_from_base_test_setup):
     mode = params_from_base_test_setup["mode"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
-    webhook_server = setup_webserver["webhook_server"]
+    # webhook_server = setup_webserver["webhook_server"]
     sg_conf_name = "webhooks/webhook_filter_external_js"
 
     if sync_gateway_version < "3.0.0":
