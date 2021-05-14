@@ -25,7 +25,7 @@ class TestServerNetMsft(TestServerWinBase):
             else:
                 build_tag_name = "TestServer-Net-C"
             self.build_name = "{}-{}".format(build_tag_name, self.version_build)
-            self.binary_path = "{}-{}\\TestServer.NetCore.dll".format(build_tag_name, self.version_build)
+            self.binary_path = "{}-{}\\testserver.exe".format(build_tag_name, self.version_build)
             self.package_name = "{}.zip".format(build_tag_name)
             if self.build is None:
                 self.download_url = "{}/couchbase-lite-c/{}/{}".format(RELEASED_BUILDS, self.version, self.package_name)
