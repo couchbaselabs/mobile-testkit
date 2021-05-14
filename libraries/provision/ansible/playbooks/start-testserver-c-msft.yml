@@ -11,9 +11,8 @@
 
     - debug: msg="Starting the Testserver "
     - name: Start TestServer
+      win_command: C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ binary_path }} /c
       win_nssm:
         name: TestServer
-        application: C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ binary_path }}
-        state: started
         stdout_file: C:\Users\{{ ansible_user }}\Desktop\TestServer\TestServer-Net-{{ version_build }}\TestServer.log
         stderr_file: C:\Users\{{ ansible_user }}\Desktop\TestServer\TestServer-Net-{{ version_build }}\TestServer.log
