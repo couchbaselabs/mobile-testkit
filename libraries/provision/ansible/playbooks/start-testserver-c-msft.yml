@@ -6,14 +6,14 @@
 
   tasks:
     - win_stat:
-       path: C:\Users\{{ ansible_user }}\Desktop\TestServer\TestServer-Net-C-{{ version_build }}\{{ binary_path }}
+       path: C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ binary_path }}
       register: st
 
     - debug: msg="Starting the Testserver "
     - name: Start TestServer
       win_nssm:
         name: TestServer
-        application: C:\Users\{{ ansible_user }}\Desktop\TestServer\TestServer-Net-C-{{ version_build }}\{{ binary_path }}
+        application: C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ binary_path }}
         state: started
         stdout_file: C:\Users\{{ ansible_user }}\Desktop\TestServer\TestServer-Net-C-{{ version_build }}\TestServer.log
         stderr_file: C:\Users\{{ ansible_user }}\Desktop\TestServer\TestServer-Net-C-{{ version_build }}\TestServer.log
