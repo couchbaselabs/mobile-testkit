@@ -512,12 +512,13 @@ def test_webhook_filter_external_https_js(params_from_base_test_setup, setup_web
 
 @pytest.fixture(scope="function")
 def setup_webserver():
-    try:
+    """try:
         webhook_server = WebServer()
     except OSError as error:
         log_info("Caught OS Error ", error)
         subprocess.check_output("kill $(lsof -t -i tcp:8080)", shell=True)
-        webhook_server = WebServer()
+        webhook_server = WebServer()"""
+    webhook_server = WebServer()
     webhook_server.start()
     # process = subprocess.Popen(args=["nohup", "python", "libraries/utilities/host_sgw_jscode.py", "--start", "&"], stdout=subprocess.PIPE)
     yield{
@@ -530,12 +531,7 @@ def setup_webserver():
 
 @pytest.fixture(scope="function")
 def setup_webserver_js_sslon():
-    try:
-        webhook_server = WebServer()
-    except OSError as error:
-        log_info("Caught OS Error ", error)
-        subprocess.check_output("kill $(lsof -t -i tcp:8080)", shell=True)
-        webhook_server = WebServer()
+    webhook_server = WebServer()
     webhook_server.start()
     # process = subprocess.Popen(args=["nohup", "python", "libraries/utilities/host_sgw_jscode.py", "--sslstart", "&"], stdout=subprocess.PIPE)
     yield{
