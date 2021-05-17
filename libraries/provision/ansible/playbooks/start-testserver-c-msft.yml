@@ -11,4 +11,4 @@
 
     - debug: msg="Starting the Testserver "
     - name: Start TestServer
-      win_command: C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ binary_path }} /c
+      win_shell: C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ binary_path }}
