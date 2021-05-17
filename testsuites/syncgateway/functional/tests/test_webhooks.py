@@ -1,6 +1,6 @@
 import time
 import pytest
-import subprocess
+# import subprocess
 from keywords import document
 from keywords.MobileRestClient import MobileRestClient
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
