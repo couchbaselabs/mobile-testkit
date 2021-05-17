@@ -115,8 +115,7 @@ class TestServerNetMsft(TestServerWinBase):
             status = self.ansible_runner.run_ansible_playbook(
                 "start-testserver-c-msft.yml",
                 extra_vars={
-                    "binary_path": self.binary_path,
-                    "version_build": self.version_build
+                    "binary_path": self.binary_path
                 }
             )
         else:
