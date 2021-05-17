@@ -5,9 +5,6 @@
     version_build:
 
   tasks:
-    - win_stat:
-       path: C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ binary_path }}
-      register: st
 
     - debug: msg="Starting the Testserver "
     - name: Start TestServer
