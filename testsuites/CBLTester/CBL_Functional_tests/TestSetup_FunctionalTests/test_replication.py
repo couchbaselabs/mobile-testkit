@@ -93,8 +93,8 @@ def test_replication_configuration_valid_values(params_from_base_test_setup, num
     replicator = Replication(base_url)
     sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg)
     session, replicator_authenticator, repl = replicator.create_session_configure_replicate(
-        base_url, sg_admin_url, sg_db, username, password, channels_sg, sg_client, cbl_db, sg_blip_url,
-        continuous=continuous, replication_type="push_pull")
+        base_url, sg_admin_url, sg_db, username, password, channels_sg, sg_client, cbl_db, sg_blip_url, continuous=continuous,
+    replication_type="push_pull")
 
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)
     sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs["rows"], number_updates=number_of_updates, auth=session)
@@ -212,8 +212,7 @@ def test_replication_configuration_with_pull_replication(params_from_base_test_s
 
     if sync_gateway_version >= "2.5.0":
         expvars = sg_client.get_expvars(sg_admin_url)
-        assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["request_changes_count"] == 1, \
-            "request_changes_count did not get incremented "
+        assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["request_changes_count"] == 1, "request_changes_count did not get incremented "
         assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["request_changes_time"] > 0, \
             "request_changes_time did not get incremented"
         assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["num_pull_repl_since_zero"] == 1, \
