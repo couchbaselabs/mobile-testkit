@@ -32,7 +32,7 @@ def setup_teardown_test(params_from_base_test_setup):
     log_info("Creating db")
     cbl_db = db.create(cbl_db_name, db_config)
 
-    yield {
+    yield{
         "db": db,
         "cbl_db": cbl_db,
         "cbl_db_name": cbl_db_name
@@ -93,8 +93,7 @@ def test_replication_configuration_valid_values(params_from_base_test_setup, num
     replicator = Replication(base_url)
     sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg)
     session, replicator_authenticator, repl = replicator.create_session_configure_replicate(
-        base_url, sg_admin_url, sg_db, username, password, channels_sg, sg_client, cbl_db, sg_blip_url, continuous=continuous,
-        replication_type="push_pull")
+        base_url, sg_admin_url, sg_db, username, password, channels_sg, sg_client, cbl_db, sg_blip_url, continuous=continuous, replication_type="push_pull")
 
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)
     sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs["rows"], number_updates=number_of_updates, auth=session)
@@ -142,8 +141,7 @@ def test_replication_configuration_valid_values(params_from_base_test_setup, num
     ('session', attachment.generate_2_png_10_10),
     ('basic', None)
 ])
-def test_replication_configuration_with_pull_replication(params_from_base_test_setup, authenticator_type,
-                                                         attachments_generator):
+def test_replication_configuration_with_pull_replication(params_from_base_test_setup, authenticator_type, attachments_generator):
     """
         @summary:
         1. Create CBL DB and create bulk doc in CBL
@@ -179,12 +177,9 @@ def test_replication_configuration_with_pull_replication(params_from_base_test_s
     # Add 5 docs to CBL
     # Add 10 docs to SG
     # One shot replication
-    sg_added_doc_ids, cbl_added_doc_ids, session = setup_sg_cbl_docs(params_from_base_test_setup, sg_db=sg_db,
-                                                                     base_url=base_url, db=db,
-                                                                     cbl_db=cbl_db, sg_url=sg_url,
-                                                                     sg_admin_url=sg_admin_url, sg_blip_url=sg_blip_url,
-                                                                     replication_type="pull", channels=channels,
-                                                                     replicator_authenticator_type=authenticator_type,
+    sg_added_doc_ids, cbl_added_doc_ids, session = setup_sg_cbl_docs(params_from_base_test_setup, sg_db=sg_db, base_url=base_url, db=db,
+                                                                     cbl_db=cbl_db, sg_url=sg_url, sg_admin_url=sg_admin_url, sg_blip_url=sg_blip_url,
+                                                                     replication_type="pull", channels=channels, replicator_authenticator_type=authenticator_type,
                                                                      attachments_generator=attachments_generator)
     sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db)
     if sg_mode == "di":
@@ -212,7 +207,7 @@ def test_replication_configuration_with_pull_replication(params_from_base_test_s
 
     if sync_gateway_version >= "2.5.0":
         expvars = sg_client.get_expvars(sg_admin_url)
-        assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["request_changes_count"] == 1, "request_changes_count did not get incremented "
+        assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["request_changes_count"] == 1, "request_changes_count did not get incremented"
         assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["request_changes_time"] > 0, "request_changes_time did not get incremented"
         assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["num_pull_repl_since_zero"] == 1, "num_pull_repl_since_zero did not get incremented"
         if attachments_generator is not None:
@@ -228,8 +223,7 @@ def test_replication_configuration_with_pull_replication(params_from_base_test_s
     ('session', attachment.generate_2_png_10_10),
     ('basic', None)
 ])
-def test_replication_configuration_with_push_replication(params_from_base_test_setup, authenticator_type,
-                                                         attachments_generator):
+def test_replication_configuration_with_push_replication(params_from_base_test_setup, authenticator_type, attachments_generator):
     """
         @summary:
         1. Create docs in SG
@@ -263,12 +257,9 @@ def test_replication_configuration_with_push_replication(params_from_base_test_s
     channels = ["ABC"]
 
     sg_client = MobileRestClient()
-    sg_added_doc_ids, cbl_added_doc_ids, session = setup_sg_cbl_docs(params_from_base_test_setup, sg_db=sg_db,
-                                                                     base_url=base_url, db=db,
-                                                                     cbl_db=cbl_db, sg_url=sg_url,
-                                                                     sg_admin_url=sg_admin_url, sg_blip_url=sg_blip_url,
-                                                                     replication_type="push", channels=channels,
-                                                                     replicator_authenticator_type=authenticator_type,
+    sg_added_doc_ids, cbl_added_doc_ids, session = setup_sg_cbl_docs(params_from_base_test_setup, sg_db=sg_db, base_url=base_url, db=db,
+                                                                     cbl_db=cbl_db, sg_url=sg_url, sg_admin_url=sg_admin_url, sg_blip_url=sg_blip_url,
+                                                                     replication_type="push", channels=channels, replicator_authenticator_type=authenticator_type,
                                                                      attachments_generator=attachments_generator)
     sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db)
 
@@ -315,6 +306,7 @@ def test_replication_push_replication_without_authentication(params_from_base_te
 
     """
     sg_db = "db"
+
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_blip_url = params_from_base_test_setup["target_url"]
@@ -343,8 +335,7 @@ def test_replication_push_replication_without_authentication(params_from_base_te
     sg_ids = [row["id"] for row in sg_docs]
 
     replicator = Replication(base_url)
-    repl_config = replicator.configure(cbl_db, target_url=sg_blip_url, continuous=True, replication_type="push",
-                                       replicator_authenticator=None)
+    repl_config = replicator.configure(cbl_db, target_url=sg_blip_url, continuous=True, replication_type="push", replicator_authenticator=None)
 
     repl = replicator.create(repl_config)
     replicator.start(repl)
@@ -371,8 +362,7 @@ def test_replication_push_replication_without_authentication(params_from_base_te
     ]
 )
 def test_replication_push_replication_invalid_authentication(params_from_base_test_setup, replicator_authenticator,
-                                                             invalid_username, invalid_password, invalid_session,
-                                                             invalid_cookie):
+                                                             invalid_username, invalid_password, invalid_session, invalid_cookie):
     """
         @summary:
         1. Create docs in CBL
@@ -412,13 +402,10 @@ def test_replication_push_replication_invalid_authentication(params_from_base_te
 
     replicator = Replication(base_url)
     if replicator_authenticator == "session":
-        replicator_authenticator = authenticator.authentication(invalid_session, invalid_cookie,
-                                                                authentication_type="session")
+        replicator_authenticator = authenticator.authentication(invalid_session, invalid_cookie, authentication_type="session")
     elif replicator_authenticator == "basic":
-        replicator_authenticator = authenticator.authentication(username=invalid_username, password=invalid_password,
-                                                                authentication_type="basic")
-    repl_config = replicator.configure(cbl_db, target_url=sg_blip_url, continuous=True, replication_type="push",
-                                       replicator_authenticator=replicator_authenticator)
+        replicator_authenticator = authenticator.authentication(username=invalid_username, password=invalid_password, authentication_type="basic")
+    repl_config = replicator.configure(cbl_db, target_url=sg_blip_url, continuous=True, replication_type="push", replicator_authenticator=replicator_authenticator)
 
     repl = replicator.create(repl_config)
     replicator.start(repl)
@@ -479,13 +466,9 @@ def test_replication_configuration_with_filtered_doc_ids(params_from_base_test_s
     list_of_filtered_ids = random.sample(cbl_added_doc_ids, num_of_filtered_ids)
 
     cbl_doc_ids = db.getDocIds(cbl_db)
-    sg_added_doc_ids, cbl_added_doc_ids, session = setup_sg_cbl_docs(params_from_base_test_setup, sg_db=sg_db,
-                                                                     base_url=base_url, db=db,
-                                                                     cbl_db=cbl_db, sg_url=sg_url,
-                                                                     sg_admin_url=sg_admin_url, sg_blip_url=sg_blip_url,
-                                                                     document_ids=list_of_filtered_ids,
-                                                                     replicator_authenticator_type="basic",
-                                                                     channels=channels)
+    sg_added_doc_ids, cbl_added_doc_ids, session = setup_sg_cbl_docs(params_from_base_test_setup, sg_db=sg_db, base_url=base_url, db=db,
+                                                                     cbl_db=cbl_db, sg_url=sg_url, sg_admin_url=sg_admin_url, sg_blip_url=sg_blip_url, document_ids=list_of_filtered_ids,
+                                                                     replicator_authenticator_type="basic", channels=channels)
 
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)
     # Verify sg docs count
@@ -670,8 +653,7 @@ def test_CBL_tombstone_doc(params_from_base_test_setup, num_of_docs, x509_cert_a
     replicator = Replication(base_url)
     authenticator = Authenticator(base_url)
     replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
-    repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channels, replication_type="pull",
-                                       replicator_authenticator=replicator_authenticator)
+    repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channels, replication_type="pull", replicator_authenticator=replicator_authenticator)
 
     repl = replicator.create(repl_config)
     replicator.start(repl)
@@ -701,10 +683,8 @@ def test_CBL_tombstone_doc(params_from_base_test_setup, num_of_docs, x509_cert_a
 
     if sync_gateway_version >= "2.5.0":
         expvars = sg_client.get_expvars(sg_admin_url)
-        assert chan_cache_tombstone_revs < expvars["syncgateway"]["per_db"][sg_db]["cache"][
-            "chan_cache_tombstone_revs"], "chan cache tombstone revs did not get incremented"
-        assert chan_cache_removal_revs < expvars["syncgateway"]["per_db"][sg_db]["cache"][
-            "chan_cache_removal_revs"], "chan_cache_removal_revs did not get incremented"
+        assert chan_cache_tombstone_revs < expvars["syncgateway"]["per_db"][sg_db]["cache"]["chan_cache_tombstone_revs"], "chan cache tombstone revs did not get incremented"
+        assert chan_cache_removal_revs < expvars["syncgateway"]["per_db"][sg_db]["cache"]["chan_cache_removal_revs"], "chan_cache_removal_revs did not get incremented"
 
 
 @pytest.mark.listener
@@ -769,8 +749,7 @@ def test_CBL_for_purged_doc(params_from_base_test_setup, sg_conf_name, delete_do
     replicator = Replication(base_url)
     authenticator = Authenticator(base_url)
     replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
-    repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channels, replication_type="pull",
-                                       replicator_authenticator=replicator_authenticator)
+    repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channels, replication_type="pull", replicator_authenticator=replicator_authenticator)
 
     repl = replicator.create(repl_config)
     replicator.start(repl)
@@ -856,8 +835,7 @@ def test_replication_purge_in_CBL(params_from_base_test_setup, sg_conf_name, del
     session = cookie, session_id
     replicator = Replication(base_url)
     replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
-    repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channels, replication_type="push",
-                                       replicator_authenticator=replicator_authenticator)
+    repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channels, replication_type="push", replicator_authenticator=replicator_authenticator)
     repl = replicator.create(repl_config)
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
@@ -944,8 +922,7 @@ def test_replication_delete_in_CBL(params_from_base_test_setup, sg_conf_name):
     session = cookie, session_id
     replicator = Replication(base_url)
     replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
-    repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channels, replication_type="push",
-                                       replicator_authenticator=replicator_authenticator)
+    repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channels, replication_type="push", replicator_authenticator=replicator_authenticator)
     repl = replicator.create(repl_config)
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
@@ -1039,8 +1016,7 @@ def test_CBL_push_pull_with_sgAccel_down(params_from_base_test_setup, sg_conf_na
 
     # 6. Now Get pull replication to SG
     repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=False,
-                                       replication_type="pull", channels=channels,
-                                       replicator_authenticator=replicator_authenticator)
+                                       replication_type="pull", channels=channels, replicator_authenticator=replicator_authenticator)
 
     repl1 = replicator.create(repl_config)
     replicator.start(repl1)
@@ -1138,8 +1114,7 @@ def CBL_offline_test(params_from_base_test_setup, sg_conf_name, num_of_docs):
 
     # 7. Do pull replication
     replication_type = "pull"
-    repl = replicator.configure_and_replicate(cbl_db, replicator_authenticator, target_url=sg_blip_url,
-                                              replication_type=replication_type, continuous=True,
+    repl = replicator.configure_and_replicate(cbl_db, replicator_authenticator, target_url=sg_blip_url, replication_type=replication_type, continuous=True,
                                               channels=channels)
     replicator.stop(repl)
 
@@ -1191,12 +1166,10 @@ def test_initial_pull_replication_background_apprun(params_from_base_test_setup,
     c.reset(sg_config_path=sg_config)
 
     # No command to push the app to background on device, so avoid test to run on ios device and no app for .net
-    if liteserv_platform.lower() == "net-msft" or liteserv_platform.lower() == "net-uwp" or (
-            (liteserv_platform.lower() != "ios" or liteserv_platform.lower() != "xamarin-ios") and device_enabled):
+    if liteserv_platform.lower() == "net-msft" or liteserv_platform.lower() == "net-uwp" or ((liteserv_platform.lower() != "ios" or liteserv_platform.lower() != "xamarin-ios") and device_enabled):
         pytest.skip('This test cannot run either it is .Net or ios with device enabled ')
 
-    if liteserv_platform in ["java-macosx", "java-msft", "java-ubuntu", "java-centos", "javaws-macosx", "javaws-msft",
-                             "javaws-ubuntu", "javaws-centos"]:
+    if liteserv_platform in ["java-macosx", "java-msft", "java-ubuntu", "java-centos", "javaws-macosx", "javaws-msft", "javaws-ubuntu", "javaws-centos"]:
         pytest.skip('This test cannot run as a Java application')
 
     client = MobileRestClient()
@@ -1291,12 +1264,10 @@ def test_push_replication_with_backgroundApp(params_from_base_test_setup, num_do
     c.reset(sg_config_path=sg_config)
 
     # No command to push the app to background on device, so avoid test to run on ios device and no app for .net
-    if liteserv_platform.lower() == "net-msft" or liteserv_platform.lower() == "net-uwp" or (
-            (liteserv_platform.lower() != "ios" or liteserv_platform.lower() != "xamarin-ios") and device_enabled):
+    if liteserv_platform.lower() == "net-msft" or liteserv_platform.lower() == "net-uwp" or ((liteserv_platform.lower() != "ios" or liteserv_platform.lower() != "xamarin-ios") and device_enabled):
         pytest.skip('This test cannot run either it is .Net or ios with device enabled ')
 
-    if liteserv_platform in ["java-macosx", "java-msft", "java-ubuntu", "java-centos", "javaws-macosx", "javaws-msft",
-                             "javaws-ubuntu", "javaws-centos"]:
+    if liteserv_platform in ["java-macosx", "java-msft", "java-ubuntu", "java-centos", "javaws-macosx", "javaws-msft", "javaws-ubuntu", "javaws-centos"]:
         pytest.skip('This test cannot run as a Java application')
 
     client = MobileRestClient()
@@ -1385,8 +1356,7 @@ def test_replication_wrong_blip(params_from_base_test_setup):
     cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
     replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
     with pytest.raises(Exception) as ex:
-        replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channels,
-                             replicator_authenticator=replicator_authenticator)
+        replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channels, replicator_authenticator=replicator_authenticator)
     ex_data = str(ex.value)
 
     if liteserv_platform == "ios" or liteserv_platform.startswith("javaws-"):
@@ -1409,8 +1379,7 @@ def test_replication_wrong_blip(params_from_base_test_setup):
     ('sg', False, 5),
     ('cbl', False, 5),
 ])
-def test_default_conflict_scenario_delete_wins(params_from_base_test_setup, delete_source, attachments,
-                                               number_of_updates):
+def test_default_conflict_scenario_delete_wins(params_from_base_test_setup, delete_source, attachments, number_of_updates):
     """
         @summary:
         1. Create docs in CBL.
@@ -1441,8 +1410,7 @@ def test_default_conflict_scenario_delete_wins(params_from_base_test_setup, dele
 
     # Create bulk doc json
     if attachments:
-        db.create_bulk_docs(num_of_docs, "replication", db=cbl_db, channels=channels,
-                            attachments_generator=attachment.generate_2_png_10_10)
+        db.create_bulk_docs(num_of_docs, "replication", db=cbl_db, channels=channels, attachments_generator=attachment.generate_2_png_10_10)
     else:
         db.create_bulk_docs(num_of_docs, "replication", db=cbl_db, channels=channels)
     sg_client = MobileRestClient()
@@ -1450,17 +1418,8 @@ def test_default_conflict_scenario_delete_wins(params_from_base_test_setup, dele
     # Start and stop continuous replication
     replicator = Replication(base_url)
     sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels)
-    session, replicator_authenticator, repl = replicator.create_session_configure_replicate(baseUrl=base_url,
-                                                                                            sg_admin_url=sg_admin_url,
-                                                                                            sg_db=sg_db,
-                                                                                            username=username,
-                                                                                            password=password,
-                                                                                            channels=channels,
-                                                                                            sg_client=sg_client,
-                                                                                            cbl_db=cbl_db,
-                                                                                            sg_blip_url=sg_blip_url,
-                                                                                            replication_type="push_pull",
-                                                                                            continuous=False)
+    session, replicator_authenticator, repl = replicator.create_session_configure_replicate(baseUrl=base_url, sg_admin_url=sg_admin_url, sg_db=sg_db, username=username, password=password,
+                                                                                            channels=channels, sg_client=sg_client, cbl_db=cbl_db, sg_blip_url=sg_blip_url, replication_type="push_pull", continuous=False)
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)
     sg_docs = sg_docs["rows"]
 
@@ -1486,25 +1445,21 @@ def test_default_conflict_scenario_delete_wins(params_from_base_test_setup, dele
             sg_delete_task.result()
             cbl_update_task.result()
 
-    replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator,
-                                       target_url=sg_blip_url, continuous=False,
+    replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator, target_url=sg_blip_url, continuous=False,
                                        channels=channels)
     # Di mode has delay for one shot replication, so need another replication only for DI mode
     if sg_mode == "di":
-        replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator,
-                                           target_url=sg_blip_url, continuous=False,
+        replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator, target_url=sg_blip_url, continuous=False,
                                            channels=channels)
     cbl_doc_ids = db.getDocIds(cbl_db)
     cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
 
     assert len(cbl_docs) == 0, "did not delete docs after delete operation"
-    replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator,
-                                       target_url=sg_blip_url, continuous=False,
+    replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator, target_url=sg_blip_url, continuous=False,
                                        channels=channels)
     # Di mode has delay for one shot replication, so need another replication only for DI mode
     if sg_mode == "di":
-        replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator,
-                                           target_url=sg_blip_url, continuous=False,
+        replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator, target_url=sg_blip_url, continuous=False,
                                            channels=channels)
 
     cbl_doc_ids = db.getDocIds(cbl_db)
@@ -1517,13 +1472,11 @@ def test_default_conflict_scenario_delete_wins(params_from_base_test_setup, dele
 
     # create docs with deleted docs id and verify replication happens without any issues.
     if attachments:
-        db.create_bulk_docs(num_of_docs, "replication", db=cbl_db, channels=channels,
-                            attachments_generator=attachment.generate_2_png_10_10)
+        db.create_bulk_docs(num_of_docs, "replication", db=cbl_db, channels=channels, attachments_generator=attachment.generate_2_png_10_10)
     else:
         db.create_bulk_docs(num_of_docs, "replication", db=cbl_db, channels=channels)
 
-    replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator,
-                                       target_url=sg_blip_url, continuous=False,
+    replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator, target_url=sg_blip_url, continuous=False,
                                        channels=channels)
 
     cbl_doc_ids = db.getDocIds(cbl_db)
@@ -1531,8 +1484,7 @@ def test_default_conflict_scenario_delete_wins(params_from_base_test_setup, dele
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)
     sg_docs = sg_docs["rows"]
     assert len(cbl_docs) == num_of_docs
-    assert len(sg_docs) == len(
-        cbl_docs), "new doc created with same doc id as deleted docs are not created and replicated"
+    assert len(sg_docs) == len(cbl_docs), "new doc created with same doc id as deleted docs are not created and replicated"
 
 
 @pytest.mark.listener
@@ -1544,6 +1496,7 @@ def test_default_conflict_scenario_delete_wins(params_from_base_test_setup, dele
     ('cbl', False),
 ])
 def test_default_conflict_scenario_highRevGeneration_wins(params_from_base_test_setup, highrev_source, attachments):
+
     """
         @summary:
         1. Create docs in CBL.
@@ -1577,8 +1530,7 @@ def test_default_conflict_scenario_highRevGeneration_wins(params_from_base_test_
 
     # Create bulk doc json
     if attachments:
-        db.create_bulk_docs(num_of_docs, "replication", db=cbl_db, channels=channels,
-                            attachments_generator=attachment.generate_2_png_10_10)
+        db.create_bulk_docs(num_of_docs, "replication", db=cbl_db, channels=channels, attachments_generator=attachment.generate_2_png_10_10)
     else:
         db.create_bulk_docs(num_of_docs, "replication", db=cbl_db, channels=channels)
     sg_client = MobileRestClient()
@@ -1587,9 +1539,7 @@ def test_default_conflict_scenario_highRevGeneration_wins(params_from_base_test_
     replicator = Replication(base_url)
     sg_client.create_user(sg_admin_url, sg_db, name="autotest", password="password", channels=channels)
     session, replicator_authenticator, repl = replicator.create_session_configure_replicate(
-        baseUrl=base_url, sg_admin_url=sg_admin_url, sg_db=sg_db, channels=channels, sg_client=sg_client, cbl_db=cbl_db,
-        sg_blip_url=sg_blip_url, username="autotest", password="password", replication_type="push_pull",
-        continuous=False)
+        baseUrl=base_url, sg_admin_url=sg_admin_url, sg_db=sg_db, channels=channels, sg_client=sg_client, cbl_db=cbl_db, sg_blip_url=sg_blip_url, username="autotest", password="password", replication_type="push_pull", continuous=False)
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)
     sg_docs = sg_docs["rows"]
 
@@ -1600,12 +1550,10 @@ def test_default_conflict_scenario_highRevGeneration_wins(params_from_base_test_
         sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=session, number_updates=2)
         db.update_bulk_docs(cbl_db)
 
-    replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator,
-                                       target_url=sg_blip_url, continuous=False,
+    replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator, target_url=sg_blip_url, continuous=False,
                                        channels=channels)
     if sg_mode == "di":
-        replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator,
-                                           target_url=sg_blip_url, continuous=False,
+        replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator, target_url=sg_blip_url, continuous=False,
                                            channels=channels)
     cbl_doc_ids = db.getDocIds(cbl_db)
     cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
@@ -1624,14 +1572,12 @@ def test_default_conflict_scenario_highRevGeneration_wins(params_from_base_test_
             assert sg_docs_values[i]["updates"] == 2, "sg with high rev id is not updated"
 
     sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs, number_updates=3, auth=session)
-    replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator,
-                                       target_url=sg_blip_url, continuous=False,
+    replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator, target_url=sg_blip_url, continuous=False,
                                        channels=channels)
     # Di mode has delay for one shot replication, so need another replication only for DI mode
     repl = None
     if sg_mode == "di":
-        repl = replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator,
-                                                  target_url=sg_blip_url, continuous=False,
+        repl = replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator, target_url=sg_blip_url, continuous=False,
                                                   channels=channels)
     cbl_doc_ids = db.getDocIds(cbl_db)
     cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
@@ -1694,8 +1640,7 @@ def test_default_conflict_scenario_highRevID_wins(params_from_base_test_setup, h
 
     # Create bulk doc json
     if attachments:
-        db.create_bulk_docs(num_of_docs, "replication", db=cbl_db, channels=channels,
-                            attachments_generator=attachment.generate_2_png_10_10)
+        db.create_bulk_docs(num_of_docs, "replication", db=cbl_db, channels=channels, attachments_generator=attachment.generate_2_png_10_10)
     else:
         db.create_bulk_docs(num_of_docs, "replication", db=cbl_db, channels=channels)
     sg_client = MobileRestClient()
@@ -1704,9 +1649,7 @@ def test_default_conflict_scenario_highRevID_wins(params_from_base_test_setup, h
     replicator = Replication(base_url)
     sg_client.create_user(sg_admin_url, sg_db, name="autotest", password="password", channels=channels)
     session, replicator_authenticator, repl = replicator.create_session_configure_replicate(
-        baseUrl=base_url, sg_admin_url=sg_admin_url, sg_db=sg_db, channels=channels, sg_client=sg_client, cbl_db=cbl_db,
-        sg_blip_url=sg_blip_url, username="autotest", password="password", replication_type="push_pull",
-        continuous=False)
+        baseUrl=base_url, sg_admin_url=sg_admin_url, sg_db=sg_db, channels=channels, sg_client=sg_client, cbl_db=cbl_db, sg_blip_url=sg_blip_url, username="autotest", password="password", replication_type="push_pull", continuous=False)
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)
     sg_docs = sg_docs["rows"]
 
@@ -1727,8 +1670,7 @@ def test_default_conflict_scenario_highRevID_wins(params_from_base_test_setup, h
                                            channels=channels, err_check=True)
         # Di mode has delay for one shot replication, so need another replication only for DI mode
         if sg_mode == "di":
-            replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator,
-                                               target_url=sg_blip_url, replication_type="push_pull", continuous=False,
+            replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator, target_url=sg_blip_url, replication_type="push_pull", continuous=False,
                                                channels=channels, err_check=True)
 
     cbl_doc_ids = db.getDocIds(cbl_db)
@@ -1815,8 +1757,7 @@ def test_default_conflict_with_two_conflictsAndTomstone(params_from_base_test_se
     replicator = Replication(base_url)
     authenticator = Authenticator(base_url)
     replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
-    repl = replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator,
-                                              target_url=sg_blip_url,
+    repl = replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator, target_url=sg_blip_url,
                                               replication_type="push_pull", continuous=True, channels=channels)
 
     # 5. Now update doc in cbl and replicate to sync_gateway
@@ -1928,8 +1869,7 @@ def test_default_conflict_with_oneTombstone_conflict(params_from_base_test_setup
     replicator = Replication(base_url)
     authenticator = Authenticator(base_url)
     replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
-    repl = replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator,
-                                              target_url=sg_blip_url,
+    repl = replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator, target_url=sg_blip_url,
                                               replication_type="push_pull", continuous=True, channels=channels)
 
     # 5. Now update doc in cbl and replicate to sync_gateway
@@ -2010,8 +1950,7 @@ def test_default_conflict_with_three_conflicts(params_from_base_test_setup):
     replicator = Replication(base_url)
     authenticator = Authenticator(base_url)
     replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
-    repl = replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator,
-                                              target_url=sg_blip_url,
+    repl = replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator, target_url=sg_blip_url,
                                               replication_type="push_pull", continuous=True, channels=channels)
 
     # 5. Now update doc in cbl and replicate to sync_gateway
@@ -2091,8 +2030,7 @@ def test_default_conflict_withConflicts_and_sgOffline(params_from_base_test_setu
     replicator = Replication(base_url)
     authenticator = Authenticator(base_url)
     replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
-    repl = replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator,
-                                              target_url=sg_blip_url,
+    repl = replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator, target_url=sg_blip_url,
                                               replication_type="push_pull", continuous=True, channels=channels)
 
     # 5. Stop sg
@@ -2210,8 +2148,7 @@ def test_default_conflict_withConflicts_withChannels(params_from_base_test_setup
         sg_client.add_conflict(url=sg_url, db=sg_db, doc_id=sg_docs[i]["id"],
                                parent_revisions=sg_docs[i]["value"]["rev"], new_revision="2-31fa", auth=session2)
 
-        sg_client.add_conflict(url=sg_url, db=sg_db, doc_id=sg_docs[i]["id"],
-                               parent_revisions=sg_docs[i]["value"]["rev"],
+        sg_client.add_conflict(url=sg_url, db=sg_db, doc_id=sg_docs[i]["id"], parent_revisions=sg_docs[i]["value"]["rev"],
                                new_revision="2-31fa9b", auth=session2)
 
     # sg update docs
@@ -2224,13 +2161,11 @@ def test_default_conflict_withConflicts_withChannels(params_from_base_test_setup
     replicator = Replication(base_url)
     authenticator = Authenticator(base_url)
     replicator_authenticator = authenticator.authentication(session_id1, cookie1, authentication_type="session")
-    repl1 = replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator,
-                                               target_url=sg_blip_url,
+    repl1 = replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator, target_url=sg_blip_url,
                                                replication_type="push_pull", continuous=True, channels=channels1)
 
     replicator_authenticator = authenticator.authentication(session_id2, cookie2, authentication_type="session")
-    repl2 = replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator,
-                                               target_url=sg_blip_url,
+    repl2 = replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator, target_url=sg_blip_url,
                                                replication_type="push_pull", continuous=True, channels=channels2)
 
     # 5. Now update doc in cbl and replicate to sync_gateway
@@ -2291,8 +2226,7 @@ def test_CBL_push_pull_with_sg_down(params_from_base_test_setup):
     c.reset(sg_config_path=sg_config)
 
     # 2. Create docs in CBL.
-    db.create_bulk_docs(num_of_docs, "cbl", db=cbl_db, channels=channels,
-                        attachments_generator=attachment.generate_2_png_10_10)
+    db.create_bulk_docs(num_of_docs, "cbl", db=cbl_db, channels=channels, attachments_generator=attachment.generate_2_png_10_10)
 
     # 3. push replication to SG
     replicator = Replication(base_url)
@@ -2305,8 +2239,7 @@ def test_CBL_push_pull_with_sg_down(params_from_base_test_setup):
     with ThreadPoolExecutor(max_workers=4) as tpe:
         wait_until_replicator_completes = tpe.submit(
             replicator.configure_and_replicate,
-            source_db=cbl_db, replicator_authenticator=replicator_authenticator, target_db=None, target_url=sg_blip_url,
-            replication_type="push_pull", continuous=True,
+            source_db=cbl_db, replicator_authenticator=replicator_authenticator, target_db=None, target_url=sg_blip_url, replication_type="push_pull", continuous=True,
             channels=channels, err_check=False
         )
 
@@ -2335,8 +2268,7 @@ def test_CBL_push_pull_with_sg_down(params_from_base_test_setup):
     ('1cbl_1sg', 10, False),
     ('3cbl_1sg', 10, False)
 ])
-def test_replication_with_3Channels(params_from_base_test_setup, setup_customized_teardown_test, topology_type,
-                                    num_of_docs, attachments):
+def test_replication_with_3Channels(params_from_base_test_setup, setup_customized_teardown_test, topology_type, num_of_docs, attachments):
     """
         @summary:
         1. Create 3 users in SG with 3 differrent channels.
@@ -2397,12 +2329,9 @@ def test_replication_with_3Channels(params_from_base_test_setup, setup_customize
 
     # 2. Create docs in sg in all 3 channels
     if attachments:
-        sg_docs = document.create_docs(doc_id_prefix='sg_docs-1', number=num_of_docs, channels=channel1,
-                                       attachments_generator=attachment.generate_2_png_10_10)
-        sg_docs2 = document.create_docs(doc_id_prefix='sg_docs-2', number=num_of_docs, channels=channel2,
-                                        attachments_generator=attachment.generate_2_png_10_10)
-        sg_docs3 = document.create_docs(doc_id_prefix='sg_docs-3', number=num_of_docs, channels=channel3,
-                                        attachments_generator=attachment.generate_2_png_10_10)
+        sg_docs = document.create_docs(doc_id_prefix='sg_docs-1', number=num_of_docs, channels=channel1, attachments_generator=attachment.generate_2_png_10_10)
+        sg_docs2 = document.create_docs(doc_id_prefix='sg_docs-2', number=num_of_docs, channels=channel2, attachments_generator=attachment.generate_2_png_10_10)
+        sg_docs3 = document.create_docs(doc_id_prefix='sg_docs-3', number=num_of_docs, channels=channel3, attachments_generator=attachment.generate_2_png_10_10)
     else:
         sg_docs = document.create_docs(doc_id_prefix='sg_docs-1', number=num_of_docs, channels=channel1)
         sg_docs2 = document.create_docs(doc_id_prefix='sg_docs-2', number=num_of_docs, channels=channel2)
@@ -2415,27 +2344,21 @@ def test_replication_with_3Channels(params_from_base_test_setup, setup_customize
     # 3. replication to CBL with continous true and push_pull on 3 CBL DBs assosiated with each sg channel.
     replicator = Replication(base_url)
     replicator_authenticator1 = authenticator.authentication(session_id1, cookie1, authentication_type="session")
-    replicator.configure_and_replicate(source_db=cbl_db1, replicator_authenticator=replicator_authenticator1,
-                                       target_url=sg_blip_url,
+    replicator.configure_and_replicate(source_db=cbl_db1, replicator_authenticator=replicator_authenticator1, target_url=sg_blip_url,
                                        replication_type="pull", continuous=False, channels=channel1)
     replicator_authenticator2 = authenticator.authentication(session_id2, cookie2, authentication_type="session")
-    replicator.configure_and_replicate(source_db=cbl_db2, replicator_authenticator=replicator_authenticator2,
-                                       target_url=sg_blip_url,
+    replicator.configure_and_replicate(source_db=cbl_db2, replicator_authenticator=replicator_authenticator2, target_url=sg_blip_url,
                                        replication_type="pull", continuous=False, channels=channel2)
     replicator_authenticator3 = authenticator.authentication(session_id3, cookie3, authentication_type="session")
-    replicator.configure_and_replicate(source_db=cbl_db3, replicator_authenticator=replicator_authenticator3,
-                                       target_url=sg_blip_url,
+    replicator.configure_and_replicate(source_db=cbl_db3, replicator_authenticator=replicator_authenticator3, target_url=sg_blip_url,
                                        replication_type="pull", continuous=False, channels=channel3)
 
     if sg_mode == "di":
-        replicator.configure_and_replicate(source_db=cbl_db1, replicator_authenticator=replicator_authenticator1,
-                                           target_url=sg_blip_url,
+        replicator.configure_and_replicate(source_db=cbl_db1, replicator_authenticator=replicator_authenticator1, target_url=sg_blip_url,
                                            replication_type="pull", continuous=False, channels=channel1)
-        replicator.configure_and_replicate(source_db=cbl_db2, replicator_authenticator=replicator_authenticator2,
-                                           target_url=sg_blip_url,
+        replicator.configure_and_replicate(source_db=cbl_db2, replicator_authenticator=replicator_authenticator2, target_url=sg_blip_url,
                                            replication_type="pull", continuous=False, channels=channel2)
-        replicator.configure_and_replicate(source_db=cbl_db3, replicator_authenticator=replicator_authenticator3,
-                                           target_url=sg_blip_url,
+        replicator.configure_and_replicate(source_db=cbl_db3, replicator_authenticator=replicator_authenticator3, target_url=sg_blip_url,
                                            replication_type="pull", continuous=False, channels=channel3)
     # 4. verify in CBL , docs got replicated to each DB appropirately
     verify_sgDocIds_cblDocIds(sg_client, sg_url, sg_db, session1, cbl_db1, db)
@@ -2500,13 +2423,11 @@ def test_replication_with_privatePublicChannels(params_from_base_test_setup, set
     # 3. replication to CBL with continous False and push_pull to CBL .
     replicator = Replication(base_url)
     replicator_authenticator1 = authenticator.authentication(session_id1, cookie1, authentication_type="session")
-    replicator.configure_and_replicate(source_db=cbl_db1, replicator_authenticator=replicator_authenticator1,
-                                       target_url=sg_blip_url,
+    replicator.configure_and_replicate(source_db=cbl_db1, replicator_authenticator=replicator_authenticator1, target_url=sg_blip_url,
                                        replication_type="pull", continuous=False, channels=publicChannel)
 
     if sg_mode == "di":
-        replicator.configure_and_replicate(source_db=cbl_db1, replicator_authenticator=replicator_authenticator1,
-                                           target_url=sg_blip_url,
+        replicator.configure_and_replicate(source_db=cbl_db1, replicator_authenticator=replicator_authenticator1, target_url=sg_blip_url,
                                            replication_type="pull", continuous=False, channels=publicChannel)
     # 4. verify in CBL , only docs from public channel is replicated
     cbl_doc_ids = db.getDocIds(cbl_db1)
@@ -2519,8 +2440,7 @@ def test_replication_with_privatePublicChannels(params_from_base_test_setup, set
     # 5. update docs in cbl
     # Verify updated docs got replicated to sg
     db.update_bulk_docs(cbl_db1)
-    replicator.configure_and_replicate(source_db=cbl_db1, replicator_authenticator=replicator_authenticator1,
-                                       target_url=sg_blip_url,
+    replicator.configure_and_replicate(source_db=cbl_db1, replicator_authenticator=replicator_authenticator1, target_url=sg_blip_url,
                                        replication_type="push_pull", continuous=False, channels=publicChannel)
     sg_docs_new = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session1, include_docs=True)
     sg_docs_new = sg_docs_new["rows"]
@@ -2547,8 +2467,7 @@ def test_replication_with_privatePublicChannels(params_from_base_test_setup, set
     ('2cbl_2sg'),
     ('1cbl_2sg')
 ])
-def test_replication_withChannels1_withMultipleSgDBs(params_from_base_test_setup, setup_customized_teardown_test,
-                                                     topology_type):
+def test_replication_withChannels1_withMultipleSgDBs(params_from_base_test_setup, setup_customized_teardown_test, topology_type):
     """
         @summary:
         1. Create 2 users in SG with 2 SG dbs with 2 differrent channels.
@@ -2612,12 +2531,10 @@ def test_replication_withChannels1_withMultipleSgDBs(params_from_base_test_setup
         cbl_db2 = cbl_db
     replicator = Replication(base_url)
     replicator_authenticator1 = authenticator.authentication(session_id1, cookie1, authentication_type="session")
-    repl1 = replicator.configure_and_replicate(source_db=cbl_db1, replicator_authenticator=replicator_authenticator1,
-                                               target_url=sg_blip_url1,
+    repl1 = replicator.configure_and_replicate(source_db=cbl_db1, replicator_authenticator=replicator_authenticator1, target_url=sg_blip_url1,
                                                replication_type="pull", continuous=True, channels=channel1)
     replicator_authenticator2 = authenticator.authentication(session_id2, cookie2, authentication_type="session")
-    repl2 = replicator.configure_and_replicate(source_db=cbl_db2, replicator_authenticator=replicator_authenticator2,
-                                               target_url=sg_blip_url2,
+    repl2 = replicator.configure_and_replicate(source_db=cbl_db2, replicator_authenticator=replicator_authenticator2, target_url=sg_blip_url2,
                                                replication_type="pull", continuous=True, channels=channel2)
 
     # 4. verify in CBL , docs got replicated to each DB appropirately
@@ -2713,16 +2630,13 @@ def test_replication_withMultipleBuckets(params_from_base_test_setup, setup_cust
         cbl_db3 = cbl_db
     replicator = Replication(base_url)
     replicator_authenticator1 = authenticator.authentication(session_id1, cookie1, authentication_type="session")
-    repl1 = replicator.configure_and_replicate(source_db=cbl_db1, replicator_authenticator=replicator_authenticator1,
-                                               target_url=sg_blip_url1,
+    repl1 = replicator.configure_and_replicate(source_db=cbl_db1, replicator_authenticator=replicator_authenticator1, target_url=sg_blip_url1,
                                                replication_type="pull", continuous=True, channels=channel1)
     replicator_authenticator2 = authenticator.authentication(session_id2, cookie2, authentication_type="session")
-    repl2 = replicator.configure_and_replicate(source_db=cbl_db2, replicator_authenticator=replicator_authenticator2,
-                                               target_url=sg_blip_url2,
+    repl2 = replicator.configure_and_replicate(source_db=cbl_db2, replicator_authenticator=replicator_authenticator2, target_url=sg_blip_url2,
                                                replication_type="pull", continuous=True, channels=channel2)
     replicator_authenticator3 = authenticator.authentication(session_id3, cookie3, authentication_type="session")
-    repl3 = replicator.configure_and_replicate(source_db=cbl_db3, replicator_authenticator=replicator_authenticator3,
-                                               target_url=sg_blip_url3,
+    repl3 = replicator.configure_and_replicate(source_db=cbl_db3, replicator_authenticator=replicator_authenticator3, target_url=sg_blip_url3,
                                                replication_type="pull", continuous=True, channels=channel3)
 
     replicator.stop(repl1)
@@ -2742,16 +2656,13 @@ def test_replication_withMultipleBuckets(params_from_base_test_setup, setup_cust
     db.update_bulk_docs(cbl_db3)
 
     # 6. Verify in sync-gateway docs got replicated.
-    replicator.configure_and_replicate(source_db=cbl_db1, replicator_authenticator=replicator_authenticator1,
-                                       target_url=sg_blip_url1,
+    replicator.configure_and_replicate(source_db=cbl_db1, replicator_authenticator=replicator_authenticator1, target_url=sg_blip_url1,
                                        replication_type="push", continuous=False, channels=channel1)
     replicator_authenticator2 = authenticator.authentication(session_id2, cookie2, authentication_type="session")
-    replicator.configure_and_replicate(source_db=cbl_db2, replicator_authenticator=replicator_authenticator2,
-                                       target_url=sg_blip_url2,
+    replicator.configure_and_replicate(source_db=cbl_db2, replicator_authenticator=replicator_authenticator2, target_url=sg_blip_url2,
                                        replication_type="push", continuous=False, channels=channel2)
     replicator_authenticator3 = authenticator.authentication(session_id3, cookie3, authentication_type="session")
-    replicator.configure_and_replicate(source_db=cbl_db3, replicator_authenticator=replicator_authenticator3,
-                                       target_url=sg_blip_url3,
+    replicator.configure_and_replicate(source_db=cbl_db3, replicator_authenticator=replicator_authenticator3, target_url=sg_blip_url3,
                                        replication_type="push", continuous=False, channels=channel3)
 
     verify_cblDocs_in_sgDocs(sg_client, sg_url, sg_db1, session1, cbl_db1, db, topology_type=topology_type)
@@ -2842,16 +2753,13 @@ def test_replication_1withMultipleBuckets_deleteOneBucket(params_from_base_test_
     # 4. Start replication to CBL with multiple replicator instances
     replicator = Replication(base_url)
     replicator_authenticator1 = authenticator.authentication(session_id1, cookie1, authentication_type="session")
-    repl1 = replicator.configure_and_replicate(source_db=cbl_db1, replicator_authenticator=replicator_authenticator1,
-                                               target_url=sg_blip_url1,
+    repl1 = replicator.configure_and_replicate(source_db=cbl_db1, replicator_authenticator=replicator_authenticator1, target_url=sg_blip_url1,
                                                replication_type="push_pull", continuous=True, channels=channel1)
     replicator_authenticator2 = authenticator.authentication(session_id2, cookie2, authentication_type="session")
-    repl2 = replicator.configure_and_replicate(source_db=cbl_db2, replicator_authenticator=replicator_authenticator2,
-                                               target_url=sg_blip_url2,
+    repl2 = replicator.configure_and_replicate(source_db=cbl_db2, replicator_authenticator=replicator_authenticator2, target_url=sg_blip_url2,
                                                replication_type="push_pull", continuous=True, channels=channel2)
     replicator_authenticator3 = authenticator.authentication(session_id3, cookie3, authentication_type="session")
-    repl3 = replicator.configure_and_replicate(source_db=cbl_db3, replicator_authenticator=replicator_authenticator3,
-                                               target_url=sg_blip_url3,
+    repl3 = replicator.configure_and_replicate(source_db=cbl_db3, replicator_authenticator=replicator_authenticator3, target_url=sg_blip_url3,
                                                replication_type="push_pull", continuous=True, channels=channel3)
 
     # 5. Deleted 3rd bucket on CBS.
@@ -2917,12 +2825,10 @@ def test_replication_multipleChannels_withFilteredDocIds(params_from_base_test_s
     sg_client.create_user(sg_admin_url, sg_db, username2, password="password", channels=channel2)
     cookie, session = sg_client.create_session(sg_admin_url, sg_db, username2)
     auth_session2 = cookie, session
-    sg_added_docs = sg_client.add_docs(url=sg_url, db=sg_db, number=num_of_docs, id_prefix="channel1-",
-                                       channels=channel1, auth=auth_session1)
+    sg_added_docs = sg_client.add_docs(url=sg_url, db=sg_db, number=num_of_docs, id_prefix="channel1-", channels=channel1, auth=auth_session1)
     sg_added_ids1 = [row["id"] for row in sg_added_docs]
 
-    sg_added_docs = sg_client.add_docs(url=sg_url, db=sg_db, number=num_of_docs, id_prefix="channel2-",
-                                       channels=channel2, auth=auth_session2)
+    sg_added_docs = sg_client.add_docs(url=sg_url, db=sg_db, number=num_of_docs, id_prefix="channel2-", channels=channel2, auth=auth_session2)
     sg_added_ids2 = [row["id"] for row in sg_added_docs]
 
     sg_combined_ids = sg_added_ids1 + sg_added_ids2
@@ -2932,20 +2838,16 @@ def test_replication_multipleChannels_withFilteredDocIds(params_from_base_test_s
     # Start and stop continuous replication
     replicator = Replication(base_url)
     authenticator = Authenticator(base_url)
-    replicator_authenticator = authenticator.authentication(username=username1, password="password",
-                                                            authentication_type="basic")
+    replicator_authenticator = authenticator.authentication(username=username1, password="password", authentication_type="basic")
     repl_config = replicator.configure(cbl_db, target_url=sg_blip_url, replication_type="push_pull", continuous=False,
-                                       documentIDs=list_of_filtered_ids, channels=channel1,
-                                       replicator_authenticator=replicator_authenticator)
+                                       documentIDs=list_of_filtered_ids, channels=channel1, replicator_authenticator=replicator_authenticator)
     repl = replicator.create(repl_config)
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
     # Filter doc ids is supported only for one shot replication, Cannot support for continuous replication
-    replicator_authenticator = authenticator.authentication(username=username2, password="password",
-                                                            authentication_type="basic")
+    replicator_authenticator = authenticator.authentication(username=username2, password="password", authentication_type="basic")
     repl_config = replicator.configure(cbl_db, target_url=sg_blip_url, replication_type="push_pull", continuous=False,
-                                       documentIDs=list_of_filtered_ids, channels=channel2,
-                                       replicator_authenticator=replicator_authenticator)
+                                       documentIDs=list_of_filtered_ids, channels=channel2, replicator_authenticator=replicator_authenticator)
     repl = replicator.create(repl_config)
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
@@ -3022,17 +2924,13 @@ def test_resetCheckpointWithPurge(params_from_base_test_setup, replication_type,
     authenticator = Authenticator(base_url)
     replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
     if replication_type == "one_way" and target_db == "sg":
-        repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channel,
-                                           replicator_authenticator=replicator_authenticator, replication_type="push")
+        repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channel, replicator_authenticator=replicator_authenticator, replication_type="push")
     if replication_type == "two_way" and target_db == "sg":
-        repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channel,
-                                           replicator_authenticator=replicator_authenticator)
+        repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channel, replicator_authenticator=replicator_authenticator)
     if replication_type == "one_way" and target_db == "cbl":
-        repl_config = replicator.configure(cbl_db, target_db=cbl_db2, continuous=True,
-                                           replicator_authenticator=replicator_authenticator, replication_type="push")
+        repl_config = replicator.configure(cbl_db, target_db=cbl_db2, continuous=True, replicator_authenticator=replicator_authenticator, replication_type="push")
     if replication_type == "two_way" and target_db == "cbl":
-        repl_config = replicator.configure(cbl_db, target_db=cbl_db2, continuous=True,
-                                           replicator_authenticator=replicator_authenticator)
+        repl_config = replicator.configure(cbl_db, target_db=cbl_db2, continuous=True, replicator_authenticator=replicator_authenticator)
     repl = replicator.create(repl_config)
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
@@ -3092,9 +2990,8 @@ def test_resetCheckpointFailure(params_from_base_test_setup):
     if liteserv_version >= "3.0":
         pytest.skip('resetCheckpointFailure API has been deprecated in 2.8 and removed in 3.0')
 
-    if (liteserv_platform.lower() == "ios"):
-        pytest.skip(
-            'ResetCheckPoint API does not throw exception in iOS if replicator is not stopped, so skipping test')
+    if(liteserv_platform.lower() == "ios"):
+        pytest.skip('ResetCheckPoint API does not throw exception in iOS if replicator is not stopped, so skipping test')
         # It crashes the app, but does not throw error
 
     # Reset cluster to ensure no data in system
@@ -3114,8 +3011,7 @@ def test_resetCheckpointFailure(params_from_base_test_setup):
     replicator = Replication(base_url)
     authenticator = Authenticator(base_url)
     replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
-    repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channel,
-                                       replicator_authenticator=replicator_authenticator)
+    repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channel, replicator_authenticator=replicator_authenticator)
 
     repl = replicator.create(repl_config)
     replicator.start(repl)
@@ -3188,17 +3084,13 @@ def test_resetCheckpointWithUpdate(params_from_base_test_setup, replication_type
     authenticator = Authenticator(base_url)
     replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
     if replication_type == "one_way" and target_db == "sg":
-        repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channel,
-                                           replicator_authenticator=replicator_authenticator, replication_type="push")
+        repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channel, replicator_authenticator=replicator_authenticator, replication_type="push")
     if replication_type == "two_way" and target_db == "sg":
-        repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channel,
-                                           replicator_authenticator=replicator_authenticator)
+        repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channel, replicator_authenticator=replicator_authenticator)
     if replication_type == "one_way" and target_db == "cbl":
-        repl_config = replicator.configure(cbl_db, target_db=cbl_db2, continuous=True,
-                                           replicator_authenticator=replicator_authenticator, replication_type="push")
+        repl_config = replicator.configure(cbl_db, target_db=cbl_db2, continuous=True, replicator_authenticator=replicator_authenticator, replication_type="push")
     if replication_type == "two_way" and target_db == "cbl":
-        repl_config = replicator.configure(cbl_db, target_db=cbl_db2, continuous=True,
-                                           replicator_authenticator=replicator_authenticator)
+        repl_config = replicator.configure(cbl_db, target_db=cbl_db2, continuous=True, replicator_authenticator=replicator_authenticator)
     repl = replicator.create(repl_config)
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
@@ -3280,8 +3172,7 @@ def test_CBL_SG_replication_with_rev_messages(params_from_base_test_setup, sg_co
 
     replicator = Replication(base_url)
     authenticator = Authenticator(base_url)
-    replicator_authenticator = authenticator.authentication(username=username, password=password,
-                                                            authentication_type="basic")
+    replicator_authenticator = authenticator.authentication(username=username, password=password, authentication_type="basic")
     repl_config = replicator.configure(cbl_db1, target_url=sg_blip_url, replication_type="push", continuous=True,
                                        channels=channels, replicator_authenticator=replicator_authenticator)
     repl = replicator.create(repl_config)
@@ -3395,20 +3286,16 @@ def test_replication_push_replication_guest_enabled(params_from_base_test_setup,
     # Also verify user with valid credentials should be able to login successfully
     db.create_bulk_docs(num_docs, "cbl2", db=cbl_db, channels=channels)
     if replicator_authenticator == "session":
-        replicator_authenticator = authenticator.authentication(session, cookie,
-                                                                authentication_type=replicator_authenticator)
+        replicator_authenticator = authenticator.authentication(session, cookie, authentication_type=replicator_authenticator)
     elif replicator_authenticator == "basic":
-        replicator_authenticator = authenticator.authentication(username=valid_username, password=valid_password,
-                                                                authentication_type=replicator_authenticator)
-    repl_config = replicator.configure(cbl_db, target_url=sg_blip_url, continuous=True, replication_type="push",
-                                       replicator_authenticator=replicator_authenticator)
+        replicator_authenticator = authenticator.authentication(username=valid_username, password=valid_password, authentication_type=replicator_authenticator)
+    repl_config = replicator.configure(cbl_db, target_url=sg_blip_url, continuous=True, replication_type="push", replicator_authenticator=replicator_authenticator)
 
     repl = replicator.create(repl_config)
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db)
-    assert len(
-        sg_docs["rows"]) == num_docs * 2, "Number of sg docs is not equal to total number of cbl docs and sg docs"
+    assert len(sg_docs["rows"]) == num_docs * 2, "Number of sg docs is not equal to total number of cbl docs and sg docs"
     replicator.stop(repl)
 
 
@@ -4033,8 +3920,7 @@ def test_blob_contructor_replication(params_from_base_test_setup, blob_data_type
     [None, False],
     [generate_2_png_100_100, True]
 ])
-def test_replication_pull_from_empty_database(params_from_base_test_setup, attachment_generator,
-                                              cbl_action_before_init_replication):
+def test_replication_pull_from_empty_database(params_from_base_test_setup, attachment_generator, cbl_action_before_init_replication):
     '''
     @summary:
     This test to validate pull replication on empty database. It should avoid sending deleted(tombstoned) documents.
@@ -4080,17 +3966,14 @@ def test_replication_pull_from_empty_database(params_from_base_test_setup, attac
     auth_session = cookie, session_id
 
     # 1. create 50 docs on SGW
-    sg_added_docs = sg_client.add_docs(url=sg_url, db=sg_db, number=num_sg_docs, id_prefix="sg_doc_a",
-                                       channels=channels, auth=auth_session, attachments_generator=attachment_generator)
+    sg_added_docs = sg_client.add_docs(url=sg_url, db=sg_db, number=num_sg_docs, id_prefix="sg_doc_a", channels=channels, auth=auth_session, attachments_generator=attachment_generator)
 
     # 2. delete 10 docs in SGW
     docs_to_delete_1 = sg_added_docs[0:10]
     sg_client.delete_docs(url=sg_url, db=sg_db, docs=docs_to_delete_1, auth=auth_session)
 
     # 3. add another 50 docs in SGW
-    sg_added_docs_2 = sg_client.add_docs(url=sg_url, db=sg_db, number=num_sg_docs, id_prefix="sg_doc_b",
-                                         channels=channels, auth=auth_session,
-                                         attachments_generator=attachment_generator)
+    sg_added_docs_2 = sg_client.add_docs(url=sg_url, db=sg_db, number=num_sg_docs, id_prefix="sg_doc_b", channels=channels, auth=auth_session, attachments_generator=attachment_generator)
 
     # 3b. verify the 10 deleted docs are in tombstone state
     sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
@@ -4208,6 +4091,33 @@ def verify_sgDocIds_cblDocIds(sg_client, url, sg_db, session, cbl_db, db):
         assert id in cbl_doc_ids, "sg doc is not replicated to cbl "
 
 
+def verify_cblDocs_in_sgDocs(sg_client, url, sg_db, session, cbl_db, db, topology_type="1cbl"):
+    sg_docs = sg_client.get_all_docs(url=url, db=sg_db, auth=session, include_docs=True)
+    sg_docs = sg_docs["rows"]
+    if "1cbl" in topology_type:
+        num_cbl_updates = 3
+    else:
+        num_cbl_updates = 1
+
+    cbl_doc_ids = db.getDocIds(cbl_db)
+    sg_doc_ids = [row["id"] for row in sg_docs]
+
+    count = 0
+    while len(sg_doc_ids) != len(cbl_doc_ids):
+        if count == 30:
+            break
+
+        time.sleep(1)
+        cbl_doc_ids = db.getDocIds(cbl_db)
+        sg_docs = sg_client.get_all_docs(url=url, db=sg_db, auth=session, include_docs=True)
+        sg_docs = sg_docs["rows"]
+        sg_doc_ids = [row["id"] for row in sg_docs]
+        count += 1
+
+    for doc in sg_docs:
+        assert doc["doc"]["updates-cbl"] == num_cbl_updates, "updated doc in cbl did not replicated to sg"
+
+
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("num_of_docs, continuous, wait_time, retries, type", [
@@ -4267,7 +4177,6 @@ def test_replication_with_custom_retries(params_from_base_test_setup, num_of_doc
 
     # Stop Sync Gateway
     sg_controller = SyncGateway()
-    # sg_controller.restart_sync_gateways(cluster_config, url=sg_url)
     sg_controller.stop_sync_gateways(cluster_config, url=sg_url)
     end_time = time.time()
     time.sleep(15)
