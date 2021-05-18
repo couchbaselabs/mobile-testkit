@@ -2,9 +2,7 @@
   hosts: windows
   vars:
     binary_path:
-
   tasks:
-
     - debug: msg="Starting the Testserver "
     - name: Start TestServer
       win_shell: C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ binary_path }}
