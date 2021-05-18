@@ -94,7 +94,7 @@ def test_replication_configuration_valid_values(params_from_base_test_setup, num
     sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg)
     session, replicator_authenticator, repl = replicator.create_session_configure_replicate(
         base_url, sg_admin_url, sg_db, username, password, channels_sg, sg_client, cbl_db, sg_blip_url, continuous=continuous,
-    replication_type="push_pull")
+        replication_type="push_pull")
 
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)
     sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs["rows"], number_updates=number_of_updates, auth=session)
