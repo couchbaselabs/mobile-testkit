@@ -4040,84 +4040,6 @@ def test_replication_pull_from_empty_database(params_from_base_test_setup, attac
     assert len(cbl_docs) == 75, "The number of docs pull from SGW is incorrect"
 
 
-def update_and_resetCheckPoint(db, cbl_db, replicator, repl, replication_type, repl_config, num_of_updates):
-    # update docs in CBL
-    db.update_bulk_docs(cbl_db)
-    cbl_doc_ids = db.getDocIds(cbl_db)
-    cbl_db_docs = db.getDocuments(cbl_db, cbl_doc_ids)
-
-    replicator.wait_until_replicator_idle(repl)
-    replicator.stop(repl)
-
-    # Reset checkpoint and do replication again from sg to cbl
-    # Verify all docs are back
-
-    if replication_type == "one_way":
-        replicator.setReplicatorType(repl_config, "pull")
-        repl = replicator.create(repl_config)
-
-    replicator.resetCheckPoint(repl)
-    replicator.wait_until_replicator_idle(repl)
-    replicator.stop(repl)
-
-    for doc in cbl_db_docs:
-        assert cbl_db_docs[doc]["updates-cbl"] == num_of_updates, "cbl docs did not get latest updates"
-
-
-def restart_sg(c, sg_conf, cluster_config):
-    status = c.sync_gateways[0].restart(config=sg_conf, cluster_config=cluster_config)
-    log_info("Restarting sg ....")
-    assert status == 0, "Sync_gateway did not start"
-
-
-def verify_sgDocIds_cblDocIds(sg_client, url, sg_db, session, cbl_db, db):
-    sg_docs = sg_client.get_all_docs(url=url, db=sg_db, auth=session)
-    sg_docs = sg_docs["rows"]
-    sg_doc_ids = [row["id"] for row in sg_docs]
-    cbl_doc_ids = db.getDocIds(cbl_db)
-    count = 0
-    while len(sg_doc_ids) != len(cbl_doc_ids):
-        if count == 30:
-            break
-
-        time.sleep(1)
-        cbl_doc_ids = db.getDocIds(cbl_db)
-        sg_docs = sg_client.get_all_docs(url=url, db=sg_db, auth=session)
-        sg_docs = sg_docs["rows"]
-        sg_doc_ids = [row["id"] for row in sg_docs]
-        count += 1
-
-    for id in sg_doc_ids:
-        assert id in cbl_doc_ids, "sg doc is not replicated to cbl "
-
-
-def verify_cblDocs_in_sgDocs(sg_client, url, sg_db, session, cbl_db, db, topology_type="1cbl"):
-    sg_docs = sg_client.get_all_docs(url=url, db=sg_db, auth=session, include_docs=True)
-    sg_docs = sg_docs["rows"]
-    if "1cbl" in topology_type:
-        num_cbl_updates = 3
-    else:
-        num_cbl_updates = 1
-
-    cbl_doc_ids = db.getDocIds(cbl_db)
-    sg_doc_ids = [row["id"] for row in sg_docs]
-
-    count = 0
-    while len(sg_doc_ids) != len(cbl_doc_ids):
-        if count == 30:
-            break
-
-        time.sleep(1)
-        cbl_doc_ids = db.getDocIds(cbl_db)
-        sg_docs = sg_client.get_all_docs(url=url, db=sg_db, auth=session, include_docs=True)
-        sg_docs = sg_docs["rows"]
-        sg_doc_ids = [row["id"] for row in sg_docs]
-        count += 1
-
-    for doc in sg_docs:
-        assert doc["doc"]["updates-cbl"] == num_cbl_updates, "updated doc in cbl did not replicated to sg"
-
-
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("num_of_docs, continuous, wait_time, retries, type", [
@@ -4381,6 +4303,7 @@ def test_replication_reset_retires(params_from_base_test_setup, num_of_docs, con
     completed = replicator.getCompleted(repl)
     replicator.stop(repl)
     assert total == completed, "total is not equal to completed"
+
 
 def update_and_resetCheckPoint(db, cbl_db, replicator, repl, replication_type, repl_config, num_of_updates):
     # update docs in CBL
