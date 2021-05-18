@@ -4382,6 +4382,56 @@ def test_replication_reset_retires(params_from_base_test_setup, num_of_docs, con
     replicator.stop(repl)
     assert total == completed, "total is not equal to completed"
 
+def update_and_resetCheckPoint(db, cbl_db, replicator, repl, replication_type, repl_config, num_of_updates):
+    # update docs in CBL
+    db.update_bulk_docs(cbl_db)
+    cbl_doc_ids = db.getDocIds(cbl_db)
+    cbl_db_docs = db.getDocuments(cbl_db, cbl_doc_ids)
+
+    replicator.wait_until_replicator_idle(repl)
+    replicator.stop(repl)
+
+    # Reset checkpoint and do replication again from sg to cbl
+    # Verify all docs are back
+
+    if replication_type == "one_way":
+        replicator.setReplicatorType(repl_config, "pull")
+        repl = replicator.create(repl_config)
+
+    replicator.resetCheckPoint(repl)
+    replicator.wait_until_replicator_idle(repl)
+    replicator.stop(repl)
+
+    for doc in cbl_db_docs:
+        assert cbl_db_docs[doc]["updates-cbl"] == num_of_updates, "cbl docs did not get latest updates"
+
+
+def restart_sg(c, sg_conf, cluster_config):
+    status = c.sync_gateways[0].restart(config=sg_conf, cluster_config=cluster_config)
+    log_info("Restarting sg ....")
+    assert status == 0, "Sync_gateway did not start"
+
+
+def verify_sgDocIds_cblDocIds(sg_client, url, sg_db, session, cbl_db, db):
+    sg_docs = sg_client.get_all_docs(url=url, db=sg_db, auth=session)
+    sg_docs = sg_docs["rows"]
+    sg_doc_ids = [row["id"] for row in sg_docs]
+    cbl_doc_ids = db.getDocIds(cbl_db)
+    count = 0
+    while len(sg_doc_ids) != len(cbl_doc_ids):
+        if count == 30:
+            break
+
+        time.sleep(1)
+        cbl_doc_ids = db.getDocIds(cbl_db)
+        sg_docs = sg_client.get_all_docs(url=url, db=sg_db, auth=session)
+        sg_docs = sg_docs["rows"]
+        sg_doc_ids = [row["id"] for row in sg_docs]
+        count += 1
+
+    for id in sg_doc_ids:
+        assert id in cbl_doc_ids, "sg doc is not replicated to cbl "
+
 
 def verify_cblDocs_in_sgDocs(sg_client, url, sg_db, session, cbl_db, db, topology_type="1cbl"):
     sg_docs = sg_client.get_all_docs(url=url, db=sg_db, auth=session, include_docs=True)
@@ -4415,18 +4465,16 @@ def setup_sg_cbl_docs(params_from_base_test_setup, sg_db, base_url, db, cbl_db, 
                       channels=None, replicator_authenticator_type=None, headers=None,
                       cbl_id_prefix="cbl", sg_id_prefix="sg_doc",
                       num_cbl_docs=5, num_sg_docs=10, attachments_generator=None):
+
     sg_client = MobileRestClient()
 
-    db.create_bulk_docs(number=num_cbl_docs, id_prefix=cbl_id_prefix, db=cbl_db, channels=channels,
-                        attachments_generator=attachments_generator)
+    db.create_bulk_docs(number=num_cbl_docs, id_prefix=cbl_id_prefix, db=cbl_db, channels=channels, attachments_generator=attachments_generator)
     cbl_added_doc_ids = db.getDocIds(cbl_db)
     # Add docs in SG
     sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
     cookie, session = sg_client.create_session(sg_admin_url, sg_db, "autotest")
     auth_session = cookie, session
-    sg_added_docs = sg_client.add_docs(url=sg_url, db=sg_db, number=num_sg_docs, id_prefix=sg_id_prefix,
-                                       channels=channels, auth=auth_session,
-                                       attachments_generator=attachments_generator)
+    sg_added_docs = sg_client.add_docs(url=sg_url, db=sg_db, number=num_sg_docs, id_prefix=sg_id_prefix, channels=channels, auth=auth_session, attachments_generator=attachments_generator)
     sg_added_ids = [row["id"] for row in sg_added_docs]
 
     # Start and stop continuous replication
@@ -4435,15 +4483,12 @@ def setup_sg_cbl_docs(params_from_base_test_setup, sg_db, base_url, db, cbl_db, 
     if replicator_authenticator_type == "session":
         replicator_authenticator = authenticator.authentication(session, cookie, authentication_type="session")
     elif replicator_authenticator_type == "basic":
-        replicator_authenticator = authenticator.authentication(username="autotest", password="password",
-                                                                authentication_type="basic")
+        replicator_authenticator = authenticator.authentication(username="autotest", password="password", authentication_type="basic")
     else:
         replicator_authenticator = None
     log_info("Configuring replicator")
-    repl_config = replicator.configure(cbl_db, target_url=sg_blip_url, replication_type=replication_type,
-                                       continuous=False,
-                                       documentIDs=document_ids, channels=channels,
-                                       replicator_authenticator=replicator_authenticator, headers=headers)
+    repl_config = replicator.configure(cbl_db, target_url=sg_blip_url, replication_type=replication_type, continuous=False,
+                                       documentIDs=document_ids, channels=channels, replicator_authenticator=replicator_authenticator, headers=headers)
     repl = replicator.create(repl_config)
     log_info("Starting replicator")
     replicator.start(repl)
