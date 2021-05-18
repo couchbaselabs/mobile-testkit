@@ -143,10 +143,15 @@ def pytest_addoption(parser):
                      help="Hides SGW product version when you hit SGW url",
                      default=False)
 
+    parser.addoption("--skip-couchbase-provision", action="store_true",
+                     help="skip the bucketcreation step")
+
+
     parser.addoption("--enable-cbs-developer-preview",
                      action="store_true",
                      help="Enabling CBS developer preview",
                      default=False)
+
 
 # This will be called once for the at the beggining of the execution in the 'tests/' directory
 # and will be torn down, (code after the yeild) when all the test session has completed.
@@ -184,6 +189,7 @@ def params_from_base_suite_setup(request):
     delta_sync_enabled = request.config.getoption("--delta-sync")
     magma_storage_enabled = request.config.getoption("--magma-storage")
     hide_product_version = request.config.getoption("--hide-product-version")
+    skip_couchbase_provision = request.config.getoption("--skip-couchbase-provision")
     enable_cbs_developer_preview = request.config.getoption("--enable-cbs-developer-preview")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
@@ -328,7 +334,8 @@ def params_from_base_suite_setup(request):
                 server_version=server_version,
                 sync_gateway_version=sync_gateway_version,
                 sync_gateway_config=sg_config,
-                cbs_platform=cbs_platform
+                cbs_platform=cbs_platform,
+                skip_couchbase_provision=skip_couchbase_provision
             )
         except ProvisioningError:
             logging_helper = Logging()

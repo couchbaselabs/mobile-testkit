@@ -18,7 +18,6 @@ from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
 from keywords.couchbaseserver import get_sdk_client_with_bucket
 from libraries.provision.ansible_runner import AnsibleRunner
 from keywords.constants import ENVIRONMENT_FILE
-from libraries.testkit.admin import Admin
 from concurrent.futures import ProcessPoolExecutor
 
 
@@ -370,7 +369,6 @@ def test_envVariables_on_sgw_config(params_from_base_test_setup, setup_env_varia
     sg_db = "db"
     bucket = "data-bucket"
 
-    log_info("Running 'test_envVariables_withoutvalues'")
     log_info("Using cbs_url: {}".format(cbs_url))
     log_info("Using sg_url: {}".format(sg_url))
     log_info("Using sg_url_admin: {}".format(sg_url_admin))
@@ -432,10 +430,7 @@ def test_envVariables_on_sgw_config(params_from_base_test_setup, setup_env_varia
 
 @pytest.mark.syncgateway
 @pytest.mark.sync
-@pytest.mark.parametrize("sg_conf_name", [
-    "custom_sync/sync_gateway_externalize_js"
-])
-def test_envVariables_withoutvalues(params_from_base_test_setup, sg_conf_name):
+def test_envVariables_withoutvalues(params_from_base_test_setup):
     """
     1. Create SGW config with variables mentioned
     2. Do not create default values
@@ -446,30 +441,36 @@ def test_envVariables_withoutvalues(params_from_base_test_setup, sg_conf_name):
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
-
+    orig_sg_conf = "sync_gateway_default_functional_tests"
+    orig_sg_conf = sync_gateway_config_path_for_mode(orig_sg_conf, mode)
+    sg_conf_name = "custom_sync/sync_gateway_externalize_js"
     if sync_gateway_version < "3.0.0":
         pytest.skip("this feature not available below 3.0.0")
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
-    sg_db = "db"
     cluster = Cluster(config=cluster_config)
-    admin = Admin(cluster.sync_gateways[0])
+    cluster.reset(sg_config_path=orig_sg_conf)
+    cluster_helper = ClusterKeywords(cluster_config)
+    sg = cluster.sync_gateways[0]
+    cluster_hosts = cluster_helper.get_cluster_topology(cluster_config)
+    sg_url = cluster_hosts["sync_gateways"][0]["public"]
 
     jsfunc = "\"sync\":" + "\"$jsfunc\","
     username = "\"username\":" + "\"$bucketuser\","
     temp_sg_config, _ = copy_sgconf_to_temp(sg_conf, mode)
     temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ replace_with_js }}", jsfunc)
     temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ username }}", username)
-    cluster.reset(sg_config_path=temp_sg_config)
-    cluster.reset(sg_config_path=temp_sg_config)
-    db_resp = admin.get_db_config(sg_db)
-    # if environment variables are not set, it should set to empty value on the config
-    assert db_resp['sync'] == "", "Sync gateway service getting wrong environment variables"
+    with ProcessPoolExecutor() as mp:
+        sgrestart = mp.submit(sg.restart, temp_sg_config, cluster_config)
+        time.sleep(60)
+    sgrestart.result(timeout=80)
+
     try:
-        db_resp['username']
-        assert db_resp['username'] == "", "Sync gateway service getting wrong environment variables"
-        assert False, "username is still showing up though there is no environment variable defined"
-    except KeyError as ex:
-        assert True, "Got expected key error"
+        requests.get(sg_url, timeout=30)
+        assert False, "Sync gateway started successfully with no environment variables or default values set "
+    except Exception as he:
+        log_info(str(he))
+        log_info("Expected to have sync gateway fail to start")
+    sg.restart(orig_sg_conf, cluster_config)
 
 
 @pytest.mark.syncgateway

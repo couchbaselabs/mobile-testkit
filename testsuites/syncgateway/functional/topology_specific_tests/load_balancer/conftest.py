@@ -45,6 +45,7 @@ def params_from_base_suite_setup(request):
     magma_storage_enabled = request.config.getoption("--magma-storage")
     hide_product_version = request.config.getoption("--hide-product-version")
     prometheus_enabled = request.config.getoption("--prometheus-enable")
+    skip_couchbase_provision = request.config.getoption("--skip-couchbase-provision")
     enable_cbs_developer_preview = request.config.getoption("--enable-cbs-developer-preview")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
@@ -234,7 +235,8 @@ def params_from_base_suite_setup(request):
                 cbs_ce=cbs_ce,
                 sg_platform=sg_platform,
                 sg_installer_type=sg_installer_type,
-                sa_installer_type=sa_installer_type
+                sa_installer_type=sa_installer_type,
+                skip_couchbase_provision=skip_couchbase_provision
             )
         except ProvisioningError:
             logging_helper = Logging()

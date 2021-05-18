@@ -186,6 +186,10 @@ def pytest_addoption(parser):
                      help="Hides SGW product version when you hit SGW url",
                      default=False)
 
+    parser.addoption("--skip-couchbase-provision",
+                     action="store_true",
+                     help="skip the couchbase provision step")
+
     parser.addoption("--enable-cbs-developer-preview",
                      action="store_true",
                      help="Enabling CBS developer preview",
@@ -243,6 +247,7 @@ def params_from_base_suite_setup(request):
     num_of_docs_to_delete = int(request.config.getoption("--num-of-docs-to-delete"))
     num_of_docs_to_add = int(request.config.getoption("--num-of-docs-to-add"))
     hide_product_version = request.config.getoption("--hide-product-version")
+    skip_couchbase_provision = request.config.getoption("--skip-couchbase-provision")
     up_time = int(request.config.getoption("--up-time"))
     enable_cbs_developer_preview = request.config.getoption("--enable-cbs-developer-preview")
     # Changing up_time in days
@@ -373,7 +378,8 @@ def params_from_base_suite_setup(request):
                 cluster_config=cluster_config,
                 server_version=server_version,
                 sync_gateway_version=sync_gateway_version,
-                sync_gateway_config=sg_config
+                sync_gateway_config=sg_config,
+                skip_couchbase_provision=skip_couchbase_provision
             )
         except ProvisioningError:
             logging_helper = Logging()
