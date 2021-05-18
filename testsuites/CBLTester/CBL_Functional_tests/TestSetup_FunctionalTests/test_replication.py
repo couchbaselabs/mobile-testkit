@@ -4358,7 +4358,6 @@ def test_replication_with_custom_timeout(params_from_base_test_setup, num_of_doc
 
     # Stop Sync Gateway
     sg_controller = SyncGateway()
-
     sg_controller.stop_sync_gateways(cluster_config, url=sg_url)
     end_time = time.time()
     replicator.start(repl)
@@ -4373,7 +4372,8 @@ def test_replication_with_custom_timeout(params_from_base_test_setup, num_of_doc
         replicator.wait_until_replicator_idle(repl)
     except Exception as e:
         assert "Error while replicating" in str(e)
-
+        replicator.stop(repl)
+    assert False
     replicator.stop(repl)
 
 
