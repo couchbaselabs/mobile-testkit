@@ -4265,32 +4265,29 @@ def test_replication_reset_retires(params_from_base_test_setup, num_of_docs, con
                                        replication_type=type, replicator_authenticator=replicator_authenticator)
     repl = replicator.create(repl_config)
     db.create_bulk_docs(num_of_docs, "cbl-replicator-retries", db=cbl_db, channels=channels_sg)
-
-    start_time = time.time()
     repl_change_listener = replicator.addChangeListener(repl)
 
     # Stop Sync Gateway
     sg_controller = SyncGateway()
-
     sg_controller.stop_sync_gateways(cluster_config, url=sg_url)
-    end_time = time.time()
     replicator.start(repl)
+    start_time = time.time()
     sg_controller.start_sync_gateways(cluster_config, url=sg_url, config=sg_config)
+    end_time = time.time()
     changes_count = replicator.getChangesCount(repl_change_listener)
     log_info("*" * 90)
     time_taken = end_time - start_time
     log_info(time_taken)
     log_info(changes_count)
-    assert changes_count > 20
     replicator.wait_until_replicator_idle(repl)
 
     # Stop the sg and restart the replicator
     sg_controller.stop_sync_gateways(cluster_config, url=sg_url)
 
     # start the sg before retries ends
+    # Adding enough sleep to wait for the retries
+    time.sleep(wait_time * (retries - 5))
     sg_controller.start_sync_gateways(cluster_config, url=sg_url, config=sg_config)
-    # Added to complete number of iteration
-    time.sleep(8)
     replicator.wait_until_replicator_idle(repl)
 
     sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)
