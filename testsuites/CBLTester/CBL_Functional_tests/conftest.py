@@ -179,6 +179,10 @@ def pytest_addoption(parser):
                      help="Enabling CBS developer preview",
                      default=False)
 
+    parser.addoption("--server-ssl",
+                     action="store_true",
+                     help="If set, will enable SSL communication between server and Sync Gateway")
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -223,6 +227,7 @@ def params_from_base_suite_setup(request):
     hide_product_version = request.config.getoption("--hide-product-version")
     skip_couchbase_provision = request.config.getoption("--skip-couchbase-provision")
     enable_cbs_developer_preview = request.config.getoption("--enable-cbs-developer-preview")
+    cbs_ssl = request.config.getoption("--server-ssl")
 
     test_name = request.node.name
 
@@ -365,6 +370,15 @@ def params_from_base_suite_setup(request):
     else:
         log_info("Running without CBS developer preview")
         persist_cluster_config_environment_prop(cluster_config, 'cbs_developer_preview', False)
+
+    if cbs_ssl:
+        log_info("Running tests with cbs <-> sg ssl enabled")
+        # Enable ssl in cluster configs
+        persist_cluster_config_environment_prop(cluster_config, 'cbs_ssl_enabled', True)
+    else:
+        log_info("Running tests with cbs <-> sg ssl disabled")
+        # Disable ssl in cluster configs
+        persist_cluster_config_environment_prop(cluster_config, 'cbs_ssl_enabled', False)
 
     # As cblite jobs run with on Centos platform, adding by default centos to environment config
     persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "centos", False)
@@ -539,7 +553,8 @@ def params_from_base_suite_setup(request):
         "cbs_ce": cbs_ce,
         "sg_ce": sg_ce,
         "cbl_ce": cbl_ce,
-        "prometheus_enable": prometheus_enable
+        "prometheus_enable": prometheus_enable,
+        "ssl_enabled": cbs_ssl
     }
 
     if request.node.testsfailed != 0 and enable_file_logging and create_db_per_suite is not None:
@@ -617,6 +632,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     cbs_ce = params_from_base_suite_setup["cbs_ce"]
     sg_ce = params_from_base_suite_setup["sg_ce"]
     prometheus_enable = request.config.getoption("--prometheus-enable")
+    cbs_ssl = params_from_base_suite_setup["ssl_enabled"]
 
     source_db = None
     test_name_cp = test_name.replace("/", "-")
@@ -714,7 +730,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "cbs_ce": cbs_ce,
         "sg_ce": sg_ce,
         "cbl_ce": cbl_ce,
-        "prometheus_enable": prometheus_enable
+        "prometheus_enable": prometheus_enable,
+        "ssl_enabled": cbs_ssl
     }
 
     if request.node.rep_call.failed and enable_file_logging and create_db_per_test is not None:
