@@ -374,11 +374,16 @@ def url_listener_setup(params_from_base_test_setup):
     cbl_db_server = cbl_db_list[0]
     listener = PeerToPeer(base_url_server, delta_sync_enabled)
     # Need to start and stop listener, if test fails in the middle listener will not be closed.
-    url_listener = listener.message_listener_start(cbl_db_server)
+    url_listener = listener.server_start(cbl_db_server, 6000)
     log_info("Url listener/server/passive peer starting .....")
     yield {
 
         "url_listener": url_listener,
         "peer_to_peer_listener": listener,
+        "base_url_list": base_url_list,
+        "base_url_server": base_url_server,
+        "cbl_db_server": cbl_db_server,
+        "cbl_db_list": cbl_db_list,
+        "delta_sync_enabled": delta_sync_enabled
     }
     listener.server_stop(url_listener, "URLEndPoint")

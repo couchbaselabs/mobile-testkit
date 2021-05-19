@@ -57,7 +57,6 @@ def test_peer_to_peer_1to1_valid_values(params_from_base_test_setup, server_setu
         db_obj_client.create_bulk_docs(num_of_docs, "replication", db=cbl_db_client, channels=channels)
 
     # Now set up client
-    print(url_listener_port)
     repl = peerToPeer_client.configure(port=url_listener_port, host=server_host, server_db_name=db_name_server,
                                        client_database=cbl_db_client, continuous=continuous,
                                        replication_type=replicator_type, endPointType=endPointType)
@@ -1161,6 +1160,67 @@ def test_peer_to_peer_with_server_down(params_from_base_test_setup, server_setup
     assert server_docs_count == num_of_docs, "Number of docs is not equivalent to number of docs in server "
     if endPointType == "URLEndPoint":
         peer_to_peer_server.server_stop(listener, endPointType)
+
+
+@pytest.mark.p2p
+@pytest.mark.listener
+@pytest.mark.parametrize("num_of_docs, continuous, replicator_type, endPointType, retries, interval", [
+    (1000, True, "push", "MessageEndPoint", 9, 9),
+    (1000, True, "pull-push", "MessageEndPoint", 13, 8),
+    (1000, True, "pull", "MessageEndPoint", 9, 20)
+])
+def test_peer_to_peer_tries(params_from_base_test_setup, num_of_docs, continuous, replicator_type, endPointType, retries, interval):
+    """
+        @summary:
+        1. Create docs on client & Server.
+        2. Start the server.
+        3. Start replication from client.
+        4. Restart the server
+        5. Verify replication is completed.
+        6. Verify all docs got replicated on server
+    """
+    host_list = params_from_base_test_setup["host_list"]
+    db_obj_list = params_from_base_test_setup["db_obj_list"]
+    db_name_list = params_from_base_test_setup["db_name_list"]
+    base_url_list = params_from_base_test_setup["base_url_list"]
+    cbl_db_list = params_from_base_test_setup["cbl_db_list"]
+    cbl_db_server = cbl_db_list[0]
+
+    channels = ["peerToPeer"]
+    base_url_client = base_url_list[1]
+    replicator = Replication(base_url_client)
+    base_url_server = base_url_list[0]
+    peerToPeer_client = PeerToPeer(base_url_client)
+    db_obj_server = db_obj_list[0]
+    cbl_db_client = cbl_db_list[1]
+    db_obj_client = db_obj_list[1]
+    db_name_server = db_name_list[0]
+    peer_to_peer_server = PeerToPeer(base_url_server)
+
+    url_listener_port = 9000
+    server_host = host_list[0]
+
+    db_obj_server.create_bulk_docs(num_of_docs, "cbl-peerToPeer", db=cbl_db_server, channels=channels)
+    db_obj_client.create_bulk_docs(num_of_docs, "replication", db=cbl_db_client, channels=channels)
+    # # Now set up client
+    repl = peerToPeer_client.configure(port=url_listener_port, host=server_host, server_db_name=db_name_server,
+                                       client_database=cbl_db_client, continuous=continuous, retries=retries,
+                                       replication_type=replicator_type, endPointType=endPointType, max_timeout_interval=interval)
+
+    peerToPeer_client.client_start(repl)
+    time.sleep((retries - 4) * interval)
+    message_url_tcp_listener = peer_to_peer_server.message_listener_start(cbl_db_server, url_listener_port)
+    time.sleep(3)
+    replicator.wait_until_replicator_idle(repl)
+    total = replicator.getTotal(repl)
+
+    completed = replicator.getCompleted(repl)
+
+    assert total == completed, "replication from client to server did not completed " + str(total) + " not equal to " + str(completed)
+    server_docs_count = db_obj_server.getCount(cbl_db_server)
+    assert server_docs_count == num_of_docs, "Number of docs is not equivalent to number of docs in server "
+    replicator.stop(repl)
+    peer_to_peer_server.server_stop(message_url_tcp_listener, endPointType)
 
 
 def client_start_replicate(peerToPeer_client, db_obj_client, param, server_host, db_name_server, cbl_db_client,
