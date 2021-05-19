@@ -4183,17 +4183,16 @@ def test_replication_with_custom_timeout(params_from_base_test_setup, num_of_doc
                                        replication_type=type, replicator_authenticator=replicator_authenticator)
     repl = replicator.create(repl_config)
     db.create_bulk_docs(num_of_docs, "cbl-replicator-retries", db=cbl_db, channels=channels_sg)
-
-    start_time = time.time()
     repl_change_listener = replicator.addChangeListener(repl)
 
     # Stop Sync Gateway
     sg_controller = SyncGateway()
     sg_controller.stop_sync_gateways(cluster_config, url=sg_url)
-    end_time = time.time()
+    start_time = time.time()
     replicator.start(repl)
-    time.sleep(3)
+    time.sleep(20)
     sg_controller.start_sync_gateways(cluster_config, url=sg_url, config=sg_config)
+    end_time = time.time()
     changes_count = replicator.getChangesCount(repl_change_listener)
     log_info("*" * 90)
     time_taken = end_time - start_time
