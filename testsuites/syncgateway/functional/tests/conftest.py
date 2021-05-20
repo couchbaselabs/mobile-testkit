@@ -523,6 +523,11 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         no_conflicts_enabled=no_conflicts_enabled
     )
 
+    cluster_helper = ClusterKeywords(cluster_config)
+    cluster_hosts = cluster_helper.get_cluster_topology(cluster_config=cluster_config)
+    sg_url = cluster_hosts["sync_gateways"][0]["public"]
+    sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
+
     log_info("Running test '{}'".format(test_name))
     log_info("cluster_config: {}".format(cluster_config))
     log_info("cluster_topology: {}".format(cluster_topology))
@@ -541,7 +546,9 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "ssl_enabled": cbs_ssl,
         "delta_sync_enabled": delta_sync_enabled,
         "sg_ce": sg_ce,
-        "cbs_ce": cbs_ce
+        "cbs_ce": cbs_ce,
+        "sg_url": sg_url,
+        "sg_admin_url": sg_admin_url
     }
 
     # Code after the yield will execute when each test finishes
