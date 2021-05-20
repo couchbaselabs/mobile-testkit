@@ -13,6 +13,12 @@
       state: absent
     ignore_errors: yes
 
+  - name: Delete CouchbaseLite libraries from previous install
+    file:
+      path: ~/javatestserver/CouchbaseLiteTemp
+      state: absent
+    ignore_errors: yes
+
   - name: check /tmp/TestServerTemp directory exists
     stat:
       path: /tmp/TestServerTemp
@@ -45,6 +51,8 @@
 
   - name: Install and start TestServer Java Daemon Service
     shell: "~/javatestserver/daemon_manager.sh start ~/javatestserver/{{ package_name }}.jar ~/javatestserver/output {{ ansible_env.JAVA_HOME }} {{ ansible_env.JSVC_HOME }}"
+    args:
+      chdir: ~/javatestserver
     when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "6"
 
   - name: Wait for port 8080 to become open on the host, don't start checking for 2 seconds

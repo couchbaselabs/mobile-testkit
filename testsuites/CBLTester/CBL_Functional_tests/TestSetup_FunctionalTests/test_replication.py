@@ -4251,7 +4251,6 @@ def test_replication_reset_retires(params_from_base_test_setup, num_of_docs, con
     # Reset cluster to ensure no data in system
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
-    sg_controller = SyncGateway()
 
     # Configure replication with push_pull
     replicator = Replication(base_url)
@@ -4279,6 +4278,7 @@ def test_replication_reset_retires(params_from_base_test_setup, num_of_docs, con
     time_taken = end_time - start_time
     log_info(time_taken)
     log_info(changes_count)
+    assert changes_count > 20
     replicator.wait_until_replicator_idle(repl)
 
     # Stop the sg and restart the replicator
@@ -4286,7 +4286,7 @@ def test_replication_reset_retires(params_from_base_test_setup, num_of_docs, con
 
     # start the sg before retries ends
     # Adding enough sleep to wait for the retries
-    time.sleep(wait_time * (retries - 5))
+    time.sleep(wait_time * (int(retries) - 5))
     sg_controller.start_sync_gateways(cluster_config, url=sg_url, config=sg_config)
     replicator.wait_until_replicator_idle(repl)
 
