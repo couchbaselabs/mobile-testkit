@@ -1,6 +1,8 @@
 import random
 import time
 import json
+import requests
+
 import pytest
 import concurrent.futures
 from concurrent.futures import ProcessPoolExecutor
@@ -2671,3 +2673,111 @@ def test_stats_logging_import_count(params_from_base_test_setup,
         assert expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"] == 10, "import_count is not incremented"
         assert expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_error_count"] == 10, "import_error count is not incremented"
         assert expvars["syncgateway"]["per_db"][sg_db]["security"]["num_access_errors"] == 1, "num_access_errors is not incremented"
+
+
+@pytest.mark.syncgateway
+@pytest.mark.xattrs
+def test_non_mobile_revision(params_from_base_test_setup):
+    """
+    Scenario:
+        1.   Sync Gateway running with shared bucket access enabled, server version 6.6.0 or higher
+        2.   Document A is a Couchbase Server tombstone, but is not a mobile tombstone (i.e. doesn't have a _sync xattr)
+            - You can get a document into this initial state in various ways, one is to:
+                -  Create a doc via Sync Gateway
+                -  Purge the doc via Sync Gateway
+        3. Push a new mobile tombstone revision for the document to Sync Gateway
+            - could either be with CBL, or via REST API
+        4. Verify SGW does not go into infinite loop
+    """
+
+    cluster_conf = params_from_base_test_setup['cluster_config']
+    cluster_topology = params_from_base_test_setup['cluster_topology']
+    mode = params_from_base_test_setup['mode']
+    xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+    ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+    sg_conf_name = 'custom_sync/grant_access_one'
+
+    if ("sync_gateway_default_functional_tests_no_port" in sg_conf_name) and get_sg_version(cluster_conf) < "1.5.0":
+        pytest.skip('couchbase/couchbases ports do not support for versions below 1.5')
+    if "sync_gateway_default_functional_tests_no_port" in sg_conf_name and not ssl_enabled:
+        pytest.skip('ssl disabled so cannot run without port')
+
+    # This test should only run when using xattr meta storage
+    if not xattrs_enabled:
+        pytest.skip('XATTR tests require --xattrs flag')
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
+    sg_url = cluster_topology['sync_gateways'][0]['public']
+
+    # bucket_name = 'data-bucket'
+    # cbs_url = cluster_topology['couchbase_servers'][0]
+    sg_db = 'db'
+    number_docs_per_client = 1
+    # number_revs_per_doc = 1
+
+    channels = ['NASA']
+
+    log_info('sg_conf: {}'.format(sg_conf))
+    log_info('sg_admin_url: {}'.format(sg_admin_url))
+    log_info('sg_url: {}'.format(sg_url))
+
+    cluster = Cluster(config=cluster_conf)
+    cluster.reset(sg_config_path=sg_conf)
+
+    sg_client = MobileRestClient()
+    mobile_user_info = UserInfo(name='mobile', password='pass', channels=channels, roles=[])
+    sg_client.create_user(
+        url=sg_admin_url,
+        db=sg_db,
+        name=mobile_user_info.name,
+        password=mobile_user_info.password,
+        channels=mobile_user_info.channels
+    )
+
+    mobile_auth = sg_client.create_session(
+        url=sg_admin_url,
+        db=sg_db,
+        name=mobile_user_info.name
+    )
+
+    # Create 'number_docs_per_client' docs from Sync Gateway
+    mobile_docs = document.create_docs('sg', number=number_docs_per_client, channels=mobile_user_info.channels)
+    bulk_docs_resp = sg_client.add_bulk_docs(
+        url=sg_url,
+        db=sg_db,
+        docs=mobile_docs,
+        auth=mobile_auth
+    )
+    assert len(bulk_docs_resp) == number_docs_per_client
+
+    sg_doc_ids = ['sg_{}'.format(i) for i in range(number_docs_per_client)]
+    # sdk_doc_ids = ['sdk_{}'.format(i) for i in range(number_docs_per_client)]
+    all_doc_ids = sg_doc_ids
+
+    # Get all of the docs via Sync Gateway
+    sg_docs, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=all_doc_ids, auth=mobile_auth)
+    assert len(sg_docs) == number_docs_per_client
+    assert len(errors) == 0
+
+    # Use Sync Gateway to delete half of the documents choosen randomly
+    # deletion_count = 0
+    doc_id_choice_pool = list(all_doc_ids)
+    random_doc_id = random.choice(doc_id_choice_pool)
+
+    # Get the current revision of the doc and delete it
+    doc = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=random_doc_id, auth=mobile_auth)
+    doc_rev = doc['_rev']
+    sg_client.delete_doc(url=sg_url, db=sg_db, doc_id=random_doc_id, rev=doc_rev, auth=mobile_auth)
+
+    # Sync Gateway purge the random doc
+    sg_client.purge_doc(url=sg_admin_url, db=sg_db, doc=doc)
+
+    # Push a new mobile tombstone revision for the document to Sync Gateway
+    # could either be with CBL, or via REST API
+    print("delete started")
+    with ProcessPoolExecutor() as mp:
+        mp.submit(requests.delete("{}/{}/{}".format(sg_url, sg_db, random_doc_id), auth=mobile_auth, timeout=30))
+
+    sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=mobile_auth)["rows"]
+    assert len(sg_docs) == 0, "sg docs are not deleted"

@@ -1019,7 +1019,7 @@ class MobileRestClient:
             latest_rev = doc_resp["_rev"]
             self.delete_doc(url, db, doc["id"], latest_rev, auth=auth)
 
-    def delete_doc(self, url, db, doc_id, rev, auth=None):
+    def delete_doc(self, url, db, doc_id, rev=None, auth=None, timeout=None):
         """
         Removes a document with the specfied revision
         """
@@ -1029,11 +1029,13 @@ class MobileRestClient:
         params = {}
         if rev is not None:
             params["rev"] = rev
+        if timeout is not None:
+            params["timeout"] = timeout
 
         if auth_type == AuthType.session:
             resp = self._session.delete("{}/{}/{}".format(url, db, doc_id), params=params, cookies=dict(SyncGatewaySession=auth[1]))
         elif auth_type == AuthType.http_basic:
-            resp = self._session.delete("{}/{}/{}".format(url, db, doc_id), params=params, auth=auth)
+            resp = self._session.delete("{}/{}/{}".format(url, db, doc_id), params=params, auth=auth, timeout=timeout)
         else:
             resp = self._session.delete("{}/{}/{}".format(url, db, doc_id), params=params)
 
