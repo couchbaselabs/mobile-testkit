@@ -4183,17 +4183,16 @@ def test_replication_with_custom_timeout(params_from_base_test_setup, num_of_doc
                                        replication_type=type, replicator_authenticator=replicator_authenticator)
     repl = replicator.create(repl_config)
     db.create_bulk_docs(num_of_docs, "cbl-replicator-retries", db=cbl_db, channels=channels_sg)
-
-    start_time = time.time()
     repl_change_listener = replicator.addChangeListener(repl)
 
     # Stop Sync Gateway
     sg_controller = SyncGateway()
     sg_controller.stop_sync_gateways(cluster_config, url=sg_url)
-    end_time = time.time()
+    start_time = time.time()
     replicator.start(repl)
-    time.sleep(3)
+    time.sleep(20)
     sg_controller.start_sync_gateways(cluster_config, url=sg_url, config=sg_config)
+    end_time = time.time()
     changes_count = replicator.getChangesCount(repl_change_listener)
     log_info("*" * 90)
     time_taken = end_time - start_time
@@ -4252,7 +4251,6 @@ def test_replication_reset_retires(params_from_base_test_setup, num_of_docs, con
     # Reset cluster to ensure no data in system
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
-    sg_controller = SyncGateway()
 
     # Configure replication with push_pull
     replicator = Replication(base_url)
@@ -4266,17 +4264,15 @@ def test_replication_reset_retires(params_from_base_test_setup, num_of_docs, con
                                        replication_type=type, replicator_authenticator=replicator_authenticator)
     repl = replicator.create(repl_config)
     db.create_bulk_docs(num_of_docs, "cbl-replicator-retries", db=cbl_db, channels=channels_sg)
-
-    start_time = time.time()
     repl_change_listener = replicator.addChangeListener(repl)
 
     # Stop Sync Gateway
     sg_controller = SyncGateway()
-
     sg_controller.stop_sync_gateways(cluster_config, url=sg_url)
-    end_time = time.time()
     replicator.start(repl)
+    start_time = time.time()
     sg_controller.start_sync_gateways(cluster_config, url=sg_url, config=sg_config)
+    end_time = time.time()
     changes_count = replicator.getChangesCount(repl_change_listener)
     log_info("*" * 90)
     time_taken = end_time - start_time
@@ -4289,9 +4285,9 @@ def test_replication_reset_retires(params_from_base_test_setup, num_of_docs, con
     sg_controller.stop_sync_gateways(cluster_config, url=sg_url)
 
     # start the sg before retries ends
+    # Adding enough sleep to wait for the retries
+    time.sleep(wait_time * (int(retries) - 5))
     sg_controller.start_sync_gateways(cluster_config, url=sg_url, config=sg_config)
-    # Added to complete number of iteration
-    time.sleep(8)
     replicator.wait_until_replicator_idle(repl)
 
     sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)
