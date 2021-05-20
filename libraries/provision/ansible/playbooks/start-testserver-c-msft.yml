@@ -5,4 +5,7 @@
   tasks:
     - debug: msg="Starting the Testserver "
     - name: Start TestServer
-      win_shell: C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ binary_path }}
+      win_nssm:
+        name: TestServerC
+        application: C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ binary_path }}
+        state: started
