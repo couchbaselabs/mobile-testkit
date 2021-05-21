@@ -13,7 +13,7 @@ import couchbase.subdocument as SD
 
 @pytest.mark.channels
 @pytest.mark.syncgateway
-@pytest.mark.parametrize("num_of_docs, x509_cert_auth", [
+@pytest.mark.parametrize("x509_cert_auth", [
     pytest.param(False, marks=pytest.mark.ce_sanity),
     pytest.param(True, marks=pytest.mark.sanity)
 ])
