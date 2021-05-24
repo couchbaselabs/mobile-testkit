@@ -40,12 +40,8 @@ def test_automatic_and_ondemand_imports(params_from_base_test_setup, x509_cert_a
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
 
-    if imports_type == "automatic":
-        if not xattrs_enabled:
-            pytest.skip('XATTR tests require --xattrs flag')
-
-    if sync_gateway_version < "3.0.0":
-        pytest.skip('This test cannot run with sg version below 3.0.0')
+    if not xattrs_enabled or sync_gateway_version < "3.0.0":
+        pytest.skip('This test cannot run with sg version below 3.0.0 and xattrs off')
     sg_channel1_value = "abc"
     sg_channels1 = [sg_channel1_value]
     username = "autotest"
@@ -262,7 +258,7 @@ def test_remove_xattrs(params_from_base_test_setup):
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
 
-    if not xattrs_enabled and sync_gateway_version < "3.0.0":
+    if not xattrs_enabled or sync_gateway_version < "3.0.0":
         pytest.skip('Test did not enable xattrs or sgw version is not 3.0 and above')
     sg_channel1_value = "abc"
     sg_channels1 = [sg_channel1_value]
@@ -360,7 +356,7 @@ def test_sync_xattrs_update_concurrently(params_from_base_test_setup):
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
 
-    if not xattrs_enabled and sync_gateway_version < "3.0.0":
+    if not xattrs_enabled or sync_gateway_version < "3.0.0":
         pytest.skip('Test did not enable xattrs or sgw version is not 3.0 and above')
 
     num_docs = 20
@@ -459,7 +455,7 @@ def test_syncfunction_user_xattrs_format(params_from_base_test_setup, non_list):
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
 
-    if not xattrs_enabled and sync_gateway_version < "3.0.0":
+    if not xattrs_enabled or sync_gateway_version < "3.0.0":
         pytest.skip('Test did not enable xattrs or sgw version is not 3.0 and above')
 
     if non_list:
@@ -528,7 +524,7 @@ def test_syncfunction_user_xattrs_dictionary_boolean(params_from_base_test_setup
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
 
-    if not xattrs_enabled and sync_gateway_version < "3.0.0":
+    if not xattrs_enabled or sync_gateway_version < "3.0.0":
         pytest.skip('Test did not enable xattrs or sgw version is not 3.0 and above')
 
     sgw_channel_value1 = "ch_abc"
