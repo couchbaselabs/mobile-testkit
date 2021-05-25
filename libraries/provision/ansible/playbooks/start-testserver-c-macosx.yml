@@ -1,0 +1,14 @@
+
+- name: Mac - Start TestServer
+  hosts: testserver
+  vars:
+    binary_path:
+  tasks:
+    - debug: msg="Starting the Testserver "
+    - name: Start TestServer
+      shell: {{ package_name }}\testserver.exe
+
+    - name: Wait for port 8080 to become open on the host, don't start checking for 2 seconds
+        wait_for:
+          port: 8080
+          delay: 2

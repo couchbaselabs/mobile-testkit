@@ -1,0 +1,2 @@
+  - name: DEPS | install awslogs forwarder service
+    shell: python3 awslogs-agent-setup.py

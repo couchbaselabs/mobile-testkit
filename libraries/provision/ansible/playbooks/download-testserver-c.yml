@@ -1,0 +1,13 @@
+
+- name: Download Testserver Java WebService Package
+  hosts: testserver
+    - name: create testserver directory if not exists
+    file:
+        path: ~ /javatestserver
+        state: directory
+        when: javatestserver_dir.stat.exists == False
+
+- name: Download TestServer C
+    get_url:
+        url: "{{ testserver_download_url }}"
+        dest: "{{ app_path}}"
