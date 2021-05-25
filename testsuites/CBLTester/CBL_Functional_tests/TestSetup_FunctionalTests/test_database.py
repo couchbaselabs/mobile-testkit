@@ -217,9 +217,6 @@ def test_DBEncryptionKey_withCompact(params_from_base_test_setup):
     '''
 
     base_url = params_from_base_test_setup["base_url"]
-    liteserv_version = params_from_base_test_setup["liteserv_version"]
-    if liteserv_version >= "3.0":
-        pytest.skip('database encryption feature not available with version >= 3.0')
 
     db = Database(base_url)
 
