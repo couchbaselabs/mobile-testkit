@@ -1063,7 +1063,7 @@ def wait_until_docs_imported_from_server(sg_admin_url, sg_client, sg_db, expecte
         count += 1
 
 
-def replace_xattrs_sync_func_in_config(sg_config, channel):
+def replace_xattrs_sync_func_in_config(sg_config, channel, enable_xattrs_key=True):
     # Sample config how it looks after it constructs the config here
     """function (doc, oldDoc, meta){
     if(meta.xattrs.channel1 != undefined){
@@ -1080,7 +1080,10 @@ def replace_xattrs_sync_func_in_config(sg_config, channel):
     }
     }` """
     temp_sg_config, _ = copy_sgconf_to_temp(sg_config, mode)
-    user_xattrs_string = """ "user_xattr_key": "{}", """.format(channel)
+    if enable_xattrs_key:
+        user_xattrs_string = """ "user_xattr_key": "{}", """.format(channel)
+    else:
+        user_xattrs_string = ""
     temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ user_xattrs_key }}", user_xattrs_string)
     temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ sync_func }}", sync_func_string)
     return temp_sg_config

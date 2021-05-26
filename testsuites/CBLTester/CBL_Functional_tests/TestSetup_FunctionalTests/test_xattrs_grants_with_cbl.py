@@ -75,6 +75,8 @@ def test_xattrs_grant_automatic_imports(params_from_base_test_setup, x509_cert_a
     # 3. Create doc via SGW
     sg_docs = document.create_docs('sg_xattrs', number=num_of_docs)
     sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=auto_user)
+    raw_doc = sg_client.get_raw_doc(sg_admin_url, sg_db, sg_doc_xattrs_id)
+    rev = raw_doc["_sync"]["rev"]
 
     # Verify docs via SGW cannot be access by user
     replicator = Replication(base_url)
@@ -98,6 +100,7 @@ def test_xattrs_grant_automatic_imports(params_from_base_test_setup, x509_cert_a
     assert expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"] == import_count + 1, "import_count is not incremented"
     raw_doc = sg_client.get_raw_doc(sg_admin_url, sg_db, sg_doc_xattrs_id)
     assert raw_doc["_meta"]["xattrs"][user_custom_channel] == sg_channel1_value, "raw doc did not get user xattrs value"
+    assert rev == raw_doc["_sync"]["rev"], "rev did not get incremented "
 
 
 @pytest.mark.channels
@@ -115,6 +118,7 @@ def test_reassigning_channels_using_user_xattrs(params_from_base_test_setup, set
         5. Verify doc can be accessed by user2 who has  access to only "xattrs_channel_two"
         6. change channel to new channel(channel2), verify doc can be accessed only in new channel
         7. verify user1 cannot access the doc
+        cover row #9, #38, #39
     """
     sg_db = "db"
     sg_url = params_from_base_test_setup["sg_url"]
@@ -128,6 +132,7 @@ def test_reassigning_channels_using_user_xattrs(params_from_base_test_setup, set
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     cbl_db1 = setup_customized_teardown_test["cbl_db1"]
     cbl_db2 = setup_customized_teardown_test["cbl_db2"]
+    delta_sync_enabled = setup_customized_teardown_test["delta_sync_enabled"]
 
     if sync_gateway_version < "3.0.0":
         pytest.skip('This test cannot run with sg version below 3.0.0')
@@ -180,7 +185,10 @@ def test_reassigning_channels_using_user_xattrs(params_from_base_test_setup, set
     replicator.wait_until_replicator_idle(repl2)
     cbl_doc_count2 = db.getCount(cbl_db2)
     assert cbl_doc_count2 == 0, "doc is not accessible by user1 who has access to 'xattrs_channel_two'"
-
+    # get deltasync stats
+    if delta_sync_enabled:
+        expvars = sg_client.get_expvars(url=sg_admin_url)
+        delta_sync_count = expvars['syncgateway']['per_db'][sg_db]['delta_sync']['delta_pull_replication_count']
     # 4. update the user xattrs via sdk from "xattrs_channel_one" to "xattrs_channel_two"
     sdk_bucket.mutate_in(sg_doc_xattrs_id, [SD.upsert(user_custom_channel, sg_channel1_value2, xattr=True, create_parents=True)])
 
@@ -195,7 +203,11 @@ def test_reassigning_channels_using_user_xattrs(params_from_base_test_setup, set
     # 7. verify user1 cannot access the doc
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=auto_user1)["rows"]
     assert len(sg_docs) == 0, "user1 can still access the doc which does not have channel"
+    replicator.wait_until_replicator_idle(repl1)
     assert cbl_doc_count1 == 0, "doc is accessible by user1 who has access to only 'xattrs_channel_one'"
+    if delta_sync_enabled:
+        expvars = sg_client.get_expvars(url=sg_admin_url)
+        assert delta_sync_count == expvars['syncgateway']['per_db'][sg_db]['delta_sync']['delta_pull_replication_count']
     replicator.stop(repl1)
     replicator.stop(repl2)
 

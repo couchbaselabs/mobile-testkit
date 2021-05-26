@@ -23,6 +23,7 @@ from libraries.testkit.admin import Admin
 def test_automatic_and_ondemand_imports(params_from_base_test_setup, x509_cert_auth, imports_type):
     """
     @summary:
+        https://docs.google.com/spreadsheets/d/15zvscRgX2U2Q1xDpUwYU54G6tVmTv_lMDOSK8G-uzeo/edit#gid=793208277
         "1. Set xattr key in config
         2. Set shared bucket access and import in config for automatic imports and imports off for on demand imports
         3. PUT 2 docs  via SGW
@@ -30,6 +31,7 @@ def test_automatic_and_ondemand_imports(params_from_base_test_setup, x509_cert_a
         5. Verify  Import Count stats is 1 for automatic imports and 0 for on demand imports
         6. Perform raw GET only on one doc to ensure added xattr is imported
         7. Import Count stats is  1
+        8. Verify raw end point to verify user xattrs with channel added - Covered #33 row
     """
     sg_db = "db"
     sg_url = params_from_base_test_setup["sg_url"]
@@ -102,7 +104,7 @@ def test_automatic_and_ondemand_imports(params_from_base_test_setup, x509_cert_a
 @pytest.mark.channels
 @pytest.mark.syncgateway
 @pytest.mark.parametrize("resync", [
-    # pytest.param(True),
+    pytest.param(True),
     pytest.param(False)
 ])
 def test_using_resync_and_swapping(params_from_base_test_setup, resync):
@@ -433,11 +435,12 @@ def test_sync_xattrs_update_concurrently(params_from_base_test_setup):
 
 @pytest.mark.channels
 @pytest.mark.syncgateway
-@pytest.mark.parametrize("non_list", [
-    pytest.param(True),
-    pytest.param(False)
+@pytest.mark.parametrize("channel_type", [
+    pytest.param("list"),
+    pytest.param("string"),
+    pytest.param("special_characters"),
 ])
-def test_syncfunction_user_xattrs_format(params_from_base_test_setup, non_list):
+def test_syncfunction_user_xattrs_format(params_from_base_test_setup, channel_type):
     """
     @summary:
         "1. Set xattr key in config
@@ -445,6 +448,7 @@ def test_syncfunction_user_xattrs_format(params_from_base_test_setup, non_list):
         3. PUT 1 docs  via SGW
         4. Update 1 doc with SDK to add user xattr and have user xattrs with map
         5. Verify the doc in SGW
+        covered # 18, 19, 20 rows
     """
     sg_db = "db"
     sg_url = params_from_base_test_setup["sg_url"]
@@ -458,10 +462,12 @@ def test_syncfunction_user_xattrs_format(params_from_base_test_setup, non_list):
     if not xattrs_enabled or sync_gateway_version < "3.0.0":
         pytest.skip('Test did not enable xattrs or sgw version is not 3.0 and above')
 
-    if non_list:
+    if channel_type == "string":
         sg_channel1_value1 = "abc"
-    else:
+    elif channel_type == "list":
         sg_channel1_value1 = ["abc", "xyz"]
+    else:
+        sg_channel1_value1 = "*(-_%"
     sg_channels1 = [sg_channel1_value1]
     username = "autotest"
     password = "password"
@@ -481,7 +487,7 @@ def test_syncfunction_user_xattrs_format(params_from_base_test_setup, non_list):
     cbs_ip = c_cluster.servers[0].host
     cbs_bucket = c_cluster.servers[0].get_bucket_names()[0]
     sdk_bucket = get_sdk_client_with_bucket(ssl_enabled, c_cluster, cbs_ip, cbs_bucket)
-    if non_list:
+    if channel_type == "string" or channel_type == "special_characters":
         sg_client.create_user(sg_admin_url, sg_db, username, password, channels=sg_channels1)
     else:
         sg_client.create_user(sg_admin_url, sg_db, username, password, channels=sg_channel1_value1)
@@ -502,18 +508,20 @@ def test_syncfunction_user_xattrs_format(params_from_base_test_setup, non_list):
 @pytest.mark.syncgateway
 @pytest.mark.parametrize("data_type", [
     pytest.param("boolean"),
-    pytest.param("dictionary")
+    pytest.param("dictionary"),
+    pytest.param("integer")
 ])
-def test_syncfunction_user_xattrs_dictionary_boolean(params_from_base_test_setup, data_type):
+def test_syncfunction_user_xattrs_dictionary_boolean_integer(params_from_base_test_setup, data_type):
     """
     @summary:
         1. Set xattr key in config
         2. Enable xattrs
-        3. Have a sync funtion to verify if channel1 value1 is True then assign the doc to the channel 'abc' , otherwise 'xyz'
-        4. Also enable user_xattrs_key on channel1 on sync config
+        3. Have a sync funtion for boolean/dictionary/integer
+        4. Also enable user_xattrs_key on channel1, channel2 on sync config
         5. create 2 docs  via SGW
         6. Update 1 doc (doc1) with SDK to add user xattr and have user xattrs with boolean
         7. verify doc1 is assign to channel 'abc' when channel1 is true otherwise 'xyz'
+        covered # 17, 21, 22 rows
     """
     sg_db = "db"
     sg_url = params_from_base_test_setup["sg_url"]
@@ -532,6 +540,9 @@ def test_syncfunction_user_xattrs_dictionary_boolean(params_from_base_test_setup
     if data_type == "boolean":
         channel_value1 = True
         channel_value2 = False
+    elif data_type == "integer":
+        channel_value1 = 5
+        channel_value2 = 5
     else:
         channel_value1 = {"value1": True, "value2": "ch_abc", "value3": "ch_xyz"}
         channel_value2 = {"value1": False, "value2": "ch_abc", "value3": "ch_xyz"}
@@ -564,7 +575,7 @@ def test_syncfunction_user_xattrs_dictionary_boolean(params_from_base_test_setup
     auto_user1 = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username1)
     auto_user2 = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username2)
     # 5. create 2 docs  via SGW
-    sg_docs = document.create_docs('user_xattrs_format', number=2)
+    sg_docs = document.create_docs('user_xattrs_format', content="doc-content", number=2)
     sg_client.add_bulk_docs(url=sg_admin_url, db=sg_db, docs=sg_docs)
 
     # 6. Update 1 doc (doc1) with SDK to add user xattr and have user xattrs with boolean
@@ -573,15 +584,304 @@ def test_syncfunction_user_xattrs_dictionary_boolean(params_from_base_test_setup
     sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db)["rows"]
 
     # 7. verify doc1 is assign to channel 'abc' when channel1 is true otherwise 'xyz'
+    if data_type == "integer":
+        time.sleep(channel_value1)  # for integer sync function written to expiry with the given integer value, so wait until it is expired
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=auto_user1)["rows"]
-    assert len(sg_docs) == 1, "docs still exist in old channel even after replacing the user xattrs"
-    sg_doc_ids = [row["id"] for row in sg_docs]
-    assert sg_doc_xattrs_id0 in sg_doc_ids, "user_xattrs_0 is not assigned based on sync function and user xattrs"
+    if data_type == "integer":
+        assert len(sg_docs) == 0, "docs still exist in old channel even after replacing the user xattrs"
+    else:
+        assert len(sg_docs) == 1, "docs still exist in old channel even after replacing the user xattrs"
+        sg_doc_ids = [row["id"] for row in sg_docs]
+        assert sg_doc_xattrs_id0 in sg_doc_ids, "user_xattrs_0 is not assigned based on sync function and user xattrs"
 
-    sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=auto_user2)["rows"]
-    assert len(sg_docs) == 1, "docs are not assigned to right channel according to sync function"
-    sg_doc_ids = [row["id"] for row in sg_docs]
-    assert sg_doc_xattrs_id1 in sg_doc_ids, "user_xattrs_1 is not assigned based on sync function and user xattrs"
+    if data_type != "integer":
+        sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=auto_user2)["rows"]
+        assert len(sg_docs) == 1, "docs are not assigned to right channel according to sync function"
+        sg_doc_ids = [row["id"] for row in sg_docs]
+        assert sg_doc_xattrs_id1 in sg_doc_ids, "user_xattrs_1 is not assigned based on sync function and user xattrs"
+
+
+@pytest.mark.channels
+@pytest.mark.syncgateway
+@pytest.mark.parametrize("missing_type", [
+    pytest.param("user_xattrs_key"),
+    pytest.param("server_user_xattrs"),
+    pytest.param("xattrs_disabled")
+])
+def test_missing_xattrs_key(params_from_base_test_setup, missing_type):
+    """
+    @summary:
+    https://docs.google.com/spreadsheets/d/15zvscRgX2U2Q1xDpUwYU54G6tVmTv_lMDOSK8G-uzeo/edit#gid=793208277
+    covers #28, 29, 30
+    1. Set shared bucket access and import in config
+    2. Write a sync function to assign new channel using xattr value without adding xattrs key enabled
+    3. Verify SGW starts successfully
+    4. create doc via SGW rest api
+    5. Update doc with SDK to add user xattr
+    6. Verify docs are not assigned to the channel which defined in user xattrs
+    """
+    sg_db = "db"
+    sg_url = params_from_base_test_setup["sg_url"]
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+    ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
+
+    if sync_gateway_version < "3.0.0":
+        pytest.skip('SGW version is not 3.0 and above')
+
+    if missing_type != "xattrs_disabled" and not xattrs_enabled:
+        pytest.skip('Test did not enable xattrs')
+    if missing_type == "xattrs_disabled" and xattrs_enabled:
+        pytest.skip('Param with xattrs disabled expected to disable xattrs')
+    sg_channel1_value = "abc"
+    sg_channels1 = [sg_channel1_value]
+    username = "autotest"
+    password = "password"
+    user_custom_channel1 = "channel1"
+    doc_xattrs_id = 'user_xattrs_format_0'
+    sg_conf_name = "custom_sync/sync_gateway_custom_sync"
+    sg_config = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+
+    sg_client = MobileRestClient()
+
+    # 1. Set shared bucket access and import in config
+    # 2. Write a sync function to assign new channel using xattr value without adding xattrs key enabled
+    # 3. Verify SGW starts successfully
+    if missing_type == "user_xattrs_key":
+        temp_sg_config = replace_xattrs_sync_func_in_config(sg_config, user_custom_channel1, enable_xattrs_key=False)
+    else:
+        temp_sg_config = replace_xattrs_sync_func_in_config(sg_config, user_custom_channel1)
+
+    c_cluster = cluster.Cluster(config=cluster_config)
+    c_cluster.reset(sg_config_path=temp_sg_config)
+
+    cbs_ip = c_cluster.servers[0].host
+    cbs_bucket = c_cluster.servers[0].get_bucket_names()[0]
+    sdk_bucket = get_sdk_client_with_bucket(ssl_enabled, c_cluster, cbs_ip, cbs_bucket)
+    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=sg_channels1)
+    auto_user = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username)
+
+    # 4. create doc via SGW rest api
+    sg_docs = document.create_docs('user_xattrs_format', number=2)
+    sg_client.add_bulk_docs(url=sg_admin_url, db=sg_db, docs=sg_docs)
+
+    # 5. Update doc with SDK to add user xattr
+    if missing_type != "server_user_xattrs":
+        sdk_bucket.mutate_in(doc_xattrs_id, [SD.upsert(user_custom_channel1, sg_channel1_value, xattr=True, create_parents=True)])
+
+    # 6. Verify docs are not assigned to the channel which defined in user xattrs
+    sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=auto_user)["rows"]
+    sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs, number_updates=1, auth=auto_user)
+    sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=auto_user)["rows"]
+    assert len(sg_docs) == 0, "docs assigned to the channel without user xattrs key"
+
+    raw_doc = sg_client.get_raw_doc(sg_admin_url, sg_db, doc_xattrs_id)
+
+    if missing_type == "user_xattrs_key":
+        try:
+            raw_doc["_meta"]["xattrs"][user_custom_channel1]
+            assert False, "did not catch the KeyError exception"
+        except KeyError as ke:
+            assert '_meta' in str(ke), "did not get the _meta key error"
+    else:
+        assert raw_doc["_meta"]["xattrs"][user_custom_channel1] is None, "raw doc has _meta xattrs with user xattrs key missing on sgw config "
+
+
+@pytest.mark.channels
+@pytest.mark.syncgateway
+@pytest.mark.parametrize("update_source", [
+    pytest.param("sdk"),
+    pytest.param("sgw")
+])
+def test_rev_with_docupdates_docxattrsupdate(params_from_base_test_setup, update_source):
+    """
+    @summary:
+        1. have sync function :
+        function (doc, oldDoc, meta){
+        if (meta.xattrs.myXattr !== undefined){
+            channel(meta.xattrs.myXattr);
+        }
+        }
+        Start SGW
+        2. Create doc in SGW
+        3. Get revision of the doc
+        4. Update user xattrs on docs via sdk :
+        sync_xattrs: {
+            channel1 : ""abc1"",
+            channel2 : ""abc2""
+        }
+        5. Also  update doc via sdk/SGW in parallel
+        6. Wait until docs imported and docs processed via sync function and verify the revision generated and incremented by 1
+    """
+    sg_db = "db"
+    sg_url = params_from_base_test_setup["sg_url"]
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+    ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
+
+    if not xattrs_enabled or sync_gateway_version < "3.0.0":
+        pytest.skip('Test did not enable xattrs or sgw version is not 3.0 and above')
+
+    sg_channel1_value1 = "abc"
+
+    sg_channels1 = [sg_channel1_value1]
+    username = "autotest"
+    password = "password"
+    user_custom_channel = "channel1"
+    sg_doc_xattrs_id = 'user_xattrs_format_0'
+    sg_conf_name = "custom_sync/sync_gateway_custom_sync"
+    sg_config = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    sg_client = MobileRestClient()
+
+    # 1. have sync function with xattrs key and channel assignment of user xattrs
+    temp_sg_config = replace_xattrs_sync_func_in_config(sg_config, user_custom_channel)
+    c_cluster = cluster.Cluster(config=cluster_config)
+    c_cluster.reset(sg_config_path=temp_sg_config)
+
+    cbs_ip = c_cluster.servers[0].host
+    cbs_bucket = c_cluster.servers[0].get_bucket_names()[0]
+    sdk_bucket = get_sdk_client_with_bucket(ssl_enabled, c_cluster, cbs_ip, cbs_bucket)
+    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=sg_channels1)
+    auto_user = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username)
+
+    # 2. Create doc in SGW
+    sg_docs = document.create_docs('user_xattrs_format', content="sgw-content", number=2)
+    sg_client.add_bulk_docs(url=sg_admin_url, db=sg_db, docs=sg_docs)
+
+    # 3. Get revision of the doc
+    raw_doc = sg_client.get_raw_doc(sg_admin_url, sg_db, sg_doc_xattrs_id)
+    rev_gen1 = int(raw_doc["_sync"]["rev"].split("-")[0])
+
+    # 4. Update user xattrs on docs via sdk
+    # 5. Also  update doc via sdk/SGW in parallel
+    if update_source == "sdk":
+        sdk_bucket.mutate_in(sg_doc_xattrs_id, [SD.upsert(user_custom_channel, sg_channel1_value1, xattr=True, create_parents=True)])
+        sdk_doc = sdk_bucket.get(sg_doc_xattrs_id)
+        doc_body = sdk_doc.value
+        doc_body['content'] = "updated_doc_content"
+        sdk_bucket.upsert(sg_doc_xattrs_id, doc_body)
+    else:
+        sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=auto_user)["rows"]
+        with ThreadPoolExecutor(max_workers=2) as tpe:
+            sdk_mutate = tpe.submit(sdk_bucket.mutate_in, sg_doc_xattrs_id, [SD.upsert(user_custom_channel, sg_channel1_value1, xattr=True, create_parents=True)])
+            sg_client.update_doc(url=sg_url, db=sg_db, doc_id=sg_doc_xattrs_id, number_updates=1, auth=auto_user)
+            sdk_mutate.result()
+    sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=auto_user)["rows"]
+    assert len(sg_docs) == 1, "docs still exist in old channel even after replacing the user xattrs"
+
+    # 6. Wait until docs imported and docs processed via sync function and verify the revision generated and incremented by 1
+    raw_doc = sg_client.get_raw_doc(sg_admin_url, sg_db, sg_doc_xattrs_id)
+    rev_gen2 = int(raw_doc["_sync"]["rev"].split("-")[0])
+    assert rev_gen2 == rev_gen1 + 1, "revision did not get incremented though there is a update on doc via SDK"
+
+
+@pytest.mark.channels
+@pytest.mark.syncgateway
+def test_rev_generation_with_largexattrs(params_from_base_test_setup):
+    """
+    @summary:
+        1. Have sync function with xattrs key and channel assignment of user xattrs
+            function (doc, oldDoc, meta){
+            if (meta.xattrs.myXattr !== undefined){
+                channel(meta.xattrs.myXattr);
+            }
+            }
+        2. Create doc in SDK
+        3. Wait until docs imported to SGW
+        4. Update user xattrs with 25 channels on docs via sdk :
+        sync_xattrs: {
+            channel1 : ""abc1"",
+            channel2 : ""abc2"",
+                |
+                |
+                |
+                |
+                |
+                |
+            may be to 25 channels
+            channel25 : ""abc25""
+        }
+        5. Verfy no rev changes. verify delta _sync stats
+    """
+    sg_db = "db"
+    # sg_url = params_from_base_test_setup["sg_url"]
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+    ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
+
+    if not xattrs_enabled or sync_gateway_version < "3.0.0":
+        pytest.skip('Test did not enable xattrs or sgw version is not 3.0 and above')
+
+    sg_channel1_value1 = "abc"
+
+    sg_channels1 = [sg_channel1_value1]
+    username = "autotest"
+    password = "password"
+    user_custom_channel = "channel1"
+    sg_doc_xattrs_id = 'sdk_0'
+    sg_conf_name = "custom_sync/sync_gateway_custom_sync"
+    number_of_sdk_docs = 1
+    sg_config = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+
+    sg_client = MobileRestClient()
+
+    # 1. Have sync function with xattrs key and channel assignment of user xattrs
+    temp_sg_config = replace_xattrs_sync_func_in_config(sg_config, user_custom_channel)
+    c_cluster = cluster.Cluster(config=cluster_config)
+    c_cluster.reset(sg_config_path=temp_sg_config)
+
+    cbs_ip = c_cluster.servers[0].host
+    sg1 = c_cluster.sync_gateways[0]
+    cbs_bucket = c_cluster.servers[0].get_bucket_names()[0]
+    sdk_bucket = get_sdk_client_with_bucket(ssl_enabled, c_cluster, cbs_ip, cbs_bucket)
+    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=sg_channels1)
+    # auto_user = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username)
+    # 2. Create doc in SDK
+    sdk_doc_bodies = document.create_docs('sdk', number=number_of_sdk_docs)
+    sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
+    # sdk_doc_ids = [doc for doc in sdk_docs]
+    sdk_bucket.upsert_multi(sdk_docs)
+
+    # 3. Wait until docs imported to SGW
+    retries = 3
+    count = 0
+    while count < retries:
+        sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db)["rows"]
+        if len(sg_docs) >= number_of_sdk_docs:
+            break
+        else:
+            count += 1
+            time.sleep(1)
+
+    # Get revision before the update
+    raw_doc = sg_client.get_raw_doc(sg_admin_url, sg_db, sg_doc_xattrs_id)
+    rev_gen1 = int(raw_doc["_sync"]["rev"].split("-")[0])
+
+    # 4. Update user xattrs with 25 channels on docs via sdk
+    channel_list = []
+    for i in range(25):
+        channel_value = "channel" + str(i)
+        channel_list.append(channel_value)
+        sdk_bucket.mutate_in(sg_doc_xattrs_id, [SD.upsert(user_custom_channel, channel_value, xattr=True, create_parents=True)])
+
+    for i in range(10):
+        channel_item = random.choice(channel_list)
+        temp_sg_config = replace_xattrs_sync_func_in_config(sg_config, channel_item)
+        sg1.restart(config=temp_sg_config, cluster_config=cluster_config)
+
+    # 5. Verfy no rev changes. verify delta _sync stats
+    raw_doc = sg_client.get_raw_doc(sg_admin_url, sg_db, sg_doc_xattrs_id)
+    rev_gen2 = int(raw_doc["_sync"]["rev"].split("-")[0])
+    assert rev_gen2 == rev_gen1, "revision did not get incremented though there is a update on doc via SDK"
 
 
 def update_user_xattrs(sdk_client, channel, channel_value, doc_ids):
@@ -605,6 +905,13 @@ def update_doctype_by_syncfn(sg_config, channel1, data_type):
             } else {
                 channel("ch_xyz");
             }
+        }
+        }` """
+    elif data_type == "integer":
+        sync_func_string = """ `function (doc, oldDoc, meta){
+        if(meta.xattrs.""" + channel1 + """ != undefined){
+            console.log("have channel1")
+            expiry(meta.xattrs.""" + channel1 + """);
         }
         }` """
     else:
