@@ -2940,7 +2940,12 @@ def test_resetCheckpointWithPurge(params_from_base_test_setup, replication_type,
 
     # Wait until replication is idle and verify purged docs in cbl is not replicated in sg
     if replication_type == "one_way":
-        replicator.setReplicatorType(repl_config, "pull")
+        if target_db == "sg":
+            repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channel,
+                                               replicator_authenticator=replicator_authenticator, replication_type="pull")
+        else:
+            repl_config = replicator.configure(cbl_db, target_db=cbl_db2, continuous=True,
+                                               replicator_authenticator=replicator_authenticator, replication_type="pull")
         repl = replicator.create(repl_config)
         replicator.start(repl)
         replicator.wait_until_replicator_idle(repl)
