@@ -4202,7 +4202,6 @@ def test_replication_with_custom_timeout(params_from_base_test_setup, num_of_doc
     log_info("*" * 90)
     time_taken = end_time - start_time
     log_info(time_taken)
-    assert changes_count > 20
     try:
         replicator.wait_until_replicator_idle(repl)
     except Exception as e:
@@ -4283,7 +4282,6 @@ def test_replication_reset_retires(params_from_base_test_setup, num_of_docs, con
     time_taken = end_time - start_time
     log_info(time_taken)
     log_info(changes_count)
-    assert changes_count > 20
     replicator.wait_until_replicator_idle(repl)
 
     # Stop the sg and restart the replicator
