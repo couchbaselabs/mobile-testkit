@@ -668,7 +668,7 @@ def test_missing_xattrs_key(params_from_base_test_setup, missing_type):
     sg_docs = document.create_docs('user_xattrs_format', number=2)
     sg_client.add_bulk_docs(url=sg_admin_url, db=sg_db, docs=sg_docs)
 
-    # 4. Update doc with SDK to add user xattr
+    # 5. Update doc with SDK to add user xattr
     if missing_type != "server_user_xattrs":
         sdk_bucket.mutate_in(doc_xattrs_id, [SD.upsert(user_custom_channel1, sg_channel1_value, xattr=True, create_parents=True)])
 
@@ -680,8 +680,6 @@ def test_missing_xattrs_key(params_from_base_test_setup, missing_type):
 
     raw_doc = sg_client.get_raw_doc(sg_admin_url, sg_db, doc_xattrs_id)
 
-    # 6. Perform raw GET only on one doc to ensure added xattr is imported
-    # raw_doc["_meta"]["xattrs"][user_custom_channel1]
     if missing_type == "user_xattrs_key":
         try:
             raw_doc["_meta"]["xattrs"][user_custom_channel1]
