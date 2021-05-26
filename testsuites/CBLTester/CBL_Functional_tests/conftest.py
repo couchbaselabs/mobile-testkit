@@ -183,6 +183,10 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="If set, will enable SSL communication between server and Sync Gateway")
 
+    parser.addoption("--magma-storage",
+                     action="store_true",
+                     help="magma-storage: Enable magma storage on couchbase server")
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -228,6 +232,7 @@ def params_from_base_suite_setup(request):
     skip_couchbase_provision = request.config.getoption("--skip-couchbase-provision")
     enable_cbs_developer_preview = request.config.getoption("--enable-cbs-developer-preview")
     cbs_ssl = request.config.getoption("--server-ssl")
+    magma_storage_enabled = request.config.getoption("--magma-storage")
 
     test_name = request.node.name
 
@@ -379,6 +384,13 @@ def params_from_base_suite_setup(request):
         log_info("Running tests with cbs <-> sg ssl disabled")
         # Disable ssl in cluster configs
         persist_cluster_config_environment_prop(cluster_config, 'cbs_ssl_enabled', False)
+
+    if magma_storage_enabled:
+        log_info("Running with magma storage")
+        persist_cluster_config_environment_prop(cluster_config, 'magma_storage_enabled', True, False)
+    else:
+        log_info("Running without magma storage")
+        persist_cluster_config_environment_prop(cluster_config, 'magma_storage_enabled', False, False)
 
     # As cblite jobs run with on Centos platform, adding by default centos to environment config
     persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "centos", False)
