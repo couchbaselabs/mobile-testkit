@@ -7,7 +7,7 @@ from generate_clusters_from_pool import get_hosts
 import paramiko
 
 
-def install_keys(public_key_path, user_name, ssh_password, hosts):
+def install_keys(public_key_path, user_name, ssh_password, hosts=None):
 
     if hosts is None:
         hosts, _ = get_hosts()
