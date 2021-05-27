@@ -16,6 +16,7 @@ from keywords import document
 from keywords.utils import host_for_url
 from couchbase.bucket import Bucket
 from keywords.MobileRestClient import MobileRestClient
+from utilities.cluster_config_utils import load_cluster_config_json
 
 import pytest
 import time
@@ -41,6 +42,7 @@ def test_sg_replicate_basic_test(params_from_base_test_setup):
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     prometheus_enabled = params_from_base_test_setup["prometheus_enabled"]
     sg_ssl = params_from_base_test_setup["sg_ssl"]
+    sg_platform = params_from_base_test_setup["sg_platform"]
 
     log_info("Running 'test_sg_replicate_basic_test'")
     log_info("Using cluster_config: {}".format(cluster_config))
@@ -164,7 +166,13 @@ def test_sg_replicate_basic_test(params_from_base_test_setup):
         assert verify_stat_on_prometheus("sgw_replication_sgr_num_docs_pushed"), expvars["syncgateway"]["per_replication"][replication_id]["sgr_num_docs_pushed"]
     if not prometheus_enabled and sync_gateway_version >= "2.8.0":
         cluster = Cluster(config=cluster_config)
-        remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip)
+        if sg_platform == "windows" or sg_platform == "macos":
+            json_cluster = load_cluster_config_json(cluster_config)
+            sghost_username = json_cluster["sync_gateways:vars"]["ansible_user"]
+            sghost_password = json_cluster["sync_gateways:vars"]["ansible_password"]
+            remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip, sg_platform, sghost_username, sghost_password)
+        else:
+            remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip)
         if sg_ssl:
             _, stdout, _ = remote_executor.execute("curl -k https://localhost:4986/_metrics")
             assert "go_gc_duration_seconds" in stdout[0]
