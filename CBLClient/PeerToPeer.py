@@ -96,7 +96,8 @@ class PeerToPeer(object):
     def configure(self, host, server_db_name, client_database, port=5000, continuous=None, authenticator=None,
                   replication_type=None, documentIDs=None, endPointType="MessageEndPoint", basic_auth=None,
                   push_filter=False, pull_filter=False, filter_callback_func='', conflict_resolver="", tls_disable=True,
-                  tls_auth_type="tls", tls_authenticator=False, server_verification_mode=False):
+                  tls_auth_type="tls", tls_authenticator=False, server_verification_mode=False, retries=None,
+                  max_timeout_interval=None):
         args = Args()
         args.setString("host", host)
         args.setInt("port", port)
@@ -120,6 +121,11 @@ class PeerToPeer(object):
             args.setMemoryPointer("basic_auth", basic_auth)
         if tls_disable is not None:
             args.setBoolean("tls_disable", tls_disable)
+        if retries is not None:
+            args.setString("max_retries", retries)
+        if max_timeout_interval is not None:
+            args.setString("max_timeout", max_timeout_interval)
+
         args.setString("tls_auth_type", tls_auth_type)
         args.setBoolean("tls_authenticator", tls_authenticator)
         args.setBoolean("server_verification_mode", server_verification_mode)

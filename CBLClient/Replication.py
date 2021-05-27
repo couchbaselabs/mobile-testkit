@@ -29,7 +29,8 @@ class Replication(object):
                   replication_type="push_pull", continuous=False,
                   push_filter=False, pull_filter=False, channels=None,
                   documentIDs=None, replicator_authenticator=None,
-                  headers=None, filter_callback_func='', conflict_resolver='', heartbeat=''):
+                  headers=None, filter_callback_func='', conflict_resolver='',
+                  heartbeat=None, max_retries=None, max_retry_wait_time=None):
         args = Args()
         args.setMemoryPointer("source_db", source_db)
         args.setBoolean("continuous", continuous)
@@ -37,8 +38,16 @@ class Replication(object):
         args.setBoolean("pull_filter", pull_filter)
         args.setString("filter_callback_func", filter_callback_func)
         args.setString("conflict_resolver", conflict_resolver)
-        if heartbeat != "":
+
+        if max_retries is not None:
+            args.setString("max_retries", max_retries)
+
+        if max_retry_wait_time is not None:
+            args.setString("max_timeout", max_retry_wait_time)
+
+        if heartbeat is not None:
             args.setString("heartbeat", heartbeat)
+
         if channels is not None:
             args.setArray("channels", channels)
 
@@ -280,7 +289,7 @@ class Replication(object):
         return self._client.invokeMethod("replicator_changeListenerGetChanges", args)
 
     def configure_and_replicate(self, source_db, replicator_authenticator=None, target_db=None, target_url=None, replication_type="push_pull", continuous=True,
-                                channels=None, err_check=True, wait_until_idle=True, heartbeat=''):
+                                channels=None, err_check=True, wait_until_idle=True, heartbeat=None):
         if target_db is None:
             repl_config = self.configure(source_db, target_url=target_url, continuous=continuous,
                                          replication_type=replication_type, channels=channels, replicator_authenticator=replicator_authenticator, heartbeat=heartbeat)
@@ -306,7 +315,7 @@ class Replication(object):
             else:
                 break
 
-    def wait_until_replicator_idle(self, repl, err_check=True, max_times=150, sleep_time=2):
+    def wait_until_replicator_idle(self, repl, err_check=True, max_times=150, sleep_time=2, max_timeout=600):
         count = 0
         idle_count = 0
         max_idle_count = 3
@@ -342,7 +351,7 @@ class Replication(object):
                 if err is not None and err != 'nil' and err != -1:
                     if not isContinous:
                         raise Exception("Error while replicating", err)
-                    if is_replicator_in_connection_retry(err) and (cur_timestamp - begin_timestamp) < 600:
+                    if is_replicator_in_connection_retry(err) and (cur_timestamp - begin_timestamp) < max_timeout:
                         log_info("Replicator connection is retrying, please wait ......")
                     else:
                         raise Exception("Error while replicating", err)
@@ -359,13 +368,17 @@ class Replication(object):
                 raise Exception("total is less than completed")
 
     def create_session_configure_replicate(self, baseUrl, sg_admin_url, sg_db, username, password,
-                                           channels, sg_client, cbl_db, sg_blip_url, replication_type=None, continuous=True):
+                                           channels, sg_client, cbl_db, sg_blip_url, replication_type=None,
+                                           continuous=True, max_retries=None, max_retry_wait_time=None):
 
         authenticator = Authenticator(baseUrl)
         cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
         session = cookie, session_id
         replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
-        repl_config = self.configure(cbl_db, sg_blip_url, continuous=continuous, channels=channels, replication_type=replication_type, replicator_authenticator=replicator_authenticator)
+        repl_config = self.configure(cbl_db, sg_blip_url, continuous=continuous, channels=channels,
+                                     replication_type=replication_type,
+                                     replicator_authenticator=replicator_authenticator,
+                                     max_retries=max_retries, max_retry_wait_time=max_retry_wait_time)
         repl = self.create(repl_config)
         self.start(repl)
         self.wait_until_replicator_idle(repl)

@@ -20,6 +20,7 @@ from keywords import document, attachment
 from libraries.testkit import cluster
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
 from keywords.attachment import generate_2_png_100_100
+from keywords.SyncGateway import SyncGateway
 
 
 @pytest.fixture(scope="function")
@@ -2939,7 +2940,12 @@ def test_resetCheckpointWithPurge(params_from_base_test_setup, replication_type,
 
     # Wait until replication is idle and verify purged docs in cbl is not replicated in sg
     if replication_type == "one_way":
-        replicator.setReplicatorType(repl_config, "pull")
+        if target_db == "sg":
+            repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channel,
+                                               replicator_authenticator=replicator_authenticator, replication_type="pull")
+        else:
+            repl_config = replicator.configure(cbl_db, target_db=cbl_db2, continuous=True,
+                                               replicator_authenticator=replicator_authenticator, replication_type="pull")
         repl = replicator.create(repl_config)
         replicator.start(repl)
         replicator.wait_until_replicator_idle(repl)
@@ -4037,6 +4043,266 @@ def test_replication_pull_from_empty_database(params_from_base_test_setup, attac
     cbl_doc_ids = db.getDocIds(cbl_db)
     cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
     assert len(cbl_docs) == 75, "The number of docs pull from SGW is incorrect"
+
+
+@pytest.mark.listener
+@pytest.mark.replication
+@pytest.mark.parametrize("num_of_docs, continuous, wait_time, retries, type", [
+    pytest.param(500, True, "2", "10", "pull"),
+    pytest.param(500, True, "3", "10", "push"),
+    pytest.param(500, True, "6", "4", "pull-push"),
+])
+def test_replication_with_custom_retries(params_from_base_test_setup, num_of_docs, continuous, wait_time, retries,
+                                         type):
+    """
+        @summary:
+        1. Create CBL DB and create bulk doc in CBL
+        2. Configure replication with valid values of valid cbl Db, valid target url
+        3. Start replication with push and pull
+        4. Verify replication is successful and verify docs exist
+    """
+    sg_db = "db"
+    sg_url = params_from_base_test_setup["sg_url"]
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_blip_url = params_from_base_test_setup["target_url"]
+    base_url = params_from_base_test_setup["base_url"]
+    sg_config = params_from_base_test_setup["sg_config"]
+    db = params_from_base_test_setup["db"]
+    cbl_db = params_from_base_test_setup["source_db"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+
+    if sync_gateway_version < "2.0.0":
+        pytest.skip('This test cannot run with sg version below 2.0')
+    channels_sg = ["replicator"]
+    username = "autotest"
+    password = "password"
+
+    # Create CBL database
+    sg_client = MobileRestClient()
+
+    # Reset cluster to ensure no data in system
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
+    sg_controller = SyncGateway()
+
+    # Configure replication with push_pull
+    replicator = Replication(base_url)
+    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg)
+    session, replicator_authenticator, repl = replicator.create_session_configure_replicate(
+        base_url, sg_admin_url, sg_db, username, password, channels_sg, sg_client, cbl_db, sg_blip_url,
+        continuous=continuous, replication_type=type, max_retry_wait_time=wait_time, max_retries=retries)
+
+    if type == "pull":
+        sg_docs = sg_client.add_docs(url=sg_url, db=sg_db, number=num_of_docs, id_prefix="sg_doc", channels=channels_sg,
+                                     auth=session)
+    else:
+        db.create_bulk_docs(num_of_docs, "cbl-replicator-retries", db=cbl_db, channels=channels_sg)
+
+    start_time = time.time()
+    repl_change_listener = replicator.addChangeListener(repl)
+
+    # Stop Sync Gateway
+    sg_controller = SyncGateway()
+    sg_controller.stop_sync_gateways(cluster_config, url=sg_url)
+    end_time = time.time()
+    time.sleep(15)
+    sg_controller.start_sync_gateways(cluster_config, url=sg_url, config=sg_config)
+    changes_count = replicator.getChangesCount(repl_change_listener)
+    if wait_time == 2:
+        assert changes_count > 8
+    elif wait_time == 3:
+        assert changes_count > 4
+    log_info("*" * 90)
+    time_taken = end_time - start_time
+    log_info(time_taken)
+
+    replicator.wait_until_replicator_idle(repl)
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)
+    sg_docs = sg_docs["rows"]
+
+    # Verify database doc counts
+    cbl_doc_count = db.getCount(cbl_db)
+    assert len(sg_docs) == cbl_doc_count, "Expected number of docs does not exist in sync-gateway after replication"
+    total = replicator.getTotal(repl)
+    completed = replicator.getCompleted(repl)
+    replicator.stop(repl)
+    assert total == completed, "total is not equal to completed"
+
+
+@pytest.mark.listener
+@pytest.mark.replication
+@pytest.mark.parametrize("num_of_docs, continuous, wait_time, type", [
+    pytest.param(500, False, "1", "pull-push"),
+])
+def test_replication_with_custom_timeout(params_from_base_test_setup, num_of_docs, continuous, wait_time, type):
+    """
+        @summary:
+        Tests verify 9 retries and on-shot replicator
+        1. Create CBL DB and create bulk doc in CBL
+        2. Configure the replicator with single shot replicator
+        3. Stop the SG
+        4. Start replication with  pull-push
+        5. sleep until replicator completes 9 default attempts
+        6. Assert replicator error
+        7. Stop the SG
+        8. Start the replicator
+        9. Start the SG
+        10. Verify replication retries are resets and connects to SG
+        11. Verify replicator docs on SG
+
+    """
+    sg_db = "db"
+    sg_url = params_from_base_test_setup["sg_url"]
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_blip_url = params_from_base_test_setup["target_url"]
+    base_url = params_from_base_test_setup["base_url"]
+    sg_config = params_from_base_test_setup["sg_config"]
+    db = params_from_base_test_setup["db"]
+    cbl_db = params_from_base_test_setup["source_db"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+
+    if sync_gateway_version < "2.0.0":
+        pytest.skip('This test cannot run with sg version below 2.0')
+    channels_sg = ["replicator"]
+    username = "autotest"
+    password = "password"
+
+    # Create CBL database
+    sg_client = MobileRestClient()
+
+    # Reset cluster to ensure no data in system
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
+    sg_controller = SyncGateway()
+
+    # Configure replication with push_pull
+    replicator = Replication(base_url)
+    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg)
+    authenticator = Authenticator(base_url)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+    replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
+
+    repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=False, channels=channels_sg, max_retry_wait_time=wait_time,
+                                       replication_type=type, replicator_authenticator=replicator_authenticator)
+    repl = replicator.create(repl_config)
+    db.create_bulk_docs(num_of_docs, "cbl-replicator-retries", db=cbl_db, channels=channels_sg)
+    repl_change_listener = replicator.addChangeListener(repl)
+
+    # Stop Sync Gateway
+    sg_controller = SyncGateway()
+    sg_controller.stop_sync_gateways(cluster_config, url=sg_url)
+    start_time = time.time()
+    replicator.start(repl)
+    time.sleep(20)
+    sg_controller.start_sync_gateways(cluster_config, url=sg_url, config=sg_config)
+    end_time = time.time()
+    changes_count = replicator.getChangesCount(repl_change_listener)
+    log_info("*" * 90)
+    log_info(changes_count)
+    time_taken = end_time - start_time
+    log_info(time_taken)
+    try:
+        replicator.wait_until_replicator_idle(repl)
+    except Exception as e:
+        assert "Error while replicating" in str(e)
+        replicator.stop(repl)
+    assert False
+    replicator.stop(repl)
+
+
+@pytest.mark.listener
+@pytest.mark.replication
+@pytest.mark.parametrize("num_of_docs, continuous, retries, wait_time, type", [
+    pytest.param(500, True, "17", "10", "pull-push"),
+    pytest.param(500, True, "17", "10", "push")
+])
+def test_replication_reset_retires(params_from_base_test_setup, num_of_docs, continuous, retries, wait_time, type):
+    """
+        @summary:
+        Tests verify the reset retries and pull-push replicator
+        1. Create CBL DB and create bulk doc in CBL
+        2. Configure the replicator with single shot replicator
+        3. Stop the SG
+        4. Start SG
+        5. Make sure replicator connects
+        7. Stop the SG
+        9. Start the SG
+        10. Verify replication retries are resets and connects to SG
+        11. Verify replicator docs on SG
+
+    """
+    sg_db = "db"
+    sg_url = params_from_base_test_setup["sg_url"]
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_blip_url = params_from_base_test_setup["target_url"]
+    base_url = params_from_base_test_setup["base_url"]
+    sg_config = params_from_base_test_setup["sg_config"]
+    db = params_from_base_test_setup["db"]
+    cbl_db = params_from_base_test_setup["source_db"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+
+    if sync_gateway_version < "2.0.0":
+        pytest.skip('This test cannot run with sg version below 2.0')
+    channels_sg = ["replicator"]
+    username = "autotest"
+    password = "password"
+
+    # Create CBL database
+    sg_client = MobileRestClient()
+
+    # Reset cluster to ensure no data in system
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
+
+    # Configure replication with push_pull
+    replicator = Replication(base_url)
+    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg)
+    authenticator = Authenticator(base_url)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+    replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
+
+    repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=continuous, channels=channels_sg,
+                                       max_retry_wait_time=wait_time, max_retries=retries,
+                                       replication_type=type, replicator_authenticator=replicator_authenticator)
+    repl = replicator.create(repl_config)
+    db.create_bulk_docs(num_of_docs, "cbl-replicator-retries", db=cbl_db, channels=channels_sg)
+    repl_change_listener = replicator.addChangeListener(repl)
+
+    # Stop Sync Gateway
+    sg_controller = SyncGateway()
+    sg_controller.stop_sync_gateways(cluster_config, url=sg_url)
+    replicator.start(repl)
+    start_time = time.time()
+    sg_controller.start_sync_gateways(cluster_config, url=sg_url, config=sg_config)
+    end_time = time.time()
+    changes_count = replicator.getChangesCount(repl_change_listener)
+    log_info("*" * 90)
+    time_taken = end_time - start_time
+    log_info(time_taken)
+    log_info(changes_count)
+    replicator.wait_until_replicator_idle(repl)
+
+    # Stop the sg and restart the replicator
+    sg_controller.stop_sync_gateways(cluster_config, url=sg_url)
+
+    # start the sg before retries ends
+    # Adding enough sleep to wait for the retries
+    time.sleep(wait_time * (int(retries) - 5))
+    sg_controller.start_sync_gateways(cluster_config, url=sg_url, config=sg_config)
+    replicator.wait_until_replicator_idle(repl)
+
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)
+    sg_docs = sg_docs["rows"]
+    # Verify database doc counts
+    cbl_doc_count = db.getCount(cbl_db)
+    assert len(sg_docs) == cbl_doc_count, "Expected number of docs does not exist in sync-gateway after replication"
+    total = replicator.getTotal(repl)
+    completed = replicator.getCompleted(repl)
+    replicator.stop(repl)
+    assert total == completed, "total is not equal to completed"
 
 
 def update_and_resetCheckPoint(db, cbl_db, replicator, repl, replication_type, repl_config, num_of_updates):

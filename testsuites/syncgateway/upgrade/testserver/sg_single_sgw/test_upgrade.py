@@ -175,7 +175,7 @@ def test_upgrade(params_from_base_test_setup):
 
     num_sdk_docs = 10
     num_sg_docs = 10
-    log_info('Adding {} docs via SDK with and without attachments'.format(num_sdk_docs))
+    log_info('Adding {} docs via SDK '.format(num_sdk_docs))
     bucket_name = 'data-bucket'
     sdk_client = get_cluster('couchbase://{}'.format(primary_server.host), bucket_name)
     sdk_doc_bodies = document.create_docs('sdk', number=num_sdk_docs, channels=sg_user_channels)
