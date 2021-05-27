@@ -1,14 +1,16 @@
 import os
 import sys
+import json
 
 from optparse import OptionParser
 from generate_clusters_from_pool import get_hosts
 import paramiko
 
 
-def install_keys(public_key_path, user_name, ssh_password):
+def install_keys(public_key_path, user_name, ssh_password, hosts):
 
-    hosts, _ = get_hosts()
+    if hosts is None:
+        hosts, _ = get_hosts()
 
     print(("Deploying key '{0}' to vms: {1}".format(
         public_key_path, hosts
@@ -79,6 +81,15 @@ if __name__ == "__main__":
         default=None
     )
 
+    parser.add_option(
+        "", "--host-ips",
+        action="store",
+        type="string",
+        dest="host_ips",
+        help="host ip addresses in comma-separated format",
+        default=None
+    )
+
     cmd_args = sys.argv[1:]
     (opts, args) = parser.parse_args(cmd_args)
 
@@ -90,8 +101,14 @@ if __name__ == "__main__":
         print(">>> Please provide a PUBLIC key (.pub) to install on the remote machines")
         sys.exit(1)
 
+    hosts = None
+    if opts.host_ips is not None:
+        host_dict = json.loads(opts.host_ips)
+        hosts = host_dict["ips"]
+
     install_keys(
         opts.public_key_path,
         opts.ssh_user,
         opts.ssh_password,
+        hosts
     )
