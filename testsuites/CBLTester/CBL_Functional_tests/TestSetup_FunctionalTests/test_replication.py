@@ -4200,6 +4200,7 @@ def test_replication_with_custom_timeout(params_from_base_test_setup, num_of_doc
     end_time = time.time()
     changes_count = replicator.getChangesCount(repl_change_listener)
     log_info("*" * 90)
+    log_info(changes_count)
     time_taken = end_time - start_time
     log_info(time_taken)
     try:
