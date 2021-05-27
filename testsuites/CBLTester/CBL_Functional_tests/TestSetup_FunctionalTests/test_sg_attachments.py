@@ -14,16 +14,20 @@ from CBLClient.Authenticator import Authenticator
 
 @pytest.mark.channels
 @pytest.mark.syncgateway
-def test_delete_docs_with_attachments(params_from_base_test_setup):
+@pytest.mark.parametrize("source, target, docs", [
+    ('sg', 'sg', 10),
+    ('cbl', 'cbl' 100),
+    ('sg', 'cbl' 100),
+])
+def test_delete_docs_with_attachments(params_from_base_test_setup, source, num_of_docs):
     """
     :param params_from_base_test_setup:
     :param sg_conf_name:
     1. Have CBL and SG up and running
     2. Create docs with attachment on SG and CBL
     3. Replicate the docs
-    4. Delete few docs in CBL
-    5. Delete few docs in SG and pull CBL docs
-    6. Verify Attachments got deleted from the bucket
+    4. Delete few docs in CBL and pull CBL docs
+    5. Verify Attachments got deleted from the bucket
     """
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     if sync_gateway_version < "3.0.0":
@@ -38,8 +42,7 @@ def test_delete_docs_with_attachments(params_from_base_test_setup):
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
     mode = params_from_base_test_setup["mode"]
-    ssl_enabled = params_from_base_test_setup["ssl_enabled"]
-    num_of_docs = 10
+
 
     channels = ["attachments"]
     db = Database(base_url)
@@ -72,3 +75,7 @@ def test_delete_docs_with_attachments(params_from_base_test_setup):
     replicator.stop(repl)
     cbl_doc_ids = db.getDocIds(cbl_db)
     assert len(cbl_doc_ids) == len(sg_docs)
+
+    # 3. Delete doc in CBL/SG
+    db.cbl_delete_bulk_docs(cbl_db)
+    sg_client.delete_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=session)
