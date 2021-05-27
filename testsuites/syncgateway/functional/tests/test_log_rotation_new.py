@@ -460,7 +460,7 @@ def test_log_200mb(params_from_base_test_setup, sg_conf_name):
         _, stdout, _ = remote_executor.execute(command)
         output = stdout[0].strip()
         # A backup file should be created with 200MB
-        if (log == "sg_debug" or log == "sg_info") and (sg_platform != "windows" or sg_platform != "macos"):
+        if (log == "sg_debug" or log == "sg_info") and (sg_platform != "windows" and sg_platform != "macos"):
             assert int(output) == int(SG_LOGS_FILES_NUM[log]) + 1
         else:
             assert output == SG_LOGS_FILES_NUM[log]
@@ -809,7 +809,7 @@ def get_sgLogs_fileNum(SG_LOGS_MAXAGE, remote_executor, sg_platform="centos", sg
 
 def send_request_to_sgw(sg_one_url, sg_admin_url, remote_executor, sg_platform="centos"):
     if sg_platform == "windows":
-        command = "for ((i=1;i <= 3000;i += 1)); do curl -s {}/ABCD/ > /dev/null; done".format(sg_one_url)
+        command = "for ((i=1;i <= 2000;i += 1)); do curl -s {}/ABCD/ > /dev/null; done".format(sg_one_url)
         os.system(command)
         command = "for ((i=1;i <= 2000;i += 1)); do curl -s -H 'Accept: application/json' {}/db/ > /dev/null; done".format(sg_admin_url)
         os.system(command)
