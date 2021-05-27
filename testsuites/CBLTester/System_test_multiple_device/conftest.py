@@ -58,10 +58,6 @@ def pytest_addoption(parser):
                      action="store",
                      help="liteserv-ports: the ports to assign to liteserv")
 
-    parser.addoption("--liteserv-android-serial-numbers",
-                     action="store",
-                     help="liteserv-android-serial-numbers: the android device serial numbers")
-
     parser.addoption("--enable-sample-bucket",
                      action="store",
                      help="enable-sample-bucket: Enable a sample server bucket")
@@ -211,13 +207,11 @@ def params_from_base_suite_setup(request):
     liteserv_versions = request.config.getoption("--liteserv-versions")
     liteserv_hosts = request.config.getoption("--liteserv-hosts")
     liteserv_ports = request.config.getoption("--liteserv-ports")
-    liteserv_android_serial_numbers = request.config.getoption("--liteserv-android-serial-numbers")
 
     platform_list = liteserv_platforms.split(',')
     version_list = liteserv_versions.split(',')
     host_list = liteserv_hosts.split(',')
     port_list = liteserv_ports.split(',')
-    liteserv_android_serial_number = liteserv_android_serial_numbers.split(',')
 
     if len(platform_list) != len(version_list) != len(host_list) != len(port_list):
         raise Exception("Provide equal no. of Parameters for host, port, version and platforms")
@@ -253,8 +247,8 @@ def params_from_base_suite_setup(request):
     num_of_docs_to_delete = int(request.config.getoption("--num-of-docs-to-delete"))
     num_of_docs_to_add = int(request.config.getoption("--num-of-docs-to-add"))
     hide_product_version = request.config.getoption("--hide-product-version")
-    up_time = float(request.config.getoption("--up-time"))
     skip_couchbase_provision = request.config.getoption("--skip-couchbase-provision")
+    up_time = int(request.config.getoption("--up-time"))
     enable_cbs_developer_preview = request.config.getoption("--enable-cbs-developer-preview")
     # Changing up_time in days
     up_time = up_time * 24 * 60
@@ -262,7 +256,6 @@ def params_from_base_suite_setup(request):
 
     test_name = request.node.name
     testserver_list = []
-    android_device_idx = 0
     for platform, version, host, port in zip(platform_list,
                                              version_list,
                                              host_list,
@@ -280,9 +273,6 @@ def params_from_base_suite_setup(request):
 
             # Install TestServer app
             if device_enabled and (platform == "ios" or platform == "android"):
-                if platform == "android" and len(liteserv_android_serial_number) != 0:
-                    testserver.serial_number = liteserv_android_serial_number[android_device_idx]
-                    android_device_idx += 1
                 testserver.install_device()
             else:
                 testserver.install()
