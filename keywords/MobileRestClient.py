@@ -1248,7 +1248,7 @@ class MobileRestClient:
             doc["updates"] = current_update_number
             doc["_rev"] = current_rev
 
-            if attachment_name is not None:
+            if attachment_name is not None and not delete_attachment:
                 atts = attachment.load_from_data_dir([attachment_name])
                 doc["_attachments"] = {
                     atts[0].name: {"data": atts[0].data}
