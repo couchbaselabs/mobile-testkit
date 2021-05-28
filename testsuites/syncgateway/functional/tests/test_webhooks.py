@@ -330,10 +330,11 @@ def test_webhook_filter_external_js(params_from_base_test_setup, setup_webserver
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
     webhook_server = setup_webserver["webhook_server"]
+    xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
     sg_conf_name = "webhooks/webhook_filter_external_js"
 
-    if sync_gateway_version < "3.0.0":
-        pytest.skip("this feature not available below 3.0.0")
+    if sync_gateway_version < "3.0.0" or not xattrs_enabled:
+        pytest.skip("this feature cannot run with SGW version below 3.0.0 or xattrs not enabled")
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     cluster_helper = ClusterKeywords(cluster_config)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config)
@@ -352,9 +353,7 @@ def test_webhook_filter_external_js(params_from_base_test_setup, setup_webserver
     bucket = cluster.servers[0].get_bucket_names()[0]
     sdk_client = get_sdk_client_with_bucket(ssl_enabled, cluster, cbs_ip, bucket)
     js_func_key = "\"filter\":\""
-    # path = "http://{}:5007/webhookFilter".format(get_local_ip())
-    jscode_external_ip = "172.23.104.165"
-    path = "http://{}:5007/webhookFilter".format(jscode_external_ip)
+    path = "http://{}:5007/webhookFilter".format(get_local_ip())
     path = js_func_key + path + "\","
     temp_sg_config, _ = copy_sgconf_to_temp(sg_conf, mode)
     temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ webhook_filter }}", path)
@@ -427,10 +426,12 @@ def test_webhook_filter_external_https_js(params_from_base_test_setup, setup_web
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
     webhook_server = setup_webserver_js_sslon["webhook_server"]
+    xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
     sg_conf_name = "webhooks/webhook_filter_external_js"
 
-    if sync_gateway_version < "3.0.0":
-        pytest.skip('this feature not available below 3.0.0')
+    if sync_gateway_version < "3.0.0" or not xattrs_enabled:
+        pytest.skip("this feature cannot run with SGW version below 3.0.0 or xattrs not enabled")
+
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     cluster_helper = ClusterKeywords(cluster_config)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config)
