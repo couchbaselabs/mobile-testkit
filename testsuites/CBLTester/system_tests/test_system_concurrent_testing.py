@@ -2,7 +2,6 @@ import pytest
 import time
 import random
 from sys import maxsize
-from threading import Thread
 import concurrent.futures
 
 from keywords.MobileRestClient import MobileRestClient
@@ -63,6 +62,8 @@ def test_system(params_from_base_suite_setup):
             server_urls.append(server.url)
         primary_server = cluster.servers[0]
         servers = cluster.servers[1:]
+        log_info("primary server is: {}".format(primary_server))
+        log_info("servers: {}".format(servers))
 
     # Reset cluster to ensure no data in system
     cluster.reset(sg_config_path=sg_config)
@@ -104,6 +105,7 @@ def test_system(params_from_base_suite_setup):
 
     time.sleep(5)
 
+    # start run tests for each client in its thread
     with concurrent.futures.ThreadPoolExecutor(max_workers=len(cbl_db_obj_list)) as executor:
         futures = []
         for base_url, cbl_db, db_obj, db_name, platform, query in zip(base_url_list, cbl_db_obj_list, testkit_db_obj_list, cbl_db_name_list, platform_list, query_obj_list):
@@ -117,7 +119,8 @@ def test_system(params_from_base_suite_setup):
             cbl_doc_ids = doc_ids_dict[db_name]
             futures.append(executor.submit(process_per_cbl_client, sg_params, cbl_params, test_params, cbl_doc_ids))
         for future in concurrent.futures.as_completed(futures):
-            doc_ids_dict.update(future.result())
+            if future.result() is not None:
+                doc_ids_dict.update(future.result())
 
 
 def cbl_db_init(sg_params, cbl_params, test_params):
@@ -160,7 +163,7 @@ def cbl_db_init(sg_params, cbl_params, test_params):
 
 
 def process_per_cbl_client(sg_params, cbl_params, test_params, doc_ids):
-    # run test per cbl db from here 
+    # run test per cbl db from here
     query_limit = 1000
     query_offset = 0
 
@@ -171,10 +174,6 @@ def process_per_cbl_client(sg_params, cbl_params, test_params, doc_ids):
     num_of_docs_to_delete = test_params["num_of_docs_to_delete"]
     num_of_docs_to_add = test_params["num_of_docs_to_add"]
     doc_id_for_new_docs = test_params["num_of_docs"]
-    # num_of_docs = test_params["num_of_docs"]
-    # num_of_docs_in_itr = test_params["num_of_docs_in_itr"]
-    # num_of_itr_per_db = test_params["num_of_itr_per_db"]
-    # extra_docs_in_itr_per_db = test_params["extra_docs_in_itr_per_db"]
     num_of_doc_updates = test_params["num_of_doc_updates"]
     generator = test_params["generator"]
 
@@ -211,7 +210,7 @@ def process_per_cbl_client(sg_params, cbl_params, test_params, doc_ids):
         repl_obj.wait_until_replicator_idle(repl, max_times=maxsize, sleep_time=repl_status_check_sleep_time)
 
         current_time = datetime.now()
-        running_time = current_time + timedelta(seconds=up_time)
+        running_time = current_time + timedelta(minutes=up_time)
         x = 1
         while running_time - current_time > timedelta(0):
 
@@ -230,7 +229,6 @@ def process_per_cbl_client(sg_params, cbl_params, test_params, doc_ids):
             _log_system_test(thread_name, 'docs update on SG', "Updating {} docs on SG - {}".format(len(docs_to_update), docs_to_update))
             sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs,
                                   number_updates=num_of_doc_updates, auth=session, channels=sg_channels)
-            # repl_obj.wait_until_replicator_idle(repl, max_times=maxsize, sleep_time=repl_status_check_sleep_time)
 
             # Waiting until replicator finishes
             _replicaton_status_check(thread_name, repl_obj, repl, repl_status_check_sleep_time)
@@ -250,7 +248,6 @@ def process_per_cbl_client(sg_params, cbl_params, test_params, doc_ids):
                              "Updating {} docs on {} db - {}".format(updates_per_db, db_obj.getName(cbl_db), list(docs_to_update)))
             db_obj.update_bulk_docs(cbl_db, num_of_doc_updates, list(docs_to_update))
             time.sleep(5)
-            # repl_obj.wait_until_replicator_idle(repl, max_times=maxsize, sleep_time=repl_status_check_sleep_time)
 
             # updating docs will affect all dbs as they are synced with SG.
             _replicaton_status_check(thread_name, repl_obj, repl, repl_status_check_sleep_time)
@@ -260,9 +257,9 @@ def process_per_cbl_client(sg_params, cbl_params, test_params, doc_ids):
             if platform.lower() not in ("net-msft", "uwp", "xamarin-ios", "xamarin-android"):
                 _releaseQueryResults(base_url, results)
 
-            ###########################
-            # Deleting docs on SG side #
-            ###########################
+            #######################################
+            # Checking for doc delete on SG side  #
+            #######################################
             docs_to_delete = set(random.sample(doc_ids, num_of_docs_to_delete))
             sg_docs = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=list(docs_to_delete), auth=session)[0]
             _log_system_test("Thread {}".format(db_name),
@@ -270,7 +267,6 @@ def process_per_cbl_client(sg_params, cbl_params, test_params, doc_ids):
                              "Deleting {} docs on SG - {}".format(len(docs_to_delete), docs_to_delete))
             sg_client.delete_bulk_docs(url=sg_url, db=sg_db,
                                        docs=sg_docs, auth=session)
-            # repl_obj.wait_until_replicator_idle(repl, max_times=maxsize, sleep_time=repl_status_check_sleep_time)
 
             _replicaton_status_check(thread_name, repl_obj, repl, repl_status_check_sleep_time)
             results = query.query_get_docs_limit_offset(cbl_db, limit=query_limit, offset=query_offset)
@@ -279,13 +275,13 @@ def process_per_cbl_client(sg_params, cbl_params, test_params, doc_ids):
                 _releaseQueryResults(base_url, results)
 
             time.sleep(5)
-            # _check_doc_count(db_obj_list, cbl_db_list)
+            _check_doc_count(db_obj, cbl_db)
             # removing ids of deleted doc from the list
             doc_ids = doc_ids - docs_to_delete
 
-            ############################
-            # Deleting docs on CBL side #
-            ############################
+            #######################################
+            # Checking for doc delete on CBL side #
+            #######################################
             docs_to_delete = set(random.sample(doc_ids, num_of_docs_to_delete))
             docs_to_delete_per_db = len(docs_to_delete)
             _log_system_test("Thread {}".format(db_name),
@@ -293,7 +289,6 @@ def process_per_cbl_client(sg_params, cbl_params, test_params, doc_ids):
                              "deleting {} docs from {} db - {}".format(docs_to_delete_per_db, db_obj.getName(cbl_db), list(docs_to_delete)))
             db_obj.delete_bulk_docs(cbl_db, list(docs_to_delete))
             time.sleep(5)
-            # repl_obj.wait_until_replicator_idle(repl, max_times=maxsize, sleep_time=repl_status_check_sleep_time)
 
             _replicaton_status_check(thread_name, repl_obj, repl, repl_status_check_sleep_time)
 
@@ -303,7 +298,7 @@ def process_per_cbl_client(sg_params, cbl_params, test_params, doc_ids):
             if platform.lower() not in ("net-msft", "uwp", "xamarin-ios", "xamarin-android"):
                 _releaseQueryResults(base_url, results)
 
-            # _check_doc_count(db_obj_list, cbl_db_list)
+            _check_doc_count(db_obj, cbl_db)
             # removing ids of deleted doc from the list
             doc_ids = doc_ids - docs_to_delete
 
@@ -333,7 +328,6 @@ def process_per_cbl_client(sg_params, cbl_params, test_params, doc_ids):
                              "creating {} docs on {} - {}".format(len(docs_to_create), db_obj.getName(cbl_db), new_doc_ids))
             db_obj.saveDocuments(cbl_db, added_docs)
             time.sleep(5)
-            # repl_obj.wait_until_replicator_idle(repl, max_times=maxsize, sleep_time=repl_status_check_sleep_time)
 
             _replicaton_status_check(thread_name, repl_obj, repl, repl_status_check_sleep_time)
 
@@ -345,7 +339,8 @@ def process_per_cbl_client(sg_params, cbl_params, test_params, doc_ids):
 
             time.sleep(5)
             doc_id_for_new_docs += num_of_docs_to_add
-            # _check_doc_count(db_obj_list, cbl_db_list)
+            query_offset += query_limit
+            _check_doc_count(db_obj, cbl_db)
 
             current_time = datetime.now()
 
@@ -354,10 +349,11 @@ def process_per_cbl_client(sg_params, cbl_params, test_params, doc_ids):
 
         repl_obj.stop(repl)
         time.sleep(5)
-        # _check_doc_count(db_obj_list, cbl_db_list)
+        _check_doc_count(db_obj, cbl_db)
+
+        results = query.query_get_docs_limit_offset(cbl_db, limit=query_limit, offset=query_offset)
 
         return {db_name: doc_ids}
-        # results = query.query_get_docs_limit_offset(cbl_db, limit=query_limit, offset=query_offset)
     except (Exception, RuntimeError) as ex:
         _log_system_test(thread_name, "exception caught", ex)
         _log_system_test(thread_name, "quit smoothly")
@@ -371,14 +367,12 @@ def _replicaton_status_check(thread_name, repl_obj, replicator, repl_status_chec
     completed = repl_obj.getCompleted(replicator)
     _log_system_test(thread_name, "_replicaton_status_check", "total: {}".format(total))
     _log_system_test(thread_name, "_replicaton_status_check", "completed: {}".format(completed))
-    # assert total == completed, "total is not equal to completed"
 
 
-def _check_doc_count(db_obj_list, cbl_db_list):
-    new_docs_count = set([db_obj.getCount(cbl_db) for db_obj, cbl_db in zip(db_obj_list, cbl_db_list)])
+def _check_doc_count(db_obj, cbl_db):
+    new_docs_count = db_obj.getCount(cbl_db)
     log_info("Doc count is - {}".format(new_docs_count))
-    if len(new_docs_count) != 1:
-        assert 0, "Doc count in all DBs are not equal"
+    assert new_docs_count >= 0, "CBL DB is empty"
 
 
 def _releaseQueryResults(base_url, results):

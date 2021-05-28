@@ -168,8 +168,8 @@ def pytest_addoption(parser):
 
     parser.addoption("--up-time",
                      action="store",
-                     default="2",
-                     help="Specify the no. of days system test will execute. Default is 2 days")
+                     default="1",
+                     help="Specify the no. of days system test will execute. Default is 1 days")
 
     parser.addoption("--repl-status-check-sleep-time",
                      action="store",
@@ -240,10 +240,11 @@ def params_from_base_suite_setup(request):
     num_of_docs_to_delete = int(request.config.getoption("--num-of-docs-to-delete"))
     num_of_docs_to_add = int(request.config.getoption("--num-of-docs-to-add"))
     hide_product_version = request.config.getoption("--hide-product-version")
+    # test runtime in days, float type allow debug runs specify shorter time, i.e. a quarter day etc.
     up_time = float(request.config.getoption("--up-time"))
+    # convert to minutes
+    up_time = up_time * 24 * 60
     enable_cbs_developer_preview = request.config.getoption("--enable-cbs-developer-preview")
-    # Changing up_time in days
-    # up_time = up_time * 24 * 60
     repl_status_check_sleep_time = int(request.config.getoption("--repl-status-check-sleep-time"))
     test_name = request.node.name
 
@@ -425,7 +426,7 @@ def params_from_base_suite_setup(request):
                              max_size=1000 * 512 * 4, plain_text=True)
             log_info("Log files available at - {}".format(cbllog.get_directory()))
 
-        db_name = "{}-{}".format("cbl-system-test", i + 1)
+        db_name = "{}-{}-{}".format("cbl-sys-test", i + 1, str(time.time()))
         log_info("db name for {} is {}".format(base_url, db_name))
         cbl_db_name_list.append(db_name)
         db = Database(base_url)
