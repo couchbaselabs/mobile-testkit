@@ -18,6 +18,7 @@ from libraries.testkit.cluster import Cluster
 @pytest.mark.changes
 @pytest.mark.session
 @pytest.mark.channel
+@pytest.mark.oscertify
 def test_load_balance_sanity(params_from_base_test_setup):
 
     cluster_config = params_from_base_test_setup["cluster_config"]

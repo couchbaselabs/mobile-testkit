@@ -509,13 +509,13 @@ def test_webhook_filter_external_https_js(params_from_base_test_setup, setup_web
 def setup_webserver():
     webhook_server = WebServer()
     webhook_server.start()
-    # process = subprocess.Popen(args=["nohup", "python", "libraries/utilities/host_sgw_jscode.py", "--start", "&"], stdout=subprocess.PIPE)
+    process = subprocess.Popen(args=["nohup", "python", "libraries/utilities/host_sgw_jscode.py", "--start", "&"], stdout=subprocess.PIPE)
     yield{
         "webhook_server": webhook_server
     }
 
     webhook_server.stop()
-    # process.kill()
+    process.kill()
 
 
 @pytest.fixture(scope="function")
