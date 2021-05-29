@@ -8,8 +8,8 @@ from keywords.utils import version_and_build
 from keywords.utils import log_info
 from keywords.constants import BINARY_DIR
 from zipfile import ZipFile
-from libraries.provision.ansible_runner import AnsibleRunner
 import requests
+import subprocess
 
 class TestServerCpp(TestServerBase):
     def __init__(self, version_build, host, port, debug_mode=None, platform="javaws-centos", community_enabled=None):
@@ -42,7 +42,24 @@ class TestServerCpp(TestServerBase):
         """
          TODO: once we know the steps add it
         """
+        if version_build is not None:
+            self.version_build = version_build
+        app_name = self.app
+        expected_binary_path = "{}/{}/{}".format(BINARY_DIR, self.app_dir, app_name)
+        if os.path.exists(expected_binary_path):
+            log_info("Package is already downloaded. Skipping.")
+            return
+        # Package not downloaded, proceed to download from latest builds
+        downloaded_package_zip_name = "{}/{}".format(BINARY_DIR, self.package_name)
+        self.version, self.build = version_and_build(self.version_build)
+        if self.build is None:
+            url = "{}/couchbase-lite-c/{}/{}".format(RELEASED_BUILDS, self.version, self.package_name)
+        else:
+            url = "{}/couchbase-lite-c/{}/{}/{}".format(LATEST_BUILDS, self.version, self.build, self.package_name)
+        log_info("Downloading {} -> {}/{}".format(url, BINARY_DIR, self.package_name))
 
+        resp = requests.get(url, verify=False)
+        resp.raise_for_status()
         if self.platform == "c-macosx" or "c-linux":
             resp = requests.get(self.download_url, verify=False)
             resp.raise_for_status()
@@ -60,9 +77,11 @@ class TestServerCpp(TestServerBase):
 
     def start(self, logfile_name):
         if self.platform == "c-macosx":
-            status = self.ansible_runner.run_ansible_playbook("start-testserver-c-macosx.yml", extra_vars={
-                "binary_path": self.binary_path
-            })
+            # status = self.ansible_runner.run_ansible_playbook("start-testserver-c-macosx.yml", extra_vars={
+            #     "binary_path": self.binary_path
+            # })
+            commd = self.binary_path
+            subprocess.run([commd], shell=True)
         else:
             status = self.ansible_runner.run_ansible_playbook("start-testserver-c-linux.yml", extra_vars={
                 "binary_path": self.binary_path
