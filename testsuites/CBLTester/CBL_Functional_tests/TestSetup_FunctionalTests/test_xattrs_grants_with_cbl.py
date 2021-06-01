@@ -132,7 +132,7 @@ def test_reassigning_channels_using_user_xattrs(params_from_base_test_setup, set
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     cbl_db1 = setup_customized_teardown_test["cbl_db1"]
     cbl_db2 = setup_customized_teardown_test["cbl_db2"]
-    delta_sync_enabled = setup_customized_teardown_test["delta_sync_enabled"]
+    delta_sync_enabled = params_from_base_test_setup["delta_sync_enabled"]
 
     if sync_gateway_version < "3.0.0":
         pytest.skip('This test cannot run with sg version below 3.0.0')
