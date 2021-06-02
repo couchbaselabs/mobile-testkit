@@ -10,7 +10,7 @@
   ignore_errors: yes
   when: ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
 
-  - name: SYNC GATEWAY | Install sync_gateway deb
+- name: SYNC GATEWAY | Install sync_gateway deb
   become: yes
   shell: dpkg -i /tmp/{{ couchbase_sync_gateway_package }}
   when: ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
