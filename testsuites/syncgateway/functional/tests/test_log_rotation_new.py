@@ -460,7 +460,7 @@ def test_log_200mb(params_from_base_test_setup, sg_conf_name):
         _, stdout, _ = remote_executor.execute(command)
         output = stdout[0].strip()
         # A backup file should be created with 200MB
-        if (log == "sg_debug" or log == "sg_info") and (sg_platform != "windows" or sg_platform != "macos"):
+        if (log == "sg_debug" or log == "sg_info") and (sg_platform != "windows" and sg_platform != "macos"):
             assert int(output) == int(SG_LOGS_FILES_NUM[log]) + 1
         else:
             assert output == SG_LOGS_FILES_NUM[log]
