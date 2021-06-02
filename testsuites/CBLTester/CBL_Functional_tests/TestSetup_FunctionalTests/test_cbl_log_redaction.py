@@ -138,7 +138,7 @@ def verify_password_masked(liteserv_platform, log_file, password, test_cbllog):
            outside runner's file directory
     """
     delimiter = "/"
-    if liteserv_platform == "net-msft" or liteserv_platform == "uwp":
+    if "-msft" in liteserv_platform or liteserv_platform == "uwp":
         delimiter = "\\"
     log_dir = log_file.split(delimiter)[-1]
     log_full_path_dir = "/tmp/cbl-logs/"
