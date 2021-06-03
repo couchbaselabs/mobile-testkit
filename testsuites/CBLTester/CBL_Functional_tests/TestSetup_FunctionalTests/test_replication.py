@@ -4195,7 +4195,7 @@ def test_replication_with_custom_timeout(params_from_base_test_setup, num_of_doc
     sg_controller.stop_sync_gateways(cluster_config, url=sg_url)
     start_time = time.time()
     replicator.start(repl)
-    time.sleep(20)
+    time.sleep(60)
     sg_controller.start_sync_gateways(cluster_config, url=sg_url, config=sg_config)
     end_time = time.time()
     changes_count = replicator.getChangesCount(repl_change_listener)
@@ -4208,7 +4208,7 @@ def test_replication_with_custom_timeout(params_from_base_test_setup, num_of_doc
     except Exception as e:
         assert "Error while replicating" in str(e)
         replicator.stop(repl)
-    assert False
+    assert False, "Replicator is able to connect to SG"
     replicator.stop(repl)
 
 
@@ -4290,7 +4290,7 @@ def test_replication_reset_retires(params_from_base_test_setup, num_of_docs, con
 
     # start the sg before retries ends
     # Adding enough sleep to wait for the retries
-    time.sleep(wait_time * (int(retries) - 5))
+    time.sleep(int(wait_time) * (int(retries) - 5))
     sg_controller.start_sync_gateways(cluster_config, url=sg_url, config=sg_config)
     replicator.wait_until_replicator_idle(repl)
 
