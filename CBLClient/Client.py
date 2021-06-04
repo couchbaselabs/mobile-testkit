@@ -26,7 +26,7 @@ class Client(object):
                 os.mkdir('results')
             file_path = 'results/' + "api_list.txt"
             line_exists = False
-            with open(file_path, 'r+') as fh:
+            with open(file_path, 'a+') as fh:
                 lines = fh.readlines()
                 for line in lines:
                     if line == method:
