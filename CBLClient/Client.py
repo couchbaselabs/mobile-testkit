@@ -29,7 +29,7 @@ class Client(object):
             with open(file_path, 'a+') as fh:
                 lines = fh.readlines()
                 for line in lines:
-                    if line == method:
+                    if line == method + '\n':
                         line_exists = True
 
                 if not line_exists:
