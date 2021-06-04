@@ -1,5 +1,5 @@
 import json
-
+import os
 from requests import Session
 from requests import Response
 from CBLClient.ValueSerializer import ValueSerializer
@@ -21,6 +21,20 @@ class Client(object):
 
             url = self.base_url + "/" + method
             print("*********" + method + "********")
+
+            if not os.path.exists('results'):
+                os.mkdir('results')
+            file_path = 'results/' + "api_list.txt"
+            line_exists = False
+            with open(file_path, 'r+') as fh:
+                lines = fh.readlines()
+                for line in lines:
+                    if line == method:
+                        line_exists = True
+                        break
+
+                if not line_exists:
+                    fh.write(method)
 
             if args:
                 for k, v in args:
