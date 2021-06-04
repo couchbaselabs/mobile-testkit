@@ -20,6 +20,7 @@ class Client(object):
             body = {}
 
             url = self.base_url + "/" + method
+            print("*********" + method + "********")
 
             if args:
                 for k, v in args:
