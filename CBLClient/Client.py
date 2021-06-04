@@ -31,7 +31,6 @@ class Client(object):
                 for line in lines:
                     if line == method:
                         line_exists = True
-                        break
 
                 if not line_exists:
                     fh.write(method + '\n')
