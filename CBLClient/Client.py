@@ -34,7 +34,7 @@ class Client(object):
                         break
 
                 if not line_exists:
-                    fh.write(method)
+                    fh.write(method + '\n')
 
             if args:
                 for k, v in args:
