@@ -3,7 +3,7 @@ import time
 import random
 
 from keywords.MobileRestClient import MobileRestClient
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from keywords.SyncGateway import sync_gateway_config_path_for_mode, replace_xattrs_sync_func_in_config
 from keywords import document
 from libraries.testkit import cluster
@@ -768,7 +768,7 @@ def test_rev_with_docupdates_docxattrsupdate(params_from_base_test_setup, update
         sdk_bucket.upsert(sg_doc_xattrs_id, doc_body)
     else:
         sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=auto_user)["rows"]
-        with ThreadPoolExecutor(max_workers=2) as tpe:
+        with ProcessPoolExecutor(max_workers=1) as tpe:
             sdk_mutate = tpe.submit(sdk_bucket.mutate_in, sg_doc_xattrs_id, [SD.upsert(user_custom_channel, sg_channel1_value1, xattr=True, create_parents=True)])
             sg_client.update_doc(url=sg_url, db=sg_db, doc_id=sg_doc_xattrs_id, number_updates=1, auth=auto_user)
             sdk_mutate.result()
