@@ -29,8 +29,9 @@ class Client(object):
             with open(file_path, 'a+') as fh:
                 lines = fh.readlines()
                 for line in lines:
-                    if line == method + '\n':
+                    if method in line:
                         line_exists = True
+                        print(method)
 
                 if not line_exists:
                     fh.write(method + '\n')
