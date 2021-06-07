@@ -3,7 +3,7 @@ import time
 import random
 
 from keywords.MobileRestClient import MobileRestClient
-from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 from keywords.SyncGateway import sync_gateway_config_path_for_mode, replace_xattrs_sync_func_in_config
 from keywords import document
 from libraries.testkit import cluster
