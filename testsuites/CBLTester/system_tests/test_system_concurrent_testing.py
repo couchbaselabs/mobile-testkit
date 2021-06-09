@@ -17,6 +17,20 @@ from CBLClient.Utils import Utils
 @pytest.mark.listener
 @pytest.mark.replication
 def test_system(params_from_base_suite_setup):
+    """
+        @summary:
+        1. Initialize CBL clients:
+            - run each client in its own thread
+            - create the initial number of docs on each client
+            - docs created in batches with specified doc count by test settings
+        2. Run CBL clients concurrently in their threads:
+            - each thread maintains its own doc list
+            - each thread performs doc update/delete/create activities iteratively
+            - all clients run semitanously, one client fail will not interrupt other test runs
+        3. Termination occurs while:
+            - test span reaches the specified maximum test up_time or
+            - all clients failed
+    """
     sync_gateway_version = params_from_base_suite_setup["sync_gateway_version"]
     if sync_gateway_version < "2.0.0":
         pytest.skip('This test cannot run with sg version below 2.0')
@@ -166,6 +180,8 @@ def process_per_cbl_client(sg_params, cbl_params, test_params, doc_ids):
     # run test per cbl db from here
     query_limit = 1000
     query_offset = 0
+    # set the session ttl much longer than default 86,400
+    session_ttl = 900000
 
     # pulling test specific parameters
     up_time = test_params["up_time"]
@@ -199,7 +215,7 @@ def process_per_cbl_client(sg_params, cbl_params, test_params, doc_ids):
     try:
         repl_obj = Replication(base_url)
         authenticator = Authenticator(base_url)
-        cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, ttl=900000)
+        cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, ttl=session_ttl)
         replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
         session = cookie, session_id
         repl_config = repl_obj.configure(cbl_db, sg_blip_url, continuous=True, channels=sg_channels,
@@ -351,7 +367,7 @@ def process_per_cbl_client(sg_params, cbl_params, test_params, doc_ids):
         time.sleep(5)
         _check_doc_count(db_obj, cbl_db)
 
-        results = query.query_get_docs_limit_offset(cbl_db, limit=query_limit, offset=query_offset)
+        query.query_get_docs_limit_offset(cbl_db, limit=query_limit, offset=query_offset)
 
         return {db_name: doc_ids}
     except (Exception, RuntimeError) as ex:
