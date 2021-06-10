@@ -245,6 +245,7 @@ def test_invalid_external_jspath(params_from_base_test_setup, setup_jsserver):
     cluster_helper = ClusterKeywords(cluster_config)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config)
     sg_url = cluster_hosts["sync_gateways"][0]["public"]
+    flag = False
 
     if sync_gateway_version < "3.0.0":
         pytest.skip("this feature not available below 3.0.0")
@@ -268,10 +269,13 @@ def test_invalid_external_jspath(params_from_base_test_setup, setup_jsserver):
 
     try:
         requests.get(sg_url, timeout=30)
-        assert False, "Sync gateway started successfully with invalid external jsfile "
+        flag = True
     except Exception as he:
         log_info(str(he))
         log_info("Expected to have sync gateway fail to start")
+
+    if flag:
+        assert False, "Sync gateway started successfully with invalid external jsfile"
 
 
 @pytest.mark.syncgateway

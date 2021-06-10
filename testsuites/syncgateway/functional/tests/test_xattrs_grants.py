@@ -1,9 +1,10 @@
 import pytest
 import time
 import random
+import requests
 
 from keywords.MobileRestClient import MobileRestClient
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 from keywords.SyncGateway import sync_gateway_config_path_for_mode, replace_xattrs_sync_func_in_config
 from keywords import document
 from libraries.testkit import cluster
@@ -12,6 +13,7 @@ from keywords.couchbaseserver import get_sdk_client_with_bucket
 import couchbase.subdocument as SD
 from utilities.cluster_config_utils import copy_sgconf_to_temp, replace_string_on_sgw_config
 from libraries.testkit.admin import Admin
+from keywords.utils import log_info
 
 
 @pytest.mark.channels
@@ -606,7 +608,6 @@ def test_syncfunction_user_xattrs_dictionary_boolean_integer(params_from_base_te
 @pytest.mark.parametrize("missing_type", [
     pytest.param("user_xattrs_key"),
     pytest.param("server_user_xattrs"),
-    pytest.param("xattrs_disabled")
 ])
 def test_missing_xattrs_key(params_from_base_test_setup, missing_type):
     """
@@ -688,6 +689,56 @@ def test_missing_xattrs_key(params_from_base_test_setup, missing_type):
             assert '_meta' in str(ke), "did not get the _meta key error"
     else:
         assert raw_doc["_meta"]["xattrs"][user_custom_channel1] is None, "raw doc has _meta xattrs with user xattrs key missing on sgw config "
+
+
+@pytest.mark.channels
+@pytest.mark.syncgateway
+def test_xattrs_key_with_disabled_xattrs(params_from_base_test_setup):
+    """
+    @summary:
+    https://docs.google.com/spreadsheets/d/15zvscRgX2U2Q1xDpUwYU54G6tVmTv_lMDOSK8G-uzeo/edit#gid=793208277
+    covers #26
+    1. Disable xattrs and enable user xattrs key in sgw config
+    2. Verify SGW throws an error when starting the sgw
+    """
+
+    sg_url = params_from_base_test_setup["sg_url"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
+    flag = False
+
+    if sync_gateway_version < "3.0.0" or xattrs_enabled:
+        pytest.skip('SGW version is not 3.0 and above or xattrs has to be disabled')
+
+    user_custom_channel1 = "channel1"
+    sg_conf_name = "custom_sync/sync_gateway_custom_sync"
+    sg_config = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+
+    temp_sg_config, _ = copy_sgconf_to_temp(sg_config, mode)
+    temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ user_xattrs_key }}", "")
+    temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ sync_func }}", """ "" """)
+    c_cluster = cluster.Cluster(config=cluster_config)
+    c_cluster.reset(sg_config_path=temp_sg_config)
+    sg = c_cluster.sync_gateways[0]
+
+    temp_sg_config = replace_xattrs_sync_func_in_config(sg_config, user_custom_channel1)
+
+    with ProcessPoolExecutor(max_workers=2) as mp:
+        sgrestart = mp.submit(sg.restart, temp_sg_config, cluster_config)
+        time.sleep(60)
+    sgrestart.result(timeout=80)
+
+    try:
+        requests.get(sg_url, timeout=30)
+        flag = True
+    except Exception as he:
+        log_info(str(he))
+        log_info("Expected to have sync gateway fail to start")
+
+    if flag:
+        assert False, "Sync gateway started successfully with xattrs disabled and xattrs key enabled "
 
 
 @pytest.mark.channels
