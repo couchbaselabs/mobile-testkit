@@ -4205,11 +4205,11 @@ def test_replication_with_custom_timeout(params_from_base_test_setup, num_of_doc
     log_info(time_taken)
     try:
         replicator.wait_until_replicator_idle(repl)
+        replicator.stop(repl)
+        assert False, "Replicator is able to connect to SG"
     except Exception as e:
         assert "Error while replicating" in str(e)
         replicator.stop(repl)
-    assert False, "Replicator is able to connect to SG"
-    replicator.stop(repl)
 
 
 @pytest.mark.listener
