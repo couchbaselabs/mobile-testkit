@@ -707,7 +707,6 @@ def test_xattrs_key_with_disabled_xattrs(params_from_base_test_setup):
     mode = params_from_base_test_setup["mode"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
-    flag = False
 
     if sync_gateway_version < "3.0.0" or xattrs_enabled:
         pytest.skip('SGW version is not 3.0 and above or xattrs has to be disabled')
@@ -732,13 +731,10 @@ def test_xattrs_key_with_disabled_xattrs(params_from_base_test_setup):
 
     try:
         requests.get(sg_url, timeout=30)
-        flag = True
-    except Exception as he:
+        assert False, "Sync gateway started successfully with xattrs disabled and xattrs key enabled "
+    except ConnectionError as he:
         log_info(str(he))
         log_info("Expected to have sync gateway fail to start")
-
-    if flag:
-        assert False, "Sync gateway started successfully with xattrs disabled and xattrs key enabled "
 
 
 @pytest.mark.channels
