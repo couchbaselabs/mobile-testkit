@@ -236,13 +236,15 @@ def params_from_base_suite_setup(request):
     if not use_local_testserver:
         log_info("Downloading TestServer ...")
         # Download TestServer app
-        # testserver.download()
+        testserver.download()
 
         # Install TestServer app
         if device_enabled:
             testserver.install_device()
         else:
             testserver.install()
+
+        testserver.start()
 
     base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_travel_sample", mode)

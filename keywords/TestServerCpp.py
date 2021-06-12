@@ -25,10 +25,11 @@ class TestServerCpp(TestServerBase):
             self.build_type = "community"
         else:
             self.build_type = "enterprise"
-        if self.build is None:
-            self.package_name = "CBLTestServer-C-{}-{}".format(self.build_type, self.version)
-            self.download_url = "{}/couchbase-lite-c/{}/{}.zip".format(RELEASED_BUILDS, self.version, self.package_name)
-            self.binary_path = "{}/{}.exe".format(BINARY_DIR, self.package_name)
+        #if self.build is None:
+        self.package_name = "CBLTestServer_macosx_x64"
+                # "CBLTestServer_macosx-{}-{}".format(self.build_type, self.version)
+        self.download_url = "{}/couchbase-lite-c/{}/{}.zip".format(RELEASED_BUILDS, self.version, self.package_name)
+        self.binary_path = "{}/{}.exe".format(BINARY_DIR, self.package_name)
 
         self.build_name = "TestServer-C-{}-{}".format(self.build_type, self.version_build)
 
@@ -37,6 +38,12 @@ class TestServerCpp(TestServerBase):
         log_info("build_name: {}".format(self.build_name))
         log_info("self.platform = {}".format(self.platform))
 
+    def install(self):
+        """
+        Noop on Mac OSX. The LiteServ is a commandline binary
+        """
+        log_info("No install needed for macosx")
+
 
     def download(self, version_build=None):
         """
@@ -44,7 +51,7 @@ class TestServerCpp(TestServerBase):
         """
         if version_build is not None:
             self.version_build = version_build
-        app_name = self.app
+        app_name = self.package_name
         expected_binary_path = "{}/{}/{}".format(BINARY_DIR, self.app_dir, app_name)
         if os.path.exists(expected_binary_path):
             log_info("Package is already downloaded. Skipping.")
