@@ -314,7 +314,7 @@ def test_envVariables_on_sgw_config(params_from_base_test_setup, setup_env_varia
     sg_db = "db"
     channel = ["sgw-env-var"]
     sg_client = MobileRestClient()
-    bucket_names = get_buckets_from_sync_gateway_config(sg_conf)
+    bucket_names = get_buckets_from_sync_gateway_config(sg_conf, cluster_config)
     # set up environment variables on sync gateway
 
     if filter_type == "sync_function":
@@ -641,8 +641,8 @@ def setup_env_variables(params_from_base_test_setup):
     assert status == 0, "ansible failed to remove systemd environment variables directory"
 
 
-def construct_env_variables_string(sg_platform, sg_conf):
-    bucket_names = get_buckets_from_sync_gateway_config(sg_conf)
+def construct_env_variables_string(sg_platform, sg_conf, cluster_config):
+    bucket_names = get_buckets_from_sync_gateway_config(sg_conf, cluster_config)
     if sg_platform == "windows":
         environment_string = """[String[]] $v = @("bucketuser=""" + bucket_names[0] + """", "jsfunc=function(doc, oldDoc){throw({forbidden: 'read only!'})}")
         Set-ItemProperty HKLM:SYSTEM\CurrentControlSet\Services\SyncGateway -Name Environment -Value $v

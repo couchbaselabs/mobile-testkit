@@ -60,7 +60,7 @@ def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_conf
 
     cluster = Cluster(config=cluster_config)
     config_path_full = os.path.abspath(sync_gateway_config.config_path)
-    config = Config(config_path_full)
+    config = Config(config_path_full, cluster_config)
 
     is_valid, reason = validate_cluster(
         cluster.sync_gateways,

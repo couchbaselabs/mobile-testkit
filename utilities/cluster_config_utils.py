@@ -60,7 +60,7 @@ def persist_cluster_config_environment_prop(cluster_config, property_name, value
     if property_name_check is True:
         valid_props = ["cbs_ssl_enabled", "xattrs_enabled", "sg_lb_enabled", "sync_gateway_version", "server_version",
                        "no_conflicts_enabled", "sync_gateway_ssl", "sg_use_views", "number_replicas",
-                       "delta_sync_enabled", "x509_certs", "hide_product_version", "cbs_developer_preview"]
+                       "delta_sync_enabled", "x509_certs", "hide_product_version", "cbs_developer_preview", "disable_persistent_config"]
         if property_name not in valid_props:
             raise ProvisioningError("Make sure the property you are trying to change is one of: {}".format(valid_props))
 
@@ -328,3 +328,21 @@ def is_hide_prod_version_enabled(cluster_config):
         return cluster["environment"]["hide_product_version"]
     except KeyError:
         return False
+
+
+def is_centralized_persistent_config_disabled(cluster_config):
+    """ verify centralized persistent config enabled/disabled"""
+
+    cluster = load_cluster_config_json(cluster_config)
+    try:
+        return cluster["environment"]["disable_persistent_config"]
+    except KeyError:
+        return False
+
+
+def copy_json_to_temp_file(conf, temp_config="resources/temp/temp_config.json"):
+    config_path = os.path.abspath(temp_config)
+    file = open(config_path, "w+")
+    file.write(json.dumps(conf, indent=4))
+    file.close
+    return temp_config

@@ -1,4 +1,5 @@
 import requests
+import subprocess
 import json
 import concurrent.futures
 import os
@@ -29,12 +30,20 @@ class Admin:
         self.users = {}
         self._headers = {"Content-Type": "application/json"}
 
-    def create_db(self, name):
-        r = requests.put("{}/{}".format(self.admin_url, name), verify=False)
-        log_request(r)
-        log_response(r)
-        r.raise_for_status()
-        return r.json()
+    def create_db(self, db, db_config={}):
+        # config_data = '{\"import_docs\": true, \"enable_shared_bucket_access\": true}'
+        data = json.dumps(db_config)
+        resp = requests.put("{0}/{1}".format(self.admin_url, db), headers=self._headers, data=data)
+        log.info("PUT {}".format(resp.url))
+        resp.raise_for_status()
+        return resp.status_code
+
+    def create_db_with_rest(self, db, db_config={}):
+        db_config = json.dumps(db_config)
+        db_config = db_config.replace('"', '\\"')
+        command = 'curl -X PUT {0}/{1}/ -H "Content-Type: application/json" -d "{2}"'.format(self.admin_url, db, db_config)
+        command_output = subprocess.check_output(command, shell=True)
+        return command_output
 
     def delete_db(self, name):
         r = requests.delete("{}/{}".format(self.admin_url, name), verify=False)

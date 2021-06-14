@@ -314,6 +314,38 @@ class CouchbaseServer:
                 error_count += 1
                 time.sleep(1)
 
+    def _create_internal_rbac_user_by_roles(self, bucketname, cluster_config, rbac_user, roles):
+        # Create user with username=bucketname and assign role based on the parameter
+        roles = "{}[{}]".format(roles, bucketname)
+        password = 'password'
+        data_user_params = {
+            "name": rbac_user,
+            "roles": roles,
+            "password": password
+        }
+
+        log_info("Creating RBAC user {} with password {} and roles {}".format(rbac_user, password, roles))
+
+        rbac_url = "{}/settings/rbac/users/local/{}".format(self.url, rbac_user)
+
+        resp = None
+        error_count = 0
+        while True:
+            if error_count == self.max_retries:
+                log_info("Error! Could not create RBAC user after retries. ")
+                raise RBACUserCreationError("Error! Could not create RBAC user after retries. ")
+            try:
+                resp = self._session.put(rbac_url, data=data_user_params, auth=('Administrator', 'password'))
+                log_r(resp)
+                resp.raise_for_status()
+                # If request does not throw, exit retry loop
+                break
+            except HTTPError as h:
+                log_info("Hit a ConnectionError while trying to create RBAC user. Retrying ...")
+                log_info("resp code: {}; error: {}".format(resp, h))
+                error_count += 1
+                time.sleep(1)
+
     def _delete_internal_rbac_bucket_user(self, bucketname):
         # Delete user with username=bucketname
         data_user_params = {

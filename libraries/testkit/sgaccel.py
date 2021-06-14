@@ -68,7 +68,8 @@ class SgAccel:
             "couchbase_server_primary_node": couchbase_server_primary_node,
             "delta_sync": "",
             "prometheus": "",
-            "hide_product_version": ""
+            "hide_product_version": "",
+            "tls": ""
         }
 
         if get_sg_version(self.cluster_config) >= "2.1.0":

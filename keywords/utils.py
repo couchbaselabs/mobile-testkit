@@ -136,6 +136,19 @@ def hostname_for_url(cluster_config, url):
     raise ValueError("Could not find name for url: {} in cluster_config: {}".format(url, cluster_config))
 
 
+def ip_from_url(url):
+    # strip possible ports
+    url = url.replace("http://", "")
+    url = url.replace("https://", "")
+    url = url.replace(":4984", "")
+    url = url.replace(":4985", "")
+    url = url.replace(":8091", "")
+    url = url.replace("[", "")
+    ip = url.replace("]", "")
+
+    return ip
+
+
 def dump_file_contents_to_logs(filename):
     try:
         log_info("Contents of {}: {}".format(filename, open(filename).read()))
