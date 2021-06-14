@@ -1,0 +1,16 @@
+{
+    "db": {
+        "import_docs": true,
+        "enable_shared_bucket_access": true,
+        "revs_limit": 19,
+        "num_index_replicas": 0,
+        "username": "data-bucket-1623511291.250931",
+        "password": "password",
+        "delta_sync": {
+            "enabled": true
+        },
+        "rev_cache_size": 1000,
+        "server": "couchbases://192.168.33.10:11207",
+        "bucket": "data-bucket-1623511291.250931"
+    }
+}

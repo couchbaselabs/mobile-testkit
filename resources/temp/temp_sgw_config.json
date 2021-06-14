@@ -1,0 +1,12 @@
+{
+    "interface": ":4984",
+    "adminInterface": "0.0.0.0:4985",
+    "maxIncomingConnections": 0,
+    "maxFileDescriptors": 90000,
+    "compressResponses": false,
+    "logging": {
+        "debug": {
+            "enabled": true
+        }
+    }
+}
