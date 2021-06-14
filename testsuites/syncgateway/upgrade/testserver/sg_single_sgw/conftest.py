@@ -157,6 +157,11 @@ def pytest_addoption(parser):
                      help="Enabling CBS developer preview",
                      default=False)
 
+    parser.addoption("--disable-persistent-config",
+                     action="store_true",
+                     help="Centralized Persistent Config",
+                     default=True)
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -205,6 +210,7 @@ def params_from_base_suite_setup(request):
     hide_product_version = request.config.getoption("--hide-product-version")
     skip_couchbase_provision = request.config.getoption("--skip-couchbase-provision")
     enable_cbs_developer_preview = request.config.getoption("--enable-cbs-developer-preview")
+    disable_persistent_config = request.config.getoption("--disable-persistent-config")
 
     test_name = request.node.name
 
@@ -237,6 +243,7 @@ def params_from_base_suite_setup(request):
     log_info("cbs_toy_build: {}".format(cbs_toy_build))
     log_info("hide_product_version: {}".format(hide_product_version))
     log_info("enable_cbs_developer_preview: {}".format(enable_cbs_developer_preview))
+    log_info("disable_persistent_config: {}".format(disable_persistent_config))
 
     # if xattrs is specified but the post upgrade SG version doesn't support, don't continue
     if upgraded_xattrs_enabled and version_is_binary(sync_gateway_upgraded_version):
@@ -267,7 +274,6 @@ def params_from_base_suite_setup(request):
             testserver.install()
 
     base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
-    sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
 
     sg_db = "db"
     suite_cbl_db = None
@@ -369,6 +375,19 @@ def params_from_base_suite_setup(request):
     else:
         log_info("Running without CBS developer preview")
         persist_cluster_config_environment_prop(cluster_config, 'cbs_developer_preview', False)
+
+    if disable_persistent_config:
+        log_info(" disable persistent config")
+        persist_cluster_config_environment_prop(cluster_config, 'disable_persistent_config', True)
+    else:
+        log_info("Running without Centralized Persistent Config")
+        persist_cluster_config_environment_prop(cluster_config, 'disable_persistent_config', False)
+
+    if disable_persistent_config:
+        sgw_config = "sync_gateway_default_functional_tests"
+    else:
+        sgw_config = "sync_gateway_default_functional_tests_cpc"
+    sg_config = sync_gateway_config_path_for_mode(sgw_config, mode)
 
     persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "centos", False)
 
@@ -472,6 +491,7 @@ def params_from_base_suite_setup(request):
         "sg_db": sg_db,
         "sg_config": sg_config,
         "create_db_per_test": create_db_per_test,
+        "disable_persistent_config": disable_persistent_config
     }
 
     # Flush all the memory contents on the server app
