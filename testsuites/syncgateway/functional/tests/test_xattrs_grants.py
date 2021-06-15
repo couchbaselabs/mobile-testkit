@@ -815,10 +815,12 @@ def test_rev_with_docupdates_docxattrsupdate(params_from_base_test_setup, update
         sdk_bucket.upsert(sg_doc_xattrs_id, doc_body)
     else:
         sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=auto_user)["rows"]
-        with ThreadPoolExecutor(max_workers=1) as tpe:
+        """with ThreadPoolExecutor(max_workers=1) as tpe:
             sdk_mutate = tpe.submit(sdk_bucket.mutate_in, sg_doc_xattrs_id, [SD.upsert(user_custom_channel, sg_channel1_value1, xattr=True, create_parents=True)])
             sg_client.update_doc(url=sg_url, db=sg_db, doc_id=sg_doc_xattrs_id, number_updates=1, auth=auto_user)
-            sdk_mutate.result()
+            sdk_mutate.result()"""
+        sdk_bucket.mutate_in(sg_doc_xattrs_id, [SD.upsert(user_custom_channel, sg_channel1_value1, xattr=True, create_parents=True)])
+        sg_client.update_doc(url=sg_url, db=sg_db, doc_id=sg_doc_xattrs_id, number_updates=1, auth=auto_user)
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=auto_user)["rows"]
     assert len(sg_docs) == 1, "docs still exist in old channel even after replacing the user xattrs"
 
