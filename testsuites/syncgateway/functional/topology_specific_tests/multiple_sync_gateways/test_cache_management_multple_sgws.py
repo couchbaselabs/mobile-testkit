@@ -40,8 +40,8 @@ def test_importdocs_false_shared_bucket_access_true(params_from_base_test_setup)
     mode = params_from_base_test_setup['mode']
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
 
-    sg_conf1 = sync_gateway_config_path_for_mode(sg_conf_name1, mode, unique_bucket=False)
-    sg_conf2 = sync_gateway_config_path_for_mode(sg_conf_name2, mode, unique_bucket=False)
+    sg_conf1 = sync_gateway_config_path_for_mode(sg_conf_name1, mode)
+    sg_conf2 = sync_gateway_config_path_for_mode(sg_conf_name2, mode)
 
     sg_client = MobileRestClient()
     cluster_utils = ClusterKeywords(cluster_conf)

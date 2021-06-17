@@ -291,7 +291,7 @@ def params_from_base_suite_setup(request):
             testserver.install()
 
     base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
-    sg_config = sync_gateway_config_path_for_mode("listener_tests/multiple_sync_gateways", mode, unique_bucket=False)
+    sg_config = sync_gateway_config_path_for_mode("listener_tests/multiple_sync_gateways", mode)
 
     sg_db1 = "sg_db1"
     sg_db2 = "sg_db2"

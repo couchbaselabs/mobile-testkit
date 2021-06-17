@@ -34,7 +34,7 @@ def validate_sync_gateway_mode(mode):
         raise ValueError("Sync Gateway mode must be 'cc' (channel cache) or 'di' (distributed index)")
 
 
-def sync_gateway_config_path_for_mode(config_prefix, mode, unique_bucket=True):
+def sync_gateway_config_path_for_mode(config_prefix, mode):
     """Construct a sync_gateway config path depending on a mode
     1. Check that mode is valid ("cc" or "di")
     2. Construct the config path relative to the root of the repository
@@ -48,14 +48,14 @@ def sync_gateway_config_path_for_mode(config_prefix, mode, unique_bucket=True):
         raise ValueError("Could not file config: {}".format(config))
 
     # replace server bucket with unique bucket name
-    if unique_bucket:
+    """if unique_bucket:
         temp_sg_conf, _ = copy_sgconf_to_tempconfig_for_reset_method(config, mode)
         temp_sg_conf = replace_string_on_sgw_config(temp_sg_conf, '"data-bucket"', '"data-bucket-{}"'.format(time.time()))
         temp_sg_conf = replace_string_on_sgw_config(temp_sg_conf, '"data-bucket-1"', '"data-bucket-1-{}"'.format(time.time()))
         temp_sg_conf = replace_string_on_sgw_config(temp_sg_conf, '"data-bucket-2"', '"data-bucket-2-{}"'.format(time.time()))
         temp_sg_conf = replace_string_on_sgw_config(temp_sg_conf, '"data-bucket-3"', '"data-bucket-3-{}"'.format(time.time()))
         temp_sg_conf = replace_string_on_sgw_config(temp_sg_conf, '"data-bucket-4"', '"data-bucket-4-{}"'.format(time.time()))
-        config = temp_sg_conf
+        config = temp_sg_conf """
     return config
 
 
