@@ -18,7 +18,7 @@ from utilities.cluster_config_utils import get_revs_limit, get_redact_level, is_
 from utilities.cluster_config_utils import is_hide_prod_version_enabled, is_centralized_persistent_config_disabled
 from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version, is_x509_auth, generate_x509_certs
 from keywords.utils import add_cbs_to_sg_config_server_field, log_info, random_string
-from keywords.constants import SYNC_GATEWAY_CERT, SGW_DB_CONFIGS
+from keywords.constants import SYNC_GATEWAY_CERT, SGW_DB_CONFIGS, SYNC_GATEWAY_CONFIGS, SYNC_GATEWAY_CONFIGS_CPC
 from keywords.exceptions import ProvisioningError
 
 log = logging.getLogger(libraries.testkit.settings.LOGGER)
@@ -68,7 +68,7 @@ class SyncGateway:
 
     def start(self, config):
         # c_cluster = cluster.Cluster(self.cluster_config)
-        if get_sg_version(self.cluster_config) < "3.0.0" or is_centralized_persistent_config_disabled(self.cluster_config):
+        if get_sg_version(self.cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(self.cluster_config):
             playbook_vars, db_config_json = self.setup_sgwconfig_db_config(self.cluster_config, config)
         else:
             conf_path = os.path.abspath(config)
@@ -203,7 +203,7 @@ class SyncGateway:
             subset=self.hostname
         )
         if status == 0:
-            if get_sg_version(self.cluster_config) < "3.0.0" or is_centralized_persistent_config_disabled(self.cluster_config):
+            if get_sg_version(self.cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(self.cluster_config):
                 # Now create rest API for all database configs
                 sgw_list = [self]
                 send_dbconfig_as_restCall(db_config_json, sgw_list)
@@ -214,7 +214,7 @@ class SyncGateway:
         if cluster_config is None:
             cluster_config = self.cluster_config
         # c_cluster = cluster.Cluster(self.cluster_config)
-        if get_sg_version(self.cluster_config) < "3.0.0" or is_centralized_persistent_config_disabled(self.cluster_config):
+        if get_sg_version(self.cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(self.cluster_config):
             playbook_vars, db_config_json = self.setup_sgwconfig_db_config(cluster_config, config)
         else:
             conf_path = os.path.abspath(config)
@@ -351,7 +351,7 @@ class SyncGateway:
             subset=self.hostname
         )
         if status == 0:
-            if get_sg_version(self.cluster_config) < "3.0.0" or is_centralized_persistent_config_disabled(self.cluster_config):
+            if get_sg_version(self.cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(self.cluster_config):
                 # Now create rest API for all database configs
                 sgw_list = [self]
                 send_dbconfig_as_restCall(db_config_json, sgw_list)
@@ -1004,3 +1004,9 @@ def send_dbconfig_as_restCall(db_config_json, sync_gateways):
             # sgw.admin.create_db(sg_db)
             print("dbconfig value is :", db_config_json[sg_db])
             sgw.admin.create_db_with_rest(sg_db, db_config_json[sg_db])
+
+
+def get_cpc_sgw_config(sg_config_path):
+    # Get relavant cpc config for sgw config
+    sg_config_path = sg_config_path.replace(SYNC_GATEWAY_CONFIGS, SYNC_GATEWAY_CONFIGS_CPC)
+    return sg_config_path

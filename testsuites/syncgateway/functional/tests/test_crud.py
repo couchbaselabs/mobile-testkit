@@ -12,6 +12,7 @@ from keywords.exceptions import TimeoutException
 from utilities.cluster_config_utils import get_sg_version, persist_cluster_config_environment_prop, copy_to_temp_conf, get_cluster
 from libraries.testkit import cluster
 from couchbase.exceptions import DocumentNotFoundException
+from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
 
 
 @pytest.mark.syncgateway
@@ -91,7 +92,7 @@ def test_document_resurrection(params_from_base_test_setup, sg_conf_name, deleti
     sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
     sg_url = cluster_topology['sync_gateways'][0]['public']
 
-    bucket_name = 'data-bucket'
+    # bucket_name = 'data-bucket'
     sg_db = 'db'
     cbs_host = host_for_url(cbs_url)
 
@@ -105,7 +106,8 @@ def test_document_resurrection(params_from_base_test_setup, sg_conf_name, deleti
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
-
+    buckets = get_buckets_from_sync_gateway_config(sg_conf, cluster_conf)
+    bucket_name = buckets[0]
     # Initialize clients
     sg_client = MobileRestClient()
     if ssl_enabled and cluster.ipv6:

@@ -11,6 +11,7 @@ from keywords.utils import log_info
 from libraries.testkit.cluster import Cluster
 from keywords.MobileRestClient import MobileRestClient
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
+from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
 
 
 @pytest.mark.sanity
@@ -45,7 +46,9 @@ def test_user_views_sanity(params_from_base_test_setup, sg_conf_name, x509_cert_
 
     topology = params_from_base_test_setup["cluster_topology"]
     cbs_url = topology["couchbase_servers"][0]
-    bucket = "data-bucket"
+    # bucket = "data-bucket"
+    buckets = get_buckets_from_sync_gateway_config(sg_conf, cluster_conf)
+    bucket = buckets[0]
     sg_admin_url = topology["sync_gateways"][0]["admin"]
     sg_public_url = topology["sync_gateways"][0]["public"]
 

@@ -849,7 +849,7 @@ class CouchbaseServer:
         # Delete some vBucket file to start a server rollback
         # Example vbucket files - 195.couch.1  310.couch.1  427.couch.1  543.couch.1
         log_info("Deleting vBucket file '66.couch.1'")
-        self.remote_executor.must_execute('sudo find /opt/couchbase/var/lib/couchbase/data/data-bucket -name "{}" -delete'.format(vbucket_filename))
+        self.remote_executor.must_execute('sudo find /opt/couchbase/var/lib/couchbase/data/{} -name "{}" -delete'.format(bucket_name, vbucket_filename))
         log_info("Listing vBucket files ...")
         out, err = self.remote_executor.must_execute("sudo ls /opt/couchbase/var/lib/couchbase/data/{}/".format(bucket_name))
 

@@ -16,6 +16,7 @@ from utilities.cluster_config_utils import persist_cluster_config_environment_pr
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.couchbaseserver import get_sdk_client_with_bucket
 from utilities.cluster_config_utils import copy_sgconf_to_temp, replace_string_on_sgw_config
+from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
 
 
 @pytest.mark.syncgateway
@@ -153,13 +154,15 @@ def test_webhooks_crud(params_from_base_test_setup, sg_conf_name, filtered):
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
 
     sg_db = 'db'
-    bucket_name = 'data-bucket'
+    # bucket_name = 'data-bucket'
     num_docs_per_client = 100
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_conf)
+    buckets = get_buckets_from_sync_gateway_config(sg_conf, cluster_conf)
+    bucket_name = buckets[0]
 
     # Start webhook server on test runner
     webhook_server = WebServer()

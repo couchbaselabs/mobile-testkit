@@ -9,6 +9,7 @@ from libraries.testkit.parallelize import in_parallel
 from keywords.utils import log_info
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.MobileRestClient import MobileRestClient
+from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
 
 
 # implements scenarios: 18 and 19
@@ -142,6 +143,8 @@ def test_db_online_offline_webhooks_offline_two(params_from_base_test_setup, sg_
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_conf)
+    buckets = get_buckets_from_sync_gateway_config(sg_conf, cluster_conf)
+    bucket = buckets[0]
 
     init_completed = time.time()
     log_info("Initialization completed. Time taken:{}s".format(init_completed - start))
@@ -170,7 +173,7 @@ def test_db_online_offline_webhooks_offline_two(params_from_base_test_setup, sg_
     in_parallel(user_objects, 'update_docs', num_revisions)
     time.sleep(10)
 
-    cluster.servers[0].delete_bucket("data-bucket")
+    cluster.servers[0].delete_bucket(bucket)
 
     webhook_events = ws.get_data()
     time.sleep(5)

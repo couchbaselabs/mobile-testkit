@@ -12,6 +12,7 @@ from keywords.timeutils import Time
 from keywords.utils import host_for_url, log_info
 from libraries.testkit.cluster import Cluster
 from utilities.cluster_config_utils import get_sg_version, get_cluster
+from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
 
 
 """
@@ -107,7 +108,9 @@ def test_numeric_expiry_as_ttl(params_from_base_test_setup, sg_conf_name):
     sg_user_name = "sg_user"
     sg_user_password = "p@ssw0rd"
     sg_user_channels = ["NBC", "ABC"]
-    bucket_name = "data-bucket"
+    # bucket_name = "data-bucket"
+    buckets = get_buckets_from_sync_gateway_config(sg_conf, cluster_config)
+    bucket_name = buckets[0]
     cbs_ip = host_for_url(cbs_url)
 
     if ssl_enabled and cluster.ipv6:
@@ -218,7 +221,9 @@ def test_string_expiry_as_ttl(params_from_base_test_setup, sg_conf_name):
     sg_user_name = "sg_user"
     sg_user_password = "p@ssw0rd"
     sg_user_channels = ["NBC", "ABC"]
-    bucket_name = "data-bucket"
+    # bucket_name = "data-bucket"
+    buckets = get_buckets_from_sync_gateway_config(sg_conf, cluster_config)
+    bucket_name = buckets[0]
     cbs_ip = host_for_url(cbs_url)
 
     if ssl_enabled and cluster.ipv6:
@@ -328,7 +333,9 @@ def test_numeric_expiry_as_unix_date(params_from_base_test_setup, sg_conf_name):
     sg_user_name = "sg_user"
     sg_user_password = "p@ssw0rd"
     sg_user_channels = ["NBC", "ABC"]
-    bucket_name = "data-bucket"
+    # bucket_name = "data-bucket"
+    buckets = get_buckets_from_sync_gateway_config(sg_conf, cluster_config)
+    bucket_name = buckets[0]
     cbs_ip = host_for_url(cbs_url)
 
     if ssl_enabled and cluster.ipv6:
@@ -441,7 +448,9 @@ def test_string_expiry_as_unix_date(params_from_base_test_setup, sg_conf_name):
     sg_user_name = "sg_user"
     sg_user_password = "p@ssw0rd"
     sg_user_channels = ["NBC", "ABC"]
-    bucket_name = "data-bucket"
+    # bucket_name = "data-bucket"
+    buckets = get_buckets_from_sync_gateway_config(sg_conf, cluster_config)
+    bucket_name = buckets[0]
     cbs_ip = host_for_url(cbs_url)
 
     if ssl_enabled and cluster.ipv6:
@@ -558,7 +567,9 @@ def test_string_expiry_as_iso_8601_date(params_from_base_test_setup, sg_conf_nam
     sg_user_name = "sg_user"
     sg_user_password = "p@ssw0rd"
     sg_user_channels = ["NBC", "ABC"]
-    bucket_name = "data-bucket"
+    # bucket_name = "data-bucket"
+    buckets = get_buckets_from_sync_gateway_config(sg_conf, cluster_config)
+    bucket_name = buckets[0]
     cbs_ip = host_for_url(cbs_url)
 
     if ssl_enabled and cluster.ipv6:
@@ -750,7 +761,9 @@ def test_rolling_ttl_expires(params_from_base_test_setup, sg_conf_name):
     sg_user_name = "sg_user"
     sg_user_password = "p@ssw0rd"
     sg_user_channels = ["NBC", "ABC"]
-    bucket_name = "data-bucket"
+    # bucket_name = "data-bucket"
+    buckets = get_buckets_from_sync_gateway_config(sg_conf, cluster_config)
+    bucket_name = buckets[0]
     cbs_ip = host_for_url(cbs_url)
 
     if ssl_enabled and cluster.ipv6:
@@ -861,7 +874,9 @@ def test_rolling_ttl_remove_expirary(params_from_base_test_setup, sg_conf_name):
     sg_user_name = "sg_user"
     sg_user_password = "p@ssw0rd"
     sg_user_channels = ["NBC", "ABC"]
-    bucket_name = "data-bucket"
+    # bucket_name = "data-bucket"
+    buckets = get_buckets_from_sync_gateway_config(sg_conf, cluster_config)
+    bucket_name = buckets[0]
     cbs_ip = host_for_url(cbs_url)
 
     if ssl_enabled and cluster.ipv6:
@@ -972,7 +987,9 @@ def test_setting_expiry_in_bulk_docs(params_from_base_test_setup, sg_conf_name):
     sg_user_name = "sg_user"
     sg_user_password = "p@ssw0rd"
     sg_user_channels = ["NBC", "ABC"]
-    bucket_name = "data-bucket"
+    # bucket_name = "data-bucket"
+    buckets = get_buckets_from_sync_gateway_config(sg_conf, cluster_config)
+    bucket_name = buckets[0]
     cbs_ip = host_for_url(cbs_url)
 
     if ssl_enabled and cluster.ipv6:

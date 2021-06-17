@@ -12,6 +12,7 @@ from keywords.ClusterKeywords import ClusterKeywords
 from libraries.testkit import cluster
 from concurrent.futures import ThreadPoolExecutor
 from libraries.testkit.prometheus import verify_stat_on_prometheus
+from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
 
 
 @pytest.mark.syncgateway
@@ -39,8 +40,8 @@ def test_importdocs_false_shared_bucket_access_true(params_from_base_test_setup)
     mode = params_from_base_test_setup['mode']
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
 
-    sg_conf1 = sync_gateway_config_path_for_mode(sg_conf_name1, mode)
-    sg_conf2 = sync_gateway_config_path_for_mode(sg_conf_name2, mode)
+    sg_conf1 = sync_gateway_config_path_for_mode(sg_conf_name1, mode, unique_bucket=False)
+    sg_conf2 = sync_gateway_config_path_for_mode(sg_conf_name2, mode, unique_bucket=False)
 
     sg_client = MobileRestClient()
     cluster_utils = ClusterKeywords(cluster_conf)
@@ -133,7 +134,9 @@ def test_sgw_cache_management_multiple_sgws(params_from_base_test_setup):
 
     sg_db = "db"
     num_docs = 100
-    bucket_name = 'data-bucket'
+    # bucket_name = 'data-bucket'
+    buckets = get_buckets_from_sync_gateway_config(sg_conf_path, cluster_config)
+    bucket_name = buckets[0]
 
     client = MobileRestClient()
     c = cluster.Cluster(config=cluster_config)
@@ -207,7 +210,9 @@ def test_sgw_high_availability(params_from_base_test_setup, setup_basic_sg_conf)
     cluster_utils.reset_cluster(cluster_config=cluster_config, sync_gateway_config=sg_conf)
 
     num_docs = 100
-    bucket_name = 'data-bucket'
+    # bucket_name = 'data-bucket'
+    buckets = get_buckets_from_sync_gateway_config(sg_conf, cluster_config)
+    bucket_name = buckets[0]
 
     sg1 = cbs_cluster.sync_gateways[0]
     cbs_url = cluster_topology['couchbase_servers'][0]

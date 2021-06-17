@@ -564,7 +564,7 @@ def test_sdk_update_with_changes_request(params_from_base_test_setup):
     if not xattrs_enabled:
         pytest.skip('XATTR tests require --xattrs flag')
 
-    config = sync_gateway_config_path_for_mode("sync_gateway_sg_replicate", mode)
+    config = sync_gateway_config_path_for_mode("sync_gateway_sg_replicate", mode, unique_bucket=False)
     cluster = Cluster(config=cluster_config)
     sg1 = cluster.sync_gateways[0]
     sg2 = cluster.sync_gateways[1]
@@ -572,7 +572,7 @@ def test_sdk_update_with_changes_request(params_from_base_test_setup):
     cluster.reset(sg_config_path=config)
     status = sg1.restart(config=config, cluster_config=cluster_config)
     assert status == 0, "Syncgateway1 did not start "
-    config = sync_gateway_config_path_for_mode("sync_gateways_one_with_import_docs", mode)
+    config = sync_gateway_config_path_for_mode("sync_gateways_one_with_import_docs", mode, unique_bucket=False)
     status = sg2.restart(config=config, cluster_config=cluster_config)
     assert status == 0, "Syncgateway2 did not start "
     admin1 = Admin(sg1)

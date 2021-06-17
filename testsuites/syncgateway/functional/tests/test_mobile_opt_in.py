@@ -14,6 +14,7 @@ from libraries.testkit.cluster import Cluster
 from utilities.cluster_config_utils import get_cluster
 from keywords.remoteexecutor import RemoteExecutor
 from utilities.cluster_config_utils import load_cluster_config_json
+from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
 
 
 @pytest.mark.syncgateway
@@ -48,7 +49,7 @@ def test_mobile_opt_in(params_from_base_test_setup, sg_conf_name):
          verify it succeeds
     """
 
-    bucket_name = 'data-bucket'
+    # bucket_name = 'data-bucket'
     sg_db = 'db'
 
     cluster_conf = params_from_base_test_setup['cluster_config']
@@ -72,6 +73,8 @@ def test_mobile_opt_in(params_from_base_test_setup, sg_conf_name):
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
+    buckets = get_buckets_from_sync_gateway_config(sg_conf, cluster_conf)
+    bucket_name = buckets[0]
 
     # Create clients
     sg_client = MobileRestClient()
@@ -254,7 +257,7 @@ def test_non_mobile_ignore_count(params_from_base_test_setup, sg_conf_name):
     8. Verify warn_count is 0
     """
 
-    bucket_name = 'data-bucket'
+    # bucket_name = 'data-bucket'
     sg_db = 'db'
 
     cluster_config = params_from_base_test_setup['cluster_config']
@@ -280,6 +283,8 @@ def test_non_mobile_ignore_count(params_from_base_test_setup, sg_conf_name):
 
     cluster = Cluster(config=cluster_config)
     cluster.reset(sg_config_path=sg_config)
+    buckets = get_buckets_from_sync_gateway_config(sg_config, cluster_config)
+    bucket_name = buckets[0]
 
     # Create clients
     sg_client = MobileRestClient()

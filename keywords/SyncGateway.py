@@ -24,7 +24,7 @@ from libraries.testkit.cluster import Cluster
 from keywords.utils import host_for_url
 from keywords import document
 from keywords.utils import random_string
-from utilities.cluster_config_utils import copy_sgconf_to_temp, replace_string_on_sgw_config, get_cluster
+from utilities.cluster_config_utils import copy_sgconf_to_temp, replace_string_on_sgw_config, get_cluster, copy_sgconf_to_tempconfig_for_reset_method
 from libraries.testkit import cluster
 
 
@@ -34,7 +34,7 @@ def validate_sync_gateway_mode(mode):
         raise ValueError("Sync Gateway mode must be 'cc' (channel cache) or 'di' (distributed index)")
 
 
-def sync_gateway_config_path_for_mode(config_prefix, mode):
+def sync_gateway_config_path_for_mode(config_prefix, mode, unique_bucket=True):
     """Construct a sync_gateway config path depending on a mode
     1. Check that mode is valid ("cc" or "di")
     2. Construct the config path relative to the root of the repository
@@ -42,20 +42,21 @@ def sync_gateway_config_path_for_mode(config_prefix, mode):
     """
 
     validate_sync_gateway_mode(mode)
-
     # Construct expected config path
     config = "{}/{}_{}.json".format(SYNC_GATEWAY_CONFIGS, config_prefix, mode)
     if not os.path.isfile(config):
         raise ValueError("Could not file config: {}".format(config))
 
     # replace server bucket with unique bucket name
-    temp_sg_conf, _ = copy_sgconf_to_temp(config, mode)
-    temp_sg_conf = replace_string_on_sgw_config(temp_sg_conf, '"data-bucket"', '"data-bucket-{}"'.format(time.time()))
-    temp_sg_conf = replace_string_on_sgw_config(temp_sg_conf, '"data-bucket-1"', '"data-bucket-1-{}"'.format(time.time()))
-    temp_sg_conf = replace_string_on_sgw_config(temp_sg_conf, '"data-bucket-2"', '"data-bucket-2-{}"'.format(time.time()))
-    temp_sg_conf = replace_string_on_sgw_config(temp_sg_conf, '"data-bucket-3"', '"data-bucket-3-{}"'.format(time.time()))
-    temp_sg_conf = replace_string_on_sgw_config(temp_sg_conf, '"data-bucket-4"', '"data-bucket-4-{}"'.format(time.time()))
-    return temp_sg_conf
+    if unique_bucket:
+        temp_sg_conf, _ = copy_sgconf_to_tempconfig_for_reset_method(config, mode)
+        temp_sg_conf = replace_string_on_sgw_config(temp_sg_conf, '"data-bucket"', '"data-bucket-{}"'.format(time.time()))
+        temp_sg_conf = replace_string_on_sgw_config(temp_sg_conf, '"data-bucket-1"', '"data-bucket-1-{}"'.format(time.time()))
+        temp_sg_conf = replace_string_on_sgw_config(temp_sg_conf, '"data-bucket-2"', '"data-bucket-2-{}"'.format(time.time()))
+        temp_sg_conf = replace_string_on_sgw_config(temp_sg_conf, '"data-bucket-3"', '"data-bucket-3-{}"'.format(time.time()))
+        temp_sg_conf = replace_string_on_sgw_config(temp_sg_conf, '"data-bucket-4"', '"data-bucket-4-{}"'.format(time.time()))
+        config = temp_sg_conf
+    return config
 
 
 def get_sync_gateway_version(host):
@@ -403,11 +404,9 @@ class SyncGateway(object):
         if config is None:
             raise ProvisioningError("Starting a Sync Gateway requires a config")
 
-        if get_sg_version(cluster_config) < "3.0.0" or is_centralized_persistent_config_disabled(cluster_config):
+        if get_sg_version(cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config):
             playbook_vars, db_config_json = c_cluster.setup_server_and_sgw(config, bucket_creation=False)
-            # send_dbconfig_as_restCall(db_config_json, c_cluster.sync_gateways)
         else:
-
             config_path = os.path.abspath(config)
             sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
             cbs_cert_path = os.path.join(os.getcwd(), "certs")
@@ -556,9 +555,10 @@ class SyncGateway(object):
             )
         if status != 0:
             raise ProvisioningError("Could not start sync_gateway")
-        if get_sg_version(cluster_config) < "3.0.0" or is_centralized_persistent_config_disabled(cluster_config):
-            # Now create rest API for all database configs
-            send_dbconfig_as_restCall(db_config_json, c_cluster.sync_gateways)
+        else:
+            if get_sg_version(cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config):
+                # Now create rest API for all database configs
+                send_dbconfig_as_restCall(db_config_json, c_cluster.sync_gateways)
 
     def stop_sync_gateways(self, cluster_config, url=None):
         """ Stop sync gateways in a cluster. If url is passed, shut down
@@ -653,7 +653,7 @@ class SyncGateway(object):
         playbook_vars1["couchbase_sync_gateway_package_base_url"] = sync_gateway_base_url
         playbook_vars1["couchbase_sync_gateway_package"] = sync_gateway_package_name
         playbook_vars1["couchbase_sg_accel_package"] = sg_accel_package_name
-        if get_sg_version(cluster_config) < "3.0.0" or is_centralized_persistent_config_disabled(cluster_config):
+        if get_sg_version(cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config):
             playbook_vars, db_config_json = c_cluster.setup_server_and_sgw(sg_config.config_path, bucket_creation=False)
         else:
             sg_conf = os.path.abspath(sg_config.config_path)
@@ -802,7 +802,7 @@ class SyncGateway(object):
 
         if status != 0:
             raise Exception("Could not upgrade sync_gateway/sg_accel")
-        if get_sg_version(cluster_config) < "3.0.0" or is_centralized_persistent_config_disabled(cluster_config):
+        if get_sg_version(cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config):
             if status == 0:
                 if url is not None:
                     # Now create rest API for all database configs
@@ -820,7 +820,7 @@ class SyncGateway(object):
             It is used to enable xattrs and import in the SG config"""
         ansible_runner = AnsibleRunner(cluster_config)
         c_cluster = cluster.Cluster(cluster_config)
-        if get_sg_version(cluster_config) < "3.0.0" or is_centralized_persistent_config_disabled(cluster_config):
+        if get_sg_version(cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config):
             playbook_vars, db_config_json = c_cluster.setup_server_and_sgw(sg_conf, bucket_creation=False)
         else:
             server_port = 8091
@@ -957,7 +957,7 @@ class SyncGateway(object):
             )
         if status != 0:
             raise Exception("Could not deploy config to sync_gateway")
-        if get_sg_version(cluster_config) < "3.0.0" or is_centralized_persistent_config_disabled(cluster_config):
+        if get_sg_version(cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config):
             if status == 0:
                 if url is not None:
                     # Now create rest API for all database configs

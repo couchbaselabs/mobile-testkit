@@ -105,8 +105,8 @@ def test_bucket_shadow_low_revs_limit_repeated_deletes(params_from_base_test_set
     if mode == "di" or xattrs_enabled or get_sync_gateway_version(sg_ip)[0] > "2.0":
         pytest.skip("https://github.com/couchbase/sync_gateway/issues/2193 and bucket shadow not supported in SG >= 2.1")
 
-    default_config_path_shadower_low_revs = sync_gateway_config_path_for_mode("sync_gateway_bucketshadow_low_revs", mode)
-    default_config_path_non_shadower_low_revs = sync_gateway_config_path_for_mode("sync_gateway_default_low_revs", mode)
+    default_config_path_shadower_low_revs = sync_gateway_config_path_for_mode("sync_gateway_bucketshadow_low_revs", mode, unique_bucket=False)
+    default_config_path_non_shadower_low_revs = sync_gateway_config_path_for_mode("sync_gateway_default_low_revs", mode, unique_bucket=False)
 
     log_info("Running 'test_bucket_shadow_low_revs_limit_repeated_deletes'")
     log_info("Using cluster_config: {}".format(cluster_config))

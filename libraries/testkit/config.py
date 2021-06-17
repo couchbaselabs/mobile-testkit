@@ -78,10 +78,10 @@ class Config:
             self.discover_mode(conf_obj)
             # extract database config from non centralized persistent config(old configs) and copy to temp db config
             # Remove database config from the original config
-            if cluster_config is not None and (get_sg_version(cluster_config) < "3.0.0" or is_centralized_persistent_config_disabled(cluster_config)):
-                self.discover_bucket_name_set(conf_obj)
-            else:
+            if cluster_config is not None and (get_sg_version(cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config)):
                 self.discover_bucket_name_set_3_0(conf_obj)
+            else:
+                self.discover_bucket_name_set(conf_obj)
 
     def get_mode(self):
 
@@ -124,7 +124,8 @@ class Config:
                 bucket_names_from_config.append(shadow["bucket"])
 
         # Buckets may be shared for different functionality
-        self.bucket_name_set = list(set(bucket_names_from_config))
+        # self.bucket_name_set = list(set(bucket_names_from_config))
+        self.bucket_name_set = list(bucket_names_from_config)
 
     def discover_bucket_name_set_new(self, conf_obj):
 
@@ -152,7 +153,8 @@ class Config:
                 bucket_names_from_config.append(shadow["bucket"])
 
         # Buckets may be shared for different functionality
-        self.bucket_name_set = list(set(bucket_names_from_config))
+        # self.bucket_name_set = list(set(bucket_names_from_config))
+        self.bucket_name_set = list(bucket_names_from_config)
 
     def discover_bucket_name_set_3_0(self, conf_obj):
         self.bucket_name_set = conf_obj["bootstrap"]["buckets"]

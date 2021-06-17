@@ -9,6 +9,7 @@ from keywords import document
 from keywords.utils import host_for_url
 from couchbase.bucket import Bucket
 from keywords.MobileRestClient import MobileRestClient
+from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
 
 
 @pytest.mark.syncgateway
@@ -29,7 +30,7 @@ def test_importDocs_withSharedBucketAccessFalse(params_from_base_test_setup):
 
     sg_db = 'db'
     num_docs = 10
-    bucket_name = 'data-bucket'
+    # bucket_name = 'data-bucket'
     sg_conf_name = "sync_gateway_with_shared_bucket_false"
 
     cluster_conf = params_from_base_test_setup['cluster_config']
@@ -43,6 +44,8 @@ def test_importDocs_withSharedBucketAccessFalse(params_from_base_test_setup):
     sg_url = cluster_topology['sync_gateways'][0]['public']
     cbs_url = cluster_topology['couchbase_servers'][0]
     sg_client = MobileRestClient()
+    buckets = get_buckets_from_sync_gateway_config(sg_conf, cluster_conf)
+    bucket_name = buckets[0]
 
     cbs_host = host_for_url(cbs_url)
 
@@ -102,7 +105,7 @@ def test_importDocs_defaultBehavior_withSharedBucketAccessTrue(params_from_base_
 
     sg_db = 'db'
     num_docs = 10
-    bucket_name = 'data-bucket'
+    # bucket_name = 'data-bucket'
     sg_conf_name = "xattrs/no_import"
 
     cluster_conf = params_from_base_test_setup['cluster_config']
@@ -116,6 +119,8 @@ def test_importDocs_defaultBehavior_withSharedBucketAccessTrue(params_from_base_
     sg_url = cluster_topology['sync_gateways'][0]['public']
     cbs_url = cluster_topology['couchbase_servers'][0]
     sg_client = MobileRestClient()
+    buckets = get_buckets_from_sync_gateway_config(sg_conf, cluster_conf)
+    bucket_name = buckets[0]
 
     cbs_host = host_for_url(cbs_url)
 
@@ -168,7 +173,7 @@ def test_importPartitions_withSharedBucketAccessTrue(params_from_base_test_setup
 
     sg_db = 'db'
     num_docs = 10
-    bucket_name = 'data-bucket'
+    # bucket_name = 'data-bucket'
     sg_conf_name = "sync_gateway_default_with_importpartitions"
 
     cluster_conf = params_from_base_test_setup['cluster_config']
@@ -182,6 +187,8 @@ def test_importPartitions_withSharedBucketAccessTrue(params_from_base_test_setup
     sg_url = cluster_topology['sync_gateways'][0]['public']
     cbs_url = cluster_topology['couchbase_servers'][0]
     sg_client = MobileRestClient()
+    buckets = get_buckets_from_sync_gateway_config(sg_conf, cluster_conf)
+    bucket_name = buckets[0]
 
     cbs_host = host_for_url(cbs_url)
 

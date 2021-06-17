@@ -387,7 +387,7 @@ def params_from_base_suite_setup(request):
         sgw_config = "sync_gateway_default_functional_tests"
     else:
         sgw_config = "sync_gateway_default_functional_tests_cpc"
-    sg_config = sync_gateway_config_path_for_mode(sgw_config, mode)
+    sg_config = sync_gateway_config_path_for_mode(sgw_config, mode, unique_bucket=False)
 
     persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "centos", False)
 

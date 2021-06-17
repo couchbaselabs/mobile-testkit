@@ -12,6 +12,7 @@ from keywords.remoteexecutor import RemoteExecutor
 from keywords.SyncGateway import wait_until_docs_imported_from_server
 from keywords.couchbaseserver import get_server_version
 from utilities.cluster_config_utils import get_cluster
+from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
 
 
 @pytest.mark.syncgateway
@@ -44,7 +45,9 @@ def test_userdefind_collections(params_from_base_test_setup):
     cb_server = couchbaseserver.CouchbaseServer(cbs_url)
     cbs_ip = host_for_url(cbs_url)
     sg_db = "db"
-    bucket = "data-bucket"
+    # bucket = "data-bucket"
+    buckets = get_buckets_from_sync_gateway_config(sg_conf, cluster_config)
+    bucket = buckets[0]
     channels = ["ABC"]
     num_sdk_docs = 10
 

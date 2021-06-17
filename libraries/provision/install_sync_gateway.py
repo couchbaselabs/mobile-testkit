@@ -148,15 +148,11 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
 
     log_info(sync_gateway_config)
     ansible_runner = AnsibleRunner(cluster_config)
+    c_cluster = cluster.Cluster(cluster_config)
     if sync_gateway_config.build_flags != "":
         log_warn("\n\n!!! WARNING: You are building with flags: {} !!!\n\n".format(sync_gateway_config.build_flags))
 
-    if get_sg_version(cluster_config) < "3.0.0" or is_centralized_persistent_config_disabled(cluster_config):
-        # TODO : if it works then I should change database config to get based on sgconfig name
-        # replace database configs from databases
-        # sg_db = "db"
-        # db_config_name = "sync_gateway_default_functional_tests"
-        c_cluster = cluster.Cluster(cluster_config)
+    if get_sg_version(cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config):
         playbook_vars, _ = c_cluster.setup_server_and_sgw(sg_config_path=sync_gateway_config.config_path)
     else:
         bucket_names = get_buckets_from_sync_gateway_config(sync_gateway_config.config_path, cluster_config)
@@ -364,8 +360,6 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
     )
     if status != 0:
         raise ProvisioningError("Failed to configure sync_gateway awslogs forwarder")
-
-    # self.sync_gateways[0].admin.put_db_config(sg_db, db_config_json)
 
 
 def create_server_buckets(cluster_config, sync_gateway_config):

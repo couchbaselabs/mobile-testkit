@@ -16,6 +16,7 @@ from keywords.utils import log_info
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.MobileRestClient import MobileRestClient
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
+from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
 
 NUM_ENDPOINTS = 13
 
@@ -611,13 +612,16 @@ def test_db_offline_tap_loss_sanity(params_from_base_test_setup, sg_conf_name, n
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
+    buckets = get_buckets_from_sync_gateway_config(sg_conf, cluster_conf)
+    bucket = buckets[0]
 
     # all db rest enpoints should succeed
     errors = rest_scan(cluster.sync_gateways[0], db="db", online=True, num_docs=num_docs, user_name="seth", channels=["ABC"])
     assert len(errors) == 0
 
     # Delete bucket to sever TAP feed
-    cluster.servers[0].delete_bucket("data-bucket")
+    # cluster.servers[0].delete_bucket("data-bucket")
+    cluster.servers[0].delete_bucket(bucket)
 
     # Check that bucket is in offline state
     errors = rest_scan(cluster.sync_gateways[0], db="db", online=False, num_docs=num_docs, user_name="seth", channels=["ABC"])
@@ -707,7 +711,9 @@ def test_multiple_dbs_unique_buckets_lose_tap(params_from_base_test_setup, sg_co
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
-
+    buckets = get_buckets_from_sync_gateway_config(sg_conf, cluster_conf)
+    bucket1 = buckets[0]
+    bucket3 = buckets[2]
     dbs = ["db1", "db2", "db3", "db4"]
 
     # all db rest endpoints should succeed
@@ -717,8 +723,10 @@ def test_multiple_dbs_unique_buckets_lose_tap(params_from_base_test_setup, sg_co
         assert len(errors) == 0
 
     log_info("Deleting data-bucket-1 and data-bucket-3")
-    cluster.servers[0].delete_bucket("data-bucket-1")
-    cluster.servers[0].delete_bucket("data-bucket-3")
+    # cluster.servers[0].delete_bucket("data-bucket-1")
+    # cluster.servers[0].delete_bucket("data-bucket-3")
+    cluster.servers[0].delete_bucket(bucket1)
+    cluster.servers[0].delete_bucket(bucket3)
 
     # Check that db2 and db4 are still Online
     log_info("Check that db2 and db4 are still Online")

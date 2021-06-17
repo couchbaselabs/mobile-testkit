@@ -206,7 +206,9 @@ def test_invalid_jsfunc(params_from_base_test_setup, invalid_js_code, invalid_js
     sg_url = topology["sync_gateways"][0]["public"]
     sg_url_admin = topology["sync_gateways"][0]["admin"]
     sg_db = "db"
-    bucket = "data-bucket"
+    # bucket = "data-bucket"
+    buckets = get_buckets_from_sync_gateway_config(temp_sg_config, cluster_config)
+    bucket = buckets[0]
 
     log_info("Running 'test_attachment_revpos_when_ancestor_unavailable'")
     log_info("Using cbs_url: {}".format(cbs_url))
@@ -367,7 +369,9 @@ def test_envVariables_on_sgw_config(params_from_base_test_setup, setup_env_varia
     sg_url = topology["sync_gateways"][0]["public"]
     sg_url_admin = topology["sync_gateways"][0]["admin"]
     sg_db = "db"
-    bucket = "data-bucket"
+    # bucket = "data-bucket"
+    buckets = get_buckets_from_sync_gateway_config(temp_sg_config, cluster_config)
+    bucket = buckets[0]
 
     log_info("Using cbs_url: {}".format(cbs_url))
     log_info("Using sg_url: {}".format(sg_url))

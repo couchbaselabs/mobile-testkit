@@ -302,6 +302,14 @@ def copy_sgconf_to_temp(sg_conf, mode):
     return temp_sg_config, temp_sg_conf_name
 
 
+def copy_sgconf_to_tempconfig_for_reset_method(sg_conf, mode):
+    temp_sg_conf_name = "temp_sg_config"
+    temp_sg_config = "resources/sync_gateway_configs/temp_sg_config_reset_{}.json".format(mode)
+    open(temp_sg_config, "w+")
+    copyfile(sg_conf, temp_sg_config)
+    return temp_sg_config, temp_sg_conf_name
+
+
 def replace_string_on_sgw_config(sg_conf, replace_string, new_string):
     with open(sg_conf, 'r') as file:
         filedata = file.read()
