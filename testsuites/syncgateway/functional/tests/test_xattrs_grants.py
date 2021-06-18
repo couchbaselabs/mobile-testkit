@@ -775,14 +775,12 @@ def test_rev_with_docupdates_docxattrsupdate(params_from_base_test_setup, update
     if not xattrs_enabled or sync_gateway_version < "3.0.0":
         pytest.skip('Test did not enable xattrs or sgw version is not 3.0 and above')
 
-    sg_channel1_value = "abc"
-    sg_channel2_value = "xyz"
+    sg_channel1_value1 = "abc"
 
-    sg_channels1 = [sg_channel1_value, sg_channel2_value]
+    sg_channels1 = [sg_channel1_value1]
     username = "autotest"
     password = "password"
     user_custom_channel = "channel1"
-    user_custom_channel2 = "channel2"
     sg_doc_xattrs_id = 'user_xattrs_format_0'
     sg_conf_name = "custom_sync/sync_gateway_custom_sync"
     sg_config = sync_gateway_config_path_for_mode(sg_conf_name, mode)
@@ -810,7 +808,7 @@ def test_rev_with_docupdates_docxattrsupdate(params_from_base_test_setup, update
     # 4. Update user xattrs on docs via sdk
     # 5. Also  update doc via sdk/SGW in parallel
     if update_source == "sdk":
-        sdk_bucket.mutate_in(sg_doc_xattrs_id, [SD.upsert(user_custom_channel, sg_channel1_value, xattr=True, create_parents=True)])
+        sdk_bucket.mutate_in(sg_doc_xattrs_id, [SD.upsert(user_custom_channel, sg_channel1_value1, xattr=True, create_parents=True)])
         sdk_doc = sdk_bucket.get(sg_doc_xattrs_id)
         doc_body = sdk_doc.value
         doc_body['content'] = "updated_doc_content"
@@ -818,7 +816,7 @@ def test_rev_with_docupdates_docxattrsupdate(params_from_base_test_setup, update
     else:
         sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=auto_user)["rows"]
         with ThreadPoolExecutor(max_workers=2) as tpe:
-            sdk_mutate = tpe.submit(sdk_bucket.mutate_in, sg_doc_xattrs_id, [SD.upsert(user_custom_channel2, sg_channel2_value, xattr=True, create_parents=True)])
+            sdk_mutate = tpe.submit(sdk_bucket.mutate_in, sg_doc_xattrs_id, [SD.upsert(user_custom_channel, sg_channel1_value1, xattr=True, create_parents=True)])
             sg_client.update_doc(url=sg_url, db=sg_db, doc_id=sg_doc_xattrs_id, number_updates=1, auth=auto_user)
             sdk_mutate.result()
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=auto_user)["rows"]
