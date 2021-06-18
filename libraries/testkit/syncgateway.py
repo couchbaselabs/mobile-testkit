@@ -1000,10 +1000,10 @@ def send_dbconfig_as_restCall(db_config_json, sync_gateways):
     # sg_dbs = database_config.keys()
     for sgw in sync_gateways:
         for sg_db in db_config_json.keys():
-            print("dbconfig of each sg db for ", sg_db)
             # sgw.admin.create_db(sg_db)
-            print("dbconfig value is :", db_config_json[sg_db])
+            # TODO : Put back one CPC config works
             sgw.admin.create_db_with_rest(sg_db, db_config_json[sg_db])
+            # sgw.admin.put_db_config(sg_db, db_config_json[sg_db])
 
 
 def get_cpc_sgw_config(sg_config_path):

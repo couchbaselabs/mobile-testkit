@@ -1,0 +1,38 @@
+{
+    "interface":":4984",
+    "adminInterface": "0.0.0.0:4985",
+    {{ logging }}
+    {{ hide_product_version }}
+    {{ sslcert }}
+    {{ sslkey }}
+    "databases":{
+        "db":{
+            {{ no_conflicts }}
+            {{ sg_use_views }}
+            {{ num_index_replicas }}
+            {{ username }}
+            {{ password }}
+            {{ cacertpath }}
+            {{ certpath }}
+            {{ keypath }}
+            {{ delta_sync }}
+            "import_docs": true,
+            "enable_shared_bucket_access": true,
+            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
+            "bucket":"data-bucket",
+            "sync": `
+            function(doc, oldDoc) {
+                if (oldDoc != null) {
+                    throw({forbidden: "Old doc should be null!"})
+                } else {
+                    console.error("oldDoc is null"); 
+                    console.log("oldDoc is null");
+                    console.log(doc.channels);
+                    channel(doc.channels);
+                }
+            }
+            `
+        }
+    }
+}
+

@@ -1,0 +1,26 @@
+{
+    "interface":":4984",
+    "adminInterface": "0.0.0.0:4985",
+    {{ sslcert }}
+    {{ sslkey }}
+    {{ logging }}
+    {{ hide_product_version }}
+    "databases":{
+        "sg_db3":{
+            {{ autoimport }}
+            {{ xattrs }}
+            {{ no_conflicts }}
+            "revs_limit": 20,
+            {{ sg_use_views }}
+            {{ num_index_replicas }}
+            {{ cacertpath }}
+            {{ certpath }}
+            {{ keypath }}
+            {{ delta_sync }}
+            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
+            "bucket":"data-bucket-3",
+            "username":"data-bucket-3",
+            "password": "password"
+        }
+    }
+}

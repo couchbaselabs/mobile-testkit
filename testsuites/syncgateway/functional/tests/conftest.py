@@ -172,8 +172,7 @@ def pytest_addoption(parser):
 
     parser.addoption("--disable-persistent-config",
                      action="store_true",
-                     help="Centralized Persistent Config",
-                     default=True)
+                     help="Centralized Persistent Config")
 
 
 # This will be called once for the at the beggining of the execution in the 'tests/' directory

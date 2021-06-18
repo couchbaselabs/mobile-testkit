@@ -1,0 +1,86 @@
+{
+    {{ logging }}
+    {{ hide_product_version }}
+   "compressResponses": false,
+   "AdminInterface":"0.0.0.0:4985",
+   {{ sslcert }}
+   {{ sslkey }}
+   "databases":{
+      "db":{
+         "oidc":{
+            "default_provider":"test",
+            "providers":{
+               "testinvalidclientid":{
+                  "issuer":"http://localhost:4984/db/_oidc_testing",
+                  "client_id":"invalid",
+                  "validation_key":"R75hfd9lasdwertwerutecw8",
+                  "callback_url":"http://localhost:4984/db/_oidc_callback",
+                  "register":true
+               },
+               "test":{
+                  "issuer":"http://localhost:4984/db/_oidc_testing",
+                  "client_id":"sync_gateway",
+                  "validation_key":"R75hfd9lasdwertwerutecw8",
+                  "callback_url":"http://localhost:4984/db/_oidc_callback",
+                  "register":true,
+                  "disable_callback_state": true
+               },
+               "testnosessions":{
+                  "issuer":"http://localhost:4984/db/_oidc_testing",
+                  "client_id":"sync_gateway",
+                  "validation_key":"R75hfd9lasdwertwerutecw8",
+                  "callback_url":"http://localhost:4984/db/_oidc_callback",
+                  "register":true,
+                  "disable_session":true,
+                  "disable_callback_state": true
+               },
+               "testinvalidscope":{
+                  "issuer":"http://localhost:4984/db/_oidc_testing",
+                  "client_id":"sync_gateway",
+                  "validation_key":"R75hfd9lasdwertwerutecw8",
+                  "callback_url":"http://localhost:4984/db/_oidc_callback",
+                  "register":true,
+                  "scope":["invalid_scope"],
+                  "disable_callback_state": true
+               },
+               "testsmallscope":{
+                  "issuer":"http://localhost:4984/db/_oidc_testing",
+                  "client_id":"sync_gateway",
+                  "validation_key":"R75hfd9lasdwertwerutecw8",
+                  "callback_url":"http://localhost:4984/db/_oidc_callback",
+                  "register":true,
+                  "scope":["openid"]
+               },
+               "testlargescope":{
+                  "issuer":"http://localhost:4984/db/_oidc_testing",
+                  "client_id":"sync_gateway",
+                  "validation_key":"R75hfd9lasdwertwerutecw8",
+                  "callback_url":"http://localhost:4984/db/_oidc_callback",
+                  "register":true,
+                  "scope":["openid", "email", "profile"],
+                  "disable_callback_state": true
+               }
+            }
+         },
+        {{ autoimport }}
+        {{ xattrs }}
+        {{ no_conflicts }}
+        {{ sg_use_views }}
+        {{ num_index_replicas }}
+        {{ username }}
+        {{ password }}
+        {{ cacertpath }}
+        {{ certpath }}
+        {{ keypath }}
+        {{ delta_sync }}
+        "unsupported": {
+            "oidc_test_provider":{
+                "enabled":true
+            }
+        },
+         "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
+         "bucket":"data-bucket"
+      }
+   }
+}
+

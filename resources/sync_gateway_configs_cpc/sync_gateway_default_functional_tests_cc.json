@@ -1,0 +1,18 @@
+{
+    "interface":":4984",
+    "adminInterface": "0.0.0.0:4985",
+    "maxIncomingConnections": 0,
+    "maxFileDescriptors": 90000,
+    "compressResponses": false,
+    {{ logging }}
+    "databases":{
+        "db":{
+            "num_index_replicas":0,
+            {{ username }}
+            {{ password }}
+            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
+            "bucket":"data-bucket",
+            "bucket_op_timeout_ms": 60000
+        }
+    }
+}

@@ -6,6 +6,7 @@ from jinja2 import Template
 
 from libraries.testkit import settings
 from keywords.utils import log_info
+from keywords.constants import SYNC_GATEWAY_CONFIGS, SYNC_GATEWAY_CONFIGS_CPC
 
 import logging
 log = logging.getLogger(settings.LOGGER)
@@ -19,7 +20,8 @@ class Config:
         self.mode = None
         self.bucket_name_set = []
         self.db_config = None
-
+        if cluster_config is not None and (get_sg_version(cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config)):
+            conf_path = conf_path.replace(SYNC_GATEWAY_CONFIGS, SYNC_GATEWAY_CONFIGS_CPC)
         with open(conf_path, "r") as config:
 
             data = config.read()

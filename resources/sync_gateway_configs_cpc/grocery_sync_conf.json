@@ -1,0 +1,14 @@
+{
+	{{ logging }}
+	{{ hide_product_version }}
+	"databases": {
+		"grocery-sync": {
+			"server": "walrus:",
+			"sync": `
+function(doc){
+	channel(doc.channels);
+}`
+		}
+
+	}
+}

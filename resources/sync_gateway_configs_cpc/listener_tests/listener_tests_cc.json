@@ -1,0 +1,25 @@
+{
+    "interface":":4984",
+    "adminInterface": "0.0.0.0:4985",
+    {{ sslcert }}
+    {{ sslkey }}
+    {{ logging }}
+    {{ hide_product_version }}
+    "databases":{
+        "db":{
+            {{ autoimport }}
+            {{ xattrs }}
+            {{ no_conflicts }}
+            {{ sg_use_views }}
+            {{ num_index_replicas }}
+            {{ username }}
+            {{ password }}
+            {{ cacertpath }}
+            {{ certpath }}
+            {{ keypath }}
+            {{ delta_sync }}
+            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
+            "bucket":"data-bucket"
+        }
+    }
+}
