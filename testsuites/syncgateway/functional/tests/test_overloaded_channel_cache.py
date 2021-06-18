@@ -45,6 +45,7 @@ def test_overloaded_channel_cache(params_from_base_test_setup, sg_conf_name, num
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     cbs_ce_version = params_from_base_test_setup["cbs_ce"]
+    sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
 
     if mode == "di":
         pytest.skip("Unsupported feature in distributed index")
@@ -70,11 +71,12 @@ def test_overloaded_channel_cache(params_from_base_test_setup, sg_conf_name, num
     target_sg = cluster.sync_gateways[0]
 
     admin = Admin(target_sg)
+    sg_db_name = "db"
 
-    users = admin.register_bulk_users(target_sg, "db", "user", 1000, "password", [user_channels], num_of_workers=10)
+    users = admin.register_bulk_users(target_sg, sg_db_name, "user", 1000, "password", [user_channels], num_of_workers=10)
     assert len(users) == 1000
 
-    doc_pusher = admin.register_user(target_sg, "db", "abc_doc_pusher", "password", ["ABC"])
+    doc_pusher = admin.register_user(target_sg, sg_db_name, "abc_doc_pusher", "password", ["ABC"])
     doc_pusher.add_docs(num_docs)
 
     # Give a few seconds to let changes register
@@ -132,4 +134,7 @@ def test_overloaded_channel_cache(params_from_base_test_setup, sg_conf_name, num
 
         # TODO for SG 2.1, a new parameter has to be queried
         # Ref SG issue #3424
-        assert resp_obj["syncGateway_changeCache"]["view_queries"] > 0
+        if sync_gateway_version < "3.0.0":
+            assert resp_obj["syncGateway_changeCache"]["view_queries"] > 0
+        else:
+            assert resp_obj['syncgateway']['per_db'][sg_db_name]['cache']['view_queries'] > 0
