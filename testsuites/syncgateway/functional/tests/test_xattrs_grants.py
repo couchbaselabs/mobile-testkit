@@ -778,7 +778,7 @@ def test_rev_with_docupdates_docxattrsupdate(params_from_base_test_setup, update
     sg_channel1_value = "abc"
     sg_channel2_value = "xyz"
 
-    sg_channels1 = [sg_channel1_value]
+    sg_channels1 = [sg_channel1_value, sg_channel2_value]
     username = "autotest"
     password = "password"
     user_custom_channel = "channel1"
