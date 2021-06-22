@@ -310,7 +310,11 @@ def test_log_maxage_timestamp_ignored(params_from_base_test_setup, sg_conf_name)
     # Change the timestamps for SG logs when SG stopped (Name is unchanged)
     for log in SG_LOGS_MAXAGE:
         file_name = "/tmp/sg_logs/{}.log".format(log)
-        command = "sudo touch -d \"{} days ago\" {}".format(SG_LOGS_MAXAGE[log], file_name)
+        if sg_platform == "macos":
+            age = [log] * 24
+            command = "sudo touch -A -{}0000 {}".format(age, file_name)
+        else:
+            command = "sudo touch -d \"{} days ago\" {}".format([log], file_name)
         remote_executor.execute(command)
 
     sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
