@@ -390,7 +390,7 @@ def test_webhook_filter_external_js(params_from_base_test_setup, setup_webserver
     sdk_client.upsert_multi(sdk_docs)
 
     count = 0
-    retries = 5
+    retries = 8
     while count < retries:
         data = webhook_server.get_data()
         # Remove unwanted data from the response
