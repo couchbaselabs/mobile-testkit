@@ -62,10 +62,10 @@ class TestServeriOS(TestServerBase):
             self.bundle_id = "com.couchbase.CBLTestServer-iOS"
         elif self.platform == "c-ios":
             # C-IOS
-            self.app_dir = "TestServer.iOS.C"
-            self.package_name = "TestServer.iOS.C.zip"
-            self.app = "TestServer.C.iOS"
-            self.bundle_id = "com.couchbase.TestServer.C.iOS"
+            self.app_dir = "TestServer-iOS"
+            self.package_name = "TestServer-iOS.zip"
+            self.app = "TestServer.iOS"
+            self.bundle_id = "com.couchbase.TestServer.iOS"
         else:
             # Xamarin-ios
             self.app_dir = "TestServer.iOS"
