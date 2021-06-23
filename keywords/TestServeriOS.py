@@ -64,7 +64,7 @@ class TestServeriOS(TestServerBase):
             # C-IOS
             self.app_dir = "CBLTestServer-iOS"
             self.package_name = "CBLTestServer-iOS.zip"
-            self.app = "TestServer.iOS"
+            self.app = "TestServer"
             self.bundle_id = "com.couchbase.TestServer.iOS"
         else:
             # Xamarin-ios
