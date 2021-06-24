@@ -187,6 +187,10 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="magma-storage: Enable magma storage on couchbase server")
 
+    parser.addoption("--liteserv-android-serial-numbers",
+                     action="store",
+                     help="liteserv-android-serial-numbers: the android device serial numbers")
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -233,7 +237,10 @@ def params_from_base_suite_setup(request):
     enable_cbs_developer_preview = request.config.getoption("--enable-cbs-developer-preview")
     cbs_ssl = request.config.getoption("--server-ssl")
     magma_storage_enabled = request.config.getoption("--magma-storage")
-
+    liteserv_android_serial_numbers = request.config.getoption("--liteserv-android-serial-numbers")
+    liteserv_android_serial_number = []
+    if liteserv_android_serial_numbers:
+        liteserv_android_serial_number = liteserv_android_serial_numbers.split(',')
     test_name = request.node.name
 
     testserver = TestServerFactory.create(platform=liteserv_platform,
@@ -250,6 +257,8 @@ def params_from_base_suite_setup(request):
 
         # Install TestServer app
         if device_enabled:
+            if len(liteserv_android_serial_number) != 0 and "android" in liteserv_platform:
+                testserver.serial_number = liteserv_android_serial_number[0]
             testserver.install_device()
         else:
             testserver.install()
