@@ -31,11 +31,11 @@ class TestServerAndroid(TestServerBase):
             self.device_enabled = False
             self.installed_package_name = "com.couchbase.TestServerApp"
             self.activity_name = self.installed_package_name + "/com.couchbase.CouchbaseLiteServ.MainActivity"
-        elif self.platform == "c-android":
-            # Cpp-android
-            self.package_name = self.apk_name = "TestServer.Android.apk"
-            self.installed_package_name = "TestServer.Android"
-            self.activity_name = self.installed_package_name + "/crc647fe427cfd4b0161b.MainActivity"
+        # elif self.platform == "c-android":
+        #     # Cpp-android
+        #     self.package_name = self.apk_name = "TestServer.Android.apk"
+        #     self.installed_package_name = "TestServer.Android"
+        #     self.activity_name = self.installed_package_name + "/md53466f247b9f9d18ced632d20bd2e0d5c.MainActivity"
         else:
             # Xamarin-android
             self.package_name = self.apk_name = "TestServer.Android.apk"
