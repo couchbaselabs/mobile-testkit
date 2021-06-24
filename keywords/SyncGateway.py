@@ -1061,3 +1061,36 @@ def wait_until_docs_imported_from_server(sg_admin_url, sg_client, sg_db, expecte
             break
         time.sleep(1)
         count += 1
+
+
+def replace_xattrs_sync_func_in_config(sg_config, channel, enable_xattrs_key=True):
+    # Sample config how it looks after it constructs the config here
+    """function (doc, oldDoc, meta){
+    if(meta.xattrs.channel1 != undefined){
+        channel(meta.xattrs.channel1);
+        console.log("channel1 is defined");
+        console.log(meta.xattrs.channel1);
+        console.log(doc._id);
+    }
+    }"""
+    mode = "cc"
+    sync_func_string = """ `function (doc, oldDoc, meta){
+    if(meta.xattrs.""" + channel + """ != undefined){
+        channel(meta.xattrs.""" + channel + """);
+    }
+    }` """
+    temp_sg_config, _ = copy_sgconf_to_temp(sg_config, mode)
+    if enable_xattrs_key:
+        user_xattrs_string = """ "user_xattr_key": "{}", """.format(channel)
+    else:
+        user_xattrs_string = ""
+    temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ user_xattrs_key }}", user_xattrs_string)
+    temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ sync_func }}", sync_func_string)
+    return temp_sg_config
+
+
+def replace_flag_with_config(sg_config, flag, property):
+    mode = "cc"
+    temp_sg_config, _ = copy_sgconf_to_temp(sg_config, mode)
+    temp_sg_config = replace_string_on_sgw_config(temp_sg_config, flag, property)
+    return temp_sg_config

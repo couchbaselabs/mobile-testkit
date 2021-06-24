@@ -180,7 +180,6 @@ def params_from_base_suite_setup(request):
     skip_couchbase_provision = request.config.getoption("--skip-couchbase-provision")
     enable_cbs_developer_preview = request.config.getoption("--enable-cbs-developer-preview")
 
-
     test_name = request.node.name
     if enable_upgrade_app:
         testserver = TestServerFactory.create(platform=liteserv_platform,

@@ -23,6 +23,7 @@ from utilities.cluster_config_utils import get_sg_version
 @pytest.mark.session
 @pytest.mark.channel
 @pytest.mark.bulkops
+@pytest.mark.oscertify
 def test_rebalance_sanity(params_from_base_test_setup):
 
     cluster_config = params_from_base_test_setup["cluster_config"]

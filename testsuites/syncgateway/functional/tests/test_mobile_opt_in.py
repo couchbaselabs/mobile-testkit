@@ -327,6 +327,7 @@ def test_non_mobile_ignore_count(params_from_base_test_setup, sg_conf_name):
     # 2. Verify “non_mobile_ignored_count” is 0 on _expvar end point
     sg_expvars = sg_client.get_expvars(url=sg_admin_url)
     non_mobile_ignore_count = sg_expvars["syncgateway"]["per_db"][sg_db]["cache"]["non_mobile_ignored_count"]
+    warn_count = sg_expvars["syncgateway"]["global"]["resource_utilization"]["warn_count"]
     assert non_mobile_ignore_count == 1, "non_mobile_ignore_count did not get expected count"
     command = "grep 'Cache: changeCache' /tmp/sg_logs/sg_info.log | wc -l"
     command1 = "grep 'does not have valid sync data' /tmp/sg_logs/sg_info.log | wc -l"
@@ -412,4 +413,4 @@ def test_non_mobile_ignore_count(params_from_base_test_setup, sg_conf_name):
     assert non_mobile_ignore_count == 1, "non_mobile_ignore_count did not get expected count"
 
     # 8. Verify warn_count is 0
-    assert sg_expvars["syncgateway"]["global"]["resource_utilization"]["warn_count"] == 0, "warn_count is not 0"
+    assert sg_expvars["syncgateway"]["global"]["resource_utilization"]["warn_count"] == warn_count, "warn_count is not 0"
