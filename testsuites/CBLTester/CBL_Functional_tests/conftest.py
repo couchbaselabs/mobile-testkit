@@ -259,13 +259,19 @@ def params_from_base_suite_setup(request):
         if device_enabled:
             if len(liteserv_android_serial_number) != 0 and "android" in liteserv_platform:
                 testserver.serial_number = liteserv_android_serial_number[0]
-            testserver.install_device()
+                testserver.install_device(liteserv_android_serial_number[0])
+            else:
+                testserver.install_device()
         else:
             testserver.install()
 
         if device_enabled and "android" in liteserv_platform:
             test_name_cp = test_name.replace("/", "-")
-            testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
+            if len(liteserv_android_serial_number) != 0 and "android" in liteserv_platform:
+                testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
+                                                                  test_name_cp, datetime.datetime.now()), liteserv_android_serial_number)
+            else:
+                testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
                                                                   test_name_cp, datetime.datetime.now()))
         else:
             testserver.start()
