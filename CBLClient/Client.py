@@ -44,6 +44,8 @@ class Client(object):
                     log_info("Got response: {}".format(result))
                 return ValueSerializer.deserialize(result)
         except Exception as err:
+            log_info(url)
+            log_info(json.dumps(body))
             if resp.content:
                 cont = resp.content
                 if isinstance(resp.content, bytes):
