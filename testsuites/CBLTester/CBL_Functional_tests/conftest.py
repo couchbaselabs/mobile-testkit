@@ -265,7 +265,7 @@ def params_from_base_suite_setup(request):
         else:
             testserver.install()
 
-        if device_enabled and "android" in liteserv_platform:
+        if device_enabled:
             test_name_cp = test_name.replace("/", "-")
             if len(liteserv_android_serial_number) != 0 and "android" in liteserv_platform:
                 testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
