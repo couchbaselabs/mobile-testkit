@@ -225,6 +225,7 @@ class TestServerAndroid(TestServerBase):
 
         # Clear adb buffer
         if device_id:
+            log_info(device_id)
             subprocess.check_call(["adb", "-s", device_id, "-d", "logcat", "-c"])
         else:
             subprocess.check_call(["adb", "-d", "logcat", "-c"])
