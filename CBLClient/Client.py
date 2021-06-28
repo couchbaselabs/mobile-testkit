@@ -32,6 +32,8 @@ class Client(object):
             resp = self.session.post(url, data=json.dumps(body))
             resp.raise_for_status()
             responseCode = resp.status_code
+            log_info(json.dumps(body))
+            print("*" * 8)
 
             if responseCode == 200:
                 result = resp.content
@@ -42,6 +44,8 @@ class Client(object):
                 if len(result) < 25:
                     # Only print short messages
                     log_info("Got response: {}".format(result))
+                print(result)
+                print("*"*8)
                 return ValueSerializer.deserialize(result)
         except Exception as err:
             log_info(url)
