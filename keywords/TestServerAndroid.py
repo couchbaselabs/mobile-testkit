@@ -251,7 +251,10 @@ class TestServerAndroid(TestServerBase):
             ])
         log_info(output)
         self._wait_until_reachable(port=self.port)
-        self._verify_launched()
+        if device_id:
+            self._verify_launched(device_id)
+        else:
+            self._verify_launched()
 
     def _verify_launched(self, device_id=None):
         """ Verify that app is launched with adb command
