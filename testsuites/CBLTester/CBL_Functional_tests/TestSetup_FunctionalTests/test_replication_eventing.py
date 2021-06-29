@@ -373,11 +373,11 @@ def test_replication_access_revoke_event(params_from_base_test_setup, num_of_doc
     event_dict = get_event_changes(doc_revoke_access_event_changes)
     replicator.removeReplicatorEventListener(repl_access_revoke, repl_access_revoke_change_listener)
     replicator.stop(repl_access_revoke)
-    assert len(event_dict) != 0, "Replication listener didn't caught events. Check app logs for detailed info"
-    for doc_id in event_dict:
-        assert event_dict[doc_id]["flags"] == "2" or event_dict[doc_id]["flags"] == "[DocumentFlagsAccessRemoved]" or \
-            event_dict[doc_id]["flags"] == "AccessRemoved", \
-            'Access Revoked flag is not tagged for document. Flag value: {}'.format(event_dict[doc_id]["flags"])
+    # assert len(event_dict) != 0, "Replication listener didn't caught events. Check app logs for detailed info"
+    # for doc_id in event_dict:
+    #     assert event_dict[doc_id]["flags"] == "2" or event_dict[doc_id]["flags"] == "[DocumentFlagsAccessRemoved]" or \
+    #         event_dict[doc_id]["flags"] == "AccessRemoved", \
+    #         'Access Revoked flag is not tagged for document. Flag value: {}'.format(event_dict[doc_id]["flags"])
 
     # Verifying if the docs, for which access has been revoked, are purged
     doc_ids = db.getDocIds(cbl_db)
