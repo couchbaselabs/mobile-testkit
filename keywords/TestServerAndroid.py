@@ -256,7 +256,7 @@ class TestServerAndroid(TestServerBase):
     def _verify_launched(self, device_id=None):
         """ Verify that app is launched with adb command
         """
-        if self.device_enabled:
+        if device_id:
             output = subprocess.check_output(["adb", "-s", device_id, "-d", "shell", "pidof", self.installed_package_name, "|", "wc", "-l"])
         else:
             output = subprocess.check_output(["adb", "-e", "shell", "pidof", self.installed_package_name, "|", "wc", "-l"])
