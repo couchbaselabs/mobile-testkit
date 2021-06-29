@@ -269,10 +269,10 @@ def params_from_base_suite_setup(request):
             test_name_cp = test_name.replace("/", "-")
             if len(liteserv_android_serial_number) != 0 and "android" in liteserv_platform:
                 testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
-                                                                  test_name_cp, datetime.datetime.now()), liteserv_android_serial_number[0])
+                                                                      test_name_cp, datetime.datetime.now()), liteserv_android_serial_number[0])
             else:
                 testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
-                                                                  test_name_cp, datetime.datetime.now()))
+                                                                      test_name_cp, datetime.datetime.now()))
         else:
             testserver.start()
 
@@ -588,7 +588,8 @@ def params_from_base_suite_setup(request):
         "sg_ce": sg_ce,
         "cbl_ce": cbl_ce,
         "prometheus_enable": prometheus_enable,
-        "ssl_enabled": cbs_ssl
+        "ssl_enabled": cbs_ssl,
+        "liteserv_android_serial_number": liteserv_android_serial_number
     }
 
     if request.node.testsfailed != 0 and enable_file_logging and create_db_per_suite is not None:
@@ -667,6 +668,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     sg_ce = params_from_base_suite_setup["sg_ce"]
     prometheus_enable = request.config.getoption("--prometheus-enable")
     cbs_ssl = params_from_base_suite_setup["ssl_enabled"]
+    liteserv_android_serial_number = params_from_base_suite_setup["liteserv_android_serial_number"]
 
     source_db = None
     test_name_cp = test_name.replace("/", "-")
@@ -677,7 +679,10 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     if not use_local_testserver and create_db_per_test:
         log_info("Starting TestServer...")
         if device_enabled:
-            testserver.start_device(log_filename)
+            if len(liteserv_android_serial_number) != 0 and "android" in liteserv_platform:
+                testserver.start_device(log_filename, liteserv_android_serial_number[0])
+            else:
+                testserver.start_device(log_filename)
         else:
             testserver.start(log_filename)
 
