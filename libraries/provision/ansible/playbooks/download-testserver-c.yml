@@ -1,9 +1,9 @@
 
-- name: Download Testserver Java WebService Package
+- name: Download Testserver C Package
   hosts: testserver
     - name: create testserver directory if not exists
     file:
-        path: ~ /javatestserver
+        path: ~ /testserver
         state: directory
         when: javatestserver_dir.stat.exists == False
 

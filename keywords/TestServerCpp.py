@@ -12,7 +12,7 @@ import requests
 import subprocess
 
 class TestServerCpp(TestServerBase):
-    def __init__(self, version_build, host, port, debug_mode=None, platform="javaws-centos", community_enabled=None):
+    def __init__(self, version_build, host, port, debug_mode=None, platform="c-linux", community_enabled=None):
         self.platform = platform
         self.released_version = {
             "3.0.0": 94

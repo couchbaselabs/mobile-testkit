@@ -154,6 +154,11 @@ class TestServerNetMsft(TestServerWinBase):
                     "log_full_path": log_full_path
                 }
             )
+        elif self.platform == "c-msft":
+            status = self.ansible_runner.run_ansible_playbook(
+                "stop-testserver-c-windows.yml"
+            )
+
         else:
             # net-uwp
             status = self.ansible_runner.run_ansible_playbook(
