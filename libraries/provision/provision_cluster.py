@@ -272,9 +272,9 @@ if __name__ == "__main__":
                       help="delta-sync: Enable delta-sync for sync gateway")
 
     parser.add_option("", "--enable-cbs-developer-preview",
-                     action="store", type="string", dest="enable_cbs_dp",
-                     help="Enabling CBS developer preview",
-                     default=False)
+                      action="store", type="string", dest="enable_cbs_dp",
+                      help="Enabling CBS developer preview",
+                      default=False)
     arg_parameters = sys.argv[1:]
 
     (opts, args) = parser.parse_args(arg_parameters)
