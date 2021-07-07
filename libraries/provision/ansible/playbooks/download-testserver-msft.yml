@@ -17,6 +17,12 @@
     win_command: sc delete TestServer
     ignore_errors: yes
 
+  - debug: msg="Stopping the Testserver C"
+    - name: stop service
+      win_service:
+        name: TestServerC
+        state: stopped
+
   - name: Delete any exiting packages
     win_file: 
       path: C:\Users\{{ ansible_user }}\Desktop\TestServer\*
