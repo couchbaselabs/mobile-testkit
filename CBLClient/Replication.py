@@ -332,6 +332,7 @@ class Replication(object):
             log_info("Activity level: {}".format(activity_level))
             log_info("total vs completed = {} vs {} ".format(self.getCompleted(repl), self.getTotal(repl)))
             log_info("count is  {}".format(count))
+            log_info("Activity level {}".format(activity_level))
             time.sleep(sleep_time)
             if activity_level == "offline" or activity_level == "connecting" or activity_level == "busy":
                 count += 1

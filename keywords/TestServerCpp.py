@@ -26,7 +26,10 @@ class TestServerCpp(TestServerBase):
         else:
             self.build_type = "enterprise"
         #if self.build is None:
-        self.package_name = "CBLTestServer_macosx_x64"
+        if self.platform == "c-macosx":
+            self.package_name = "CBLTestServer_macosx_x64"
+        else:
+            self.package_name = "testserver_linux_x64"
                 # "CBLTestServer_macosx-{}-{}".format(self.build_type, self.version)
         self.download_url = "{}/couchbase-lite-c/{}/{}.zip".format(RELEASED_BUILDS, self.version, self.package_name)
         self.binary_path = "{}/{}.exe".format(BINARY_DIR, self.package_name)
@@ -49,35 +52,47 @@ class TestServerCpp(TestServerBase):
         """
          TODO: once we know the steps add it
         """
-        if version_build is not None:
-            self.version_build = version_build
-        app_name = self.package_name
-        expected_binary_path = "{}/{}/{}".format(BINARY_DIR, self.app_dir, app_name)
-        if os.path.exists(expected_binary_path):
-            log_info("Package is already downloaded. Skipping.")
+
+        status = self.ansible_runner.run_ansible_playbook("download-testserver-c.yml", extra_vars={
+            "testserver_download_url": self.download_url,
+            "package_name": self.package_name
+        })
+
+        if status == 0:
             return
-        # Package not downloaded, proceed to download from latest builds
-        downloaded_package_zip_name = "{}/{}".format(BINARY_DIR, self.package_name)
-        self.version, self.build = version_and_build(self.version_build)
-        if self.build is None:
-            url = "{}/couchbase-lite-c/{}/{}".format(RELEASED_BUILDS, self.version, self.package_name)
         else:
-            url = "{}/couchbase-lite-c/{}/{}/{}".format(LATEST_BUILDS, self.version, self.build, self.package_name)
-        log_info("Downloading {} -> {}/{}".format(url, BINARY_DIR, self.package_name))
+            raise LiteServError("Failed to download Test server on remote machine")
 
-        resp = requests.get(url, verify=False)
-        resp.raise_for_status()
-        if self.platform == "c-macosx" or "c-linux":
-            resp = requests.get(self.download_url, verify=False)
-            resp.raise_for_status()
-            with open("{}/{}".format(BINARY_DIR, self.package_name), "wb") as f:
-                f.write(resp.content)
-            extracted_directory_name = self.binary_path.replace(".zip", "")
-            with ZipFile("{}".format(self.binary_path)) as zip_f:
-                zip_f.extractall("{}".format(extracted_directory_name))
 
-            # Remove .zip
-            os.remove("{}".format(self.binary_path))
+        # if version_build is not None:
+        #     self.version_build = version_build
+        # app_name = self.package_name
+        # expected_binary_path = "{}/{}/{}".format(BINARY_DIR, self.app_dir, app_name)
+        # if os.path.exists(expected_binary_path):
+        #     log_info("Package is already downloaded. Skipping.")
+        #     return
+        # # Package not downloaded, proceed to download from latest builds
+        # downloaded_package_zip_name = "{}/{}".format(BINARY_DIR, self.package_name)
+        # self.version, self.build = version_and_build(self.version_build)
+        # if self.build is None:
+        #     url = "{}/couchbase-lite-c/{}/{}".format(RELEASED_BUILDS, self.version, self.package_name)
+        # else:
+        #     url = "{}/couchbase-lite-c/{}/{}/{}".format(LATEST_BUILDS, self.version, self.build, self.package_name)
+        # log_info("Downloading {} -> {}/{}".format(url, BINARY_DIR, self.package_name))
+        #
+        # resp = requests.get(url, verify=False)
+        # resp.raise_for_status()
+        # if self.platform == "c-macosx" or "c-linux":
+        #     resp = requests.get(self.download_url, verify=False)
+        #     resp.raise_for_status()
+        #     with open("{}/{}".format(BINARY_DIR, self.package_name), "wb") as f:
+        #         f.write(resp.content)
+        #     extracted_directory_name = self.binary_path.replace(".zip", "")
+        #     with ZipFile("{}".format(self.binary_path)) as zip_f:
+        #         zip_f.extractall("{}".format(extracted_directory_name))
+        #
+        #     # Remove .zip
+        #     os.remove("{}".format(self.binary_path))
 
     def remove(self):
         raise NotImplementedError()
