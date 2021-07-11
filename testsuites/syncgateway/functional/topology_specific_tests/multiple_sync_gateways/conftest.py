@@ -5,6 +5,7 @@ from keywords.ClusterKeywords import ClusterKeywords
 from keywords.SyncGateway import (sync_gateway_config_path_for_mode,
                                   validate_sync_gateway_mode)
 from keywords.tklogging import Logging
+from keywords.constants import CLUSTER_CONFIGS_DIR
 from keywords.utils import log_info, check_xattr_support, version_is_binary, clear_resources_pngs
 
 from keywords.exceptions import ProvisioningError, FeatureSupportedError
@@ -49,6 +50,7 @@ def params_from_base_suite_setup(request):
     skip_couchbase_provision = request.config.getoption("--skip-couchbase-provision")
     enable_cbs_developer_preview = request.config.getoption("--enable-cbs-developer-preview")
     disable_persistent_config = request.config.getoption("--disable-persistent-config")
+    cluster_config = request.config.getoption("--cluster-config")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
@@ -88,7 +90,7 @@ def params_from_base_suite_setup(request):
     validate_sync_gateway_mode(mode)
 
     # use base_cc cluster config if mode is "cc" or base_di cluster config if more is "di"
-    cluster_config = "{}/multiple_sync_gateways_{}".format(constants.CLUSTER_CONFIGS_DIR, mode)
+    cluster_config = "{}/{}{}".format(CLUSTER_CONFIGS_DIR, cluster_config, mode)
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
 
     if use_views:

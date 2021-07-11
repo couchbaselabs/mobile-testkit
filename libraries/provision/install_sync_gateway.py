@@ -198,7 +198,8 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
             "delta_sync": "",
             "prometheus": "",
             "hide_product_version": "",
-            "tls": ""
+            "tls": "",
+            "disable_persistent_config": ""
         }
 
         if get_sg_version(cluster_config) >= "2.1.0":
@@ -294,8 +295,10 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
             playbook_vars["prometheus"] = '"metricsInterface": ":4986",'
 
         if is_hide_prod_version_enabled(cluster_config) and get_sg_version(cluster_config) >= "2.8.1":
-                playbook_vars["hide_product_version"] = '"hide_product_version": true,'
+            playbook_vars["hide_product_version"] = '"hide_product_version": true,'
 
+        if is_centralized_persistent_config_disabled(cluster_config):
+            playbook_vars["disable_persistent_config"] = '"disable_persistent_config": true,'
     # Install Sync Gateway via Source or Package
     if sync_gateway_config.commit is not None:
         # Install from source

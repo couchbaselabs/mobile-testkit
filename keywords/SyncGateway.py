@@ -6,7 +6,7 @@ from requests import Session
 from jinja2 import Template
 import time
 import re
-from keywords.constants import SYNC_GATEWAY_CONFIGS, SYNC_GATEWAY_CERT
+from keywords.constants import SYNC_GATEWAY_CONFIGS, SYNC_GATEWAY_CERT, SYNC_GATEWAY_CONFIGS_CPC
 from keywords.utils import version_is_binary, add_cbs_to_sg_config_server_field
 from keywords.utils import log_r
 from keywords.utils import version_and_build
@@ -34,7 +34,7 @@ def validate_sync_gateway_mode(mode):
         raise ValueError("Sync Gateway mode must be 'cc' (channel cache) or 'di' (distributed index)")
 
 
-def sync_gateway_config_path_for_mode(config_prefix, mode):
+def sync_gateway_config_path_for_mode(config_prefix, mode, cpc=False):
     """Construct a sync_gateway config path depending on a mode
     1. Check that mode is valid ("cc" or "di")
     2. Construct the config path relative to the root of the repository
@@ -42,20 +42,18 @@ def sync_gateway_config_path_for_mode(config_prefix, mode):
     """
 
     validate_sync_gateway_mode(mode)
+    # cluster_config = os.environ["CLUSTER_CONFIG"]
+    #if get_sg_version(cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config):
+    #    cpc = True
     # Construct expected config path
     config = "{}/{}_{}.json".format(SYNC_GATEWAY_CONFIGS, config_prefix, mode)
     if not os.path.isfile(config):
         raise ValueError("Could not file config: {}".format(config))
 
-    # replace server bucket with unique bucket name
-    """if unique_bucket:
-        temp_sg_conf, _ = copy_sgconf_to_tempconfig_for_reset_method(config, mode)
-        temp_sg_conf = replace_string_on_sgw_config(temp_sg_conf, '"data-bucket"', '"data-bucket-{}"'.format(time.time()))
-        temp_sg_conf = replace_string_on_sgw_config(temp_sg_conf, '"data-bucket-1"', '"data-bucket-1-{}"'.format(time.time()))
-        temp_sg_conf = replace_string_on_sgw_config(temp_sg_conf, '"data-bucket-2"', '"data-bucket-2-{}"'.format(time.time()))
-        temp_sg_conf = replace_string_on_sgw_config(temp_sg_conf, '"data-bucket-3"', '"data-bucket-3-{}"'.format(time.time()))
-        temp_sg_conf = replace_string_on_sgw_config(temp_sg_conf, '"data-bucket-4"', '"data-bucket-4-{}"'.format(time.time()))
-        config = temp_sg_conf """
+    if cpc:
+        config = "{}/{}_{}.json".format(SYNC_GATEWAY_CONFIGS_CPC, config_prefix, mode)
+    if not os.path.isfile(config):
+        raise ValueError("Could not file config: {}".format(config))
     return config
 
 
@@ -260,6 +258,7 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config):
         delta_sync_prop = ""
         hide_prod_version_prop = ""
         tls_prop = ""
+        disable_persistent_config_prop = ""
 
         sg_platform = get_sg_platform(cluster_config)
         if get_sg_version(cluster_config) >= "2.1.0":
@@ -328,6 +327,9 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config):
         if is_hide_prod_version_enabled(cluster_config) and get_sg_version(cluster_config) >= "2.8.1":
             hide_prod_version_prop = '"hide_product_version": true,'
 
+        if is_centralized_persistent_config_disabled(cluster_config):
+            disable_persistent_config_prop = '"disable_persistent_config": true,'
+
         temp = template.render(
             couchbase_server_primary_node=couchbase_server_primary_node,
             is_index_writer="false",
@@ -352,7 +354,8 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config):
             revs_limit=revs_limit_prop,
             delta_sync=delta_sync_prop,
             hide_prod_version=hide_prod_version_prop,
-            tls=tls_prop
+            tls=tls_prop,
+            disable_persistent_config_prop=disable_persistent_config_prop
         )
         data = json.loads(temp)
 
@@ -443,7 +446,8 @@ class SyncGateway(object):
                 "delta_sync": "",
                 "prometheus": "",
                 "hide_product_version": "",
-                "tls": ""
+                "tls": "",
+                "disable_persistent_config": ""
             }
             sg_platform = get_sg_platform(cluster_config)
             if get_sg_version(cluster_config) >= "2.1.0":
@@ -539,6 +543,9 @@ class SyncGateway(object):
             if is_hide_prod_version_enabled(cluster_config) and get_sg_version(cluster_config) >= "2.8.1":
                 playbook_vars["hide_product_version"] = '"hide_product_version": true,'
 
+            if is_centralized_persistent_config_disabled(cluster_config):
+                playbook_vars["disable_persistent_config"] = '"disable_persistent_config": true,'
+
         if url is not None:
             target = hostname_for_url(cluster_config, url)
             log_info("Starting {} sync_gateway.".format(target))
@@ -602,7 +609,7 @@ class SyncGateway(object):
         if status != 0:
             raise ProvisioningError("Could not restart sync_gateway")
 
-    def upgrade_sync_gateway(self, sync_gateways, sync_gateway_version, sync_gateway_upgraded_version, sg_conf, cluster_config):
+    def upgrade_sync_gateway(self, sync_gateways, sync_gateway_version, sync_gateway_upgraded_version, sg_conf, cluster_config, verify_version=True):
         log_info('------------------------------------------')
         log_info('START Sync Gateway cluster upgrade')
         log_info('------------------------------------------')
@@ -612,7 +619,8 @@ class SyncGateway(object):
             log_info("Checking for sync gateway product info before upgrade")
             verify_sync_gateway_product_info(sg_ip)
             log_info("Checking for sync gateway version: {}".format(sync_gateway_version))
-            verify_sync_gateway_version(sg_ip, sync_gateway_version)
+            if verify_version:
+                verify_sync_gateway_version(sg_ip, sync_gateway_version)
             log_info("Upgrading sync gateway: {}".format(sg_ip))
             self.upgrade_sync_gateways(
                 cluster_config=cluster_config,
@@ -690,7 +698,8 @@ class SyncGateway(object):
                 "delta_sync": "",
                 "prometheus": "",
                 "hide_product_version": "",
-                "tls": ""
+                "tls": "",
+                "disable_persistent_config": ""
             }
 
             sync_gateway_base_url, sync_gateway_package_name, sg_accel_package_name = sg_config.sync_gateway_base_url_and_package()
@@ -781,6 +790,9 @@ class SyncGateway(object):
 
             if is_hide_prod_version_enabled(cluster_config) and get_sg_version(cluster_config) >= "2.8.1":
                 playbook_vars["hide_product_version"] = '"hide_product_version": true,'
+
+            if is_centralized_persistent_config_disabled(cluster_config):
+                playbook_vars["disable_persistent_config"] = '"disable_persistent_config": true,'
         playbook_vars.update(playbook_vars1)
         if url is not None:
             target = hostname_for_url(cluster_config, url)
@@ -858,7 +870,8 @@ class SyncGateway(object):
                 "delta_sync": "",
                 "prometheus": "",
                 "hide_product_version": "",
-                "tls": ""
+                "tls": "",
+                "disable_persistent_config": ""
             }
 
             playbook_vars["username"] = '"username": "{}",'.format(bucket_names[0])
@@ -940,6 +953,8 @@ class SyncGateway(object):
             if is_hide_prod_version_enabled(cluster_config) and get_sg_version(cluster_config) >= "2.8.1":
                 playbook_vars["hide_product_version"] = '"hide_product_version": true,'
 
+            if is_centralized_persistent_config_disabled(self._cluster_config):
+                playbook_vars["disable_persistent_config"] = '"disable_persistent_config": true,'
         # Deploy config
         if url is not None:
             target = hostname_for_url(cluster_config, url)

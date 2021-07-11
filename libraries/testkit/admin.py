@@ -58,6 +58,14 @@ class Admin:
         r.raise_for_status()
         return r.json()
 
+    def get_dbs_from_config(self):
+        r = requests.get("{}/_config".format(self.admin_url), verify=False)
+        log.info("GET {}".format(r.url))
+        r.raise_for_status()
+        json_config = r.json()
+        print("json config is ", json_config)
+        return list(json_config["Databases"].keys())
+
     # GET /{db}/
     def get_db_info(self, db):
         resp = requests.get("{0}/{1}/".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False)
@@ -182,6 +190,13 @@ class Admin:
         log.info("PUT {}".format(resp.url))
         resp.raise_for_status()
         return resp.status_code
+
+    # GET /_config
+    def get_config(self):
+        resp = requests.get("{0}/_config".format(self.admin_url), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False)
+        log.info("GET {}".format(resp.url))
+        resp.raise_for_status()
+        return resp.json()
 
     # GET /_cbgt/api/cfg
     def get_cbgt_config(self):

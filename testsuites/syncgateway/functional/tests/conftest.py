@@ -1,6 +1,7 @@
 """ Setup for Sync Gateway functional tests """
 
 import pytest
+import os
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.constants import CLUSTER_CONFIGS_DIR
 from keywords.exceptions import ProvisioningError, FeatureSupportedError
@@ -173,6 +174,11 @@ def pytest_addoption(parser):
     parser.addoption("--disable-persistent-config",
                      action="store_true",
                      help="Centralized Persistent Config")
+    
+    parser.addoption("--sync-gateway-previous-version",
+                     action="store",
+                     help="sync-gateway-previous-version")
+    
 
 
 # This will be called once for the at the beggining of the execution in the 'tests/' directory
@@ -215,6 +221,7 @@ def params_from_base_suite_setup(request):
     skip_couchbase_provision = request.config.getoption("--skip-couchbase-provision")
     enable_cbs_developer_preview = request.config.getoption("--enable-cbs-developer-preview")
     disable_persistent_config = request.config.getoption("--disable-persistent-config")
+    sync_gateway_previous_version = request.config.getoption("--sync-gateway-previous-version")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
@@ -400,11 +407,6 @@ def params_from_base_suite_setup(request):
         log_info("Running without Centralized Persistent Config")
         persist_cluster_config_environment_prop(cluster_config, 'disable_persistent_config', False)
 
-    """if disable_persistent_config:
-        sgw_config = "sync_gateway_default_functional_tests"
-    else:
-        sgw_config = "sync_gateway_default_functional_tests_cpc"
-    sg_config = sync_gateway_config_path_for_mode(sgw_config, mode) """
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
     # Skip provisioning if user specifies '--skip-provisoning' or '--sequoia'
     should_provision = True
@@ -412,34 +414,43 @@ def params_from_base_suite_setup(request):
         should_provision = False
 
     cluster_utils = ClusterKeywords(cluster_config)
-    if should_provision:
+    provision_flag = True
+    count = 0
+    max_count = 2
+    while provision_flag and count < max_count:
+        if should_provision:
+            try:
+                cluster_utils.provision_cluster(
+                    cluster_config=cluster_config,
+                    server_version=server_version,
+                    sync_gateway_version=sync_gateway_version,
+                    sync_gateway_config=sg_config,
+                    race_enabled=race_enabled,
+                    cbs_platform=cbs_platform,
+                    sg_platform=sg_platform,
+                    sg_installer_type=sg_installer_type,
+                    sa_platform=sa_platform,
+                    sa_installer_type=sa_installer_type,
+                    sg_ce=sg_ce,
+                    cbs_ce=cbs_ce,
+                    skip_couchbase_provision=skip_couchbase_provision
+                )
+            except ProvisioningError:
+                logging_helper = Logging()
+                logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=request.node.name)
+                raise
         try:
-            cluster_utils.provision_cluster(
-                cluster_config=cluster_config,
-                server_version=server_version,
-                sync_gateway_version=sync_gateway_version,
-                sync_gateway_config=sg_config,
-                race_enabled=race_enabled,
-                cbs_platform=cbs_platform,
-                sg_platform=sg_platform,
-                sg_installer_type=sg_installer_type,
-                sa_platform=sa_platform,
-                sa_installer_type=sa_installer_type,
-                sg_ce=sg_ce,
-                cbs_ce=cbs_ce,
-                skip_couchbase_provision=skip_couchbase_provision
+            # Hit this intalled running services to verify the correct versions are installed
+            cluster_utils.verify_cluster_versions(
+                cluster_config,
+                expected_server_version=server_version,
+                expected_sync_gateway_version=sync_gateway_version
             )
-        except ProvisioningError:
-            logging_helper = Logging()
-            logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=request.node.name)
-            raise
-
-    # Hit this intalled running services to verify the correct versions are installed
-    cluster_utils.verify_cluster_versions(
-        cluster_config,
-        expected_server_version=server_version,
-        expected_sync_gateway_version=sync_gateway_version
-    )
+            provision_flag = False
+        except Exception:
+            provision_flag = True
+            should_provision = True
+        count += 1
 
     # Load topology as a dictionary
     cluster_utils = ClusterKeywords(cluster_config)
@@ -468,7 +479,8 @@ def params_from_base_suite_setup(request):
         "sg_config": sg_config,
         "cbs_ce": cbs_ce,
         "prometheus_enabled": prometheus_enabled,
-        "disable_persistent_config": disable_persistent_config
+        "disable_persistent_config": disable_persistent_config,
+        "sync_gateway_previous_version": sync_gateway_previous_version
     }
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
@@ -508,6 +520,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     sg_ce = params_from_base_suite_setup["sg_ce"]
     sg_config = params_from_base_suite_setup["sg_config"]
     cbs_ce = params_from_base_suite_setup["cbs_ce"]
+    sync_gateway_previous_version = params_from_base_suite_setup["sync_gateway_previous_version"]
 
     test_name = request.node.name
     c = cluster.Cluster(cluster_config)
@@ -566,7 +579,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "sg_ce": sg_ce,
         "cbs_ce": cbs_ce,
         "sg_url": sg_url,
-        "sg_admin_url": sg_admin_url
+        "sg_admin_url": sg_admin_url,
+        "sync_gateway_previous_version": sync_gateway_previous_version
     }
 
     # Code after the yield will execute when each test finishes

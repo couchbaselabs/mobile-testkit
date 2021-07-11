@@ -115,3 +115,8 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="Centralized Persistent Config",
                      default=True)
+
+    parser.addoption("--cluster-config",
+                     action="store",
+                     help="Provide a custom cluster config",
+                     default="multiple_sync_gateways_")

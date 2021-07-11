@@ -100,7 +100,8 @@ class SyncGateway:
                 "delta_sync": "",
                 "prometheus": "",
                 "hide_product_version": "",
-                "tls": ""
+                "tls": "",
+                "disable_persistent_config":""
 
             }
 
@@ -183,6 +184,9 @@ class SyncGateway:
             if is_hide_prod_version_enabled(self.cluster_config) and get_sg_version(self.cluster_config) >= "2.8.1":
                 playbook_vars["hide_product_version"] = '"hide_product_version": true,'
 
+            if is_centralized_persistent_config_disabled(self._cluster_config):
+                playbook_vars["disable_persistent_config"] = '"disable_persistent_config": true,'
+
             if is_cbs_ssl_enabled(self.cluster_config) and get_sg_version(self.cluster_config) >= "1.5.0":
                 playbook_vars["server_scheme"] = "couchbases"
                 playbook_vars["server_port"] = 11207
@@ -246,7 +250,8 @@ class SyncGateway:
                 "delta_sync": "",
                 "prometheus": "",
                 "hide_product_version": "",
-                "tls": ""
+                "tls": "",
+                "disable_persistent_config":""
             }
             sg_platform = get_sg_platform(cluster_config)
 
@@ -330,6 +335,9 @@ class SyncGateway:
 
             if is_hide_prod_version_enabled(cluster_config) and get_sg_version(cluster_config) >= "2.8.1":
                 playbook_vars["hide_product_version"] = '"hide_product_version": true,'
+
+            if is_centralized_persistent_config_disabled(cluster_config):
+                playbook_vars["disable_persistent_config"] = '"disable_persistent_config": true,'
 
             if is_cbs_ssl_enabled(cluster_config) and get_sg_version(cluster_config) >= "1.5.0":
                 playbook_vars["server_scheme"] = "couchbases"
@@ -1010,3 +1018,106 @@ def get_cpc_sgw_config(sg_config_path):
     # Get relavant cpc config for sgw config
     sg_config_path = sg_config_path.replace(SYNC_GATEWAY_CONFIGS, SYNC_GATEWAY_CONFIGS_CPC)
     return sg_config_path
+
+
+def construct_dbconfig_json(db_config_file, cluster_config, sg_platform):
+    db_config_path = "{}/{}.json".format(SGW_DB_CONFIGS, db_config_file)
+    if not os.path.isfile(db_config_path):
+        raise ValueError("Could not file config: {}".format(db_config_path))
+    couchbase_server_primary_node = add_cbs_to_sg_config_server_field(cluster_config)
+    couchbase_server_primary_node = get_cbs_primary_nodes_str(cluster_config, couchbase_server_primary_node)
+    bucket_names = get_buckets_from_sync_gateway_config(db_config_path, cluster_config)
+    with open(db_config_path, "r") as config:
+        db_config_data = config.read()
+    
+    autoimport_var = ""
+    xattrs_var = ""
+    no_conflicts_var = ""
+    sg_use_views_var = ""
+    num_index_replicas_var = ""
+    username_var = ""
+    password_var = "password"
+    cacertpath_var = ""
+    certpath_var = ""
+    keypath_var = ""
+    delta_sync_var = ""
+    server_scheme_var = ""
+    server_port_var = ""
+    x509_auth_var = False
+    revs_limit_var = ""
+    
+    if sg_platform == "macos":
+        sg_home_directory = "/Users/sync_gateway"
+    elif sg_platform == "windows":
+        sg_home_directory = "C:\\\\PROGRA~1\\\\Couchbase\\\\Sync Gateway"
+    else:
+        sg_home_directory = "/home/sync_gateway"
+
+    if is_x509_auth(cluster_config):
+        certpath_var = '"certpath": "{}/certs/chain.pem",'.format(sg_home_directory)
+        keypath_var = '"keypath": "{}/certs/pkey.key",'.format(sg_home_directory)
+        cacertpath_var = '"cacertpath": "{}/certs/ca.pem",'.format(sg_home_directory)
+
+        if sg_platform == "windows":
+            certpath_var = certpath_var.replace("/", "\\\\")
+            keypath_var = keypath_var.replace("/", "\\\\")
+            cacertpath_var = cacertpath_var.replace("/", "\\\\")
+
+        server_scheme_var = "couchbases"
+        server_port_var = ""
+        # generate_x509_certs(cluster_config, bucket_names, sg_platform)
+        # x509_auth_var = True
+
+    else:
+        username_var = bucket_names[0]
+
+    if is_cbs_ssl_enabled(cluster_config):
+        server_scheme_var = "couchbases"
+        server_port_var = "11207"
+    if get_sg_use_views(cluster_config):
+        sg_use_views_var = '"use_views": true,'
+    else:
+        num_replicas = get_sg_replicas(cluster_config)
+        num_index_replicas_var = '"num_index_replicas": {},'.format(num_replicas)
+
+    # Add configuration to run with xattrs
+    if is_xattrs_enabled(cluster_config):
+        autoimport_var = '"import_docs": true,'
+        xattrs_var = '"enable_shared_bucket_access": true,'
+
+    if no_conflicts_enabled(cluster_config):
+        no_conflicts_var = '"allow_conflicts": false,'
+
+    try:
+        revs_limit = get_revs_limit(cluster_config)
+        revs_limit_var = '"revs_limit": {},'.format(revs_limit)
+
+    except KeyError:
+        log_info("revs_limit not found in {}, Ignoring".format(cluster_config))
+
+    if is_delta_sync_enabled(cluster_config) and get_sg_version(cluster_config) >= "2.5.0":
+        delta_sync_var = '"delta_sync": { "enabled": true},'
+
+    db_username_var = '"username": "{}",'.format(username_var)
+    db_password_var = '"password": "{}",'.format(password_var)
+    template = Template(db_config_data)
+    db_config_data = template.render(
+        couchbase_server_primary_node=couchbase_server_primary_node,
+        server_port=server_port_var,
+        server_scheme=server_scheme_var,
+        certpath=certpath_var,
+        keypath=keypath_var,
+        cacertpath=cacertpath_var,
+        username=db_username_var,
+        password=db_password_var,
+        # bucket=db_bucket_var,
+        sg_use_views=sg_use_views_var,
+        num_index_replicas=num_index_replicas_var,
+        autoimport=autoimport_var,
+        xattrs=xattrs_var,
+        no_conflicts=no_conflicts_var,
+        revs_limit=revs_limit_var,
+        delta_sync=delta_sync_var
+    )
+    return db_config_data
+    
