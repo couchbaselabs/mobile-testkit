@@ -5,14 +5,16 @@ from keywords.TestServerBase import TestServerBase
 from keywords.constants import LATEST_BUILDS, RELEASED_BUILDS
 from keywords.exceptions import LiteServError
 from keywords.utils import version_and_build
-from keywords.utils import log_info
 from keywords.constants import BINARY_DIR
 from zipfile import ZipFile
+from keywords.utils import log_info
+from libraries.provision.ansible_runner import AnsibleRunner
 import requests
 import subprocess
 
 class TestServerCpp(TestServerBase):
     def __init__(self, version_build, host, port, debug_mode=None, platform="c-linux", community_enabled=None):
+        super(TestServerCpp, self).__init__(version_build, host, port)
         self.platform = platform
         self.released_version = {
             "3.0.0": 94
@@ -40,6 +42,58 @@ class TestServerCpp(TestServerBase):
         log_info("download_url: {}".format(self.download_url))
         log_info("build_name: {}".format(self.build_name))
         log_info("self.platform = {}".format(self.platform))
+
+        '''
+           generate ansible config file base on platform format
+           '''
+        if self.platform == "c-msft":
+            # java ws on Windows platform
+            if "LITESERV_MSFT_HOST_USER" not in os.environ:
+                raise LiteServError(
+                    "Make sure you define 'LITESERV_MSFT_HOST_USER' as the windows user for the host you are targeting")
+
+            if "LITESERV_MSFT_HOST_PASSWORD" not in os.environ:
+                raise LiteServError(
+                    "Make sure you define 'LITESERV_MSFT_HOST_PASSWORD' as the windows user for the host you are targeting")
+
+            # Create config for TestServer Windows host
+            ansible_testserver_target_lines = [
+                "[windows]",
+                "win1 ansible_host={}".format(host),
+                "[windows:vars]",
+                "ansible_user={}".format(os.environ["LITESERV_MSFT_HOST_USER"]),
+                "ansible_password={}".format(os.environ["LITESERV_MSFT_HOST_PASSWORD"]),
+                "ansible_port=5985",
+                "ansible_connection=winrm",
+                "# The following is necessary for Python 2.7.9+ when using default WinRM self-signed certificates:",
+                "ansible_winrm_server_cert_validation=ignore"
+            ]
+        else:
+            if "TESTSERVER_HOST_USER" not in os.environ:
+                raise LiteServError(
+                    "Make sure you define 'TESTSERVER_HOST_USER' as the user for the host you are targeting")
+
+            if "TESTSERVER_HOST_PASSWORD" not in os.environ:
+                raise LiteServError(
+                    "Make sure you define 'TESTSERVER_HOST_PASSWORD' as the user for the host you are targeting")
+
+            # Create config for TestServer non-Windows host
+            ansible_testserver_target_lines = [
+                "[testserver]",
+                "testserver ansible_host={}".format(host),
+                "[testserver:vars]",
+                "ansible_user={}".format(os.environ["TESTSERVER_HOST_USER"]),
+                "ansible_password={}".format(os.environ["TESTSERVER_HOST_PASSWORD"])
+            ]
+
+        ansible_testserver_target_string = "\n".join(ansible_testserver_target_lines)
+        log_info("Writing: {}".format(ansible_testserver_target_string))
+        config_location = "resources/liteserv_configs/{}".format(self.platform)
+
+        with open(config_location, "w") as f:
+            f.write(ansible_testserver_target_string)
+        self.ansible_runner = AnsibleRunner(config=config_location)
+
 
     def install(self):
         """

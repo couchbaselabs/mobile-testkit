@@ -1,12 +1,9 @@
 
 - name: Download Testserver C Package
   hosts: testserver
-    - name: create testserver directory if not exists
-    file:
-        path: ~ /ctestserver
-        state: directory
-        when: c_testserver_dir.stat.exists == False
-
+  vars:
+    testserver_download_url:
+    package_name:
 
   tasks:
   - debug:
@@ -16,11 +13,37 @@
       msg: "package_name: {{ package_name }}"
 
 
+  - name: Check the CouchbaseLite core zip file exists
+    stat:
+      path: ~/ctestserver/{{ package_name }}.zip
+    register: core_st
+
+  - name: Delete any exiting pre-downloaded files
+    file:
+      path: ~/ctestserver
+      state: absent
+    when: core_st.stat.exists == False
+
+  - debug:
+      msg: "testserver war files and CouchbaseLite core zip already present, skipping download..."
+    when: core_st.stat.exists == True
+
+  - name: Check the TestServer zip file exists
+    stat:
+      path: ~/ctestserver
+    register: ctestserver_dir
+
+  - name: create ctestserver directory if not exists
+    file:
+      path: ~/ctestserver
+      state: directory
+    when: ctestserver_dir.stat.exists == False
+
   - name: Download TestServer C
-      get_url:
-        url: "{{ testserver_download_url }}"
-        dest: ~/ctestserver/{{ package_name }}.zip
-      when: core_st.stat.exists == False
+    get_url:
+      url: "{{ testserver_download_url }}"
+      dest: ~/ctestserver/{{ package_name }}.zip
+    when: core_st.stat.exists == False
 
   - name: Unzip Couchbase Lite Library and remove .zip
-      unarchive: src=~/ctestserver/{{ package_name}}.zip dest=~/ctestserver copy=no
+    unarchive: src=~/ctestserver/{{ package_name }}.zip dest=~/ctestserver copy=no
