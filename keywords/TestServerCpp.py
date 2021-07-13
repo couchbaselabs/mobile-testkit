@@ -33,7 +33,7 @@ class TestServerCpp(TestServerBase):
         else:
             self.package_name = "testserver_linux_x64"
                 # "CBLTestServer_macosx-{}-{}".format(self.build_type, self.version)
-        self.download_url = "{}/couchbase-lite-c/{}/{}.zip".format(RELEASED_BUILDS, self.version, self.package_name)
+        self.download_url = "{}/couchbase-lite-c/{}/{}/{}.zip".format(RELEASED_BUILDS, self.version, self.build, self.package_name)
         self.binary_path = "{}/{}.exe".format(BINARY_DIR, self.package_name)
 
         self.build_name = "TestServer-C-{}-{}".format(self.build_type, self.version_build)
