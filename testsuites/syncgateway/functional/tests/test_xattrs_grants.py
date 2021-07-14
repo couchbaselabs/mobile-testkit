@@ -732,7 +732,7 @@ def test_xattrs_key_with_disabled_xattrs(params_from_base_test_setup):
     try:
         requests.get(sg_url, timeout=30)
         assert False, "Sync gateway started successfully with xattrs disabled and xattrs key enabled "
-    except ConnectionError as he:
+    except Exception as he:
         log_info(str(he))
         log_info("Expected to have sync gateway fail to start")
 
