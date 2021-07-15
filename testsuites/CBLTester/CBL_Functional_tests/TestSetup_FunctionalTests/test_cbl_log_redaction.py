@@ -140,6 +140,7 @@ def verify_password_masked(liteserv_platform, log_file, password, test_cbllog):
     delimiter = "/"
     if "-msft" in liteserv_platform or liteserv_platform == "uwp":
         delimiter = "\\"
+    log_info("\n Collecting logs from the log file.. " + log_file)
     log_dir = log_file.split(delimiter)[-1]
     log_full_path_dir = "/tmp/cbl-logs/"
     os.mkdir(log_full_path_dir)
@@ -161,8 +162,9 @@ def verify_password_masked(liteserv_platform, log_file, password, test_cbllog):
     log_dir_path = os.path.join(log_full_path_dir, log_dir)
     if zipfile.is_zipfile(test_log):
         with zipfile.ZipFile(test_log, 'r') as zip_ref:
-            zip_ref.extractall(log_full_path_dir)
+            zip_ref.extractall(log_dir_path)
 
+    log_info(log_dir_path)
     log_info("Checking {} for copied log files - {}".format(log_dir_path, os.listdir(log_dir_path)))
     log_file = subprocess.check_output("ls -t {} | head -1".format(log_dir_path), shell=True)
     assert len(os.listdir(log_dir_path)) != 0, "Log files are not available at {}".format(log_dir_path)
