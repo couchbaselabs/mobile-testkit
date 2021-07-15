@@ -87,6 +87,7 @@ def test_replication_eventing_status(params_from_base_test_setup, num_of_docs):
     replicator.stop(repl)
 
     # Processing received events
+    print(doc_repl_event_changes)
     replicated_event_changes = get_event_changes(doc_repl_event_changes)
     push_docs = []
     pull_docs = []
