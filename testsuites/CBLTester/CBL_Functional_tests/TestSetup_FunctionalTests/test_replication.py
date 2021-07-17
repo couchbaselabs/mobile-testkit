@@ -3889,13 +3889,13 @@ def test_blob_contructor_replication(params_from_base_test_setup, blob_data_type
         image_location = get_embedded_asset_file_path(liteserv_platform, db, cbl_db, "golden_gate_large.jpg")
 
         if blob_data_type == "byte_array":
-            image_byte_array = blob.createImageContent(image_location)
+            image_byte_array = blob.createImageContent(image_location, db)
             blob_value = blob.create("image/jpeg", content=image_byte_array)
         elif blob_data_type == "stream":
-            image_stream = blob.createImageStream(image_location)
+            image_stream = blob.createImageStream(image_location, db)
             blob_value = blob.create("image/jpeg", stream=image_stream)
         elif blob_data_type == "file_url":
-            image_file_url = blob.createImageFileUrl(image_location)
+            image_file_url = blob.createImageFileUrl(image_location, db)
             blob_value = blob.create("image/jpeg", file_url=image_file_url)
 
         dictionary.setBlob(mutable_dictionary, "new_field_blob", blob_value)

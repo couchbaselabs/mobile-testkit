@@ -28,15 +28,19 @@ class Blob(object):
             raise Exception("Provide correct parameter")
         return self._client.invokeMethod("blob_create", args)
 
-    def createImageContent(self, image):
+    def createImageContent(self, image, database=None):
         args = Args()
         args.setString("image", image)
+        if database:
+            args.setMemoryPointer("database", database)
         # this call will return an byte array object
         return self._client.invokeMethod("blob_createImageContent", args)
 
-    def createImageStream(self, image):
+    def createImageStream(self, image, database=None):
         args = Args()
         args.setString("image", image)
+        if database:
+            args.setMemoryPointer("database", database)
         # this call will return an input stream
         return self._client.invokeMethod("blob_createImageStream", args)
 
