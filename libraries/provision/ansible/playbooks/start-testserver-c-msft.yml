@@ -3,7 +3,7 @@
   vars:
     binary_path:
   tasks:
-    - debug: msg="Starting the Testserver  {{ binary_path }}"
+    - debug: msg="Starting the Testserver"
     - name: Start TestServer
       win_nssm:
         name: TestServerC
