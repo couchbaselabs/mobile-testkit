@@ -1,2 +1,10 @@
-  - name: DEPS | install awslogs forwarder service
-    shell: python3 awslogs-agent-setup.py
+- name: Start TestServer
+  hosts: testserver
+  vars:
+    binary_path:
+
+  tasks:
+    - debug: msg="Starting the TestService  {{binary_path}}"
+    - name: Start TestServer
+      command: ~/ctestserver/testserver
+      when: start
