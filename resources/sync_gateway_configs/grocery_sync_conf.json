@@ -1,6 +1,7 @@
 {
 	{{ logging }}
 	{{ hide_product_version }}
+	{{ disable_persistent_config }}
 	"databases": {
 		"grocery-sync": {
 			"server": "walrus:",

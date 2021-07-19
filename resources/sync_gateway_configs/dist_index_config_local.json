@@ -6,6 +6,7 @@
     "compressResponses": false,
     {{ logging }}
     {{ hide_product_version }}
+    {{ disable_persistent_config }}
     "cluster_config": {
         "server":"http://127.0.0.1:8091",
         "data_dir":".",

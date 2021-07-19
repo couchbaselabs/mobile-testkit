@@ -130,3 +130,8 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="Enabling CBS developer preview",
                      default=False)
+
+    parser.addoption("--disable-persistent-config",
+                     action="store_true",
+                     help="Centralized Persistent Config",
+                     default=True)

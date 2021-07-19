@@ -1,6 +1,7 @@
 {
   {{ logging }}
   {{ hide_product_version }}
+  {{ disable_persistent_config }}
   "adminInterface": "0.0.0.0:4985",
   "facebook": { "register": true },
   {{ sslcert }}

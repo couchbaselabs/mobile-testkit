@@ -6,6 +6,7 @@
   "compressResponses": false,
   {{ logging }}
   {{ hide_product_version }}
+  {{ disable_persistent_config }}
   "replications": [
     {
       "replication_id": "continuous",

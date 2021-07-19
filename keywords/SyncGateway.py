@@ -24,6 +24,7 @@ from keywords.utils import host_for_url
 from keywords import document
 from keywords.utils import random_string
 from utilities.cluster_config_utils import copy_sgconf_to_temp, replace_string_on_sgw_config, get_cluster
+from utilities.cluster_config_utils import is_centralized_persistent_config_disabled
 
 
 def validate_sync_gateway_mode(mode):
@@ -249,6 +250,7 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config):
         sslkey_prop = ""
         delta_sync_prop = ""
         hide_prod_version_prop = ""
+        disable_persistent_config_prop = ""
 
         sg_platform = get_sg_platform(cluster_config)
         if get_sg_version(cluster_config) >= "2.1.0":
@@ -310,6 +312,9 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config):
         if is_hide_prod_version_enabled(cluster_config) and get_sg_version(cluster_config) >= "2.8.1":
             hide_prod_version_prop = '"hide_product_version": true,'
 
+        if is_centralized_persistent_config_disabled(cluster_config):
+            disable_persistent_config_prop = '"disable_persistent_config": true,'
+
         temp = template.render(
             couchbase_server_primary_node=couchbase_server_primary_node,
             is_index_writer="false",
@@ -333,7 +338,8 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config):
             no_conflicts=no_conflicts_prop,
             revs_limit=revs_limit_prop,
             delta_sync=delta_sync_prop,
-            hide_prod_version=hide_prod_version_prop
+            hide_prod_version=hide_prod_version_prop,
+            disable_persistent_config=disable_persistent_config_prop
         )
         data = json.loads(temp)
 
@@ -420,7 +426,8 @@ class SyncGateway(object):
             "couchbase_server_primary_node": couchbase_server_primary_node,
             "delta_sync": "",
             "prometheus": "",
-            "hide_product_version": ""
+            "hide_product_version": "",
+            "disable_persistent_config": ""
         }
         sg_platform = get_sg_platform(cluster_config)
         if get_sg_version(cluster_config) >= "2.1.0":
@@ -508,6 +515,9 @@ class SyncGateway(object):
 
         if is_hide_prod_version_enabled(cluster_config) and get_sg_version(cluster_config) >= "2.8.1":
             playbook_vars["hide_product_version"] = '"hide_product_version": true,'
+
+        if is_centralized_persistent_config_disabled(cluster_config):
+            playbook_vars["disable_persistent_config"] = '"disable_persistent_config": true,'
 
         if url is not None:
             target = hostname_for_url(cluster_config, url)
@@ -647,7 +657,8 @@ class SyncGateway(object):
             "couchbase_server_primary_node": couchbase_server_primary_node,
             "delta_sync": "",
             "prometheus": "",
-            "hide_product_version": ""
+            "hide_product_version": "",
+            "disable_persistent_config": ""
         }
 
         sync_gateway_base_url, sync_gateway_package_name, sg_accel_package_name = sg_config.sync_gateway_base_url_and_package()
@@ -732,6 +743,9 @@ class SyncGateway(object):
         if is_hide_prod_version_enabled(cluster_config) and get_sg_version(cluster_config) >= "2.8.1":
             playbook_vars["hide_product_version"] = '"hide_product_version": true,'
 
+        if is_centralized_persistent_config_disabled(cluster_config):
+            playbook_vars["disable_persistent_config"] = '"disable_persistent_config": true,'
+
         if url is not None:
             target = hostname_for_url(cluster_config, url)
             log_info("Upgrading sync_gateway/sg_accel on {} ...".format(target))
@@ -792,7 +806,8 @@ class SyncGateway(object):
             "no_conflicts": "",
             "delta_sync": "",
             "prometheus": "",
-            "hide_product_version": ""
+            "hide_product_version": "",
+            "disable_persistent_config": ""
         }
 
         playbook_vars["username"] = '"username": "{}",'.format(bucket_names[0])
@@ -866,6 +881,9 @@ class SyncGateway(object):
 
         if is_hide_prod_version_enabled(cluster_config) and get_sg_version(cluster_config) >= "2.8.1":
             playbook_vars["hide_product_version"] = '"hide_product_version": true,'
+
+        if is_centralized_persistent_config_disabled(cluster_config):
+            playbook_vars["disable_persistent_config"] = '"disable_persistent_config": true,'
 
         # Deploy config
         if url is not None:

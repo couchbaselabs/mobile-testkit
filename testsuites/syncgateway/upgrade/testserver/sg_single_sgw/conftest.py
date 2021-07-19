@@ -157,6 +157,11 @@ def pytest_addoption(parser):
                      help="Enabling CBS developer preview",
                      default=False)
 
+    parser.addoption("--disable-persistent-config",
+                     action="store_true",
+                     help="Centralized Persistent Config",
+                     default=True)
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -205,6 +210,7 @@ def params_from_base_suite_setup(request):
     hide_product_version = request.config.getoption("--hide-product-version")
     skip_couchbase_provision = request.config.getoption("--skip-couchbase-provision")
     enable_cbs_developer_preview = request.config.getoption("--enable-cbs-developer-preview")
+    disable_persistent_config = request.config.getoption("--disable-persistent-config")
 
     test_name = request.node.name
 
@@ -237,6 +243,7 @@ def params_from_base_suite_setup(request):
     log_info("cbs_toy_build: {}".format(cbs_toy_build))
     log_info("hide_product_version: {}".format(hide_product_version))
     log_info("enable_cbs_developer_preview: {}".format(enable_cbs_developer_preview))
+    log_info("disable_persistent_config: {}".format(disable_persistent_config))
 
     # if xattrs is specified but the post upgrade SG version doesn't support, don't continue
     if upgraded_xattrs_enabled and version_is_binary(sync_gateway_upgraded_version):
@@ -369,6 +376,13 @@ def params_from_base_suite_setup(request):
     else:
         log_info("Running without CBS developer preview")
         persist_cluster_config_environment_prop(cluster_config, 'cbs_developer_preview', False)
+
+    if disable_persistent_config:
+        log_info(" disable persistent config")
+        persist_cluster_config_environment_prop(cluster_config, 'disable_persistent_config', True)
+    else:
+        log_info("Running without Centralized Persistent Config")
+        persist_cluster_config_environment_prop(cluster_config, 'disable_persistent_config', False)
 
     persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "centos", False)
 

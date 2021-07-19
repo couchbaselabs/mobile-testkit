@@ -1,6 +1,7 @@
 {
     {{ logging }}
     {{ hide_product_version }}
+    {{ disable_persistent_config }}
    "compressResponses": false,
    "AdminInterface":"0.0.0.0:4985",
    {{ sslcert }}

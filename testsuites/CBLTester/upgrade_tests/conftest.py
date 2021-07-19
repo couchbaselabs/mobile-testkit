@@ -140,6 +140,11 @@ def pytest_addoption(parser):
                      help="Enabling CBS developer preview",
                      default=False)
 
+    parser.addoption("--disable-persistent-config",
+                     action="store_true",
+                     help="Centralized Persistent Config",
+                     default=True)
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -179,6 +184,7 @@ def params_from_base_suite_setup(request):
     second_liteserv_platform = request.config.getoption("--second-liteserv-platform")
     skip_couchbase_provision = request.config.getoption("--skip-couchbase-provision")
     enable_cbs_developer_preview = request.config.getoption("--enable-cbs-developer-preview")
+    disable_persistent_config = request.config.getoption("--disable-persistent-config")
 
     test_name = request.node.name
     if enable_upgrade_app:
@@ -304,6 +310,13 @@ def params_from_base_suite_setup(request):
     else:
         log_info("Running without CBS developer preview")
         persist_cluster_config_environment_prop(cluster_config, 'cbs_developer_preview', False)
+
+    if disable_persistent_config:
+        log_info(" disable persistent config")
+        persist_cluster_config_environment_prop(cluster_config, 'disable_persistent_config', True)
+    else:
+        log_info("Running without Centralized Persistent Config")
+        persist_cluster_config_environment_prop(cluster_config, 'disable_persistent_config', False)
 
     # As cblite jobs run with on Centos platform, adding by default centos to environment config
     persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "centos", False)

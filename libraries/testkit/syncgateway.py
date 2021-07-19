@@ -19,6 +19,7 @@ from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, ge
 from keywords.utils import add_cbs_to_sg_config_server_field, log_info, random_string
 from keywords.constants import SYNC_GATEWAY_CERT
 from keywords.exceptions import ProvisioningError
+from utilities.cluster_config_utils import is_centralized_persistent_config_disabled
 
 log = logging.getLogger(libraries.testkit.settings.LOGGER)
 
@@ -94,7 +95,8 @@ class SyncGateway:
             "couchbase_server_primary_node": self.couchbase_server_primary_node,
             "delta_sync": "",
             "prometheus": "",
-            "hide_product_version": ""
+            "hide_product_version": "",
+            "disable_persistent_config": ""
 
         }
 
@@ -173,6 +175,9 @@ class SyncGateway:
 
         if is_hide_prod_version_enabled(self.cluster_config) and get_sg_version(self.cluster_config) >= "2.8.1":
             playbook_vars["hide_product_version"] = '"hide_product_version": true,'
+
+        if is_centralized_persistent_config_disabled(self._cluster_config):
+            playbook_vars["disable_persistent_config"] = '"disable_persistent_config": true,'
 
         if is_cbs_ssl_enabled(self.cluster_config) and get_sg_version(self.cluster_config) >= "1.5.0":
             playbook_vars["server_scheme"] = "couchbases"

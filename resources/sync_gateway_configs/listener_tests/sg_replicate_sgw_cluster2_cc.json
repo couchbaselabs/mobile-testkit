@@ -5,6 +5,7 @@
     {{ sslkey }}
     {{ logging }}
     {{ hide_product_version }}
+    {{ disable_persistent_config }}
     {{ prometheus }}
     "databases":{
         "sg_db2":{

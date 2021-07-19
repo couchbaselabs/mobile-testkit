@@ -6,6 +6,7 @@
     "compressResponses": true,
     {{ logging }}
     {{ hide_product_version }}
+    {{ disable_persistent_config }}
     "cluster_config": {
         "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
         "data_dir":".",

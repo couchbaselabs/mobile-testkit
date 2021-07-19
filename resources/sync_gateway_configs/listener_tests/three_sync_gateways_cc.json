@@ -3,6 +3,7 @@
     "adminInterface": "0.0.0.0:4985",
     {{ logging }}
     {{ hide_product_version }}
+    {{ disable_persistent_config }}
     {{ sslcert }}
     {{ sslkey }}
     "databases":{

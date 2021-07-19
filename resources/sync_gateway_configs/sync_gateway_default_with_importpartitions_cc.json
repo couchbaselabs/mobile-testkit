@@ -8,6 +8,7 @@
     {{ sslkey }}
     {{ logging }}
     {{ hide_product_version }}
+    {{ disable_persistent_config }}
     "databases":{
         "db":{
             {{ no_conflicts }}
