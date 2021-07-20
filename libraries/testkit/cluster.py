@@ -297,7 +297,7 @@ class Cluster:
         if is_hide_prod_version_enabled(self._cluster_config) and get_sg_version(self._cluster_config) >= "2.8.1":
             playbook_vars["hide_product_version"] = '"hide_product_version": true,'
 
-        if is_centralized_persistent_config_disabled(self._cluster_config):
+        if is_centralized_persistent_config_disabled(self._cluster_config) and get_sg_version(self._cluster_config) >= "3.0.0":
             playbook_vars["disable_persistent_config"] = '"disable_persistent_config": true,'
 
         # Sleep for a few seconds for the indexes to teardown

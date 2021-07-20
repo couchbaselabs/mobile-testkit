@@ -312,7 +312,7 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config):
         if is_hide_prod_version_enabled(cluster_config) and get_sg_version(cluster_config) >= "2.8.1":
             hide_prod_version_prop = '"hide_product_version": true,'
 
-        if is_centralized_persistent_config_disabled(cluster_config):
+        if is_centralized_persistent_config_disabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
             disable_persistent_config_prop = '"disable_persistent_config": true,'
 
         temp = template.render(
@@ -516,7 +516,7 @@ class SyncGateway(object):
         if is_hide_prod_version_enabled(cluster_config) and get_sg_version(cluster_config) >= "2.8.1":
             playbook_vars["hide_product_version"] = '"hide_product_version": true,'
 
-        if is_centralized_persistent_config_disabled(cluster_config):
+        if is_centralized_persistent_config_disabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
             playbook_vars["disable_persistent_config"] = '"disable_persistent_config": true,'
 
         if url is not None:
@@ -743,7 +743,7 @@ class SyncGateway(object):
         if is_hide_prod_version_enabled(cluster_config) and get_sg_version(cluster_config) >= "2.8.1":
             playbook_vars["hide_product_version"] = '"hide_product_version": true,'
 
-        if is_centralized_persistent_config_disabled(cluster_config):
+        if is_centralized_persistent_config_disabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
             playbook_vars["disable_persistent_config"] = '"disable_persistent_config": true,'
 
         if url is not None:
@@ -882,7 +882,7 @@ class SyncGateway(object):
         if is_hide_prod_version_enabled(cluster_config) and get_sg_version(cluster_config) >= "2.8.1":
             playbook_vars["hide_product_version"] = '"hide_product_version": true,'
 
-        if is_centralized_persistent_config_disabled(cluster_config):
+        if is_centralized_persistent_config_disabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
             playbook_vars["disable_persistent_config"] = '"disable_persistent_config": true,'
 
         # Deploy config

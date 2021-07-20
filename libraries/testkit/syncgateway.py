@@ -176,7 +176,7 @@ class SyncGateway:
         if is_hide_prod_version_enabled(self.cluster_config) and get_sg_version(self.cluster_config) >= "2.8.1":
             playbook_vars["hide_product_version"] = '"hide_product_version": true,'
 
-        if is_centralized_persistent_config_disabled(self.cluster_config):
+        if is_centralized_persistent_config_disabled(self.cluster_config) and get_sg_version(self.cluster_config) >= "3.0.0":
             playbook_vars["disable_persistent_config"] = '"disable_persistent_config": true,'
 
         if is_cbs_ssl_enabled(self.cluster_config) and get_sg_version(self.cluster_config) >= "1.5.0":
@@ -232,7 +232,8 @@ class SyncGateway:
             "couchbase_server_primary_node": self.couchbase_server_primary_node,
             "delta_sync": "",
             "prometheus": "",
-            "hide_product_version": ""
+            "hide_product_version": "",
+            "disable_persistent_config": ""
         }
         sg_platform = get_sg_platform(self.cluster_config)
         if sg_ssl_enabled(self.cluster_config):
@@ -308,6 +309,9 @@ class SyncGateway:
 
         if is_hide_prod_version_enabled(cluster_config) and get_sg_version(cluster_config) >= "2.8.1":
             playbook_vars["hide_product_version"] = '"hide_product_version": true,'
+
+        if is_centralized_persistent_config_disabled(self.cluster_config) and get_sg_version(self.cluster_config) >= "3.0.0":
+            playbook_vars["disable_persistent_config"] = '"disable_persistent_config": true,'
 
         if is_cbs_ssl_enabled(self.cluster_config) and get_sg_version(self.cluster_config) >= "1.5.0":
             playbook_vars["server_scheme"] = "couchbases"
