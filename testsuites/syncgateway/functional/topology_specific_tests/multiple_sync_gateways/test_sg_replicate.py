@@ -45,6 +45,8 @@ def test_sg_replicate_basic_test(params_from_base_test_setup):
     sg_ssl = params_from_base_test_setup["sg_ssl"]
     sg_platform = params_from_base_test_setup["sg_platform"]
 
+    if sync_gateway_version >= "3.0.0":
+        pytest.skip('sg-replicate 1  does not support 3.0.0 and above')
     log_info("Running 'test_sg_replicate_basic_test'")
     log_info("Using cluster_config: {}".format(cluster_config))
 
@@ -191,7 +193,11 @@ def test_sg_replicate_basic_test(params_from_base_test_setup):
 def test_sg_replicate_basic_test_channels(params_from_base_test_setup):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     mode = params_from_base_test_setup["mode"]
+
+    if sync_gateway_version >= "3.0.0":
+        pytest.skip('sg-replicate 1  does not support 3.0.0 and above')
 
     log_info("Running 'test_sg_replicate_basic_test_channels'")
     log_info("Using cluster_config: {}".format(cluster_config))
@@ -247,6 +253,10 @@ def test_sg_replicate_continuous_replication(params_from_base_test_setup):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+
+    if sync_gateway_version >= "3.0.0":
+        pytest.skip('sg-replicate 1  does not support 3.0.0 and above')
 
     log_info("Running 'test_sg_replicate_continuous_replication'")
     log_info("Using cluster_config: {}".format(cluster_config))
@@ -358,6 +368,10 @@ def test_sg_replicate_non_existent_db(params_from_base_test_setup):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+
+    if sync_gateway_version >= "3.0.0":
+        pytest.skip('sg-replicate 1  does not support 3.0.0 and above')
 
     log_info("Running 'test_sg_replicate_non_existent_db'")
     log_info("Using cluster_config: {}".format(cluster_config))
@@ -410,6 +424,10 @@ def test_sg_replicate_push_async(params_from_base_test_setup, num_docs):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+
+    if sync_gateway_version >= "3.0.0":
+        pytest.skip('sg-replicate 1  does not support 3.0.0 and above')
 
     log_info("Running 'test_sg_replicate_push_async'")
     log_info("Using cluster_config: {}".format(cluster_config))
@@ -466,6 +484,10 @@ def test_stop_replication_via_replication_id(params_from_base_test_setup):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+
+    if sync_gateway_version >= "3.0.0":
+        pytest.skip('sg-replicate 1  does not support 3.0.0 and above')
 
     log_info("Running 'test_stop_replication_via_replication_id'")
     log_info("Using cluster_config: {}".format(cluster_config))
@@ -513,6 +535,10 @@ def test_replication_config(params_from_base_test_setup):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+
+    if sync_gateway_version >= "3.0.0":
+        pytest.skip('sg-replicate 1  does not support 3.0.0 and above')
 
     log_info("Running 'test_replication_config'")
     log_info("Using cluster_config: {}".format(cluster_config))
@@ -549,6 +575,10 @@ def test_sdk_update_with_changes_request(params_from_base_test_setup):
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+
+    if sync_gateway_version >= "3.0.0":
+        pytest.skip('sg-replicate 1  does not support 3.0.0 and above')
 
     channel = ['ABC']
     bucket_name = 'data-bucket-1'
