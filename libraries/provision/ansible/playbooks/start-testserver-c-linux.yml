@@ -6,5 +6,5 @@
   tasks:
     - debug: msg="Starting the TestService  {{binary_path}}"
     - name: Start TestServer
-      command: ~/ctestserver/testserver
+      command: "nohup  ~/ctestserver/testserver &"
       ignore_errors: yes
