@@ -39,6 +39,8 @@ class Blob(object):
         args = Args()
         args.setString("image", image)
         args.setMemoryPointer("database", database)
+        print(args)
+        print("**********Image Stream")
         # this call will return an input stream
         return self._client.invokeMethod("blob_createImageStream", args)
 
