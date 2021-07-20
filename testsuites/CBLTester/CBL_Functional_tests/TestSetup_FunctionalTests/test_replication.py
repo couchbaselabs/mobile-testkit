@@ -3893,6 +3893,7 @@ def test_blob_contructor_replication(params_from_base_test_setup, blob_data_type
             image_byte_array = blob.createImageContent(image_location, db)
             blob_value = blob.create("image/jpeg", content=image_byte_array)
         elif blob_data_type == "stream":
+            print(db)
             image_stream = blob.createImageStream(image_location, db)
             blob_value = blob.create("image/jpeg", stream=image_stream)
         elif blob_data_type == "file_url" and "c-" not in liteserv_platform:
