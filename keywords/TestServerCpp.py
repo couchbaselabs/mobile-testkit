@@ -170,7 +170,7 @@ class TestServerCpp(TestServerBase):
         if status == 0:
             return
         else:
-            raise LiteServError("Failed to start Tomcat on remote machine")
+            raise LiteServError("Failed to start TestServer on remote machine")
 
     def _verify_launched(self):
         raise NotImplementedError()

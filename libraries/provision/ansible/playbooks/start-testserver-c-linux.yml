@@ -7,4 +7,4 @@
     - debug: msg="Starting the TestService  {{binary_path}}"
     - name: Start TestServer
       command: ~/ctestserver/testserver
-      when: start
+      ignore_errors: yes
