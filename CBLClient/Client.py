@@ -43,7 +43,8 @@ class Client(object):
                     result = result.decode('utf8', 'ignore')
                 if len(result) < 25:
                     # Only print short messages
-                    log_info("Got response: {}".format(result))
+
+                    log_info("For url: {} Got response: {}".format(url, result))
                 print(result)
                 print("*"*8)
                 return ValueSerializer.deserialize(result)
