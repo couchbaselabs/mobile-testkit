@@ -461,9 +461,13 @@ def params_from_base_suite_setup(request):
         log_info("Starting TestServer...")
         test_name_cp = test_name.replace("/", "-")
         if device_enabled:
-            testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
-                                                                  test_name_cp,
-                                                                  datetime.datetime.now()))
+            if len(liteserv_android_serial_number) != 0 and "android" in liteserv_platform:
+                testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
+                                                                      test_name_cp, datetime.datetime.now()),
+                                        liteserv_android_serial_number[0])
+            else:
+                testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
+                                                                      test_name_cp, datetime.datetime.now()))
         else:
             testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
                                                            test_name_cp,
