@@ -8,6 +8,10 @@
     {{ logging }}
     {{ hide_product_version }}
     {{ disable_persistent_config }}
+    {{ server_tls_skip_verify }}
+    {{ disable_tls_server }}
+    {{ disable_tls_client }}
+    {{ disable_admin_auth }}
     {{ sslcert }}
     {{ sslkey }}
     "databases":{

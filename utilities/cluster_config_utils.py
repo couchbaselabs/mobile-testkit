@@ -338,3 +338,43 @@ def is_centralized_persistent_config_disabled(cluster_config):
         return cluster["environment"]["disable_persistent_config"]
     except KeyError:
         return False
+
+
+def is_server_tls_skip_verify_enabled(cluster_config):
+    """ verify server tls skip verify config enabled/disabled"""
+
+    cluster = load_cluster_config_json(cluster_config)
+    try:
+        return cluster["environment"]["server_tls_skip_verify"]
+    except KeyError:
+        return False
+
+
+def is_tls_server_disabled(cluster_config):
+    """ verify tls server enabled/disabled"""
+
+    cluster = load_cluster_config_json(cluster_config)
+    try:
+        return cluster["environment"]["disable_tls_server"]
+    except KeyError:
+        return False
+
+
+def is_tls_client_disabled(cluster_config):
+    """ verify tls client enabled/disabled"""
+
+    cluster = load_cluster_config_json(cluster_config)
+    try:
+        return cluster["environment"]["tls_client"]
+    except KeyError:
+        return False
+
+
+def is_admin_auth_disabled(cluster_config):
+    """ verify admin auth enabled/disabled"""
+
+    cluster = load_cluster_config_json(cluster_config)
+    try:
+        return cluster["environment"]["disable_admin_auth"]
+    except KeyError:
+        return False

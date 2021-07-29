@@ -188,8 +188,23 @@ def pytest_addoption(parser):
 
     parser.addoption("--disable-persistent-config",
                      action="store_true",
-                     help="Centralized Persistent Config",
-                     default=True)
+                     help="Disable Centralized Persistent Config")
+
+    parser.addoption("--enable-server-tls-skip-verify",
+                     action="store_true",
+                     help="Enable Server tls skip verify config")
+
+    parser.addoption("--disable-tls-server",
+                     action="store_true",
+                     help="Disable tls server")
+
+    parser.addoption("--disable-tls-client",
+                     action="store_true",
+                     help="Disable tls client")
+
+    parser.addoption("--disable-admin-auth",
+                     action="store_true",
+                     help="Disable Admin auth")
 
 
 # This will get called once before the first test that
@@ -251,6 +266,10 @@ def params_from_base_suite_setup(request):
     up_time = up_time * 24 * 60
     enable_cbs_developer_preview = request.config.getoption("--enable-cbs-developer-preview")
     disable_persistent_config = request.config.getoption("--disable-persistent-config")
+    enable_server_tls_skip_verify = request.config.getoption("--enable-server-tls-skip-verify")
+    disable_tls_server = request.config.getoption("--disable-tls-server")
+    disable_tls_client = request.config.getoption("--disable-tls-client")
+    disable_admin_auth = request.config.getoption("--disable-admin-auth")
     repl_status_check_sleep_time = int(request.config.getoption("--repl-status-check-sleep-time"))
     test_name = request.node.name
 
@@ -380,6 +399,34 @@ def params_from_base_suite_setup(request):
     else:
         log_info("Running without Centralized Persistent Config")
         persist_cluster_config_environment_prop(cluster_config, 'disable_persistent_config', False)
+
+    if enable_server_tls_skip_verify:
+        log_info("Enable server tls skip verify flag")
+        persist_cluster_config_environment_prop(cluster_config, 'server_tls_skip_verify', True)
+    else:
+        log_info("Running without server_tls_skip_verify Config")
+        persist_cluster_config_environment_prop(cluster_config, 'server_tls_skip_verify', False)
+
+    if disable_tls_server:
+        log_info("Disable tls server flag")
+        persist_cluster_config_environment_prop(cluster_config, 'disable_tls_server', True)
+    else:
+        log_info("Enable tls server flag")
+        persist_cluster_config_environment_prop(cluster_config, 'disable_tls_server', False)
+
+    if disable_tls_client:
+        log_info("Disabled tls client flag")
+        persist_cluster_config_environment_prop(cluster_config, 'disable_tls_client', True)
+    else:
+        log_info("Enabled tls client flag")
+        persist_cluster_config_environment_prop(cluster_config, 'disable_tls_client', False)
+
+    if disable_admin_auth:
+        log_info("Disabled Admin Auth")
+        persist_cluster_config_environment_prop(cluster_config, 'disable_admin_auth', True)
+    else:
+        log_info("Enabled Admin Auth")
+        persist_cluster_config_environment_prop(cluster_config, 'disable_admin_auth', False)
 
     if sync_gateway_version < "2.0":
         pytest.skip('Does not work with sg < 2.0 , so skipping the test')

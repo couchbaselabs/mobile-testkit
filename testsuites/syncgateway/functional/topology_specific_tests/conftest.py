@@ -113,5 +113,20 @@ def pytest_addoption(parser):
 
     parser.addoption("--disable-persistent-config",
                      action="store_true",
-                     help="Centralized Persistent Config",
-                     default=True)
+                     help="Disable Centralized Persistent Config")
+
+    parser.addoption("--enable-server-tls-skip-verify",
+                     action="store_true",
+                     help="Enable Server tls skip verify config")
+
+    parser.addoption("--disable-tls-server",
+                     action="store_true",
+                     help="Disable tls server")
+
+    parser.addoption("--disable-tls-client",
+                     action="store_true",
+                     help="Disable tls client")
+
+    parser.addoption("--disable-admin-auth",
+                     action="store_true",
+                     help="Disable Admin auth")
