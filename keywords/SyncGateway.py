@@ -252,9 +252,9 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config):
         hide_prod_version_prop = ""
         disable_persistent_config_prop = ""
         server_tls_skip_verify_prop = ""
-        tls_server_prop = ""
-        tls_client_prop = ""
-        admin_auth_prop = ""
+        disable_tls_server_prop = ""
+        disable_tls_client_prop = ""
+        disable_admin_auth_prop = ""
         metrics_auth_prop = ""
 
         sg_platform = get_sg_platform(cluster_config)
@@ -324,14 +324,13 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config):
             server_tls_skip_verify_prop = '"server_tls_skip_verify": true,'
 
         if is_tls_server_disabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
-            tls_server_prop = '"use_tls_server": false,'
+            disable_tls_server_prop = '"use_tls_server": false,'
 
         if is_tls_client_disabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
-            tls_client_prop = '"use_tls_client": false,'
+            disable_tls_client_prop = '"use_tls_client": false,'
 
         if is_admin_auth_disabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
-            admin_auth_prop = '"admin_interface_authentication": false,'
-            metrics_auth_prop = '"metrics_interface_authentication": false,'
+            disable_admin_auth_prop = '"admin_interface_authentication": false,\n"metrics_interface_authentication": false,'
 
         temp = template.render(
             couchbase_server_primary_node=couchbase_server_primary_node,
@@ -359,9 +358,9 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config):
             hide_prod_version=hide_prod_version_prop,
             disable_persistent_config=disable_persistent_config_prop,
             server_tls_skip_verify=server_tls_skip_verify_prop,
-            tls_server=tls_server_prop,
-            tls_client=tls_client_prop,
-            admin_auth=admin_auth_prop,
+            tls_server=disable_tls_server_prop,
+            tls_client=disable_tls_client_prop,
+            admin_auth=disable_admin_auth_prop,
             metrics_auth=metrics_auth_prop
         )
         data = json.loads(temp)
@@ -452,10 +451,9 @@ class SyncGateway(object):
             "hide_product_version": "",
             "disable_persistent_config": "",
             "server_tls_skip_verify": "",
-            "tls_server": "",
-            "tls_client": "",
-            "admin_auth": "",
-            "metrics_auth": ""
+            "disable_tls_server": "",
+            "disable_tls_client": "",
+            "disable_admin_auth": ""
         }
         sg_platform = get_sg_platform(cluster_config)
         if get_sg_version(cluster_config) >= "2.1.0":
@@ -551,14 +549,13 @@ class SyncGateway(object):
             playbook_vars["server_tls_skip_verify"] = '"server_tls_skip_verify": true,'
 
         if is_tls_server_disabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
-            playbook_vars["tls_server"] = '"use_tls_server": false,'
+            playbook_vars["disable_tls_server"] = '"use_tls_server": false,'
 
         if is_tls_client_disabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
-            playbook_vars["tls_client"] = '"use_tls_client": false,'
+            playbook_vars["disable_tls_client"] = '"use_tls_client": false,'
 
         if is_admin_auth_disabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
-            playbook_vars["admin_auth"] = '"admin_interface_authentication": false,'
-            playbook_vars["metrics_auth"] = '"metrics_interface_authentication": false,'
+            playbook_vars["disable_admin_auth"] = '"admin_interface_authentication": false,    \n"metrics_interface_authentication": false,'
 
         if url is not None:
             target = hostname_for_url(cluster_config, url)
@@ -701,10 +698,9 @@ class SyncGateway(object):
             "hide_product_version": "",
             "disable_persistent_config": "",
             "server_tls_skip_verify": "",
-            "tls_server": "",
-            "tls_client": "",
-            "admin_auth": "",
-            "metrics_auth": ""
+            "disable_tls_server": "",
+            "disable_tls_client": "",
+            "disable_admin_auth": ""
         }
 
         sync_gateway_base_url, sync_gateway_package_name, sg_accel_package_name = sg_config.sync_gateway_base_url_and_package()
@@ -796,14 +792,13 @@ class SyncGateway(object):
             playbook_vars["server_tls_skip_verify"] = '"server_tls_skip_verify": true,'
 
         if is_tls_server_disabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
-            playbook_vars["tls_server"] = '"use_tls_server": false,'
+            playbook_vars["disable_tls_server"] = '"use_tls_server": false,'
 
         if is_tls_client_disabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
-            playbook_vars["tls_client"] = '"use_tls_client": false,'
+            playbook_vars["disable_tls_client"] = '"use_tls_client": false,'
 
         if is_admin_auth_disabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
-            playbook_vars["admin_auth"] = '"admin_interface_authentication": false,'
-            playbook_vars["metrics_auth"] = '"metrics_interface_authentication": false,'
+            playbook_vars["disable_admin_auth"] = '"admin_interface_authentication": false,    \n"metrics_interface_authentication": false,'
 
         if url is not None:
             target = hostname_for_url(cluster_config, url)
@@ -868,10 +863,9 @@ class SyncGateway(object):
             "hide_product_version": "",
             "disable_persistent_config": "",
             "server_tls_skip_verify": "",
-            "tls_server": "",
-            "tls_client": "",
-            "admin_auth": "",
-            "metrics_auth": ""
+            "disable_tls_server": "",
+            "disable_tls_client": "",
+            "disable_admin_auth": ""
         }
 
         playbook_vars["username"] = '"username": "{}",'.format(bucket_names[0])
@@ -953,14 +947,13 @@ class SyncGateway(object):
             playbook_vars["server_tls_skip_verify"] = '"server_tls_skip_verify": true,'
 
         if is_tls_server_disabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
-            playbook_vars["tls_server"] = '"use_tls_server": false,'
+            playbook_vars["disable_tls_server"] = '"use_tls_server": false,'
 
         if is_tls_client_disabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
-            playbook_vars["tls_client"] = '"use_tls_client": false,'
+            playbook_vars["disable_tls_client"] = '"use_tls_client": false,'
 
         if is_admin_auth_disabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
-            playbook_vars["admin_auth"] = '"admin_interface_authentication": false,'
-            playbook_vars["metrics_auth"] = '"metrics_interface_authentication": false,'
+            playbook_vars["disable_admin_auth"] = '"admin_interface_authentication": false,    \n"metrics_interface_authentication": false,'
 
         # Deploy config
         if url is not None:

@@ -197,10 +197,9 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
         "hide_product_version": "",
         "disable_persistent_config": "",
         "server_tls_skip_verify": "",
-        "tls_server": "",
-        "tls_client": "",
-        "admin_auth": "",
-        "metrics_auth": ""
+        "disable_tls_server": "",
+        "disable_tls_client": "",
+        "disable_admin_auth": ""
     }
 
     if get_sg_version(cluster_config) >= "2.1.0":
@@ -298,14 +297,13 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
         playbook_vars["server_tls_skip_verify"] = '"server_tls_skip_verify": true,'
 
     if is_tls_server_disabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
-        playbook_vars["tls_server"] = '"use_tls_server": false,'
+        playbook_vars["disable_tls_server"] = '"use_tls_server": false,'
 
     if is_tls_client_disabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
-        playbook_vars["tls_client"] = '"use_tls_client": false,'
+        playbook_vars["disable_tls_client"] = '"use_tls_client": false,'
 
     if is_admin_auth_disabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
-        playbook_vars["admin_auth"] = '"admin_interface_authentication": false,'
-        playbook_vars["metrics_auth"] = '"metrics_interface_authentication": false,'
+        playbook_vars["disable_admin_auth"] = '"admin_interface_authentication": false,    \n"metrics_interface_authentication": false,'
 
     # Install Sync Gateway via Source or Package
     if sync_gateway_config.commit is not None:

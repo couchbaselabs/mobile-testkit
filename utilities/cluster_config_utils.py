@@ -366,7 +366,7 @@ def is_tls_client_disabled(cluster_config):
 
     cluster = load_cluster_config_json(cluster_config)
     try:
-        return cluster["environment"]["tls_client"]
+        return cluster["environment"]["disable_tls_client"]
     except KeyError:
         return False
 
