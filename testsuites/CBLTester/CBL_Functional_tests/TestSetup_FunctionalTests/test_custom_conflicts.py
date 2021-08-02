@@ -417,8 +417,6 @@ def test_merge_wins_custom_conflicts(params_from_base_test_setup, replicator_typ
             data["cbl_random"] = random_string(length=10, printable=True)
             db.updateDocument(cbl_db, doc_id=doc_id, data=data)
             cbl_doc = db.getDocuments(cbl_db, [doc_id])
-
-            log_info("Updated CBL Doc ************** - {}".format(cbl_doc[doc_id]))
     repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channels,
                                        replicator_authenticator=replicator_authenticator,
                                        replication_type=replicator_type, conflict_resolver="merge")

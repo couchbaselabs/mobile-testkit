@@ -1504,7 +1504,7 @@ def test_default_conflict_scenario_highRevGeneration_wins(params_from_base_test_
         4. update doc 1 times in Sg and update doc 2 times in CBL and vice versa in 2nd scenario
         5. Start replication with push pull and continous False.
         6. Wait until replication done
-        7. Verfiy doc with higher rev id is updated in CBL.
+        7. Verify doc with higher rev id is updated in CBL.
         8. Now update docs in sync gateway 3 times.
         9. Start replication with push pull and continous False.
         10. Wait until replication is done
@@ -1587,9 +1587,10 @@ def test_default_conflict_scenario_highRevGeneration_wins(params_from_base_test_
             verify_updates = 5
         count = 0
         while count < 30 and cbl_docs[doc]["updates"] != verify_updates:
-            time.sleep(1)
+            time.sleep(5)
             cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
             count += 1
+
         assert cbl_docs[doc]["updates"] == verify_updates, "cbl with high rev id is not updated "
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session, include_docs=True)
     sg_docs = sg_docs["rows"]
