@@ -241,6 +241,8 @@ def params_from_base_suite_setup(request):
         expected_sync_gateway_version=sync_gateway_version
     )
 
+    cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
+
     if prometheus_enabled:
         if not prometheus.is_prometheus_installed():
             prometheus.install_prometheus()
@@ -256,7 +258,8 @@ def params_from_base_suite_setup(request):
            "sync_gateway_version": sync_gateway_version,
            "sg_ce": sg_ce,
            "prometheus_enabled": prometheus_enabled,
-           "sg_ssl": sg_ssl
+           "sg_ssl": sg_ssl,
+           "cluster_topology": cluster_topology
            }
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
@@ -288,6 +291,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     sg_ce = params_from_base_suite_setup["sg_ce"]
     prometheus_enabled = params_from_base_suite_setup["prometheus_enabled"]
     sg_ssl = params_from_base_suite_setup["sg_ssl"]
+    cluster_topology = params_from_base_suite_setup["cluster_topology"]
 
     test_name = request.node.name
     log_info("Setting up test '{}'".format(test_name))
@@ -300,7 +304,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
            "sync_gateway_version": sync_gateway_version,
            "sg_ce": sg_ce,
            "prometheus_enabled": prometheus_enabled,
-           "sg_ssl": sg_ssl
+           "sg_ssl": sg_ssl,
+           "cluster_topology": cluster_topology
            }
 
     # Code after the yeild will execute when each test finishes
