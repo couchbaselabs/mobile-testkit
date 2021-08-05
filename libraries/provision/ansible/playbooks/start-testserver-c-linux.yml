@@ -6,4 +6,7 @@
   tasks:
     - debug: msg="Starting the TestService  {{binary_path}}"
     - name: Start TestServer
-      command: "./root/ctestserver/testserver  & "
+      shell: "/root/ctestserver/testserver &"
+      args:
+        chdir: "/root/ctestserver"
+        executable: "/bin/bash"
