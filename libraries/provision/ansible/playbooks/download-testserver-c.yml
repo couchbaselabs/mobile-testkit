@@ -27,7 +27,6 @@
     get_url:
       url: "{{ testserver_download_url }}"
       dest: ~/ctestserver/{{ package_name }}.zip
-    when: core_st.stat.exists == False
 
   - name: Unzip Couchbase Lite Library and remove .zip
     unarchive: src=~/ctestserver/{{ package_name }}.zip dest=~/ctestserver copy=no
