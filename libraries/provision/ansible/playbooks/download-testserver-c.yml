@@ -13,31 +13,15 @@
       msg: "package_name: {{ package_name }}"
 
 
-  - name: Check the CouchbaseLite core zip file exists
-    stat:
-      path: ~/ctestserver/{{ package_name }}.zip
-    register: core_st
-
   - name: Delete any exiting pre-downloaded files
     file:
       path: ~/ctestserver
       state: absent
-    when: core_st.stat.exists == False
-
-  - debug:
-      msg: "testserver war files and CouchbaseLite core zip already present, skipping download..."
-    when: core_st.stat.exists == True
-
-  - name: Check the TestServer zip file exists
-    stat:
-      path: ~/ctestserver
-    register: ctestserver_dir
 
   - name: create ctestserver directory if not exists
     file:
       path: ~/ctestserver
       state: directory
-    when: ctestserver_dir.stat.exists == False
 
   - name: Download TestServer C
     get_url:
