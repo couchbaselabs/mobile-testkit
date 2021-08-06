@@ -83,6 +83,7 @@ def test_replication_configuration_valid_values(params_from_base_test_setup, num
     if x509_cert_auth:
         temp_cluster_config = copy_to_temp_conf(cluster_config, mode)
         persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
+        persist_cluster_config_environment_prop(temp_cluster_config, 'server_tls_skip_verify', False)
         cluster_config = temp_cluster_config
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
@@ -630,6 +631,7 @@ def test_CBL_tombstone_doc(params_from_base_test_setup, num_of_docs, x509_cert_a
     if x509_cert_auth:
         temp_cluster_config = copy_to_temp_conf(cluster_config, mode)
         persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
+        persist_cluster_config_environment_prop(temp_cluster_config, 'server_tls_skip_verify', False)
         cluster_config = temp_cluster_config
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)

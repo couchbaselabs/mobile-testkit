@@ -63,6 +63,7 @@ def test_xattrs_grant_automatic_imports(params_from_base_test_setup, x509_cert_a
     if x509_cert_auth:
         temp_cluster_config = copy_to_temp_conf(cluster_config, mode)
         persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
+        persist_cluster_config_environment_prop(temp_cluster_config, 'server_tls_skip_verify', False)
         cluster_config = temp_cluster_config
     c_cluster = cluster.Cluster(config=cluster_config)
     c_cluster.reset(sg_config_path=temp_sg_config)

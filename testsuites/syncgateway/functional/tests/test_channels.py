@@ -134,6 +134,7 @@ def test_remove_add_channels_to_doc(params_from_base_test_setup, sg_conf_name, x
     if x509_cert_auth:
         temp_cluster_config = copy_to_temp_conf(cluster_config, mode)
         persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
+        persist_cluster_config_environment_prop(temp_cluster_config, 'server_tls_skip_verify', False)
         cluster_config = temp_cluster_config
 
     cluster = Cluster(cluster_config)
