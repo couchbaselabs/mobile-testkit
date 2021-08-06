@@ -6,7 +6,9 @@
   tasks:
     - debug: msg="Starting the TestService  {{binary_path}}"
     - name: Start TestServer
-      command: "start-stop-daemon --start --quiet --exec /root/ctestserver/testserver --background"
+      shell: "nohup /root/ctestserver/testserver &"
+      args:
+        chdir: "/root"
 
 
 
