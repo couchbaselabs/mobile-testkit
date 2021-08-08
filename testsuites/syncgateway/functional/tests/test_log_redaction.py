@@ -66,6 +66,7 @@ def test_log_redaction_config(params_from_base_test_setup, remove_tmp_sg_redacti
 
     if x509_cert_auth and not cbs_ce_version:
         persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
+        persist_cluster_config_environment_prop(temp_cluster_config, 'server_tls_skip_verify', False)
 
     cluster = Cluster(config=temp_cluster_config)
     cluster.reset(sg_config_path=sg_conf)
@@ -130,6 +131,7 @@ def test_sgCollect1(params_from_base_test_setup, remove_tmp_sg_redaction_logs, s
 
     if x509_cert_auth and not cbs_ce_version:
         persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
+        persist_cluster_config_environment_prop(temp_cluster_config, 'server_tls_skip_verify', False)
 
     cluster = Cluster(config=temp_cluster_config)
     cluster.reset(sg_config_path=sg_conf)
@@ -199,6 +201,7 @@ def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_
 
     if x509_cert_auth and not cbs_ce_version:
         persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
+        persist_cluster_config_environment_prop(temp_cluster_config, 'server_tls_skip_verify', False)
 
     cluster = Cluster(config=temp_cluster_config)
     cluster.reset(sg_config_path=sg_conf)
@@ -318,6 +321,7 @@ def test_sgCollectRestApi_errorMessages(params_from_base_test_setup, remove_tmp_
 
     if x509_cert_auth and not cbs_ce_version:
         persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
+        persist_cluster_config_environment_prop(temp_cluster_config, 'server_tls_skip_verify', False)
 
     cluster = Cluster(config=temp_cluster_config)
     cluster.reset(sg_config_path=sg_conf)
