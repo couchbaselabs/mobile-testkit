@@ -920,22 +920,22 @@ class SyncGateway(object):
         if is_delta_sync_enabled(cluster_config) and version >= "2.5.0":
             playbook_vars["delta_sync"] = '"delta_sync": { "enabled": true},'
 
-        if get_sg_version(cluster_config) >= "2.8.0":
+        if version >= "2.8.0":
             playbook_vars["prometheus"] = '"metricsInterface": ":4986",'
 
-        if is_hide_prod_version_enabled(cluster_config) and get_sg_version(cluster_config) >= "2.8.1":
+        if is_hide_prod_version_enabled(cluster_config) and version >= "2.8.1":
             playbook_vars["hide_product_version"] = '"hide_product_version": true,'
 
-        if is_centralized_persistent_config_disabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
+        if is_centralized_persistent_config_disabled(cluster_config) and version >= "3.0.0":
             playbook_vars["disable_persistent_config"] = '"disable_persistent_config": true,'
 
-        if is_server_tls_skip_verify_enabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
+        if is_server_tls_skip_verify_enabled(cluster_config) and version >= "3.0.0":
             playbook_vars["server_tls_skip_verify"] = '"server_tls_skip_verify": true,'
 
-        if is_tls_server_disabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
+        if is_tls_server_disabled(cluster_config) and version >= "3.0.0":
             playbook_vars["disable_tls_server"] = '"use_tls_server": false,'
 
-        if is_admin_auth_disabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
+        if is_admin_auth_disabled(cluster_config) and version >= "3.0.0":
             playbook_vars["disable_admin_auth"] = '"admin_interface_authentication": false,    \n"metrics_interface_authentication": false,'
 
         # Deploy config
