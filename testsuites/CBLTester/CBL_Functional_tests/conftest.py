@@ -199,10 +199,6 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="Disable tls server")
 
-    parser.addoption("--disable-tls-client",
-                     action="store_true",
-                     help="Disable tls client")
-
     parser.addoption("--disable-admin-auth",
                      action="store_true",
                      help="Disable Admin auth")
@@ -223,6 +219,7 @@ def params_from_base_suite_setup(request):
     skip_provisioning = request.config.getoption("--skip-provisioning")
     use_local_testserver = request.config.getoption("--use-local-testserver")
     sync_gateway_version = request.config.getoption("--sync-gateway-version")
+    disable_tls_server = request.config.getoption("--disable-tls-server")
     mode = request.config.getoption("--mode")
     server_version = request.config.getoption("--server-version")
     enable_sample_bucket = request.config.getoption("--enable-sample-bucket")
@@ -256,7 +253,7 @@ def params_from_base_suite_setup(request):
     disable_persistent_config = request.config.getoption("--disable-persistent-config")
     enable_server_tls_skip_verify = request.config.getoption("--enable-server-tls-skip-verify")
     disable_tls_server = request.config.getoption("--disable-tls-server")
-    disable_tls_client = request.config.getoption("--disable-tls-client")
+
     disable_admin_auth = request.config.getoption("--disable-admin-auth")
 
     test_name = request.node.name
@@ -438,13 +435,6 @@ def params_from_base_suite_setup(request):
         log_info("Enable tls server flag")
         persist_cluster_config_environment_prop(cluster_config, 'disable_tls_server', False)
 
-    if disable_tls_client:
-        log_info("Disabled tls client flag")
-        persist_cluster_config_environment_prop(cluster_config, 'disable_tls_client', True)
-    else:
-        log_info("Enabled tls client flag")
-        persist_cluster_config_environment_prop(cluster_config, 'disable_tls_client', False)
-
     if disable_admin_auth:
         log_info("Disabled Admin Auth")
         persist_cluster_config_environment_prop(cluster_config, 'disable_admin_auth', True)
@@ -604,6 +594,7 @@ def params_from_base_suite_setup(request):
         "sg_db": sg_db,
         "no_conflicts_enabled": no_conflicts_enabled,
         "sync_gateway_version": sync_gateway_version,
+        "disable_tls_server": disable_tls_server,
         "target_admin_url": target_admin_url,
         "base_url": base_url,
         "enable_sample_bucket": enable_sample_bucket,
@@ -687,6 +678,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     sg_ip = params_from_base_suite_setup["sg_ip"]
     sg_db = params_from_base_suite_setup["sg_db"]
     sync_gateway_version = params_from_base_suite_setup["sync_gateway_version"]
+    disable_tls_server = params_from_base_suite_setup["disable_tls_server"]
     sg_config = params_from_base_suite_setup["sg_config"]
     liteserv_platform = params_from_base_suite_setup["liteserv_platform"]
     testserver = params_from_base_suite_setup["testserver"]
@@ -778,6 +770,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "sg_db": sg_db,
         "no_conflicts_enabled": no_conflicts_enabled,
         "sync_gateway_version": sync_gateway_version,
+        "disable_tls_server": disable_tls_server,
         "source_db": source_db,
         "cbl_db": cbl_db,
         "suite_source_db": suite_source_db,

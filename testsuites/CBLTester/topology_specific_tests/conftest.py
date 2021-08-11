@@ -143,10 +143,6 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="Disable tls server")
 
-    parser.addoption("--disable-tls-client",
-                     action="store_true",
-                     help="Disable tls client")
-
     parser.addoption("--disable-admin-auth",
                      action="store_true",
                      help="Disable Admin auth")

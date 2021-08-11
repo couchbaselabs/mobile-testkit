@@ -174,10 +174,6 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="Disable tls server")
 
-    parser.addoption("--disable-tls-client",
-                     action="store_true",
-                     help="Disable tls client")
-
     parser.addoption("--disable-admin-auth",
                      action="store_true",
                      help="Disable Admin auth")
@@ -196,6 +192,7 @@ def params_from_base_suite_setup(request):
     # pytest command line parameters
     server_version = request.config.getoption("--server-version")
     sync_gateway_version = request.config.getoption("--sync-gateway-version")
+    disable_tls_server = request.config.getoption("--disable-tls-server")
     mode = request.config.getoption("--mode")
     skip_provisioning = request.config.getoption("--skip-provisioning")
     ci = request.config.getoption("--ci")
@@ -222,7 +219,7 @@ def params_from_base_suite_setup(request):
     disable_persistent_config = request.config.getoption("--disable-persistent-config")
     enable_server_tls_skip_verify = request.config.getoption("--enable-server-tls-skip-verify")
     disable_tls_server = request.config.getoption("--disable-tls-server")
-    disable_tls_client = request.config.getoption("--disable-tls-client")
+
     disable_admin_auth = request.config.getoption("--disable-admin-auth")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
@@ -415,13 +412,6 @@ def params_from_base_suite_setup(request):
         log_info("Enable tls server flag")
         persist_cluster_config_environment_prop(cluster_config, 'disable_tls_server', False)
 
-    if disable_tls_client:
-        log_info("Disabled tls client flag")
-        persist_cluster_config_environment_prop(cluster_config, 'disable_tls_client', True)
-    else:
-        log_info("Enabled tls client flag")
-        persist_cluster_config_environment_prop(cluster_config, 'disable_tls_client', False)
-
     if disable_admin_auth:
         log_info("Disabled Admin Auth")
         persist_cluster_config_environment_prop(cluster_config, 'disable_admin_auth', True)
@@ -479,6 +469,7 @@ def params_from_base_suite_setup(request):
 
     yield {
         "sync_gateway_version": sync_gateway_version,
+        "disable_tls_server": disable_tls_server,
         "cluster_config": cluster_config,
         "cluster_topology": cluster_topology,
         "mode": mode,
@@ -526,6 +517,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     no_conflicts_enabled = params_from_base_suite_setup["no_conflicts_enabled"]
     cbs_ssl = params_from_base_suite_setup["ssl_enabled"]
     sync_gateway_version = params_from_base_suite_setup["sync_gateway_version"]
+    disable_tls_server = params_from_base_suite_setup["disable_tls_server"]
     sg_platform = params_from_base_suite_setup["sg_platform"]
     delta_sync_enabled = params_from_base_suite_setup["delta_sync_enabled"]
     sg_ce = params_from_base_suite_setup["sg_ce"]
@@ -578,6 +570,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "xattrs_enabled": xattrs_enabled,
         "no_conflicts_enabled": no_conflicts_enabled,
         "sync_gateway_version": sync_gateway_version,
+        "disable_tls_server": disable_tls_server,
         "sg_platform": sg_platform,
         "ssl_enabled": cbs_ssl,
         "delta_sync_enabled": delta_sync_enabled,

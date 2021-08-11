@@ -152,10 +152,6 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="Disable tls server")
 
-    parser.addoption("--disable-tls-client",
-                     action="store_true",
-                     help="Disable tls client")
-
     parser.addoption("--disable-admin-auth",
                      action="store_true",
                      help="Disable Admin auth")
@@ -176,6 +172,7 @@ def params_from_base_suite_setup(request):
     liteserv_port = request.config.getoption("--liteserv-port")
     skip_provisioning = request.config.getoption("--skip-provisioning")
     sync_gateway_version = request.config.getoption("--sync-gateway-version")
+    disable_tls_server = request.config.getoption("--disable-tls-server")
     mode = request.config.getoption("--mode")
     db_password = request.config.getoption("--encrypted-db-password")
     encrypted_db = request.config.getoption("--encrypted-db")
@@ -202,7 +199,7 @@ def params_from_base_suite_setup(request):
     disable_persistent_config = request.config.getoption("--disable-persistent-config")
     enable_server_tls_skip_verify = request.config.getoption("--enable-server-tls-skip-verify")
     disable_tls_server = request.config.getoption("--disable-tls-server")
-    disable_tls_client = request.config.getoption("--disable-tls-client")
+
     disable_admin_auth = request.config.getoption("--disable-admin-auth")
 
     test_name = request.node.name
@@ -351,13 +348,6 @@ def params_from_base_suite_setup(request):
         log_info("Enable tls server flag")
         persist_cluster_config_environment_prop(cluster_config, 'disable_tls_server', False)
 
-    if disable_tls_client:
-        log_info("Disabled tls client flag")
-        persist_cluster_config_environment_prop(cluster_config, 'disable_tls_client', True)
-    else:
-        log_info("Enabled tls client flag")
-        persist_cluster_config_environment_prop(cluster_config, 'disable_tls_client', False)
-
     if disable_admin_auth:
         log_info("Disabled Admin Auth")
         persist_cluster_config_environment_prop(cluster_config, 'disable_admin_auth', True)
@@ -444,6 +434,7 @@ def params_from_base_suite_setup(request):
         "no_conflicts_enabled": no_conflicts_enabled,
         "server_version": server_version,
         "sync_gateway_version": sync_gateway_version,
+        "disable_tls_server": disable_tls_server,
         "sg_admin_url": sg_admin_url,
         "base_url": base_url,
         "suite_source_db": suite_source_db,

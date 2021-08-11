@@ -187,10 +187,6 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="Disable tls server")
 
-    parser.addoption("--disable-tls-client",
-                     action="store_true",
-                     help="Disable tls client")
-
     parser.addoption("--disable-admin-auth",
                      action="store_true",
                      help="Disable Admin auth")
@@ -214,6 +210,7 @@ def params_from_base_suite_setup(request):
 
     server_version = request.config.getoption("--server-version")
     sync_gateway_version = request.config.getoption("--sync-gateway-version")
+    disable_tls_server = request.config.getoption("--disable-tls-server")
 
     cbs_ssl = request.config.getoption("--server-ssl")
     sg_ssl = request.config.getoption("--sg-ssl")
@@ -248,7 +245,7 @@ def params_from_base_suite_setup(request):
     disable_persistent_config = request.config.getoption("--disable-persistent-config")
     enable_server_tls_skip_verify = request.config.getoption("--enable-server-tls-skip-verify")
     disable_tls_server = request.config.getoption("--disable-tls-server")
-    disable_tls_client = request.config.getoption("--disable-tls-client")
+
     disable_admin_auth = request.config.getoption("--disable-admin-auth")
     test_name = request.node.name
 
@@ -449,13 +446,6 @@ def params_from_base_suite_setup(request):
         log_info("Enable tls server flag")
         persist_cluster_config_environment_prop(cluster_config, 'disable_tls_server', False)
 
-    if disable_tls_client:
-        log_info("Disabled tls client flag")
-        persist_cluster_config_environment_prop(cluster_config, 'disable_tls_client', True)
-    else:
-        log_info("Enabled tls client flag")
-        persist_cluster_config_environment_prop(cluster_config, 'disable_tls_client', False)
-
     if disable_admin_auth:
         log_info("Disabled Admin Auth")
         persist_cluster_config_environment_prop(cluster_config, 'disable_admin_auth', True)
@@ -534,6 +524,7 @@ def params_from_base_suite_setup(request):
         "cbs_platform": cbs_platform,
         "server_version": server_version,
         "sync_gateway_version": sync_gateway_version,
+        "disable_tls_server": disable_tls_server,
         "server_upgraded_version": server_upgraded_version,
         "sync_gateway_upgraded_version": sync_gateway_upgraded_version,
         "cbs_ssl": cbs_ssl,
@@ -591,6 +582,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     mode = params_from_base_suite_setup["mode"]
     server_version = params_from_base_suite_setup["server_version"]
     sync_gateway_version = params_from_base_suite_setup["sync_gateway_version"]
+    disable_tls_server = params_from_base_suite_setup["disable_tls_server"]
     server_upgraded_version = params_from_base_suite_setup["server_upgraded_version"]
     sync_gateway_upgraded_version = params_from_base_suite_setup["sync_gateway_upgraded_version"]
     cbs_ssl = params_from_base_suite_setup["cbs_ssl"],
@@ -699,6 +691,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "mode": mode,
         "server_version": server_version,
         "sync_gateway_version": sync_gateway_version,
+        "disable_tls_server": disable_tls_server,
         "server_upgraded_version": server_upgraded_version,
         "sync_gateway_upgraded_version": sync_gateway_upgraded_version,
         "cbs_ssl": cbs_ssl,
