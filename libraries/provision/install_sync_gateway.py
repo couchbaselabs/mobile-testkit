@@ -14,7 +14,7 @@ from keywords.constants import SYNC_GATEWAY_CERT
 from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_revs_limit, sg_ssl_enabled
 from utilities.cluster_config_utils import is_hide_prod_version_enabled, get_cbs_primary_nodes_str
 from utilities.cluster_config_utils import get_sg_version, get_sg_replicas, get_sg_use_views, get_redact_level, is_x509_auth, generate_x509_certs, is_delta_sync_enabled
-from utilities.cluster_config_utils import is_centralized_persistent_config_disabled, is_server_tls_skip_verify_enabled, is_admin_auth_disabled, is_tls_server_disabled, is_tls_client_disabled
+from utilities.cluster_config_utils import is_centralized_persistent_config_disabled, is_server_tls_skip_verify_enabled, is_admin_auth_disabled, is_tls_server_disabled
 
 
 class SyncGatewayConfig:
@@ -198,7 +198,6 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
         "disable_persistent_config": "",
         "server_tls_skip_verify": "",
         "disable_tls_server": "",
-        "disable_tls_client": "",
         "disable_admin_auth": ""
     }
 
@@ -298,9 +297,6 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
 
     if is_tls_server_disabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
         playbook_vars["disable_tls_server"] = '"use_tls_server": false,'
-
-    if is_tls_client_disabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
-        playbook_vars["disable_tls_client"] = '"use_tls_client": false,'
 
     if is_admin_auth_disabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
         playbook_vars["disable_admin_auth"] = '"admin_interface_authentication": false,    \n"metrics_interface_authentication": false,'
