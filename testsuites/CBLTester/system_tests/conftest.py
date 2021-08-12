@@ -243,7 +243,9 @@ def params_from_base_suite_setup(request):
     # test runtime in days, float type allow debug runs specify shorter time, i.e. a quarter day etc.
     up_time = float(request.config.getoption("--up-time"))
     # convert to minutes
-    up_time = up_time * 24 * 60
+    # up_time = up_time * 24 * 60
+    # set up_time in hour for now
+    up_time = up_time * 60
     enable_cbs_developer_preview = request.config.getoption("--enable-cbs-developer-preview")
     repl_status_check_sleep_time = int(request.config.getoption("--repl-status-check-sleep-time"))
     test_name = request.node.name
