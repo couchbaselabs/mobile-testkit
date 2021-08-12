@@ -64,7 +64,10 @@ def test_log_redaction_config(params_from_base_test_setup, remove_tmp_sg_redacti
     persist_cluster_config_environment_prop(temp_cluster_config, 'redactlevel', redaction_level,
                                             property_name_check=False)
 
+    disable_tls_server = params_from_base_test_setup["disable_tls_server"]
     if x509_cert_auth and not cbs_ce_version:
+        if disable_tls_server:
+            pytest.skip("x509 test cannot run tls server disabled")
         persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
         persist_cluster_config_environment_prop(temp_cluster_config, 'server_tls_skip_verify', False)
 
@@ -129,7 +132,10 @@ def test_sgCollect1(params_from_base_test_setup, remove_tmp_sg_redaction_logs, s
     persist_cluster_config_environment_prop(temp_cluster_config, 'redactlevel', "partial", property_name_check=False)
     cbs_ce_version = params_from_base_test_setup["cbs_ce"]
 
+    disable_tls_server = params_from_base_test_setup["disable_tls_server"]
     if x509_cert_auth and not cbs_ce_version:
+        if disable_tls_server:
+            pytest.skip("x509 test cannot run tls server disabled")
         persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
         persist_cluster_config_environment_prop(temp_cluster_config, 'server_tls_skip_verify', False)
 
@@ -199,7 +205,10 @@ def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_
     temp_cluster_config = copy_to_temp_conf(cluster_config, mode)
     persist_cluster_config_environment_prop(temp_cluster_config, 'redactlevel', "partial", property_name_check=False)
 
+    disable_tls_server = params_from_base_test_setup["disable_tls_server"]
     if x509_cert_auth and not cbs_ce_version:
+        if disable_tls_server:
+            pytest.skip("x509 test cannot run tls server disabled")
         persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
         persist_cluster_config_environment_prop(temp_cluster_config, 'server_tls_skip_verify', False)
 
@@ -319,7 +328,10 @@ def test_sgCollectRestApi_errorMessages(params_from_base_test_setup, remove_tmp_
     temp_cluster_config = copy_to_temp_conf(cluster_config, mode)
     persist_cluster_config_environment_prop(temp_cluster_config, 'redactlevel', "partial", property_name_check=False)
 
+    disable_tls_server = params_from_base_test_setup["disable_tls_server"]
     if x509_cert_auth and not cbs_ce_version:
+        if disable_tls_server:
+            pytest.skip("x509 test cannot run tls server disabled")
         persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
         persist_cluster_config_environment_prop(temp_cluster_config, 'server_tls_skip_verify', False)
 
