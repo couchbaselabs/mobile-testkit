@@ -107,6 +107,10 @@ class TestServerCpp(TestServerBase):
             commd = self.binary_path
             subprocess.run([commd], shell=True)
         else:
+            print("STOPPING THE TESTSERVER")
+            remote_executor = RemoteExecutor(self.host, self.platform, os.environ["TESTSERVER_HOST_USER"],
+                                             os.environ["TESTSERVER_HOST_PASSWORD"])
+            remote_executor.execute("ps -ef | grep 'testserver' | awk '{print $2}' | xargs kill -9 $1")
             status = self.ansible_runner.run_ansible_playbook("start-testserver-c-linux.yml", extra_vars={
                 "binary_path": self.binary_path
             })
@@ -135,4 +139,4 @@ class TestServerCpp(TestServerBase):
         if status == 0:
             return
         else:
-            raise LiteServError("Failed to stop Tomcat on remote machine")
+            raise LiteServError("Failed to stop Testserver on remote machine")
