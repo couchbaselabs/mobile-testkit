@@ -1,4 +1,4 @@
-from datetime import datetime
+# from datetime import datetime
 import random
 import pytest
 import time
@@ -456,7 +456,6 @@ def test_disable_auto_purge_no_impact_purged_docs(params_from_base_test_setup):
         remote_password=password,
         direction="pull",
         continuous=True,
-        channels=channels,
         purge_on_removal=True
     )
 
@@ -495,6 +494,7 @@ def test_disable_auto_purge_no_impact_purged_docs(params_from_base_test_setup):
         channels=channels
     )
     sg1.modify_replication2_status(replicator2_id, DB1, "start")
+    time.sleep(2)
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id, read_flag=True, max_times=3000)
 
     # 7. verify doc_A_* not replicated back after the replication auto purge config update
@@ -513,7 +513,7 @@ def test_disable_auto_purge_no_impact_purged_docs(params_from_base_test_setup):
 def test_user_lost_channel_access_pull(params_from_base_test_setup):
     """
         @summary:
-        test case #3
+        Channel Access Revocation Test Plan (ISGR) #3
         1. on passive SGW, create docs:
             - doc_A belongs to channel A only
             - doc_AnB belongs to channel A and channel B
@@ -626,7 +626,7 @@ def test_user_lost_channel_access_pull(params_from_base_test_setup):
 def test_user_lost_channel_access_push_only(params_from_base_test_setup):
     """
         @summary:
-        test case #6 & #9
+        Channel Access Revocation Test Plan (ISGR) #6
         1. on passive SGW, create docs:
             - doc_A belongs to channel A only
             - doc_AnB belongs to channel A and channel B
@@ -714,6 +714,8 @@ def test_user_lost_channel_access_push_only(params_from_base_test_setup):
         continuous=True,
         purge_on_removal=True
     )
+    sg1.modify_replication2_status(replicator2_id, DB1, "start")
+    time.sleep(2)
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id, write_flag=True, read_flag=True, max_times=3000)
 
     # 5. revoke user access from channel A
@@ -746,9 +748,9 @@ def test_user_lost_channel_access_push_only(params_from_base_test_setup):
     assert "sg2_AnB_0" in sg1_doc_ids
     assert "sg2_C_0" in sg1_doc_ids
 
-    doc_c_local = sg_client.get_doc(url=sg1.url, db=DB1, auth=auth_session1, doc_id=doc_c_id)
-    doc_c_remote = sg_client.get_doc(url=sg2.admin.admin_url, db=DB2, auth=auth_session2, doc_id=doc_c_id)
-    assert doc_c_local != doc_c_remote, "doc should be rejected due to user revoked channel access"
+    with pytest.raises(HTTPError) as ex:
+        sg_client.get_doc(url=sg2.url, db=DB2, auth=auth_session2, doc_id=doc_c_id)
+    assert str(ex.value).startswith("403 Client Error: Forbidden for url:")
 
     sg1.stop_replication2_by_id(replicator2_id, DB1)
 
@@ -758,7 +760,7 @@ def test_user_lost_channel_access_push_only(params_from_base_test_setup):
 def test_user_lost_channel_access_push_and_pull(params_from_base_test_setup):
     """
         @summary:
-        Channel Access Revocation Test Plan (ISGR) #6
+        Channel Access Revocation Test Plan (ISGR) #9
         1. on passive SGW, create docs:
             - doc_A belongs to channel A only
             - doc_AnB belongs to channel A and channel B
@@ -857,6 +859,7 @@ def test_user_lost_channel_access_push_and_pull(params_from_base_test_setup):
     sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=["B"])
     time.sleep(3)
     sg1.modify_replication2_status(replicator2_id, DB1, "start")
+    time.sleep(2)
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id, read_flag=True, write_flag=True, max_times=3000)
 
     # 8. verify docs in channel C are purged
@@ -878,7 +881,7 @@ def test_user_lost_channel_access_push_and_pull(params_from_base_test_setup):
 def test_user_removed_from_role_by_direction(params_from_base_test_setup, replication_direction):
     """
         @summary:
-        test case #7 & #10
+        Channel Access Revocation Test Plan (ISGR) #4 & #10
         1. create roles and user:
             - role1 has access to channel A and B
             - role2 has access to channel B and C
@@ -1007,7 +1010,7 @@ def test_user_removed_from_role_by_direction(params_from_base_test_setup, replic
 def test_user_removed_from_role_push_only(params_from_base_test_setup):
     """
         @summary:
-        test case #7 & #10
+        Channel Access Revocation Test Plan (ISGR) #7
         1. create roles and user:
             - role R1 has access to channel A and B
             - role R2 has access to channel B and C
@@ -1111,6 +1114,9 @@ def test_user_removed_from_role_push_only(params_from_base_test_setup):
         continuous=True,
         purge_on_removal=True
     )
+    sg1.modify_replication2_status(replicator2_id, DB1, "start")
+    time.sleep(2)
+    sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id, read_flag=True, max_times=3000)
 
     # 6. on SGW remove the user from role1
     sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=other_channels, roles=[role2])
@@ -1154,7 +1160,7 @@ def test_user_removed_from_role_push_only(params_from_base_test_setup):
 def test_user_role_revoked_channel_access_by_direction(params_from_base_test_setup, replication_direction):
     """
         @summary:
-        test case #5
+        Channel Access Revocation Test Plan (ISGR) #5 & #11
         1. create role and user:
             - role R access to channel A, B and D
             - user assigned to role R and channel C
@@ -1276,7 +1282,7 @@ def test_user_role_revoked_channel_access_by_direction(params_from_base_test_set
 def test_user_role_revoked_channel_access_push_only(params_from_base_test_setup):
     """
         @summary:
-        test case #8 & #11
+        Channel Access Revocation Test Plan (ISGR) #8
         1. create role and user:
             - role R access to channel A, B and D
             - user assigned to role R and channel C
@@ -1412,7 +1418,7 @@ def test_user_role_revoked_channel_access_push_only(params_from_base_test_setup)
 def test_user_reassign_to_channel_pull(params_from_base_test_setup):
     """
         @summary:
-        test case #13
+        Channel Access Revocation Test Plan (ISGR) #13
         1. on passive SGW, create docs:
             - doc_A belongs to channel A only
             - doc_AnB belongs to channel A and B
@@ -1517,7 +1523,7 @@ def test_user_reassign_to_channel_pull(params_from_base_test_setup):
 def test_user_reassign_to_channel_push_only(params_from_base_test_setup):
     """
         @summary:
-        Channel Access Revocation Test Plan (ISGR) #14 & #15
+        Channel Access Revocation Test Plan (ISGR) #14
         1. on passive SGW, create docs:
             - doc_A in channel A only
             - doc_AnB in channel A and channel B
@@ -1527,9 +1533,9 @@ def test_user_reassign_to_channel_push_only(params_from_base_test_setup):
         4. update the replication direction to push and enable auto purge
         5. revoke user access from channel A
         6. verify docs have no impact
-        7. update doc_A on active SGW and verify doc_A update doesn't get pushed
+        7. on active SGW, add a new doc to channel A, update doc_A and verify doc_A update doesn't get pushed
         8. reassign user access to channel A, and verify docs not impacted
-        9. update a doc on active SGW, verify the modified doc is pushed after user reassigned to channel access
+        9. on active SGW, add another doc, update doc_A again, verify the docs pushed after user reassigned to channel access
     """
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
@@ -1589,25 +1595,25 @@ def test_user_reassign_to_channel_push_only(params_from_base_test_setup):
     sg1_doc_ids = [doc["id"] for doc in sg1_docs["rows"]]
     for sg2_doc_id in sg2_doc_ids:
         assert sg2_doc_id in sg1_doc_ids
+    sg1.stop_replication2_by_id(replicator2_id, DB1)
 
     # 4. update the replication direction to push and enable auto purge
-    sg1.start_replication2(
+    replicator2_id_2 = sg1.start_replication2(
         local_db=DB1,
         remote_url=sg2.url,
         remote_db=DB2,
         remote_user=sg2_username,
         remote_password=password,
-        replication_id=replicator2_id,
         direction="push",
         continuous=True,
         purge_on_removal=True
     )
-    sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id, write_flag=True, read_flag=True, max_times=3000)
+    sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id_2, write_flag=True, read_flag=True, max_times=3000)
 
     # 5. revoke user access from channel A
     sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=["B", "C"])
     time.sleep(3)
-    sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id, write_flag=True, read_flag=True, max_times=3000)
+    sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id_2, write_flag=True, read_flag=True, max_times=3000)
 
     # 6. verify docs have no impact
     sg1_docs = sg_client.get_all_docs(url=sg1.url, db=DB1, auth=auth_session1, include_docs=True)
@@ -1616,24 +1622,23 @@ def test_user_reassign_to_channel_push_only(params_from_base_test_setup):
     assert "sg2_AnB_0" in sg1_doc_ids
     assert "sg2_C_0" in sg1_doc_ids
 
-    # 7. update doc_A on active SGW and verify doc_A update doesn't get pushed
+    # 7. on active SGW, add a new doc to channel A, update doc_A and verify doc_A update doesn't get pushed
+    sg_client.add_docs(url=sg1.url, db=DB1, number=1, id_prefix="doc_before_reassign", channels=["A"], auth=auth_session1)
+
     updated_doc_id = "sg2_A_0"
     sg_client.update_doc(url=sg1.url, db=DB1, doc_id=updated_doc_id,
                          number_updates=3, auth=auth_session1,
                          property_updater=add_new_fields_to_doc)
-    sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id, write_flag=True, read_flag=True, max_times=3000)
+    sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id_2, write_flag=True, read_flag=True, max_times=3000)
+
     with pytest.raises(HTTPError) as ex:
         updated_doc_remote = sg_client.get_doc(url=sg2.url, db=DB2, auth=auth_session2, doc_id=updated_doc_id)
     assert str(ex.value).startswith("403 Client Error: Forbidden for url:")
 
-    updated_doc_local = sg_client.get_doc(url=sg1.url, db=DB1, auth=auth_session1, doc_id=updated_doc_id)
-    updated_doc_remote = sg_client.get_doc(url=sg2.admin.admin_url, db=DB2, auth=auth_session2, doc_id=updated_doc_id)
-    assert updated_doc_local != updated_doc_remote, "doc should be rejected due to user revoked channel access"
-
     # 8. reassign user access to channel A, and verify docs not impacted
     sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=["A", "B", "C"])
     time.sleep(3)
-    sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id, write_flag=True, read_flag=True, max_times=3000)
+    sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id_2, write_flag=True, read_flag=True, max_times=3000)
 
     sg1_docs = sg_client.get_all_docs(url=sg1.url, db=DB1, auth=auth_session1, include_docs=True)
     sg1_doc_ids = [doc["id"] for doc in sg1_docs["rows"]]
@@ -1641,17 +1646,24 @@ def test_user_reassign_to_channel_push_only(params_from_base_test_setup):
     assert "sg2_AnB_0" in sg1_doc_ids
     assert "sg2_C_0" in sg1_doc_ids
 
-    # 9. update a doc on active SGW, verify the modified doc is pushed after user reassigned to channel access
+    # 9. on active SGW, add another doc, update doc_A again, verify the docs pushed after user reassigned to channel access
+    sg_client.add_docs(url=sg1.url, db=DB1, number=1, id_prefix="doc_after_reassign", channels=["A"], auth=auth_session1)
     sg_client.update_doc(url=sg1.url, db=DB1, doc_id=updated_doc_id,
-                         number_updates=3, auth=auth_session1,
+                         number_updates=1, auth=auth_session1,
                          property_updater=add_additional_new_field_to_doc)
 
-    sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id, write_flag=True, read_flag=True, max_times=3000)
+    sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id_2, write_flag=True, read_flag=True, max_times=3000)
+
     updated_doc_local = sg_client.get_doc(url=sg1.url, db=DB1, auth=auth_session1, doc_id=updated_doc_id)
     updated_doc_remote = sg_client.get_doc(url=sg2.url, db=DB2, auth=auth_session2, doc_id=updated_doc_id)
     assert updated_doc_local == updated_doc_remote, "doc should be pushed after user reasigned to channel access"
 
-    sg1.stop_replication2_by_id(replicator2_id, DB1)
+    sg2_docs = sg_client.get_all_docs(url=sg2.url, db=DB2, auth=auth_session2, include_docs=True)
+    sg2_doc_ids = [doc["id"] for doc in sg2_docs["rows"]]
+    assert "doc_before_reassign_0" in sg2_doc_ids
+    assert "doc_after_reassign_0" in sg2_doc_ids
+
+    sg1.stop_replication2_by_id(replicator2_id_2, DB1)
 
 
 @pytest.mark.listener
@@ -1659,7 +1671,7 @@ def test_user_reassign_to_channel_push_only(params_from_base_test_setup):
 def test_user_reassign_to_channel_push_pull(params_from_base_test_setup):
     """
         @summary:
-        test case #14 & #15
+        Channel Access Revocation Test Plan (ISGR) #15
         1. on passive SGW, create docs:
             - doc_A belongs to channel A only
             - doc_AnB belongs to channel A and B
@@ -1779,7 +1791,7 @@ def test_user_reassign_to_channel_push_pull(params_from_base_test_setup):
 def test_auto_purge_for_tombstone_docs(params_from_base_test_setup, with_local_update):
     """
         @summary:
-        Channel Access Revocation Test Plan (ISGR) #13
+        Channel Access Revocation Test Plan (ISGR) #16
         1. on passive SGW, create docs in channel A and B
         2. start a pull replication sg1 <- sg2 with with auto purge enabled
         3. verify active SGW have all docs pulled
@@ -1868,6 +1880,7 @@ def test_auto_purge_for_tombstone_docs(params_from_base_test_setup, with_local_u
     sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=["B", "C"])
     time.sleep(2)
     sg1.modify_replication2_status(replicator2_id, DB1, "start")
+    time.sleep(2)
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id, read_flag=True, max_times=3000)
 
     # 6. verify the tombstoned docs get auto purged
@@ -1999,7 +2012,7 @@ def test_resurrected_docs_by_sdk(params_from_base_test_setup, resurrect_type):
                 "sg_tracking_prop": 0,
                 "sdk_tracking_prop": 0
             }
-        sdk_doc_body = document.create_doc(selected_doc_id, prop_generator=update_doc_body, channels=['A'])
+        sdk_doc_body = document.create_doc(selected_doc_id, prop_generator=update_props, channels=['A'])
         log_info('Adding doc via SDK with doc body {}'.format(sdk_doc_body))
 
     sdk_client.upsert(selected_doc_id, sdk_doc_body)
@@ -2008,8 +2021,7 @@ def test_resurrected_docs_by_sdk(params_from_base_test_setup, resurrect_type):
     # 6. verify doc created from sdk imported to SGW
     sg2_docs = sg_client.get_all_docs(url=sg2.url, db=DB2, auth=auth_session2, include_docs=True)
     resurrected_doc_body = sg_client.get_doc(url=sg2.url, db=DB2, auth=auth_session2, doc_id=selected_doc_id)
-    assert sdk_doc_body == resurrected_doc_body
-    assert sdk_doc_body == sg2_docs[selected_doc_id]
+    assert compare_doc_body(sdk_doc_body, resurrected_doc_body)
 
     # 7. revoke user access from channel A
     sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=["B", "C"])
@@ -2027,50 +2039,21 @@ def test_resurrected_docs_by_sdk(params_from_base_test_setup, resurrect_type):
     sg1.stop_replication2_by_id(replicator2_id, DB1)
 
 
-def create_and_push_docs(sg_client, local_sg, remote_sg, local_db, remote_db, remote_user, password, repeats, sleep_period):
-    # this method makes repeat actions to create docs in local db and push to remote db
-    sg1 = local_sg
-    sg2 = remote_sg
-    user_revoked = False
-    revocation_mark = 0
-    for i in repeats:
-        if i > repeats / 2 and not user_revoked:
-            # revoke user access from channel A
-            sg_client.update_user(url=sg2.admin.admin_url, db=remote_db, name=remote_user, channels=["B"])
-            user_revoked = True
-            revocation_mark = i
-        # add 3 docs each time
-        sg_client.add_docs(url=sg1.admin.admin_url, db=local_db, number=3, id_prefix="local_A_{}".format(i), channels=["A"])
-        sg1.start_replication2(
-            local_db=local_db,
-            remote_url=sg2.url,
-            remote_db=remote_db,
-            remote_user=remote_user,
-            remote_password=password,
-            direction="push",
-            continuous=False
-        )
-        time.sleep(sleep_period)
-
-    return revocation_mark
-
-
-def pull_docs_in_parallel(local_sg, remote_sg, local_db, remote_db, remote_user, password, wait_time_in_sec):
-    sg1 = local_sg
-    sg2 = remote_sg
-    start_time = datetime.now()
-    repl_id = sg1.start_replication2(
-        local_db=local_db,
-        remote_url=sg2.url,
-        remote_db=remote_db,
-        remote_user=remote_user,
-        remote_password=password,
-        direction="pull",
-        continuous=True,
-        purge_on_removal=True
-    )
-    time.sleep(wait_time_in_sec)
-    sg1.stop_replication2_by_id(repl_id, local_db)
-    end_time = datetime.now()
-
-    return (end_time - start_time).total_seconds()
+def compare_doc_body(doc1, doc2):
+    try:
+        del doc1["_rev"]
+    except KeyError:
+        log_info("no _rev exists")
+    try:
+        del doc2["_rev"]
+    except KeyError:
+        log_info("no _rev exists")
+    try:
+        del doc1["_revisions"]
+    except KeyError:
+        log_info("no _revisions exists")
+    try:
+        del doc2["_revisions"]
+    except KeyError:
+        log_info("no _revisions exists")
+    return doc1 == doc2
