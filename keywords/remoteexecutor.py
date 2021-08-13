@@ -51,6 +51,7 @@ class RemoteExecutor:
         elif "c" in self.sg_platform:
             self.client.connect(self.host, username=self.username, password=self.password,
                                 banner_timeout=REMOTE_EXECUTOR_TIMEOUT)
+            stdin, stdout, stderr = self.client.exec_command(command, timeout=60)
         else:
             if self.sg_platform == "macos":
                 self.client.connect(self.host, username=self.username, password=self.password, banner_timeout=REMOTE_EXECUTOR_TIMEOUT)
