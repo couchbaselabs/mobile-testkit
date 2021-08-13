@@ -51,9 +51,9 @@ def test_webhooks(params_from_base_test_setup, sg_conf_name, num_users, num_chan
     log_info("Using num_docs: {}".format(num_docs))
     log_info("Using num_revisions: {}".format(num_revisions))
     disable_tls_server = params_from_base_test_setup["disable_tls_server"]
+    if x509_cert_auth and disable_tls_server:
+        pytest.skip("x509 test cannot run tls server disabled")
     if x509_cert_auth and not cbs_ce_version:
-        if disable_tls_server:
-            pytest.skip("x509 test cannot run tls server disabled")
         temp_cluster_config = copy_to_temp_conf(cluster_conf, mode)
         persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
         persist_cluster_config_environment_prop(temp_cluster_config, 'server_tls_skip_verify', False)

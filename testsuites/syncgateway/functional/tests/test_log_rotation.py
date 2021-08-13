@@ -95,9 +95,9 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name, 
     log_info("Using sg_conf: {}".format(sg_conf))
 
     disable_tls_server = params_from_base_test_setup["disable_tls_server"]
+    if x509_cert_auth and disable_tls_server:
+        pytest.skip("x509 test cannot run tls server disabled")
     if x509_cert_auth and not cbs_ce_version:
-        if disable_tls_server:
-            pytest.skip("x509 test cannot run tls server disabled")
         temp_cluster_config = copy_to_temp_conf(cluster_conf, mode)
         persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
         persist_cluster_config_environment_prop(temp_cluster_config, 'server_tls_skip_verify', False)
