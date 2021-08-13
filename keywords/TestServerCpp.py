@@ -31,7 +31,7 @@ class TestServerCpp(TestServerBase):
         if self.platform == "c-macosx":
             self.package_name = "CBLTestServer_macosx_x64"
         else:
-            self.package_name = "testserver_linux_x64"
+            self.package_name = "testserver_debian9_x64"
         if self.build is None:
             self.download_url = "{}/couchbase-lite-c/{}/{}.zip".format(RELEASED_BUILDS, self.version, self.package_name)
         else:
