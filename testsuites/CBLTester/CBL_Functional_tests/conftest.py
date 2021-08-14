@@ -820,6 +820,11 @@ def class_init(request, params_from_base_suite_setup):
     enable_encryption = params_from_base_suite_setup["enable_encryption"]
     encryption_password = params_from_base_suite_setup["encryption_password"]
 
+    cbllog = FileLogging(base_url)
+    cbllog.configure(log_level="verbose", max_rotate_count=2,
+                     max_size=1000000 * 512, plain_text=True)
+    suite_db_log_files = cbllog.get_directory()
+    log_info("Log files available at - {}".format(suite_db_log_files))
     db_obj = Database(base_url)
     doc_obj = Document(base_url)
     datatype = DataTypeInitiator(base_url)
@@ -831,16 +836,13 @@ def class_init(request, params_from_base_suite_setup):
     base_auth_obj = BasicAuthenticator(base_url)
     session_auth_obj = SessionAuthenticator(base_url)
     sg_client = MobileRestClient()
+
     if enable_encryption:
         db_config = db_obj.configure(password=encryption_password)
     else:
         db_config = db_obj.configure()
     db = db_obj.create("cbl-init-db", db_config)
-    cbllog = FileLogging(base_url)
-    cbllog.configure(log_level="verbose", max_rotate_count=2,
-                     max_size=1000000 * 512, plain_text=True)
-    suite_db_log_files = cbllog.get_directory()
-    log_info("Log files available at - {}".format(suite_db_log_files))
+
 
     request.cls.db_obj = db_obj
     request.cls.doc_obj = doc_obj
