@@ -4048,9 +4048,9 @@ def test_replication_pull_from_empty_database(params_from_base_test_setup, attac
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("num_of_docs, continuous, wait_time, retries, type", [
-    pytest.param(500, True, "2", "10", "pull"),
-    pytest.param(500, True, "3", "10", "push"),
-    pytest.param(500, True, "6", "4", "pull-push"),
+    pytest.param(500, True, "2", "25", "pull"),
+    pytest.param(500, True, "3", "20", "push"),
+    pytest.param(500, True, "6", "15", "pull-push"),
 ])
 def test_replication_with_custom_retries(params_from_base_test_setup, num_of_docs, continuous, wait_time, retries,
                                          type):
@@ -4290,7 +4290,7 @@ def test_replication_reset_retires(params_from_base_test_setup, num_of_docs, con
 
     # start the sg before retries ends
     # Adding enough sleep to wait for the retries
-    time.sleep(int(wait_time) * (int(retries) - 5))
+    time.sleep(int(wait_time))
     sg_controller.start_sync_gateways(cluster_config, url=sg_url, config=sg_config)
     replicator.wait_until_replicator_idle(repl)
 
