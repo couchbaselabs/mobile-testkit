@@ -16,9 +16,9 @@ class TestServerFactory:
     @staticmethod
     def validate_platform(platform):
         valid_platforms = ["android", "ios", "net-mono", "net-msft", "net-uwp", "xamarin-android", "xamarin-ios",
-                           "java-macosx", "java-msft", "java-ubuntu", "java-centos", "c-linux", "c-rpi", "c-macosx",
+                           "java-macosx", "java-msft", "java-ubuntu", "java-centos", "c-rpi", "c-macosx",
                            "javaws-macosx", "javaws-msft", "javaws-ubuntu", "javaws-centos", "c-msft", "c-ios", "c-uwp",
-                           "c-android", "c-debian"]
+                           "c-android", "c-debian", "c-ubuntu"]
         if platform not in valid_platforms:
             raise ValueError("Unsupported 'platform': {}".format(platform))
 
@@ -54,7 +54,7 @@ class TestServerFactory:
         elif platform in ["javaws-macosx", "javaws-msft", "javaws-ubuntu", "javaws-centos"]:
             return TestServerJavaWS(version_build, host, port, debug_mode, platform=platform,
                                     community_enabled=community_enabled)
-        elif platform in ["c-macosx", "c-rpi", "c-debian"]:
+        elif platform in ["c-macosx", "c-rpi", "c-debian", "c-ubuntu"]:
             return TestServerCpp(version_build, host, port, debug_mode, platform=platform,
                                  community_enabled=community_enabled)
         else:

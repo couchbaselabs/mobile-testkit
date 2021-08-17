@@ -12,7 +12,7 @@ from keywords.remoteexecutor import RemoteExecutor
 import subprocess
 
 class TestServerCpp(TestServerBase):
-    def __init__(self, version_build, host, port, debug_mode=None, platform="c-linux", community_enabled=None):
+    def __init__(self, version_build, host, port, debug_mode=None, platform="c-debian", community_enabled=None):
         super(TestServerCpp, self).__init__(version_build, host, port)
         self.platform = platform
         self.host = host
@@ -29,9 +29,13 @@ class TestServerCpp(TestServerBase):
             self.build_type = "enterprise"
 
         if self.platform == "c-macosx":
-            self.package_name = "CBLTestServer_focal_x64"
-        if self.platform == "c-linux":
+            self.package_name = "CBLTestServer_macosx_x64"
+        elif self.platform == "c-debian":
             self.package_name = "testserver_debian9_x64"
+        else:
+            self.package_name = "testserver_focal_x64"
+
+
 
         self.build_name = self.package_name + "_" + "".format(self.build_type)
 
