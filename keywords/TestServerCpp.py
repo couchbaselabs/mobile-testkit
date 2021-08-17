@@ -29,16 +29,19 @@ class TestServerCpp(TestServerBase):
             self.build_type = "enterprise"
 
         if self.platform == "c-macosx":
-            self.package_name = "CBLTestServer_macosx_x64"
-        else:
+            self.package_name = "CBLTestServer_focal_x64"
+        if self.platform == "c-linux":
             self.package_name = "testserver_debian9_x64"
+
+        self.build_name = self.package_name + "_" + "".format(self.build_type)
+
         if self.build is None:
-            self.download_url = "{}/couchbase-lite-c/{}/{}.zip".format(RELEASED_BUILDS, self.version, self.package_name)
+            self.download_url = "{}/couchbase-lite-c/{}/{}.zip".format(RELEASED_BUILDS, self.version, self.build_name)
         else:
-            self.download_url = "{}/couchbase-lite-c/{}/{}/{}.zip".format(LATEST_BUILDS, self.version, self.build, self.package_name)
+            self.download_url = "{}/couchbase-lite-c/{}/{}/{}.zip".format(LATEST_BUILDS, self.version, self.build, self.build_name)
         self.binary_path = "{}/{}.exe".format(BINARY_DIR, self.package_name)
 
-        self.build_name = "TestServer-C-{}-{}".format(self.build_type, self.version_build)
+
 
         log_info("package_name: {}".format(self.package_name))
         log_info("download_url: {}".format(self.download_url))
@@ -88,7 +91,7 @@ class TestServerCpp(TestServerBase):
 
         status = self.ansible_runner.run_ansible_playbook("download-testserver-c.yml", extra_vars={
             "testserver_download_url": self.download_url,
-            "package_name": self.package_name
+            "package_name": self.build_name
         })
 
         if status == 0:

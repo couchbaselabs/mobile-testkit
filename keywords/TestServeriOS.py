@@ -62,8 +62,11 @@ class TestServeriOS(TestServerBase):
             self.bundle_id = "com.couchbase.CBLTestServer-iOS"
         elif self.platform == "c-ios":
             # C-IOS
-            self.app_dir = "CBLTestServer-iOS"
-            self.package_name = "CBLTestServer-iOS.zip"
+            if community_enabled:
+                self.app_dir = "CBLTestServer-iOS_community"
+            else:
+                self.app_dir = "CBLTestServer-iOS_enterprise"
+            self.package_name = self.app_dir + ".zip"
             self.app = "TestServer"
             self.bundle_id = "com.couchbase.TestServer"
         else:

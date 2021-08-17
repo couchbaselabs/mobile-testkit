@@ -33,7 +33,10 @@ class TestServerAndroid(TestServerBase):
             self.activity_name = self.installed_package_name + "/com.couchbase.CouchbaseLiteServ.MainActivity"
         elif self.platform == "c-android":
             # Cpp-android
-            self.package_name = self.apk_name = "CBLTestServer-C-release.apk"
+            if community_enabled:
+                self.package_name = self.apk_name = "CBLTestServer-C-community.apk"
+            else:
+                self.package_name = self.apk_name = "CBLTestServer-C-enterprise.apk"
             self.installed_package_name = "com.couchbase.testsuite"
             self.activity_name = self.installed_package_name + "/android.app.NativeActivity"
         else:
