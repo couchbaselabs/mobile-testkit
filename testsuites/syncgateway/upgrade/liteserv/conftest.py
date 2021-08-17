@@ -151,6 +151,22 @@ def pytest_addoption(parser):
                      help="Enabling CBS developer preview",
                      default=False)
 
+    parser.addoption("--disable-persistent-config",
+                     action="store_true",
+                     help="Disable Centralized Persistent Config")
+
+    parser.addoption("--enable-server-tls-skip-verify",
+                     action="store_true",
+                     help="Enable Server tls skip verify config")
+
+    parser.addoption("--disable-tls-server",
+                     action="store_true",
+                     help="Disable tls server")
+
+    parser.addoption("--disable-admin-auth",
+                     action="store_true",
+                     help="Disable Admin auth")
+
 
 # This will be called once for the at the beggining of the execution in the 'tests/' directory
 # and will be torn down, (code after the yeild) when all the test session has completed.
@@ -166,6 +182,7 @@ def params_from_base_suite_setup(request):
     # pytest command line parameters
     server_version = request.config.getoption("--server-version")
     sync_gateway_version = request.config.getoption("--sync-gateway-version")
+    disable_tls_server = request.config.getoption("--disable-tls-server")
     server_upgraded_version = request.config.getoption("--server-upgraded-version")
     sync_gateway_upgraded_version = request.config.getoption("--sync-gateway-upgraded-version")
     mode = request.config.getoption("--mode")
@@ -190,6 +207,11 @@ def params_from_base_suite_setup(request):
     hide_product_version = request.config.getoption("--hide-product-version")
     skip_couchbase_provision = request.config.getoption("--skip-couchbase-provision")
     enable_cbs_developer_preview = request.config.getoption("--enable-cbs-developer-preview")
+    disable_persistent_config = request.config.getoption("--disable-persistent-config")
+    enable_server_tls_skip_verify = request.config.getoption("--enable-server-tls-skip-verify")
+    disable_tls_server = request.config.getoption("--disable-tls-server")
+
+    disable_admin_auth = request.config.getoption("--disable-admin-auth")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_upgraded_version, sync_gateway_upgraded_version)
@@ -216,6 +238,7 @@ def params_from_base_suite_setup(request):
     log_info("delta_sync_enabled: {}".format(delta_sync_enabled))
     log_info("hide_product_version: {}".format(hide_product_version))
     log_info("enable_cbs_developer_preview: {}".format(enable_cbs_developer_preview))
+    log_info("disable_persistent_config: {}".format(disable_persistent_config))
 
     # Make sure mode for sync_gateway is supported ('cc' or 'di')
     validate_sync_gateway_mode(mode)
@@ -302,6 +325,34 @@ def params_from_base_suite_setup(request):
         log_info("Running without CBS developer preview")
         persist_cluster_config_environment_prop(cluster_config, 'cbs_developer_preview', False)
 
+    if disable_persistent_config:
+        log_info(" disable persistent config")
+        persist_cluster_config_environment_prop(cluster_config, 'disable_persistent_config', True)
+    else:
+        log_info("Running without Centralized Persistent Config")
+        persist_cluster_config_environment_prop(cluster_config, 'disable_persistent_config', False)
+
+    if enable_server_tls_skip_verify:
+        log_info("Enable server tls skip verify flag")
+        persist_cluster_config_environment_prop(cluster_config, 'server_tls_skip_verify', True)
+    else:
+        log_info("Running without server_tls_skip_verify Config")
+        persist_cluster_config_environment_prop(cluster_config, 'server_tls_skip_verify', False)
+
+    if disable_tls_server:
+        log_info("Disable tls server flag")
+        persist_cluster_config_environment_prop(cluster_config, 'disable_tls_server', True)
+    else:
+        log_info("Enable tls server flag")
+        persist_cluster_config_environment_prop(cluster_config, 'disable_tls_server', False)
+
+    if disable_admin_auth:
+        log_info("Disabled Admin Auth")
+        persist_cluster_config_environment_prop(cluster_config, 'disable_admin_auth', True)
+    else:
+        log_info("Enabled Admin Auth")
+        persist_cluster_config_environment_prop(cluster_config, 'disable_admin_auth', False)
+
     # SGW upgrade job run with on Centos platform, adding by default centos to environment config
     persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "centos", False)
 
@@ -358,6 +409,7 @@ def params_from_base_suite_setup(request):
         "xattrs_enabled": xattrs_enabled,
         "server_version": server_version,
         "sync_gateway_version": sync_gateway_version,
+        "disable_tls_server": disable_tls_server,
         "server_upgraded_version": server_upgraded_version,
         "sync_gateway_upgraded_version": sync_gateway_upgraded_version,
         "liteserv_host": liteserv_host,
@@ -389,6 +441,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     xattrs_enabled = params_from_base_suite_setup["xattrs_enabled"]
     server_version = params_from_base_suite_setup["server_version"]
     sync_gateway_version = params_from_base_suite_setup["sync_gateway_version"]
+    disable_tls_server = params_from_base_suite_setup["disable_tls_server"]
     server_upgraded_version = params_from_base_suite_setup["server_upgraded_version"]
     sync_gateway_upgraded_version = params_from_base_suite_setup["sync_gateway_upgraded_version"]
     liteserv_host = params_from_base_suite_setup["liteserv_host"]
@@ -434,6 +487,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "xattrs_enabled": xattrs_enabled,
         "server_version": server_version,
         "sync_gateway_version": sync_gateway_version,
+        "disable_tls_server": disable_tls_server,
         "server_upgraded_version": server_upgraded_version,
         "sync_gateway_upgraded_version": sync_gateway_upgraded_version,
         "liteserv_host": liteserv_host,

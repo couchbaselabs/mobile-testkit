@@ -57,9 +57,13 @@ def test_automatic_and_ondemand_imports(params_from_base_test_setup, x509_cert_a
 
     sg_client = MobileRestClient()
 
+    disable_tls_server = params_from_base_test_setup["disable_tls_server"]
+    if x509_cert_auth and disable_tls_server:
+        pytest.skip("x509 test cannot run tls server disabled")
     if x509_cert_auth:
         temp_cluster_config = copy_to_temp_conf(cluster_config, mode)
         persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
+        persist_cluster_config_environment_prop(temp_cluster_config, 'server_tls_skip_verify', False)
         cluster_config = temp_cluster_config
 
     # 1. Set xattr key in config

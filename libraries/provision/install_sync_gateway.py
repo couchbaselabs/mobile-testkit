@@ -14,6 +14,7 @@ from keywords.constants import SYNC_GATEWAY_CERT
 from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_revs_limit, sg_ssl_enabled
 from utilities.cluster_config_utils import is_hide_prod_version_enabled, get_cbs_primary_nodes_str
 from utilities.cluster_config_utils import get_sg_version, get_sg_replicas, get_sg_use_views, get_redact_level, is_x509_auth, generate_x509_certs, is_delta_sync_enabled
+from utilities.cluster_config_utils import is_centralized_persistent_config_disabled, is_server_tls_skip_verify_enabled, is_admin_auth_disabled, is_tls_server_disabled
 
 
 class SyncGatewayConfig:
@@ -193,7 +194,11 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
         "couchbase_server_primary_node": couchbase_server_primary_node,
         "delta_sync": "",
         "prometheus": "",
-        "hide_product_version": ""
+        "hide_product_version": "",
+        "disable_persistent_config": "",
+        "server_tls_skip_verify": "",
+        "disable_tls_server": "",
+        "disable_admin_auth": ""
     }
 
     if get_sg_version(cluster_config) >= "2.1.0":
@@ -282,7 +287,19 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
         playbook_vars["prometheus"] = '"metricsInterface": ":4986",'
 
     if is_hide_prod_version_enabled(cluster_config) and get_sg_version(cluster_config) >= "2.8.1":
-            playbook_vars["hide_product_version"] = '"hide_product_version": true,'
+        playbook_vars["hide_product_version"] = '"hide_product_version": true,'
+
+    if is_centralized_persistent_config_disabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
+        playbook_vars["disable_persistent_config"] = '"disable_persistent_config": true,'
+
+    if is_server_tls_skip_verify_enabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
+        playbook_vars["server_tls_skip_verify"] = '"server_tls_skip_verify": true,'
+
+    if is_tls_server_disabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
+        playbook_vars["disable_tls_server"] = '"use_tls_server": false,'
+
+    if is_admin_auth_disabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
+        playbook_vars["disable_admin_auth"] = '"admin_interface_authentication": false,    \n"metrics_interface_authentication": false,'
 
     # Install Sync Gateway via Source or Package
     if sync_gateway_config.commit is not None:
