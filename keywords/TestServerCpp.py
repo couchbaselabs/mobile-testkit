@@ -35,9 +35,7 @@ class TestServerCpp(TestServerBase):
         else:
             self.package_name = "testserver_focal_x64"
 
-
-
-        self.build_name = self.package_name + "_" + "".format(self.build_type)
+        self.build_name = self.package_name + "_" + self.build_type
 
         if self.build is None:
             self.download_url = "{}/couchbase-lite-c/{}/{}.zip".format(RELEASED_BUILDS, self.version, self.build_name)
