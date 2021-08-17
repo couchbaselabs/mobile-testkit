@@ -199,7 +199,7 @@ def test_no_conflicts_enabled_with_revs_limit(params_from_base_test_setup, sg_co
     ('sync_gateway_revs_conflict_configurable', 100, 35),
     ('sync_gateway_revs_conflict_configurable', 100, 50)
 ])
-def test_no_conflicts_update_with_revs_limit(params_from_base_test_setup, sg_conf_name, num_of_docs, revs_limit):
+def no_conflicts_update_with_revs_limit(params_from_base_test_setup, sg_conf_name, num_of_docs, revs_limit):
     """
         @summary:
         1. Have sg config with allow conflicts with some revs_limit
