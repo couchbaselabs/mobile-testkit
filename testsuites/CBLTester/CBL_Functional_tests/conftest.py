@@ -801,7 +801,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         time.sleep(1)
         try:
             if db.exists(cbl_db, path):
-                db.deleteDB(source_db)
+                # db.deleteDB(source_db)
                 log_info("not deleting")
             log_info("Flushing server memory")
             utils_obj = Utils(base_url)
