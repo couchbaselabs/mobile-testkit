@@ -403,7 +403,7 @@ def test_migrate_conflicts_to_noConflicts_CBL(params_from_base_test_setup, sg_co
                                    auth=session)
         assert he.value.args[0].startswith('409 Client Error: Conflict for url:')
 
-    total_updates = (revs_limit + 5) / 2
+    total_updates = (revs_limit + 5) // 2
     for i in range(total_updates):
         try:
             sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs, number_updates=1, delay=None,
