@@ -1265,7 +1265,7 @@ def test_push_replication_with_backgroundApp(params_from_base_test_setup, num_do
     if liteserv_platform.lower() == "net-msft" or liteserv_platform.lower() == "net-uwp" or ((liteserv_platform.lower() != "ios" or liteserv_platform.lower() != "xamarin-ios") and device_enabled):
         pytest.skip('This test cannot run either it is .Net or ios with device enabled ')
 
-    if liteserv_platform in ["java-macosx", "java-msft", "java-ubuntu", "java-centos", "javaws-macosx", "javaws-msft", "javaws-ubuntu", "javaws-centos"]:
+    if liteserv_platform in ["java-macosx", "java-msft", "java-ubuntu", "java-centos", "javaws-macosx", "javaws-msft", "javaws-ubuntu", "javaws-centos"] or 'c' in liteserv_platform:
         pytest.skip('This test cannot run as a Java application')
 
     client = MobileRestClient()
