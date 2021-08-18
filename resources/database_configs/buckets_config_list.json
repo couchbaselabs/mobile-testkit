@@ -1,0 +1,5 @@
+{
+    "sync_gateway_default" : ["data-bucket"],
+    "sync_gateway_default_functional_tests" : ["data-bucket"],
+    "sync_gateway_default_bootstrap": ["data-bucket"]
+}

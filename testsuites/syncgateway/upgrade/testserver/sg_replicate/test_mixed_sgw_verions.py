@@ -10,6 +10,7 @@ from couchbase.bucket import Bucket
 from keywords.MobileRestClient import MobileRestClient
 from keywords.ClusterKeywords import ClusterKeywords
 from libraries.testkit import cluster
+from keywords import attachment
 from concurrent.futures import ThreadPoolExecutor
 from libraries.testkit.prometheus import verify_stat_on_prometheus
 from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
@@ -125,29 +126,14 @@ def test_combination_of_cpc_and_noncpc(params_from_base_test_setup, disable_pers
     sg3.restart(config=sg_conf, cluster_config=cluster_conf)
     sg4.restart(config=sg_conf, cluster_config=cluster_conf)
 
-
 @pytest.mark.syncgateway
-def test_automatic_upgrade(params_from_base_test_setup, setup_version):
+def test_replication_allowconflictsFalse(params_from_base_test_setup):
     """
     @summary :
-    Test cases link on google drive : https://docs.google.com/spreadsheets/d/19kJQ4_g6RroaoG2YYe0X11d9pU0xam-lb-n23aPLhO4/edit#gid=0
-    "1. Have 4 sgw nodes in sgw cluster, all sgw nodes are in same cluster
-      2. Start replication to cbl and continue replication and have updates on docs on cbl
-      3. Upgrade 2 sgw nodes to lithium
-      4. Have default setting of disable_persistent_config = false on lithium nodes
-
-      6. update revs_limit on lithium nodes via rest end point 
-      7. Verify all sgw nodes are connected successfully
-      8. upgrade last 2 nodes of SGW and have it connected to bucket1 with default value of centralized persistent config 
-      9. Verify replication completes without any issue 
-
-      Same as above except Step # 2
-      After step #2. Add dynamic Config
-      Verify on _config end point that default values of dynamic config is overried on bucket . 
-      ""As part of the steps
-      1. verify backup file
-      2. Verify the location of the new  file after the upgrade
-      2. verify new version of SGW config"" "
+    1. Spin up SGW with current version
+    2. Spin up 2.7 SGW with allow_conflicts=false
+    3. Setup replication v2 'push' from current version to pre 2.8 version
+    4. Check that replication enters error state, an error is logged and the error_count stat increments
 
     """
 
@@ -161,60 +147,71 @@ def test_automatic_upgrade(params_from_base_test_setup, setup_version):
     sync_gateway_upgraded_version = params_from_base_test_setup['sync_gateway_upgraded_version']
     mode = params_from_base_test_setup['mode']
     sg_platform = params_from_base_test_setup['sg_platform']
-    base_url = params_from_base_test_setup["base_url"]
-    cbl_db = params_from_base_test_setup["source_db"]
+    xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
     username = "autotest"
     password = "password"
-    sg_channels = ["non_cpc"]
+    sg_channels = ["mixed_versions"]
 
     if sync_gateway_upgraded_version < "3.0.0":
         pytest.skip('This test can run with sgw version 3.0 and above')
     # 1. Have 3 SGW nodes: 1 node as pre-lithium and 2 nodes on lithium
-    persist_cluster_config_environment_prop(cluster_conf, 'disable_persistent_config', False)
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     sg_client = MobileRestClient()
-    sg_obj = SyncGateway()
-    cluster_util = ClusterKeywords(cluster_conf)
-    topology = cluster_util.get_cluster_topology(cluster_conf, lb_enable=False)
-    sync_gateways = topology["sync_gateways"]
-    
     # cluster_utils = ClusterKeywords(cluster_conf)
     # cluster_topology = cluster_utils.get_cluster_topology(cluster_conf)
-    # 1. Have 4 sgw nodes in sgw cluster, all sgw nodes are in same cluster
     cbs_cluster = Cluster(config=cluster_conf)
     cbs_cluster.reset(sg_config_path=sg_conf)
 
-    # 2. Start replication to cbl and continue replication and have updates on docs on cbl
+    # 2. 2 node as pre-lithium and 2 nodes on lithium
+    sg_obj = SyncGateway()
+    cluster_util = ClusterKeywords(cluster_conf)
+    # cbs_url = cluster_topology['couchbase_servers'][0]
+    # cbs_host = host_for_url(cbs_url)
+    topology = cluster_util.get_cluster_topology(cluster_conf, lb_enable=False)
+    sync_gateways = topology["sync_gateways"]
+    sgw_list1 = sync_gateways[2:]
+    sg1 = cbs_cluster.sync_gateways[0]
+    sg2 = cbs_cluster.sync_gateways[1]
+    sg3 = cbs_cluster.sync_gateways[2]
+    sg4 = cbs_cluster.sync_gateways[3]
+    sg3.stop()
+    sg4.stop()
+
+    sg_obj.install_sync_gateway(cluster_conf, sync_gateway_upgraded_version, sg_conf)
+    # sg_obj.upgrade_sync_gateway(sgw_list1, sync_gateway_version, sync_gateway_upgraded_version, sg_conf, cluster_conf, verify_version=False)
+
+    sg_client.create_user(sg1.admin.admin_url, sg_db, "autotest", password="password", channels=sg_channels)
+    cookie, session_id = sg_client.create_session(sg1.admin.admin_url, sg_db, "autotest")
+    session = cookie, session_id
+    sg_docs = document.create_docs(doc_id_prefix='sg_docs', number=10, attachments_generator=attachment.generate_2_png_10_10, channels=sg_channels)
+    sg_docs = sg_client.add_bulk_docs(url=sg1.url, db=sg_db, docs=sg_docs, auth=session)
+
+    repl_id_1 = sg1.start_replication2(
+        local_db=sg_db1,
+        remote_url=sg2.url,
+        remote_db=sg_db2,
+        remote_user=name2,
+        remote_password=password,
+        direction=direction,
+        continuous=continuous
+    )
+    expected_tasks = 1
+    if not continuous:
+        expected_tasks = 0
+    active_tasks = sg1.admin.get_sgreplicate2_active_tasks(sg_db1, expected_tasks=expected_tasks)
+    sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id_1, read_flag=read_flag, write_flag=write_flag)
+    assert len(active_tasks) == expected_tasks, "number of active tasks is not 1"
+
+
     sg1 = cbs_cluster.sync_gateways[0]
     sg3 = cbs_cluster.sync_gateways[2]
     sg4 = cbs_cluster.sync_gateways[3]
-    sg_dbs = sg1.admin.get_dbs_from_config()
-    replicator = Replication(base_url)
-    sg_cookie, sg_session = sg_client.create_session(url=sg1.admin.admin_url, db=sg_dbs[0], name=username)
-    authenticator = Authenticator(base_url)
-    replicator_authenticator = authenticator.authentication(sg_session, sg_cookie, authentication_type="session")
-    repl = replicator.configure_and_replicate(cbl_db, target_url=sg1.url, continuous=True, channels=sg_channels, replication_type="push_pull", replicator_authenticator=replicator_authenticator)
-
-    # 3. Upgrade 2 sgw nodes to lithium
-    sgw_list1 = sync_gateways[:2]
-    sg_obj.upgrade_sync_gateway(sgw_list1, sync_gateway_version, sync_gateway_upgraded_version, sg_conf, cluster_conf)
-
-
-
-    
-    
-    # cbs_url = cluster_topology['couchbase_servers'][0]
-    # cbs_host = host_for_url(cbs_url)
-    
-    
-
-    
     db_config_file = "sync_gateway_default_db"
     dbconfig = construct_dbconfig_json(db_config_file, cluster_conf, sg_platform)
 
     print("dbconfig is ", dbconfig)
-    
+    sg_dbs = sg1.admin.get_dbs_from_config()
 
     sg1_db_config = sg1.admin.get_db_config(sg_dbs[0])
     print("sg1 db config is ", sg1_db_config)
@@ -251,8 +248,3 @@ def test_automatic_upgrade(params_from_base_test_setup, setup_version):
 
     sg3.restart(config=sg_conf, cluster_config=cluster_conf)
     sg4.restart(config=sg_conf, cluster_config=cluster_conf)
-
-
-@pytest.fixture(scope="session")
-def reset_sgw_versions(request):
-   

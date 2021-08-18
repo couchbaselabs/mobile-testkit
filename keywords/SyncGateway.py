@@ -43,13 +43,12 @@ def sync_gateway_config_path_for_mode(config_prefix, mode, cpc=False):
 
     validate_sync_gateway_mode(mode)
     # cluster_config = os.environ["CLUSTER_CONFIG"]
-    #if get_sg_version(cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config):
+    # if get_sg_version(cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config):
     #    cpc = True
     # Construct expected config path
     config = "{}/{}_{}.json".format(SYNC_GATEWAY_CONFIGS, config_prefix, mode)
-    if not os.path.isfile(config):
-        raise ValueError("Could not file config: {}".format(config))
-
+    #if not os.path.isfile(config):
+    #    raise ValueError("Could not file config: {}".format(config))
     if cpc:
         config = "{}/{}_{}.json".format(SYNC_GATEWAY_CONFIGS_CPC, config_prefix, mode)
     if not os.path.isfile(config):
@@ -123,7 +122,11 @@ def verify_sync_gateway_version(host, expected_sync_gateway_version):
         "2.1.3.1": "2",
         "2.5.0": "271",
         "2.6.0": "127",
-        "2.7.0": "166"
+        "2.7.0": "166",
+        "2.7.4": "8",
+        "2.8.0": "376",
+        "2.8.0.1": "3",
+        "2.8.1": "15"
     }
     version, build = version_and_build(expected_sync_gateway_version)
     if build is None:
@@ -370,7 +373,7 @@ class SyncGateway(object):
         self.server_port = 8091
         self.server_scheme = "http"
 
-    def install_sync_gateway(self, cluster_config, sync_gateway_version, sync_gateway_config):
+    def install_sync_gateway(self, cluster_config, sync_gateway_version, sync_gateway_config, url=None, skip_bucketcreation=False):
 
         # Dirty hack -- these have to be put here in order to avoid circular imports
         from libraries.provision.install_sync_gateway import install_sync_gateway
@@ -379,11 +382,11 @@ class SyncGateway(object):
         if version_is_binary(sync_gateway_version):
             version, build = version_and_build(sync_gateway_version)
             log_info("VERSION: {} BUILD: {}".format(version, build))
-            sg_config = SyncGatewayConfig(None, version, build, sync_gateway_config, "", False)
+            sg_config = SyncGatewayConfig(None, version, build, sync_gateway_config, "", skip_bucketcreation=skip_bucketcreation)
         else:
-            sg_config = SyncGatewayConfig(sync_gateway_version, None, None, sync_gateway_config, "", False)
+            sg_config = SyncGatewayConfig(sync_gateway_version, None, None, sync_gateway_config, "", skip_bucketcreation=skip_bucketcreation)
 
-        install_sync_gateway(cluster_config=cluster_config, sync_gateway_config=sg_config)
+        install_sync_gateway(cluster_config=cluster_config, sync_gateway_config=sg_config, url=url, sync_gateway_version=sync_gateway_version)
 
         log_info("Verfying versions for cluster: {}".format(cluster_config))
 
@@ -391,14 +394,18 @@ class SyncGateway(object):
             cluster_obj = json.loads(f.read())
 
         # Verify sync_gateway versions
-        for sg in cluster_obj["sync_gateways"]:
-            verify_sync_gateway_version(sg["ip"], sync_gateway_version)
+        if url is None:
+            for sg in cluster_obj["sync_gateways"]:
+                verify_sync_gateway_version(sg["ip"], sync_gateway_version)
+        else:
+            url_ip = url.split('//')[1].split(":")[0]
+            verify_sync_gateway_version(url_ip, sync_gateway_version)
 
         # Verify sg_accel versions, use the same expected version for sync_gateway for now
         for ac in cluster_obj["sg_accels"]:
             verify_sg_accel_version(ac["ip"], sync_gateway_version)
 
-    def start_sync_gateways(self, cluster_config, url=None, config=None):
+    def start_sync_gateways(self, cluster_config, url=None, config=None, bucket_list=[]):
         """Start sync gateways in a cluster. If url is passed,
         start the sync gateway at that url
         """
@@ -408,7 +415,7 @@ class SyncGateway(object):
             raise ProvisioningError("Starting a Sync Gateway requires a config")
 
         if get_sg_version(cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config):
-            playbook_vars, db_config_json = c_cluster.setup_server_and_sgw(config, bucket_creation=False)
+            playbook_vars, db_config_json = c_cluster.setup_server_and_sgw(config, bucket_creation=False, bucket_list=bucket_list)
         else:
             config_path = os.path.abspath(config)
             sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
@@ -640,7 +647,7 @@ class SyncGateway(object):
         log_info('END Sync Gateway cluster upgrade')
         log_info('------------------------------------------')
 
-    def upgrade_sync_gateways(self, cluster_config, sg_conf, sync_gateway_version, url=None):
+    def upgrade_sync_gateways(self, cluster_config, sg_conf, sync_gateway_version, url=None, upgrade_only=False):
         """ Upgrade sync gateways in a cluster. If url is passed, upgrade
             the sync gateway at that url
         """
@@ -794,39 +801,58 @@ class SyncGateway(object):
             if is_centralized_persistent_config_disabled(cluster_config):
                 playbook_vars["disable_persistent_config"] = '"disable_persistent_config": true,'
         playbook_vars.update(playbook_vars1)
-        if url is not None:
-            target = hostname_for_url(cluster_config, url)
-            log_info("Upgrading sync_gateway/sg_accel on {} ...".format(target))
-            status = ansible_runner.run_ansible_playbook(
-                "upgrade-sg-sgaccel-package.yml",
-                subset=target,
-                extra_vars=playbook_vars
-            )
-            log_info("Completed upgrading {}".format(url))
+        if upgrade_only:
+            if url is not None:
+                target = hostname_for_url(cluster_config, url)
+                log_info("Upgrading sync_gateway on targe {}".format(target))
+                status = ansible_runner.run_ansible_playbook(
+                    "upgrade-sgw-package.yml",
+                    subset=target,
+                    extra_vars=playbook_vars
+                )
+                log_info("Completed upgrading {}".format(url))
+            else:
+                log_info("Upgrading all sync_gateways")
+                status = ansible_runner.run_ansible_playbook(
+                    "upgrade-sgw-package.yml",
+                    extra_vars=playbook_vars
+                )
+                log_info("Completed upgrading all sync_gateways/sg_accels")
+            log_info("upgrade status is {}".format(status))
         else:
-            log_info("Upgrading all sync_gateways/sg_accels")
-            status = ansible_runner.run_ansible_playbook(
-                "upgrade-sg-sgaccel-package.yml",
-                extra_vars=playbook_vars
-            )
-            log_info("Completed upgrading all sync_gateways/sg_accels")
-        log_info("upgrade status is {}".format(status))
+            if url is not None:
+                target = hostname_for_url(cluster_config, url)
+                log_info("Upgrading sync_gateway/sg_accel on {} ...".format(target))
+                status = ansible_runner.run_ansible_playbook(
+                    "upgrade-sg-sgaccel-package.yml",
+                    subset=target,
+                    extra_vars=playbook_vars
+                )
+                log_info("Completed upgrading {}".format(url))
+            else:
+                log_info("Upgrading all sync_gateways/sg_accels")
+                status = ansible_runner.run_ansible_playbook(
+                    "upgrade-sg-sgaccel-package.yml",
+                    extra_vars=playbook_vars
+                )
+                log_info("Completed upgrading all sync_gateways/sg_accels")
+            log_info("upgrade status is {}".format(status))
 
-        if status != 0:
-            raise Exception("Could not upgrade sync_gateway/sg_accel")
-        if get_sg_version(cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config):
-            if status == 0:
-                if url is not None:
-                    # Now create rest API for all database configs
-                    sg_name = hostname_for_url(cluster_config, url)
-                    sg_ip = ip_from_url(url)
-                    sg_target = {"name": sg_name, "ip": sg_ip}
-                    sg_gateways = [SyncGateway(cluster_config=self._cluster_config, target=sg_target)]
-                    send_dbconfig_as_restCall(db_config_json, sg_gateways)
-                else:
-                    send_dbconfig_as_restCall(db_config_json, c_cluster.sync_gateways)
+            if status != 0:
+                raise Exception("Could not upgrade sync_gateway/sg_accel")
+            if get_sg_version(cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config):
+                if status == 0:
+                    if url is not None:
+                        # Now create rest API for all database configs
+                        sg_name = hostname_for_url(cluster_config, url)
+                        sg_ip = ip_from_url(url)
+                        sg_target = {"name": sg_name, "ip": sg_ip}
+                        sg_gateways = [SyncGateway(cluster_config=self._cluster_config, target=sg_target)]
+                        send_dbconfig_as_restCall(db_config_json, sg_gateways)
+                    else:
+                        send_dbconfig_as_restCall(db_config_json, c_cluster.sync_gateways)
 
-    def redeploy_sync_gateway_config(self, cluster_config, sg_conf, url, sync_gateway_version, enable_import=False):
+    def redeploy_sync_gateway_config(self, cluster_config, sg_conf, url, sync_gateway_version, enable_import=False, deploy_only=False):
         """Deploy an SG config with xattrs enabled
             Will also enable import if enable_import is set to True
             It is used to enable xattrs and import in the SG config"""
@@ -953,36 +979,54 @@ class SyncGateway(object):
             if is_hide_prod_version_enabled(cluster_config) and get_sg_version(cluster_config) >= "2.8.1":
                 playbook_vars["hide_product_version"] = '"hide_product_version": true,'
 
-            if is_centralized_persistent_config_disabled(self._cluster_config):
+            if is_centralized_persistent_config_disabled(cluster_config):
                 playbook_vars["disable_persistent_config"] = '"disable_persistent_config": true,'
         # Deploy config
-        if url is not None:
-            target = hostname_for_url(cluster_config, url)
-            log_info("Deploying sync_gateway config on {} ...".format(target))
-            status = ansible_runner.run_ansible_playbook(
-                "deploy-sync-gateway-config.yml",
-                subset=target,
-                extra_vars=playbook_vars
-            )
+        if deploy_only:
+            if url is not None:
+                target = hostname_for_url(cluster_config, url)
+                log_info("Deploying sync_gateway config on {} ...".format(target))
+                status = ansible_runner.run_ansible_playbook(
+                    "deploy-only-sync-gateway.yml",
+                    subset=target,
+                    extra_vars=playbook_vars
+                )
+            else:
+                log_info("Deploying config on all sync_gateways")
+                status = ansible_runner.run_ansible_playbook(
+                    "deploy-only-sync-gateway.yml",
+                    extra_vars=playbook_vars
+                )
+            if status != 0:
+                raise Exception("Could not deploy config to sync_gateway")
         else:
-            log_info("Deploying config on all sync_gateways")
-            status = ansible_runner.run_ansible_playbook(
-                "deploy-sync-gateway-config.yml",
-                extra_vars=playbook_vars
-            )
-        if status != 0:
-            raise Exception("Could not deploy config to sync_gateway")
-        if get_sg_version(cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config):
-            if status == 0:
-                if url is not None:
-                    # Now create rest API for all database configs
-                    sg_name = hostname_for_url(cluster_config, url)
-                    sg_ip = ip_from_url(url)
-                    sg_target = {"name": sg_name, "ip": sg_ip}
-                    sg_gateways = [SyncGateway(cluster_config=self._cluster_config, target=sg_target)]
-                    send_dbconfig_as_restCall(db_config_json, sg_gateways)
-                else:
-                    send_dbconfig_as_restCall(db_config_json, c_cluster.sync_gateways)
+            if url is not None:
+                target = hostname_for_url(cluster_config, url)
+                log_info("Deploying sync_gateway config on {} ...".format(target))
+                status = ansible_runner.run_ansible_playbook(
+                    "deploy-sync-gateway-config.yml",
+                    subset=target,
+                    extra_vars=playbook_vars
+                )
+            else:
+                log_info("Deploying config on all sync_gateways")
+                status = ansible_runner.run_ansible_playbook(
+                    "deploy-sync-gateway-config.yml",
+                    extra_vars=playbook_vars
+                )
+            if status != 0:
+                raise Exception("Could not deploy config to sync_gateway")
+            if get_sg_version(cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config):
+                if status == 0:
+                    if url is not None:
+                        # Now create rest API for all database configs
+                        sg_name = hostname_for_url(cluster_config, url)
+                        sg_ip = ip_from_url(url)
+                        sg_target = {"name": sg_name, "ip": sg_ip}
+                        sg_gateways = [SyncGateway(cluster_config=self._cluster_config, target=sg_target)]
+                        send_dbconfig_as_restCall(db_config_json, sg_gateways)
+                    else:
+                        send_dbconfig_as_restCall(db_config_json, c_cluster.sync_gateways)
 
     def create_directory(self, cluster_config, url, dir_name):
         if dir_name is None:

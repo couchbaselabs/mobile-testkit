@@ -4,6 +4,7 @@ import ansible.constants
 from keywords.exceptions import RemoteCommandError
 from keywords.utils import log_info
 from keywords.constants import REMOTE_EXECUTOR_TIMEOUT
+from utilities.cluster_config_utils import load_cluster_config_json
 
 
 def stream_output(stdio_file_stream):
@@ -22,7 +23,7 @@ class RemoteExecutor:
     located in the root of the repository
     """
 
-    def __init__(self, host, sg_platform="centos", username=None, password=None):
+    def __init__(self, host, sg_platform="centos", username=None, password=None, cluster_config=None):
         client = paramiko.SSHClient()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         self.client = client
@@ -31,6 +32,11 @@ class RemoteExecutor:
         if "[" in self.host:
             self.host = self.host.replace("[", "")
             self.host = self.host.replace("]", "")
+        if cluster_config is not None:
+            if sg_platform == "windows" or sg_platform == "macos":
+                json_cluster = load_cluster_config_json(cluster_config)
+                username = json_cluster["sync_gateways:vars"]["ansible_user"]
+                password = json_cluster["sync_gateways:vars"]["ansible_password"]
         self.username = ansible.constants.DEFAULT_REMOTE_USER
         if username is not None:
             self.username = username

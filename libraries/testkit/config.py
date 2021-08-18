@@ -6,7 +6,7 @@ from jinja2 import Template
 
 from libraries.testkit import settings
 from keywords.utils import log_info
-from keywords.constants import SYNC_GATEWAY_CONFIGS, SYNC_GATEWAY_CONFIGS_CPC
+from keywords.constants import SYNC_GATEWAY_CONFIGS, SYNC_GATEWAY_CONFIGS_CPC, BUCKET_LIST
 
 import logging
 log = logging.getLogger(settings.LOGGER)
@@ -20,8 +20,8 @@ class Config:
         self.mode = None
         self.bucket_name_set = []
         self.db_config = None
-        if cluster_config is not None and (get_sg_version(cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config)):
-            conf_path = conf_path.replace(SYNC_GATEWAY_CONFIGS, SYNC_GATEWAY_CONFIGS_CPC)
+        #if cluster_config is not None and (get_sg_version(cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config)):
+        #    conf_path = conf_path.replace(SYNC_GATEWAY_CONFIGS, SYNC_GATEWAY_CONFIGS_CPC)
         with open(conf_path, "r") as config:
 
             data = config.read()
@@ -81,7 +81,8 @@ class Config:
             # extract database config from non centralized persistent config(old configs) and copy to temp db config
             # Remove database config from the original config
             if cluster_config is not None and (get_sg_version(cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config)):
-                self.discover_bucket_name_set_3_0(conf_obj)
+                sgw_conf_file_name = conf_path.split('/')[-1].split("_cc.")[0]
+                self.discover_bucket_name_set_3_0(sgw_conf_file_name)
             else:
                 self.discover_bucket_name_set(conf_obj)
 
@@ -158,8 +159,15 @@ class Config:
         # self.bucket_name_set = list(set(bucket_names_from_config))
         self.bucket_name_set = list(bucket_names_from_config)
 
-    def discover_bucket_name_set_3_0(self, conf_obj):
-        self.bucket_name_set = conf_obj["bootstrap"]["buckets"]
+    def discover_bucket_name_set_3_0(self, sgw_config):
+        # self.bucket_name_set = conf_obj["bootstrap"]["buckets"]
+        bucket_list_data = open(BUCKET_LIST)
+        json_data = json.load(bucket_list_data)
+        try:
+            self.bucket_name_set = json_data[sgw_config]
+        except KeyError:
+            self.bucket_name_set = []
+        # self.bucket_name_set = ["data-bucket"]
 
     def get_db_config(self):
 
@@ -262,10 +270,15 @@ def escape_json_value(raw_value):
 
 def seperate_sgw_and_db_config(sgw_conf_data):
     sgw_conf_data = json.loads(sgw_conf_data)
-    db_config = sgw_conf_data["databases"]
-    del sgw_conf_data["databases"]
-    temp_db_config = "resources/temp/temp_config_db.json"
     temp_sgw_config = "resources/temp/temp_sgw_config.json"
-    db_config_file = copy_json_to_temp_file(db_config, temp_db_config)
     sgw_config_file = copy_json_to_temp_file(sgw_conf_data, temp_sgw_config)
-    return sgw_config_file, db_config_file
+    try:
+        sgw_conf_data["databases"]
+        db_config = sgw_conf_data["databases"]
+        del sgw_conf_data["databases"]
+        temp_db_config = "resources/temp/temp_config_db.json"
+        db_config_file = copy_json_to_temp_file(db_config, temp_db_config)
+        return sgw_config_file, db_config_file
+    except KeyError as ke:
+        log.info("ignoring if databases key not found in new configs")
+        return sgw_config_file

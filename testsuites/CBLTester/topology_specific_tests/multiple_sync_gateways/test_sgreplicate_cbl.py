@@ -4,7 +4,7 @@ import time
 import os
 import random
 import subprocess
-
+from requests import Session
 
 from keywords.MobileRestClient import MobileRestClient
 from CBLClient.Database import Database
@@ -22,6 +22,7 @@ from utilities.cluster_config_utils import copy_sgconf_to_temp, replace_string_o
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.couchbaseserver import get_sdk_client_with_bucket
 from libraries.testkit.prometheus import verify_stat_on_prometheus
+from utilities.cluster_config_utils import persist_cluster_config_environment_prop
 
 
 def setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_teardown_test, cbl_replication_type, sg_conf_name='listener_tests/multiple_sync_gateways', num_of_docs=10, channels1=None, sgw_cluster1_sg_config_name=None, sgw_cluster2_sg_config_name=None, name1=None, name2=None, password1=None, password2=None):
@@ -2270,6 +2271,95 @@ def test_sg_replicate_doc_resurrection(params_from_base_test_setup, setup_custom
     sg_doc1 = sg_client.get_doc(url=sg1.url, db=sg_db1, doc_id=random_doc_id, auth=session1)
     sg_doc2 = sg_client.get_doc(url=sg2.admin.admin_url, db=sg_db2, doc_id=random_doc_id)
     assert sg_doc1['_rev'] == sg_doc2['_rev'], "revisions of sgw cluster1 and sgw cluster 2 did not match for the doc which resurrected"
+
+
+@pytest.fixture(scope="function")
+def sgw_version_reset(request, params_from_base_test_setup):
+    sgw_cluster2_conf_name = 'listener_tests/sg_replicate_sgw_cluster2'
+    sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
+    cluster_config = params_from_base_test_setup['cluster_config']
+    mode = params_from_base_test_setup['mode']
+    sg_obj = SyncGateway()
+    sgw_cluster2_sg_config = sync_gateway_config_path_for_mode(sgw_cluster2_conf_name, mode)
+    cluster_helper = ClusterKeywords(cluster_config)
+    cluster_hosts = cluster_helper.get_cluster_topology(cluster_config)
+    sg_two_url = cluster_hosts["sync_gateways"][1]["public"]
+    yield {
+        "cluster_config": cluster_config,
+        "sg_obj": sg_obj,
+        "mode": mode,
+        "sg_two_url": sg_two_url,
+        "sgw_cluster2_conf_name": sgw_cluster2_conf_name
+    }
+    sg_obj.install_sync_gateway(cluster_config, sync_gateway_version, sgw_cluster2_sg_config, url=sg_two_url, skip_bucketcreation=True)
+
+
+@pytest.mark.topospecific
+@pytest.mark.syncgateway
+@pytest.mark.sgreplicate
+def test_sg_replicate_mixed_sgw_versions(params_from_base_test_setup, setup_customized_teardown_test, sgw_version_reset):
+    '''
+    @summary
+    1. Spin up 1 SGW with current version
+    2. Spin up 2.7 SGW with allow_conflicts=false
+    3. Setup replication v2 'push' from current version to pre 2.8 version
+    4. Check that replication enters error state, an error is logged and the error_count stat increments
+    '''
+
+    # 1.Have 2 sgw nodes , have cbl on each SGW
+    sgw_cluster1_conf_name = 'listener_tests/sg_replicate_sgw_cluster1'
+    sgw_cluster2_conf_name = sgw_version_reset["sgw_cluster2_conf_name"]
+    mode = sgw_version_reset["mode"]
+    cluster_conf = sgw_version_reset["cluster_config"]
+    sg_obj = sgw_version_reset["sg_obj"]
+    sg_two_url = sgw_version_reset["sg_two_url"]
+    write_flag = False
+    read_flag = False
+    sg_client = MobileRestClient()
+    direction = "push"
+    continuous = True
+    sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
+    sgw_cluster2_sg_config = sync_gateway_config_path_for_mode(sgw_cluster2_conf_name, mode)
+    sg_obj.install_sync_gateway(cluster_conf, sync_gateway_version, sgw_cluster2_sg_config, url=sg_two_url, skip_bucketcreation=True) 
+    db, num_of_docs, sg_db1, sg_db2, name1, name2, _, password, channels1, _, replicator, replicator_authenticator1, replicator_authenticator2, sg1_blip_url, sg2_blip_url, sg1, sg2, repl1, _, cbl_db1, cbl_db2, _ = setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_teardown_test,
+                                                                                                                                                                                                                                                  cbl_replication_type="push", sgw_cluster1_sg_config_name=sgw_cluster1_conf_name,
+                                                                                                                                                                                                                                                  sgw_cluster2_sg_config_name=sgw_cluster2_conf_name)
+
+    # 2. Spin up 2.7 SGW with allow_conflicts=false
+    sync_gateway_2_7_version = "2.7.4"
+    persist_cluster_config_environment_prop(cluster_conf, 'no_conflicts_enabled', True)
+    sg_obj.install_sync_gateway(cluster_conf, sync_gateway_2_7_version, sgw_cluster2_sg_config, url=sg_two_url, skip_bucketcreation=True)
+    db.create_bulk_docs(num_of_docs, "sgw1_docs", db=cbl_db1, channels=channels1)
+    db.create_bulk_docs(num_of_docs, "sgw2_docs", db=cbl_db2, channels=channels1)
+    repl2 = replicator.configure_and_replicate(
+        source_db=cbl_db2, replicator_authenticator=replicator_authenticator2, target_url=sg2_blip_url)
+
+    replicator.wait_until_replicator_idle(repl1)
+    replicator.wait_until_replicator_idle(repl2)
+
+    if "push" in direction:
+        write_flag = True
+    if "pull" in direction:
+        read_flag = True
+
+    # 3. Setup replication v2 'push' from current version to pre 2.8 version
+    repl_id_1 = sg1.start_replication2(
+        local_db=sg_db1,
+        remote_url=sg2.url,
+        remote_db=sg_db2,
+        remote_user=name2,
+        remote_password=password,
+        direction=direction,
+        continuous=continuous
+    )
+
+    # 4. Check that replication enters error state, an error is logged and the error_count stat increments
+    expected_tasks = 1
+    sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id_1, read_flag=read_flag, write_flag=write_flag)
+    active_tasks = sg1.admin.get_sgreplicate2_active_tasks(sg_db1, expected_tasks=expected_tasks)
+    assert len(active_tasks) == 0, "number of active tasks is not 0"
+    expvars = sg_client.get_expvars(url=sg1.admin.admin_url)
+    assert expvars["syncgateway"]["global"]["resource_utilization"]["error_count"] == 1, "error count has not raised with replication failure"
 
 
 def restart_sg_nodes(sg1, sg2, sg_config, cluster_config):

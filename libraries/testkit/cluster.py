@@ -115,7 +115,7 @@ class Cluster:
         self.servers = [CouchbaseServer(url=cb_url) for cb_url in cbs_urls]
         self.sync_gateway_config = None  # will be set to Config object when reset() called
 
-    def reset(self, sg_config_path):
+    def reset(self, sg_config_path, bucket_list=[]):
 
         ansible_runner = AnsibleRunner(self._cluster_config)
 
@@ -157,7 +157,7 @@ class Cluster:
             # replace database configs from databases
             # sg_db = "db"
             # db_config_name = "sync_gateway_default_functional_tests"
-            playbook_vars, db_config_json = self.setup_server_and_sgw(sg_config_path=sg_config_path)
+            playbook_vars, db_config_json = self.setup_server_and_sgw(sg_config_path=sg_config_path, bucket_list=bucket_list)
         else:
 
             bucket_name_set = config.get_bucket_name_set()
@@ -352,18 +352,21 @@ class Cluster:
 
         return mode
 
-    def setup_server_and_sgw(self, sg_config_path, bucket_creation=True):
+    def setup_server_and_sgw(self, sg_config_path, bucket_creation=True, bucket_list=[]):
         # Parse config and grab bucket names
         ansible_runner = AnsibleRunner(self._cluster_config)
         cpc_sgw_config_path = get_cpc_sgw_config(sg_config_path)
         cpc_config_path_full = os.path.abspath(cpc_sgw_config_path)
         config_path_full = os.path.abspath(sg_config_path)
         config = Config(config_path_full, self._cluster_config)
-        bucket_name_set = config.get_bucket_name_set()
+        if not bucket_list:
+            bucket_name_set = config.get_bucket_name_set()
+        else:
+            bucket_name_set = bucket_list
         sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
         cbs_cert_path = os.path.join(os.getcwd(), "certs")
-        bucket_names = get_buckets_from_sync_gateway_config(sg_config_path, self._cluster_config)
-
+        # bucket_names = get_buckets_from_sync_gateway_config(cpc_sgw_config_path, self._cluster_config)
+        bucket_names = bucket_name_set
         read_bucket_user = "bucket-admin"
         self.sync_gateway_config = config
 
@@ -552,8 +555,12 @@ class Cluster:
         )
 
         print("config_path _full is ", cpc_config_path_full)
-        sg_config_path, database_config = seperate_sgw_and_db_config(sgw_config_data)
-
+        sgw_db_config = seperate_sgw_and_db_config(sgw_config_data)
+        if len(sgw_db_config) == 2:
+            sg_config_path, database_config = sgw_db_config
+        else:
+            sg_config_path = sgw_db_config[0]
+            database_config = ""
         # sg_config_path_full = os.path.abspath(sg_config_path)
         # Create bootstrap playbook vars
         bootstrap_playbook_vars = {
@@ -575,9 +582,11 @@ class Cluster:
             "couchbase_server_primary_node": couchbase_server_primary_node,
             "logging": logging_var
         }
-
-        with open(database_config) as f:
-            db_config_json = json.loads(f.read())
+        if database_config == "":
+            db_config_json = {}
+        else:
+            with open(database_config) as f:
+                db_config_json = json.loads(f.read())
 
         # Sleep for a few seconds for the indexes to teardown
         time.sleep(5)
@@ -590,165 +599,6 @@ class Cluster:
         self.sync_gateways[0].admin.put_db_config(self, sg_db, db_config_json) """
 
         return bootstrap_playbook_vars, db_config_json
-
-    def setup_non_cpc(self, sg_config_path, ansible_runner, bucket_creation=True):
-        config_path_full = os.path.abspath(sg_config_path)
-        sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
-        cbs_cert_path = os.path.join(os.getcwd(), "certs")
-        bucket_names = get_buckets_from_sync_gateway_config(sg_config_path, self._cluster_config)
-        config = self.sync_gateway_config
-
-        is_valid, reason = validate_cluster(self.sync_gateways, self.sg_accels, config)
-        if not is_valid:
-            raise ProvisioningError(reason)
-        if bucket_creation:
-            bucket_name_set = config.get_bucket_name_set()
-            log_info(">>> Creating buckets on: {}".format(self.servers[0].url))
-            log_info(">>> Creating buckets {}".format(bucket_name_set))
-            self.servers[0].create_buckets(bucket_names=bucket_name_set,
-                                           cluster_config=self._cluster_config,
-                                           ipv6=self.ipv6)
-
-            # Wait for server to be in a warmup state to work around
-            # https://github.com/couchbase/sync_gateway/issues/1745
-            log_info(">>> Waiting for Server: {} to be in a healthy state".format(self.servers[0].url))
-            self.servers[0].wait_for_ready_state()
-
-        log_info(">>> Starting sync_gateway with configuration: {}".format(config_path_full))
-
-        server_port = 8091
-        server_scheme = "http"
-        couchbase_server_primary_node = add_cbs_to_sg_config_server_field(self._cluster_config)
-        if self.cbs_ssl:
-            server_port = 18091
-            server_scheme = "https"
-
-        couchbase_server_primary_node = get_cbs_primary_nodes_str(self._cluster_config, couchbase_server_primary_node)
-
-        # Start sync-gateway
-        playbook_vars = {
-            "sync_gateway_config_filepath": config_path_full,
-            "username": "",
-            "password": "",
-            "certpath": "",
-            "keypath": "",
-            "cacertpath": "",
-            "x509_certs_dir": cbs_cert_path,
-            "x509_auth": False,
-            "sg_cert_path": sg_cert_path,
-            "server_port": server_port,
-            "server_scheme": server_scheme,
-            "autoimport": "",
-            "xattrs": "",
-            "no_conflicts": "",
-            "revs_limit": "",
-            "sslcert": "",
-            "sslkey": "",
-            "num_index_replicas": "",
-            "sg_use_views": "",
-            "couchbase_server_primary_node": couchbase_server_primary_node,
-            "delta_sync": "",
-            "prometheus": "",
-            "hide_product_version": "",
-            "tls": ""
-        }
-
-        sg_platform = get_sg_platform(self._cluster_config)
-        if get_sg_version(self._cluster_config) >= "2.1.0":
-            logging_config = '"logging": {"debug": {"enabled": true}'
-            try:
-                redact_level = get_redact_level(self._cluster_config)
-                playbook_vars["logging"] = '{}, "redaction_level": "{}" {},'.format(logging_config, redact_level, "}")
-            except KeyError as ex:
-                log_info("Keyerror in getting logging{}".format(ex))
-                playbook_vars["logging"] = '{} {},'.format(logging_config, "}")
-            if get_sg_use_views(self._cluster_config):
-                playbook_vars["sg_use_views"] = '"use_views": true,'
-            else:
-                num_replicas = get_sg_replicas(self._cluster_config)
-                playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
-
-            if sg_platform == "macos":
-                sg_home_directory = "/Users/sync_gateway"
-            elif sg_platform == "windows":
-                sg_home_directory = "C:\\\\PROGRA~1\\\\Couchbase\\\\Sync Gateway"
-            else:
-                sg_home_directory = "/home/sync_gateway"
-
-            if is_x509_auth(self._cluster_config):
-                playbook_vars[
-                    "certpath"] = '"certpath": "{}/certs/chain.pem",'.format(sg_home_directory)
-                playbook_vars[
-                    "keypath"] = '"keypath": "{}/certs/pkey.key",'.format(sg_home_directory)
-                playbook_vars[
-                    "cacertpath"] = '"cacertpath": "{}/certs/ca.pem",'.format(sg_home_directory)
-                if sg_platform == "windows":
-                    playbook_vars["certpath"] = playbook_vars["certpath"].replace("/", "\\\\")
-                    playbook_vars["keypath"] = playbook_vars["keypath"].replace("/", "\\\\")
-                    playbook_vars["cacertpath"] = playbook_vars["cacertpath"].replace("/", "\\\\")
-                playbook_vars["server_scheme"] = "couchbases"
-                playbook_vars["server_port"] = ""
-                playbook_vars["x509_auth"] = True
-                generate_x509_certs(self._cluster_config, bucket_names, sg_platform)
-            else:
-                playbook_vars["username"] = '"username": "{}",'.format(
-                    bucket_names[0])
-                playbook_vars["password"] = '"password": "password",'
-        else:
-            playbook_vars["logging"] = '"log": ["*"],'
-            playbook_vars["username"] = '"username": "{}",'.format(
-                bucket_names[0])
-            playbook_vars["password"] = '"password": "password",'
-
-        if self.cbs_ssl and get_sg_version(self._cluster_config) >= "1.5.0":
-            playbook_vars["server_scheme"] = "couchbases"
-            playbook_vars["server_port"] = 11207
-            block_http_vars = {}
-            port_list = [8091, 8092, 8093, 8094, 8095, 8096, 11210, 11211]
-            for port in port_list:
-                block_http_vars["port"] = port
-                status = ansible_runner.run_ansible_playbook(
-                    "block-http-ports.yml",
-                    extra_vars=block_http_vars
-                )
-                if status != 0:
-                    raise ProvisioningError("Failed to block port on SGW")
-        # Add configuration to run with xattrs
-        if self.xattrs:
-            playbook_vars["autoimport"] = '"import_docs": true,'
-            playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
-
-        if self.sync_gateway_ssl:
-            if self.centralized_persistent_config:
-                playbook_vars["tls"] = """
-                    "tls": {"minimum_version": "tlsv1.3",
-                            "SSLCert": "sg_cert.pem",
-                            "SSLKey": "sg_privkey.pem"
-                            }, """
-            else:
-                playbook_vars["sslcert"] = '"SSLCert": "sg_cert.pem",'
-                playbook_vars["sslkey"] = '"SSLKey": "sg_privkey.pem",'
-
-        if no_conflicts_enabled(self._cluster_config):
-            playbook_vars["no_conflicts"] = '"allow_conflicts": false,'
-        try:
-            revs_limit = get_revs_limit(self._cluster_config)
-            playbook_vars["revs_limit"] = '"revs_limit": {},'.format(revs_limit)
-        except KeyError:
-            log_info("revs_limit not found in {}, Ignoring".format(self._cluster_config))
-            playbook_vars["revs_limit"] = ''
-
-        if is_delta_sync_enabled(self._cluster_config) and get_sg_version(self._cluster_config) >= "2.5.0":
-            playbook_vars["delta_sync"] = '"delta_sync": { "enabled": true},'
-
-        if get_sg_version(self._cluster_config) >= "2.8.0":
-            playbook_vars["prometheus"] = '"metricsInterface": ":4986",'
-
-        if is_hide_prod_version_enabled(self._cluster_config) and get_sg_version(self._cluster_config) >= "2.8.1":
-            playbook_vars["hide_product_version"] = '"hide_product_version": true,'
-
-        # Sleep for a few seconds for the indexes to teardown
-        time.sleep(5)
 
     def restart_services(self):
         ansible_runner = AnsibleRunner(self._cluster_config)
@@ -855,7 +705,7 @@ class Cluster:
 
         return True
 
-    def verify_alive(self, mode):
+    def verify_alive(self, mode="cc"):
         errors = []
         for sg in self.sync_gateways:
             try:

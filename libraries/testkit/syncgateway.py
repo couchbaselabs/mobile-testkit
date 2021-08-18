@@ -14,12 +14,13 @@ from libraries.testkit.admin import Admin
 from libraries.testkit.config import Config, seperate_sgw_and_db_config
 from libraries.testkit.debug import log_request, log_response
 from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, sg_ssl_enabled, get_cbs_primary_nodes_str
-from utilities.cluster_config_utils import get_revs_limit, get_redact_level, is_delta_sync_enabled, get_sg_platform
+from utilities.cluster_config_utils import get_revs_limit, get_redact_level, is_delta_sync_enabled, get_sg_platform, get_bucket_list_cpc
 from utilities.cluster_config_utils import is_hide_prod_version_enabled, is_centralized_persistent_config_disabled
 from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version, is_x509_auth, generate_x509_certs
 from keywords.utils import add_cbs_to_sg_config_server_field, log_info, random_string
 from keywords.constants import SYNC_GATEWAY_CERT, SGW_DB_CONFIGS, SYNC_GATEWAY_CONFIGS, SYNC_GATEWAY_CONFIGS_CPC
 from keywords.exceptions import ProvisioningError
+from keywords.remoteexecutor import RemoteExecutor
 
 log = logging.getLogger(libraries.testkit.settings.LOGGER)
 
@@ -1016,17 +1017,19 @@ def send_dbconfig_as_restCall(db_config_json, sync_gateways):
 
 def get_cpc_sgw_config(sg_config_path):
     # Get relavant cpc config for sgw config
-    sg_config_path = sg_config_path.replace(SYNC_GATEWAY_CONFIGS, SYNC_GATEWAY_CONFIGS_CPC)
+    if SYNC_GATEWAY_CONFIGS_CPC not in sg_config_path and "temp_sg_config" not in sg_config_path:
+        sg_config_path = sg_config_path.replace(SYNC_GATEWAY_CONFIGS, SYNC_GATEWAY_CONFIGS_CPC)
     return sg_config_path
 
 
-def construct_dbconfig_json(db_config_file, cluster_config, sg_platform):
+def construct_dbconfig_json(db_config_file, cluster_config, sg_platform, sgw_config):
     db_config_path = "{}/{}.json".format(SGW_DB_CONFIGS, db_config_file)
     if not os.path.isfile(db_config_path):
         raise ValueError("Could not file config: {}".format(db_config_path))
     couchbase_server_primary_node = add_cbs_to_sg_config_server_field(cluster_config)
     couchbase_server_primary_node = get_cbs_primary_nodes_str(cluster_config, couchbase_server_primary_node)
-    bucket_names = get_buckets_from_sync_gateway_config(db_config_path, cluster_config)
+    # bucket_names = get_buckets_from_sync_gateway_config(db_config_path, cluster_config)
+    bucket_names = get_bucket_list_cpc(sgw_config)
     with open(db_config_path, "r") as config:
         db_config_data = config.read()
     
@@ -1045,6 +1048,7 @@ def construct_dbconfig_json(db_config_file, cluster_config, sg_platform):
     server_port_var = ""
     x509_auth_var = False
     revs_limit_var = ""
+    bucket_var = bucket_names[0]
     
     if sg_platform == "macos":
         sg_home_directory = "/Users/sync_gateway"
@@ -1065,7 +1069,7 @@ def construct_dbconfig_json(db_config_file, cluster_config, sg_platform):
 
         server_scheme_var = "couchbases"
         server_port_var = ""
-        # generate_x509_certs(cluster_config, bucket_names, sg_platform)
+        generate_x509_certs(cluster_config, bucket_names, sg_platform)
         # x509_auth_var = True
 
     else:
@@ -1100,6 +1104,7 @@ def construct_dbconfig_json(db_config_file, cluster_config, sg_platform):
 
     db_username_var = '"username": "{}",'.format(username_var)
     db_password_var = '"password": "{}",'.format(password_var)
+    db_bucket_var = '"bucket": "{}",'.format(bucket_var)
     template = Template(db_config_data)
     db_config_data = template.render(
         couchbase_server_primary_node=couchbase_server_primary_node,
@@ -1110,7 +1115,7 @@ def construct_dbconfig_json(db_config_file, cluster_config, sg_platform):
         cacertpath=cacertpath_var,
         username=db_username_var,
         password=db_password_var,
-        # bucket=db_bucket_var,
+        bucket=db_bucket_var,
         sg_use_views=sg_use_views_var,
         num_index_replicas=num_index_replicas_var,
         autoimport=autoimport_var,
@@ -1121,3 +1126,85 @@ def construct_dbconfig_json(db_config_file, cluster_config, sg_platform):
     )
     return db_config_data
     
+def start_sgbinary(sg1, sg_platform, adminInterface=None, interface=None, cacertpath=None, certpath=None, configServer=None, dbname=None, defaultLogFilePath=None, disable_persistent_config=None, keypath=None, log=None, logFilePath=None, profileInterface=None, url=None):
+    """-adminInterface string
+    	Address to bind admin interface to (default "127.0.0.1:4985")
+  -cacertpath string
+    	Root CA certificate path
+  -certpath string
+    	Client certificate path
+  -configServer string
+    	URL of server that can return database configs
+  -dbname string
+    	Name of Couchbase Server database (defaults to name of bucket)
+  -defaultLogFilePath string
+    	Path to log files, if not overridden by --logFilePath, or the config
+  -deploymentID string
+    	Customer/project identifier for stats reporting
+  -disable_persistent_config
+    	Can be set to false to disable persistent config handling, and read all configuration from a legacy config file. (default true)
+  -interface string
+    	Address to bind to (default ":4984")
+  -keypath string
+    	Client certificate key path
+  -log string
+    	Log keys, comma separated
+  -logFilePath string
+    	Path to log files
+  -pretty
+    	Pretty-print JSON responses
+  -profileInterface string
+    	Address to bind profile interface to
+  -url string
+    	Address of Couchbase server
+  -verbose
+    	Log more info about requests """
+    c_adminInterface = ""
+    c_interface = ""
+    c_cacertpath = ""
+    c_certpath = ""
+    c_configServer = ""
+    c_dbname = ""
+    c_defaultLogFilePath = ""
+    c_disable_persistent_config = ""
+    c_keypath = ""
+    c_log = ""
+    c_logFilePath = ""
+    c_profileInterface = ""
+    c_url = ""
+    if adminInterface is not None:
+        c_adminInterface = "-adminInterface=" + adminInterface
+    if interface is not None:
+        c_interface = "-interface=" + interface
+    if cacertpath is not None:
+        c_cacertpath = "-cacertpath=" + cacertpath
+    if certpath is not None:
+        c_certpath = "-certpath=" + certpath
+    if configServer is not None:
+        c_configServer = "-configServer=" + configServer
+    if dbname is not None:
+        c_dbname = "-dbname=" + dbname
+    if defaultLogFilePath is not None:
+        c_defaultLogFilePath = "-defaultLogFilePath=" + defaultLogFilePath
+    if disable_persistent_config is not None:
+        c_disable_persistent_config = "-disable_persistent_config={}".format(disable_persistent_config)
+    if keypath is not None:
+        c_keypath = "-keypath=" + keypath
+    if log is not None:
+        c_log = "-log=" + log
+    if logFilePath is not None:
+        c_logFilePath = "-logFilePath=" + logFilePath
+    if profileInterface is not None:
+        c_profileInterface = "-profileInterface " + profileInterface
+    if url is not None:
+        c_url = "-url=" + url
+    remote_executor = RemoteExecutor(sg1.ip)
+    if sg_platform == "macos":
+        sg_home_directory = "/Users/sync_gateway"
+    elif sg_platform == "windows":
+        sg_home_directory = "C:\\\\PROGRA~1\\\\Couchbase\\\\Sync Gateway"
+    else:
+        sg_home_directory = "/home/sync_gateway"
+    command = "/opt/couchbase-sync-gateway/bin/sync_gateway {} {} {} {} {} {} {} {} {} {} {} {} {} {}/sync_gateway.json &".format(c_adminInterface, c_interface, c_cacertpath, c_certpath, c_configServer, c_dbname, c_defaultLogFilePath, c_disable_persistent_config, c_keypath, c_log, c_logFilePath, c_profileInterface, c_url, sg_home_directory)
+    _, stdout, _ = remote_executor.execute(command)
+    return stdout

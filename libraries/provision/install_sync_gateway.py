@@ -15,6 +15,7 @@ from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled
 from utilities.cluster_config_utils import is_hide_prod_version_enabled, get_cbs_primary_nodes_str, is_centralized_persistent_config_disabled
 from utilities.cluster_config_utils import get_sg_version, get_sg_replicas, get_sg_use_views, get_redact_level, is_x509_auth, generate_x509_certs, is_delta_sync_enabled
 from libraries.testkit import cluster
+from keywords.utils import hostname_for_url, version_and_build
 
 
 class SyncGatewayConfig:
@@ -144,15 +145,19 @@ class SyncGatewayConfig:
 def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
                          sg_platform="centos", sg_installer_type="msi",
                          sa_platform="centos", sa_installer_type="msi",
-                         ipv6=False, aws=False):
+                         ipv6=False, aws=False, url=None, sync_gateway_version=None):
 
     log_info(sync_gateway_config)
     ansible_runner = AnsibleRunner(cluster_config)
     c_cluster = cluster.Cluster(cluster_config)
+    if sync_gateway_version is not None:
+        version, _ = version_and_build(sync_gateway_version)
+    else:
+        version = get_sg_version(cluster_config)
     if sync_gateway_config.build_flags != "":
         log_warn("\n\n!!! WARNING: You are building with flags: {} !!!\n\n".format(sync_gateway_config.build_flags))
 
-    if get_sg_version(cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config):
+    if version >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config):
         playbook_vars, _ = c_cluster.setup_server_and_sgw(sg_config_path=sync_gateway_config.config_path)
     else:
         bucket_names = get_buckets_from_sync_gateway_config(sync_gateway_config.config_path, cluster_config)
@@ -202,7 +207,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
             "disable_persistent_config": ""
         }
 
-        if get_sg_version(cluster_config) >= "2.1.0":
+        if version >= "2.1.0":
             logging_config = '"logging": {"debug": {"enabled": true}'
             try:
                 redact_level = get_redact_level(cluster_config)
@@ -250,7 +255,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
                 bucket_names[0])
             playbook_vars["password"] = '"password": "password",'
 
-        if is_cbs_ssl_enabled(cluster_config) and get_sg_version(cluster_config) >= "1.5.0":
+        if is_cbs_ssl_enabled(cluster_config) and version >= "1.5.0":
             playbook_vars["server_scheme"] = "couchbases"
             playbook_vars["server_port"] = 11207
             block_http_vars = {}
@@ -288,13 +293,13 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
         except KeyError:
             log_info("revs_limit not found in {}, Ignoring".format(cluster_config))
 
-        if is_delta_sync_enabled(cluster_config) and get_sg_version(cluster_config) >= "2.5.0":
+        if is_delta_sync_enabled(cluster_config) and version >= "2.5.0":
             playbook_vars["delta_sync"] = '"delta_sync": { "enabled": true},'
 
-        if get_sg_version(cluster_config) >= "2.8.0":
+        if version >= "2.8.0":
             playbook_vars["prometheus"] = '"metricsInterface": ":4986",'
 
-        if is_hide_prod_version_enabled(cluster_config) and get_sg_version(cluster_config) >= "2.8.1":
+        if is_hide_prod_version_enabled(cluster_config) and version >= "2.8.1":
             playbook_vars["hide_product_version"] = '"hide_product_version": true,'
 
         if is_centralized_persistent_config_disabled(cluster_config):
@@ -324,21 +329,39 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
         playbook_vars["couchbase_sg_accel_package"] = sg_accel_package_name
         playbook_vars["couchbase_server_version"] = sync_gateway_config.get_sg_version_build()
 
-        if sg_platform == "windows":
-            status = ansible_runner.run_ansible_playbook(
-                "install-sync-gateway-package-windows.yml",
-                extra_vars=playbook_vars
-            )
-        elif sg_platform == "macos":
-            status = ansible_runner.run_ansible_playbook(
-                "install-sync-gateway-package-macos.yml",
-                extra_vars=playbook_vars
-            )
+        if url is not None:
+            target = hostname_for_url(cluster_config, url)
+            if sg_platform == "windows":
+                status = ansible_runner.run_ansible_playbook(
+                    "install-sync-gateway-package-windows.yml",
+                    extra_vars=playbook_vars, subset=target
+                )
+            elif sg_platform == "macos":
+                status = ansible_runner.run_ansible_playbook(
+                    "install-sync-gateway-package-macos.yml",
+                    extra_vars=playbook_vars, subset=target
+                )
+            else:
+                status = ansible_runner.run_ansible_playbook(
+                    "install-sync-gateway-package.yml",
+                    extra_vars=playbook_vars, subset=target
+                )
         else:
-            status = ansible_runner.run_ansible_playbook(
-                "install-sync-gateway-package.yml",
-                extra_vars=playbook_vars
-            )
+            if sg_platform == "windows":
+                status = ansible_runner.run_ansible_playbook(
+                    "install-sync-gateway-package-windows.yml",
+                    extra_vars=playbook_vars
+                )
+            elif sg_platform == "macos":
+                status = ansible_runner.run_ansible_playbook(
+                    "install-sync-gateway-package-macos.yml",
+                    extra_vars=playbook_vars
+                )
+            else:
+                status = ansible_runner.run_ansible_playbook(
+                    "install-sync-gateway-package.yml",
+                    extra_vars=playbook_vars
+                )
 
         if status != 0:
             raise ProvisioningError("Failed to install sync_gateway package")

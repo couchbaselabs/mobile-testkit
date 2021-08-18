@@ -119,4 +119,4 @@ def pytest_addoption(parser):
     parser.addoption("--cluster-config",
                      action="store",
                      help="Provide a custom cluster config",
-                     default="multiple_sync_gateways_")
+                     default="three_sync_gateways_")

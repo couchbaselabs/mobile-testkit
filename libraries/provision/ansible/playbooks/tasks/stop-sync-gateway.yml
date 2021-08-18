@@ -17,5 +17,5 @@
   ignore_errors: yes
   when: ansible_distribution == "MacOSX"
 
-- name: SYNC GATEWAY | Verify sync_gateway not listening on port
-  wait_for: port=4985 state=stopped
+# - name: SYNC GATEWAY | Verify sync_gateway not listening on port
+#  wait_for: port=4985 state=stopped

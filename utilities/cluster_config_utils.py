@@ -8,7 +8,7 @@ from shutil import copyfile, rmtree
 from subprocess import Popen, PIPE
 from distutils.dir_util import copy_tree
 from couchbase.cluster import PasswordAuthenticator, ClusterTimeoutOptions, ClusterOptions, Cluster
-
+from keywords.constants import BUCKET_LIST
 
 class CustomConfigParser(configparser.RawConfigParser):
     """Virtually identical to the original method, but delimit keys and values with '=' instead of ' = '
@@ -299,7 +299,10 @@ def copy_sgconf_to_temp(sg_conf, mode):
     temp_sg_config = "resources/sync_gateway_configs/temp_sg_config_{}.json".format(mode)
     open(temp_sg_config, "w+")
     copyfile(sg_conf, temp_sg_config)
-    return temp_sg_config, temp_sg_conf_name
+    bucket_list = []
+    if "sync_gateway_configs_cpc" in sg_conf:
+        bucket_list = get_bucket_list_cpc(sg_conf)
+    return temp_sg_config, temp_sg_conf_name, bucket_list
 
 
 def copy_sgconf_to_tempconfig_for_reset_method(sg_conf, mode):
@@ -354,3 +357,10 @@ def copy_json_to_temp_file(conf, temp_config="resources/temp/temp_config.json"):
     file.write(json.dumps(conf, indent=4))
     file.close
     return temp_config
+
+
+def get_bucket_list_cpc(sgw_config):
+    sgw_conf_file_name = sgw_config.split('/')[-1].split("_cc.")[0]
+    bucket_list_data = open(BUCKET_LIST)
+    json_data = json.load(bucket_list_data)
+    return json_data[sgw_conf_file_name]
