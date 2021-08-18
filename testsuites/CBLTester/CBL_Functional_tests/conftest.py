@@ -878,21 +878,6 @@ def setup_customized_teardown_test(request, params_from_base_test_setup):
     disable_encryption = params_from_base_test_setup["disable_encryption"]
     encryption_password = params_from_base_test_setup["encryption_password"]
     db = Database(base_url)
-    tests_list = request.node.items
-    failed_test_list = []
-    for test in tests_list:
-        if test.rep_call.failed:
-            failed_test_list.append(test.rep_call.nodeid)
-    zip_data = request.cls.cbllog.get_logs_in_zip()
-    suite_log_zip_file = "Suite_test_log.zip"
-
-    if os.path.exists(suite_log_zip_file):
-        log_info("Log file for failed Suite tests is: {}".format(suite_log_zip_file))
-        target_zip = zipfile.ZipFile(suite_log_zip_file, 'w')
-        with zipfile.ZipFile(io.BytesIO(zip_data)) as thezip:
-            for zipinfo in thezip.infolist():
-                target_zip.writestr(zipinfo.filename, thezip.read(zipinfo.filename))
-        target_zip.close()
     if disable_encryption:
         db_config = db.configure()
     else:
