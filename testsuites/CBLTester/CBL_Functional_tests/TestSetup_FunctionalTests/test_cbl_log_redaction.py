@@ -128,7 +128,7 @@ def test_verify_invalid_mask_password_in_logs(params_from_base_test_setup, inval
 
     repl = replicator.create(repl_config)
     replicator.start(repl)
-    replicator.wait_until_replicator_idle(repl, err_check=False)
+    replicator.getError(repl)
     verify_password_masked(liteserv_platform, log_file, invalid_password, test_cbllog)
 
 
