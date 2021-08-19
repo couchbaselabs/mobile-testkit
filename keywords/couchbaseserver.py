@@ -690,11 +690,21 @@ class CouchbaseServer:
 
         log_info("Starting rebalance out: {} with nodes {}".format(server_to_remove.host, data))
         # Override session headers for this one off request
-        resp = self._session.post(
-            "{}/controller/rebalance".format(self.url),
-            headers={"Content-Type": "application/x-www-form-urlencoded"},
-            data=data
-        )
+        count = 0
+        max_retries = 5
+        while count < max_retries:
+            try:
+                resp = self._session.post(
+                    "{}/controller/rebalance".format(self.url),
+                    headers={"Content-Type": "application/x-www-form-urlencoded"},
+                    data=data
+                )
+            except HTTPError:
+                log_info("Got http error while trying to rebalance out the server, so trying one more time")
+            if resp.status_code == 200:
+                break
+            count += 1
+            time.sleep(1)
         log_r(resp)
         resp.raise_for_status()
 
@@ -767,6 +777,7 @@ class CouchbaseServer:
             if resp.status_code == 200:
                 break
             count += 1
+            time.sleep(1)
         log_r(resp)
         resp.raise_for_status()
 

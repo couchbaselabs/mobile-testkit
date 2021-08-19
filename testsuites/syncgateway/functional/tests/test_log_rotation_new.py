@@ -42,9 +42,13 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name, 
     if get_sync_gateway_version(sg_ip)[0] < "2.1":
         pytest.skip("Continuous logging Test NA for SG < 2.1")
 
+    disable_tls_server = params_from_base_test_setup["disable_tls_server"]
+    if x509_cert_auth and disable_tls_server:
+        pytest.skip("x509 test cannot run tls server disabled")
     if x509_cert_auth and not cbs_ce_version:
         temp_cluster_config = copy_to_temp_conf(cluster_conf, mode)
         persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
+        persist_cluster_config_environment_prop(temp_cluster_config, 'server_tls_skip_verify', False)
         cluster_conf = temp_cluster_config
 
     cluster = Cluster(config=cluster_conf)
@@ -310,7 +314,11 @@ def test_log_maxage_timestamp_ignored(params_from_base_test_setup, sg_conf_name)
     # Change the timestamps for SG logs when SG stopped (Name is unchanged)
     for log in SG_LOGS_MAXAGE:
         file_name = "/tmp/sg_logs/{}.log".format(log)
-        command = "sudo touch -d \"{} days ago\" {}".format(SG_LOGS_MAXAGE[log], file_name)
+        if sg_platform == "macos":
+            age = [log] * 24
+            command = "sudo touch -A -{}0000 {}".format(age, file_name)
+        else:
+            command = "sudo touch -d \"{} days ago\" {}".format([log], file_name)
         remote_executor.execute(command)
 
     sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)

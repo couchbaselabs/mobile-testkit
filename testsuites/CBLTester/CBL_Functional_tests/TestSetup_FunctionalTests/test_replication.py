@@ -80,9 +80,13 @@ def test_replication_configuration_valid_values(params_from_base_test_setup, num
     sg_client = MobileRestClient()
 
     # Reset cluster to ensure no data in system
+    disable_tls_server = params_from_base_test_setup["disable_tls_server"]
+    if x509_cert_auth and disable_tls_server:
+        pytest.skip("x509 test cannot run tls server disabled")
     if x509_cert_auth:
         temp_cluster_config = copy_to_temp_conf(cluster_config, mode)
         persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
+        persist_cluster_config_environment_prop(temp_cluster_config, 'server_tls_skip_verify', False)
         cluster_config = temp_cluster_config
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
@@ -626,9 +630,13 @@ def test_CBL_tombstone_doc(params_from_base_test_setup, num_of_docs, x509_cert_a
     sg_client = MobileRestClient()
 
     # Modify sync-gateway config to use no-conflicts config
+    disable_tls_server = params_from_base_test_setup["disable_tls_server"]
+    if x509_cert_auth and disable_tls_server:
+        pytest.skip("x509 test cannot run tls server disabled")
     if x509_cert_auth:
         temp_cluster_config = copy_to_temp_conf(cluster_config, mode)
         persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
+        persist_cluster_config_environment_prop(temp_cluster_config, 'server_tls_skip_verify', False)
         cluster_config = temp_cluster_config
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
@@ -4050,9 +4058,9 @@ def test_replication_pull_from_empty_database(params_from_base_test_setup, attac
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("num_of_docs, continuous, wait_time, retries, type", [
-    pytest.param(500, True, "2", "10", "pull"),
-    pytest.param(500, True, "3", "10", "push"),
-    pytest.param(500, True, "6", "4", "pull-push"),
+    pytest.param(500, True, "2", "25", "pull"),
+    pytest.param(500, True, "3", "20", "push"),
+    pytest.param(500, True, "6", "15", "pull-push"),
 ])
 def test_replication_with_custom_retries(params_from_base_test_setup, num_of_docs, continuous, wait_time, retries,
                                          type):
@@ -4292,7 +4300,7 @@ def test_replication_reset_retires(params_from_base_test_setup, num_of_docs, con
 
     # start the sg before retries ends
     # Adding enough sleep to wait for the retries
-    time.sleep(int(wait_time) * (int(retries) - 5))
+    time.sleep(int(wait_time))
     sg_controller.start_sync_gateways(cluster_config, url=sg_url, config=sg_config)
     replicator.wait_until_replicator_idle(repl)
 

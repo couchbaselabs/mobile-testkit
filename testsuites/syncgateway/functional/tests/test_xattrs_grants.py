@@ -57,9 +57,13 @@ def test_automatic_and_ondemand_imports(params_from_base_test_setup, x509_cert_a
 
     sg_client = MobileRestClient()
 
+    disable_tls_server = params_from_base_test_setup["disable_tls_server"]
+    if x509_cert_auth and disable_tls_server:
+        pytest.skip("x509 test cannot run tls server disabled")
     if x509_cert_auth:
         temp_cluster_config = copy_to_temp_conf(cluster_config, mode)
         persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
+        persist_cluster_config_environment_prop(temp_cluster_config, 'server_tls_skip_verify', False)
         cluster_config = temp_cluster_config
 
     # 1. Set xattr key in config
@@ -732,7 +736,7 @@ def test_xattrs_key_with_disabled_xattrs(params_from_base_test_setup):
     try:
         requests.get(sg_url, timeout=30)
         assert False, "Sync gateway started successfully with xattrs disabled and xattrs key enabled "
-    except ConnectionError as he:
+    except Exception as he:
         log_info(str(he))
         log_info("Expected to have sync gateway fail to start")
 
