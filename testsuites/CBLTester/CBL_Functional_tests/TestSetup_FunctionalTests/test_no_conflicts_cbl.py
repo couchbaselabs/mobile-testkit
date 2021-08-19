@@ -686,7 +686,7 @@ def sg_updateDocs(sg_client, url, db, docs, number_updates, auth):
 @pytest.mark.parametrize("sg_conf_name, num_of_docs, number_of_updates", [
     ('listener_tests/listener_tests_no_conflicts', 10, 2),
     ('listener_tests/listener_tests_no_conflicts', 100, 10),
-    # ('listener_tests/listener_tests_no_conflicts', 100, 50)
+    ('listener_tests/listener_tests_no_conflicts', 100, 50)
 ])
 def test_multiple_cbls_updates_concurrently_with_push(params_from_base_test_setup, setup_customized_teardown_test, sg_conf_name, num_of_docs, number_of_updates):
     """

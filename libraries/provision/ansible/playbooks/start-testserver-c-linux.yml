@@ -8,7 +8,7 @@
     - name: Start TestServer
       shell: "nohup /root/ctestserver/testserver &"
       args:
-        chdir: "/root"
+        chdir: "/root/ctestserver"
 
 
 

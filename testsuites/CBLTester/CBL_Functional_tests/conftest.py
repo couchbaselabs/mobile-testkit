@@ -951,6 +951,6 @@ def setup_customized_teardown_test(request, params_from_base_test_setup):
         "cbl_db3": cbl_db3,
     }
     log_info("Tearing down test")
-    db.deleteDB(cbl_db1)
-    db.deleteDB(cbl_db2)
-    db.deleteDB(cbl_db3)
+    # db.deleteDB(cbl_db1)
+    # db.deleteDB(cbl_db2)
+    # db.deleteDB(cbl_db3)
