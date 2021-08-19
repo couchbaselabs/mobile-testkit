@@ -21,9 +21,9 @@ class TestServerNetMsft(TestServerWinBase):
 
         if self.platform == "c-msft":
             if community_enabled:
-                build_tag_name = "testserver_windesktop_x64_community"
+                build_tag_name = "testserver_windesktop_x86_64_community"
             else:
-                build_tag_name = "testserver_windesktop_x64_enterprise"
+                build_tag_name = "testserver_windesktop_x86_64_enterprise"
             self.build_name = "{}-{}".format(build_tag_name, self.version_build)
             self.binary_path = "{}-{}\\testserver.exe".format(build_tag_name, self.version_build)
             self.package_name = "{}.zip".format(build_tag_name)
