@@ -3850,6 +3850,9 @@ def test_blob_contructor_replication(params_from_base_test_setup, blob_data_type
     username = "autotest"
     password = "password"
 
+    if "c-" in liteserv_platform and blob_data_type == "file_url":
+        pytest.skip('This test cannot run for C platforms')
+
     sg_client = MobileRestClient()
     sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channels)
     cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
@@ -3893,7 +3896,7 @@ def test_blob_contructor_replication(params_from_base_test_setup, blob_data_type
         elif blob_data_type == "stream":
             image_stream = blob.createImageStream(image_location, cbl_db)
             blob_value = blob.create("image/jpeg", stream=image_stream)
-        elif blob_data_type == "file_url" and "c-" not in liteserv_platform:
+        elif blob_data_type == "file_url":
             image_file_url = blob.createImageFileUrl(image_location)
             blob_value = blob.create("image/jpeg", file_url=image_file_url)
 
