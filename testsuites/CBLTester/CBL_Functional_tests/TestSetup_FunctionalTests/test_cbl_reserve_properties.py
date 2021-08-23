@@ -41,12 +41,13 @@ def test_reserve_property(params_from_base_test_setup):
                                    attachments=attachment.generate_2_png_10_10())
 
     doc2 = documentObj.create("doc_2", doc_body)
-    if "c-" in liteserv_platform:
-        try:
-            db.saveDocument(cbl_db, doc2)
-            assert False, "Did not throw the unsupported reserve property error"
-        except Exception as err:
-            assert "Illegal top-level key `_id` in document" in str(err), \
-                "Did not throw the unsupported reserve property error"
-    else:
-        db.saveDocument(cbl_db, doc2)
+    db.saveDocument(cbl_db, doc2)
+    # if "c-" in liteserv_platform:
+    #     try:
+    #         db.saveDocument(cbl_db, doc2)
+    #         assert False, "Did not throw the unsupported reserve property error"
+    #     except Exception as err:
+    #         assert "Illegal top-level key `_id` in document" in str(err), \
+    #             "Did not throw the unsupported reserve property error"
+    # else:
+    #     db.saveDocument(cbl_db, doc2)
