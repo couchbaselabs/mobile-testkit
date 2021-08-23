@@ -19,7 +19,7 @@ def test_reserve_property(params_from_base_test_setup):
     liteserv_version = params_from_base_test_setup["liteserv_version"]
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
-    liteserv_platform = params_from_base_test_setup["liteserv_platform"]
+    # liteserv_platform = params_from_base_test_setup["liteserv_platform"]
     if liteserv_version < "3.0.0":
         pytest.skip('This test cannot run with CBL version below 3.0.0')
     channel = ["Replication-1"]
