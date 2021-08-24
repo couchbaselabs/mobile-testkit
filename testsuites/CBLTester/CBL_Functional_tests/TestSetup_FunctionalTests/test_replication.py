@@ -4226,7 +4226,7 @@ def test_replication_with_custom_timeout(params_from_base_test_setup, num_of_doc
 @pytest.mark.replication
 @pytest.mark.parametrize("num_of_docs, continuous, retries, wait_time, type", [
     pytest.param(500, True, "17", "10", "pull-push"),
-    pytest.param(500, True, "17", "10", "push")
+    pytest.param(500, False, "17", "10", "push")
 ])
 def test_replication_reset_retires(params_from_base_test_setup, num_of_docs, continuous, retries, wait_time, type):
     """
