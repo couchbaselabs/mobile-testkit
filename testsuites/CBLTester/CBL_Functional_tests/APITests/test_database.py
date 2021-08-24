@@ -14,7 +14,11 @@ class TestDatabase(object):
         @summary: Checking for the Exception handling in database create API
         """
         if self.liteserv_version >= "2.6.0":
-            err_msg = "db name must not be empty"
+            if "c-" in self.liteserv_platform:
+                err_msg = "invalid parameter"
+            else:
+                err_msg = "db name must not be empty"
+
         log_info("check for error message: {}".format(err_msg))
 
         if "android" in self.liteserv_platform and db_name == "":
