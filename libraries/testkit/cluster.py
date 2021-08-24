@@ -173,8 +173,8 @@ class Cluster:
 
         log_info(">>> Starting sync_gateway with configuration: {}".format(config_path_full))
 
-        server_port = 8091
-        server_scheme = "http"
+        server_port = ""
+        server_scheme = "couchbase"
         couchbase_server_primary_node = add_cbs_to_sg_config_server_field(self._cluster_config)
         if self.cbs_ssl:
             server_port = 18091

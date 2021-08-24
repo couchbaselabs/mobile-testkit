@@ -366,8 +366,8 @@ class SyncGateway(object):
 
     def __init__(self):
         self._session = Session()
-        self.server_port = 8091
-        self.server_scheme = "http"
+        self.server_port = ""
+        self.server_scheme = "couchbase"
 
     def install_sync_gateway(self, cluster_config, sync_gateway_version, sync_gateway_config):
 
@@ -811,8 +811,8 @@ class SyncGateway(object):
             Will also enable import if enable_import is set to True
             It is used to enable xattrs and import in the SG config"""
         ansible_runner = AnsibleRunner(cluster_config)
-        server_port = 8091
-        server_scheme = "http"
+        server_port = ""
+        server_scheme = "couchbase"
         sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
         cbs_cert_path = os.path.join(os.getcwd(), "certs")
         bucket_names = get_buckets_from_sync_gateway_config(sg_conf)
