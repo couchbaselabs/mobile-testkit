@@ -254,7 +254,6 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config):
         server_tls_skip_verify_prop = ""
         disable_tls_server_prop = ""
         disable_admin_auth_prop = ""
-        metrics_auth_prop = ""
 
         sg_platform = get_sg_platform(cluster_config)
         if get_sg_version(cluster_config) >= "2.1.0":
@@ -354,9 +353,8 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config):
             hide_prod_version=hide_prod_version_prop,
             disable_persistent_config=disable_persistent_config_prop,
             server_tls_skip_verify=server_tls_skip_verify_prop,
-            tls_server=disable_tls_server_prop,
-            admin_auth=disable_admin_auth_prop,
-            metrics_auth=metrics_auth_prop
+            disable_tls_server=disable_tls_server_prop,
+            disable_admin_auth=disable_admin_auth_prop
         )
         data = json.loads(temp)
 

@@ -82,8 +82,10 @@ def test_attachments_on_docs_rejected_by_sync_function(params_from_base_test_set
     assert str(he.value).startswith("403 Client Error: Forbidden for url:")
 
     cb_server = couchbaseserver.CouchbaseServer(cbs_url)
-
-    server_att_docs = cb_server.get_server_docs_with_prefix(bucket=bucket, prefix="_sync:att:", ipv6=cluster.ipv6)
+    if sync_gateway_version >= "3.0.0":
+        server_att_docs = cb_server.get_server_docs_with_prefix(bucket=bucket, prefix="_sync:att2:", ipv6=cluster.ipv6)
+    else:
+        server_att_docs = cb_server.get_server_docs_with_prefix(bucket=bucket, prefix="_sync:att:", ipv6=cluster.ipv6)
     num_att_docs = len(server_att_docs)
     assert num_att_docs == 0
 
