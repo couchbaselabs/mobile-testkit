@@ -829,6 +829,6 @@ def send_request_to_sgw(sg_one_url, sg_admin_url, remote_executor, sg_platform="
         os.system(command)
     else:
         remote_executor.execute(
-            "for ((i=1;i <= 3200;i += 1)); do curl -s http://localhost:4984/ABCD/ > /dev/null; done")
+            "for ((i=1;i <= 4000;i += 1)); do curl -s http://localhost:4984/ABCD/ > /dev/null; done")
         remote_executor.execute(
-            "for ((i=1;i <= 2000;i += 1)); do curl -s -H 'Accept: text/plain' http://localhost:4985/db/ > /dev/null; done")
+            "for ((i=1;i <= 4000;i += 1)); do curl -s -H 'Accept: text/plain' http://localhost:4985/db/ > /dev/null; done")
