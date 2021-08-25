@@ -192,7 +192,16 @@ class CouchbaseServer:
         count = 0
         index_url = self.url.replace("8091", "9102")
         while count < 5:
-            resp = self._session.get("{}/getIndexStatus".format(index_url))
+            retry_count = 0
+            while retry_count < 5:
+                try:
+                    resp = self._session.get("{}/getIndexStatus".format(index_url))
+                    log_r(resp)
+                    resp.raise_for_status()
+                except ConnectionError:
+                    log_info("Hit a ConnectionError while trying to get index status. Retrying ...")
+                    time.sleep(1)
+                retry_count += 1
             resp_obj = resp.json()
             if "status" not in resp_obj:
                 break
