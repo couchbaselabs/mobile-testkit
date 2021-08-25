@@ -413,6 +413,8 @@ def test_replication_push_replication_invalid_authentication(params_from_base_te
 
     repl = replicator.create(repl_config)
     replicator.start(repl)
+    # Adding sleep to replicator to retry
+    time.sleep(5)
     error = replicator.getError(repl)
 
     assert "401" in error, "expected error did not occurred"
