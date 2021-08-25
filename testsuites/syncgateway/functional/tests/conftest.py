@@ -186,6 +186,10 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="Disable Admin auth")
 
+    parser.addoption("--enforce-server-tls",
+                     action="store_true",
+                     help="Enforce server tls")
+
 
 # This will be called once for the at the beggining of the execution in the 'tests/' directory
 # and will be torn down, (code after the yeild) when all the test session has completed.
@@ -229,6 +233,7 @@ def params_from_base_suite_setup(request):
     enable_cbs_developer_preview = request.config.getoption("--enable-cbs-developer-preview")
     disable_persistent_config = request.config.getoption("--disable-persistent-config")
     enable_server_tls_skip_verify = request.config.getoption("--enable-server-tls-skip-verify")
+    enforce_server_tls = request.config.getoption("--enforce-server-tls")
 
     disable_admin_auth = request.config.getoption("--disable-admin-auth")
 
@@ -261,6 +266,7 @@ def params_from_base_suite_setup(request):
     log_info("hide_product_version: {}".format(hide_product_version))
     log_info("enable_cbs_developer_preview: {}".format(enable_cbs_developer_preview))
     log_info("disable_persistent_config: {}".format(disable_persistent_config))
+    log_info("Enforce server tls: {}".format(enforce_server_tls))
 
     # sg-ce is invalid for di mode
     if mode == "di" and sg_ce:
@@ -436,6 +442,13 @@ def params_from_base_suite_setup(request):
     else:
         log_info("Enabled Admin Auth")
         persist_cluster_config_environment_prop(cluster_config, 'disable_admin_auth', False)
+
+    if enforce_server_tls:
+        log_info("Enforce server tls")
+        persist_cluster_config_environment_prop(cluster_config, 'enforce_server_tls', True)
+    else:
+        log_info("Not enforced server tls")
+        persist_cluster_config_environment_prop(cluster_config, 'enforce_server_tls', False)
 
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
 

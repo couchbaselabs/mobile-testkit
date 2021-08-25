@@ -51,8 +51,8 @@ def params_from_base_suite_setup(request):
     disable_persistent_config = request.config.getoption("--disable-persistent-config")
     enable_server_tls_skip_verify = request.config.getoption("--enable-server-tls-skip-verify")
     disable_tls_server = request.config.getoption("--disable-tls-server")
-
     disable_admin_auth = request.config.getoption("--disable-admin-auth")
+    enforce_server_tls = request.config.getoption("--enforce-server-tls")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
@@ -82,6 +82,7 @@ def params_from_base_suite_setup(request):
     log_info("prometheus_enabled: {}".format(prometheus_enabled))
     log_info("enable_cbs_developer_preview: {}".format(enable_cbs_developer_preview))
     log_info("disable_persistent_config: {}".format(disable_persistent_config))
+    log_info("Enforce server tls: {}".format(enforce_server_tls))
 
     # sg-ce is invalid for di mode
     if mode == "di" and sg_ce:
@@ -247,6 +248,13 @@ def params_from_base_suite_setup(request):
     else:
         log_info("Enabled Admin Auth")
         persist_cluster_config_environment_prop(cluster_config, 'disable_admin_auth', False)
+
+    if enforce_server_tls:
+        log_info("Enforce server tls")
+        persist_cluster_config_environment_prop(cluster_config, 'enforce_server_tls', True)
+    else:
+        log_info("Not enforced server tls")
+        persist_cluster_config_environment_prop(cluster_config, 'enforce_server_tls', False)
 
     if sync_gateway_version < "2.0.0" and no_conflicts_enabled:
         pytest.skip("Test cannot run with no-conflicts with sg version < 2.0.0")

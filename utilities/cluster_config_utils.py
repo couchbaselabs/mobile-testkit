@@ -61,7 +61,7 @@ def persist_cluster_config_environment_prop(cluster_config, property_name, value
         valid_props = ["cbs_ssl_enabled", "xattrs_enabled", "sg_lb_enabled", "sync_gateway_version", "server_version",
                        "no_conflicts_enabled", "sync_gateway_ssl", "sg_use_views", "number_replicas",
                        "delta_sync_enabled", "x509_certs", "hide_product_version", "cbs_developer_preview", "disable_persistent_config",
-                       "server_tls_skip_verify", "disable_tls_server", "disable_admin_auth"]
+                       "server_tls_skip_verify", "disable_tls_server", "disable_admin_auth", "enforce_server_tls"]
         if property_name not in valid_props:
             raise ProvisioningError("Make sure the property you are trying to change is one of: {}".format(valid_props))
 
@@ -367,5 +367,15 @@ def is_admin_auth_disabled(cluster_config):
     cluster = load_cluster_config_json(cluster_config)
     try:
         return cluster["environment"]["disable_admin_auth"]
+    except KeyError:
+        return False
+
+
+def is_enforce_server_tls(cluster_config):
+    """ verify server tls is enforced"""
+
+    cluster = load_cluster_config_json(cluster_config)
+    try:
+        return cluster["environment"]["enforce_server_tls"]
     except KeyError:
         return False

@@ -8,6 +8,7 @@
     couchbase_server_package_name:
     ipv6_enabled:
     cbs_dp_preview:
+    enforce_server_tls:
     couchbase_server_package_url: "{{ couchbase_server_package_base_url }}/{{ couchbase_server_package_name }}"
 
 
@@ -115,9 +116,9 @@
     - name: COUCHBASE SERVER | Wait for node to be listening on port 8091
       wait_for: port=8091 delay=5 timeout=60
 
-    - name: Setting IP family of the cluster
+    - name: COUCHBASE SERVER | Setting IP family of the cluster(6.X and up)
       shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli ip-family  --set --ipv6 -c [{{ couchbase_server_node }}]:{{ couchbase_server_admin_port }} -u={{ couchbase_server_admin }} --password={{ couchbase_server_password }}"
-      when: "'6.5' in couchbase_server_package_name and ipv6_enabled"
+      when:  "(not {{ cb_major_version['stdout'] | search('\\b[1-5]\\b') }}) and ipv6_enabled"
 
     - name: COUCHBASE SERVER | Configure cluster settings (3.0.X and 3.1.X)
       shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli cluster-init -c {{ couchbase_server_node }}:{{ couchbase_server_admin_port }} --user={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --cluster-port={{couchbase_server_admin_port}} --cluster-ramsize={{ couchbase_server_cluster_ram }}"
@@ -200,11 +201,11 @@
 
     - name: COUCHBASE SERVER | Enable auto failover (6.X and up) | configure IPv4
       shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli setting-autofailover -c {{ couchbase_server_primary_node }}:{{ couchbase_server_admin_port }} -u={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --enable-auto-failover=1 --auto-failover-timeout=30"
-      when:  "(not {{ cb_major_version['stdout'] | search('\\b[1-5]\\b') }}) and not ipv6_enabled"
+      when:  "(not {{ cb_major_version['stdout'] | search('\\b[1-5]\\b') }}) and not ipv6_enabled and not {{ enforce_server_tls }}"
 
     - name: COUCHBASE SERVER | Enable auto failover (6.X and up) | configure IPv6
       shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli setting-autofailover -c [{{ couchbase_server_primary_node }}]:{{ couchbase_server_admin_port }} -u={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --enable-auto-failover=1 --auto-failover-timeout=30"
-      when:  "(not {{ cb_major_version['stdout'] | search('\\b[1-5]\\b') }}) and ipv6_enabled"
+      when:  "(not {{ cb_major_version['stdout'] | search('\\b[1-5]\\b') }}) and ipv6_enabled and not {{ enforce_server_tls }}"
 
     - name: COUCHBASE SERVER | Enable auto failover (3.X to 5.X) | configure IPv4
       shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli setting-autofailover -c {{ couchbase_server_primary_node }}:{{ couchbase_server_admin_port }} --user={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --enable-auto-failover=1 --auto-failover-timeout=30"
@@ -217,3 +218,21 @@
     - name: COUCHBASE SERVER | Enable developer preview (6.X and up)
       shell: yes | {{ couchbase_server_home_path }}/bin/couchbase-cli enable-developer-preview --enable -c localhost:{{ couchbase_server_admin_port }} -u {{ couchbase_server_admin }} -p {{ couchbase_server_password }}
       when:  "(not {{ cb_major_version['stdout'] | search('\\b[1-5]\\b') }}) and {{ cbs_dp_preview }}"
+
+    - name: COUCHBASE SERVER | Disable auto failover (7.X and up) | configure IPv4
+      shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli setting-autofailover -c {{ couchbase_server_primary_node }}:{{ couchbase_server_admin_port }} -u={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --enable-auto-failover=0 --auto-failover-timeout=30"
+      when:  "(not {{ cb_major_version['stdout'] | search('\\b[1-5]\\b') }}) and not ipv6_enabled and {{ enforce_server_tls }}"
+
+    - name: COUCHBASE SERVER | Disable auto failover (7.X and up) | configure IPv6
+      shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli setting-autofailover -c [{{ couchbase_server_primary_node }}]:{{ couchbase_server_admin_port }} -u={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --enable-auto-failover=0 --auto-failover-timeout=30"
+      when:  "(not {{ cb_major_version['stdout'] | search('\\b[1-5]\\b') }}) and ipv6_enabled and {{ enforce_server_tls }}"
+
+    - name: COUCHBASE SERVER | Enable node to node encryption (7.X and up)
+      shell: yes | {{ couchbase_server_home_path }}/bin/couchbase-cli node-to-node-encryption --enable -c localhost:{{ couchbase_server_admin_port }} -u {{ couchbase_server_admin }} -p {{ couchbase_server_password }}
+      when:  "(not {{ cb_major_version['stdout'] | search('\\b[1-6]\\b') }}) and {{ enforce_server_tls }}"
+
+    - name: COUCHBASE SERVER | Enable strict mode (7.X and up)
+      shell: yes | {{ couchbase_server_home_path }}/bin/couchbase-cli setting-security -c localhost:{{ couchbase_server_admin_port }} -u {{ couchbase_server_admin }} -p {{ couchbase_server_password }} --set --cluster-encryption-level strict
+      when:  "(not {{ cb_major_version['stdout'] | search('\\b[1-6]\\b') }}) and {{ enforce_server_tls }}"
+
+    

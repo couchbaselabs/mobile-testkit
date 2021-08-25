@@ -117,7 +117,8 @@ def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_conf
 def provision_cluster_aws(cluster_config, couchbase_server_config, sync_gateway_config, sg_ssl=False, sg_lb=False, cbs_ssl=False, use_views=False,
                           xattrs_enabled=False, no_conflicts_enabled=False, delta_sync_enabled=False, number_replicas=0, sg_ce=False,
                           cbs_platform="centos7", sg_platform="centos", sg_installer_type="msi", sa_platform="centos",
-                          sa_installer_type="msi", cbs_ce=False, aws=False, skip_couchbase_provision=False, enable_cbs_developer_preview=False, disable_persistent_config=False):
+                          sa_installer_type="msi", cbs_ce=False, aws=False, skip_couchbase_provision=False, enable_cbs_developer_preview=False, disable_persistent_config=False,
+                          enforce_server_tls="false"):
 
     if sg_ssl:
         log_info("Enabling SSL on sync gateway")
@@ -188,6 +189,13 @@ def provision_cluster_aws(cluster_config, couchbase_server_config, sync_gateway_
     else:
         log_info("Running without Centralized Persistent Config")
         persist_cluster_config_environment_prop(cluster_config, 'disable_persistent_config', False)
+
+    if enforce_server_tls:
+        log_info("Enforcing server tls")
+        persist_cluster_config_environment_prop(cluster_config, 'enforce_server_tls', True)
+    else:
+        log_info("Not running Enforcing server tls")
+        persist_cluster_config_environment_prop(cluster_config, 'enforce_server_tls', False)
 
     provision_cluster(cluster_config=cluster_conf, couchbase_server_config=server_config,
                       sync_gateway_config=sync_gateway_conf, cbs_platform=opts.cbs_platform, aws=aws)
@@ -282,6 +290,11 @@ if __name__ == "__main__":
                       action="store", type="string", dest="enable_cbs_dp",
                       help="Enabling CBS developer preview",
                       default=False)
+
+    parser.add_option("", "--enforce-server-tls",
+                      action="store", type="string", dest="enforce_server_tls",
+                      help="Enforcing server tls",
+                      default=False)
     arg_parameters = sys.argv[1:]
 
     (opts, args) = parser.parse_args(arg_parameters)
@@ -317,5 +330,5 @@ if __name__ == "__main__":
     provision_cluster_aws(
         sg_ssl=opts.sg_ssl, sg_lb=opts.sg_lb, cbs_ssl=opts.cbs_ssl, use_views=opts.use_views, xattrs_enabled=opts.xattrs_enabled, no_conflicts_enabled=opts.no_conflicts_enabled,
         delta_sync_enabled=opts.delta_sync_enabled, number_replicas=opts.number_replicas, cluster_config=cluster_conf, couchbase_server_config=server_config,
-        sync_gateway_config=sync_gateway_conf, cbs_platform=opts.cbs_platform, aws=True, enable_cbs_developer_preview=opts.enable_cbs_dp
+        sync_gateway_config=sync_gateway_conf, cbs_platform=opts.cbs_platform, aws=True, enable_cbs_developer_preview=opts.enable_cbs_dp, enforce_server_tls=opts.enforce_server_tls
     )
