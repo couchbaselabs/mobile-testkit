@@ -236,7 +236,7 @@
       retries: 5
       delay: 1
       register: result
-      until: result.stdout.find("SUCCESS:" != -1
+      until: result.stdout.find("SUCCESS:") != -1
       when:  "(not {{ cb_major_version['stdout'] | search('\\b[1-6]\\b') }}) and {{ enforce_server_tls }}"
 
     
