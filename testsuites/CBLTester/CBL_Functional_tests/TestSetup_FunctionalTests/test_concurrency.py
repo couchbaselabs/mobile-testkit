@@ -120,7 +120,7 @@ def test_replication_with_concurrencyControl_deleteSameDocId(params_from_base_te
     saved_doc = documentObj.setData(doc_mut, doc_body)
     db.saveDocument(cbl_db, saved_doc)
 
-    db.deleteDocumentWithConcurrency(cbl_db, cbl_doc, concurrencyType)
+    db.deleteDocumentWithConcurrency(cbl_db, saved_doc, concurrencyType)
 
     if concurrencyType == "lastWriteWins":
         cbl_doc_ids = db.getDocIds(cbl_db)
