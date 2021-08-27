@@ -971,7 +971,7 @@ class MobileRestClient:
         if auth_type == AuthType.session:
             for y in doc.keys():
                 if type(doc.get(y)) == bytes:
-                    y = doc.get(y).decode('ascii')
+                    doc[y] = doc.get(y).decode('ascii')
             resp = self._session.put("{}/{}/{}".format(url, db, doc_id), params=params, data=json.dumps(doc), cookies=dict(SyncGatewaySession=auth[1]))
         elif auth_type == AuthType.http_basic:
             resp = self._session.put("{}/{}/{}".format(url, db, doc_id), params=params, data=json.dumps(doc), auth=auth)
