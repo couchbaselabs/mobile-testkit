@@ -4,9 +4,25 @@
     "maxIncomingConnections": 0,
     "maxFileDescriptors": 90000,
     "compressResponses": false,
+    "metricsInterface": ":4986",
     "logging": {
         "debug": {
             "enabled": true
+        }
+    },
+    "databases": {
+        "db": {
+            "import_docs": true,
+            "enable_shared_bucket_access": true,
+            "num_index_replicas": 0,
+            "username": "data-bucket",
+            "password": "password",
+            "delta_sync": {
+                "enabled": true
+            },
+            "server": "couchbases://172.23.106.108:11207",
+            "bucket": "data-bucket",
+            "bucket_op_timeout_ms": 60000
         }
     }
 }

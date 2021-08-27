@@ -38,6 +38,7 @@ class TestServerAndroid(TestServerBase):
             self.activity_name = self.installed_package_name + "/md53466f247b9f9d18ced632d20bd2e0d5c.MainActivity"
 
         self.device_option = "-e"
+        self.serial_number = ""
 
     def download(self, version_build=None):
         """
@@ -117,7 +118,9 @@ class TestServerAndroid(TestServerBase):
         """Install the apk to running Android device or emulator"""
 
         self.device_enabled = True
-        self.device_option = "-d"
+        self.device_option = ["-d"]
+        if self.serial_number != "":
+            self.device_option = ["-s", self.serial_number]
         apk_path = "{}/{}".format(BINARY_DIR, self.apk_name)
 
         try:
@@ -137,7 +140,8 @@ class TestServerAndroid(TestServerBase):
             if count > max_retries:
                 raise LiteServError(".apk install failed!")
             try:
-                output = subprocess.check_output(["adb", "-d", "install", "-r", apk_path])
+                command = self.set_device_option(["adb", "install", "-r", apk_path])
+                output = subprocess.check_output(command)
                 break
             except Exception as e:
                 if "INSTALL_FAILED_ALREADY_EXISTS" in e.args[0] or "INSTALL_FAILED_UPDATE_INCOMPATIBLE" in e.message:
@@ -150,7 +154,8 @@ class TestServerAndroid(TestServerBase):
                     # Install succeeded, continue
                     break
 
-        output = subprocess.check_output(["adb", "-d", "shell", "pm", "list", "packages"])
+        command = self.set_device_option(["adb", "shell", "pm", "list", "packages"])
+        output = subprocess.check_output(command)
         if self.installed_package_name not in output.decode():
             raise LiteServError("Failed to install package: {}".format(output))
 
@@ -159,12 +164,14 @@ class TestServerAndroid(TestServerBase):
     def remove(self):
         """Removes the Test Server application from the running device
         """
-        output = subprocess.check_output(["adb", "uninstall", self.installed_package_name])
+        command = self.set_device_option(["adb", "uninstall", self.installed_package_name])
+        output = subprocess.check_output(command)
         if output.strip() != "Success" and output.strip() != b"Success":
             log_info(output)
             raise LiteServError("Error. Could not remove app.")
 
-        output = subprocess.check_output(["adb", "shell", "pm", "list", "packages"])
+        command = self.set_device_option(["adb", "shell", "pm", "list", "packages"])
+        output = subprocess.check_output(command)
         if self.installed_package_name in output.decode():
             raise LiteServError("Error uninstalling app!")
 
@@ -210,18 +217,20 @@ class TestServerAndroid(TestServerBase):
         """
 
         # Clear adb buffer
-        subprocess.check_call(["adb", "-d", "logcat", "-c"])
+        command = self.set_device_option(["adb", "logcat", "-c"])
+        subprocess.check_call(command)
 
         # Start redirecting adb output to the logfile
         self.logfile = open(logfile_name, "w+")
-        self.process = subprocess.Popen(args=["adb", "-d", "logcat"], stdout=self.logfile)
+        command = self.set_device_option(["adb", "logcat"])
+        self.process = subprocess.Popen(args=command, stdout=self.logfile)
 
-        output = subprocess.check_output([
-            "adb", "-d", "shell", "am", "start", "-n", self.activity_name,
+        command = self.set_device_option([
+            "adb", "shell", "am", "start", "-n", self.activity_name,
             "--es", "username", "none",
             "--es", "password", "none",
-            "--ei", "listen_port", str(self.port),
-        ])
+            "--ei", "listen_port", str(self.port)])
+        output = subprocess.check_output(command)
         log_info(output)
         self._wait_until_reachable(port=self.port)
         self._verify_launched()
@@ -230,7 +239,8 @@ class TestServerAndroid(TestServerBase):
         """ Verify that app is launched with adb command
         """
         if self.device_enabled:
-            output = subprocess.check_output(["adb", "-d", "shell", "pidof", self.installed_package_name, "|", "wc", "-l"])
+            command = self.set_device_option(["adb", "shell", "pidof", self.installed_package_name, "|", "wc", "-l"])
+            output = subprocess.check_output(command)
         else:
             output = subprocess.check_output(["adb", "-e", "shell", "pidof", self.installed_package_name, "|", "wc", "-l"])
         log_info("output for running activity {}".format(output))
@@ -245,11 +255,13 @@ class TestServerAndroid(TestServerBase):
         """
 
         log_info("Stopping LiteServ: http://{}:{}".format(self.host, self.port))
-        output = subprocess.check_output(["adb", self.device_option, "shell", "am", "force-stop", self.installed_package_name])
+        command = self.set_device_option(["adb", "shell", "am", "force-stop", self.installed_package_name])
+        output = subprocess.check_output(command)
         log_info(output)
 
         # Clear package data
-        output = subprocess.check_output(["adb", self.device_option, "shell", "pm", "clear", self.installed_package_name])
+        command = self.set_device_option(["adb", "shell", "pm", "clear", self.installed_package_name])
+        output = subprocess.check_output(command)
         log_info(output)
 
         # self._verify_not_running()
@@ -261,19 +273,21 @@ class TestServerAndroid(TestServerBase):
 
     def close_app(self):
         if self.device_enabled:
-            output = subprocess.check_output(["adb", "-d", "shell", "input", "keyevent ", "3"])
+            command = self.set_device_option(["adb", "shell", "input", "keyevent ", "3"])
+            output = subprocess.check_output(command)
         else:
             output = subprocess.check_output(["adb", "-e", "shell", "input", "keyevent ", "3"])
         log_info(output)
 
     def open_app(self):
         if self.device_enabled:
-            output = subprocess.check_output([
-                "adb", "-d", "shell", "am", "start", "-n", self.activity_name,
+            command = self.set_device_option([
+                "adb", "shell", "am", "start", "-n", self.activity_name,
                 "--es", "username", "none", "--es", "password", "none", "--ei",
                 "listen_port",
                 str(self.port)
             ])
+            output = subprocess.check_output(command)
         else:
             output = subprocess.check_output([
                 "adb", "-e", "shell", "am", "start", "-n", self.activity_name,
@@ -285,3 +299,18 @@ class TestServerAndroid(TestServerBase):
         log_info(output)
         self._wait_until_reachable(port=self.port)
         self._verify_launched()
+
+    def set_device_option(self, command):
+        '''
+            this method is to modify the adb command
+            based on the self.device_option is given
+            i.e.
+            input: command = ["adb", "logcat"]
+                   option = "-d"
+            return: ["adb", "-d", "logcat"]
+            input: command = ["adb", "logcat"]
+                   option = ["-s", "K183010440"]
+            return: ["adb", "-s", "K183010440", "logcat"]
+        '''
+        command[1:1] = self.device_option
+        return command

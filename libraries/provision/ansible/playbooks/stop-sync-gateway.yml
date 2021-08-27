@@ -7,5 +7,9 @@
     become: yes
     when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian" or ansible_distribution == "MacOSX"
 
+  - include: tasks/stop-sync-gateway-binary.yml
+    become: yes
+    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian" or ansible_distribution == "MacOSX"
+
   - include: tasks/stop-sync-gateway-windows.yml
     when: ansible_os_family == "Windows"

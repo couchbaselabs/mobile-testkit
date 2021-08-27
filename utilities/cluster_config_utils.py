@@ -60,7 +60,8 @@ def persist_cluster_config_environment_prop(cluster_config, property_name, value
     if property_name_check is True:
         valid_props = ["cbs_ssl_enabled", "xattrs_enabled", "sg_lb_enabled", "sync_gateway_version", "server_version",
                        "no_conflicts_enabled", "sync_gateway_ssl", "sg_use_views", "number_replicas",
-                       "delta_sync_enabled", "x509_certs", "hide_product_version", "cbs_developer_preview", "disable_persistent_config"]
+                       "delta_sync_enabled", "x509_certs", "hide_product_version", "cbs_developer_preview", "disable_persistent_config",
+                       "server_tls_skip_verify", "disable_tls_server", "disable_admin_auth"]
         if property_name not in valid_props:
             raise ProvisioningError("Make sure the property you are trying to change is one of: {}".format(valid_props))
 
@@ -364,3 +365,33 @@ def get_bucket_list_cpc(sgw_config):
     bucket_list_data = open(BUCKET_LIST)
     json_data = json.load(bucket_list_data)
     return json_data[sgw_conf_file_name]
+
+def is_server_tls_skip_verify_enabled(cluster_config):
+    """ verify server tls skip verify config enabled/disabled"""
+
+    cluster = load_cluster_config_json(cluster_config)
+    try:
+        return cluster["environment"]["server_tls_skip_verify"]
+    except KeyError:
+        return False
+
+
+def is_tls_server_disabled(cluster_config):
+    """ verify tls server enabled/disabled"""
+
+    cluster = load_cluster_config_json(cluster_config)
+    try:
+        return cluster["environment"]["disable_tls_server"]
+    except KeyError:
+        return False
+
+
+def is_admin_auth_disabled(cluster_config):
+    """ verify admin auth enabled/disabled"""
+
+    cluster = load_cluster_config_json(cluster_config)
+    try:
+        return cluster["environment"]["disable_admin_auth"]
+    except KeyError:
+        return False
+

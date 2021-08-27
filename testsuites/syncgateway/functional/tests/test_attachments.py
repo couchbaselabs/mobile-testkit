@@ -46,7 +46,7 @@ def test_attachment_revpos_when_ancestor_unavailable(params_from_base_test_setup
     no_conflicts_enabled = params_from_base_test_setup["no_conflicts_enabled"]
 
     if no_conflicts_enabled:
-        pytest.skip('--no-conflicts is not enabled, so skipping the test')
+        pytest.skip('--no-conflicts is enabled, so skipping the test')
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 

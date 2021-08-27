@@ -21,6 +21,8 @@ from keywords.utils import add_cbs_to_sg_config_server_field, log_info, random_s
 from keywords.constants import SYNC_GATEWAY_CERT, SGW_DB_CONFIGS, SYNC_GATEWAY_CONFIGS, SYNC_GATEWAY_CONFIGS_CPC
 from keywords.exceptions import ProvisioningError
 from keywords.remoteexecutor import RemoteExecutor
+from utilities.cluster_config_utils import is_centralized_persistent_config_disabled, is_server_tls_skip_verify_enabled, is_admin_auth_disabled, is_tls_server_disabled
+
 
 log = logging.getLogger(libraries.testkit.settings.LOGGER)
 
@@ -102,12 +104,14 @@ class SyncGateway:
                 "prometheus": "",
                 "hide_product_version": "",
                 "tls": "",
-                "disable_persistent_config":""
-
+                "disable_persistent_config": "",
+                "server_tls_skip_verify": "",
+                "disable_tls_server": "",
+                "disable_admin_auth": ""
             }
 
             if sg_ssl_enabled(self.cluster_config):
-                if is_centralized_persistent_config_disabled(self.cluster_config):
+                if is_centralized_persistent_config_disabled(self.cluster_config) and get_sg_version(self.cluster_config) >= "3.0.0":
                     playbook_vars["sslcert"] = '"SSLCert": "sg_cert.pem",'
                     playbook_vars["sslkey"] = '"SSLKey": "sg_privkey.pem",'
                 else:
@@ -185,8 +189,17 @@ class SyncGateway:
             if is_hide_prod_version_enabled(self.cluster_config) and get_sg_version(self.cluster_config) >= "2.8.1":
                 playbook_vars["hide_product_version"] = '"hide_product_version": true,'
 
-            if is_centralized_persistent_config_disabled(self._cluster_config):
+            if is_centralized_persistent_config_disabled(self.cluster_config) and get_sg_version(self.cluster_config) >= "3.0.0":
                 playbook_vars["disable_persistent_config"] = '"disable_persistent_config": true,'
+
+            if is_server_tls_skip_verify_enabled(self.cluster_config) and get_sg_version(self.cluster_config) >= "3.0.0":
+                playbook_vars["server_tls_skip_verify"] = '"server_tls_skip_verify": true,'
+
+            if is_tls_server_disabled(self.cluster_config) and get_sg_version(self.cluster_config) >= "3.0.0":
+                playbook_vars["disable_tls_server"] = '"use_tls_server": false,'
+
+            if is_admin_auth_disabled(self.cluster_config) and get_sg_version(self.cluster_config) >= "3.0.0":
+                playbook_vars["disable_admin_auth"] = '"admin_interface_authentication": false,    \n"metrics_interface_authentication": false,'
 
             if is_cbs_ssl_enabled(self.cluster_config) and get_sg_version(self.cluster_config) >= "1.5.0":
                 playbook_vars["server_scheme"] = "couchbases"
@@ -252,7 +265,10 @@ class SyncGateway:
                 "prometheus": "",
                 "hide_product_version": "",
                 "tls": "",
-                "disable_persistent_config":""
+                "disable_persistent_config": "",
+                "server_tls_skip_verify": "",
+                "disable_tls_server": "",
+                "disable_admin_auth": ""
             }
             sg_platform = get_sg_platform(cluster_config)
 
@@ -309,6 +325,7 @@ class SyncGateway:
                     playbook_vars["username"] = '"username": "{}",'.format(
                         bucket_names[0])
                     playbook_vars["password"] = '"password": "password",'
+
             else:
                 playbook_vars["logging"] = '"log": ["*"],'
                 playbook_vars["username"] = '"username": "{}",'.format(
@@ -337,8 +354,17 @@ class SyncGateway:
             if is_hide_prod_version_enabled(cluster_config) and get_sg_version(cluster_config) >= "2.8.1":
                 playbook_vars["hide_product_version"] = '"hide_product_version": true,'
 
-            if is_centralized_persistent_config_disabled(cluster_config):
+            if is_centralized_persistent_config_disabled(self.cluster_config) and get_sg_version(self.cluster_config) >= "3.0.0":
                 playbook_vars["disable_persistent_config"] = '"disable_persistent_config": true,'
+
+            if is_server_tls_skip_verify_enabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
+                playbook_vars["server_tls_skip_verify"] = '"server_tls_skip_verify": true,'
+
+            if is_tls_server_disabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
+                playbook_vars["disable_tls_server"] = '"use_tls_server": false,'
+
+            if is_admin_auth_disabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
+                playbook_vars["disable_admin_auth"] = '"admin_interface_authentication": false,    \n"metrics_interface_authentication": false,'
 
             if is_cbs_ssl_enabled(cluster_config) and get_sg_version(cluster_config) >= "1.5.0":
                 playbook_vars["server_scheme"] = "couchbases"

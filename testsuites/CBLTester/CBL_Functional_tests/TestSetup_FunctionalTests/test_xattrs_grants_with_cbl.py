@@ -60,9 +60,13 @@ def test_xattrs_grant_automatic_imports(params_from_base_test_setup, x509_cert_a
     temp_sg_config = replace_xattrs_sync_func_in_config(sg_config, user_custom_channel)
 
     # Reset cluster to ensure no data in system
+    disable_tls_server = params_from_base_test_setup["disable_tls_server"]
+    if x509_cert_auth and disable_tls_server:
+        pytest.skip("x509 test cannot run tls server disabled")
     if x509_cert_auth:
         temp_cluster_config = copy_to_temp_conf(cluster_config, mode)
         persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
+        persist_cluster_config_environment_prop(temp_cluster_config, 'server_tls_skip_verify', False)
         cluster_config = temp_cluster_config
     c_cluster = cluster.Cluster(config=cluster_config)
     c_cluster.reset(sg_config_path=temp_sg_config)
@@ -132,7 +136,7 @@ def test_reassigning_channels_using_user_xattrs(params_from_base_test_setup, set
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     cbl_db1 = setup_customized_teardown_test["cbl_db1"]
     cbl_db2 = setup_customized_teardown_test["cbl_db2"]
-    delta_sync_enabled = setup_customized_teardown_test["delta_sync_enabled"]
+    delta_sync_enabled = params_from_base_test_setup["delta_sync_enabled"]
 
     if sync_gateway_version < "3.0.0":
         pytest.skip('This test cannot run with sg version below 3.0.0')

@@ -15,7 +15,7 @@ from CBLClient.Authenticator import Authenticator
 from CBLClient.Document import Document
 from CBLClient.Replication import Replication
 from keywords.SyncGateway import sync_gateway_config_path_for_mode, setup_sgreplicate1_on_sgconfig, setup_replications_on_sgconfig
-from utilities.cluster_config_utils import load_cluster_config_json, get_cluster
+from utilities.cluster_config_utils import load_cluster_config_json, get_cluster, is_centralized_persistent_config_disabled, get_sg_version
 
 
 def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
@@ -257,7 +257,7 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
         replications_key = "replications"
         sgr2_replace_string = "\"{}\": {}{}{},".format(replications_key, "{", replications_ids, "}")
         temp_sg_config_copy, _ = copy_sgconf_to_temp(sg_config, mode)
-        if stop_replication_before_upgrade:
+        if stop_replication_before_upgrade and sync_gateway_version >= "3.0.0":
             sg1.stop_replication_by_id(sgw_repl1_id1, use_admin_url=True)
             sg1.stop_replication_by_id(sgw_repl1_id2, use_admin_url=True)
             temp_sg_config = replace_string_on_sgw_config(temp_sg_config_copy, "{{ replace_with_sg1_replications }}", "")
@@ -312,13 +312,14 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
 
         primary_server = cluster.servers[0]
 
-        # 6. Restart SGWs after the server upgrade
+        # 6. Restart SGWs after the sgw upgrade
         sg_obj = SyncGateway()
-        for sg in sync_gateways:
+        # TODO : comment below and test 
+        """ for sg in sync_gateways:
             sg_ip = host_for_url(sg["admin"])
             log_info("Restarting sync gateway after server upgrade {}".format(sg_ip))
             sg_obj.restart_sync_gateways(cluster_config=cluster_config, url=sg_ip)
-            time.sleep(5)
+            time.sleep(5) """
 
         if need_to_redeploy:
             # Enable xattrs on all SG/SGAccel nodes

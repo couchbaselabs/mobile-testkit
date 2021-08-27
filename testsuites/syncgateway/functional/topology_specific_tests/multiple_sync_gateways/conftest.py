@@ -26,6 +26,7 @@ def params_from_base_suite_setup(request):
     # pytest command line parameters
     server_version = request.config.getoption("--server-version")
     sync_gateway_version = request.config.getoption("--sync-gateway-version")
+    disable_tls_server = request.config.getoption("--disable-tls-server")
     mode = request.config.getoption("--mode")
     skip_provisioning = request.config.getoption("--skip-provisioning")
     race_enabled = request.config.getoption("--race")
@@ -51,6 +52,9 @@ def params_from_base_suite_setup(request):
     enable_cbs_developer_preview = request.config.getoption("--enable-cbs-developer-preview")
     disable_persistent_config = request.config.getoption("--disable-persistent-config")
     cluster_config = request.config.getoption("--cluster-config")
+    enable_server_tls_skip_verify = request.config.getoption("--enable-server-tls-skip-verify")
+    disable_tls_server = request.config.getoption("--disable-tls-server")
+    disable_admin_auth = request.config.getoption("--disable-admin-auth")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
@@ -78,6 +82,7 @@ def params_from_base_suite_setup(request):
     log_info("prometheus_enabled: {}".format(prometheus_enabled))
     log_info("hide_product_version: {}".format(hide_product_version))
     log_info("enable_cbs_developer_preview: {}".format(enable_cbs_developer_preview))
+    log_info("disable_persistent_config: {}".format(disable_persistent_config))
 
     # sg-ce is invalid for di mode
     if mode == "di" and sg_ce:
@@ -214,6 +219,27 @@ def params_from_base_suite_setup(request):
         log_info("Running without Centralized Persistent Config")
         persist_cluster_config_environment_prop(cluster_config, 'disable_persistent_config', False)
 
+    if enable_server_tls_skip_verify:
+        log_info("Enable server tls skip verify flag")
+        persist_cluster_config_environment_prop(cluster_config, 'server_tls_skip_verify', True)
+    else:
+        log_info("Running without server_tls_skip_verify Config")
+        persist_cluster_config_environment_prop(cluster_config, 'server_tls_skip_verify', False)
+
+    if disable_tls_server:
+        log_info("Disable tls server flag")
+        persist_cluster_config_environment_prop(cluster_config, 'disable_tls_server', True)
+    else:
+        log_info("Enable tls server flag")
+        persist_cluster_config_environment_prop(cluster_config, 'disable_tls_server', False)
+
+    if disable_admin_auth:
+        log_info("Disabled Admin Auth")
+        persist_cluster_config_environment_prop(cluster_config, 'disable_admin_auth', True)
+    else:
+        log_info("Enabled Admin Auth")
+        persist_cluster_config_environment_prop(cluster_config, 'disable_admin_auth', False)
+
     if sync_gateway_version < "2.0.0" and no_conflicts_enabled:
         pytest.skip("Test cannot run with no-conflicts with sg version < 2.0.0")
 
@@ -264,6 +290,7 @@ def params_from_base_suite_setup(request):
            "xattrs_enabled": xattrs_enabled,
            "sg_platform": sg_platform,
            "sync_gateway_version": sync_gateway_version,
+           "disable_tls_server": disable_tls_server,
            "sg_ce": sg_ce,
            "prometheus_enabled": prometheus_enabled,
            "sg_ssl": sg_ssl
@@ -273,7 +300,7 @@ def params_from_base_suite_setup(request):
 
     # Stop all sync_gateway and sg_accels as test finished
     c = cluster.Cluster(cluster_config)
-    c.stop_sg_and_accel()
+    # c.stop_sg_and_accel()
 
     # Delete png files under resources/data
     clear_resources_pngs()
@@ -295,6 +322,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     xattrs_enabled = params_from_base_suite_setup["xattrs_enabled"]
     sg_platform = params_from_base_suite_setup["sg_platform"]
     sync_gateway_version = params_from_base_suite_setup["sync_gateway_version"]
+    disable_tls_server = params_from_base_suite_setup["disable_tls_server"]
     sg_ce = params_from_base_suite_setup["sg_ce"]
     prometheus_enabled = params_from_base_suite_setup["prometheus_enabled"]
     sg_ssl = params_from_base_suite_setup["sg_ssl"]
@@ -308,6 +336,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
            "xattrs_enabled": xattrs_enabled,
            "sg_platform": sg_platform,
            "sync_gateway_version": sync_gateway_version,
+           "disable_tls_server": disable_tls_server,
            "sg_ce": sg_ce,
            "prometheus_enabled": prometheus_enabled,
            "sg_ssl": sg_ssl

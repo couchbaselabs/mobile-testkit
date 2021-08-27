@@ -159,8 +159,19 @@ def pytest_addoption(parser):
 
     parser.addoption("--disable-persistent-config",
                      action="store_true",
-                     help="Centralized Persistent Config",
-                     default=True)
+                     help="Disable Centralized Persistent Config")
+
+    parser.addoption("--enable-server-tls-skip-verify",
+                     action="store_true",
+                     help="Enable Server tls skip verify config")
+
+    parser.addoption("--disable-tls-server",
+                     action="store_true",
+                     help="Disable tls server")
+
+    parser.addoption("--disable-admin-auth",
+                     action="store_true",
+                     help="Disable Admin auth")
 
 
 # This will get called once before the first test that
@@ -181,6 +192,7 @@ def params_from_base_suite_setup(request):
 
     server_version = request.config.getoption("--server-version")
     sync_gateway_version = request.config.getoption("--sync-gateway-version")
+    disable_tls_server = request.config.getoption("--disable-tls-server")
 
     cbs_ssl = request.config.getoption("--server-ssl")
     sg_ssl = request.config.getoption("--sg-ssl")
@@ -211,6 +223,9 @@ def params_from_base_suite_setup(request):
     skip_couchbase_provision = request.config.getoption("--skip-couchbase-provision")
     enable_cbs_developer_preview = request.config.getoption("--enable-cbs-developer-preview")
     disable_persistent_config = request.config.getoption("--disable-persistent-config")
+    enable_server_tls_skip_verify = request.config.getoption("--enable-server-tls-skip-verify")
+    disable_tls_server = request.config.getoption("--disable-tls-server")
+    disable_admin_auth = request.config.getoption("--disable-admin-auth")
 
     test_name = request.node.name
 
@@ -389,6 +404,27 @@ def params_from_base_suite_setup(request):
         sgw_config = "sync_gateway_default_functional_tests_cpc"
     sg_config = sync_gateway_config_path_for_mode(sgw_config, mode)
 
+    if enable_server_tls_skip_verify:
+        log_info("Enable server tls skip verify flag")
+        persist_cluster_config_environment_prop(cluster_config, 'server_tls_skip_verify', True)
+    else:
+        log_info("Running without server_tls_skip_verify Config")
+        persist_cluster_config_environment_prop(cluster_config, 'server_tls_skip_verify', False)
+
+    if disable_tls_server:
+        log_info("Disable tls server flag")
+        persist_cluster_config_environment_prop(cluster_config, 'disable_tls_server', True)
+    else:
+        log_info("Enable tls server flag")
+        persist_cluster_config_environment_prop(cluster_config, 'disable_tls_server', False)
+
+    if disable_admin_auth:
+        log_info("Disabled Admin Auth")
+        persist_cluster_config_environment_prop(cluster_config, 'disable_admin_auth', True)
+    else:
+        log_info("Enabled Admin Auth")
+        persist_cluster_config_environment_prop(cluster_config, 'disable_admin_auth', False)
+
     persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "centos", False)
 
     # Write the number of replicas to cluster config
@@ -461,6 +497,7 @@ def params_from_base_suite_setup(request):
         "cbs_platform": cbs_platform,
         "server_version": server_version,
         "sync_gateway_version": sync_gateway_version,
+        "disable_tls_server": disable_tls_server,
         "server_upgraded_version": server_upgraded_version,
         "sync_gateway_upgraded_version": sync_gateway_upgraded_version,
         "cbs_ssl": cbs_ssl,
@@ -512,6 +549,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     mode = params_from_base_suite_setup["mode"]
     server_version = params_from_base_suite_setup["server_version"]
     sync_gateway_version = params_from_base_suite_setup["sync_gateway_version"]
+    disable_tls_server = params_from_base_suite_setup["disable_tls_server"]
     server_upgraded_version = params_from_base_suite_setup["server_upgraded_version"]
     sync_gateway_upgraded_version = params_from_base_suite_setup["sync_gateway_upgraded_version"]
     cbs_ssl = params_from_base_suite_setup["cbs_ssl"],
@@ -612,6 +650,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "mode": mode,
         "server_version": server_version,
         "sync_gateway_version": sync_gateway_version,
+        "disable_tls_server": disable_tls_server,
         "server_upgraded_version": server_upgraded_version,
         "sync_gateway_upgraded_version": sync_gateway_upgraded_version,
         "cbs_ssl": cbs_ssl,

@@ -16,6 +16,7 @@ from utilities.cluster_config_utils import is_hide_prod_version_enabled, get_cbs
 from utilities.cluster_config_utils import get_sg_version, get_sg_replicas, get_sg_use_views, get_redact_level, is_x509_auth, generate_x509_certs, is_delta_sync_enabled
 from libraries.testkit import cluster
 from keywords.utils import hostname_for_url, version_and_build
+from utilities.cluster_config_utils import is_server_tls_skip_verify_enabled, is_admin_auth_disabled, is_tls_server_disabled
 
 
 class SyncGatewayConfig:
@@ -204,7 +205,10 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
             "prometheus": "",
             "hide_product_version": "",
             "tls": "",
-            "disable_persistent_config": ""
+            "disable_persistent_config": "",
+            "server_tls_skip_verify": "",
+            "disable_tls_server": "",
+            "disable_admin_auth": ""
         }
 
         if version >= "2.1.0":
@@ -301,6 +305,18 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
 
         if is_hide_prod_version_enabled(cluster_config) and version >= "2.8.1":
             playbook_vars["hide_product_version"] = '"hide_product_version": true,'
+
+        if is_centralized_persistent_config_disabled(cluster_config) and version >= "3.0.0":
+            playbook_vars["disable_persistent_config"] = '"disable_persistent_config": true,'
+
+        if is_server_tls_skip_verify_enabled(cluster_config) and version >= "3.0.0":
+            playbook_vars["server_tls_skip_verify"] = '"server_tls_skip_verify": true,'
+
+        if is_tls_server_disabled(cluster_config) and version >= "3.0.0":
+            playbook_vars["disable_tls_server"] = '"use_tls_server": false,'
+
+        if is_admin_auth_disabled(cluster_config) and version >= "3.0.0":
+            playbook_vars["disable_admin_auth"] = '"admin_interface_authentication": false,    \n"metrics_interface_authentication": false,'
 
         if is_centralized_persistent_config_disabled(cluster_config):
             playbook_vars["disable_persistent_config"] = '"disable_persistent_config": true,'

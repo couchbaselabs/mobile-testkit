@@ -37,7 +37,7 @@ def sgw_version_reset(request, params_from_base_test_setup):
     mode = params_from_base_test_setup['mode']
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     sg_obj = SyncGateway()
-    sg_obj.install_sync_gateway(cluster_conf, sync_gateway_previous_version, sg_conf)
+    sg_obj.install_sync_gateway(cluster_conf, sync_gateway_previous_version, sg_conf, skip_bucketcreation=True)
     yield {
         "cluster_conf": cluster_conf,
         "sg_obj": sg_obj,
@@ -48,7 +48,7 @@ def sgw_version_reset(request, params_from_base_test_setup):
 
 
 @pytest.mark.syncgateway
-def test_automatic_upgrade(params_from_base_test_setup, sgw_version_reset):
+def test_automatic_upgrade(params_from_base_test_setup):
     """
     @summary :
     Test cases link on google drive : https://docs.google.com/spreadsheets/d/19kJQ4_g6RroaoG2YYe0X11d9pU0xam-lb-n23aPLhO4/edit#gid=0
@@ -59,7 +59,7 @@ def test_automatic_upgrade(params_from_base_test_setup, sgw_version_reset):
     "" 
 
 
-    ""1. Have prelithium config with configs like 
+    ""1. Have prelithium config with configs like
         """"interface"""":"""":4984"""",
         """"adminInterface"""": """"0.0.0.0:4985"""",
         """"maxIncomingConnections"""": 0,
@@ -83,63 +83,66 @@ def test_automatic_upgrade(params_from_base_test_setup, sgw_version_reset):
                 """"bucket_op_timeout_ms"""": 60000
             }
     3. Add dynamic config like log_file_path or redaction_level on sgw config 
-    4. Upgrade SGW to lithium 
+    4. Upgrade SGW to lithium and verify new version of SGW config
     5. Verify all the above configs converted to new format.
         Default config for dynamic config like logging should have default values on _config rest end point
     6. verify backup file
-    7. verify new version of SGW config
     """
 
     sg_conf_name = "sync_gateway_default"
     cluster_conf = params_from_base_test_setup['cluster_config']
     sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
-    sync_gateway_previous_version = sgw_version_reset['sync_gateway_previous_version']
-    mode = sgw_version_reset['mode']
-    sg_obj = sgw_version_reset["sg_obj"]
-    cluster_conf = sgw_version_reset["cluster_conf"]
-    sg_conf_name = sgw_version_reset["sg_conf_name"]
-
-    """sg_platform = params_from_base_test_setup['sg_platform']
-    username = "autotest"
-    password = "password"
-    sg_channels = ["cpc"]"""
+    sync_gateway_previous_version = params_from_base_test_setup['sync_gateway_previous_version']
+    mode = params_from_base_test_setup['mode']
 
     # 1. Have prelithium config
     # 2. Have configs required for database on prelithium config
     if sync_gateway_version < "3.0.0":
         pytest.skip('This test can run with sgw version 3.0 and above')
     # 1. Have 3 SGW nodes: 1 node as pre-lithium and 2 nodes on lithium
-    # persist_cluster_config_environment_prop(cluster_conf, 'disable_persistent_config', False)
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
-    # sg_client = MobileRestClient()
-    temp_cluster_config = copy_to_temp_conf(cluster_conf, mode)
-    persist_cluster_config_environment_prop(temp_cluster_config, 'redactlevel', "partial",
-                                            property_name_check=False)
-    sg_obj.install_sync_gateway(temp_cluster_config, sync_gateway_previous_version, sg_conf)
-    cluster_util = ClusterKeywords(temp_cluster_config)
-    topology = cluster_util.get_cluster_topology(temp_cluster_config)
+    cluster_util = ClusterKeywords(cluster_conf)
+    topology = cluster_util.get_cluster_topology(cluster_conf)
     sync_gateways = topology["sync_gateways"]
     
-    # cluster_utils = ClusterKeywords(cluster_conf)
-    # cluster_topology = cluster_utils.get_cluster_topology(cluster_conf)
     # 3. Add dynamic config like log_file_path or redaction_level on sgw config
-    cbs_cluster = Cluster(config=temp_cluster_config)
+    cbs_cluster = Cluster(config=cluster_conf)
     cbs_cluster.reset(sg_config_path=sg_conf)
 
-    # 4. Upgrade SGW to lithium
-    # sgw_list1 = sync_gateways[:2]
-    sg_obj.upgrade_sync_gateway(sync_gateways, sync_gateway_previous_version, sync_gateway_version, sg_conf, temp_cluster_config)
+    sg_obj = SyncGateway()
+    # temp_cluster_config = copy_to_temp_conf(cluster_conf, mode)
+    # persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
+    # persist_cluster_config_environment_prop(temp_cluster_config, 'server_tls_skip_verify', False)
+    # cluster_conf = temp_cluster_config
+    sg_obj.install_sync_gateway(cluster_conf, sync_gateway_previous_version, sg_conf, skip_bucketcreation=True)
 
+    # 4. Upgrade SGW to lithium  and verify new version of SGW config
+    # sg_obj.upgrade_sync_gateway(sync_gateways, sync_gateway_previous_version, sync_gateway_version, sg_conf, cluster_conf)
+    sg_obj.upgrade_sync_gateways(cluster_config=cluster_conf, sg_conf=sg_conf, sync_gateway_version=sync_gateway_version, upgrade_only=True)
+  
     # 5. Verify all the above configs converted to new format.
     #   Default config for dynamic config like logging should have default values on _config rest end point
     sg1 = cbs_cluster.sync_gateways[0]
-    # sg_dbs = sg1.admin.get_dbs_from_config()
+    cbs_url = cbs_cluster.servers[0]
+    # cbs_url = cbs_url.replace("https", "couchbases")
+    cbs_bucket = cbs_cluster.servers[0].get_bucket_names()[0]
     sg1_config = sg1.admin.get_config()
-    assert sg1_config["logging"] is None, "logging did not get reset"
+    assert sg1_config["bootstrap"]["server"] == cbs_url, "server did not match with legacy config"
+    assert sg1_config["bootstrap"]["username"] == cbs_bucket, "username did not match with legacy config"
+
+    ["rotation"] is None, "logging did not get reset"
+    assert sg1_config["logging"]["console"]["rotation"] is None, "logging did not get reset"
+    assert sg1_config["logging"]["error"]["rotation"] is None, "logging did not get reset"
+    assert sg1_config["logging"]["warn"]["rotation"] is None, "logging did not get reset"
+    assert sg1_config["logging"]["info"]["rotation"] is None, "logging did not get reset"
+    assert sg1_config["logging"]["debug"]["rotation"] is None, "logging did not get reset"
+    assert sg1_config["logging"]["trace"]["rotation"] is None, "logging did not get reset"
+    assert sg1_config["logging"]["stats"]["rotation"] is None, "logging did not get reset"
     # 6. verify backup file
-    # 7. verify new version of SGW config
+    #TODO
+    
     
 
 @pytest.mark.syncgateway

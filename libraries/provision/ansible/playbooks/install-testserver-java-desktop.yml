@@ -53,7 +53,7 @@
     shell: "~/javatestserver/daemon_manager.sh start ~/javatestserver/{{ package_name }}.jar ~/javatestserver/output {{ ansible_env.JAVA_HOME }} {{ ansible_env.JSVC_HOME }}"
     args:
       chdir: ~/javatestserver
-    when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "6"
+    when: (ansible_distribution == "CentOS" or ansible_distribution == "RedHat") and ansible_distribution_major_version == "6"
 
   - name: Wait for port 8080 to become open on the host, don't start checking for 2 seconds
     wait_for:

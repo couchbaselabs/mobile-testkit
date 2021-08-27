@@ -22,6 +22,7 @@ def params_from_base_suite_setup(request):
     # pytest command line parameters
     server_version = request.config.getoption("--server-version")
     sync_gateway_version = request.config.getoption("--sync-gateway-version")
+    disable_tls_server = request.config.getoption("--disable-tls-server")
     mode = request.config.getoption("--mode")
     skip_provisioning = request.config.getoption("--skip-provisioning")
     race_enabled = request.config.getoption("--race")
@@ -48,6 +49,9 @@ def params_from_base_suite_setup(request):
     skip_couchbase_provision = request.config.getoption("--skip-couchbase-provision")
     enable_cbs_developer_preview = request.config.getoption("--enable-cbs-developer-preview")
     disable_persistent_config = request.config.getoption("--disable-persistent-config")
+    enable_server_tls_skip_verify = request.config.getoption("--enable-server-tls-skip-verify")
+    disable_tls_server = request.config.getoption("--disable-tls-server")
+    disable_admin_auth = request.config.getoption("--disable-admin-auth")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
@@ -222,6 +226,27 @@ def params_from_base_suite_setup(request):
         log_info("Running without Centralized Persistent Config")
         persist_cluster_config_environment_prop(cluster_config, 'disable_persistent_config', False)
 
+    if enable_server_tls_skip_verify:
+        log_info("Enable server tls skip verify flag")
+        persist_cluster_config_environment_prop(cluster_config, 'server_tls_skip_verify', True)
+    else:
+        log_info("Running without server_tls_skip_verify Config")
+        persist_cluster_config_environment_prop(cluster_config, 'server_tls_skip_verify', False)
+
+    if disable_tls_server:
+        log_info("Disable tls server flag")
+        persist_cluster_config_environment_prop(cluster_config, 'disable_tls_server', True)
+    else:
+        log_info("Enable tls server flag")
+        persist_cluster_config_environment_prop(cluster_config, 'disable_tls_server', False)
+
+    if disable_admin_auth:
+        log_info("Disabled Admin Auth")
+        persist_cluster_config_environment_prop(cluster_config, 'disable_admin_auth', True)
+    else:
+        log_info("Enabled Admin Auth")
+        persist_cluster_config_environment_prop(cluster_config, 'disable_admin_auth', False)
+
     if sync_gateway_version < "2.0.0" and no_conflicts_enabled:
         pytest.skip("Test cannot run with no-conflicts with sg version < 2.0.0")
 
@@ -259,7 +284,7 @@ def params_from_base_suite_setup(request):
         expected_sync_gateway_version=sync_gateway_version
     )
 
-    yield {"cluster_config": cluster_config, "mode": mode, "sg_platform": sg_platform}
+    yield {"cluster_config": cluster_config, "mode": mode, "sg_platform": sg_platform, "sg_ce": sg_ce}
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
 
@@ -285,11 +310,13 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     cluster_config = params_from_base_suite_setup["cluster_config"]
     mode = params_from_base_suite_setup["mode"]
     sg_platform = params_from_base_suite_setup["sg_platform"]
+    sg_ce = params_from_base_suite_setup["sg_ce"]
 
     yield {
         "cluster_config": cluster_config,
         "mode": mode,
-        "sg_platform": sg_platform
+        "sg_platform": sg_platform,
+        "sg_ce": sg_ce
     }
 
     log_info("Tearing down test '{}'".format(test_name))

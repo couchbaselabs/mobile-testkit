@@ -20,7 +20,7 @@ from utilities.cluster_config_utils import get_load_balancer_ip, no_conflicts_en
 from utilities.cluster_config_utils import generate_x509_certs, is_x509_auth, get_cbs_primary_nodes_str, is_hide_prod_version_enabled
 from keywords.constants import SYNC_GATEWAY_CERT
 from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version
-from utilities.cluster_config_utils import is_centralized_persistent_config_disabled
+from utilities.cluster_config_utils import is_centralized_persistent_config_disabled, is_server_tls_skip_verify_enabled, is_admin_auth_disabled, is_tls_server_disabled
 
 
 class Cluster:
@@ -217,7 +217,10 @@ class Cluster:
                 "prometheus": "",
                 "hide_product_version": "",
                 "tls": "",
-                "disable_persistent_config":""
+                "disable_persistent_config": "",
+                "server_tls_skip_verify": "",
+                "disable_tls_server": "",
+                "disable_admin_auth": ""
             }
 
             sg_platform = get_sg_platform(self._cluster_config)
@@ -314,8 +317,17 @@ class Cluster:
             if is_hide_prod_version_enabled(self._cluster_config) and get_sg_version(self._cluster_config) >= "2.8.1":
                 playbook_vars["hide_product_version"] = '"hide_product_version": true,'
 
-            if is_centralized_persistent_config_disabled(self._cluster_config):
+            if is_centralized_persistent_config_disabled(self._cluster_config) and get_sg_version(self._cluster_config) >= "3.0.0":
                 playbook_vars["disable_persistent_config"] = '"disable_persistent_config": true,'
+
+            if is_server_tls_skip_verify_enabled(self._cluster_config) and get_sg_version(self._cluster_config) >= "3.0.0":
+                playbook_vars["server_tls_skip_verify"] = '"server_tls_skip_verify": true,'
+
+            if is_tls_server_disabled(self._cluster_config) and get_sg_version(self._cluster_config) >= "3.0.0":
+                playbook_vars["disable_tls_server"] = '"use_tls_server": false,'
+
+            if is_admin_auth_disabled(self._cluster_config) and get_sg_version(self._cluster_config) >= "3.0.0":
+                playbook_vars["disable_admin_auth"] = '"admin_interface_authentication": false,    \n"metrics_interface_authentication": false,'
 
             # Sleep for a few seconds for the indexes to teardown
             time.sleep(5)
@@ -420,6 +432,10 @@ class Cluster:
         no_conflicts_var = ""
         revs_limit_var = ""
         delta_sync_var = ""
+        disable_persistent_config_var = ""
+        server_tls_skip_verify_var = ""
+        disable_tls_server_var = ""
+        disable_admin_auth_var = ""
 
         sg_platform = get_sg_platform(self._cluster_config)
 
@@ -486,10 +502,17 @@ class Cluster:
             hide_product_version_var = '"hide_product_version": true,'
         bucket_list_var = '"buckets": {},'.format(bucket_names)
 
-        if is_centralized_persistent_config_disabled(self._cluster_config):
+        if is_centralized_persistent_config_disabled(self._cluster_config) and get_sg_version(self._cluster_config) >= "3.0.0":
             disable_persistent_config_var = '"disable_persistent_config": true,'
-        else:  # TODO: temporirly adding this else, remove it once disable_persistent_config is disabled by default
-            disable_persistent_config_var = '"disable_persistent_config": false,'
+
+        if is_server_tls_skip_verify_enabled(self._cluster_config) and get_sg_version(self._cluster_config) >= "3.0.0":
+            server_tls_skip_verify_var = '"server_tls_skip_verify": true,'
+
+        if is_tls_server_disabled(self._cluster_config) and get_sg_version(self._cluster_config) >= "3.0.0":
+            disable_tls_server_var = '"use_tls_server": false,'
+
+        if is_admin_auth_disabled(self._cluster_config) and get_sg_version(self._cluster_config) >= "3.0.0":
+            disable_admin_auth_var = '"admin_interface_authentication": false,    \n"metrics_interface_authentication": false,'
 
         if get_sg_version(self._cluster_config) >= "2.8.0":
             prometheus_var = '"metricsInterface": ":4986",'
@@ -551,7 +574,10 @@ class Cluster:
             xattrs=xattrs_var,
             no_conflicts=no_conflicts_var,
             revs_limit=revs_limit_var,
-            delta_sync=delta_sync_var
+            delta_sync=delta_sync_var,
+            server_tls_skip_verify=server_tls_skip_verify_var,
+            disable_tls_server=disable_tls_server_var,
+            disable_admin_auth=disable_admin_auth_var
         )
 
         print("config_path _full is ", cpc_config_path_full)
