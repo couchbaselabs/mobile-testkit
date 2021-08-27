@@ -25,7 +25,7 @@ class ClusterDef:
 
 
 def write_config(config, pool_file, use_docker, sg_windows, sg_accel_windows, sg_platform="centos7",
-                 ipv6=False, x509_certs=False, cbs_platform="centos7"):
+                 ipv6=False, x509_certs=False, cbs_platform="centos7", ipv4only=False, ipv6only=False):
 
     connection_string = ""
     if use_docker:
@@ -364,6 +364,8 @@ def write_config(config, pool_file, use_docker, sg_windows, sg_accel_windows, sg
         f.write("x509_certs={}\n".format(x509_certs))
         f.write("delta_sync_enabled=False\n")
         f.write("two_sg_cluster_lb_enabled=False\n")
+        f.write("ipv4_only_enabled={}\n".format(ipv4only))
+        f.write("ipv6_only_enabled={}\n".format(ipv6only))
 
         if sg_platform.lower() == "macos":
             f.write("\n\n[sync_gateways:vars]\n")
@@ -417,7 +419,9 @@ def write_config(config, pool_file, use_docker, sg_windows, sg_accel_windows, sg
                 "ipv6_enabled": ipv6,
                 "x509_certs": x509_certs,
                 "delta_sync_enabled": False,
-                "two_sg_cluster_lb_enabled": False
+                "two_sg_cluster_lb_enabled": False,
+                "ipv4_only_enabled": ipv4only,
+                "ipv6_only_enabled": ipv6only
             }
         }
 
@@ -463,7 +467,7 @@ def get_hosts(pool_file="resources/pool.json"):
 
 def generate_clusters_from_pool(pool_file, use_docker=False, sg_windows=False,
                                 sg_accel_windows=False, sg_platform="centos7", ipv6=False,
-                                x509_certs=False, cbs_platform="centos7"):
+                                x509_certs=False, cbs_platform="centos7", ipv4only=False, ipv6only=False):
 
     cluster_confs = [
 
@@ -554,7 +558,7 @@ def generate_clusters_from_pool(pool_file, use_docker=False, sg_windows=False,
     print(("Generating 'resources/cluster_configs/'. Using docker: {}".format(use_docker)))
     for cluster_conf in cluster_confs:
         write_config(cluster_conf, pool_file, use_docker, sg_windows,
-                     sg_accel_windows, sg_platform, ipv6=ipv6, x509_certs=x509_certs, cbs_platform=cbs_platform)
+                     sg_accel_windows, sg_platform, ipv6=ipv6, x509_certs=x509_certs, cbs_platform=cbs_platform, ipv4only=ipv4only, ipv6only=ipv6only)
 
 
 if __name__ == "__main__":
@@ -582,6 +586,10 @@ if __name__ == "__main__":
 
     parser.add_option("--ipv6", action="store_true", default=False, help="IPv6 addresses")
 
+    parser.add_option("--ipv6only", action="store_true", default=False, help="IPv6 only setup")
+
+    parser.add_option("--ipv4only", action="store_true", default=False, help="IPv4 only setup")
+
     parser.add_option("--x509-certs", action="store_true", default=False,
                       help="Enable x509_certs authentication")
 
@@ -591,4 +599,4 @@ if __name__ == "__main__":
 
     generate_clusters_from_pool(opts.pool_file, opts.use_docker, opts.sg_windows,
                                 opts.sg_accel_windows, opts.sg_platform, opts.ipv6,
-                                opts.x509_certs, opts.cbs_platform)
+                                opts.x509_certs, opts.cbs_platform, opts.ipv4only, opts.ipv6only)

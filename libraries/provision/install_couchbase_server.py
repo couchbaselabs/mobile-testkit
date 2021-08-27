@@ -75,7 +75,9 @@ def install_couchbase_server(cluster_config, couchbase_server_config, cbs_platfo
             "couchbase_server_package_name": server_package_name,
             "ipv6_enabled": cluster["environment"]["ipv6_enabled"],
             "cbs_dp_preview": cluster["environment"]["cbs_developer_preview"],
-            "enforce_server_tls": cluster["environment"]["enforce_server_tls"]
+            "enforce_server_tls": cluster["environment"]["enforce_server_tls"],
+            "ipv4only": cluster["environment"]["ipv4_only_enabled"],
+            "ipv6only": cluster["environment"]["ipv6_only_enabled"]
         }
     )
     if status != 0:
