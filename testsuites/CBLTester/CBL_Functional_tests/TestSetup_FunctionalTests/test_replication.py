@@ -343,7 +343,8 @@ def test_replication_push_replication_without_authentication(params_from_base_te
 
     repl = replicator.create(repl_config)
     replicator.start(repl)
-    replicator.wait_until_replicator_idle(repl, err_check=False)
+    # Removed replicator wait call and adding the sleep to allow the replicator to try few times to get the error
+    time.sleep(7)
     error = replicator.getError(repl)
 
     assert "401" in error, "expected error did not occurred"
