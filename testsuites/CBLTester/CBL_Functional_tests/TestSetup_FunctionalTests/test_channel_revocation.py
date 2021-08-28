@@ -890,11 +890,13 @@ def test_auto_purge_notification(params_from_base_test_setup, auto_purge_flag):
 
 @pytest.mark.listener
 @pytest.mark.channel_revocation
-@pytest.mark.parametrize("revoke_type", [
-    ("doc_removal_from_channel"),
-    ("user_removal_from_channel")
+@pytest.mark.parametrize('auto_purge, pull_filter', [
+    ("disabled", False),
+    ("disabled", True),
+    ("enabled", False),
+    ("enabled", True),
 ])
-def test_user_reassigned_to_channel_no_filtering(params_from_base_test_setup, revoke_type):
+def test_auto_purge_with_pull_filtering(params_from_base_test_setup, auto_purge, pull_filter):
     """
         @summary:
         TODO - NOT COMPLETED
@@ -961,55 +963,56 @@ def test_user_reassigned_to_channel_no_filtering(params_from_base_test_setup, re
     assert cbl_doc_count == 10, "Number of cbl docs is not equal to total number expected"
 
     # 5. create a new replication, verify the doc lost access is not purged
-    repl = replicator.configure_and_replicate(source_db=cbl_db,
-                                              target_url=sg_blip_url,
-                                              continuous=True,
-                                              replication_type="pull",
-                                              replicator_authenticator=replicator_authenticator)
-    replicator.wait_until_replicator_idle(repl)
-
-    # 4. on SGW remove doc from channel
-    picked_doc_id = "CH_A_doc_1"
-    if revoke_type == "user_removal_from_channel":
-        sg_client.update_user(url=sg_admin_url, db=sg_db, name=username, channels=["B"])
-    elif revoke_type == "doc_removal_from_channel":
-        sg_client.update_doc(url=sg_url, db=sg_db, doc_id=picked_doc_id, auth=session, channels=["CH_Other"])
-
-    time.sleep(3)
-    replicator.wait_until_replicator_idle(repl)
-
-    cbl_doc_count = db.getCount(cbl_db)
-    if revoke_type == "user_removal_from_channel":
-        assert cbl_doc_count == 0, "Number of cbl docs is not expected"
+    if pull_filter:
+        repl_config = replicator.configure(source_db=cbl_db,
+                                           target_url=sg_blip_url,
+                                           continuous=True,
+                                           replication_type='pull',
+                                           pull_filter=True,
+                                           filter_callback_func='deleted',
+                                           auto_purge=auto_purge,
+                                           replicator_authenticator=replicator_authenticator)
     else:
-        assert cbl_doc_count == 9, "Number of cbl docs is not expected"
-        cbl_doc_ids = db.getDocIds(cbl_db)
-        assert picked_doc_id not in cbl_doc_ids, "doc removed from channel should be purged"
-
-    # 6. reassign the channel to user
-    sg_client.update_user(url=sg_admin_url, db=sg_db, name=username, channels=channels_sg)
-    time.sleep(3)
-    replicator.wait_until_replicator_idle(repl)
-    replicator.stop(repl)
-
-    # 7. set fileter to replication and restart the replication
-    repl_config = replicator.configure(source_db=cbl_db,
-                                       target_url=sg_blip_url,
-                                       continuous=False,
-                                       replication_type='pull',
-                                       pull_filter=True,
-                                       filter_callback_func='deleted',
-                                       replicator_authenticator=replicator_authenticator)
+        repl_config = replicator.configure(source_db=cbl_db,
+                                           target_url=sg_blip_url,
+                                           continuous=True,
+                                           replication_type="pull",
+                                           auto_purge=auto_purge,
+                                           replicator_authenticator=replicator_authenticator)
     repl = replicator.create(repl_config)
+    repl_delete_change_listener = replicator.addReplicatorEventChangeListener(repl)
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
 
-    # 8. assertion purged docs will not resync
+    # 4. on SGW remove doc from channel
+    sg_client.update_user(url=sg_admin_url, db=sg_db, name=username, channels=["B"])
+    time.sleep(5)
+    replicator.wait_until_replicator_idle(repl)
+
     cbl_doc_count = db.getCount(cbl_db)
-    if revoke_type == "user_removal_from_channel":
-        assert cbl_doc_count == 0, "Number of cbl docs is not expected"
+    if not pull_filter and auto_purge == "enabled":
+        assert cbl_doc_count == 0, "auto purged expected to happen but not performed"
     else:
-        assert cbl_doc_count == 9, "Number of cbl docs is not expected"
+        assert cbl_doc_count == 10, "auto purge expected not to happen"
+
+    # 5. Verifying the delete event in event captures if auto purge is enabled
+    if auto_purge == "enabled":
+        doc_delete_event_changes = replicator.getReplicatorEventChanges(repl_delete_change_listener)
+        event_dict = get_event_changes(doc_delete_event_changes)
+        replicator.removeReplicatorEventListener(repl, repl_delete_change_listener)
+
+        if pull_filter:
+            err = replicator.getError(repl)
+            print(err)
+        else:
+            assert len(event_dict) != 0, "Replication listener didn't caught events."
+
+            doc_id = "CH_A_doc_1"
+            flags = event_dict[doc_id]["flags"]
+            assert flags == "2" or flags == "[ACCESS_REMOVED]" or flags == "AccessRemoved", \
+                'Deleted flag is not tagged for document. Flag value: {}'.format(event_dict[doc_id]["flags"])
+
+    replicator.stop(repl)
 
 
 @pytest.mark.listener
@@ -1244,18 +1247,13 @@ def test_user_reassigned_to_channel_push(params_from_base_test_setup, with_doc_u
 def test_tombstoned_doc_auto_purge(params_from_base_test_setup):
     """
         @summary:
-        1. have SGW and CBL up and running
-        2. on SGW create a user with channel A and channel B
-        3. on SGW create docs with channel A, and channel B, and channel A & B
-        4. on CBL start a pull replicator with the user's credential to bring SGW docs to CBL
-        5. assertion: doc count on CBL equals to docs on SGW
-        6. pick a doc on channel A only, tombstone it on SGW and update on CBL, pick a doc on channel A & B, tombstone it
-        7. on SGW remove the user from channel A
-        8. on CBL start a pull replicator with the user's credential, and wait for replication to idle
-        9. assertion:
-            channel A only docs are auto purged
-            channel B docs no impact
-            channel A & B docs, only the tombstoned doc got purged, the others no impact
+        1. on SGW create a user autotest with channel A and channel B
+        2. on SGW create docs with channel A, B and channel A and B
+        3. on CBL start a pull replicator and verify docs replicated
+        4. pick docs, make them tombstoned on SG and apply updates on CBL
+        5. remove user access from channel A
+        6. on CBL, start a new pull replication
+        7. assertion based on replicator type
     """
     sg_db = "db"
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
@@ -1350,11 +1348,278 @@ def test_tombstoned_doc_auto_purge(params_from_base_test_setup):
         assert doc_id != picked_ch_ANB_doc_id, "tombstoned doc is not purged on CBL"
 
 
+@pytest.mark.listener
+@pytest.mark.channel_revocation
+@pytest.mark.parametrize('resurrect_keep_body, deletion_type, resurrect_type', [
+    (True, 'tombstone', 'api'),
+    (True, 'tombstone', 'sdk'),
+    (False, 'tombstone', 'api'),
+    (False, 'tombstone', 'sdk'),
+    (True, 'purge', 'api'),
+    (True, 'purge', 'sdk'),
+    (False, 'purge', 'api'),
+    (False, 'purge', 'sdk')
+])
+def test_resurrected_doc_auto_purge(params_from_base_test_setup, resurrect_keep_body, deletion_type, resurrect_type):
+    """
+        @summary:
+        1. on SGW create a user autotest with channel A and channel B
+        2. on SGW create 10 docs with channel A, and 15 docs with channel B
+        3. pick a doc, update several times
+        4. on CBL start a pull replicator, verify docs replicated
+        5. delete the picked doc
+        6. doc resurrected
+        7. on SGW remove the user from channel A
+        8. on CBL, start replication with pull/push/push-pull replicator type
+        9. assertion based on replicator type
+    """
+    sg_db = "db"
+    cluster_topology = params_from_base_test_setup['cluster_topology']
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    liteserv_version = params_from_base_test_setup["liteserv_version"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_config = params_from_base_test_setup["sg_config"]
+    ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    sg_url = params_from_base_test_setup["sg_url"]
+    base_url = params_from_base_test_setup["base_url"]
+    cbl_db = params_from_base_test_setup["source_db"]
+    sg_blip_url = params_from_base_test_setup["target_url"]
+    db = params_from_base_test_setup["db"]
 
+    if sync_gateway_version < "3.0.0" or liteserv_version < "3.0.0":
+        pytest.skip('This test cannot run with version below 3.0')
+
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
+
+    sg_client = MobileRestClient()
+
+    # 1. on SGW create a user autotest with channel A and channel B
+    channels_sg = ["A", "B"]
+    username = "autotest"
+    password = "password"
+    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+    session = cookie, session_id
+
+    # 2. on SGW create 10 docs with channel A, and 15 docs with channel B
+    sg_client.add_docs(url=sg_url, db=sg_db, number=10, id_prefix="CH_A_doc",
+                       channels=["A"], auth=session)
+
+    sg_client.add_docs(url=sg_url, db=sg_db, number=15, id_prefix="CH_B_doc",
+                       channels=["B"], auth=session)
+
+    # 3. pick a doc, update several times
+    picked_doc_id = "CH_A_doc_{}".format(random.randrange(10))
+    picked_doc_rev_1 = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=picked_doc_id, auth=session)
+
+    for i in range(5):
+        sg_client.update_doc(url=sg_url, db=sg_db, doc_id=picked_doc_id, number_updates=1, auth=session, property_updater=property_updater)
+
+    # 4. on CBL start a pull replicator, verify docs replicated
+    authenticator = Authenticator(base_url)
+    replicator = Replication(base_url)
+    replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
+    repl = replicator.configure_and_replicate(source_db=cbl_db,
+                                              target_url=sg_blip_url,
+                                              continuous=False,
+                                              replication_type="pull",
+                                              replicator_authenticator=replicator_authenticator)
+    replicator.wait_until_replicator_idle(repl)
+
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db)
+    assert len(sg_docs["rows"]) == 25, "Number of sg docs is not equal to total number expected"
+
+    cbl_doc_count = db.getCount(cbl_db)
+    assert len(sg_docs["rows"]) == cbl_doc_count, "Number of sg docs is not equal to total number of cbl docs"
+
+    # 5. delete the picked doc
+    doc = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=picked_doc_id, auth=session)
+    if deletion_type == "tombstone":
+        deleted = sg_client.delete_doc(url=sg_url, db=sg_db, doc_id=picked_doc_id, rev=doc['_rev'], auth=session)
+        log_info('tombstone doc via Sync Gateway')
+        log_info(deleted)
+    elif deletion_type == "purge":
+        log_info('Purging doc via Sync Gateway')
+        sg_client.purge_doc(url=sg_admin_url, db=sg_db, doc=doc)
+
+    # 6. doc resurrected
+    doc_body = {}
+    if resurrect_keep_body:
+        doc_body = get_doc_body(picked_doc_rev_1)
+    else:
+        doc_body = doc_generators.simple()
+        doc_body = document.create_doc(doc_id=picked_doc_id, content=doc_generators.simple(), channels=["A"])
+
+    if resurrect_type == "api":
+        sg_client.add_doc(url=sg_url, db=sg_db, doc=doc_body, auth=session)
+    elif resurrect_type == "sdk":
+        cbs_url = cluster_topology['couchbase_servers'][0]
+        cbs_host = host_for_url(cbs_url)
+        bucket_name = "travel-sample"
+
+        if ssl_enabled and c.ipv6:
+            connection_url = "couchbases://{}?ssl=no_verify&ipv6=allow".format(cbs_host)
+        elif ssl_enabled and not c.ipv6:
+            connection_url = "couchbases://{}?ssl=no_verify".format(cbs_host)
+        elif not ssl_enabled and c.ipv6:
+            connection_url = "couchbase://{}?ipv6=allow".format(cbs_host)
+        else:
+            connection_url = 'couchbase://{}'.format(cbs_host)
+        sdk_client = get_cluster(connection_url, bucket_name)
+
+        sdk_docs = {picked_doc_id: doc_body}
+        log_info('Creating SDK docs')
+        sdk_client.upsert_multi(sdk_docs)
+    time.sleep(5)
+
+    # 7. on SGW remove the user from channel A
+    sg_client.update_user(url=sg_admin_url, db=sg_db, name=username, channels=["B"])
+    time.sleep(5)
+
+    # 8. on CBL, start replication with pull/push/push-pull replicator type
+    repl = replicator.configure_and_replicate(source_db=cbl_db,
+                                              target_url=sg_blip_url,
+                                              continuous=False,
+                                              replication_type="pull",
+                                              replicator_authenticator=replicator_authenticator)
+
+    replicator.wait_until_replicator_idle(repl)
+
+    # 9. assertion based on replicator type
+    cbl_doc_count = db.getCount(cbl_db)
+    assert cbl_doc_count == 15, "Number of cbl docs is not expected"
+    cbl_doc_ids = db.getDocIds(cbl_db)
+    for doc_id in cbl_doc_ids:
+        assert not doc_id.startswith("CH_A_doc"), "to be auto-purged doc is still accessible from cbl"
+
+
+@pytest.mark.listener
+@pytest.mark.channel_revocation
+def test_role_ressignment_end_to_end(params_from_base_test_setup):
+    """
+        @summary:
+        1. on SGW create role1 and role2, create user1 in role1 and user2 in role2
+        2. on SGW create docs in channels
+        3. on CBL start a continous push-pull replication with user1, verify docs replicated
+        4. on SGW grant role2 to user1, verify docs belong to channel B get replicated
+        5. create some docs on channel B
+        6. user1 is revoked role2, verify docs purged
+    """
+    sg_db = "db"
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    liteserv_version = params_from_base_test_setup["liteserv_version"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_config = params_from_base_test_setup["sg_config"]
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    sg_url = params_from_base_test_setup["sg_url"]
+    base_url = params_from_base_test_setup["base_url"]
+    cbl_db = params_from_base_test_setup["source_db"]
+    sg_blip_url = params_from_base_test_setup["target_url"]
+    db = params_from_base_test_setup["db"]
+
+    if sync_gateway_version < "3.0.0" or liteserv_version < "3.0.0":
+        pytest.skip('This test cannot run with version below 3.0')
+
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
+
+    sg_client = MobileRestClient()
+
+    # 1. on SGW create role1 and role2, create user1 in role1 and user2 in role2
+    role1 = "R1"
+    role2 = "R2"
+    roles = [role1, role2]
+    role1_channels = ["A"]
+    role2_channels = ["A", "B"]
+    username1 = "autotest"
+    username2 = "admintest"
+    password = "password"
+
+    # role1 access channel A
+    sg_client.create_role(url=sg_admin_url, db=sg_db, name=role1, channels=role1_channels)
+    # role2 access channel A and channel B
+    sg_client.create_role(url=sg_admin_url, db=sg_db, name=role2, channels=role2_channels)
+    # user1 access channel A
+    sg_client.create_user(sg_admin_url, sg_db, username1, password=password, roles=[role1])
+    # user2 access channel A and channel B
+    sg_client.create_user(sg_admin_url, sg_db, username2, password=password, roles=roles)
+    cookie1, session_id1 = sg_client.create_session(sg_admin_url, sg_db, username1)
+    session1 = cookie1, session_id1
+    cookie2, session_id2 = sg_client.create_session(sg_admin_url, sg_db, username2)
+    session2 = cookie2, session_id2
+
+    # 2. on SGW create docs in channels
+    # create docs with user1
+    sg_client.add_docs(url=sg_admin_url, db=sg_db, number=10, id_prefix="CH_A_doc",
+                       channels=["A"], auth=session1)
+    # create docs with user2
+    sg_client.add_docs(url=sg_admin_url, db=sg_db, number=15, id_prefix="CH_B_doc",
+                       channels=["B"], auth=session2)
+    sg_client.add_docs(url=sg_admin_url, db=sg_db, number=9, id_prefix="CH_ANB_doc",
+                       channels=["A", "B"], auth=session2)
+
+    # 3. on CBL start a continous push-pull replication with user1, verify docs replicated
+    authenticator = Authenticator(base_url)
+    replicator = Replication(base_url)
+    replicator_authenticator = authenticator.authentication(session_id1, cookie1, authentication_type="session")
+    repl = replicator.configure_and_replicate(source_db=cbl_db,
+                                              target_url=sg_blip_url,
+                                              continuous=True,
+                                              replication_type="pushAndPull",
+                                              replicator_authenticator=replicator_authenticator)
+    replicator.wait_until_replicator_idle(repl)
+
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db)
+    assert len(sg_docs["rows"]) == 34, "Number of sg docs is not equal to total number expected"
+
+    cbl_doc_count = db.getCount(cbl_db)
+    assert cbl_doc_count == 19, "Number of cbl docs is not equal to total number expected"
+
+    # 4. on SGW grant role2 to user1, verify docs belong to channel B get replicated
+    sg_client.update_user(url=sg_admin_url, db=sg_db, name=username1, roles=roles)
+    time.sleep(3)
+    replicator.wait_until_replicator_idle(repl)
+
+    cbl_doc_count = db.getCount(cbl_db)
+    assert cbl_doc_count == 34, "Number of cbl docs is not expected"
+
+    # 5. create some docs on channel B
+    db.create_bulk_docs(3, "additional_CH_B_doc", db=cbl_db, channels=["B"])
+    replicator.wait_until_replicator_idle(repl)
+
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db)
+    assert len(sg_docs["rows"]) == 37, "Number of sg docs is not expected"
+
+    sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session1)
+    assert len(sg_docs["rows"]) == 37, "Number of sg docs is not expected"
+
+    # 6. user1 is revoked role2, verify docs purged
+    sg_client.update_user(url=sg_admin_url, db=sg_db, name=username1, roles=[role1])
+    time.sleep(5)
+    replicator.wait_until_replicator_idle(repl)
+
+    cbl_doc_count = db.getCount(cbl_db)
+    assert cbl_doc_count == 19, "Number of cbl docs is not expected"
+
+    cbl_doc_ids = db.getDocIds(cbl_db)
+    for doc_id in cbl_doc_ids:
+        assert not doc_id.startswith("CH_B_doc"), "to be auto-purged doc is still accessible from cbl"
+        assert not doc_id.startswith("additional_CH_B_doc"), "to be auto-purged doc is still accessible from cbl"
+
+    replicator.stop(repl)
 
 
 def property_updater(doc_body):
     doc_body["sg_new_update1"] = random_string(length=20)
     doc_body["sg_new_update2"] = random_string(length=20)
+
+    return doc_body
+
+
+def get_doc_body(doc_body):
+    del doc_body['_rev']
+    del doc_body['_revisions']
 
     return doc_body
