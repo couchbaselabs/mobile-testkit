@@ -14,7 +14,7 @@ from CBLClient.Document import Document
 # from CBLClient.Dictionary import Dictionary
 # from libraries.testkit.prometheus import verify_stat_on_prometheus
 # from keywords.SyncGateway import sync_gateway_config_path_for_mode
-from keywords import document, attachment
+# from keywords import document, attachment
 from libraries.testkit import cluster
 # from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
 # from keywords.attachment import generate_2_png_100_100
@@ -47,7 +47,6 @@ def test_replication_with_encryption(params_from_base_test_setup, type):
     sg_config = params_from_base_test_setup["sg_config"]
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
-    mode = params_from_base_test_setup["mode"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     num_of_docs = 1
     number_of_updates = 2
@@ -106,4 +105,3 @@ def test_replication_with_encryption(params_from_base_test_setup, type):
     cbl_doc_ids = db.getDocIds(cbl_db)
     cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
     assert len(cbl_docs) == 0, "did not delete docs after delete operation"
-
