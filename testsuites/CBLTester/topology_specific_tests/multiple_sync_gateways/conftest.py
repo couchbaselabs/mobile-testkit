@@ -495,6 +495,25 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "prometheus_enable": prometheus_enable
     }
 
+    if request.node.testsfailed != 0 and enable_file_logging and create_db_per_suite is not None:
+        tests_list = request.node.items
+        failed_test_list = []
+        for test in tests_list:
+            if test.rep_call.failed:
+                failed_test_list.append(test.rep_call.nodeid)
+        zip_data = suite_cbllog.get_logs_in_zip()
+        suite_log_zip_file = "Suite_test_log.zip"
+
+        if os.path.exists(suite_log_zip_file):
+            log_info("Log file for failed Suite tests is: {}".format(suite_log_zip_file))
+            target_zip = zipfile.ZipFile(suite_log_zip_file, 'w')
+            with zipfile.ZipFile(io.BytesIO(zip_data)) as thezip:
+                for zipinfo in thezip.infolist():
+                    target_zip.writestr(zipinfo.filename, thezip.read(zipinfo.filename))
+            target_zip.close()
+        else:
+            log_info("Cannot find log file for failed Suite tests")
+
     log_info("Tearing down test")
     if create_db_per_test:
         # Delete CBL database
