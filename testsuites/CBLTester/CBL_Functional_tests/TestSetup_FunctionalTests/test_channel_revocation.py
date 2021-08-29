@@ -1,11 +1,9 @@
-import re
 import pytest
 import random
 import time
 
 from CBLClient.Authenticator import Authenticator
 from CBLClient.Database import Database
-from CBLClient.Document import Document
 from CBLClient.Replication import Replication
 from keywords import document
 from keywords.MobileRestClient import MobileRestClient
@@ -919,7 +917,6 @@ def test_auto_purge_with_pull_filtering(params_from_base_test_setup, auto_purge,
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_config = params_from_base_test_setup["sg_config"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
-    sg_url = params_from_base_test_setup["sg_url"]
     base_url = params_from_base_test_setup["base_url"]
     cbl_db = params_from_base_test_setup["source_db"]
     sg_blip_url = params_from_base_test_setup["target_url"]
