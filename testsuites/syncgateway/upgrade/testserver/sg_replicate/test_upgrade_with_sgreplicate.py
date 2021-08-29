@@ -262,13 +262,13 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
         replications_key = "replications"
         sgr2_replace_string = "\"{}\": {}{}{},".format(replications_key, "[", replications_ids, "]")
         temp_sg_config_copy, _ = copy_sgconf_to_temp(sg_config, mode)
-        if stop_replication_before_upgrade or sync_gateway_upgraded_version >= "3.0.0":
-            sg1.stop_replication_by_id(sgw_repl1_id1, use_admin_url=True)
-            sg1.stop_replication_by_id(sgw_repl1_id2, use_admin_url=True)
-            temp_sg_config = replace_string_on_sgw_config(temp_sg_config_copy, "{{ replace_with_sg1_replications }}", "")
-        else:
-            temp_sg_config = replace_string_on_sgw_config(temp_sg_config_copy, "{{ replace_with_sg1_replications }}", replace_string)
-
+        if stop_replication_before_upgrade:
+            if sync_gateway_upgraded_version < "3.0.0":
+                sg1.stop_replication_by_id(sgw_repl1_id1, use_admin_url=True)
+                sg1.stop_replication_by_id(sgw_repl1_id2, use_admin_url=True)
+                temp_sg_config = replace_string_on_sgw_config(temp_sg_config_copy, "{{ replace_with_sg1_replications }}", replace_string)
+            else:
+                temp_sg_config = replace_string_on_sgw_config(temp_sg_config_copy, "{{ replace_with_sg1_replications }}", "")
         temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ replace_with_sgreplicate2_replications }}", sgr2_replace_string)
         sgw_cluster1_config_path = "{}/{}".format(os.getcwd(), temp_sg_config)
     # If no conflicts is not enabled then create conflicts on sgw cluster1 and sgw cluster2
