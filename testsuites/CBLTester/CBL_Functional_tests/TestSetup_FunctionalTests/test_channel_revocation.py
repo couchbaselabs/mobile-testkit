@@ -364,7 +364,7 @@ def test_user_removed_from_role(params_from_base_test_setup, replicator_directio
 
     # 5. on SGW remove the user from role1
     sg_client.update_user(url=sg_admin_url, db=sg_db, name=username, channels=other_channels, roles=[role2])
-    time.sleep(3)
+    time.sleep(5)
     replicator.wait_until_replicator_idle(repl)
 
     # 6. assertion based on replicator type
@@ -388,7 +388,7 @@ def test_user_removed_from_role(params_from_base_test_setup, replicator_directio
         # 7. on push-pull, create new docs, assertion: newly created docs not replicated to SGW
         new_doc_ids_A = db.create_bulk_docs(2, "role1_removal_doc_on_channel_A", db=cbl_db, channels=["A"])
         new_doc_ids_B = db.create_bulk_docs(3, "role1_removal_doc_on_channel_B", db=cbl_db, channels=["B"])
-        time.sleep(2)
+        time.sleep(3)
         replicator.wait_until_replicator_idle(repl)
 
         sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)
@@ -400,7 +400,7 @@ def test_user_removed_from_role(params_from_base_test_setup, replicator_directio
 
     # 8. on SGW remove the user from role2
     sg_client.update_user(url=sg_admin_url, db=sg_db, name=username, channels=other_channels, roles=[])
-    time.sleep(3)
+    time.sleep(5)
     replicator.wait_until_replicator_idle(repl)
 
     # 9. assertion based on replicator type
@@ -521,7 +521,7 @@ def test_users_role_revoked(params_from_base_test_setup, replicator_type):
 
     # 5. role1 lost access to channel A
     sg_client.update_role(url=sg_admin_url, db=sg_db, name=role1, channels=["B"])
-    time.sleep(3)
+    time.sleep(5)
 
     replicator.wait_until_replicator_idle(repl)
 
@@ -558,7 +558,7 @@ def test_users_role_revoked(params_from_base_test_setup, replicator_type):
 
     # 8. on SGW role1 lost access to channel B as well
     sg_client.update_role(url=sg_admin_url, db=sg_db, name=role1, channels=[])
-    time.sleep(3)
+    time.sleep(5)
 
     replicator.wait_until_replicator_idle(repl)
 
