@@ -40,6 +40,7 @@ class Config:
 
                 data = temp_config
 
+            print("template data is ", data)
             template = Template(data)
 
             # In order to render the template and produce _valid json_, we need to
