@@ -279,19 +279,6 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
                 sg_client.add_conflict(url=sg1.url, db=sg_db1, doc_id=doc["id"], parent_revisions=doc["rev"],
                                        new_revision="2-foo", auth=session1)
 
-    # TODO : please remove - debugging
-    cluster_util = ClusterKeywords(cluster_config)
-    topology = cluster_util.get_cluster_topology(cluster_config, lb_enable=False)
-    sync_gateways = topology["sync_gateways"]
-    sgw_cluster1_list = sync_gateways[:2]
-    sg_obj.upgrade_sync_gateway(
-        sgw_cluster1_list,
-        sync_gateway_version,
-        sync_gateway_upgraded_version,
-        sgw_cluster1_config_path,
-        cluster_config
-    )
-    # TODO: please remove - debugging
     with ProcessPoolExecutor() as up:
         # Start updates in background process
         updates_future = up.submit(update_docs, db, cbl_db1, doc_ids,
