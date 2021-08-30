@@ -268,7 +268,7 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
             temp_sg_config = replace_string_on_sgw_config(temp_sg_config_copy, "{{ replace_with_sg1_replications }}", "")
         else:
             temp_sg_config = replace_string_on_sgw_config(temp_sg_config_copy, "{{ replace_with_sg1_replications }}", replace_string)
-        if sync_gateway_upgraded_version > "3.0.0":
+        if sync_gateway_upgraded_version >= "3.0.0":
             temp_sg_config = replace_string_on_sgw_config(temp_sg_config_copy, "{{ replace_with_sg1_replications }}", "")
         temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ replace_with_sgreplicate2_replications }}", sgr2_replace_string)
         sgw_cluster1_config_path = "{}/{}".format(os.getcwd(), temp_sg_config)
