@@ -503,6 +503,10 @@ def is_replicator_in_connection_retry(error_msg):
     # check c
     if "111" in error_msg and "Connection refused" in error_msg:
         return True
+
+    if "No connection could be made because the target machine actively refused it" in error_msg:
+        return True
+
     return False
 
 
