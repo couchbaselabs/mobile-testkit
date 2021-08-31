@@ -284,6 +284,7 @@ def test_user_removed_from_channel_with_doc_mutation(params_from_base_test_setup
 def test_user_removed_from_role(params_from_base_test_setup, replicator_direction):
     """
         @summary:
+        Channel Access Revocation Test Plan (CBL) #2
         1. on SGW create role1 and role2, create a user autotest belongs to role1, role2 and channel C
         2. on SGW create docs in channels
         3. on CBL, start a one-time pull replicator with the user credential and verify docs are replicated
@@ -443,6 +444,7 @@ def test_user_removed_from_role(params_from_base_test_setup, replicator_directio
 def test_users_role_revoked(params_from_base_test_setup, replicator_type):
     """
         @summary:
+        Channel Access Revocation Test Plan (CBL) #3
         1. on SGW create role1, and a user autotest belongs to role1 and channel C
         2. on SGW create docs on channels
         3. on CBL start a one-time pull replicator with the user credential, and verify docs are replicated to SGW
@@ -601,6 +603,7 @@ def test_users_role_revoked(params_from_base_test_setup, replicator_type):
 def test_auto_purge_config_settings(params_from_base_test_setup, auto_purge_flag):
     """
         @summary:
+        Channel Access Revocation Test Plan (CBL) #4
         1. on SGW create a user autotest with a channel
         2. on SGW create 10 docs with channel
         3. create replication with specified auto purge config setting, and verify docs are replicated
@@ -715,6 +718,7 @@ def test_auto_purge_config_settings(params_from_base_test_setup, auto_purge_flag
 def test_auto_purge_config_with_removal_type(params_from_base_test_setup, removal_access_type):
     """
         @summary:
+        Channel Access Revocation Test Plan (CBL) #4
         1. on SGW create a user autotest with a channel
         2. on SGW create 10 docs with channel and synced down to CBL
         3. create a replication, verify docs get replicated
@@ -820,6 +824,7 @@ def test_auto_purge_config_with_removal_type(params_from_base_test_setup, remova
 def test_auto_purge_notification(params_from_base_test_setup, auto_purge_flag):
     """
         @summary:
+        Channel Access Revocation Test Plan (CBL) #5
         1. on SGW create a user autotest with a channel
         2. on SGW create docs with channel and synced down to CBL
         3. create a replication, disable auto purge config, verify docs replicated
@@ -913,7 +918,7 @@ def test_auto_purge_notification(params_from_base_test_setup, auto_purge_flag):
 def test_auto_purge_with_pull_filtering(params_from_base_test_setup, auto_purge):
     """
         @summary:
-        TODO - NOT COMPLETED
+        Channel Access Revocation Test Plan (CBL) #6
         1. have SGW and CBL up and running
         2. on SGW create a user with channel A and channel B
         3. on SGW create 10 docs with channel A, and 15 docs with channel B, and 9 docs with channel A & B
@@ -1028,6 +1033,7 @@ def test_auto_purge_with_pull_filtering(params_from_base_test_setup, auto_purge)
 def test_user_reassigned_to_channel_pull(params_from_base_test_setup, replicator_direction):
     """
         @summary:
+        Channel Access Revocation Test Plan (CBL) #7 & #9
         1. on SGW create a user autotest with channel A and channel B
         2. on SGW create 10 docs with channel A, and 15 docs with channel B
         3. on CBL start a pull replicator with the user credential
@@ -1133,6 +1139,7 @@ def test_user_reassigned_to_channel_pull(params_from_base_test_setup, replicator
 def test_user_reassigned_to_channel_push(params_from_base_test_setup, with_doc_update):
     """
         @summary:
+        Channel Access Revocation Test Plan (CBL) #8
         1. on SGW create a user autotest with channel A and channel B
         2. on SGW create 10 docs with channel A, and 15 docs with channel B
         3. on CBL start a one-time pull replicator, verify docs replicated
@@ -1251,6 +1258,7 @@ def test_user_reassigned_to_channel_push(params_from_base_test_setup, with_doc_u
 def test_tombstoned_doc_auto_purge(params_from_base_test_setup):
     """
         @summary:
+        Channel Access Revocation Test Plan (CBL) #10
         1. on SGW create a user autotest with channel A and channel B
         2. on SGW create docs with channel A, B and channel A and B
         3. on CBL start a pull replicator and verify docs replicated
@@ -1367,6 +1375,7 @@ def test_tombstoned_doc_auto_purge(params_from_base_test_setup):
 def test_resurrected_doc_auto_purge(params_from_base_test_setup, resurrect_keep_body, deletion_type, resurrect_type):
     """
         @summary:
+        Channel Access Revocation Test Plan (CBL) #11 & #12
         1. on SGW create a user autotest with channel A and channel B
         2. on SGW create 10 docs with channel A, and 15 docs with channel B
         3. pick a doc, update several times
@@ -1504,6 +1513,7 @@ def test_resurrected_doc_auto_purge(params_from_base_test_setup, resurrect_keep_
 def test_role_ressignment_end_to_end(params_from_base_test_setup):
     """
         @summary:
+        Channel Access Revocation Test Plan (CBL) #13
         1. on SGW create role1 and role2, create user1 in role1 and user2 in role2
         2. on SGW create docs in channels
         3. on CBL start a continous push-pull replication with user1, verify docs replicated
