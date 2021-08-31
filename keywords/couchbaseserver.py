@@ -338,7 +338,6 @@ class CouchbaseServer:
                 if resp.status_code == 200:
                     log_info("delete internal rbac bucket user request has been successfully processed.")
                     break
-                resp.raise_for_status()
             except HTTPError as h:
                 log_info("resp code: {}; error: {}".format(resp, h))
                 if '404 Client Error: Object Not Found for url' in str(h):
@@ -348,6 +347,7 @@ class CouchbaseServer:
                 log_info("RBAC user does not exist, Catching connection errors here")
             except ChunkedEncodingError as che:
                 log_info(str(che))
+            resp.raise_for_status()
             count += 1
 
     def _get_mem_total_lowest(self, server_info):
@@ -743,13 +743,24 @@ class CouchbaseServer:
         log_info("Known nodes: {}".format(data))
 
         # Override session headers for this one off request
-        resp = self._session.post(
-            "{}/controller/rebalance".format(self.url),
-            headers={"Content-Type": "application/x-www-form-urlencoded"},
-            data=data
-        )
-        log_r(resp)
-        resp.raise_for_status()
+        count = 0
+        max_count = 5
+        while count < max_count:
+            try:
+                resp = self._session.post(
+                    "{}/controller/rebalance".format(self.url),
+                    headers={"Content-Type": "application/x-www-form-urlencoded"},
+                    data=data
+                )
+                if resp.status_code == 200:
+                    break
+            except HTTPError as h:
+                log_info("HTTP ERROR:", str(h))
+            except ConnectionError as e:
+                log_info("connection ERROR:", str(e))
+            count += 1
+            log_r(resp)
+            resp.raise_for_status()
 
         self._wait_for_rebalance_complete()
 
