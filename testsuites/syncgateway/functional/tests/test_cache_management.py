@@ -37,6 +37,7 @@ def test_importDocs_withSharedBucketAccessFalse(params_from_base_test_setup):
     mode = params_from_base_test_setup['mode']
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
     sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
+    enforce_server_tls = params_from_base_test_setup["enforce_server_tls"]
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
@@ -60,10 +61,16 @@ def test_importDocs_withSharedBucketAccessFalse(params_from_base_test_setup):
     # 1. Start CBS and SGW with only enable_shared_bucket_access=false
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
-    if cluster.ipv6:
+
+    if enforce_server_tls and cluster.ipv6:
+        sdk_client = Bucket('couchbase://{}/{}?ssl=no_verify&ipv6=allow'.format(cbs_host, bucket_name), password='password')
+    elif enforce_server_tls and not cluster.ipv6:
+        sdk_client = Bucket('couchbase://{}/{}?ssl=no_verify'.format(cbs_host, bucket_name), password='password')
+    elif not enforce_server_tls and cluster.ipv6:
         sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_host, bucket_name), password='password')
     else:
         sdk_client = Bucket('couchbase://{}/{}'.format(cbs_host, bucket_name), password='password')
+
     sdk_client.timeout = 600
 
     # 2. Create docs in CBS via SDK
