@@ -1,6 +1,10 @@
 import pytest
 import random
 import time
+import os
+import subprocess
+import zipfile
+import io
 
 from CBLClient.Authenticator import Authenticator
 from CBLClient.Database import Database
@@ -640,28 +644,30 @@ def test_auto_purge_config_settings(params_from_base_test_setup, auto_purge_flag
     replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
     if auto_purge_flag == "enabled":
         log_info("start a replication and explicitly enable its auto purge")
-        repl = replicator.configure_and_replicate(source_db=cbl_db,
-                                                  target_url=sg_blip_url,
-                                                  continuous=True,
-                                                  replication_type="pull",
-                                                  replicator_authenticator=replicator_authenticator,
-                                                  auto_purge="enabled")
+        repl_config = replicator.configure(source_db=cbl_db,
+                                           target_url=sg_blip_url,
+                                           continuous=True,
+                                           replication_type="pull",
+                                           replicator_authenticator=replicator_authenticator,
+                                           auto_purge="enabled")
     elif auto_purge_flag == "disabled":
         log_info("start a replication and disable its auto purge setting")
-        repl = replicator.configure_and_replicate(source_db=cbl_db,
-                                                  target_url=sg_blip_url,
-                                                  continuous=True,
-                                                  replication_type="pull",
-                                                  replicator_authenticator=replicator_authenticator,
-                                                  auto_purge="disabled")
+        repl_config = replicator.configure(source_db=cbl_db,
+                                           target_url=sg_blip_url,
+                                           continuous=True,
+                                           replication_type="pull",
+                                           replicator_authenticator=replicator_authenticator,
+                                           auto_purge="disabled")
     elif auto_purge_flag == "no_flag":
         log_info("start a replication with default auto purge setting")
-        repl = replicator.configure_and_replicate(source_db=cbl_db,
-                                                  target_url=sg_blip_url,
-                                                  continuous=True,
-                                                  replication_type="pull",
-                                                  replicator_authenticator=replicator_authenticator)
+        repl_config = replicator.configure(source_db=cbl_db,
+                                           target_url=sg_blip_url,
+                                           continuous=True,
+                                           replication_type="pull",
+                                           replicator_authenticator=replicator_authenticator)
 
+    repl = replicator.create(repl_config)
+    replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
 
     sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db)
@@ -682,9 +688,12 @@ def test_auto_purge_config_settings(params_from_base_test_setup, auto_purge_flag
         assert cbl_doc_count == 0, "docs on cbl expected to be auto purge"
 
     # 5. reset disable_auto_purge to true, verify auto-purged will not be pulled down to CBL with reset checkpoint to true
-    repl_config = replicator.getConfig(repl)
+    replicator.stop(repl)
     replicator.setAutoPurgeFlag(configuration=repl_config, auto_purge_flag=False)
-    time.sleep(2)
+    repl = replicator.create(repl_config)
+    replicator.start(repl)
+    replicator.wait_until_replicator_idle(repl)
+
     replicator.resetCheckPoint(repl)
     time.sleep(2)
 
@@ -747,11 +756,13 @@ def test_auto_purge_config_with_removal_type(params_from_base_test_setup, remova
     authenticator = Authenticator(base_url)
     replicator = Replication(base_url)
     replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
-    repl = replicator.configure_and_replicate(source_db=cbl_db,
-                                              target_url=sg_blip_url,
-                                              continuous=True,
-                                              replication_type="pull",
-                                              replicator_authenticator=replicator_authenticator)
+    repl_config = replicator.configure(source_db=cbl_db,
+                                       target_url=sg_blip_url,
+                                       continuous=True,
+                                       replication_type="pull",
+                                       replicator_authenticator=replicator_authenticator)
+    repl = replicator.create(repl_config)
+    replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
 
     sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db)
@@ -782,8 +793,12 @@ def test_auto_purge_config_with_removal_type(params_from_base_test_setup, remova
         assert cbl_doc_count == 0
 
     # 6. disable auto_purge setting, verify auto-purged will not be pulled down to CBL even after reset checkpoint
-    repl_config = replicator.getConfig(repl)
+    replicator.stop(repl)
+    time.sleep(1)
     replicator.setAutoPurgeFlag(configuration=repl_config, auto_purge_flag=False)
+    repl = replicator.create(repl_config)
+    replicator.start(repl)
+    replicator.wait_until_replicator_idle(repl)
 
     replicator.resetCheckPoint(repl)
     replicator.wait_until_replicator_idle(repl)
@@ -888,13 +903,11 @@ def test_auto_purge_notification(params_from_base_test_setup, auto_purge_flag):
 
 @pytest.mark.listener
 @pytest.mark.channel_revocation
-@pytest.mark.parametrize('auto_purge, pull_filter', [
-    ("disabled", False),
-    ("disabled", True),
-    ("enabled", False),
-    ("enabled", True),
+@pytest.mark.parametrize('auto_purge', [
+    ("disabled"),
+    ("enabled"),
 ])
-def test_auto_purge_with_pull_filtering(params_from_base_test_setup, auto_purge, pull_filter):
+def test_auto_purge_with_pull_filtering(params_from_base_test_setup, auto_purge):
     """
         @summary:
         TODO - NOT COMPLETED
@@ -921,6 +934,9 @@ def test_auto_purge_with_pull_filtering(params_from_base_test_setup, auto_purge,
     cbl_db = params_from_base_test_setup["source_db"]
     sg_blip_url = params_from_base_test_setup["target_url"]
     db = params_from_base_test_setup["db"]
+    liteserv_platform = params_from_base_test_setup["liteserv_platform"]
+    log_file = params_from_base_test_setup["test_db_log_file"]
+    test_cbllog = params_from_base_test_setup["test_cbllog"]
 
     if sync_gateway_version < "3.0.0" or liteserv_version < "3.0.0":
         pytest.skip('This test cannot run with version below 3.0')
@@ -929,6 +945,8 @@ def test_auto_purge_with_pull_filtering(params_from_base_test_setup, auto_purge,
     c.reset(sg_config_path=sg_config)
 
     sg_client = MobileRestClient()
+
+    delete_tmp_logs()  # Clean up tmp logs before test runs
 
     # 1. on SGW create a user autotest with channel A and channel B
     channels_sg = ["A", "B"]
@@ -960,22 +978,15 @@ def test_auto_purge_with_pull_filtering(params_from_base_test_setup, auto_purge,
     assert cbl_doc_count == 10, "Number of cbl docs is not equal to total number expected"
 
     # 5. create a new replication, verify the doc lost access is not purged
-    if pull_filter:
-        repl_config = replicator.configure(source_db=cbl_db,
-                                           target_url=sg_blip_url,
-                                           continuous=True,
-                                           replication_type='pull',
-                                           pull_filter=True,
-                                           filter_callback_func='deleted',
-                                           auto_purge=auto_purge,
-                                           replicator_authenticator=replicator_authenticator)
-    else:
-        repl_config = replicator.configure(source_db=cbl_db,
-                                           target_url=sg_blip_url,
-                                           continuous=True,
-                                           replication_type="pull",
-                                           auto_purge=auto_purge,
-                                           replicator_authenticator=replicator_authenticator)
+    repl_config = replicator.configure(source_db=cbl_db,
+                                       target_url=sg_blip_url,
+                                       continuous=True,
+                                       replication_type='pull',
+                                       pull_filter=True,
+                                       filter_callback_func='access_revoked',
+                                       auto_purge=auto_purge,
+                                       replicator_authenticator=replicator_authenticator)
+
     repl = replicator.create(repl_config)
     repl_delete_change_listener = replicator.addReplicatorEventChangeListener(repl)
     replicator.start(repl)
@@ -987,10 +998,7 @@ def test_auto_purge_with_pull_filtering(params_from_base_test_setup, auto_purge,
     replicator.wait_until_replicator_idle(repl)
 
     cbl_doc_count = db.getCount(cbl_db)
-    if not pull_filter and auto_purge == "enabled":
-        assert cbl_doc_count == 0, "auto purged expected to happen but not performed"
-    else:
-        assert cbl_doc_count == 10, "auto purge expected not to happen"
+    assert cbl_doc_count == 10, "auto purge expected not to happen"
 
     # 5. Verifying the delete event in event captures if auto purge is enabled
     if auto_purge == "enabled":
@@ -998,16 +1006,12 @@ def test_auto_purge_with_pull_filtering(params_from_base_test_setup, auto_purge,
         event_dict = get_event_changes(doc_delete_event_changes)
         replicator.removeReplicatorEventListener(repl, repl_delete_change_listener)
 
-        if pull_filter:
-            err = replicator.getError(repl)
-            print(err)
-        else:
-            assert len(event_dict) != 0, "Replication listener didn't caught events."
+        doc_id = "CH_A_doc_1"
+        flags = event_dict[doc_id]["flags"]
+        assert flags == "2" or flags == "[ACCESS_REMOVED]" or flags == "AccessRemoved", \
+            'Deleted flag is not tagged for document. Flag value: {}'.format(event_dict[doc_id]["flags"])
 
-            doc_id = "CH_A_doc_1"
-            flags = event_dict[doc_id]["flags"]
-            assert flags == "2" or flags == "[ACCESS_REMOVED]" or flags == "AccessRemoved", \
-                'Deleted flag is not tagged for document. Flag value: {}'.format(event_dict[doc_id]["flags"])
+        verify_doc_replication_rejection(liteserv_platform, log_file, test_cbllog)
 
     replicator.stop(repl)
 
@@ -1620,3 +1624,55 @@ def get_doc_body(doc_body):
     del doc_body['_revisions']
 
     return doc_body
+
+
+def verify_doc_replication_rejection(liteserv_platform, log_file, test_cbllog):
+    """
+       @note: Porting logs for Android, xamarin-android, net-core and net-uwp platform, as the logs reside
+           outside runner's file directory
+    """
+    delimiter = "/"
+    if "-msft" in liteserv_platform or liteserv_platform == "uwp":
+        delimiter = "\\"
+    log_dir = log_file.split(delimiter)[-1]
+    log_full_path_dir = "/tmp/cbl-logs/"
+    os.mkdir(log_full_path_dir)
+    log_info("\n Collecting logs")
+    zip_data = test_cbllog.get_logs_in_zip()
+    if zip_data == -1:
+        raise Exception("Failed to get zip log files from CBL app")
+    test_log_zip_file = "cbl_log.zip"
+    test_log = os.path.join(log_full_path_dir, test_log_zip_file)
+    log_info("Log file for failed test is: {}".format(test_log_zip_file))
+
+    target_zip = zipfile.ZipFile(test_log, 'w')
+    with zipfile.ZipFile(io.BytesIO(zip_data)) as thezip:
+        for zipinfo in thezip.infolist():
+            target_zip.writestr(zipinfo.filename, thezip.read(zipinfo.filename))
+    target_zip.close()
+
+    # unzipping the zipped log files
+    log_dir_path = os.path.join(log_full_path_dir, log_dir)
+    if zipfile.is_zipfile(test_log):
+        with zipfile.ZipFile(test_log, 'r') as zip_ref:
+            zip_ref.extractall(log_full_path_dir)
+
+    log_info("Checking {} for copied log files - {}".format(log_dir_path, os.listdir(log_dir_path)))
+    log_file = subprocess.check_output("ls -t {} | head -1".format(log_dir_path), shell=True)
+    assert len(os.listdir(log_dir_path)) != 0, "Log files are not available at {}".format(log_dir_path)
+    command = "grep '{}' {}/*.cbllog | wc -l".format("WebSocket error 403", log_dir_path)
+    log_info("Running command: {}".format(command))
+    output = subprocess.check_output(command, shell=True)
+    output = int(output.strip())
+    assert output != 0, "WebSocket error 403 is expected"
+
+    command = "grep '{}' {}/*.cbllog | wc -l".format("rejected by validation function", log_dir_path)
+    log_info("Running command: {}".format(command))
+    output = subprocess.check_output(command, shell=True)
+    output = int(output.strip())
+    assert output != 0, "rejected by validation function is expected"
+
+
+def delete_tmp_logs():
+    del_output = subprocess.check_output("rm -rf /tmp/cbl-logs", shell=True)
+    log_info("delete output is ", del_output)
