@@ -32,6 +32,8 @@ class TestServerCpp(TestServerBase):
             self.package_name = "CBLTestServer_macosx-x86_64"
         elif self.platform == "c-debian":
             self.package_name = "testserver_debian9-x86_64"
+        elif self.platform == "c-rpi":
+            self.package_name = "testserver_raspios10-armhf"
         else:
             self.package_name = "testserver_ubuntu20.04-x86_64"
 
@@ -42,7 +44,6 @@ class TestServerCpp(TestServerBase):
         else:
             self.download_url = "{}/couchbase-lite-c/{}/{}/{}.zip".format(LATEST_BUILDS, self.version, self.build, self.build_name)
         self.binary_path = "{}/{}.exe".format(BINARY_DIR, self.package_name)
-
 
 
         log_info("package_name: {}".format(self.package_name))
@@ -78,13 +79,11 @@ class TestServerCpp(TestServerBase):
             f.write(ansible_testserver_target_string)
         self.ansible_runner = AnsibleRunner(config=config_location)
 
-
     def install(self):
         """
         Noop on Mac OSX. The LiteServ is a commandline binary
         """
         log_info("No install needed for C")
-
 
     def download(self, version_build=None):
         """
