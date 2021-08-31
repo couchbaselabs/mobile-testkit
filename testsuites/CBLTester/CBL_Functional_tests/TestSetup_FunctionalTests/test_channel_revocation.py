@@ -689,6 +689,8 @@ def test_auto_purge_config_settings(params_from_base_test_setup, auto_purge_flag
 
     # 5. reset disable_auto_purge to true, verify auto-purged will not be pulled down to CBL with reset checkpoint to true
     replicator.stop(repl)
+    time.sleep(3)
+
     replicator.setAutoPurgeFlag(configuration=repl_config, auto_purge_flag=False)
     repl = replicator.create(repl_config)
     replicator.start(repl)
@@ -794,7 +796,8 @@ def test_auto_purge_config_with_removal_type(params_from_base_test_setup, remova
 
     # 6. disable auto_purge setting, verify auto-purged will not be pulled down to CBL even after reset checkpoint
     replicator.stop(repl)
-    time.sleep(1)
+    time.sleep(3)
+
     replicator.setAutoPurgeFlag(configuration=repl_config, auto_purge_flag=False)
     repl = replicator.create(repl_config)
     replicator.start(repl)
