@@ -14,7 +14,7 @@ from CBLClient.Document import Document
 # from CBLClient.Dictionary import Dictionary
 # from libraries.testkit.prometheus import verify_stat_on_prometheus
 # from keywords.SyncGateway import sync_gateway_config_path_for_mode
-# from keywords import document, attachment
+from keywords import document
 from libraries.testkit import cluster
 # from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
 # from keywords.attachment import generate_2_png_100_100
@@ -66,7 +66,7 @@ def test_replication_with_encryption(params_from_base_test_setup, type):
     db.create_bulk_docs(num_of_docs, "cbl", db=cbl_db, channels=channels_sg)
     doc_id = "doc_1"
     documentObj = Document(base_url)
-    doc_body = documentObj.create_doc(doc_id=doc_id, content="doc1", channels=channel, cbl=True, encrypted=True)
+    doc_body = document.create_doc(doc_id=doc_id, content="doc1", channels=channel, cbl=True, encrypted=True)
     doc1 = documentObj.create(doc_id, doc_body)
     db.saveDocument(cbl_db, doc1)
 
@@ -96,7 +96,7 @@ def test_replication_with_encryption(params_from_base_test_setup, type):
     db.update_bulk_docs(database=cbl_db, number_of_updates=number_of_updates)
     cbl_doc_ids = db.getDocIds(cbl_db)
     cbl_db_docs = db.getDocuments(cbl_db, cbl_doc_ids)
-    print(cbl_db_docs)
+    print(cbl_db_docs["doc_1"])
     for doc in cbl_doc_ids:
         assert cbl_db_docs[doc]["updates-cbl"] == number_of_updates, "updates-cbl did not get updated"
 

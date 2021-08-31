@@ -898,7 +898,6 @@ def class_init(request, params_from_base_suite_setup):
         db_config = db_obj.configure(password=encryption_password)
     db = db_obj.create("cbl-init-db", db_config)
 
-
     request.cls.db_obj = db_obj
     request.cls.doc_obj = doc_obj
     request.cls.dict_obj = dict_obj
