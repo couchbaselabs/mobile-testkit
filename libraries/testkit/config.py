@@ -40,7 +40,6 @@ class Config:
 
                 data = temp_config
 
-            print("template data is ", data)
             template = Template(data)
 
             # In order to render the template and produce _valid json_, we need to
@@ -71,7 +70,6 @@ class Config:
             # strip out sync functions `function ... }`
             data = convert_to_valid_json(data)
             # Find all bucket names in config's databases: {}
-            print(" data under config after converting to json ", data)
             conf_obj = json.loads(data)
 
             self.discover_mode(conf_obj)
