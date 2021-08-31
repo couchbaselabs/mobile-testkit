@@ -387,7 +387,7 @@ class CouchbaseServer:
         """
         count = 0
         mem_total_lowest = None
-        while count < 5 and mem_total_lowest is None:
+        while count < 10 and mem_total_lowest is None:
             resp = self._session.get("{}/pools/default".format(self.url))
             resp.raise_for_status()
             resp_json = resp.json()
