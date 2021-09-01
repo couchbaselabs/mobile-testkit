@@ -249,10 +249,10 @@ class CouchbaseServer:
         """
         start = time.time()
         while True:
-
+            log_r("waiting for ready state ..... ")
             elapsed = time.time()
             if elapsed - start > keywords.constants.CLIENT_REQUEST_TIMEOUT:
-                raise Exception("Timeout: Server not in ready state! {}s".format(elapsed))
+                raise Exception("Timeout: Server not in ready state! {}s".format(elapsed - start))
 
             # Verfy the server is in a "healthy", not "warmup" state
             try:
