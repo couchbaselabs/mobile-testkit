@@ -501,7 +501,7 @@ def is_replicator_in_connection_retry(error_msg):
     if "NSPOSIXErrorDomain" in error_msg and "Connection refused" in error_msg and "Code=61" in error_msg:
         return True
     # check c
-    if "111" in error_msg and "Connection refused" in error_msg:
+    if "111" or "61" in error_msg and "Connection refused" in error_msg:
         return True
 
     if "No connection could be made because the target machine actively refused it" in error_msg:
