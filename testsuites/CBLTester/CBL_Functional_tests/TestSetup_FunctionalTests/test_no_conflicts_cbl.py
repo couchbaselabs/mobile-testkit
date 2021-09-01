@@ -824,7 +824,7 @@ def test_multiple_cbls_updates_concurrently_with_push(params_from_base_test_setu
 @pytest.mark.parametrize("sg_conf_name, num_of_docs, number_of_updates", [
     ('listener_tests/listener_tests_no_conflicts', 10, 2),
     ('listener_tests/listener_tests_no_conflicts', 100, 5),
-    # ('listener_tests/listener_tests_no_conflicts', 1000, 10)
+    ('listener_tests/listener_tests_no_conflicts', 1000, 10)
 ])
 def test_multiple_cbls_updates_concurrently_with_pull(params_from_base_test_setup, setup_customized_teardown_test, sg_conf_name, num_of_docs, number_of_updates):
     """
