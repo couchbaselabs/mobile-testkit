@@ -42,9 +42,13 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name, 
     if get_sync_gateway_version(sg_ip)[0] < "2.1":
         pytest.skip("Continuous logging Test NA for SG < 2.1")
 
+    disable_tls_server = params_from_base_test_setup["disable_tls_server"]
+    if x509_cert_auth and disable_tls_server:
+        pytest.skip("x509 test cannot run tls server disabled")
     if x509_cert_auth and not cbs_ce_version:
         temp_cluster_config = copy_to_temp_conf(cluster_conf, mode)
         persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
+        persist_cluster_config_environment_prop(temp_cluster_config, 'server_tls_skip_verify', False)
         cluster_conf = temp_cluster_config
 
     cluster = Cluster(config=cluster_conf)
@@ -825,6 +829,6 @@ def send_request_to_sgw(sg_one_url, sg_admin_url, remote_executor, sg_platform="
         os.system(command)
     else:
         remote_executor.execute(
-            "for ((i=1;i <= 3200;i += 1)); do curl -s http://localhost:4984/ABCD/ > /dev/null; done")
+            "for ((i=1;i <= 4000;i += 1)); do curl -s http://localhost:4984/ABCD/ > /dev/null; done")
         remote_executor.execute(
-            "for ((i=1;i <= 2000;i += 1)); do curl -s -H 'Accept: text/plain' http://localhost:4985/db/ > /dev/null; done")
+            "for ((i=1;i <= 4000;i += 1)); do curl -s -H 'Accept: text/plain' http://localhost:4985/db/ > /dev/null; done")

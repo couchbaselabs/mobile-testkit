@@ -295,11 +295,11 @@ def test_no_conflicts_update_with_revs_limit(params_from_base_test_setup, sg_con
     persist_cluster_config_environment_prop(temp_cluster_config, 'revs_limit', reduced_revs_limit, property_name_check=False)
     status = c.sync_gateways[0].restart(config=sg_config, cluster_config=temp_cluster_config)
     assert status == 0, "Syncgateway did not start after having revs_limit 2 with no conflicts mode"
-    time.sleep(3)
+    time.sleep(9)
 
     # Update the docs 1 more time
     sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs, number_updates=1, delay=None, auth=session, channels=channels)
-    time.sleep(2)
+    time.sleep(5)
     replicator.wait_until_replicator_idle(repl)
     # Get number of revisions and verify number of revisions should be same revs_limit
     # Verify previous revisions does not exist

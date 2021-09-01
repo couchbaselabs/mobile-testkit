@@ -49,6 +49,7 @@ def params_from_base_suite_setup(request):
     skip_provisioning = request.config.getoption("--skip-provisioning")
     use_local_testserver = request.config.getoption("--use-local-testserver")
     sync_gateway_version = request.config.getoption("--sync-gateway-version")
+    disable_tls_server = request.config.getoption("--disable-tls-server")
 
     server_version = request.config.getoption("--server-version")
     enable_sample_bucket = request.config.getoption("--enable-sample-bucket")
@@ -71,6 +72,12 @@ def params_from_base_suite_setup(request):
     prometheus_enable = request.config.getoption("--prometheus-enable")
     hide_product_version = request.config.getoption("--hide-product-version")
     enable_cbs_developer_preview = request.config.getoption("--enable-cbs-developer-preview")
+    disable_persistent_config = request.config.getoption("--disable-persistent-config")
+    enable_server_tls_skip_verify = request.config.getoption("--enable-server-tls-skip-verify")
+    disable_tls_server = request.config.getoption("--disable-tls-server")
+
+    disable_admin_auth = request.config.getoption("--disable-admin-auth")
+
     sg_ssl = ""
 
     test_name = request.node.name
@@ -170,6 +177,34 @@ def params_from_base_suite_setup(request):
     else:
         log_info("Running without CBS developer preview")
         persist_cluster_config_environment_prop(cluster_config, 'cbs_developer_preview', False)
+
+    if disable_persistent_config:
+        log_info(" disable persistent config")
+        persist_cluster_config_environment_prop(cluster_config, 'disable_persistent_config', True)
+    else:
+        log_info("Running without Centralized Persistent Config")
+        persist_cluster_config_environment_prop(cluster_config, 'disable_persistent_config', False)
+
+    if enable_server_tls_skip_verify:
+        log_info("Enable server tls skip verify flag")
+        persist_cluster_config_environment_prop(cluster_config, 'server_tls_skip_verify', True)
+    else:
+        log_info("Running without server_tls_skip_verify Config")
+        persist_cluster_config_environment_prop(cluster_config, 'server_tls_skip_verify', False)
+
+    if disable_tls_server:
+        log_info("Disable tls server flag")
+        persist_cluster_config_environment_prop(cluster_config, 'disable_tls_server', True)
+    else:
+        log_info("Enable tls server flag")
+        persist_cluster_config_environment_prop(cluster_config, 'disable_tls_server', False)
+
+    if disable_admin_auth:
+        log_info("Disabled Admin Auth")
+        persist_cluster_config_environment_prop(cluster_config, 'disable_admin_auth', True)
+    else:
+        log_info("Enabled Admin Auth")
+        persist_cluster_config_environment_prop(cluster_config, 'disable_admin_auth', False)
 
     # As cblite jobs run with on Centos platform, adding by default centos to environment config
     persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "centos", False)
@@ -316,6 +351,7 @@ def params_from_base_suite_setup(request):
         "sg_db": sg_db,
         "no_conflicts_enabled": True,
         "sync_gateway_version": sync_gateway_version,
+        "disable_tls_server": disable_tls_server,
         "target_admin_url": target_admin_url,
         "base_url": base_url,
         "enable_sample_bucket": enable_sample_bucket,
@@ -393,6 +429,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     sg_ip = params_from_base_suite_setup["sg_ip"]
     sg_db = params_from_base_suite_setup["sg_db"]
     sync_gateway_version = params_from_base_suite_setup["sync_gateway_version"]
+    disable_tls_server = params_from_base_suite_setup["disable_tls_server"]
     sg_config = params_from_base_suite_setup["sg_config"]
     liteserv_platform = params_from_base_suite_setup["liteserv_platform"]
     testserver = params_from_base_suite_setup["testserver"]
@@ -479,6 +516,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "sg_db": sg_db,
         "no_conflicts_enabled": no_conflicts_enabled,
         "sync_gateway_version": sync_gateway_version,
+        "disable_tls_server": disable_tls_server,
         "source_db": source_db,
         "cbl_db": cbl_db,
         "suite_source_db": suite_source_db,

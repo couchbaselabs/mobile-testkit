@@ -24,6 +24,7 @@ from keywords.utils import host_for_url
 from keywords import document
 from keywords.utils import random_string
 from utilities.cluster_config_utils import copy_sgconf_to_temp, replace_string_on_sgw_config, get_cluster
+from utilities.cluster_config_utils import is_centralized_persistent_config_disabled, is_server_tls_skip_verify_enabled, is_admin_auth_disabled, is_tls_server_disabled
 
 
 def validate_sync_gateway_mode(mode):
@@ -249,6 +250,10 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config):
         sslkey_prop = ""
         delta_sync_prop = ""
         hide_prod_version_prop = ""
+        disable_persistent_config_prop = ""
+        server_tls_skip_verify_prop = ""
+        disable_tls_server_prop = ""
+        disable_admin_auth_prop = ""
 
         sg_platform = get_sg_platform(cluster_config)
         if get_sg_version(cluster_config) >= "2.1.0":
@@ -310,6 +315,18 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config):
         if is_hide_prod_version_enabled(cluster_config) and get_sg_version(cluster_config) >= "2.8.1":
             hide_prod_version_prop = '"hide_product_version": true,'
 
+        if is_centralized_persistent_config_disabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
+            disable_persistent_config_prop = '"disable_persistent_config": true,'
+
+        if is_server_tls_skip_verify_enabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
+            server_tls_skip_verify_prop = '"server_tls_skip_verify": true,'
+
+        if is_tls_server_disabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
+            disable_tls_server_prop = '"use_tls_server": false,'
+
+        if is_admin_auth_disabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
+            disable_admin_auth_prop = '"admin_interface_authentication": false,\n"metrics_interface_authentication": false,'
+
         temp = template.render(
             couchbase_server_primary_node=couchbase_server_primary_node,
             is_index_writer="false",
@@ -333,7 +350,11 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config):
             no_conflicts=no_conflicts_prop,
             revs_limit=revs_limit_prop,
             delta_sync=delta_sync_prop,
-            hide_prod_version=hide_prod_version_prop
+            hide_prod_version=hide_prod_version_prop,
+            disable_persistent_config=disable_persistent_config_prop,
+            server_tls_skip_verify=server_tls_skip_verify_prop,
+            disable_tls_server=disable_tls_server_prop,
+            disable_admin_auth=disable_admin_auth_prop
         )
         data = json.loads(temp)
 
@@ -345,8 +366,8 @@ class SyncGateway(object):
 
     def __init__(self):
         self._session = Session()
-        self.server_port = 8091
-        self.server_scheme = "http"
+        self.server_port = ""
+        self.server_scheme = "couchbase"
 
     def install_sync_gateway(self, cluster_config, sync_gateway_version, sync_gateway_config):
 
@@ -420,7 +441,11 @@ class SyncGateway(object):
             "couchbase_server_primary_node": couchbase_server_primary_node,
             "delta_sync": "",
             "prometheus": "",
-            "hide_product_version": ""
+            "hide_product_version": "",
+            "disable_persistent_config": "",
+            "server_tls_skip_verify": "",
+            "disable_tls_server": "",
+            "disable_admin_auth": ""
         }
         sg_platform = get_sg_platform(cluster_config)
         if get_sg_version(cluster_config) >= "2.1.0":
@@ -508,6 +533,18 @@ class SyncGateway(object):
 
         if is_hide_prod_version_enabled(cluster_config) and get_sg_version(cluster_config) >= "2.8.1":
             playbook_vars["hide_product_version"] = '"hide_product_version": true,'
+
+        if is_centralized_persistent_config_disabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
+            playbook_vars["disable_persistent_config"] = '"disable_persistent_config": true,'
+
+        if is_server_tls_skip_verify_enabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
+            playbook_vars["server_tls_skip_verify"] = '"server_tls_skip_verify": true,'
+
+        if is_tls_server_disabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
+            playbook_vars["disable_tls_server"] = '"use_tls_server": false,'
+
+        if is_admin_auth_disabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
+            playbook_vars["disable_admin_auth"] = '"admin_interface_authentication": false,    \n"metrics_interface_authentication": false,'
 
         if url is not None:
             target = hostname_for_url(cluster_config, url)
@@ -647,7 +684,11 @@ class SyncGateway(object):
             "couchbase_server_primary_node": couchbase_server_primary_node,
             "delta_sync": "",
             "prometheus": "",
-            "hide_product_version": ""
+            "hide_product_version": "",
+            "disable_persistent_config": "",
+            "server_tls_skip_verify": "",
+            "disable_tls_server": "",
+            "disable_admin_auth": ""
         }
 
         sync_gateway_base_url, sync_gateway_package_name, sg_accel_package_name = sg_config.sync_gateway_base_url_and_package()
@@ -726,11 +767,23 @@ class SyncGateway(object):
         if is_delta_sync_enabled(cluster_config) and version >= "2.5.0":
             playbook_vars["delta_sync"] = '"delta_sync": { "enabled": true},'
 
-        if get_sg_version(cluster_config) >= "2.8.0":
+        if version >= "2.8.0":
             playbook_vars["prometheus"] = '"metricsInterface": ":4986",'
 
-        if is_hide_prod_version_enabled(cluster_config) and get_sg_version(cluster_config) >= "2.8.1":
+        if is_hide_prod_version_enabled(cluster_config) and version >= "2.8.1":
             playbook_vars["hide_product_version"] = '"hide_product_version": true,'
+
+        if is_centralized_persistent_config_disabled(cluster_config) and version >= "3.0.0":
+            playbook_vars["disable_persistent_config"] = '"disable_persistent_config": true,'
+
+        if is_server_tls_skip_verify_enabled(cluster_config) and version >= "3.0.0":
+            playbook_vars["server_tls_skip_verify"] = '"server_tls_skip_verify": true,'
+
+        if is_tls_server_disabled(cluster_config) and version >= "3.0.0":
+            playbook_vars["disable_tls_server"] = '"use_tls_server": false,'
+
+        if is_admin_auth_disabled(cluster_config) and version >= "3.0.0":
+            playbook_vars["disable_admin_auth"] = '"admin_interface_authentication": false,    \n"metrics_interface_authentication": false,'
 
         if url is not None:
             target = hostname_for_url(cluster_config, url)
@@ -758,8 +811,8 @@ class SyncGateway(object):
             Will also enable import if enable_import is set to True
             It is used to enable xattrs and import in the SG config"""
         ansible_runner = AnsibleRunner(cluster_config)
-        server_port = 8091
-        server_scheme = "http"
+        server_port = ""
+        server_scheme = "couchbase"
         sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
         cbs_cert_path = os.path.join(os.getcwd(), "certs")
         bucket_names = get_buckets_from_sync_gateway_config(sg_conf)
@@ -792,7 +845,11 @@ class SyncGateway(object):
             "no_conflicts": "",
             "delta_sync": "",
             "prometheus": "",
-            "hide_product_version": ""
+            "hide_product_version": "",
+            "disable_persistent_config": "",
+            "server_tls_skip_verify": "",
+            "disable_tls_server": "",
+            "disable_admin_auth": ""
         }
 
         playbook_vars["username"] = '"username": "{}",'.format(bucket_names[0])
@@ -861,11 +918,23 @@ class SyncGateway(object):
         if is_delta_sync_enabled(cluster_config) and version >= "2.5.0":
             playbook_vars["delta_sync"] = '"delta_sync": { "enabled": true},'
 
-        if get_sg_version(cluster_config) >= "2.8.0":
+        if version >= "2.8.0":
             playbook_vars["prometheus"] = '"metricsInterface": ":4986",'
 
-        if is_hide_prod_version_enabled(cluster_config) and get_sg_version(cluster_config) >= "2.8.1":
+        if is_hide_prod_version_enabled(cluster_config) and version >= "2.8.1":
             playbook_vars["hide_product_version"] = '"hide_product_version": true,'
+
+        if is_centralized_persistent_config_disabled(cluster_config) and version >= "3.0.0":
+            playbook_vars["disable_persistent_config"] = '"disable_persistent_config": true,'
+
+        if is_server_tls_skip_verify_enabled(cluster_config) and version >= "3.0.0":
+            playbook_vars["server_tls_skip_verify"] = '"server_tls_skip_verify": true,'
+
+        if is_tls_server_disabled(cluster_config) and version >= "3.0.0":
+            playbook_vars["disable_tls_server"] = '"use_tls_server": false,'
+
+        if is_admin_auth_disabled(cluster_config) and version >= "3.0.0":
+            playbook_vars["disable_admin_auth"] = '"admin_interface_authentication": false,    \n"metrics_interface_authentication": false,'
 
         # Deploy config
         if url is not None:

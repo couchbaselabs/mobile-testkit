@@ -27,15 +27,20 @@ from utilities.cluster_config_utils import persist_cluster_config_environment_pr
 def test_user_views_sanity(params_from_base_test_setup, sg_conf_name, x509_cert_auth):
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     log_info("Running 'single_user_multiple_channels'")
     log_info("cluster_conf: {}".format(cluster_conf))
     log_info("conf: {}".format(sg_conf))
+    disable_tls_server = params_from_base_test_setup["disable_tls_server"]
+    if x509_cert_auth and disable_tls_server:
+        pytest.skip("x509 test cannot run tls server disabled")
     if x509_cert_auth:
         temp_cluster_config = copy_to_temp_conf(cluster_conf, mode)
         persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
+        persist_cluster_config_environment_prop(temp_cluster_config, 'server_tls_skip_verify', False)
         cluster_conf = temp_cluster_config
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
@@ -170,7 +175,10 @@ def test_user_views_sanity(params_from_base_test_setup, sg_conf_name, x509_cert_
 
     # Assert that the attachment docs gets written to couchbase server
     server = couchbaseserver.CouchbaseServer(cbs_url)
-    server_att_docs = server.get_server_docs_with_prefix(bucket=bucket, prefix="_sync:att:", ipv6=cluster.ipv6)
+    if sync_gateway_version >= "3.0.0":
+        server_att_docs = server.get_server_docs_with_prefix(bucket=bucket, prefix="_sync:att2:", ipv6=cluster.ipv6)
+    else:
+        server_att_docs = server.get_server_docs_with_prefix(bucket=bucket, prefix="_sync:att:", ipv6=cluster.ipv6)
     expected_num_attachments = (number_docs_per_channel * 2) + \
         number_docs_per_channel + \
         (number_docs_per_channel * 2) + \

@@ -130,3 +130,19 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="Enabling CBS developer preview",
                      default=False)
+
+    parser.addoption("--disable-persistent-config",
+                     action="store_true",
+                     help="Disable Centralized Persistent Config")
+
+    parser.addoption("--enable-server-tls-skip-verify",
+                     action="store_true",
+                     help="Enable Server tls skip verify config")
+
+    parser.addoption("--disable-tls-server",
+                     action="store_true",
+                     help="Disable tls server")
+
+    parser.addoption("--disable-admin-auth",
+                     action="store_true",
+                     help="Disable Admin auth")

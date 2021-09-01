@@ -45,7 +45,7 @@ def test_attachment_revpos_when_ancestor_unavailable(params_from_base_test_setup
     no_conflicts_enabled = params_from_base_test_setup["no_conflicts_enabled"]
 
     if no_conflicts_enabled:
-        pytest.skip('--no-conflicts is not enabled, so skipping the test')
+        pytest.skip('--no-conflicts is enabled, so skipping the test')
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
@@ -203,6 +203,7 @@ def test_writing_attachment_to_couchbase_server(params_from_base_test_setup, sg_
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
@@ -246,6 +247,9 @@ def test_writing_attachment_to_couchbase_server(params_from_base_test_setup, sg_
     server = couchbaseserver.CouchbaseServer(cbs_url)
 
     # Assert that the attachment doc gets written to couchbase server
-    server_att_docs = server.get_server_docs_with_prefix(bucket=bucket, prefix="_sync:att:", ipv6=cluster.ipv6)
+    if sync_gateway_version >= "3.0.0":
+        server_att_docs = server.get_server_docs_with_prefix(bucket=bucket, prefix="_sync:att2:", ipv6=cluster.ipv6)
+    else:
+        server_att_docs = server.get_server_docs_with_prefix(bucket=bucket, prefix="_sync:att:", ipv6=cluster.ipv6)
     num_att_docs = len(server_att_docs)
     assert num_att_docs == 1
