@@ -1,5 +1,4 @@
 # from datetime import datetime
-from operator import mod
 import random
 import pytest
 import time
@@ -8,7 +7,7 @@ import os
 from couchbase.bucket import Bucket
 from keywords import document
 from keywords.MobileRestClient import MobileRestClient
-from keywords.SyncGateway import sync_gateway_config_path_for_mode, create_sync_gateways, SyncGateway
+from keywords.SyncGateway import sync_gateway_config_path_for_mode, SyncGateway
 from keywords.utils import add_new_fields_to_doc, host_for_url, log_info, add_additional_new_field_to_doc
 from libraries.testkit.cluster import Cluster
 from libraries.testkit import cluster
@@ -2219,8 +2218,8 @@ def test_resurrected_docs_by_sdk(params_from_base_test_setup, resurrect_type):
     sg_client.delete_doc(url=sg2.url, db=DB2, doc_id=selected_doc_id, rev=selected_doc_rev_latest['_rev'], auth=auth_session2)
 
     bucket_name = 'data-bucket-2'
-    cluster = Cluster(config=cluster_config)
-    if cluster.ipv6:
+    cbs_cluster = Cluster(config=cluster_config)
+    if cbs_cluster.ipv6:
         sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_host, bucket_name), password='password')
     else:
         sdk_client = Bucket('couchbase://{}/{}'.format(cbs_host, bucket_name), password='password')
