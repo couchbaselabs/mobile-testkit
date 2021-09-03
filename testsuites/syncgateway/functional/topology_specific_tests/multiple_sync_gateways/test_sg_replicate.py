@@ -626,7 +626,6 @@ def test_sdk_update_with_changes_request(params_from_base_test_setup):
 
     # 5.Read document via SG from node A to get rev-id for revision 1
     doc = sg_client.get_doc(url=admin1.admin_url, db=DB1, doc_id=sdk_doc_id)
-    print("doc is ", doc)
     revid_1 = doc["_rev"]
 
     # 6.Update the document via SDK
@@ -649,12 +648,10 @@ def update_docs_via_sdk(client, docs_to_update, prop_to_update, number_updates):
 
     log_info("Client: {}".format(id(client)))
     num_of_docs = len(docs_to_update)
-    print("docs to update is ", docs_to_update)
     for i in range(num_of_docs):
 
         doc_value_result = client.get(docs_to_update[i])
         doc = doc_value_result.value
-        print("doc is ", doc)
         doc_id = docs_to_update[i]
         for i in range(number_updates):
             try:
