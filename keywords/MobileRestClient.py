@@ -957,6 +957,8 @@ class MobileRestClient:
             doc["_attachments"] = {
                 atts[0].name: {"data": atts[0].data}
             }
+            if type(doc["_attachments"][attachment_name]["data"]) == bytes:
+                doc["_attachments"][attachment_name]["data"] = doc["_attachments"][attachment_name]["data"].decode()
 
         parent_revision_digests = []
         for parent_rev in parent_revs:
@@ -969,8 +971,6 @@ class MobileRestClient:
 
         params = {"new_edits": "false"}
         if auth_type == AuthType.session:
-            if type(doc["_attachments"][attachment_name]["data"]) == bytes:
-                doc["_attachments"][attachment_name]["data"] = doc["_attachments"][attachment_name]["data"].decode()
             resp = self._session.put("{}/{}/{}".format(url, db, doc_id), params=params, data=json.dumps(doc), cookies=dict(SyncGatewaySession=auth[1]))
         elif auth_type == AuthType.http_basic:
             resp = self._session.put("{}/{}/{}".format(url, db, doc_id), params=params, data=json.dumps(doc), auth=auth)
