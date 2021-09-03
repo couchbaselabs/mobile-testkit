@@ -1,9 +1,9 @@
-# from datetime import datetime
-import random
-import pytest
-import time
+from datetime import datetime
 import os
-# from concurrent.futures import ThreadPoolExecutor
+import pytest
+import random
+import time
+from concurrent.futures import ThreadPoolExecutor
 from couchbase.bucket import Bucket
 from keywords import document
 from keywords.MobileRestClient import MobileRestClient
@@ -16,6 +16,31 @@ from requests.exceptions import HTTPError
 
 DB1 = "sg_db1"
 DB2 = "sg_db2"
+
+
+def redeploy_sync_gateway(cluster_config, mode, sync_gateway_version):
+    sgwgateway = SyncGateway()
+    sg_conf_name = "listener_tests/multiple_sync_gateways"
+
+    c_cluster = cluster.Cluster(config=cluster_config)
+    sg_config = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    c_cluster.reset(sg_config_path=sg_config)
+
+    sg1 = c_cluster.sync_gateways[0]
+    sg2 = c_cluster.sync_gateways[1]
+
+    sgw_cluster1_conf_name = sync_gateway_config_path_for_mode('listener_tests/sg_replicate_sgw_cluster1', mode)
+    sgw_cluster2_conf_name = sync_gateway_config_path_for_mode('listener_tests/sg_replicate_sgw_cluster2', mode)
+
+    sg_cluster1_config_path = "{}/{}".format(os.getcwd(), sgw_cluster1_conf_name)
+    sg_cluster2_config_path = "{}/{}".format(os.getcwd(), sgw_cluster2_conf_name)
+    sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_cluster1_config_path, url=sg1.ip,
+                                            sync_gateway_version=sync_gateway_version, enable_import=True)
+
+    sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_cluster2_config_path, url=sg2.ip,
+                                            sync_gateway_version=sync_gateway_version, enable_import=True)
+
+    return sg1, sg2
 
 
 @pytest.mark.listener
@@ -46,26 +71,7 @@ def test_auto_purge_setting_impact(params_from_base_test_setup, auto_purge_setti
         pytest.skip('This test cannot run with Sync Gateway version below 3.0')
 
     # prepare sync gateway environment
-    sgwgateway = SyncGateway()
-    sg_conf_name = "listener_tests/multiple_sync_gateways"
-
-    c_cluster = cluster.Cluster(config=cluster_config)
-    sg_config = sync_gateway_config_path_for_mode(sg_conf_name, mode)
-    c_cluster.reset(sg_config_path=sg_config)
-
-    sg1 = c_cluster.sync_gateways[0]
-    sg2 = c_cluster.sync_gateways[1]
-
-    sgw_cluster1_conf_name = sync_gateway_config_path_for_mode('listener_tests/sg_replicate_sgw_cluster1', mode)
-    sgw_cluster2_conf_name = sync_gateway_config_path_for_mode('listener_tests/sg_replicate_sgw_cluster2', mode)
-
-    sg_cluster1_config_path = "{}/{}".format(os.getcwd(), sgw_cluster1_conf_name)
-    sg_cluster2_config_path = "{}/{}".format(os.getcwd(), sgw_cluster2_conf_name)
-    sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_cluster1_config_path, url=sg1.ip,
-                                            sync_gateway_version=sync_gateway_version, enable_import=True)
-
-    sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_cluster2_config_path, url=sg2.ip,
-                                            sync_gateway_version=sync_gateway_version, enable_import=True)
+    sg1, sg2 = redeploy_sync_gateway(cluster_config, mode, sync_gateway_version)
 
     sg_client = MobileRestClient()
 
@@ -179,26 +185,7 @@ def test_existing_replication_enabling_auto_purge(params_from_base_test_setup, r
         pytest.skip('This test cannot run with Sync Gateway version below 3.0')
 
     # prepare sync gateway environment
-    sgwgateway = SyncGateway()
-    sg_conf_name = "listener_tests/multiple_sync_gateways"
-
-    c_cluster = cluster.Cluster(config=cluster_config)
-    sg_config = sync_gateway_config_path_for_mode(sg_conf_name, mode)
-    c_cluster.reset(sg_config_path=sg_config)
-
-    sg1 = c_cluster.sync_gateways[0]
-    sg2 = c_cluster.sync_gateways[1]
-
-    sgw_cluster1_conf_name = sync_gateway_config_path_for_mode('listener_tests/sg_replicate_sgw_cluster1', mode)
-    sgw_cluster2_conf_name = sync_gateway_config_path_for_mode('listener_tests/sg_replicate_sgw_cluster2', mode)
-
-    sg_cluster1_config_path = "{}/{}".format(os.getcwd(), sgw_cluster1_conf_name)
-    sg_cluster2_config_path = "{}/{}".format(os.getcwd(), sgw_cluster2_conf_name)
-    sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_cluster1_config_path, url=sg1.ip,
-                                            sync_gateway_version=sync_gateway_version, enable_import=True)
-
-    sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_cluster2_config_path, url=sg2.ip,
-                                            sync_gateway_version=sync_gateway_version, enable_import=True)
+    sg1, sg2 = redeploy_sync_gateway(cluster_config, mode, sync_gateway_version)
 
     sg_client = MobileRestClient()
 
@@ -330,26 +317,7 @@ def test_new_replication_enabling_auto_purge(params_from_base_test_setup):
         pytest.skip('This test cannot run with Sync Gateway version below 3.0')
 
     # prepare sync gateway environment
-    sgwgateway = SyncGateway()
-    sg_conf_name = "listener_tests/multiple_sync_gateways"
-
-    c_cluster = cluster.Cluster(config=cluster_config)
-    sg_config = sync_gateway_config_path_for_mode(sg_conf_name, mode)
-    c_cluster.reset(sg_config_path=sg_config)
-
-    sg1 = c_cluster.sync_gateways[0]
-    sg2 = c_cluster.sync_gateways[1]
-
-    sgw_cluster1_conf_name = sync_gateway_config_path_for_mode('listener_tests/sg_replicate_sgw_cluster1', mode)
-    sgw_cluster2_conf_name = sync_gateway_config_path_for_mode('listener_tests/sg_replicate_sgw_cluster2', mode)
-
-    sg_cluster1_config_path = "{}/{}".format(os.getcwd(), sgw_cluster1_conf_name)
-    sg_cluster2_config_path = "{}/{}".format(os.getcwd(), sgw_cluster2_conf_name)
-    sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_cluster1_config_path, url=sg1.ip,
-                                            sync_gateway_version=sync_gateway_version, enable_import=True)
-
-    sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_cluster2_config_path, url=sg2.ip,
-                                            sync_gateway_version=sync_gateway_version, enable_import=True)
+    sg1, sg2 = redeploy_sync_gateway(cluster_config, mode, sync_gateway_version)
 
     sg_client = MobileRestClient()
 
@@ -460,26 +428,7 @@ def test_disable_auto_purge_no_impact_purged_docs(params_from_base_test_setup):
         pytest.skip('This test cannot run with Sync Gateway version below 3.0')
 
     # prepare sync gateway environment
-    sgwgateway = SyncGateway()
-    sg_conf_name = "listener_tests/multiple_sync_gateways"
-
-    c_cluster = cluster.Cluster(config=cluster_config)
-    sg_config = sync_gateway_config_path_for_mode(sg_conf_name, mode)
-    c_cluster.reset(sg_config_path=sg_config)
-
-    sg1 = c_cluster.sync_gateways[0]
-    sg2 = c_cluster.sync_gateways[1]
-
-    sgw_cluster1_conf_name = sync_gateway_config_path_for_mode('listener_tests/sg_replicate_sgw_cluster1', mode)
-    sgw_cluster2_conf_name = sync_gateway_config_path_for_mode('listener_tests/sg_replicate_sgw_cluster2', mode)
-
-    sg_cluster1_config_path = "{}/{}".format(os.getcwd(), sgw_cluster1_conf_name)
-    sg_cluster2_config_path = "{}/{}".format(os.getcwd(), sgw_cluster2_conf_name)
-    sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_cluster1_config_path, url=sg1.ip,
-                                            sync_gateway_version=sync_gateway_version, enable_import=True)
-
-    sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_cluster2_config_path, url=sg2.ip,
-                                            sync_gateway_version=sync_gateway_version, enable_import=True)
+    sg1, sg2 = redeploy_sync_gateway(cluster_config, mode, sync_gateway_version)
 
     sg_client = MobileRestClient()
 
@@ -593,26 +542,7 @@ def test_user_lost_channel_access_pull(params_from_base_test_setup):
         pytest.skip('This test cannot run with Sync Gateway version below 3.0')
 
     # prepare sync gateway environment
-    sgwgateway = SyncGateway()
-    sg_conf_name = "listener_tests/multiple_sync_gateways"
-
-    c_cluster = cluster.Cluster(config=cluster_config)
-    sg_config = sync_gateway_config_path_for_mode(sg_conf_name, mode)
-    c_cluster.reset(sg_config_path=sg_config)
-
-    sg1 = c_cluster.sync_gateways[0]
-    sg2 = c_cluster.sync_gateways[1]
-
-    sgw_cluster1_conf_name = sync_gateway_config_path_for_mode('listener_tests/sg_replicate_sgw_cluster1', mode)
-    sgw_cluster2_conf_name = sync_gateway_config_path_for_mode('listener_tests/sg_replicate_sgw_cluster2', mode)
-
-    sg_cluster1_config_path = "{}/{}".format(os.getcwd(), sgw_cluster1_conf_name)
-    sg_cluster2_config_path = "{}/{}".format(os.getcwd(), sgw_cluster2_conf_name)
-    sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_cluster1_config_path, url=sg1.ip,
-                                            sync_gateway_version=sync_gateway_version, enable_import=True)
-
-    sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_cluster2_config_path, url=sg2.ip,
-                                            sync_gateway_version=sync_gateway_version, enable_import=True)
+    sg1, sg2 = redeploy_sync_gateway(cluster_config, mode, sync_gateway_version)
 
     sg_client = MobileRestClient()
 
@@ -721,26 +651,7 @@ def test_user_lost_channel_access_push_only(params_from_base_test_setup):
         pytest.skip('This test cannot run with Sync Gateway version below 3.0')
 
     # prepare sync gateway environment
-    sgwgateway = SyncGateway()
-    sg_conf_name = "listener_tests/multiple_sync_gateways"
-
-    c_cluster = cluster.Cluster(config=cluster_config)
-    sg_config = sync_gateway_config_path_for_mode(sg_conf_name, mode)
-    c_cluster.reset(sg_config_path=sg_config)
-
-    sg1 = c_cluster.sync_gateways[0]
-    sg2 = c_cluster.sync_gateways[1]
-
-    sgw_cluster1_conf_name = sync_gateway_config_path_for_mode('listener_tests/sg_replicate_sgw_cluster1', mode)
-    sgw_cluster2_conf_name = sync_gateway_config_path_for_mode('listener_tests/sg_replicate_sgw_cluster2', mode)
-
-    sg_cluster1_config_path = "{}/{}".format(os.getcwd(), sgw_cluster1_conf_name)
-    sg_cluster2_config_path = "{}/{}".format(os.getcwd(), sgw_cluster2_conf_name)
-    sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_cluster1_config_path, url=sg1.ip,
-                                            sync_gateway_version=sync_gateway_version, enable_import=True)
-
-    sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_cluster2_config_path, url=sg2.ip,
-                                            sync_gateway_version=sync_gateway_version, enable_import=True)
+    sg1, sg2 = redeploy_sync_gateway(cluster_config, mode, sync_gateway_version)
 
     sg_client = MobileRestClient()
 
@@ -868,26 +779,7 @@ def test_user_lost_channel_access_push_and_pull(params_from_base_test_setup):
         pytest.skip('This test cannot run with Sync Gateway version below 3.0')
 
     # prepare sync gateway environment
-    sgwgateway = SyncGateway()
-    sg_conf_name = "listener_tests/multiple_sync_gateways"
-
-    c_cluster = cluster.Cluster(config=cluster_config)
-    sg_config = sync_gateway_config_path_for_mode(sg_conf_name, mode)
-    c_cluster.reset(sg_config_path=sg_config)
-
-    sg1 = c_cluster.sync_gateways[0]
-    sg2 = c_cluster.sync_gateways[1]
-
-    sgw_cluster1_conf_name = sync_gateway_config_path_for_mode('listener_tests/sg_replicate_sgw_cluster1', mode)
-    sgw_cluster2_conf_name = sync_gateway_config_path_for_mode('listener_tests/sg_replicate_sgw_cluster2', mode)
-
-    sg_cluster1_config_path = "{}/{}".format(os.getcwd(), sgw_cluster1_conf_name)
-    sg_cluster2_config_path = "{}/{}".format(os.getcwd(), sgw_cluster2_conf_name)
-    sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_cluster1_config_path, url=sg1.ip,
-                                            sync_gateway_version=sync_gateway_version, enable_import=True)
-
-    sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_cluster2_config_path, url=sg2.ip,
-                                            sync_gateway_version=sync_gateway_version, enable_import=True)
+    sg1, sg2 = redeploy_sync_gateway(cluster_config, mode, sync_gateway_version)
 
     sg_client = MobileRestClient()
 
@@ -1009,26 +901,7 @@ def test_user_removed_from_role_by_direction(params_from_base_test_setup, replic
         pytest.skip('This test cannot run with Sync Gateway version below 3.0')
 
     # prepare sync gateway environment
-    sgwgateway = SyncGateway()
-    sg_conf_name = "listener_tests/multiple_sync_gateways"
-
-    c_cluster = cluster.Cluster(config=cluster_config)
-    sg_config = sync_gateway_config_path_for_mode(sg_conf_name, mode)
-    c_cluster.reset(sg_config_path=sg_config)
-
-    sg1 = c_cluster.sync_gateways[0]
-    sg2 = c_cluster.sync_gateways[1]
-
-    sgw_cluster1_conf_name = sync_gateway_config_path_for_mode('listener_tests/sg_replicate_sgw_cluster1', mode)
-    sgw_cluster2_conf_name = sync_gateway_config_path_for_mode('listener_tests/sg_replicate_sgw_cluster2', mode)
-
-    sg_cluster1_config_path = "{}/{}".format(os.getcwd(), sgw_cluster1_conf_name)
-    sg_cluster2_config_path = "{}/{}".format(os.getcwd(), sgw_cluster2_conf_name)
-    sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_cluster1_config_path, url=sg1.ip,
-                                            sync_gateway_version=sync_gateway_version, enable_import=True)
-
-    sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_cluster2_config_path, url=sg2.ip,
-                                            sync_gateway_version=sync_gateway_version, enable_import=True)
+    sg1, sg2 = redeploy_sync_gateway(cluster_config, mode, sync_gateway_version)
 
     sg_client = MobileRestClient()
 
@@ -1153,26 +1026,7 @@ def test_user_removed_from_role_push_only(params_from_base_test_setup):
         pytest.skip('This test cannot run with Sync Gateway version below 3.0')
 
     # prepare sync gateway environment
-    sgwgateway = SyncGateway()
-    sg_conf_name = "listener_tests/multiple_sync_gateways"
-
-    c_cluster = cluster.Cluster(config=cluster_config)
-    sg_config = sync_gateway_config_path_for_mode(sg_conf_name, mode)
-    c_cluster.reset(sg_config_path=sg_config)
-
-    sg1 = c_cluster.sync_gateways[0]
-    sg2 = c_cluster.sync_gateways[1]
-
-    sgw_cluster1_conf_name = sync_gateway_config_path_for_mode('listener_tests/sg_replicate_sgw_cluster1', mode)
-    sgw_cluster2_conf_name = sync_gateway_config_path_for_mode('listener_tests/sg_replicate_sgw_cluster2', mode)
-
-    sg_cluster1_config_path = "{}/{}".format(os.getcwd(), sgw_cluster1_conf_name)
-    sg_cluster2_config_path = "{}/{}".format(os.getcwd(), sgw_cluster2_conf_name)
-    sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_cluster1_config_path, url=sg1.ip,
-                                            sync_gateway_version=sync_gateway_version, enable_import=True)
-
-    sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_cluster2_config_path, url=sg2.ip,
-                                            sync_gateway_version=sync_gateway_version, enable_import=True)
+    sg1, sg2 = redeploy_sync_gateway(cluster_config, mode, sync_gateway_version)
 
     sg_client = MobileRestClient()
 
@@ -1314,26 +1168,7 @@ def test_user_role_revoked_channel_access_by_direction(params_from_base_test_set
         pytest.skip('This test cannot run with Sync Gateway version below 3.0')
 
     # prepare sync gateway environment
-    sgwgateway = SyncGateway()
-    sg_conf_name = "listener_tests/multiple_sync_gateways"
-
-    c_cluster = cluster.Cluster(config=cluster_config)
-    sg_config = sync_gateway_config_path_for_mode(sg_conf_name, mode)
-    c_cluster.reset(sg_config_path=sg_config)
-
-    sg1 = c_cluster.sync_gateways[0]
-    sg2 = c_cluster.sync_gateways[1]
-
-    sgw_cluster1_conf_name = sync_gateway_config_path_for_mode('listener_tests/sg_replicate_sgw_cluster1', mode)
-    sgw_cluster2_conf_name = sync_gateway_config_path_for_mode('listener_tests/sg_replicate_sgw_cluster2', mode)
-
-    sg_cluster1_config_path = "{}/{}".format(os.getcwd(), sgw_cluster1_conf_name)
-    sg_cluster2_config_path = "{}/{}".format(os.getcwd(), sgw_cluster2_conf_name)
-    sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_cluster1_config_path, url=sg1.ip,
-                                            sync_gateway_version=sync_gateway_version, enable_import=True)
-
-    sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_cluster2_config_path, url=sg2.ip,
-                                            sync_gateway_version=sync_gateway_version, enable_import=True)
+    sg1, sg2 = redeploy_sync_gateway(cluster_config, mode, sync_gateway_version)
 
     sg_client = MobileRestClient()
 
@@ -1451,26 +1286,7 @@ def test_user_role_revoked_channel_access_push_only(params_from_base_test_setup)
         pytest.skip('This test cannot run with Sync Gateway version below 3.0')
 
     # prepare sync gateway environment
-    sgwgateway = SyncGateway()
-    sg_conf_name = "listener_tests/multiple_sync_gateways"
-
-    c_cluster = cluster.Cluster(config=cluster_config)
-    sg_config = sync_gateway_config_path_for_mode(sg_conf_name, mode)
-    c_cluster.reset(sg_config_path=sg_config)
-
-    sg1 = c_cluster.sync_gateways[0]
-    sg2 = c_cluster.sync_gateways[1]
-
-    sgw_cluster1_conf_name = sync_gateway_config_path_for_mode('listener_tests/sg_replicate_sgw_cluster1', mode)
-    sgw_cluster2_conf_name = sync_gateway_config_path_for_mode('listener_tests/sg_replicate_sgw_cluster2', mode)
-
-    sg_cluster1_config_path = "{}/{}".format(os.getcwd(), sgw_cluster1_conf_name)
-    sg_cluster2_config_path = "{}/{}".format(os.getcwd(), sgw_cluster2_conf_name)
-    sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_cluster1_config_path, url=sg1.ip,
-                                            sync_gateway_version=sync_gateway_version, enable_import=True)
-
-    sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_cluster2_config_path, url=sg2.ip,
-                                            sync_gateway_version=sync_gateway_version, enable_import=True)
+    sg1, sg2 = redeploy_sync_gateway(cluster_config, mode, sync_gateway_version)
 
     sg_client = MobileRestClient()
 
@@ -1596,26 +1412,7 @@ def test_user_reassign_to_channel_pull(params_from_base_test_setup):
         pytest.skip('This test cannot run with Sync Gateway version below 3.0')
 
     # prepare sync gateway environment
-    sgwgateway = SyncGateway()
-    sg_conf_name = "listener_tests/multiple_sync_gateways"
-
-    c_cluster = cluster.Cluster(config=cluster_config)
-    sg_config = sync_gateway_config_path_for_mode(sg_conf_name, mode)
-    c_cluster.reset(sg_config_path=sg_config)
-
-    sg1 = c_cluster.sync_gateways[0]
-    sg2 = c_cluster.sync_gateways[1]
-
-    sgw_cluster1_conf_name = sync_gateway_config_path_for_mode('listener_tests/sg_replicate_sgw_cluster1', mode)
-    sgw_cluster2_conf_name = sync_gateway_config_path_for_mode('listener_tests/sg_replicate_sgw_cluster2', mode)
-
-    sg_cluster1_config_path = "{}/{}".format(os.getcwd(), sgw_cluster1_conf_name)
-    sg_cluster2_config_path = "{}/{}".format(os.getcwd(), sgw_cluster2_conf_name)
-    sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_cluster1_config_path, url=sg1.ip,
-                                            sync_gateway_version=sync_gateway_version, enable_import=True)
-
-    sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_cluster2_config_path, url=sg2.ip,
-                                            sync_gateway_version=sync_gateway_version, enable_import=True)
+    sg1, sg2 = redeploy_sync_gateway(cluster_config, mode, sync_gateway_version)
 
     sg_client = MobileRestClient()
 
@@ -1716,26 +1513,7 @@ def test_user_reassign_to_channel_push_only(params_from_base_test_setup):
         pytest.skip('This test cannot run with Sync Gateway version below 3.0')
 
     # prepare sync gateway environment
-    sgwgateway = SyncGateway()
-    sg_conf_name = "listener_tests/multiple_sync_gateways"
-
-    c_cluster = cluster.Cluster(config=cluster_config)
-    sg_config = sync_gateway_config_path_for_mode(sg_conf_name, mode)
-    c_cluster.reset(sg_config_path=sg_config)
-
-    sg1 = c_cluster.sync_gateways[0]
-    sg2 = c_cluster.sync_gateways[1]
-
-    sgw_cluster1_conf_name = sync_gateway_config_path_for_mode('listener_tests/sg_replicate_sgw_cluster1', mode)
-    sgw_cluster2_conf_name = sync_gateway_config_path_for_mode('listener_tests/sg_replicate_sgw_cluster2', mode)
-
-    sg_cluster1_config_path = "{}/{}".format(os.getcwd(), sgw_cluster1_conf_name)
-    sg_cluster2_config_path = "{}/{}".format(os.getcwd(), sgw_cluster2_conf_name)
-    sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_cluster1_config_path, url=sg1.ip,
-                                            sync_gateway_version=sync_gateway_version, enable_import=True)
-
-    sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_cluster2_config_path, url=sg2.ip,
-                                            sync_gateway_version=sync_gateway_version, enable_import=True)
+    sg1, sg2 = redeploy_sync_gateway(cluster_config, mode, sync_gateway_version)
 
     sg_client = MobileRestClient()
 
@@ -1877,26 +1655,7 @@ def test_user_reassign_to_channel_push_pull(params_from_base_test_setup):
         pytest.skip('This test cannot run with Sync Gateway version below 3.0')
 
     # prepare sync gateway environment
-    sgwgateway = SyncGateway()
-    sg_conf_name = "listener_tests/multiple_sync_gateways"
-
-    c_cluster = cluster.Cluster(config=cluster_config)
-    sg_config = sync_gateway_config_path_for_mode(sg_conf_name, mode)
-    c_cluster.reset(sg_config_path=sg_config)
-
-    sg1 = c_cluster.sync_gateways[0]
-    sg2 = c_cluster.sync_gateways[1]
-
-    sgw_cluster1_conf_name = sync_gateway_config_path_for_mode('listener_tests/sg_replicate_sgw_cluster1', mode)
-    sgw_cluster2_conf_name = sync_gateway_config_path_for_mode('listener_tests/sg_replicate_sgw_cluster2', mode)
-
-    sg_cluster1_config_path = "{}/{}".format(os.getcwd(), sgw_cluster1_conf_name)
-    sg_cluster2_config_path = "{}/{}".format(os.getcwd(), sgw_cluster2_conf_name)
-    sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_cluster1_config_path, url=sg1.ip,
-                                            sync_gateway_version=sync_gateway_version, enable_import=True)
-
-    sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_cluster2_config_path, url=sg2.ip,
-                                            sync_gateway_version=sync_gateway_version, enable_import=True)
+    sg1, sg2 = redeploy_sync_gateway(cluster_config, mode, sync_gateway_version)
 
     sg_client = MobileRestClient()
 
@@ -2006,26 +1765,7 @@ def test_auto_purge_for_tombstone_docs(params_from_base_test_setup, with_local_u
         pytest.skip('This test cannot run with Sync Gateway version below 3.0')
 
     # prepare sync gateway environment
-    sgwgateway = SyncGateway()
-    sg_conf_name = "listener_tests/multiple_sync_gateways"
-
-    c_cluster = cluster.Cluster(config=cluster_config)
-    sg_config = sync_gateway_config_path_for_mode(sg_conf_name, mode)
-    c_cluster.reset(sg_config_path=sg_config)
-
-    sg1 = c_cluster.sync_gateways[0]
-    sg2 = c_cluster.sync_gateways[1]
-
-    sgw_cluster1_conf_name = sync_gateway_config_path_for_mode('listener_tests/sg_replicate_sgw_cluster1', mode)
-    sgw_cluster2_conf_name = sync_gateway_config_path_for_mode('listener_tests/sg_replicate_sgw_cluster2', mode)
-
-    sg_cluster1_config_path = "{}/{}".format(os.getcwd(), sgw_cluster1_conf_name)
-    sg_cluster2_config_path = "{}/{}".format(os.getcwd(), sgw_cluster2_conf_name)
-    sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_cluster1_config_path, url=sg1.ip,
-                                            sync_gateway_version=sync_gateway_version, enable_import=True)
-
-    sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_cluster2_config_path, url=sg2.ip,
-                                            sync_gateway_version=sync_gateway_version, enable_import=True)
+    sg1, sg2 = redeploy_sync_gateway(cluster_config, mode, sync_gateway_version)
 
     sg_client = MobileRestClient()
 
@@ -2138,26 +1878,7 @@ def test_resurrected_docs_by_sdk(params_from_base_test_setup, resurrect_type):
         pytest.skip("This test only runs with xattrs enabled scenario")
 
     # prepare sync gateway environment
-    sgwgateway = SyncGateway()
-    sg_conf_name = "listener_tests/multiple_sync_gateways"
-
-    c_cluster = cluster.Cluster(config=cluster_config)
-    sg_config = sync_gateway_config_path_for_mode(sg_conf_name, mode)
-    c_cluster.reset(sg_config_path=sg_config)
-
-    sg1 = c_cluster.sync_gateways[0]
-    sg2 = c_cluster.sync_gateways[1]
-
-    sgw_cluster1_conf_name = sync_gateway_config_path_for_mode('listener_tests/sg_replicate_sgw_cluster1', mode)
-    sgw_cluster2_conf_name = sync_gateway_config_path_for_mode('listener_tests/sg_replicate_sgw_cluster2', mode)
-
-    sg_cluster1_config_path = "{}/{}".format(os.getcwd(), sgw_cluster1_conf_name)
-    sg_cluster2_config_path = "{}/{}".format(os.getcwd(), sgw_cluster2_conf_name)
-    sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_cluster1_config_path, url=sg1.ip,
-                                            sync_gateway_version=sync_gateway_version, enable_import=True)
-
-    sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_cluster2_config_path, url=sg2.ip,
-                                            sync_gateway_version=sync_gateway_version, enable_import=True)
+    sg1, sg2 = redeploy_sync_gateway(cluster_config, mode, sync_gateway_version)
 
     cbs_host = host_for_url(cbs_url)
     sg_client = MobileRestClient()
@@ -2265,6 +1986,120 @@ def test_resurrected_docs_by_sdk(params_from_base_test_setup, resurrect_type):
     sg1.stop_replication2_by_id(replicator2_id, DB1)
 
 
+@pytest.mark.listener
+@pytest.mark.channel_revocation
+def test_concurrent_update_on_channel_revocation(params_from_base_test_setup):
+    """
+        @summary:
+        test case #12
+        1. on passive SGW, create docs
+        2. start a pull replication sg1 <- sg2 with default auto purge config
+        3. verify active SGW have pulled all docs
+        4. start 2 threads, one create and push docs, another pull constantly,
+        5.. verify docs not impacted on active SGW
+    """
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+
+    # check sync gateway version
+    if sync_gateway_version < "3.0.0":
+        pytest.skip('This test cannot run with Sync Gateway version below 3.0')
+
+    # prepare sync gateway environment
+    sg1, sg2 = redeploy_sync_gateway(cluster_config, mode, sync_gateway_version)
+
+    sg_client = MobileRestClient()
+
+    # create users, user sessions
+    channels = ["A", "B"]
+    sg1_username = "sg1_user"
+    sg2_username = "sg2_user"
+    password = "password"
+
+    sg_client.create_user(url=sg1.admin.admin_url, db=DB1, name=sg1_username, password=password, channels=channels)
+    sg_client.create_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, password=password, channels=channels)
+
+    cookie1, session1 = sg_client.create_session(url=sg1.admin.admin_url, db=DB1, name=sg1_username)
+    auth_session1 = cookie1, session1
+
+    cookie2, session2 = sg_client.create_session(url=sg2.admin.admin_url, db=DB2, name=sg2_username)
+    auth_session2 = cookie2, session2
+
+    # 1. on passive SGW, create docs
+    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=10, id_prefix="sg2_A", channels=["A"])
+    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=5, id_prefix="sg2_AnB", channels=["A", "B"])
+    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=3, id_prefix="sg2_B", channels=["B"])
+
+    sg2_docs = sg_client.get_all_docs(url=sg2.url, db=DB2, auth=auth_session2, include_docs=True)
+    sg2_doc_ids = [doc["id"] for doc in sg2_docs["rows"]]
+
+    # 2. start a pull replication sg1 <- sg2 with default auto purge config, verify active SGW have pulled all docs
+    replicator2_id = sg1.start_replication2(
+        local_db=DB1,
+        remote_url=sg2.url,
+        remote_db=DB2,
+        remote_user=sg2_username,
+        remote_password=password,
+        direction="pull",
+        continuous=False
+    )
+    sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id, read_flag=True, max_times=3000)
+
+    sg1_docs = sg_client.get_all_docs(url=sg1.url, db=DB1, auth=auth_session1, include_docs=True)
+    sg1_doc_ids = [doc["id"] for doc in sg1_docs["rows"]]
+    for sg2_doc_id in sg2_doc_ids:
+        assert sg2_doc_id in sg1_doc_ids
+
+    # 3. start two threads, one create and push docs, another pull constantly
+    repeats = 10
+    sleep_period_in_sec = 5
+    wait_time_in_sec = repeats * sleep_period_in_sec + 5
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        create_and_push_task = executor.submit(
+            create_and_push_docs,
+            sg_client,
+            sg1,
+            sg2,
+            DB1,
+            DB2,
+            sg2_username,
+            password,
+            repeats,
+            sleep_period_in_sec)
+        pulling_task = executor.submit(
+            pull_docs_in_parallel,
+            sg1,
+            sg2,
+            DB1,
+            DB2,
+            sg2_username,
+            password,
+            wait_time_in_sec)
+
+        create_and_push_task.result()
+        pulling_task.result()
+
+    # 4. verify docs not impacted on active SGW
+    sg1_docs = sg_client.get_all_docs(url=sg1.url, db=DB1, auth=auth_session1, include_docs=True)
+    sg1_doc_ids = [doc["id"] for doc in sg1_docs["rows"]]
+
+    for sg1_doc_id in sg1_doc_ids:
+        assert not sg1_doc_id.startswith("sg2_A_")
+        assert sg1_doc_id.startswith("sg2_AnB") or sg1_doc_id.startswith("sg2_B") or sg1_doc_id.startswith("local_A_")
+
+    for i in range(repeats):
+        for j in range(3):
+            if i > repeats / 2:
+                # doc added after user lost access : doc remains on local, push gets rejected by remote
+                assert "local_A_{}_{}".format(i, j) in sg1_doc_ids
+            else:
+                # doc added before user lost access, doc gets pushed to remote
+                # another replication thread purge it on local when user lost access
+                assert "local_A_{}_{}".format(i, j) not in sg1_doc_ids
+
+
 def compare_doc_body(doc1, doc2):
     try:
         del doc1["_rev"]
@@ -2283,3 +2118,53 @@ def compare_doc_body(doc1, doc2):
     except KeyError:
         log_info("no _revisions exists")
     return doc1 == doc2
+
+
+def create_and_push_docs(sg_client, local_sg, remote_sg, local_db, remote_db, remote_user, password, repeats, sleep_period):
+    # this method makes repeat actions to create docs in local db and push to remote db
+    sg1 = local_sg
+    sg2 = remote_sg
+    user_revoked = False
+    revocation_mark = 0
+    for i in range(repeats):
+        if i > repeats / 2 and not user_revoked:
+            # revoke user access from channel A
+            sg_client.update_user(url=sg2.admin.admin_url, db=remote_db, name=remote_user, channels=["B"])
+            time.sleep(5)
+            user_revoked = True
+            revocation_mark = i
+        # add 3 docs each time
+        sg_client.add_docs(url=sg1.admin.admin_url, db=local_db, number=3, id_prefix="local_A_{}".format(i), channels=["A"])
+        sg1.start_replication2(
+            local_db=local_db,
+            remote_url=sg2.url,
+            remote_db=remote_db,
+            remote_user=remote_user,
+            remote_password=password,
+            direction="push",
+            continuous=True
+        )
+        time.sleep(sleep_period)
+
+    return revocation_mark
+
+
+def pull_docs_in_parallel(local_sg, remote_sg, local_db, remote_db, remote_user, password, wait_time_in_sec):
+    sg1 = local_sg
+    sg2 = remote_sg
+    start_time = datetime.now()
+    repl_id = sg1.start_replication2(
+        local_db=local_db,
+        remote_url=sg2.url,
+        remote_db=remote_db,
+        remote_user=remote_user,
+        remote_password=password,
+        direction="pull",
+        continuous=True,
+        purge_on_removal=True
+    )
+    time.sleep(wait_time_in_sec)
+    sg1.stop_replication2_by_id(repl_id, local_db)
+    end_time = datetime.now()
+
+    return (end_time - start_time).total_seconds()
