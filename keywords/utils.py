@@ -419,6 +419,7 @@ def deep_dict_compare(object1, object2, isPredictiveResult=False):
         if "stub" in object1:
             del object1["stub"]
             del object1["revpos"]
+            del object1["ver"]
         else:
             log_info("lengths of sgw object and cbl object are different {} --- {}".format(len(object1), len(object2)))
             log_info("keys of object 1 and object2 {}\n---{}".format(list(object1.keys()), list(object2.keys())))
