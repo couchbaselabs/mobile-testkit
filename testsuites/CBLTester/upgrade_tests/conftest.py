@@ -156,6 +156,9 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="Disable Admin auth")
 
+    parser.addoption("--server-ssl",
+                     action="store_true",
+                     help="If set, will enable SSL communication between server and Sync Gateway")
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -180,6 +183,7 @@ def params_from_base_suite_setup(request):
     xattrs_enabled = request.config.getoption("--xattrs")
     device_enabled = request.config.getoption("--device")
     community_enabled = request.config.getoption("--community")
+    cbs_ssl = request.config.getoption("--server-ssl")
     sg_ssl = request.config.getoption("--sg-ssl")
     sg_lb = request.config.getoption("--sg-lb")
     ci = request.config.getoption("--ci")
@@ -355,6 +359,15 @@ def params_from_base_suite_setup(request):
         log_info("Enabled Admin Auth")
         persist_cluster_config_environment_prop(cluster_config, 'disable_admin_auth', False)
 
+    if cbs_ssl:
+        log_info("Running tests with cbs <-> sg ssl enabled")
+        # Enable ssl in cluster configs
+        persist_cluster_config_environment_prop(cluster_config, 'cbs_ssl_enabled', True)
+    else:
+        log_info("Running tests with cbs <-> sg ssl disabled")
+        # Disable ssl in cluster configs
+        persist_cluster_config_environment_prop(cluster_config, 'cbs_ssl_enabled', False)
+
     # As cblite jobs run with on Centos platform, adding by default centos to environment config
     persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "centos", False)
 
@@ -454,7 +467,8 @@ def params_from_base_suite_setup(request):
         "sg_url": sg_url,
         "second_liteserv_host": second_liteserv_host,
         "second_liteserv_version": second_liteserv_version,
-        "second_liteserv_platform": second_liteserv_platform
+        "second_liteserv_platform": second_liteserv_platform,
+        "cbs_ssl": cbs_ssl
     }
 
     # Flush all the memory contents on the server app
