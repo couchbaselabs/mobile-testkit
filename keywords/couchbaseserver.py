@@ -754,6 +754,8 @@ class CouchbaseServer:
                     headers={"Content-Type": "application/x-www-form-urlencoded"},
                     data=data
                 )
+                log_r(resp)
+                resp.raise_for_status()
                 if resp.status_code == 200:
                     break
             except HTTPError as h:
@@ -762,11 +764,7 @@ class CouchbaseServer:
                 log_info("connection ERROR:", str(e))
             count += 1
             time.sleep(1)
-            log_r(resp)
-            resp.raise_for_status()
-
         self._wait_for_rebalance_complete()
-
         return True
 
     def recover(self, server_to_recover):
