@@ -306,7 +306,7 @@ def test_log_maxage_timestamp_ignored(params_from_base_test_setup, sg_conf_name)
 
     sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
     # ~1M MB will be added to log file after requests
-    send_request_to_sgw(sg_one_url, sg_admin_url, remote_executor, sg_platform)
+    send_request_to_sgw(sg_one_url, sg_admin_url, remote_executor, sg_platform, num_of_requests=3200)
 
     sg_helper.stop_sync_gateways(cluster_config=cluster_conf, url=sg_one_url)
     # Get number of logs for each type of log
@@ -815,7 +815,7 @@ def get_sgLogs_fileNum(SG_LOGS_MAXAGE, remote_executor, sg_platform="centos", sg
     return SG_LOGS_FILES_NUM
 
 
-def send_request_to_sgw(sg_one_url, sg_admin_url, remote_executor, sg_platform="centos"):
+def send_request_to_sgw(sg_one_url, sg_admin_url, remote_executor, sg_platform="centos", num_of_requests=4000):
     if sg_platform == "windows":
         command = "for ((i=1;i <= 2000;i += 1)); do curl -s {}/ABCD/ > /dev/null; done".format(sg_one_url)
         os.system(command)
@@ -829,6 +829,6 @@ def send_request_to_sgw(sg_one_url, sg_admin_url, remote_executor, sg_platform="
         os.system(command)
     else:
         remote_executor.execute(
-            "for ((i=1;i <= 4000;i += 1)); do curl -s http://localhost:4984/ABCD/ > /dev/null; done")
+            "for ((i=1;i <= {};i += 1)); do curl -s http://localhost:4984/ABCD/ > /dev/null; done".format(num_of_requests))
         remote_executor.execute(
-            "for ((i=1;i <= 4000;i += 1)); do curl -s -H 'Accept: text/plain' http://localhost:4985/db/ > /dev/null; done")
+            "for ((i=1;i <= {};i += 1)); do curl -s -H 'Accept: text/plain' http://localhost:4985/db/ > /dev/null; done".format(num_of_requests))
