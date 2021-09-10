@@ -184,6 +184,7 @@ def test_upgrade(params_from_base_test_setup):
     time.sleep(30)  # to let the docs import from server to sgw
     replicator.wait_until_replicator_idle(repl)
     doc_ids = db.getDocIds(cbl_db, limit=num_docs + (num_sdk_docs * 2) + 2)
+    print('doc ids after creating docs via sdk')
     added_docs = db.getDocuments(cbl_db, doc_ids)
     # 3. Start a thread to keep updating docs on CBL
     terminator_doc_id = 'terminator'
@@ -319,6 +320,9 @@ def verify_sg_docs_revision_history(url, db, cbl_db2, num_docs, sg_db, added_doc
             num_sg_docs_in_cbldb2 += 1
             assert '_attachments' in cbl_docs2[doc], "_attachments does not exist in doc created in sgw"
     assert num_sg_docs_in_cbldb2 == 2, "sgw docs are not replicated to cbl db2"
+    for doc in expected_doc_map:
+        print("doc in expected doc map ", doc)
+        print("value is ", expected_doc_map[doc])
     for doc in sg_docs:
         if "sgw_docs" not in doc['id']:
             key = doc["doc"]["_id"]
