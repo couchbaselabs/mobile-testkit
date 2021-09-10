@@ -29,7 +29,7 @@ class TestServerCpp(TestServerBase):
             self.build_type = "enterprise"
 
         if self.platform == "c-macosx":
-            self.package_name = "CBLTestServer_macos"
+            self.package_name = "testserver_macos"
         elif self.platform == "c-debian":
             self.package_name = "testserver_debian9-x86_64"
         elif self.platform == "c-rpi":
@@ -114,6 +114,7 @@ class TestServerCpp(TestServerBase):
             # })
             commd = self.binary_path
             subprocess.run([commd], shell=True)
+            status = 0
         else:
             print("STOPPING THE TESTSERVER")
             remote_executor = RemoteExecutor(self.host, self.platform, os.environ["TESTSERVER_HOST_USER"],
@@ -136,9 +137,9 @@ class TestServerCpp(TestServerBase):
     def stop(self):
         if self.platform == "c-macosx":
             # stop Tomcat Windows Service
-            status = self.ansible_runner.run_ansible_playbook("stop-testserver-c-macos.yml", extra_vars={
-                "service_status": "stopped"
-            })
+            commd = "ps -ef | grep 'testserver' | awk '{print $2}' | xargs kill -9 $1"
+            subprocess.run([commd], shell=True)
+            status = 0
         else:
             print("STOPPING THE TESTSERVER")
             remote_executor = RemoteExecutor(self.host, self.platform, os.environ["TESTSERVER_HOST_USER"], os.environ["TESTSERVER_HOST_PASSWORD"])
