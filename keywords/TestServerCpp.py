@@ -61,11 +61,15 @@ class TestServerCpp(TestServerBase):
         if "TESTSERVER_HOST_PASSWORD" not in os.environ:
             raise LiteServError(
                 "Make sure you define 'TESTSERVER_HOST_PASSWORD' as the user for the host you are targeting")
+        if "TESTSERVER_HOST" not in os.environ:
+            test_host = host
+        else:
+            test_host = os.environ["TESTSERVER_HOST"]
 
             # Create config for TestServer non-Windows host
         ansible_testserver_target_lines = [
             "[testserver]",
-            "testserver ansible_host={}".format(host),
+            "testserver ansible_host={}".format(test_host),
             "[testserver:vars]",
             "ansible_user={}".format(os.environ["TESTSERVER_HOST_USER"]),
             "ansible_password={}".format(os.environ["TESTSERVER_HOST_PASSWORD"])
