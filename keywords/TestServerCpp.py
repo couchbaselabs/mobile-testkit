@@ -29,7 +29,7 @@ class TestServerCpp(TestServerBase):
             self.build_type = "enterprise"
 
         if self.platform == "c-macosx":
-            self.package_name = "CBLTestServer_macosx-x86_64"
+            self.package_name = "CBLTestServer_macos"
         elif self.platform == "c-debian":
             self.package_name = "testserver_debian9-x86_64"
         elif self.platform == "c-rpi":
