@@ -33,7 +33,7 @@ class TestServerFactory:
             raise ValueError("Make sure you provide a port!")
 
     @staticmethod
-    def create(platform, version_build, host, port, community_enabled=None, debug_mode=False):
+    def create(platform, version_build, host, port, community_enabled=None, debug_mode=False, platform_version=False):
         TestServerFactory.validate_platform(platform)
         TestServerFactory.validate_host(host)
         TestServerFactory.validate_port(port)
@@ -56,6 +56,6 @@ class TestServerFactory:
                                     community_enabled=community_enabled)
         elif platform in ["c-macosx", "c-rpi", "c-debian", "c-ubuntu"]:
             return TestServerCpp(version_build, host, port, debug_mode, platform=platform,
-                                 community_enabled=community_enabled)
+                                 community_enabled=community_enabled, platform_version=platform_version)
         else:
             raise NotImplementedError("Test server does not support this version")
