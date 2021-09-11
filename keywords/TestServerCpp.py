@@ -109,12 +109,9 @@ class TestServerCpp(TestServerBase):
 
     def start(self, logfile_name):
         if self.platform == "c-macosx":
-            # status = self.ansible_runner.run_ansible_playbook("start-testserver-c-macosx.yml", extra_vars={
-            #     "binary_path": self.binary_path
-            # })
-            commd = self.binary_path
-            subprocess.run([commd], shell=True)
-            status = 0
+            status = self.ansible_runner.run_ansible_playbook("start-testserver-c-macosx.yml", extra_vars={
+                "binary_path": self.binary_path
+            })
         else:
             print("STOPPING THE TESTSERVER")
             remote_executor = RemoteExecutor(self.host, self.platform, os.environ["TESTSERVER_HOST_USER"],
