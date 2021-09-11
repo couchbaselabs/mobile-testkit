@@ -7,6 +7,6 @@
   tasks:
     - debug: msg="Starting the TestService  {{binary_path}}"
     - name: Start TestServer
-      shell: "nohup /Users/couchbase/ctestserver/testserver &"
+      shell: "nohup {{ binary_path }}/ctestserver/testserver &"
       args:
-        chdir: "/Users/couchbase/ctestserver"
+        chdir: "{{ binary_path }}/ctestserver"

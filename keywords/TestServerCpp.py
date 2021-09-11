@@ -12,7 +12,7 @@ from keywords.remoteexecutor import RemoteExecutor
 import subprocess
 
 class TestServerCpp(TestServerBase):
-    def __init__(self, version_build, host, port, debug_mode=None, platform="c-debian", community_enabled=None):
+    def __init__(self, version_build, host, port, debug_mode=None, platform="c-debian", community_enabled=None, platform_version=None):
         super(TestServerCpp, self).__init__(version_build, host, port)
         self.platform = platform
         self.host = host
@@ -108,18 +108,28 @@ class TestServerCpp(TestServerBase):
         raise NotImplementedError()
 
     def start(self, logfile_name):
+
         if self.platform == "c-macosx":
+            home_location = "/Users/couchbase"
+        elif self.platform == "c-rpi":
+            home_location = "/home/pi"
+        else:
+            home_location = "/root"
+        if self.platform == "c-macosx":
+            commd = "ps -ef | grep 'testserver' | awk '{print $2}' | xargs kill -9 $1"
+            subprocess.run([commd], shell=True)
             status = self.ansible_runner.run_ansible_playbook("start-testserver-c-macosx.yml", extra_vars={
-                "binary_path": self.binary_path
+                "binary_path": home_location
             })
         else:
-            print("STOPPING THE TESTSERVER")
             remote_executor = RemoteExecutor(self.host, self.platform, os.environ["TESTSERVER_HOST_USER"],
                                              os.environ["TESTSERVER_HOST_PASSWORD"])
             remote_executor.execute("ps -ef | grep 'testserver' | awk '{print $2}' | xargs kill -9 $1")
             status = self.ansible_runner.run_ansible_playbook("start-testserver-c-linux.yml", extra_vars={
                 "binary_path": self.binary_path
             })
+
+
 
         time.sleep(15)
 
