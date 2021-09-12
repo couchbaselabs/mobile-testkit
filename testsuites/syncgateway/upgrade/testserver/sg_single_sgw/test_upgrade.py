@@ -188,6 +188,7 @@ def test_upgrade(params_from_base_test_setup):
     print("sg docs ids tmep is ", sg_docs_temp_ids)
     doc_ids = db.getDocIds(cbl_db, limit=num_docs + (num_sdk_docs * 2) + 2)
     print('doc ids after creating docs via sdk', doc_ids)
+    assert "sdk_0" in doc_ids, "sdk docs are not imported to SGW and CBL"
     added_docs = db.getDocuments(cbl_db, doc_ids)
     # 3. Start a thread to keep updating docs on CBL
     terminator_doc_id = 'terminator'
