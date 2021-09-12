@@ -227,7 +227,10 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config):
         sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
         cbs_cert_path = os.path.join(os.getcwd(), "certs")
         if is_xattrs_enabled(cluster_config):
-            autoimport_prop = '"import_docs": true,'
+            if get_sg_version(cluster_config) >= "2.1.0":
+                autoimport_prop = '"import_docs": true,'
+            else:
+                autoimport_prop = '"import_docs": "continuous",'
             xattrs_prop = '"enable_shared_bucket_access": true,'
         else:
             autoimport_prop = ""
@@ -499,7 +502,10 @@ class SyncGateway(object):
             playbook_vars["password"] = '"password": "password",'
 
         if is_xattrs_enabled(cluster_config):
-            playbook_vars["autoimport"] = '"import_docs": true,'
+            if get_sg_version(cluster_config) >= "2.1.0":
+                playbook_vars["autoimport"] = '"import_docs": true,'
+            else:
+                playbook_vars["autoimport"] = '"import_docs": "continuous",'
             playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
 
         if sg_ssl_enabled(cluster_config):
@@ -750,7 +756,10 @@ class SyncGateway(object):
         else:
             playbook_vars["logging"] = '"log": ["*"],'
         if is_xattrs_enabled(cluster_config) and cbs_version >= "5.0.0":
-            playbook_vars["autoimport"] = '"import_docs": true,'
+            if version >= "2.1.0":
+                playbook_vars["autoimport"] = '"import_docs": true,'
+            else:
+                playbook_vars["autoimport"] = '"import_docs": "continuous",'
             playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
 
         if sg_ssl_enabled(cluster_config):
@@ -899,7 +908,10 @@ class SyncGateway(object):
             playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
 
         if is_xattrs_enabled(cluster_config) and enable_import:
-            playbook_vars["autoimport"] = '"import_docs": true,'
+            if version >= "2.1.0":
+                playbook_vars["autoimport"] = '"import_docs": true,'
+            else:
+                playbook_vars["autoimport"] = '"import_docs": "continuous",'
 
         if no_conflicts_enabled(cluster_config):
             playbook_vars["no_conflicts"] = '"allow_conflicts": false,'
