@@ -45,7 +45,6 @@ class TestServerCpp(TestServerBase):
             self.download_url = "{}/couchbase-lite-c/{}/{}/{}.zip".format(LATEST_BUILDS, self.version, self.build, self.build_name)
         self.binary_path = "{}/{}.exe".format(BINARY_DIR, self.package_name)
 
-
         log_info("package_name: {}".format(self.package_name))
         log_info("download_url: {}".format(self.download_url))
         log_info("build_name: {}".format(self.build_name))
@@ -62,14 +61,14 @@ class TestServerCpp(TestServerBase):
             raise LiteServError(
                 "Make sure you define 'TESTSERVER_HOST_PASSWORD' as the user for the host you are targeting")
         if "TESTSERVER_HOST" not in os.environ:
-            test_host = host
+            self.test_host = host
         else:
-            test_host = os.environ["TESTSERVER_HOST"]
+            self.test_host = os.environ["TESTSERVER_HOST"]
 
             # Create config for TestServer non-Windows host
         ansible_testserver_target_lines = [
             "[testserver]",
-            "testserver ansible_host={}".format(test_host),
+            "testserver ansible_host={}".format(self.test_host),
             "[testserver:vars]",
             "ansible_user={}".format(os.environ["TESTSERVER_HOST_USER"]),
             "ansible_password={}".format(os.environ["TESTSERVER_HOST_PASSWORD"])
@@ -125,9 +124,6 @@ class TestServerCpp(TestServerBase):
         status = self.ansible_runner.run_ansible_playbook("start-testserver-c-linux.yml", extra_vars={
             "binary_path": home_location
         })
-
-
-
         time.sleep(15)
 
         if status == 0:
@@ -139,17 +135,7 @@ class TestServerCpp(TestServerBase):
         raise NotImplementedError()
 
     def stop(self):
-        if self.platform == "c-macosx":
-            # stop Tomcat Windows Service
-            commd = "ps -ef | grep 'testserver' | awk '{print $2}' | xargs kill -9 $1"
-            subprocess.run([commd], shell=True)
-            status = 0
-        else:
-            print("STOPPING THE TESTSERVER")
-            remote_executor = RemoteExecutor(self.host, self.platform, os.environ["TESTSERVER_HOST_USER"], os.environ["TESTSERVER_HOST_PASSWORD"])
-            remote_executor.execute("ps -ef | grep 'testserver' | awk '{print $2}' | xargs kill -9 $1")
+        print("STOPPING THE TESTSERVER")
+        remote_executor = RemoteExecutor(self.test_host, self.platform, os.environ["TESTSERVER_HOST_USER"], os.environ["TESTSERVER_HOST_PASSWORD"])
+        remote_executor.execute("ps -ef | grep 'testserver' | awk '{print $2}' | xargs kill -9 $1")
 
-        if status == 0:
-            return
-        else:
-            raise LiteServError("Failed to stop Testserver on remote machine")
