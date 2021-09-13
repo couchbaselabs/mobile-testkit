@@ -202,6 +202,10 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="Disable Admin auth")
 
+    parser.addoption("--server-ssl",
+                     action="store_true",
+                     help="If set, will enable SSL communication between server and Sync Gateway")
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -245,6 +249,7 @@ def params_from_base_suite_setup(request):
     enable_rebalance = request.config.getoption("--enable-rebalance")
     enable_file_logging = request.config.getoption("--enable-file-logging")
     delta_sync_enabled = request.config.getoption("--delta-sync")
+    cbs_ssl = request.config.getoption("--server-ssl")
 
     community_enabled = request.config.getoption("--community")
 
@@ -389,6 +394,15 @@ def params_from_base_suite_setup(request):
     else:
         log_info("Running without CBS developer preview")
         persist_cluster_config_environment_prop(cluster_config, 'cbs_developer_preview', False)
+
+    if cbs_ssl:
+        log_info("Running tests with cbs <-> sg ssl enabled")
+        # Enable ssl in cluster configs
+        persist_cluster_config_environment_prop(cluster_config, 'cbs_ssl_enabled', True)
+    else:
+        log_info("Running tests with cbs <-> sg ssl disabled")
+        # Disable ssl in cluster configs
+        persist_cluster_config_environment_prop(cluster_config, 'cbs_ssl_enabled', False)
 
     if disable_persistent_config:
         log_info(" disable persistent config")
