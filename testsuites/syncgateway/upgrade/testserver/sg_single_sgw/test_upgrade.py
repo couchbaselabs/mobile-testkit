@@ -181,14 +181,8 @@ def test_upgrade(params_from_base_test_setup):
     sdk_doc_bodies = document.create_docs('sdk', number=num_sdk_docs, channels=sg_user_channels)
     sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
     sdk_client.upsert_multi(sdk_docs)
-    time.sleep(90)  # to let the docs import from server to sgw
     replicator.wait_until_replicator_idle(repl)
-    sg_docs_temp = sg_client.get_all_docs(url=sg_admin_url, db=sg_db)["rows"]
-    sg_docs_temp_ids = [doc['id'] for doc in sg_docs_temp]
-    print("sg docs ids tmep is ", sg_docs_temp_ids)
     doc_ids = db.getDocIds(cbl_db, limit=num_docs + (num_sdk_docs * 2) + 2)
-    print('doc ids after creating docs via sdk', doc_ids)
-    assert "sdk_0" in doc_ids, "sdk docs are not imported to SGW and CBL"
     added_docs = db.getDocuments(cbl_db, doc_ids)
     # 3. Start a thread to keep updating docs on CBL
     terminator_doc_id = 'terminator'
@@ -268,13 +262,10 @@ def test_upgrade(params_from_base_test_setup):
         # 7. Gather CBL docs new revs for verification
         log_info("Gathering the updated revs for verification")
         doc_ids = []
-        print("added docs before for loop ..", added_docs)
         for doc_id in added_docs:
             doc_ids.append(doc_id)
             if doc_id in updated_doc_revs:
                 added_docs[doc_id]["numOfUpdates"] = updated_doc_revs[doc_id]
-        print("added docs after the  for loop ..", doc_ids)
-        print("added docs after the  for loop added docs  ..", added_docs)
         # 8. Compare rev id, doc body and revision history of all docs on both CBL and SGW
         verify_sg_docs_revision_history(sg_admin_url, db, cbl_db2, num_docs + num_sdk_docs + 3, sg_db=sg_db, added_docs=added_docs, terminator=terminator_doc_id)
 
@@ -316,7 +307,6 @@ def verify_sg_docs_revision_history(url, db, cbl_db2, num_docs, sg_db, added_doc
     cbl_docs2 = db.getDocuments(cbl_db2, cbl_doc_ids2)
     num_sg_docs_in_cbldb2 = 0
     expected_doc_map = {}
-    print(" added docs in verify rev history ", added_docs)
     for doc in added_docs:
         if "numOfUpdates" in added_docs[doc]:
             expected_doc_map[doc] = added_docs[doc]["numOfUpdates"] - 1
@@ -327,9 +317,6 @@ def verify_sg_docs_revision_history(url, db, cbl_db2, num_docs, sg_db, added_doc
             num_sg_docs_in_cbldb2 += 1
             assert '_attachments' in cbl_docs2[doc], "_attachments does not exist in doc created in sgw"
     assert num_sg_docs_in_cbldb2 == 2, "sgw docs are not replicated to cbl db2"
-    for doc in expected_doc_map:
-        print("doc in expected doc map ", doc)
-        print("value is ", expected_doc_map[doc])
     for doc in sg_docs:
         if "sgw_docs" not in doc['id']:
             key = doc["doc"]["_id"]

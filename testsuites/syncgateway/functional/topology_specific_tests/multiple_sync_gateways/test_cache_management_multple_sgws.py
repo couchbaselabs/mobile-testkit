@@ -15,6 +15,9 @@ from libraries.testkit.prometheus import verify_stat_on_prometheus
 
 
 @pytest.mark.syncgateway
+@pytest.mark.topospecific
+@pytest.mark.oscertify
+@pytest.mark.sanity
 def test_importdocs_false_shared_bucket_access_true(params_from_base_test_setup):
     """
     @summary :

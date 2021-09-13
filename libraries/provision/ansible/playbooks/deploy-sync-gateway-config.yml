@@ -2,7 +2,7 @@
 # Deploy SG config
 - hosts: sync_gateways
   any_errors_fatal: true
-  become: yes
+
   vars:
     sync_gateway_config_filepath:
     couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
@@ -35,6 +35,12 @@
 
   - include: tasks/start-sync-gateway-macos.yml
     when: ansible_distribution == "MacOSX"
+
+  - include: tasks/deploy-sync-gateway-config-windows.yml
+    when: ansible_os_family == "Windows"
+
+  - include: tasks/start-sync-gateway-windows.yml
+    when: ansible_os_family == "Windows"
 
 # Deploy SG Accel config
 - hosts: sg_accels
