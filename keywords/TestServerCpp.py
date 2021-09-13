@@ -118,16 +118,13 @@ class TestServerCpp(TestServerBase):
         if self.platform == "c-macosx":
             commd = "ps -ef | grep 'testserver' | awk '{print $2}' | xargs kill -9 $1"
             subprocess.run([commd], shell=True)
-            status = self.ansible_runner.run_ansible_playbook("start-testserver-c-macosx.yml", extra_vars={
-                "binary_path": home_location
-            })
         else:
             remote_executor = RemoteExecutor(self.host, self.platform, os.environ["TESTSERVER_HOST_USER"],
                                              os.environ["TESTSERVER_HOST_PASSWORD"])
             remote_executor.execute("ps -ef | grep 'testserver' | awk '{print $2}' | xargs kill -9 $1")
-            status = self.ansible_runner.run_ansible_playbook("start-testserver-c-linux.yml", extra_vars={
-                "binary_path": self.binary_path
-            })
+        status = self.ansible_runner.run_ansible_playbook("start-testserver-c-linux.yml", extra_vars={
+            "binary_path": home_location
+        })
 
 
 
