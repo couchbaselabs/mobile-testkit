@@ -147,7 +147,7 @@ def test_sgw_cache_management_multiple_sgws(params_from_base_test_setup):
 
     # 2. Create docs in CBS
     create_docs_via_sdk(cbs_url, cbs_cluster, bucket_name, num_docs)
-    time.sleep(3)
+    time.sleep(15) # needed as windows take more time to import
 
     # 3.Verify following stats
     #    EE - import_cancel_cas =0
