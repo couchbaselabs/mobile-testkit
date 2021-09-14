@@ -3944,14 +3944,10 @@ def test_replication_pull_from_empty_database(params_from_base_test_setup, attac
         False, do nothing (cbl db is empty, absolutely no action before replication, NO tombstone docs get pull)
         True, create 9 docs in cbl db, delete these 9 docs (cbl db is empty, but no longer in initial state, tombstone docs get pull)
     5. create a onetime pull replicator, start replication
-    6. verify SGW stats, if cbl_action_before_init_replication:
-        False, cbl_replication_pull.rev_send_count = 90
-        True, cbl_replication_pull.rev_send_count = 100
+    6. verify SGW stats, cbl_replication_pull.rev_send_count == 90
     7. verify CBL, total number of docs is 90, and verify the doc ids are not belongs to tombstone docs
     8. delete 15 more docs on SGW
-    9. restart the replication, verify SGW stats, if cbl_action_before_init_replication:
-        False, cbl_replication_pull.rev_send_count = 105 (90 + 15 deleted in the second time)
-        True, cbl_replication_pull.rev_send_count = 115 (100 + 15 deleted in the second time)
+    9. restart the replication, verify SGW stats, cbl_replication_pull.rev_send_count == 90
     10. verify CBL deleted docs in step 8 have been removed from CBL db
     '''
     cluster_config = params_from_base_test_setup["cluster_config"]
@@ -4016,10 +4012,7 @@ def test_replication_pull_from_empty_database(params_from_base_test_setup, attac
     # 6. verify SGW stats, cbl_replication_pull.rev_send_count sent to CBL equals to 90
     expvars = sg_client.get_expvars(sg_admin_url)
     rev_send_count = expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["rev_send_count"]
-    if cbl_action_before_init_replication:
-        assert rev_send_count == 100, "rev_send_count {} is incorrect".format(rev_send_count)
-    else:
-        assert rev_send_count == 90, "rev_send_count {} is incorrect".format(rev_send_count)
+    assert rev_send_count == 90, "rev_send_count {} is incorrect".format(rev_send_count)
 
     # 7. verify CBL, total number of docs is 90, and verify the doc ids are not belongs to tombstone docs
     cbl_doc_ids = db.getDocIds(cbl_db)
@@ -4042,10 +4035,7 @@ def test_replication_pull_from_empty_database(params_from_base_test_setup, attac
 
     expvars = sg_client.get_expvars(sg_admin_url)
     rev_send_count2 = expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["rev_send_count"]
-    if not cbl_action_before_init_replication:
-        assert rev_send_count2 == 105, "rev_send_count {} is incorrect".format(rev_send_count2)
-    else:
-        assert rev_send_count2 == 115, "rev_send_count {} is incorrect".format(rev_send_count2)
+    assert rev_send_count2 == 90, "rev_send_count {} is incorrect".format(rev_send_count2)
 
     # 10. verify CBL deleted docs in step 7 have been removed from CBL db
     cbl_doc_ids = db.getDocIds(cbl_db)
