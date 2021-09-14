@@ -1,4 +1,5 @@
 import pytest
+import time
 
 from keywords.MobileRestClient import MobileRestClient
 from CBLClient.Database import Database
@@ -114,6 +115,7 @@ def test_multiple_sgs_with_differrent_revs_limit(params_from_base_test_setup, se
 
     replicator.wait_until_replicator_idle(repl1)
     replicator.wait_until_replicator_idle(repl2)
+    time.sleep(60)
     replicator.stop(repl1)
     replicator.stop(repl2)
 
