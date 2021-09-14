@@ -1,4 +1,5 @@
 import pytest
+import time
 
 from keywords.MobileRestClient import MobileRestClient
 from CBLClient.Database import Database
@@ -124,6 +125,7 @@ def test_multiple_sgs_with_differrent_revs_limit(params_from_base_test_setup, se
         revs = sg_client.get_revs_num_in_history(sg1_url, sg_db1, doc_id, auth=session1)
         assert len(revs) == revs_limit1
 
+    time.sleep(60)
     sg_docs = sg_client.get_all_docs(url=sg2_url, db=sg_db2, auth=session2)
     sg_doc_ids = [doc['id'] for doc in sg_docs["rows"]]
     for doc_id in sg_doc_ids:
@@ -267,7 +269,7 @@ def test_multiple_sgs_with_CBLs(params_from_base_test_setup, setup_customized_te
     elif liteserv_platform in ["java-macosx", "java-msft", "java-ubuntu", "java-centos", "javaws-macosx", "javaws-msft", "javaws-ubuntu", "javaws-centos"]:
         assert "WebSocket connection closed by peer" in repl2_error
     elif 'c-' in liteserv_platform:
-        assert "No connection could be made" in repl2_error
+        assert "No connection could be made" in repl2_error or "Connection refused" in repl2_error
     else:
         assert "POSIXErrorDomain" in repl2_error
     # 6. Verify one CBL DB should be successful as other CBL DB should fail as associated Sg is down
