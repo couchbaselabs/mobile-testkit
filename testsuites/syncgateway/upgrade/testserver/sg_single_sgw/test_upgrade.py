@@ -181,6 +181,7 @@ def test_upgrade(params_from_base_test_setup):
     sdk_doc_bodies = document.create_docs('sdk', number=num_sdk_docs, channels=sg_user_channels)
     sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
     sdk_client.upsert_multi(sdk_docs)
+    time.sleep(30) # to let the docs import from server to sgw
     replicator.wait_until_replicator_idle(repl)
     doc_ids = db.getDocIds(cbl_db, limit=num_docs + (num_sdk_docs * 2) + 2)
     added_docs = db.getDocuments(cbl_db, doc_ids)
