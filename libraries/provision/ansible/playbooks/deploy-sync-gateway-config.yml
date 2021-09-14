@@ -23,6 +23,10 @@
 
   tasks:
   - include: tasks/stop-sync-gateway.yml
+    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian" or ansible_distribution == "MacOSX"
+
+  - include: tasks/stop-sync-gateway-windows.yml
+    when: ansible_os_family == "Windows"
 
   - include: tasks/deploy-sync-gateway-config.yml
     when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
