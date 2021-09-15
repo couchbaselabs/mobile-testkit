@@ -327,13 +327,15 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     }
 
     if create_db_per_test:
+        tear_down_processed = []
         for testserver, cbl_db, db_obj, base_url, db_name, path in zip(testserver_list, cbl_db_list, db_obj_list, base_url_list, db_name_list, db_path_list):
             try:
-                if db.exists(db_name, path):
+                if db.exists(db_name, path) and base_url not in tear_down_processed:
                     log_info(
                         "Deleting the database {} at the test teardown for base url {}".format(db_obj.getName(cbl_db),
                                                                                                base_url))
                     db.deleteDB(cbl_db)
+                    tear_down_processed.append(base_url)
                 log_info("Flushing server memory")
                 utils_obj = Utils(base_url)
                 utils_obj.flushMemory()
