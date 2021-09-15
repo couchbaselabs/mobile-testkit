@@ -133,11 +133,6 @@ def test_replication_configuration_valid_values(params_from_base_test_setup, num
             assert cbl_db_docs[doc]["updates"] == 0, "sync-gateway updates got pushed to CBL for one shot replication"
     replicator.stop(repl)
 
-    total = replicator.getTotal(repl)
-    completed = replicator.getCompleted(repl)
-    replicator.stop(repl)
-    assert total == completed, "total is not equal to completed"
-
 
 @pytest.mark.listener
 @pytest.mark.replication
