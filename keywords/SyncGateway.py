@@ -116,7 +116,10 @@ def verify_sync_gateway_version(host, expected_sync_gateway_version):
         "2.1.3.1": "2",
         "2.5.0": "271",
         "2.6.0": "127",
-        "2.7.0": "166"
+        "2.7.0": "166",
+        "2.8.0": "376",
+        "2.8.0.1": "3",
+        "2.8.2": "1"
     }
     version, build = version_and_build(expected_sync_gateway_version)
     if build is None:
@@ -366,8 +369,8 @@ class SyncGateway(object):
 
     def __init__(self):
         self._session = Session()
-        self.server_port = 8091
-        self.server_scheme = "http"
+        self.server_port = ""
+        self.server_scheme = "couchbase"
 
     def install_sync_gateway(self, cluster_config, sync_gateway_version, sync_gateway_config):
 
@@ -690,7 +693,6 @@ class SyncGateway(object):
             "disable_tls_server": "",
             "disable_admin_auth": ""
         }
-
         sync_gateway_base_url, sync_gateway_package_name, sg_accel_package_name = sg_config.sync_gateway_base_url_and_package()
 
         playbook_vars["couchbase_sync_gateway_package_base_url"] = sync_gateway_base_url
@@ -747,7 +749,6 @@ class SyncGateway(object):
                 playbook_vars["password"] = '"password": "password",'
         else:
             playbook_vars["logging"] = '"log": ["*"],'
-
         if is_xattrs_enabled(cluster_config) and cbs_version >= "5.0.0":
             playbook_vars["autoimport"] = '"import_docs": true,'
             playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
@@ -766,7 +767,6 @@ class SyncGateway(object):
 
         if is_delta_sync_enabled(cluster_config) and version >= "2.5.0":
             playbook_vars["delta_sync"] = '"delta_sync": { "enabled": true},'
-
         if version >= "2.8.0":
             playbook_vars["prometheus"] = '"metricsInterface": ":4986",'
 
@@ -784,7 +784,6 @@ class SyncGateway(object):
 
         if is_admin_auth_disabled(cluster_config) and version >= "3.0.0":
             playbook_vars["disable_admin_auth"] = '"admin_interface_authentication": false,    \n"metrics_interface_authentication": false,'
-
         if url is not None:
             target = hostname_for_url(cluster_config, url)
             log_info("Upgrading sync_gateway/sg_accel on {} ...".format(target))
@@ -811,8 +810,8 @@ class SyncGateway(object):
             Will also enable import if enable_import is set to True
             It is used to enable xattrs and import in the SG config"""
         ansible_runner = AnsibleRunner(cluster_config)
-        server_port = 8091
-        server_scheme = "http"
+        server_port = ""
+        server_scheme = "couchbase"
         sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
         cbs_cert_path = os.path.join(os.getcwd(), "certs")
         bucket_names = get_buckets_from_sync_gateway_config(sg_conf)

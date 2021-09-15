@@ -162,8 +162,8 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
     if not sync_gateway_config.skip_bucketcreation:
         create_server_buckets(cluster_config, sync_gateway_config)
 
-    server_port = 8091
-    server_scheme = "http"
+    server_port = ""
+    server_scheme = "couchbase"
 
     if is_cbs_ssl_enabled(cluster_config):
         server_port = ""

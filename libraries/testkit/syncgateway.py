@@ -42,8 +42,8 @@ class SyncGateway:
         self.admin = Admin(self)
 
         self.cluster_config = cluster_config
-        self.server_port = 8091
-        self.server_scheme = "http"
+        self.server_port = ""
+        self.server_scheme = "couchbase"
 
         if is_cbs_ssl_enabled(self.cluster_config):
             self.server_port = ""
@@ -626,6 +626,41 @@ class SyncGateway:
         log_request(r)
         log_response(r)
         r.raise_for_status()
+
+    def modify_replication2_status(self, replication_id, db, action):
+        sg_url = self.admin.admin_url
+        if action == "reset":
+            self.reset_replication2_checkpoint(sg_url, replication_id, db)
+        else:
+            r = requests.put("{}/{}/_replicationStatus/{}?action={}".format(sg_url, db, replication_id, action))
+            log_request(r)
+            log_response(r)
+            r.raise_for_status()
+
+    def reset_replication2_checkpoint(self, sg_url, replication_id, db):
+        r = requests.put("{}/{}/_replicationStatus/{}?action=stop".format(sg_url, db, replication_id))
+        log_request(r)
+        log_response(r)
+        r.raise_for_status()
+        time.sleep(1)
+        r = requests.put("{}/{}/_replicationStatus/{}?action=reset".format(sg_url, db, replication_id))
+        log_request(r)
+        log_response(r)
+        r.raise_for_status()
+        time.sleep(1)
+        r = requests.put("{}/{}/_replicationStatus/{}?action=start".format(sg_url, db, replication_id))
+        log_request(r)
+        log_response(r)
+        r.raise_for_status()
+        time.sleep(1)
+
+    def get_replication2(self, db):
+        sg_url = self.admin.admin_url
+        r = requests.get("{}/{}/_replication".format(sg_url, db))
+        log_request(r)
+        log_response(r)
+        r.raise_for_status()
+        return r.json()
 
     def __repr__(self):
         return "SyncGateway: {}:{}\n".format(self.hostname, self.ip)
