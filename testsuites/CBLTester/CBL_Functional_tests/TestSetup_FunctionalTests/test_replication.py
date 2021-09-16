@@ -133,11 +133,6 @@ def test_replication_configuration_valid_values(params_from_base_test_setup, num
             assert cbl_db_docs[doc]["updates"] == 0, "sync-gateway updates got pushed to CBL for one shot replication"
     replicator.stop(repl)
 
-    total = replicator.getTotal(repl)
-    completed = replicator.getCompleted(repl)
-    replicator.stop(repl)
-    assert total == completed, "total is not equal to completed"
-
 
 @pytest.mark.listener
 @pytest.mark.replication
@@ -3735,7 +3730,10 @@ def test_channel_update_replication(params_from_base_test_setup):
 
     # 8. CBL should not get any new docs which created at step
     cbl_doc_ids = db.getDocIds(cbl_db)
-    assert len(cbl_doc_ids) == num_docs, "new docs which created in sgw after role change got replicated to cbl"
+    if sync_gateway_version < "3.0":
+        assert len(cbl_doc_ids) == num_docs, "new docs which created in sgw after role change got replicated to cbl"
+    else:
+        assert len(cbl_doc_ids) == 0, "Existing docs in cbl is not purged or new docs got replicated to cbl with channel update to the user"
     for id in cbl_doc_ids:
         assert "new_role_doc" not in id, "new doc got replicated to cbl"
 
