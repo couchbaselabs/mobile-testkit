@@ -265,7 +265,7 @@ class TestServerAndroid(TestServerBase):
         if device_id:
             output = subprocess.check_output(["adb", "-s", device_id, "-d", "shell", "pidof", self.installed_package_name, "|", "wc", "-l"])
         else:
-            output = subprocess.check_output(["adb", "-e", "shell", "pidof", self.installed_package_name, "|", "wc", "-l"])
+            output = subprocess.check_output(["adb", "shell", "pidof", self.installed_package_name, "|", "wc", "-l"])
         log_info("output for running activity {}".format(output))
         if output is None:
             raise LiteServError("Err! App did not launched")
