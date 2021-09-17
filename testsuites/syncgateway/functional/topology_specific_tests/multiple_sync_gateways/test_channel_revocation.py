@@ -45,6 +45,7 @@ def redeploy_sync_gateway(cluster_config, mode, sync_gateway_version):
 
 @pytest.mark.listener
 @pytest.mark.channel_revocation
+@pytest.mark.syncgateway
 @pytest.mark.parametrize("auto_purge_setting", [
     pytest.param("enabled"),
     pytest.param("default"),
@@ -158,6 +159,7 @@ def test_auto_purge_setting_impact(params_from_base_test_setup, auto_purge_setti
 
 @pytest.mark.listener
 @pytest.mark.channel_revocation
+@pytest.mark.syncgateway
 @pytest.mark.parametrize("require_checkpoint_reset", [
     pytest.param(True),
     pytest.param(False)
@@ -294,6 +296,7 @@ def test_existing_replication_enabling_auto_purge(params_from_base_test_setup, r
 
 @pytest.mark.listener
 @pytest.mark.channel_revocation
+@pytest.mark.syncgateway
 def test_new_replication_enabling_auto_purge(params_from_base_test_setup):
     """
         @summary:
@@ -407,6 +410,7 @@ def test_new_replication_enabling_auto_purge(params_from_base_test_setup):
 
 @pytest.mark.listener
 @pytest.mark.channel_revocation
+@pytest.mark.syncgateway
 def test_disable_auto_purge_no_impact_purged_docs(params_from_base_test_setup):
     """
         @summary:
@@ -517,6 +521,7 @@ def test_disable_auto_purge_no_impact_purged_docs(params_from_base_test_setup):
 @pytest.mark.listener
 @pytest.mark.channel_revocation
 @pytest.mark.sanity
+@pytest.mark.syncgateway
 def test_user_lost_channel_access_pull(params_from_base_test_setup):
     """
         @summary:
@@ -625,6 +630,7 @@ def test_user_lost_channel_access_pull(params_from_base_test_setup):
 
 @pytest.mark.listener
 @pytest.mark.channel_revocation
+@pytest.mark.syncgateway
 def test_user_lost_channel_access_push_only(params_from_base_test_setup):
     """
         @summary:
@@ -754,6 +760,7 @@ def test_user_lost_channel_access_push_only(params_from_base_test_setup):
 
 @pytest.mark.listener
 @pytest.mark.channel_revocation
+@pytest.mark.syncgateway
 def test_user_lost_channel_access_push_and_pull(params_from_base_test_setup):
     """
         @summary:
@@ -866,6 +873,7 @@ def test_user_lost_channel_access_push_and_pull(params_from_base_test_setup):
 
 @pytest.mark.listener
 @pytest.mark.channel_revocation
+@pytest.mark.syncgateway
 @pytest.mark.parametrize("replication_direction", [
     pytest.param("pull"),
     pytest.param("pushAndPull")
@@ -994,6 +1002,7 @@ def test_user_removed_from_role_by_direction(params_from_base_test_setup, replic
 
 @pytest.mark.listener
 @pytest.mark.channel_revocation
+@pytest.mark.syncgateway
 def test_user_removed_from_role_push_only(params_from_base_test_setup):
     """
         @summary:
@@ -1135,6 +1144,7 @@ def test_user_removed_from_role_push_only(params_from_base_test_setup):
 
 @pytest.mark.listener
 @pytest.mark.channel_revocation
+@pytest.mark.syncgateway
 @pytest.mark.parametrize("replication_direction", [
     pytest.param("pull"),
     pytest.param("pushAndPull")
@@ -1256,6 +1266,7 @@ def test_user_role_revoked_channel_access_by_direction(params_from_base_test_set
 
 @pytest.mark.listener
 @pytest.mark.channel_revocation
+@pytest.mark.syncgateway
 def test_user_role_revoked_channel_access_push_only(params_from_base_test_setup):
     """
         @summary:
@@ -1387,6 +1398,7 @@ def test_user_role_revoked_channel_access_push_only(params_from_base_test_setup)
 @pytest.mark.listener
 @pytest.mark.channel_revocation
 @pytest.mark.sanity
+@pytest.mark.syncgateway
 def test_user_reassign_to_channel_pull(params_from_base_test_setup):
     """
         @summary:
@@ -1487,6 +1499,8 @@ def test_user_reassign_to_channel_pull(params_from_base_test_setup):
 
 @pytest.mark.listener
 @pytest.mark.channel_revocation
+@pytest.mark.syncgateway
+@pytest.mark.oscertify
 def test_user_reassign_to_channel_push_only(params_from_base_test_setup):
     """
         @summary:
@@ -1630,6 +1644,7 @@ def test_user_reassign_to_channel_push_only(params_from_base_test_setup):
 
 @pytest.mark.listener
 @pytest.mark.channel_revocation
+@pytest.mark.syncgateway
 def test_user_reassign_to_channel_push_pull(params_from_base_test_setup):
     """
         @summary:
@@ -1741,6 +1756,7 @@ def test_user_reassign_to_channel_push_pull(params_from_base_test_setup):
 
 @pytest.mark.listener
 @pytest.mark.channel_revocation
+@pytest.mark.syncgateway
 @pytest.mark.parametrize("with_local_update", [
     pytest.param(False),
     pytest.param(True)
@@ -1846,6 +1862,7 @@ def test_auto_purge_for_tombstone_docs(params_from_base_test_setup, with_local_u
 
 @pytest.mark.listener
 @pytest.mark.channel_revocation
+@pytest.mark.syncgateway
 @pytest.mark.parametrize("resurrect_type", [
     pytest.param("same_doc_body"),
     pytest.param("different_doc_body")
@@ -1988,6 +2005,7 @@ def test_resurrected_docs_by_sdk(params_from_base_test_setup, resurrect_type):
 
 @pytest.mark.listener
 @pytest.mark.channel_revocation
+@pytest.mark.syncgateway
 def test_concurrent_update_on_channel_revocation(params_from_base_test_setup):
     """
         @summary:

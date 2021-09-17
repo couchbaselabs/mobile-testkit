@@ -35,15 +35,22 @@ class TestDatabase(object):
 
         db = self.db_obj.create(random_string(6))
         # checking when Null/None documentId is provided
-        err_msg = "null"
+        if self.liteserv_platform == "android" or self.liteserv_platform.startswith("java"):
+            err_msg = "id must not be empty"
+        else:
+            err_msg = "null"
+
         try:
             self.db_obj.getDocument(db, None)
             assert 0
         except Exception as err_resp:
             assert err_msg in str(err_resp)
         # checking document in db with empty name
-        doc_id = self.db_obj.getDocument(db, "")
-        assert doc_id == -1
+        try:
+            doc_id = self.db_obj.getDocument(db, "")
+            assert doc_id == -1
+        except Exception as err_resp:
+            assert err_msg in str(err_resp)
         # checking for a non-existing doc in DB
         doc_id = self.db_obj.getDocument(db, "I-do-not-exist")
         assert doc_id == -1
