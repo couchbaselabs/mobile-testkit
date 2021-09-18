@@ -275,7 +275,10 @@ class Cluster:
                     raise ProvisioningError("Failed to block port on SGW")
         # Add configuration to run with xattrs
         if self.xattrs:
-            playbook_vars["autoimport"] = '"import_docs": true,'
+            if get_sg_version(self._cluster_config) >= "2.1.0":
+                playbook_vars["autoimport"] = '"import_docs": true,'
+            else:
+                playbook_vars["autoimport"] = '"import_docs": "continuous",'
             playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
 
         if self.sync_gateway_ssl:

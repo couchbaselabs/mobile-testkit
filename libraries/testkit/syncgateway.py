@@ -158,7 +158,10 @@ class SyncGateway:
             playbook_vars["sslkey"] = '"SSLKey": "sg_privkey.pem",'
 
         if is_xattrs_enabled(self.cluster_config):
-            playbook_vars["autoimport"] = '"import_docs": true,'
+            if get_sg_version(self.cluster_config) >= "2.1.0":
+                playbook_vars["autoimport"] = '"import_docs": true,'
+            else:
+                playbook_vars["autoimport"] = '"import_docs": "continuous",'
             playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
 
         if no_conflicts_enabled(self.cluster_config):
@@ -303,7 +306,10 @@ class SyncGateway:
             playbook_vars["password"] = '"password": "password",'
 
         if is_xattrs_enabled(self.cluster_config):
-            playbook_vars["autoimport"] = '"import_docs": true,'
+            if get_sg_version(self.cluster_config) >= "2.1.0":
+                playbook_vars["autoimport"] = '"import_docs": true,'
+            else:
+                playbook_vars["autoimport"] = '"import_docs": "continuous",'
             playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
 
         if no_conflicts_enabled(self.cluster_config):

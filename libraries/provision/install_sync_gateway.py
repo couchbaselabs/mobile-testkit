@@ -264,7 +264,10 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
                 raise ProvisioningError("Failed to block port on SGW")
 
     if is_xattrs_enabled(cluster_config):
-        playbook_vars["autoimport"] = '"import_docs": true,'
+        if get_sg_version(cluster_config) >= "2.1.0":
+            playbook_vars["autoimport"] = '"import_docs": true,'
+        else:
+            playbook_vars["autoimport"] = '"import_docs": "continuous",'
         playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
 
     if no_conflicts_enabled(cluster_config):
