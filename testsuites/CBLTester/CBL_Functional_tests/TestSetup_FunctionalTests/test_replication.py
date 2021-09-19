@@ -4110,6 +4110,7 @@ def test_replication_with_custom_retries(params_from_base_test_setup, num_of_doc
     else:
         db.create_bulk_docs(num_of_docs, "cbl-replicator-retries", db=cbl_db, channels=channels_sg)
 
+    log_info(sg_docs)
     start_time = time.time()
     repl_change_listener = replicator.addChangeListener(repl)
 
@@ -4128,10 +4129,12 @@ def test_replication_with_custom_retries(params_from_base_test_setup, num_of_doc
     time_taken = end_time - start_time
     log_info(time_taken)
 
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)
+    log_info(sg_docs)
     replicator.wait_until_replicator_idle(repl)
+
     sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)
     sg_docs = sg_docs["rows"]
-
     # Verify database doc counts
     cbl_doc_count = db.getCount(cbl_db)
     assert len(sg_docs) == cbl_doc_count, "Expected number of docs does not exist in sync-gateway after replication"
