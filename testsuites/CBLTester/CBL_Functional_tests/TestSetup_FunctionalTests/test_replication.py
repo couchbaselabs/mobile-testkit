@@ -4063,9 +4063,10 @@ def test_replication_with_custom_retries(params_from_base_test_setup, num_of_doc
     """
         @summary:
         1. Create CBL DB and create bulk doc in CBL
-        2. Configure replication with valid values of valid cbl Db, valid target url
-        3. Start replication with push and pull
-        4. Verify replication is successful and verify docs exist
+        2. Stop the SG
+        3. Start replication with retries(push and pull)
+        4. Verify replicator is retrying
+        5. Start the SG and verify replicator connect to SG
     """
     sg_db = "db"
     sg_url = params_from_base_test_setup["sg_url"]
@@ -4119,7 +4120,6 @@ def test_replication_with_custom_retries(params_from_base_test_setup, num_of_doc
         assert changes_count > 8
     elif wait_time == 3:
         assert changes_count > 4
-    log_info("*" * 90)
     time_taken = end_time - start_time
     log_info(time_taken)
 
