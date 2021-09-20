@@ -133,11 +133,6 @@ def test_replication_configuration_valid_values(params_from_base_test_setup, num
             assert cbl_db_docs[doc]["updates"] == 0, "sync-gateway updates got pushed to CBL for one shot replication"
     replicator.stop(repl)
 
-    total = replicator.getTotal(repl)
-    completed = replicator.getCompleted(repl)
-    replicator.stop(repl)
-    assert total == completed, "total is not equal to completed"
-
 
 @pytest.mark.listener
 @pytest.mark.replication
@@ -3733,7 +3728,10 @@ def test_channel_update_replication(params_from_base_test_setup):
 
     # 8. CBL should not get any new docs which created at step
     cbl_doc_ids = db.getDocIds(cbl_db)
-    assert len(cbl_doc_ids) == num_docs, "new docs which created in sgw after role change got replicated to cbl"
+    if sync_gateway_version < "3.0":
+        assert len(cbl_doc_ids) == num_docs, "new docs which created in sgw after role change got replicated to cbl"
+    else:
+        assert len(cbl_doc_ids) == 0, "Existing docs in cbl is not purged or new docs got replicated to cbl with channel update to the user"
     for id in cbl_doc_ids:
         assert "new_role_doc" not in id, "new doc got replicated to cbl"
 
@@ -4065,9 +4063,10 @@ def test_replication_with_custom_retries(params_from_base_test_setup, num_of_doc
     """
         @summary:
         1. Create CBL DB and create bulk doc in CBL
-        2. Configure replication with valid values of valid cbl Db, valid target url
-        3. Start replication with push and pull
-        4. Verify replication is successful and verify docs exist
+        2. Stop the SG
+        3. Start replication with retries(push and pull)
+        4. Verify replicator is retrying
+        5. Start the SG and verify replicator connect to SG
     """
     sg_db = "db"
     sg_url = params_from_base_test_setup["sg_url"]
@@ -4121,7 +4120,6 @@ def test_replication_with_custom_retries(params_from_base_test_setup, num_of_doc
         assert changes_count > 8
     elif wait_time == 3:
         assert changes_count > 4
-    log_info("*" * 90)
     time_taken = end_time - start_time
     log_info(time_taken)
 
