@@ -4132,9 +4132,9 @@ def test_replication_with_custom_retries(params_from_base_test_setup, num_of_doc
     sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)
     log_info(sg_docs)
     # Give some time to replicator to retry
-    time.sleep(65)
+    # time.sleep(65)
     # Commented as all network errors are causing test failures, but replicator retrying as expected
-    # replicator.wait_until_replicator_idle(repl)
+    replicator.wait_until_replicator_idle(repl, err_check=False)
     sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)
     sg_docs = sg_docs["rows"]
     # Verify database doc counts
