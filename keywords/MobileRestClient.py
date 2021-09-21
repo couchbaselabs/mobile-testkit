@@ -2381,8 +2381,7 @@ class MobileRestClient:
 
         log_r(resp)
         resp.raise_for_status()
-        resp_obj = resp.json()
-        return resp_obj
+        return resp
 
     def get_revs_num_in_history(self, url, db, doc_id, auth=None):
         """
