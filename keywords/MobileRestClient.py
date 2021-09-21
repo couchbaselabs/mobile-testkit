@@ -2367,6 +2367,23 @@ class MobileRestClient:
         resp_obj = resp.json()
         return resp_obj
 
+    def get_revision_tree(self, url, db, doc_id, auth=None):
+        """
+        Get all revision history
+        """
+        auth_type = get_auth_type(auth)
+        if auth_type == AuthType.session:
+            resp = self._session.get("{}/{}/_revtree/{}".format(url, db, doc_id), cookies=dict(SyncGatewaySession=auth[1]))
+        elif auth_type == AuthType.http_basic:
+            resp = self._session.get("{}/{}/_revtree/{}".format(url, db, doc_id), auth=auth)
+        else:
+            resp = self._session.get("{}/{}/_revtree/{}".format(url, db, doc_id))
+
+        log_r(resp)
+        resp.raise_for_status()
+        resp_obj = resp.json()
+        return resp_obj
+
     def get_revs_num_in_history(self, url, db, doc_id, auth=None):
         """
         Get all revisions from history for specified doc
