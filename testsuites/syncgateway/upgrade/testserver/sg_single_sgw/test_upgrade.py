@@ -157,9 +157,8 @@ def test_upgrade(params_from_base_test_setup):
     sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db)
     sg_doc_ids = [doc['id'] for doc in sg_docs["rows"]]
     for doc_id in sg_doc_ids:
-        revs = sg_client.get_revs_num_in_history(sg_admin_url, sg_db, doc_id)
-        print("revs for doc id ", doc_id)
-        print("revs for doc id ", revs)
+        revs = sg_client.get_revision_tree(sg_admin_url, sg_db, doc_id)
+        print("revs for doc id {} and revs {} ".format(doc_id, revs))
 
     # Start 2nd replicator to verify docs with attachments gets replicated after the upgrade for one shot replications
     sg_cookie, sg_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=sg_user_name)
@@ -200,9 +199,8 @@ def test_upgrade(params_from_base_test_setup):
     sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db)
     sg_doc_ids = [doc['id'] for doc in sg_docs["rows"]]
     for doc_id in sg_doc_ids:
-        revs = sg_client.get_revs_num_in_history(sg_admin_url, sg_db, doc_id)
-        print("revs for doc id ", doc_id)
-        print("revs for doc id ", revs)
+        revs = sg_client.get_revision_tree(sg_admin_url, sg_db, doc_id)
+        print("revs for doc id {} and revs {} ".format(doc_id, revs))
     # 3. Start a thread to keep updating docs on CBL
     terminator_doc_id = 'terminator'
     with ProcessPoolExecutor() as up:
@@ -273,9 +271,8 @@ def test_upgrade(params_from_base_test_setup):
         sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db)
         sg_doc_ids = [doc['id'] for doc in sg_docs["rows"]]
         for doc_id in sg_doc_ids:
-            revs = sg_client.get_revs_num_in_history(sg_admin_url, sg_db, doc_id)
-            print("revs for doc id ", doc_id)
-            print("revs for doc id ", revs)
+            revs = sg_client.get_revision_tree(sg_admin_url, sg_db, doc_id)
+            print("revs for doc id {} and revs {} ".format(doc_id, revs))
         repl_config2 = replicator.configure(cbl_db2, sg_blip_url, continuous=True, channels=sg_user_channels, replication_type="push_pull", replicator_authenticator=replicator_authenticator)
         repl2 = replicator.create(repl_config2)
         replicator.start(repl2)
@@ -291,9 +288,8 @@ def test_upgrade(params_from_base_test_setup):
         sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db)
         sg_doc_ids = [doc['id'] for doc in sg_docs["rows"]]
         for doc_id in sg_doc_ids:
-            revs = sg_client.get_revs_num_in_history(sg_admin_url, sg_db, doc_id)
-            print("revs for doc id ", doc_id)
-            print("revs for doc id ", revs)
+            revs = sg_client.get_revision_tree(sg_admin_url, sg_db, doc_id)
+            print("revs for doc id {} and revs {} ".format(doc_id, revs))
 
         # 7. Gather CBL docs new revs for verification
         log_info("Gathering the updated revs for verification")
@@ -308,9 +304,8 @@ def test_upgrade(params_from_base_test_setup):
         sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db)
         sg_doc_ids = [doc['id'] for doc in sg_docs["rows"]]
         for doc_id in sg_doc_ids:
-            revs = sg_client.get_revs_num_in_history(sg_admin_url, sg_db, doc_id)
-            print("revs for doc id ", doc_id)
-            print("revs for doc id ", revs)
+            revs = sg_client.get_revision_tree(sg_admin_url, sg_db, doc_id)
+            print("revs for doc id {} and revs {} ".format(doc_id, revs))
 
         # 8. Compare rev id, doc body and revision history of all docs on both CBL and SGW
         verify_sg_docs_revision_history(sg_admin_url, db, cbl_db2, num_docs + num_sdk_docs + 3, sg_db=sg_db, added_docs=added_docs, terminator=terminator_doc_id)
@@ -381,7 +376,7 @@ def verify_sg_docs_revision_history(url, db, cbl_db2, num_docs, sg_db, added_doc
                 del added_docs[key]["_id"]
             except KeyError:
                 log_info("Ignoring id verification")
-            assert rev_gen == expected_doc_map[key], "revision mismatch"
+            assert rev_gen == expected_doc_map[key], "revision mismatch for the key {} and rev gen is ".format(key, rev)
             assert len(doc["doc"]) == len(added_docs[key]), "doc length mismatch"
 
     log_info("finished verify_sg_docs_revision_history.")
