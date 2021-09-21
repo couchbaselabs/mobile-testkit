@@ -2381,7 +2381,7 @@ class MobileRestClient:
 
         log_r(resp)
         resp.raise_for_status()
-        return resp
+        return resp.content
 
     def get_revs_num_in_history(self, url, db, doc_id, auth=None):
         """
