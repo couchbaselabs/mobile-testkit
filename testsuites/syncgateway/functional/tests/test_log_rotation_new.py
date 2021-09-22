@@ -815,7 +815,7 @@ def get_sgLogs_fileNum(SG_LOGS_MAXAGE, remote_executor, sg_platform="centos", sg
     return SG_LOGS_FILES_NUM
 
 
-def send_request_to_sgw(sg_one_url, sg_admin_url, remote_executor, sg_platform="centos", num_of_requests=4000):
+def send_request_to_sgw(sg_one_url, sg_admin_url, remote_executor, sg_platform="centos", num_of_requests=2500):
     if sg_platform == "windows":
         command = "for ((i=1;i <= 2000;i += 1)); do curl -s {}/ABCD/ > /dev/null; done".format(sg_one_url)
         os.system(command)
