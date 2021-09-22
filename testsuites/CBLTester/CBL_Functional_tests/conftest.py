@@ -187,10 +187,6 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="magma-storage: Enable magma storage on couchbase server")
 
-    parser.addoption("--liteserv-android-serial-numbers",
-                     action="store",
-                     help="liteserv-android-serial-numbers: the android device serial numbers")
-
     parser.addoption("--disable-persistent-config",
                      action="store_true",
                      help="Disable Centralized Persistent Config")
@@ -254,11 +250,6 @@ def params_from_base_suite_setup(request):
     enable_cbs_developer_preview = request.config.getoption("--enable-cbs-developer-preview")
     cbs_ssl = request.config.getoption("--server-ssl")
     magma_storage_enabled = request.config.getoption("--magma-storage")
-
-    liteserv_android_serial_numbers = request.config.getoption("--liteserv-android-serial-numbers")
-    liteserv_android_serial_number = []
-    if liteserv_android_serial_numbers:
-        liteserv_android_serial_number = liteserv_android_serial_numbers.split(',')
     disable_persistent_config = request.config.getoption("--disable-persistent-config")
     enable_server_tls_skip_verify = request.config.getoption("--enable-server-tls-skip-verify")
     disable_tls_server = request.config.getoption("--disable-tls-server")
@@ -281,20 +272,12 @@ def params_from_base_suite_setup(request):
 
         # Install TestServer app
         if device_enabled:
-            if len(liteserv_android_serial_number) != 0 and "android" in liteserv_platform:
-                testserver.serial_number = liteserv_android_serial_number[0]
-                testserver.install_device(liteserv_android_serial_number[0])
-            else:
-                testserver.install_device()
+            testserver.install_device()
         else:
             testserver.install()
         test_name_cp = test_name.replace("/", "-")
         if device_enabled:
-            if len(liteserv_android_serial_number) != 0 and "android" in liteserv_platform:
-                testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
-                                                                      test_name_cp, datetime.datetime.now()), liteserv_android_serial_number[0])
-            else:
-                testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
+            testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
                                                                       test_name_cp, datetime.datetime.now()))
         else:
             testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp,
@@ -513,12 +496,7 @@ def params_from_base_suite_setup(request):
         log_info("Starting TestServer...")
         test_name_cp = test_name.replace("/", "-")
         if device_enabled:
-            if len(liteserv_android_serial_number) != 0 and "android" in liteserv_platform:
-                testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
-                                                                      test_name_cp, datetime.datetime.now()),
-                                        liteserv_android_serial_number[0])
-            else:
-                testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
+            testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
                                                                       test_name_cp, datetime.datetime.now()))
         else:
             testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
@@ -645,8 +623,7 @@ def params_from_base_suite_setup(request):
         "sg_ce": sg_ce,
         "cbl_ce": cbl_ce,
         "prometheus_enable": prometheus_enable,
-        "ssl_enabled": cbs_ssl,
-        "liteserv_android_serial_number": liteserv_android_serial_number
+        "ssl_enabled": cbs_ssl
     }
 
     if request.node.testsfailed != 0 and enable_file_logging and create_db_per_suite is not None:
@@ -726,7 +703,6 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     sg_ce = params_from_base_suite_setup["sg_ce"]
     prometheus_enable = request.config.getoption("--prometheus-enable")
     cbs_ssl = params_from_base_suite_setup["ssl_enabled"]
-    liteserv_android_serial_number = params_from_base_suite_setup["liteserv_android_serial_number"]
 
     source_db = None
     test_name_cp = test_name.replace("/", "-")
@@ -737,10 +713,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     if not use_local_testserver and create_db_per_test:
         log_info("Starting TestServer...")
         if device_enabled:
-            if len(liteserv_android_serial_number) != 0 and "android" in liteserv_platform:
-                testserver.start_device(log_filename, liteserv_android_serial_number[0])
-            else:
-                testserver.start_device(log_filename)
+            testserver.start_device(log_filename)
         else:
             testserver.start(log_filename)
 

@@ -66,7 +66,7 @@ def test_replication_with_encryption(params_from_base_test_setup, type):
     db.create_bulk_docs(num_of_docs, "cbl", db=cbl_db, channels=channels_sg)
     doc_id = "doc_1"
     documentObj = Document(base_url)
-    doc_body = document.create_doc(doc_id=doc_id, content="doc1", channels=channel, cbl=True, encrypted=True)
+    doc_body = document.create_doc(doc_id=doc_id, content="doc1", channels=channel, cbl=True)
     doc1 = documentObj.create(doc_id, doc_body)
     db.saveDocument(cbl_db, doc1)
 

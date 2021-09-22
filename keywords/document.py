@@ -4,7 +4,6 @@ import zlib
 
 from keywords import types
 from keywords import utils
-from itertools import cycle
 
 import keywords.exceptions
 
@@ -80,7 +79,7 @@ def update_prop_generator():
     return {"updates": 0}
 
 
-def create_doc(doc_id, content=None, attachments=None, expiry=None, channels=None, prop_generator=None, cbl=False, encrypted=False):
+def create_doc(doc_id, content=None, attachments=None, expiry=None, channels=None, prop_generator=None, cbl=False):
     """
     Keyword that creates a document body as a list for use with Add Doc keyword
     return result format:
@@ -116,10 +115,6 @@ def create_doc(doc_id, content=None, attachments=None, expiry=None, channels=Non
         # Loop through list of attachment and attach them to the doc
         doc["_attachments"] = {att.name: {"data": att.data} for att in attachments}
 
-    if encrypted:
-        encrypted_message = str_xor("password")
-        doc["encrypted$password"] = {"alg": "xor", "ciphertext": encrypted_message}
-
     logging.debug(doc)
 
     if prop_generator is not None:
@@ -129,11 +124,6 @@ def create_doc(doc_id, content=None, attachments=None, expiry=None, channels=Non
             doc[k] = v
 
     return doc
-
-
-def str_xor(message):
-    key = "mobiletestkit"
-    return ''.join(chr(ord(c) ^ ord(k)) for c, k in zip(message, cycle(key)))
 
 
 def create_docs(doc_id_prefix, number, content=None, attachments_generator=None, expiry=None, channels=None, prop_generator=None):
