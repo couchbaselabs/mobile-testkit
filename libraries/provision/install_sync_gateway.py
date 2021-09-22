@@ -46,27 +46,36 @@ class SyncGatewayConfig:
     def resolve_sg_sa_mobile_url(self, installer="sync-gateway",
                                  sg_type="enterprise",
                                  platform_extension="rpm", aws=False):
+        if platform_extension == "armzip":
+            architecture = "_arm64"
+        elif platform_extension == "linuxarch":
+            architecture = "_aarch64"
+        else:
+            architecture = "_x86_64"
         if self._build_number:
             base_url = "http://latestbuilds.service.couchbase.com/builds/latestbuilds/sync_gateway/{}/{}".format(self._version_number,
                                                                                                                  self._build_number)
-            package_name = "couchbase-{}-{}_{}-{}_x86_64.{}".format(installer,
-                                                                    sg_type,
-                                                                    self._version_number,
-                                                                    self._build_number,
-                                                                    platform_extension)
+            package_name = "couchbase-{}-{}_{}-{}{}.{}".format(installer,
+                                                               sg_type,
+                                                               self._version_number,
+                                                               self._build_number,
+                                                               architecture,
+                                                               platform_extension)
         else:
             base_url = "http://latestbuilds.service.couchbase.com/builds/releases/mobile/couchbase-sync-gateway/{}".format(self._version_number)
-            package_name = "couchbase-{}-{}_{}_x86_64.{}".format(installer,
-                                                                 sg_type,
-                                                                 self._version_number,
-                                                                 platform_extension)
+            package_name = "couchbase-{}-{}_{}{}.{}".format(installer,
+                                                            sg_type,
+                                                            self._version_number,
+                                                            architecture,
+                                                            platform_extension)
         if aws:
             base_url = "https://cbmobile-packages.s3.amazonaws.com"
-            package_name = "couchbase-{}-{}_{}-{}_x86_64.{}".format(installer,
-                                                                    sg_type,
-                                                                    self._version_number,
-                                                                    self._build_number,
-                                                                    platform_extension)
+            package_name = "couchbase-{}-{}_{}-{}{}.{}".format(installer,
+                                                               sg_type,
+                                                               self._version_number,
+                                                               self._build_number,
+                                                               architecture,
+                                                               platform_extension)
         return base_url, package_name
 
     def sync_gateway_base_url_and_package(self, sg_ce=False,
@@ -83,6 +92,10 @@ class SyncGatewayConfig:
             sg_platform_extension = "deb"
         elif "macos" in sg_platform:
             sg_platform_extension = "zip"
+        elif "macosarm" in sg_platform:
+            sg_platform_extension = "armzip"
+        elif "linuxarch" in sg_platform:
+            sg_platform_extension = "linuxarch"
 
         # Setting SG Accel platform extension
         if "windows" in sa_platform:
@@ -93,6 +106,10 @@ class SyncGatewayConfig:
             sa_platform_extension = "deb"
         elif "macos" in sa_platform:
             sg_platform_extension = "zip"
+        elif "macosarm" in sa_platform:
+            sg_platform_extension = "armzip"
+        elif "linuxarch" in sa_platform:
+            sg_platform_extension = "linuxarch"
 
         if self._version_number == "1.1.0" or self._build_number == "1.1.1":
             log_info("Version unsupported in provisioning.")
