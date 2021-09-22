@@ -306,7 +306,7 @@ def test_log_maxage_timestamp_ignored(params_from_base_test_setup, sg_conf_name)
 
     sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
     # ~1M MB will be added to log file after requests
-    send_request_to_sgw(sg_one_url, sg_admin_url, remote_executor, sg_platform, num_of_requests=3200)
+    send_request_to_sgw(sg_one_url, sg_admin_url, remote_executor, sg_platform)
 
     sg_helper.stop_sync_gateways(cluster_config=cluster_conf, url=sg_one_url)
     # Get number of logs for each type of log
