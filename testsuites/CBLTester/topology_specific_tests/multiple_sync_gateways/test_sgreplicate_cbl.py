@@ -2136,6 +2136,7 @@ def test_sg_replicate_custom_conflict_resolve(params_from_base_test_setup, setup
     sg1.restart(config=temp_sg_config, cluster_config=cluster_config)
     # 6. start push_pull replication with one shot with custom conflict resovler
     sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id, read_flag=True, write_flag=True)
+    time.sleep(30)  # To avoid inconsistent failure when replication did not complete
     # 7. if  local_wins : docs updated on sg1 gets replicated to sg2
     # if  remote_wins : docs updated on sg2 gets replicated to sg1
     # Verify docs created in cbl2
