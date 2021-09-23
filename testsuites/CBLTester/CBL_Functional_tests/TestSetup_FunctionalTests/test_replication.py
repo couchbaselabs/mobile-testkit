@@ -4123,17 +4123,14 @@ def test_replication_with_custom_retries(params_from_base_test_setup, num_of_doc
     time_taken = end_time - start_time
     log_info(time_taken)
 
-    replicator.wait_until_replicator_idle(repl)
+    replicator.wait_until_replicator_idle(repl, err_check=False)
     sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)
     sg_docs = sg_docs["rows"]
 
     # Verify database doc counts
     cbl_doc_count = db.getCount(cbl_db)
     assert len(sg_docs) == cbl_doc_count, "Expected number of docs does not exist in sync-gateway after replication"
-    total = replicator.getTotal(repl)
-    completed = replicator.getCompleted(repl)
     replicator.stop(repl)
-    assert total == completed, "total is not equal to completed"
 
 
 @pytest.mark.listener
@@ -4289,7 +4286,7 @@ def test_replication_reset_retires(params_from_base_test_setup, num_of_docs, con
     time_taken = end_time - start_time
     log_info(time_taken)
     log_info(changes_count)
-    replicator.wait_until_replicator_idle(repl)
+    replicator.wait_until_replicator_idle(repl, err_check=False)
 
     # Stop the sg and restart the replicator
     sg_controller.stop_sync_gateways(cluster_config, url=sg_url)
@@ -4298,17 +4295,14 @@ def test_replication_reset_retires(params_from_base_test_setup, num_of_docs, con
     # Adding enough sleep to wait for the retries
     time.sleep(int(wait_time))
     sg_controller.start_sync_gateways(cluster_config, url=sg_url, config=sg_config)
-    replicator.wait_until_replicator_idle(repl)
+    replicator.wait_until_replicator_idle(repl, err_check=False)
 
     sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)
     sg_docs = sg_docs["rows"]
     # Verify database doc counts
     cbl_doc_count = db.getCount(cbl_db)
     assert len(sg_docs) == cbl_doc_count, "Expected number of docs does not exist in sync-gateway after replication"
-    total = replicator.getTotal(repl)
-    completed = replicator.getCompleted(repl)
     replicator.stop(repl)
-    assert total == completed, "total is not equal to completed"
 
 
 def update_and_resetCheckPoint(db, cbl_db, replicator, repl, replication_type, repl_config, num_of_updates):
