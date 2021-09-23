@@ -230,7 +230,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
             num_replicas = get_sg_replicas(cluster_config)
             playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
 
-        if sg_platform == "macos":
+        if "macos" in sg_platform:
             sg_home_directory = "/Users/sync_gateway"
         elif sg_platform == "windows":
                 sg_home_directory = "C:\\\\PROGRA~1\\\\Couchbase\\\\Sync Gateway"
