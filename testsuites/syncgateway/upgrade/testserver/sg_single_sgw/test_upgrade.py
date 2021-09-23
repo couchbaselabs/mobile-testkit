@@ -276,10 +276,12 @@ def test_upgrade(params_from_base_test_setup):
         repl_config2 = replicator.configure(cbl_db2, sg_blip_url, continuous=True, channels=sg_user_channels, replication_type="push_pull", replicator_authenticator=replicator_authenticator)
         repl2 = replicator.create(repl_config2)
         replicator.start(repl2)
-        log_info("waiting for the replication to complete")
-        replicator.wait_until_replicator_idle(repl2, max_times=3000)
         log_info("Trying to create terminator id ....")
         db.create_bulk_docs(number=1, id_prefix=terminator_doc_id, db=cbl_db, channels=sg_user_channels)
+
+        log_info("waiting for the replication to complete")
+        replicator.wait_until_replicator_idle(repl2, max_times=3000)
+        
         log_info("Waiting for doc updates to complete")
         updated_doc_revs = updates_future.result()
 
@@ -377,6 +379,12 @@ def verify_sg_docs_revision_history(url, db, cbl_db2, num_docs, sg_db, added_doc
             except KeyError:
                 log_info("Ignoring id verification")
             assert rev_gen == expected_doc_map[key], "revision mismatch for the key {} and rev gen is ".format(key, rev)
+
+            try:
+                del doc["doc"]["_attachments"]
+            except KeyError:
+                log_info("_attachments not found, ignoring removal")
+            
             assert len(doc["doc"]) == len(added_docs[key]), "doc length mismatch"
 
     log_info("finished verify_sg_docs_revision_history.")
