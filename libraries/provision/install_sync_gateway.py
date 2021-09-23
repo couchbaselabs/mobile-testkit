@@ -45,13 +45,7 @@ class SyncGatewayConfig:
 
     def resolve_sg_sa_mobile_url(self, installer="sync-gateway",
                                  sg_type="enterprise",
-                                 platform_extension="rpm", aws=False):
-        if platform_extension == "armzip":
-            architecture = "_arm64"
-        elif platform_extension == "linuxarch":
-            architecture = "_aarch64"
-        else:
-            architecture = "_x86_64"
+                                 platform_extension="rpm", aws=False, architecture="_x86_64"):
         if self._build_number:
             base_url = "http://latestbuilds.service.couchbase.com/builds/latestbuilds/sync_gateway/{}/{}".format(self._version_number,
                                                                                                                  self._build_number)
@@ -83,6 +77,7 @@ class SyncGatewayConfig:
                                           sg_installer_type="msi",
                                           sa_platform="centos",
                                           sa_installer_type="msi", aws=False):
+        architecture = "_x86_64"
         # Setting SG platform extension
         if "windows" in sg_platform:
             sg_platform_extension = "msi"
@@ -90,12 +85,14 @@ class SyncGatewayConfig:
             sg_platform_extension = "rpm"
         elif "ubuntu" in sg_platform:
             sg_platform_extension = "deb"
+        elif "macosarm" in sg_platform:
+            sg_platform_extension = "zip"
+            architecture = "_arm64"
         elif "macos" in sg_platform:
             sg_platform_extension = "zip"
-        elif "macosarm" in sg_platform:
-            sg_platform_extension = "armzip"
         elif "linuxarch" in sg_platform:
-            sg_platform_extension = "linuxarch"
+            sg_platform_extension = "rpm"
+            architecture = "_aarch64"
 
         # Setting SG Accel platform extension
         if "windows" in sa_platform:
@@ -104,12 +101,12 @@ class SyncGatewayConfig:
             sa_platform_extension = "rpm"
         elif "ubuntu" in sa_platform:
             sa_platform_extension = "deb"
-        elif "macos" in sa_platform:
-            sg_platform_extension = "zip"
         elif "macosarm" in sa_platform:
-            sg_platform_extension = "armzip"
+            sa_platform_extension = "zip"
+        elif "macos" in sa_platform:
+            sa_platform_extension = "zip"
         elif "linuxarch" in sa_platform:
-            sg_platform_extension = "linuxarch"
+            sa_platform_extension = "rpm"
 
         if self._version_number == "1.1.0" or self._build_number == "1.1.1":
             log_info("Version unsupported in provisioning.")
@@ -129,9 +126,8 @@ class SyncGatewayConfig:
                 sg_platform_extension = "exe"
                 sa_platform_extension = "exe"
 
-            base_url, sg_package_name = self.resolve_sg_sa_mobile_url("sync-gateway", sg_type, sg_platform_extension, aws)
+            base_url, sg_package_name = self.resolve_sg_sa_mobile_url("sync-gateway", sg_type, sg_platform_extension, aws, architecture)
             base_url, accel_package_name = self.resolve_sg_sa_mobile_url("sg-accel", sg_type, sa_platform_extension, aws)
-
         return base_url, sg_package_name, accel_package_name
 
     def is_valid(self):
@@ -351,7 +347,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
                 "install-sync-gateway-package-windows.yml",
                 extra_vars=playbook_vars
             )
-        elif sg_platform == "macos":
+        elif "macos" in sg_platform:
             status = ansible_runner.run_ansible_playbook(
                 "install-sync-gateway-package-macos.yml",
                 extra_vars=playbook_vars
