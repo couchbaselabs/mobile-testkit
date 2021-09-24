@@ -28,9 +28,11 @@
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket",
             "cache": {
-                "channel_cache_max_length": 15000,
-                "channel_cache_min_length": 15000,
-                "channel_cache_expiry": 90
+                "channel_cache": {
+                    "max_length": 15000,
+                    "min_length": 15000,
+                    "expiry_seconds": 90
+                }
             }
         }
     }

@@ -25,7 +25,7 @@
 
   tasks:
   # update and start service
-  - name: SYNC GATEWAY | Install sync_gateway rpm
+  - name: SYNC GATEWAY | upgrade sync_gateway rpm
     shell: rpm -U --force /tmp/{{ couchbase_sync_gateway_package }}
 
   - name: SYNC GATEWAY | wait until sync gateway to listen on port

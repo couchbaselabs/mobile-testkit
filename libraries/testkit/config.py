@@ -20,7 +20,7 @@ class Config:
         self.mode = None
         self.bucket_name_set = []
         self.db_config = None
-        #if cluster_config is not None and (get_sg_version(cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config)):
+        # if cluster_config is not None and (get_sg_version(cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config)):
         #    conf_path = conf_path.replace(SYNC_GATEWAY_CONFIGS, SYNC_GATEWAY_CONFIGS_CPC)
         with open(conf_path, "r") as config:
 
@@ -80,11 +80,12 @@ class Config:
             self.discover_mode(conf_obj)
             # extract database config from non centralized persistent config(old configs) and copy to temp db config
             # Remove database config from the original config
-            if cluster_config is not None and (get_sg_version(cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config)):
+            self.discover_bucket_name_set(conf_obj)
+            """if cluster_config is not None and (get_sg_version(cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config)):
                 sgw_conf_file_name = conf_path.split('/')[-1].split("_cc.")[0]
                 self.discover_bucket_name_set_3_0(sgw_conf_file_name)
             else:
-                self.discover_bucket_name_set(conf_obj)
+                self.discover_bucket_name_set(conf_obj)"""
 
     def get_mode(self):
 

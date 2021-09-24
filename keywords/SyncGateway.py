@@ -708,7 +708,7 @@ class SyncGateway(object):
         playbook_vars1["couchbase_sync_gateway_package_base_url"] = sync_gateway_base_url
         playbook_vars1["couchbase_sync_gateway_package"] = sync_gateway_package_name
         playbook_vars1["couchbase_sg_accel_package"] = sg_accel_package_name
-        if get_sg_version(cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config):
+        """ if get_sg_version(cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config):
             playbook_vars, db_config_json = c_cluster.setup_server_and_sgw(sg_config.config_path, bucket_creation=False)
         else:
             sg_conf = os.path.abspath(sg_config.config_path)
@@ -818,11 +818,11 @@ class SyncGateway(object):
                     playbook_vars["sslcert"] = '"SSLCert": "sg_cert.pem",'
                     playbook_vars["sslkey"] = '"SSLKey": "sg_privkey.pem",'
                 else:
-                    playbook_vars["tls"] = """
+                    playbook_vars["tls"] = ""##"
                         "tls": {"minimum_version": "tlsv1.3",
                                 "SSLCert": "sg_cert.pem",
                                 "SSLKey": "sg_privkey.pem"
-                                }, """
+                                }, ""##"
 
             if no_conflicts_enabled(cluster_config):
                 playbook_vars["no_conflicts"] = '"allow_conflicts": false,'
@@ -854,7 +854,152 @@ class SyncGateway(object):
                 playbook_vars["disable_tls_server"] = '"use_tls_server": false,'
 
             if is_admin_auth_disabled(cluster_config) and version >= "3.0.0":
-                playbook_vars["disable_admin_auth"] = '"admin_interface_authentication": false,    \n"metrics_interface_authentication": false,'
+                playbook_vars["disable_admin_auth"] = '"admin_interface_authentication": false,    \n"metrics_interface_authentication": false,' """
+        
+        sg_conf = os.path.abspath(sg_config.config_path)
+        sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
+        cbs_cert_path = os.path.join(os.getcwd(), "certs")
+        couchbase_server_primary_node = add_cbs_to_sg_config_server_field(cluster_config)
+        bucket_names = get_buckets_from_sync_gateway_config(sg_conf, cluster_config)
+
+        if is_x509_auth(cluster_config) or is_cbs_ssl_enabled(cluster_config):
+            self.server_port = ""
+            self.server_scheme = "couchbases"
+
+        couchbase_server_primary_node = get_cbs_primary_nodes_str(cluster_config, couchbase_server_primary_node)
+        # Shared vars
+        playbook_vars = {
+            "sync_gateway_config_filepath": sg_conf,
+            "username": "",
+            "password": "",
+            "certpath": "",
+            "keypath": "",
+            "cacertpath": "",
+            "x509_auth": False,
+            "sg_cert_path": sg_cert_path,
+            "x509_certs_dir": cbs_cert_path,
+            "server_port": self.server_port,
+            "server_scheme": self.server_scheme,
+            "autoimport": "",
+            "xattrs": "",
+            "no_conflicts": "",
+            "revs_limit": "",
+            "sg_use_views": "",
+            "num_index_replicas": "",
+            "couchbase_server_primary_node": couchbase_server_primary_node,
+            "delta_sync": "",
+            "prometheus": "",
+            "hide_product_version": "",
+            "tls": "",
+            "disable_persistent_config": "",
+            "server_tls_skip_verify": "",
+            "disable_tls_server": "",
+            "disable_admin_auth": ""
+        }
+
+        sync_gateway_base_url, sync_gateway_package_name, sg_accel_package_name = sg_config.sync_gateway_base_url_and_package()
+
+        playbook_vars["couchbase_sync_gateway_package_base_url"] = sync_gateway_base_url
+        playbook_vars["couchbase_sync_gateway_package"] = sync_gateway_package_name
+        playbook_vars["couchbase_sg_accel_package"] = sg_accel_package_name
+        playbook_vars["username"] = '"username": "{}",'.format(bucket_names[0])
+        playbook_vars["password"] = '"password": "password",'
+
+        server_version = get_cbs_version(cluster_config)
+        cbs_version, cbs_build = version_and_build(server_version)
+
+        if version >= "2.1.0":
+            logging_config = '"logging": {"debug": {"enabled": true}'
+            try:
+                redact_level = get_redact_level(cluster_config)
+                playbook_vars["logging"] = '{}, "redaction_level": "{}" {},'.format(logging_config, redact_level, "}")
+            except KeyError as ex:
+                log_info("Keyerror in getting logging{}".format(str(ex)))
+
+                playbook_vars["logging"] = '{} {},'.format(logging_config, "}")
+
+            if not get_sg_use_views(cluster_config) and cbs_version >= "5.5.0":
+                num_replicas = get_sg_replicas(cluster_config)
+                playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
+            else:
+                playbook_vars["sg_use_views"] = '"use_views": true,'
+
+            sg_platform = get_sg_platform(cluster_config)
+            if sg_platform == "macos":
+                sg_home_directory = "/Users/sync_gateway"
+            elif sg_platform == "windows":
+                sg_home_directory = "C:\\\\PROGRA~1\\\\Couchbase\\\\Sync Gateway"
+            else:
+                sg_home_directory = "/home/sync_gateway"
+
+            if is_x509_auth(cluster_config):
+                playbook_vars[
+                    "certpath"] = '"certpath": "{}/certs/chain.pem",'.format(sg_home_directory)
+                playbook_vars[
+                    "keypath"] = '"keypath": "{}/certs/pkey.key",'.format(sg_home_directory)
+                playbook_vars[
+                    "cacertpath"] = '"cacertpath": "{}/certs/ca.pem",'.format(sg_home_directory)
+                if sg_platform == "windows":
+                    playbook_vars["certpath"] = playbook_vars["certpath"].replace("/", "\\\\")
+                    playbook_vars["keypath"] = playbook_vars["keypath"].replace("/", "\\\\")
+                    playbook_vars["cacertpath"] = playbook_vars["cacertpath"].replace("/", "\\\\")
+                playbook_vars["server_scheme"] = "couchbases"
+                playbook_vars["server_port"] = ""
+                playbook_vars["x509_auth"] = True
+                generate_x509_certs(cluster_config, bucket_names, sg_platform)
+            else:
+                playbook_vars["username"] = '"username": "{}",'.format(
+                    bucket_names[0])
+                playbook_vars["password"] = '"password": "password",'
+        else:
+            playbook_vars["logging"] = '"log": ["*"],'
+
+        if is_xattrs_enabled(cluster_config) and cbs_version >= "5.0.0":
+            playbook_vars["autoimport"] = '"import_docs": true,'
+            playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
+
+        if sg_ssl_enabled(cluster_config):
+            if is_centralized_persistent_config_disabled(cluster_config):
+                playbook_vars["sslcert"] = '"SSLCert": "sg_cert.pem",'
+                playbook_vars["sslkey"] = '"SSLKey": "sg_privkey.pem",'
+            else:
+                playbook_vars["tls"] = """
+                    "tls": {"minimum_version": "tlsv1.3",
+                            "SSLCert": "sg_cert.pem",
+                            "SSLKey": "sg_privkey.pem"
+                            }, """
+
+        if no_conflicts_enabled(cluster_config):
+            playbook_vars["no_conflicts"] = '"allow_conflicts": false,'
+        try:
+            revs_limit = get_revs_limit(cluster_config)
+            playbook_vars["revs_limit"] = '"revs_limit": {},'.format(revs_limit)
+        except KeyError:
+            log_info("revs_limit not found in {}, Ignoring".format(cluster_config))
+
+        if is_delta_sync_enabled(cluster_config) and version >= "2.5.0":
+            playbook_vars["delta_sync"] = '"delta_sync": { "enabled": true},'
+
+        if get_sg_version(cluster_config) >= "2.8.0":
+            playbook_vars["prometheus"] = '"metricsInterface": ":4986",'
+
+        if is_hide_prod_version_enabled(cluster_config) and get_sg_version(cluster_config) >= "2.8.1":
+            playbook_vars["hide_product_version"] = '"hide_product_version": true,'
+
+        if is_centralized_persistent_config_disabled(cluster_config):
+            playbook_vars["disable_persistent_config"] = '"disable_persistent_config": true,'
+
+        if is_centralized_persistent_config_disabled(cluster_config) and version >= "3.0.0":
+            playbook_vars["disable_persistent_config"] = '"disable_persistent_config": true,'
+
+        if is_server_tls_skip_verify_enabled(cluster_config) and version >= "3.0.0":
+            playbook_vars["server_tls_skip_verify"] = '"server_tls_skip_verify": true,'
+
+        if is_tls_server_disabled(cluster_config) and version >= "3.0.0":
+            playbook_vars["disable_tls_server"] = '"use_tls_server": false,'
+
+        if is_admin_auth_disabled(cluster_config) and version >= "3.0.0":
+            playbook_vars["disable_admin_auth"] = '"admin_interface_authentication": false,    \n"metrics_interface_authentication": false,' 
         playbook_vars.update(playbook_vars1)
         if upgrade_only:
             if url is not None:
@@ -895,7 +1040,7 @@ class SyncGateway(object):
 
             if status != 0:
                 raise Exception("Could not upgrade sync_gateway/sg_accel")
-            if get_sg_version(cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config):
+            """if get_sg_version(cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config):
                 if status == 0:
                     if url is not None:
                         # Now create rest API for all database configs
@@ -905,7 +1050,7 @@ class SyncGateway(object):
                         sg_gateways = [SyncGateway(cluster_config=self._cluster_config, target=sg_target)]
                         send_dbconfig_as_restCall(db_config_json, sg_gateways)
                     else:
-                        send_dbconfig_as_restCall(db_config_json, c_cluster.sync_gateways)
+                        send_dbconfig_as_restCall(db_config_json, c_cluster.sync_gateways)"""
 
     def redeploy_sync_gateway_config(self, cluster_config, sg_conf, url, sync_gateway_version, enable_import=False, deploy_only=False):
         """Deploy an SG config with xattrs enabled

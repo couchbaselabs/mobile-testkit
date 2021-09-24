@@ -120,7 +120,7 @@ def test_automatic_upgrade(params_from_base_test_setup):
 
     # 4. Upgrade SGW to lithium  and verify new version of SGW config
     # sg_obj.upgrade_sync_gateway(sync_gateways, sync_gateway_previous_version, sync_gateway_version, sg_conf, cluster_conf)
-    sg_obj.upgrade_sync_gateways(cluster_config=cluster_conf, sg_conf=sg_conf, sync_gateway_version=sync_gateway_version, upgrade_only=True)
+    sg_obj.upgrade_sync_gateways(cluster_config=cluster_conf, sg_conf=sg_conf, sync_gateway_version=sync_gateway_version)
   
     # 5. Verify all the above configs converted to new format.
     #   Default config for dynamic config like logging should have default values on _config rest end point

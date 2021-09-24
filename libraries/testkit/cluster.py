@@ -331,6 +331,7 @@ class Cluster:
 
             # Sleep for a few seconds for the indexes to teardown
             time.sleep(5)
+            # time.sleep(30)
 
         status = ansible_runner.run_ansible_playbook(
             "start-sync-gateway.yml",
@@ -367,19 +368,28 @@ class Cluster:
     def setup_server_and_sgw(self, sg_config_path, bucket_creation=True, bucket_list=[]):
         # Parse config and grab bucket names
         ansible_runner = AnsibleRunner(self._cluster_config)
-        cpc_sgw_config_path = get_cpc_sgw_config(sg_config_path)
+        # TODO top-todo1: For now using one commong bootstrop config , once everything is done , check back and see if common bootstrap config is enough
+        # for top-todo1: cpc_sgw_config_path = get_cpc_sgw_config(sg_config_path)
+        from keywords.SyncGateway import sync_gateway_config_path_for_mode
+        cpc_sgw_config_path = "resources/sync_gateway_configs_cpc/sync_gateway_default"
+        sg_conf_name = "sync_gateway_default"
+        mode = "cc"
+        cpc_sgw_config_path = sync_gateway_config_path_for_mode(sg_conf_name, mode, cpc=True)
         cpc_config_path_full = os.path.abspath(cpc_sgw_config_path)
         config_path_full = os.path.abspath(sg_config_path)
         config = Config(config_path_full, self._cluster_config)
         if not bucket_list:
+            print("Getting bucket list from sgw config")
             bucket_name_set = config.get_bucket_name_set()
         else:
+            print("provided bucket list")
             bucket_name_set = bucket_list
         sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
         cbs_cert_path = os.path.join(os.getcwd(), "certs")
+        # TODO : BEN suggested that read user on sgw config will change in beta refresh, comment and get back later
         # bucket_names = get_buckets_from_sync_gateway_config(cpc_sgw_config_path, self._cluster_config)
         bucket_names = bucket_name_set
-        read_bucket_user = "bucket-admin"
+        # read_bucket_user = "bucket-admin"
         self.sync_gateway_config = config
 
         if bucket_creation:
@@ -387,9 +397,10 @@ class Cluster:
             log_info(">>> Creating buckets {}".format(bucket_name_set))
             self.servers[0].create_buckets(bucket_names=bucket_name_set, cluster_config=self._cluster_config, ipv6=self.ipv6)
 
+            # TODO : BEN suggested that read user on sgw config will change in beta refresh, comment and get back later
             # Create read_bucker_user for all buckets
-            for bucket_name in bucket_names:
-                self.servers[0]._create_internal_rbac_user_by_roles(bucket_name, self._cluster_config, read_bucket_user, "data_reader")
+            # for bucket_name in bucket_names:
+            #     self.servers[0]._create_internal_rbac_user_by_roles(bucket_name, self._cluster_config, read_bucket_user, "data_reader")
 
             log_info(">>> Waiting for Server: {} to be in a healthy state".format(self.servers[0].url))
             self.servers[0].wait_for_ready_state()
@@ -399,6 +410,7 @@ class Cluster:
         with open(config_path_full, "r") as config:
             sgw_config_data = config.read()
 
+        print("sgw config data ---  ", sgw_config_data)
         server_port_var = 8091
         server_scheme_var = "http"
         couchbase_server_primary_node = add_cbs_to_sg_config_server_field(self._cluster_config)
@@ -409,7 +421,7 @@ class Cluster:
         couchbase_server_primary_node = get_cbs_primary_nodes_str(self._cluster_config, couchbase_server_primary_node)
         # Assign default values to all configs
         x509_auth_var = False
-        password_var = "password"
+        password_var = ""
         username_playbook_var = ""
         tls_var = ""
         sslcert_var = ""
@@ -455,9 +467,9 @@ class Cluster:
             sg_home_directory = "/home/sync_gateway"
 
         if is_x509_auth(self._cluster_config):
-            certpath_var = '"certpath": "{}/certs/chain.pem",'.format(sg_home_directory)
-            keypath_var = '"keypath": "{}/certs/pkey.key",'.format(sg_home_directory)
-            cacertpath_var = '"cacertpath": "{}/certs/ca.pem",'.format(sg_home_directory)
+            certpath_var = '"x509_cert_path": "{}/certs/chain.pem",'.format(sg_home_directory)
+            keypath_var = '"x509_key_path": "{}/certs/pkey.key",'.format(sg_home_directory)
+            cacertpath_var = '"ca_cert_path": "{}/certs/ca.pem",'.format(sg_home_directory)
 
             if sg_platform == "windows":
                 certpath_var = certpath_var.replace("/", "\\\\")
@@ -470,10 +482,11 @@ class Cluster:
             x509_auth_var = True
 
         else:
-            # TODO : revert back for CPC
-            username_playbook_var = '"username": "{}",'.format(read_bucket_user)
-            # username_playbook_var = '"username": "{}",'.format(bucket_names[0])
-            username_var = bucket_names[0]
+            # TODO : revert back for CPC if read bucket user is back
+            # username_playbook_var = '"username": "{}",'.format(read_bucket_user)
+            username_playbook_var = '"username": "{}",'.format(bucket_names[0])
+            # username_var = bucket_names[0]
+            password_var = '"password": "password",'
 
         if self.cbs_ssl:
             server_scheme_var = "couchbases"
@@ -541,8 +554,8 @@ class Cluster:
         if is_delta_sync_enabled(self._cluster_config) and get_sg_version(self._cluster_config) >= "2.5.0":
             delta_sync_var = '"delta_sync": { "enabled": true},'
 
-        db_username_var = '"username": "{}",'.format(username_var)
-        db_password_var = '"password": "{}",'.format(password_var)
+        # db_username_var = '"username": "{}",'.format(username_var)
+        # db_password_var = password_var
         db_bucket_var = '"bucket": "{}",'.format(bucket_names[0])
         # Replace values with string on sgw config data
 
@@ -565,8 +578,8 @@ class Cluster:
             certpath=certpath_var,
             keypath=keypath_var,
             cacertpath=cacertpath_var,
-            username=db_username_var,
-            password=db_password_var,
+            username=username_playbook_var,
+            password=password_var,
             bucket=db_bucket_var,
             sg_use_views=sg_use_views_var,
             num_index_replicas=num_index_replicas_var,
@@ -579,8 +592,7 @@ class Cluster:
             disable_tls_server=disable_tls_server_var,
             disable_admin_auth=disable_admin_auth_var
         )
-
-        print("config_path _full is ", cpc_config_path_full)
+        print("sgw config data after the template is ", sgw_config_data)
         sgw_db_config = seperate_sgw_and_db_config(sgw_config_data)
         if len(sgw_db_config) == 2:
             sg_config_path, database_config = sgw_db_config
@@ -594,7 +606,7 @@ class Cluster:
             "server_port": server_port_var,
             "server_scheme": server_scheme_var,
             "username": username_playbook_var,
-            "password": db_password_var,
+            "password": password_var,
             "sg_cert_path": sg_cert_path,
             "sslcert": sslcert_var,
             "sslkey": sslkey_var,
@@ -606,24 +618,36 @@ class Cluster:
             "x509_auth": x509_auth_var,
             "x509_certs_dir": cbs_cert_path,
             "couchbase_server_primary_node": couchbase_server_primary_node,
-            "logging": logging_var
+            "logging": logging_var,
+            "autoimport": autoimport_var,
+            "xattrs": xattrs_var,
+            "no_conflicts": no_conflicts_var,
+            "sg_use_views": sg_use_views_var,
+            "num_index_replicas": num_index_replicas_var,
+            "disable_tls_server": disable_tls_server_var,
+            "certpath": certpath_var,
+            "keypath": keypath_var,
+            "cacertpath": cacertpath_var,
+            "delta_sync": delta_sync_var,
+            "revs_limit": revs_limit_var,
+            "server_tls_skip_verify": server_tls_skip_verify_var,
+            "disable_admin_auth": disable_admin_auth_var
         }
         if database_config == "":
             db_config_json = {}
         else:
             with open(database_config) as f:
                 db_config_json = json.loads(f.read())
-
         # Sleep for a few seconds for the indexes to teardown
         time.sleep(5)
 
-        """ status = ansible_runner.run_ansible_playbook(
+        """status = ansible_runner.run_ansible_playbook(
             "start-sync-gateway.yml",
             extra_vars=bootstrap_playbook_vars
         )
         assert status == 0, "Failed to start to Sync Gateway"
-        self.sync_gateways[0].admin.put_db_config(self, sg_db, db_config_json) """
-
+        self.sync_gateways[0].admin.put_db_config(self, sg_db, db_config_json)"""
+        print("ddb_config_json is ----", db_config_json)
         return bootstrap_playbook_vars, db_config_json
 
     def restart_services(self):
