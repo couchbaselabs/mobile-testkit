@@ -398,10 +398,11 @@ def params_from_base_suite_setup(request):
         log_info("Running without Centralized Persistent Config")
         persist_cluster_config_environment_prop(cluster_config, 'disable_persistent_config', False)
 
-    if disable_persistent_config:
+    sgw_config = "sync_gateway_default_functional_tests"
+    """if disable_persistent_config:
         sgw_config = "sync_gateway_default_functional_tests"
     else:
-        sgw_config = "sync_gateway_default_functional_tests_cpc"
+        sgw_config = "sync_gateway_default_functional_tests_cpc" """
     sg_config = sync_gateway_config_path_for_mode(sgw_config, mode)
 
     if enable_server_tls_skip_verify:
