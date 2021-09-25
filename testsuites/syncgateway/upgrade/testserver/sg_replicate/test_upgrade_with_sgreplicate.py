@@ -15,7 +15,8 @@ from CBLClient.Authenticator import Authenticator
 from CBLClient.Document import Document
 from CBLClient.Replication import Replication
 from keywords.SyncGateway import sync_gateway_config_path_for_mode, setup_sgreplicate1_on_sgconfig, setup_replications_on_sgconfig
-from utilities.cluster_config_utils import load_cluster_config_json, get_cluster, is_centralized_persistent_config_disabled, get_sg_version
+# from utilities.cluster_config_utils import load_cluster_config_json, get_cluster, is_centralized_persistent_config_disabled, get_sg_version
+from utilities.cluster_config_utils import load_cluster_config_json, get_cluster
 
 
 def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
@@ -184,7 +185,7 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
 
     sg_conf_name = 'sync_gateway_sg_replicate1_in_sgwconfig'
     sg_config = sync_gateway_config_path_for_mode(sg_conf_name, mode)
-    temp_sg_config_copy, _ = copy_sgconf_to_temp(sg_config, mode)
+    temp_sg_config_copy, _, _ = copy_sgconf_to_temp(sg_config, mode)
     if sync_gateway_version < "2.8.0":
         replication_1, sgw_repl1_id1 = setup_sgreplicate1_on_sgconfig(sg1.admin.admin_url, sg_db1, sg3.admin.admin_url, sg_db2, channels=replication1_channel, continuous=True)
         replication_2, sgw_repl1_id2 = setup_sgreplicate1_on_sgconfig(sg3.admin.admin_url, sg_db2, sg1.admin.admin_url, sg_db1, channels=replication1_channel, continuous=True)
@@ -314,7 +315,7 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
 
         # 6. Restart SGWs after the sgw upgrade
         sg_obj = SyncGateway()
-        # TODO : comment below and test 
+        # TODO : comment below and test
         """ for sg in sync_gateways:
             sg_ip = host_for_url(sg["admin"])
             log_info("Restarting sync gateway after server upgrade {}".format(sg_ip))
