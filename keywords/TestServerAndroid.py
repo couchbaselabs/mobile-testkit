@@ -310,7 +310,7 @@ class TestServerAndroid(TestServerBase):
             based on the self.device_option is given
             i.e.
             input: command = ["adb", "logcat"]
-                   option = "-d"
+                   option = ["-d"]
             return: ["adb", "-d", "logcat"]
             input: command = ["adb", "logcat"]
                    option = ["-s", "K183010440"]
