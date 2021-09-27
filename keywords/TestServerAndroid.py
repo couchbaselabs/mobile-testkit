@@ -127,7 +127,7 @@ class TestServerAndroid(TestServerBase):
         """Install the apk to running Android device or emulator"""
 
         self.device_enabled = True
-        self.device_option = "-d"
+        self.device_option = ["-d"]
         if self.serial_number != "":
             self.device_option = ["-s", self.serial_number]
         apk_path = "{}/{}".format(BINARY_DIR, self.apk_name)
@@ -310,7 +310,7 @@ class TestServerAndroid(TestServerBase):
             based on the self.device_option is given
             i.e.
             input: command = ["adb", "logcat"]
-                   option = ["-d"]
+                   option = "-d"
             return: ["adb", "-d", "logcat"]
             input: command = ["adb", "logcat"]
                    option = ["-s", "K183010440"]
