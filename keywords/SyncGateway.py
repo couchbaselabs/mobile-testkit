@@ -25,8 +25,9 @@ from keywords.utils import host_for_url
 from keywords import document
 from keywords.utils import random_string
 from utilities.cluster_config_utils import copy_sgconf_to_temp, replace_string_on_sgw_config, get_cluster
-from utilities.cluster_config_utils import is_centralized_persistent_config_disabled, is_server_tls_skip_verify_enabled, is_admin_auth_disabled, is_tls_server_disabled
+from utilities.cluster_config_utils import is_server_tls_skip_verify_enabled, is_admin_auth_disabled, is_tls_server_disabled
 from libraries.testkit import cluster
+
 
 def validate_sync_gateway_mode(mode):
     """Verifies that the sync_gateway mode is either channel cache ('cc') or distributed index ('di')"""
@@ -47,7 +48,7 @@ def sync_gateway_config_path_for_mode(config_prefix, mode, cpc=False):
     #    cpc = True
     # Construct expected config path
     config = "{}/{}_{}.json".format(SYNC_GATEWAY_CONFIGS, config_prefix, mode)
-    #if not os.path.isfile(config):
+    # if not os.path.isfile(config):
     #    raise ValueError("Could not file config: {}".format(config))
     if cpc:
         config = "{}/{}_{}.json".format(SYNC_GATEWAY_CONFIGS_CPC, config_prefix, mode)
@@ -126,7 +127,8 @@ def verify_sync_gateway_version(host, expected_sync_gateway_version):
         "2.7.4": "8",
         "2.8.0": "376",
         "2.8.0.1": "3",
-        "2.8.1": "15"
+        "2.8.1": "15",
+        "2.8.2": "1"
     }
     version, build = version_and_build(expected_sync_gateway_version)
     if build is None:
@@ -234,7 +236,10 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config):
         sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
         cbs_cert_path = os.path.join(os.getcwd(), "certs")
         if is_xattrs_enabled(cluster_config):
-            autoimport_prop = '"import_docs": true,'
+            if get_sg_version(cluster_config) >= "2.1.0":
+                autoimport_prop = '"import_docs": true,'
+            else:
+                autoimport_prop = '"import_docs": "continuous",'
             xattrs_prop = '"enable_shared_bucket_access": true,'
         else:
             autoimport_prop = ""
@@ -371,10 +376,11 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config):
             delta_sync=delta_sync_prop,
             hide_prod_version=hide_prod_version_prop,
             tls=tls_prop,
+            metrics_auth=metrics_auth_prop,
+            disable_persistent_config=disable_persistent_config_prop,
             server_tls_skip_verify=server_tls_skip_verify_prop,
-            tls_server=disable_tls_server_prop,
-            admin_auth=disable_admin_auth_prop,
-            metrics_auth=metrics_auth_prop
+            disable_tls_server=disable_tls_server_prop,
+            disable_admin_auth=disable_admin_auth_prop
         )
         data = json.loads(temp)
 
@@ -386,8 +392,8 @@ class SyncGateway(object):
 
     def __init__(self):
         self._session = Session()
-        self.server_port = 8091
-        self.server_scheme = "http"
+        self.server_port = ""
+        self.server_scheme = "couchbase"
 
     def install_sync_gateway(self, cluster_config, sync_gateway_version, sync_gateway_config, url=None, skip_bucketcreation=False):
 
@@ -692,7 +698,7 @@ class SyncGateway(object):
             the sync gateway at that url
         """
         ansible_runner = AnsibleRunner(cluster_config)
-        c_cluster = cluster.Cluster(cluster_config)
+        # c_cluster = cluster.Cluster(cluster_config)
         from libraries.provision.install_sync_gateway import SyncGatewayConfig
         version, build = version_and_build(sync_gateway_version)
         sg_config = SyncGatewayConfig(
@@ -855,7 +861,7 @@ class SyncGateway(object):
 
             if is_admin_auth_disabled(cluster_config) and version >= "3.0.0":
                 playbook_vars["disable_admin_auth"] = '"admin_interface_authentication": false,    \n"metrics_interface_authentication": false,' """
-        
+
         sg_conf = os.path.abspath(sg_config.config_path)
         sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
         cbs_cert_path = os.path.join(os.getcwd(), "certs")
@@ -896,7 +902,6 @@ class SyncGateway(object):
             "disable_tls_server": "",
             "disable_admin_auth": ""
         }
-
         sync_gateway_base_url, sync_gateway_package_name, sg_accel_package_name = sg_config.sync_gateway_base_url_and_package()
 
         playbook_vars["couchbase_sync_gateway_package_base_url"] = sync_gateway_base_url
@@ -953,9 +958,11 @@ class SyncGateway(object):
                 playbook_vars["password"] = '"password": "password",'
         else:
             playbook_vars["logging"] = '"log": ["*"],'
-
         if is_xattrs_enabled(cluster_config) and cbs_version >= "5.0.0":
-            playbook_vars["autoimport"] = '"import_docs": true,'
+            if version >= "2.1.0":
+                playbook_vars["autoimport"] = '"import_docs": true,'
+            else:
+                playbook_vars["autoimport"] = '"import_docs": "continuous",'
             playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
 
         if sg_ssl_enabled(cluster_config):
@@ -979,11 +986,10 @@ class SyncGateway(object):
 
         if is_delta_sync_enabled(cluster_config) and version >= "2.5.0":
             playbook_vars["delta_sync"] = '"delta_sync": { "enabled": true},'
-
-        if get_sg_version(cluster_config) >= "2.8.0":
+        if version >= "2.8.0":
             playbook_vars["prometheus"] = '"metricsInterface": ":4986",'
 
-        if is_hide_prod_version_enabled(cluster_config) and get_sg_version(cluster_config) >= "2.8.1":
+        if is_hide_prod_version_enabled(cluster_config) and version >= "2.8.1":
             playbook_vars["hide_product_version"] = '"hide_product_version": true,'
 
         if is_centralized_persistent_config_disabled(cluster_config):
@@ -999,7 +1005,7 @@ class SyncGateway(object):
             playbook_vars["disable_tls_server"] = '"use_tls_server": false,'
 
         if is_admin_auth_disabled(cluster_config) and version >= "3.0.0":
-            playbook_vars["disable_admin_auth"] = '"admin_interface_authentication": false,    \n"metrics_interface_authentication": false,' 
+            playbook_vars["disable_admin_auth"] = '"admin_interface_authentication": false,    \n"metrics_interface_authentication": false,'
         playbook_vars.update(playbook_vars1)
         if upgrade_only:
             if url is not None:
@@ -1151,7 +1157,10 @@ class SyncGateway(object):
                 playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
 
             if is_xattrs_enabled(cluster_config) and enable_import:
-                playbook_vars["autoimport"] = '"import_docs": true,'
+                if version >= "2.1.0":
+                    playbook_vars["autoimport"] = '"import_docs": true,'
+                else:
+                    playbook_vars["autoimport"] = '"import_docs": "continuous",'
 
             if no_conflicts_enabled(cluster_config):
                 playbook_vars["no_conflicts"] = '"allow_conflicts": false,'

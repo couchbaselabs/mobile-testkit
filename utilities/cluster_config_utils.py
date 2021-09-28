@@ -10,6 +10,7 @@ from distutils.dir_util import copy_tree
 from couchbase.cluster import PasswordAuthenticator, ClusterTimeoutOptions, ClusterOptions, Cluster
 from keywords.constants import BUCKET_LIST
 
+
 class CustomConfigParser(configparser.RawConfigParser):
     """Virtually identical to the original method, but delimit keys and values with '=' instead of ' = '
        Python 3 has a space_around_delimiters=False option for write, it does not work for python 2.x
@@ -366,6 +367,7 @@ def get_bucket_list_cpc(sgw_config):
     json_data = json.load(bucket_list_data)
     return json_data[sgw_conf_file_name]
 
+
 def is_server_tls_skip_verify_enabled(cluster_config):
     """ verify server tls skip verify config enabled/disabled"""
 
@@ -394,4 +396,3 @@ def is_admin_auth_disabled(cluster_config):
         return cluster["environment"]["disable_admin_auth"]
     except KeyError:
         return False
-

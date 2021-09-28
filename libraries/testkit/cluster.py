@@ -13,7 +13,7 @@ from libraries.provision.ansible_runner import AnsibleRunner
 from libraries.testkit.admin import Admin
 from libraries.testkit.config import Config, seperate_sgw_and_db_config
 from libraries.testkit.sgaccel import SgAccel
-from libraries.testkit.syncgateway import SyncGateway, send_dbconfig_as_restCall, get_cpc_sgw_config
+from libraries.testkit.syncgateway import SyncGateway, send_dbconfig_as_restCall
 from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
 from utilities.cluster_config_utils import is_load_balancer_enabled, get_revs_limit, get_redact_level, is_load_balancer_with_two_clusters_enabled
 from utilities.cluster_config_utils import get_load_balancer_ip, no_conflicts_enabled, is_delta_sync_enabled, get_sg_platform
@@ -410,9 +410,8 @@ class Cluster:
         with open(config_path_full, "r") as config:
             sgw_config_data = config.read()
 
-        print("sgw config data ---  ", sgw_config_data)
-        server_port_var = 8091
-        server_scheme_var = "http"
+        server_port = ""
+        server_scheme = "couchbase"
         couchbase_server_primary_node = add_cbs_to_sg_config_server_field(self._cluster_config)
         if self.cbs_ssl:
             server_port_var = 18091
@@ -436,7 +435,7 @@ class Cluster:
         cacertpath_var = ""
         server_scheme_var = ""
         server_port_var = ""
-        username_var = ""
+        # username_var = ""
         sg_use_views_var = ""
         num_index_replicas_var = ""
         autoimport_var = ""
@@ -448,6 +447,37 @@ class Cluster:
         server_tls_skip_verify_var = ""
         disable_tls_server_var = ""
         disable_admin_auth_var = ""
+
+        # Start sync-gateway
+        playbook_vars = {
+            "sync_gateway_config_filepath": config_path_full,
+            "username": "",
+            "password": "",
+            "certpath": "",
+            "keypath": "",
+            "cacertpath": "",
+            "x509_certs_dir": cbs_cert_path,
+            "x509_auth": False,
+            "sg_cert_path": sg_cert_path,
+            "server_port": server_port,
+            "server_scheme": server_scheme,
+            "autoimport": "",
+            "xattrs": "",
+            "no_conflicts": "",
+            "revs_limit": "",
+            "sslcert": "",
+            "sslkey": "",
+            "num_index_replicas": "",
+            "sg_use_views": "",
+            "couchbase_server_primary_node": couchbase_server_primary_node,
+            "delta_sync": "",
+            "prometheus": "",
+            "hide_product_version": "",
+            "disable_persistent_config": "",
+            "server_tls_skip_verify": "",
+            "disable_tls_server": "",
+            "disable_admin_auth": ""
+        }
 
         sg_platform = get_sg_platform(self._cluster_config)
 
@@ -538,7 +568,10 @@ class Cluster:
 
         # Add configuration to run with xattrs
         if self.xattrs:
-            autoimport_var = '"import_docs": true,'
+            if get_sg_version(self._cluster_config) >= "2.1.0":
+                autoimport_var = '"import_docs": true,'
+            else:
+                autoimport_var = '"import_docs": "continuous",'
             xattrs_var = '"enable_shared_bucket_access": true,'
 
         if no_conflicts_enabled(self._cluster_config):

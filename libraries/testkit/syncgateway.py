@@ -21,7 +21,7 @@ from keywords.utils import add_cbs_to_sg_config_server_field, log_info, random_s
 from keywords.constants import SYNC_GATEWAY_CERT, SGW_DB_CONFIGS, SYNC_GATEWAY_CONFIGS, SYNC_GATEWAY_CONFIGS_CPC
 from keywords.exceptions import ProvisioningError
 from keywords.remoteexecutor import RemoteExecutor
-from utilities.cluster_config_utils import is_centralized_persistent_config_disabled, is_server_tls_skip_verify_enabled, is_admin_auth_disabled, is_tls_server_disabled
+from utilities.cluster_config_utils import is_server_tls_skip_verify_enabled, is_admin_auth_disabled, is_tls_server_disabled
 
 
 log = logging.getLogger(libraries.testkit.settings.LOGGER)
@@ -45,8 +45,8 @@ class SyncGateway:
         self.admin = Admin(self)
 
         self.cluster_config = cluster_config
-        self.server_port = 8091
-        self.server_scheme = "http"
+        self.server_port = ""
+        self.server_scheme = "couchbase"
 
         if is_cbs_ssl_enabled(self.cluster_config):
             self.server_port = ""
@@ -169,7 +169,10 @@ class SyncGateway:
                 playbook_vars["password"] = '"password": "password",'
 
             if is_xattrs_enabled(self.cluster_config):
-                playbook_vars["autoimport"] = '"import_docs": true,'
+                if get_sg_version(self.cluster_config) >= "2.1.0":
+                    playbook_vars["autoimport"] = '"import_docs": true,'
+                else:
+                    playbook_vars["autoimport"] = '"import_docs": "continuous",'
                 playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
 
             if no_conflicts_enabled(self.cluster_config):
@@ -332,9 +335,12 @@ class SyncGateway:
                     bucket_names[0])
                 playbook_vars["password"] = '"password": "password",'
 
-            if is_xattrs_enabled(cluster_config):
-                playbook_vars["autoimport"] = '"import_docs": true,'
-                playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
+            if is_xattrs_enabled(self.cluster_config):
+                if get_sg_version(self.cluster_config) >= "2.1.0":
+                    playbook_vars["autoimport"] = '"import_docs": true,'
+                else:
+                    playbook_vars["autoimport"] = '"import_docs": "continuous",'
+            playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
 
             if no_conflicts_enabled(cluster_config):
                 playbook_vars["no_conflicts"] = '"allow_conflicts": false,'
@@ -661,6 +667,41 @@ class SyncGateway:
         log_request(r)
         log_response(r)
         r.raise_for_status()
+
+    def modify_replication2_status(self, replication_id, db, action):
+        sg_url = self.admin.admin_url
+        if action == "reset":
+            self.reset_replication2_checkpoint(sg_url, replication_id, db)
+        else:
+            r = requests.put("{}/{}/_replicationStatus/{}?action={}".format(sg_url, db, replication_id, action))
+            log_request(r)
+            log_response(r)
+            r.raise_for_status()
+
+    def reset_replication2_checkpoint(self, sg_url, replication_id, db):
+        r = requests.put("{}/{}/_replicationStatus/{}?action=stop".format(sg_url, db, replication_id))
+        log_request(r)
+        log_response(r)
+        r.raise_for_status()
+        time.sleep(1)
+        r = requests.put("{}/{}/_replicationStatus/{}?action=reset".format(sg_url, db, replication_id))
+        log_request(r)
+        log_response(r)
+        r.raise_for_status()
+        time.sleep(1)
+        r = requests.put("{}/{}/_replicationStatus/{}?action=start".format(sg_url, db, replication_id))
+        log_request(r)
+        log_response(r)
+        r.raise_for_status()
+        time.sleep(1)
+
+    def get_replication2(self, db):
+        sg_url = self.admin.admin_url
+        r = requests.get("{}/{}/_replication".format(sg_url, db))
+        log_request(r)
+        log_response(r)
+        r.raise_for_status()
+        return r.json()
 
     def __repr__(self):
         return "SyncGateway: {}:{}\n".format(self.hostname, self.ip)
@@ -1075,7 +1116,7 @@ def construct_dbconfig_json(db_config_file, cluster_config, sg_platform, sgw_con
     bucket_names = get_bucket_list_cpc(sgw_config)
     with open(db_config_path, "r") as config:
         db_config_data = config.read()
-    
+
     autoimport_var = ""
     xattrs_var = ""
     no_conflicts_var = ""
@@ -1089,10 +1130,10 @@ def construct_dbconfig_json(db_config_file, cluster_config, sg_platform, sgw_con
     delta_sync_var = ""
     server_scheme_var = ""
     server_port_var = ""
-    x509_auth_var = False
+    # x509_auth_var = False
     revs_limit_var = ""
     bucket_var = bucket_names[0]
-    
+
     if sg_platform == "macos":
         sg_home_directory = "/Users/sync_gateway"
     elif sg_platform == "windows":
@@ -1168,40 +1209,41 @@ def construct_dbconfig_json(db_config_file, cluster_config, sg_platform, sgw_con
         delta_sync=delta_sync_var
     )
     return db_config_data
-    
+
+
 def start_sgbinary(sg1, sg_platform, adminInterface=None, interface=None, cacertpath=None, certpath=None, configServer=None, dbname=None, defaultLogFilePath=None, disable_persistent_config=None, keypath=None, log=None, logFilePath=None, profileInterface=None, url=None):
     """-adminInterface string
-    	Address to bind admin interface to (default "127.0.0.1:4985")
+    Address to bind admin interface to (default "127.0.0.1:4985")
   -cacertpath string
-    	Root CA certificate path
+    Root CA certificate path
   -certpath string
-    	Client certificate path
+    Client certificate path
   -configServer string
-    	URL of server that can return database configs
+    URL of server that can return database configs
   -dbname string
-    	Name of Couchbase Server database (defaults to name of bucket)
+    Name of Couchbase Server database (defaults to name of bucket)
   -defaultLogFilePath string
-    	Path to log files, if not overridden by --logFilePath, or the config
+    Path to log files, if not overridden by --logFilePath, or the config
   -deploymentID string
-    	Customer/project identifier for stats reporting
+    Customer/project identifier for stats reporting
   -disable_persistent_config
-    	Can be set to false to disable persistent config handling, and read all configuration from a legacy config file. (default true)
+    Can be set to false to disable persistent config handling, and read all configuration from a legacy config file. (default true)
   -interface string
-    	Address to bind to (default ":4984")
+    Address to bind to (default ":4984")
   -keypath string
-    	Client certificate key path
+    Client certificate key path
   -log string
-    	Log keys, comma separated
+    Log keys, comma separated
   -logFilePath string
-    	Path to log files
+    Path to log files
   -pretty
-    	Pretty-print JSON responses
+    Pretty-print JSON responses
   -profileInterface string
-    	Address to bind profile interface to
+    Address to bind profile interface to
   -url string
-    	Address of Couchbase server
+    Address of Couchbase server
   -verbose
-    	Log more info about requests """
+    Log more info about requests """
     c_adminInterface = ""
     c_interface = ""
     c_cacertpath = ""

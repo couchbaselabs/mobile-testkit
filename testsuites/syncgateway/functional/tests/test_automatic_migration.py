@@ -4,23 +4,23 @@ import os
 import json
 import concurrent.futures
 
-from keywords.utils import log_info
+# from keywords.utils import log_info
 from libraries.testkit.cluster import Cluster
 from keywords.SyncGateway import sync_gateway_config_path_for_mode, SyncGateway, setup_replications_on_sgconfig, load_sync_gateway_config
-from keywords import document
-from keywords.utils import host_for_url, deep_dict_compare
-from couchbase.bucket import Bucket
-from keywords.MobileRestClient import MobileRestClient
+# from keywords import document
+# from keywords.utils import host_for_url, deep_dict_compare
+# from couchbase.bucket import Bucket
+# from keywords.MobileRestClient import MobileRestClient
 from keywords.ClusterKeywords import ClusterKeywords
-from libraries.testkit import cluster
+""" from libraries.testkit import cluster
 from concurrent.futures import ThreadPoolExecutor
 from libraries.testkit.prometheus import verify_stat_on_prometheus
-from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
-from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
+from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config """
+from utilities.cluster_config_utils import persist_cluster_config_environment_prop
 from utilities.cluster_config_utils import copy_sgconf_to_temp, replace_string_on_sgw_config
-from libraries.testkit.syncgateway import construct_dbconfig_json
-from CBLClient.Replication import Replication
-from CBLClient.Authenticator import Authenticator
+# from libraries.testkit.syncgateway import construct_dbconfig_json
+# from CBLClient.Replication import Replication
+# from CBLClient.Authenticator import Authenticator
 from keywords import couchbaseserver
 from keywords.remoteexecutor import RemoteExecutor
 from keywords.constants import ENVIRONMENT_FILE
@@ -103,10 +103,10 @@ def test_automatic_upgrade(params_from_base_test_setup):
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
-    cluster_util = ClusterKeywords(cluster_conf)
-    topology = cluster_util.get_cluster_topology(cluster_conf)
-    sync_gateways = topology["sync_gateways"]
-    
+    # cluster_util = ClusterKeywords(cluster_conf)
+    # topology = cluster_util.get_cluster_topology(cluster_conf)
+    # sync_gateways = topology["sync_gateways"]
+
     # 3. Add dynamic config like log_file_path or redaction_level on sgw config
     cbs_cluster = Cluster(config=cluster_conf)
     cbs_cluster.reset(sg_config_path=sg_conf)
@@ -121,7 +121,7 @@ def test_automatic_upgrade(params_from_base_test_setup):
     # 4. Upgrade SGW to lithium  and verify new version of SGW config
     # sg_obj.upgrade_sync_gateway(sync_gateways, sync_gateway_previous_version, sync_gateway_version, sg_conf, cluster_conf)
     sg_obj.upgrade_sync_gateways(cluster_config=cluster_conf, sg_conf=sg_conf, sync_gateway_version=sync_gateway_version)
-  
+
     # 5. Verify all the above configs converted to new format.
     #   Default config for dynamic config like logging should have default values on _config rest end point
     sg1 = cbs_cluster.sync_gateways[0]
@@ -141,9 +141,8 @@ def test_automatic_upgrade(params_from_base_test_setup):
     assert sg1_config["logging"]["trace"]["rotation"] is None, "logging did not get reset"
     assert sg1_config["logging"]["stats"]["rotation"] is None, "logging did not get reset"
     # 6. verify backup file
-    #TODO
-    
-    
+    # TODO
+
 
 @pytest.mark.syncgateway
 @pytest.mark.parametrize("persistent_config", [
@@ -168,7 +167,7 @@ def test_automatic1_upgrade_with_replication_config(params_from_base_test_setup,
     cluster_conf = sgw_version_reset["cluster_conf"]
     sg_conf_name = sgw_version_reset["sg_conf_name"]
 
-    #sg_platform = params_from_base_test_setup['sg_platform']
+    # sg_platform = params_from_base_test_setup['sg_platform']
     username = "autotest"
     password = "password"
     sg_channels = ["cpc"]
@@ -193,7 +192,7 @@ def test_automatic1_upgrade_with_replication_config(params_from_base_test_setup,
     cluster_util = ClusterKeywords(cluster_conf)
     topology = cluster_util.get_cluster_topology(cluster_conf)
     sync_gateways = topology["sync_gateways"]
-    
+
     cbs_cluster.reset(sg_config_path=temp_sg_config)
     # sg1_config = sg1.admin.get_config()
 
@@ -203,7 +202,7 @@ def test_automatic1_upgrade_with_replication_config(params_from_base_test_setup,
     sg_obj.upgrade_sync_gateway(sync_gateways, sync_gateway_previous_version, sync_gateway_version, temp_sg_config, cluster_conf)
 
     # 4. Verify replication are migrated and stored in bucket
-    
+
     sg_dbs = sg1.admin.get_dbs_from_config()
     active_tasks = sg1.admin.get_sgreplicate2_active_tasks(sg_dbs[0])
     assert len(active_tasks == 1, "replication tasks did not migrated successfully")
@@ -235,10 +234,7 @@ def test_automatic_migration_with_server_connection_fails(params_from_base_test_
     sg_conf_name = sgw_version_reset["sg_conf_name"]
     # sg_conf_name = 'listener_tests/listener_tests_with_replications'
 
-    #sg_platform = params_from_base_test_setup['sg_platform']
-    username = "autotest"
-    password = "password"
-    sg_channels = ["cpc"]
+    # sg_platform = params_from_base_test_setup['sg_platform']
     # remote_url = "http://10.100.10.100"
     # remote_db = "remote_db"
 
@@ -267,11 +263,11 @@ def test_automatic_migration_with_server_connection_fails(params_from_base_test_
     # sg_obj.redeploy_sync_gateway_config(cluster_config=cluster_conf, sg_conf=sg_conf, sync_gateway_version=sync_gateway_version, enable_import=True, deploy_only=True)
     # 3 . Upgrade SGW to lithium and have Automatic upgrade
     with concurrent.futures.ProcessPoolExecutor() as ex:
-        upgrade_process = ex.submit(sg_obj.upgrade_sync_gateways, sync_gateways, sync_gateway_previous_version, sync_gateway_version, sg_conf, cluster_conf)
+        ex.submit(sg_obj.upgrade_sync_gateways, sync_gateways, sync_gateway_previous_version, sync_gateway_version, sg_conf, cluster_conf)
         time.sleep(120)
         server.start()
     # 4. Verify replication are migrated and stored in bucket
-    
+
     sg_dbs = sg1.admin.get_dbs_from_config()
 
 

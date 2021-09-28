@@ -1,23 +1,23 @@
 import pytest
-import time
 
-from keywords.utils import log_info
+# from keywords.utils import log_info
 from libraries.testkit.cluster import Cluster
-from keywords.SyncGateway import sync_gateway_config_path_for_mode, SyncGateway, create_docs_via_sdk
+from keywords.SyncGateway import sync_gateway_config_path_for_mode, SyncGateway
 from keywords import document
-from keywords.utils import host_for_url, deep_dict_compare
-from couchbase.bucket import Bucket
+# from keywords.utils import host_for_url, deep_dict_compare
+# from couchbase.bucket import Bucket
 from keywords.MobileRestClient import MobileRestClient
 from keywords.ClusterKeywords import ClusterKeywords
-from libraries.testkit import cluster
+# from libraries.testkit import cluster
 from keywords import attachment
-from concurrent.futures import ThreadPoolExecutor
-from libraries.testkit.prometheus import verify_stat_on_prometheus
-from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
+# from concurrent.futures import ThreadPoolExecutor
+# from libraries.testkit.prometheus import verify_stat_on_prometheus
+# from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop
 from libraries.testkit.syncgateway import construct_dbconfig_json
-from CBLClient.Replication import Replication
-from CBLClient.Authenticator import Authenticator
+# from CBLClient.Replication import Replication
+# from CBLClient.Authenticator import Authenticator
+
 
 @pytest.mark.syncgateway
 @pytest.mark.parametrize("disable_persistent_config", [
@@ -33,7 +33,7 @@ def test_combination_of_cpc_and_noncpc(params_from_base_test_setup, disable_pers
     3. Start pre-lithium node
     4.  Set disable_persistent_config = true on lithium nodes
     5. Have sgw node2 with revs_limit as 30 via rest end point
-    6. Verify _config end point that all 3 nodes of revs_limit are differrent and not shared 
+    6. Verify _config end point that all 3 nodes of revs_limit are differrent and not shared
     7. Restart the SGW node 2(lithium node)
     8. Verify _config end point that revs_limit is assigned to default value
 
@@ -49,7 +49,7 @@ def test_combination_of_cpc_and_noncpc(params_from_base_test_setup, disable_pers
     sync_gateway_upgraded_version = params_from_base_test_setup['sync_gateway_upgraded_version']
     mode = params_from_base_test_setup['mode']
     sg_platform = params_from_base_test_setup['sg_platform']
-    xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+    # xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
     username = "autotest"
     password = "password"
     sg_channels = ["non_cpc"]
@@ -126,6 +126,7 @@ def test_combination_of_cpc_and_noncpc(params_from_base_test_setup, disable_pers
     sg3.restart(config=sg_conf, cluster_config=cluster_conf)
     sg4.restart(config=sg_conf, cluster_config=cluster_conf)
 
+
 @pytest.mark.syncgateway
 def test_replication_allowconflictsFalse(params_from_base_test_setup):
     """
@@ -170,7 +171,7 @@ def test_replication_allowconflictsFalse(params_from_base_test_setup):
     # cbs_host = host_for_url(cbs_url)
     topology = cluster_util.get_cluster_topology(cluster_conf, lb_enable=False)
     sync_gateways = topology["sync_gateways"]
-    sgw_list1 = sync_gateways[2:]
+    # sgw_list1 = sync_gateways[2:]
     sg1 = cbs_cluster.sync_gateways[0]
     sg2 = cbs_cluster.sync_gateways[1]
     sg3 = cbs_cluster.sync_gateways[2]
@@ -202,7 +203,6 @@ def test_replication_allowconflictsFalse(params_from_base_test_setup):
     active_tasks = sg1.admin.get_sgreplicate2_active_tasks(sg_db1, expected_tasks=expected_tasks)
     sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id_1, read_flag=read_flag, write_flag=write_flag)
     assert len(active_tasks) == expected_tasks, "number of active tasks is not 1"
-
 
     sg1 = cbs_cluster.sync_gateways[0]
     sg3 = cbs_cluster.sync_gateways[2]

@@ -16,6 +16,9 @@ from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
 
 
 @pytest.mark.syncgateway
+@pytest.mark.topospecific
+@pytest.mark.oscertify
+@pytest.mark.sanity
 def test_importdocs_false_shared_bucket_access_true(params_from_base_test_setup):
     """
     @summary :
@@ -147,7 +150,7 @@ def test_sgw_cache_management_multiple_sgws(params_from_base_test_setup):
 
     # 2. Create docs in CBS
     create_docs_via_sdk(cbs_url, cbs_cluster, bucket_name, num_docs)
-    time.sleep(3)
+    time.sleep(15)  # needed as windows take more time to import
 
     # 3.Verify following stats
     #    EE - import_cancel_cas =0

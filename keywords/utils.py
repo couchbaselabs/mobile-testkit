@@ -305,6 +305,11 @@ def add_new_fields_to_doc(doc_body):
     return doc_body
 
 
+def add_additional_new_field_to_doc(doc_body):
+    doc_body["new_field_4"] = random_string(length=20)
+    return doc_body
+
+
 def compare_docs(cbl_db, db, docs_dict):
     doc_ids = db.getDocIds(cbl_db)
     cbl_db_docs = db.getDocuments(cbl_db, doc_ids)
@@ -432,6 +437,7 @@ def deep_dict_compare(object1, object2, isPredictiveResult=False):
         if "stub" in object1:
             del object1["stub"]
             del object1["revpos"]
+            del object1["ver"]
         else:
             log_info("lengths of sgw object and cbl object are different {} --- {}".format(len(object1), len(object2)))
             log_info("keys of object 1 and object2 {}\n---{}".format(list(object1.keys()), list(object2.keys())))

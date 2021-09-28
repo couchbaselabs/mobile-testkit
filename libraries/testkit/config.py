@@ -1,12 +1,12 @@
 import json
 import re
 
-from utilities.cluster_config_utils import get_sg_version, is_centralized_persistent_config_disabled, copy_json_to_temp_file
+from utilities.cluster_config_utils import copy_json_to_temp_file
 from jinja2 import Template
 
 from libraries.testkit import settings
 from keywords.utils import log_info
-from keywords.constants import SYNC_GATEWAY_CONFIGS, SYNC_GATEWAY_CONFIGS_CPC, BUCKET_LIST
+from keywords.constants import BUCKET_LIST
 
 import logging
 log = logging.getLogger(settings.LOGGER)

@@ -45,7 +45,6 @@ def params_from_base_suite_setup(request):
     sg_platform = request.config.getoption("--sg-platform")
     cbs_platform = request.config.getoption("--cbs-platform")
     delta_sync_enabled = request.config.getoption("--delta-sync")
-    cbs_platform = request.config.getoption("--cbs-platform")
     magma_storage_enabled = request.config.getoption("--magma-storage")
     hide_product_version = request.config.getoption("--hide-product-version")
     prometheus_enabled = request.config.getoption("--prometheus-enable")

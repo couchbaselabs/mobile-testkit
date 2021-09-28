@@ -28,6 +28,7 @@ from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
 def test_user_views_sanity(params_from_base_test_setup, sg_conf_name, x509_cert_auth):
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
@@ -177,7 +178,10 @@ def test_user_views_sanity(params_from_base_test_setup, sg_conf_name, x509_cert_
 
     # Assert that the attachment docs gets written to couchbase server
     server = couchbaseserver.CouchbaseServer(cbs_url)
-    server_att_docs = server.get_server_docs_with_prefix(bucket=bucket, prefix="_sync:att:", ipv6=cluster.ipv6)
+    if sync_gateway_version >= "3.0.0":
+        server_att_docs = server.get_server_docs_with_prefix(bucket=bucket, prefix="_sync:att2:", ipv6=cluster.ipv6)
+    else:
+        server_att_docs = server.get_server_docs_with_prefix(bucket=bucket, prefix="_sync:att:", ipv6=cluster.ipv6)
     expected_num_attachments = (number_docs_per_channel * 2) + \
         number_docs_per_channel + \
         (number_docs_per_channel * 2) + \

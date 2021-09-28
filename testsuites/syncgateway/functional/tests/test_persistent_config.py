@@ -4,22 +4,23 @@ import json
 
 from keywords.utils import log_info
 from libraries.testkit.cluster import Cluster
-from keywords.SyncGateway import sync_gateway_config_path_for_mode, SyncGateway, create_docs_via_sdk, load_sync_gateway_config
+from keywords.SyncGateway import sync_gateway_config_path_for_mode, SyncGateway, load_sync_gateway_config
 from keywords import document
-from keywords.utils import host_for_url, deep_dict_compare
-from couchbase.bucket import Bucket
+# from keywords.utils import host_for_url, deep_dict_compare
+# from couchbase.bucket import Bucket
 from keywords.MobileRestClient import MobileRestClient
 from keywords.ClusterKeywords import ClusterKeywords
-from libraries.testkit import cluster
-from concurrent.futures import ThreadPoolExecutor
-from libraries.testkit.prometheus import verify_stat_on_prometheus
-from libraries.testkit.syncgateway import start_sgbinary, get_buckets_from_sync_gateway_config
+# from libraries.testkit import cluster
+# from concurrent.futures import ThreadPoolExecutor
+# from libraries.testkit.prometheus import verify_stat_on_prometheus
+# from libraries.testkit.syncgateway import start_sgbinary, get_buckets_from_sync_gateway_config
+# from libraries.testkit.syncgateway import start_sgbinary
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop
 from libraries.testkit.syncgateway import construct_dbconfig_json
-from CBLClient.Replication import Replication
-from CBLClient.Authenticator import Authenticator
+# from CBLClient.Replication import Replication
+# from CBLClient.Authenticator import Authenticator
 from utilities.cluster_config_utils import is_centralized_persistent_config_disabled, copy_to_temp_conf
-from keywords.remoteexecutor import RemoteExecutor
+# from keywords.remoteexecutor import RemoteExecutor
 
 
 @pytest.mark.syncgateway
@@ -36,7 +37,7 @@ def test_default_config_values(params_from_base_test_setup):
     6. Now have bootstrap and static config and verify default values of dynamic config
     """
 
-    sg_db = 'db'
+    # sg_db = 'db'
     sg_conf_name = "sync_gateway_default_bootstrap"
     sg_conf_name2 = "sync_gateway_default"
     sg_obj = SyncGateway()
@@ -45,10 +46,10 @@ def test_default_config_values(params_from_base_test_setup):
     sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
     # sync_gateway_upgraded_version = params_from_base_test_setup['sync_gateway_upgraded_version']
     mode = params_from_base_test_setup['mode']
-    sg_platform = params_from_base_test_setup['sg_platform']
+    """ sg_platform = params_from_base_test_setup['sg_platform']
     username = "autotest"
     password = "password"
-    sg_channels = ["non_cpc"]
+    sg_channels = ["non_cpc"] """
 
     # 1. Have prelithium config
     # 2. Have configs required fo database on prelithium config
@@ -60,13 +61,13 @@ def test_default_config_values(params_from_base_test_setup):
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode, cpc=True)
     sg_conf2 = sync_gateway_config_path_for_mode(sg_conf_name2, mode, cpc=True)
 
-    sg_client = MobileRestClient() 
+    # sg_client = MobileRestClient() 
     sg_obj = SyncGateway()
     cluster_util = ClusterKeywords(temp_cluster_config)
     topology = cluster_util.get_cluster_topology(temp_cluster_config)
-    sync_gateways = topology["sync_gateways"]
+    # sync_gateways = topology["sync_gateways"]
     sg_one_url = topology["sync_gateways"][0]["public"]
-    
+
     # 3. Have min bootstrap configuration without static system config with differrent config
     cbs_cluster = Cluster(config=temp_cluster_config)
     cbs_cluster.reset(sg_config_path=sg_conf)
@@ -80,7 +81,7 @@ def test_default_config_values(params_from_base_test_setup):
     sg_obj.start_sync_gateways(cluster_config=temp_cluster_config, url=sg_one_url, config=sg_conf2)
 
     # Verify default values of dynamic config
-    
+
 
 @pytest.mark.syncgateway
 @pytest.mark.parametrize("sg_conf_name", [
@@ -97,7 +98,7 @@ def test_invalid_configs(params_from_base_test_setup, sg_conf_name):
     3. Verify SGW fails to restart"
     """
 
-    sg_db = 'db'
+    # sg_db = 'db'
     # sg_conf_name = "sync_gateway_default_invalid_bootstrap"
     sg_obj = SyncGateway()
 
@@ -105,12 +106,12 @@ def test_invalid_configs(params_from_base_test_setup, sg_conf_name):
     sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
     # sync_gateway_upgraded_version = params_from_base_test_setup['sync_gateway_upgraded_version']
     mode = params_from_base_test_setup['mode']
-    sg_platform = params_from_base_test_setup['sg_platform']
+    """ sg_platform = params_from_base_test_setup['sg_platform']
     base_url = params_from_base_test_setup["base_url"]
     cbl_db = params_from_base_test_setup["source_db"]
     username = "autotest"
     password = "password"
-    sg_channels = ["non_cpc"]
+    sg_channels = ["non_cpc"] """
 
     # 1. Have prelithium config
     # 2. Have configs required fo database on prelithium config
@@ -118,17 +119,16 @@ def test_invalid_configs(params_from_base_test_setup, sg_conf_name):
     persist_cluster_config_environment_prop(temp_cluster_config, 'disable_persistent_config', False)
     if sync_gateway_version < "3.0.0" and not is_centralized_persistent_config_disabled(cluster_conf):
         pytest.skip('This test can run with sgw version 3.0 and with persistent config off')
-    # 1. Have 3 SGW nodes: 1 node as pre-lithium and 2 nodes on lithium
-    
+
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
-    sg_client = MobileRestClient() 
+    # sg_client = MobileRestClient() 
     sg_obj = SyncGateway()
     cluster_util = ClusterKeywords(cluster_conf)
     topology = cluster_util.get_cluster_topology(cluster_conf)
-    sync_gateways = topology["sync_gateways"]
+    # sync_gateways = topology["sync_gateways"]
     sg_one_url = topology["sync_gateways"][0]["public"]
-    
+
     # 3. Have min bootstrap configuration without static system config with differrent config
     if sg_conf_name == "sync_gateway_default":
         sgw_config = load_sync_gateway_config(sg_conf, topology["couchbase_servers"][0], cluster_conf)
@@ -166,16 +166,16 @@ def test_sgw_command_line(params_from_base_test_setup):
     5. Verify _config rest end point and validate that params passed for bootstrap, static values are matching with command line params"
     """
 
-    sg_db = 'db'
+    # sg_db = 'db'
     sg_conf_name = "sync_gateway_default_bootstrap"
 
     cluster_conf = params_from_base_test_setup['cluster_config']
     sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
     mode = params_from_base_test_setup['mode']
     sg_platform = params_from_base_test_setup['sg_platform']
-    username = "autotest"
+    """ username = "autotest"
     password = "password"
-    sg_channels = ["non_cpc"]
+    sg_channels = ["non_cpc"] """
 
     temp_cluster_config = copy_to_temp_conf(cluster_conf, mode)
     # 2. Have default_persistent_config value on SGW nodes
@@ -186,13 +186,13 @@ def test_sgw_command_line(params_from_base_test_setup):
         pytest.skip('This test can run with sgw version 3.0 and above')
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode, cpc=True)
 
-    sg_client = MobileRestClient()
+    # sg_client = MobileRestClient()
     sg_obj = SyncGateway()
-    cluster_util = ClusterKeywords(temp_cluster_config)
-    topology = cluster_util.get_cluster_topology(temp_cluster_config)
-    sync_gateways = topology["sync_gateways"]
-    sg_one_url = topology["sync_gateways"][0]["public"]
-    
+    # cluster_util = ClusterKeywords(temp_cluster_config)
+    # topology = cluster_util.get_cluster_topology(temp_cluster_config)
+    # sync_gateways = topology["sync_gateways"]
+    # sg_one_url = topology["sync_gateways"][0]["public"]
+
     # 3. Have min bootstrap configuration
     cbs_cluster = Cluster(config=temp_cluster_config)
     cbs_cluster.reset(sg_config_path=sg_conf)
@@ -202,12 +202,12 @@ def test_sgw_command_line(params_from_base_test_setup):
     print("stopping explicetely ")
     sg_obj.stop_sync_gateways(temp_cluster_config)
     sg_obj.redeploy_sync_gateway_config(temp_cluster_config, sg_conf, url=None, sync_gateway_version=sync_gateway_version, enable_import=True, deploy_only=True)
-    adminInterface = "5985"
+    """ adminInterface = "5985"
     interface = "5984"
     cacertpath = ""
     certpath = ""
     configServer = ""
-    dbname = ""
+    dbname = "" 
     defaultLogFilePath = "/tmp/sg_logs"
     disable_persistent_config = False
     keypath = ""
@@ -216,6 +216,7 @@ def test_sgw_command_line(params_from_base_test_setup):
     profileInterface = ""
     url = ""
     std_output = start_sgbinary(sg1, sg_platform, adminInterface=adminInterface, interface=interface, defaultLogFilePath=defaultLogFilePath, disable_persistent_config=disable_persistent_config)
+    """
     count = 0
     retry = 5
     errors = 1
@@ -242,9 +243,9 @@ def test_invalid_database_credentials(params_from_base_test_setup):
 
     sg_db = 'sg_db'
     sg_db2 = 'sg_db2'
-    sg_db3 = 'sg_db3'
+    # sg_db3 = 'sg_db3'
     sg_conf_name = "sync_gateway_default_bootstrap"
-    sg_obj = SyncGateway()
+    # sg_obj = SyncGateway()
 
     cluster_conf = params_from_base_test_setup['cluster_config']
     mode = params_from_base_test_setup['mode']
@@ -258,16 +259,16 @@ def test_invalid_database_credentials(params_from_base_test_setup):
     sg_config = sync_gateway_config_path_for_mode(sg_conf_name, mode, cpc=True)
 
     sg_client = MobileRestClient()
-    cluster_utils = ClusterKeywords(cluster_conf)
+    """ cluster_utils = ClusterKeywords(cluster_conf)
     cluster_topology = cluster_utils.get_cluster_topology(cluster_conf)
     cbs_url = cluster_topology['couchbase_servers'][0]
     sg_one_url = cluster_topology["sync_gateways"][0]["public"]
-    sg_two_url = cluster_topology["sync_gateways"][1]["public"]
+    sg_two_url = cluster_topology["sync_gateways"][1]["public"] """
     sg_db2_username = "autotest"
     sg_password = "password"
     sg_channels = ["cpc_testing"]
-    sg_username2 = "autotest2"
-    sg_channels2 = ["cpc_testing2"]
+    # sg_username2 = "autotest2"
+    # sg_channels2 = ["cpc_testing2"]
     cbs_cluster = Cluster(config=cluster_conf)
     cbs_cluster.reset(sg_config_path=sg_config)
     time.sleep(15)
@@ -283,16 +284,15 @@ def test_invalid_database_credentials(params_from_base_test_setup):
     sg1.admin.create_db_with_rest(sg_db, dbconfig)
 
     # 6. Verify db config end point on one of the node and verify it shows all 3 db configs
-    sg1_db1_config = sg1.admin.get_db_config(sg_db1)
-    """assert""" 
-    
+    # sg1_db1_config = sg1.admin.get_db_config(sg_db1)
+    """assert"""
+
     # 7. Create doc, doc1 on node on sg_db2.
     sg_client.create_user(sg1.admin.admin_url, sg_db2, sg_db2_username, sg_password, channels=sg_channels)
     auto_user = sg_client.create_session(url=sg1.admin.admin_url, db=sg_db2, name=sg_db2_username)
     sg_docs = document.create_docs('cpc-union', number=2, channels=sg_channels)
     sg_client.add_bulk_docs(url=sg1.url, db=sg_db2, docs=sg_docs, auth=auto_user)
-    
-    
+
     # 8. Verify all 3 nodes can access the doc1 on sg_db2
     sg_docs = sg_client.get_all_docs(url=sg1.url, db=sg_db2, auth=auto_user)["rows"]
     assert len(sg_docs) == 2, "sg1 node could not access sg_db2 docs"

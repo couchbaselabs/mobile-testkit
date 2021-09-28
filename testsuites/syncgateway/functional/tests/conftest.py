@@ -1,7 +1,6 @@
 """ Setup for Sync Gateway functional tests """
 
 import pytest
-import os
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.constants import CLUSTER_CONFIGS_DIR
 from keywords.exceptions import ProvisioningError, FeatureSupportedError
@@ -174,7 +173,7 @@ def pytest_addoption(parser):
     parser.addoption("--disable-persistent-config",
                      action="store_true",
                      help="Disable Centralized Persistent Config")
-    
+
     parser.addoption("--sync-gateway-previous-version",
                      action="store",
                      help="sync-gateway-previous-version")
@@ -236,7 +235,6 @@ def params_from_base_suite_setup(request):
     sync_gateway_previous_version = request.config.getoption("--sync-gateway-previous-version")
     enable_server_tls_skip_verify = request.config.getoption("--enable-server-tls-skip-verify")
     disable_admin_auth = request.config.getoption("--disable-admin-auth")
-
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)

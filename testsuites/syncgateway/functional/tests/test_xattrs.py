@@ -1045,7 +1045,10 @@ def test_sdk_does_not_see_sync_meta(params_from_base_test_setup, sg_conf_name):
         # Build tuple of the filename and server doc id of the attachments
         if sync_gateway_version < "2.5":
             for att_key, att_val in list(doc_body['_attachments'].items()):
-                attachment_name_ids.append((att_key, '_sync:att:{}'.format(att_val['digest'])))
+                if sync_gateway_version >= "3.0.0":
+                    attachment_name_ids.append((att_key, '_sync:att2:{}'.format(att_val['digest'])))
+                else:
+                    attachment_name_ids.append((att_key, '_sync:att:{}'.format(att_val['digest'])))
 
     assert len(doc_ids) == 0
 

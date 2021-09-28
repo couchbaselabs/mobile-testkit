@@ -407,7 +407,7 @@ def params_from_base_suite_setup(request):
         sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
     else:
         sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode, cpc=True)"""
-    # sg_config = sync_gateway_config_path_for_mode(sgw_config, mode) 
+    # sg_config = sync_gateway_config_path_for_mode(sgw_config, mode)
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
     # Skip provisioning if user specifies '--skip-provisoning' or '--sequoia'
     should_provision = True
