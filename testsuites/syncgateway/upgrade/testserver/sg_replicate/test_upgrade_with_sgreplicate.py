@@ -261,7 +261,7 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
         replications_ids = "{},{}".format(replication_1, replication_2)
         replications_key = "replications"
         sgr2_replace_string = "\"{}\": {}{}{},".format(replications_key, "{", replications_ids, "}")
-        temp_sg_config_copy, _ = copy_sgconf_to_temp(sg_config, mode)
+        temp_sg_config_copy, _, _ = copy_sgconf_to_temp(sg_config, mode)
         if sync_gateway_upgraded_version >= "3.0.0":
             temp_sg_config = replace_string_on_sgw_config(temp_sg_config_copy, "{{ replace_with_sg1_replications }}", "")
         if stop_replication_before_upgrade:
