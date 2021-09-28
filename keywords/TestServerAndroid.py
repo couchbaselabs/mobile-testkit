@@ -127,7 +127,7 @@ class TestServerAndroid(TestServerBase):
         """Install the apk to running Android device or emulator"""
 
         self.device_enabled = True
-        self.device_option = "-d"
+        self.device_option = ["-d"]
         if self.serial_number != "":
             self.device_option = ["-s", self.serial_number]
         apk_path = "{}/{}".format(BINARY_DIR, self.apk_name)
