@@ -33,7 +33,10 @@ class TestServerCpp(TestServerBase):
         elif self.platform == "c-debian":
             self.package_name = "testserver_debian9-x86_64"
         elif self.platform == "c-rpi":
-            self.package_name = "testserver_raspios10-armhf"
+            if "TESTSERVER_ARM" not in os.environ:
+                self.package_name = "testserver_raspios10-armhf"
+            else:
+                self.package_name = "testserver_raspios10-arm64"
         else:
             self.package_name = "testserver_ubuntu20.04-x86_64"
 
