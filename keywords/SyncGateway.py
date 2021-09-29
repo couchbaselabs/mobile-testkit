@@ -276,7 +276,7 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config):
             if get_sg_use_views(cluster_config):
                 sg_use_views_prop = '"use_views": true,'
 
-            if sg_platform == "macos":
+            if "macos" in sg_platform:
                 sg_home_directory = "/Users/sync_gateway"
             elif sg_platform == "windows":
                 sg_home_directory = "C:\\\\PROGRA~1\\\\Couchbase\\\\Sync Gateway"
@@ -469,7 +469,7 @@ class SyncGateway(object):
                 num_replicas = get_sg_replicas(cluster_config)
                 playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
 
-            if sg_platform == "macos":
+            if "macos" in sg_platform:
                 sg_home_directory = "/Users/sync_gateway"
             elif sg_platform == "windows":
                 sg_home_directory = "C:\\\\PROGRA~1\\\\Couchbase\\\\Sync Gateway"
@@ -727,7 +727,7 @@ class SyncGateway(object):
                 playbook_vars["sg_use_views"] = '"use_views": true,'
 
             sg_platform = get_sg_platform(cluster_config)
-            if sg_platform == "macos":
+            if "macos" in sg_platform:
                 sg_home_directory = "/Users/sync_gateway"
             elif sg_platform == "windows":
                 sg_home_directory = "C:\\\\PROGRA~1\\\\Couchbase\\\\Sync Gateway"
@@ -879,7 +879,7 @@ class SyncGateway(object):
                 playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
 
             sg_platform = get_sg_platform(cluster_config)
-            if sg_platform == "macos":
+            if "macos" in sg_platform:
                 sg_home_directory = "/Users/sync_gateway"
             elif sg_platform == "windows":
                 sg_home_directory = "C:\\\\PROGRA~1\\\\Couchbase\\\\Sync Gateway"

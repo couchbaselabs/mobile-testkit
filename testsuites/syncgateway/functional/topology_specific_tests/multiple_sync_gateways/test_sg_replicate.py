@@ -169,7 +169,7 @@ def test_sg_replicate_basic_test(params_from_base_test_setup):
         assert verify_stat_on_prometheus("sgw_replication_sgr_num_docs_pushed"), expvars["syncgateway"]["per_replication"][replication_id]["sgr_num_docs_pushed"]
     if not prometheus_enabled and sync_gateway_version >= "2.8.0":
         cluster = Cluster(config=cluster_config)
-        if sg_platform == "windows" or sg_platform == "macos":
+        if sg_platform == "windows" or "macos" in sg_platform:
             json_cluster = load_cluster_config_json(cluster_config)
             sghost_username = json_cluster["sync_gateways:vars"]["ansible_user"]
             sghost_password = json_cluster["sync_gateways:vars"]["ansible_password"]

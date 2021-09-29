@@ -286,7 +286,7 @@ def test_envVariables_on_sgw_config(params_from_base_test_setup, setup_env_varia
         environment_string = """[String[]] $v = @("bucketuser=""" + bucket_names[0] + """", "jsfunc=""" + js_content + """\")
         Set-ItemProperty HKLM:SYSTEM\CurrentControlSet\Services\SyncGateway -Name Environment -Value $v
         """
-    elif sg_platform == "macos":
+    elif "macos" in sg_platform:
         environment_string = """launchctl setenv bucketuser """ + bucket_names[0] + """
         launchctl setenv jsfunc \"""" + js_content + """\"
         """
@@ -481,7 +481,7 @@ def test_jscode_envvariables_path(params_from_base_test_setup, setup_env_variabl
         environment_string = """[String[]] $v = @("tempjs=""" + tempjs + """\")
         Set-ItemProperty HKLM:SYSTEM\CurrentControlSet\Services\SyncGateway -Name Environment -Value $v
         """
-    elif sg_platform == "macos":
+    elif "macos" in sg_platform:
         environment_string = """launchctl setenv tempjs """ + tempjs + """
         """
     else:
@@ -605,7 +605,7 @@ def construct_env_variables_string(sg_platform, sg_conf):
         environment_string = """[String[]] $v = @("bucketuser=""" + bucket_names[0] + """", "jsfunc=function(doc, oldDoc){throw({forbidden: 'read only!'})}")
         Set-ItemProperty HKLM:SYSTEM\CurrentControlSet\Services\SyncGateway -Name Environment -Value $v
         """
-    elif sg_platform == "macos":
+    elif "macos" in sg_platform:
         environment_string = """export bucketuser=""" + bucket_names[0] + """
         export jsfunc=function(doc, oldDoc){throw({forbidden: 'read only!'})}")
         """
