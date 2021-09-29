@@ -111,6 +111,7 @@ def test_upgrade_cbl(params_from_base_suite_setup):
                               "suite_cbl_db": upgrade_cbl_db_name,
                               "sync_gateway_version": params_from_base_suite_setup["sync_gateway_version"],
                               }
+
     query_test_list = [
         (test_get_doc_ids, (params_for_query_tests,)),
         (test_any_operator, (params_for_query_tests,)),
@@ -330,7 +331,7 @@ def _upgrade_db(args):
     time.sleep(1)
     new_db_path = db.getPath(temp_db)
     delimiter = "/"
-    if liteserv_platform == "net-msft" or liteserv_platform == "net-uwp":
+    if liteserv_platform in ["net-msft", "net-uwp", "java-msft", "javaws-msft"]:
         delimiter = "\\"
     new_db_path = "{}".format(delimiter).join(new_db_path.split(delimiter)[:-2]) + \
                   "{}{}.cblite2".format(delimiter, upgrade_cbl_db_name)
@@ -354,6 +355,7 @@ def _upgrade_db(args):
 
     log_info("Copying db of CBL-{} to CBL-{}".format(base_liteserv_version, upgraded_liteserv_version))
     prebuilt_db_path = db.get_pre_built_db(prebuilt_db_path)
+    log_info("prebuild_db_path: {} new_db_path: {}".format(prebuilt_db_path, new_db_path))
     assert "Copied" == utils_obj.copy_files(prebuilt_db_path, new_db_path)
     cbl_db = db.create(upgrade_cbl_db_name, db_config)
     assert isinstance(cbl_db, MemoryPointer), "Failed to migrate db from previous version of CBL"
