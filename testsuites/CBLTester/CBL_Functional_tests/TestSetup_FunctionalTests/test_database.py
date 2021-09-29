@@ -317,7 +317,8 @@ def test_removeDBEncryptionKey(params_from_base_test_setup):
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("encrypted", [
-    False
+    False,
+    True
 ])
 def test_copy_prebuilt_database(params_from_base_test_setup, encrypted):
     """
