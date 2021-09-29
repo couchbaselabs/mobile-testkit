@@ -275,13 +275,6 @@ def params_from_base_suite_setup(request):
             testserver.install_device()
         else:
             testserver.install()
-        test_name_cp = test_name.replace("/", "-")
-        if device_enabled:
-            testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
-                                                                      test_name_cp, datetime.datetime.now()))
-        else:
-            testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp,
-                                                           datetime.datetime.now()))
 
     base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_travel_sample", mode)
