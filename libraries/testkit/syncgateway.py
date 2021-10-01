@@ -23,7 +23,6 @@ from keywords.exceptions import ProvisioningError
 from keywords.remoteexecutor import RemoteExecutor
 from utilities.cluster_config_utils import is_server_tls_skip_verify_enabled, is_admin_auth_disabled, is_tls_server_disabled
 
-
 log = logging.getLogger(libraries.testkit.settings.LOGGER)
 
 
@@ -1095,10 +1094,21 @@ def send_dbconfig_as_restCall(db_config_json, sync_gateways):
             if "x509_cert_path" in sgw_db_config[sg_db].keys():
                 del sgw_db_config[sg_db]["x509_cert_path"]
             print("dbconfig json", sgw_db_config[sg_db])
-            # sgw.admin.create_db(sg_db, sgw_db_config[sg_db])
+            sgw.admin.create_db(sg_db, sgw_db_config[sg_db])
             # TODO : Put back one CPC config works
             # sgw.admin.create_db_with_rest(sg_db, db_config_json[sg_db])
-            sgw.admin.put_db_config(sg_db, sgw_db_config[sg_db])
+            # sgw.admin.put_db_config(sg_db, sgw_db_config[sg_db])
+
+
+def create_logging_config(logging_config_json, sync_gateways):
+    # convert database config for each sg db and send to rest end point
+    # sg_dbs = database_config.keys()
+    # time.sleep(30)
+    from keywords.MobileRestClient import MobileRestClient
+    client = MobileRestClient()
+    for sgw in sync_gateways:
+        print("logging config json for sgw : ", logging_config_json)
+        client.create_logging_with_rest(sgw.admin.admin_url, logging_config_json)
 
 
 def get_cpc_sgw_config(sg_config_path):

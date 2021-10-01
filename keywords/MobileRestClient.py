@@ -2440,3 +2440,9 @@ class MobileRestClient:
         resp.raise_for_status()
         resp_obj = resp.json()
         del resp_obj["_exp"]
+
+    def create_logging_with_rest(self, url, logging_json):
+        resp = self._session.put("{0}/_config".format(url), headers=self._session.headers, data=json.dumps(logging_json), verify=False)
+        log_r(resp)
+        resp.raise_for_status()
+        return resp.status_code
