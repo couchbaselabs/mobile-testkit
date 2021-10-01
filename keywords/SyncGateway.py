@@ -437,7 +437,7 @@ class SyncGateway(object):
             raise ProvisioningError("Starting a Sync Gateway requires a config")
 
         if get_sg_version(cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config):
-            playbook_vars, db_config_json = c_cluster.setup_server_and_sgw(config, bucket_creation=False, bucket_list=bucket_list)
+            playbook_vars, db_config_json, _ = c_cluster.setup_server_and_sgw(config, bucket_creation=False, bucket_list=bucket_list)
         else:
             config_path = os.path.abspath(config)
             sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
@@ -1065,7 +1065,7 @@ class SyncGateway(object):
         ansible_runner = AnsibleRunner(cluster_config)
         c_cluster = cluster.Cluster(cluster_config)
         if get_sg_version(cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config):
-            playbook_vars, db_config_json = c_cluster.setup_server_and_sgw(sg_conf, bucket_creation=False)
+            playbook_vars, db_config_json, _ = c_cluster.setup_server_and_sgw(sg_conf, bucket_creation=False)
         else:
             server_port = 8091
             server_scheme = "http"
