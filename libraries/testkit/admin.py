@@ -33,7 +33,10 @@ class Admin:
     def create_db(self, db, db_config={}):
         # config_data = '{\"import_docs\": true, \"enable_shared_bucket_access\": true}'
         data = json.dumps(db_config)
-        resp = requests.put("{0}/{1}".format(self.admin_url, db), headers=self._headers, data=data)
+        # db_config = '{"import_docs": true, "enable_shared_bucket_access": true, "num_index_replicas": 0, "delta_sync": {"enabled": true}, "bucket": "data-bucket", "bucket_op_timeout_ms": 60000}'
+        data = json.dumps(db_config)
+        print("jsond dumpts afeter data is ", data)
+        resp = requests.put("{0}/{1}/".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, data=json.dumps(db_config), verify=False)
         log.info("PUT {}".format(resp.url))
         resp.raise_for_status()
         return resp.status_code

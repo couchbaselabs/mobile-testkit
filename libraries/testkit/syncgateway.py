@@ -1094,10 +1094,10 @@ def send_dbconfig_as_restCall(db_config_json, sync_gateways):
             if "x509_cert_path" in sgw_db_config[sg_db].keys():
                 del sgw_db_config[sg_db]["x509_cert_path"]
             print("dbconfig json", sgw_db_config[sg_db])
-            # sgw.admin.create_db(sg_db, sgw_db_config[sg_db])
+            sgw.admin.create_db(sg_db, sgw_db_config[sg_db])
             # TODO : Put back one CPC config works
-            # sgw.admin.create_db_with_rest(sg_db, db_config_json[sg_db])
-            sgw.admin.put_db_config(sg_db, sgw_db_config[sg_db])
+            # sgw.admin.create_db_with_rest(sg_db, sgw_db_config[sg_db])
+            # sgw.admin.put_db_config(sg_db, sgw_db_config[sg_db])
 
 
 def create_logging_config(logging_config_json, sync_gateways):
