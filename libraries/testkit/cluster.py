@@ -13,7 +13,7 @@ from libraries.provision.ansible_runner import AnsibleRunner
 from libraries.testkit.admin import Admin
 from libraries.testkit.config import Config, seperate_sgw_and_db_config
 from libraries.testkit.sgaccel import SgAccel
-from libraries.testkit.syncgateway import SyncGateway, send_dbconfig_as_restCall
+from libraries.testkit.syncgateway import SyncGateway, send_dbconfig_as_restCall, create_logging_config
 from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
 from utilities.cluster_config_utils import is_load_balancer_enabled, get_revs_limit, get_redact_level, is_load_balancer_with_two_clusters_enabled
 from utilities.cluster_config_utils import get_load_balancer_ip, no_conflicts_enabled, is_delta_sync_enabled, get_sg_platform
@@ -157,7 +157,7 @@ class Cluster:
             # replace database configs from databases
             # sg_db = "db"
             # db_config_name = "sync_gateway_default_functional_tests"
-            playbook_vars, db_config_json = self.setup_server_and_sgw(sg_config_path=sg_config_path, bucket_list=bucket_list)
+            playbook_vars, db_config_json, logging_config_json = self.setup_server_and_sgw(sg_config_path=sg_config_path, bucket_list=bucket_list)
         else:
 
             bucket_name_set = config.get_bucket_name_set()
@@ -362,6 +362,8 @@ class Cluster:
             if get_sg_version(self._cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(self._cluster_config):
                 # Now create rest API for all database configs
                 send_dbconfig_as_restCall(db_config_json, self.sync_gateways)
+                if logging_config_json:
+                    create_logging_config(logging_config_json, self.sync_gateways)
 
         return mode
 
@@ -448,7 +450,7 @@ class Cluster:
         disable_tls_server_var = ""
         disable_admin_auth_var = ""
 
-        # Start sync-gateway
+        """# Start sync-gateway
         playbook_vars = {
             "sync_gateway_config_filepath": config_path_full,
             "username": "",
@@ -477,7 +479,7 @@ class Cluster:
             "server_tls_skip_verify": "",
             "disable_tls_server": "",
             "disable_admin_auth": ""
-        }
+        } """
 
         sg_platform = get_sg_platform(self._cluster_config)
 
@@ -626,13 +628,14 @@ class Cluster:
             disable_admin_auth=disable_admin_auth_var
         )
         print("sgw config data after the template is ", sgw_config_data)
-        sgw_db_config = seperate_sgw_and_db_config(sgw_config_data)
+        """sgw_db_config = seperate_sgw_and_db_config(sgw_config_data)
         if len(sgw_db_config) == 2:
             sg_config_path, database_config = sgw_db_config
         else:
             sg_config_path = sgw_db_config[0]
             database_config = ""
-        # sg_config_path_full = os.path.abspath(sg_config_path)
+        # sg_config_path_full = os.path.abspath(sg_config_path) """
+        db_config_json, logging_config_json = seperate_sgw_and_db_config(sgw_config_data)
         # Create bootstrap playbook vars
         bootstrap_playbook_vars = {
             "sync_gateway_config_filepath": cpc_config_path_full,
@@ -666,11 +669,11 @@ class Cluster:
             "server_tls_skip_verify": server_tls_skip_verify_var,
             "disable_admin_auth": disable_admin_auth_var
         }
-        if database_config == "":
+        """if database_config == "":
             db_config_json = {}
         else:
             with open(database_config) as f:
-                db_config_json = json.loads(f.read())
+                db_config_json = json.loads(f.read()) """
         # Sleep for a few seconds for the indexes to teardown
         time.sleep(5)
 
@@ -681,7 +684,7 @@ class Cluster:
         assert status == 0, "Failed to start to Sync Gateway"
         self.sync_gateways[0].admin.put_db_config(self, sg_db, db_config_json)"""
         print("ddb_config_json is ----", db_config_json)
-        return bootstrap_playbook_vars, db_config_json
+        return bootstrap_playbook_vars, db_config_json, logging_config_json
 
     def restart_services(self):
         ansible_runner = AnsibleRunner(self._cluster_config)
