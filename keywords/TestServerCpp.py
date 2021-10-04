@@ -10,6 +10,7 @@ from keywords.utils import log_info
 from libraries.provision.ansible_runner import AnsibleRunner
 from keywords.remoteexecutor import RemoteExecutor
 import subprocess
+from requests.exceptions import ConnectionError
 
 class TestServerCpp(TestServerBase):
     def __init__(self, version_build, host, port, debug_mode=None, platform="c-debian", community_enabled=None, platform_version=None):
@@ -87,7 +88,7 @@ class TestServerCpp(TestServerBase):
 
     def install(self):
         """
-        Noop on Mac OSX. The LiteServ is a commandline binary
+        No install needed for C
         """
         log_info("No install needed for C")
 
@@ -135,7 +136,13 @@ class TestServerCpp(TestServerBase):
             raise LiteServError("Failed to start TestServer on remote machine")
 
     def _verify_launched(self):
-        raise NotImplementedError()
+        try:
+            self.session.get("http://{}:{}/".format(self.host, self.port))
+        except ConnectionError:
+            # Expecting connection error if LiteServ is not running on the port
+            raise LiteServError("Did not connected to Test server app")
+
+        return True
 
     def stop(self):
         print("STOPPING THE TESTSERVER")

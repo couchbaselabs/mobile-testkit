@@ -60,14 +60,14 @@ def test_multiple_sgs_with_differrent_revs_limit(params_from_base_test_setup, se
     sg2 = c.sync_gateways[1]
 
     # Setting revs_limit to sg1
-    revs_limit1 = 20
+    revs_limit1 = 23
     temp_cluster_config = copy_to_temp_conf(cluster_config, sg_mode)
     persist_cluster_config_environment_prop(temp_cluster_config, 'revs_limit', revs_limit1, property_name_check=False)
     status = sg1.restart(config=sg_config, cluster_config=temp_cluster_config)
     assert status == 0, "Syncgateway did not start after changing the revs_limit on sg1"
 
     # Setting revs_limit to sg2
-    revs_limit2 = 20
+    revs_limit2 = 23
     temp_cluster_config = copy_to_temp_conf(cluster_config, sg_mode)
     persist_cluster_config_environment_prop(temp_cluster_config, 'revs_limit', revs_limit2, property_name_check=False)
     status = sg2.restart(config=sg_config, cluster_config=temp_cluster_config)
@@ -125,7 +125,7 @@ def test_multiple_sgs_with_differrent_revs_limit(params_from_base_test_setup, se
         revs = sg_client.get_revs_num_in_history(sg1_url, sg_db1, doc_id, auth=session1)
         assert len(revs) == revs_limit1
 
-    time.sleep(60)
+    time.sleep(180)
     sg_docs = sg_client.get_all_docs(url=sg2_url, db=sg_db2, auth=session2)
     sg_doc_ids = [doc['id'] for doc in sg_docs["rows"]]
     for doc_id in sg_doc_ids:

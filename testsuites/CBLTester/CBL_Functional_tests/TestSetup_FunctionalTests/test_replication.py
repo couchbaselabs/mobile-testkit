@@ -45,9 +45,7 @@ def setup_teardown_test(params_from_base_test_setup):
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("num_of_docs, continuous, x509_cert_auth", [
-    pytest.param(10, True, True, marks=pytest.mark.sanity),
-    pytest.param(100, True, False, marks=pytest.mark.ce_sanity),
-    (1000, True, True)
+    pytest.param(10, True, True, marks=pytest.mark.sanity)
 ])
 def test_replication_configuration_valid_values(params_from_base_test_setup, num_of_docs, continuous, x509_cert_auth):
     """
@@ -1172,7 +1170,7 @@ def test_initial_pull_replication_background_apprun(params_from_base_test_setup,
 
     # No command to push the app to background on device, so avoid test to run on ios device and no app for .net
     if (liteserv_platform.lower() == "ios" or liteserv_platform.lower() == "xamarin-ios") and not device_enabled:
-        print("Executing only ios simulators")
+        log_info("Executing only ios simulators")
     else:
         pytest.skip('This test cannot run either it is .Net or ios with device enabled ')
 
@@ -4130,9 +4128,7 @@ def test_replication_with_custom_retries(params_from_base_test_setup, num_of_doc
     log_info(time_taken)
 
     sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)
-    log_info(sg_docs)
     # Give some time to replicator to retry
-    # time.sleep(65)
     # Commented as all network errors are causing test failures, but replicator retrying as expected
     replicator.wait_until_replicator_idle(repl, err_check=False)
     sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)
