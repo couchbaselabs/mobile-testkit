@@ -67,13 +67,6 @@ class Dictionary(object):
         args.setMemoryPointer("value", value)
         return self._client.invokeMethod("dictionary_setArray", args)
 
-    def set_encrypted_value(self, dictionary, key, value):
-        args = Args()
-        args.setMemoryPointer("dictionary", dictionary)
-        args.setString("key", key)
-        args.setMemoryPointer("value", value)
-        return self._client.invokeMethod("dictionary_setEncryptedValue", args)
-
     def getBlob(self, dictionary, key):
         args = Args()
         args.setMemoryPointer("dictionary", dictionary)
@@ -164,6 +157,13 @@ class Dictionary(object):
         args.setString("key", key)
         args.setLong("value", value)
         return self._client.invokeMethod("dictionary_setLong", args)
+
+    def setEncryptable(self, dictionary, key, value):
+        args = Args()
+        args.setMemoryPointer("dictionary", dictionary)
+        args.setString("key", key)
+        args.setMemoryPointer("value", value)
+        return self._client.invokeMethod("dictionary_setEncryptable", args)
 
     def getNumber(self, dictionary, key):
         args = Args()

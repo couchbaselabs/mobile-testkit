@@ -1169,9 +1169,7 @@ def test_initial_pull_replication_background_apprun(params_from_base_test_setup,
     c.reset(sg_config_path=sg_config)
 
     # No command to push the app to background on device, so avoid test to run on ios device and no app for .net
-    if (liteserv_platform.lower() == "ios" or liteserv_platform.lower() == "xamarin-ios") and not device_enabled:
-        log_info("Executing only ios simulators")
-    else:
+    if not ((liteserv_platform.lower() == "ios" or liteserv_platform.lower() == "xamarin-ios") and not device_enabled):
         pytest.skip('This test cannot run either it is .Net or ios with device enabled ')
 
     client = MobileRestClient()

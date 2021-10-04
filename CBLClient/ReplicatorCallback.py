@@ -14,49 +14,47 @@ class ReplicatorCallback(object):
 
         self._client = Client(base_url)
 
-    def create(self, type, encryptable_value, decrypted_value):
+    def create(self, type, encryptable_value):
         args = Args()
-        args.setString("decryptedValue", decrypted_value)
-        if type == "array":
-            args.setArray("encryptableValue", encryptable_value)
-        elif type == "string":
+        args.setString("type", type)
+
+        if type == "String":
+            args.setString("encrytableValue", encryptable_value)
+        elif type == "Array":
+            args.setMemoryPointer("encryptableValue", encryptable_value)
+        elif type == "Bool":
+            args.setBoolean("encryptableValue", encryptable_value)
+        elif type == "Float":
+            args.setFloat("encryptableValue", encryptable_value)
+        elif type == "Dict":
             args.setString("encryptableValue", encryptable_value)
-        elif type == "dic":
-            args.setDictionary("encryptableValue", encryptable_value)
+        elif type == "Int":
+            args.setInt("encryptableValue", encryptable_value)
+        elif type == "UInt":
+            args.setInt("encryptableValue", encryptable_value)
+        elif type == "Double":
+            args.setFloat("encryptableValue", encryptable_value)
         else:
             raise Exception("Provide correct parameter")
-        args.setString("type", type)
-        return self._client.invokeMethod("encryptionCallback_create", args)
+        return self._client.invokeMethod("encryptable_createValue", args)
 
-    def create_encryptor(self, doc_id, doc_data, key, doc_property, alg="xor"):
+    def createEncryptor(self, algo="xor", key="testkit"):
         args = Args()
-        args.setString("id", doc_id)
-        args.setString("algo", "xor")
-        args.setString("doc_data", doc_data)
+        args.setString("algo", algo)
         args.setString("key", key)
-        args.setString("doc_property", doc_property)
-        return self._client.invokeMethod("encryptionCallback_encryptor", args)
-
-    def create_decryptor(self, doc_id, doc_data, doc_property, key, alg="xor"):
-        args = Args()
-        args.setString("id", doc_id)
-        args.setString("algo", "xor")
-        args.setString("doc_data", doc_data)
-        args.setString("key", key)
-        args.setString("doc_property", doc_property)
-        return self._client.invokeMethod("encryptionCallback_decryptor", args)
+        return self._client.invokeMethod("encryptable_createEncryptor", args)
 
     def get_encryptable_value(self, encryptable_value):
         args = Args()
         args.setString("encryptableValue", encryptable_value)
-        return self._client.invokeMethod("encryptionCallback_getEncryptableValue", args)
+        return self._client.invokeMethod("encryptable_getEncryptableValue", args)
 
     def set_encryptable_value(self, encryptable_value):
         args = Args()
         args.setMemoryPointer("encryptedValue", encryptable_value)
-        return self._client.invokeMethod("encryptionCallback_setEncryptableValue", args)
+        return self._client.invokeMethod("encryptable_setEncryptableValue", args)
 
     def is_encryptable_value(self, encryptable_value):
         args = Args()
         args.setString("encryptableValue", encryptable_value)
-        return self._client.invokeMethod("encryptionCallback_isEncryptableValue", args)
+        return self._client.invokeMethod("encryptable_isEncryptableValue", args)
