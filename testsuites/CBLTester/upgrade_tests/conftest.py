@@ -160,6 +160,11 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="If set, will enable SSL communication between server and Sync Gateway")
 
+    parser.addoption("--use-local-testserver",
+                     action="store_true",
+                     help="Skip download and launch TestServer, use local debug build",
+                     default=False)
+
 # This will get called once before the first test that
 # runs with this as input parameters in this file
 # This setup will be called once for all tests in the
@@ -203,6 +208,7 @@ def params_from_base_suite_setup(request):
     disable_persistent_config = request.config.getoption("--disable-persistent-config")
     enable_server_tls_skip_verify = request.config.getoption("--enable-server-tls-skip-verify")
     disable_tls_server = request.config.getoption("--disable-tls-server")
+    use_local_testserver = request.config.getoption("--use-local-testserver")
 
     disable_admin_auth = request.config.getoption("--disable-admin-auth")
 
@@ -222,15 +228,16 @@ def params_from_base_suite_setup(request):
                                               community_enabled=community_enabled,
                                               debug_mode=debug_mode)
 
-    log_info("Downloading TestServer ...")
-    # Download TestServer app
-    testserver.download()
+    if not use_local_testserver:
+        log_info("Downloading TestServer ...")
+        # Download TestServer app
+        testserver.download()
 
-    # Install TestServer app
-    if device_enabled:
-        testserver.install_device()
-    else:
-        testserver.install()
+        # Install TestServer app
+        if device_enabled:
+            testserver.install_device()
+        else:
+            testserver.install()
 
     base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_travel_sample", mode)
@@ -405,17 +412,18 @@ def params_from_base_suite_setup(request):
     )
     sg_admin_url = cluster_topology["sync_gateways"][0]["admin"]
 
-    # Start Test server which needed for suite level set up like query tests
-    log_info("Starting TestServer...")
     test_name_cp = test_name.replace("/", "-")
-    if device_enabled:
-        testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
-                                                              test_name_cp,
-                                                              datetime.datetime.now()))
-    else:
-        testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
-                                                       test_name_cp,
-                                                       datetime.datetime.now()))
+    if not use_local_testserver:
+        # Start Test server which needed for suite level set up like query tests
+        log_info("Starting TestServer...")
+        if device_enabled:
+            testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
+                                                                  test_name_cp,
+                                                                  datetime.datetime.now()))
+        else:
+            testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
+                                                           test_name_cp,
+                                                           datetime.datetime.now()))
 
     suite_source_db = None
     suite_db_log_files = None
@@ -474,7 +482,8 @@ def params_from_base_suite_setup(request):
     # Flush all the memory contents on the server app
     log_info("Flushing server memory")
     utils_obj.flushMemory()
-    log_info("Stopping the test server per suite")
-    testserver.stop()
+    if not use_local_testserver:
+        log_info("Stopping the test server per suite")
+        testserver.stop()
     # Delete png files under resources/data
     clear_resources_pngs()

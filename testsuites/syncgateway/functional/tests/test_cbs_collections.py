@@ -55,7 +55,7 @@ def test_userdefind_collections(params_from_base_test_setup):
         pytest.skip('This test require --xattrs flag or server version 7.0 and up')
     cluster = Cluster(config=cluster_config)
     cluster.reset(sg_config_path=sg_conf)
-    if sg_platform == "windows" or sg_platform == "macos":
+    if sg_platform == "windows" or "macos" in sg_platform:
         json_cluster = load_cluster_config_json(cluster_config)
         sghost_username = json_cluster["sync_gateways:vars"]["ansible_user"]
         sghost_password = json_cluster["sync_gateways:vars"]["ansible_password"]
