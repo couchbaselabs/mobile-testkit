@@ -157,7 +157,7 @@ class Cluster:
             # replace database configs from databases
             # sg_db = "db"
             # db_config_name = "sync_gateway_default_functional_tests"
-            playbook_vars, db_config_json, logging_config_json = self.setup_server_and_sgw(sg_config_path=sg_config_path, bucket_list=bucket_list)
+            playbook_vars, db_config_json, sgw_config_data = self.setup_server_and_sgw(sg_config_path=sg_config_path, bucket_list=bucket_list)
         else:
 
             bucket_name_set = config.get_bucket_name_set()
@@ -361,9 +361,11 @@ class Cluster:
         if status == 0:
             if get_sg_version(self._cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(self._cluster_config):
                 # Now create rest API for all database configs
-                send_dbconfig_as_restCall(db_config_json, self.sync_gateways)
-                if logging_config_json:
-                    create_logging_config(logging_config_json, self.sync_gateways)
+                print("db_config_json is ", db_config_json)
+                send_dbconfig_as_restCall(db_config_json, self.sync_gateways, sgw_config_data)
+
+                # if logging_config_json:
+                #     create_logging_config(logging_config_json, self.sync_gateways)
 
         return mode
 
@@ -373,7 +375,7 @@ class Cluster:
         # TODO top-todo1: For now using one commong bootstrop config , once everything is done , check back and see if common bootstrap config is enough
         # for top-todo1: cpc_sgw_config_path = get_cpc_sgw_config(sg_config_path)
         from keywords.SyncGateway import sync_gateway_config_path_for_mode
-        cpc_sgw_config_path = "resources/sync_gateway_configs_cpc/sync_gateway_default"
+        # cpc_sgw_config_path = "resources/sync_gateway_configs_cpc/sync_gateway_default"
         sg_conf_name = "sync_gateway_default"
         mode = "cc"
         cpc_sgw_config_path = sync_gateway_config_path_for_mode(sg_conf_name, mode, cpc=True)
@@ -628,14 +630,15 @@ class Cluster:
             disable_admin_auth=disable_admin_auth_var
         )
         print("sgw config data after the template is ", sgw_config_data)
-        """sgw_db_config = seperate_sgw_and_db_config(sgw_config_data)
+        sgw_db_config = seperate_sgw_and_db_config(sgw_config_data)
         if len(sgw_db_config) == 2:
             sg_config_path, database_config = sgw_db_config
         else:
             sg_config_path = sgw_db_config[0]
             database_config = ""
-        # sg_config_path_full = os.path.abspath(sg_config_path) """
-        db_config_json, logging_config_json = seperate_sgw_and_db_config(sgw_config_data)
+        db_config_json = database_config
+        # sg_config_path_full = os.path.abspath(sg_config_path)
+        # db_config_json = seperate_sgw_and_db_config(sgw_config_data)
         # Create bootstrap playbook vars
         bootstrap_playbook_vars = {
             "sync_gateway_config_filepath": cpc_config_path_full,
@@ -669,11 +672,11 @@ class Cluster:
             "server_tls_skip_verify": server_tls_skip_verify_var,
             "disable_admin_auth": disable_admin_auth_var
         }
-        """if database_config == "":
+        if database_config == "":
             db_config_json = {}
         else:
             with open(database_config) as f:
-                db_config_json = json.loads(f.read()) """
+                db_config_json = json.loads(f.read())
         # Sleep for a few seconds for the indexes to teardown
         time.sleep(5)
 
@@ -684,7 +687,7 @@ class Cluster:
         assert status == 0, "Failed to start to Sync Gateway"
         self.sync_gateways[0].admin.put_db_config(self, sg_db, db_config_json)"""
         print("ddb_config_json is ----", db_config_json)
-        return bootstrap_playbook_vars, db_config_json, logging_config_json
+        return bootstrap_playbook_vars, db_config_json, sgw_config_data
 
     def restart_services(self):
         ansible_runner = AnsibleRunner(self._cluster_config)

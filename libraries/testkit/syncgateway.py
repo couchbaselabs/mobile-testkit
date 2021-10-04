@@ -714,7 +714,11 @@ class SyncGateway:
         sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
         cbs_cert_path = os.path.join(os.getcwd(), "certs")
         bucket_names = get_buckets_from_sync_gateway_config(sg_config_path, cluster_config)
-
+        sg_conf_name = "sync_gateway_default"
+        mode = "cc"
+        from keywords.SyncGateway import sync_gateway_config_path_for_mode
+        cpc_sgw_config_path = sync_gateway_config_path_for_mode(sg_conf_name, mode, cpc=True)
+        cpc_config_path_full = os.path.abspath(cpc_sgw_config_path)
         read_bucket_user = "bucket-admin"
         # self.sync_gateway_config = config
 
@@ -730,7 +734,7 @@ class SyncGateway:
             log_info(">>> Waiting for Server: {} to be in a healthy state".format(cluster.servers[0].url))
             cluster.servers[0].wait_for_ready_state() """
 
-        log_info(">>> Starting sync_gateway with configuration: {}".format(config_path_full))
+        log_info(">>> Starting sync_gateway with configuration: {}".format(cpc_config_path_full))
 
         with open(config_path_full, "r") as config:
             sgw_config_data = config.read()
@@ -901,10 +905,10 @@ class SyncGateway:
 
         print("config_path _full is ", config_path_full)
         sg_config_path, database_config = seperate_sgw_and_db_config(sgw_config_data)
-        sg_config_path_full = os.path.abspath(sg_config_path)
+        # sg_config_path_full = os.path.abspath(sg_config_path)
         # Create bootstrap playbook vars
         bootstrap_playbook_vars = {
-            "sync_gateway_config_filepath": sg_config_path_full,
+            "sync_gateway_config_filepath": cpc_config_path_full,
             "server_port": server_port_var,
             "server_scheme": server_scheme_var,
             "username": username_playbook_var,
@@ -1070,14 +1074,18 @@ def assert_has_doc(sg_user, doc_id):
     assert doc["_id"] == doc_id
 
 
-def send_dbconfig_as_restCall(db_config_json, sync_gateways):
+def send_dbconfig_as_restCall(db_config_json, sync_gateways, sgw_config_data):
     # convert database config for each sg db and send to rest end point
     # sg_dbs = database_config.keys()
     # time.sleep(30)
+
     for sgw in sync_gateways:
         print("db config json for sgw : ", sgw)
         sgw_db_config = db_config_json
         print("sgw_db_config.keys ", sgw_db_config.keys())
+        if sgw_config_data.count("`") > 1:
+            sgw_config_data = sgw_config_data.split("`")
+        i = 1
         for sg_db in sgw_db_config.keys():
             print("sg_db of keys : ", sg_db)
             # TODO : Should look for better place to delete 'server' key if tests usese old config
@@ -1094,7 +1102,13 @@ def send_dbconfig_as_restCall(db_config_json, sync_gateways):
             if "x509_cert_path" in sgw_db_config[sg_db].keys():
                 del sgw_db_config[sg_db]["x509_cert_path"]
             print("dbconfig json", sgw_db_config[sg_db])
-            sgw.admin.create_db(sg_db, sgw_db_config[sg_db])
+            try:
+                sgw.admin.create_db(sg_db, sgw_db_config[sg_db])
+                
+            except Exception as e:
+                print("ignore if there is no dbatabase", str(e))
+
+            # sgw.admin.create_db(sg_db, sgw_db_config[sg_db])
             # TODO : Put back one CPC config works
             # sgw.admin.create_db_with_rest(sg_db, sgw_db_config[sg_db])
             # sgw.admin.put_db_config(sg_db, sgw_db_config[sg_db])
