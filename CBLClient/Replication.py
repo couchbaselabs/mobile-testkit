@@ -30,12 +30,8 @@ class Replication(object):
                   push_filter=False, pull_filter=False, channels=None,
                   documentIDs=None, replicator_authenticator=None,
                   headers=None, filter_callback_func='', conflict_resolver='',
-<<<<<<< HEAD
-                  heartbeat=None, max_retries=None, max_retry_wait_time=None,encryptor=None):
-=======
                   heartbeat=None, max_retries=None, max_retry_wait_time=None,
-                  auto_purge=None):
->>>>>>> 5560a61385494bd24ab29790fe41919a96443f16
+                  auto_purge=None, encryptor=None):
         args = Args()
         args.setMemoryPointer("source_db", source_db)
         args.setBoolean("continuous", continuous)
