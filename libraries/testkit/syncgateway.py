@@ -837,7 +837,7 @@ class SyncGateway:
         else:  # TODO: temporirly adding this else, remove it once disable_persistent_config is disabled by default
             disable_persistent_config_var = '"disable_persistent_config": true,'
 
-        if get_sg_version(self._cluster_config) >= "2.8.0":
+        if get_sg_version(cluster_config) >= "2.8.0":
             prometheus_var = '"metricsInterface": ":4986",'
 
         if get_sg_use_views(cluster_config):
