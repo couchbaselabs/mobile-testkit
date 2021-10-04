@@ -189,10 +189,7 @@ def test_reassigning_channels_using_user_xattrs(params_from_base_test_setup, set
     replicator.wait_until_replicator_idle(repl2)
     cbl_doc_count2 = db.getCount(cbl_db2)
     assert cbl_doc_count2 == 0, "doc is accessible by user2 who has access to 'xattrs_channel_two'"
-    # get deltasync stats
-    if delta_sync_enabled:
-        expvars = sg_client.get_expvars(url=sg_admin_url)
-        delta_sync_count = expvars['syncgateway']['per_db'][sg_db]['delta_sync']['delta_pull_replication_count']
+
     # 4. update the user xattrs via sdk from "xattrs_channel_one" to "xattrs_channel_two"
     sdk_bucket.mutate_in(sg_doc_xattrs_id, [SD.upsert(user_custom_channel, sg_channel1_value2, xattr=True, create_parents=True)])
 
@@ -211,7 +208,8 @@ def test_reassigning_channels_using_user_xattrs(params_from_base_test_setup, set
     assert cbl_doc_count1 == 0, "doc is accessible by user1 who has access to only 'xattrs_channel_one'"
     if delta_sync_enabled:
         expvars = sg_client.get_expvars(url=sg_admin_url)
-        assert delta_sync_count == expvars['syncgateway']['per_db'][sg_db]['delta_sync']['delta_pull_replication_count']
+        assert expvars['syncgateway']['per_db'][sg_db]['delta_sync']['deltas_requested'] == 0, "there is a change in delta with expvars change"
+        assert expvars['syncgateway']['per_db'][sg_db]['delta_sync']['deltas_sent'] == 0, "there is a change in delta with expvars change"
     replicator.stop(repl1)
     replicator.stop(repl2)
 

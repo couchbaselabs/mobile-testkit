@@ -18,7 +18,7 @@ docutils==0.12
 ecdsa==0.13
 enum34==1.1.6
 flake8==3.3.0
-futures==3.0.5
+futures==3.1.1
 idna==2.5
 ipaddress==1.0.18
 isort==4.2.5

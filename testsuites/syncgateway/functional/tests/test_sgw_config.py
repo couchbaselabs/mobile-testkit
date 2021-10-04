@@ -3,7 +3,7 @@ import time
 import os
 import requests
 import subprocess
-from requests.exceptions import HTTPError, ConnectionError
+from requests.exceptions import HTTPError
 
 from keywords.utils import log_info, get_local_ip
 from keywords.ClusterKeywords import ClusterKeywords
@@ -156,8 +156,7 @@ def test_invalid_jsfunc(params_from_base_test_setup, invalid_js_code, invalid_js
     "1. Create valid js function in the file which sgw can read
     2. provide valid sync gateyway function
     3. Provide invalid js path/jscode for sync key in sgw config
-    4. Start sync gateway, it should start successfully
-    5. Verify sync gateway fails to create a doc as jscode/jsfilepath is invalid
+    4. Start sync gateway, it should fail to start
     """
 
     cluster_config = params_from_base_test_setup["cluster_config"]
@@ -165,22 +164,13 @@ def test_invalid_jsfunc(params_from_base_test_setup, invalid_js_code, invalid_js
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     sg_platform = params_from_base_test_setup["sg_platform"]
     sg_conf_name = "custom_sync/sync_gateway_externalize_js"
+    sg_conf_reset_name = "sync_gateway_default"
 
     if sync_gateway_version < "3.0.0":
         pytest.skip("this feature not available below 3.0.0")
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
-    cluster_helper = ClusterKeywords(cluster_config)
-    cluster_hosts = cluster_helper.get_cluster_topology(cluster_config)
-    sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
-    sg_url = cluster_hosts["sync_gateways"][0]["public"]
-    username = "autotest"
-    password = "password"
-    doc_id = "doc_1"
-    sg_db = "db"
-    channel = ["sgw-env-var"]
-    sg_client = MobileRestClient()
+    sg_conf_reset = sync_gateway_config_path_for_mode(sg_conf_reset_name, mode)
     cluster = Cluster(config=cluster_config)
-    # sg_ip = cluster.sync_gateways[0].ip
     sg_hostname = cluster.sync_gateways[0].hostname
 
     if invalid_js_code:
@@ -198,32 +188,12 @@ def test_invalid_jsfunc(params_from_base_test_setup, invalid_js_code, invalid_js
 
     temp_sg_config, _ = copy_sgconf_to_temp(sg_conf, mode)
     temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ replace_with_js }}", path)
-    cluster.reset(sg_config_path=temp_sg_config)
+    try:
+        cluster.reset(sg_config_path=temp_sg_config)
+    except Exception as ex:
+        assert "Failed to start to Sync Gateway" in str(ex), "Sync gateway did not fail with invalid js sync function"
 
-    topology = cluster_helper.get_cluster_topology(cluster_config)
-
-    cbs_url = topology["couchbase_servers"][0]
-    sg_url = topology["sync_gateways"][0]["public"]
-    sg_url_admin = topology["sync_gateways"][0]["admin"]
-    sg_db = "db"
-    bucket = "data-bucket"
-
-    log_info("Running 'test_attachment_revpos_when_ancestor_unavailable'")
-    log_info("Using cbs_url: {}".format(cbs_url))
-    log_info("Using sg_url: {}".format(sg_url))
-    log_info("Using sg_url_admin: {}".format(sg_url_admin))
-    log_info("Using sg_db: {}".format(sg_db))
-    log_info("Using bucket: {}".format(bucket))
-
-    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channel)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
-    session1 = cookie, session_id
-
-    # 1. Create a doc
-    sg_doc_body = document.create_doc(doc_id=doc_id, channels=channel)
-    with pytest.raises(HTTPError) as he:
-        sg_client.add_doc(url=sg_url, db=sg_db, doc=sg_doc_body, auth=session1)
-    assert str(he.value).startswith("500 Server Error: Internal Server Error for url:")
+    cluster.reset(sg_config_path=sg_conf_reset)
 
 
 @pytest.mark.syncgateway
@@ -232,9 +202,7 @@ def test_invalid_external_jspath(params_from_base_test_setup, setup_jsserver):
     """
     1. Create valid js function in the file which sgw can read
     2. Start sync gateway
-    3. Verify SGW starts sucessfully
-    4. Write a test which documents can process the sgw config
-    5. Verify the documents are process and worked based on js sync function
+    3. Verify SGW fail to start
     """
 
     cluster_config = params_from_base_test_setup["cluster_config"]
@@ -242,9 +210,6 @@ def test_invalid_external_jspath(params_from_base_test_setup, setup_jsserver):
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     orig_sg_conf = "sync_gateway_default_functional_tests"
     sg_conf_name = "custom_sync/sync_gateway_externalize_js"
-    cluster_helper = ClusterKeywords(cluster_config)
-    cluster_hosts = cluster_helper.get_cluster_topology(cluster_config)
-    sg_url = cluster_hosts["sync_gateways"][0]["public"]
 
     if sync_gateway_version < "3.0.0":
         pytest.skip("this feature not available below 3.0.0")
@@ -252,26 +217,19 @@ def test_invalid_external_jspath(params_from_base_test_setup, setup_jsserver):
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     cluster = Cluster(config=cluster_config)
-    cluster.reset(sg_config_path=orig_sg_conf)
 
     # Create and set up sdk client
-    sg = cluster.sync_gateways[0]
     js_func_key = "\"import_filter\":\""
     path = "http://{}:5007/invalid_jsfunc".format(get_local_ip())
     path = js_func_key + path + "\","
     temp_sg_config, _ = copy_sgconf_to_temp(sg_conf, mode)
     temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ replace_with_js }}", path)
-    with ProcessPoolExecutor() as mp:
-        sgrestart = mp.submit(sg.restart, temp_sg_config, cluster_config)
-        time.sleep(60)
-    sgrestart.result(timeout=80)
-
     try:
-        requests.get(sg_url, timeout=30)
-        assert False, "Sync gateway started successfully with invalid external jsfile"
-    except ConnectionError as he:
-        log_info(str(he))
-        log_info("Expected to have sync gateway fail to start")
+        cluster.reset(sg_config_path=temp_sg_config)
+    except Exception as ex:
+        assert "Failed to start to Sync Gateway" in str(ex), "Sync gateway did not fail with invalid external js path"
+
+    cluster.reset(sg_config_path=orig_sg_conf)
 
 
 @pytest.mark.syncgateway
@@ -328,7 +286,7 @@ def test_envVariables_on_sgw_config(params_from_base_test_setup, setup_env_varia
         environment_string = """[String[]] $v = @("bucketuser=""" + bucket_names[0] + """", "jsfunc=""" + js_content + """\")
         Set-ItemProperty HKLM:SYSTEM\CurrentControlSet\Services\SyncGateway -Name Environment -Value $v
         """
-    elif sg_platform == "macos":
+    elif "macos" in sg_platform:
         environment_string = """launchctl setenv bucketuser """ + bucket_names[0] + """
         launchctl setenv jsfunc \"""" + js_content + """\"
         """
@@ -523,7 +481,7 @@ def test_jscode_envvariables_path(params_from_base_test_setup, setup_env_variabl
         environment_string = """[String[]] $v = @("tempjs=""" + tempjs + """\")
         Set-ItemProperty HKLM:SYSTEM\CurrentControlSet\Services\SyncGateway -Name Environment -Value $v
         """
-    elif sg_platform == "macos":
+    elif "macos" in sg_platform:
         environment_string = """launchctl setenv tempjs """ + tempjs + """
         """
     else:
@@ -647,7 +605,7 @@ def construct_env_variables_string(sg_platform, sg_conf):
         environment_string = """[String[]] $v = @("bucketuser=""" + bucket_names[0] + """", "jsfunc=function(doc, oldDoc){throw({forbidden: 'read only!'})}")
         Set-ItemProperty HKLM:SYSTEM\CurrentControlSet\Services\SyncGateway -Name Environment -Value $v
         """
-    elif sg_platform == "macos":
+    elif "macos" in sg_platform:
         environment_string = """export bucketuser=""" + bucket_names[0] + """
         export jsfunc=function(doc, oldDoc){throw({forbidden: 'read only!'})}")
         """

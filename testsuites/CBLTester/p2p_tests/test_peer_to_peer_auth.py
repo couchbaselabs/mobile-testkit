@@ -118,7 +118,7 @@ def test_peer_to_peer_with_basic_auth_incorrect_pass(params_from_base_test_setup
     try:
         replicator.wait_until_replicator_idle(repl)
     except Exception as he:
-        assert 'unauthorized' in str(he)
+        assert 'unauthorized' in str(he).lower()
         peerToPeer_server.server_stop(replicator_tcp_listener, endPointType)
 
     # incorrect username
@@ -138,7 +138,7 @@ def test_peer_to_peer_with_basic_auth_incorrect_pass(params_from_base_test_setup
     try:
         replicator.wait_until_replicator_idle(repl)
     except Exception as he:
-        assert 'unauthorized' in str(he)
+        assert 'unauthorized' in str(he).lower()
         peerToPeer_server.server_stop(replicator_tcp_listener, endPointType)
         return
     assert False, "We need to get unauthorized errors"
