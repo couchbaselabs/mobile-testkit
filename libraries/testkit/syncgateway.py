@@ -1083,6 +1083,7 @@ def send_dbconfig_as_restCall(db_config_json, sync_gateways, sgw_config_data):
         print("db config json for sgw : ", sgw)
         sgw_db_config = db_config_json
         print("sgw_db_config.keys ", sgw_db_config.keys())
+        sync_func = None
         if sgw_config_data.count("`") > 1:
             sync_func = sgw_config_data.split("`")[1]
         for sg_db in sgw_db_config.keys():
@@ -1105,7 +1106,8 @@ def send_dbconfig_as_restCall(db_config_json, sync_gateways, sgw_config_data):
                 sgw.admin.create_db(sg_db, sgw_db_config[sg_db])
             except Exception as e:
                 print("ignore if there is no dbatabase", str(e))
-            sgw.admin.create_sync_func(sg_db, sync_func)
+            if sync_func is not None:
+                sgw.admin.create_sync_func(sg_db, sync_func)
             # sgw.admin.create_db(sg_db, sgw_db_config[sg_db])
             # TODO : Put back one CPC config works
             # sgw.admin.create_db_with_rest(sg_db, sgw_db_config[sg_db])
