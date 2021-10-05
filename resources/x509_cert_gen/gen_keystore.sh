@@ -10,6 +10,7 @@ USERNAME=${2:-sdkqecertuser}
 SSH_PASSWORD=${3:-couchbase}
 CLUSTER_VERSION=${4:-6.5.0-4959}
 USE_JSON=false
+NON_LOCAL_CA_UPLOAD=true
 
 if [[ $CLUSTER_VERSION =~ ^([0-9]+)\.([0-9]+) ]]
 then
@@ -81,6 +82,10 @@ do
       ${SSH} root@${ip} "chmod o+rx ${INBOX}${CHAIN}"
       ${SSH} root@${ip} "chmod o+rx ${INBOX}${NODE}.key"
   fi
+  # Enable Non local CA cert upload
+  if ${NON_LOCAL_CA_UPLOAD} ; then
+    ${SSH} root@${ip} "curl -X POST localhost:8091/settings/security/allowNonLocalCACertUpload -d 'true'" -u ${ADMINCRED} -H "'Content-Type:application/x-www-form-urlencoded'"
+  fi
   # Upload ROOT CA and activate it
   curl -s -o /dev/null --data-binary "@./${ROOT_CA}.pem" http://${ADMINCRED}@${ip}:8091/controller/uploadClusterCA
   curl -sX POST http://${ADMINCRED}@${ip}:8091/node/controller/reloadCertificate
@@ -92,7 +97,9 @@ do
       curl -s -d "state=enable" -d "delimiter=" -d "path=subject.cn" -d "prefix=" http://${ADMINCRED}@${ip}:8091/settings/clientCertAuth
   fi
 done
-
+if ${NON_LOCAL_CA_UPLOAD} ; then
+    ${SSH} root@${ip} "curl -X POST localhost:8091/settings/security/allowNonLocalCACertUpload -d 'false'" -u ${ADMINCRED} -H "'Content-Type:application/x-www-form-urlencoded'"
+fi
 # Create keystore file and import ROOT/INTERMEDIATE/CLIENT cert
 KEYSTORE_FILE=keystore.jks
 STOREPASS=123456
