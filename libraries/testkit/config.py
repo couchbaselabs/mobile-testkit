@@ -269,7 +269,7 @@ def escape_json_value(raw_value):
     return escaped
 
 
-def seperate_sgw_and_db_config(sgw_conf_data):
+def seperate_sgw_and_db_config_new(sgw_conf_data):
     sgw_conf_data = json.loads(sgw_conf_data)
     temp_sgw_config = "resources/temp/temp_sgw_config.json"
     sgw_config_file = copy_json_to_temp_file(sgw_conf_data, temp_sgw_config)
@@ -285,14 +285,9 @@ def seperate_sgw_and_db_config(sgw_conf_data):
         return sgw_config_file
 
 
-def seperate_sgw_and_db_config_new(sgw_conf_data):
-    sync_func = ""
-    sync_func = sgw_conf_data.split("`")[1]
+def seperate_sgw_and_db_config(sgw_conf_data):
     sgw_conf_data = convert_to_valid_json(sgw_conf_data)
     sgw_conf_data = json.loads(sgw_conf_data)
-    # print("sync")
-    # sgw_conf_data["databases"]["sync"] = "`" + sync_func + "`"
-    # print("sgw_conf_data with sync function is ", sgw_conf_data)
     temp_sgw_config = "resources/temp/temp_sgw_config.json"
     sgw_config_file = copy_json_to_temp_file(sgw_conf_data, temp_sgw_config)
     db_config_payload = {}
@@ -301,4 +296,4 @@ def seperate_sgw_and_db_config_new(sgw_conf_data):
         db_config_payload = sgw_conf_data["databases"]
     if "logging" in sgw_conf_data.keys():
         logging_payload["logging"] = sgw_conf_data["logging"]
-    return db_config_payload, sync_func
+    return sgw_config_file, db_config_payload

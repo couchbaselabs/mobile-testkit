@@ -630,15 +630,16 @@ class Cluster:
             disable_admin_auth=disable_admin_auth_var
         )
         print("sgw config data after the template is ", sgw_config_data)
-        sgw_db_config = seperate_sgw_and_db_config(sgw_config_data)
+        """sgw_db_config = seperate_sgw_and_db_config(sgw_config_data)
         if len(sgw_db_config) == 2:
             sg_config_path, database_config = sgw_db_config
         else:
             sg_config_path = sgw_db_config[0]
             database_config = ""
-        db_config_json = database_config
+         """
         # sg_config_path_full = os.path.abspath(sg_config_path)
-        # db_config_json = seperate_sgw_and_db_config(sgw_config_data)
+        sg_config_path, database_config = seperate_sgw_and_db_config(sgw_config_data)
+        db_config_json = database_config
         # Create bootstrap playbook vars
         bootstrap_playbook_vars = {
             "sync_gateway_config_filepath": cpc_config_path_full,
@@ -672,11 +673,11 @@ class Cluster:
             "server_tls_skip_verify": server_tls_skip_verify_var,
             "disable_admin_auth": disable_admin_auth_var
         }
-        if database_config == "":
+        """ if database_config == "":
             db_config_json = {}
         else:
             with open(database_config) as f:
-                db_config_json = json.loads(f.read())
+                db_config_json = json.loads(f.read()) """
         # Sleep for a few seconds for the indexes to teardown
         time.sleep(5)
 

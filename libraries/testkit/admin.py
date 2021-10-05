@@ -343,3 +343,12 @@ class Admin:
             time.sleep(1)
             local_count += 1
         return count
+
+    def create_sync_func(self, db, sync_func):
+        sync_headers = {"Content-Type": "application/javascript"}
+        resp = requests.put("{0}/{1}/_config/sync".format(self.admin_url, db), headers=sync_headers, timeout=settings.HTTP_REQ_TIMEOUT, data=sync_func, verify=False)
+        log.info("PUT {}".format(resp.url))
+        resp.raise_for_status()
+        return resp.status_code
+
+
