@@ -235,7 +235,7 @@ class SyncGateway:
             cluster_config = self.cluster_config
         # c_cluster = cluster.Cluster(self.cluster_config)
         if get_sg_version(self.cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(self.cluster_config):
-            playbook_vars, db_config_json = self.setup_sgwconfig_db_config(cluster_config, config)
+            playbook_vars, db_config_json, sgw_config_data = self.setup_sgwconfig_db_config(cluster_config, config)
         else:
             conf_path = os.path.abspath(config)
             log.info(">>> Restarting sync_gateway with configuration: {}".format(conf_path))
@@ -394,7 +394,7 @@ class SyncGateway:
             if get_sg_version(self.cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(self.cluster_config):
                 # Now create rest API for all database configs
                 sgw_list = [self]
-                send_dbconfig_as_restCall(db_config_json, sgw_list)
+                send_dbconfig_as_restCall(db_config_json, sgw_list, sgw_config_data)
         return status
 
     def verify_launched(self):
@@ -772,6 +772,10 @@ class SyncGateway:
         no_conflicts_var = ""
         revs_limit_var = ""
         delta_sync_var = ""
+        disable_persistent_config_var = ""
+        server_tls_skip_verify_var = ""
+        disable_tls_server_var = ""
+        disable_admin_auth_var = ""
 
         sg_platform = get_sg_platform(cluster_config)
 
@@ -836,10 +840,17 @@ class SyncGateway:
             hide_product_version_var = '"hide_product_version": true,'
         bucket_list_var = '"buckets": {},'.format(bucket_names)
 
-        if is_centralized_persistent_config_disabled(cluster_config):
-            disable_persistent_config_var = '"disable_persistent_config": false,'
-        else:  # TODO: temporirly adding this else, remove it once disable_persistent_config is disabled by default
+        if is_centralized_persistent_config_disabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
             disable_persistent_config_var = '"disable_persistent_config": true,'
+
+        if is_server_tls_skip_verify_enabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
+            server_tls_skip_verify_var = '"server_tls_skip_verify": true,'
+
+        if is_tls_server_disabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
+            disable_tls_server_var = '"use_tls_server": false,'
+
+        if is_admin_auth_disabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
+            disable_admin_auth_var = '"admin_interface_authentication": false,    \n"metrics_interface_authentication": false,'
 
         if get_sg_version(cluster_config) >= "2.8.0":
             prometheus_var = '"metricsInterface": ":4986",'
@@ -900,7 +911,10 @@ class SyncGateway:
             xattrs=xattrs_var,
             no_conflicts=no_conflicts_var,
             revs_limit=revs_limit_var,
-            delta_sync=delta_sync_var
+            delta_sync=delta_sync_var,
+            server_tls_skip_verify=server_tls_skip_verify_var,
+            disable_tls_server=disable_tls_server_var,
+            disable_admin_auth=disable_admin_auth_var
         )
 
         print("config_path _full is ", config_path_full)
@@ -924,13 +938,26 @@ class SyncGateway:
             "x509_auth": x509_auth_var,
             "x509_certs_dir": cbs_cert_path,
             "couchbase_server_primary_node": couchbase_server_primary_node,
-            "logging": logging_var
+            "logging": logging_var,
+            "autoimport": autoimport_var,
+            "xattrs": xattrs_var,
+            "no_conflicts": no_conflicts_var,
+            "sg_use_views": sg_use_views_var,
+            "num_index_replicas": num_index_replicas_var,
+            "disable_tls_server": disable_tls_server_var,
+            "certpath": certpath_var,
+            "keypath": keypath_var,
+            "cacertpath": cacertpath_var,
+            "delta_sync": delta_sync_var,
+            "revs_limit": revs_limit_var,
+            "server_tls_skip_verify": server_tls_skip_verify_var,
+            "disable_admin_auth": disable_admin_auth_var
         }
 
         # config_path_full = os.path.abspath(sg_config_path)
         # convert database config to json data and create database config via rest api
-        with open(database_config) as f:
-            db_config_json = json.loads(f.read())
+        """ with open(database_config) as f:
+            db_config_json = json.loads(f.read()) """
 
         # Sleep for a few seconds for the indexes to teardown
         time.sleep(5)
@@ -942,7 +969,7 @@ class SyncGateway:
         assert status == 0, "Failed to start to Sync Gateway"
         self.sync_gateways[0].admin.put_db_config(self, sg_db, db_config_json) """
 
-        return bootstrap_playbook_vars, db_config_json
+        return bootstrap_playbook_vars, database_config, sgw_config_data
 
 
 def get_buckets_from_sync_gateway_config(sync_gateway_config_path, cluster_config=None):
