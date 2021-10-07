@@ -302,13 +302,13 @@ class Replication(object):
         return self._client.invokeMethod("replicator_changeListenerGetChanges", args)
 
     def configure_and_replicate(self, source_db, replicator_authenticator=None, target_db=None, target_url=None, replication_type="push_pull", continuous=True,
-                                channels=None, err_check=True, wait_until_idle=True, heartbeat=None, auto_purge=None):
+                                channels=None, err_check=True, wait_until_idle=True, heartbeat=None, auto_purge=None, encryptor=None):
         if target_db is None:
             repl_config = self.configure(source_db, target_url=target_url, continuous=continuous,
-                                         replication_type=replication_type, channels=channels, replicator_authenticator=replicator_authenticator, heartbeat=heartbeat, auto_purge=auto_purge)
+                                         replication_type=replication_type, channels=channels, replicator_authenticator=replicator_authenticator, heartbeat=heartbeat, auto_purge=auto_purge, encryptor=encryptor)
         else:
             repl_config = self.configure(source_db, target_db=target_db, continuous=continuous,
-                                         replication_type=replication_type, channels=channels, replicator_authenticator=replicator_authenticator, heartbeat=heartbeat, auto_purge=auto_purge)
+                                         replication_type=replication_type, channels=channels, replicator_authenticator=replicator_authenticator, heartbeat=heartbeat, auto_purge=auto_purge, encryptor=encryptor)
         repl = self.create(repl_config)
         self.start(repl)
         if wait_until_idle:

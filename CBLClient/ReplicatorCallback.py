@@ -14,12 +14,12 @@ class ReplicatorCallback(object):
 
         self._client = Client(base_url)
 
-    def create(self, type, encryptable_value):
+    def create(self, type, encryptable_value=None):
         args = Args()
         args.setString("type", type)
 
         if type == "String":
-            args.setString("encrytableValue", encryptable_value)
+            args.setString("encryptableValue", encryptable_value)
         elif type == "Array":
             args.setMemoryPointer("encryptableValue", encryptable_value)
         elif type == "Bool":
@@ -27,15 +27,13 @@ class ReplicatorCallback(object):
         elif type == "Float":
             args.setFloat("encryptableValue", encryptable_value)
         elif type == "Dict":
-            args.setString("encryptableValue", encryptable_value)
+            args.setDictionary("encryptableValue", encryptable_value)
         elif type == "Int":
             args.setInt("encryptableValue", encryptable_value)
         elif type == "UInt":
             args.setInt("encryptableValue", encryptable_value)
         elif type == "Double":
             args.setFloat("encryptableValue", encryptable_value)
-        else:
-            raise Exception("Provide correct parameter")
         return self._client.invokeMethod("encryptable_createValue", args)
 
     def createEncryptor(self, algo="xor", key="testkit"):
