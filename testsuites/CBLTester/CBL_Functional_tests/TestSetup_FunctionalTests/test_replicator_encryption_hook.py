@@ -399,7 +399,7 @@ def test_encryption_with_two_dbs(params_from_base_test_setup):
     4. Create another CBL DB then create 2 documents
     5. Verify both DBs docs are replicated to SG
     6. Verify Both BDs got all documents, verify Decrypter works fine as expected
-    7. Verify the Encypted doc data on DB2
+    7. Verify the Encypted value in DB2
     """
 
     liteserv_platform = params_from_base_test_setup["liteserv_platform"]
@@ -434,9 +434,11 @@ def test_encryption_with_two_dbs(params_from_base_test_setup):
     encryptable = ReplicatorCallback(base_url)
 
     # 2. Create a simple document with encryption property
-    dict = {"balance": "$2,393.65", "picture": "http://placehold.it/32x32", "email": "ofeliasears@imageflow.com", "phone": "+1 (939) 542-2185"}
-    dict2 = dictionary.toMutableDictionary(dict)
-    encrypted_value = encryptable.create("Dict", dict2)
+    # dict = {"balance": "$2,393.65", "picture": "http://placehold.it/32x32", "email": "ofeliasears@imageflow.com", "phone": "+1 (939) 542-2185"}
+    # dict2 = dictionary.toMutableDictionary(dict)
+    # encrypted_value = encryptable.create("Dict", dict2)
+    # dictionary.setEncryptable(mutable, "encrypted_field_dict", encrypted_value)
+    encrypted_value = encryptable.create("String", "Testt&#[{()_/^%@")
     dictionary.setEncryptable(mutable, "encrypted_field_dict", encrypted_value)
     # # Add the encrypted key value in the document dictionary
     doc_body_new = dictionary.toMap(mutable)
@@ -466,7 +468,7 @@ def test_encryption_with_two_dbs(params_from_base_test_setup):
     sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)
     sg_docs = sg_docs["rows"]
 
-    #3. Start the replicator and make sure documents are replicated on SG.
+    # 3. Start the replicator and make sure documents are replicated on SG.
     cbl_doc_count = db.getCount(cbl_db)
     assert len(sg_docs) == cbl_doc_count, "Expected number of docs does not exist in sync-gateway after replication"
 
@@ -479,6 +481,7 @@ def test_encryption_with_two_dbs(params_from_base_test_setup):
     db2.create_bulk_docs(2, "cbl_sync2", db=cbl_db2, channels=channels_sg)
     # generator="complex_doc")
 
+    # encryptor2 = encryptable.createEncryptor("xor", "testkit")
     replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
     repl2 = replicator.configure_and_replicate(source_db=cbl_db2,
                                               target_url=sg_blip_url,
@@ -513,6 +516,97 @@ def test_encryption_with_two_dbs(params_from_base_test_setup):
     print(encrypted_doc['encrypted_field_dict']['value'])
     assert deep_dict_compare(encrypted_doc['encrypted_field_dict']['value'], dict)
 
+
+@pytest.mark.listener
+@pytest.mark.callback
+@pytest.mark.sanity
+def test_replication_complex_doc_encryption(params_from_base_test_setup):
+    """
+    @summary:
+    Create various types of Encrypted values.
+    https://docs.google.com/spreadsheets/d/1-E7qv8UlR3-AyhaKvagsFtwB-i4JOBZWGKHJn6JDSqY/edit#gid=0
+    test 13
+
+    1. Have SG and CBL up and running
+    2. Create a simple document with encryption property (String, int, Double, Float, dict , Array, and Dict)
+    3. Start the replicator and make sure documents are
+    replicated on SG. Verify encrypted fields and Verify data is encrypted.
+    4.  Verify Updates on the Encrypted doc on CBL
+    5.  Start the replicator and verify the docs
+    6. Verify Delete on the Encrypted document on CBL and replicate
+    """
+
+    liteserv_platform = params_from_base_test_setup["liteserv_platform"]
+    if "c-" not in liteserv_platform.lower():
+        pytest.skip('This test cannot run other than C.')
+
+    sg_db = "db"
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_blip_url = params_from_base_test_setup["target_url"]
+    base_url = params_from_base_test_setup["base_url"]
+    sg_config = params_from_base_test_setup["sg_config"]
+    db = params_from_base_test_setup["db"]
+    cbl_db = params_from_base_test_setup["source_db"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    number_of_updates = 2
+    sg_client = MobileRestClient()
+
+    if sync_gateway_version < "2.0.0":
+        pytest.skip('This test cannot run with sg version below 2.0')
+    channels_sg = ["ABCD"]
+    username = "autotest"
+    password = "password"
+
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
+
+    # Create docs in CBL
+    encryptable = ReplicatorCallback(base_url)
+    documentObj = Document(base_url)
+    dictionary = Dictionary(base_url)
+
+    # Create encrypted value
+    doc_body = doc_generators.complex_doc()
+    mutable = dictionary.toMutableDictionary(doc_body)
+    encrypted_value = encryptable.create("UInt", 4294967295)
+    dictionary.setEncryptable(mutable, "encrypted_field_Uint", encrypted_value)
+
+    doc_body_new = dictionary.toMap(mutable)
+    doc = doc_body_new["dictionary"]
+
+    doc['purchasedetails'][0]['item']['barcodes'][0]['encrypted_field_Uint'] = doc_body_new['encrypted_field_Uint']
+    doc1 = documentObj.create("cbl_sync2_0", doc)
+    db.saveDocument(cbl_db, doc1)
+
+    # Create an encryptor for replicator
+    encryptor = encryptable.createEncryptor("xor", "testkit")
+
+    # Configure replication with push/pull
+    replicator = Replication(base_url)
+    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg)
+    session, replicator_authenticator, repl = replicator.create_session_configure_replicate(base_url, sg_admin_url,
+                                                                                            sg_db, username, password,
+                                                                                            channels_sg,
+                                                                                            sg_client, cbl_db,
+                                                                                            sg_blip_url,
+                                                                                            continuous=True,
+                                                                                            encryptor=encryptor)
+
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)
+    sg_docs = sg_docs["rows"]
+
+    print('alg' and 'ciphertext' and 'kid' in sg_docs[0]["doc"]['purchasedetails'][0]['item']['barcodes'][0]['encrypted$encrypted_field_Uint'])
+
+    # Assert encrypted fields in the SG
+    assert 'alg' and 'ciphertext' and 'kid' in sg_docs[0]["doc"]['purchasedetails'][0]['item']['barcodes'][0]['encrypted$encrypted_field_Uint'], \
+        "All required fields are not present in the encrypted data"
+    assert "4294967295" not in sg_docs[0]["doc"]['purchasedetails'][0]['item']['barcodes'][0]['encrypted$encrypted_field_Uint']["ciphertext"], \
+        "Data is not encrypted in the SG"
+
+    # Verify database doc counts in CBL
+    cbl_doc_count = db.getCount(cbl_db)
+    assert len(sg_docs) == cbl_doc_count, "Expected number of docs does not exist in sync-gateway after replication"
 
 
 
