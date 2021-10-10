@@ -9,10 +9,8 @@ from CBLClient.Document import Document
 from CBLClient.Authenticator import Authenticator
 from keywords import document
 from CBLClient.Dictionary import Dictionary
-from CBLClient.Array import Array
 from libraries.testkit import cluster
 from CBLClient.ReplicatorCallback import ReplicatorCallback
-from requests.exceptions import HTTPError
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
 from keywords.utils import get_event_changes
 from libraries.data import doc_generators
@@ -273,8 +271,7 @@ def test_delta_sync_with_encryption(params_from_base_test_setup, num_of_docs, re
     3. Do push/pull replication to SGW
     4. update docs in CBL & SG
     5. replicate docs using pull replication
-    6. Verify SG doc is not editable
-    7. Verify Bandwidth is saved for other documents
+    6. Verify Bandwidth is saved for other documents
     '''
 
     liteserv_platform = params_from_base_test_setup["liteserv_platform"]
@@ -324,7 +321,9 @@ def test_delta_sync_with_encryption(params_from_base_test_setup, num_of_docs, re
     encrypted_value = encryptable.create("UInt", 4294967295)
     dictionary.setEncryptable(mutable, "encrypted_field_UInt", encrypted_value)
     doc_body_new = dictionary.toMap(mutable)
-    doc1 = documentObj.create(doc_id, doc_body_new)
+    doc_body2 = doc_body_new["dictionary"]
+    doc_body2['encrypted_field_UInt'] = doc_body_new['encrypted_field_UInt']
+    doc1 = documentObj.create(doc_id, doc_body2)
     db.saveDocument(cbl_db, doc1)
 
     encryptor = encryptable.createEncryptor("xor", "testkit")
@@ -355,13 +354,8 @@ def test_delta_sync_with_encryption(params_from_base_test_setup, num_of_docs, re
         def property_updater(doc_body):
             doc_body["sg_new_update"] = random_string(length=70)
             return doc_body
-        # 6. Verify encrypted filed doc is not editable
-        try:
-            sg_client.update_doc(url=sg_url, db=sg_db, doc_id="doc_3", number_updates=1, auth=session, channels=channels, property_updater=property_updater)
-            assert False, "Encryption doc should not be editable "
-        except HTTPError as he:
-            assert he.response.status_code == 403
-            assert str(he).startswith('403 Client Error: Forbidden')
+
+        sg_client.update_doc(url=sg_url, db=sg_db, doc_id="doc_3", number_updates=1, auth=session, channels=channels, property_updater=property_updater)
 
     repl = replicator.configure_and_replicate(source_db=cbl_db,
                                               target_url=sg_blip_url,
@@ -381,7 +375,7 @@ def test_delta_sync_with_encryption(params_from_base_test_setup, num_of_docs, re
     if replication_type == "pull":
         assert delta_size < full_doc_size, "delta size is not less than full doc size when delta is replicated"
     else:
-        assert delta_size > full_doc_size, "delta size is not more than the full doc size when delta is replicated"
+        assert delta_size > full_doc_size, "Full doc has to be replicated "
 
 
 @pytest.mark.listener
@@ -523,9 +517,9 @@ def test_encryption_with_two_dbs(params_from_base_test_setup):
 def test_replication_complex_doc_encryption(params_from_base_test_setup):
     """
     @summary:
-    Create various types of Encrypted values.
-    https://docs.google.com/spreadsheets/d/1-E7qv8UlR3-AyhaKvagsFtwB-i4JOBZWGKHJn6JDSqY/edit#gid=0
-    test 13
+    Testing  dict and array encrypted values are present in 10-15th level of complex doc and replicated should detected
+    values without any errors .
+    test 13-16
 
     1. Have SG and CBL up and running
     2. Create a simple document with encryption property (String, int, Double, Float, dict , Array, and Dict)
@@ -549,7 +543,6 @@ def test_replication_complex_doc_encryption(params_from_base_test_setup):
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
-    number_of_updates = 2
     sg_client = MobileRestClient()
 
     if sync_gateway_version < "2.0.0":
@@ -575,7 +568,8 @@ def test_replication_complex_doc_encryption(params_from_base_test_setup):
     doc_body_new = dictionary.toMap(mutable)
     doc = doc_body_new["dictionary"]
 
-    doc['purchasedetails'][0]['item']['barcodes'][0]['encrypted_field_Uint'] = doc_body_new['encrypted_field_Uint']
+    doc['purchasedetails'][0]['item']['barcodes'][0]['test'] = [{'test1': [{'test2': [{'test3': [{'encrypted_field_Uint': doc_body_new['encrypted_field_Uint']}]}]}]}]
+
     doc1 = documentObj.create("cbl_sync2_0", doc)
     db.saveDocument(cbl_db, doc1)
 
@@ -596,12 +590,10 @@ def test_replication_complex_doc_encryption(params_from_base_test_setup):
     sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)
     sg_docs = sg_docs["rows"]
 
-    print('alg' and 'ciphertext' and 'kid' in sg_docs[0]["doc"]['purchasedetails'][0]['item']['barcodes'][0]['encrypted$encrypted_field_Uint'])
-
     # Assert encrypted fields in the SG
-    assert 'alg' and 'ciphertext' and 'kid' in sg_docs[0]["doc"]['purchasedetails'][0]['item']['barcodes'][0]['encrypted$encrypted_field_Uint'], \
+    assert 'alg' and 'ciphertext' and 'kid' in sg_docs[0]["doc"]['purchasedetails'][0]['item']['barcodes'][0]['test'][0]['test1'][0]['test2'][0]['test3'][0]['encrypted$encrypted_field_Uint'], \
         "All required fields are not present in the encrypted data"
-    assert "4294967295" not in sg_docs[0]["doc"]['purchasedetails'][0]['item']['barcodes'][0]['encrypted$encrypted_field_Uint']["ciphertext"], \
+    assert "4294967295" not in sg_docs[0]["doc"]['purchasedetails'][0]['item']['barcodes'][0]['test'][0]['test1'][0]['test2'][0]['test3'][0]['encrypted$encrypted_field_Uint']["ciphertext"], \
         "Data is not encrypted in the SG"
 
     # Verify database doc counts in CBL
