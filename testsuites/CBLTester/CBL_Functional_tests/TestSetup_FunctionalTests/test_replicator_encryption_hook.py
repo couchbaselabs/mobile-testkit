@@ -428,11 +428,11 @@ def test_encryption_with_two_dbs(params_from_base_test_setup):
     encryptable = ReplicatorCallback(base_url)
 
     # 2. Create a simple document with encryption property
-    # dict = {"balance": "$2,393.65", "picture": "http://placehold.it/32x32", "email": "ofeliasears@imageflow.com", "phone": "+1 (939) 542-2185"}
-    # dict2 = dictionary.toMutableDictionary(dict)
-    # encrypted_value = encryptable.create("Dict", dict2)
-    # dictionary.setEncryptable(mutable, "encrypted_field_dict", encrypted_value)
-    encrypted_value = encryptable.create("String", "Testt&#[{()_/^%@")
+    dict = {"balance": "$2,393.65", "picture": "http://placehold.it/32x32", "email": "ofeliasears@imageflow.com", "phone": "+1 (939) 542-2185"}
+    dict2 = dictionary.toMutableDictionary(dict)
+    encrypted_value = encryptable.create("Dict", dict2)
+    dictionary.setEncryptable(mutable, "encrypted_field_dict", encrypted_value)
+    # encrypted_value = encryptable.create("String", "Testt&#[{()_/^%@")
     dictionary.setEncryptable(mutable, "encrypted_field_dict", encrypted_value)
     # # Add the encrypted key value in the document dictionary
     doc_body_new = dictionary.toMap(mutable)
@@ -489,26 +489,11 @@ def test_encryption_with_two_dbs(params_from_base_test_setup):
 
     assert len(cbl_doc_ids2) == len(cbl_doc_ids)
     # Verify the encrypted doc content that got replicated from DB1
-    cbl_doc_ids = db2.getDocIds(cbl_db2)
-    cbl_db_docs = db2.getDocuments(cbl_db2, cbl_doc_ids)
-    for doc_id, doc_body in list(cbl_db_docs.items()):
-        print(doc_id, doc_body)
-        print(doc_body)
-        print("*"*10)
-
-    print("*" * 20)
-    print("DB one docs")
     cbl_doc_ids = db.getDocIds(cbl_db)
     cbl_db_docs = db.getDocuments(cbl_db, cbl_doc_ids)
-    for doc_id, doc_body in list(cbl_db_docs.items()):
-        print(doc_id, doc_body)
-        print(doc_body)
-        print("*" * 10)
 
     encrypted_doc = cbl_db_docs["doc_3"]
-    print(encrypted_doc['encrypted_field_dict'])
-    print(encrypted_doc['encrypted_field_dict']['value'])
-    assert deep_dict_compare(encrypted_doc['encrypted_field_dict']['value'], dict)
+    assert deep_dict_compare(encrypted_doc['encrypted_field_dict']['value']['dictionary'], dict), "Decryption is not working "
 
 
 @pytest.mark.listener
@@ -568,6 +553,7 @@ def test_replication_complex_doc_encryption(params_from_base_test_setup):
     doc_body_new = dictionary.toMap(mutable)
     doc = doc_body_new["dictionary"]
 
+    # Add encrypted value 15 level deep of dict and array
     doc['purchasedetails'][0]['item']['barcodes'][0]['test'] = [{'test1': [{'test2': [{'test3': [{'encrypted_field_Uint': doc_body_new['encrypted_field_Uint']}]}]}]}]
 
     doc1 = documentObj.create("cbl_sync2_0", doc)
