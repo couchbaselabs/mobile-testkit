@@ -471,11 +471,8 @@ def test_encryption_with_two_dbs(params_from_base_test_setup):
     db_config = db2.configure(password="password")
     cbl_db2 = db2.create(cbl_db_name2, db_config)
 
-    replicator2 = Replication(base_url)
     db2.create_bulk_docs(2, "cbl_sync2", db=cbl_db2, channels=channels_sg)
-    # generator="complex_doc")
 
-    # encryptor2 = encryptable.createEncryptor("xor", "testkit")
     replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
     repl2 = replicator.configure_and_replicate(source_db=cbl_db2,
                                               target_url=sg_blip_url,
@@ -488,7 +485,7 @@ def test_encryption_with_two_dbs(params_from_base_test_setup):
     cbl_doc_ids = db.getDocIds(cbl_db)
 
     assert len(cbl_doc_ids2) == len(cbl_doc_ids)
-    # Verify the encrypted doc content that got replicated from DB1
+    #5 Verify the encrypted doc content that got replicated from DB1
     cbl_doc_ids = db.getDocIds(cbl_db)
     cbl_db_docs = db.getDocuments(cbl_db, cbl_doc_ids)
 
@@ -507,12 +504,11 @@ def test_replication_complex_doc_encryption(params_from_base_test_setup):
     test 13-16
 
     1. Have SG and CBL up and running
-    2. Create a simple document with encryption property (String, int, Double, Float, dict , Array, and Dict)
+    2. Create a complex document with encryption property (Array, and Dict)
     3. Start the replicator and make sure documents are
     replicated on SG. Verify encrypted fields and Verify data is encrypted.
-    4.  Verify Updates on the Encrypted doc on CBL
-    5.  Start the replicator and verify the docs
-    6. Verify Delete on the Encrypted document on CBL and replicate
+    4. Start the replicator and verify the docs
+    5. Verify encrypted values at 15th level of array and dic are detected by replicator and shown correctly on sg
     """
 
     liteserv_platform = params_from_base_test_setup["liteserv_platform"]
@@ -585,11 +581,6 @@ def test_replication_complex_doc_encryption(params_from_base_test_setup):
     # Verify database doc counts in CBL
     cbl_doc_count = db.getCount(cbl_db)
     assert len(sg_docs) == cbl_doc_count, "Expected number of docs does not exist in sync-gateway after replication"
-
-
-
-
-
 
 
 
