@@ -108,7 +108,8 @@ class TestServerCpp(TestServerBase):
             raise LiteServError("Failed to download Test server on remote machine")
 
     def remove(self):
-        raise NotImplementedError()
+        commd = "ps -ef | grep 'testserver' | awk '{print $2}'"
+        subprocess.run([commd], shell=False)
 
     def start(self, logfile_name):
 
