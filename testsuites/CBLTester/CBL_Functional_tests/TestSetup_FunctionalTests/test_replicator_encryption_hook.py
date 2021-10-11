@@ -432,7 +432,6 @@ def test_encryption_with_two_dbs(params_from_base_test_setup):
     dict2 = dictionary.toMutableDictionary(dict)
     encrypted_value = encryptable.create("Dict", dict2)
     dictionary.setEncryptable(mutable, "encrypted_field_dict", encrypted_value)
-    # encrypted_value = encryptable.create("String", "Testt&#[{()_/^%@")
     dictionary.setEncryptable(mutable, "encrypted_field_dict", encrypted_value)
     # # Add the encrypted key value in the document dictionary
     doc_body_new = dictionary.toMap(mutable)
@@ -485,7 +484,8 @@ def test_encryption_with_two_dbs(params_from_base_test_setup):
     cbl_doc_ids = db.getDocIds(cbl_db)
 
     assert len(cbl_doc_ids2) == len(cbl_doc_ids)
-    #5 Verify the encrypted doc content that got replicated from DB1
+
+    # 5 Verify the encrypted doc content that got replicated from DB1
     cbl_doc_ids = db.getDocIds(cbl_db)
     cbl_db_docs = db.getDocuments(cbl_db, cbl_doc_ids)
 
