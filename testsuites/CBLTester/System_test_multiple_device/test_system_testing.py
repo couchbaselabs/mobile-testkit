@@ -135,11 +135,10 @@ def test_system(params_from_base_suite_setup):
         repl_obj.start(repl)
         repl_obj.wait_until_replicator_idle(repl, max_times=maxsize, sleep_time=repl_status_check_sleep_time)
         replicator_list.append(repl)
-        if "c-" not in platform.lower():
-            results = query.query_get_docs_limit_offset(cbl_db, limit=query_limit, offset=query_offset)
-            # Query results do not store in memory for dot net, so no need to release memory for dotnet
-            if("platform.lower()" != "net-msft" and platform.lower() != "uwp" and platform.lower() != "xamarin-ios" and platform.lower() != "xamarin-android"):
-                _releaseQueryResults(base_url, results)
+        results = query.query_get_docs_limit_offset(cbl_db, limit=query_limit, offset=query_offset)
+        # Query results do not store in memory for dot net, so no need to release memory for dotnet
+        if("platform.lower()" != "net-msft" and platform.lower() != "uwp" and platform.lower() != "xamarin-ios" and platform.lower() != "xamarin-android"):
+            _releaseQueryResults(base_url, results)
 
     current_time = datetime.now()
     running_time = current_time + timedelta(minutes=up_time)
