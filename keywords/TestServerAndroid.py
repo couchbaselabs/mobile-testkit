@@ -164,7 +164,6 @@ class TestServerAndroid(TestServerBase):
                     break
         command = self.set_device_option(["adb", "shell", "pm", "list", "packages"])
         output = subprocess.check_output(command)
-        log_info("Trying to remove....")
         if self.installed_package_name not in output.decode():
             raise LiteServError("Failed to install package: {}".format(output))
 
