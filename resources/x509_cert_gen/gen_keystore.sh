@@ -7,10 +7,11 @@ NODE=pkey
 CHAIN=chain
 CLUSTER=${1:-172.23.123.176}
 USERNAME=${2:-sdkqecertuser}
-SSH_PASSWORD=${3:-couchbase}
-CLUSTER_VERSION=${4:-6.5.0-4959}
+CLUSTER_VERSION=${3:-6.5.0-4959}
+SSH_PASSWORD=${4:-couchbase}
+
 USE_JSON=false
-NON_LOCAL_CA_UPLOAD=true
+NON_LOCAL_CA_UPLOAD=false
 
 if [[ $CLUSTER_VERSION =~ ^([0-9]+)\.([0-9]+) ]]
 then
@@ -18,11 +19,18 @@ then
     minor=${BASH_REMATCH[2]}
 fi
 
-if (($minor>=5)); then
+if (($major>=6 && $minor>=5)); then
     USE_JSON=true
 fi
-
-
+if (($major>6)); then
+    USE_JSON=true
+fi
+if (($major>=7 && $minor>=1)); then
+    NON_LOCAL_CA_UPLOAD=true
+fi
+if (($major>7)); then
+    NON_LOCAL_CA_UPLOAD=true
+fi
 ADMINCRED=Administrator:password
 SSH="sshpass -p $SSH_PASSWORD ssh -o StrictHostKeyChecking=no"
 SCP="sshpass -p $SSH_PASSWORD scp -o StrictHostKeyChecking=no"
@@ -96,10 +104,11 @@ do
   else
       curl -s -d "state=enable" -d "delimiter=" -d "path=subject.cn" -d "prefix=" http://${ADMINCRED}@${ip}:8091/settings/clientCertAuth
   fi
-done
-if ${NON_LOCAL_CA_UPLOAD} ; then
+  if ${NON_LOCAL_CA_UPLOAD} ; then
     ${SSH} root@${ip} "curl -X POST localhost:8091/settings/security/allowNonLocalCACertUpload -d 'false'" -u ${ADMINCRED} -H "'Content-Type:application/x-www-form-urlencoded'"
-fi
+  fi
+done
+
 # Create keystore file and import ROOT/INTERMEDIATE/CLIENT cert
 KEYSTORE_FILE=keystore.jks
 STOREPASS=123456
