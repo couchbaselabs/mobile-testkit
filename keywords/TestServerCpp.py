@@ -12,6 +12,7 @@ from keywords.remoteexecutor import RemoteExecutor
 import subprocess
 from requests.exceptions import ConnectionError
 
+
 class TestServerCpp(TestServerBase):
     def __init__(self, version_build, host, port, debug_mode=None, platform="c-debian", community_enabled=None, platform_version=None):
         super(TestServerCpp, self).__init__(version_build, host, port)
@@ -76,7 +77,7 @@ class TestServerCpp(TestServerBase):
             "[testserver:vars]",
             "ansible_user={}".format(os.environ["TESTSERVER_HOST_USER"]),
             "ansible_password={}".format(os.environ["TESTSERVER_HOST_PASSWORD"])
-            ]
+        ]
 
         ansible_testserver_target_string = "\n".join(ansible_testserver_target_lines)
         log_info("Writing: {}".format(ansible_testserver_target_string))
@@ -149,4 +150,3 @@ class TestServerCpp(TestServerBase):
         print("STOPPING THE TESTSERVER")
         remote_executor = RemoteExecutor(self.test_host, self.platform, os.environ["TESTSERVER_HOST_USER"], os.environ["TESTSERVER_HOST_PASSWORD"])
         remote_executor.execute("ps -ef | grep 'testserver' | awk '{print $2}' | xargs kill -9 $1")
-

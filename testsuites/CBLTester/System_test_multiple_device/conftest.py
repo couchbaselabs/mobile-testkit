@@ -210,7 +210,7 @@ def pytest_addoption(parser):
     parser.addoption("--disable-admin-auth",
                      action="store_true",
                      help="Disable Admin auth")
-    
+
     parser.addoption("--server-ssl",
                      action="store_true",
                      help="If set, will enable SSL communication between server and Sync Gateway")
@@ -424,7 +424,7 @@ def params_from_base_suite_setup(request):
 
     if sync_gateway_version < "2.0":
         pytest.skip('Does not work with sg < 2.0 , so skipping the test')
-        
+
     if cbs_ssl:
         log_info("Running tests with cbs <-> sg ssl enabled")
         # Enable ssl in cluster configs

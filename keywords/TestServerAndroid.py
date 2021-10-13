@@ -2,7 +2,6 @@ import os
 import subprocess
 
 import requests
-
 from keywords.TestServerBase import TestServerBase
 from keywords.constants import LATEST_BUILDS, RELEASED_BUILDS
 from keywords.constants import BINARY_DIR
@@ -236,7 +235,7 @@ class TestServerAndroid(TestServerBase):
             "--es", "username", "none",
             "--es", "password", "none",
             "--ei", "listen_port", str(self.port),
-            ])
+        ])
         output = subprocess.check_output(command)
         log_info(output)
         self._wait_until_reachable(port=self.port)

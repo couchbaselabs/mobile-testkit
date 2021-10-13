@@ -260,10 +260,9 @@ def test_system(params_from_base_suite_setup):
             i += docs_to_delete_per_db
             if "c-" not in platform.lower():
                 time.sleep(5)
-                results = query.query_get_docs_limit_offset(cbl_db, limit=query_limit,
-                                                        offset=query_offset)
+                results = query.query_get_docs_limit_offset(cbl_db, limit=query_limit, offset=query_offset)
                 # Query results do not store in memory for dot net, so no need to release memory for dotnet
-                if(platform.lower() != "net-msft" and platform.lower() != "uwp" and platform.lower() != "xamarin-ios" and platform.lower() != "xamarin-android"):
+                if platform.lower() != "net-msft" and platform.lower() != "uwp" and platform.lower() != "xamarin-ios" and platform.lower() != "xamarin-android":
                     _releaseQueryResults(base_url, results)
 
             # Deleting docs will affect all dbs as they are synced with SG.
@@ -318,10 +317,9 @@ def test_system(params_from_base_suite_setup):
             t.start()
             t.join()
             if "c-" not in platform.lower():
-                results = query.query_get_docs_limit_offset(cbl_db, limit=query_limit,
-                                                        offset=query_offset)
+                results = query.query_get_docs_limit_offset(cbl_db, limit=query_limit, offset=query_offset)
                 # Query results do not store in memory for dot net, so no need to release memory for dotnet
-                if(platform.lower() != "net-msft" and platform.lower() != "uwp" and platform.lower() != "xamarin-ios" and platform.lower() != "xamarin-android"):
+                if platform.lower() != "net-msft" and platform.lower() != "uwp" and platform.lower() != "xamarin-ios" and platform.lower() != "xamarin-android":
                     _releaseQueryResults(base_url, results)
 
             time.sleep(5)

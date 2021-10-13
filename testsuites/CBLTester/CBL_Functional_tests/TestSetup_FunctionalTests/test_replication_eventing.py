@@ -550,6 +550,4 @@ def test_push_replication_for_20mb_doc(params_from_base_test_setup, attachment_g
                                        continuous=False,
                                        headers=session_header)
     repl = replicator.create(repl_config)
-    repl_change_listener = replicator.addReplicatorEventChangeListener(repl)
-
-
+    replicator.addReplicatorEventChangeListener(repl)
