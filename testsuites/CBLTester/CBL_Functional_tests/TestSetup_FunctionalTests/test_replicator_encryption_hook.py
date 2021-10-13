@@ -507,8 +507,7 @@ def test_replication_complex_doc_encryption(params_from_base_test_setup):
     2. Create a complex document with encryption property (Array, and Dict)
     3. Start the replicator and make sure documents are
     replicated on SG. Verify encrypted fields and Verify data is encrypted.
-    4. Start the replicator and verify the docs
-    5. Verify encrypted values at 15th level of array and dic are detected by replicator and shown correctly on sg
+    4. Verify encrypted values at 15th level of array and dic are detected by replicator and shown correctly on sg
     """
 
     liteserv_platform = params_from_base_test_setup["liteserv_platform"]
@@ -532,6 +531,7 @@ def test_replication_complex_doc_encryption(params_from_base_test_setup):
     username = "autotest"
     password = "password"
 
+    # 1.Have SG and CBL up and running
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
 
@@ -540,7 +540,7 @@ def test_replication_complex_doc_encryption(params_from_base_test_setup):
     documentObj = Document(base_url)
     dictionary = Dictionary(base_url)
 
-    # Create encrypted value
+    # 2. Create a complex document with encryption property
     doc_body = doc_generators.complex_doc()
     mutable = dictionary.toMutableDictionary(doc_body)
     encrypted_value = encryptable.create("UInt", 4294967295)
@@ -549,7 +549,6 @@ def test_replication_complex_doc_encryption(params_from_base_test_setup):
     doc_body_new = dictionary.toMap(mutable)
     doc = doc_body_new["dictionary"]
 
-    # Add encrypted value 15 level deep of dict and array
     doc['purchasedetails'][0]['item']['barcodes'][0]['test'] = [
         {'test1': [{'test2': [{'test3': [{'encrypted_field_Uint': doc_body_new['encrypted_field_Uint']}]}]}]}]
 
@@ -559,21 +558,22 @@ def test_replication_complex_doc_encryption(params_from_base_test_setup):
     # Create an encryptor for replicator
     encryptor = encryptable.createEncryptor("xor", "testkit")
 
-    # Configure replication with push/pull
+    # 3. Start the replicator and make sure documents are
+    #     replicated on SG. Verify encrypted fields and Verify data is encrypted.
     replicator = Replication(base_url)
     sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg)
     session, replicator_authenticator, repl = replicator.create_session_configure_replicate(base_url, sg_admin_url,
                                                                                             sg_db, username, password,
                                                                                             channels_sg,
                                                                                             sg_client, cbl_db,
-                                                                                            sg_blip_url,
+                                                                                                sg_blip_url,
                                                                                             continuous=True,
                                                                                             encryptor=encryptor)
 
     sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)
     sg_docs = sg_docs["rows"]
 
-    # Assert encrypted fields in the SG
+    # 4. Verify encrypted values at 15th level of array and dic are detected by replicator and shown correctly on sg
     assert 'alg' and 'ciphertext' and 'kid' in \
            sg_docs[0]["doc"]['purchasedetails'][0]['item']['barcodes'][0]['test'][0]['test1'][0]['test2'][0]['test3'][
                0]['encrypted$encrypted_field_Uint'], \
