@@ -776,7 +776,7 @@ class CouchbaseServer:
         data = "otpNode=ns_1@{}&recoveryType=delta".format(server_to_recover.host)
         # Override session headers for this one off request
         count = 0
-        max_retries = 10
+        max_retries = 25
         while count < max_retries:
             try:
                 resp = self._session.post(
