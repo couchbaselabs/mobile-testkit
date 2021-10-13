@@ -155,6 +155,8 @@ def test_remove_dcp_cacert_handling(params_from_base_test_setup, sg_conf_name, n
     3. Add cacertpath without keypath and certpath, but add username/password on the sgw config file
     4. Verify SGW starts succesfully without keypath and certpath
     """
+
+    # 1. Set up default sync config file
     cluster_conf = params_from_base_test_setup["cluster_config"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     mode = params_from_base_test_setup["mode"]
@@ -164,15 +166,9 @@ def test_remove_dcp_cacert_handling(params_from_base_test_setup, sg_conf_name, n
         pytest.skip('this cannot run with sgw version below 2.8.2')
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
-
-    """ log_info("Running seq")
-    log_info("cluster_conf: {}".format(cluster_conf))
-    log_info("sg_conf: {}".format(sg_conf))
-    log_info("num_users: {}".format(num_users))
-    log_info("num_docs: {}".format(num_docs))
-    log_info("num_revisions: {}".format(num_revisions)) """
-
     disable_tls_server = params_from_base_test_setup["disable_tls_server"]
+
+    # 2. Generate x509
     if x509_cert_auth and disable_tls_server:
         pytest.skip("x509 test cannot run tls server disabled")
     if x509_cert_auth:
@@ -181,6 +177,7 @@ def test_remove_dcp_cacert_handling(params_from_base_test_setup, sg_conf_name, n
         persist_cluster_config_environment_prop(temp_cluster_config, 'server_tls_skip_verify', False)
         cluster_conf = temp_cluster_config
 
+    # 3. Add cacertpath without keypath and certpath, but add username/password on the sgw config file
     cluster = Cluster(config=cluster_conf)
     cbs_bucket = cluster.servers[0].get_bucket_names()[0]
     temp_sg_config, _ = copy_sgconf_to_temp(sg_conf, mode)
@@ -189,4 +186,5 @@ def test_remove_dcp_cacert_handling(params_from_base_test_setup, sg_conf_name, n
     temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ certpath }}", "")
     temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ keypath }}", "")
 
+    # 4. Verify SGW starts succesfully without keypath and certpath
     cluster.reset(sg_config_path=temp_sg_config)  # this has an assert to verify SGW can start successfully with above setup
