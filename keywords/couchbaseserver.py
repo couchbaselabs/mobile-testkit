@@ -789,6 +789,7 @@ class CouchbaseServer:
             if resp.status_code == 200:
                 break
             count += 1
+            print("sleeping 1 sec ")
             time.sleep(1)
         log_r(resp)
         resp.raise_for_status()
