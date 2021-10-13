@@ -38,9 +38,11 @@ def test_xattrs_grant_automatic_imports(params_from_base_test_setup, x509_cert_a
     mode = params_from_base_test_setup["mode"]
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
 
-    if sync_gateway_version < "3.0.0":
-        pytest.skip('This test cannot run with sg version below 3.0.0')
+    if not xattrs_enabled or sync_gateway_version < "3.0.0":
+        pytest.skip('Test did not enable xattrs or sgw version is not 3.0 and above')
+
     sg_channel1_value = "abc"
     sg_channels1 = [sg_channel1_value]
     username = "autotest"
@@ -137,9 +139,11 @@ def test_reassigning_channels_using_user_xattrs(params_from_base_test_setup, set
     cbl_db1 = setup_customized_teardown_test["cbl_db1"]
     cbl_db2 = setup_customized_teardown_test["cbl_db2"]
     delta_sync_enabled = params_from_base_test_setup["delta_sync_enabled"]
+    xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
 
-    if sync_gateway_version < "3.0.0":
-        pytest.skip('This test cannot run with sg version below 3.0.0')
+    if not xattrs_enabled or sync_gateway_version < "3.0.0":
+        pytest.skip('Test did not enable xattrs or sgw version is not 3.0 and above')
+
     sg_channel1_value1 = "xattrs_channel_one"
     sg_channel1_value2 = "xattrs_channel_two"
     sg_channels_1 = [sg_channel1_value1]
@@ -240,9 +244,11 @@ def test_tombstone_docs_via_sdk(params_from_base_test_setup, tombstone_type):
     mode = params_from_base_test_setup["mode"]
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
 
-    if sync_gateway_version < "3.0.0":
-        pytest.skip('This test cannot run with sg version below 3.0.0')
+    if not xattrs_enabled or sync_gateway_version < "3.0.0":
+        pytest.skip('Test did not enable xattrs or sgw version is not 3.0 and above')
+
     sg_channel1_value1 = "xattrs_channel_one"
     sg_channels_1 = [sg_channel1_value1]
     username = "autotest_1"
