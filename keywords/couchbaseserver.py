@@ -715,16 +715,24 @@ class CouchbaseServer:
         log_info("Setting recover mode to 'delta' for server {}".format(server_to_recover.host))
         data = "otpNode=ns_1@{}&recoveryType=delta".format(server_to_recover.host)
         # Override session headers for this one off request
-        resp = self._session.post(
-            "{}/controller/setRecoveryType".format(self.url),
-            headers={"Content-Type": "application/x-www-form-urlencoded"},
-            data=data
-        )
-
+        count = 0
+        max_retries = 5
+        while count < max_retries:
+            try:
+                resp = self._session.post(
+                    "{}/controller/setRecoveryType".format(self.url),
+                    headers={"Content-Type": "application/x-www-form-urlencoded"},
+                    data=data
+                )
+            except HTTPError:
+                log_info("Got http error while trying to recover the server, so trying one more time")
+            if resp.status_code == 200:
+                break
+            count += 1
+            time.sleep(1)
         log_r(resp)
         resp.raise_for_status()
-
-        # TODO reset Quota
+     
 
     def start(self):
         """Starts a running Couchbase Server via 'service couchbase-server start'"""
