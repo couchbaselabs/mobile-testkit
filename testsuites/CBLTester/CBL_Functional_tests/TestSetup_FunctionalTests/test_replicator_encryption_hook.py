@@ -566,7 +566,7 @@ def test_replication_complex_doc_encryption(params_from_base_test_setup):
                                                                                             sg_db, username, password,
                                                                                             channels_sg,
                                                                                             sg_client, cbl_db,
-                                                                                                sg_blip_url,
+                                                                                            sg_blip_url,
                                                                                             continuous=True,
                                                                                             encryptor=encryptor)
 
