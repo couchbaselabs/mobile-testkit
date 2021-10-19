@@ -840,12 +840,6 @@ def class_init(request, params_from_base_suite_setup):
     liteserv_version = params_from_base_suite_setup["liteserv_version"]
     disable_encryption = params_from_base_suite_setup["disable_encryption"]
     encryption_password = params_from_base_suite_setup["encryption_password"]
-
-    cbllog = FileLogging(base_url)
-    cbllog.configure(log_level="verbose", max_rotate_count=2,
-                     max_size=1000000 * 512, plain_text=True)
-    suite_db_log_files = cbllog.get_directory()
-    log_info("Log files available at - {}".format(suite_db_log_files))
     db_obj = Database(base_url)
     doc_obj = Document(base_url)
     datatype = DataTypeInitiator(base_url)
@@ -882,7 +876,6 @@ def class_init(request, params_from_base_suite_setup):
     request.cls.db = db
     request.cls.liteserv_platform = liteserv_platform
     request.cls.liteserv_version = liteserv_version
-    request.cls.cbllog = cbllog
 
     yield
     db_obj.deleteDB(db)
