@@ -118,6 +118,7 @@ def test_multiple_sgs_with_differrent_revs_limit(params_from_base_test_setup, se
     replicator.stop(repl1)
     replicator.stop(repl2)
 
+    time.sleep(280)
     # 4. Get docs from sgs and verify revs_limit is maintained
     sg_docs = sg_client.get_all_docs(url=sg1_url, db=sg_db1, auth=session1)
     sg_doc_ids = [doc['id'] for doc in sg_docs["rows"]]
@@ -125,7 +126,6 @@ def test_multiple_sgs_with_differrent_revs_limit(params_from_base_test_setup, se
         revs = sg_client.get_revs_num_in_history(sg1_url, sg_db1, doc_id, auth=session1)
         assert len(revs) == revs_limit1
 
-    time.sleep(180)
     sg_docs = sg_client.get_all_docs(url=sg2_url, db=sg_db2, auth=session2)
     sg_doc_ids = [doc['id'] for doc in sg_docs["rows"]]
     for doc_id in sg_doc_ids:
@@ -244,6 +244,7 @@ def test_multiple_sgs_with_CBLs(params_from_base_test_setup, setup_customized_te
     replicator.stop(repl1)
     replicator.stop(repl2)
 
+    time.sleep(280)
     # 3. exchange DBs of SG and do pull replication.
     repl1 = replicator.configure_and_replicate(
         source_db=cbl_db1, replicator_authenticator=replicator_authenticator2, target_url=sg2_blip_url, replication_type="pull")
