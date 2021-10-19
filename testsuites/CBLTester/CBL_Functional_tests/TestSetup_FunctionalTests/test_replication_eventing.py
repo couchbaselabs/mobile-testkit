@@ -550,11 +550,12 @@ def test_push_replication_for_20mb_doc(params_from_base_test_setup, attachment_g
                                        continuous=False,
                                        headers=session_header)
     repl = replicator.create(repl_config)
-    replicator.addReplicatorEventChangeListener(repl)
+    repl_change_listener = replicator.addReplicatorEventChangeListener(repl)
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl, max_times=5000)
     # 3. Getting changes from the replication event listener
     doc_repl_event_changes = replicator.getReplicatorEventChanges(repl_change_listener)
+    replicator.removeReplicatorEventListener(repl, repl_change_listener)
     replicated_event_changes = get_event_changes(doc_repl_event_changes)
     for doc in replicated_event_changes:
         assert replicated_event_changes[doc]["error_code"] is not None or "None", "Replication failed for large doc"
