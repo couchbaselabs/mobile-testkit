@@ -2246,11 +2246,14 @@ def test_sg_replicate_doc_resurrection(params_from_base_test_setup, setup_custom
         else:
             cbl_database = cbl_db2
         db.delete_bulk_docs(cbl_database, doc_ids=[random_doc_id])
-        time.sleep(5)
+        # time.sleep(5)
         mutable_doc1 = documentObj.create(random_doc_id, doc_body)
         db.saveDocument(cbl_database, mutable_doc1)
+        print("random doc id is ", random_doc_id)
+        cbl_doc_ids1 = db.getDocIds(cbl_db1)
+        print("cbl_docs_ids 1  are :", cbl_doc_ids1)
         cbl_doc_ids2 = db.getDocIds(cbl_db2)
-        print("cbl_docs_ids are :", cbl_doc_ids2)
+        print("cbl_docs_ids 2 are :", cbl_doc_ids2)
     else:
         doc_body = document.create_doc(doc_id=random_doc_id, content="testing-doc-resurrec", channels=channels1)
         if delete_sgw_cluster == "sgw1":
