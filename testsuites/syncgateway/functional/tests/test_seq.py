@@ -118,7 +118,7 @@ def test_metrics_public_ports(params_from_base_test_setup):
     mode = params_from_base_test_setup["mode"]
 
     # Skip the test if sgw version is not 2.8.3 and above
-    if sync_gateway_version < "2.8.3"):
+    if sync_gateway_version < "2.8.3":
         pytest.skip('this test requires version 2.8.3 and above')
 
     session = Session()
@@ -150,10 +150,10 @@ def test_metrics_public_ports(params_from_base_test_setup):
 @pytest.mark.basicauth
 @pytest.mark.bulkops
 @pytest.mark.changes
-@pytest.mark.parametrize("sg_conf_name, num_users, num_docs, num_revisions, x509_cert_auth", [
-    ("sync_gateway_default_functional_tests", 10, 500, 1, True)
+@pytest.mark.parametrize("sg_conf_name, x509_cert_auth", [
+    ("sync_gateway_default_functional_tests", True)
 ])
-def test_remove_dcp_cacert_handling(params_from_base_test_setup, sg_conf_name, num_users, num_docs, num_revisions, x509_cert_auth):
+def test_remove_dcp_cacert_handling(params_from_base_test_setup, sg_conf_name, x509_cert_auth):
     """
     @summary
     1. Set up default sync config file
