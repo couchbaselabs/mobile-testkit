@@ -105,38 +105,44 @@ def test_seq(params_from_base_test_setup, sg_conf_name, num_users, num_docs, num
 
 @pytest.mark.syncgateway
 @pytest.mark.prometheus
-def test_promethus_public_ports(params_from_base_test_setup):
+def test_metrics_public_ports(params_from_base_test_setup):
     """
     @summary:
-    1. set up prometheus
-    2. Access some of the public api with prometheus port
+    1. set up metrics config on sgw config
+    2. Access some of the public api with metrics port
     3. Verify it is not accessible
     """
-    prometheus_enabled = params_from_base_test_setup["prometheus_enabled"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    cluster_conf = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
 
-    # Skip the test if prometheus not enabled and sgw version is not
-    if not(prometheus_enabled and sync_gateway_version >= "2.8.2"):
-        pytest.skip('this is prometheus specific test')
+    # Skip the test if sgw version is not 2.8.3 and above
+    if sync_gateway_version < "2.8.3"):
+        pytest.skip('this test requires version 2.8.3 and above')
 
     session = Session()
     sg_db = "db"
-    # 1. set up prometheus
-    prometheus_url = sg_admin_url.replace("4985", "4986")
+    sg_conf_name = "sync_gateway_default_functional_tests"
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    cluster = Cluster(config=cluster_conf)
+    cluster.reset(sg_config_path=sg_conf)
 
-    # 2. Access some of the public api with prometheus port
-    req = session.get("{}/{}".format(prometheus_url, sg_db))
+    # 1. set up metrics config on sgw config
+    metrics_url = sg_admin_url.replace("4985", "4986")
+
+    # 2. Access some of the public api with metrics port
+    req = session.get("{}/{}".format(metrics_url, sg_db))
     # 3. Verify it is not accessible
     assert req.status_code == 404, "Expected 404 status, actual {}".format(req.status_code)
 
-    req = session.get("{}/{}/_config".format(prometheus_url, sg_db))
+    req = session.get("{}/{}/_config".format(metrics_url, sg_db))
     assert req.status_code == 404, "Expected 404 status, actual {}".format(req.status_code)
 
-    req = session.get("{}/_config".format(prometheus_url))
+    req = session.get("{}/_config".format(metrics_url))
     assert req.status_code == 404, "Expected 404 status, actual {}".format(req.status_code)
 
-    req = session.get("{}/_all_docs".format(prometheus_url))
+    req = session.get("{}/_all_docs".format(metrics_url))
     assert req.status_code == 404, "Expected 404 status, actual {}".format(req.status_code)
 
 
