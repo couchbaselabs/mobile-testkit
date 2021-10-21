@@ -129,6 +129,7 @@ def test_bucket_online_offline_resync_sanity(params_from_base_test_setup, sg_con
                                                       cluster_config=cluster_conf)
     assert restart_status == 0
     retries = 0
+    admin.take_db_offline(db="db")
     if sync_gateway_version < "3.0.0":
         while retries < 5:
             try:

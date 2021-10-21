@@ -1111,6 +1111,8 @@ def send_dbconfig_as_restCall(db_config_json, sync_gateways, sgw_config_data):
         sgw_db_config = db_config_json
         print("sgw_db_config.keys ", sgw_db_config.keys())
         sync_func = None
+        roles_exist = False
+        users_exist = False
         if sgw_config_data.count("`") > 1:
             sync_func = sgw_config_data.split("`")[1]
         for sg_db in sgw_db_config.keys():
@@ -1128,14 +1130,23 @@ def send_dbconfig_as_restCall(db_config_json, sync_gateways, sgw_config_data):
                 del sgw_db_config[sg_db]["x509_key_path"]
             if "x509_cert_path" in sgw_db_config[sg_db].keys():
                 del sgw_db_config[sg_db]["x509_cert_path"]
-            print("dbconfig json", sgw_db_config[sg_db])
-            try:
-                sgw.admin.create_db(sg_db, sgw_db_config[sg_db])
-            except Exception as e:
-                print("ignore if there is no dbatabase", str(e))
+            if "roles" in sgw_db_config[sg_db].keys():
+                roles_cfg = sgw_db_config[sg_db]["roles"]
+                roles_exist = True
+                del sgw_db_config[sg_db]["roles"]
+            if "users" in sgw_db_config[sg_db].keys():
+                users_cfg = sgw_db_config[sg_db]["users"]
+                users_exist = True
+                del sgw_db_config[sg_db]["users"]
+            sgw.admin.create_db(sg_db, sgw_db_config[sg_db])
             if sync_func is not None:
                 sgw.admin.create_sync_func(sg_db, sync_func)
-            # sgw.admin.create_db(sg_db, sgw_db_config[sg_db])
+            if roles_exist:
+                for role in roles_cfg:
+                    sgw.admin.create_role(sg_db, role, roles_cfg[role]['admin_channels'])
+            if users_exist:
+                for user in users_cfg:
+                    sgw.admin.register_user(sgw.ip, sg_db, user, users_cfg[user]['password'], channels=users_cfg[user]['admin_channels'], roles=users_cfg[user]['admin_roles'])
             # TODO : Put back one CPC config works
             # sgw.admin.create_db_with_rest(sg_db, sgw_db_config[sg_db])
             # sgw.admin.put_db_config(sg_db, sgw_db_config[sg_db])
