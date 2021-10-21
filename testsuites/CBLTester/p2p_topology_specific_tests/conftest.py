@@ -145,6 +145,7 @@ def params_from_base_suite_setup(request):
     skip_provisioning = request.config.getoption("--skip-provisioning")
     use_local_testserver = request.config.getoption("--use-local-testserver")
     sync_gateway_version = request.config.getoption("--sync-gateway-version")
+    disable_tls_server = request.config.getoption("--disable-tls-server")
     mode = request.config.getoption("--mode")
 
     server_version = request.config.getoption("--server-version")
@@ -385,6 +386,7 @@ def params_from_base_suite_setup(request):
         "sg_db": sg_db,
         "no_conflicts_enabled": no_conflicts_enabled,
         "sync_gateway_version": sync_gateway_version,
+        "disable_tls_server": disable_tls_server,
         "base_url": base_url,
         "base_url2": base_url2,
         "enable_sample_bucket": enable_sample_bucket,
@@ -444,6 +446,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     mode = params_from_base_suite_setup["mode"]
     target_url = params_from_base_suite_setup["target_url"]
     sync_gateway_version = params_from_base_suite_setup["sync_gateway_version"]
+    disable_tls_server = params_from_base_suite_setup["disable_tls_server"]
     sg_ip = params_from_base_suite_setup["sg_ip"]
     sg_db = params_from_base_suite_setup["sg_db"]
     sg_config = params_from_base_suite_setup["sg_config"]
@@ -530,6 +533,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "sg_db": sg_db,
         "no_conflicts_enabled": no_conflicts_enabled,
         "sync_gateway_version": sync_gateway_version,
+        "disable_tls_server": disable_tls_server,
         "source_db": source_db,
         "source_db2": source_db2,
         "cbl_db": cbl_db,

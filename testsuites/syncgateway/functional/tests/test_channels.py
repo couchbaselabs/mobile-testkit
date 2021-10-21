@@ -35,10 +35,11 @@ def test_channels_view_after_restart(params_from_base_test_setup, sg_conf_name):
     cluster_config = params_from_base_test_setup['cluster_config']
     topology = params_from_base_test_setup['cluster_topology']
     mode = params_from_base_test_setup['mode']
+    sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
 
     sg_url = topology['sync_gateways'][0]['public']
     sg_admin_url = topology['sync_gateways'][0]['admin']
-    sg_db = 'db'
+    sg_db_name = 'db'
     num_docs = 10000
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
@@ -52,7 +53,7 @@ def test_channels_view_after_restart(params_from_base_test_setup, sg_conf_name):
 
     client.create_user(
         url=sg_admin_url,
-        db=sg_db,
+        db=sg_db_name,
         name=seth_user_info.name,
         password=seth_user_info.password,
         channels=seth_user_info.channels
@@ -60,16 +61,16 @@ def test_channels_view_after_restart(params_from_base_test_setup, sg_conf_name):
 
     seth_session = client.create_session(
         url=sg_admin_url,
-        db=sg_db,
+        db=sg_db_name,
         name=seth_user_info.name
     )
 
     # Add docs to Sync Gateway
     doc_bodies = document.create_docs(doc_id_prefix='seth_doc', number=num_docs, channels=seth_user_info.channels)
-    bulk_docs_resp = client.add_bulk_docs(url=sg_url, db=sg_db, docs=doc_bodies, auth=seth_session)
+    bulk_docs_resp = client.add_bulk_docs(url=sg_url, db=sg_db_name, docs=doc_bodies, auth=seth_session)
     assert len(bulk_docs_resp) == num_docs
 
-    client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=bulk_docs_resp, auth=seth_session)
+    client.verify_docs_in_changes(url=sg_url, db=sg_db_name, expected_docs=bulk_docs_resp, auth=seth_session)
 
     # Reset sync gateway to clear channel cache
     sg = SyncGateway()
@@ -78,12 +79,12 @@ def test_channels_view_after_restart(params_from_base_test_setup, sg_conf_name):
 
     # Add 1 doc to Sync Gateway (to initialize the channel cache)
     doc_bodies = document.create_docs(doc_id_prefix='doc_new', number=1, channels=seth_user_info.channels)
-    bulk_docs_resp_new = client.add_bulk_docs(url=sg_url, db=sg_db, docs=doc_bodies, auth=seth_session)
+    bulk_docs_resp_new = client.add_bulk_docs(url=sg_url, db=sg_db_name, docs=doc_bodies, auth=seth_session)
     assert len(bulk_docs_resp_new) == 1
 
     # Changes request to trigger population of channel cache with view call
     bulk_docs_resp += bulk_docs_resp_new
-    client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=bulk_docs_resp, auth=seth_session)
+    client.verify_docs_in_changes(url=sg_url, db=sg_db_name, expected_docs=bulk_docs_resp, auth=seth_session)
 
     # Get Sync Gateway Expvars
     expvars = client.get_expvars(url=sg_admin_url)
@@ -91,10 +92,13 @@ def test_channels_view_after_restart(params_from_base_test_setup, sg_conf_name):
     # Only check the view querys if in channel cache mode
     if mode == 'cc':
         log_info('Looking for view queries == 1 in expvars')
-        assert expvars['syncGateway_changeCache']['view_queries'] == 3
+        if sync_gateway_version < "3.0.0":
+            assert expvars['syncGateway_changeCache']['view_queries'] == 3
+        else:
+            assert expvars['syncgateway']['per_db'][sg_db_name]['cache']['view_queries'] == 3
 
     # Issue a second changes request that shouldn't trigger a view call
-    client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=bulk_docs_resp, auth=seth_session)
+    client.verify_docs_in_changes(url=sg_url, db=sg_db_name, expected_docs=bulk_docs_resp, auth=seth_session)
 
     # Get Sync Gateway Expvars
     expvars = client.get_expvars(url=sg_admin_url)
@@ -102,7 +106,10 @@ def test_channels_view_after_restart(params_from_base_test_setup, sg_conf_name):
     # Only check the view querys if in channel cache mode
     if mode == 'cc':
         log_info('Looking for view queries == 1 in expvars')
-        assert expvars['syncGateway_changeCache']['view_queries'] == 5
+        if sync_gateway_version < "3.0.0":
+            assert expvars['syncGateway_changeCache']['view_queries'] == 5
+        else:
+            assert expvars['syncgateway']['per_db'][sg_db_name]['cache']['view_queries'] == 5
 
 
 @pytest.mark.sanity
@@ -124,9 +131,13 @@ def test_remove_add_channels_to_doc(params_from_base_test_setup, sg_conf_name, x
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
+    disable_tls_server = params_from_base_test_setup["disable_tls_server"]
+    if x509_cert_auth and disable_tls_server:
+        pytest.skip("x509 test cannot run tls server disabled")
     if x509_cert_auth:
         temp_cluster_config = copy_to_temp_conf(cluster_config, mode)
         persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
+        persist_cluster_config_environment_prop(temp_cluster_config, 'server_tls_skip_verify', False)
         cluster_config = temp_cluster_config
 
     cluster = Cluster(cluster_config)

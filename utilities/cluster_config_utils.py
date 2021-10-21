@@ -60,7 +60,8 @@ def persist_cluster_config_environment_prop(cluster_config, property_name, value
     if property_name_check is True:
         valid_props = ["cbs_ssl_enabled", "xattrs_enabled", "sg_lb_enabled", "sync_gateway_version", "server_version",
                        "no_conflicts_enabled", "sync_gateway_ssl", "sg_use_views", "number_replicas",
-                       "delta_sync_enabled", "x509_certs", "hide_product_version", "cbs_developer_preview"]
+                       "delta_sync_enabled", "x509_certs", "hide_product_version", "cbs_developer_preview", "disable_persistent_config",
+                       "server_tls_skip_verify", "disable_tls_server", "disable_admin_auth"]
         if property_name not in valid_props:
             raise ProvisioningError("Make sure the property you are trying to change is one of: {}".format(valid_props))
 
@@ -84,6 +85,7 @@ def persist_cluster_config_environment_prop(cluster_config, property_name, value
 
 def generate_x509_certs(cluster_config, bucket_name, sg_platform):
     ''' Generate and insert x509 certs for CBS and SG TLS Handshake'''
+    cbs_version = get_cbs_version(cluster_config)
     cluster = load_cluster_config_json(cluster_config)
     if sg_platform.lower() != "windows" and sg_platform.lower() != "macos":
         for line in open("ansible.cfg"):
@@ -111,7 +113,7 @@ def generate_x509_certs(cluster_config, bucket_name, sg_platform):
             else:
                 f.write("DNS.{} = {}\n".format(item + 1, cbs_nodes[item]))
 
-    cmd = ["./gen_keystore.sh", cbs_nodes[0], bucket_name[0]]
+    cmd = ["./gen_keystore.sh", cbs_nodes[0], bucket_name[0], cbs_version]
     print(" ".join(cmd))
     proc = Popen(cmd, stdout=PIPE, stderr=PIPE)
     stdout, stderr = proc.communicate()
@@ -326,5 +328,45 @@ def is_hide_prod_version_enabled(cluster_config):
     cluster = load_cluster_config_json(cluster_config)
     try:
         return cluster["environment"]["hide_product_version"]
+    except KeyError:
+        return False
+
+
+def is_centralized_persistent_config_disabled(cluster_config):
+    """ verify centralized persistent config enabled/disabled"""
+
+    cluster = load_cluster_config_json(cluster_config)
+    try:
+        return cluster["environment"]["disable_persistent_config"]
+    except KeyError:
+        return False
+
+
+def is_server_tls_skip_verify_enabled(cluster_config):
+    """ verify server tls skip verify config enabled/disabled"""
+
+    cluster = load_cluster_config_json(cluster_config)
+    try:
+        return cluster["environment"]["server_tls_skip_verify"]
+    except KeyError:
+        return False
+
+
+def is_tls_server_disabled(cluster_config):
+    """ verify tls server enabled/disabled"""
+
+    cluster = load_cluster_config_json(cluster_config)
+    try:
+        return cluster["environment"]["disable_tls_server"]
+    except KeyError:
+        return False
+
+
+def is_admin_auth_disabled(cluster_config):
+    """ verify admin auth enabled/disabled"""
+
+    cluster = load_cluster_config_json(cluster_config)
+    try:
+        return cluster["environment"]["disable_admin_auth"]
     except KeyError:
         return False

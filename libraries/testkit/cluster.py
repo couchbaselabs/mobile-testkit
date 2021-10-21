@@ -19,6 +19,7 @@ from utilities.cluster_config_utils import get_load_balancer_ip, no_conflicts_en
 from utilities.cluster_config_utils import generate_x509_certs, is_x509_auth, get_cbs_primary_nodes_str, is_hide_prod_version_enabled
 from keywords.constants import SYNC_GATEWAY_CERT
 from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version
+from utilities.cluster_config_utils import is_centralized_persistent_config_disabled, is_server_tls_skip_verify_enabled, is_admin_auth_disabled, is_tls_server_disabled
 
 
 class Cluster:
@@ -172,8 +173,8 @@ class Cluster:
 
         log_info(">>> Starting sync_gateway with configuration: {}".format(config_path_full))
 
-        server_port = 8091
-        server_scheme = "http"
+        server_port = ""
+        server_scheme = "couchbase"
         couchbase_server_primary_node = add_cbs_to_sg_config_server_field(self._cluster_config)
         if self.cbs_ssl:
             server_port = 18091
@@ -205,7 +206,11 @@ class Cluster:
             "couchbase_server_primary_node": couchbase_server_primary_node,
             "delta_sync": "",
             "prometheus": "",
-            "hide_product_version": ""
+            "hide_product_version": "",
+            "disable_persistent_config": "",
+            "server_tls_skip_verify": "",
+            "disable_tls_server": "",
+            "disable_admin_auth": ""
         }
 
         sg_platform = get_sg_platform(self._cluster_config)
@@ -223,7 +228,7 @@ class Cluster:
                 num_replicas = get_sg_replicas(self._cluster_config)
                 playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
 
-            if sg_platform == "macos":
+            if "macos" in sg_platform:
                 sg_home_directory = "/Users/sync_gateway"
             elif sg_platform == "windows":
                 sg_home_directory = "C:\\\\PROGRA~1\\\\Couchbase\\\\Sync Gateway"
@@ -270,7 +275,10 @@ class Cluster:
                     raise ProvisioningError("Failed to block port on SGW")
         # Add configuration to run with xattrs
         if self.xattrs:
-            playbook_vars["autoimport"] = '"import_docs": true,'
+            if get_sg_version(self._cluster_config) >= "2.1.0":
+                playbook_vars["autoimport"] = '"import_docs": true,'
+            else:
+                playbook_vars["autoimport"] = '"import_docs": "continuous",'
             playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
 
         if self.sync_gateway_ssl:
@@ -294,6 +302,18 @@ class Cluster:
 
         if is_hide_prod_version_enabled(self._cluster_config) and get_sg_version(self._cluster_config) >= "2.8.1":
             playbook_vars["hide_product_version"] = '"hide_product_version": true,'
+
+        if is_centralized_persistent_config_disabled(self._cluster_config) and get_sg_version(self._cluster_config) >= "3.0.0":
+            playbook_vars["disable_persistent_config"] = '"disable_persistent_config": true,'
+
+        if is_server_tls_skip_verify_enabled(self._cluster_config) and get_sg_version(self._cluster_config) >= "3.0.0":
+            playbook_vars["server_tls_skip_verify"] = '"server_tls_skip_verify": true,'
+
+        if is_tls_server_disabled(self._cluster_config) and get_sg_version(self._cluster_config) >= "3.0.0":
+            playbook_vars["disable_tls_server"] = '"use_tls_server": false,'
+
+        if is_admin_auth_disabled(self._cluster_config) and get_sg_version(self._cluster_config) >= "3.0.0":
+            playbook_vars["disable_admin_auth"] = '"admin_interface_authentication": false,    \n"metrics_interface_authentication": false,'
 
         # Sleep for a few seconds for the indexes to teardown
         time.sleep(5)

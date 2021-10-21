@@ -42,9 +42,13 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name, 
     if get_sync_gateway_version(sg_ip)[0] < "2.1":
         pytest.skip("Continuous logging Test NA for SG < 2.1")
 
+    disable_tls_server = params_from_base_test_setup["disable_tls_server"]
+    if x509_cert_auth and disable_tls_server:
+        pytest.skip("x509 test cannot run tls server disabled")
     if x509_cert_auth and not cbs_ce_version:
         temp_cluster_config = copy_to_temp_conf(cluster_conf, mode)
         persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
+        persist_cluster_config_environment_prop(temp_cluster_config, 'server_tls_skip_verify', False)
         cluster_conf = temp_cluster_config
 
     cluster = Cluster(config=cluster_conf)
@@ -77,7 +81,7 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name, 
     sg_helper.create_directory(cluster_config=cluster_conf, url=sg_one_url, dir_name="/tmp/sg_logs")
 
     SG_LOGS = ['sg_debug', 'sg_info', 'sg_warn']
-    if sg_platform == "windows" or sg_platform == "macos":
+    if sg_platform == "windows" or "macos" in sg_platform:
         json_cluster = load_cluster_config_json(cluster_conf)
         sghost_username = json_cluster["sync_gateways:vars"]["ansible_user"]
         sghost_password = json_cluster["sync_gateways:vars"]["ansible_password"]
@@ -260,7 +264,7 @@ def test_log_maxage_timestamp_ignored(params_from_base_test_setup, sg_conf_name)
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
-    if sg_platform == "windows" or sg_platform == "macos":
+    if sg_platform == "windows" or "macos" in sg_platform:
         json_cluster = load_cluster_config_json(cluster_conf)
         sghost_username = json_cluster["sync_gateways:vars"]["ansible_user"]
         sghost_password = json_cluster["sync_gateways:vars"]["ansible_password"]
@@ -310,7 +314,11 @@ def test_log_maxage_timestamp_ignored(params_from_base_test_setup, sg_conf_name)
     # Change the timestamps for SG logs when SG stopped (Name is unchanged)
     for log in SG_LOGS_MAXAGE:
         file_name = "/tmp/sg_logs/{}.log".format(log)
-        command = "sudo touch -d \"{} days ago\" {}".format(SG_LOGS_MAXAGE[log], file_name)
+        if "macos" in sg_platform:
+            age = [log] * 24
+            command = "sudo touch -A -{}0000 {}".format(age, file_name)
+        else:
+            command = "sudo touch -d \"{} days ago\" {}".format([log], file_name)
         remote_executor.execute(command)
 
     sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
@@ -412,7 +420,7 @@ def test_log_200mb(params_from_base_test_setup, sg_conf_name):
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
-    if sg_platform == "windows" or sg_platform == "macos":
+    if sg_platform == "windows" or "macos" in sg_platform:
         json_cluster = load_cluster_config_json(cluster_conf)
         sghost_username = json_cluster["sync_gateways:vars"]["ansible_user"]
         sghost_password = json_cluster["sync_gateways:vars"]["ansible_password"]
@@ -460,7 +468,7 @@ def test_log_200mb(params_from_base_test_setup, sg_conf_name):
         _, stdout, _ = remote_executor.execute(command)
         output = stdout[0].strip()
         # A backup file should be created with 200MB
-        if (log == "sg_debug" or log == "sg_info") and (sg_platform != "windows" or sg_platform != "macos"):
+        if (log == "sg_debug" or log == "sg_info") and (sg_platform != "windows" and sg_platform != "macos"):
             assert int(output) == int(SG_LOGS_FILES_NUM[log]) + 1
         else:
             assert output == SG_LOGS_FILES_NUM[log]
@@ -716,7 +724,7 @@ def test_rotated_logs_size_limit(params_from_base_test_setup, sg_conf_name):
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
-    if sg_platform == "windows" or sg_platform == "macos":
+    if sg_platform == "windows" or "macos" in sg_platform:
         json_cluster = load_cluster_config_json(cluster_conf)
         sghost_username = json_cluster["sync_gateways:vars"]["ansible_user"]
         sghost_password = json_cluster["sync_gateways:vars"]["ansible_password"]
@@ -769,7 +777,7 @@ def test_rotated_logs_size_limit(params_from_base_test_setup, sg_conf_name):
         _, stdout, _ = remote_executor.execute(command)
         # A rotated log file should be created with 100MB
         if (log == "sg_debug" or log == "sg_info"):
-            if sg_platform == "windows" or sg_platform == "macos":
+            if sg_platform == "windows" or "macos" in sg_platform:
                 assert stdout[0].strip() == SG_LOGS_FILES_NUM[log]
             else:
                 assert int(stdout[0].strip()) == int(SG_LOGS_FILES_NUM[log]) + 1
@@ -807,20 +815,20 @@ def get_sgLogs_fileNum(SG_LOGS_MAXAGE, remote_executor, sg_platform="centos", sg
     return SG_LOGS_FILES_NUM
 
 
-def send_request_to_sgw(sg_one_url, sg_admin_url, remote_executor, sg_platform="centos"):
+def send_request_to_sgw(sg_one_url, sg_admin_url, remote_executor, sg_platform="centos", num_of_requests=2500):
     if sg_platform == "windows":
         command = "for ((i=1;i <= 2000;i += 1)); do curl -s {}/ABCD/ > /dev/null; done".format(sg_one_url)
         os.system(command)
         command = "for ((i=1;i <= 2000;i += 1)); do curl -s -H 'Accept: application/json' {}/db/ > /dev/null; done".format(sg_admin_url)
         os.system(command)
 
-    elif sg_platform == "macos":
+    elif "macos" in sg_platform:
         command = "for ((i=1;i <= 3000;i += 1)); do curl -s {}/ABCD/ > /dev/null; done".format(sg_one_url)
         os.system(command)
         command = "for ((i=1;i <= 2000;i += 1)); do curl -s -H 'Accept: application/json' {}/db/ > /dev/null; done".format(sg_admin_url)
         os.system(command)
     else:
         remote_executor.execute(
-            "for ((i=1;i <= 3200;i += 1)); do curl -s http://localhost:4984/ABCD/ > /dev/null; done")
+            "for ((i=1;i <= {};i += 1)); do curl -s http://localhost:4984/ABCD/ > /dev/null; done".format(num_of_requests))
         remote_executor.execute(
-            "for ((i=1;i <= 2000;i += 1)); do curl -s -H 'Accept: text/plain' http://localhost:4985/db/ > /dev/null; done")
+            "for ((i=1;i <= {};i += 1)); do curl -s -H 'Accept: text/plain' http://localhost:4985/db/ > /dev/null; done".format(num_of_requests))

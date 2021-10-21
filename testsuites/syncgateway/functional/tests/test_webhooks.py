@@ -50,9 +50,13 @@ def test_webhooks(params_from_base_test_setup, sg_conf_name, num_users, num_chan
     log_info("Using num_channels: {}".format(num_channels))
     log_info("Using num_docs: {}".format(num_docs))
     log_info("Using num_revisions: {}".format(num_revisions))
+    disable_tls_server = params_from_base_test_setup["disable_tls_server"]
+    if x509_cert_auth and disable_tls_server:
+        pytest.skip("x509 test cannot run tls server disabled")
     if x509_cert_auth and not cbs_ce_version:
         temp_cluster_config = copy_to_temp_conf(cluster_conf, mode)
         persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
+        persist_cluster_config_environment_prop(temp_cluster_config, 'server_tls_skip_verify', False)
         cluster_conf = temp_cluster_config
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_conf)
@@ -330,10 +334,11 @@ def test_webhook_filter_external_js(params_from_base_test_setup, setup_webserver
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
     webhook_server = setup_webserver["webhook_server"]
+    xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
     sg_conf_name = "webhooks/webhook_filter_external_js"
 
-    if sync_gateway_version < "3.0.0":
-        pytest.skip("this feature not available below 3.0.0")
+    if sync_gateway_version < "3.0.0" or not xattrs_enabled:
+        pytest.skip("this feature cannot run with SGW version below 3.0.0 or xattrs not enabled")
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     cluster_helper = ClusterKeywords(cluster_config)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config)
@@ -389,7 +394,7 @@ def test_webhook_filter_external_js(params_from_base_test_setup, setup_webserver
     sdk_client.upsert_multi(sdk_docs)
 
     count = 0
-    retries = 5
+    retries = 8
     while count < retries:
         data = webhook_server.get_data()
         # Remove unwanted data from the response
@@ -425,10 +430,12 @@ def test_webhook_filter_external_https_js(params_from_base_test_setup, setup_web
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
     webhook_server = setup_webserver_js_sslon["webhook_server"]
+    xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
     sg_conf_name = "webhooks/webhook_filter_external_js"
 
-    if sync_gateway_version < "3.0.0":
-        pytest.skip('this feature not available below 3.0.0')
+    if sync_gateway_version < "3.0.0" or not xattrs_enabled:
+        pytest.skip("this feature cannot run with SGW version below 3.0.0 or xattrs not enabled")
+
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     cluster_helper = ClusterKeywords(cluster_config)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config)

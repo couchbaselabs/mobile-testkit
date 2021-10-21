@@ -30,7 +30,8 @@ class Replication(object):
                   push_filter=False, pull_filter=False, channels=None,
                   documentIDs=None, replicator_authenticator=None,
                   headers=None, filter_callback_func='', conflict_resolver='',
-                  heartbeat=None, max_retries=None, max_retry_wait_time=None):
+                  heartbeat=None, max_retries=None, max_retry_wait_time=None,
+                  auto_purge=None):
         args = Args()
         args.setMemoryPointer("source_db", source_db)
         args.setBoolean("continuous", continuous)
@@ -68,6 +69,9 @@ class Replication(object):
 
         if target_db is not None:
             args.setMemoryPointer("target_db", target_db)
+
+        if auto_purge is not None:
+            args.setString("auto_purge", auto_purge)
 
         cluster_config = os.environ["CLUSTER_CONFIG"]
         if sg_ssl_enabled(cluster_config):
@@ -189,6 +193,12 @@ class Replication(object):
         return self._client.invokeMethod("replicatorConfiguration_setReplicatorType",
                                          args)
 
+    def setAutoPurgeFlag(self, configuration, auto_purge_flag=True):
+        args = Args()
+        args.setMemoryPointer("configuration", configuration)
+        args.setBoolean("auto_purge", auto_purge_flag)
+        return self._client.invokeMethod("replicatorConfiguration_setAutoPurge", args)
+
     def create(self, config):
         args = Args()
         args.setMemoryPointer("config", config)
@@ -289,13 +299,13 @@ class Replication(object):
         return self._client.invokeMethod("replicator_changeListenerGetChanges", args)
 
     def configure_and_replicate(self, source_db, replicator_authenticator=None, target_db=None, target_url=None, replication_type="push_pull", continuous=True,
-                                channels=None, err_check=True, wait_until_idle=True, heartbeat=None):
+                                channels=None, err_check=True, wait_until_idle=True, heartbeat=None, auto_purge=None):
         if target_db is None:
             repl_config = self.configure(source_db, target_url=target_url, continuous=continuous,
-                                         replication_type=replication_type, channels=channels, replicator_authenticator=replicator_authenticator, heartbeat=heartbeat)
+                                         replication_type=replication_type, channels=channels, replicator_authenticator=replicator_authenticator, heartbeat=heartbeat, auto_purge=auto_purge)
         else:
             repl_config = self.configure(source_db, target_db=target_db, continuous=continuous,
-                                         replication_type=replication_type, channels=channels, replicator_authenticator=replicator_authenticator, heartbeat=heartbeat)
+                                         replication_type=replication_type, channels=channels, replicator_authenticator=replicator_authenticator, heartbeat=heartbeat, auto_purge=auto_purge)
         repl = self.create(repl_config)
         self.start(repl)
         if wait_until_idle:

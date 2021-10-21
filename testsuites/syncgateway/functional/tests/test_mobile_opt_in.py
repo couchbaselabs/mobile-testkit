@@ -327,10 +327,11 @@ def test_non_mobile_ignore_count(params_from_base_test_setup, sg_conf_name):
     # 2. Verify “non_mobile_ignored_count” is 0 on _expvar end point
     sg_expvars = sg_client.get_expvars(url=sg_admin_url)
     non_mobile_ignore_count = sg_expvars["syncgateway"]["per_db"][sg_db]["cache"]["non_mobile_ignored_count"]
+    warn_count = sg_expvars["syncgateway"]["global"]["resource_utilization"]["warn_count"]
     assert non_mobile_ignore_count == 1, "non_mobile_ignore_count did not get expected count"
     command = "grep 'Cache: changeCache' /tmp/sg_logs/sg_info.log | wc -l"
     command1 = "grep 'does not have valid sync data' /tmp/sg_logs/sg_info.log | wc -l"
-    if sg_platform == "macos":
+    if "macos" in sg_platform:
         stdout = subprocess.check_output(command, shell=True)
         log1_num = int(stdout)
         stdout = subprocess.check_output(command1, shell=True)
@@ -347,7 +348,7 @@ def test_non_mobile_ignore_count(params_from_base_test_setup, sg_conf_name):
     doc = document.create_doc(doc_id=doc_id2, channels=['non_mobile_ignore'])
     sdk_client.upsert(doc_id2, doc)
 
-    if sg_platform == "macos":
+    if "macos" in sg_platform:
         time.sleep(2)
         stdout = subprocess.check_output(command, shell=True)
         assert int(stdout) == 1 + log1_num, "did not find the expected match on sg info logs"
@@ -379,7 +380,7 @@ def test_non_mobile_ignore_count(params_from_base_test_setup, sg_conf_name):
     status = cluster.sync_gateways[0].restart(config=sg_config, cluster_config=cluster_config)
     assert status == 0, "Syncgateway did not start after adding revs_limit  with no conflicts mode "
 
-    if sg_platform == "macos":
+    if "macos" in sg_platform:
         stdout = subprocess.check_output(command, shell=True)
         log1_num = int(stdout)
         stdout = subprocess.check_output(command1, shell=True)
@@ -395,7 +396,7 @@ def test_non_mobile_ignore_count(params_from_base_test_setup, sg_conf_name):
     doc = document.create_doc(doc_id=doc_id3, channels=['non_mobile_ignore'])
     sdk_client.upsert(doc_id3, doc)
 
-    if sg_platform == "macos":
+    if "macos" in sg_platform:
         time.sleep(2)
         stdout = subprocess.check_output(command, shell=True)
         assert int(stdout) == 1 + log1_num, "did not find the expected match on sg info logs"
@@ -412,4 +413,4 @@ def test_non_mobile_ignore_count(params_from_base_test_setup, sg_conf_name):
     assert non_mobile_ignore_count == 1, "non_mobile_ignore_count did not get expected count"
 
     # 8. Verify warn_count is 0
-    assert sg_expvars["syncgateway"]["global"]["resource_utilization"]["warn_count"] == 0, "warn_count is not 0"
+    assert sg_expvars["syncgateway"]["global"]["resource_utilization"]["warn_count"] == warn_count, "warn_count is not 0"

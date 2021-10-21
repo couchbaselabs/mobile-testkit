@@ -18,6 +18,7 @@ from libraries.testkit.cluster import Cluster
 @pytest.mark.changes
 @pytest.mark.session
 @pytest.mark.channel
+@pytest.mark.oscertify
 def test_load_balance_sanity(params_from_base_test_setup):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
@@ -55,7 +56,7 @@ def test_load_balance_sanity(params_from_base_test_setup):
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
         log_info("Starting ...")
-        if sg_platform == "macos":
+        if "macos" in sg_platform:
             ct_task = executor.submit(ct.start, timeout=180000)
         else:
             ct_task = executor.submit(ct.start)
@@ -96,7 +97,10 @@ def test_sgw_down_with_load_balancer(params_from_base_test_setup, sgw_down_with_
     cluster_config = sgw_down_with_load_balancer_teardown["cluster_config"]
     sg1 = sgw_down_with_load_balancer_teardown["sg1"]
     sg_conf_path = sgw_down_with_load_balancer_teardown["sg_conf_path"]
+    sg_ce = params_from_base_test_setup["sg_ce"]
 
+    if sg_ce:
+        pytest.skip('--sg-ce is enabled. This test runs only on enterprise edition of sgw')
     # 1. Have 2 SGWs having load balancer with shared_bucket_access=true and have CBS set up
     cluster_utils = ClusterKeywords(cluster_config)
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)

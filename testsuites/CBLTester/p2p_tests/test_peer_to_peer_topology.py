@@ -68,10 +68,10 @@ def test_peer_to_peer_mesh_topology(params_from_base_test_setup, server_setup, n
     peer3_listener_port = peer_to_peer3.get_url_listener_port(peer3_listener)
 
     if attachments:
-        db_obj_peer1.create_bulk_docs(num_of_docs, "p2preplication", db=cbl_db_peer2, channels=channels,
+        db_obj_peer1.create_bulk_docs(num_of_docs, "p2preplication", db=cbl_db_peer1, channels=channels,
                                       attachments_generator=attachment.generate_png_100_100)
     else:
-        db_obj_peer1.create_bulk_docs(num_of_docs, "p2preplication", db=cbl_db_peer2, channels=channels)
+        db_obj_peer1.create_bulk_docs(num_of_docs, "p2preplication", db=cbl_db_peer1, channels=channels)
 
     # Peer1 connected peer2 replicator and peer3 replicator
     peer2_repl1 = peer_to_peer2.configure(port=peer1_listener_port, host=peer1_host, server_db_name=db_name_peer1,
@@ -110,7 +110,7 @@ def test_peer_to_peer_mesh_topology(params_from_base_test_setup, server_setup, n
 
     # Peer2 connected peer1 replicator and peer3 replicator
     peer1_repl1 = peer_to_peer1.configure(port=peer2_listener_port, host=peer2_host, server_db_name=db_name_peer2,
-                                          client_database=cbl_db_peer2,
+                                          client_database=cbl_db_peer1,
                                           continuous=continuous, replication_type=replicator_type,
                                           endPointType=endPointType)
     peer_to_peer1.client_start(peer1_repl1)

@@ -16,6 +16,7 @@ from keywords import document
 from keywords.utils import host_for_url
 from couchbase.bucket import Bucket
 from keywords.MobileRestClient import MobileRestClient
+from utilities.cluster_config_utils import load_cluster_config_json
 
 import pytest
 import time
@@ -34,6 +35,7 @@ DB2 = "db2"
 @pytest.mark.channel
 @pytest.mark.basicauth
 @pytest.mark.changes
+@pytest.mark.oscertify
 def test_sg_replicate_basic_test(params_from_base_test_setup):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
@@ -41,7 +43,10 @@ def test_sg_replicate_basic_test(params_from_base_test_setup):
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     prometheus_enabled = params_from_base_test_setup["prometheus_enabled"]
     sg_ssl = params_from_base_test_setup["sg_ssl"]
+    sg_platform = params_from_base_test_setup["sg_platform"]
 
+    if sync_gateway_version >= "3.0.0":
+        pytest.skip('sg-replicate 1  does not support 3.0.0 and above')
     log_info("Running 'test_sg_replicate_basic_test'")
     log_info("Using cluster_config: {}".format(cluster_config))
 
@@ -164,7 +169,13 @@ def test_sg_replicate_basic_test(params_from_base_test_setup):
         assert verify_stat_on_prometheus("sgw_replication_sgr_num_docs_pushed"), expvars["syncgateway"]["per_replication"][replication_id]["sgr_num_docs_pushed"]
     if not prometheus_enabled and sync_gateway_version >= "2.8.0":
         cluster = Cluster(config=cluster_config)
-        remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip)
+        if sg_platform == "windows" or "macos" in sg_platform:
+            json_cluster = load_cluster_config_json(cluster_config)
+            sghost_username = json_cluster["sync_gateways:vars"]["ansible_user"]
+            sghost_password = json_cluster["sync_gateways:vars"]["ansible_password"]
+            remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip, sg_platform, sghost_username, sghost_password)
+        else:
+            remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip)
         if sg_ssl:
             _, stdout, _ = remote_executor.execute("curl -k https://localhost:4986/_metrics")
             assert "go_gc_duration_seconds" in stdout[0]
@@ -182,7 +193,11 @@ def test_sg_replicate_basic_test(params_from_base_test_setup):
 def test_sg_replicate_basic_test_channels(params_from_base_test_setup):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     mode = params_from_base_test_setup["mode"]
+
+    if sync_gateway_version >= "3.0.0":
+        pytest.skip('sg-replicate 1  does not support 3.0.0 and above')
 
     log_info("Running 'test_sg_replicate_basic_test_channels'")
     log_info("Using cluster_config: {}".format(cluster_config))
@@ -238,6 +253,10 @@ def test_sg_replicate_continuous_replication(params_from_base_test_setup):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+
+    if sync_gateway_version >= "3.0.0":
+        pytest.skip('sg-replicate 1  does not support 3.0.0 and above')
 
     log_info("Running 'test_sg_replicate_continuous_replication'")
     log_info("Using cluster_config: {}".format(cluster_config))
@@ -349,6 +368,10 @@ def test_sg_replicate_non_existent_db(params_from_base_test_setup):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+
+    if sync_gateway_version >= "3.0.0":
+        pytest.skip('sg-replicate 1  does not support 3.0.0 and above')
 
     log_info("Running 'test_sg_replicate_non_existent_db'")
     log_info("Using cluster_config: {}".format(cluster_config))
@@ -401,6 +424,10 @@ def test_sg_replicate_push_async(params_from_base_test_setup, num_docs):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+
+    if sync_gateway_version >= "3.0.0":
+        pytest.skip('sg-replicate 1  does not support 3.0.0 and above')
 
     log_info("Running 'test_sg_replicate_push_async'")
     log_info("Using cluster_config: {}".format(cluster_config))
@@ -457,6 +484,10 @@ def test_stop_replication_via_replication_id(params_from_base_test_setup):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+
+    if sync_gateway_version >= "3.0.0":
+        pytest.skip('sg-replicate 1  does not support 3.0.0 and above')
 
     log_info("Running 'test_stop_replication_via_replication_id'")
     log_info("Using cluster_config: {}".format(cluster_config))
@@ -504,6 +535,10 @@ def test_replication_config(params_from_base_test_setup):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+
+    if sync_gateway_version >= "3.0.0":
+        pytest.skip('sg-replicate 1  does not support 3.0.0 and above')
 
     log_info("Running 'test_replication_config'")
     log_info("Using cluster_config: {}".format(cluster_config))
@@ -540,6 +575,10 @@ def test_sdk_update_with_changes_request(params_from_base_test_setup):
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+
+    if sync_gateway_version >= "3.0.0":
+        pytest.skip('sg-replicate 1  does not support 3.0.0 and above')
 
     channel = ['ABC']
     bucket_name = 'data-bucket-1'
@@ -587,7 +626,6 @@ def test_sdk_update_with_changes_request(params_from_base_test_setup):
 
     # 5.Read document via SG from node A to get rev-id for revision 1
     doc = sg_client.get_doc(url=admin1.admin_url, db=DB1, doc_id=sdk_doc_id)
-    print("doc is ", doc)
     revid_1 = doc["_rev"]
 
     # 6.Update the document via SDK
@@ -610,12 +648,10 @@ def update_docs_via_sdk(client, docs_to_update, prop_to_update, number_updates):
 
     log_info("Client: {}".format(id(client)))
     num_of_docs = len(docs_to_update)
-    print("docs to update is ", docs_to_update)
     for i in range(num_of_docs):
 
         doc_value_result = client.get(docs_to_update[i])
         doc = doc_value_result.value
-        print("doc is ", doc)
         doc_id = docs_to_update[i]
         for i in range(number_updates):
             try:

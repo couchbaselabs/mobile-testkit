@@ -49,6 +49,7 @@ def params_from_base_suite_setup(request):
     skip_provisioning = request.config.getoption("--skip-provisioning")
     use_local_testserver = request.config.getoption("--use-local-testserver")
     sync_gateway_version = request.config.getoption("--sync-gateway-version")
+    disable_tls_server = request.config.getoption("--disable-tls-server")
 
     server_version = request.config.getoption("--server-version")
     enable_sample_bucket = request.config.getoption("--enable-sample-bucket")
@@ -65,12 +66,19 @@ def params_from_base_suite_setup(request):
     delta_sync_enabled = request.config.getoption("--delta-sync")
     cbs_ce = request.config.getoption("--cbs-ce")
     sg_ce = request.config.getoption("--sg-ce")
+    cbs_ssl = request.config.getoption("--server-ssl")
     cluster_config = request.config.getoption("--cluster-config")
     enable_encryption = request.config.getoption("--enable-encryption")
     encryption_password = request.config.getoption("--encryption-password")
     prometheus_enable = request.config.getoption("--prometheus-enable")
     hide_product_version = request.config.getoption("--hide-product-version")
     enable_cbs_developer_preview = request.config.getoption("--enable-cbs-developer-preview")
+    disable_persistent_config = request.config.getoption("--disable-persistent-config")
+    enable_server_tls_skip_verify = request.config.getoption("--enable-server-tls-skip-verify")
+    disable_tls_server = request.config.getoption("--disable-tls-server")
+
+    disable_admin_auth = request.config.getoption("--disable-admin-auth")
+
     sg_ssl = ""
 
     test_name = request.node.name
@@ -157,6 +165,15 @@ def params_from_base_suite_setup(request):
         log_info("Running without delta sync")
         persist_cluster_config_environment_prop(cluster_config, 'delta_sync_enabled', False)
 
+    if cbs_ssl:
+        log_info("Running tests with cbs <-> sg ssl enabled")
+        # Enable ssl in cluster configs
+        persist_cluster_config_environment_prop(cluster_config, 'cbs_ssl_enabled', True)
+    else:
+        log_info("Running tests with cbs <-> sg ssl disabled")
+        # Disable ssl in cluster configs
+        persist_cluster_config_environment_prop(cluster_config, 'cbs_ssl_enabled', False)
+
     if hide_product_version:
         log_info("Suppress the SGW product Version")
         persist_cluster_config_environment_prop(cluster_config, 'hide_product_version', True)
@@ -170,6 +187,34 @@ def params_from_base_suite_setup(request):
     else:
         log_info("Running without CBS developer preview")
         persist_cluster_config_environment_prop(cluster_config, 'cbs_developer_preview', False)
+
+    if disable_persistent_config:
+        log_info(" disable persistent config")
+        persist_cluster_config_environment_prop(cluster_config, 'disable_persistent_config', True)
+    else:
+        log_info("Running without Centralized Persistent Config")
+        persist_cluster_config_environment_prop(cluster_config, 'disable_persistent_config', False)
+
+    if enable_server_tls_skip_verify:
+        log_info("Enable server tls skip verify flag")
+        persist_cluster_config_environment_prop(cluster_config, 'server_tls_skip_verify', True)
+    else:
+        log_info("Running without server_tls_skip_verify Config")
+        persist_cluster_config_environment_prop(cluster_config, 'server_tls_skip_verify', False)
+
+    if disable_tls_server:
+        log_info("Disable tls server flag")
+        persist_cluster_config_environment_prop(cluster_config, 'disable_tls_server', True)
+    else:
+        log_info("Enable tls server flag")
+        persist_cluster_config_environment_prop(cluster_config, 'disable_tls_server', False)
+
+    if disable_admin_auth:
+        log_info("Disabled Admin Auth")
+        persist_cluster_config_environment_prop(cluster_config, 'disable_admin_auth', True)
+    else:
+        log_info("Enabled Admin Auth")
+        persist_cluster_config_environment_prop(cluster_config, 'disable_admin_auth', False)
 
     # As cblite jobs run with on Centos platform, adding by default centos to environment config
     persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "centos", False)
@@ -316,6 +361,7 @@ def params_from_base_suite_setup(request):
         "sg_db": sg_db,
         "no_conflicts_enabled": True,
         "sync_gateway_version": sync_gateway_version,
+        "disable_tls_server": disable_tls_server,
         "target_admin_url": target_admin_url,
         "base_url": base_url,
         "enable_sample_bucket": enable_sample_bucket,
@@ -334,7 +380,8 @@ def params_from_base_suite_setup(request):
         "encryption_password": encryption_password,
         "cbs_ce": cbs_ce,
         "sg_ce": sg_ce,
-        "prometheus_enable": prometheus_enable
+        "prometheus_enable": prometheus_enable,
+        "ssl_enabled": cbs_ssl
     }
 
     if request.node.testsfailed != 0 and enable_file_logging and create_db_per_suite is not None:
@@ -393,6 +440,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     sg_ip = params_from_base_suite_setup["sg_ip"]
     sg_db = params_from_base_suite_setup["sg_db"]
     sync_gateway_version = params_from_base_suite_setup["sync_gateway_version"]
+    disable_tls_server = params_from_base_suite_setup["disable_tls_server"]
     sg_config = params_from_base_suite_setup["sg_config"]
     liteserv_platform = params_from_base_suite_setup["liteserv_platform"]
     testserver = params_from_base_suite_setup["testserver"]
@@ -407,6 +455,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     cbs_ce = params_from_base_suite_setup["cbs_ce"]
     sg_ce = params_from_base_suite_setup["sg_ce"]
     prometheus_enable = request.config.getoption("--prometheus-enable")
+    cbs_ssl = params_from_base_suite_setup["ssl_enabled"]
 
     source_db = None
     test_name_cp = test_name.replace("/", "-")
@@ -479,6 +528,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "sg_db": sg_db,
         "no_conflicts_enabled": no_conflicts_enabled,
         "sync_gateway_version": sync_gateway_version,
+        "disable_tls_server": disable_tls_server,
         "source_db": source_db,
         "cbl_db": cbl_db,
         "suite_source_db": suite_source_db,
@@ -500,6 +550,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "test_cbllog": test_cbllog,
         "cbs_ce": cbs_ce,
         "sg_ce": sg_ce,
+        "ssl_enabled": cbs_ssl,
         "prometheus_enable": prometheus_enable
     }
 
@@ -614,6 +665,23 @@ def setup_customized_teardown_test(params_from_base_test_setup):
         "cbl_db3": cbl_db3,
     }
     log_info("Tearing down test")
-    db.deleteDB(cbl_db1)
-    db.deleteDB(cbl_db2)
-    db.deleteDB(cbl_db3)
+    path = db.getPath(cbl_db1).rstrip("/\\")
+    path2 = db.getPath(cbl_db2).rstrip("/\\")
+    path3 = db.getPath(cbl_db3).rstrip("/\\")
+    if '\\' in path:
+        path = '\\'.join(path.split('\\')[:-1])
+        path2 = '\\'.join(path2.split('\\')[:-1])
+        path3 = '\\'.join(path3.split('\\')[:-1])
+    else:
+        path = '/'.join(path.split('/')[:-1])
+        path2 = '/'.join(path2.split('/')[:-1])
+        path3 = '/'.join(path3.split('/')[:-1])
+    try:
+        if db.exists(cbl_db_name1, path):
+            db.deleteDB(cbl_db1)
+        if db.exists(cbl_db_name2, path2):
+            db.deleteDB(cbl_db2)
+        if db.exists(cbl_db_name3, path3):
+            db.deleteDB(cbl_db3)
+    except Exception as err:
+        log_info("Exception occurred: {}".format(err))

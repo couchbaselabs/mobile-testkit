@@ -58,6 +58,10 @@ def pytest_addoption(parser):
                      action="store",
                      help="liteserv-ports: the ports to assign to liteserv")
 
+    parser.addoption("--liteserv-android-serial-numbers",
+                     action="store",
+                     help="liteserv-android-serial-numbers: the android device serial numbers")
+
     parser.addoption("--enable-sample-bucket",
                      action="store",
                      help="enable-sample-bucket: Enable a sample server bucket")
@@ -65,10 +69,6 @@ def pytest_addoption(parser):
     parser.addoption("--xattrs",
                      action="store_true",
                      help="xattrs: Enable xattrs for sync gateway")
-
-    parser.addoption("--create-db-per-suite",
-                     action="store",
-                     help="create-db-per-suite: Creates/deletes client DB per suite")
 
     parser.addoption("--no-conflicts",
                      action="store_true",
@@ -110,11 +110,6 @@ def pytest_addoption(parser):
                      help="Provide cluster config to use. Default is base config",
                      default="base")
 
-    parser.addoption("--create-db-per-test",
-                     action="store",
-                     help="create-db-per-test: Creates/deletes client DB for every test",
-                     default="test")
-
     parser.addoption("--enable-file-logging",
                      action="store_true",
                      help="If set, CBL file logging would enable. Supported only cbl2.5 onwards")
@@ -140,8 +135,8 @@ def pytest_addoption(parser):
 
     parser.addoption("--num-of-docs",
                      action="store",
-                     default="1000000",
-                     help="Specify the initial no. of docs for an app to start the system test. Default is 1M Docs")
+                     default="10000",
+                     help="Specify the initial no. of docs for an app to start the system test. Default is 10k Docs per cbl db")
 
     parser.addoption("--num-of-doc-updates",
                      action="store",
@@ -155,7 +150,7 @@ def pytest_addoption(parser):
 
     parser.addoption("--num-of-docs-to-delete",
                      action="store",
-                     default="1000",
+                     default="100",
                      help="Specify the no. of random docs to delete in each iteration. Default is 1000 times."
                           "In each iteration twice the no. of docs specified will be deleted. Once from SG side and "
                           "once from all cbl app in cluster")
@@ -169,12 +164,12 @@ def pytest_addoption(parser):
     parser.addoption("--num-of-docs-to-add",
                      action="store",
                      default="2000",
-                     help="Specify the no. of random docs to add in each iteration per cbl app. Default is 1000 times")
+                     help="Specify the no. of random docs to add in each iteration per cbl app. Default is 2000 times")
 
     parser.addoption("--up-time",
                      action="store",
-                     default="2",
-                     help="Specify the no. of days system test will execute. Default is 2 days")
+                     default="1",
+                     help="Specify the no. of days system test will execute. Default is 1 days")
 
     parser.addoption("--repl-status-check-sleep-time",
                      action="store",
@@ -185,10 +180,6 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="Hides SGW product version when you hit SGW url",
                      default=False)
-
-    parser.addoption("--skip-couchbase-provision",
-                     action="store_true",
-                     help="skip the couchbase provision step")
 
     parser.addoption("--enable-cbs-developer-preview",
                      action="store_true",
@@ -223,11 +214,15 @@ def params_from_base_suite_setup(request):
     liteserv_versions = request.config.getoption("--liteserv-versions")
     liteserv_hosts = request.config.getoption("--liteserv-hosts")
     liteserv_ports = request.config.getoption("--liteserv-ports")
+    liteserv_android_serial_numbers = request.config.getoption("--liteserv-android-serial-numbers")
 
     platform_list = liteserv_platforms.split(',')
     version_list = liteserv_versions.split(',')
     host_list = liteserv_hosts.split(',')
     port_list = liteserv_ports.split(',')
+    liteserv_android_serial_number = []
+    if liteserv_android_serial_numbers:
+        liteserv_android_serial_number = liteserv_android_serial_numbers.split(',')
 
     if len(platform_list) != len(version_list) != len(host_list) != len(port_list):
         raise Exception("Provide equal no. of Parameters for host, port, version and platforms")
@@ -247,8 +242,6 @@ def params_from_base_suite_setup(request):
     use_views = request.config.getoption("--use-views")
     number_replicas = request.config.getoption("--number-replicas")
     cluster_config_prefix = request.config.getoption("--cluster-config")
-    create_db_per_test = request.config.getoption("--create-db-per-test")
-    create_db_per_suite = request.config.getoption("--create-db-per-suite")
     enable_rebalance = request.config.getoption("--enable-rebalance")
     enable_file_logging = request.config.getoption("--enable-file-logging")
     delta_sync_enabled = request.config.getoption("--delta-sync")
@@ -264,20 +257,25 @@ def params_from_base_suite_setup(request):
     num_of_docs_to_delete = int(request.config.getoption("--num-of-docs-to-delete"))
     num_of_docs_to_add = int(request.config.getoption("--num-of-docs-to-add"))
     hide_product_version = request.config.getoption("--hide-product-version")
-    skip_couchbase_provision = request.config.getoption("--skip-couchbase-provision")
-    up_time = int(request.config.getoption("--up-time"))
+    # test runtime in days, float type allow debug runs specify shorter time, i.e. a quarter day etc.
+    up_time = float(request.config.getoption("--up-time"))
+    # convert to minutes
+    up_time = up_time * 24 * 60
     enable_cbs_developer_preview = request.config.getoption("--enable-cbs-developer-preview")
     disable_persistent_config = request.config.getoption("--disable-persistent-config")
     enable_server_tls_skip_verify = request.config.getoption("--enable-server-tls-skip-verify")
     disable_tls_server = request.config.getoption("--disable-tls-server")
 
     disable_admin_auth = request.config.getoption("--disable-admin-auth")
-    # Changing up_time in days
-    up_time = up_time * 24 * 60
     repl_status_check_sleep_time = int(request.config.getoption("--repl-status-check-sleep-time"))
-
     test_name = request.node.name
+
+    # ================================================ #
+    # prepare testserver app for each cbl client
+    # testserver app download + install
+    # ================================================ #
     testserver_list = []
+    android_device_idx = 0
     for platform, version, host, port in zip(platform_list,
                                              version_list,
                                              host_list,
@@ -295,15 +293,18 @@ def params_from_base_suite_setup(request):
 
             # Install TestServer app
             if device_enabled and (platform == "ios" or platform == "android"):
+                if platform == "android" and len(liteserv_android_serial_number) != 0:
+                    testserver.serial_number = liteserv_android_serial_number[android_device_idx]
+                    android_device_idx += 1
                 testserver.install_device()
             else:
                 testserver.install()
 
         testserver_list.append(testserver)
-    base_url_list = []
-    for host, port in zip(host_list, port_list):
-        base_url_list.append("http://{}:{}".format(host, port))
 
+    # ================================================ #
+    # prepare couchbase server and sync gateway cluster
+    # ================================================ #
     cluster_config = "{}/{}_{}".format(CLUSTER_CONFIGS_DIR, cluster_config_prefix, mode)
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_default", mode)
     no_conflicts_enabled = request.config.getoption("--no-conflicts")
@@ -428,8 +429,7 @@ def params_from_base_suite_setup(request):
                 cluster_config=cluster_config,
                 server_version=server_version,
                 sync_gateway_version=sync_gateway_version,
-                sync_gateway_config=sg_config,
-                skip_couchbase_provision=skip_couchbase_provision
+                sync_gateway_config=sg_config
             )
         except ProvisioningError:
             logging_helper = Logging()
@@ -444,53 +444,61 @@ def params_from_base_suite_setup(request):
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
     log_info("sg_admin_url: {}".format(sg_admin_url))
 
+    # ================================================ #
+    # prepare testserver app on cbl client
+    # start testserver app, setup log config, etc
+    # ================================================ #
+    base_url_list = []
+    for host, port in zip(host_list, port_list):
+        base_url_list.append("http://{}:{}".format(host, port))
+
     # Create CBL databases on all devices
-    db_name_list = []
-    cbl_db_list = []
-    db_obj_list = []
+    cbl_db_name_list = []
+    cbl_db_obj_list = []
+    testkit_db_obj_list = []
     query_obj_list = []
-    if create_db_per_suite:
-        # Start Test server which needed for suite level set up like query tests
-        for testserver in testserver_list:
-            if not use_local_testserver:
-                log_info("Starting TestServer...")
-                test_name_cp = test_name.replace("/", "-")
-                if device_enabled:
-                    testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
-                                                                          test_name_cp, datetime.datetime.now()))
-                else:
-                    testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp,
-                                                                   datetime.datetime.now()))
-        for base_url, i, liteserv_version in zip(base_url_list, range(len(base_url_list)), version_list):
-
-            if enable_file_logging and liteserv_version >= "2.5.0":
-                cbllog = FileLogging(base_url)
-                cbllog.configure(log_level="verbose", max_rotate_count=2,
-                                 max_size=1000 * 512 * 4, plain_text=True)
-                log_info("Log files available at - {}".format(cbllog.get_directory()))
-            db_name = "{}-{}".format(create_db_per_suite, i + 1)
-            log_info("db name for {} is {}".format(base_url, db_name))
-            db_name_list.append(db_name)
-            db = Database(base_url)
-            query_obj_list.append(Query(base_url))
-            db_obj_list.append(db)
-
-            log_info("Creating a Database {} at the suite setup".format(db_name))
-            if enable_encryption:
-                db_config = db.configure(password=encryption_password)
+    # Start Test server which needed for suite level set up like query tests
+    for testserver, platform in zip(testserver_list, platform_list):
+        if not use_local_testserver:
+            log_info("Starting TestServer...")
+            test_name_cp = test_name.replace("/", "-")
+            if device_enabled and (platform == "ios" or platform == "android"):
+                testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
+                                                                      test_name_cp, datetime.datetime.now()))
             else:
-                db_config = db.configure()
-            cbl_db = db.create(db_name, db_config)
-            cbl_db_list.append(cbl_db)
-            log_info("Getting the database name")
-            assert db.getName(cbl_db) == db_name
-            if resume_cluster:
-                path = db.getPath(cbl_db).rstrip("/\\")
-                if '\\' in path:
-                    path = '\\'.join(path.split('\\')[:-1])
-                else:
-                    path = '/'.join(path.split('/')[:-1])
-                assert db.exists(db_name, path)
+                testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp,
+                                                               datetime.datetime.now()))
+
+    for base_url, i, liteserv_version in zip(base_url_list, range(len(base_url_list)), version_list):
+        if enable_file_logging and liteserv_version >= "2.5.0":
+            cbllog = FileLogging(base_url)
+            cbllog.configure(log_level="verbose", max_rotate_count=2,
+                             max_size=1000 * 512 * 4, plain_text=True)
+            log_info("Log files available at - {}".format(cbllog.get_directory()))
+
+        db_name = "{}-{}-{}".format("cbl-sys-test", i + 1, str(time.time()))
+        log_info("db name for {} is {}".format(base_url, db_name))
+        cbl_db_name_list.append(db_name)
+        db = Database(base_url)
+        query_obj_list.append(Query(base_url))
+        testkit_db_obj_list.append(db)
+
+        log_info("Creating a Database {} at the suite setup".format(db_name))
+        if enable_encryption:
+            db_config = db.configure(password=encryption_password)
+        else:
+            db_config = db.configure()
+        cbl_db = db.create(db_name, db_config)
+        cbl_db_obj_list.append(cbl_db)
+        log_info("Getting the database name")
+        assert db.getName(cbl_db) == db_name
+        if resume_cluster:
+            path = db.getPath(cbl_db).rstrip("/\\")
+            if '\\' in path:
+                path = '\\'.join(path.split('\\')[:-1])
+            else:
+                path = '/'.join(path.split('/')[:-1])
+            assert db.exists(db_name, path)
 
     yield {
         "cluster_config": cluster_config,
@@ -511,16 +519,15 @@ def params_from_base_suite_setup(request):
         "disable_tls_server": disable_tls_server,
         "target_admin_url": target_admin_url,
         "enable_sample_bucket": enable_sample_bucket,
-        "cbl_db_list": cbl_db_list,
-        "db_name_list": db_name_list,
+        "cbl_db_obj_list": cbl_db_obj_list,
+        "cbl_db_name_list": cbl_db_name_list,
         "base_url_list": base_url_list,
         "query_obj_list": query_obj_list,
         "sg_config": sg_config,
-        "db_obj_list": db_obj_list,
+        "testkit_db_obj_list": testkit_db_obj_list,
         "device_enabled": device_enabled,
         "generator": generator,
         "resume_cluster": resume_cluster,
-        "create_db_per_test": create_db_per_test,
         "enable_rebalance": enable_rebalance,
         "enable_encryption": enable_encryption,
         "encryption_password": encryption_password,
@@ -537,12 +544,11 @@ def params_from_base_suite_setup(request):
         "hide_product_version": hide_product_version
     }
 
-    if create_db_per_suite:
-        for cbl_db, db_obj, base_url in zip(cbl_db_list, db_obj_list, base_url_list):
-            if not no_db_delete:
-                log_info("Deleting the database {} at the suite teardown".format(db_obj.getName(cbl_db)))
-                time.sleep(2)
-                db_obj.deleteDB(cbl_db)
+    for cbl_db, db_obj, base_url in zip(cbl_db_obj_list, testkit_db_obj_list, base_url_list):
+        if not no_db_delete:
+            log_info("Deleting the database {} at the suite teardown".format(db_obj.getName(cbl_db)))
+            time.sleep(2)
+            db_obj.deleteDB(cbl_db)
 
     # Flush all the memory contents on the server app
     for base_url, testserver in zip(base_url_list, testserver_list):
@@ -552,4 +558,5 @@ def params_from_base_suite_setup(request):
         if not use_local_testserver:
             log_info("Stopping the test server")
             testserver.stop()
+
     clear_resources_pngs()

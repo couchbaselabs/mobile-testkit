@@ -232,6 +232,7 @@ def test_bucket_shadow_low_revs_limit(params_from_base_test_setup):
 @pytest.mark.bucketshadow
 @pytest.mark.channel
 @pytest.mark.basicauth
+@pytest.mark.oscertify
 def test_bucket_shadow_multiple_sync_gateways(params_from_base_test_setup):
 
     cluster_config = params_from_base_test_setup["cluster_config"]

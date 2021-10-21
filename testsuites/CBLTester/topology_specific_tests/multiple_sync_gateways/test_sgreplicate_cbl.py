@@ -2136,6 +2136,7 @@ def test_sg_replicate_custom_conflict_resolve(params_from_base_test_setup, setup
     sg1.restart(config=temp_sg_config, cluster_config=cluster_config)
     # 6. start push_pull replication with one shot with custom conflict resovler
     sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id, read_flag=True, write_flag=True)
+    time.sleep(30)  # To avoid inconsistent failure when replication did not complete
     # 7. if  local_wins : docs updated on sg1 gets replicated to sg2
     # if  remote_wins : docs updated on sg2 gets replicated to sg1
     # Verify docs created in cbl2
@@ -2238,8 +2239,8 @@ def test_sg_replicate_doc_resurrection(params_from_base_test_setup, setup_custom
     # 6. Delete the doc on cbl1/sdk(data-bucket) and recreate the doc with same doc id
     cbl_doc_ids1 = db.getDocIds(cbl_db1)
     random_doc_id = random.choice(cbl_doc_ids1)
-    doc_body = document.create_doc(doc_id=random_doc_id, content="testing-doc-resurrec", channels=channels1)
     if doc_delete_source == "cbl":
+        doc_body = document.create_doc(doc_id=random_doc_id, content="testing-doc-resurrec", channels=channels1, cbl=True)
         if delete_sgw_cluster == "sgw1":
             cbl_database = cbl_db1
         else:
@@ -2248,6 +2249,7 @@ def test_sg_replicate_doc_resurrection(params_from_base_test_setup, setup_custom
         mutable_doc1 = documentObj.create(random_doc_id, doc_body)
         db.saveDocument(cbl_database, mutable_doc1)
     else:
+        doc_body = document.create_doc(doc_id=random_doc_id, content="testing-doc-resurrec", channels=channels1)
         if delete_sgw_cluster == "sgw1":
             cbs_bucket = bucket[0]
         else:

@@ -12,6 +12,7 @@ from keywords.remoteexecutor import RemoteExecutor
 from keywords.SyncGateway import wait_until_docs_imported_from_server
 from keywords.couchbaseserver import get_server_version
 from utilities.cluster_config_utils import get_cluster
+from utilities.cluster_config_utils import load_cluster_config_json
 
 
 @pytest.mark.syncgateway
@@ -28,6 +29,7 @@ def test_userdefind_collections(params_from_base_test_setup):
     """
 
     cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_platform = params_from_base_test_setup["sg_platform"]
     sg_conf_name = 'sync_gateway_default_functional_tests'
     mode = "cc"
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
@@ -49,12 +51,17 @@ def test_userdefind_collections(params_from_base_test_setup):
     num_sdk_docs = 10
 
     server_version = get_server_version(cbs_ip, cbs_ssl=ssl_enabled)
-    print("server version is ", server_version)
     if not xattrs_enabled or server_version < "7.0.0":
         pytest.skip('This test require --xattrs flag or server version 7.0 and up')
     cluster = Cluster(config=cluster_config)
     cluster.reset(sg_config_path=sg_conf)
-    remote_executor = RemoteExecutor(cluster.servers[0].host)
+    if sg_platform == "windows" or "macos" in sg_platform:
+        json_cluster = load_cluster_config_json(cluster_config)
+        sghost_username = json_cluster["sync_gateways:vars"]["ansible_user"]
+        sghost_password = json_cluster["sync_gateways:vars"]["ansible_password"]
+        remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip, sg_platform, sghost_username, sghost_password)
+    else:
+        remote_executor = RemoteExecutor(cluster.servers[0].host)
 
     # 1. Create docs via sdk with and without attachments on default collections
     if ssl_enabled and cluster.ipv6:
