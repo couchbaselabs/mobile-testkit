@@ -57,7 +57,7 @@ def test_basic_replication_with_encryption(params_from_base_test_setup):
     channels_sg = ["ABCD"]
     username = "autotest"
     password = "password"
-
+    # 1. Have SG and CBL up and running
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
 
@@ -69,7 +69,7 @@ def test_basic_replication_with_encryption(params_from_base_test_setup):
     mutable = dictionary.toMutableDictionary(doc_body)
     encryptable = ReplicatorCallback(base_url)
 
-    # Create encrypted value
+    # 2. Create a simple document with encryption property (String, int, Double, Float, dict , Array, and Dict)
     dict2 = dictionary.toMutableDictionary(
         {"balance": "$2,393.65", "picture": "http://placehold.it/32x32", "email": "ofeliasears@imageflow.com",
          "phone": "+1 (939) 542-2185"})
@@ -100,7 +100,8 @@ def test_basic_replication_with_encryption(params_from_base_test_setup):
     # Create an encryptor for replicator
     encryptor = encryptable.createEncryptor("xor", "testkit")
 
-    # Configure replication with push/pull
+    # 3. Start the replicator and make sure documents are
+    #     replicated on SG. Verify encrypted fields and Verify data is encrypted.
     replicator = Replication(base_url)
     sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg)
     session, replicator_authenticator, repl = replicator.create_session_configure_replicate(base_url, sg_admin_url,
@@ -124,10 +125,11 @@ def test_basic_replication_with_encryption(params_from_base_test_setup):
     cbl_doc_count = db.getCount(cbl_db)
     assert len(sg_docs) == cbl_doc_count, "Expected number of docs does not exist in sync-gateway after replication"
 
-    # update normal doc data  in CBL
+    # 4.  Verify Updates on the Encrypted doc on CBL
     db.update_bulk_docs(database=cbl_db, number_of_updates=number_of_updates)
     cbl_doc_ids = db.getDocIds(cbl_db)
     cbl_db_docs = db.getDocuments(cbl_db, cbl_doc_ids)
+
     # Update encrypted field data in the CBL DOC
     for doc in cbl_db_docs:
         doc_body = cbl_db_docs[doc]
@@ -137,13 +139,14 @@ def test_basic_replication_with_encryption(params_from_base_test_setup):
         doc_body_new = dictionary.toMap(mutable)
         updated_docs = {doc: doc_body_new}
         db.updateDocuments(cbl_db, updated_docs)
-
+    # 5.  Start the replicator and verify the docs
     for doc in cbl_doc_ids:
         assert cbl_db_docs[doc]["updates-cbl"] == number_of_updates, "updates-cbl did not get updated"
 
     replicator.wait_until_replicator_idle(repl)
 
-    # Delete all documents Verify that docs with encrypted fields are deleted c
+    # 6. Verify Delete on the Encrypted document on CBL and replicate
+    # Delete all documents Verify that docs with encrypted fields are deleted.
     db.cbl_delete_bulk_docs(cbl_db)
     cbl_doc_ids = db.getDocIds(cbl_db)
     cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
