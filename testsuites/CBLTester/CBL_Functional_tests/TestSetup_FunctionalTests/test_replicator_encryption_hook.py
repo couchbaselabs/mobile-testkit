@@ -131,6 +131,7 @@ def test_basic_replication_with_encryption(params_from_base_test_setup):
     cbl_db_docs = db.getDocuments(cbl_db, cbl_doc_ids)
 
     # Update encrypted field data in the CBL DOC
+    # 5.  Start the replicator and verify the docs
     for doc in cbl_db_docs:
         doc_body = cbl_db_docs[doc]
         mutable = dictionary.toMutableDictionary(doc_body)
@@ -139,7 +140,7 @@ def test_basic_replication_with_encryption(params_from_base_test_setup):
         doc_body_new = dictionary.toMap(mutable)
         updated_docs = {doc: doc_body_new}
         db.updateDocuments(cbl_db, updated_docs)
-    # 5.  Start the replicator and verify the docs
+
     for doc in cbl_doc_ids:
         assert cbl_db_docs[doc]["updates-cbl"] == number_of_updates, "updates-cbl did not get updated"
 
