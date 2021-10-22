@@ -4104,7 +4104,6 @@ def test_replication_with_custom_retries(params_from_base_test_setup, num_of_doc
     if type == "pull":
         sg_docs = sg_client.add_docs(url=sg_url, db=sg_db, number=num_of_docs, id_prefix="sg_doc", channels=channels_sg,
                                      auth=session)
-        print(sg_docs)
     else:
         db.create_bulk_docs(num_of_docs, "cbl-replicator-retries", db=cbl_db, channels=channels_sg)
 
