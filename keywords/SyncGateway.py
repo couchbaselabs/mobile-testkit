@@ -437,7 +437,7 @@ class SyncGateway(object):
             raise ProvisioningError("Starting a Sync Gateway requires a config")
 
         if get_sg_version(cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config):
-            playbook_vars, db_config_json, _ = c_cluster.setup_server_and_sgw(config, bucket_creation=False, bucket_list=bucket_list)
+            playbook_vars, db_config_json, sgw_config_data = c_cluster.setup_server_and_sgw(config, bucket_creation=False, bucket_list=bucket_list)
         else:
             config_path = os.path.abspath(config)
             sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
@@ -615,10 +615,11 @@ class SyncGateway(object):
             )
         if status != 0:
             raise ProvisioningError("Could not start sync_gateway")
-        else:
+        """else:
             if get_sg_version(cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config):
                 # Now create rest API for all database configs
-                send_dbconfig_as_restCall(db_config_json, c_cluster.sync_gateways)
+                db_config_json = ""
+                send_dbconfig_as_restCall(db_config_json, c_cluster.sync_gateways, sgw_config_data) """
 
     def stop_sync_gateways(self, cluster_config, url=None):
         """ Stop sync gateways in a cluster. If url is passed, shut down
@@ -1444,7 +1445,7 @@ def replace_xattrs_sync_func_in_config(sg_config, channel, enable_xattrs_key=Tru
         channel(meta.xattrs.""" + channel + """);
     }
     }` """
-    temp_sg_config, _ = copy_sgconf_to_temp(sg_config, mode)
+    temp_sg_config, _, _ = copy_sgconf_to_temp(sg_config, mode)
     if enable_xattrs_key:
         user_xattrs_string = """ "user_xattr_key": "{}", """.format(channel)
     else:
