@@ -411,9 +411,14 @@ class Cluster:
 
         log_info(">>> Starting sync_gateway with configuration: {}".format(cpc_config_path_full))
 
+        # Extracing sgw config from sgw config file
         with open(config_path_full, "r") as config:
             sgw_config_data = config.read()
 
+        # Extracting cluster from cluster config
+        with open("{}.json".format(self._cluster_config)) as f:
+            cluster = json.loads(f.read())
+        
         server_port = ""
         server_scheme = "couchbase"
         couchbase_server_primary_node = add_cbs_to_sg_config_server_field(self._cluster_config)
@@ -451,6 +456,7 @@ class Cluster:
         server_tls_skip_verify_var = ""
         disable_tls_server_var = ""
         disable_admin_auth_var = ""
+        webhook_ip_var = cluster["webhook_ip"][0]["ip"]
 
         """# Start sync-gateway
         playbook_vars = {
@@ -627,7 +633,8 @@ class Cluster:
             delta_sync=delta_sync_var,
             server_tls_skip_verify=server_tls_skip_verify_var,
             disable_tls_server=disable_tls_server_var,
-            disable_admin_auth=disable_admin_auth_var
+            disable_admin_auth=disable_admin_auth_var,
+            webhook_ip=webhook_ip_var
         )
         print("sgw config data after the template is ", sgw_config_data)
         """sgw_db_config = seperate_sgw_and_db_config(sgw_config_data)
@@ -671,7 +678,8 @@ class Cluster:
             "delta_sync": delta_sync_var,
             "revs_limit": revs_limit_var,
             "server_tls_skip_verify": server_tls_skip_verify_var,
-            "disable_admin_auth": disable_admin_auth_var
+            "disable_admin_auth": disable_admin_auth_var,
+            "webhook_ip": webhook_ip_var
         }
         """ if database_config == "":
             db_config_json = {}
