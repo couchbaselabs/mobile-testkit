@@ -1648,7 +1648,10 @@ def verify_doc_replication_rejection(liteserv_platform, log_file, test_cbllog):
     if "-msft" in liteserv_platform or liteserv_platform == "uwp":
         delimiter = "\\"
     log_dir = log_file.split(delimiter)[-1]
-    log_full_path_dir = "/tmp/cbl-logs/"
+    if "c-ubuntu" or "c-debian" or "c-rasbian" or "c-macosx" in liteserv_platform:
+        log_full_path_dir = "/tmp/"
+    else:
+        log_full_path_dir = "/tmp/cbl-logs/"
     os.mkdir(log_full_path_dir)
     log_info("\n Collecting logs")
     zip_data = test_cbllog.get_logs_in_zip()
