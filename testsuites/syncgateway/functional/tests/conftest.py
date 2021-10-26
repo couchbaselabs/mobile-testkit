@@ -154,7 +154,7 @@ def pytest_addoption(parser):
                      help="If set, community edition will get picked up , default is enterprise", default=False)
 
     parser.addoption("--prometheus-enable",
-                     action="store",
+                     action="store_true",
                      help="prometheus-enable:Start prometheus metrics on SyncGateway")
 
     parser.addoption("--hide-product-version",
@@ -485,7 +485,6 @@ def params_from_base_suite_setup(request):
         sg_url = cluster_topology["sync_gateways"][0]["public"]
         sg_ip = host_for_url(sg_url)
         prometheus.start_prometheus(sg_ip, sg_ssl)
-
     yield {
         "sync_gateway_version": sync_gateway_version,
         "disable_tls_server": disable_tls_server,
@@ -542,6 +541,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     sg_ce = params_from_base_suite_setup["sg_ce"]
     sg_config = params_from_base_suite_setup["sg_config"]
     cbs_ce = params_from_base_suite_setup["cbs_ce"]
+    prometheus_enabled = request.config.getoption("--prometheus-enable")
 
     test_name = request.node.name
     c = cluster.Cluster(cluster_config)
@@ -601,7 +601,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "sg_ce": sg_ce,
         "cbs_ce": cbs_ce,
         "sg_url": sg_url,
-        "sg_admin_url": sg_admin_url
+        "sg_admin_url": sg_admin_url,
+        "prometheus_enabled": prometheus_enabled
     }
 
     # Code after the yield will execute when each test finishes
