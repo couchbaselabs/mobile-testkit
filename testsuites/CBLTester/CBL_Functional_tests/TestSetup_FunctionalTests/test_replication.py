@@ -2967,6 +2967,8 @@ def test_resetCheckpointWithPurge(params_from_base_test_setup, replication_type,
     # Reset checkpoint and do replication again from sg to cbl
     # Verify all docs are back
     replicator.resetCheckPoint(repl)
+    if liteserv_version < "3.0":
+        replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
     assert db.getCount(cbl_db) == num_of_docs, "Docs that got purged in CBL did not got back after resetCheckpoint"
     replicator.stop(repl)
