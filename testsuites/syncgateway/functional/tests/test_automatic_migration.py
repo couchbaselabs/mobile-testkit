@@ -54,9 +54,9 @@ def test_automatic_upgrade(params_from_base_test_setup):
     Test cases link on google drive : https://docs.google.com/spreadsheets/d/19kJQ4_g6RroaoG2YYe0X11d9pU0xam-lb-n23aPLhO4/edit#gid=0
     "Same as above except Step # 2
     After step #2. Add dynamic Config
-    Verify on _config end point that default values of dynamic config is overried on bucket . 
+    Verify on _config end point that default values of dynamic config is overried on bucket .
     ""As part of the steps
-    "" 
+    ""
 
 
     ""1. Have prelithium config with configs like
@@ -82,7 +82,7 @@ def test_automatic_upgrade(params_from_base_test_setup):
                 """"bucket"""":""""data-bucket"""",
                 """"bucket_op_timeout_ms"""": 60000
             }
-    3. Add dynamic config like log_file_path or redaction_level on sgw config 
+    3. Add dynamic config like log_file_path or redaction_level on sgw config
     4. Upgrade SGW to lithium and verify new version of SGW config
     5. Verify all the above configs converted to new format.
         Default config for dynamic config like logging should have default values on _config rest end point
@@ -153,7 +153,7 @@ def test_automatic1_upgrade_with_replication_config(params_from_base_test_setup,
     """
     @summary :
     Test cases link on google drive : https://docs.google.com/spreadsheets/d/19kJQ4_g6RroaoG2YYe0X11d9pU0xam-lb-n23aPLhO4/edit#gid=0
-    ""1.Have prelithium config 
+    ""1.Have prelithium config
     2. Have SGW config with replication config on
     3. Automatic upgrade
     4. Verify replication are migrated and stored in bucket
@@ -213,12 +213,12 @@ def test_automatic1_upgrade_with_replication_config(params_from_base_test_setup,
     (False),
     # (True)
 ])
-def test_automatic_migration_with_server_connection_fails(params_from_base_test_setup, sgw_version_reset, persistent_config):
+def test_automatic_migration_with_server_connection_fails(params_from_base_test_setup, persistent_config):
     """
     @summary :
     Test cases link on google drive : https://docs.google.com/spreadsheets/d/19kJQ4_g6RroaoG2YYe0X11d9pU0xam-lb-n23aPLhO4/edit#gid=0
-    ""1.Have prelithium config 
-    2. Once SGW is connected successfully to the server, 
+    ""1.Have prelithium config
+    2. Once SGW is connected successfully to the server,
     3. stop the server
     4. upgrade to 3.0 and above
     5. Have SGW failed to start with server reconnection failure
@@ -227,11 +227,11 @@ def test_automatic_migration_with_server_connection_fails(params_from_base_test_
 
     cluster_conf = params_from_base_test_setup['cluster_config']
     sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
-    sync_gateway_previous_version = sgw_version_reset['sync_gateway_previous_version']
-    mode = sgw_version_reset['mode']
-    sg_obj = sgw_version_reset["sg_obj"]
-    cluster_conf = sgw_version_reset["cluster_conf"]
-    sg_conf_name = sgw_version_reset["sg_conf_name"]
+    sync_gateway_previous_version = params_from_base_test_setup['sync_gateway_previous_version']
+    mode = params_from_base_test_setup['mode']
+    cluster_conf = params_from_base_test_setup["cluster_config"]
+    sg_conf_name = "sync_gateway_default"
+    sg_obj = SyncGateway()
     # sg_conf_name = 'listener_tests/listener_tests_with_replications'
 
     # sg_platform = params_from_base_test_setup['sg_platform']
@@ -249,10 +249,11 @@ def test_automatic_migration_with_server_connection_fails(params_from_base_test_
     sg1 = cbs_cluster.sync_gateways[0]
     cluster_util = ClusterKeywords(cluster_conf)
     topology = cluster_util.get_cluster_topology(cluster_conf)
-    sync_gateways = topology["sync_gateways"]
+    # sync_gateways = topology["sync_gateways"]
     coucbase_servers = topology["couchbase_servers"]
-    
-    cbs_cluster.reset(sg_config_path=sg_conf)
+
+    # cbs_cluster.reset(sg_config_path=sg_conf)
+    sg_obj.install_sync_gateway(cluster_conf, sync_gateway_previous_version, sg_conf, skip_bucketcreation=True)
     # sg1_config = sg1.admin.get_config()
 
     # 3. stop the server
@@ -263,12 +264,13 @@ def test_automatic_migration_with_server_connection_fails(params_from_base_test_
     # sg_obj.redeploy_sync_gateway_config(cluster_config=cluster_conf, sg_conf=sg_conf, sync_gateway_version=sync_gateway_version, enable_import=True, deploy_only=True)
     # 3 . Upgrade SGW to lithium and have Automatic upgrade
     with concurrent.futures.ProcessPoolExecutor() as ex:
-        ex.submit(sg_obj.upgrade_sync_gateways, sync_gateways, sync_gateway_previous_version, sync_gateway_version, sg_conf, cluster_conf)
+        ex.submit(sg_obj.upgrade_sync_gateways, cluster_config=cluster_conf, sg_conf=sg_conf, sync_gateway_version=sync_gateway_version)
+        # ex.submit(sg_obj.upgrade_sync_gateways, sync_gateways, sync_gateway_previous_version, sync_gateway_version, sg_conf, cluster_conf)
         time.sleep(120)
         server.start()
     # 4. Verify replication are migrated and stored in bucket
 
-    sg_dbs = sg1.admin.get_dbs_from_config()
+    # sg_dbs = sg1.admin.get_dbs_from_config()
 
 
 @pytest.fixture(scope="function")
@@ -283,15 +285,20 @@ def setup_env_variables(params_from_base_test_setup):
         "sg_hostname": sg_hostname,
         "ansible_runner": ansible_runner
     }
-    status = ansible_runner.run_ansible_playbook(
+    """status = ansible_runner.run_ansible_playbook(
         "remove-env-variables-for-service.yml",
         subset=sg_hostname
     )
-    assert status == 0, "ansible failed to remove systemd environment variables directory"
+    assert status == 0, "ansible failed to remove systemd environment variables directory" """
 
 
 @pytest.mark.syncgateway
-def test_automatic_migration_fails_with_directory_permissions(params_from_base_test_setup, sgw_version_reset, setup_env_variables):
+@pytest.mark.parametrize("nonWritable_directory_permissions", [
+    # (False),
+    (True)
+])
+@pytest.mark.syncgateway
+def test_automatic_migration_fails_with_directory_permissions(params_from_base_test_setup, sgw_version_reset, setup_env_variables, nonWritable_directory_permissions):
     """
     @summary :
     Test cases link on google drive : https://docs.google.com/spreadsheets/d/19kJQ4_g6RroaoG2YYe0X11d9pU0xam-lb-n23aPLhO4/edit#gid=0
@@ -322,15 +329,15 @@ def test_automatic_migration_fails_with_directory_permissions(params_from_base_t
 
     # 2. Have SGW config with replication config on
     cbs_cluster = Cluster(config=cluster_conf)
-    sg1 = cbs_cluster.sync_gateways[0]
+    # sg1 = cbs_cluster.sync_gateways[0]
     # sg_obj.install_sync_gateway(cluster_conf, sync_gateway_previous_version, temp_sg_config)
     cluster_util = ClusterKeywords(cluster_conf)
     topology = cluster_util.get_cluster_topology(cluster_conf)
     sync_gateways = topology["sync_gateways"]
-    coucbase_servers = topology["couchbase_servers"]
-    cbs_cluster.reset(sg_config_path=sg_conf)
+    # coucbase_servers = topology["couchbase_servers"]
+    # cbs_cluster.reset(sg_config_path=sg_conf)
     # sg_hostname = sg1.hostname
-    
+
     # 3. Deploy the sgw config on the directory which sync gateway user does not have permissions
     if sg_platform == "windows":
         sgw_config_dir = "C:\\\\tmp\\\\sgw_directory"
@@ -363,8 +370,12 @@ def test_automatic_migration_fails_with_directory_permissions(params_from_base_t
         subset=sg_hostname
     )
     remote_executor = RemoteExecutor(cbs_cluster.sync_gateways[0].ip)
+    remote_executor.execute("rm -rf {}".format(sgw_config_dir))
     remote_executor.execute("mkdir -p {}".format(sgw_config_dir))
-    remote_executor.execute("sudo chmod 721 -R {}".format(sgw_config_dir))
+    if nonWritable_directory_permissions:
+        remote_executor.execute("sudo chmod 555 -R {}".format(sgw_config_dir))
+    else:
+        remote_executor.execute("sudo chmod 777 -R {}".format(sgw_config_dir))
     data = load_sync_gateway_config(sg_conf, topology["couchbase_servers"][0], cluster_conf)
     create_files_with_content(json.dumps(data), sg_platform, sg_hostname, "sync_gateway.json", cluster_conf, path=sgw_config_path)
     # sg1_config = sg1.admin.get_config()
@@ -372,8 +383,8 @@ def test_automatic_migration_fails_with_directory_permissions(params_from_base_t
     # 3 . Upgrade SGW to lithium and have Automatic upgrade
     sg_obj.upgrade_sync_gateway(sync_gateways, sync_gateway_previous_version, sync_gateway_version, sg_conf, cluster_conf)
 
-    # 4. Verify replication are migrated and stored in bucket
-    
+    """# 4. Verify replication are migrated and stored in bucket
+
     sg_dbs = sg1.admin.get_dbs_from_config()
     active_tasks = sg1.admin.get_sgreplicate2_active_tasks(sg_dbs[0])
-    assert len(active_tasks == 1, "replication tasks did not migrated successfully")
+    assert len(active_tasks == 1, "replication tasks did not migrated successfully") """

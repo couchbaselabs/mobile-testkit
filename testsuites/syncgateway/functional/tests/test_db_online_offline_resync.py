@@ -121,13 +121,22 @@ def test_bucket_online_offline_resync_sanity(params_from_base_test_setup, sg_con
 
     # Take "db" offline
     sg_client = MobileRestClient()
-    status = sg_client.take_db_offline(cluster_conf=cluster_conf, db="db")
-    assert status == 0
 
     sg_restart_config = sync_gateway_config_path_for_mode("bucket_online_offline/db_online_offline_access_restricted", test_mode)
-    restart_status = cluster.sync_gateways[0].restart(sg_restart_config,
-                                                      cluster_config=cluster_conf)
-    assert restart_status == 0
+
+    if sync_gateway_version < "3.0.0":
+        status = sg_client.take_db_offline(cluster_conf=cluster_conf, db="db")
+        assert status == 0
+        restart_status = cluster.sync_gateways[0].restart(sg_restart_config,
+                                                          cluster_config=cluster_conf)
+        assert restart_status == 0
+    else:
+        # admin.delete_sync_func(db="db")
+        with open(sg_restart_config) as f:
+            sg_config_json = f.read()
+        sync_func = sg_config_json.split("`")[1]
+        sg_db = "db"
+        admin.create_sync_func(sg_db, sync_func)
     retries = 0
     admin.take_db_offline(db="db")
     if sync_gateway_version < "3.0.0":
@@ -282,13 +291,20 @@ def test_bucket_online_offline_resync_with_online(params_from_base_test_setup, s
 
     # Take "db" offline
     sg_client = MobileRestClient()
-    status = sg_client.take_db_offline(cluster_conf=cluster_conf, db="db")
-    assert status == 0
-
     sg_restart_config = sync_gateway_config_path_for_mode("bucket_online_offline/db_online_offline_access_restricted", test_mode)
-    restart_status = cluster.sync_gateways[0].restart(sg_restart_config,
-                                                      cluster_config=cluster_conf)
-    assert restart_status == 0
+    if sync_gateway_version < "3.0.0":
+        status = sg_client.take_db_offline(cluster_conf=cluster_conf, db="db")
+        assert status == 0
+        restart_status = cluster.sync_gateways[0].restart(sg_restart_config,
+                                                          cluster_config=cluster_conf)
+        assert restart_status == 0
+    else:
+        with open(sg_restart_config) as f:
+            sg_config_json = f.read()
+        sync_func = sg_config_json.split("`")[1]
+        sg_db = "db"
+        admin.create_sync_func(sg_db, sync_func)
+        status = sg_client.take_db_offline(cluster_conf=cluster_conf, db="db")
 
     pool = ThreadPool(processes=1)
 
@@ -469,13 +485,21 @@ def test_bucket_online_offline_resync_with_offline(params_from_base_test_setup, 
 
     # Take "db" offline
     sg_client = MobileRestClient()
-    status = sg_client.take_db_offline(cluster_conf=cluster_conf, db="db")
-    assert status == 0
-
     sg_restart_config = sync_gateway_config_path_for_mode("bucket_online_offline/db_online_offline_access_restricted", test_mode)
-    restart_status = cluster.sync_gateways[0].restart(sg_restart_config,
-                                                      cluster_config=cluster_conf)
-    assert restart_status == 0
+
+    if sync_gateway_version < "3.0.0":
+        status = sg_client.take_db_offline(cluster_conf=cluster_conf, db="db")
+        assert status == 0
+        restart_status = cluster.sync_gateways[0].restart(sg_restart_config,
+                                                          cluster_config=cluster_conf)
+        assert restart_status == 0
+    else:
+        with open(sg_restart_config) as f:
+            sg_config_json = f.read()
+        sync_func = sg_config_json.split("`")[1]
+        sg_db = "db"
+        admin.create_sync_func(sg_db, sync_func)
+        status = sg_client.take_db_offline(cluster_conf=cluster_conf, db="db")
 
     pool = ThreadPool(processes=1)
     log_info("Restarted SG....")

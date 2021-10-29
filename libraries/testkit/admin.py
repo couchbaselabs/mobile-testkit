@@ -351,4 +351,16 @@ class Admin:
         resp.raise_for_status()
         return resp.status_code
 
+    def delete_sync_func(self, db):
+        sync_headers = {"Content-Type": "application/javascript"}
+        resp = requests.delete("{0}/{1}/_config/sync".format(self.admin_url, db), headers=sync_headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False)
+        log.info("PUT {}".format(resp.url))
+        resp.raise_for_status()
+        return resp.status_code
+
+    def create_imp_fltr_func(self, db, imp_fltr_func):
+        resp = requests.put("{0}/{1}/_config/import_filter".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, data=imp_fltr_func, verify=False)
+        log.info("PUT {}".format(resp.url))
+        resp.raise_for_status()
+        return resp.status_code
 

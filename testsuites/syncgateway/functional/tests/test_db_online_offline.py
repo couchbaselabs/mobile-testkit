@@ -556,6 +556,7 @@ def test_offline_true_config_bring_online(params_from_base_test_setup, sg_conf_n
 
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
 
     if mode == "di":
         pytest.skip("Offline tests not supported in Di mode -- see https://github.com/couchbase/sync_gateway/issues/2423#issuecomment-300841425")
@@ -585,6 +586,9 @@ def test_offline_true_config_bring_online(params_from_base_test_setup, sg_conf_n
     assert status == 0
 
     # all db endpoints should succeed
+    if sync_gateway_version >= "3.0.0":
+        admin = Admin(cluster.sync_gateways[0])
+        admin.register_user(target=cluster.sync_gateways[0], db="db", name="seth", password="password", channels=["*", "ABC"])
     errors = rest_scan(cluster.sync_gateways[0], db="db", online=True, num_docs=num_docs, user_name="seth", channels=["ABC"])
     assert len(errors) == 0
 

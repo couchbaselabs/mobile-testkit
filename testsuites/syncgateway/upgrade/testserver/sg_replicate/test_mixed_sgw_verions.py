@@ -144,11 +144,11 @@ def test_replication_allowconflictsFalse(params_from_base_test_setup):
     # sg_conf_name2 = "xattrs/no_import"
 
     cluster_conf = params_from_base_test_setup['cluster_config']
-    sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
+    # sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
     sync_gateway_upgraded_version = params_from_base_test_setup['sync_gateway_upgraded_version']
     mode = params_from_base_test_setup['mode']
     sg_platform = params_from_base_test_setup['sg_platform']
-    xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+    # xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
     username = "autotest"
     password = "password"
     sg_channels = ["mixed_versions"]
@@ -166,11 +166,11 @@ def test_replication_allowconflictsFalse(params_from_base_test_setup):
 
     # 2. 2 node as pre-lithium and 2 nodes on lithium
     sg_obj = SyncGateway()
-    cluster_util = ClusterKeywords(cluster_conf)
+    # cluster_util = ClusterKeywords(cluster_conf)
     # cbs_url = cluster_topology['couchbase_servers'][0]
     # cbs_host = host_for_url(cbs_url)
-    topology = cluster_util.get_cluster_topology(cluster_conf, lb_enable=False)
-    sync_gateways = topology["sync_gateways"]
+    # topology = cluster_util.get_cluster_topology(cluster_conf, lb_enable=False)
+    # sync_gateways = topology["sync_gateways"]
     # sgw_list1 = sync_gateways[2:]
     sg1 = cbs_cluster.sync_gateways[0]
     sg2 = cbs_cluster.sync_gateways[1]

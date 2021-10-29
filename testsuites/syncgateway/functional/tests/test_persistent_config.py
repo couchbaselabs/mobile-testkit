@@ -31,7 +31,7 @@ def test_default_config_values(params_from_base_test_setup):
     Covered #30, #7
     "1. Set up sgw node in the SGW cluster
     2. Have default value of default_persistent_config value on SGW nodes.
-    3. Have min bootstrap configuration without static system config with differrent config 
+    3. Have min bootstrap configuration without static system config with differrent config
     4. Verify SGW node connect to each bucket and each one has differrnent configure
     5. Verify _config rest end point and validate that static system config had default value
     6. Now have bootstrap and static config and verify default values of dynamic config
@@ -61,7 +61,7 @@ def test_default_config_values(params_from_base_test_setup):
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode, cpc=True)
     sg_conf2 = sync_gateway_config_path_for_mode(sg_conf_name2, mode, cpc=True)
 
-    # sg_client = MobileRestClient() 
+    # sg_client = MobileRestClient()
     sg_obj = SyncGateway()
     cluster_util = ClusterKeywords(temp_cluster_config)
     topology = cluster_util.get_cluster_topology(temp_cluster_config)
@@ -122,7 +122,7 @@ def test_invalid_configs(params_from_base_test_setup, sg_conf_name):
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
-    # sg_client = MobileRestClient() 
+    # sg_client = MobileRestClient()
     sg_obj = SyncGateway()
     cluster_util = ClusterKeywords(cluster_conf)
     topology = cluster_util.get_cluster_topology(cluster_conf)
@@ -161,8 +161,8 @@ def test_sgw_command_line(params_from_base_test_setup):
     1. Set up sgw node in the SGW cluster
     2. Have default_persistent_config value on SGW nodes.
     3. Have min bootstrap configuration
-    4. Start  sgw node by passing command line params by passing server, bucket info 
-    5. Verify SGW node connect to each bucket 
+    4. Start  sgw node by passing command line params by passing server, bucket info
+    5. Verify SGW node connect to each bucket
     5. Verify _config rest end point and validate that params passed for bootstrap, static values are matching with command line params"
     """
 
@@ -172,7 +172,7 @@ def test_sgw_command_line(params_from_base_test_setup):
     cluster_conf = params_from_base_test_setup['cluster_config']
     sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
     mode = params_from_base_test_setup['mode']
-    sg_platform = params_from_base_test_setup['sg_platform']
+    # sg_platform = params_from_base_test_setup['sg_platform']
     """ username = "autotest"
     password = "password"
     sg_channels = ["non_cpc"] """
@@ -207,7 +207,7 @@ def test_sgw_command_line(params_from_base_test_setup):
     cacertpath = ""
     certpath = ""
     configServer = ""
-    dbname = "" 
+    dbname = ""
     defaultLogFilePath = "/tmp/sg_logs"
     disable_persistent_config = False
     keypath = ""
@@ -274,6 +274,7 @@ def test_invalid_database_credentials(params_from_base_test_setup):
     time.sleep(15)
     sg1 = cbs_cluster.sync_gateways[0]
     sg2 = cbs_cluster.sync_gateways[1]
+    sg3 = cbs_cluster.sync_gateways[2]
 
     # 3. Add database config on node1 with sg_db1
     # revs_limit = 20

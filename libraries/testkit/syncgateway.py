@@ -390,11 +390,11 @@ class SyncGateway:
             extra_vars=playbook_vars,
             subset=self.hostname
         )
-        if status == 0:
+        """ if status == 0:
             if get_sg_version(self.cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(self.cluster_config):
                 # Now create rest API for all database configs
                 sgw_list = [self]
-                send_dbconfig_as_restCall(db_config_json, sgw_list, sgw_config_data)
+                send_dbconfig_as_restCall(db_config_json, sgw_list, sgw_config_data) """
         return status
 
     def verify_launched(self):
@@ -749,7 +749,7 @@ class SyncGateway:
         couchbase_server_primary_node = get_cbs_primary_nodes_str(cluster_config, couchbase_server_primary_node)
         # Assign default values to all configs
         x509_auth_var = False
-        password_var = "password"
+        password_var = ""
         username_playbook_var = ""
         tls_var = ""
         sslcert_var = ""
@@ -795,9 +795,9 @@ class SyncGateway:
             sg_home_directory = "/home/sync_gateway"
 
         if is_x509_auth(cluster_config):
-            certpath_var = '"certpath": "{}/certs/chain.pem",'.format(sg_home_directory)
-            keypath_var = '"keypath": "{}/certs/pkey.key",'.format(sg_home_directory)
-            cacertpath_var = '"cacertpath": "{}/certs/ca.pem",'.format(sg_home_directory)
+            certpath_var = '"x509_cert_path": "{}/certs/chain.pem",'.format(sg_home_directory)
+            keypath_var = '"x509_key_path": "{}/certs/pkey.key",'.format(sg_home_directory)
+            cacertpath_var = '"ca_cert_path": "{}/certs/ca.pem",'.format(sg_home_directory)
 
             if sg_platform == "windows":
                 certpath_var = certpath_var.replace("/", "\\\\")
@@ -1110,12 +1110,20 @@ def send_dbconfig_as_restCall(db_config_json, sync_gateways, sgw_config_data):
         print("db config json for sgw : ", sgw)
         sgw_db_config = db_config_json
         print("sgw_db_config.keys ", sgw_db_config.keys())
-        sync_func = None
+        # sync_func = None
+        # imp_fltr_func = None
         roles_exist = False
         users_exist = False
-        if sgw_config_data.count("`") > 1:
-            sync_func = sgw_config_data.split("`")[1]
+        """ import_filter_exist = False
+        if "\"sync\":" in sgw_config_data:
+            sync_func = sgw_config_data.split("\"sync\": `")[1]
+            sync_func = sync_func.split("`")[0]
+        if "\"import_filter\":" in sgw_config_data:
+            imp_fltr_func = sgw_config_data.split("\"import_filter\": `")[1]
+            imp_fltr_func = imp_fltr_func.split("`")[0]
+            print("import filter with split: ", imp_fltr_func) """
         for sg_db in sgw_db_config.keys():
+            
             print("sg_db of keys : ", sg_db)
             # TODO : Should look for better place to delete 'server' key if tests usese old config
             if "server" in sgw_db_config[sg_db].keys():
@@ -1138,15 +1146,31 @@ def send_dbconfig_as_restCall(db_config_json, sync_gateways, sgw_config_data):
                 users_cfg = sgw_db_config[sg_db]["users"]
                 users_exist = True
                 del sgw_db_config[sg_db]["users"]
+            """if "sync" in sgw_db_config[sg_db].keys():
+                sync_func = sgw_db_config[sg_db]["sync"]
+                print("sync cfg func after extracting from sgw_db_config: ", sync_func)
+                sync_func_exist = True
+            if "import_filter" in sgw_db_config[sg_db].keys():
+                imp_fltr_func = sgw_db_config[sg_db]["import_filter"]
+                print("import filter cfg func after extracting from sgw_db_config: ", imp_fltr_func)
+                import_filter_exist = True """
             sgw.admin.create_db(sg_db, sgw_db_config[sg_db])
-            if sync_func is not None:
-                sgw.admin.create_sync_func(sg_db, sync_func)
-            if roles_exist:
-                for role in roles_cfg:
-                    sgw.admin.create_role(sg_db, role, roles_cfg[role]['admin_channels'])
-            if users_exist:
-                for user in users_cfg:
-                    sgw.admin.register_user(sgw.ip, sg_db, user, users_cfg[user]['password'], channels=users_cfg[user]['admin_channels'], roles=users_cfg[user]['admin_roles'])
+            db_info = sgw.admin.get_db_info("db")
+            if db_info["state"] == "Online":
+                """ if sync_func_exist:
+                    sgw.admin.create_sync_func(sg_db, sync_func) """
+                if roles_exist:
+                    for role in roles_cfg:
+                        sgw.admin.create_role(sg_db, role, roles_cfg[role]['admin_channels'])
+                if users_exist:
+                    for user in users_cfg:
+                        if roles_exist:
+                            sgw.admin.register_user(sgw.ip, sg_db, user, users_cfg[user]['password'], channels=users_cfg[user]['admin_channels'], roles=users_cfg[user]['admin_roles'])
+                        else:
+                            sgw.admin.register_user(sgw.ip, sg_db, user, users_cfg[user]['password'], channels=users_cfg[user]['admin_channels'])
+                """ if import_filter_exist:
+                    sgw.admin.create_imp_fltr_func(sg_db, imp_fltr_func) """
+
             # TODO : Put back one CPC config works
             # sgw.admin.create_db_with_rest(sg_db, sgw_db_config[sg_db])
             # sgw.admin.put_db_config(sg_db, sgw_db_config[sg_db])
