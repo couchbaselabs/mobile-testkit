@@ -72,7 +72,7 @@ class CouchbaseServer:
     def __init__(self, url):
         self.url = re.sub(r'[\[\]]', '', url)
         self.cbs_ssl = False
-        self.max_retries = 5
+        self.max_retries = 10
 
         # Strip http prefix and port to store host
 
