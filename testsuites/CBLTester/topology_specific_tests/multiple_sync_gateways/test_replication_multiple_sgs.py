@@ -1,4 +1,5 @@
 import pytest
+import time
 
 from keywords.MobileRestClient import MobileRestClient
 from CBLClient.Database import Database
@@ -109,11 +110,18 @@ def test_multiple_sgs_with_differrent_revs_limit(params_from_base_test_setup, se
     repl2 = replicator.configure_and_replicate(
         source_db=cbl_db2, replicator_authenticator=replicator_authenticator2, target_url=sg2_blip_url, replication_type="push")
 
-    db.update_bulk_docs(cbl_db1, number_of_updates=35)
-    db.update_bulk_docs(cbl_db2, number_of_updates=35)
-
+    db.update_bulk_docs(cbl_db1, number_of_updates=18)
+    db.update_bulk_docs(cbl_db2, number_of_updates=18)
+    time.sleep(60)
     replicator.wait_until_replicator_idle(repl1)
     replicator.wait_until_replicator_idle(repl2)
+
+    db.update_bulk_docs(cbl_db1, number_of_updates=17)
+    db.update_bulk_docs(cbl_db2, number_of_updates=17)
+    time.sleep(60)
+    replicator.wait_until_replicator_idle(repl1)
+    replicator.wait_until_replicator_idle(repl2)
+
     replicator.stop(repl1)
     replicator.stop(repl2)
 
