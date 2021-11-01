@@ -145,7 +145,7 @@ class CouchbaseServer:
         """
 
         count = 0
-        max_retries = 5
+        max_retries = 10
         while True:
 
             if count == max_retries:
