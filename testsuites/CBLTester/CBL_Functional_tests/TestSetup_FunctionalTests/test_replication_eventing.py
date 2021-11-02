@@ -307,6 +307,7 @@ def test_replication_access_revoke_event(params_from_base_test_setup, num_of_doc
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    liteserv_version = params_from_base_test_setup["liteserv_version"]
 
     if sync_gateway_version < "2.5.0":
         pytest.skip('This test cannnot run with sg version below 2.5')
@@ -374,8 +375,14 @@ def test_replication_access_revoke_event(params_from_base_test_setup, num_of_doc
     replicator.removeReplicatorEventListener(repl_access_revoke, repl_access_revoke_change_listener)
     replicator.stop(repl_access_revoke)
     assert len(event_dict) != 0, "Replication listener didn't caught events. Check app logs for detailed info"
+
+    if liteserv_version < "3.0.0":
+        access_removed_flag = "[DocumentFlagsAccessRemoved]"
+    else:
+        access_removed_flag = "[ACCESS_REMOVED]"
+
     for doc_id in event_dict:
-        assert event_dict[doc_id]["flags"] == "2" or event_dict[doc_id]["flags"] == "[ACCESS_REMOVED]" or \
+        assert event_dict[doc_id]["flags"] == "2" or event_dict[doc_id]["flags"] == access_removed_flag or \
             event_dict[doc_id]["flags"] == "AccessRemoved", \
             'Access Revoked flag is not tagged for document. Flag value: {}'.format(event_dict[doc_id]["flags"])
 
@@ -410,6 +417,7 @@ def test_replication_delete_event(params_from_base_test_setup, num_of_docs):
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    liteserv_version = params_from_base_test_setup["liteserv_version"]
 
     if sync_gateway_version < "2.5.0":
         pytest.skip('This test cannnot run with sg version below 2.5')
@@ -476,10 +484,18 @@ def test_replication_delete_event(params_from_base_test_setup, num_of_docs):
     replicator.removeReplicatorEventListener(repl_delete, repl_delete_change_listener)
     replicator.stop(repl_delete)
     assert len(event_dict) != 0, "Replication listener didn't caught events. Check app logs for detailed info"
+
+    if liteserv_version < "3.0.0":
+        access_removed_flag = "[DocumentFlagsAccessRemoved]"
+        deleted_flag = "[DocumentFlagsDeleted]"
+    else:
+        access_removed_flag = "[ACCESS_REMOVED]"
+        deleted_flag = "[DELETED]"
+
     for doc_id in event_dict:
         flags = event_dict[doc_id]["flags"]
-        assert flags == "1" or flags == "[DELETED]" or flags == "Deleted" or \
-            flags == "[ACCESS_REMOVED]" or flags == "AccessRemoved", \
+        assert flags == "1" or flags == deleted_flag or flags == "Deleted" or \
+            flags == access_removed_flag or flags == "AccessRemoved", \
             'Deleted flag is not tagged for document. Flag value: {}'.format(event_dict[doc_id]["flags"])
 
     # Verifying if the docs, for which access has be revoked, are purged
