@@ -165,6 +165,7 @@ def test_invalid_jsfunc(params_from_base_test_setup, invalid_js_code, invalid_js
     sg_platform = params_from_base_test_setup["sg_platform"]
     sg_conf_name = "custom_sync/sync_gateway_externalize_js"
     sg_conf_reset_name = "sync_gateway_default"
+    disable_persistent_config = params_from_base_test_setup["disable_persistent_config"]
 
     if sync_gateway_version < "3.0.0":
         pytest.skip("this feature not available below 3.0.0")
@@ -191,8 +192,10 @@ def test_invalid_jsfunc(params_from_base_test_setup, invalid_js_code, invalid_js
     try:
         cluster.reset(sg_config_path=temp_sg_config)
     except Exception as ex:
-        assert "Failed to start to Sync Gateway" in str(ex), "Sync gateway did not fail with invalid js sync function"
-
+        if not disable_persistent_config:
+            assert "400 Client Error: Bad Request for url" in str(ex), "Sync gateway did not fail with invalid js sync function"
+        else:
+            assert "400 Client Error: Bad Request for url" in str(ex), "DB creation did not fail with invalid external js path"
     cluster.reset(sg_config_path=sg_conf_reset)
 
 
@@ -208,6 +211,7 @@ def test_invalid_external_jspath(params_from_base_test_setup, setup_jsserver):
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    disable_persistent_config = params_from_base_test_setup["disable_persistent_config"]
     orig_sg_conf = "sync_gateway_default_functional_tests"
     sg_conf_name = "custom_sync/sync_gateway_externalize_js"
 
@@ -227,8 +231,10 @@ def test_invalid_external_jspath(params_from_base_test_setup, setup_jsserver):
     try:
         cluster.reset(sg_config_path=temp_sg_config)
     except Exception as ex:
-        assert "Failed to start to Sync Gateway" in str(ex), "Sync gateway did not fail with invalid external js path"
-
+        if not disable_persistent_config:
+            assert "Failed to start to Sync Gateway" in str(ex), "Sync gateway did not fail with invalid external js path"
+        else:
+            assert "400 Client Error: Bad Request for url" in str(ex), "DB creation did not fail with invalid external js path"
     cluster.reset(sg_config_path=orig_sg_conf)
 
 

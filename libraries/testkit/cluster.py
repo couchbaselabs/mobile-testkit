@@ -4,6 +4,7 @@ import time
 from jinja2 import Template
 
 from requests.exceptions import ConnectionError
+from requests import HTTPError
 
 import keywords.exceptions
 from keywords.couchbaseserver import CouchbaseServer
@@ -363,7 +364,6 @@ class Cluster:
                 # Now create rest API for all database configs
                 print("db_config_json is ", db_config_json)
                 send_dbconfig_as_restCall(db_config_json, self.sync_gateways, sgw_config_data)
-
                 # if logging_config_json:
                 #     create_logging_config(logging_config_json, self.sync_gateways)
 
@@ -390,22 +390,16 @@ class Cluster:
             bucket_name_set = bucket_list
         sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
         cbs_cert_path = os.path.join(os.getcwd(), "certs")
-        # TODO : BEN suggested that read user on sgw config will change in beta refresh, comment and get back later
-        # bucket_names = get_buckets_from_sync_gateway_config(cpc_sgw_config_path, self._cluster_config)
+
         bucket_names = bucket_name_set
-        # read_bucket_user = "bucket-admin"
+        common_bucket_user = "bucket-admin"
         self.sync_gateway_config = config
 
         if bucket_creation:
             log_info(">>> Creating buckets on: {}".format(self.servers[0].url))
             log_info(">>> Creating buckets {}".format(bucket_name_set))
             self.servers[0].create_buckets(bucket_names=bucket_name_set, cluster_config=self._cluster_config, ipv6=self.ipv6)
-
-            # TODO : BEN suggested that read user on sgw config will change in beta refresh, comment and get back later
-            # Create read_bucker_user for all buckets
-            # for bucket_name in bucket_names:
-            #     self.servers[0]._create_internal_rbac_user_by_roles(bucket_name, self._cluster_config, read_bucket_user, "data_reader")
-
+            self.servers[0]._create_internal_rbac_user_by_roles('*', self._cluster_config, common_bucket_user, "mobile_sync_gateway")
             log_info(">>> Waiting for Server: {} to be in a healthy state".format(self.servers[0].url))
             self.servers[0].wait_for_ready_state()
 
@@ -418,7 +412,7 @@ class Cluster:
         # Extracting cluster from cluster config
         with open("{}.json".format(self._cluster_config)) as f:
             cluster = json.loads(f.read())
-        
+
         server_port = ""
         server_scheme = "couchbase"
         couchbase_server_primary_node = add_cbs_to_sg_config_server_field(self._cluster_config)
@@ -523,9 +517,9 @@ class Cluster:
 
         else:
             # TODO : revert back for CPC if read bucket user is back
-            # username_playbook_var = '"username": "{}",'.format(read_bucket_user)
-            username_playbook_var = '"username": "{}",'.format(bucket_names[0])
-            # username_var = bucket_names[0]
+            username_playbook_var = '"username": "{}",'.format(common_bucket_user)
+            # username_playbook_var = '"username": "{}",'.format(bucket_names[0])
+            username_var = '"username": "{}",'.format(bucket_names[0])
             password_var = '"password": "password",'
 
         if self.cbs_ssl:
@@ -621,7 +615,7 @@ class Cluster:
             certpath=certpath_var,
             keypath=keypath_var,
             cacertpath=cacertpath_var,
-            username=username_playbook_var,
+            username=username_var,
             password=password_var,
             bucket=db_bucket_var,
             sg_use_views=sg_use_views_var,

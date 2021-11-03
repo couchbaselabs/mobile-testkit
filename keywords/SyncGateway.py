@@ -1445,7 +1445,7 @@ def replace_xattrs_sync_func_in_config(sg_config, channel, enable_xattrs_key=Tru
         channel(meta.xattrs.""" + channel + """);
     }
     }` """
-    temp_sg_config, _, _ = copy_sgconf_to_temp(sg_config, mode)
+    temp_sg_config, _ = copy_sgconf_to_temp(sg_config, mode)
     if enable_xattrs_key:
         user_xattrs_string = """ "user_xattr_key": "{}", """.format(channel)
     else:

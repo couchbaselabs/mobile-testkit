@@ -185,7 +185,7 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
 
     sg_conf_name = 'sync_gateway_sg_replicate1_in_sgwconfig'
     sg_config = sync_gateway_config_path_for_mode(sg_conf_name, mode)
-    temp_sg_config_copy, _, _ = copy_sgconf_to_temp(sg_config, mode)
+    temp_sg_config_copy, _ = copy_sgconf_to_temp(sg_config, mode)
     if sync_gateway_version < "2.8.0":
         replication_1, sgw_repl1_id1 = setup_sgreplicate1_on_sgconfig(sg1.admin.admin_url, sg_db1, sg3.admin.admin_url, sg_db2, channels=replication1_channel, continuous=True)
         replication_2, sgw_repl1_id2 = setup_sgreplicate1_on_sgconfig(sg3.admin.admin_url, sg_db2, sg1.admin.admin_url, sg_db1, channels=replication1_channel, continuous=True)
@@ -261,7 +261,7 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
         replications_ids = "{},{}".format(replication_1, replication_2)
         replications_key = "replications"
         sgr2_replace_string = "\"{}\": {}{}{},".format(replications_key, "{", replications_ids, "}")
-        temp_sg_config_copy, _, _ = copy_sgconf_to_temp(sg_config, mode)
+        temp_sg_config_copy, _ = copy_sgconf_to_temp(sg_config, mode)
         if sync_gateway_upgraded_version >= "3.0.0":
             temp_sg_config = replace_string_on_sgw_config(temp_sg_config_copy, "{{ replace_with_sg1_replications }}", "")
         if stop_replication_before_upgrade:

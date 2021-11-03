@@ -559,6 +559,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     sg_config = params_from_base_suite_setup["sg_config"]
     cbs_ce = params_from_base_suite_setup["cbs_ce"]
     sync_gateway_previous_version = params_from_base_suite_setup["sync_gateway_previous_version"]
+    disable_persistent_config = params_from_base_suite_setup["disable_persistent_config"]
 
     test_name = request.node.name
     c = cluster.Cluster(cluster_config)
@@ -619,7 +620,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "cbs_ce": cbs_ce,
         "sg_url": sg_url,
         "sg_admin_url": sg_admin_url,
-        "sync_gateway_previous_version": sync_gateway_previous_version
+        "sync_gateway_previous_version": sync_gateway_previous_version,
+        "disable_persistent_config": disable_persistent_config
     }
 
     # Code after the yield will execute when each test finishes

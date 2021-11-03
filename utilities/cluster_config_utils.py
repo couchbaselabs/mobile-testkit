@@ -296,9 +296,9 @@ def copy_to_temp_conf(cluster_config, mode):
     return temp_cluster_config
 
 
-def copy_sgconf_to_temp(sg_conf, mode):
+def copy_sgconf_to_tempconfig_for_persistent_config_test(sg_conf, mode):
     temp_sg_conf_name = "temp_sg_config"
-    temp_sg_config = "resources/sync_gateway_configs/temp_sg_config_{}.json".format(mode)
+    temp_sg_config = "resources/sync_gateway_configs/temp_sg_config_persistent_{}.json".format(mode)
     open(temp_sg_config, "w+")
     copyfile(sg_conf, temp_sg_config)
     bucket_list = []
@@ -307,9 +307,9 @@ def copy_sgconf_to_temp(sg_conf, mode):
     return temp_sg_config, temp_sg_conf_name, bucket_list
 
 
-def copy_sgconf_to_tempconfig_for_reset_method(sg_conf, mode):
+def copy_sgconf_to_temp(sg_conf, mode):
     temp_sg_conf_name = "temp_sg_config"
-    temp_sg_config = "resources/sync_gateway_configs/temp_sg_config_reset_{}.json".format(mode)
+    temp_sg_config = "resources/sync_gateway_configs/temp_sg_config_{}.json".format(mode)
     open(temp_sg_config, "w+")
     copyfile(sg_conf, temp_sg_config)
     return temp_sg_config, temp_sg_conf_name

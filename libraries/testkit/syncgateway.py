@@ -390,11 +390,16 @@ class SyncGateway:
             extra_vars=playbook_vars,
             subset=self.hostname
         )
-        """ if status == 0:
+        if status == 0:
             if get_sg_version(self.cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(self.cluster_config):
                 # Now create rest API for all database configs
                 sgw_list = [self]
-                send_dbconfig_as_restCall(db_config_json, sgw_list, sgw_config_data) """
+                try:
+                    send_dbconfig_as_restCall(db_config_json, sgw_list, sgw_config_data)
+                except HTTPError as e:
+                    status = -1
+                    # This is to work similiar to non persistent config to avoid updates on regression tests
+                    log.info("if db fails, setting status to -1")
         return status
 
     def verify_launched(self):
@@ -719,7 +724,7 @@ class SyncGateway:
         from keywords.SyncGateway import sync_gateway_config_path_for_mode
         cpc_sgw_config_path = sync_gateway_config_path_for_mode(sg_conf_name, mode, cpc=True)
         cpc_config_path_full = os.path.abspath(cpc_sgw_config_path)
-        read_bucket_user = "bucket-admin"
+        # common_bucket_user = "bucket-admin"
         # self.sync_gateway_config = config
 
         """ if bucket_creation:
@@ -810,8 +815,10 @@ class SyncGateway:
             x509_auth_var = True
 
         else:
-            username_playbook_var = '"username": "{}",'.format(read_bucket_user)
+            # username_playbook_var = '"username": "{}",'.format(read_bucket_user)
+            username_playbook_var = '"username": "{}",'.format(bucket_names[0])
             username_var = bucket_names[0]
+            password_var = "password"
 
         if is_cbs_ssl_enabled(cluster_config):
             server_scheme_var = "couchbases"
@@ -926,7 +933,7 @@ class SyncGateway:
             "server_port": server_port_var,
             "server_scheme": server_scheme_var,
             "username": username_playbook_var,
-            "password": password_var,
+            "password": db_password_var,
             "sg_cert_path": sg_cert_path,
             "sslcert": sslcert_var,
             "sslkey": sslkey_var,
@@ -1114,6 +1121,7 @@ def send_dbconfig_as_restCall(db_config_json, sync_gateways, sgw_config_data):
         # imp_fltr_func = None
         roles_exist = False
         users_exist = False
+        db_list = sgw.admin.get_dbs()
         """ import_filter_exist = False
         if "\"sync\":" in sgw_config_data:
             sync_func = sgw_config_data.split("\"sync\": `")[1]
@@ -1123,8 +1131,8 @@ def send_dbconfig_as_restCall(db_config_json, sync_gateways, sgw_config_data):
             imp_fltr_func = imp_fltr_func.split("`")[0]
             print("import filter with split: ", imp_fltr_func) """
         for sg_db in sgw_db_config.keys():
-            
-            print("sg_db of keys : ", sg_db)
+            if sg_db in db_list:
+                sgw.admin.delete_db(sg_db)
             # TODO : Should look for better place to delete 'server' key if tests usese old config
             if "server" in sgw_db_config[sg_db].keys():
                 del sgw_db_config[sg_db]["server"]
@@ -1155,7 +1163,7 @@ def send_dbconfig_as_restCall(db_config_json, sync_gateways, sgw_config_data):
                 print("import filter cfg func after extracting from sgw_db_config: ", imp_fltr_func)
                 import_filter_exist = True """
             sgw.admin.create_db(sg_db, sgw_db_config[sg_db])
-            db_info = sgw.admin.get_db_info("db")
+            db_info = sgw.admin.get_db_info(sg_db)
             if db_info["state"] == "Online":
                 """ if sync_func_exist:
                     sgw.admin.create_sync_func(sg_db, sync_func) """
