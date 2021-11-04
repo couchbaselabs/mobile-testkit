@@ -1122,6 +1122,7 @@ def send_dbconfig_as_restCall(db_config_json, sync_gateways, sgw_config_data):
         roles_exist = False
         users_exist = False
         db_list = sgw.admin.get_dbs()
+        print("db_list is ", db_list)
         """ import_filter_exist = False
         if "\"sync\":" in sgw_config_data:
             sync_func = sgw_config_data.split("\"sync\": `")[1]
@@ -1132,6 +1133,8 @@ def send_dbconfig_as_restCall(db_config_json, sync_gateways, sgw_config_data):
             print("import filter with split: ", imp_fltr_func) """
         for sg_db in sgw_db_config.keys():
             if sg_db in db_list:
+                print("deleting the sg db now... ", sg_db)
+                print(sgw)
                 sgw.admin.delete_db(sg_db)
             # TODO : Should look for better place to delete 'server' key if tests usese old config
             if "server" in sgw_db_config[sg_db].keys():
