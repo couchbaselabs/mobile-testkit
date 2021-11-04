@@ -509,6 +509,21 @@ class MobileRestClient:
 
         return resp.json()
 
+    def get_attachment_by_document(self, url, db, doc, attachment=None):
+
+        """
+        GET /{db}/{doc}/{attachment}?meta=true
+        Get the attachment meta data for tracking
+        """
+        if attachment:
+            resp = self._session.get("{}/{}/{}/{}?meta=true".format(url, db, doc, attachment))
+        else:
+            resp = self._session.get("{}/{}/{}?meta=true".format(url, db, doc))
+        log_r(resp)
+        resp.raise_for_status()
+        return resp.json()
+
+
     def compact_database(self, url, db):
         """
         POST /{db}/_compact and will verify compaction by
@@ -2440,3 +2455,20 @@ class MobileRestClient:
         resp.raise_for_status()
         resp_obj = resp.json()
         del resp_obj["_exp"]
+
+    def compact_attachments(self, url, action):
+        if action == "status":
+            resp = self._session.get("{}/_compact?type=attachment".format(url))
+            return log_r(resp)
+        elif action == "start":
+            resp = self._session.post("{}/_compact?type=attachment&action=start".format(url))
+            return log_r(resp)
+        elif action == "progress":
+            resp = self._session.post("{}/_compact?type=attachment".format(url))
+            return log_r(resp)
+        elif action == "stop":
+            resp = self._session.post("{}/_compact?type=attachment&action=stop".format(url))
+            return log_r(resp)
+
+
+
