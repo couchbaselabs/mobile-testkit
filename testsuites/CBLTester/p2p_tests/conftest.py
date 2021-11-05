@@ -13,10 +13,8 @@ from CBLClient.FileLogging import FileLogging
 
 
 def pytest_addoption(parser):
-    parser.addoption("--use-local-testserver",
-                     action="store_true",
-                     help="Skip installing testserver at setup",
-                     default=False)
+    parser.addoption("--use-local-testserver", action="store_true",
+                     help="Skip installing testserver at setup", default=False)
 
     parser.addoption("--liteserv-platforms",
                      action="store",
