@@ -209,7 +209,8 @@ def params_from_base_suite_setup(request):
         "encryption_password": encryption_password,
         "testserver_list": testserver_list,
         "enable_file_logging": enable_file_logging,
-        "delta_sync_enabled": delta_sync_enabled
+        "delta_sync_enabled": delta_sync_enabled,
+        "use_local_testserver": use_local_testserver
     }
 
     if create_db_per_suite:
