@@ -126,10 +126,9 @@ class Config:
             shadow = val["shadow"]
             if len(shadow["bucket"]) > 0:
                 bucket_names_from_config.append(shadow["bucket"])
-
         # Buckets may be shared for different functionality
-        # self.bucket_name_set = list(set(bucket_names_from_config))
-        self.bucket_name_set = list(bucket_names_from_config)
+        self.bucket_name_set = list(set(bucket_names_from_config))
+        # self.bucket_name_set = list(bucket_names_from_config)
 
     def discover_bucket_name_set_new(self, conf_obj):
 

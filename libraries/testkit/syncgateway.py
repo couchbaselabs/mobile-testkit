@@ -71,7 +71,7 @@ class SyncGateway:
     def start(self, config):
         # c_cluster = cluster.Cluster(self.cluster_config)
         if get_sg_version(self.cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(self.cluster_config):
-            playbook_vars, db_config_json = self.setup_sgwconfig_db_config(self.cluster_config, config)
+            playbook_vars, db_config_json, sgw_config_data = self.setup_sgwconfig_db_config(self.cluster_config, config)
         else:
             conf_path = os.path.abspath(config)
             log.info(">>> Starting sync_gateway with configuration: {}".format(conf_path))
@@ -226,7 +226,7 @@ class SyncGateway:
             if get_sg_version(self.cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(self.cluster_config):
                 # Now create rest API for all database configs
                 sgw_list = [self]
-                send_dbconfig_as_restCall(db_config_json, sgw_list)
+                send_dbconfig_as_restCall(db_config_json, sgw_list, sgw_config_data)
         return status
 
     def restart(self, config, cluster_config=None):
