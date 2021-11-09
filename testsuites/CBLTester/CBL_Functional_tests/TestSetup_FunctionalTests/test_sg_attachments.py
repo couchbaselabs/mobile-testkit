@@ -168,8 +168,8 @@ def test_doc_with_many_attachments(params_from_base_test_setup):
     sg_client.create_user(sg_admin_url, sg_db, "autotest00", password="password", channels=channels)
     cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest00")
     session = cookie, session_id
-    sg_docs = document.create_docs(doc_id_prefix='sg_docs', number=1,
-                                   attachments_generator=attachment.generate_5_png_100_100, channels=channels)
+
+    added_doc = sg_client.add_docs(url=sg_url, db=sg_db, number=1, id_prefix="sg_doc_a", channels=channels, auth=session, attachments_generator=attachment.generate_5_png_100_100)
 
     # 3.  Replicate to CBL/SG
     replicator = Replication(base_url)

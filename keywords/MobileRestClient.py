@@ -1227,7 +1227,7 @@ class MobileRestClient:
 
         return resp.json()
 
-    def update_doc(self, url, db, doc_id, number_updates=1, attachment_name=None, expiry=None, delay=None, auth=None, channels=None, property_updater=None, remove_expiry=False, rev=None, doc=None):
+    def update_doc(self, url, db, doc_id, number_updates=1, attachment_name=None, expiry=None, delay=None, auth=None, channels=None, property_updater=None, remove_expiry=False, rev=None, doc=None, delete_attachment=None):
         """
         Updates a doc on a db a number of times.
             1. GETs the doc
@@ -1265,6 +1265,11 @@ class MobileRestClient:
 
             if attachment_name is not None and not delete_attachment:
                 atts = attachment.load_from_data_dir([attachment_name])
+                doc["_attachments"] = {
+                    atts[0].name: {"data": atts[0].data}
+                }
+            if delete_attachment:
+                atts = attachment.load_from_data_dir(delete_attachment)
                 doc["_attachments"] = {
                     atts[0].name: {"data": atts[0].data}
                 }
