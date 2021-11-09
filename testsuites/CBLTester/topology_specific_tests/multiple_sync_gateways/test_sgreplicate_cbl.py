@@ -2265,6 +2265,7 @@ def test_sg_replicate_doc_resurrection(params_from_base_test_setup, setup_custom
         replicator.wait_until_replicator_idle(repl1)
         sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id_1, read_flag=read_flag, write_flag=write_flag)
         replicator.wait_until_replicator_idle(repl2)
+        time.sleep(2)
         sdk_client.upsert(random_doc_id, doc_body)
 
     replicator.wait_until_replicator_idle(repl1)
