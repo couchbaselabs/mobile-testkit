@@ -1,0 +1,17 @@
+- name: Windows UWP - Stop TestServer
+  hosts: windows
+  vars:
+    binary_path:
+
+  tasks:
+    - debug: msg="Stopping the Testserver C"
+    - name: stop service
+      win_service:
+        name: TestServerC
+        state: stopped
+      async: 45
+      poll: 5
+
+    - name: Delete the testsever process
+      win_command: sc delete TestServerC
+      ignore_errors: yes

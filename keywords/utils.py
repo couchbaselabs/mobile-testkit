@@ -465,9 +465,9 @@ def meet_supported_version(version_list, target_version):
 def get_embedded_asset_file_path(cblite_platform, db, cbl_db, file_name):
     log_info("get a file path from embedded resources.")
     if cblite_platform in ["android", "xamarin-android", "java-macosx", "java-msft", "java-ubuntu", "java-centos",
-                           "javaws-macosx", "javaws-msft", "javaws-ubuntu", "javaws-centos"]:
+                           "javaws-macosx", "javaws-msft", "javaws-ubuntu", "javaws-centos", "c-android"]:
         return file_name
-    elif cblite_platform == "ios":
+    elif "ios" or "c-ios" in cblite_platform:
         return "Files/{}".format(file_name)
     elif cblite_platform == "net-msft":
         db_path = db.getPath(cbl_db).rstrip("\\")
@@ -507,6 +507,13 @@ def is_replicator_in_connection_retry(error_msg):
     # check ios
     if "NSPOSIXErrorDomain" in error_msg and "Connection refused" in error_msg and "Code=61" in error_msg:
         return True
+    # check c
+    if ("111" or "61" or "5003") in error_msg:
+        return True
+
+    if "No connection could be made because the target machine actively refused it" in error_msg:
+        return True
+
     return False
 
 

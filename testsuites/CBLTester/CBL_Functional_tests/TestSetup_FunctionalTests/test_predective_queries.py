@@ -26,15 +26,20 @@ def test_predictiveQueries_basicInputOutput(params_from_base_test_setup, doc_gen
            it should send back same result
         4. Verify that prediction query throws error when invalid input is provided
     '''
+    liteserv_platform = params_from_base_test_setup["liteserv_platform"]
+    liteserv_version = params_from_base_test_setup["liteserv_version"]
+
+    if "c-" in liteserv_platform:
+        pytest.skip('This test can not run on c platform')
+
+    if liteserv_version < "2.5.0":
+        pytest.skip('This test cannnot run with CBL version below 2.5')
+
     base_url = params_from_base_test_setup["base_url"]
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
     sg_config = params_from_base_test_setup["sg_config"]
     cluster_config = params_from_base_test_setup["cluster_config"]
-    liteserv_version = params_from_base_test_setup["liteserv_version"]
-
-    if liteserv_version < "2.5.0":
-        pytest.skip('This test cannnot run with CBL version below 2.5')
 
     # Reset cluster to ensure no data in system
     c = cluster.Cluster(config=cluster_config)
@@ -94,6 +99,10 @@ def test_predictiveQueries_euclideanCosineDistance(params_from_base_test_setup, 
         2. find the euclidean distance, square euclidean distance, and cosine distance
         3. Verify all 3 distances return right value
     '''
+    liteserv_platform = params_from_base_test_setup["liteserv_platform"]
+    if "c-" in liteserv_platform:
+        pytest.skip('This test can not run on c platform')
+
     base_url = params_from_base_test_setup["base_url"]
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]

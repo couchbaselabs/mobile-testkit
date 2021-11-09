@@ -2,7 +2,6 @@ import os
 import subprocess
 
 import requests
-
 from keywords.TestServerBase import TestServerBase
 from keywords.constants import LATEST_BUILDS, RELEASED_BUILDS
 from keywords.constants import BINARY_DIR
@@ -31,6 +30,14 @@ class TestServerAndroid(TestServerBase):
             self.device_enabled = False
             self.installed_package_name = "com.couchbase.TestServerApp"
             self.activity_name = self.installed_package_name + "/com.couchbase.CouchbaseLiteServ.MainActivity"
+        elif self.platform == "c-android":
+            # Cpp-android
+            if community_enabled:
+                self.package_name = self.apk_name = "CBLTestServer-C-community.apk"
+            else:
+                self.package_name = self.apk_name = "CBLTestServer-C-enterprise.apk"
+            self.installed_package_name = "com.couchbase.testsuite"
+            self.activity_name = self.installed_package_name + "/android.app.NativeActivity"
         else:
             # Xamarin-android
             self.package_name = self.apk_name = "TestServer.Android.apk"
@@ -62,6 +69,8 @@ class TestServerAndroid(TestServerBase):
                 url = "{}/{}/{}/{}".format(RELEASED_BUILDS, self.download_source, version, self.package_name)
             else:
                 url = "{}/{}/{}/{}/{}".format(LATEST_BUILDS, self.download_source, version, build, self.package_name)
+        if self.platform == "c-android":
+            url = "{}/couchbase-lite-c/{}/{}/{}".format(LATEST_BUILDS, version, build, self.package_name)
         else:
             url = "{}/couchbase-lite-net/{}/{}/{}".format(LATEST_BUILDS, version, build, self.package_name)
 
@@ -93,8 +102,8 @@ class TestServerAndroid(TestServerBase):
             if count > max_retries:
                 raise LiteServError(".apk install failed!")
             try:
+
                 output = subprocess.check_output(["adb", "-e", "install", "-r", apk_path])
-                break
             except Exception as e:
                 if "INSTALL_FAILED_ALREADY_EXISTS" in str(e) or "INSTALL_FAILED_UPDATE_INCOMPATIBLE" in str(e):
 
@@ -106,8 +115,7 @@ class TestServerAndroid(TestServerBase):
                 else:
                     # Install succeeded, continue
                     break
-
-        output = subprocess.check_output(["adb", "-e", "shell", "pm", "list", "packages"])
+            output = subprocess.check_output(["adb", "-e", "shell", "pm", "list", "packages"])
 
         if str(self.installed_package_name) not in str(output):
             raise LiteServError("Failed to install package: {}".format(output))
@@ -153,7 +161,6 @@ class TestServerAndroid(TestServerBase):
                 else:
                     # Install succeeded, continue
                     break
-
         command = self.set_device_option(["adb", "shell", "pm", "list", "packages"])
         output = subprocess.check_output(command)
         if self.installed_package_name not in output.decode():
@@ -169,8 +176,7 @@ class TestServerAndroid(TestServerBase):
         if output.strip() != "Success" and output.strip() != b"Success":
             log_info(output)
             raise LiteServError("Error. Could not remove app.")
-
-        command = self.set_device_option(["adb", "shell", "pm", "list", "packages"])
+        command = self.set_device_option(["adb", "uninstall", self.installed_package_name])
         output = subprocess.check_output(command)
         if self.installed_package_name in output.decode():
             raise LiteServError("Error uninstalling app!")
@@ -224,12 +230,12 @@ class TestServerAndroid(TestServerBase):
         self.logfile = open(logfile_name, "w+")
         command = self.set_device_option(["adb", "logcat"])
         self.process = subprocess.Popen(args=command, stdout=self.logfile)
-
         command = self.set_device_option([
             "adb", "shell", "am", "start", "-n", self.activity_name,
             "--es", "username", "none",
             "--es", "password", "none",
-            "--ei", "listen_port", str(self.port)])
+            "--ei", "listen_port", str(self.port),
+        ])
         output = subprocess.check_output(command)
         log_info(output)
         self._wait_until_reachable(port=self.port)
@@ -259,12 +265,9 @@ class TestServerAndroid(TestServerBase):
         output = subprocess.check_output(command)
         log_info(output)
 
-        # Clear package data
         command = self.set_device_option(["adb", "shell", "pm", "clear", self.installed_package_name])
         output = subprocess.check_output(command)
         log_info(output)
-
-        # self._verify_not_running()
 
         self.logfile.flush()
         self.logfile.close()
@@ -295,7 +298,6 @@ class TestServerAndroid(TestServerBase):
                 "listen_port",
                 str(self.port)
             ])
-        log_info(output)
         log_info(output)
         self._wait_until_reachable(port=self.port)
         self._verify_launched()
