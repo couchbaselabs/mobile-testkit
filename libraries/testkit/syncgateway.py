@@ -1121,6 +1121,7 @@ def send_dbconfig_as_restCall(db_config_json, sync_gateways, sgw_config_data):
         # imp_fltr_func = None
         roles_exist = False
         users_exist = False
+        print("sleeping some time for first one to execute")
         db_list = sgw.admin.get_dbs()
         print("db_list is ", db_list)
         """ import_filter_exist = False
@@ -1165,7 +1166,12 @@ def send_dbconfig_as_restCall(db_config_json, sync_gateways, sgw_config_data):
                 imp_fltr_func = sgw_db_config[sg_db]["import_filter"]
                 print("import filter cfg func after extracting from sgw_db_config: ", imp_fltr_func)
                 import_filter_exist = True """
-            sgw.admin.create_db(sg_db, sgw_db_config[sg_db])
+            try:
+                sgw.admin.create_db(sg_db, sgw_db_config[sg_db])
+            except HTTPError as e:
+                sgw.admin.delete_db(sg_db)
+                time.sleep(1)
+                sgw.admin.create_db(sg_db, sgw_db_config[sg_db])
             db_info = sgw.admin.get_db_info(sg_db)
             if db_info["state"] == "Online":
                 """ if sync_func_exist:
