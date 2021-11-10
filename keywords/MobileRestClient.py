@@ -1269,10 +1269,8 @@ class MobileRestClient:
                     atts[0].name: {"data": atts[0].data}
                 }
             if delete_attachment:
-                atts = attachment.load_from_data_dir(delete_attachment)
-                doc["_attachments"] = {
-                    atts[0].name: {"data": atts[0].data}
-                }
+                # atts = attachment.load_from_data_dir([delete_attachment()])
+                doc["_attachments"] = delete_attachment
 
             if expiry is not None:
                 doc["_exp"] = expiry

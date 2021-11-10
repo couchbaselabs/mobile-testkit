@@ -141,7 +141,6 @@ def test_doc_with_many_attachments(params_from_base_test_setup):
     2. Create a doc with lot of attachments on single document and replicate it to CBL
     3. Replicate to SG
     4. Delete few attachments and verify attachments are deleted in the bucket
-    5. Delete the doc and verify all the attachments are deleted in the bucket
     """
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     if sync_gateway_version < "3.0.0":
@@ -155,21 +154,21 @@ def test_doc_with_many_attachments(params_from_base_test_setup):
     base_url = params_from_base_test_setup["base_url"]
     cbl_db = params_from_base_test_setup["source_db"]
 
-    channels = ["attachments"]
+    channels = ["attachments_compaction"]
     db = Database(base_url)
     sg_client = MobileRestClient()
 
     # 1. Have CBL and SG up and running
     sg_config = params_from_base_test_setup["sg_config"]
     c = cluster.Cluster(config=cluster_config)
-    # c.reset(sg_config_path=sg_config)
+    c.reset(sg_config_path=sg_config)
 
     # 2. Add docs to SG/CBL.
-    sg_client.create_user(sg_admin_url, sg_db, "autotest00", password="password", channels=channels)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest00")
+    sg_client.create_user(sg_admin_url, sg_db, "attachment", password="password", channels=channels)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "attachment")
     session = cookie, session_id
 
-    added_doc = sg_client.add_docs(url=sg_url, db=sg_db, number=1, id_prefix="sg_doc_a", channels=channels, auth=session, attachments_generator=attachment.generate_5_png_100_100)
+    added_doc = sg_client.add_docs(url=sg_url, db=sg_db, number=1, id_prefix="att_com", channels=channels, auth=session, attachments_generator=attachment.generate_5_png_100_100)
 
     # 3.  Replicate to CBL/SG
     replicator = Replication(base_url)
@@ -178,10 +177,6 @@ def test_doc_with_many_attachments(params_from_base_test_setup):
     repl = replicator.configure_and_replicate(cbl_db, target_url=sg_blip_url, continuous=True,
                                               replicator_authenticator=replicator_authenticator)
 
-    # repl = replicator.create(repl)
-    # replicator.start(repl)
-    # replicator.wait_until_replicator_idle(repl)
-    # replicator.stop(repl)
     cbl_doc_ids = db.getDocIds(cbl_db)
 
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session, include_docs=True)
@@ -191,17 +186,21 @@ def test_doc_with_many_attachments(params_from_base_test_setup):
     # Get the attachment ID from the document meta data for verification
     for doc_id in sdk_doc_ids:
         raw_doc = sg_client.get_attachment_by_document(sg_admin_url, db=sg_db, doc=doc_id)
-        att_name = list(raw_doc["_attachments"].keys())[0]
-        att_name = att_name.replace('/', '%2F')
-        attachment_raw = sg_client.get_attachment_by_document(sg_admin_url, db=sg_db, doc=doc_id, attachment=att_name)
-        attachment_ids.append(attachment_raw['key'])
+        print(raw_doc)
+        attachments = raw_doc["_attachments"]
+        att_names = list(raw_doc["_attachments"].keys())
+        for name in att_names:
+            attachment_raw = sg_client.get_attachment_by_document(sg_admin_url, db=sg_db, doc=doc_id, attachment=name)
+            attachment_ids.append(attachment_raw['key'])
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
     cluster_topology = params_from_base_test_setup['cluster_topology']
 
     # 4  Delete few attachments and verify attachments are deleted in the bucket
-    sg_client.update_doc(url=sg_admin_url, db=sg_db, doc_id=cbl_doc_ids, number_updates=1, attachment_name=attachment_ids[:3])
+    del attachments[att_names[0]]
+    del attachments[att_names[1]]
+    sg_client.update_doc(url=sg_admin_url, db=sg_db, doc_id=cbl_doc_ids[0], number_updates=1, delete_attachment=attachments)
 
-    # verify the deleted attachment
+    # 5. verify deleted attachments
     cbs_url = cluster_topology['couchbase_servers'][0]
     # Connect to server via SDK
     cbs_ip = host_for_url(cbs_url)
@@ -212,19 +211,14 @@ def test_doc_with_many_attachments(params_from_base_test_setup):
     bucket_name = 'travel-sample'
     sdk_client = get_cluster(connection_url, bucket_name)
 
-    # 5. Delete the document
-    sg_client.delete_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=session)
-
-    # 6. verify deleted attachments
-    sdk_deleted_doc_scratch_pad = list(attachment_ids)
-    for doc_id in attachment_ids:
-        nfe = None
-        with pytest.raises(DocumentNotFoundException) as nfe:
-            sdk_client.get(doc_id)
-        log_info(nfe.value)
-        if nfe is not None:
-            sdk_deleted_doc_scratch_pad.remove(nfe.value.key)
-    assert len(sdk_deleted_doc_scratch_pad) == 3
+    nfe = None
+    with pytest.raises(DocumentNotFoundException) as nfe:
+        sdk_client.get(attachment_ids[0])
+    log_info(nfe.value)
+    nfe = None
+    with pytest.raises(DocumentNotFoundException) as nfe:
+        sdk_client.get(attachment_ids[1])
+    log_info(nfe.value)
 
 
 @pytest.mark.channels
@@ -242,12 +236,6 @@ def test_restart_sg_creating_attachments(params_from_base_test_setup):
     if sync_gateway_version < "3.0.0":
         pytest.skip('This test cannot run with sg version below 3.0.0')
 
-    xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
-
-    # This test should only run when using xattr meta storage
-    if not xattrs_enabled:
-        pytest.skip('XATTR tests require --xattrs flag or test has enable delta sync')
-
     sg_db = "db"
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
@@ -256,24 +244,81 @@ def test_restart_sg_creating_attachments(params_from_base_test_setup):
     base_url = params_from_base_test_setup["base_url"]
     cbl_db = params_from_base_test_setup["source_db"]
 
-    channels = ["attachments"]
+    channels = ["attachment-099"]
     db = Database(base_url)
     sg_client = MobileRestClient()
-    num_of_docs = 100
 
     # 1. Have CBL and SG up and running
     sg_config = params_from_base_test_setup["sg_config"]
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
+    authenticator = Authenticator(base_url)
 
-    # 2. Add docs to SG/CBL.
-    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest")
+    # 2. Create docs with attachment on CBL
+    db.create_bulk_docs(50, "attachment-2", db=cbl_db, channels=channels, attachments_generator=attachment.generate_png_100_100)
+
+    # 3. Replicate the docs
+    sg_client.create_user(sg_admin_url, sg_db, "auto779", password="password", channels=channels)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "auto779")
     session = cookie, session_id
+    replicator = Replication(base_url)
+    replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
+    repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channels, replication_type="push-pull",
+                                       replicator_authenticator=replicator_authenticator)
+    repl = replicator.create(repl_config)
+    replicator.start(repl)
+    replicator.wait_until_replicator_idle(repl)
+    cbl_doc_ids = db.getDocIds(cbl_db)
+    sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session, include_docs=True)
+    assert len(cbl_doc_ids) == len(sg_docs["rows"])
+    sdk_doc_ids = [doc['id'] for doc in sg_docs["rows"]]
+    attachment_ids = []
+    # Get the attachment ID from the document meta data for verification
+    for doc_id in sdk_doc_ids:
+        raw_doc = sg_client.get_attachment_by_document(sg_admin_url, db=sg_db, doc=doc_id)
+        att_name = list(raw_doc["_attachments"].keys())[0]
+        att_name = att_name.replace('/', '%2F')
+        attachment_raw = sg_client.get_attachment_by_document(sg_admin_url, db=sg_db, doc=doc_id, attachment=att_name)
+        attachment_ids.append(attachment_raw['key'])
+    ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+    cluster_topology = params_from_base_test_setup['cluster_topology']
+
+    # Verify the all the attachment IDs are present in the CB
+    cbs_url = cluster_topology['couchbase_servers'][0]
+    # Connect to server via SDK
+    cbs_ip = host_for_url(cbs_url)
+    if ssl_enabled:
+        connection_url = "couchbases://{}?ssl=no_verify".format(cbs_ip)
+    else:
+        connection_url = 'couchbase://{}'.format(cbs_ip)
+    bucket_name = 'travel-sample'
+    sdk_client = get_cluster(connection_url, bucket_name)
+    sdk_client.get_multi(attachment_ids)
+
+    # 4. Delete docs in CBL/SG
+    sg_client.delete_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=session)
+
+    replicator.start(repl)
+    replicator.wait_until_replicator_idle(repl)
+    replicator.stop(repl)
+
+    # 5. Verify attachments are completely deleted from bucket
+    sdk_deleted_doc_scratch_pad = list(attachment_ids)
+    for doc_id in attachment_ids:
+        nfe = None
+        with pytest.raises(DocumentNotFoundException) as nfe:
+            sdk_client.get(doc_id)
+        log_info(nfe.value)
+        if nfe is not None:
+            sdk_deleted_doc_scratch_pad.remove(nfe.value.key)
+    assert len(sdk_deleted_doc_scratch_pad) == 0
+
+
     attachments_list = attachment.generate_5_png_10_10
     sg_docs = document.create_docs(doc_id_prefix='sg_docs', number=num_of_docs,
                                    attachments_generator=attachments_list, channels=channels)
     sg_client.restart(config=sg_config, cluster_config=cluster_config)
+
 
 
 def verify_sg_xattrs(mode, sg_client, sg_url, sg_db, doc_id, expected_number_of_revs, expected_number_of_channels, deleted_docs=False):
