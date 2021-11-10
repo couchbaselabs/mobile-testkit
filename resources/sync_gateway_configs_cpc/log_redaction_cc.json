@@ -1,27 +1,18 @@
 {
-    "interface":":4984",
-    "adminInterface": "0.0.0.0:4985",
-    "maxIncomingConnections": 0,
-    "maxFileDescriptors": 90000,
-    "compressResponses": false,
+    "bootstrap": {
+        {{ server_tls_skip_verify }}
+        {{ username }}
+        {{ password }}
+        {{ cacertpath }}
+        {{ certpath }}
+        {{ keypath }}
+        "group_id": "persistent_group1",
+        "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}"
+    },
     {{ logging }}
-    {{ hide_product_version }}
-    "databases":{
-        "db":{
-            {{ autoimport }}
-            {{ xattrs }}
-            {{ no_conflicts }}
-            {{ sg_use_views }}
-            {{ num_index_replicas }}
-            {{ username }}
-            {{ password }}
-            {{ cacertpath }}
-            {{ certpath }}
-            {{ keypath }}
-            {{ delta_sync }}
-            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
-            "bucket":"data-bucket"
-        }
+    "api":{
+        {{ disable_admin_auth }}
+        "public_interface":":4984",
+        "admin_interface":"0.0.0.0:4985"
     }
 }
-
