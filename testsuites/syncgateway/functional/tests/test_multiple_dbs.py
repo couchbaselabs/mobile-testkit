@@ -82,6 +82,8 @@ def test_multiple_db_single_data_bucket_single_index_bucket(params_from_base_tes
                                                             num_docs_per_user, x509_cert_auth):
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    disable_persistent_config = params_from_base_test_setup["disable_persistent_config"]
+    sync_gateway_previous_version = params_from_base_test_setup["sync_gateway_previous_version"]
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
@@ -92,6 +94,8 @@ def test_multiple_db_single_data_bucket_single_index_bucket(params_from_base_tes
     log_info("Using num_docs_per_user: {}".format(num_docs_per_user))
 
     disable_tls_server = params_from_base_test_setup["disable_tls_server"]
+    if not disable_persistent_config and sync_gateway_previous_version >= "3.0.0":
+        pytest.skip("multiple db pointing to same server bucket which belongs to same cluster does not support in 3.0 with persistent config enabled")
     if x509_cert_auth and disable_tls_server:
         pytest.skip("x509 test cannot run tls server disabled")
     if x509_cert_auth:

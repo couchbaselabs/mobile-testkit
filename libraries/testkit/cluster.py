@@ -116,7 +116,7 @@ class Cluster:
         self.servers = [CouchbaseServer(url=cb_url) for cb_url in cbs_urls]
         self.sync_gateway_config = None  # will be set to Config object when reset() called
 
-    def reset(self, sg_config_path, bucket_list=[]):
+    def reset(self, sg_config_path, bucket_list=[], use_config=False):
 
         ansible_runner = AnsibleRunner(self._cluster_config)
 
@@ -158,7 +158,7 @@ class Cluster:
             # replace database configs from databases
             # sg_db = "db"
             # db_config_name = "sync_gateway_default_functional_tests"
-            playbook_vars, db_config_json, sgw_config_data = self.setup_server_and_sgw(sg_config_path=sg_config_path, bucket_list=bucket_list)
+            playbook_vars, db_config_json, sgw_config_data = self.setup_server_and_sgw(sg_config_path=sg_config_path, bucket_list=bucket_list, use_config=use_config)
         else:
 
             bucket_name_set = config.get_bucket_name_set()
@@ -369,16 +369,19 @@ class Cluster:
 
         return mode
 
-    def setup_server_and_sgw(self, sg_config_path, bucket_creation=True, bucket_list=[]):
+    def setup_server_and_sgw(self, sg_config_path, bucket_creation=True, bucket_list=[], use_config=False):
         # Parse config and grab bucket names
         ansible_runner = AnsibleRunner(self._cluster_config)
         # TODO top-todo1: For now using one commong bootstrop config , once everything is done , check back and see if common bootstrap config is enough
         # for top-todo1: cpc_sgw_config_path = get_cpc_sgw_config(sg_config_path)
-        from keywords.SyncGateway import sync_gateway_config_path_for_mode
+        from keywords.SyncGateway import sync_gateway_config_path_for_mode, get_cpc_config_from_config_path
         # cpc_sgw_config_path = "resources/sync_gateway_configs_cpc/sync_gateway_default"
         sg_conf_name = "sync_gateway_default"
         mode = "cc"
         cpc_sgw_config_path = sync_gateway_config_path_for_mode(sg_conf_name, mode, cpc=True)
+        if use_config:
+            cpc_sgw_config_path = get_cpc_config_from_config_path(sg_config_path, mode)
+
         cpc_config_path_full = os.path.abspath(cpc_sgw_config_path)
         config_path_full = os.path.abspath(sg_config_path)
         config = Config(config_path_full, self._cluster_config)

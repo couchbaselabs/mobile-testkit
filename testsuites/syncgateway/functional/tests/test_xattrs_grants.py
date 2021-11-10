@@ -961,7 +961,7 @@ def update_doctype_by_syncfn(sg_config, channel1, data_type):
     elif data_type == "integer":
         sync_func_string = """ `function (doc, oldDoc, meta){
         if(meta.xattrs.""" + channel1 + """ != undefined){
-            console.log("have channel1")
+            console.log("have channel1");
             expiry(meta.xattrs.""" + channel1 + """);
         }
         }` """

@@ -72,7 +72,7 @@ def test_log_redaction_config(params_from_base_test_setup, remove_tmp_sg_redacti
         persist_cluster_config_environment_prop(temp_cluster_config, 'server_tls_skip_verify', False)
 
     cluster = Cluster(config=temp_cluster_config)
-    cluster.reset(sg_config_path=sg_conf)
+    cluster.reset(sg_config_path=sg_conf, use_config=True)
 
     # Create user in sync_gateway
     sg_client = MobileRestClient()
@@ -140,7 +140,7 @@ def test_sgCollect1(params_from_base_test_setup, remove_tmp_sg_redaction_logs, s
         persist_cluster_config_environment_prop(temp_cluster_config, 'server_tls_skip_verify', False)
 
     cluster = Cluster(config=temp_cluster_config)
-    cluster.reset(sg_config_path=sg_conf)
+    cluster.reset(sg_config_path=sg_conf, use_config=True)
 
     # Create user in sync_gateway
     sg_client = MobileRestClient()
@@ -213,7 +213,7 @@ def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_
         persist_cluster_config_environment_prop(temp_cluster_config, 'server_tls_skip_verify', False)
 
     cluster = Cluster(config=temp_cluster_config)
-    cluster.reset(sg_config_path=sg_conf)
+    cluster.reset(sg_config_path=sg_conf, use_config=True)
 
     # Get sync_gateway host and sa accel host
     cluster = load_cluster_config_json(cluster_config)
@@ -336,7 +336,7 @@ def test_sgCollectRestApi_errorMessages(params_from_base_test_setup, remove_tmp_
         persist_cluster_config_environment_prop(temp_cluster_config, 'server_tls_skip_verify', False)
 
     cluster = Cluster(config=temp_cluster_config)
-    cluster.reset(sg_config_path=sg_conf)
+    cluster.reset(sg_config_path=sg_conf, use_config=True)
 
     # Get sync_gateway host
     cluster = load_cluster_config_json(cluster_config)

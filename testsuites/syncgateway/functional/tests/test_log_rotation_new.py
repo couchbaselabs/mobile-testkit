@@ -52,7 +52,7 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name, 
         cluster_conf = temp_cluster_config
 
     cluster = Cluster(config=cluster_conf)
-    cluster.reset(sg_config_path=sg_conf)
+    cluster.reset(sg_config_path=sg_conf, use_config=True)
 
     # Stop sync_gateways
     log_info(">>> Stopping sync_gateway")
@@ -97,7 +97,7 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name, 
         sg_helper.create_empty_file(cluster_config=cluster_conf, url=sg_one_url, file_name=file_name, file_size=file_size)
 
     # iterate 5 times to verify that every time we get new backup file with ~100MB
-    sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
+    sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf, use_config=True)
 
     log_info("Start sending bunch of requests to syncgatway to have more logs")
     send_request_to_sgw(sg_one_url, sg_admin_url, remote_executor, sg_platform)
@@ -119,7 +119,7 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name, 
         file_size = 100 * 1024 * 1024
         sg_helper.create_empty_file(cluster_config=cluster_conf, url=sg_one_url, file_name=file_name, file_size=file_size)
 
-    sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=sg_conf)
+    sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=sg_conf, use_config=True)
 
     # Remove generated conf file
     os.remove(temp_conf)
@@ -151,7 +151,7 @@ def test_invalid_logKeys_string(params_from_base_test_setup, sg_conf_name):
         pytest.skip("Continuous logging Test NA for SG < 2.1")
 
     cluster = Cluster(config=cluster_conf)
-    cluster.reset(sg_config_path=sg_conf)
+    cluster.reset(sg_config_path=sg_conf, use_config=True)
 
     # read sample sg_conf
     sg_one_url = cluster_hosts["sync_gateways"][0]["public"]
@@ -171,9 +171,9 @@ def test_invalid_logKeys_string(params_from_base_test_setup, sg_conf_name):
     sg_helper = SyncGateway()
     sg_helper.stop_sync_gateways(cluster_config=cluster_conf, url=sg_one_url)
     try:
-        sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
+        sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf, use_config=True)
     except ProvisioningError:
-        sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=sg_conf)
+        sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=sg_conf, use_config=True)
         # Remove generated conf file
         os.remove(temp_conf)
         return
@@ -210,7 +210,7 @@ def test_log_nondefault_logKeys_set(params_from_base_test_setup, sg_conf_name):
         pytest.skip("Test NA for SG  > 2.1")
 
     cluster = Cluster(config=cluster_conf)
-    cluster.reset(sg_config_path=sg_conf)
+    cluster.reset(sg_config_path=sg_conf, use_config=True)
 
     # read sample sg_conf
     sg_one_url = cluster_hosts["sync_gateways"][0]["public"]
@@ -230,7 +230,7 @@ def test_log_nondefault_logKeys_set(params_from_base_test_setup, sg_conf_name):
     sg_helper.stop_sync_gateways(cluster_config=cluster_conf, url=sg_one_url)
 
     # Start sync_gateways
-    sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
+    sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf, use_config=True)
 
     # Remove generated conf file
     os.remove(temp_conf)
@@ -263,7 +263,7 @@ def test_log_maxage_timestamp_ignored(params_from_base_test_setup, sg_conf_name)
         pytest.skip("Continuous logging Test NA for SG < 2.1")
 
     cluster = Cluster(config=cluster_conf)
-    cluster.reset(sg_config_path=sg_conf)
+    cluster.reset(sg_config_path=sg_conf, use_config=True)
     if sg_platform == "windows" or sg_platform == "macos":
         json_cluster = load_cluster_config_json(cluster_conf)
         sghost_username = json_cluster["sync_gateways:vars"]["ansible_user"]
@@ -304,7 +304,7 @@ def test_log_maxage_timestamp_ignored(params_from_base_test_setup, sg_conf_name)
     with open(temp_conf, 'w') as fp:
         json.dump(data, fp, indent=4)
 
-    sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
+    sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf, use_config=True)
     # ~1M MB will be added to log file after requests
     send_request_to_sgw(sg_one_url, sg_admin_url, remote_executor, sg_platform)
 
@@ -321,7 +321,7 @@ def test_log_maxage_timestamp_ignored(params_from_base_test_setup, sg_conf_name)
             command = "sudo touch -d \"{} days ago\" {}".format([log], file_name)
         remote_executor.execute(command)
 
-    sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
+    sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf, use_config=True)
 
     for log in SG_LOGS_MAXAGE:
         # Verify that new log file was not created
@@ -361,7 +361,7 @@ def test_log_rotation_invalid_path(params_from_base_test_setup, sg_conf_name):
         pytest.skip("Continuous logging Test NA for SG < 2.1")
 
     cluster = Cluster(config=cluster_conf)
-    cluster.reset(sg_config_path=sg_conf)
+    cluster.reset(sg_config_path=sg_conf, use_config=True)
 
     sg_one_url = cluster_hosts["sync_gateways"][0]["public"]
 
@@ -383,9 +383,9 @@ def test_log_rotation_invalid_path(params_from_base_test_setup, sg_conf_name):
     sg_helper = SyncGateway()
     sg_helper.stop_sync_gateways(cluster_config=cluster_conf, url=sg_one_url)
     try:
-        sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
+        sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf, use_config=True)
     except ProvisioningError:
-        sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=sg_conf)
+        sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=sg_conf, use_config=True)
         # Remove generated conf file
         os.remove(temp_conf)
         return
@@ -419,7 +419,7 @@ def test_log_200mb(params_from_base_test_setup, sg_conf_name):
         pytest.skip("Continuous logging Test NA for SG < 2.1")
 
     cluster = Cluster(config=cluster_conf)
-    cluster.reset(sg_config_path=sg_conf)
+    cluster.reset(sg_config_path=sg_conf, use_config=True)
     if sg_platform == "windows" or sg_platform == "macos":
         json_cluster = load_cluster_config_json(cluster_conf)
         sghost_username = json_cluster["sync_gateways:vars"]["ansible_user"]
@@ -458,7 +458,7 @@ def test_log_200mb(params_from_base_test_setup, sg_conf_name):
     with open(temp_conf, 'w') as fp:
         json.dump(data, fp, indent=4)
 
-    sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
+    sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf, use_config=True)
     SG_LOGS_FILES_NUM = get_sgLogs_fileNum(SG_LOGS, remote_executor, sg_platform)
     # ~1M MB will be added to log file after requests
     send_request_to_sgw(sg_one_url, sg_admin_url, remote_executor, sg_platform)
@@ -507,7 +507,7 @@ def test_log_rotation_negative(params_from_base_test_setup, sg_conf_name):
         pytest.skip("Continuous logging Test NA for SG < 2.1")
 
     cluster = Cluster(config=cluster_conf)
-    cluster.reset(sg_config_path=sg_conf)
+    cluster.reset(sg_config_path=sg_conf, use_config=True)
 
     sg_one_url = cluster_hosts["sync_gateways"][0]["public"]
 
@@ -537,9 +537,9 @@ def test_log_rotation_negative(params_from_base_test_setup, sg_conf_name):
     sg_helper = SyncGateway()
     sg_helper.stop_sync_gateways(cluster_config=cluster_conf, url=sg_one_url)
     try:
-        sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
+        sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf, use_config=True)
     except ProvisioningError:
-        sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=sg_conf)
+        sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=sg_conf, use_config=True)
         # Remove generated conf file
         os.remove(temp_conf)
         return
@@ -577,7 +577,7 @@ def test_log_maxbackups_0(params_from_base_test_setup, sg_conf_name):
         pytest.skip("Continuous logging Test NA for SG < 2.1 and backup config is removed 2.6.0 and up")
 
     cluster = Cluster(config=cluster_conf)
-    cluster.reset(sg_config_path=sg_conf)
+    cluster.reset(sg_config_path=sg_conf, use_config=True)
 
     sg_one_url = cluster_hosts["sync_gateways"][0]["public"]
 
@@ -618,7 +618,7 @@ def test_log_maxbackups_0(params_from_base_test_setup, sg_conf_name):
     with open(temp_conf, 'w') as fp:
         json.dump(data, fp, indent=4)
 
-    sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
+    sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf, use_config=True)
     # ~1M MB will be added to log file after requests
     send_request_to_sgw(sg_one_url, sg_admin_url, remote_executor, sg_platform)
     for log in SG_LOGS:
@@ -660,7 +660,7 @@ def test_log_logLevel_invalid(params_from_base_test_setup, sg_conf_name):
         pytest.skip("Continuous logging Test NA for SG < 2.1")
 
     cluster = Cluster(config=cluster_conf)
-    cluster.reset(sg_config_path=sg_conf)
+    cluster.reset(sg_config_path=sg_conf, use_config=True)
 
     sg_one_url = cluster_hosts["sync_gateways"][0]["public"]
 
@@ -681,9 +681,9 @@ def test_log_logLevel_invalid(params_from_base_test_setup, sg_conf_name):
     sg_helper = SyncGateway()
     sg_helper.stop_sync_gateways(cluster_config=cluster_conf, url=sg_one_url)
     try:
-        sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
+        sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf, use_config=True)
     except ProvisioningError:
-        sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=sg_conf)
+        sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=sg_conf, use_config=True)
         # Remove generated conf file
         os.remove(temp_conf)
         return
@@ -723,7 +723,7 @@ def test_rotated_logs_size_limit(params_from_base_test_setup, sg_conf_name):
         pytest.skip("rotated log size limit Test NA for the SGW version below 2.5.0")
 
     cluster = Cluster(config=cluster_conf)
-    cluster.reset(sg_config_path=sg_conf)
+    cluster.reset(sg_config_path=sg_conf, use_config=True)
     if sg_platform == "windows" or sg_platform == "macos":
         json_cluster = load_cluster_config_json(cluster_conf)
         sghost_username = json_cluster["sync_gateways:vars"]["ansible_user"]
@@ -767,7 +767,7 @@ def test_rotated_logs_size_limit(params_from_base_test_setup, sg_conf_name):
     else:
         sg_logs_dir = "/tmp/sg_logs"
 
-    sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
+    sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf, use_config=True)
     SG_LOGS_FILES_NUM = get_sgLogs_fileNum(SG_LOGS, remote_executor, sg_platform, sg_logs_dir)
     # ~1M MB will be added to log file after requests
     send_request_to_sgw(sg_one_url, sg_admin_url, remote_executor, sg_platform)
