@@ -25,14 +25,12 @@ class Client(object):
                 for k, v in args:
                     val = ValueSerializer.serialize(v)
                     body[k] = val
-
             # Create connection to method endpoint.
             headers = {"Content-Type": "application/json"}
             self.session.headers = headers
             resp = self.session.post(url, data=json.dumps(body))
             resp.raise_for_status()
             responseCode = resp.status_code
-
             if responseCode == 200:
                 result = resp.content
                 if ignore_deserialize:
@@ -41,7 +39,7 @@ class Client(object):
                     result = result.decode('utf8', 'ignore')
                 if len(result) < 25:
                     # Only print short messages
-                    log_info("Got response: {}".format(result))
+                    log_info("For url: {} Got response: {}".format(url, result))
                 return ValueSerializer.deserialize(result)
         except Exception as err:
             if resp.content:
@@ -55,7 +53,6 @@ class Client(object):
     def release(self, obj):
         args = Args()
         args.setMemoryPointer("object", obj)
-
         self.invokeMethod("release", args)
 
     class MethodInvocationException(RuntimeError):
@@ -64,7 +61,6 @@ class Client(object):
 
         def __init__(self, responseCode, responseMessage):
             super(responseMessage)
-
             self._responseCode = responseCode
             self._responseMessage = responseMessage
 

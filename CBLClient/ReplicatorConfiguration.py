@@ -19,7 +19,7 @@ class ReplicatorConfiguration(object):
         self._client = Client(base_url)
 
     def configure(self, source_db, target_url=None, target_db=None, replication_type="push_pull", continuous=False,
-                  channels=None, documentIDs=None, replicator_authenticator=None, headers=None, max_timeout_interval=None, retries=None):
+                  channels=None, documentIDs=None, replicator_authenticator=None, headers=None, max_timeout_interval=None, retries=None, encryptor=None):
         args = Args()
         args.setMemoryPointer("source_db", source_db)
         args.setString("replication_type", replication_type)
@@ -40,6 +40,8 @@ class ReplicatorConfiguration(object):
         if target_db is None:
             args.setString("target_url", target_url)
             return self._client.invokeMethod("replicator_configureRemoteDbUrl", args)
+        if encryptor is not None:
+            args.setMemoryPointer("encryptor", encryptor)
         else:
             args.setMemoryPointer("target_db", target_db)
             return self._client.invokeMethod("replicator_configureLocalDb", args)

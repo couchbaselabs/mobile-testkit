@@ -978,6 +978,8 @@ class MobileRestClient:
             doc["_attachments"] = {
                 atts[0].name: {"data": atts[0].data}
             }
+            if type(doc["_attachments"][attachment_name]["data"]) == bytes:
+                doc["_attachments"][attachment_name]["data"] = doc["_attachments"][attachment_name]["data"].decode()
 
         parent_revision_digests = []
         for parent_rev in parent_revs:

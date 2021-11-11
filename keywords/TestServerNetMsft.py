@@ -18,7 +18,31 @@ class TestServerNetMsft(TestServerWinBase):
 
         if version_build <= "2.1.0":
             raise Exception("No .net based app available to download for 2.1.0 or below at latestbuild. Use nuget package to create app.")
-        if self.platform == "net-msft":
+
+        if self.platform == "c-msft":
+            if community_enabled:
+                build_tag_name = "testserver_windesktop-x86_64_community"
+            else:
+                build_tag_name = "testserver_windesktop-x86_64_enterprise"
+            self.build_name = "{}-{}".format(build_tag_name, self.version_build)
+            self.binary_path = "{}-{}\\testserver.exe".format(build_tag_name, self.version_build)
+            self.package_name = "{}.zip".format(build_tag_name)
+            if self.build is None:
+                self.download_url = "{}/couchbase-lite-c/{}/{}".format(RELEASED_BUILDS, self.version, self.package_name)
+            else:
+                self.download_url = "{}/couchbase-lite-c/{}/{}/{}".format(LATEST_BUILDS, self.version, self.build, self.package_name)
+        elif self.platform == "c-uwp":
+            self.binary_path = "TestServer-C-UWP-{}\\run.ps1".format(self.version_build)
+            if self.build is None:
+                self.download_url = "{}/couchbase-lite-c/{}/TestServer.C.UWP.zip".format(RELEASED_BUILDS, self.version)
+            else:
+                self.download_url = "{}/couchbase-lite-c/{}/{}/TestServer.C.UWP.zip".format(LATEST_BUILDS, self.version,
+                                                                                            self.build)
+            self.package_name = "TestServer.C.UWP.zip"
+            self.stop_binary_path = "TestServer-C-UWP-{}\\stop.ps1".format(self.version_build)
+            self.build_name = "TestServer-C-UWP-{}".format(self.version_build)
+
+        elif self.platform == "net-msft":
             if community_enabled:
                 self.build_name = "TestServer-Net-community-{}".format(self.version_build)
                 self.binary_path = "TestServer-Net-community-{}\\TestServer.NetCore.dll".format(self.version_build)
@@ -84,6 +108,16 @@ class TestServerNetMsft(TestServerWinBase):
                     "version_build": self.version_build
                 }
             )
+        elif self.platform == "c-msft":
+            self.logfile = logfile_name
+            log_info("Starting Test server {}".format(self.binary_path))
+            # Start Testserver via Ansible on remote machine
+            status = self.ansible_runner.run_ansible_playbook(
+                "start-testserver-c-msft.yml",
+                extra_vars={
+                    "binary_path": self.binary_path
+                }
+            )
         else:
             # net-uwp
             log_info("Starting Test server UWP {}".format(self.binary_path))
@@ -120,6 +154,11 @@ class TestServerNetMsft(TestServerWinBase):
                     "log_full_path": log_full_path
                 }
             )
+        elif self.platform == "c-msft":
+            status = self.ansible_runner.run_ansible_playbook(
+                "stop-testserver-c-windows.yml"
+            )
+
         else:
             # net-uwp
             status = self.ansible_runner.run_ansible_playbook(

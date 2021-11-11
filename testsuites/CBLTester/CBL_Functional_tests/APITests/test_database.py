@@ -14,10 +14,14 @@ class TestDatabase(object):
         @summary: Checking for the Exception handling in database create API
         """
         if self.liteserv_version >= "2.6.0":
-            err_msg = "db name must not be empty"
+            if "c-" in self.liteserv_platform:
+                err_msg = "invalid parameter"
+            else:
+                err_msg = "db name must not be empty"
+
         log_info("check for error message: {}".format(err_msg))
 
-        if self.liteserv_platform != "android" and db_name == "":
+        if "android" in self.liteserv_platform and db_name == "":
             pytest.skip("Test not applicable for ios")
 
         if len(db_name) >= 128 and (self.liteserv_platform != "ios" or self.liteserv_platform != "android"):
@@ -104,7 +108,7 @@ class TestDatabase(object):
         """
         @summary: Testing Database constructor method of Database API
         """
-        if len(db_name) >= 128 and (self.liteserv_platform != "ios" or self.liteserv_platform != "android"):
+        if len(db_name) >= 128 and ("ios" or "android" in self.liteserv_platform):
             pytest.skip("Test not supported on .net platforms or the db name is longer than or equal to 128 characters")
 
         db = self.db_obj.create(db_name)
@@ -126,7 +130,7 @@ class TestDatabase(object):
         """
         @summary: Testing close method of Database API
         """
-        if len(db_name) >= 128 and (self.liteserv_platform != "ios" or self.liteserv_platform != "android"):
+        if len(db_name) >= 128 and ("ios" or "android" in self.liteserv_platform):
             pytest.skip("Test not supported on .net platforms or the db name is longer than or equal to 128 characters")
 
         db = self.db_obj.create(db_name)
@@ -146,7 +150,7 @@ class TestDatabase(object):
         """
         @summary: Testing delete(DB) method of Database API
         """
-        if len(db_name) >= 128 and (self.liteserv_platform != "ios" or self.liteserv_platform != "android"):
+        if len(db_name) >= 128 and ("ios" or "android" in self.liteserv_platform):
             pytest.skip("Test not supported on .net platforms or the db name is longer than or equal to 128 characters")
 
         db = self.db_obj.create(db_name)
@@ -173,7 +177,7 @@ class TestDatabase(object):
         """
         @summary: Testing delete method of Database API
         """
-        if len(db_name) >= 128 and (self.liteserv_platform != "ios" or self.liteserv_platform != "android"):
+        if len(db_name) >= 128 and ("ios" or "android" in self.liteserv_platform):
             pytest.skip("Test not supported on .net platforms or the db name is longer than or equal to 128 characters")
 
         db_name = db_name.lower()
@@ -226,7 +230,7 @@ class TestDatabase(object):
         """
         @summary: Testing exist method of Database API
         """
-        if len(db_name) >= 128 and (self.liteserv_platform != "ios" or self.liteserv_platform != "android"):
+        if len(db_name) >= 128 and ("ios" or "android" in self.liteserv_platform):
             pytest.skip("Test not supported on .net platforms or the db name is longer than or equal to 128 characters")
 
         db = self.db_obj.create(db_name)
@@ -256,7 +260,7 @@ class TestDatabase(object):
         """
         @summary: Testing getDocument method of Database API
         """
-        if len(db_name) >= 128 and (self.liteserv_platform != "ios" or self.liteserv_platform != "android"):
+        if len(db_name) >= 128 and ("ios" or "android" in self.liteserv_platform):
             pytest.skip("Test not supported on .net platforms or the db name is longer than or equal to 128 characters")
 
         db = self.db_obj.create(db_name)
@@ -281,7 +285,7 @@ class TestDatabase(object):
         """
         @summary: Testing getName method of Database API
         """
-        if len(db_name) >= 128 and (self.liteserv_platform != "ios" or self.liteserv_platform != "android"):
+        if len(db_name) >= 128 and ("ios" or "android" in self.liteserv_platform):
             pytest.skip("Test not supported on .net platforms or the db name is longer than or equal to 128 characters")
 
         db = self.db_obj.create(db_name)
@@ -303,7 +307,7 @@ class TestDatabase(object):
         """
         @summary: Testing getPath method of Database API
         """
-        if len(db_name) >= 128 and (self.liteserv_platform != "ios" or self.liteserv_platform != "android"):
+        if len(db_name) >= 128 and ("ios" or "android" in self.liteserv_platform):
             pytest.skip("Test not supported on .net platforms  or the db name is longer than or equal"
                         " to 128 characters")
 
@@ -353,7 +357,7 @@ class TestDatabase(object):
         """
         @summary: Testing save method of Database API
         """
-        if len(db_name) >= 128 and (self.liteserv_platform != "ios" or self.liteserv_platform != "android"):
+        if len(db_name) >= 128 and ("ios" or "android" in self.liteserv_platform):
             pytest.skip("Test not supported on .net platforms  or the db name is longer than or equal"
                         " to 128 characters")
 

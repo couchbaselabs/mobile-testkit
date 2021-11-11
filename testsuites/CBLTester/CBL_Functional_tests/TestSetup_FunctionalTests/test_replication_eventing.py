@@ -571,7 +571,6 @@ def test_push_replication_for_20mb_doc(params_from_base_test_setup, attachment_g
     # 2. Starting Replication and waiting for it finish
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl, max_times=5000)
-
     # 3. Getting changes from the replication event listener
     doc_repl_event_changes = replicator.getReplicatorEventChanges(repl_change_listener)
     replicator.removeReplicatorEventListener(repl, repl_change_listener)
