@@ -174,6 +174,10 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="Disable Centralized Persistent Config")
 
+    parser.addoption("--sync-gateway-previous-version",
+                     action="store",
+                     help="sync-gateway-previous-version")
+
     parser.addoption("--enable-server-tls-skip-verify",
                      action="store_true",
                      help="Enable Server tls skip verify config")
@@ -228,6 +232,7 @@ def params_from_base_suite_setup(request):
     skip_couchbase_provision = request.config.getoption("--skip-couchbase-provision")
     enable_cbs_developer_preview = request.config.getoption("--enable-cbs-developer-preview")
     disable_persistent_config = request.config.getoption("--disable-persistent-config")
+    sync_gateway_previous_version = request.config.getoption("--sync-gateway-previous-version")
     enable_server_tls_skip_verify = request.config.getoption("--enable-server-tls-skip-verify")
 
     disable_admin_auth = request.config.getoption("--disable-admin-auth")
@@ -500,7 +505,8 @@ def params_from_base_suite_setup(request):
         "sg_ce": sg_ce,
         "sg_config": sg_config,
         "cbs_ce": cbs_ce,
-        "prometheus_enabled": prometheus_enabled
+        "prometheus_enabled": prometheus_enabled,
+        "sync_gateway_previous_version": sync_gateway_previous_version
     }
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
@@ -542,6 +548,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     sg_config = params_from_base_suite_setup["sg_config"]
     cbs_ce = params_from_base_suite_setup["cbs_ce"]
     prometheus_enabled = request.config.getoption("--prometheus-enable")
+    sync_gateway_previous_version = params_from_base_suite_setup["sync_gateway_previous_version"]
 
     test_name = request.node.name
     c = cluster.Cluster(cluster_config)
@@ -602,7 +609,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "cbs_ce": cbs_ce,
         "sg_url": sg_url,
         "sg_admin_url": sg_admin_url,
-        "prometheus_enabled": prometheus_enabled
+        "prometheus_enabled": prometheus_enabled,
+        "sync_gateway_previous_version": sync_gateway_previous_version
     }
 
     # Code after the yield will execute when each test finishes
