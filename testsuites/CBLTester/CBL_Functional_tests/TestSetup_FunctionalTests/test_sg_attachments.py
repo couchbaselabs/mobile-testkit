@@ -25,6 +25,7 @@ from couchbase.exceptions import DocumentNotFoundException
 ])
 def test_delete_docs_with_attachments(params_from_base_test_setup, source, target, num_of_docs):
     """
+    https://docs.google.com/spreadsheets/d/1RrrIcIZN7MgLDlNzGWfUHo2NTYrx1Jr55SBNeCdDUQs/edit#gid=0
     1. Have CBL and SG up and running
     2. Create docs with attachment on CBL
     3. Replicate the docs
