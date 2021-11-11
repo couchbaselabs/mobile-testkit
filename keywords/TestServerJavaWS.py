@@ -91,7 +91,8 @@ class TestServerJavaWS(TestServerBase):
                 "testserver ansible_host={}".format(host),
                 "[testserver:vars]",
                 "ansible_user={}".format(os.environ["TESTSERVER_HOST_USER"]),
-                "ansible_password={}".format(os.environ["TESTSERVER_HOST_PASSWORD"])
+                "ansible_password={}".format(os.environ["TESTSERVER_HOST_PASSWORD"]),
+                "ansible_ssh_common_args: '-o UserKnownHostsFile=/dev/null'"
             ]
 
         ansible_testserver_target_string = "\n".join(ansible_testserver_target_lines)

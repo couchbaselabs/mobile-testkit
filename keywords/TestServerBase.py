@@ -66,7 +66,7 @@ class TestServerBase(object):
                 # If request does not throw, exit retry loop
                 break
             except ConnectionError:
-                log_info("Test server app may not be launched (Retrying) ...")
+                log_info("Test server app may not be launched (Retrying) ...  " + url)
                 time.sleep(1)
                 count += 1
 

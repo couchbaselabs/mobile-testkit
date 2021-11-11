@@ -211,6 +211,10 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="Disable Admin auth")
 
+    parser.addoption("--server-ssl",
+                     action="store_true",
+                     help="If set, will enable SSL communication between server and Sync Gateway")
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -240,6 +244,7 @@ def params_from_base_suite_setup(request):
     enable_sample_bucket = request.config.getoption("--enable-sample-bucket")
     xattrs_enabled = request.config.getoption("--xattrs")
     device_enabled = request.config.getoption("--device")
+    cbs_ssl = request.config.getoption("--server-ssl")
     sg_ssl = request.config.getoption("--sg-ssl")
     resume_cluster = request.config.getoption("--resume-cluster")
     generator = request.config.getoption("--doc-generator")
@@ -419,6 +424,15 @@ def params_from_base_suite_setup(request):
 
     if sync_gateway_version < "2.0":
         pytest.skip('Does not work with sg < 2.0 , so skipping the test')
+
+    if cbs_ssl:
+        log_info("Running tests with cbs <-> sg ssl enabled")
+        # Enable ssl in cluster configs
+        persist_cluster_config_environment_prop(cluster_config, 'cbs_ssl_enabled', True)
+    else:
+        log_info("Running tests with cbs <-> sg ssl disabled")
+        # Disable ssl in cluster configs
+        persist_cluster_config_environment_prop(cluster_config, 'cbs_ssl_enabled', False)
 
     if not skip_provisioning:
         log_info("Installing Sync Gateway + Couchbase Server + Accels ('di' only)")

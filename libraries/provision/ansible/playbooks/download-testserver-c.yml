@@ -1,0 +1,32 @@
+
+- name: Download Testserver C Package
+  hosts: testserver
+  vars:
+    testserver_download_url:
+    package_name:
+
+  tasks:
+  - debug:
+      msg: "testserver_download_url: {{ testserver_download_url }}"
+
+  - debug:
+      msg: "package_name: {{ package_name }}"
+
+
+  - name: Delete any exiting pre-downloaded files
+    file:
+      path: ~/ctestserver
+      state: absent
+
+  - name: create ctestserver directory if not exists
+    file:
+      path: ~/ctestserver
+      state: directory
+
+  - name: Download TestServer C
+    get_url:
+      url: "{{ testserver_download_url }}"
+      dest: ~/ctestserver/{{ package_name }}.zip
+
+  - name: Unzip Couchbase Lite Library and remove .zip
+    unarchive: src=~/ctestserver/{{ package_name }}.zip dest=~/ctestserver copy=no

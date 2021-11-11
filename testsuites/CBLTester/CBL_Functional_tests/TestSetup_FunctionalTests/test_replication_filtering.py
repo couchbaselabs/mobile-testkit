@@ -464,7 +464,7 @@ def test_filter_retrieval_with_replication_restart(params_from_base_test_setup, 
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
 
     if sync_gateway_version < "2.5.0":
-        pytest.skip('This test cannnot run with sg version below 2.5')
+        pytest.skip('This test cannot run with sg version below 2.5')
     channels = ["ABC"]
     username = "autotest"
     password = "password"
