@@ -1,6 +1,7 @@
 import logging
 import json
 import time
+from typing import Tuple
 import uuid
 import re
 
@@ -26,6 +27,8 @@ from keywords.SyncGateway import validate_sync_gateway_mode
 
 from keywords.exceptions import RestError, TimeoutException, LiteServError, ChangesError
 from keywords import types
+
+from requests.auth import HTTPBasicAuth
 
 
 def parse_multipart_response(response):
@@ -205,7 +208,7 @@ class MobileRestClient:
 
         return resp_obj
 
-    def request_session(self, url, db, name, password=None, ttl=86400):
+    def request_session(self, url, db, name, password=None, ttl=86400, auth=None):
         data = {
             "name": name,
             "ttl": ttl
@@ -213,13 +216,17 @@ class MobileRestClient:
         if password:
             data["password"] = password
 
-        resp = self._session.post("{}/{}/_session".format(url, db), data=json.dumps(data))
+        if auth:
+            resp = self._session.post("{}/{}/_session".format(url, db), data=json.dumps(data), auth=HTTPBasicAuth(auth[0], auth[1]))
+        else:
+            resp = self._session.post("{}/{}/_session".format(url, db), data=json.dumps(data))
+
         log_r(resp)
         resp.raise_for_status()
         return resp
 
-    def create_session(self, url, db, name, password=None, ttl=86400):
-        resp = self.request_session(url, db, name, password, ttl)
+    def create_session(self, url, db, name, password=None, ttl=86400, auth=None):
+        resp = self.request_session(url, db, name, password, ttl, auth)
         resp_obj = resp.json()
 
         if "cookie_name" in resp_obj:
@@ -296,7 +303,7 @@ class MobileRestClient:
 
         return resp.json()
 
-    def create_role(self, url, db, name, channels=None):
+    def create_role(self, url, db, name, channels=None, auth=None):
         """ Creates a role with name and channels for the specified 'db' """
 
         if channels is None:
@@ -309,11 +316,14 @@ class MobileRestClient:
             "admin_channels": channels
         }
 
-        resp = self._session.post("{}/{}/_role/".format(url, db), data=json.dumps(data))
+        if auth:
+            resp = self._session.post("{}/{}/_role/".format(url, db), data=json.dumps(data), auth=HTTPBasicAuth(auth[0], auth[1]))
+        else:
+            resp = self._session.post("{}/{}/_role/".format(url, db), data=json.dumps(data))
         log_r(resp)
         resp.raise_for_status()
 
-    def update_role(self, url, db, name, channels=None):
+    def update_role(self, url, db, name, channels=None, auth=None):
         """ Updates a role with name and channels for the specified 'db' """
 
         if channels is None:
@@ -326,7 +336,10 @@ class MobileRestClient:
             "admin_channels": channels
         }
 
-        resp = self._session.put("{}/{}/_role/{}".format(url, db, name), data=json.dumps(data))
+        if auth:
+            resp = self._session.put("{}/{}/_role/{}".format(url, db, name), data=json.dumps(data), auth=HTTPBasicAuth(auth[0], auth[1]))
+        else:
+            resp = self._session.put("{}/{}/_role/{}".format(url, db, name), data=json.dumps(data))
         log_r(resp)
         resp.raise_for_status()
 
@@ -348,7 +361,7 @@ class MobileRestClient:
 
         return resp.json()
 
-    def create_user(self, url, db, name, password, channels=None, roles=None):
+    def create_user(self, url, db, name, password, channels=None, roles=None, auth=None):
         """ Creates a user with channels on the sync_gateway Admin REST API.
         Returns a name password tuple that can be used for session creation or basic authentication
         """
@@ -368,12 +381,16 @@ class MobileRestClient:
             "admin_channels": channels,
             "admin_roles": roles
         }
-        resp = self._session.post("{}/{}/_user/".format(url, db), data=json.dumps(data))
+        if auth:
+            resp = self._session.post("{}/{}/_user/".format(url, db), data=json.dumps(data), auth=HTTPBasicAuth(auth[0], auth[1]))
+        else:
+            resp = self._session.post("{}/{}/_user/".format(url, db), data=json.dumps(data))
+
         log_r(resp)
         resp.raise_for_status()
         return name, password
 
-    def update_user(self, url, db, name, password=None, channels=None, roles=None, disabled=False):
+    def update_user(self, url, db, name, password=None, channels=None, roles=None, disabled=False, auth=None):
         """ Updates a user via the admin REST api
         Returns a name password tuple that can be used for session creation or basic authentication.
 
@@ -401,7 +418,11 @@ class MobileRestClient:
         if disabled:
             data["disabled"] = True
 
-        resp = self._session.put("{}/{}/_user/{}".format(url, db, name), data=json.dumps(data))
+        if auth:
+            resp = self._session.put("{}/{}/_user/{}".format(url, db, name), data=json.dumps(data), auth=HTTPBasicAuth(auth[0], auth[1]))
+        else:
+            resp = self._session.put("{}/{}/_user/{}".format(url, db, name), data=json.dumps(data))
+
         log_r(resp)
         resp.raise_for_status()
         return name, password
@@ -1098,7 +1119,7 @@ class MobileRestClient:
                 time.sleep(1)
                 continue
 
-    def purge_doc(self, url, db, doc):
+    def purge_doc(self, url, db, doc, auth=None):
         """
         Purges the each doc by doc id
 
@@ -1118,8 +1139,10 @@ class MobileRestClient:
             data = {
                 doc["id"]: [doc["rev"]]
             }
-
-        resp = self._session.post("{}/{}/_purge".format(url, db), json.dumps(data))
+        if auth:
+            resp = self._session.post("{}/{}/_purge".format(url, db), json.dumps(data), HTTPBasicAuth(auth[0], auth[1]))
+        else:
+            resp = self._session.post("{}/{}/_purge".format(url, db), json.dumps(data))
         log_r(resp)
         resp.raise_for_status()
         resp_obj = resp.json()

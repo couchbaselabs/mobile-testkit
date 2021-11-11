@@ -3,6 +3,7 @@ import json
 
 import requests
 from requests import Session
+from requests.auth import HTTPBasicAuth
 from jinja2 import Template
 import time
 import re
@@ -56,7 +57,7 @@ def get_sync_gateway_version(host):
     if sg_ssl_enabled(cluster_config):
         sg_scheme = "https"
 
-    resp = requests.get("{}://{}:4985".format(sg_scheme, host), verify=False)
+    resp = requests.get("{}://{}:4985".format(sg_scheme, host), verify=False, auth=HTTPBasicAuth('sgw_admin', 'password'))
     log_r(resp)
     resp.raise_for_status()
     resp_obj = resp.json()

@@ -10,6 +10,7 @@ from CBLClient.Authenticator import Authenticator
 
 from libraries.testkit import cluster
 from keywords.utils import log_info
+from keywords.constants import RBAC_FULL_ADMIN
 
 
 @pytest.mark.listener
@@ -41,6 +42,7 @@ def test_mask_password_in_logs(params_from_base_test_setup, password):
     liteserv_platform = params_from_base_test_setup["liteserv_platform"]
     enable_file_logging = params_from_base_test_setup["enable_file_logging"]
     test_cbllog = params_from_base_test_setup["test_cbllog"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     num_cbl_docs = 500
     if sync_gateway_version < "2.0.0" and not enable_file_logging:
@@ -58,8 +60,8 @@ def test_mask_password_in_logs(params_from_base_test_setup, password):
     db.create_bulk_docs(number=num_cbl_docs, id_prefix="cblid", db=cbl_db, channels=channels)
 
     # Add docs in SG
-    sg_client.create_user(sg_admin_url, sg_db, "autotest", password=password, channels=channels)
-    sg_client.create_session(sg_admin_url, sg_db, "autotest")
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, "autotest", password=password, channels=channels, auth=auth)
 
     replicator_authenticator = authenticator.authentication(username="autotest", password=password,
                                                             authentication_type="basic")
@@ -101,6 +103,7 @@ def test_verify_invalid_mask_password_in_logs(params_from_base_test_setup, inval
     liteserv_platform = params_from_base_test_setup["liteserv_platform"]
     enable_file_logging = params_from_base_test_setup["enable_file_logging"]
     test_cbllog = params_from_base_test_setup["test_cbllog"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     num_cbl_docs = 50
     if sync_gateway_version < "2.0.0" and not enable_file_logging:
@@ -118,8 +121,9 @@ def test_verify_invalid_mask_password_in_logs(params_from_base_test_setup, inval
     db.create_bulk_docs(number=num_cbl_docs, id_prefix="cblid", db=cbl_db, channels=channels)
 
     # Add docs in SG
-    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
-    sg_client.create_session(sg_admin_url, sg_db, "autotest")
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels, auth=auth)
+    sg_client.create_session(sg_admin_url, sg_db, "autotest", auth=auth)
 
     replicator_authenticator = authenticator.authentication(username="autotest", password=invalid_password,
                                                             authentication_type="basic")
