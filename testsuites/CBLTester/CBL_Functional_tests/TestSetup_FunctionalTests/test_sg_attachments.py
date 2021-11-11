@@ -21,7 +21,7 @@ from couchbase.exceptions import DocumentNotFoundException
     ('cbl', 'cbl', 100),
     ('sg', 'cbl', 10),
 ])
-def test_delete_docs_with_attachments(params_from_base_test_setup, source, target, num_of_docs, sdk_doc_ids=None):
+def test_delete_docs_with_attachments(params_from_base_test_setup, source, target, num_of_docs):
     """
     1. Have CBL and SG up and running
     2. Create docs with attachment on CBL
@@ -52,11 +52,12 @@ def test_delete_docs_with_attachments(params_from_base_test_setup, source, targe
     authenticator = Authenticator(base_url)
 
     # 2. Create docs with attachment on CBL
-    db.create_bulk_docs(num_of_docs, "attachment-2", db=cbl_db, channels=channels, attachments_generator=attachment.generate_png_100_100)
+    db.create_bulk_docs(num_of_docs, "attachment-2", db=cbl_db, channels=channels,
+                        attachments_generator=attachment.generate_png_100_100)
 
     # 3. Replicate the docs
-    sg_client.create_user(sg_admin_url, sg_db, "auto779", password="password", channels=channels)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "auto779")
+    sg_client.create_user(sg_admin_url, sg_db, "auto-test", password="password", channels=channels)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "auto-test")
     session = cookie, session_id
     replicator = Replication(base_url)
     replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
@@ -198,9 +199,10 @@ def test_doc_with_many_attachments(params_from_base_test_setup):
     # 4  Delete few attachments and verify attachments are deleted in the bucket
     del attachments[att_names[0]]
     del attachments[att_names[1]]
+    print(attachments)
     sg_client.update_doc(url=sg_admin_url, db=sg_db, doc_id=cbl_doc_ids[0], number_updates=1, delete_attachment=attachments)
-
-    # 5. verify deleted attachments
+    sg_client.update_doc(url=sg_admin_url, db=sg_db, doc_id=cbl_doc_ids[0], number_updates=1,
+                         # 5. verify deleted attachments
     cbs_url = cluster_topology['couchbase_servers'][0]
     # Connect to server via SDK
     cbs_ip = host_for_url(cbs_url)
@@ -244,22 +246,22 @@ def test_restart_sg_creating_attachments(params_from_base_test_setup):
     base_url = params_from_base_test_setup["base_url"]
     cbl_db = params_from_base_test_setup["source_db"]
 
-    channels = ["attachment-099"]
+    channels = ["attachment-10"]
     db = Database(base_url)
     sg_client = MobileRestClient()
 
     # 1. Have CBL and SG up and running
     sg_config = params_from_base_test_setup["sg_config"]
     c = cluster.Cluster(config=cluster_config)
-    c.reset(sg_config_path=sg_config)
+    # c.reset(sg_config_path=sg_config)
     authenticator = Authenticator(base_url)
 
     # 2. Create docs with attachment on CBL
-    db.create_bulk_docs(50, "attachment-2", db=cbl_db, channels=channels, attachments_generator=attachment.generate_png_100_100)
+    db.create_bulk_docs(50, "attachment-110", db=cbl_db, channels=channels, attachments_generator=attachment.generate_5_png_100_100)
 
     # 3. Replicate the docs
-    sg_client.create_user(sg_admin_url, sg_db, "auto779", password="password", channels=channels)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "auto779")
+    sg_client.create_user(sg_admin_url, sg_db, "auto10", password="password", channels=channels)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "auto10")
     session = cookie, session_id
     replicator = Replication(base_url)
     replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
@@ -267,17 +269,23 @@ def test_restart_sg_creating_attachments(params_from_base_test_setup):
                                        replicator_authenticator=replicator_authenticator)
     repl = replicator.create(repl_config)
     replicator.start(repl)
+    status = c.sync_gateways[0].restart(config=sg_config, cluster_config=cluster_config)
+    log_info("Restarting sg ....")
+    assert status == 0, "Sync_gateway did not start"
+    time.sleep(19)
     replicator.wait_until_replicator_idle(repl)
     cbl_doc_ids = db.getDocIds(cbl_db)
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session, include_docs=True)
     assert len(cbl_doc_ids) == len(sg_docs["rows"])
     sdk_doc_ids = [doc['id'] for doc in sg_docs["rows"]]
     attachment_ids = []
+    attachment_name = []
     # Get the attachment ID from the document meta data for verification
     for doc_id in sdk_doc_ids:
         raw_doc = sg_client.get_attachment_by_document(sg_admin_url, db=sg_db, doc=doc_id)
         att_name = list(raw_doc["_attachments"].keys())[0]
         att_name = att_name.replace('/', '%2F')
+        attachment_name.append(att_name)
         attachment_raw = sg_client.get_attachment_by_document(sg_admin_url, db=sg_db, doc=doc_id, attachment=att_name)
         attachment_ids.append(attachment_raw['key'])
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
@@ -296,7 +304,7 @@ def test_restart_sg_creating_attachments(params_from_base_test_setup):
     sdk_client.get_multi(attachment_ids)
 
     # 4. Delete docs in CBL/SG
-    sg_client.delete_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=session)
+    sg_client.delete_docs(url=sg_url, db=sg_db, docs=sg_docs["rows"], auth=session)
 
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
@@ -312,13 +320,6 @@ def test_restart_sg_creating_attachments(params_from_base_test_setup):
         if nfe is not None:
             sdk_deleted_doc_scratch_pad.remove(nfe.value.key)
     assert len(sdk_deleted_doc_scratch_pad) == 0
-
-
-    attachments_list = attachment.generate_5_png_10_10
-    sg_docs = document.create_docs(doc_id_prefix='sg_docs', number=num_of_docs,
-                                   attachments_generator=attachments_list, channels=channels)
-    sg_client.restart(config=sg_config, cluster_config=cluster_config)
-
 
 
 def verify_sg_xattrs(mode, sg_client, sg_url, sg_db, doc_id, expected_number_of_revs, expected_number_of_channels, deleted_docs=False):

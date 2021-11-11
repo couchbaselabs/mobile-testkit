@@ -174,6 +174,10 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="Disable Centralized Persistent Config")
 
+    parser.addoption("--sync-gateway-previous-version",
+                     action="store",
+                     help="sync-gateway-previous-version")
+
     parser.addoption("--enable-server-tls-skip-verify",
                      action="store_true",
                      help="Enable Server tls skip verify config")
