@@ -18,7 +18,7 @@ from libraries.provision.ansible_runner import AnsibleRunner
 from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_redact_level, get_sg_platform
 from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version, sg_ssl_enabled, get_cbs_version, is_delta_sync_enabled
 from utilities.cluster_config_utils import is_hide_prod_version_enabled, is_centralized_persistent_config_disabled
-from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config, send_dbconfig_as_restCall
+from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config, send_dbconfig_as_restCall, setup_sgwconfig_db_config
 from libraries.testkit.cluster import Cluster
 
 from keywords.utils import host_for_url
@@ -218,7 +218,7 @@ def verify_sg_accel_version(host, expected_sg_accel_version):
             raise ProvisioningError("Unexpected sync_gateway version!! Expected: {} Actual: {}".format(expected_sg_accel_version, running_ac_version))
 
 
-def load_sync_gateway_config(sg_conf, server_url, cluster_config):
+def load_sync_gateway_config(sg_conf, server_url, cluster_config, sg_db_cfg=None):
     """ Loads a syncgateway configuration for modification"""
     match_obj = re.match("(\w+?):\/\/(.*?):(\d+?)$", server_url)
     if match_obj:
@@ -232,7 +232,11 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config):
     with open(sg_conf) as default_conf:
         template = Template(default_conf.read())
         config_path = os.path.abspath(sg_conf)
-        bucket_names = get_buckets_from_sync_gateway_config(config_path, cluster_config)
+        if sg_db_cfg is not None:
+            non_cpc_config_path = os.path.abspath(sg_db_cfg)
+            bucket_names = get_buckets_from_sync_gateway_config(non_cpc_config_path, cluster_config)
+        else:
+            bucket_names = get_buckets_from_sync_gateway_config(config_path, cluster_config)
         sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
         cbs_cert_path = os.path.join(os.getcwd(), "certs")
         if is_xattrs_enabled(cluster_config):

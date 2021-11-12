@@ -380,7 +380,12 @@ class Cluster:
         mode = "cc"
         cpc_sgw_config_path = sync_gateway_config_path_for_mode(sg_conf_name, mode, cpc=True)
         if use_config:
-            cpc_sgw_config_path = get_cpc_config_from_config_path(sg_config_path, mode)
+            if use_config is True:
+                cpc_sgw_config_path = get_cpc_config_from_config_path(sg_config_path, mode)
+            else:
+                print("using the sgconfig path as use_config.......")
+                cpc_sgw_config_path = sg_config_path
+                sg_config_path = use_config
 
         cpc_config_path_full = os.path.abspath(cpc_sgw_config_path)
         config_path_full = os.path.abspath(sg_config_path)
@@ -441,7 +446,7 @@ class Cluster:
         cacertpath_var = ""
         server_scheme_var = ""
         server_port_var = ""
-        # username_var = ""
+        username_var = ""
         sg_use_views_var = ""
         num_index_replicas_var = ""
         autoimport_var = ""

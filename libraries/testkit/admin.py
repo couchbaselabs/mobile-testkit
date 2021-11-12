@@ -58,6 +58,7 @@ class Admin:
     def get_dbs(self):
         r = requests.get("{}/_all_dbs".format(self.admin_url), verify=False)
         log.info("GET {}".format(r.url))
+        log_response(r)
         r.raise_for_status()
         return r.json()
 
@@ -363,4 +364,19 @@ class Admin:
         log.info("PUT {}".format(resp.url))
         resp.raise_for_status()
         return resp.status_code
+
+    # PUT /_config
+    def put_config(self, config):
+        print("json dumpt of log config : ", json.dumps(config))
+        resp = requests.put("{0}/_config".format(self.admin_url), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, data=json.dumps(config), verify=False)
+        log.info("PUT {}".format(resp.url))
+        resp.raise_for_status()
+        return resp.status_code
+
+    # GET /_config
+    def get_runtime_config(self):
+        resp = requests.get("{0}/_config?include_runtime=true".format(self.admin_url), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False)
+        log.info("GET {}".format(resp.url))
+        resp.raise_for_status()
+        return resp.json()
 
