@@ -9,6 +9,7 @@ from keywords.MobileRestClient import MobileRestClient
 from CBLClient.Replication import Replication
 from CBLClient.Authenticator import Authenticator
 from CBLClient.Query import Query
+from keywords.constants import RBAC_FULL_ADMIN
 
 
 @pytest.mark.listener
@@ -389,6 +390,7 @@ def test_db_close_on_active_replicators(params_from_base_test_setup):
     sg_db = "db"
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_blip_url = params_from_base_test_setup["target_url"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if liteserv_version < "2.8.0":
         pytest.skip('This test supports for a feature from hydrogen(2.8.0)')
@@ -420,14 +422,15 @@ def test_db_close_on_active_replicators(params_from_base_test_setup):
     password = "password"
 
     sg_client = MobileRestClient()
-    sg_client.create_user(sg_admin_url, sg_db, username1, password=password, channels=channel1)
-    cookie1, session_id1 = sg_client.create_session(sg_admin_url, sg_db, username1)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username1, password=password, channels=channel1, auth=auth)
+    cookie1, session_id1 = sg_client.create_session(sg_admin_url, sg_db, username1, auth=auth)
 
-    sg_client.create_user(sg_admin_url, sg_db, username2, password=password, channels=channel2)
-    cookie2, session_id2 = sg_client.create_session(sg_admin_url, sg_db, username2)
+    sg_client.create_user(sg_admin_url, sg_db, username2, password=password, channels=channel2, auth=auth)
+    cookie2, session_id2 = sg_client.create_session(sg_admin_url, sg_db, username2, auth=auth)
 
-    sg_client.create_user(sg_admin_url, sg_db, username3, password=password, channels=channel3)
-    cookie3, session_id3 = sg_client.create_session(sg_admin_url, sg_db, username3)
+    sg_client.create_user(sg_admin_url, sg_db, username3, password=password, channels=channel3, auth=auth)
+    cookie3, session_id3 = sg_client.create_session(sg_admin_url, sg_db, username3, auth=auth)
 
     # 2. start 3 replicators on 3 different channels, set all continous to True
     replicator = Replication(base_url)
@@ -478,6 +481,7 @@ def test_db_close_on_active_replicator_and_live_query(params_from_base_test_setu
     sg_db = "db"
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_blip_url = params_from_base_test_setup["target_url"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if liteserv_version < "2.8.0":
         pytest.skip('This test supports for a feature from hydrogen(2.8.0)')
@@ -506,11 +510,12 @@ def test_db_close_on_active_replicator_and_live_query(params_from_base_test_setu
     password = "password"
 
     sg_client = MobileRestClient()
-    sg_client.create_user(sg_admin_url, sg_db, username1, password=password, channels=channel1)
-    cookie1, session_id1 = sg_client.create_session(sg_admin_url, sg_db, username1)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username1, password=password, channels=channel1, auth=auth)
+    cookie1, session_id1 = sg_client.create_session(sg_admin_url, sg_db, username1, auth=auth)
 
-    sg_client.create_user(sg_admin_url, sg_db, username2, password=password, channels=channel2)
-    cookie2, session_id2 = sg_client.create_session(sg_admin_url, sg_db, username2)
+    sg_client.create_user(sg_admin_url, sg_db, username2, password=password, channels=channel2, auth=auth)
+    cookie2, session_id2 = sg_client.create_session(sg_admin_url, sg_db, username2, auth=auth)
 
     # 2. start 2 replicators on 2 different channels, set all continous to True
     replicator = Replication(base_url)
@@ -561,6 +566,7 @@ def test_db_delete_on_active_replicators(params_from_base_test_setup):
     sg_db = "db"
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_blip_url = params_from_base_test_setup["target_url"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if liteserv_version < "2.8.0":
         pytest.skip('This test supports for a feature from hydrogen(2.8.0)')
@@ -580,7 +586,7 @@ def test_db_delete_on_active_replicators(params_from_base_test_setup):
     channel1 = ["Replication-1"]
     channel2 = ["Replication-2"]
     channel3 = ["Replication-3"]
-
+  
     db.create_bulk_docs(num_of_docs, "ch1", db=cbl_db, channels=channel1)
     db.create_bulk_docs(num_of_docs, "ch2", db=cbl_db, channels=channel2)
     db.create_bulk_docs(num_of_docs, "ch3", db=cbl_db, channels=channel3)
@@ -592,14 +598,15 @@ def test_db_delete_on_active_replicators(params_from_base_test_setup):
     password = "password"
 
     sg_client = MobileRestClient()
-    sg_client.create_user(sg_admin_url, sg_db, username1, password=password, channels=channel1)
-    cookie1, session_id1 = sg_client.create_session(sg_admin_url, sg_db, username1)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username1, password=password, channels=channel1, auth=auth)
+    cookie1, session_id1 = sg_client.create_session(sg_admin_url, sg_db, username1, auth=auth)
 
-    sg_client.create_user(sg_admin_url, sg_db, username2, password=password, channels=channel2)
-    cookie2, session_id2 = sg_client.create_session(sg_admin_url, sg_db, username2)
+    sg_client.create_user(sg_admin_url, sg_db, username2, password=password, channels=channel2, auth=auth)
+    cookie2, session_id2 = sg_client.create_session(sg_admin_url, sg_db, username2, auth=auth)
 
-    sg_client.create_user(sg_admin_url, sg_db, username3, password=password, channels=channel3)
-    cookie3, session_id3 = sg_client.create_session(sg_admin_url, sg_db, username3)
+    sg_client.create_user(sg_admin_url, sg_db, username3, password=password, channels=channel3, auth=auth)
+    cookie3, session_id3 = sg_client.create_session(sg_admin_url, sg_db, username3, auth=auth)
 
     # 2. start 3 replicators on 3 different channels, set all continous to True
     replicator = Replication(base_url)
@@ -646,6 +653,7 @@ def test_db_delete_on_active_replicator_and_live_query(params_from_base_test_set
     sg_db = "db"
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_blip_url = params_from_base_test_setup["target_url"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if liteserv_version < "2.8.0":
         pytest.skip('This test supports for a feature from hydrogen(2.8.0)')
@@ -674,11 +682,12 @@ def test_db_delete_on_active_replicator_and_live_query(params_from_base_test_set
     password = "password"
 
     sg_client = MobileRestClient()
-    sg_client.create_user(sg_admin_url, sg_db, username1, password=password, channels=channel1)
-    cookie1, session_id1 = sg_client.create_session(sg_admin_url, sg_db, username1)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username1, password=password, channels=channel1, auth=auth)
+    cookie1, session_id1 = sg_client.create_session(sg_admin_url, sg_db, username1, auth=auth)
 
-    sg_client.create_user(sg_admin_url, sg_db, username2, password=password, channels=channel2)
-    cookie2, session_id2 = sg_client.create_session(sg_admin_url, sg_db, username2)
+    sg_client.create_user(sg_admin_url, sg_db, username2, password=password, channels=channel2, auth=auth)
+    cookie2, session_id2 = sg_client.create_session(sg_admin_url, sg_db, username2, auth=auth)
 
     # 2. start 2 replicators on 2 different channels, set all continous to True
     replicator = Replication(base_url)

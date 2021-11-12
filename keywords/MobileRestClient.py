@@ -114,13 +114,16 @@ class MobileRestClient:
             merged_list.extend(doc_list)
         return merged_list
 
-    def get_server_type(self, url):
+    def get_server_type(self, url, auth=None):
         """
         Issues a get to the service running at the specified url.
         It will return a server type of 'listener' or 'syncgateway'
         """
 
-        resp = self._session.get(url)
+        if auth:
+            resp = self._session.get(url, auth=HTTPBasicAuth(auth[0], auth[1]))
+        else:
+            resp = self._session.get(url)
         log_r(resp)
         resp.raise_for_status()
         resp_obj = resp.json()
@@ -845,13 +848,16 @@ class MobileRestClient:
 
         return resp_obj
 
-    def get_raw_doc(self, url, db, doc_id):
+    def get_raw_doc(self, url, db, doc_id, auth=None):
         """ Get a document via _raw Sync Gateway endpoint """
         params = {
             "include_doc": "true",
             "redact": "false"
         }
-        resp = self._session.get("{}/{}/_raw/{}".format(url, db, doc_id), params=params)
+        if auth:
+            resp = self._session.get("{}/{}/_raw/{}".format(url, db, doc_id), params=params, auth=HTTPBasicAuth(auth[0], auth[1]))
+        else:
+            resp = self._session.get("{}/{}/_raw/{}".format(url, db, doc_id), params=params)
         log_r(resp)
         resp.raise_for_status()
         return resp.json()
@@ -1129,7 +1135,7 @@ class MobileRestClient:
         docs format (Sync Gateway): [{u'ok': True, u'_rev': u'3-56e50918afe3e9b3c29e94ad55cc6b15', u'_id': u'large_attach_0'}, ...]
         """
 
-        server_type = self.get_server_type(url=url)
+        server_type = self.get_server_type(url=url, auth=auth)
 
         if server_type == ServerType.syncgateway:
             log_info("Purging doc: {}".format(doc["_id"]))
@@ -1142,7 +1148,7 @@ class MobileRestClient:
                 doc["id"]: [doc["rev"]]
             }
         if auth:
-            resp = self._session.post("{}/{}/_purge".format(url, db), json.dumps(data), HTTPBasicAuth(auth[0], auth[1]))
+            resp = self._session.post("{}/{}/_purge".format(url, db), json.dumps(data), auth=HTTPBasicAuth(auth[0], auth[1]))
         else:
             resp = self._session.post("{}/{}/_purge".format(url, db), json.dumps(data))
         log_r(resp)
@@ -1151,7 +1157,7 @@ class MobileRestClient:
 
         return resp_obj
 
-    def purge_docs(self, url, db, docs):
+    def purge_docs(self, url, db, docs, auth=None):
         """
         Purges the each doc in the provided 'docs' given the 'id' and 'rev'
 
@@ -1159,7 +1165,7 @@ class MobileRestClient:
         docs format (Sync Gateway): [{u'ok': True, u'_rev': u'3-56e50918afe3e9b3c29e94ad55cc6b15', u'_id': u'large_attach_0'}, ...]
         """
 
-        server_type = self.get_server_type(url=url)
+        server_type = self.get_server_type(url=url, auth=auth)
 
         purged_docs = []
         for doc in docs:
@@ -1175,7 +1181,10 @@ class MobileRestClient:
                     doc["id"]: [doc["rev"]]
                 }
 
-            resp = self._session.post("{}/{}/_purge".format(url, db), json.dumps(data))
+            if auth:
+                resp = self._session.post("{}/{}/_purge".format(url, db), json.dumps(data), auth=HTTPBasicAuth(auth[0], auth[1]))
+            else:
+                resp = self._session.post("{}/{}/_purge".format(url, db), json.dumps(data))
             log_r(resp)
             resp.raise_for_status()
             resp_obj = resp.json()
@@ -2338,9 +2347,12 @@ class MobileRestClient:
         if missing_doc_ids != expected_missing_doc_ids:
             raise AssertionError("Found doc ids should be the same as expected doc ids")
 
-    def get_expvars(self, url):
+    def get_expvars(self, url, auth=None):
         """ Gets expvars for the url """
-        resp = self._session.get("{}/_expvar".format(url))
+        if auth:
+            resp = self._session.get("{}/_expvar".format(url), auth=HTTPBasicAuth(auth[0], auth[1]))
+        else:
+            resp = self._session.get("{}/_expvar".format(url))
         log_r(resp)
         resp.raise_for_status()
 

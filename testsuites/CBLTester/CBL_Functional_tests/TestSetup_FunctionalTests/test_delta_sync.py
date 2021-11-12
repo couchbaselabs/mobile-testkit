@@ -11,6 +11,7 @@ from utilities.cluster_config_utils import persist_cluster_config_environment_pr
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from libraries.testkit import cluster
 from libraries.testkit.prometheus import verify_stat_on_prometheus
+from keywords.constants import RBAC_FULL_ADMIN
 
 
 @pytest.mark.listener
@@ -44,6 +45,7 @@ def test_delta_sync_replication(params_from_base_test_setup, num_of_docs, replic
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     mode = params_from_base_test_setup["mode"]
     prometheus_enable = params_from_base_test_setup["prometheus_enable"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if sync_gateway_version < "2.5.0":
         pytest.skip('This test cannnot run with sg version below 2.5')
@@ -60,8 +62,9 @@ def test_delta_sync_replication(params_from_base_test_setup, num_of_docs, replic
     enable_delta_sync(c, sg_config, cluster_config, mode, True)
 
     sg_client = MobileRestClient()
-    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channels)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channels, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
     session = cookie, session_id
     # 1. Create docs in CBL
     db.create_bulk_docs(num_of_docs, "cbl_sync", db=cbl_db, channels=channels)
@@ -76,8 +79,8 @@ def test_delta_sync_replication(params_from_base_test_setup, num_of_docs, replic
                                               replicator_authenticator=replicator_authenticator,
                                               replication_type="push")
     replicator.stop(repl)
-    _, doc_writes_bytes = get_net_stats(sg_client, sg_admin_url)
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
+    _, doc_writes_bytes = get_net_stats(sg_client, sg_admin_url, auth)
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True, auth=auth)["rows"]
     # Verify database doc counts
     cbl_doc_count = db.getCount(cbl_db)
     assert len(sg_docs) == cbl_doc_count, "Expected number of docs does not exist in sync-gateway after replication"
@@ -91,7 +94,7 @@ def test_delta_sync_replication(params_from_base_test_setup, num_of_docs, replic
                                               replicator_authenticator=replicator_authenticator,
                                               replication_type="pull")
     replicator.stop(repl)
-    doc_reads_bytes1, doc_writes_bytes1 = get_net_stats(sg_client, sg_admin_url)
+    doc_reads_bytes1, doc_writes_bytes1 = get_net_stats(sg_client, sg_admin_url, auth)
     delta_size = doc_reads_bytes1
     assert delta_size < doc_writes_bytes, "did not replicate just delta"
 
@@ -122,7 +125,7 @@ def test_delta_sync_replication(params_from_base_test_setup, num_of_docs, replic
     replicator.stop(repl)
 
     # Get Sync Gateway Expvars
-    expvars = sg_client.get_expvars(url=sg_admin_url)
+    expvars = sg_client.get_expvars(url=sg_admin_url, auth=auth)
 
     if replication_type == "push":
         assert expvars['syncgateway']['per_db'][sg_db]['delta_sync']['delta_push_doc_count'] == num_of_docs, "delta push replication count is not right"
@@ -137,7 +140,7 @@ def test_delta_sync_replication(params_from_base_test_setup, num_of_docs, replic
             assert verify_stat_on_prometheus("sgw_delta_sync_delta_pull_replication_count"), expvars['syncgateway']['per_db'][sg_db]['delta_sync']['delta_pull_replication_count']
             assert verify_stat_on_prometheus("sgw_gsi_views_access_count"), expvars['syncgateway']['per_db'][sg_db]['gsi_views']['access_query_count']
 
-    doc_reads_bytes2, doc_writes_bytes2 = get_net_stats(sg_client, sg_admin_url)
+    doc_reads_bytes2, doc_writes_bytes2 = get_net_stats(sg_client, sg_admin_url, auth)
     if replication_type == "push":
         delta_size = doc_writes_bytes2 - doc_writes_bytes1
     else:
@@ -146,7 +149,7 @@ def test_delta_sync_replication(params_from_base_test_setup, num_of_docs, replic
     if replication_type != "push" and file_attachment is not None:
         assert delta_size < doc_writes_bytes, "did not replicate just delta"
 
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True, auth=auth)["rows"]
     doc_ids = db.getDocIds(cbl_db)
     cbl_db_docs = db.getDocuments(cbl_db, doc_ids)
     compare_docs(cbl_db, db, sg_docs)
@@ -186,6 +189,7 @@ def test_delta_sync_enabled_disabled(params_from_base_test_setup, num_of_docs, r
     cbl_db = params_from_base_test_setup["source_db"]
     mode = params_from_base_test_setup["mode"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if sync_gateway_version < "2.5.0":
         pytest.skip('This test cannnot run with sg version below 2.5')
@@ -200,8 +204,9 @@ def test_delta_sync_enabled_disabled(params_from_base_test_setup, num_of_docs, r
     enable_delta_sync(c, sg_config, cluster_config, mode, True)
 
     sg_client = MobileRestClient()
-    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channels)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channels, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
     session = cookie, session_id
     replicator = Replication(base_url)
     authenticator = Authenticator(base_url)
@@ -217,10 +222,10 @@ def test_delta_sync_enabled_disabled(params_from_base_test_setup, num_of_docs, r
                                               replication_type="push")
     replicator.stop(repl)
 
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True, auth=auth)["rows"]
 
     # Get expvars and get original size of document
-    _, doc_writes_bytes = get_net_stats(sg_client, sg_admin_url)
+    _, doc_writes_bytes = get_net_stats(sg_client, sg_admin_url, auth)
     update_docs(replication_type, cbl_db, db, sg_client, sg_docs, sg_url, sg_db, number_of_updates, session, channels)
 
     repl = replicator.configure_and_replicate(source_db=cbl_db,
@@ -231,14 +236,14 @@ def test_delta_sync_enabled_disabled(params_from_base_test_setup, num_of_docs, r
     replicator.stop(repl)
 
     # Get expvars and get original size of document
-    doc_reads_bytes1, doc_writes_bytes1 = get_net_stats(sg_client, sg_admin_url)
+    doc_reads_bytes1, doc_writes_bytes1 = get_net_stats(sg_client, sg_admin_url, auth)
     if replication_type == "pull":
         delta_size = doc_reads_bytes1
     else:
         delta_size = doc_writes_bytes1 - doc_writes_bytes
 
     # Get Sync Gateway Expvars
-    expvars = sg_client.get_expvars(url=sg_admin_url)
+    expvars = sg_client.get_expvars(url=sg_admin_url, auth=auth)
     if replication_type == "push":
         assert expvars['syncgateway']['per_db'][sg_db]['delta_sync']['delta_push_doc_count'] == 10, "delta push replication count is not right"
     else:
@@ -252,17 +257,17 @@ def test_delta_sync_enabled_disabled(params_from_base_test_setup, num_of_docs, r
 
     update_docs(replication_type, cbl_db, db, sg_client, sg_docs, sg_url, sg_db, number_of_updates, session, channels)
     # Get expvars and get original size of document
-    doc_reads_bytes2, doc_writes_bytes2 = get_net_stats(sg_client, sg_admin_url)
+    doc_reads_bytes2, doc_writes_bytes2 = get_net_stats(sg_client, sg_admin_url, auth)
 
     repl = replicator.configure_and_replicate(source_db=cbl_db,
                                               target_url=sg_blip_url,
                                               continuous=False,
                                               replicator_authenticator=replicator_authenticator,
                                               replication_type=replication_type)
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True, auth=auth)["rows"]
 
     # Get expvars and get original size of document
-    doc_reads_bytes3, doc_writes_bytes3 = get_net_stats(sg_client, sg_admin_url)
+    doc_reads_bytes3, doc_writes_bytes3 = get_net_stats(sg_client, sg_admin_url, auth)
     if replication_type == "pull":
         delta_disabled_doc_size = doc_reads_bytes3 - doc_reads_bytes2
     else:
@@ -272,7 +277,7 @@ def test_delta_sync_enabled_disabled(params_from_base_test_setup, num_of_docs, r
     # assert delta_disabled_doc_size == full_doc_size, "did not get full doc size"
     assert delta_disabled_doc_size > delta_size, "disabled delta doc size is more than enabled delta size"
     try:
-        expvars = sg_client.get_expvars(url=sg_admin_url)
+        expvars = sg_client.get_expvars(url=sg_admin_url, auth=auth)
         expvars['syncgateway']['per_db'][sg_db]['delta_sync']
         assert False, "delta sync is not disabled"
     except KeyError:
@@ -309,6 +314,7 @@ def test_delta_sync_within_expiry(params_from_base_test_setup, num_of_docs, repl
     cbl_db = params_from_base_test_setup["source_db"]
     mode = params_from_base_test_setup["mode"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if sync_gateway_version < "2.5.0":
         pytest.skip('This test cannnot run with sg version below 2.5')
@@ -324,8 +330,9 @@ def test_delta_sync_within_expiry(params_from_base_test_setup, num_of_docs, repl
     enable_delta_sync(c, sg_config, cluster_config, mode, True)
 
     sg_client = MobileRestClient()
-    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channels)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channels, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
     session = cookie, session_id
     # 2. Create docs in CBL
     db.create_bulk_docs(num_of_docs, "cbl_sync", db=cbl_db, channels=channels)
@@ -342,7 +349,7 @@ def test_delta_sync_within_expiry(params_from_base_test_setup, num_of_docs, repl
     replicator.stop(repl)
 
     # get stats_send from expvar api
-    _, doc_writes_bytes1 = get_net_stats(sg_client, sg_admin_url)
+    _, doc_writes_bytes1 = get_net_stats(sg_client, sg_admin_url, auth)
 
     # 4. update docs in SGW/CBL
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, include_docs=True, auth=session)["rows"]
@@ -356,7 +363,7 @@ def test_delta_sync_within_expiry(params_from_base_test_setup, num_of_docs, repl
                                               replication_type=replication_type)
 
     # 6. get stats_send from expvar api
-    doc_reads_bytes2, doc_writes_bytes2 = get_net_stats(sg_client, sg_admin_url)
+    doc_reads_bytes2, doc_writes_bytes2 = get_net_stats(sg_client, sg_admin_url, auth)
     if replication_type == "pull":
         delta_size = doc_reads_bytes2
     else:
@@ -410,6 +417,7 @@ def test_delta_sync_utf8_strings(params_from_base_test_setup, num_of_docs, repli
     mode = params_from_base_test_setup["mode"]
     sg_config = params_from_base_test_setup["sg_config"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if sync_gateway_version < "2.5.0":
         pytest.skip('This test cannnot run with sg version below 2.5')
@@ -424,8 +432,9 @@ def test_delta_sync_utf8_strings(params_from_base_test_setup, num_of_docs, repli
     enable_delta_sync(c, sg_config, cluster_config, mode, True)
 
     sg_client = MobileRestClient()
-    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channels)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channels, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
     session = cookie, session_id
 
     # 2. Create docs in CBL
@@ -442,11 +451,11 @@ def test_delta_sync_utf8_strings(params_from_base_test_setup, num_of_docs, repli
                                               replicator_authenticator=replicator_authenticator,
                                               replication_type="push")
     replicator.stop(repl)
-    _, doc_writes_bytes1 = get_net_stats(sg_client, sg_admin_url)
+    _, doc_writes_bytes1 = get_net_stats(sg_client, sg_admin_url, auth)
     full_doc_size = doc_writes_bytes1
 
     # 4. update docs in SGW/CBL
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True, auth=auth)["rows"]
     update_docs(replication_type, cbl_db, db, sg_client, sg_docs, sg_url, sg_db, number_of_updates, session, channels, string_type="utf-8")
 
     # 5. replicate docs using push/pull replication
@@ -456,14 +465,14 @@ def test_delta_sync_utf8_strings(params_from_base_test_setup, num_of_docs, repli
                                               replicator_authenticator=replicator_authenticator,
                                               replication_type=replication_type)
     replicator.stop(repl)
-    doc_reads_bytes2, doc_writes_bytes2 = get_net_stats(sg_client, sg_admin_url)
+    doc_reads_bytes2, doc_writes_bytes2 = get_net_stats(sg_client, sg_admin_url, auth)
     if replication_type == "pull":
         delta_size = doc_reads_bytes2
     else:
         delta_size = doc_writes_bytes2 - doc_writes_bytes1
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True, auth=auth)["rows"]
     compare_docs(cbl_db, db, sg_docs)
-    verify_delta_stats_counts(sg_client, sg_admin_url, replication_type, sg_db, num_of_docs)
+    verify_delta_stats_counts(sg_client, sg_admin_url, replication_type, sg_db, num_of_docs, auth)
     assert delta_size < full_doc_size, "delta size is not less than full doc size when delta is replicated"
 
 
@@ -494,6 +503,7 @@ def test_delta_sync_nested_doc(params_from_base_test_setup, num_of_docs, replica
     mode = params_from_base_test_setup["mode"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     sg_config = params_from_base_test_setup["sg_config"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if sync_gateway_version < "2.5.0":
         pytest.skip('This test cannnot run with sg version below 2.5')
@@ -508,8 +518,9 @@ def test_delta_sync_nested_doc(params_from_base_test_setup, num_of_docs, replica
     enable_delta_sync(c, sg_config, cluster_config, mode, True)
 
     sg_client = MobileRestClient()
-    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channels)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channels, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
     session = cookie, session_id
 
     # 2. Create docs in CBL
@@ -527,10 +538,10 @@ def test_delta_sync_nested_doc(params_from_base_test_setup, num_of_docs, replica
     replicator.stop(repl)
 
     # get net_stats_send from expvar api
-    _, doc_writes_bytes1 = get_net_stats(sg_client, sg_admin_url)
+    _, doc_writes_bytes1 = get_net_stats(sg_client, sg_admin_url, auth)
 
     # 4. update docs in SGW/CBL
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True, auth=auth)["rows"]
     update_docs(replication_type, cbl_db, db, sg_client, sg_docs, sg_url, sg_db, number_of_updates, session, channels)
 
     # 5. replicate docs using pull replication
@@ -541,13 +552,13 @@ def test_delta_sync_nested_doc(params_from_base_test_setup, num_of_docs, replica
                                               replication_type=replication_type)
 
     # 6. get pub_net_stats_send from expvar api
-    doc_reads_bytes2, _ = get_net_stats(sg_client, sg_admin_url)
+    doc_reads_bytes2, _ = get_net_stats(sg_client, sg_admin_url, auth)
     assert doc_reads_bytes2 < doc_writes_bytes1, "delta size is not less than full doc size"
 
     # 7. Verify the body of nested doc matches with sgw and cbl
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True, auth=auth)["rows"]
     compare_docs(cbl_db, db, sg_docs)
-    verify_delta_stats_counts(sg_client, sg_admin_url, replication_type, sg_db, num_of_docs)
+    verify_delta_stats_counts(sg_client, sg_admin_url, replication_type, sg_db, num_of_docs, auth)
 
 
 @pytest.mark.listener
@@ -574,6 +585,7 @@ def test_delta_sync_dbWorker(params_from_base_test_setup):
     mode = params_from_base_test_setup["mode"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     sg_config = params_from_base_test_setup["sg_config"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if sync_gateway_version < "2.5.0":
         pytest.skip('This test cannnot run with sg version below 2.5')
@@ -590,8 +602,9 @@ def test_delta_sync_dbWorker(params_from_base_test_setup):
     enable_delta_sync(c, sg_config, cluster_config, mode, True)
 
     sg_client = MobileRestClient()
-    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channels)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channels, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
     session = cookie, session_id
 
     # 1. add docs in SGW
@@ -609,7 +622,7 @@ def test_delta_sync_dbWorker(params_from_base_test_setup):
     replicator.stop(repl)
 
     # 3. update docs in SGW/CBL
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True, auth=auth)["rows"]
     update_docs(replication_type, cbl_db, db, sg_client, sg_docs, sg_url, sg_db, number_of_updates, session, channels)
     sg_client.add_docs(url=sg_url, db=sg_db, number=num_of_docs, id_prefix="db_worker2", channels=channels, auth=session)
 
@@ -621,7 +634,7 @@ def test_delta_sync_dbWorker(params_from_base_test_setup):
                                               replication_type=replication_type)
 
     # 5. Verify docs after replication matching in SGW and CBL
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True, auth=auth)["rows"]
     compare_docs(cbl_db, db, sg_docs)
 
 
@@ -654,6 +667,7 @@ def test_delta_sync_larger_than_doc(params_from_base_test_setup, num_of_docs, re
     mode = params_from_base_test_setup["mode"]
     sg_config = params_from_base_test_setup["sg_config"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if sync_gateway_version < "2.5.0":
         pytest.skip('This test cannnot run with sg version below 2.5')
@@ -668,8 +682,9 @@ def test_delta_sync_larger_than_doc(params_from_base_test_setup, num_of_docs, re
     enable_delta_sync(c, sg_config, cluster_config, mode, True)
 
     sg_client = MobileRestClient()
-    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channels)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channels, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
     session = cookie, session_id
 
     # 2. Create docs in CBL
@@ -687,11 +702,11 @@ def test_delta_sync_larger_than_doc(params_from_base_test_setup, num_of_docs, re
     replicator.stop(repl)
 
     # get stats_send from expvar api
-    _, doc_writes_bytes1 = get_net_stats(sg_client, sg_admin_url)
+    _, doc_writes_bytes1 = get_net_stats(sg_client, sg_admin_url, auth)
     full_doc_size = doc_writes_bytes1
 
     # 4. update docs in SGW/CBL
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True, auth=auth)["rows"]
     update_larger_doc(replication_type, cbl_db, db, sg_client, sg_docs, sg_url, sg_db, number_of_updates, session, channels)
 
     # 5. replicate docs using push/pull replication
@@ -702,14 +717,14 @@ def test_delta_sync_larger_than_doc(params_from_base_test_setup, num_of_docs, re
                                               replication_type=replication_type)
 
     # 6. get stats from expvar api
-    doc_reads_bytes2, doc_writes_bytes2 = get_net_stats(sg_client, sg_admin_url)
+    doc_reads_bytes2, doc_writes_bytes2 = get_net_stats(sg_client, sg_admin_url, auth)
     if replication_type == "pull":
         larger_delta_size = doc_reads_bytes2
     else:
         larger_delta_size = doc_writes_bytes2 - doc_writes_bytes1
 
     # compare full body on SGW and CBL and verify whole body matches
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True, auth=auth)["rows"]
     compare_docs(cbl_db, db, sg_docs)
 
     assert larger_delta_size >= full_doc_size, "did not get full doc size after deltas is expired"
@@ -745,6 +760,7 @@ def test_delta_sync_on_community_edition(params_from_base_test_setup, num_of_doc
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     sg_ce = params_from_base_test_setup["sg_ce"]
     mode = params_from_base_test_setup["mode"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if not sg_ce:
         pytest.skip("Test is only for community edition of SG")
@@ -764,8 +780,9 @@ def test_delta_sync_on_community_edition(params_from_base_test_setup, num_of_doc
     enable_delta_sync(c, sg_config, cluster_config, mode, True)
 
     sg_client = MobileRestClient()
-    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channels)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channels, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
     session = cookie, session_id
     # 1. Create docs in CBL
     db.create_bulk_docs(num_of_docs, "cbl_sync", db=cbl_db, channels=channels)
@@ -780,8 +797,8 @@ def test_delta_sync_on_community_edition(params_from_base_test_setup, num_of_doc
                                               replicator_authenticator=replicator_authenticator,
                                               replication_type="push")
     replicator.stop(repl)
-    doc_read_bytes, doc_writes_bytes = get_net_stats(sg_client, sg_admin_url)
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
+    doc_read_bytes, doc_writes_bytes = get_net_stats(sg_client, sg_admin_url, auth)
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True, auth=auth)["rows"]
     # Verify database doc counts
     cbl_doc_count = db.getCount(cbl_db)
     assert len(sg_docs) == cbl_doc_count, "Expected number of docs does not exist in sync-gateway after replication"
@@ -795,7 +812,7 @@ def test_delta_sync_on_community_edition(params_from_base_test_setup, num_of_doc
                                               replicator_authenticator=replicator_authenticator,
                                               replication_type="pull")
     replicator.stop(repl)
-    doc_reads_bytes1, doc_writes_bytes1 = get_net_stats(sg_client, sg_admin_url)
+    doc_reads_bytes1, doc_writes_bytes1 = get_net_stats(sg_client, sg_admin_url, auth)
     delta_size = doc_reads_bytes1
     assert delta_size > doc_writes_bytes, "delta_sync in SG CE"
 
@@ -842,12 +859,12 @@ def test_delta_sync_on_community_edition(params_from_base_test_setup, num_of_doc
     replicator.stop(repl)
 
     # Get Sync Gateway Expvars
-    expvars = sg_client.get_expvars(url=sg_admin_url)
+    expvars = sg_client.get_expvars(url=sg_admin_url, auth=auth)
 
     # 5. Verify delta sync stats are not available for community edition
     assert "delta_sync" not in expvars['syncgateway']['per_db'][sg_db], "delta_sync in SG CE"
 
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True, auth=auth)["rows"]
     doc_ids = db.getDocIds(cbl_db)
     cbl_db_docs = db.getDocuments(cbl_db, doc_ids)
     compare_docs(cbl_db, db, sg_docs)
@@ -883,6 +900,7 @@ def test_delta_sync_with_no_deltas(params_from_base_test_setup, doc_creation_sou
     mode = params_from_base_test_setup["mode"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     sg_config = params_from_base_test_setup["sg_config"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     num_of_docs = 1
 
     if sync_gateway_version < "2.5.0":
@@ -897,8 +915,9 @@ def test_delta_sync_with_no_deltas(params_from_base_test_setup, doc_creation_sou
     enable_delta_sync(c, sg_config, cluster_config, mode, True)
 
     sg_client = MobileRestClient()
-    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channels)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channels, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
     session = cookie, session_id
 
     # 1. Create docs in CBL/SGW
@@ -933,7 +952,7 @@ def test_delta_sync_with_no_deltas(params_from_base_test_setup, doc_creation_sou
             db.updateDocument(cbl_db, doc_id=doc_id, data=data)
 
     else:
-        sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
+        sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True, auth=auth)["rows"]
         for doc in sg_docs:
             sg_client.update_doc_with_content(url=sg_url, db=sg_db, doc_id=doc["id"], key="location", value="germany", auth=session, channels=channels)
 
@@ -950,7 +969,7 @@ def test_delta_sync_with_no_deltas(params_from_base_test_setup, doc_creation_sou
     # if updated in cbl at step3, it has to update on SGW at step5
     # if updated in SGW at step3, it has to upddate on CBL at step5
     if doc_update_source == "cbl":
-        sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
+        sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True, auth=auth)["rows"]
         for doc in sg_docs:
             sg_client.update_doc_with_content(url=sg_url, db=sg_db, doc_id=doc["id"], key="location", value="Arizona", auth=session, channels=channels)
     else:
@@ -963,7 +982,7 @@ def test_delta_sync_with_no_deltas(params_from_base_test_setup, doc_creation_sou
     replicator.wait_until_replicator_idle(repl)
 
     # 6. Verify the body of the doc matches with sgw and cbl
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True, auth=auth)["rows"]
     compare_docs(cbl_db, db, sg_docs)
     replicator.stop(repl)
 
@@ -1012,15 +1031,15 @@ def property_updater(doc_body):
     return doc_body
 
 
-def get_net_stats(sg_client, sg_admin_url):
-    expvars = sg_client.get_expvars(url=sg_admin_url)
+def get_net_stats(sg_client, sg_admin_url, auth):
+    expvars = sg_client.get_expvars(url=sg_admin_url, auth=auth)
     doc_reads_bytes = expvars['syncgateway']['per_db']['db']['database']['doc_reads_bytes_blip']
     doc_writes_bytes = expvars['syncgateway']['per_db']['db']['database']['doc_writes_bytes_blip']
     return doc_reads_bytes, doc_writes_bytes
 
 
-def verify_delta_stats_counts(sg_client, sg_admin_url, replication_type, sg_db, num_of_docs):
-    expvars = sg_client.get_expvars(url=sg_admin_url)
+def verify_delta_stats_counts(sg_client, sg_admin_url, replication_type, sg_db, num_of_docs, auth):
+    expvars = sg_client.get_expvars(url=sg_admin_url, auth=auth)
     if replication_type == "push":
         assert expvars['syncgateway']['per_db'][sg_db]['delta_sync']['delta_push_doc_count'] == num_of_docs, "delta push replication count is not right"
     else:

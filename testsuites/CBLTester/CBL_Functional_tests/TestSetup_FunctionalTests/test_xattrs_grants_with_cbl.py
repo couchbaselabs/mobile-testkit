@@ -9,6 +9,7 @@ from libraries.testkit import cluster
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
 from keywords.couchbaseserver import get_sdk_client_with_bucket
 import couchbase.subdocument as SD
+from keywords.constants import RBAC_FULL_ADMIN
 
 
 @pytest.mark.channels
@@ -39,6 +40,7 @@ def test_xattrs_grant_automatic_imports(params_from_base_test_setup, x509_cert_a
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if not xattrs_enabled or sync_gateway_version < "3.0.0":
         pytest.skip('Test did not enable xattrs or sgw version is not 3.0 and above')
@@ -76,23 +78,24 @@ def test_xattrs_grant_automatic_imports(params_from_base_test_setup, x509_cert_a
     cbs_ip = c_cluster.servers[0].host
     cbs_bucket = c_cluster.servers[0].get_bucket_names()[0]
     sdk_bucket = get_sdk_client_with_bucket(ssl_enabled, c_cluster, cbs_ip, cbs_bucket)
-    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=sg_channels1)
-    auto_user = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=sg_channels1, auth=auth)
+    auto_user = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username, auth=auth)
     # 3. Create doc via SGW
     sg_docs = document.create_docs('sg_xattrs', number=num_of_docs)
     sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=auto_user)
-    raw_doc = sg_client.get_raw_doc(sg_admin_url, sg_db, sg_doc_xattrs_id)
+    raw_doc = sg_client.get_raw_doc(sg_admin_url, sg_db, sg_doc_xattrs_id, auth=auth)
     rev = raw_doc["_sync"]["rev"]
 
     # Verify docs via SGW cannot be access by user
     replicator = Replication(base_url)
     _, _, repl = replicator.create_session_configure_replicate(
-        base_url, sg_admin_url, sg_db, username, password, sg_channels1, sg_client, cbl_db, sg_blip_url, continuous=continuous, replication_type="push_pull")
+        base_url, sg_admin_url, sg_db, username, password, sg_channels1, sg_client, cbl_db, sg_blip_url, continuous=continuous, replication_type="push_pull", auth=auth)
     replicator.wait_until_replicator_idle(repl)
     cbl_doc_count = db.getCount(cbl_db)
     assert cbl_doc_count == 0, "cbl docs count is not 0"
 
-    expvars = sg_client.get_expvars(sg_admin_url)
+    expvars = sg_client.get_expvars(sg_admin_url, auth=auth)
     import_count = expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"]
 
     # 4. Update doc with SDK to add user xattr
@@ -102,9 +105,9 @@ def test_xattrs_grant_automatic_imports(params_from_base_test_setup, x509_cert_a
     assert cbl_doc_count == 1, "cbl docs count is not 1 after assigning the user xattrs to the channel"
 
     # 5. Verify  Import Count stats is 1
-    expvars = sg_client.get_expvars(sg_admin_url)
+    expvars = sg_client.get_expvars(sg_admin_url, auth=auth)
     assert expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"] == import_count + 1, "import_count is not incremented"
-    raw_doc = sg_client.get_raw_doc(sg_admin_url, sg_db, sg_doc_xattrs_id)
+    raw_doc = sg_client.get_raw_doc(sg_admin_url, sg_db, sg_doc_xattrs_id, auth=auth)
     assert raw_doc["_meta"]["xattrs"][user_custom_channel] == sg_channel1_value, "raw doc did not get user xattrs value"
     assert rev == raw_doc["_sync"]["rev"], "rev did not get incremented "
 
@@ -140,6 +143,7 @@ def test_reassigning_channels_using_user_xattrs(params_from_base_test_setup, set
     cbl_db2 = setup_customized_teardown_test["cbl_db2"]
     delta_sync_enabled = params_from_base_test_setup["delta_sync_enabled"]
     xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if not xattrs_enabled or sync_gateway_version < "3.0.0":
         pytest.skip('Test did not enable xattrs or sgw version is not 3.0 and above')
@@ -169,10 +173,11 @@ def test_reassigning_channels_using_user_xattrs(params_from_base_test_setup, set
     cbs_ip = c_cluster.servers[0].host
     cbs_bucket = c_cluster.servers[0].get_bucket_names()[0]
     sdk_bucket = get_sdk_client_with_bucket(ssl_enabled, c_cluster, cbs_ip, cbs_bucket)
-    sg_client.create_user(sg_admin_url, sg_db, username1, password, channels=sg_channels_1)
-    auto_user1 = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username1)
-    sg_client.create_user(sg_admin_url, sg_db, username2, password, channels=sg_channels_2)
-    sg_client.create_session(url=sg_admin_url, db=sg_db, name=username2)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username1, password, channels=sg_channels_1, auth=auth)
+    auto_user1 = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username1, auth=auth)
+    sg_client.create_user(sg_admin_url, sg_db, username2, password, channels=sg_channels_2, auth=auth)
+    sg_client.create_session(url=sg_admin_url, db=sg_db, name=username2, auth=auth)
     sg_docs = document.create_docs('sg_xattrs', number=1)
     sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=auto_user1)
 
@@ -183,13 +188,13 @@ def test_reassigning_channels_using_user_xattrs(params_from_base_test_setup, set
     # Configure replication with push_pull
     replicator = Replication(base_url)
     _, _, repl1 = replicator.create_session_configure_replicate(
-        base_url, sg_admin_url, sg_db, username1, password, sg_channels_1, sg_client, cbl_db1, sg_blip_url, continuous=continuous, replication_type="push_pull")
+        base_url, sg_admin_url, sg_db, username1, password, sg_channels_1, sg_client, cbl_db1, sg_blip_url, continuous=continuous, replication_type="push_pull", auth=auth)
     replicator.wait_until_replicator_idle(repl1)
     cbl_doc_count1 = db.getCount(cbl_db1)
     assert cbl_doc_count1 == 1, "doc is not accessible by user1 who has access to 'xattrs_channel_one' "
 
     _, _, repl2 = replicator.create_session_configure_replicate(
-        base_url, sg_admin_url, sg_db, username2, password, sg_channels_2, sg_client, cbl_db2, sg_blip_url, continuous=continuous, replication_type="push_pull")
+        base_url, sg_admin_url, sg_db, username2, password, sg_channels_2, sg_client, cbl_db2, sg_blip_url, continuous=continuous, replication_type="push_pull", auth=auth)
     replicator.wait_until_replicator_idle(repl2)
     cbl_doc_count2 = db.getCount(cbl_db2)
     assert cbl_doc_count2 == 0, "doc is accessible by user2 who has access to 'xattrs_channel_two'"
@@ -211,7 +216,7 @@ def test_reassigning_channels_using_user_xattrs(params_from_base_test_setup, set
     replicator.wait_until_replicator_idle(repl1)
     assert cbl_doc_count1 == 0, "doc is accessible by user1 who has access to only 'xattrs_channel_one'"
     if delta_sync_enabled:
-        expvars = sg_client.get_expvars(url=sg_admin_url)
+        expvars = sg_client.get_expvars(url=sg_admin_url, auth=auth)
         assert expvars['syncgateway']['per_db'][sg_db]['delta_sync']['deltas_requested'] == 0, "there is a change in delta with expvars change"
         assert expvars['syncgateway']['per_db'][sg_db]['delta_sync']['deltas_sent'] == 0, "there is a change in delta with expvars change"
     replicator.stop(repl1)
@@ -245,6 +250,7 @@ def test_tombstone_docs_via_sdk(params_from_base_test_setup, tombstone_type):
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if not xattrs_enabled or sync_gateway_version < "3.0.0":
         pytest.skip('Test did not enable xattrs or sgw version is not 3.0 and above')
@@ -273,8 +279,9 @@ def test_tombstone_docs_via_sdk(params_from_base_test_setup, tombstone_type):
     cbs_ip = c_cluster.servers[0].host
     cbs_bucket = c_cluster.servers[0].get_bucket_names()[0]
     sdk_bucket = get_sdk_client_with_bucket(ssl_enabled, c_cluster, cbs_ip, cbs_bucket)
-    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=sg_channels_1)
-    auto_user = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=sg_channels_1, auth=auth)
+    auto_user = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username, auth=auth)
 
     # 3. Create docs and add user xattrs to the doc and have all docs sync to cbl
     sg_docs = document.create_docs('sg_xattrs', number=10)
@@ -285,7 +292,7 @@ def test_tombstone_docs_via_sdk(params_from_base_test_setup, tombstone_type):
 
     replicator = Replication(base_url)
     _, _, repl = replicator.create_session_configure_replicate(
-        base_url, sg_admin_url, sg_db, username, password, sg_channels_1, sg_client, cbl_db, sg_blip_url, continuous=continuous, replication_type="push_pull")
+        base_url, sg_admin_url, sg_db, username, password, sg_channels_1, sg_client, cbl_db, sg_blip_url, continuous=continuous, replication_type="push_pull", auth=auth)
     replicator.wait_until_replicator_idle(repl)
 
     # 4. have obly one doc expired/ delete via SDK in few mins
