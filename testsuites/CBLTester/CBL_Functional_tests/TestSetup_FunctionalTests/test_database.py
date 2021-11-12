@@ -586,7 +586,7 @@ def test_db_delete_on_active_replicators(params_from_base_test_setup):
     channel1 = ["Replication-1"]
     channel2 = ["Replication-2"]
     channel3 = ["Replication-3"]
-  
+
     db.create_bulk_docs(num_of_docs, "ch1", db=cbl_db, channels=channel1)
     db.create_bulk_docs(num_of_docs, "ch2", db=cbl_db, channels=channel2)
     db.create_bulk_docs(num_of_docs, "ch3", db=cbl_db, channels=channel3)

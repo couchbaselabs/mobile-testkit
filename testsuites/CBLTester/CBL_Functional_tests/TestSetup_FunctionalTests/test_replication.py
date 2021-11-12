@@ -3686,7 +3686,7 @@ def test_roles_replication(params_from_base_test_setup):
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     sg_client.create_user(sg_admin_url, sg_db, username, password=password, roles=roles, auth=auth)
     cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
-    session = cookie, session_id
+    # session = cookie, session_id
 
     # 2. Add new roles.
     sg_client.create_role(url=sg_admin_url, db=sg_db, name=role_name, channels=role1_channels, auth=auth)
@@ -3776,7 +3776,7 @@ def test_channel_update_replication(params_from_base_test_setup):
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=abc_channels, auth=auth)
     cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
-    session = cookie, session_id
+    # session = cookie, session_id
 
     # 2. Create docs on SGW.
     sg_client.add_docs(url=sg_admin_url, db=sg_db, number=num_docs, id_prefix="role_doc",
@@ -3863,7 +3863,7 @@ def test_replication_behavior_with_channelRole_modification(params_from_base_tes
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=abc_channels, auth=auth)
     cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
-    session = cookie, session_id
+    # session = cookie, session_id
 
     # 2. Add new role.
     sg_client.create_role(url=sg_admin_url, db=sg_db, name="ABCDEF_role", channels=abc_channels, auth=auth)
@@ -3948,7 +3948,7 @@ def test_blob_contructor_replication(params_from_base_test_setup, blob_data_type
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channels, auth=auth)
     cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
-    session = cookie, session_id
+    # session = cookie, session_id
 
     # 1. Create docs in CBL
     db.create_bulk_docs(num_of_docs, "cbl_sync", db=cbl_db, channels=channels)
