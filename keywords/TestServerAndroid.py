@@ -69,7 +69,7 @@ class TestServerAndroid(TestServerBase):
                 url = "{}/{}/{}/{}".format(RELEASED_BUILDS, self.download_source, version, self.package_name)
             else:
                 url = "{}/{}/{}/{}/{}".format(LATEST_BUILDS, self.download_source, version, build, self.package_name)
-        if self.platform == "c-android":
+        elif self.platform == "c-android":
             url = "{}/couchbase-lite-c/{}/{}/{}".format(LATEST_BUILDS, version, build, self.package_name)
         else:
             url = "{}/couchbase-lite-net/{}/{}/{}".format(LATEST_BUILDS, version, build, self.package_name)
