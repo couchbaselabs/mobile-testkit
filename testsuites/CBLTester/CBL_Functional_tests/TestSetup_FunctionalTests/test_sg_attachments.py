@@ -3,11 +3,7 @@ import time
 
 from requests.exceptions import HTTPError
 from keywords.MobileRestClient import MobileRestClient
-from CBLClient.Replication import Replication
-from keywords.SyncGateway import sync_gateway_config_path_for_mode, replace_xattrs_sync_func_in_config
-from keywords import document
 from libraries.testkit import cluster
-from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
 from CBLClient.Database import Database
 from keywords import document, attachment
 from CBLClient.Replication import Replication
@@ -19,6 +15,7 @@ from couchbase.exceptions import DocumentNotFoundException
 
 @pytest.mark.channels
 @pytest.mark.syncgateway
+@pytest.mark.attachment_cleanup
 @pytest.mark.parametrize("source, target, num_of_docs", [
     ('cbl', 'cbl', 100),
     ('sg', 'cbl', 10),
@@ -140,8 +137,10 @@ def verify_doc_ids_in_sdk_get_multi(response, expected_number_docs, expected_ids
 
 @pytest.mark.channels
 @pytest.mark.syncgateway
+@pytest.mark.attachment_cleanup
 def test_doc_with_many_attachments(params_from_base_test_setup):
     """
+    https://docs.google.com/spreadsheets/d/1RrrIcIZN7MgLDlNzGWfUHo2NTYrx1Jr55SBNeCdDUQs/edit#gid=0
     1. Have SG and CBL up and running
     2. Create a doc with lot of attachments on single document and replicate it to CBL
     3. Replicate to SG
@@ -289,8 +288,10 @@ def test_doc_with_many_attachments(params_from_base_test_setup):
 
 @pytest.mark.channels
 @pytest.mark.syncgateway
+@pytest.mark.attachment_cleanup
 def test_restart_sg_creating_attachments(params_from_base_test_setup):
     """
+    https://docs.google.com/spreadsheets/d/1RrrIcIZN7MgLDlNzGWfUHo2NTYrx1Jr55SBNeCdDUQs/edit#gid=0
     1.Have SG and CBL up and running
     2. Create docs with attachments
     3. Restart SG while documents are created
