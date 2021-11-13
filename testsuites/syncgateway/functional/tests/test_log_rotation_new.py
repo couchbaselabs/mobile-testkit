@@ -425,42 +425,41 @@ def test_log_rotation_invalid_path(params_from_base_test_setup, sg_conf_name):
         invalid_log_filepath = "C:\Program Files\test"
     else:
         invalid_log_filepath = "/12345/1231/131231.log"
+
+    sg_one_url = cluster_hosts["sync_gateways"][0]["public"]
+
+    # read sample sg_conf
     if not disable_persistent_config and sync_gateway_version >= "3.0.0":
-        admin = Admin(cluster.sync_gateways[0])
-        log_config = {
-            "logging": {
-                "log_file_path": {invalid_log_filepath}
-            }
-        }
-        try:
-            admin.put_config(log_config)
-        except Exception as ex:
-            assert "Object of type set is not JSON serializable" in str(ex), "invalid log path is accepted"
+        cpc_sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode, cpc=True)
+        data = load_sync_gateway_config(cpc_sg_conf, cluster_hosts["couchbase_servers"][0], cluster_conf, sg_conf)
     else:
-        sg_one_url = cluster_hosts["sync_gateways"][0]["public"]
-
-        # read sample sg_conf
         data = load_sync_gateway_config(sg_conf, cluster_hosts["couchbase_servers"][0], cluster_conf)
-        data['logging']["log_file_path"] = invalid_log_filepath
-        # create temp config file in the same folder as sg_conf
-        temp_conf = "/".join(sg_conf.split('/')[:-2]) + '/temp_conf.json'
+    data['logging']["log_file_path"] = invalid_log_filepath
+    # create temp config file in the same folder as sg_conf
+    temp_conf = "/".join(sg_conf.split('/')[:-2]) + '/temp_conf.json'
 
-        with open(temp_conf, 'w') as fp:
-            json.dump(data, fp, indent=4)
-        # Stop sync_gateways
-        log_info(">>> Stopping sync_gateway")
-        sg_helper = SyncGateway()
-        sg_helper.stop_sync_gateways(cluster_config=cluster_conf, url=sg_one_url)
-        try:
-            sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf, use_config=True)
-        except ProvisioningError:
+    with open(temp_conf, 'w') as fp:
+        json.dump(data, fp, indent=4)
+    # Stop sync_gateways
+    log_info(">>> Stopping sync_gateway")
+    sg_helper = SyncGateway()
+    sg_helper.stop_sync_gateways(cluster_config=cluster_conf, url=sg_one_url)
+    try:
+        if not disable_persistent_config and sync_gateway_version >= "3.0.0":
+            sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf, use_config=sg_conf)
+        else:
+            sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
+    except ProvisioningError:
+        if not disable_persistent_config and sync_gateway_version >= "3.0.0":
             sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=sg_conf, use_config=True)
-            # Remove generated conf file
-            os.remove(temp_conf)
-            return
+        else:
+            sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=sg_conf)
         # Remove generated conf file
         os.remove(temp_conf)
-        pytest.fail("SG shouldn't be started!!!!")
+        return
+    # Remove generated conf file
+    os.remove(temp_conf)
+    pytest.fail("SG shouldn't be started!!!!")
 
 
 @pytest.mark.syncgateway
