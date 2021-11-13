@@ -388,6 +388,10 @@ def params_from_base_suite_setup(request):
     if sync_gateway_version < "2.0":
         pytest.skip('Does not work with sg < 2.0 , so skipping the test')
 
+    print("==============================================")
+    print("=== disable_admin_auth : {} ===".format(disable_admin_auth))
+    print("==============================================")
+
     if not skip_provisioning:
         log_info("Installing Sync Gateway + Couchbase Server + Accels ('di' only)")
 
@@ -436,6 +440,11 @@ def params_from_base_suite_setup(request):
 
     utils_obj = Utils(base_url)
 
+    need_sgw_admin_auth = (not disable_admin_auth) and sync_gateway_version >= "3.0"
+    print("==============================================")
+    print("=== need_sgw_admin_auth : {} ===".format(need_sgw_admin_auth))
+    print("==============================================")
+
     yield {
         "cluster_config": cluster_config,
         "mode": mode,
@@ -476,7 +485,8 @@ def params_from_base_suite_setup(request):
         "second_liteserv_host": second_liteserv_host,
         "second_liteserv_version": second_liteserv_version,
         "second_liteserv_platform": second_liteserv_platform,
-        "cbs_ssl": cbs_ssl
+        "cbs_ssl": cbs_ssl,
+        "need_sgw_admin_auth": need_sgw_admin_auth
     }
 
     # Flush all the memory contents on the server app
