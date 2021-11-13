@@ -11,6 +11,7 @@ from libraries.testkit import cluster
 from libraries.testkit.admin import Admin
 from keywords.constants import CLUSTER_CONFIGS_DIR
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
+from keywords.constants import RBAC_FULL_ADMIN
 
 
 @pytest.mark.listener
@@ -42,6 +43,7 @@ def test_multiple_sgs_with_differrent_revs_limit(params_from_base_test_setup, se
     base_url = params_from_base_test_setup["base_url"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     sg_ssl = params_from_base_test_setup["sg_ssl"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     db = Database(base_url)
 
     channels1 = ["Replication1"]
@@ -87,8 +89,9 @@ def test_multiple_sgs_with_differrent_revs_limit(params_from_base_test_setup, se
     sg1_blip_url = "{}://{}:4984/{}".format(protocol, sg1_ip, sg_db1)
     sg2_blip_url = "{}://{}:4984/{}".format(protocol, sg2_ip, sg_db2)
 
-    sg_client.create_user(sg1_admin_url, sg_db1, name1, password="password", channels=channels1)
-    sg_client.create_user(sg2_admin_url, sg_db2, name2, password="password", channels=channels2)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg1_admin_url, sg_db1, name1, password="password", channels=channels1, auth=auth)
+    sg_client.create_user(sg2_admin_url, sg_db2, name2, password="password", channels=channels2, auth=auth)
     # Create bulk doc json
     cbl_db1 = setup_customized_teardown_test["cbl_db1"]
     cbl_db2 = setup_customized_teardown_test["cbl_db2"]
@@ -97,11 +100,12 @@ def test_multiple_sgs_with_differrent_revs_limit(params_from_base_test_setup, se
 
     # 2. Do push replication to two SGS(each DB to each SG)
     replicator = Replication(base_url)
-    cookie, session_id = sg_client.create_session(sg1_admin_url, sg_db1, name1)
+
+    cookie, session_id = sg_client.create_session(sg1_admin_url, sg_db1, name1, auth=auth)
     session1 = cookie, session_id
     authenticator = Authenticator(base_url)
     replicator_authenticator1 = authenticator.authentication(session_id, cookie, authentication_type="session")
-    cookie, session_id = sg_client.create_session(sg2_admin_url, sg_db2, name2)
+    cookie, session_id = sg_client.create_session(sg2_admin_url, sg_db2, name2, auth=auth)
     session2 = cookie, session_id
     replicator_authenticator2 = authenticator.authentication(session_id, cookie, authentication_type="session")
     repl1 = replicator.configure_and_replicate(
@@ -191,6 +195,7 @@ def test_multiple_sgs_with_CBLs(params_from_base_test_setup, setup_customized_te
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     liteserv_platform = params_from_base_test_setup["liteserv_platform"]
     sg_ssl = params_from_base_test_setup["sg_ssl"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     channels1 = ["Replication1"]
     channels2 = ["Replication2"]
@@ -225,8 +230,9 @@ def test_multiple_sgs_with_CBLs(params_from_base_test_setup, setup_customized_te
     sg1_blip_url = "{}://{}:4984/{}".format(protocol, sg1_ip, sg_db1)
     sg2_blip_url = "{}://{}:4984/{}".format(protocol, sg2_ip, sg_db2)
 
-    sg_client.create_user(sg1_admin_url, sg_db1, "autotest1", password="password", channels=channels1)
-    sg_client.create_user(sg2_admin_url, sg_db2, "autotest2", password="password", channels=channels2)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg1_admin_url, sg_db1, "autotest1", password="password", channels=channels1, auth=auth)
+    sg_client.create_user(sg2_admin_url, sg_db2, "autotest2", password="password", channels=channels2, auth=auth)
     # Create bulk doc json
     cbl_db1 = setup_customized_teardown_test["cbl_db1"]
     cbl_db2 = setup_customized_teardown_test["cbl_db2"]
@@ -237,13 +243,13 @@ def test_multiple_sgs_with_CBLs(params_from_base_test_setup, setup_customized_te
 
     # 2. Do push replication to two SGS(each DB to each SG)
     replicator = Replication(base_url)
-    cookie, session_id = sg_client.create_session(sg1_admin_url, sg_db1, name1)
+    cookie, session_id = sg_client.create_session(sg1_admin_url, sg_db1, name1, auth=auth)
     authenticator = Authenticator(base_url)
     replicator_authenticator1 = authenticator.authentication(session_id, cookie, authentication_type="session")
     repl1 = replicator.configure_and_replicate(
         source_db=cbl_db1, replicator_authenticator=replicator_authenticator1, target_url=sg1_blip_url, replication_type="push")
 
-    cookie, session_id = sg_client.create_session(sg2_admin_url, sg_db2, name2)
+    cookie, session_id = sg_client.create_session(sg2_admin_url, sg_db2, name2, auth=auth)
     authenticator = Authenticator(base_url)
     replicator_authenticator2 = authenticator.authentication(session_id, cookie, authentication_type="session")
     repl2 = replicator.configure_and_replicate(

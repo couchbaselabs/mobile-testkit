@@ -22,6 +22,7 @@ from utilities.cluster_config_utils import copy_sgconf_to_temp, replace_string_o
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.couchbaseserver import get_sdk_client_with_bucket
 from libraries.testkit.prometheus import verify_stat_on_prometheus
+from keywords.constants import RBAC_FULL_ADMIN
 
 
 def setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_teardown_test, cbl_replication_type, sg_conf_name='listener_tests/multiple_sync_gateways', num_of_docs=10, channels1=None, sgw_cluster1_sg_config_name=None, sgw_cluster2_sg_config_name=None, name1=None, name2=None, password1=None, password2=None):
@@ -33,6 +34,7 @@ def setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_te
     sg_mode = params_from_base_test_setup["mode"]
     cbl_db1 = setup_customized_teardown_test["cbl_db1"]
     cbl_db2 = setup_customized_teardown_test["cbl_db2"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     sg_db1 = "sg_db1"
     sg_db2 = "sg_db2"
     protocol = "ws"
@@ -91,18 +93,19 @@ def setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_te
     sg1_blip_url = "{}://{}:4984/{}".format(protocol, sg1_ip, sg_db1)
     sg2_blip_url = "{}://{}:4984/{}".format(protocol, sg2_ip, sg_db2)
 
-    sg_client.create_user(sg1_admin_url, sg_db1, name1, password=password1, channels=channels1)
-    sg_client.create_user(sg2_admin_url, sg_db2, name2, password=password2, channels=channels1)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg1_admin_url, sg_db1, name1, password=password1, channels=channels1, auth=auth)
+    sg_client.create_user(sg2_admin_url, sg_db2, name2, password=password2, channels=channels1, auth=auth)
     # Create bulk doc json
 
     # 2. Create replication authenticator
     replicator = Replication(base_url)
-    cookie, session_id = sg_client.create_session(sg1_admin_url, sg_db1, name1)
+    cookie, session_id = sg_client.create_session(sg1_admin_url, sg_db1, name1, auth=auth)
     session1 = cookie, session_id
     authenticator = Authenticator(base_url)
     replicator_authenticator1 = authenticator.authentication(session_id, cookie, authentication_type="session")
 
-    cookie2, session_id2 = sg_client.create_session(sg2_admin_url, sg_db2, name2)
+    cookie2, session_id2 = sg_client.create_session(sg2_admin_url, sg_db2, name2, auth=auth)
     replicator_authenticator2 = authenticator.authentication(session_id2, cookie2, authentication_type="session")
 
     # Do push replication to from cbl1 to sg1 cbl -> sg1
@@ -138,6 +141,7 @@ def test_sg_replicate_push_pull_replication(params_from_base_test_setup, setup_c
     '''
 
     # 1.Have 2 sgw nodes , have cbl on each SGW
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     sgw_cluster1_conf_name = 'listener_tests/sg_replicate_sgw_cluster1'
     sgw_cluster2_conf_name = 'listener_tests/sg_replicate_sgw_cluster2'
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
@@ -151,7 +155,8 @@ def test_sg_replicate_push_pull_replication(params_from_base_test_setup, setup_c
                                                                                                                                                                                                                                                   sgw_cluster2_sg_config_name=sgw_cluster2_conf_name)
 
     # Get expvars before test starts
-    expvars = sg_client.get_expvars(url=sg1.admin.admin_url)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    expvars = sg_client.get_expvars(url=sg1.admin.admin_url, auth=auth)
     # 2. Add docs in cbl1
     if attachments:
         db.create_bulk_docs(num_of_docs, "sgw1_docs", db=cbl_db1, channels=channels1, attachments_generator=attachment.generate_png_100_100)
@@ -216,7 +221,7 @@ def test_sg_replicate_push_pull_replication(params_from_base_test_setup, setup_c
                     assert "_attachments" in cbl_db_docs[doc_id], "attachment did not updated on cbl_db1"
 
     # Get expvars after test completed
-    expvars = sg_client.get_expvars(url=sg1.admin.admin_url)
+    expvars = sg_client.get_expvars(url=sg1.admin.admin_url, auth=auth)
     if attachments:
         if "push" in direction:
             assert expvars['syncgateway']['per_db'][sg_db1]['replications'][repl_id_1]['sgr_num_attachment_bytes_pushed'] > 0, "push replication bytes is not incrementedd"
@@ -545,6 +550,7 @@ def test_sg_replicate_oneactive_2passive(params_from_base_test_setup, setup_cust
     cluster_config = params_from_base_test_setup["cluster_config"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     sg_mode = params_from_base_test_setup["mode"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     # 1.Have 2 sgw nodes , have cbl on each SGW
     cbl_db3 = setup_customized_teardown_test["cbl_db3"]
     continuous = True
@@ -573,8 +579,9 @@ def test_sg_replicate_oneactive_2passive(params_from_base_test_setup, setup_cust
     sg3_blip_url = "ws://{}:4984/{}".format(sg3.ip, sg_db3)
     if sg_ssl:
         sg3_blip_url = "wss://{}:4984/{}".format(sg3.ip, sg_db3)
-    sg_client.create_user(sg3_admin_url, sg_db3, name3, password=password1, channels=channels1)
-    cookie, session_id = sg_client.create_session(sg3_admin_url, sg_db3, name3)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg3_admin_url, sg_db3, name3, password=password1, channels=channels1, auth=auth)
+    cookie, session_id = sg_client.create_session(sg3_admin_url, sg_db3, name3, auth=auth)
     replicator_authenticator3 = authenticator.authentication(session_id, cookie, authentication_type="session")
 
     repl2 = replicator.configure_and_replicate(
@@ -662,6 +669,7 @@ def test_sg_replicate_2active_1passive(params_from_base_test_setup, setup_custom
     cluster_config = params_from_base_test_setup["cluster_config"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     sg_mode = params_from_base_test_setup["mode"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     cbl_db3 = setup_customized_teardown_test["cbl_db3"]
     continuous = True
@@ -687,8 +695,9 @@ def test_sg_replicate_2active_1passive(params_from_base_test_setup, setup_custom
     sg3_blip_url = "ws://{}:4984/{}".format(sg3.ip, sg_db3)
     if sg_ssl:
         sg3_blip_url = "wss://{}:4984/{}".format(sg3.ip, sg_db3)
-    sg_client.create_user(sg3.admin.admin_url, sg_db3, name3, password=password1, channels=channels1)
-    cookie, session_id = sg_client.create_session(sg3.admin.admin_url, sg_db3, name3)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg3.admin.admin_url, sg_db3, name3, password=password1, channels=channels1, auth=auth)
+    cookie, session_id = sg_client.create_session(sg3.admin.admin_url, sg_db3, name3, auth=auth)
     replicator_authenticator3 = authenticator.authentication(session_id, cookie, authentication_type="session")
 
     # 2. Create docs in cbd db1 and cbl db3.
@@ -760,6 +769,7 @@ def test_sg_replicate_channel_filtering_with_attachments(params_from_base_test_s
 
     # 1.Have 2 sgw nodes , have cbl on each SGW
     base_url = params_from_base_test_setup["base_url"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     sgw_cluster1_conf_name = 'listener_tests/sg_replicate_sgw_cluster1'
     sgw_cluster2_conf_name = 'listener_tests/sg_replicate_sgw_cluster2'
     file_attachment = "sample_text.txt"
@@ -783,13 +793,14 @@ def test_sg_replicate_channel_filtering_with_attachments(params_from_base_test_s
     # 2. Create docs on cbl-db1 and have push_pull, continous replication with sg1
     #        each with 2 differrent channel, few docs on both channels
     channels3 = channels1 + channels2
-    sg_client.create_user(sg1.admin.admin_url, sg_db1, name3, password=password1, channels=channels3)
-    sg_client.create_user(sg2.admin.admin_url, sg_db2, name4, password=password2, channels=channels3)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg1.admin.admin_url, sg_db1, name3, password=password1, channels=channels3, auth=auth)
+    sg_client.create_user(sg2.admin.admin_url, sg_db2, name4, password=password2, channels=channels3, auth=auth)
 
-    cookie, session_id = sg_client.create_session(sg1.admin.admin_url, sg_db1, name3)
+    cookie, session_id = sg_client.create_session(sg1.admin.admin_url, sg_db1, name3, auth=auth)
     session = cookie, session_id
     replicator_authenticator3 = authenticator.authentication(session_id, cookie, authentication_type="session")
-    cookie, session_id = sg_client.create_session(sg2.admin.admin_url, sg_db2, name4)
+    cookie, session_id = sg_client.create_session(sg2.admin.admin_url, sg_db2, name4, auth=auth)
     replicator_authenticator4 = authenticator.authentication(session_id, cookie, authentication_type="session")
 
     repl3 = replicator.configure_and_replicate(
@@ -884,6 +895,7 @@ def test_sg_replicate_pull_pushPull_channel_filtering(params_from_base_test_setu
 
     # 1.Have 2 sgw nodes , have cbl on each SGW
     base_url = params_from_base_test_setup["base_url"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     sgw_cluster1_conf_name = 'listener_tests/sg_replicate_sgw_cluster1'
     sgw_cluster2_conf_name = 'listener_tests/sg_replicate_sgw_cluster2'
     continuous = True
@@ -906,13 +918,13 @@ def test_sg_replicate_pull_pushPull_channel_filtering(params_from_base_test_setu
     #        each with 2 differrent channel, few docs on both channels
 
     channels3 = channels1 + channels2 + channels4
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg1.admin.admin_url, sg_db1, name3, password=password, channels=channels3, auth=auth)
+    sg_client.create_user(sg2.admin.admin_url, sg_db2, name4, password=password, channels=channels3, auth=auth)
 
-    sg_client.create_user(sg1.admin.admin_url, sg_db1, name3, password=password, channels=channels3)
-    sg_client.create_user(sg2.admin.admin_url, sg_db2, name4, password=password, channels=channels3)
-
-    cookie, session_id = sg_client.create_session(sg1.admin.admin_url, sg_db1, name3)
+    cookie, session_id = sg_client.create_session(sg1.admin.admin_url, sg_db1, name3, auth=auth)
     replicator_authenticator3 = authenticator.authentication(session_id, cookie, authentication_type="session")
-    cookie, session_id = sg_client.create_session(sg2.admin.admin_url, sg_db2, name4)
+    cookie, session_id = sg_client.create_session(sg2.admin.admin_url, sg_db2, name4, auth=auth)
     replicator_authenticator4 = authenticator.authentication(session_id, cookie, authentication_type="session")
 
     # Create docs with channel1 on sgw cluster1 and channel on sgw cluster2.
@@ -1061,6 +1073,7 @@ def test_sg_replicate_multiple_replications_with_filters(params_from_base_test_s
     sgw_cluster1_conf_name = 'listener_tests/sg_replicate_sgw_cluster1'
     sgw_cluster2_conf_name = 'listener_tests/sg_replicate_sgw_cluster2'
     base_url = params_from_base_test_setup["base_url"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     continuous = True
     channel1_docs = 5
     channel2_docs = 7
@@ -1082,12 +1095,13 @@ def test_sg_replicate_multiple_replications_with_filters(params_from_base_test_s
                                                                                                                                                                                                                                                           sgw_cluster1_sg_config_name=sgw_cluster1_conf_name, sgw_cluster2_sg_config_name=sgw_cluster2_conf_name)
     channels = channels1 + channels2 + channels3
     channels_list = [channels1, channels2, channels3, channels4]
-    sg_client.create_user(sg1.admin.admin_url, sg_db1, name3, password=password, channels=channels)
-    sg_client.create_user(sg2.admin.admin_url, sg_db2, name4, password=password, channels=channels)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg1.admin.admin_url, sg_db1, name3, password=password, channels=channels, auth=auth)
+    sg_client.create_user(sg2.admin.admin_url, sg_db2, name4, password=password, channels=channels, auth=auth)
 
-    cookie, session_id = sg_client.create_session(sg1.admin.admin_url, sg_db1, name3)
+    cookie, session_id = sg_client.create_session(sg1.admin.admin_url, sg_db1, name3, auth=auth)
     replicator_authenticator3 = authenticator.authentication(session_id, cookie, authentication_type="session")
-    cookie, session_id = sg_client.create_session(sg2.admin.admin_url, sg_db2, name4)
+    cookie, session_id = sg_client.create_session(sg2.admin.admin_url, sg_db2, name4, auth=auth)
     replicator_authenticator4 = authenticator.authentication(session_id, cookie, authentication_type="session")
 
     # 1.create docs with mutlple  channels, channel1, channel2, channel3..
@@ -1167,6 +1181,7 @@ def test_sg_replicate_remove_channel(params_from_base_test_setup, setup_customiz
     sgw_cluster1_conf_name = 'listener_tests/sg_replicate_sgw_cluster1'
     sgw_cluster2_conf_name = 'listener_tests/sg_replicate_sgw_cluster2'
     base_url = params_from_base_test_setup["base_url"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     continuous = True
     num_of_docs = 10
 
@@ -1185,13 +1200,14 @@ def test_sg_replicate_remove_channel(params_from_base_test_setup, setup_customiz
                                                                                                                                                                                                                           sgw_cluster1_sg_config_name=sgw_cluster1_conf_name, sgw_cluster2_sg_config_name=sgw_cluster2_conf_name)
     replicator.stop(repl1)
     channels = channels1 + channels2 + channels3
-    sg_client.create_user(sg1.admin.admin_url, sg_db1, name3, password=password, channels=channels)
-    sg_client.create_user(sg2.admin.admin_url, sg_db2, name4, password=password, channels=channels)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg1.admin.admin_url, sg_db1, name3, password=password, channels=channels, auth=auth)
+    sg_client.create_user(sg2.admin.admin_url, sg_db2, name4, password=password, channels=channels, auth=auth)
 
-    cookie, session_id = sg_client.create_session(sg1.admin.admin_url, sg_db1, name3)
+    cookie, session_id = sg_client.create_session(sg1.admin.admin_url, sg_db1, name3, auth=auth)
     session = cookie, session_id
     replicator_authenticator3 = authenticator.authentication(session_id, cookie, authentication_type="session")
-    cookie, session_id = sg_client.create_session(sg2.admin.admin_url, sg_db2, name4)
+    cookie, session_id = sg_client.create_session(sg2.admin.admin_url, sg_db2, name4, auth=auth)
     replicator_authenticator4 = authenticator.authentication(session_id, cookie, authentication_type="session")
 
     # 1.create docs with mutlple  channels, channel1, channel2, channel3..
@@ -1272,6 +1288,7 @@ def test_sg_replicate_replications_with_drop_out_one_node(params_from_base_test_
     sg_ce = params_from_base_test_setup["sg_ce"]
     cluster_config = params_from_base_test_setup["cluster_config"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     cbl_db3 = setup_customized_teardown_test["cbl_db3"]
     sgw_cluster1_conf_name = 'listener_tests/sg_replicate_sgw_cluster1'
     sgw_cluster2_conf_name = 'listener_tests/sg_replicate_sgw_cluster2'
@@ -1304,8 +1321,9 @@ def test_sg_replicate_replications_with_drop_out_one_node(params_from_base_test_
     sg3_blip_url = "ws://{}:4984/{}".format(sg3.ip, sg_db1)
     if sg_ssl:
         sg3_blip_url = "wss://{}:4984/{}".format(sg3.ip, sg_db1)
-    sg_client.create_user(sg3_admin_url, sg_db1, name3, password=password, channels=channels3)
-    cookie, session_id = sg_client.create_session(sg3_admin_url, sg_db1, name3)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg3_admin_url, sg_db1, name3, password=password, channels=channels3, auth=auth)
+    cookie, session_id = sg_client.create_session(sg3_admin_url, sg_db1, name3, auth=auth)
     replicator_authenticator3 = authenticator.authentication(session_id, cookie, authentication_type="session")
 
     db.create_bulk_docs(num_of_docs, Replication1, db=cbl_db1, channels=channels1)
@@ -1406,6 +1424,7 @@ def test_sg_replicate_sgwconfig_replications_with_opt_out(params_from_base_test_
     sg_ssl = params_from_base_test_setup["sg_ssl"]
     base_url = params_from_base_test_setup["base_url"]
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     sg_conf_name = 'listener_tests/four_sync_gateways'
     sg_conf_name2 = 'listener_tests/listener_tests_with_replications'
     sgw_cluster2_conf_name = 'listener_tests/sg_replicate_sgw_cluster2'
@@ -1465,10 +1484,11 @@ def test_sg_replicate_sgwconfig_replications_with_opt_out(params_from_base_test_
     sg4.restart(config=sg_config3, cluster_config=cluster_config)
 
     # Create users with new config
-    sg_client.create_user(sg3_admin_url, sg_db1, name3, password=password, channels=channels)
-    cookie, session_id = sg_client.create_session(sg3_admin_url, sg_db1, name3)
-    sg_client.create_user(sg4_admin_url, sg_db1, name4, password=password, channels=channels)
-    cookie, session_id = sg_client.create_session(sg4_admin_url, sg_db1, name4)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg3_admin_url, sg_db1, name3, password=password, channels=channels, auth=auth)
+    cookie, session_id = sg_client.create_session(sg3_admin_url, sg_db1, name3, auth=auth)
+    sg_client.create_user(sg4_admin_url, sg_db1, name4, password=password, channels=channels, auth=auth)
+    cookie, session_id = sg_client.create_session(sg4_admin_url, sg_db1, name4, auth=auth)
     replicator_authenticator4 = authenticator.authentication(session_id, cookie, authentication_type="session")
 
     # Now create docs on all sg nodes
@@ -1558,6 +1578,7 @@ def test_sg_replicate_distributions_replications(params_from_base_test_setup, se
 
     base_url = params_from_base_test_setup["base_url"]
     sg_mode = params_from_base_test_setup["mode"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     cluster_config = params_from_base_test_setup["cluster_config"]
     sgw_cluster1_conf_name = 'listener_tests/sg_replicate_sgw_cluster1'
     sgw_cluster2_conf_name = 'listener_tests/sg_replicate_sgw_cluster2'
@@ -1571,6 +1592,7 @@ def test_sg_replicate_distributions_replications(params_from_base_test_setup, se
     channels5 = ["Replication5"]
     channels6 = ["Replication6"]
 
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     channels_6 = channels1 + channels2 + channels3 + channels4 + channels5 + channels6
     db, num_of_docs, sg_db1, sg_db2, name1, name2, _, password, _, _, replicator, _, replicator_authenticator2, _, sg2_blip_url, sg1, sg2, repl1, c_cluster, cbl_db1, cbl_db2, _ = setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_teardown_test,
                                                                                                                                                                                                                cbl_replication_type="push_pull", sg_conf_name=sg_conf_name,
@@ -1676,6 +1698,7 @@ def test_sg_replicate_update_sgw_nodes_in_cluster(params_from_base_test_setup, s
     sg_mode = params_from_base_test_setup["mode"]
     cluster_config = params_from_base_test_setup["cluster_config"]
     cbl_db3 = setup_customized_teardown_test["cbl_db3"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     sgw_cluster1_conf_name = 'listener_tests/sg_replicate_sgw_cluster1'
     sgw_cluster2_conf_name = 'listener_tests/sg_replicate_sgw_cluster2'
     sg_conf_name = 'listener_tests/four_sync_gateways'
@@ -1693,8 +1716,8 @@ def test_sg_replicate_update_sgw_nodes_in_cluster(params_from_base_test_setup, s
     sg3.restart(config=sgw_cluster1_sg_config, cluster_config=cluster_config)
     sg4, sg_db4, sg4_admin_url, sg4_blip_url = get_sg4(params_from_base_test_setup, c_cluster, sg_db=sg_db1)
     sg4.restart(config=sgw_cluster1_sg_config, cluster_config=cluster_config)
-
-    replicator_authenticator4, _ = create_sguser_cbl_authenticator(base_url, sg4_admin_url, sg_db4, name4, password, channels1)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    replicator_authenticator4, _ = create_sguser_cbl_authenticator(base_url, sg4_admin_url, sg_db4, name4, password, channels1, auth=auth)
 
     # 1. create docs on sg1 and sg2 using cbl_db1 and cbl_db2
     db.create_bulk_docs(num_of_docs, "Replication1", db=cbl_db1, channels=channels1)
@@ -1796,6 +1819,7 @@ def test_sg_replicate_restart_active_passive_nodes(params_from_base_test_setup, 
     sg_mode = params_from_base_test_setup["mode"]
     cbl_db3 = setup_customized_teardown_test["cbl_db3"]
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     sgw_cluster1_conf_name = 'listener_tests/sg_replicate_sgw_cluster1'
     sgw_cluster2_conf_name = 'listener_tests/sg_replicate_sgw_cluster2'
     sg_conf_name = 'listener_tests/four_sync_gateways'
@@ -1813,7 +1837,8 @@ def test_sg_replicate_restart_active_passive_nodes(params_from_base_test_setup, 
     sgw_cluster2_sg_config = sync_gateway_config_path_for_mode(sgw_cluster2_conf_name, sg_mode)
     sg3.restart(config=sgw_cluster1_sg_config, cluster_config=cluster_config)
     sg4.restart(config=sgw_cluster2_sg_config, cluster_config=cluster_config)
-    replicator_authenticator4, session4 = create_sguser_cbl_authenticator(base_url, sg4_admin_url, sg_db2, name4, password, channels1)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    replicator_authenticator4, session4 = create_sguser_cbl_authenticator(base_url, sg4_admin_url, sg_db2, name4, password, channels1, auth=auth)
 
     # 1. create docs on sg1 and sg2 using cbl_db1 and cbl_db2
     db.create_bulk_docs(num_of_docs, "Replication1", db=cbl_db1, channels=channels1)
@@ -2181,6 +2206,7 @@ def test_sg_replicate_doc_resurrection(params_from_base_test_setup, setup_custom
     base_url = params_from_base_test_setup["base_url"]
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
     cluster_config = params_from_base_test_setup["cluster_config"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     cluster_helper = ClusterKeywords(cluster_config)
     topology = cluster_helper.get_cluster_topology(cluster_config)
     cbs_url = topology["couchbase_servers"][0]
@@ -2189,6 +2215,7 @@ def test_sg_replicate_doc_resurrection(params_from_base_test_setup, setup_custom
     sg_client = MobileRestClient()
     documentObj = Document(base_url)
     cbs_ip = host_for_url(cbs_url)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     db, num_of_docs, sg_db1, sg_db2, name1, name2, _, password, channels1, _, replicator, replicator_authenticator1, replicator_authenticator2, sg1_blip_url, sg2_blip_url, sg1, sg2, repl1, c_cluster, cbl_db1, cbl_db2, session1 = setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_teardown_test,
                                                                                                                                                                                                                                                                  cbl_replication_type="push", sgw_cluster1_sg_config_name=sgw_cluster1_conf_name,
@@ -2270,7 +2297,7 @@ def test_sg_replicate_doc_resurrection(params_from_base_test_setup, setup_custom
     assert random_doc_id in cbl_doc_ids2, "resurrected doc does not exist on cbl db2"
     assert random_doc_id in cbl_doc_ids1, "resurrected doc does not exist on cbl db1"
     sg_doc1 = sg_client.get_doc(url=sg1.url, db=sg_db1, doc_id=random_doc_id, auth=session1)
-    sg_doc2 = sg_client.get_doc(url=sg2.admin.admin_url, db=sg_db2, doc_id=random_doc_id)
+    sg_doc2 = sg_client.get_doc(url=sg2.admin.admin_url, db=sg_db2, doc_id=random_doc_id, auth=auth)
     assert sg_doc1['_rev'] == sg_doc2['_rev'], "revisions of sgw cluster1 and sgw cluster 2 did not match for the doc which resurrected"
 
 
@@ -2306,11 +2333,11 @@ def get_sg4(params_from_base_test_setup, c_cluster, sg_db="sg_db4"):
     return sg4, sg_db, sg4_admin_url, sg4_blip_url
 
 
-def create_sguser_cbl_authenticator(base_url, sg_admin_url, sg_db, name, password, channels):
+def create_sguser_cbl_authenticator(base_url, sg_admin_url, sg_db, name, password, channels, auth=None):
     sg_client = MobileRestClient()
     authenticator = Authenticator(base_url)
-    sg_client.create_user(sg_admin_url, sg_db, name, password=password, channels=channels)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, name)
+    sg_client.create_user(sg_admin_url, sg_db, name, password=password, channels=channels, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, name, auth=auth)
     session = cookie, session_id
     replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
     return replicator_authenticator, session

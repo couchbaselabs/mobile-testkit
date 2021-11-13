@@ -78,6 +78,9 @@ def params_from_base_suite_setup(request):
     disable_tls_server = request.config.getoption("--disable-tls-server")
 
     disable_admin_auth = request.config.getoption("--disable-admin-auth")
+    print("==============================================")
+    print("=== disable_admin_auth : {} ===".format(disable_admin_auth))
+    print("==============================================")
 
     sg_ssl = ""
 
@@ -253,6 +256,11 @@ def params_from_base_suite_setup(request):
         expected_sync_gateway_version=sync_gateway_version
     )
 
+    need_sgw_admin_auth = (not disable_admin_auth) and sync_gateway_version >= "3.0"
+    print("==============================================")
+    print("=== need_sgw_admin_auth : {} ===".format(need_sgw_admin_auth))
+    print("==============================================")
+
     if enable_sample_bucket and not create_db_per_suite:
         # if enable_sample_bucket and not create_db_per_test:
         raise Exception("enable_sample_bucket has to be used with create_db_per_suite")
@@ -381,7 +389,8 @@ def params_from_base_suite_setup(request):
         "cbs_ce": cbs_ce,
         "sg_ce": sg_ce,
         "prometheus_enable": prometheus_enable,
-        "ssl_enabled": cbs_ssl
+        "ssl_enabled": cbs_ssl,
+        "need_sgw_admin_auth": need_sgw_admin_auth
     }
 
     if request.node.testsfailed != 0 and enable_file_logging and create_db_per_suite is not None:
@@ -456,6 +465,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     sg_ce = params_from_base_suite_setup["sg_ce"]
     prometheus_enable = request.config.getoption("--prometheus-enable")
     cbs_ssl = params_from_base_suite_setup["ssl_enabled"]
+    need_sgw_admin_auth = params_from_base_suite_setup["need_sgw_admin_auth"]
 
     source_db = None
     test_name_cp = test_name.replace("/", "-")
@@ -551,7 +561,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "cbs_ce": cbs_ce,
         "sg_ce": sg_ce,
         "ssl_enabled": cbs_ssl,
-        "prometheus_enable": prometheus_enable
+        "prometheus_enable": prometheus_enable,
+        "need_sgw_admin_auth": need_sgw_admin_auth
     }
 
     if request.node.rep_call.failed and enable_file_logging and create_db_per_test is not None:
