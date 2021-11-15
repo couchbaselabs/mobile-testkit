@@ -87,7 +87,7 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name, 
     sg_helper.create_directory(cluster_config=cluster_conf, url=sg_one_url, dir_name="/tmp/sg_logs")
 
     SG_LOGS = ['sg_debug', 'sg_info', 'sg_warn']
-    if sg_platform == "windows" or sg_platform == "macos":
+    if sg_platform == "windows" or "macos" in sg_platform:
         json_cluster = load_cluster_config_json(cluster_conf)
         sghost_username = json_cluster["sync_gateways:vars"]["ansible_user"]
         sghost_password = json_cluster["sync_gateways:vars"]["ansible_password"]
@@ -310,7 +310,7 @@ def test_log_maxage_timestamp_ignored(params_from_base_test_setup, sg_conf_name)
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf, use_config=True)
-    if sg_platform == "windows" or sg_platform == "macos":
+    if sg_platform == "windows" or "macos" in sg_platform:
         json_cluster = load_cluster_config_json(cluster_conf)
         sghost_username = json_cluster["sync_gateways:vars"]["ansible_user"]
         sghost_password = json_cluster["sync_gateways:vars"]["ansible_password"]
@@ -367,7 +367,7 @@ def test_log_maxage_timestamp_ignored(params_from_base_test_setup, sg_conf_name)
     # Change the timestamps for SG logs when SG stopped (Name is unchanged)
     for log in SG_LOGS_MAXAGE:
         file_name = "/tmp/sg_logs/{}.log".format(log)
-        if sg_platform == "macos":
+        if "macos" in sg_platform:
             age = [log] * 24
             command = "sudo touch -A -{}0000 {}".format(age, file_name)
         else:
@@ -490,7 +490,7 @@ def test_log_200mb(params_from_base_test_setup, sg_conf_name):
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf, use_config=True)
-    if sg_platform == "windows" or sg_platform == "macos":
+    if sg_platform == "windows" or "macos" in sg_platform:
         json_cluster = load_cluster_config_json(cluster_conf)
         sghost_username = json_cluster["sync_gateways:vars"]["ansible_user"]
         sghost_password = json_cluster["sync_gateways:vars"]["ansible_password"]
@@ -831,7 +831,7 @@ def test_rotated_logs_size_limit(params_from_base_test_setup, sg_conf_name):
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf, use_config=True)
-    if sg_platform == "windows" or sg_platform == "macos":
+    if sg_platform == "windows" or "macos" in sg_platform:
         json_cluster = load_cluster_config_json(cluster_conf)
         sghost_username = json_cluster["sync_gateways:vars"]["ansible_user"]
         sghost_password = json_cluster["sync_gateways:vars"]["ansible_password"]
@@ -891,7 +891,7 @@ def test_rotated_logs_size_limit(params_from_base_test_setup, sg_conf_name):
         _, stdout, _ = remote_executor.execute(command)
         # A rotated log file should be created with 100MB
         if (log == "sg_debug" or log == "sg_info"):
-            if sg_platform == "windows" or sg_platform == "macos":
+            if sg_platform == "windows" or "macos" in sg_platform:
                 assert stdout[0].strip() == SG_LOGS_FILES_NUM[log]
             else:
                 assert int(stdout[0].strip()) == int(SG_LOGS_FILES_NUM[log]) + 1
@@ -936,7 +936,7 @@ def send_request_to_sgw(sg_one_url, sg_admin_url, remote_executor, sg_platform="
         command = "for ((i=1;i <= 2000;i += 1)); do curl -s -H 'Accept: application/json' {}/db/ > /dev/null; done".format(sg_admin_url)
         os.system(command)
 
-    elif sg_platform == "macos":
+    elif "macos" in sg_platform:
         command = "for ((i=1;i <= 3000;i += 1)); do curl -s {}/ABCD/ > /dev/null; done".format(sg_one_url)
         os.system(command)
         command = "for ((i=1;i <= 2000;i += 1)); do curl -s -H 'Accept: application/json' {}/db/ > /dev/null; done".format(sg_admin_url)

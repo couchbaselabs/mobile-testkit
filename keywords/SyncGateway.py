@@ -25,7 +25,7 @@ from keywords.utils import host_for_url
 from keywords import document
 from keywords.utils import random_string
 from utilities.cluster_config_utils import copy_sgconf_to_temp, replace_string_on_sgw_config, get_cluster
-from utilities.cluster_config_utils import is_server_tls_skip_verify_enabled, is_admin_auth_disabled, is_tls_server_disabled
+from utilities.cluster_config_utils import is_centralized_persistent_config_disabled, is_server_tls_skip_verify_enabled, is_admin_auth_disabled, is_tls_server_disabled
 from libraries.testkit import cluster
 
 
@@ -291,7 +291,7 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config, sg_db_cfg=None
             if get_sg_use_views(cluster_config):
                 sg_use_views_prop = '"use_views": true,'
 
-            if sg_platform == "macos":
+            if "macos" in sg_platform:
                 sg_home_directory = "/Users/sync_gateway"
             elif sg_platform == "windows":
                 sg_home_directory = "C:\\\\PROGRA~1\\\\Couchbase\\\\Sync Gateway"
@@ -454,6 +454,7 @@ class SyncGateway(object):
         if get_sg_version(cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config):
             playbook_vars, db_config_json, sgw_config_data = c_cluster.setup_server_and_sgw(config, bucket_creation=False, bucket_list=bucket_list, use_config=use_config)
         else:
+            ansible_runner = AnsibleRunner(cluster_config)
             config_path = os.path.abspath(config)
             sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
             cbs_cert_path = os.path.join(os.getcwd(), "certs")
@@ -463,14 +464,6 @@ class SyncGateway(object):
                 self.server_port = ""
                 self.server_scheme = "couchbases"
 
-            config_path = os.path.abspath(config)
-            sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
-            cbs_cert_path = os.path.join(os.getcwd(), "certs")
-            bucket_names = get_buckets_from_sync_gateway_config(config_path)
-            couchbase_server_primary_node = add_cbs_to_sg_config_server_field(cluster_config)
-            if is_cbs_ssl_enabled(cluster_config):
-                self.server_port = ""
-                self.server_scheme = "couchbases"
 
             if is_x509_auth(cluster_config):
                 self.server_port = ""
@@ -521,7 +514,7 @@ class SyncGateway(object):
                     num_replicas = get_sg_replicas(cluster_config)
                     playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
 
-                if sg_platform == "macos":
+                if "macos" in sg_platform:
                     sg_home_directory = "/Users/sync_gateway"
                 elif sg_platform == "windows":
                     sg_home_directory = "C:\\\\PROGRA~1\\\\Couchbase\\\\Sync Gateway"
@@ -554,7 +547,10 @@ class SyncGateway(object):
                 playbook_vars["password"] = '"password": "password",'
 
             if is_xattrs_enabled(cluster_config):
-                playbook_vars["autoimport"] = '"import_docs": true,'
+                if get_sg_version(cluster_config) >= "2.1.0":
+                    playbook_vars["autoimport"] = '"import_docs": true,'
+                else:
+                    playbook_vars["autoimport"] = '"import_docs": "continuous",'
                 playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
 
             if sg_ssl_enabled(cluster_config):
@@ -601,6 +597,18 @@ class SyncGateway(object):
 
             if is_centralized_persistent_config_disabled(cluster_config):
                 playbook_vars["disable_persistent_config"] = '"disable_persistent_config": true,'
+
+        if is_centralized_persistent_config_disabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
+            playbook_vars["disable_persistent_config"] = '"disable_persistent_config": true,'
+
+        if is_server_tls_skip_verify_enabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
+            playbook_vars["server_tls_skip_verify"] = '"server_tls_skip_verify": true,'
+
+        if is_tls_server_disabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
+            playbook_vars["disable_tls_server"] = '"use_tls_server": false,'
+
+        if is_admin_auth_disabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
+            playbook_vars["disable_admin_auth"] = '"admin_interface_authentication": false,    \n"metrics_interface_authentication": false,'
 
         if is_centralized_persistent_config_disabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
             playbook_vars["disable_persistent_config"] = '"disable_persistent_config": true,'
@@ -946,7 +954,7 @@ class SyncGateway(object):
                 playbook_vars["sg_use_views"] = '"use_views": true,'
 
             sg_platform = get_sg_platform(cluster_config)
-            if sg_platform == "macos":
+            if "macos" in sg_platform:
                 sg_home_directory = "/Users/sync_gateway"
             elif sg_platform == "windows":
                 sg_home_directory = "C:\\\\PROGRA~1\\\\Couchbase\\\\Sync Gateway"
@@ -1008,8 +1016,34 @@ class SyncGateway(object):
         if is_hide_prod_version_enabled(cluster_config) and version >= "2.8.1":
             playbook_vars["hide_product_version"] = '"hide_product_version": true,'
 
-        if is_centralized_persistent_config_disabled(cluster_config):
+        if is_centralized_persistent_config_disabled(cluster_config) and version >= "3.0.0":
             playbook_vars["disable_persistent_config"] = '"disable_persistent_config": true,'
+
+        if is_server_tls_skip_verify_enabled(cluster_config) and version >= "3.0.0":
+            playbook_vars["server_tls_skip_verify"] = '"server_tls_skip_verify": true,'
+
+        if is_tls_server_disabled(cluster_config) and version >= "3.0.0":
+            playbook_vars["disable_tls_server"] = '"use_tls_server": false,'
+
+        if is_admin_auth_disabled(cluster_config) and version >= "3.0.0":
+            playbook_vars["disable_admin_auth"] = '"admin_interface_authentication": false,    \n"metrics_interface_authentication": false,'
+        if url is not None:
+            target = hostname_for_url(cluster_config, url)
+            log_info("Upgrading sync_gateway/sg_accel on {} ...".format(target))
+            status = ansible_runner.run_ansible_playbook(
+                "upgrade-sg-sgaccel-package.yml",
+                subset=target,
+                extra_vars=playbook_vars
+            )
+            log_info("Completed upgrading {}".format(url))
+        else:
+            log_info("Upgrading all sync_gateways/sg_accels")
+            status = ansible_runner.run_ansible_playbook(
+                "upgrade-sg-sgaccel-package.yml",
+                extra_vars=playbook_vars
+            )
+            log_info("Completed upgrading all sync_gateways/sg_accels")
+        log_info("upgrade status is {}".format(status))
 
         if is_centralized_persistent_config_disabled(cluster_config) and version >= "3.0.0":
             playbook_vars["disable_persistent_config"] = '"disable_persistent_config": true,'
@@ -1084,7 +1118,7 @@ class SyncGateway(object):
             playbook_vars, db_config_json, _ = c_cluster.setup_server_and_sgw(sg_conf, bucket_creation=False)
         else:
             server_port = 8091
-            server_scheme = "http"
+            server_scheme = "couchbase"
             sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
             cbs_cert_path = os.path.join(os.getcwd(), "certs")
             bucket_names = get_buckets_from_sync_gateway_config(sg_conf, cluster_config)
@@ -1144,7 +1178,7 @@ class SyncGateway(object):
                     playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
 
                 sg_platform = get_sg_platform(cluster_config)
-                if sg_platform == "macos":
+                if "macos" in sg_platform:
                     sg_home_directory = "/Users/sync_gateway"
                 elif sg_platform == "windows":
                     sg_home_directory = "C:\\\\PROGRA~1\\\\Couchbase\\\\Sync Gateway"

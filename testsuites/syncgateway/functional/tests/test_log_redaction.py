@@ -247,7 +247,7 @@ def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_
     if output_dir:
         if sg_platform == "windows":
             directory = "c{}\\test".format(":")
-        elif sg_platform == "macos":
+        elif "macos" in sg_platform:
             directory = "/Users/sync_gateway/data"
         else:
             directory = "/home/sync_gateway/data"
@@ -524,7 +524,7 @@ def pull_redacted_zip_file(cluster_config, sg_platform, output_dir=None, sa_outp
     sg_logs_dir = output_dir
     sa_logs_dir = sa_output_dir
     if output_dir is None:
-        if sg_platform == "macos":
+        if "macos" in sg_platform:
             sg_logs_dir = "/Users/sync_gateway/logs"
             sa_logs_dir = "/Users/sg_accel/logs"
         elif sg_platform == "windows":

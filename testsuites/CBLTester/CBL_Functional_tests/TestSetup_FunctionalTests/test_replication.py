@@ -46,9 +46,7 @@ def setup_teardown_test(params_from_base_test_setup):
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("num_of_docs, continuous, x509_cert_auth", [
-    pytest.param(10, True, True, marks=pytest.mark.sanity),
-    pytest.param(100, True, False, marks=pytest.mark.ce_sanity),
-    (1000, True, True)
+    pytest.param(10, True, True, marks=pytest.mark.sanity)
 ])
 def test_replication_configuration_valid_values(params_from_base_test_setup, num_of_docs, continuous, x509_cert_auth):
     """
@@ -339,7 +337,8 @@ def test_replication_push_replication_without_authentication(params_from_base_te
 
     repl = replicator.create(repl_config)
     replicator.start(repl)
-    replicator.wait_until_replicator_idle(repl, err_check=False)
+    # Removed replicator wait call and adding the sleep to allow the replicator to try few times to get the error
+    time.sleep(7)
     error = replicator.getError(repl)
 
     assert "401" in error, "expected error did not occurred"
@@ -409,7 +408,8 @@ def test_replication_push_replication_invalid_authentication(params_from_base_te
 
     repl = replicator.create(repl_config)
     replicator.start(repl)
-    replicator.wait_until_replicator_idle(repl, err_check=False)
+    # Adding sleep to replicator to retry
+    time.sleep(5)
     error = replicator.getError(repl)
 
     assert "401" in error, "expected error did not occurred"
@@ -1170,11 +1170,8 @@ def test_initial_pull_replication_background_apprun(params_from_base_test_setup,
     c.reset(sg_config_path=sg_config)
 
     # No command to push the app to background on device, so avoid test to run on ios device and no app for .net
-    if liteserv_platform.lower() == "net-msft" or liteserv_platform.lower() == "net-uwp" or ((liteserv_platform.lower() != "ios" or liteserv_platform.lower() != "xamarin-ios") and device_enabled):
+    if not ((liteserv_platform.lower() == "ios" or liteserv_platform.lower() == "xamarin-ios") and not device_enabled):
         pytest.skip('This test cannot run either it is .Net or ios with device enabled ')
-
-    if liteserv_platform in ["java-macosx", "java-msft", "java-ubuntu", "java-centos", "javaws-macosx", "javaws-msft", "javaws-ubuntu", "javaws-centos"]:
-        pytest.skip('This test cannot run as a Java application')
 
     client = MobileRestClient()
     client.create_user(sg_admin_url, sg_db, "testuser", password="password", channels=["ABC", "NBC"])
@@ -1271,7 +1268,7 @@ def test_push_replication_with_backgroundApp(params_from_base_test_setup, num_do
     if liteserv_platform.lower() == "net-msft" or liteserv_platform.lower() == "net-uwp" or ((liteserv_platform.lower() != "ios" or liteserv_platform.lower() != "xamarin-ios") and device_enabled):
         pytest.skip('This test cannot run either it is .Net or ios with device enabled ')
 
-    if liteserv_platform in ["java-macosx", "java-msft", "java-ubuntu", "java-centos", "javaws-macosx", "javaws-msft", "javaws-ubuntu", "javaws-centos"]:
+    if liteserv_platform in ["java-macosx", "java-msft", "java-ubuntu", "java-centos", "javaws-macosx", "javaws-msft", "javaws-ubuntu", "javaws-centos"] or 'c' in liteserv_platform:
         pytest.skip('This test cannot run as a Java application')
 
     client = MobileRestClient()
@@ -1509,7 +1506,7 @@ def test_default_conflict_scenario_highRevGeneration_wins(params_from_base_test_
         4. update doc 1 times in Sg and update doc 2 times in CBL and vice versa in 2nd scenario
         5. Start replication with push pull and continous False.
         6. Wait until replication done
-        7. Verfiy doc with higher rev id is updated in CBL.
+        7. Verify doc with higher rev id is updated in CBL.
         8. Now update docs in sync gateway 3 times.
         9. Start replication with push pull and continous False.
         10. Wait until replication is done
@@ -1592,9 +1589,10 @@ def test_default_conflict_scenario_highRevGeneration_wins(params_from_base_test_
             verify_updates = 5
         count = 0
         while count < 30 and cbl_docs[doc]["updates"] != verify_updates:
-            time.sleep(1)
+            time.sleep(5)
             cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
             count += 1
+
         assert cbl_docs[doc]["updates"] == verify_updates, "cbl with high rev id is not updated "
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session, include_docs=True)
     sg_docs = sg_docs["rows"]
@@ -2970,6 +2968,8 @@ def test_resetCheckpointWithPurge(params_from_base_test_setup, replication_type,
     # Reset checkpoint and do replication again from sg to cbl
     # Verify all docs are back
     replicator.resetCheckPoint(repl)
+    if liteserv_version < "3.0":
+        replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
     assert db.getCount(cbl_db) == num_of_docs, "Docs that got purged in CBL did not got back after resetCheckpoint"
     replicator.stop(repl)
@@ -3860,6 +3860,9 @@ def test_blob_contructor_replication(params_from_base_test_setup, blob_data_type
     username = "autotest"
     password = "password"
 
+    if "c-" in liteserv_platform and blob_data_type == "file_url":
+        pytest.skip('This test cannot run for C platforms')
+
     sg_client = MobileRestClient()
     sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channels)
     cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
@@ -3898,10 +3901,10 @@ def test_blob_contructor_replication(params_from_base_test_setup, blob_data_type
         image_location = get_embedded_asset_file_path(liteserv_platform, db, cbl_db, "golden_gate_large.jpg")
 
         if blob_data_type == "byte_array":
-            image_byte_array = blob.createImageContent(image_location)
+            image_byte_array = blob.createImageContent(image_location, cbl_db)
             blob_value = blob.create("image/jpeg", content=image_byte_array)
         elif blob_data_type == "stream":
-            image_stream = blob.createImageStream(image_location)
+            image_stream = blob.createImageStream(image_location, cbl_db)
             blob_value = blob.create("image/jpeg", stream=image_stream)
         elif blob_data_type == "file_url":
             image_file_url = blob.createImageFileUrl(image_location)
@@ -4126,10 +4129,12 @@ def test_replication_with_custom_retries(params_from_base_test_setup, num_of_doc
     time_taken = end_time - start_time
     log_info(time_taken)
 
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)
+    # Give some time to replicator to retry
+    # Commented as all network errors are causing test failures, but replicator retrying as expected
     replicator.wait_until_replicator_idle(repl, err_check=False)
     sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)
     sg_docs = sg_docs["rows"]
-
     # Verify database doc counts
     cbl_doc_count = db.getCount(cbl_db)
     assert len(sg_docs) == cbl_doc_count, "Expected number of docs does not exist in sync-gateway after replication"

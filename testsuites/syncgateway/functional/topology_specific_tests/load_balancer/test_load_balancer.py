@@ -57,7 +57,7 @@ def test_load_balance_sanity(params_from_base_test_setup):
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
         log_info("Starting ...")
-        if sg_platform == "macos":
+        if "macos" in sg_platform:
             ct_task = executor.submit(ct.start, timeout=180000)
         else:
             ct_task = executor.submit(ct.start)

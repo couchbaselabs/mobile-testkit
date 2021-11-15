@@ -106,7 +106,7 @@ def test_delta_sync_replication(params_from_base_test_setup, num_of_docs, replic
                     dictionary.setString(mutable_dictionary, "new_field_1", random_string(length=30))
                     dictionary.setString(mutable_dictionary, "new_field_2", random_string(length=80))
 
-                    image_content = blob.createImageStream(image_location)
+                    image_content = blob.createImageStream(image_location, cbl_db)
                     blob_value = blob.create("image/jpeg", stream=image_content)
                     dictionary.setBlob(mutable_dictionary, "_attachments", blob_value)
                 db.updateDocument(database=cbl_db, data=doc_body, doc_id=doc_id)

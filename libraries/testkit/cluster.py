@@ -501,7 +501,7 @@ class Cluster:
             log_info("Keyerror in getting logging{}".format(ex))
             logging_var = '{} {},'.format(logging_config, "}")
 
-        if sg_platform == "macos":
+        if "macos" in sg_platform:
             sg_home_directory = "/Users/sync_gateway"
         elif sg_platform == "windows":
             sg_home_directory = "C:\\\\PROGRA~1\\\\Couchbase\\\\Sync Gateway"

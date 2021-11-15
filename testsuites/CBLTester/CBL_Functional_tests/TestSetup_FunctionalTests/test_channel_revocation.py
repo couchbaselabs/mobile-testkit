@@ -1399,9 +1399,13 @@ def test_resurrected_doc_auto_purge(params_from_base_test_setup, resurrect_keep_
     cbl_db = params_from_base_test_setup["source_db"]
     sg_blip_url = params_from_base_test_setup["target_url"]
     db = params_from_base_test_setup["db"]
+    xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
 
     if sync_gateway_version < "3.0.0" or liteserv_version < "3.0.0":
         pytest.skip('This test cannot run with version below 3.0')
+
+    if resurrect_type == 'sdk' and not xattrs_enabled:
+        pytest.skip('This test is not applicable while creating docs through sdk but xattrs is disabled')
 
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)

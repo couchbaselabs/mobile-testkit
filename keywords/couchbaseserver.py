@@ -728,6 +728,7 @@ class CouchbaseServer:
         count = 0
         max_retries = 5
         while count < max_retries:
+            log_info("trying to rebalance out....")
             try:
                 resp = self._session.post(
                     "{}/controller/rebalance".format(self.url),

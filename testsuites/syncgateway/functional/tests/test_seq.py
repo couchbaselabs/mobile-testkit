@@ -5,10 +5,11 @@ import pytest
 from libraries.testkit.admin import Admin
 from libraries.testkit.cluster import Cluster
 from libraries.testkit.verify import verify_changes
-
+from requests import Session
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.utils import log_info
 from utilities.cluster_config_utils import get_sg_version, persist_cluster_config_environment_prop, copy_to_temp_conf
+from utilities.cluster_config_utils import copy_sgconf_to_temp, replace_string_on_sgw_config
 
 
 @pytest.mark.syncgateway
@@ -100,3 +101,96 @@ def test_seq(params_from_base_test_setup, sg_conf_name, num_users, num_docs, num
     all_doc_caches = [user.cache for user in users]
     all_docs = {k: v for cache in all_doc_caches for k, v in list(cache.items())}
     verify_changes(users, expected_num_docs=num_users * num_docs, expected_num_revisions=num_revisions, expected_docs=all_docs)
+
+
+@pytest.mark.syncgateway
+@pytest.mark.prometheus
+def test_metrics_public_ports(params_from_base_test_setup):
+    """
+    @summary:
+    1. set up metrics config on sgw config
+    2. Access some of the public api with metrics port
+    3. Verify it is not accessible
+    """
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    cluster_conf = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+
+    # Skip the test if sgw version is not 2.8.3 and above
+    if sync_gateway_version < "2.8.3":
+        pytest.skip('this test requires version 2.8.3 and above')
+
+    session = Session()
+    sg_db = "db"
+    sg_conf_name = "sync_gateway_default_functional_tests"
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    cluster = Cluster(config=cluster_conf)
+    cluster.reset(sg_config_path=sg_conf)
+
+    # 1. set up metrics config on sgw config
+    metrics_url = sg_admin_url.replace("4985", "4986")
+
+    # 2. Access some of the public api with metrics port
+    req = session.get("{}/{}".format(metrics_url, sg_db))
+    # 3. Verify it is not accessible
+    assert req.status_code == 404, "Expected 404 status, actual {}".format(req.status_code)
+
+    req = session.get("{}/{}/_config".format(metrics_url, sg_db))
+    assert req.status_code == 404, "Expected 404 status, actual {}".format(req.status_code)
+
+    req = session.get("{}/_config".format(metrics_url))
+    assert req.status_code == 404, "Expected 404 status, actual {}".format(req.status_code)
+
+    req = session.get("{}/_all_docs".format(metrics_url))
+    assert req.status_code == 404, "Expected 404 status, actual {}".format(req.status_code)
+
+
+@pytest.mark.syncgateway
+@pytest.mark.basicauth
+@pytest.mark.bulkops
+@pytest.mark.changes
+@pytest.mark.parametrize("sg_conf_name, x509_cert_auth", [
+    ("sync_gateway_default_functional_tests", True)
+])
+def test_remove_dcp_cacert_handling(params_from_base_test_setup, sg_conf_name, x509_cert_auth):
+    """
+    @summary
+    1. Set up default sync config file
+    2. Generate x509
+    3. Add cacertpath without keypath and certpath, but add username/password on the sgw config file
+    4. Verify SGW starts succesfully without keypath and certpath
+    """
+
+    # 1. Set up default sync config file
+    cluster_conf = params_from_base_test_setup["cluster_config"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    mode = params_from_base_test_setup["mode"]
+
+    # Skip the test if sgw version is below 2.8.2
+    if sync_gateway_version <= "2.8.2":
+        pytest.skip('this cannot run with sgw version below 2.8.2')
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    disable_tls_server = params_from_base_test_setup["disable_tls_server"]
+
+    # 2. Generate x509
+    if x509_cert_auth and disable_tls_server:
+        pytest.skip("x509 test cannot run tls server disabled")
+    if x509_cert_auth:
+        temp_cluster_config = copy_to_temp_conf(cluster_conf, mode)
+        persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
+        persist_cluster_config_environment_prop(temp_cluster_config, 'server_tls_skip_verify', False)
+        cluster_conf = temp_cluster_config
+
+    # 3. Add cacertpath without keypath and certpath, but add username/password on the sgw config file
+    cluster = Cluster(config=cluster_conf)
+    cbs_bucket = cluster.servers[0].get_bucket_names()[0]
+    temp_sg_config, _ = copy_sgconf_to_temp(sg_conf, mode)
+    temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ username }}", '"username": "{}",'.format(cbs_bucket))
+    temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ password }}", '"password": "password",')
+    temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ certpath }}", "")
+    temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ keypath }}", "")
+
+    # 4. Verify SGW starts succesfully without keypath and certpath
+    cluster.reset(sg_config_path=temp_sg_config)  # this has an assert to verify SGW can start successfully with above setup

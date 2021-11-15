@@ -16,7 +16,7 @@ from utilities.cluster_config_utils import is_hide_prod_version_enabled, get_cbs
 from utilities.cluster_config_utils import get_sg_version, get_sg_replicas, get_sg_use_views, get_redact_level, is_x509_auth, generate_x509_certs, is_delta_sync_enabled
 from libraries.testkit import cluster
 from keywords.utils import hostname_for_url, version_and_build
-from utilities.cluster_config_utils import is_server_tls_skip_verify_enabled, is_admin_auth_disabled, is_tls_server_disabled
+from utilities.cluster_config_utils import is_centralized_persistent_config_disabled, is_server_tls_skip_verify_enabled, is_admin_auth_disabled, is_tls_server_disabled
 
 
 class SyncGatewayConfig:
@@ -47,28 +47,31 @@ class SyncGatewayConfig:
 
     def resolve_sg_sa_mobile_url(self, installer="sync-gateway",
                                  sg_type="enterprise",
-                                 platform_extension="rpm", aws=False):
+                                 platform_extension="rpm", aws=False, architecture="_x86_64"):
         if self._build_number:
             base_url = "http://latestbuilds.service.couchbase.com/builds/latestbuilds/sync_gateway/{}/{}".format(self._version_number,
                                                                                                                  self._build_number)
-            package_name = "couchbase-{}-{}_{}-{}_x86_64.{}".format(installer,
-                                                                    sg_type,
-                                                                    self._version_number,
-                                                                    self._build_number,
-                                                                    platform_extension)
+            package_name = "couchbase-{}-{}_{}-{}{}.{}".format(installer,
+                                                               sg_type,
+                                                               self._version_number,
+                                                               self._build_number,
+                                                               architecture,
+                                                               platform_extension)
         else:
             base_url = "http://latestbuilds.service.couchbase.com/builds/releases/mobile/couchbase-sync-gateway/{}".format(self._version_number)
-            package_name = "couchbase-{}-{}_{}_x86_64.{}".format(installer,
-                                                                 sg_type,
-                                                                 self._version_number,
-                                                                 platform_extension)
+            package_name = "couchbase-{}-{}_{}{}.{}".format(installer,
+                                                            sg_type,
+                                                            self._version_number,
+                                                            architecture,
+                                                            platform_extension)
         if aws:
             base_url = "https://cbmobile-packages.s3.amazonaws.com"
-            package_name = "couchbase-{}-{}_{}-{}_x86_64.{}".format(installer,
-                                                                    sg_type,
-                                                                    self._version_number,
-                                                                    self._build_number,
-                                                                    platform_extension)
+            package_name = "couchbase-{}-{}_{}-{}{}.{}".format(installer,
+                                                               sg_type,
+                                                               self._version_number,
+                                                               self._build_number,
+                                                               architecture,
+                                                               platform_extension)
         return base_url, package_name
 
     def sync_gateway_base_url_and_package(self, sg_ce=False,
@@ -76,6 +79,7 @@ class SyncGatewayConfig:
                                           sg_installer_type="msi",
                                           sa_platform="centos",
                                           sa_installer_type="msi", aws=False):
+        architecture = "_x86_64"
         # Setting SG platform extension
         if "windows" in sg_platform:
             sg_platform_extension = "msi"
@@ -83,8 +87,14 @@ class SyncGatewayConfig:
             sg_platform_extension = "rpm"
         elif "ubuntu" in sg_platform:
             sg_platform_extension = "deb"
+        elif "macosarm" in sg_platform:
+            sg_platform_extension = "zip"
+            architecture = "_arm64"
         elif "macos" in sg_platform:
             sg_platform_extension = "zip"
+        elif "linuxarch" in sg_platform:
+            sg_platform_extension = "rpm"
+            architecture = "_aarch64"
 
         # Setting SG Accel platform extension
         if "windows" in sa_platform:
@@ -93,8 +103,12 @@ class SyncGatewayConfig:
             sa_platform_extension = "rpm"
         elif "ubuntu" in sa_platform:
             sa_platform_extension = "deb"
+        elif "macosarm" in sa_platform:
+            sa_platform_extension = "zip"
         elif "macos" in sa_platform:
-            sg_platform_extension = "zip"
+            sa_platform_extension = "zip"
+        elif "linuxarch" in sa_platform:
+            sa_platform_extension = "rpm"
 
         if self._version_number == "1.1.0" or self._build_number == "1.1.1":
             log_info("Version unsupported in provisioning.")
@@ -114,9 +128,8 @@ class SyncGatewayConfig:
                 sg_platform_extension = "exe"
                 sa_platform_extension = "exe"
 
-            base_url, sg_package_name = self.resolve_sg_sa_mobile_url("sync-gateway", sg_type, sg_platform_extension, aws)
+            base_url, sg_package_name = self.resolve_sg_sa_mobile_url("sync-gateway", sg_type, sg_platform_extension, aws, architecture)
             base_url, accel_package_name = self.resolve_sg_sa_mobile_url("sg-accel", sg_type, sa_platform_extension, aws)
-
         return base_url, sg_package_name, accel_package_name
 
     def is_valid(self):
@@ -172,7 +185,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
             create_server_buckets(cluster_config, sync_gateway_config)
 
         server_port = 8091
-        server_scheme = "http"
+        server_scheme = "couchbase"
 
         if is_cbs_ssl_enabled(cluster_config):
             server_port = ""
@@ -211,7 +224,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
             "disable_admin_auth": ""
         }
 
-        if version >= "2.1.0":
+        if get_sg_version(cluster_config) >= "2.1.0":
             logging_config = '"logging": {"debug": {"enabled": true}'
             try:
                 redact_level = get_redact_level(cluster_config)
@@ -227,7 +240,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
                 num_replicas = get_sg_replicas(cluster_config)
                 playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
 
-            if sg_platform == "macos":
+            if "macos" in sg_platform:
                 sg_home_directory = "/Users/sync_gateway"
             elif sg_platform == "windows":
                     sg_home_directory = "C:\\\\PROGRA~1\\\\Couchbase\\\\Sync Gateway"
@@ -306,19 +319,19 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
         if version >= "2.8.0":
             playbook_vars["prometheus"] = '"metricsInterface": ":4986",'
 
-        if is_hide_prod_version_enabled(cluster_config) and version >= "2.8.1":
+        if is_hide_prod_version_enabled(cluster_config) and get_sg_version(cluster_config) >= "2.8.1":
             playbook_vars["hide_product_version"] = '"hide_product_version": true,'
 
-        if is_centralized_persistent_config_disabled(cluster_config) and version >= "3.0.0":
+        if is_centralized_persistent_config_disabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
             playbook_vars["disable_persistent_config"] = '"disable_persistent_config": true,'
 
-        if is_server_tls_skip_verify_enabled(cluster_config) and version >= "3.0.0":
+        if is_server_tls_skip_verify_enabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
             playbook_vars["server_tls_skip_verify"] = '"server_tls_skip_verify": true,'
 
-        if is_tls_server_disabled(cluster_config) and version >= "3.0.0":
+        if is_tls_server_disabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
             playbook_vars["disable_tls_server"] = '"use_tls_server": false,'
 
-        if is_admin_auth_disabled(cluster_config) and version >= "3.0.0":
+        if is_admin_auth_disabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
             playbook_vars["disable_admin_auth"] = '"admin_interface_authentication": false,    \n"metrics_interface_authentication": false,'
 
         if is_centralized_persistent_config_disabled(cluster_config):
@@ -355,7 +368,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
                     "install-sync-gateway-package-windows.yml",
                     extra_vars=playbook_vars, subset=target
                 )
-            elif sg_platform == "macos":
+            elif "macos" in sg_platform:
                 status = ansible_runner.run_ansible_playbook(
                     "install-sync-gateway-package-macos.yml",
                     extra_vars=playbook_vars, subset=target

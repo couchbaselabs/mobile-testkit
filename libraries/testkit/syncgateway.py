@@ -110,15 +110,8 @@ class SyncGateway:
             }
 
             if sg_ssl_enabled(self.cluster_config):
-                if is_centralized_persistent_config_disabled(self.cluster_config) and get_sg_version(self.cluster_config) >= "3.0.0":
-                    playbook_vars["sslcert"] = '"SSLCert": "sg_cert.pem",'
-                    playbook_vars["sslkey"] = '"SSLKey": "sg_privkey.pem",'
-                else:
-                    playbook_vars["tls"] = """
-                        "tls": {"minimum_version": "tlsv1.3",
-                                "SSLCert": "sg_cert.pem",
-                                "SSLKey": "sg_privkey.pem"
-                                }, """
+                playbook_vars["sslcert"] = '"SSLCert": "sg_cert.pem",'
+                playbook_vars["sslkey"] = '"SSLKey": "sg_privkey.pem",'
 
             if get_sg_version(self.cluster_config) >= "2.1.0":
                 logging_config = '"logging": {"debug": {"enabled": true}'
@@ -135,7 +128,7 @@ class SyncGateway:
                     num_replicas = get_sg_replicas(self.cluster_config)
                     playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
 
-                if sg_platform == "macos":
+                if "macos" in sg_platform:
                     sg_home_directory = "/Users/sync_gateway"
                 elif sg_platform == "windows":
                     sg_home_directory = "C:\\\\PROGRA~1\\\\Couchbase\\\\Sync Gateway"
@@ -275,15 +268,8 @@ class SyncGateway:
             sg_platform = get_sg_platform(cluster_config)
 
             if sg_ssl_enabled(cluster_config):
-                if is_centralized_persistent_config_disabled(cluster_config):
-                    playbook_vars["sslcert"] = '"SSLCert": "sg_cert.pem",'
-                    playbook_vars["sslkey"] = '"SSLKey": "sg_privkey.pem",'
-                else:
-                    playbook_vars["tls"] = """
-                        "tls": {"minimum_version": "tlsv1.3",
-                                "SSLCert": "sg_cert.pem",
-                                "SSLKey": "sg_privkey.pem"
-                                }, """
+                playbook_vars["sslcert"] = '"SSLCert": "sg_cert.pem",'
+                playbook_vars["sslkey"] = '"SSLKey": "sg_privkey.pem",'
 
             if get_sg_version(cluster_config) >= "2.1.0":
                 logging_config = '"logging": {"debug": {"enabled": true}'
@@ -301,7 +287,7 @@ class SyncGateway:
                     num_replicas = get_sg_replicas(cluster_config)
                     playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
 
-                if sg_platform == "macos":
+                if "macos" in sg_platform:
                     sg_home_directory = "/Users/sync_gateway"
                 elif sg_platform == "windows":
                     sg_home_directory = "C:\\\\PROGRA~1\\\\Couchbase\\\\Sync Gateway"
