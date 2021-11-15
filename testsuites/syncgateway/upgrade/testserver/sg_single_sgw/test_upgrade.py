@@ -174,6 +174,20 @@ def test_upgrade(params_from_base_test_setup):
     secondary_server = cluster.servers[1]
     servers = cluster.servers[1:]
 
+    # update attachment indirectly deleting the attachments
+    attachments = {}
+    duplicate_attachments = attachment.load_from_data_dir(["golden_gate_large.jpg"])
+    for att in duplicate_attachments:
+        attachments[att.name] = {"data": att.data}
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)
+    sg_client.update_doc(url=sg_admin_url, db=sg_db, doc_id=sg_docs["rows"][0], number_updates=6,
+                         update_attachment=attachments)
+    attachments = {}
+    duplicate_attachments = attachment.load_from_data_dir(["sample_text.txt"])
+    for att in duplicate_attachments:
+        attachments[att.name] = {"data": att.data}
+    sg_client.update_doc(url=sg_admin_url, db=sg_db, doc_id=sg_docs["rows"][0], number_updates=6,
+                         update_attachment=attachments)
     num_sdk_docs = 10
     num_sg_docs = 10
     log_info('Adding {} docs via SDK '.format(num_sdk_docs))
@@ -301,238 +315,12 @@ def test_upgrade(params_from_base_test_setup):
         replicator.stop(repl2)
         replicator.stop(repl)
 
-
-def test_upgrade_compaction(params_from_base_test_setup):
-    """
-    @summary
-        The test environment setup includes: 1CBS, 1SGW
-        If xattrs enabled,
-        [test scenarios and steps]:
-        1. Create user, session and docs on SG
-        2. Starting continuous push_pull replication between TestServer and SGW
-        3. Delete documents with attachments
-        4. Upgrade SGW one by one on cluster config list
-        5. Upgrade CBS one by one on cluster config list
-        6. Restart SGWs after the server upgrade
-        7. Run compaction
-    """
-    cluster_config = params_from_base_test_setup['cluster_config']
-    mode = params_from_base_test_setup['mode']
-    server_version = params_from_base_test_setup['server_version']
-    sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
-    server_upgraded_version = params_from_base_test_setup['server_upgraded_version']
-    sync_gateway_upgraded_version = params_from_base_test_setup['sync_gateway_upgraded_version']
-    cbs_ssl = params_from_base_test_setup["cbs_ssl"],
-    sg_ssl = params_from_base_test_setup["sg_ssl"],
-    xattrs_enabled = params_from_base_test_setup["xattrs_enabled"],
-    use_views = params_from_base_test_setup["use_views"],
-    number_replicas = params_from_base_test_setup["number_replicas"],
-    delta_sync_enabled = params_from_base_test_setup["delta_sync_enabled"],
-    upgraded_cbs_ssl = params_from_base_test_setup['upgraded_cbs_ssl']
-    upgraded_sg_ssl = params_from_base_test_setup['upgraded_sg_ssl']
-    upgraded_xattrs_enabled = params_from_base_test_setup['upgraded_xattrs_enabled']
-    upgraded_use_views = params_from_base_test_setup['upgraded_use_views']
-    upgraded_number_replicas = params_from_base_test_setup['upgraded_number_replicas']
-    upgraded_delta_sync_enabled = params_from_base_test_setup['upgraded_delta_sync_enabled']
-    base_url = params_from_base_test_setup["base_url"]
-    sg_blip_url = params_from_base_test_setup["target_url"]
-    num_docs = int(params_from_base_test_setup['num_docs'])
-    cbs_platform = params_from_base_test_setup['cbs_platform']
-    cbs_toy_build = params_from_base_test_setup['cbs_toy_build']
-    cbl_db = params_from_base_test_setup["source_db"]
-    cbl_db2 = params_from_base_test_setup["source_db2"]
-    db = params_from_base_test_setup["db"]
-    sg_config = params_from_base_test_setup["sg_config"]
-    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
-    sg_ip = params_from_base_test_setup["sg_ip"]
-    sg_conf = "{}/resources/sync_gateway_configs/sync_gateway_default_functional_tests_{}.json".format(os.getcwd(), mode)
-
-    if not xattrs_enabled:
-        pytest.skip('XATTR tests require --xattrs flag or test has enable delta sync')
-
-    # update cluster_config with the post upgrade required params
-    need_to_redeploy = False
-    if (sg_ssl != upgraded_sg_ssl) and upgraded_sg_ssl:
-        log_info("Enabling SSL on sync gateway after upgrade")
-        need_to_redeploy = True
-        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', True)
-
-    if (cbs_ssl != upgraded_cbs_ssl) and upgraded_cbs_ssl:
-        log_info("Running tests with cbs <-> sg ssl enabled after upgrade")
-        # Enable ssl in cluster configs
-        need_to_redeploy = True
-        persist_cluster_config_environment_prop(cluster_config, 'cbs_ssl_enabled', True)
-
-    if sync_gateway_upgraded_version >= "2.0.0" and server_upgraded_version >= "5.0.0" and (xattrs_enabled != upgraded_xattrs_enabled):
-        need_to_redeploy = True
-        if upgraded_xattrs_enabled:
-            log_info("Running test with xattrs for sync meta storage after upgrade")
-            persist_cluster_config_environment_prop(cluster_config, 'xattrs_enabled', True)
-        else:
-            log_info("Using document storage for sync meta data after upgrade")
-            persist_cluster_config_environment_prop(cluster_config, 'xattrs_enabled', False)
-
-    if sync_gateway_upgraded_version >= "2.5.0" and server_upgraded_version >= "5.5.0" and (delta_sync_enabled != upgraded_delta_sync_enabled):
-        need_to_redeploy = True
-        if upgraded_delta_sync_enabled:
-            log_info("Running with delta sync after upgrade")
-            persist_cluster_config_environment_prop(cluster_config, 'delta_sync_enabled', True)
-        else:
-            log_info("Running without delta sync after upgrade")
-            persist_cluster_config_environment_prop(cluster_config, 'delta_sync_enabled', False)
-
-    # 1. Create user, session and docs on SG
-    sg_client = MobileRestClient()
-    cluster = Cluster(config=cluster_config)
-    cluster.reset(sg_config_path=sg_config)
-
-    sg_user_channels = ["sg_user_channel"]
-    sg_db = "db"
-    sg_user_name = "sg_user"
-    sg_user_password = "password"
-    sg_client.create_user(
-        url=sg_admin_url,
-        db=sg_db,
-        name=sg_user_name,
-        password=sg_user_password,
-        channels=sg_user_channels
-    )
-
-    doc_obj = Document(base_url)
-    sg_obj = SyncGateway()
-    db.create_bulk_docs(number=num_docs, id_prefix="cbl_filter", db=cbl_db, channels=sg_user_channels, attachments_generator=attachment.generate_2_png_10_10)
-    doc_ids = db.getDocIds(cbl_db, limit=num_docs)
-    added_docs = db.getDocuments(cbl_db, doc_ids)
-    log_info("Added {} docs".format(len(added_docs)))
-
-    # 2. Starting continuous push_pull replication from TestServer to sync gateway
-    log_info("Starting continuous push pull replication from TestServer to sync gateway")
-    replicator = Replication(base_url)
-    sg_cookie, sg_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=sg_user_name)
-    authenticator = Authenticator(base_url)
-    replicator_authenticator = authenticator.authentication(sg_session, sg_cookie, authentication_type="session")
-    repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=sg_user_channels, replication_type="push_pull", replicator_authenticator=replicator_authenticator)
-
-    attachments_list = attachment.generate_5_png_10_10
-    sg_docs = sg_client.add_docs(url=sg_url, db=sg_db, number=num_sg_docs, id_prefix="sg_doc_b", channels=channels, auth=auth_session, attachments_generator=attachment_generator)
+        sg_client.compact_attachments(sg_admin_url, "status")
+        sg_client.compact_attachments(sg_admin_url, "progress")
+        sg_client.compact_attachments(sg_admin_url, "stop")
 
 
-    repl = replicator.create(repl_config)
-    replicator.start(repl)
-    replicator.wait_until_replicator_idle(repl)
 
-    # Start 2nd replicator to verify docs with attachments gets replicated after the upgrade for one shot replications
-    sg_cookie, sg_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=sg_user_name)
-    sg_cookie1, sg_session1 = sg_client.create_session(url=sg_admin_url, db=sg_db, name=sg_user_name)
-    repl_config1 = replicator.configure(cbl_db2, sg_blip_url, continuous=False, channels=sg_user_channels, replication_type="push_pull", replicator_authenticator=replicator_authenticator)
-    repl1 = replicator.create(repl_config1)
-    replicator.start(repl1)
-    replicator.wait_until_replicator_idle(repl1)
-    sg_client.add_docs(url=sg_admin_url, db=sg_db, number=2, id_prefix="sgw_docs1", channels=sg_user_channels, generator="simple_user", attachments_generator=attachment.generate_2_png_10_10)
-
-    # 5. Delete the document
-    sg_client.delete_docs(url=sg_admin_url, db=sg_db, docs=sg_docs, auth=sg_session)
-
-    # Create docs in CBS cluster
-    cluster = Cluster(config=cluster_config)
-    if len(cluster.servers) < 2:
-        raise Exception("Please provide at least 2 servers")
-
-    server_urls = []
-    for server in cluster.servers:
-        server_urls.append(server.url)
-
-    primary_server = cluster.servers[0]
-    secondary_server = cluster.servers[1]
-    servers = cluster.servers[1:]
-
-    num_sdk_docs = 10
-    num_sg_docs = 10
-    log_info('Adding {} docs via SDK '.format(num_sdk_docs))
-    bucket_name = 'data-bucket'
-    sdk_client = get_cluster('couchbase://{}'.format(primary_server.host), bucket_name)
-
-    # 3. Start a thread to keep updating docs on CBL
-    terminator_doc_id = 'terminator'
-    with ProcessPoolExecutor() as up:
-
-        # 4. Upgrade SGW one by one on cluster config list
-        cluster_util = ClusterKeywords(cluster_config)
-        topology = cluster_util.get_cluster_topology(cluster_config, lb_enable=False)
-        sync_gateways = topology["sync_gateways"]
-        sg_obj.upgrade_sync_gateway(
-            sync_gateways,
-            sync_gateway_version,
-            sync_gateway_upgraded_version,
-            sg_conf,
-            cluster_config
-        )
-        # 6. Restart SGWs after the server upgrade
-        for sg in sync_gateways:
-            sg_ip = host_for_url(sg["admin"])
-            log_info("Restarting sync gateway {}".format(sg_ip))
-            sg_obj.restart_sync_gateways(cluster_config=cluster_config, url=sg_ip)
-            time.sleep(5)
-
-        if need_to_redeploy:
-            # Enable xattrs on all SG/SGAccel nodes
-            # cc - Start 1 SG with import enabled, all with XATTRs enabled
-            #    - Do not enable import in SG.
-            if mode == "cc":
-                enable_import = True
-
-            sg_obj = SyncGateway()
-            for sg in sync_gateways:
-                sg_ip = host_for_url(sg["admin"])
-                sg_obj.redeploy_sync_gateway_config(
-                    cluster_config=cluster_config,
-                    sg_conf=sg_conf,
-                    url=sg_ip,
-                    sync_gateway_version=sync_gateway_upgraded_version,
-                    enable_import=enable_import
-                )
-                if sync_gateway_upgraded_version < "2.7.0":
-                    enable_import = False  # with 2.7 and later we can have enable import on all docs
-                # Check Import showing up on all nodes
-
-        repl_config2 = replicator.configure(cbl_db2, sg_blip_url, continuous=True, channels=sg_user_channels, replication_type="push_pull", replicator_authenticator=replicator_authenticator)
-        repl2 = replicator.create(repl_config2)
-        replicator.start(repl2)
-        log_info("waiting for the replication to complete")
-        replicator.wait_until_replicator_idle(repl2, max_times=3000)
-        log_info("Trying to create terminator id ....")
-        db.create_bulk_docs(number=1, id_prefix=terminator_doc_id, db=cbl_db, channels=sg_user_channels)
-        log_info("Waiting for doc updates to complete")
-
-        # 9. If xattrs enabled, validate CBS contains _sync records for each doc
-        if upgraded_xattrs_enabled:
-            # Verify through SDK that there is no _sync property in the doc body
-            log_info("Fetching docs from SDK")
-            docs_from_sdk = sdk_client.get_multi(doc_ids)
-            log_info("Verifying that there is no _sync property in the docs")
-            for i in docs_from_sdk:
-                if "_sync" in docs_from_sdk[i].content:
-                    raise Exception("_sync section found in docs after upgrade")
-
-        # 10. Verify docs from cbl_db2 whether docs created on SGW or CBS after the upgrade got replicated to cbl
-        # New code to add docs on SGW and CBS to add new docs
-        sdk_doc_bodies = document.create_docs('sdk_after_upgrade', number=num_sdk_docs, channels=sg_user_channels)
-        sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
-        sdk_client.upsert_multi(sdk_docs)
-        sg_client.add_docs(url=sg_admin_url, db=sg_db, number=num_sg_docs, id_prefix="sgw_after_upgrade", channels=sg_user_channels)
-        replicator.wait_until_replicator_idle(repl2)
-        if upgraded_xattrs_enabled:
-            time.sleep(30)  # to let the docs import from server to sgw
-            cbl_doc_ids2 = db.getDocIds(cbl_db2, limit=num_docs + (num_sdk_docs * 4) + 3)
-            count1 = sum('sdk_after_upgrade' in s for s in cbl_doc_ids2)
-            assert count1 == num_sdk_docs, "docs via sdk after upgrade did not replicate to cbl"
-        else:
-            cbl_doc_ids2 = db.getDocIds(cbl_db2, limit=num_docs + (num_sdk_docs * 3) + 3)
-        count2 = sum('sgw_after_upgrade' in s for s in cbl_doc_ids2)
-        assert count2 == num_sg_docs, "docs via SGW after upgrade did not replicate to cbl"
-        log_info("Stopping replication between testserver and sync gateway")
-        replicator.stop(repl2)
-        replicator.stop(repl)
 
 def verify_sg_docs_revision_history(url, db, cbl_db2, num_docs, sg_db, added_docs, terminator):
     sg_client = MobileRestClient()
