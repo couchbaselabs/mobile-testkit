@@ -20,6 +20,8 @@
     couchbase_server_admin_port: 8091
     protocol: http://
     addnode_protocol: http://
+    addnode_port: 18091
+    ssl_verify:
     couchbase_server_home_path: /opt/couchbase
 
     # Primary node
@@ -170,18 +172,20 @@
 
     - set_fact:
         addnode_protocol: https://
+        addnode_port: 18091
+        ssl_verify: --no-ssl-verify
       when: "( {{ cb_major_version['stdout'] | search('\\b[7]\\b') }} ) or ( '7.1.0' in cb_full_version.stdout )"
 
     - name: COUCHBASE SERVER | Join additional cluster nodes | configure IPv6
-      shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli server-add -c {{ addnode_protocol }}://[{{ couchbase_server_primary_node }}]:{{ couchbase_server_admin_port }} -u={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --server-add={{ addnode_protocol }}://[{{ couchbase_server_node }}]:{{ couchbase_server_admin_port }} --server-add-username={{ couchbase_server_admin }} --server-add-password={{ couchbase_server_password }}"
+      shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli server-add -c {{ addnode_protocol }}://[{{ couchbase_server_primary_node }}]:{{ addnode_port }} -u={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --server-add={{ addnode_protocol }}://[{{ couchbase_server_node }}]:{{ addnode_port }} --server-add-username={{ couchbase_server_admin }} --server-add-password={{ couchbase_server_password }} {{ ssl_verify }}"
       when: "not (couchbase_server_node == couchbase_server_primary_node ) and (not {{ cb_major_version['stdout'] | search('\\b[1-5]\\b') }}) and ipv6_enabled"
 
     - name: COUCHBASE SERVER | Join additional cluster nodes | configure IPv4
-      shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli server-add -c {{ addnode_protocol }}{{ couchbase_server_primary_node }}:{{ couchbase_server_admin_port }} -u={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --server-add={{ addnode_protocol }}{{ couchbase_server_node }}:{{ couchbase_server_admin_port }} --server-add-username={{ couchbase_server_admin }} --server-add-password={{ couchbase_server_password }}"
+      shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli server-add -c {{ addnode_protocol }}{{ couchbase_server_primary_node }}:{{ addnode_port }} -u={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --server-add={{ addnode_protocol }}{{ couchbase_server_node }}:{{ addnode_port }} --server-add-username={{ couchbase_server_admin }} --server-add-password={{ couchbase_server_password }} {{ ssl_verify }}"
       when: "not (couchbase_server_node == couchbase_server_primary_node ) and not ipv6_enabled"
 
     - name: COUCHBASE SERVER | Join additional cluster nodes | configure IPv6
-      shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli server-add -c {{ addnode_protocol }}[{{ couchbase_server_primary_node }}]:{{ couchbase_server_admin_port }} -u={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --server-add={{ addnode_protocol }}{{ couchbase_server_node }}:{{ couchbase_server_admin_port }} --server-add-username={{ couchbase_server_admin }} --server-add-password={{ couchbase_server_password }}"
+      shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli server-add -c {{ addnode_protocol }}[{{ couchbase_server_primary_node }}]:{{ addnode_port }} -u={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --server-add={{ addnode_protocol }}{{ couchbase_server_node }}:{{ addnode_port }} --server-add-username={{ couchbase_server_admin }} --server-add-password={{ couchbase_server_password }} {{ ssl_verify }}"
       when: "not (couchbase_server_node == couchbase_server_primary_node ) and ipv6_enabled"
 
     - name: COUCHBASE SERVER | Rebalance cluster (6.X and up) | configure IPv4
