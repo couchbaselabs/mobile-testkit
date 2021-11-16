@@ -1295,7 +1295,7 @@ class SyncGateway(object):
                         sg_name = hostname_for_url(cluster_config, url)
                         sg_ip = ip_from_url(url)
                         sg_target = {"name": sg_name, "ip": sg_ip}
-                        sg_gateways = [SyncGateway(cluster_config=self._cluster_config, target=sg_target)]
+                        sg_gateways = [SyncGateway(cluster_config=cluster_config, target=sg_target)]
                         send_dbconfig_as_restCall(db_config_json, sg_gateways)
                     else:
                         send_dbconfig_as_restCall(db_config_json, c_cluster.sync_gateways)
