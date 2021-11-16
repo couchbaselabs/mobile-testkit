@@ -1113,9 +1113,10 @@ class SyncGateway(object):
             Will also enable import if enable_import is set to True
             It is used to enable xattrs and import in the SG config"""
         ansible_runner = AnsibleRunner(cluster_config)
+        from libraries.testkit.syncgateway import SyncGateway
         c_cluster = cluster.Cluster(cluster_config)
         if get_sg_version(cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config):
-            playbook_vars, db_config_json, _ = c_cluster.setup_server_and_sgw(sg_conf, bucket_creation=False)
+            playbook_vars, db_config_json, sgw_config_data = c_cluster.setup_server_and_sgw(sg_conf, bucket_creation=False)
         else:
             server_port = 8091
             server_scheme = "couchbase"
@@ -1296,9 +1297,9 @@ class SyncGateway(object):
                         sg_ip = ip_from_url(url)
                         sg_target = {"name": sg_name, "ip": sg_ip}
                         sg_gateways = [SyncGateway(cluster_config=cluster_config, target=sg_target)]
-                        send_dbconfig_as_restCall(db_config_json, sg_gateways)
+                        send_dbconfig_as_restCall(db_config_json, sg_gateways, sgw_config_data)
                     else:
-                        send_dbconfig_as_restCall(db_config_json, c_cluster.sync_gateways)
+                        send_dbconfig_as_restCall(db_config_json, c_cluster.sync_gateways, sgw_config_data)
 
     def create_directory(self, cluster_config, url, dir_name):
         if dir_name is None:
