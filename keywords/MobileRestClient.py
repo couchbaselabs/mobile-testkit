@@ -1036,6 +1036,11 @@ class MobileRestClient:
             latest_rev = doc_resp["_rev"]
             self.delete_doc(url, db, doc["id"], latest_rev, auth=auth)
 
+    def get_latest_rev(self, url, db, doc_id, auth):
+        doc_resp = self.get_doc(url, db, doc_id, auth=auth)
+        latest_rev = doc_resp["_rev"]
+        return latest_rev
+
     def delete_doc(self, url, db, doc_id, rev=None, auth=None, timeout=None):
         """
         Removes a document with the specfied revision
@@ -1157,9 +1162,9 @@ class MobileRestClient:
         for doc in docs:
 
             if server_type == ServerType.syncgateway:
-                log_info("Purging doc: {}".format(doc["_id"]))
+                log_info("Purging doc: {}".format(doc["id"]))
                 data = {
-                    doc["_id"]: ['*']
+                    doc["id"]: ['*']
                 }
             else:
                 log_info("Purging doc: {}".format(doc["id"]))
@@ -1337,7 +1342,7 @@ class MobileRestClient:
 
         return resp_obj
 
-    def add_docs(self, url, db, number, id_prefix, auth=None, channels=None, generator=None, attachments_generator=None):
+    def add_docs(self, url, db, number, id_prefix, auth=None, channels=None, generator=None, attachments_generator=None, expiry=None):
         """
         if id_prefix == None, generate a uuid for each doc
 
@@ -1367,6 +1372,8 @@ class MobileRestClient:
                 types.verify_is_callable(attachments_generator)
                 attachments = attachments_generator()
                 doc_body["_attachments"] = {att.name: {"data": att.data} for att in attachments}
+            if expiry is not None:
+                doc_body["_exp"] = expiry
 
             if id_prefix is None:
                 doc_id = str(uuid.uuid4())
@@ -2461,18 +2468,26 @@ class MobileRestClient:
         resp_obj = resp.json()
         del resp_obj["_exp"]
 
-    def compact_attachments(self, url, action):
+    def compact_attachments(self, url, db, action):
         if action == "status":
-            resp = self._session.get("{}/_compact?type=attachment".format(url))
+            resp = self._session.get("{}/{}/_compact?type=attachment".format(url, db))
+            resp_obj = resp.json()
+            print(resp_obj)
             return log_r(resp)
         elif action == "start":
-            resp = self._session.post("{}/_compact?type=attachment&action=start".format(url))
+            resp = self._session.post("{}/{}/_compact?type=attachment&action=start".format(url, db))
+            resp_obj = resp.json()
+            print(resp_obj)
             return log_r(resp)
         elif action == "progress":
-            resp = self._session.post("{}/_compact?type=attachment".format(url))
+            resp = self._session.post("{}/{}/_compact?type=attachment".format(url, db))
+            resp_obj = resp.json()
+            print(resp_obj)
             return log_r(resp)
         elif action == "stop":
-            resp = self._session.post("{}/_compact?type=attachment&action=stop".format(url))
+            resp = self._session.post("{}/{}/_compact?type=attachment&action=stop".format(url, db))
+            resp_obj = resp.json()
+            print(resp_obj)
             return log_r(resp)
 
 

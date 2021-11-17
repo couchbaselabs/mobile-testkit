@@ -11,6 +11,7 @@ from CBLClient.Authenticator import Authenticator
 from keywords.utils import host_for_url, log_info
 from utilities.cluster_config_utils import get_cluster
 from couchbase.exceptions import DocumentNotFoundException
+from keywords.SyncGateway import sync_gateway_config_path_for_mode
 
 
 @pytest.mark.channels
@@ -30,8 +31,13 @@ def test_delete_docs_with_attachments(params_from_base_test_setup, source, targe
     5. Verify Attachments got deleted from the bucket
     """
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
-    if sync_gateway_version < "3.0.0":
-        pytest.skip('This test cannot run with sg version below 3.0.0')
+    if sync_gateway_version >= "3.0.0":
+        pytest.skip('attachment cleanup meta api is enabled and does not work below 3.0 , so skipping the test')
+    xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
+
+    # This test should only run when using xattr
+    if not xattrs_enabled:
+        pytest.skip('XATTR tests require --xattrs flag')
 
     sg_db = "db"
     sg_url = params_from_base_test_setup["sg_url"]
@@ -151,8 +157,13 @@ def test_doc_with_many_attachments(params_from_base_test_setup):
     8. Verify document two's sample_text attachment is still present in SG and Couchbase
     """
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
-    if sync_gateway_version < "3.0.0":
-        pytest.skip('This test cannot run with sg version below 3.0.0')
+    if sync_gateway_version >= "3.0.0":
+        pytest.skip('attachment cleanup meta api is enabled and does not work below 3.0 , so skipping the test')
+    xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
+
+    # This test should only run when using xattr
+    if not xattrs_enabled:
+        pytest.skip('XATTR tests require --xattrs flag')
 
     sg_db = "db"
     sg_url = params_from_base_test_setup["sg_url"]
@@ -300,8 +311,13 @@ def test_restart_sg_creating_attachments(params_from_base_test_setup):
     7. verify all the attachments are deleted in the bucket
     """
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
-    if sync_gateway_version < "3.0.0":
+    if sync_gateway_version >= "3.0.0":
         pytest.skip('This test cannot run with sg version below 3.0.0')
+    xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
+
+    # This test should only run when using xattr
+    if not xattrs_enabled:
+        pytest.skip('XATTR tests require --xattrs flag')
 
     sg_db = "db"
     sg_url = params_from_base_test_setup["sg_url"]
@@ -419,3 +435,159 @@ def verify_sg_xattrs(mode, sg_client, sg_url, sg_db, doc_id, expected_number_of_
     assert isinstance(sg_sync_meta['history']['revs'], list)
     assert len(sg_sync_meta['history']['revs']) == expected_number_of_revs
     assert isinstance(sg_sync_meta['history']['parents'], list)
+
+
+
+# @pytest.mark.syncgateway
+# @pytest.mark.attachment_cleanup
+# def test_purge_attachments(params_from_base_test_setup):
+#
+#     """
+#
+#     :param params_from_base_test_setup:
+#     :return:
+
+    """
+
+# @pytest.mark.syncgateway
+# @pytest.mark.attachment_cleanup
+# def test_expire_attachments(params_from_base_test_setup):
+#     """
+#     0. Have SG and CBL :
+#     1. Create docs with attachments in SG.
+#     2. pull replication to CBL with continuous
+#     3. Purge doc or expire doc in SG.
+#     4. wait for replication to finish.
+#     5. Stop replication
+#     6. Verify  expired doc and attachments are deleted on SG
+#     """
+
+
+
+@pytest.mark.listener
+@pytest.mark.replication
+@pytest.mark.parametrize("delete_doc_type", [
+    ("purge"),
+    ("expire")
+])
+def test_attachment_expire_purged_doc(params_from_base_test_setup, delete_doc_type):
+    """
+        @summary:
+        1. Create docs in SG.
+        2. pull replication to CBL with continuous
+        3. Purge doc or expire doc with attachments in SG.
+        4. wait for replication to finish.
+        5. Stop replication
+        6. Verify that purged doc or expired doc is not deleted in CBL
+        7. Verify attachments are deleted in couchbase bucket
+
+    """
+    sg_db = "db"
+    sg_url = params_from_base_test_setup["sg_url"]
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    sg_mode = params_from_base_test_setup["mode"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_blip_url = params_from_base_test_setup["target_url"]
+    base_url = params_from_base_test_setup["base_url"]
+    no_conflicts_enabled = params_from_base_test_setup["no_conflicts_enabled"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    sg_config = params_from_base_test_setup["sg_config"]
+    db = params_from_base_test_setup["db"]
+    cbl_db = params_from_base_test_setup["source_db"]
+    xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
+    num_of_docs = 10
+    sg_conf_name = "listener_tests/listener_tests_no_conflicts"
+
+    if sync_gateway_version >= "3.0.0":
+        pytest.skip('This test cannot run with sg version below 3.0.0')
+
+    # This test should only run when using xattr meta storage
+    if not xattrs_enabled:
+        pytest.skip('XATTR tests require --xattrs flag')
+
+    channels = ["Replication"]
+    sg_client = MobileRestClient()
+
+    # Modify sync-gateway config to use no-conflicts config
+    if no_conflicts_enabled:
+        sg_config = sync_gateway_config_path_for_mode(sg_conf_name, sg_mode)
+    cl = cluster.Cluster(config=cluster_config)
+    cl.reset(sg_config_path=sg_config)
+
+    # 1. Add docs to SG.
+    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest")
+    session = cookie, session_id
+    sg_docs = document.create_docs(doc_id_prefix='sg_docs', number=num_of_docs,
+                                   attachments_generator=attachment.generate_2_png_10_10, channels=channels)
+    sg_docs = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=session)
+    assert len(sg_docs) == num_of_docs
+
+    # Create an expiry doc
+    if delete_doc_type == "expire":
+        doc_exp_3_body = document.create_doc(doc_id="exp_3", expiry=3, channels=channels, attachments=attachment.generate_png_100_100)
+        sg_client.add_doc(url=sg_url, db=sg_db, doc=doc_exp_3_body, auth=session)
+
+    # 2. Pull replication to CBL
+    replicator = Replication(base_url)
+    authenticator = Authenticator(base_url)
+    replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
+    repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channels, replication_type="pull", replicator_authenticator=replicator_authenticator)
+
+    repl = replicator.create(repl_config)
+    replicator.start(repl)
+    replicator.wait_until_replicator_idle(repl)
+
+    attachment_name = []
+    attachment_ids = []
+    # get attachmnet IDs of Expired doc
+    if delete_doc_type == "expire":
+        doc_id = "exp_3"
+    else:
+        doc_id = "sg_docs_7"
+
+    raw_doc = sg_client.get_attachment_by_document(sg_admin_url, db=sg_db, doc=doc_id)
+    att_name = list(raw_doc["_attachments"].keys())[0]
+    att_name = att_name.replace('/', '%2F')
+    attachment_name.append(att_name)
+    attachment_raw = sg_client.get_attachment_by_document(sg_admin_url, db=sg_db, doc=doc_id, attachment=att_name)
+    attachment_ids.append(attachment_raw['key'])
+
+    # 3. Purge doc in SG.
+    if delete_doc_type == "purge":
+        doc = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=session)
+        sg_client.purge_doc(url=sg_admin_url, db=sg_db, doc=doc)
+
+    # expire doc
+    if delete_doc_type == "expire":
+        time.sleep(5)
+
+    # 4. wait for replication to finish
+    replicator.wait_until_replicator_idle(repl)
+    replicator.stop(repl)
+    cbl_doc_ids = db.getDocIds(cbl_db)
+    assert doc_id in cbl_doc_ids, "{} document does not exist in CBL after replication".format(delete_doc_type)
+
+    # 5. Verify attachments are completely deleted from bucket
+    ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+    cluster_topology = params_from_base_test_setup['cluster_topology']
+    cbs_url = cluster_topology['couchbase_servers'][0]
+    # Connect to server via SDK
+    cbs_ip = host_for_url(cbs_url)
+    if ssl_enabled:
+        connection_url = "couchbases://{}?ssl=no_verify".format(cbs_ip)
+    else:
+        connection_url = 'couchbase://{}'.format(cbs_ip)
+    bucket_name = 'travel-sample'
+    sdk_client = get_cluster(connection_url, bucket_name)
+    sdk_client.get_multi(attachment_ids)
+
+    sdk_deleted_doc_scratch_pad = list(attachment_ids)
+    for doc_id in attachment_ids:
+        nfe = None
+        with pytest.raises(DocumentNotFoundException) as nfe:
+            sdk_client.get(doc_id)
+        log_info(nfe.value)
+        if nfe is not None:
+            sdk_deleted_doc_scratch_pad.remove(nfe.value.key)
+    assert len(sdk_deleted_doc_scratch_pad) == 0
