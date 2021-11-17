@@ -1120,10 +1120,10 @@ def send_dbconfig_as_restCall(db_config_json, sync_gateways, sgw_config_data):
             imp_fltr_func = imp_fltr_func.split("`")[0]
             print("import filter with split: ", imp_fltr_func) """
         for sg_db in sgw_db_config.keys():
-            if sg_db in db_list:
+            """ if sg_db in db_list:
                 print("deleting the sg db now... ", sg_db)
                 print(sgw)
-                sgw.admin.delete_db(sg_db)
+                sgw.admin.delete_db(sg_db) """
             # TODO : Should look for better place to delete 'server' key if tests usese old config
             if "server" in sgw_db_config[sg_db].keys():
                 del sgw_db_config[sg_db]["server"]
@@ -1156,9 +1156,10 @@ def send_dbconfig_as_restCall(db_config_json, sync_gateways, sgw_config_data):
             try:
                 sgw.admin.create_db(sg_db, sgw_db_config[sg_db])
             except HTTPError as e:
-                sgw.admin.delete_db(sg_db)
+                """sgw.admin.delete_db(sg_db)
                 time.sleep(1)
-                sgw.admin.create_db(sg_db, sgw_db_config[sg_db])
+                sgw.admin.create_db(sg_db, sgw_db_config[sg_db])"""
+                print("ignorning if db already exists in sync gateway")
             db_info = sgw.admin.get_db_info(sg_db)
             if db_info["state"] == "Online":
                 """ if sync_func_exist:
