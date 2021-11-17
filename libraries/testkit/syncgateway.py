@@ -645,12 +645,16 @@ class SyncGateway:
         if not user_credentials_url:
             data["username"] = remote_user
             data["password"] = remote_password
-        print("starting sg replicate2 rest end point ..")
-        print("json dumpts of replication is ", json.dumps(data))
+        # print("starting sg replicate2 rest end point ..")
+        # print("json dumps of replication is ", json.dumps(data))
         r = requests.put("{}/{}/_replication/{}".format(sg_url, local_db, replication_id), headers=self._headers, data=json.dumps(data))
+        # log.info("PUT {}".format(r.url))
+        # log.info("status code {}".format(r.status_code))
+        # log.info("text of response {}".format(r.text))
         log_request(r)
         log_response(r)
         r.raise_for_status()
+        time.sleep(1)
         return replication_id
 
     def stop_replication2_by_id(self, replication_id, db):

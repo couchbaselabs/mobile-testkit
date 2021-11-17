@@ -281,6 +281,7 @@ class Admin:
         write_retry_count = 0
         while count < max_times:
             r = requests.get("{}/{}/_replicationStatus/{}".format(self.admin_url, db, repl_id), verify=False)
+            log.info("GET {}".format(r.url))
             r.raise_for_status()
             resp_obj = r.json()
             status = resp_obj["status"]
