@@ -645,6 +645,8 @@ class SyncGateway:
         if not user_credentials_url:
             data["username"] = remote_user
             data["password"] = remote_password
+        print("starting sg replicate2 rest end point ..")
+        print("json dumpts of replication is ", json.dumps(data))
         r = requests.put("{}/{}/_replication/{}".format(sg_url, local_db, replication_id), headers=self._headers, data=json.dumps(data))
         log_request(r)
         log_response(r)
