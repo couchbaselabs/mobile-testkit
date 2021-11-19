@@ -263,7 +263,7 @@ class Admin:
             time.sleep(1)
         return active_resp_data
 
-    def wait_until_sgw_replication_done(self, db, repl_id, read_flag=False, write_flag=False, max_times=25):
+    def wait_until_sgw_replication_done(self, db, repl_id, read_flag=False, write_flag=False, max_times=30):
 
         read_flag = True
         write_flag = True
