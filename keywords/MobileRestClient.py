@@ -2472,23 +2472,22 @@ class MobileRestClient:
         if action == "status":
             resp = self._session.get("{}/{}/_compact?type=attachment".format(url, db))
             resp_obj = resp.json()
-            print(resp_obj)
-            return log_r(resp)
+            return resp_obj
         elif action == "start":
             resp = self._session.post("{}/{}/_compact?type=attachment&action=start".format(url, db))
             resp_obj = resp.json()
             print(resp_obj)
-            return log_r(resp)
+            return resp_obj
         elif action == "progress":
             resp = self._session.post("{}/{}/_compact?type=attachment".format(url, db))
             resp_obj = resp.json()
             print(resp_obj)
-            return log_r(resp)
+            return resp_obj
         elif action == "stop":
             resp = self._session.post("{}/{}/_compact?type=attachment&action=stop".format(url, db))
             resp_obj = resp.json()
             print(resp_obj)
-            return log_r(resp)
+            return resp_obj
 
 
 

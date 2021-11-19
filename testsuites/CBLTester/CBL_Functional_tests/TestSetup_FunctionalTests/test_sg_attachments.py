@@ -256,7 +256,7 @@ def test_doc_with_many_attachments(params_from_base_test_setup):
         sdk_client.get(attachment_ids[1])
     log_info(nfe.value)
 
-    duplicate_attachments = attachment.load_from_data_dir(["sample_text.txt", "sample_text.txt"])
+    duplicate_attachments = attachment.load_from_data_dir(["sample_text.txt", "duplicate_sample.txt"])
     for att in duplicate_attachments:
         attachments[att.name] = {"data": att.data}
 
@@ -334,7 +334,7 @@ def test_restart_sg_creating_attachments(params_from_base_test_setup):
     # 1. Have CBL and SG up and running
     sg_config = params_from_base_test_setup["sg_config"]
     c = cluster.Cluster(config=cluster_config)
-    # c.reset(sg_config_path=sg_config)
+    c.reset(sg_config_path=sg_config)
     authenticator = Authenticator(base_url)
 
     # 2. Create docs with attachment on CBL
@@ -437,38 +437,11 @@ def verify_sg_xattrs(mode, sg_client, sg_url, sg_db, doc_id, expected_number_of_
     assert isinstance(sg_sync_meta['history']['parents'], list)
 
 
-
-# @pytest.mark.syncgateway
-# @pytest.mark.attachment_cleanup
-# def test_purge_attachments(params_from_base_test_setup):
-#
-#     """
-#
-#     :param params_from_base_test_setup:
-#     :return:
-
-    """
-
-# @pytest.mark.syncgateway
-# @pytest.mark.attachment_cleanup
-# def test_expire_attachments(params_from_base_test_setup):
-#     """
-#     0. Have SG and CBL :
-#     1. Create docs with attachments in SG.
-#     2. pull replication to CBL with continuous
-#     3. Purge doc or expire doc in SG.
-#     4. wait for replication to finish.
-#     5. Stop replication
-#     6. Verify  expired doc and attachments are deleted on SG
-#     """
-
-
-
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("delete_doc_type", [
-    ("purge"),
-    ("expire")
+    "purge",
+    "expire"
 ])
 def test_attachment_expire_purged_doc(params_from_base_test_setup, delete_doc_type):
     """
@@ -498,8 +471,9 @@ def test_attachment_expire_purged_doc(params_from_base_test_setup, delete_doc_ty
     num_of_docs = 10
     sg_conf_name = "listener_tests/listener_tests_no_conflicts"
 
-    if sync_gateway_version >= "3.0.0":
-        pytest.skip('This test cannot run with sg version below 3.0.0')
+
+    # if sync_gateway_version >= "3.0.0":
+    #     pytest.skip('This test cannot run with sg version below 3.0.0')
 
     # This test should only run when using xattr meta storage
     if not xattrs_enabled:
@@ -553,7 +527,8 @@ def test_attachment_expire_purged_doc(params_from_base_test_setup, delete_doc_ty
     attachment_raw = sg_client.get_attachment_by_document(sg_admin_url, db=sg_db, doc=doc_id, attachment=att_name)
     attachment_ids.append(attachment_raw['key'])
 
-    # 3. Purge doc in SG.
+    # 3. Purge doc or expire doc with attachments in SG.
+    # Purge doc in SG.
     if delete_doc_type == "purge":
         doc = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=session)
         sg_client.purge_doc(url=sg_admin_url, db=sg_db, doc=doc)

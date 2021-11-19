@@ -47,8 +47,9 @@ def test_upgrade_delete_attachments(params_from_base_test_setup):
     remote_db = "db"
 
     # # 1. Have prelithium config
-    # if sync_gateway_version < "3.0.0":
-    #     pytest.skip('This test can run with sgw version 3.0 and above')
+    print(sync_gateway_version, "sync_gateway_version")
+    if sync_gateway_version >= "3.0.0":
+        pytest.skip('This test can run with sgw version 3.0 and above')
     sg_conf_name = "sync_gateway_default"
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
@@ -56,13 +57,8 @@ def test_upgrade_delete_attachments(params_from_base_test_setup):
     sg1 = cbs_cluster.sync_gateways[0]
     # temp_cluster_config = copy_to_temp_conf(cluster_conf, mode)
     temp_sg_config, _ = copy_sgconf_to_temp(sg_conf, mode)
-    print("*" * 10)
-    print(temp_sg_config)
-    print("*" * 10)
 
     cbs_cluster.reset(sg_config_path=temp_sg_config)
-    print(cluster_conf)
-    print("*" * 10)
     persist_cluster_config_environment_prop(cluster_conf, 'sync_gateway_version', sync_gateway_previous_version, True)
     print(cluster_conf)
     sg_obj.install_sync_gateway(cluster_conf, sync_gateway_previous_version, temp_sg_config)
@@ -74,16 +70,10 @@ def test_upgrade_delete_attachments(params_from_base_test_setup):
     cookie, session_id = sg_client.create_session(sg_admin_url, remote_db, username)
     session = cookie, session_id
 
-    added_doc = sg_client.add_docs(url=sg_url, db=remote_db, number=11, id_prefix="att_com", channels=sg_channels,
+    added_doc = sg_client.add_docs(url=sg_url, db=remote_db, number=1000, id_prefix="att_com", channels=sg_channels,
                                    auth=session, attachments_generator=attachment.generate_5_png_100_100)
 
-    log_info(added_doc)
-    print("* after changing to latest" * 10)
-
     persist_cluster_config_environment_prop(cluster_conf, 'sync_gateway_version', sync_gateway_version, True)
-    print(cluster_conf)
-    print("* after changing to latest" * 10)
-
     for i in range(4):
         doc_id = "att_com_" + str(i)
         latest_rev = sg_client.get_latest_rev(sg_admin_url, remote_db, doc_id, session)
@@ -155,22 +145,27 @@ def test_upgrade_delete_attachments(params_from_base_test_setup):
             sdk_deleted_doc_scratch_pad.remove(nfe.value.key)
     assert len(sdk_deleted_doc_scratch_pad) == 0
 
-    sg_client.compact_attachments(sg_admin_url, remote_db, "status")
+    assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["status"] == "stopped"
     sg_client.compact_attachments(sg_admin_url, remote_db, "start")
-    time.sleep(26)
-    sg_client.compact_attachments(sg_admin_url, remote_db, "status")
-
-    assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")
-    assert sg_client.compact_attachments(sg_admin_url, remote_db, "start")
-    assert sg_client.compact_attachments(sg_admin_url, remote_db, "progress")
-    assert sg_client.compact_attachments(sg_admin_url, remote_db, "stop")
+    sg_client.compact_attachments(sg_admin_url, remote_db, "stop")
+    sg_client.compact_attachments(sg_admin_url, remote_db, "start")
+    status = sg_client.compact_attachments(sg_admin_url, remote_db, "status")["status"]
+    if status == "stopping" or status == "running":
+        sg_client.compact_attachments(sg_admin_url, remote_db, "progress")
+        time.sleep(5)
+    assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["status"] == "stopped"
+    assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["marked_attachments"] == "4956", "compaction count not matching"
+    assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["last_error"] == "", "Error found while running the compaction process"
+    # TODO
+    #  assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["start_time"]
+    #  assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["marked_attachments"]
 
 
 @pytest.mark.syncgateway
 @pytest.mark.attachment_cleanup
 @pytest.mark.parametrize("delete_doc_type", [
-    ("purge"),
-    ("expire")
+    "purge",
+    "expire"
 ])
 def test_upgrade_purge_expire_attachments(params_from_base_test_setup, delete_doc_type):
     """
@@ -199,8 +194,8 @@ def test_upgrade_purge_expire_attachments(params_from_base_test_setup, delete_do
     remote_db = "db"
 
     # 1. Have prelithium config
-    # if sync_gateway_version > "2.9.9":
-    #     pytest.skip('This test cannot run with sg version below 3.0.0')
+    if sync_gateway_version >= "3.0.0":
+        pytest.skip('This test cannot run with sg version below 3.0.0')
     sg_conf_name = "sync_gateway_default"
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
@@ -235,7 +230,6 @@ def test_upgrade_purge_expire_attachments(params_from_base_test_setup, delete_do
     persist_cluster_config_environment_prop(cluster_conf, 'sync_gateway_version', sync_gateway_version, True)
 
     sg_docs = sg_client.get_all_docs(url=sg_url, db=remote_db, auth=session, include_docs=True)
-    print(sg_docs)
     attachments = {}
     duplicate_attachments = attachment.load_from_data_dir(["sample_text.txt"])
     for att in duplicate_attachments:
@@ -249,8 +243,6 @@ def test_upgrade_purge_expire_attachments(params_from_base_test_setup, delete_do
         sg_client.purge_docs(url=sg_admin_url, db=remote_db, docs=sg_docs["rows"])
     else:
         time.sleep(5)
-    print(sg_docs["rows"])
-    print("*" * 10)
 
     added_doc = sg_client.add_docs(url=sg_url, db=remote_db, number=10, id_prefix="att_com", channels=sg_channels,
                                    auth=session, attachments_generator=attachment.generate_5_png_100_100)
@@ -262,10 +254,20 @@ def test_upgrade_purge_expire_attachments(params_from_base_test_setup, delete_do
     sg_client.update_doc(url=sg_admin_url, db=remote_db, doc_id="att_com_" + str(6), number_updates=1,
                          update_attachment=attachments)
 
-    sg_client.compact_attachments(sg_admin_url, remote_db, "status")
+    assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["status"] == "stopped"
     sg_client.compact_attachments(sg_admin_url, remote_db, "start")
-    sg_client.compact_attachments(sg_admin_url, remote_db, "progress")
     sg_client.compact_attachments(sg_admin_url, remote_db, "stop")
+    sg_client.compact_attachments(sg_admin_url, remote_db, "start")
+    status = sg_client.compact_attachments(sg_admin_url, remote_db, "status")["status"]
+    if status == "stopping" or status == "running":
+        sg_client.compact_attachments(sg_admin_url, remote_db, "progress")
+        time.sleep(5)
+    assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["status"] == "stopped"
+    assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["marked_attachments"] == "4956", "compaction count not matching"
+    assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["last_error"] == "", "Error found while running the compaction process"
+    # TODO
+    #  assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["start_time"]
+    #  assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["marked_attachments"]
 
 
 @pytest.mark.syncgateway
@@ -306,8 +308,8 @@ def test_upgrade_legacy_attachments(params_from_base_test_setup):
     remote_db = "db"
 
     # 1. Have prelithium config
-    # if sync_gateway_version > "2.9.9":
-    #     pytest.skip('This test cannot run with sg version below 3.0.0')
+    if sync_gateway_version >= "3.0.0":
+        pytest.skip('This test cannot run with sg version below 3.0.0')
     sg_conf_name = "sync_gateway_default"
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
@@ -334,7 +336,6 @@ def test_upgrade_legacy_attachments(params_from_base_test_setup):
                                    auth=session, attachments_generator=attachment.generate_png_1_1)
 
     # 3. Create 4 more documents sharing the same attachment.
-
     added_doc = sg_client.add_docs(url=sg_url, db=remote_db, number=4, id_prefix="att_same",
                                    channels=sg_channels, auth=session)
 
@@ -408,14 +409,26 @@ def test_upgrade_legacy_attachments(params_from_base_test_setup):
     sg_client.delete_doc(url=sg_admin_url, db=remote_db, doc_id="att_same_1", rev=latest_rev, auth=session)
     # 10. Purge doc6 and verify that the att4 is still persisted in the bucket.
     sg_client.purge_docs(url=sg_admin_url, db=remote_db, docs=[sg_docs["rows"][4]])
-    # Verify all attachments are still present
+
+    # # Verify all attachments are still present
     for att_id in set_one_attachment_ids:
         sdk_client.get(att_id)
 
     for att_id in set_two_attachment_ids:
         sdk_client.get(att_id)
 
-    sg_client.compact_attachments(sg_admin_url, remote_db, "status")
+    assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["status"] == "stopped"
     sg_client.compact_attachments(sg_admin_url, remote_db, "start")
-    time.sleep(26)
-    sg_client.compact_attachments(sg_admin_url, remote_db, "status")
+    sg_client.compact_attachments(sg_admin_url, remote_db, "stop")
+    sg_client.compact_attachments(sg_admin_url, remote_db, "start")
+    status = sg_client.compact_attachments(sg_admin_url, remote_db, "status")["status"]
+    if status == "stopping" or status == "running":
+        sg_client.compact_attachments(sg_admin_url, remote_db, "progress")
+        time.sleep(5)
+    assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["status"] == "stopped"
+    assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["marked_attachments"] == "4", "compaction count not matching"
+    assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["last_error"] == "", "Error found while running the compaction process"
+    # TODO
+    #  assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["start_time"]
+    #  assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["marked_attachments"]
+
