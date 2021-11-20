@@ -31,7 +31,7 @@ def test_delete_docs_with_attachments(params_from_base_test_setup, source, targe
     5. Verify Attachments got deleted from the bucket
     """
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
-    if sync_gateway_version >= "3.0.0":
+    if sync_gateway_version < "3.0.0":
         pytest.skip('attachment cleanup meta api is enabled and does not work below 3.0 , so skipping the test')
     xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
 
@@ -157,7 +157,7 @@ def test_doc_with_many_attachments(params_from_base_test_setup):
     8. Verify document two's sample_text attachment is still present in SG and Couchbase
     """
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
-    if sync_gateway_version >= "3.0.0":
+    if sync_gateway_version < "3.0.0":
         pytest.skip('attachment cleanup meta api is enabled and does not work below 3.0 , so skipping the test')
     xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
 
@@ -311,7 +311,7 @@ def test_restart_sg_creating_attachments(params_from_base_test_setup):
     7. verify all the attachments are deleted in the bucket
     """
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
-    if sync_gateway_version >= "3.0.0":
+    if sync_gateway_version < "3.0.0":
         pytest.skip('This test cannot run with sg version below 3.0.0')
     xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
 
@@ -471,9 +471,8 @@ def test_attachment_expire_purged_doc(params_from_base_test_setup, delete_doc_ty
     num_of_docs = 10
     sg_conf_name = "listener_tests/listener_tests_no_conflicts"
 
-
-    # if sync_gateway_version >= "3.0.0":
-    #     pytest.skip('This test cannot run with sg version below 3.0.0')
+    if sync_gateway_version < "3.0.0":
+        pytest.skip('This test cannot run with sg version below 3.0.0')
 
     # This test should only run when using xattr meta storage
     if not xattrs_enabled:
@@ -499,33 +498,34 @@ def test_attachment_expire_purged_doc(params_from_base_test_setup, delete_doc_ty
 
     # Create an expiry doc
     if delete_doc_type == "expire":
-        doc_exp_3_body = document.create_doc(doc_id="exp_3", expiry=3, channels=channels, attachments=attachment.generate_png_100_100)
-        sg_client.add_doc(url=sg_url, db=sg_db, doc=doc_exp_3_body, auth=session)
+        doc_exp_3_body = document.create_docs(doc_id_prefix="exp_3", number=1, channels=channels, attachments_generator=attachment.generate_2_png_10_10, expiry=15)
+        sg_client.add_doc(url=sg_url, db=sg_db, doc=doc_exp_3_body[0], auth=session)
 
-    # 2. Pull replication to CBL
-    replicator = Replication(base_url)
-    authenticator = Authenticator(base_url)
-    replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
-    repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channels, replication_type="pull", replicator_authenticator=replicator_authenticator)
-
-    repl = replicator.create(repl_config)
-    replicator.start(repl)
-    replicator.wait_until_replicator_idle(repl)
-
-    attachment_name = []
-    attachment_ids = []
     # get attachmnet IDs of Expired doc
     if delete_doc_type == "expire":
-        doc_id = "exp_3"
+        doc_id = "exp_3_0"
     else:
         doc_id = "sg_docs_7"
-
+    attachment_name = []
+    attachment_ids = []
     raw_doc = sg_client.get_attachment_by_document(sg_admin_url, db=sg_db, doc=doc_id)
     att_name = list(raw_doc["_attachments"].keys())[0]
     att_name = att_name.replace('/', '%2F')
     attachment_name.append(att_name)
     attachment_raw = sg_client.get_attachment_by_document(sg_admin_url, db=sg_db, doc=doc_id, attachment=att_name)
     attachment_ids.append(attachment_raw['key'])
+    print(attachment_ids)
+
+    # 2. Pull replication to CBL
+    replicator = Replication(base_url)
+    authenticator = Authenticator(base_url)
+    replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
+    repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channels, replication_type="pull",
+                                       replicator_authenticator=replicator_authenticator)
+
+    repl = replicator.create(repl_config)
+    replicator.start(repl)
+    replicator.wait_until_replicator_idle(repl)
 
     # 3. Purge doc or expire doc with attachments in SG.
     # Purge doc in SG.
@@ -553,7 +553,7 @@ def test_attachment_expire_purged_doc(params_from_base_test_setup, delete_doc_ty
         connection_url = "couchbases://{}?ssl=no_verify".format(cbs_ip)
     else:
         connection_url = 'couchbase://{}'.format(cbs_ip)
-    bucket_name = 'travel-sample'
+    bucket_name = 'data-bucket'
     sdk_client = get_cluster(connection_url, bucket_name)
     sdk_client.get_multi(attachment_ids)
 

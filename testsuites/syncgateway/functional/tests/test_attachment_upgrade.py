@@ -48,7 +48,7 @@ def test_upgrade_delete_attachments(params_from_base_test_setup):
 
     # # 1. Have prelithium config
     print(sync_gateway_version, "sync_gateway_version")
-    if sync_gateway_version >= "3.0.0":
+    if sync_gateway_version < "3.0.0":
         pytest.skip('This test can run with sgw version 3.0 and above')
     sg_conf_name = "sync_gateway_default"
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
@@ -194,7 +194,7 @@ def test_upgrade_purge_expire_attachments(params_from_base_test_setup, delete_do
     remote_db = "db"
 
     # 1. Have prelithium config
-    if sync_gateway_version >= "3.0.0":
+    if sync_gateway_version < "3.0.0":
         pytest.skip('This test cannot run with sg version below 3.0.0')
     sg_conf_name = "sync_gateway_default"
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
@@ -308,7 +308,7 @@ def test_upgrade_legacy_attachments(params_from_base_test_setup):
     remote_db = "db"
 
     # 1. Have prelithium config
-    if sync_gateway_version >= "3.0.0":
+    if sync_gateway_version < "3.0.0":
         pytest.skip('This test cannot run with sg version below 3.0.0')
     sg_conf_name = "sync_gateway_default"
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
