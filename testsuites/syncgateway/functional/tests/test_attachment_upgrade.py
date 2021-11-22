@@ -60,7 +60,6 @@ def test_upgrade_delete_attachments(params_from_base_test_setup):
 
     cbs_cluster.reset(sg_config_path=temp_sg_config)
     persist_cluster_config_environment_prop(cluster_conf, 'sync_gateway_version', sync_gateway_previous_version, True)
-    print(cluster_conf)
     sg_obj.install_sync_gateway(cluster_conf, sync_gateway_previous_version, temp_sg_config)
     cluster_util = ClusterKeywords(cluster_conf)
     topology = cluster_util.get_cluster_topology(cluster_conf)

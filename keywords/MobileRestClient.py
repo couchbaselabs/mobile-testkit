@@ -2480,7 +2480,6 @@ class MobileRestClient:
         elif action == "start":
             resp = self._session.post("{}/{}/_compact?type=attachment&action=start".format(url, db))
             resp_obj = resp.json()
-            print(resp_obj)
             return resp_obj
         elif action == "progress":
             resp = self._session.post("{}/{}/_compact?type=attachment".format(url, db))
