@@ -1161,10 +1161,16 @@ class MobileRestClient:
         for doc in docs:
 
             if server_type == ServerType.syncgateway:
-                log_info("Purging doc: {}".format(doc["id"]))
-                data = {
-                    doc["id"]: ['*']
-                }
+                if "_id" in doc:
+                    log_info("Purging doc: {}".format(doc["_id"]))
+                    data = {
+                        doc["_id"]: ['*']
+                    }
+                else:
+                    log_info("Purging doc: {}".format(doc["id"]))
+                    data = {
+                        doc["id"]: ['*']
+                    }
             else:
                 log_info("Purging doc: {}".format(doc["id"]))
                 data = {
@@ -1275,7 +1281,6 @@ class MobileRestClient:
                     atts[0].name: {"data": atts[0].data}
                 }
             if update_attachment:
-                # atts = attachment.load_from_data_dir([delete_attachment()])
                 doc["_attachments"] = update_attachment
 
             if expiry is not None:
@@ -2480,10 +2485,8 @@ class MobileRestClient:
         elif action == "progress":
             resp = self._session.post("{}/{}/_compact?type=attachment".format(url, db))
             resp_obj = resp.json()
-            print(resp_obj)
             return resp_obj
         elif action == "stop":
             resp = self._session.post("{}/{}/_compact?type=attachment&action=stop".format(url, db))
             resp_obj = resp.json()
-            print(resp_obj)
             return resp_obj
