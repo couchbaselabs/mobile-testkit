@@ -187,8 +187,8 @@ def test_doc_with_many_attachments(params_from_base_test_setup):
     cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "attachment")
     session = cookie, session_id
 
-    added_doc = sg_client.add_docs(url=sg_url, db=sg_db, number=2, id_prefix="att_com", channels=channels, auth=session,
-                                   attachments_generator=attachment.generate_5_png_100_100)
+    sg_client.add_docs(url=sg_url, db=sg_db, number=2, id_prefix="att_com", channels=channels, auth=session,
+                       attachments_generator=attachment.generate_5_png_100_100)
 
     # 3.  Replicate to CBL/SG
     replicator = Replication(base_url)
@@ -295,6 +295,7 @@ def test_doc_with_many_attachments(params_from_base_test_setup):
 
     for att_id in updated_attachment_ids:
         assert sdk_client.get(att_id)
+    replicator.stop(repl)
 
 
 @pytest.mark.channels

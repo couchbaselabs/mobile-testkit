@@ -2,7 +2,6 @@ import os
 import random
 import time
 
-import pytest
 from concurrent.futures import ProcessPoolExecutor
 from keywords.couchbaseserver import verify_server_version
 from keywords.utils import log_info, host_for_url
@@ -318,8 +317,6 @@ def test_upgrade(params_from_base_test_setup):
         sg_client.compact_attachments(sg_admin_url, "status")
         sg_client.compact_attachments(sg_admin_url, "progress")
         sg_client.compact_attachments(sg_admin_url, "stop")
-
-
 
 
 def verify_sg_docs_revision_history(url, db, cbl_db2, num_docs, sg_db, added_docs, terminator):

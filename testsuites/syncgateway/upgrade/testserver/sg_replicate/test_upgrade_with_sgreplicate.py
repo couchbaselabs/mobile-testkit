@@ -232,6 +232,9 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
                         attachments_generator=attachment.generate_2_png_10_10)
     db.create_bulk_docs(number=num_docs, id_prefix=sgw_cluster1_replication1_ch3, db=cbl_db1, channels=replication2_channel3,
                         attachments_generator=attachment.generate_2_png_10_10)
+    # Adding a doc with attachment for attachment validation
+    db.create_bulk_docs(number=2, id_prefix="sgw_attachments1", db=cbl_db2, channels=replication1_channel,
+                        attachments_generator=attachment.generate_2_png_10_10)
     # Starting continuous push_pull replication from TestServer to sync gateway cluster1
     log_info("Starting continuous push pull replication from TestServer to sync gateway")
     repl1, replicator_authenticator1, session1 = create_sgw_sessions_and_configure_replications(sg_client, replicator, authenticator, sg_user_channels,
@@ -239,12 +242,18 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
 
     repl2, _, _ = create_sgw_sessions_and_configure_replications(sg_client, replicator, authenticator, sg_user_channels,
                                                                  sg3, sg2_user_name, sg_db2, cbl_db2, sg2_blip_url)
-    # Start 3rd replicator to verify docs with attachments gets replicated after the upgrade for one shot replications from sgw cluster1 to cbl db3
+
+    #  Start 3rd replicator to verify docs with attachments gets replicated after the upgrade for one shot replications from sgw cluster1 to cbl db3
     repl_config3 = replicator.configure(cbl_db3, sg1_blip_url, continuous=False, channels=sg_user_channels, replication_type="push_pull", replicator_authenticator=replicator_authenticator1)
     repl3 = replicator.create(repl_config3)
     replicator.start(repl3)
     replicator.wait_until_replicator_idle(repl3)
     sg_client.add_docs(url=sg1.admin.admin_url, db=sg_db1, number=2, id_prefix="sgw_docs3", channels=replication2_channel4, generator="simple_user", attachments_generator=attachment.generate_2_png_10_10)
+
+    # Adding a doc with attachment for attachment validation
+    sg_client.add_docs(url=sg1.admin.admin_url, db=sg_db1, number=2, id_prefix="sgw_attachments",
+                       channels=replication2_channel4, generator="simple_user", attachments_generator=attachment.generate_2_png_10_10)
+
     terminator1_doc_id = 'terminator1'
 
     # Create sg replicate2 in sgw config by using same repl id of sg replicate1 for sg replicate2
@@ -278,6 +287,9 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
             if "sgw_cluster1_replication1" in doc:
                 sg_client.add_conflict(url=sg1.url, db=sg_db1, doc_id=doc["id"], parent_revisions=doc["rev"],
                                        new_revision="2-foo", auth=session1)
+    doc_id = "sgw_attachments_0"
+    latest_rev = sg_client.get_latest_rev(sg1.admin.admin_url, sg_db1, doc_id)
+    sg_client.delete_doc(url=sg1.admin.admin_url, db=sg_db1, doc_id=doc_id, rev=latest_rev)
 
     with ProcessPoolExecutor() as up:
         # Start updates in background process
@@ -355,6 +367,7 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
         repl_config4 = replicator.configure(cbl_db3, sg1_blip_url, continuous=True, channels=sg_user_channels, replication_type="push_pull", replicator_authenticator=replicator_authenticator1)
         repl4 = replicator.create(repl_config4)
         replicator.start(repl4)
+
         log_info("Trying to create terminator id ....")
         db.create_bulk_docs(number=1, id_prefix=terminator1_doc_id, db=cbl_db1, channels=replication2_channel4)
         log_info("Waiting for doc updates to complete")
@@ -406,6 +419,10 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
     for replid in repl_id:
         sg1.admin.wait_until_sgw_replication_done(sg_db1, replid, write_flag=True, max_times=3000)
     replicator.wait_until_replicator_idle(repl2, max_times=3000)
+    doc_id = "sgw_attachments_1"
+    latest_rev = sg_client.get_latest_rev(sg1.admin.admin_url, sg_db1, doc_id)
+    sg_client.delete_doc(url=sg1.admin.admin_url, db=sg_db1, doc_id=doc_id, rev=latest_rev)
+
     cbl_doc_ids2 = db.getDocIds(cbl_db2, limit=num_docs * 6)  # number times 6 as it creates docs 6 times at 6 places
     count = sum(sgw_cluster1_replication1 in s for s in cbl_doc_ids2)
     assert count == num_docs, "all docs with replication1 channel1 did not replicate to cbl db2"
@@ -426,6 +443,14 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
             if sync_gateway_version < "2.8.0":
                 assert doc["doc"]["_rev"] == sg3_doc["_rev"], "number of updates value is not same on both clusters for {}".format(doc)
 
+    # Attachment cleanup compaction process to verify docs are deleted after the upgrade.
+    sg_client.compact_attachments(sg1.admin.admin_url, sg_db2, "start")
+    status = sg_client.compact_attachments(sg1.admin.admin_url, sg_db2, "status")["status"]
+    if status == "stopping" or status == "running":
+        sg_client.compact_attachments(sg1.admin.admin_url, sg_db2, "progress")
+        time.sleep(5)
+    assert sg_client.compact_attachments(sg1.admin.admin_url, sg_db2, "status")["status"] == "stopped"
+    assert sg_client.compact_attachments(sg1.admin.admin_url, sg_db2, "status")["marked_attachments"] == "2", "compaction count not matched"
     replicator.stop(repl1)
     replicator.stop(repl2)
     replicator.stop(repl3)

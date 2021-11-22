@@ -523,7 +523,6 @@ class MobileRestClient:
         resp.raise_for_status()
         return resp.json()
 
-
     def compact_database(self, url, db):
         """
         POST /{db}/_compact and will verify compaction by
@@ -2488,6 +2487,3 @@ class MobileRestClient:
             resp_obj = resp.json()
             print(resp_obj)
             return resp_obj
-
-
-
