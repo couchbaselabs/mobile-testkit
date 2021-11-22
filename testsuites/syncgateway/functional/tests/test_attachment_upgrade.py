@@ -44,10 +44,14 @@ def test_upgrade_delete_attachments(params_from_base_test_setup):
     sg_channels = ["attachments-cleanup"]
     remote_db = "db"
 
-    # # 1. Have prelithium config
-    print(sync_gateway_version, "sync_gateway_version")
+    # 1. Have prelithium config
     if sync_gateway_version < "3.0.0":
         pytest.skip('This test can run with sgw version 3.0 and above')
+
+    xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
+    # This test should only run when using xattr
+    if not xattrs_enabled:
+        pytest.skip('XATTR tests require --xattrs flag')
     sg_conf_name = "sync_gateway_default"
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
@@ -197,6 +201,11 @@ def test_upgrade_purge_expire_attachments(params_from_base_test_setup, delete_do
         pytest.skip('This test cannot run with sg version below 3.0.0')
     sg_conf_name = "sync_gateway_default"
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
+
+    # This test should only run when using xattr
+    if not xattrs_enabled:
+        pytest.skip('XATTR tests require --xattrs flag')
 
     cbs_cluster = Cluster(config=cluster_conf)
     temp_sg_config, _ = copy_sgconf_to_temp(sg_conf, mode)
@@ -314,6 +323,11 @@ def test_upgrade_legacy_attachments(params_from_base_test_setup):
         pytest.skip('This test cannot run with sg version below 3.0.0')
     sg_conf_name = "sync_gateway_default"
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
+
+    # This test should only run when using xattr
+    if not xattrs_enabled:
+        pytest.skip('XATTR tests require --xattrs flag')
 
     cbs_cluster = Cluster(config=cluster_conf)
     # temp_cluster_config = copy_to_temp_conf(cluster_conf, mode)
