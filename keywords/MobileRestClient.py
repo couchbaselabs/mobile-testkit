@@ -1035,7 +1035,7 @@ class MobileRestClient:
             latest_rev = doc_resp["_rev"]
             self.delete_doc(url, db, doc["id"], latest_rev, auth=auth)
 
-    def get_latest_rev(self, url, db, doc_id, auth):
+    def get_latest_rev(self, url, db, doc_id, auth=None):
         doc_resp = self.get_doc(url, db, doc_id, auth=auth)
         latest_rev = doc_resp["_rev"]
         return latest_rev
