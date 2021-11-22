@@ -178,7 +178,7 @@ def test_upgrade(params_from_base_test_setup):
     duplicate_attachments = attachment.load_from_data_dir(["golden_gate_large.jpg"])
     for att in duplicate_attachments:
         attachments[att.name] = {"data": att.data}
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)
+    sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)
     sg_client.update_doc(url=sg_admin_url, db=sg_db, doc_id="sgw_docs1_0", number_updates=6,
                          update_attachment=attachments)
     attachments = {}
