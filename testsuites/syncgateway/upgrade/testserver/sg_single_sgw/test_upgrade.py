@@ -314,9 +314,13 @@ def test_upgrade(params_from_base_test_setup):
         replicator.stop(repl2)
         replicator.stop(repl)
 
-        sg_client.compact_attachments(sg_admin_url, "status")
-        sg_client.compact_attachments(sg_admin_url, "progress")
-        sg_client.compact_attachments(sg_admin_url, "stop")
+        assert sg_client.compact_attachments(sg_admin_url, sg_db, "status")["status"] == "stopped"
+        sg_client.compact_attachments(sg_admin_url, sg_db, "start")
+        assert sg_client.compact_attachments(sg_admin_url, sg_db, "status")["status"] == "stopped"
+        assert sg_client.compact_attachments(sg_admin_url, sg_db, "status")["last_error"] == "", \
+            "Error found while running the compaction process"
+        assert sg_client.compact_attachments(sg_admin_url, sg_db, "status")["marked_attachments"] == "2"
+
 
 
 def verify_sg_docs_revision_history(url, db, cbl_db2, num_docs, sg_db, added_docs, terminator):
