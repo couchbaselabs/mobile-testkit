@@ -9,8 +9,8 @@
       date
     ignore_errors: True
     register: ps
-    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian" or ansible_os_family == "Darwin"
+    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian" or ansible_os_family == "Darwin"
 
   - debug: 
       msg: "printing reset clocks std out {{ ps.stdout }}"
-    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian" or ansible_os_family == "Darwin"
+    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian" or ansible_os_family == "Darwin"

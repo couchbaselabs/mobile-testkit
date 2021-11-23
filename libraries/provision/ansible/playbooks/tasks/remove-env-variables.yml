@@ -4,11 +4,11 @@
   file: 
     path=/etc/systemd/system/sync_gateway.service.d 
     state=absent
-  when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat"
+  when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon"
 
 
 # Relaod systemctl daemon
 - name: SYNC GATEWAY | systemctl daemon relaod on centos
   become: yes
   shell: systemctl daemon-reload
-  when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat"
+  when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon"
