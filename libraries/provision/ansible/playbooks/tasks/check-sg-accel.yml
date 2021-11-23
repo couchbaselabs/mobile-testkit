@@ -3,7 +3,7 @@
   shell: service sg_accel status
   register: output
   failed_when: output.stdout | search("dead")
-  when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7"
+  when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7" or ansible_distribution == "Amazon"
 
 - name: SG ACCEL | check sg_accel service status for CentOS 6
   become: yes
