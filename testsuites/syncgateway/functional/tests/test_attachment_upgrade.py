@@ -140,7 +140,7 @@ def test_upgrade_delete_attachments(params_from_base_test_setup):
     assert len(sdk_deleted_doc_scratch_pad) == 0
 
     # 7 Execute the compaction process is collecting the deleted docs
-    assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["status"] == "stopped"
+    assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["status"] == "completed"
     sg_client.compact_attachments(sg_admin_url, remote_db, "start")
     sg_client.compact_attachments(sg_admin_url, remote_db, "stop")
     sg_client.compact_attachments(sg_admin_url, remote_db, "start")
@@ -149,13 +149,15 @@ def test_upgrade_delete_attachments(params_from_base_test_setup):
         sg_client.compact_attachments(sg_admin_url, remote_db, "progress")
         time.sleep(5)
     assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["status"] == "stopped"
-    assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["marked_attachments"] == "4956", \
-        "compaction count not matching"
+    # assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["marked_attachments"] == "4957", \
+    #     "compaction count not matching"
+    assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["purged_attachments"] == "996", \
+        "purged attachments"
     assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["last_error"] == "", \
         "Error found while running the compaction process"
-    # TODO
-    #  assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["start_time"]
-    #  assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["marked_attachments"]
+
+    assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["start_time"] != "", "Start time is empty"
+    assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["compact_id"] != "", "Compact Id is empty"
 
     # 8. Verify existing duplicated attachments
     # Verify document 10's sample_text attachment is still present in SG
@@ -233,8 +235,6 @@ def test_upgrade_purge_expire_attachments(params_from_base_test_setup, delete_do
                            channels=sg_channels, auth=session,
                            attachments_generator=attachment.generate_5_png_100_100)
 
-    persist_cluster_config_environment_prop(cluster_conf, 'sync_gateway_version', sync_gateway_version, True)
-
     sg_docs = sg_client.get_all_docs(url=sg_url, db=remote_db, auth=session, include_docs=True)
     attachments = {}
     duplicate_attachments = attachment.load_from_data_dir(["sample_text.txt"])
@@ -249,35 +249,28 @@ def test_upgrade_purge_expire_attachments(params_from_base_test_setup, delete_do
     if delete_doc_type == "purge":
         sg_client.purge_docs(url=sg_admin_url, db=remote_db, docs=sg_docs["rows"])
     else:
-        time.sleep(5)
-
-    sg_client.add_docs(url=sg_url, db=remote_db, number=10, id_prefix="att_com", channels=sg_channels,
-                       auth=session, attachments_generator=attachment.generate_5_png_100_100)
+        time.sleep(6)
 
     # 5 . Upgrade SGW to lithium and have Automatic upgrade
+    persist_cluster_config_environment_prop(cluster_conf, 'sync_gateway_version', sync_gateway_version, True)
     sg_obj.upgrade_sync_gateway(sync_gateways, sync_gateway_previous_version, sync_gateway_version, sg_conf,
                                 cluster_conf)
 
-    sg_client.update_doc(url=sg_admin_url, db=remote_db, doc_id="att_com_" + str(6), number_updates=1,
-                         update_attachment=attachments)
-
     #  6. Verify the purge/Expired attachment cleanup using compaction
-    assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["status"] == "stopped"
-    sg_client.compact_attachments(sg_admin_url, remote_db, "start")
-    sg_client.compact_attachments(sg_admin_url, remote_db, "stop")
     sg_client.compact_attachments(sg_admin_url, remote_db, "start")
     status = sg_client.compact_attachments(sg_admin_url, remote_db, "status")["status"]
-    if status == "stopping" or status == "running":
+    if status == "running":
         sg_client.compact_attachments(sg_admin_url, remote_db, "progress")
-        time.sleep(5)
-    assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["status"] == "stopped"
-    assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["marked_attachments"] == "4956", \
-        "compaction count not matching"
-    assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["last_error"] == "", \
-        "Error found while running the compaction process"
-    # TODO
-    #  assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["start_time"]
-    #  assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["marked_attachments"]
+        time.sleep(10)
+    compaction_status = sg_client.compact_attachments(sg_admin_url, remote_db, "status")
+    log_info(compaction_status)
+    assert compaction_status["last_error"] == "", "Error found while running the compaction process"
+    assert compaction_status["start_time"] != ""
+    if delete_doc_type == "purge":
+        assert compaction_status["purged_attachments"] == "101", "purged attachment count is not matching"
+    else:
+        assert compaction_status["purged_attachments"] == "100", "purged attachment count is not matching"
+
 
 
 @pytest.mark.syncgateway
@@ -301,6 +294,8 @@ def test_upgrade_legacy_attachments(params_from_base_test_setup):
         8. Update doc4 by removing att4 and verify that the att4 is still persisted in the bucket.
         9. Delete doc5  and verify that the att4 is still persisted in the bucket.
         10. Purge doc6 and verify that the att4 is still persisted in the bucket.
+        11. Execute compaction
+        12 Verify all attachments are not present after compaction
     """
 
     cluster_conf = params_from_base_test_setup['cluster_config']
@@ -430,20 +425,34 @@ def test_upgrade_legacy_attachments(params_from_base_test_setup):
 
     for att_id in set_two_attachment_ids:
         sdk_client.get(att_id)
-
-    assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["status"] == "stopped"
-    sg_client.compact_attachments(sg_admin_url, remote_db, "start")
-    sg_client.compact_attachments(sg_admin_url, remote_db, "stop")
+    # 11. Execute compaction
+    assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["status"] == "completed"
     sg_client.compact_attachments(sg_admin_url, remote_db, "start")
     status = sg_client.compact_attachments(sg_admin_url, remote_db, "status")["status"]
-    if status == "stopping" or status == "running":
+    if status == "running":
         sg_client.compact_attachments(sg_admin_url, remote_db, "progress")
         time.sleep(5)
-    assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["status"] == "stopped"
-    assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["marked_attachments"] == "4", \
-        "compaction count not matched"
-    assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["last_error"] == "", \
-        "Error found while running the compaction process"
-    # TODO
-    #  assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["start_time"]
-    #  assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["marked_attachments"]
+    compaction_status = sg_client.compact_attachments(sg_admin_url, remote_db, "status")
+    log_info(compaction_status)
+    assert compaction_status["last_error"] == "", "Error found while running the compaction process"
+    assert compaction_status["start_time"] != ""
+    assert compaction_status["purged_attachments"] == 2, "purged attachment count is not matching"
+    assert compaction_status["marked_attachments"] == 4, "compaction count not matching"
+
+    # 12 Verify all attachments are not present after compaction
+    del set_one_attachment_ids[0]
+    sdk_deleted_doc_scratch_pad = list(set_one_attachment_ids)
+    for doc_id in set_one_attachment_ids:
+        nfe = None
+        with pytest.raises(DocumentNotFoundException) as nfe:
+            sdk_client.get(doc_id)
+        log_info(nfe.value)
+        if nfe is not None:
+            sdk_deleted_doc_scratch_pad.remove(nfe.value.key)
+    assert len(sdk_deleted_doc_scratch_pad) == 0
+
+    nfe = None
+    with pytest.raises(DocumentNotFoundException) as nfe:
+        sdk_client.get("att_same_1")
+    log_info(nfe.value)
+
