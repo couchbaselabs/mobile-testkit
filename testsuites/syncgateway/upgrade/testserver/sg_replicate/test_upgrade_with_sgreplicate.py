@@ -444,13 +444,15 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
                 assert doc["doc"]["_rev"] == sg3_doc["_rev"], "number of updates value is not same on both clusters for {}".format(doc)
 
     # Attachment cleanup compaction process to verify docs are deleted after the upgrade.
-    sg_client.compact_attachments(sg1.admin.admin_url, sg_db2, "start")
-    status = sg_client.compact_attachments(sg1.admin.admin_url, sg_db2, "status")["status"]
-    if status == "stopping" or status == "running":
-        sg_client.compact_attachments(sg1.admin.admin_url, sg_db2, "progress")
+    sg_client.compact_attachments(sg1.admin.admin_url, sg_db1, "start")
+    compaction_status = sg_client.compact_attachments(sg1.admin.admin_url, sg_db1, "status")
+    log_info(compaction_status)
+    if compaction_status["status"] == "stopping" or compaction_status["status"] == "running":
+        sg_client.compact_attachments(sg1.admin.admin_url, sg_db1, "progress")
         time.sleep(5)
-    assert sg_client.compact_attachments(sg1.admin.admin_url, sg_db2, "status")["status"] == "stopped"
-    assert sg_client.compact_attachments(sg1.admin.admin_url, sg_db2, "status")["marked_attachments"] == "2", "compaction count not matched"
+    compaction_status = sg_client.compact_attachments(sg1.admin.admin_url, sg_db1, "status")
+    assert compaction_status["status"] == "stopped"
+    assert compaction_status["purged_attachments"] == "2", "compaction count not matched"
     replicator.stop(repl1)
     replicator.stop(repl2)
     replicator.stop(repl3)

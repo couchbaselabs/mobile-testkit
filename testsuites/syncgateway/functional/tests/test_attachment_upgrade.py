@@ -70,7 +70,7 @@ def test_upgrade_delete_attachments(params_from_base_test_setup):
     session = cookie, session_id
 
     #  1. Create the documents with attachments in the older version(2.8-1.5) of SG
-    sg_client.add_docs(url=sg_url, db=remote_db, number=1000, id_prefix="att_com", channels=sg_channels,
+    sg_client.add_docs(url=sg_url, db=remote_db, number=15, id_prefix="att_com", channels=sg_channels,
                        auth=session, attachments_generator=attachment.generate_5_png_100_100)
     # 2. Delete few documents
     persist_cluster_config_environment_prop(cluster_conf, 'sync_gateway_version', sync_gateway_version, True)
@@ -145,6 +145,8 @@ def test_upgrade_delete_attachments(params_from_base_test_setup):
     sg_client.compact_attachments(sg_admin_url, remote_db, "stop")
     sg_client.compact_attachments(sg_admin_url, remote_db, "start")
     status = sg_client.compact_attachments(sg_admin_url, remote_db, "status")["status"]
+    print("*"*20)
+    print(status)
     if status == "stopping" or status == "running":
         sg_client.compact_attachments(sg_admin_url, remote_db, "progress")
         time.sleep(5)
