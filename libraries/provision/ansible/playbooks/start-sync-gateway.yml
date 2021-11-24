@@ -19,6 +19,7 @@
     x509_auth:
     x509_certs_dir:
     cacertpath:
+    tls:
 
   tasks:
   - include: tasks/deploy-sync-gateway-config.yml

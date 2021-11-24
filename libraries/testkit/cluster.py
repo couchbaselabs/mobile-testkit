@@ -291,11 +291,10 @@ class Cluster:
 
             if self.sync_gateway_ssl:
                 if self.centralized_persistent_config:
-                    playbook_vars["tls"] = """
-                        "tls": {"minimum_version": "tlsv1.3",
-                                "SSLCert": "sg_cert.pem",
-                                "SSLKey": "sg_privkey.pem"
-                                }, """
+                    playbook_vars["tls"] = """ "https": {"tls_minimum_version": "tlsv1.3",
+                             "tls_cert_path": "sg_cert.pem",
+                             "tls_key_path": "sg_privkey.pem"
+                            }, """
                 else:
                     playbook_vars["sslcert"] = '"SSLCert": "sg_cert.pem",'
                     playbook_vars["sslkey"] = '"SSLKey": "sg_privkey.pem",'
@@ -545,10 +544,11 @@ class Cluster:
                     raise ProvisioningError("Failed to block port on SGW")
 
         if self.sync_gateway_ssl:
-            if self.centralized_persistent_config:
-                tls_var = """ "tls": {"minimum_version": "tlsv1.3",
-                             "SSLCert": "sg_cert.pem",
-                             "SSLKey": "sg_privkey.pem"
+            print("yes it is sg-ssl enabled")
+            if not is_centralized_persistent_config_disabled(self._cluster_config):
+                tls_var = """ "https": {"tls_minimum_version": "tlsv1.3",
+                             "tls_cert_path": "sg_cert.pem",
+                             "tls_key_path": "sg_privkey.pem"
                             }, """
             else:
                 sslcert_var = '"SSLCert": "sg_cert.pem",'

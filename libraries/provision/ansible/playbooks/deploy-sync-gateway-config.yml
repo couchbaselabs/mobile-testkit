@@ -24,6 +24,7 @@
     disable_admin_auth:
     certpath:
     keypath:
+    tls:
 
   tasks:
   - include: tasks/stop-sync-gateway.yml

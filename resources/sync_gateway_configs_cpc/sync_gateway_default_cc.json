@@ -11,6 +11,7 @@
     },
     "api":{
         {{ disable_admin_auth }}
+        {{ tls }}
         "public_interface":":4984",
         "admin_interface":"0.0.0.0:4985"
     }

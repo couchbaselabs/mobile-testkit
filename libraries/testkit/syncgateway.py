@@ -382,7 +382,7 @@ class SyncGateway:
                 sgw_list = [self]
                 try:
                     send_dbconfig_as_restCall(db_config_json, sgw_list, sgw_config_data)
-                except HTTPError as e:
+                except Exception as e:
                     status = -1
                     # This is to work similiar to non persistent config to avoid updates on regression tests
                     log.info("if db fails, setting status to -1")
@@ -829,10 +829,10 @@ def setup_sgwconfig_db_config(cluster_config, sg_config_path):
 
     if sg_ssl_enabled(cluster_config):
         if is_centralized_persistent_config_disabled(cluster_config):
-            tls_var = """ "tls": {"minimum_version": "tlsv1.3",
-                            "SSLCert": "sg_cert.pem",
-                            "SSLKey": "sg_privkey.pem"
-                        }, """
+            tls_var = """ "https": {"tls_minimum_version": "tlsv1.3",
+                             "tls_cert_path": "sg_cert.pem",
+                             "tls_key_path": "sg_privkey.pem"
+                            }, """
         else:
             sslcert_var = '"SSLCert": "sg_cert.pem",'
             sslkey_var = '"SSLKey": "sg_privkey.pem",'
@@ -1114,7 +1114,6 @@ def send_dbconfig_as_restCall(db_config_json, sync_gateways, sgw_config_data):
         # imp_fltr_func = None
         roles_exist = False
         users_exist = False
-        print("sleeping some time for first one to execute")
         db_list = sgw.admin.get_dbs()
         print("db_list is ", db_list)
         """ import_filter_exist = False
@@ -1165,7 +1164,7 @@ def send_dbconfig_as_restCall(db_config_json, sync_gateways, sgw_config_data):
                 """sgw.admin.delete_db(sg_db)
                 time.sleep(1)
                 sgw.admin.create_db(sg_db, sgw_db_config[sg_db])"""
-                print("ignorning if db already exists in sync gateway")
+                print("ignorning if db already exists in sync gateway", str(e))
             db_info = sgw.admin.get_db_info(sg_db)
             if db_info["state"] == "Online":
                 """ if sync_func_exist:
