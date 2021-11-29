@@ -291,7 +291,7 @@ class Cluster:
 
             if self.sync_gateway_ssl:
                 if self.centralized_persistent_config:
-                    playbook_vars["tls"] = """ "https": {"tls_minimum_version": "tlsv1.3",
+                    playbook_vars["tls"] = """ "https": {
                              "tls_cert_path": "sg_cert.pem",
                              "tls_key_path": "sg_privkey.pem"
                             }, """
@@ -546,7 +546,7 @@ class Cluster:
         if self.sync_gateway_ssl:
             print("yes it is sg-ssl enabled")
             if not is_centralized_persistent_config_disabled(self._cluster_config):
-                tls_var = """ "https": {"tls_minimum_version": "tlsv1.3",
+                tls_var = """ "https": {
                              "tls_cert_path": "sg_cert.pem",
                              "tls_key_path": "sg_privkey.pem"
                             }, """

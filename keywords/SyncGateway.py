@@ -323,7 +323,7 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config, sg_db_cfg=None
                 sslcert_prop = '"SSLCert": "sg_cert.pem",'
                 sslkey_prop = '"SSLKey": "sg_privkey.pem",'
             else:
-                tls_prop = """ "https": {"tls_minimum_version": "tlsv1.3",
+                tls_prop = """ "https": {
                              "tls_cert_path": "sg_cert.pem",
                              "tls_key_path": "sg_privkey.pem"
                             }, """
@@ -557,7 +557,7 @@ class SyncGateway(object):
                     playbook_vars["sslcert"] = '"SSLCert": "sg_cert.pem",'
                     playbook_vars["sslkey"] = '"SSLKey": "sg_privkey.pem",'
                 else:
-                    playbook_vars["tls"] = """ "https": {"tls_minimum_version": "tlsv1.3",
+                    playbook_vars["tls"] = """ "https": {
                              "tls_cert_path": "sg_cert.pem",
                              "tls_key_path": "sg_privkey.pem"
                             }, """
@@ -992,7 +992,7 @@ class SyncGateway(object):
                 playbook_vars["sslcert"] = '"SSLCert": "sg_cert.pem",'
                 playbook_vars["sslkey"] = '"SSLKey": "sg_privkey.pem",'
             else:
-                playbook_vars["tls"] = """ "https": {"tls_minimum_version": "tlsv1.3",
+                playbook_vars["tls"] = """ "https": {
                              "tls_cert_path": "sg_cert.pem",
                              "tls_key_path": "sg_privkey.pem"
                             }, """
@@ -1218,7 +1218,7 @@ class SyncGateway(object):
                     playbook_vars["sslcert"] = '"SSLCert": "sg_cert.pem",'
                     playbook_vars["sslkey"] = '"SSLKey": "sg_privkey.pem",'
                 else:
-                    playbook_vars["tls"] = """ "https": {"tls_minimum_version": "tlsv1.3",
+                    playbook_vars["tls"] = """ "https": {
                              "tls_cert_path": "sg_cert.pem",
                              "tls_key_path": "sg_privkey.pem"
                             }, """

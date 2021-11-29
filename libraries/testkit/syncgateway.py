@@ -829,7 +829,7 @@ def setup_sgwconfig_db_config(cluster_config, sg_config_path):
 
     if sg_ssl_enabled(cluster_config):
         if is_centralized_persistent_config_disabled(cluster_config):
-            tls_var = """ "https": {"tls_minimum_version": "tlsv1.3",
+            tls_var = """ "https": {
                              "tls_cert_path": "sg_cert.pem",
                              "tls_key_path": "sg_privkey.pem"
                             }, """
