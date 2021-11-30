@@ -19,7 +19,7 @@
     couchbase_server_admin_port: "{{ couchbase_server_admin_port }}"
     protocol: http://
     addnode_protocol: http://
-    addnode_port: 18091
+    addnode_port: 8091
     ssl_verify:
     couchbase_server_home_path: /opt/couchbase
 
