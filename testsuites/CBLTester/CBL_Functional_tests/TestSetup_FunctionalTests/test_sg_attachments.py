@@ -560,7 +560,10 @@ def test_attachment_expire_purged_doc(params_from_base_test_setup, delete_doc_ty
     sdk_client = get_cluster(connection_url, bucket_name)
     with pytest.raises(DocumentNotFoundException) as nfe:
         sdk_client.get(doc_id)
+    log_info(nfe)
     with pytest.raises(DocumentNotFoundException) as nfe:
         sdk_client.get(attachment_ids[0])
+    log_info(nfe)
+
 
 

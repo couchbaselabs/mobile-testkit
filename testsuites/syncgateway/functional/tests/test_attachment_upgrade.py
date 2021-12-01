@@ -259,7 +259,7 @@ def test_upgrade_purge_expire_attachments(params_from_base_test_setup, delete_do
     else:
         time.sleep(6)
     with pytest.raises(HTTPError) as he:
-        doc = sg_client.get_doc(url=sg_url, db=remote_db, doc_id="att_com_0", auth=session)
+        sg_client.get_doc(url=sg_url, db=remote_db, doc_id="att_com_0", auth=session)
     http_error_str = str(he.value)
     assert http_error_str.startswith("403 Client Error: Forbidden")
 
@@ -468,4 +468,3 @@ def test_upgrade_legacy_attachments(params_from_base_test_setup):
     with pytest.raises(DocumentNotFoundException) as nfe:
         sdk_client.get("att_same_1")
     log_info(nfe.value)
-
