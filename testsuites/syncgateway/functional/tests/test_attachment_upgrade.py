@@ -12,11 +12,16 @@ from utilities.cluster_config_utils import persist_cluster_config_environment_pr
 from keywords import attachment
 from utilities.cluster_config_utils import get_cluster
 from couchbase.exceptions import DocumentNotFoundException
+from requests.exceptions import HTTPError
 
 
 @pytest.mark.syncgateway
 @pytest.mark.attachment_cleanup
-def test_upgrade_delete_attachments(params_from_base_test_setup):
+@pytest.mark.parametrize("doc_count, marked", [
+    (100, 457),
+    (1000, 4957)
+])
+def test_upgrade_delete_attachments(params_from_base_test_setup, doc_count, marked):
     """
     @summary :
     Test cases link on google drive :https://docs.google.com/spreadsheets/d/1RrrIcIZN7MgLDlNzGWfUHo2NTYrx1Jr55SBNeCdDUQs/edit#gid=0
@@ -70,7 +75,7 @@ def test_upgrade_delete_attachments(params_from_base_test_setup):
     session = cookie, session_id
 
     #  1. Create the documents with attachments in the older version(2.8-1.5) of SG
-    sg_client.add_docs(url=sg_url, db=remote_db, number=15, id_prefix="att_com", channels=sg_channels,
+    sg_client.add_docs(url=sg_url, db=remote_db, number=doc_count, id_prefix="att_com", channels=sg_channels,
                        auth=session, attachments_generator=attachment.generate_5_png_100_100)
     # 2. Delete few documents
     persist_cluster_config_environment_prop(cluster_conf, 'sync_gateway_version', sync_gateway_version, True)
@@ -142,18 +147,18 @@ def test_upgrade_delete_attachments(params_from_base_test_setup):
     # 7 Execute the compaction process is collecting the deleted docs
     assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["status"] == "completed"
     sg_client.compact_attachments(sg_admin_url, remote_db, "start")
-    sg_client.compact_attachments(sg_admin_url, remote_db, "stop")
-    sg_client.compact_attachments(sg_admin_url, remote_db, "start")
+    # sg_client.compact_attachments(sg_admin_url, remote_db, "stop")
+    # sg_client.compact_attachments(sg_admin_url, remote_db, "start")
     status = sg_client.compact_attachments(sg_admin_url, remote_db, "status")["status"]
-    print("*"*20)
-    print(status)
+
     if status == "stopping" or status == "running":
         sg_client.compact_attachments(sg_admin_url, remote_db, "progress")
-        time.sleep(5)
-    assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["status"] == "stopped"
-    # assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["marked_attachments"] == "4957", \
-    #     "compaction count not matching"
-    assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["purged_attachments"] == "996", \
+        time.sleep(40)
+    print(sg_client.compact_attachments(sg_admin_url, remote_db, "status"))
+    assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["status"] == "completed"
+    assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["marked_attachments"] == marked, \
+        "compaction count not matching"
+    assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["purged_attachments"] == 45, \
         "purged attachments"
     assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["last_error"] == "", \
         "Error found while running the compaction process"
@@ -252,6 +257,10 @@ def test_upgrade_purge_expire_attachments(params_from_base_test_setup, delete_do
         sg_client.purge_docs(url=sg_admin_url, db=remote_db, docs=sg_docs["rows"])
     else:
         time.sleep(6)
+    with pytest.raises(HTTPError) as he:
+        doc = sg_client.get_doc(url=sg_url, db=remote_db, doc_id="att_com_0", auth=session)
+    http_error_str = str(he.value)
+    assert http_error_str.startswith("403 Client Error: Forbidden")
 
     # 5 . Upgrade SGW to lithium and have Automatic upgrade
     persist_cluster_config_environment_prop(cluster_conf, 'sync_gateway_version', sync_gateway_version, True)
@@ -266,13 +275,14 @@ def test_upgrade_purge_expire_attachments(params_from_base_test_setup, delete_do
         time.sleep(10)
     compaction_status = sg_client.compact_attachments(sg_admin_url, remote_db, "status")
     log_info(compaction_status)
+    assert compaction_status["status"] == "completed", "Compaction status should be completed"
     assert compaction_status["last_error"] == "", "Error found while running the compaction process"
-    assert compaction_status["start_time"] != ""
+    assert compaction_status["start_time"] != "", "Compaction start time is missing"
+    assert compaction_status["compact_id"] != "", "Compaction id is missing"
     if delete_doc_type == "purge":
-        assert compaction_status["purged_attachments"] == "101", "purged attachment count is not matching"
+        assert compaction_status["purged_attachments"] == 101, "purged attachment count is not matching"
     else:
-        assert compaction_status["purged_attachments"] == "100", "purged attachment count is not matching"
-
+        assert compaction_status["purged_attachments"] == 95, "purged attachment count is not matching"
 
 
 @pytest.mark.syncgateway

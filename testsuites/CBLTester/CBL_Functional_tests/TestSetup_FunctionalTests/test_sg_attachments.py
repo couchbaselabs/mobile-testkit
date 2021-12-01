@@ -499,7 +499,7 @@ def test_attachment_expire_purged_doc(params_from_base_test_setup, delete_doc_ty
 
     # Create an expiry doc
     if delete_doc_type == "expire":
-        doc_exp_3_body = document.create_docs(doc_id_prefix="exp_3", number=1, channels=channels, attachments_generator=attachment.generate_2_png_10_10, expiry=15)
+        doc_exp_3_body = document.create_docs(doc_id_prefix="exp_3", number=1, channels=channels, attachments_generator=attachment.generate_2_png_10_10, expiry=5)
         sg_client.add_doc(url=sg_url, db=sg_db, doc=doc_exp_3_body[0], auth=session)
 
     # get attachmnet IDs of Expired doc
@@ -534,15 +534,15 @@ def test_attachment_expire_purged_doc(params_from_base_test_setup, delete_doc_ty
         doc = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=session)
         sg_client.purge_doc(url=sg_admin_url, db=sg_db, doc=doc)
 
-    # expire doc
-    if delete_doc_type == "expire":
-        time.sleep(5)
-
     # 4. wait for replication to finish
     replicator.wait_until_replicator_idle(repl)
     replicator.stop(repl)
     cbl_doc_ids = db.getDocIds(cbl_db)
     assert doc_id in cbl_doc_ids, "{} document does not exist in CBL after replication".format(delete_doc_type)
+
+    # expire doc
+    if delete_doc_type == "expire":
+        time.sleep(35)
 
     # 5. Verify attachments are completely deleted from bucket
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
@@ -556,14 +556,7 @@ def test_attachment_expire_purged_doc(params_from_base_test_setup, delete_doc_ty
         connection_url = 'couchbase://{}'.format(cbs_ip)
     bucket_name = 'data-bucket'
     sdk_client = get_cluster(connection_url, bucket_name)
-    sdk_client.get_multi(attachment_ids)
+    print(sdk_client.get(attachment_ids[0]))
+    with pytest.raises(DocumentNotFoundException) as nfe:
+        sdk_client.get(attachment_ids[0])
 
-    sdk_deleted_doc_scratch_pad = list(attachment_ids)
-    for doc_id in attachment_ids:
-        nfe = None
-        with pytest.raises(DocumentNotFoundException) as nfe:
-            sdk_client.get(doc_id)
-        log_info(nfe.value)
-        if nfe is not None:
-            sdk_deleted_doc_scratch_pad.remove(nfe.value.key)
-    assert len(sdk_deleted_doc_scratch_pad) == 0
