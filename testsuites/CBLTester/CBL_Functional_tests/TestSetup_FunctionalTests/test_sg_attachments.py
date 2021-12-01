@@ -133,7 +133,6 @@ def verify_doc_ids_in_sdk_get_multi(response, expected_number_docs, expected_ids
 
     # Cross off all the doc ids seen in the response from the scratch pad
     for doc_id, value in list(response.items()):
-        print(value.content)
         assert '_sync' not in value.content
         expected_ids_scratch_pad.remove(doc_id)
 
@@ -499,7 +498,7 @@ def test_attachment_expire_purged_doc(params_from_base_test_setup, delete_doc_ty
 
     # Create an expiry doc
     if delete_doc_type == "expire":
-        doc_exp_3_body = document.create_docs(doc_id_prefix="exp_3", number=1, channels=channels, attachments_generator=attachment.generate_2_png_10_10, expiry=5)
+        doc_exp_3_body = document.create_docs(doc_id_prefix="exp_3", number=1, channels=channels, attachments_generator=attachment.generate_2_png_10_10, expiry=2)
         sg_client.add_doc(url=sg_url, db=sg_db, doc=doc_exp_3_body[0], auth=session)
 
     # get attachmnet IDs of Expired doc
@@ -515,7 +514,6 @@ def test_attachment_expire_purged_doc(params_from_base_test_setup, delete_doc_ty
     attachment_name.append(att_name)
     attachment_raw = sg_client.get_attachment_by_document(sg_admin_url, db=sg_db, doc=doc_id, attachment=att_name)
     attachment_ids.append(attachment_raw['key'])
-    print(attachment_ids)
 
     # 2. Pull replication to CBL
     replicator = Replication(base_url)
@@ -523,7 +521,7 @@ def test_attachment_expire_purged_doc(params_from_base_test_setup, delete_doc_ty
     replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
     repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channels, replication_type="pull",
                                        replicator_authenticator=replicator_authenticator)
-
+    # 4.. Stop replication
     repl = replicator.create(repl_config)
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
@@ -540,11 +538,15 @@ def test_attachment_expire_purged_doc(params_from_base_test_setup, delete_doc_ty
     cbl_doc_ids = db.getDocIds(cbl_db)
     assert doc_id in cbl_doc_ids, "{} document does not exist in CBL after replication".format(delete_doc_type)
 
-    # expire doc
+    # 5 wait until expire doc
     if delete_doc_type == "expire":
         time.sleep(35)
-
-    # 5. Verify attachments are completely deleted from bucket
+    # 6. Verify that purged doc or expired doc is not deleted in CBL
+    with pytest.raises(HTTPError) as he:
+        doc = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=session)
+    http_error_str = str(he.value)
+    log_info(http_error_str)
+    # 7. Verify attachments are completely deleted from bucket
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
     cluster_topology = params_from_base_test_setup['cluster_topology']
     cbs_url = cluster_topology['couchbase_servers'][0]
@@ -556,7 +558,9 @@ def test_attachment_expire_purged_doc(params_from_base_test_setup, delete_doc_ty
         connection_url = 'couchbase://{}'.format(cbs_ip)
     bucket_name = 'data-bucket'
     sdk_client = get_cluster(connection_url, bucket_name)
-    print(sdk_client.get(attachment_ids[0]))
+    with pytest.raises(DocumentNotFoundException) as nfe:
+        sdk_client.get(doc_id)
     with pytest.raises(DocumentNotFoundException) as nfe:
         sdk_client.get(attachment_ids[0])
+
 
