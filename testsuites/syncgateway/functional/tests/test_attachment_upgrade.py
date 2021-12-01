@@ -155,7 +155,10 @@ def test_upgrade_delete_attachments(params_from_base_test_setup, doc_count, mark
 
     if status == "stopping" or status == "running":
         sg_client.compact_attachments(sg_admin_url, remote_db, "progress")
-        time.sleep(40)
+        if doc_count == 1000:
+            time.sleep(100)
+        else:
+            time.sleep(40)
     assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["status"] == "completed"
     assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["marked_attachments"] == marked, \
         "compaction count not matching"
