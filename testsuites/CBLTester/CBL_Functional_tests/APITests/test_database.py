@@ -21,7 +21,7 @@ class TestDatabase(object):
 
         log_info("check for error message: {}".format(err_msg))
 
-        if "android" in self.liteserv_platform and db_name == "":
+        if "android" or "ios" in self.liteserv_platform and db_name == "":
             pytest.skip("Test not applicable for ios")
 
         if len(db_name) >= 128 and (self.liteserv_platform != "ios" or self.liteserv_platform != "android"):
