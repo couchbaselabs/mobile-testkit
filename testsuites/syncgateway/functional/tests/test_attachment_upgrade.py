@@ -147,14 +147,15 @@ def test_upgrade_delete_attachments(params_from_base_test_setup, doc_count, mark
     # 7 Execute the compaction process is collecting the deleted docs
     assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["status"] == "completed"
     sg_client.compact_attachments(sg_admin_url, remote_db, "start")
-    # sg_client.compact_attachments(sg_admin_url, remote_db, "stop")
-    # sg_client.compact_attachments(sg_admin_url, remote_db, "start")
+    sg_client.compact_attachments(sg_admin_url, remote_db, "stop")
+    # We need to wait for few minutes to start the process again
+    time.sleep(40)
+    sg_client.compact_attachments(sg_admin_url, remote_db, "start")
     status = sg_client.compact_attachments(sg_admin_url, remote_db, "status")["status"]
 
     if status == "stopping" or status == "running":
         sg_client.compact_attachments(sg_admin_url, remote_db, "progress")
         time.sleep(40)
-    print(sg_client.compact_attachments(sg_admin_url, remote_db, "status"))
     assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["status"] == "completed"
     assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["marked_attachments"] == marked, \
         "compaction count not matching"
