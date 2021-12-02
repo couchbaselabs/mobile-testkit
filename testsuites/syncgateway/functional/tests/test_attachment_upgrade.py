@@ -53,10 +53,7 @@ def test_upgrade_delete_attachments(params_from_base_test_setup, doc_count, mark
     if sync_gateway_version < "3.0.0":
         pytest.skip('This test can run with sgw version 3.0 and above')
 
-    xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
     # This test should only run when using xattr
-    if not xattrs_enabled:
-        pytest.skip('XATTR tests require --xattrs flag')
     sg_conf_name = "sync_gateway_default"
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
@@ -159,6 +156,7 @@ def test_upgrade_delete_attachments(params_from_base_test_setup, doc_count, mark
             time.sleep(100)
         else:
             time.sleep(40)
+    log_info(sg_client.compact_attachments(sg_admin_url, remote_db, "status"))
     assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["status"] == "completed"
     assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["marked_attachments"] == marked, \
         "compaction count not matching"
@@ -213,12 +211,6 @@ def test_upgrade_purge_expire_attachments(params_from_base_test_setup, delete_do
         pytest.skip('This test cannot run with sg version below 3.0.0')
     sg_conf_name = "sync_gateway_default"
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
-    xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
-
-    # This test should only run when using xattr
-    if not xattrs_enabled:
-        pytest.skip('XATTR tests require --xattrs flag')
-
     cbs_cluster = Cluster(config=cluster_conf)
     temp_sg_config, _ = copy_sgconf_to_temp(sg_conf, mode)
     cbs_cluster.reset(sg_config_path=temp_sg_config)
@@ -379,7 +371,6 @@ def test_upgrade_legacy_attachments(params_from_base_test_setup):
                                 cluster_conf)
 
     # Get all attachment names
-
     set_one_attachment_name = []
     set_one_attachment_ids = []
 

@@ -33,11 +33,6 @@ def test_delete_docs_with_attachments(params_from_base_test_setup, source, targe
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     if sync_gateway_version < "3.0.0":
         pytest.skip('attachment cleanup meta api is enabled and does not work below 3.0 , so skipping the test')
-    xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
-
-    # This test should only run when using xattr
-    if not xattrs_enabled:
-        pytest.skip('XATTR tests require --xattrs flag')
 
     sg_db = "db"
     sg_url = params_from_base_test_setup["sg_url"]
@@ -158,11 +153,6 @@ def test_doc_with_many_attachments(params_from_base_test_setup):
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     if sync_gateway_version < "3.0.0":
         pytest.skip('attachment cleanup meta api is enabled and does not work below 3.0 , so skipping the test')
-    xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
-
-    # This test should only run when using xattr
-    if not xattrs_enabled:
-        pytest.skip('XATTR tests require --xattrs flag')
 
     sg_db = "db"
     sg_url = params_from_base_test_setup["sg_url"]
@@ -313,11 +303,8 @@ def test_restart_sg_creating_attachments(params_from_base_test_setup):
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     if sync_gateway_version < "3.0.0":
         pytest.skip('This test cannot run with sg version below 3.0.0')
-    xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
 
     # This test should only run when using xattr
-    if not xattrs_enabled:
-        pytest.skip('XATTR tests require --xattrs flag')
 
     sg_db = "db"
     sg_url = params_from_base_test_setup["sg_url"]
@@ -473,10 +460,6 @@ def test_attachment_expire_purged_doc(params_from_base_test_setup, delete_doc_ty
 
     if sync_gateway_version < "3.0.0":
         pytest.skip('This test cannot run with sg version below 3.0.0')
-
-    # This test should only run when using xattr meta storage
-    if not xattrs_enabled:
-        pytest.skip('XATTR tests require --xattrs flag')
 
     channels = ["Replication"]
     sg_client = MobileRestClient()
