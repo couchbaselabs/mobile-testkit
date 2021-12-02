@@ -443,7 +443,7 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
             if sync_gateway_version < "2.8.0":
                 assert doc["doc"]["_rev"] == sg3_doc["_rev"], "number of updates value is not same on both clusters for {}".format(doc)
 
-    if sync_gateway_version >= "3.0.0":
+    if sync_gateway_upgraded_version >= "3.0.0":
         # Attachment cleanup compaction process to verify docs are deleted after the upgrade.
         sg_client.compact_attachments(sg1.admin.admin_url, sg_db1, "start")
         compaction_status = sg_client.compact_attachments(sg1.admin.admin_url, sg_db1, "status")
