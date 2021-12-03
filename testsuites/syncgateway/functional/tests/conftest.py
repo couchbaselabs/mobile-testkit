@@ -176,7 +176,8 @@ def pytest_addoption(parser):
 
     parser.addoption("--sync-gateway-previous-version",
                      action="store",
-                     help="sync-gateway-previous-version")
+                     help="sync-gateway-previous-version",
+                     default="2.8.2-1")
 
     parser.addoption("--enable-server-tls-skip-verify",
                      action="store_true",
