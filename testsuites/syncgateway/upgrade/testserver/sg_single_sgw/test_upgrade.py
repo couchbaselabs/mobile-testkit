@@ -320,7 +320,7 @@ def test_upgrade(params_from_base_test_setup):
             assert att_status["status"] == "completed"
             assert att_status["last_error"] == "", \
                 "Error found while running the compaction process"
-            assert att_status["purged_attachments"] == 2
+            assert att_status["purged_attachments"] == 660
 
 
 def verify_sg_docs_revision_history(url, db, cbl_db2, num_docs, sg_db, added_docs, terminator):
