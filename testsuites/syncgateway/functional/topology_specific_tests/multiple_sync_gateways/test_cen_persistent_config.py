@@ -100,7 +100,7 @@ def test_centralized_persistent_flag_off(params_from_base_test_setup):
 
 @pytest.mark.syncgateway
 @pytest.mark.parametrize("group_type", [
-    # ("default"),
+    ("default"),
     ("named")
 ])
 def test_named_and_default_group(params_from_base_test_setup, group_type):

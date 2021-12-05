@@ -47,11 +47,12 @@ def sync_gateway_config_path_for_mode(config_prefix, mode, cpc=False):
     # if get_sg_version(cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config):
     #    cpc = True
     # Construct expected config path
-    config = "{}/{}_{}.json".format(SYNC_GATEWAY_CONFIGS, config_prefix, mode)
     # if not os.path.isfile(config):
     #    raise ValueError("Could not file config: {}".format(config))
     if cpc:
         config = "{}/{}_{}.json".format(SYNC_GATEWAY_CONFIGS_CPC, config_prefix, mode)
+    else:
+        config = "{}/{}_{}.json".format(SYNC_GATEWAY_CONFIGS, config_prefix, mode)
     if not os.path.isfile(config):
         raise ValueError("Could not file config: {}".format(config))
     return config

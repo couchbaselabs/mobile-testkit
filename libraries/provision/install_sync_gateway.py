@@ -298,13 +298,13 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
 
         if sg_ssl_enabled(cluster_config):
             if is_centralized_persistent_config_disabled(cluster_config):
+                playbook_vars["sslcert"] = '"SSLCert": "sg_cert.pem",'
+                playbook_vars["sslkey"] = '"SSLKey": "sg_privkey.pem",'
+            else:
                 playbook_vars["tls"] = """ "https": {
                              "tls_cert_path": "sg_cert.pem",
                              "tls_key_path": "sg_privkey.pem"
                             }, """
-            else:
-                playbook_vars["sslcert"] = '"SSLCert": "sg_cert.pem",'
-                playbook_vars["sslkey"] = '"SSLKey": "sg_privkey.pem",'
 
         try:
             revs_limit = get_revs_limit(cluster_config)

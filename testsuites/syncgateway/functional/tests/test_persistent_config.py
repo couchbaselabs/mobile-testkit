@@ -21,6 +21,7 @@ from libraries.testkit.syncgateway import construct_dbconfig_json
 # from CBLClient.Authenticator import Authenticator
 from utilities.cluster_config_utils import is_centralized_persistent_config_disabled, copy_to_temp_conf
 # from keywords.remoteexecutor import RemoteExecutor
+from utilities.cluster_config_utils import copy_sgconf_to_temp, replace_string_on_sgw_config
 
 
 @pytest.mark.syncgateway
@@ -303,3 +304,59 @@ def test_invalid_database_credentials(params_from_base_test_setup):
 
     sg_docs = sg_client.get_all_docs(url=sg3.url, db=sg_db2, auth=auto_user)["rows"]
     assert len(sg_docs) == 2, "sg3 node could not access sg_db2 docs"
+
+
+@pytest.mark.syncgateway
+@pytest.mark.oscertify
+@pytest.mark.parametrize("group_type", [
+    ("default"),
+    ("named")
+])
+def test_default_named_group(params_from_base_test_setup, group_type):
+    """
+    @summary :
+    Test cases link on google drive : https://docs.google.com/spreadsheets/d/19kJQ4_g6RroaoG2YYe0X11d9pU0xam-lb-n23aPLhO4/edit#gid=0
+    1. Setup SGw node with default group on sgw config
+    2. Start sync gateway
+    3. Verify SGW starts successfully with default group id on CE and EE
+    4. Test custom group id on CE and verify SGW starts to fail
+    """
+
+     # sg_db = 'db'
+    sg_cpc_conf_name = "sync_gateway_cpc_custom_group"
+    sg_conf_name = "sync_gateway_default"
+
+    cluster_conf = params_from_base_test_setup['cluster_config']
+    sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
+    mode = params_from_base_test_setup['mode']
+    disable_persistent_config = params_from_base_test_setup['disable_persistent_config']
+    sg_ce = params_from_base_test_setup['sg_ce']
+
+    if sync_gateway_version < "3.0.0" and not disable_persistent_config:
+        pytest.skip('This test can run with sgw version 3.0 and above')
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    cpc_sg_conf = sync_gateway_config_path_for_mode(sg_cpc_conf_name, mode, cpc=True)
+    sg_obj = SyncGateway()
+
+    # 1. Setup SGw node with default group on sgw config
+    # 2. Start sync gateway
+    if group_type == "default":
+        replaced_group = ""
+    else:
+        replaced_group = '"group_id": "replaced_named_group",'
+    str = '{{ groupid }}'
+    temp_sg_config, _ = copy_sgconf_to_temp(cpc_sg_conf, mode)
+    temp_sg_config = replace_string_on_sgw_config(temp_sg_config, str, replaced_group)
+    cbs_cluster = Cluster(config=cluster_conf)
+    sg1 = cbs_cluster.sync_gateways[0]
+    sg_obj.stop_sync_gateways(cluster_config=cluster_conf, url=sg1.url)
+    # 3. Verify SGW starts successfully with default group id on CE and EE
+    # 4. Test custom group id on CE and verify SGW starts to fail
+    try:
+        sg_obj.start_sync_gateways(cluster_config=cluster_conf, url=sg1.url, config=temp_sg_config, use_config=sg_conf)
+    except Exception as ex:
+        print("Exception caught is ", str(ex))
+        if group_type == "named" and not sg_ce:
+            assert False, "Sync gateway failed to start with custom group id"
+        if group_type == "default":
+            assert False, "Sync gateway failed to start with default group id "

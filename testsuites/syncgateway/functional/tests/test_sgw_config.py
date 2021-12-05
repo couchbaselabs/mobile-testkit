@@ -19,6 +19,7 @@ from keywords.couchbaseserver import get_sdk_client_with_bucket
 from libraries.provision.ansible_runner import AnsibleRunner
 from keywords.constants import ENVIRONMENT_FILE
 from concurrent.futures import ProcessPoolExecutor
+from keywords.SyncGateway import SyncGateway
 
 
 @pytest.mark.syncgateway
@@ -236,6 +237,98 @@ def test_invalid_external_jspath(params_from_base_test_setup, setup_jsserver):
         else:
             assert "400 Client Error: Bad Request for url" in str(ex), "DB creation did not fail with invalid external js path"
     cluster.reset(sg_config_path=orig_sg_conf)
+
+
+@pytest.mark.syncgateway
+@pytest.mark.sync
+@pytest.mark.parametrize("default_values", [
+    (False),
+    pytest.param(True, marks=pytest.mark.oscertify)
+])
+def test_envVariables_usrpassword_on_sgw_config(params_from_base_test_setup, setup_env_variables, default_values):
+    """
+    1. Create SGW config with environment variables created for usernmae and password
+    2. Define environment variables/default values for each OS  username and password
+    3. Start SGW and verify it start successfully
+    4. Verify  that username and password got substituted with environment variables/default values
+    """
+
+    mode = params_from_base_test_setup["mode"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    sg_platform = params_from_base_test_setup["sg_platform"]
+    cluster_config = setup_env_variables["cluster_config"]
+    cluster = setup_env_variables["cluster"]
+    ansible_runner = setup_env_variables["ansible_runner"]
+    sg_hostname = setup_env_variables["sg_hostname"]
+    xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
+
+    if sync_gateway_version < "3.0.0":
+        pytest.skip("this feature not available below 3.0.0")
+
+    sg_conf_name = "sync_gateway_default"
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    cpc_sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode, cpc=True)
+    cluster_helper = ClusterKeywords(cluster_config)
+    cluster_hosts = cluster_helper.get_cluster_topology(cluster_config)
+    sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
+    sg_url = cluster_hosts["sync_gateways"][0]["public"]
+    username = "autotest"
+    password = "password"
+    doc_id = "doc_1"
+    sg_db = "db"
+    channel = ["sgw-env-var"]
+    groupid = "custom_per_group_2"
+    sg_client = MobileRestClient()
+    bucket_names = get_buckets_from_sync_gateway_config(sg_conf, cluster_config)
+    # set up environment variables on sync gateway
+
+    ''' if filter_type == "sync_function":
+        js_content = """function(doc, oldDoc){throw({forbidden: 'read only!'})}"""
+        jsfunc = "\"sync\":" + "\"$jsfunc\","
+    elif filter_type == "import_filter":
+        js_content = """function(doc){ return doc.type == 'mobile'}"""
+        jsfunc = "\"import_filter\":" + "\"$jsfunc\"," '''
+
+    if sg_platform == "windows":
+        environment_string = """[String[]] $v = @("bucketuser=""" + bucket_names[0] + """", "groupidvar=""" + groupid + """\")
+        Set-ItemProperty HKLM:SYSTEM\CurrentControlSet\Services\SyncGateway -Name Environment -Value $v
+        """
+    elif "macos" in sg_platform:
+        environment_string = """launchctl setenv bucketuser """ + bucket_names[0] + """
+        launchctl setenv groupidvar \"""" + groupid + """\"
+        """
+    else:
+        environment_string = """[Service]
+        Environment="bucketuser=""" + bucket_names[0] + """"
+        Environment="groupidvar=""" + groupid + """"
+        """
+
+    environment_file = os.path.abspath(ENVIRONMENT_FILE)
+    environmentFileWriter = open(environment_file, "w")
+    environmentFileWriter.write(environment_string)
+    environmentFileWriter.close()
+    playbook_vars = {
+        "environment_file": environment_file
+    }
+    ansible_runner.run_ansible_playbook(
+        "setup-env-variables-for-service.yml",
+        extra_vars=playbook_vars,
+        subset=sg_hostname
+    )
+    username_sub = "\"username\":" + "\"$bucketuser\","
+    groupid_sub = "$groupidvar"
+    if default_values:
+        password = "\"password\":" + "\"${password:-password}\","
+
+    temp_sg_config, _ = copy_sgconf_to_temp(cpc_sg_conf, mode)
+
+    temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "persistent_group1", groupid_sub)
+    temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ username }}", username_sub)
+    if default_values:
+        temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ password }}", password)
+    sg_helper = SyncGateway()
+    sg_helper.stop_sync_gateways(cluster_config=cluster_config, url=sg_url)
+    sg_helper.start_sync_gateways(cluster_config=cluster_config, url=sg_url, config=temp_sg_config, use_config=sg_conf)
 
 
 @pytest.mark.syncgateway

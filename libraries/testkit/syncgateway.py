@@ -380,12 +380,13 @@ class SyncGateway:
             if get_sg_version(self.cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(self.cluster_config):
                 # Now create rest API for all database configs
                 sgw_list = [self]
+                send_dbconfig_as_restCall(db_config_json, sgw_list, sgw_config_data)
                 try:
                     send_dbconfig_as_restCall(db_config_json, sgw_list, sgw_config_data)
-                except Exception as e:
+                except Exception as ex:
                     status = -1
                     # This is to work similiar to non persistent config to avoid updates on regression tests
-                    log.info("if db fails, setting status to -1")
+                    log.info("if db fails, setting status to -1", str(ex))
         return status
 
     def verify_launched(self):
@@ -829,13 +830,15 @@ def setup_sgwconfig_db_config(cluster_config, sg_config_path):
 
     if sg_ssl_enabled(cluster_config):
         if is_centralized_persistent_config_disabled(cluster_config):
-            tls_var = """ "https": {
-                             "tls_cert_path": "sg_cert.pem",
-                             "tls_key_path": "sg_privkey.pem"
-                            }, """
+                sslcert_var = '"SSLCert": "sg_cert.pem",'
+                sslkey_var = '"SSLKey": "sg_privkey.pem",'
         else:
-            sslcert_var = '"SSLCert": "sg_cert.pem",'
-            sslkey_var = '"SSLKey": "sg_privkey.pem",'
+            tls_var = """ "https": {
+                            "tls_cert_path": "sg_cert.pem",
+                            "tls_key_path": "sg_privkey.pem"
+                        }, """
+
+        
     if is_hide_prod_version_enabled(cluster_config):
         hide_product_version_var = '"hide_product_version": true,'
     bucket_list_var = '"buckets": {},'.format(bucket_names)

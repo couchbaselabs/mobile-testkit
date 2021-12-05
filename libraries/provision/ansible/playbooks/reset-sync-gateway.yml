@@ -42,6 +42,7 @@
     disable_admin_auth:
     certpath:
     keypath:
+    tls:
 
 
   tasks:
