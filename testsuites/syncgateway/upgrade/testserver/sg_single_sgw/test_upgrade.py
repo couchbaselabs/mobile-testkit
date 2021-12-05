@@ -178,13 +178,8 @@ def test_upgrade(params_from_base_test_setup):
     duplicate_attachments = attachment.load_from_data_dir(["golden_gate_large.jpg"])
     for att in duplicate_attachments:
         attachments[att.name] = {"data": att.data}
-    sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)
     sg_client.update_doc(url=sg_admin_url, db=sg_db, doc_id="sgw_docs1_0", number_updates=1,
                          update_attachment=attachments)
-    attachments = {}
-    duplicate_attachments = attachment.load_from_data_dir(["sample_text.txt"])
-    for att in duplicate_attachments:
-        attachments[att.name] = {"data": att.data}
     sg_client.update_doc(url=sg_admin_url, db=sg_db, doc_id="sgw_docs1_1", number_updates=1,
                          update_attachment=attachments)
     replicator.start(repl1)
@@ -320,10 +315,12 @@ def test_upgrade(params_from_base_test_setup):
             # we need to wait until compaction process is done
             while sg_client.compact_attachments(sg_admin_url, sg_db, "status")["status"] == "running":
                 time.sleep(10)
-            assert sg_client.compact_attachments(sg_admin_url, sg_db, "status")["status"] == "completed"
-            assert sg_client.compact_attachments(sg_admin_url, sg_db, "status")["last_error"] == "", \
+            att_status = sg_client.compact_attachments(sg_admin_url, sg_db, "status")
+            log_info(att_status)
+            assert att_status["status"] == "completed"
+            assert att_status["last_error"] == "", \
                 "Error found while running the compaction process"
-            assert sg_client.compact_attachments(sg_admin_url, sg_db, "status")["purged_attachments"] == 2
+            assert att_status["purged_attachments"] == 2
 
 
 def verify_sg_docs_revision_history(url, db, cbl_db2, num_docs, sg_db, added_docs, terminator):
