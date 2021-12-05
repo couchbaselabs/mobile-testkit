@@ -139,6 +139,7 @@ def test_upgrade(params_from_base_test_setup):
     doc_ids = db.getDocIds(cbl_db, limit=num_docs)
     added_docs = db.getDocuments(cbl_db, doc_ids)
     log_info("Added {} docs".format(len(added_docs)))
+    sg_client.add_docs(url=sg_admin_url, db=sg_db, number=2, id_prefix="sgw_docs1", channels=sg_user_channels, generator="simple_user", attachments_generator=attachment.generate_2_png_10_10)
 
     # 2. Starting continuous push_pull replication from TestServer to sync gateway
     log_info("Starting continuous push pull replication from TestServer to sync gateway")
@@ -158,7 +159,6 @@ def test_upgrade(params_from_base_test_setup):
     repl1 = replicator.create(repl_config1)
     replicator.start(repl1)
     replicator.wait_until_replicator_idle(repl1)
-    sg_client.add_docs(url=sg_admin_url, db=sg_db, number=2, id_prefix="sgw_docs1", channels=sg_user_channels, generator="simple_user", attachments_generator=attachment.generate_2_png_10_10)
 
     # Create docs in CBS cluster
     cluster = Cluster(config=cluster_config)
@@ -179,14 +179,15 @@ def test_upgrade(params_from_base_test_setup):
     for att in duplicate_attachments:
         attachments[att.name] = {"data": att.data}
     sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)
-    sg_client.update_doc(url=sg_admin_url, db=sg_db, doc_id="sgw_docs1_0", number_updates=6,
+    sg_client.update_doc(url=sg_admin_url, db=sg_db, doc_id="sgw_docs1_0", number_updates=1,
                          update_attachment=attachments)
     attachments = {}
     duplicate_attachments = attachment.load_from_data_dir(["sample_text.txt"])
     for att in duplicate_attachments:
         attachments[att.name] = {"data": att.data}
-    sg_client.update_doc(url=sg_admin_url, db=sg_db, doc_id="sgw_docs1_0", number_updates=6,
+    sg_client.update_doc(url=sg_admin_url, db=sg_db, doc_id="sgw_docs1_1", number_updates=1,
                          update_attachment=attachments)
+    replicator.start(repl1)
     num_sdk_docs = 10
     num_sg_docs = 10
     log_info('Adding {} docs via SDK '.format(num_sdk_docs))
