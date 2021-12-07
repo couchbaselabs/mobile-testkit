@@ -8,6 +8,7 @@ from keywords.MobileRestClient import MobileRestClient
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.SyncGateway import SyncGateway
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
+from keywords.constants import RBAC_FULL_ADMIN
 
 import keywords.exceptions
 from keywords import userinfo
@@ -36,6 +37,7 @@ def test_channels_view_after_restart(params_from_base_test_setup, sg_conf_name):
     topology = params_from_base_test_setup['cluster_topology']
     mode = params_from_base_test_setup['mode']
     sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     sg_url = topology['sync_gateways'][0]['public']
     sg_admin_url = topology['sync_gateways'][0]['admin']
@@ -51,18 +53,21 @@ def test_channels_view_after_restart(params_from_base_test_setup, sg_conf_name):
 
     seth_user_info = userinfo.UserInfo('seth', 'pass', channels=['NASA'], roles=[])
 
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     client.create_user(
         url=sg_admin_url,
         db=sg_db_name,
         name=seth_user_info.name,
         password=seth_user_info.password,
-        channels=seth_user_info.channels
+        channels=seth_user_info.channels,
+        auth=auth
     )
 
     seth_session = client.create_session(
         url=sg_admin_url,
         db=sg_db_name,
-        name=seth_user_info.name
+        name=seth_user_info.name,
+        auth=auth
     )
 
     # Add docs to Sync Gateway
@@ -87,7 +92,7 @@ def test_channels_view_after_restart(params_from_base_test_setup, sg_conf_name):
     client.verify_docs_in_changes(url=sg_url, db=sg_db_name, expected_docs=bulk_docs_resp, auth=seth_session)
 
     # Get Sync Gateway Expvars
-    expvars = client.get_expvars(url=sg_admin_url)
+    expvars = client.get_expvars(url=sg_admin_url, auth=auth)
 
     # Only check the view querys if in channel cache mode
     if mode == 'cc':
@@ -101,7 +106,7 @@ def test_channels_view_after_restart(params_from_base_test_setup, sg_conf_name):
     client.verify_docs_in_changes(url=sg_url, db=sg_db_name, expected_docs=bulk_docs_resp, auth=seth_session)
 
     # Get Sync Gateway Expvars
-    expvars = client.get_expvars(url=sg_admin_url)
+    expvars = client.get_expvars(url=sg_admin_url, auth=auth)
 
     # Only check the view querys if in channel cache mode
     if mode == 'cc':
@@ -124,6 +129,7 @@ def test_remove_add_channels_to_doc(params_from_base_test_setup, sg_conf_name, x
     cluster_config = params_from_base_test_setup["cluster_config"]
     topology = params_from_base_test_setup["cluster_topology"]
     mode = params_from_base_test_setup["mode"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     sg_url = topology["sync_gateways"][0]["public"]
     sg_admin_url = topology["sync_gateways"][0]["admin"]
@@ -148,12 +154,14 @@ def test_remove_add_channels_to_doc(params_from_base_test_setup, sg_conf_name, x
     admin_user_info = userinfo.UserInfo("admin", "pass", channels=["A", "B"], roles=[])
     a_user_info = userinfo.UserInfo("a_user", "pass", channels=["A"], roles=[])
 
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     admin_user_auth = client.create_user(
         url=sg_admin_url,
         db=sg_db,
         name=admin_user_info.name,
         password=admin_user_info.password,
-        channels=admin_user_info.channels
+        channels=admin_user_info.channels,
+        auth=auth
     )
 
     a_user_auth = client.create_user(
@@ -161,7 +169,8 @@ def test_remove_add_channels_to_doc(params_from_base_test_setup, sg_conf_name, x
         db=sg_db,
         name=a_user_info.name,
         password=a_user_info.password,
-        channels=a_user_info.channels
+        channels=a_user_info.channels,
+        auth=auth
     )
 
     a_docs = client.add_docs(
@@ -183,7 +192,7 @@ def test_remove_add_channels_to_doc(params_from_base_test_setup, sg_conf_name, x
 
     # Wait for all docs to also show up on admin changes feed
     # Reproduces https://github.com/couchbaselabs/sync-gateway-accel/issues/68
-    client.verify_docs_in_changes(sg_admin_url, sg_db, expected_docs=a_docs)
+    client.verify_docs_in_changes(sg_admin_url, sg_db, expected_docs=a_docs, auth=auth)
 
     # Get changes for 'a_user'
     a_user_changes = client.get_changes(url=sg_url, db=sg_db, since=0, auth=a_user_auth, feed="normal")

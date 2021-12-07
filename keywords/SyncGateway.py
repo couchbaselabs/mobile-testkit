@@ -1130,12 +1130,12 @@ def update_replication_in_sgw_config(sg_conf_name, sg_mode, repl_remote, repl_re
     return temp_sg_config
 
 
-def wait_until_docs_imported_from_server(sg_admin_url, sg_client, sg_db, expected_docs, prev_import_count, timeout=5):
-    sg_expvars = sg_client.get_expvars(sg_admin_url)
+def wait_until_docs_imported_from_server(sg_admin_url, sg_client, sg_db, expected_docs, prev_import_count, auth=None, timeout=5):
+    sg_expvars = sg_client.get_expvars(sg_admin_url, auth=auth)
     sg_import_count = sg_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"]
     count = 0
     while True:
-        sg_expvars = sg_client.get_expvars(sg_admin_url)
+        sg_expvars = sg_client.get_expvars(sg_admin_url, auth=auth)
         sg_import_count = sg_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"]
         import_count = sg_import_count - prev_import_count
         if count > timeout or import_count >= expected_docs:

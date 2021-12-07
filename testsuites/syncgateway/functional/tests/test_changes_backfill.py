@@ -7,6 +7,7 @@ from libraries.testkit.cluster import Cluster
 from keywords.MobileRestClient import MobileRestClient
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
+from keywords.constants import RBAC_FULL_ADMIN
 
 from keywords import userinfo
 from keywords import document
@@ -42,6 +43,7 @@ def test_backfill_channels_oneshot_changes(params_from_base_test_setup, sg_conf_
     cluster_config = params_from_base_test_setup["cluster_config"]
     topology = params_from_base_test_setup["cluster_topology"]
     mode = params_from_base_test_setup["mode"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     sg_url = topology["sync_gateways"][0]["public"]
     sg_admin_url = topology["sync_gateways"][0]["admin"]
@@ -66,9 +68,10 @@ def test_backfill_channels_oneshot_changes(params_from_base_test_setup, sg_conf_
     client = MobileRestClient()
 
     admin_user_info = userinfo.UserInfo("admin", "pass", channels=["A"], roles=[])
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     if grant_type == "CHANNEL-TO-ROLE-REST" or grant_type == "CHANNEL-TO-ROLE-SYNC":
-        client.create_role(url=sg_admin_url, db=sg_db, name="empty_role", channels=[])
+        client.create_role(url=sg_admin_url, db=sg_db, name="empty_role", channels=[], auth=auth)
         user_b_user_info = userinfo.UserInfo("USER_B", "pass", channels=["B"], roles=["empty_role"])
     else:
         user_b_user_info = userinfo.UserInfo("USER_B", "pass", channels=["B"], roles=[])
@@ -79,7 +82,8 @@ def test_backfill_channels_oneshot_changes(params_from_base_test_setup, sg_conf_
         db=sg_db,
         name=admin_user_info.name,
         password=admin_user_info.password,
-        channels=admin_user_info.channels
+        channels=admin_user_info.channels,
+        auth=auth
     )
 
     client.create_user(
@@ -88,18 +92,21 @@ def test_backfill_channels_oneshot_changes(params_from_base_test_setup, sg_conf_
         name=user_b_user_info.name,
         password=user_b_user_info.password,
         channels=user_b_user_info.channels,
-        roles=user_b_user_info.roles
+        roles=user_b_user_info.roles,
+        auth=auth
     )
 
     admin_session = client.create_session(
         url=sg_admin_url,
         db=sg_db,
-        name=admin_user_info.name
+        name=admin_user_info.name,
+        auth=auth
     )
     user_b_session = client.create_session(
         url=sg_admin_url,
         db=sg_db,
-        name=user_b_user_info.name
+        name=user_b_user_info.name,
+        auth=auth
     )
 
     # Create 50 "A" channel docs
@@ -125,7 +132,7 @@ def test_backfill_channels_oneshot_changes(params_from_base_test_setup, sg_conf_
     if grant_type == "CHANNEL-REST":
         log_info("Granting user access to channel A via Admin REST user update")
         # Grant via update to user in Admin API
-        client.update_user(url=sg_admin_url, db=sg_db, name=user_b_user_info.name, channels=["A", "B"])
+        client.update_user(url=sg_admin_url, db=sg_db, name=user_b_user_info.name, channels=["A", "B"], auth=auth)
 
     elif grant_type == "CHANNEL-SYNC":
         log_info("Granting user access to channel A sync function access()")
@@ -137,13 +144,13 @@ def test_backfill_channels_oneshot_changes(params_from_base_test_setup, sg_conf_
     elif grant_type == "ROLE-REST":
         log_info("Granting user access to channel A via Admin REST role grant")
         # Create role with channel A
-        client.create_role(url=sg_admin_url, db=sg_db, name="channel-A-role", channels=["A"])
-        client.update_user(url=sg_admin_url, db=sg_db, name="USER_B", channels=["B"], roles=["channel-A-role"])
+        client.create_role(url=sg_admin_url, db=sg_db, name="channel-A-role", channels=["A"], auth=auth)
+        client.update_user(url=sg_admin_url, db=sg_db, name="USER_B", channels=["B"], roles=["channel-A-role"], auth=auth)
 
     elif grant_type == "ROLE-SYNC":
         log_info("Granting user access to channel A via sync function role() grant")
         # Create role with channel A
-        client.create_role(url=sg_admin_url, db=sg_db, name="channel-A-role", channels=["A"])
+        client.create_role(url=sg_admin_url, db=sg_db, name="channel-A-role", channels=["A"], auth=auth)
 
         # Grant via role() in sync_function, then id 'role_access' will trigger an role(doc.users, doc.roles)
         role_access_doc = document.create_doc("role_access")
@@ -153,7 +160,7 @@ def test_backfill_channels_oneshot_changes(params_from_base_test_setup, sg_conf_
 
     elif grant_type == "CHANNEL-TO-ROLE-REST":
         # Update the empty_role to have channel "A"
-        client.update_role(url=sg_admin_url, db=sg_db, name="empty_role", channels=["A"])
+        client.update_role(url=sg_admin_url, db=sg_db, name="empty_role", channels=["A"], auth=auth)
 
     elif grant_type == "CHANNEL-TO-ROLE-SYNC":
         # Grant empty_role access to channel "A" via sync function
@@ -245,6 +252,7 @@ def test_backfill_channels_oneshot_limit_changes(params_from_base_test_setup, sg
     cluster_config = params_from_base_test_setup["cluster_config"]
     topology = params_from_base_test_setup["cluster_topology"]
     mode = params_from_base_test_setup["mode"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     sg_url = topology["sync_gateways"][0]["public"]
     sg_admin_url = topology["sync_gateways"][0]["admin"]
@@ -267,13 +275,15 @@ def test_backfill_channels_oneshot_limit_changes(params_from_base_test_setup, sg
     else:
         user_b_user_info = userinfo.UserInfo("USER_B", "pass", channels=["B"], roles=[])
 
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     # Create users / sessions
     client.create_user(
         url=sg_admin_url,
         db=sg_db,
         name=admin_user_info.name,
         password=admin_user_info.password,
-        channels=admin_user_info.channels
+        channels=admin_user_info.channels,
+        auth=auth
     )
 
     client.create_user(
@@ -282,11 +292,12 @@ def test_backfill_channels_oneshot_limit_changes(params_from_base_test_setup, sg
         name=user_b_user_info.name,
         password=user_b_user_info.password,
         channels=user_b_user_info.channels,
-        roles=user_b_user_info.roles
+        roles=user_b_user_info.roles,
+        auth=auth
     )
 
-    admin_session = client.create_session(url=sg_admin_url, db=sg_db, name=admin_user_info.name)
-    user_b_session = client.create_session(url=sg_admin_url, db=sg_db, name=user_b_user_info.name)
+    admin_session = client.create_session(url=sg_admin_url, db=sg_db, name=admin_user_info.name, auth=auth)
+    user_b_session = client.create_session(url=sg_admin_url, db=sg_db, name=user_b_user_info.name, auth=auth)
 
     # Create 50 "A" channel docs
     a_docs = client.add_docs(url=sg_url, db=sg_db, number=50, id_prefix=None, auth=admin_session, channels=["A"])
@@ -312,7 +323,7 @@ def test_backfill_channels_oneshot_limit_changes(params_from_base_test_setup, sg
         log_info("Granting user access to channel A via Admin REST user update")
         # Grant via update to user in Admin API
         client.update_user(url=sg_admin_url, db=sg_db,
-                           name=user_b_user_info.name, channels=["A", "B"])
+                           name=user_b_user_info.name, channels=["A", "B"], auth=auth)
 
     elif grant_type == "CHANNEL-SYNC":
         log_info("Granting user access to channel A sync function access()")
@@ -324,13 +335,13 @@ def test_backfill_channels_oneshot_limit_changes(params_from_base_test_setup, sg
     elif grant_type == "ROLE-REST":
         log_info("Granting user access to channel A via Admin REST role grant")
         # Create role with channel A
-        client.create_role(url=sg_admin_url, db=sg_db, name="channel-A-role", channels=["A"])
-        client.update_user(url=sg_admin_url, db=sg_db, name="USER_B", roles=["channel-A-role"])
+        client.create_role(url=sg_admin_url, db=sg_db, name="channel-A-role", channels=["A"], auth=auth)
+        client.update_user(url=sg_admin_url, db=sg_db, name="USER_B", roles=["channel-A-role"], auth=auth)
 
     elif grant_type == "ROLE-SYNC":
         log_info("Granting user access to channel A via sync function role() grant")
         # Create role with channel A
-        client.create_role(url=sg_admin_url, db=sg_db, name="channel-A-role", channels=["A"])
+        client.create_role(url=sg_admin_url, db=sg_db, name="channel-A-role", channels=["A"], auth=auth)
 
         # Grant via role() in sync_function, then id 'role_access' will trigger an role(doc.users, doc.roles)
         role_access_doc = document.create_doc("role_access")
@@ -340,7 +351,7 @@ def test_backfill_channels_oneshot_limit_changes(params_from_base_test_setup, sg
 
     elif grant_type == "CHANNEL-TO-ROLE-REST":
         # Update the empty_role to have channel "A"
-        client.update_role(url=sg_admin_url, db=sg_db, name="empty_role", channels=["A"])
+        client.update_role(url=sg_admin_url, db=sg_db, name="empty_role", channels=["A"], auth=auth)
 
     elif grant_type == "CHANNEL-TO-ROLE-SYNC":
         # Grant empty_role access to channel "A" via sync function
@@ -474,6 +485,7 @@ def test_awaken_backfill_channels_longpoll_changes_with_limit(params_from_base_t
     cluster_config = params_from_base_test_setup["cluster_config"]
     topology = params_from_base_test_setup["cluster_topology"]
     mode = params_from_base_test_setup["mode"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     sg_url = topology["sync_gateways"][0]["public"]
     sg_admin_url = topology["sync_gateways"][0]["admin"]
@@ -496,6 +508,7 @@ def test_awaken_backfill_channels_longpoll_changes_with_limit(params_from_base_t
     else:
         user_b_user_info = userinfo.UserInfo("USER_B", "pass", channels=["B"], roles=[])
 
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     # Create users / sessions
     client.create_user(
         url=sg_admin_url,
@@ -503,6 +516,7 @@ def test_awaken_backfill_channels_longpoll_changes_with_limit(params_from_base_t
         name=admin_user_info.name,
         password=admin_user_info.password,
         channels=admin_user_info.channels,
+        auth=auth
     )
 
     client.create_user(
@@ -511,11 +525,12 @@ def test_awaken_backfill_channels_longpoll_changes_with_limit(params_from_base_t
         name=user_b_user_info.name,
         password=user_b_user_info.password,
         channels=user_b_user_info.channels,
-        roles=user_b_user_info.roles
+        roles=user_b_user_info.roles,
+        auth=auth
     )
 
-    admin_session = client.create_session(url=sg_admin_url, db=sg_db, name=admin_user_info.name)
-    user_b_session = client.create_session(url=sg_admin_url, db=sg_db, name=user_b_user_info.name)
+    admin_session = client.create_session(url=sg_admin_url, db=sg_db, name=admin_user_info.name, auth=auth)
+    user_b_session = client.create_session(url=sg_admin_url, db=sg_db, name=user_b_user_info.name, auth=auth)
 
     # Create 50 "A" channel docs
     a_docs = client.add_docs(url=sg_url, db=sg_db, number=50, id_prefix=None, auth=admin_session, channels=["A"])
@@ -558,7 +573,8 @@ def test_awaken_backfill_channels_longpoll_changes_with_limit(params_from_base_t
                 url=sg_admin_url,
                 db=sg_db,
                 name=user_b_user_info.name,
-                channels=["A", "B"]
+                channels=["A", "B"],
+                auth=auth
             )
 
         elif grant_type == "CHANNEL-SYNC":
@@ -577,13 +593,14 @@ def test_awaken_backfill_channels_longpoll_changes_with_limit(params_from_base_t
                 url=sg_admin_url,
                 db=sg_db,
                 name=user_b_user_info.name,
-                roles=["channel-A-role"]
+                roles=["channel-A-role"], 
+                auth=auth
             )
 
         elif grant_type == "ROLE-SYNC":
             log_info("Granting user access to channel A via sync function role() grant")
             # Create role with channel A
-            client.create_role(url=sg_admin_url, db=sg_db, name="channel-A-role", channels=["A"])
+            client.create_role(url=sg_admin_url, db=sg_db, name="channel-A-role", channels=["A"], auth=auth)
 
             # Grant via role() in sync_function, then id 'role_access' will trigger an role(doc.users, doc.roles)
             role_access_doc = document.create_doc("role_access")
@@ -593,7 +610,7 @@ def test_awaken_backfill_channels_longpoll_changes_with_limit(params_from_base_t
 
         elif grant_type == "CHANNEL-TO-ROLE-REST":
             # Update the empty_role to have channel "A"
-            client.update_role(url=sg_admin_url, db=sg_db, name="empty_role", channels=["A"])
+            client.update_role(url=sg_admin_url, db=sg_db, name="empty_role", channels=["A"], auth=auth)
 
         elif grant_type == "CHANNEL-TO-ROLE-SYNC":
             # Grant empty_role access to channel "A" via sync function
@@ -688,6 +705,7 @@ def test_backfill_channel_grant_to_role_longpoll(params_from_base_test_setup, sg
     cluster_config = params_from_base_test_setup["cluster_config"]
     topology = params_from_base_test_setup["cluster_topology"]
     mode = params_from_base_test_setup["mode"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     sg_url = topology["sync_gateways"][0]["public"]
     sg_admin_url = topology["sync_gateways"][0]["admin"]
@@ -709,7 +727,8 @@ def test_backfill_channel_grant_to_role_longpoll(params_from_base_test_setup, sg
     cluster.reset(sg_conf)
 
     client = MobileRestClient()
-    client.create_role(url=sg_admin_url, db=sg_db, name=empty_role_name, channels=[])
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    client.create_role(url=sg_admin_url, db=sg_db, name=empty_role_name, channels=[], auth=auth)
 
     pusher_info = userinfo.UserInfo("pusher", "pass", channels=channels_to_grant, roles=[])
     grantee_info = userinfo.UserInfo("grantee", "pass", channels=[], roles=[empty_role_name])
@@ -721,12 +740,14 @@ def test_backfill_channel_grant_to_role_longpoll(params_from_base_test_setup, sg
         name=pusher_info.name,
         password=pusher_info.password,
         channels=pusher_info.channels,
-        roles=pusher_info.roles
+        roles=pusher_info.roles,
+        auth=auth
     )
     pusher_session = client.create_session(
         url=sg_admin_url,
         db=sg_db,
-        name=pusher_info.name
+        name=pusher_info.name,
+        auth=auth
     )
 
     client.create_user(
@@ -735,12 +756,14 @@ def test_backfill_channel_grant_to_role_longpoll(params_from_base_test_setup, sg
         name=grantee_info.name,
         password=grantee_info.password,
         channels=grantee_info.channels,
-        roles=grantee_info.roles
+        roles=grantee_info.roles,
+        auth=auth
     )
     grantee_session = client.create_session(
         url=sg_admin_url,
         db=sg_db,
-        name=grantee_info.name
+        name=grantee_info.name,
+        auth=auth
     )
 
     pusher_changes = client.get_changes(url=sg_url, db=sg_db, since=0, auth=pusher_session)
@@ -798,7 +821,7 @@ def test_backfill_channel_grant_to_role_longpoll(params_from_base_test_setup, sg
 
     if grant_type == "CHANNEL-REST":
         # Grant channel access to role via REST
-        client.update_role(url=sg_admin_url, db=sg_db, name=empty_role_name, channels=channels_to_grant)
+        client.update_role(url=sg_admin_url, db=sg_db, name=empty_role_name, channels=channels_to_grant, auth=auth)
     elif grant_type == "CHANNEL-SYNC":
         # Grant channel access to role via sync function
         access_doc = document.create_doc(doc_id="channel_grant_to_role")

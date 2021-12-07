@@ -13,6 +13,7 @@ from keywords.SyncGateway import wait_until_docs_imported_from_server
 from keywords.couchbaseserver import get_server_version
 from utilities.cluster_config_utils import get_cluster
 from utilities.cluster_config_utils import load_cluster_config_json
+from keywords.constants import RBAC_FULL_ADMIN
 
 
 @pytest.mark.syncgateway
@@ -30,6 +31,7 @@ def test_userdefind_collections(params_from_base_test_setup):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_platform = params_from_base_test_setup["sg_platform"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     sg_conf_name = 'sync_gateway_default_functional_tests'
     mode = "cc"
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
@@ -81,10 +83,11 @@ def test_userdefind_collections(params_from_base_test_setup):
     scope = cb_server.create_scope(bucket)
     collection = cb_server.create_collection(bucket, scope)
     collection_id = cb_server.get_collection_id(bucket, scope, collection)
-    sg_expvars = sg_client.get_expvars(sg_admin_url)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_expvars = sg_client.get_expvars(sg_admin_url, auth=auth)
     import_count = sg_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"]
     remote_executor.execute("/opt/couchbase/bin/cbworkloadgen -n localhost:8091 -i {} -b {} -j -c 0x{} -u Administrator -p password".format(num_sdk_docs, bucket, collection_id))
-    wait_until_docs_imported_from_server(sg_admin_url, sg_client, sg_db, num_sdk_docs, import_count)
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db)["rows"]
+    wait_until_docs_imported_from_server(sg_admin_url, sg_client, sg_db, num_sdk_docs, import_count, auth=auth)
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, auth=auth)["rows"]
     assert sum("sdk_default" in s["id"] for s in sg_docs) == num_sdk_docs, "default collections docs are not imported to sync gateway"
     assert sum("pymc" in s for s in sg_docs) == 0, "user defined docs are imported to sync gateway"

@@ -231,6 +231,9 @@ def params_from_base_suite_setup(request):
     enable_server_tls_skip_verify = request.config.getoption("--enable-server-tls-skip-verify")
 
     disable_admin_auth = request.config.getoption("--disable-admin-auth")
+    print("==============================================")
+    print("=== disable_admin_auth : {} ===".format(disable_admin_auth))
+    print("==============================================")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
@@ -474,6 +477,11 @@ def params_from_base_suite_setup(request):
         expected_sync_gateway_version=sync_gateway_version
     )
 
+    need_sgw_admin_auth = (not disable_admin_auth) and sync_gateway_version >= "3.0"
+    print("==============================================")
+    print("=== need_sgw_admin_auth : {} ===".format(need_sgw_admin_auth))
+    print("==============================================")
+
     # Load topology as a dictionary
     cluster_utils = ClusterKeywords(cluster_config)
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
@@ -500,7 +508,8 @@ def params_from_base_suite_setup(request):
         "sg_ce": sg_ce,
         "sg_config": sg_config,
         "cbs_ce": cbs_ce,
-        "prometheus_enabled": prometheus_enabled
+        "prometheus_enabled": prometheus_enabled,
+        "need_sgw_admin_auth": need_sgw_admin_auth
     }
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
@@ -541,6 +550,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     sg_ce = params_from_base_suite_setup["sg_ce"]
     sg_config = params_from_base_suite_setup["sg_config"]
     cbs_ce = params_from_base_suite_setup["cbs_ce"]
+    need_sgw_admin_auth = params_from_base_suite_setup["need_sgw_admin_auth"]
     prometheus_enabled = request.config.getoption("--prometheus-enable")
 
     test_name = request.node.name
@@ -602,7 +612,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "cbs_ce": cbs_ce,
         "sg_url": sg_url,
         "sg_admin_url": sg_admin_url,
-        "prometheus_enabled": prometheus_enabled
+        "prometheus_enabled": prometheus_enabled,
+        "need_sgw_admin_auth": need_sgw_admin_auth
     }
 
     # Code after the yield will execute when each test finishes
