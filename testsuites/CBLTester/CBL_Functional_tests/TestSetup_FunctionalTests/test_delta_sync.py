@@ -162,7 +162,7 @@ def test_delta_sync_replication(params_from_base_test_setup, num_of_docs, replic
 def test_delta_sync_enabled_disabled(params_from_base_test_setup, num_of_docs, replication_type):
     '''
     @summary:
-    1. Have detla sync enabled by default
+    1. Have delta sync enabled by default
     2. Create docs in CBL
     3. Do push replication to SGW
     4. update docs in SGW

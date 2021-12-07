@@ -227,7 +227,7 @@ class SyncGateway:
         if cluster_config is None:
             cluster_config = self.cluster_config
         # c_cluster = cluster.Cluster(self.cluster_config)
-        if get_sg_version(self.cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(self.cluster_config):
+        if get_sg_version(cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config):
             playbook_vars, db_config_json, sgw_config_data = setup_sgwconfig_db_config(cluster_config, config)
         else:
             conf_path = os.path.abspath(config)
@@ -320,8 +320,8 @@ class SyncGateway:
                     bucket_names[0])
                 playbook_vars["password"] = '"password": "password",'
 
-            if is_xattrs_enabled(self.cluster_config):
-                if get_sg_version(self.cluster_config) >= "2.1.0":
+            if is_xattrs_enabled(cluster_config):
+                if get_sg_version(cluster_config) >= "2.1.0":
                     playbook_vars["autoimport"] = '"import_docs": true,'
                 else:
                     playbook_vars["autoimport"] = '"import_docs": "continuous",'
@@ -345,7 +345,7 @@ class SyncGateway:
             if is_hide_prod_version_enabled(cluster_config) and get_sg_version(cluster_config) >= "2.8.1":
                 playbook_vars["hide_product_version"] = '"hide_product_version": true,'
 
-            if is_centralized_persistent_config_disabled(self.cluster_config) and get_sg_version(self.cluster_config) >= "3.0.0":
+            if is_centralized_persistent_config_disabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
                 playbook_vars["disable_persistent_config"] = '"disable_persistent_config": true,'
 
             if is_server_tls_skip_verify_enabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
@@ -377,9 +377,10 @@ class SyncGateway:
             subset=self.hostname
         )
         if status == 0:
-            if get_sg_version(self.cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(self.cluster_config):
+            if get_sg_version(cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config):
                 # Now create rest API for all database configs
                 sgw_list = [self]
+                print("sgw_config_data before sending rest call ", sgw_config_data)
                 send_dbconfig_as_restCall(db_config_json, sgw_list, sgw_config_data)
                 try:
                     send_dbconfig_as_restCall(db_config_json, sgw_list, sgw_config_data)
@@ -1168,6 +1169,7 @@ def send_dbconfig_as_restCall(db_config_json, sync_gateways, sgw_config_data):
                 time.sleep(1)
                 sgw.admin.create_db(sg_db, sgw_db_config[sg_db])"""
                 print("ignorning if db already exists in sync gateway", str(e))
+                sgw.admin.put_db_config(sg_db, sgw_db_config[sg_db])
             db_info = sgw.admin.get_db_info(sg_db)
             if db_info["state"] == "Online":
                 """ if sync_func_exist:
