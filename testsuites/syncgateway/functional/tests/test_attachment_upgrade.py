@@ -159,6 +159,8 @@ def test_upgrade_delete_attachments(params_from_base_test_setup, doc_count, mark
             time.sleep(40)
     log_info(sg_client.compact_attachments(sg_admin_url, remote_db, "status"))
     assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["status"] == "completed"
+    assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["marked_attachments"] >= marked, \
+        "compaction count not matching"
     assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["purged_attachments"] == 45, \
         "purged attachments"
     assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["last_error"] == "", \
