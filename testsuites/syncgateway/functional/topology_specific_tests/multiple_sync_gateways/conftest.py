@@ -94,7 +94,8 @@ def params_from_base_suite_setup(request):
     validate_sync_gateway_mode(mode)
 
     # use base_cc cluster config if mode is "cc" or base_di cluster config if more is "di"
-    cluster_config = "{}/{}{}".format(CLUSTER_CONFIGS_DIR, cluster_config, mode)
+    # cluster_config = "{}/{}{}".format(CLUSTER_CONFIGS_DIR, cluster_config, mode)
+    cluster_config = "{}/multiple_sync_gateways_{}".format(constants.CLUSTER_CONFIGS_DIR, mode)
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
 
     if use_views:
@@ -302,7 +303,7 @@ def params_from_base_suite_setup(request):
 
     # Stop all sync_gateway and sg_accels as test finished
     c = cluster.Cluster(cluster_config)
-    c.stop_sg_and_accel()
+    # c.stop_sg_and_accel()
 
     # Delete png files under resources/data
     clear_resources_pngs()
