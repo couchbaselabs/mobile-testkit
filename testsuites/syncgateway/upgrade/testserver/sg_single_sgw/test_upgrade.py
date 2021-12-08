@@ -174,14 +174,14 @@ def test_upgrade(params_from_base_test_setup):
     servers = cluster.servers[1:]
 
     # update attachment indirectly deleting the attachments
-    # attachments = {}
-    # duplicate_attachments = attachment.load_from_data_dir(["golden_gate_large.jpg"])
-    # for att in duplicate_attachments:
-    #     attachments[att.name] = {"data": att.data}
-    # sg_client.update_doc(url=sg_admin_url, db=sg_db, doc_id="sgw_docs1_0", number_updates=1,
-    #                      update_attachment=attachments)
-    # sg_client.update_doc(url=sg_admin_url, db=sg_db, doc_id="sgw_docs1_1", number_updates=1,
-    #                      update_attachment=attachments)
+    attachments = {}
+    duplicate_attachments = attachment.load_from_data_dir(["golden_gate_large.jpg"])
+    for att in duplicate_attachments:
+        attachments[att.name] = {"data": att.data}
+    sg_client.update_doc(url=sg_admin_url, db=sg_db, doc_id="sgw_docs1_0", number_updates=1,
+                         update_attachment=attachments)
+    sg_client.update_doc(url=sg_admin_url, db=sg_db, doc_id="sgw_docs1_1", number_updates=1,
+                         update_attachment=attachments)
     replicator.start(repl1)
     num_sdk_docs = 10
     num_sg_docs = 10
@@ -321,7 +321,7 @@ def test_upgrade(params_from_base_test_setup):
             assert att_status["status"] == "completed"
             assert att_status["last_error"] == "", \
                 "Error found while running the compaction process"
-            assert att_status["purged_attachments"] == 660
+            assert att_status["purged_attachments"] > 500
 
 
 def verify_sg_docs_revision_history(url, db, cbl_db2, num_docs, sg_db, added_docs, terminator):
