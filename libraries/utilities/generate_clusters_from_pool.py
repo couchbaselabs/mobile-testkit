@@ -370,7 +370,7 @@ def write_config(config, pool_file, use_docker, sg_windows, sg_accel_windows, sg
         f.write("delta_sync_enabled=False\n")
         f.write("two_sg_cluster_lb_enabled=False\n")
 
-        if sg_platform.lower() == "macos":
+        if "macos" in sg_platform.lower():
             f.write("\n\n[sync_gateways:vars]\n")
             f.write("ansible_user=MacOSFakeUser\n")
             f.write("ansible_password=MacOSFakePassword\n")
@@ -438,7 +438,7 @@ def write_config(config, pool_file, use_docker, sg_windows, sg_accel_windows, sg
                 }
             }
             cluster_dict.update(sg_dict)
-        if sg_platform.lower() == "macos":
+        if "macos" in sg_platform.lower():
             sg_dict = {
                 "sync_gateways:vars": {
                     "ansible_user": "MacOSFakeUser",

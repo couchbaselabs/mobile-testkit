@@ -33,7 +33,7 @@ class RemoteExecutor:
             self.host = self.host.replace("[", "")
             self.host = self.host.replace("]", "")
         if cluster_config is not None:
-            if sg_platform == "windows" or sg_platform == "macos":
+            if sg_platform == "windows" or "macos" in sg_platform:
                 json_cluster = load_cluster_config_json(cluster_config)
                 username = json_cluster["sync_gateways:vars"]["ansible_user"]
                 password = json_cluster["sync_gateways:vars"]["ansible_password"]

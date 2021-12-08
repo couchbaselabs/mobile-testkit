@@ -383,7 +383,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
                     "install-sync-gateway-package-windows.yml",
                     extra_vars=playbook_vars
                 )
-            elif sg_platform == "macos":
+            elif "macos" in sg_platform:
                 status = ansible_runner.run_ansible_playbook(
                     "install-sync-gateway-package-macos.yml",
                     extra_vars=playbook_vars

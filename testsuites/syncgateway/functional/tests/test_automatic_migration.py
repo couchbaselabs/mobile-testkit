@@ -345,7 +345,7 @@ def test_automatic_migration_fails_with_directory_permissions(params_from_base_t
         environment_string = """[String[]] $v = @("CONFIG=""" + sgw_config_path + """"\")
         Set-ItemProperty HKLM:SYSTEM\CurrentControlSet\Services\SyncGateway -Name Environment -Value $v
         """
-    elif sg_platform == "macos":
+    elif "macos" in sg_platform:
         sgw_config_dir = "/tmp/sgw_directory"
         sgw_config_path = sgw_config_dir + "/sync_gateway.json"
         environment_string = """launchctl setenv CONFIG """ + sgw_config_path + """

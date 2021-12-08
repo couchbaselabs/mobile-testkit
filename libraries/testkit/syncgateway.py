@@ -787,7 +787,7 @@ def setup_sgwconfig_db_config(cluster_config, sg_config_path):
         log_info("Keyerror in getting logging{}".format(ex))
         logging_var = '{} {},'.format(logging_config, "}")
 
-    if sg_platform == "macos":
+    if "macos" in sg_platform:
         sg_home_directory = "/Users/sync_gateway"
     elif sg_platform == "windows":
         sg_home_directory = "C:\\\\PROGRA~1\\\\Couchbase\\\\Sync Gateway"
@@ -1237,7 +1237,7 @@ def construct_dbconfig_json(db_config_file, cluster_config, sg_platform, sgw_con
     revs_limit_var = ""
     bucket_var = bucket_names[0]
 
-    if sg_platform == "macos":
+    if "macos" in sg_platform:
         sg_home_directory = "/Users/sync_gateway"
     elif sg_platform == "windows":
         sg_home_directory = "C:\\\\PROGRA~1\\\\Couchbase\\\\Sync Gateway"
@@ -1387,7 +1387,7 @@ def start_sgbinary(sg1, sg_platform, adminInterface=None, interface=None, cacert
     if url is not None:
         c_url = "-url=" + url
     remote_executor = RemoteExecutor(sg1.ip)
-    if sg_platform == "macos":
+    if "macos" in sg_platform:
         sg_home_directory = "/Users/sync_gateway"
     elif sg_platform == "windows":
         sg_home_directory = "C:\\\\PROGRA~1\\\\Couchbase\\\\Sync Gateway"
