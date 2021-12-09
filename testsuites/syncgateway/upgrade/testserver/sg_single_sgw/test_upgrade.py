@@ -270,7 +270,7 @@ def test_upgrade(params_from_base_test_setup):
         db.create_bulk_docs(number=1, id_prefix=terminator_doc_id, db=cbl_db, channels=sg_user_channels)
         log_info("Waiting for doc updates to complete")
         updated_doc_revs = updates_future.result()
-        print("******"*20)
+        print("******" * 20)
         print(updates_future.result())
 
         # 7. Gather CBL docs new revs for verification
@@ -403,7 +403,7 @@ def update_docs(db, cbl_db, added_docs, doc_obj, terminator_doc_id_prefix):
         for _ in range(docs_per_update):
             random_doc_id = random.choice(current_user_doc_ids)
             user_docs_subset_to_update.append(random_doc_id)
-        print("*"*20)
+        print("*" * 20)
         print(len(user_docs_subset_to_update))
         print("*" * 20)
 
