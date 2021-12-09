@@ -514,7 +514,8 @@ def params_from_base_suite_setup(request):
         "sg_ce": sg_ce,
         "sg_config": sg_config,
         "cbs_ce": cbs_ce,
-        "prometheus_enabled": prometheus_enabled
+        "prometheus_enabled": prometheus_enabled,
+        "enforce_server_tls": enforce_server_tls
     }
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
@@ -555,6 +556,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     sg_ce = params_from_base_suite_setup["sg_ce"]
     sg_config = params_from_base_suite_setup["sg_config"]
     cbs_ce = params_from_base_suite_setup["cbs_ce"]
+    enforce_server_tls = params_from_base_suite_setup["enforce_server_tls"]
 
     test_name = request.node.name
     c = cluster.Cluster(cluster_config)
@@ -614,7 +616,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "sg_ce": sg_ce,
         "cbs_ce": cbs_ce,
         "sg_url": sg_url,
-        "sg_admin_url": sg_admin_url
+        "sg_admin_url": sg_admin_url,
+        "enforce_server_tls": enforce_server_tls
     }
 
     # Code after the yield will execute when each test finishes

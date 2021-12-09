@@ -1,5 +1,6 @@
 import configparser
 import json
+import requests
 import os
 import re
 from datetime import timedelta
@@ -84,8 +85,44 @@ def persist_cluster_config_environment_prop(cluster_config, property_name, value
 
 
 def generate_x509_certs(cluster_config, bucket_name, sg_platform):
-    ''' Generate and insert x509 certs for CBS and SG TLS Handshake'''
     cluster = load_cluster_config_json(cluster_config)
+    from keywords.remoteexecutor import RemoteExecutor
+    cbs_nodes = [node["ip"] for node in cluster["couchbase_servers"]]
+    if is_enforce_server_tls(cluster_config):
+        cluster = load_cluster_config_json(cluster_config)
+        server_ip = cluster["couchbase_servers"][0]["ip"]
+        remote_executor = RemoteExecutor(server_ip)
+        command1 = "/opt/couchbase/bin/couchbase-cli setting-security -c http://localhost:8091 -u Administrator -p password --set --cluster-encryption-level control"
+        remote_executor.execute(command1)
+        command2 = "/opt/couchbase/bin/couchbase-cli node-to-node-encryption -c http://localhost:8091 -u Administrator -p password --disable"
+        remote_executor.execute(command2)
+
+        ''' Enable Client cert Auth on the server if enforce Server TLs is enabled'''
+        # from libraries.testkit import cluster
+        # c_cluster = cluster.Cluster(config=cluster_config)
+        # cbs_url = c_cluster.servers[0].url
+        data = """{
+            "state": "enable",
+            "prefixes": [
+            {
+                "path": "san.uri",
+                "prefix": "www.",
+                "delimiter": "."
+            },
+            {
+                "path": "san.email",
+                "prefix": "",
+                "delimiter": "@"
+            }
+            ]
+        }"""
+        # mb = MobileRestClient()
+        session = requests.session()
+        session.auth = ("Administrator", "password")
+        resp = session.post("http://{}:8091/settings/clientCertAuth".format(cbs_nodes[0]), data=data)
+        print(resp)
+        resp.raise_for_status()
+    ''' Generate and insert x509 certs for CBS and SG TLS Handshake'''
     if sg_platform.lower() != "windows" and sg_platform.lower() != "macos":
         for line in open("ansible.cfg"):
             match = re.match('remote_user\s*=\s*(\w*)$', line)
@@ -103,7 +140,7 @@ def generate_x509_certs(cluster_config, bucket_name, sg_platform):
     src = os.path.join(curr_dir, "resources/x509_cert_gen")
     copy_tree(src, certs_dir)
     os.chdir(certs_dir)
-    cbs_nodes = [node["ip"] for node in cluster["couchbase_servers"]]
+    # cbs_nodes = [node["ip"] for node in cluster["couchbase_servers"]]
 
     with open("openssl-san.cnf", "a+") as f:
         for item in range(len(cbs_nodes)):
@@ -119,6 +156,11 @@ def generate_x509_certs(cluster_config, bucket_name, sg_platform):
     print(stdout, stderr)
 
     os.chdir(curr_dir)
+    if is_enforce_server_tls(cluster_config):
+        command2 = "/opt/couchbase/bin/couchbase-cli node-to-node-encryption -c http://localhost:8091 -u Administrator -p password --enable"
+        remote_executor.execute(command2)
+        command1 = "/opt/couchbase/bin/couchbase-cli setting-security -c http://localhost:8091 -u Administrator -p password --set --cluster-encryption-level strict"
+        remote_executor.execute(command1)
 
 
 def load_cluster_config_json(cluster_config):
