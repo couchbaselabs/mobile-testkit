@@ -267,7 +267,6 @@ def test_upgrade(params_from_base_test_setup):
             doc_ids.append(doc_id)
             if doc_id in updated_doc_revs:
                 added_docs[doc_id]["numOfUpdates"] = updated_doc_revs[doc_id]
-
         # 8. Compare rev id, doc body and revision history of all docs on both CBL and SGW
         verify_sg_docs_revision_history(sg_admin_url, db, cbl_db2, num_docs + num_sdk_docs + 3, sg_db=sg_db, added_docs=added_docs, terminator=terminator_doc_id)
 

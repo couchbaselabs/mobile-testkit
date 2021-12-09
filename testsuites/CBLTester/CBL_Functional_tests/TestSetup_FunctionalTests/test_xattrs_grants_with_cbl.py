@@ -38,9 +38,11 @@ def test_xattrs_grant_automatic_imports(params_from_base_test_setup, x509_cert_a
     mode = params_from_base_test_setup["mode"]
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
 
-    if sync_gateway_version < "3.0.0":
-        pytest.skip('This test cannot run with sg version below 3.0.0')
+    if not xattrs_enabled or sync_gateway_version < "3.0.0":
+        pytest.skip('Test did not enable xattrs or sgw version is not 3.0 and above')
+
     sg_channel1_value = "abc"
     sg_channels1 = [sg_channel1_value]
     username = "autotest"
@@ -113,11 +115,11 @@ def test_reassigning_channels_using_user_xattrs(params_from_base_test_setup, set
     """
     @summary:
         "1. Have a sync function to assign channel1 and verify doc can be accesssed user1 who has access to only channel1
-        2.Add  user xattrs via sdk with channel1 and channel2
+        2.Add  user xattrs via sdk with channel1
         sync_xattrs: {
             channel1 : "xattrs_channel_one"
         }
-        3. Verify doc can be accessed by user1, who has  access to only "xattrs_channel_two", but not by user2
+        3. Verify doc can be accessed by user1, who has  access to only "xattrs_channel_one", but not by user2
         4. update the user xattrs via sdk from "xattrs_channel_one" to "xattrs_channel_two"
         5. Verify doc can be accessed by user2 who has  access to only "xattrs_channel_two"
         6. change channel to new channel(channel2), verify doc can be accessed only in new channel
@@ -137,9 +139,11 @@ def test_reassigning_channels_using_user_xattrs(params_from_base_test_setup, set
     cbl_db1 = setup_customized_teardown_test["cbl_db1"]
     cbl_db2 = setup_customized_teardown_test["cbl_db2"]
     delta_sync_enabled = params_from_base_test_setup["delta_sync_enabled"]
+    xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
 
-    if sync_gateway_version < "3.0.0":
-        pytest.skip('This test cannot run with sg version below 3.0.0')
+    if not xattrs_enabled or sync_gateway_version < "3.0.0":
+        pytest.skip('Test did not enable xattrs or sgw version is not 3.0 and above')
+
     sg_channel1_value1 = "xattrs_channel_one"
     sg_channel1_value2 = "xattrs_channel_two"
     sg_channels_1 = [sg_channel1_value1]
@@ -175,7 +179,7 @@ def test_reassigning_channels_using_user_xattrs(params_from_base_test_setup, set
     # 2.Add  user xattrs via sdk with channel1 with value "xattrs_channel_one"
     sdk_bucket.mutate_in(sg_doc_xattrs_id, [SD.upsert(user_custom_channel, sg_channel1_value1, xattr=True, create_parents=True)])
 
-    # 3. Verify doc can be accessed by user1, who has  access to only "xattrs_channel_two", but not by user2
+    # 3. Verify doc can be accessed by user1, who has  access to only "xattrs_channel_one", but not by user2
     # Configure replication with push_pull
     replicator = Replication(base_url)
     _, _, repl1 = replicator.create_session_configure_replicate(
@@ -188,11 +192,8 @@ def test_reassigning_channels_using_user_xattrs(params_from_base_test_setup, set
         base_url, sg_admin_url, sg_db, username2, password, sg_channels_2, sg_client, cbl_db2, sg_blip_url, continuous=continuous, replication_type="push_pull")
     replicator.wait_until_replicator_idle(repl2)
     cbl_doc_count2 = db.getCount(cbl_db2)
-    assert cbl_doc_count2 == 0, "doc is not accessible by user1 who has access to 'xattrs_channel_two'"
-    # get deltasync stats
-    if delta_sync_enabled:
-        expvars = sg_client.get_expvars(url=sg_admin_url)
-        delta_sync_count = expvars['syncgateway']['per_db'][sg_db]['delta_sync']['delta_pull_replication_count']
+    assert cbl_doc_count2 == 0, "doc is accessible by user2 who has access to 'xattrs_channel_two'"
+
     # 4. update the user xattrs via sdk from "xattrs_channel_one" to "xattrs_channel_two"
     sdk_bucket.mutate_in(sg_doc_xattrs_id, [SD.upsert(user_custom_channel, sg_channel1_value2, xattr=True, create_parents=True)])
 
@@ -211,7 +212,8 @@ def test_reassigning_channels_using_user_xattrs(params_from_base_test_setup, set
     assert cbl_doc_count1 == 0, "doc is accessible by user1 who has access to only 'xattrs_channel_one'"
     if delta_sync_enabled:
         expvars = sg_client.get_expvars(url=sg_admin_url)
-        assert delta_sync_count == expvars['syncgateway']['per_db'][sg_db]['delta_sync']['delta_pull_replication_count']
+        assert expvars['syncgateway']['per_db'][sg_db]['delta_sync']['deltas_requested'] == 0, "there is a change in delta with expvars change"
+        assert expvars['syncgateway']['per_db'][sg_db]['delta_sync']['deltas_sent'] == 0, "there is a change in delta with expvars change"
     replicator.stop(repl1)
     replicator.stop(repl2)
 
@@ -242,9 +244,11 @@ def test_tombstone_docs_via_sdk(params_from_base_test_setup, tombstone_type):
     mode = params_from_base_test_setup["mode"]
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
 
-    if sync_gateway_version < "3.0.0":
-        pytest.skip('This test cannot run with sg version below 3.0.0')
+    if not xattrs_enabled or sync_gateway_version < "3.0.0":
+        pytest.skip('Test did not enable xattrs or sgw version is not 3.0 and above')
+
     sg_channel1_value1 = "xattrs_channel_one"
     sg_channels_1 = [sg_channel1_value1]
     username = "autotest_1"

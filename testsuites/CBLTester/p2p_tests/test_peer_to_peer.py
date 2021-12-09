@@ -605,6 +605,7 @@ def test_peer_to_peer_resetCheckPoint(params_from_base_test_setup, server_setup,
     base_url_list = server_setup["base_url_list"]
     cbl_db_server = server_setup["cbl_db_server"]
     cbl_db_list = server_setup["cbl_db_list"]
+    version_list = params_from_base_test_setup["version_list"]
     channel = ["peerToPeer"]
 
     base_url_client = base_url_list[1]
@@ -648,6 +649,8 @@ def test_peer_to_peer_resetCheckPoint(params_from_base_test_setup, server_setup,
 
     # call reset api and restart client request and replication
     replicator.resetCheckPoint(repl)
+    if version_list[1] < '3.0.0':
+        replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
     assert db_obj_client.getCount(cbl_db_client) == num_of_docs, "Docs that got purged in client did not got it back from server after resetcheckpoint api"
     assert db_obj_server.getCount(cbl_db_server) == num_of_docs, "docs got purged in server after resetcheckpoint"
@@ -1211,7 +1214,7 @@ def test_peer_to_peer_tries(params_from_base_test_setup, num_of_docs, continuous
     time.sleep((retries - 4) * interval)
     message_url_tcp_listener = peer_to_peer_server.message_listener_start(cbl_db_server, url_listener_port)
     time.sleep(3)
-    replicator.wait_until_replicator_idle(repl)
+    replicator.wait_until_replicator_idle(repl, err_check=False)
     total = replicator.getTotal(repl)
 
     completed = replicator.getCompleted(repl)

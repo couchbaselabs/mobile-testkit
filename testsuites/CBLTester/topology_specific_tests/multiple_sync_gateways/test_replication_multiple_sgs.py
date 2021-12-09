@@ -1,4 +1,5 @@
 import pytest
+import time
 
 from keywords.MobileRestClient import MobileRestClient
 from CBLClient.Database import Database
@@ -59,7 +60,7 @@ def test_multiple_sgs_with_differrent_revs_limit(params_from_base_test_setup, se
     sg2 = c.sync_gateways[1]
 
     # Setting revs_limit to sg1
-    revs_limit1 = 20
+    revs_limit1 = 23
     temp_cluster_config = copy_to_temp_conf(cluster_config, sg_mode)
     persist_cluster_config_environment_prop(temp_cluster_config, 'revs_limit', revs_limit1, property_name_check=False)
     status = sg1.restart(config=sg_config, cluster_config=temp_cluster_config)
@@ -109,14 +110,22 @@ def test_multiple_sgs_with_differrent_revs_limit(params_from_base_test_setup, se
     repl2 = replicator.configure_and_replicate(
         source_db=cbl_db2, replicator_authenticator=replicator_authenticator2, target_url=sg2_blip_url, replication_type="push")
 
-    db.update_bulk_docs(cbl_db1, number_of_updates=35)
-    db.update_bulk_docs(cbl_db2, number_of_updates=35)
-
+    db.update_bulk_docs(cbl_db1, number_of_updates=18)
+    db.update_bulk_docs(cbl_db2, number_of_updates=18)
+    time.sleep(60)
     replicator.wait_until_replicator_idle(repl1)
     replicator.wait_until_replicator_idle(repl2)
+
+    db.update_bulk_docs(cbl_db1, number_of_updates=17)
+    db.update_bulk_docs(cbl_db2, number_of_updates=17)
+    time.sleep(60)
+    replicator.wait_until_replicator_idle(repl1)
+    replicator.wait_until_replicator_idle(repl2)
+
     replicator.stop(repl1)
     replicator.stop(repl2)
 
+    time.sleep(280)
     # 4. Get docs from sgs and verify revs_limit is maintained
     sg_docs = sg_client.get_all_docs(url=sg1_url, db=sg_db1, auth=session1)
     sg_doc_ids = [doc['id'] for doc in sg_docs["rows"]]
@@ -242,6 +251,7 @@ def test_multiple_sgs_with_CBLs(params_from_base_test_setup, setup_customized_te
     replicator.stop(repl1)
     replicator.stop(repl2)
 
+    time.sleep(280)
     # 3. exchange DBs of SG and do pull replication.
     repl1 = replicator.configure_and_replicate(
         source_db=cbl_db1, replicator_authenticator=replicator_authenticator2, target_url=sg2_blip_url, replication_type="pull")
@@ -263,9 +273,11 @@ def test_multiple_sgs_with_CBLs(params_from_base_test_setup, setup_customized_te
     replicator.stop(repl1)
     repl2_error = replicator.getError(repl2)
     if liteserv_platform == "xamarin-ios" or liteserv_platform == "xamarin-android" or liteserv_platform == "net-msft" or liteserv_platform == "net-uwp":
-        assert "POSIXDomain" in repl2_error
+        assert "POSIXDomain" or "Couchbase.Lite.CouchbaseNetworkException" in repl2_error
     elif liteserv_platform in ["java-macosx", "java-msft", "java-ubuntu", "java-centos", "javaws-macosx", "javaws-msft", "javaws-ubuntu", "javaws-centos"]:
         assert "WebSocket connection closed by peer" in repl2_error
+    elif 'c-' in liteserv_platform:
+        assert "No connection could be made" in repl2_error or "Connection refused" in repl2_error
     else:
         assert "POSIXErrorDomain" in repl2_error
     # 6. Verify one CBL DB should be successful as other CBL DB should fail as associated Sg is down

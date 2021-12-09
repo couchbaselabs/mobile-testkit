@@ -147,7 +147,7 @@ def test_invalidEncryption(params_from_base_test_setup, password):
         with pytest.raises(Exception) as he:
             invalid_key_db_config = db_configure.setEncryptionKey(db_config, password=password)
             db.create(cbl_db_name, invalid_key_db_config)
-        assert str(he.value).startswith('400 Client Error: Bad Request for url:')
+        assert '400 Client Error: Bad Request for url:' in str(he.value)
 
 
 @pytest.mark.listener

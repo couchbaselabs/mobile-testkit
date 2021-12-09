@@ -43,13 +43,16 @@ class RemoteExecutor:
 
         log_info("Connecting to {}".format(self.host))
         log_info("Running '{}' on host {}".format(command, self.host))
-
         if self.sg_platform == "windows":
             self.client.connect(self.host, username=self.username, password=self.password, banner_timeout=REMOTE_EXECUTOR_TIMEOUT)
             command = "cmd /c " + command
             stdin, stdout, stderr = self.client.exec_command(command, timeout=60)
+        elif self.sg_platform.startswith("c-"):
+            self.client.connect(self.host, username=self.username, password=self.password,
+                                banner_timeout=REMOTE_EXECUTOR_TIMEOUT)
+            stdin, stdout, stderr = self.client.exec_command(command, timeout=60)
         else:
-            if self.sg_platform == "macos":
+            if "macos" in self.sg_platform:
                 self.client.connect(self.host, username=self.username, password=self.password, banner_timeout=REMOTE_EXECUTOR_TIMEOUT)
             else:
                 self.client.connect(self.host, username=self.username, banner_timeout=REMOTE_EXECUTOR_TIMEOUT)

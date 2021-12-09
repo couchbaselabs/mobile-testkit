@@ -30,7 +30,8 @@ class Replication(object):
                   push_filter=False, pull_filter=False, channels=None,
                   documentIDs=None, replicator_authenticator=None,
                   headers=None, filter_callback_func='', conflict_resolver='',
-                  heartbeat=None, max_retries=None, max_retry_wait_time=None):
+                  heartbeat=None, max_retries=None, max_retry_wait_time=None,
+                  auto_purge=None, encryptor=None):
         args = Args()
         args.setMemoryPointer("source_db", source_db)
         args.setBoolean("continuous", continuous)
@@ -69,9 +70,15 @@ class Replication(object):
         if target_db is not None:
             args.setMemoryPointer("target_db", target_db)
 
+        if auto_purge is not None:
+            args.setString("auto_purge", auto_purge)
+
         cluster_config = os.environ["CLUSTER_CONFIG"]
         if sg_ssl_enabled(cluster_config):
             args.setString("pinnedservercert", "sg_cert")
+
+        if encryptor is not None:
+            args.setMemoryPointer("encryptor", encryptor)
 
         return self._client.invokeMethod("replicatorConfiguration_configure", args)
 
@@ -189,6 +196,12 @@ class Replication(object):
         return self._client.invokeMethod("replicatorConfiguration_setReplicatorType",
                                          args)
 
+    def setAutoPurgeFlag(self, configuration, auto_purge_flag=True):
+        args = Args()
+        args.setMemoryPointer("configuration", configuration)
+        args.setBoolean("auto_purge", auto_purge_flag)
+        return self._client.invokeMethod("replicatorConfiguration_setAutoPurge", args)
+
     def create(self, config):
         args = Args()
         args.setMemoryPointer("config", config)
@@ -289,13 +302,13 @@ class Replication(object):
         return self._client.invokeMethod("replicator_changeListenerGetChanges", args)
 
     def configure_and_replicate(self, source_db, replicator_authenticator=None, target_db=None, target_url=None, replication_type="push_pull", continuous=True,
-                                channels=None, err_check=True, wait_until_idle=True, heartbeat=None):
+                                channels=None, err_check=True, wait_until_idle=True, heartbeat=None, auto_purge=None, encryptor=None):
         if target_db is None:
             repl_config = self.configure(source_db, target_url=target_url, continuous=continuous,
-                                         replication_type=replication_type, channels=channels, replicator_authenticator=replicator_authenticator, heartbeat=heartbeat)
+                                         replication_type=replication_type, channels=channels, replicator_authenticator=replicator_authenticator, heartbeat=heartbeat, auto_purge=auto_purge, encryptor=encryptor)
         else:
             repl_config = self.configure(source_db, target_db=target_db, continuous=continuous,
-                                         replication_type=replication_type, channels=channels, replicator_authenticator=replicator_authenticator, heartbeat=heartbeat)
+                                         replication_type=replication_type, channels=channels, replicator_authenticator=replicator_authenticator, heartbeat=heartbeat, auto_purge=auto_purge, encryptor=encryptor)
         repl = self.create(repl_config)
         self.start(repl)
         if wait_until_idle:
@@ -332,6 +345,7 @@ class Replication(object):
             log_info("Activity level: {}".format(activity_level))
             log_info("total vs completed = {} vs {} ".format(self.getCompleted(repl), self.getTotal(repl)))
             log_info("count is  {}".format(count))
+            log_info("Activity level {}".format(activity_level))
             time.sleep(sleep_time)
             if activity_level == "offline" or activity_level == "connecting" or activity_level == "busy":
                 count += 1
@@ -369,7 +383,7 @@ class Replication(object):
 
     def create_session_configure_replicate(self, baseUrl, sg_admin_url, sg_db, username, password,
                                            channels, sg_client, cbl_db, sg_blip_url, replication_type=None,
-                                           continuous=True, max_retries=None, max_retry_wait_time=None):
+                                           continuous=True, max_retries=None, max_retry_wait_time=None, encryptor=None):
 
         authenticator = Authenticator(baseUrl)
         cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
@@ -378,7 +392,7 @@ class Replication(object):
         repl_config = self.configure(cbl_db, sg_blip_url, continuous=continuous, channels=channels,
                                      replication_type=replication_type,
                                      replicator_authenticator=replicator_authenticator,
-                                     max_retries=max_retries, max_retry_wait_time=max_retry_wait_time)
+                                     max_retries=max_retries, max_retry_wait_time=max_retry_wait_time, encryptor=encryptor)
         repl = self.create(repl_config)
         self.start(repl)
         self.wait_until_replicator_idle(repl)

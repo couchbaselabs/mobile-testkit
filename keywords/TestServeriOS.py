@@ -60,6 +60,15 @@ class TestServeriOS(TestServerBase):
                 self.app = "CBLTestServer-iOS-EE"
 
             self.bundle_id = "com.couchbase.CBLTestServer-iOS"
+        elif self.platform == "c-ios":
+            # C-IOS
+            if community_enabled:
+                self.app_dir = "CBLTestServer-iOS_community"
+            else:
+                self.app_dir = "CBLTestServer-iOS_enterprise"
+            self.package_name = self.app_dir + ".zip"
+            self.app = "TestServer"
+            self.bundle_id = "com.couchbase.TestServer"
         else:
             # Xamarin-ios
             self.app_dir = "TestServer.iOS"
@@ -101,6 +110,11 @@ class TestServeriOS(TestServerBase):
                     url = "{}/couchbase-lite-ios/{}/{}".format(RELEASED_BUILDS, self.version, self.package_name)
             else:
                 url = "{}/couchbase-lite-ios/{}/{}/{}".format(LATEST_BUILDS, self.version, self.build, self.package_name)
+        elif self.platform == "c-ios":
+            if self.build is None:
+                url = "{}/couchbase-lite-c/{}/{}".format(RELEASED_BUILDS, self.version, self.package_name)
+            else:
+                url = "{}/couchbase-lite-c/{}/{}/{}".format(LATEST_BUILDS, self.version, self.build, self.package_name)
         else:
             if self.build is None:
                 url = "{}/couchbase-lite-net/{}/{}".format(RELEASED_BUILDS, self.version, self.package_name)

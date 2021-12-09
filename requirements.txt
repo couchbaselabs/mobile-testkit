@@ -10,7 +10,7 @@ botocore==1.4.5
 cffi==1.10.0
 colorama==0.3.3
 configparser==3.5.0
-couchbase==3.0.10
+couchbase==3.2.3
 cryptography==2.8
 docker==2.2.1
 docker-pycreds==0.2.1
@@ -18,7 +18,7 @@ docutils==0.12
 ecdsa==0.13
 enum34==1.1.6
 flake8==3.3.0
-futures==3.0.5
+futures==3.1.1
 idna==2.5
 ipaddress==1.0.18
 isort==4.2.5
@@ -53,7 +53,7 @@ requests==2.19.0
 requests-ntlm==0.3.0
 rsa==3.3
 s3transfer==0.0.1
-six==1.10.0
+six==1.15.0
 termcolor==1.1.0
 troposphere==1.5.0
 websocket-client==0.40.0

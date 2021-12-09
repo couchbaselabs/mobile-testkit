@@ -85,6 +85,8 @@ def persist_cluster_config_environment_prop(cluster_config, property_name, value
 
 
 def generate_x509_certs(cluster_config, bucket_name, sg_platform):
+    ''' Generate and insert x509 certs for CBS and SG TLS Handshake'''
+    cbs_version = get_cbs_version(cluster_config)
     cluster = load_cluster_config_json(cluster_config)
     from keywords.remoteexecutor import RemoteExecutor
     cbs_nodes = [node["ip"] for node in cluster["couchbase_servers"]]
@@ -149,7 +151,7 @@ def generate_x509_certs(cluster_config, bucket_name, sg_platform):
             else:
                 f.write("DNS.{} = {}\n".format(item + 1, cbs_nodes[item]))
 
-    cmd = ["./gen_keystore.sh", cbs_nodes[0], bucket_name[0]]
+    cmd = ["./gen_keystore.sh", cbs_nodes[0], bucket_name[0], cbs_version]
     print(" ".join(cmd))
     proc = Popen(cmd, stdout=PIPE, stderr=PIPE)
     stdout, stderr = proc.communicate()

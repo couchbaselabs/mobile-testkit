@@ -121,7 +121,10 @@ class TestDocument(object):
         doc = self.doc_obj.create()
 
         # checking for empty doc
-        assert self.doc_obj.getKeys(doc) == []
+        keys = self.doc_obj.getKeys(doc)
+        if keys is None:
+            keys = []
+        assert keys == []
         result_list = []
         key = "string_key"
         value = "Test String"

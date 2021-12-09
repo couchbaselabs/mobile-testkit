@@ -96,10 +96,11 @@ class Database(object):
             args.setString("id", doc_id)
         return self._client.invokeMethod("database_getDocument", args)
 
-    def getDocuments(self, database, ids):
+    def getDocuments(self, database, ids, encrypted=False):
         args = Args()
         args.setMemoryPointer("database", database)
         args.setArray("ids", ids)
+        args.setBoolean("encrypted", encrypted)
         return self._client.invokeMethod("database_getDocuments", args)
 
     def saveDocument(self, database, document):

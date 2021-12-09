@@ -173,8 +173,8 @@ class Cluster:
 
         log_info(">>> Starting sync_gateway with configuration: {}".format(config_path_full))
 
-        server_port = 8091
-        server_scheme = "http"
+        server_port = ""
+        server_scheme = "couchbase"
         couchbase_server_primary_node = add_cbs_to_sg_config_server_field(self._cluster_config)
         if self.cbs_ssl:
             server_port = 18091
@@ -228,7 +228,7 @@ class Cluster:
                 num_replicas = get_sg_replicas(self._cluster_config)
                 playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
 
-            if sg_platform == "macos":
+            if "macos" in sg_platform:
                 sg_home_directory = "/Users/sync_gateway"
             elif sg_platform == "windows":
                 sg_home_directory = "C:\\\\PROGRA~1\\\\Couchbase\\\\Sync Gateway"
@@ -275,7 +275,10 @@ class Cluster:
                     raise ProvisioningError("Failed to block port on SGW")
         # Add configuration to run with xattrs
         if self.xattrs:
-            playbook_vars["autoimport"] = '"import_docs": true,'
+            if get_sg_version(self._cluster_config) >= "2.1.0":
+                playbook_vars["autoimport"] = '"import_docs": true,'
+            else:
+                playbook_vars["autoimport"] = '"import_docs": "continuous",'
             playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
 
         if self.sync_gateway_ssl:
