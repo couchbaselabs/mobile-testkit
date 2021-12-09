@@ -317,7 +317,7 @@ def test_upgrade(params_from_base_test_setup):
             sg_client.compact_attachments(sg_admin_url, sg_db, "start")
             # we need to wait until compaction process is done
             while sg_client.compact_attachments(sg_admin_url, sg_db, "status")["status"] == "running":
-                time.sleep(10)
+                time.sleep(60)
             att_status = sg_client.compact_attachments(sg_admin_url, sg_db, "status")
             log_info(att_status)
             assert att_status["status"] == "completed"
