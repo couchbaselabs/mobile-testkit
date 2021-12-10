@@ -6,7 +6,7 @@
     become: yes
     command: iptables --flush
     ignore_errors: True
-    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
+    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
 
 - hosts: load_balancers
 
@@ -15,7 +15,7 @@
     become: yes
     command: iptables --flush
     ignore_errors: True
-    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
+    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
 
 - hosts: sync_gateways
 

@@ -50,7 +50,7 @@
 
     - name: Install Couchbase Server on CentOS
       yum: name=/tmp/{{ couchbase_server_package_name }} state=present
-      when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat"
+      when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon"
 
     - name: Install Couchbase Server on Ubuntu
       apt: deb=/tmp/{{ couchbase_server_package_name }} state=present
@@ -84,15 +84,15 @@
 
     - name: COUCHBASE SERVER | Enabled Transparent Huge Pages
       shell: echo 'for i in /sys/kernel/mm/*transparent_hugepage/enabled; do echo never > $i; done' >> /etc/rc.local
-      when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7"
+      when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7" or ansible_distribution == "Amazon"
 
     - name: COUCHBASE SERVER | Disable Transparent Huge Pages
       shell: echo 'for i in /sys/kernel/mm/*transparent_hugepage/defrag; do echo never > $i; done' >> /etc/rc.local
-      when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7"
+      when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7" or ansible_distribution == "Amazon"
 
     - name: COUCHBASE SERVER | Enabled Transparent Huge Pages again
       shell: for i in /sys/kernel/mm/*transparent_hugepage/enabled; do echo never > $i; done
-      when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7"
+      when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7" or ansible_distribution == "Amazon"
 
     # Start via init scipt if running CBS 4.0.0 or 4.1.0 on CentOS 7.2 due to https://issues.couchbase.com/browse/MB-17193
     - name: COUCHBASE SERVER | Start Couchbase Service (Hack around 7.2 and CBS 4.1.0 issue)
