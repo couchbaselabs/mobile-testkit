@@ -403,9 +403,6 @@ def update_docs(db, cbl_db, added_docs, doc_obj, terminator_doc_id_prefix):
         for _ in range(docs_per_update):
             random_doc_id = random.choice(current_user_doc_ids)
             user_docs_subset_to_update.append(random_doc_id)
-        print("*" * 20)
-        print(len(user_docs_subset_to_update))
-        print("*" * 20)
 
         cbl_db_docs_to_update = {}
         for doc_id in user_docs_subset_to_update:
