@@ -94,8 +94,8 @@ def params_from_base_suite_setup(request):
     validate_sync_gateway_mode(mode)
 
     # use base_cc cluster config if mode is "cc" or base_di cluster config if more is "di"
-    # cluster_config = "{}/{}{}".format(CLUSTER_CONFIGS_DIR, cluster_config, mode)
-    cluster_config = "{}/multiple_sync_gateways_{}".format(CLUSTER_CONFIGS_DIR, mode)
+    cluster_config = "{}/{}{}".format(CLUSTER_CONFIGS_DIR, cluster_config, mode)
+    # cluster_config = "{}/multiple_sync_gateways_{}".format(CLUSTER_CONFIGS_DIR, mode)
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
 
     if use_views:
@@ -308,7 +308,8 @@ def params_from_base_suite_setup(request):
     # Delete png files under resources/data
     clear_resources_pngs()
     if prometheus_enabled:
-        prometheus.stop_prometheus(sg_ip, sg_ssl)
+        log_info("if promotheus enable")
+        # prometheus.stop_prometheus(sg_ip, sg_ssl)
 
 
 # This is called before each test and will yield the dictionary to each test that references the method
