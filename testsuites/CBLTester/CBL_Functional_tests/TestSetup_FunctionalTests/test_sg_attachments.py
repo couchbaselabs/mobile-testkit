@@ -454,7 +454,6 @@ def test_attachment_expire_purged_doc(params_from_base_test_setup, delete_doc_ty
     sg_config = params_from_base_test_setup["sg_config"]
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
-    xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
     num_of_docs = 10
     sg_conf_name = "listener_tests/listener_tests_no_conflicts"
 
@@ -547,6 +546,3 @@ def test_attachment_expire_purged_doc(params_from_base_test_setup, delete_doc_ty
     with pytest.raises(DocumentNotFoundException) as nfe:
         sdk_client.get(attachment_ids[0])
     log_info(nfe)
-
-
-

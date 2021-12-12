@@ -250,8 +250,6 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
     replicator.start(repl3)
     replicator.wait_until_replicator_idle(repl3)
     sg_client.add_docs(url=sg1.admin.admin_url, db=sg_db1, number=2, id_prefix="sgw_docs3", channels=replication2_channel4, generator="simple_user", attachments_generator=attachment.generate_2_png_10_10)
-
-
     terminator1_doc_id = 'terminator1'
 
     # Create sg replicate2 in sgw config by using same repl id of sg replicate1 for sg replicate2
@@ -285,7 +283,7 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
             if "sgw_cluster1_replication1" in doc:
                 sg_client.add_conflict(url=sg1.url, db=sg_db1, doc_id=doc["id"], parent_revisions=doc["rev"],
                                        new_revision="2-foo", auth=session1)
-    doc_id = "sgw_attachments_0"
+    doc_id = "sgw_attachments1_1"
     latest_rev = sg_client.get_latest_rev(sg1.admin.admin_url, sg_db1, doc_id)
     sg_client.delete_doc(url=sg1.admin.admin_url, db=sg_db1, doc_id=doc_id, rev=latest_rev)
 
