@@ -283,7 +283,7 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
             if "sgw_cluster1_replication1" in doc:
                 sg_client.add_conflict(url=sg1.url, db=sg_db1, doc_id=doc["id"], parent_revisions=doc["rev"],
                                        new_revision="2-foo", auth=session1)
-    doc_id = "sgw_attachments1_1"
+    doc_id = "sgw_attachments1_0"
     latest_rev = sg_client.get_latest_rev(sg1.admin.admin_url, sg_db1, doc_id)
     sg_client.delete_doc(url=sg1.admin.admin_url, db=sg_db1, doc_id=doc_id, rev=latest_rev)
 
