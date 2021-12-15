@@ -449,6 +449,10 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
             time.sleep(5)
         compaction_status = sg_client.compact_attachments(sg1.admin.admin_url, sg_db1, "status")
         log_info("compaction status:- " + str(compaction_status))
+        count = 1
+        while count < 10 or compaction_status["status"] != "completed":
+            time.sleep(1)
+            count += 1
         assert compaction_status["status"] == "completed"
         assert compaction_status["purged_attachments"] == 4, "compaction count not matched"
     replicator.stop(repl1)
