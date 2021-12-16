@@ -287,7 +287,7 @@ def test_upgrade_purge_expire_attachments(params_from_base_test_setup, sgw_versi
     if delete_doc_type == "purge":
         assert compaction_status["purged_attachments"] == 101, "purged attachment count is not matching"
     else:
-        assert compaction_status["purged_attachments"] + compaction_status["marked_attachments"]== 101, "purged and marked attachment count is not matching"
+        assert compaction_status["purged_attachments"] + compaction_status["marked_attachments"] >= 101, "purged and marked attachment count is not matching"
 
 
 @pytest.mark.syncgateway
