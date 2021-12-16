@@ -171,6 +171,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
     config_path = os.path.abspath(sync_gateway_config.config_path)
     sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
     couchbase_server_primary_node = add_cbs_to_sg_config_server_field(cluster_config)
+    version = sync_gateway_config._version_number
     # Create buckets unless the user explicitly asked to skip this step
     if not sync_gateway_config.skip_bucketcreation:
         create_server_buckets(cluster_config, sync_gateway_config)
@@ -305,16 +306,16 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
     if is_hide_prod_version_enabled(cluster_config) and get_sg_version(cluster_config) >= "2.8.1":
         playbook_vars["hide_product_version"] = '"hide_product_version": true,'
 
-    if is_centralized_persistent_config_disabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
+    if is_centralized_persistent_config_disabled(cluster_config) and version >= "3.0.0":
         playbook_vars["disable_persistent_config"] = '"disable_persistent_config": true,'
 
-    if is_server_tls_skip_verify_enabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
+    if is_server_tls_skip_verify_enabled(cluster_config) and version >= "3.0.0":
         playbook_vars["server_tls_skip_verify"] = '"server_tls_skip_verify": true,'
 
-    if is_tls_server_disabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
+    if is_tls_server_disabled(cluster_config) and version >= "3.0.0":
         playbook_vars["disable_tls_server"] = '"use_tls_server": false,'
 
-    if is_admin_auth_disabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
+    if is_admin_auth_disabled(cluster_config) and version >= "3.0.0":
         playbook_vars["disable_admin_auth"] = '"admin_interface_authentication": false,    \n"metrics_interface_authentication": false,'
 
     # Install Sync Gateway via Source or Package

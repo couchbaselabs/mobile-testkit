@@ -3,7 +3,7 @@ import time
 
 from keywords.utils import log_info, host_for_url
 from libraries.testkit.cluster import Cluster
-from keywords.SyncGateway import sync_gateway_config_path_for_mode, SyncGateway
+from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.ClusterKeywords import ClusterKeywords
 
 from keywords.MobileRestClient import MobileRestClient
@@ -21,7 +21,7 @@ from requests.exceptions import HTTPError
     (100, 457),
     (1000, 4957)
 ])
-def test_upgrade_delete_attachments(params_from_base_test_setup, doc_count, marked):
+def test_upgrade_delete_attachments(params_from_base_test_setup, sgw_version_reset, doc_count, marked):
     """
     @summary :
     Test cases link on google drive :https://docs.google.com/spreadsheets/d/1RrrIcIZN7MgLDlNzGWfUHo2NTYrx1Jr55SBNeCdDUQs/edit#gid=0
@@ -35,15 +35,14 @@ def test_upgrade_delete_attachments(params_from_base_test_setup, doc_count, mark
     8. Verify existing duplicated attachments
     """
 
-    cluster_conf = params_from_base_test_setup['cluster_config']
+    cluster_conf = sgw_version_reset['cluster_conf']
     sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
-    sync_gateway_previous_version = params_from_base_test_setup['sync_gateway_previous_version']
-    mode = params_from_base_test_setup['mode']
+    sync_gateway_previous_version = sgw_version_reset['sync_gateway_previous_version']
+    mode = sgw_version_reset['mode']
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
-    sg_obj = SyncGateway()
+    sg_obj = sgw_version_reset['sg_obj']
 
-    # sg_platform = params_from_base_test_setup['sg_platform']
     username = "autotest"
     password = "password"
     sg_channels = ["attachments-cleanup"]
@@ -57,12 +56,12 @@ def test_upgrade_delete_attachments(params_from_base_test_setup, doc_count, mark
     sg_conf_name = "sync_gateway_default"
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
-    cbs_cluster = Cluster(config=cluster_conf)
-    temp_sg_config, _ = copy_sgconf_to_temp(sg_conf, mode)
+    # cbs_cluster = Cluster(config=cluster_conf)
+    # temp_sg_config, _ = copy_sgconf_to_temp(sg_conf, mode)
 
-    cbs_cluster.reset(sg_config_path=temp_sg_config)
-    persist_cluster_config_environment_prop(cluster_conf, 'sync_gateway_version', sync_gateway_previous_version, True)
-    sg_obj.install_sync_gateway(cluster_conf, sync_gateway_previous_version, temp_sg_config)
+    # cbs_cluster.reset(sg_config_path=temp_sg_config)
+    # persist_cluster_config_environment_prop(cluster_conf, 'sync_gateway_version', sync_gateway_previous_version, True)
+    # sg_obj.install_sync_gateway(cluster_conf, sync_gateway_previous_version, temp_sg_config)
     cluster_util = ClusterKeywords(cluster_conf)
     topology = cluster_util.get_cluster_topology(cluster_conf)
     sync_gateways = topology["sync_gateways"]
@@ -148,7 +147,17 @@ def test_upgrade_delete_attachments(params_from_base_test_setup, doc_count, mark
     # We need to wait for few minutes to start the process again
     # time.sleep(40)
 
-    sg_client.compact_attachments(sg_admin_url, remote_db, "start")
+    count = 1
+    while True and count < 10:
+        resp = sg_client.compact_attachments(sg_admin_url, remote_db, "start")
+        try:
+            resp["reason"]
+            if "Process stop still in progress" not in resp["reason"]:
+                break
+        except KeyError as ke:
+            log_info("compact attachment started and no reason caught")
+        time.sleep(1)
+        count += 1
     status = sg_client.compact_attachments(sg_admin_url, remote_db, "status")["status"]
 
     if status == "stopping" or status == "running":
@@ -183,7 +192,7 @@ def test_upgrade_delete_attachments(params_from_base_test_setup, doc_count, mark
     "purge",
     "expire"
 ])
-def test_upgrade_purge_expire_attachments(params_from_base_test_setup, delete_doc_type):
+def test_upgrade_purge_expire_attachments(params_from_base_test_setup, sgw_version_reset, delete_doc_type):
     """
     1. Start the SG with pre lithium and CB
     2. Create docs with attachments on SG and CB (xattrs)
@@ -193,15 +202,14 @@ def test_upgrade_purge_expire_attachments(params_from_base_test_setup, delete_do
     6. Run the compaction process and Verify Compaction cleaned the purged/Expired docs
     """
 
-    cluster_conf = params_from_base_test_setup['cluster_config']
+    cluster_conf = sgw_version_reset['cluster_conf']
     sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
-    sync_gateway_previous_version = params_from_base_test_setup['sync_gateway_previous_version']
-    mode = params_from_base_test_setup['mode']
+    sync_gateway_previous_version = sgw_version_reset['sync_gateway_previous_version']
+    mode = sgw_version_reset['mode']
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
-    sg_obj = SyncGateway()
+    sg_obj = sgw_version_reset['sg_obj']
 
-    # sg_platform = params_from_base_test_setup['sg_platform']
     username = "autotest"
     password = "password"
     sg_channels = ["attachments-cleanup"]
@@ -212,11 +220,11 @@ def test_upgrade_purge_expire_attachments(params_from_base_test_setup, delete_do
         pytest.skip('This test cannot run with sg version below 3.0.0')
     sg_conf_name = "sync_gateway_default"
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
-    cbs_cluster = Cluster(config=cluster_conf)
-    temp_sg_config, _ = copy_sgconf_to_temp(sg_conf, mode)
-    cbs_cluster.reset(sg_config_path=temp_sg_config)
-    persist_cluster_config_environment_prop(cluster_conf, 'sync_gateway_version', sync_gateway_previous_version, True)
-    sg_obj.install_sync_gateway(cluster_conf, sync_gateway_previous_version, temp_sg_config)
+    # cbs_cluster = Cluster(config=cluster_conf)
+    # temp_sg_config, _ = copy_sgconf_to_temp(sg_conf, mode)
+    # cbs_cluster.reset(sg_config_path=temp_sg_config)
+    # persist_cluster_config_environment_prop(cluster_conf, 'sync_gateway_version', sync_gateway_previous_version, True)
+    # sg_obj.install_sync_gateway(cluster_conf, sync_gateway_previous_version, temp_sg_config)
     cluster_util = ClusterKeywords(cluster_conf)
     topology = cluster_util.get_cluster_topology(cluster_conf)
     sync_gateways = topology["sync_gateways"]
@@ -257,7 +265,7 @@ def test_upgrade_purge_expire_attachments(params_from_base_test_setup, delete_do
     with pytest.raises(HTTPError) as he:
         sg_client.get_doc(url=sg_url, db=remote_db, doc_id="att_com_0", auth=session)
     http_error_str = str(he.value)
-    assert http_error_str.startswith("404 Client Error: Not Found")
+    assert http_error_str.startswith("403 Client Error: Forbidden for url:")
 
     # 5 . Upgrade SGW to lithium and have Automatic upgrade
     persist_cluster_config_environment_prop(cluster_conf, 'sync_gateway_version', sync_gateway_version, True)
@@ -269,7 +277,7 @@ def test_upgrade_purge_expire_attachments(params_from_base_test_setup, delete_do
     status = sg_client.compact_attachments(sg_admin_url, remote_db, "status")["status"]
     if status == "running":
         sg_client.compact_attachments(sg_admin_url, remote_db, "progress")
-        time.sleep(10)
+        time.sleep(30)
     compaction_status = sg_client.compact_attachments(sg_admin_url, remote_db, "status")
     log_info(compaction_status)
     assert compaction_status["status"] == "completed", "Compaction status should be completed"
@@ -279,12 +287,12 @@ def test_upgrade_purge_expire_attachments(params_from_base_test_setup, delete_do
     if delete_doc_type == "purge":
         assert compaction_status["purged_attachments"] == 101, "purged attachment count is not matching"
     else:
-        assert compaction_status["purged_attachments"] == 95, "purged attachment count is not matching"
+        assert compaction_status["purged_attachments"] == 51, "purged attachment count is not matching"
 
 
 @pytest.mark.syncgateway
 @pytest.mark.attachment_cleanup
-def test_upgrade_legacy_attachments(params_from_base_test_setup):
+def test_upgrade_legacy_attachments(params_from_base_test_setup, sgw_version_reset):
     """
         1.Setup a node with SG version 2.8.0 installed.
         2. Create 3 different documents with 3 different inline attachments.
@@ -307,13 +315,13 @@ def test_upgrade_legacy_attachments(params_from_base_test_setup):
         12 Verify all attachments are not present after compaction
     """
 
-    cluster_conf = params_from_base_test_setup['cluster_config']
+    cluster_conf = sgw_version_reset['cluster_conf']
     sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
-    sync_gateway_previous_version = params_from_base_test_setup['sync_gateway_previous_version']
-    mode = params_from_base_test_setup['mode']
+    sync_gateway_previous_version = sgw_version_reset['sync_gateway_previous_version']
+    mode = sgw_version_reset['mode']
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
-    sg_obj = SyncGateway()
+    sg_obj = sgw_version_reset['sg_obj']
 
     # sg_platform = params_from_base_test_setup['sg_platform']
     username = "autotest"
