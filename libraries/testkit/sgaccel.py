@@ -109,7 +109,7 @@ class SgAccel:
             playbook_vars["delta_sync"] = '"delta_sync": { "enabled": true},'
 
         if get_sg_version(self.cluster_config) >= "2.8.0":
-            playbook_vars["prometheus"] = '"metricsInterface": ":4986",'
+            playbook_vars["prometheus"] = '"metrics_interface": ":4986",'
 
         if is_hide_prod_version_enabled(self.cluster_config) and get_sg_version(self.cluster_config) >= "2.8.1":
             playbook_vars["hide_product_version"] = '"hide_product_version": true,'

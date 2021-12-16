@@ -312,7 +312,7 @@ class Cluster:
                 playbook_vars["delta_sync"] = '"delta_sync": { "enabled": true},'
 
             if get_sg_version(self._cluster_config) >= "2.8.0":
-                playbook_vars["prometheus"] = '"metricsInterface": ":4986",'
+                playbook_vars["prometheus"] = '"metrics_interface": ":4986",'
 
             if is_hide_prod_version_enabled(self._cluster_config) and get_sg_version(self._cluster_config) >= "2.8.1":
                 playbook_vars["hide_product_version"] = '"hide_product_version": true,'
@@ -570,7 +570,7 @@ class Cluster:
             disable_admin_auth_var = '"admin_interface_authentication": false,    \n"metrics_interface_authentication": false,'
 
         if get_sg_version(self._cluster_config) >= "2.8.0":
-            prometheus_var = '"metricsInterface": ":4986",'
+            prometheus_var = '"metrics_interface": ":4986",'
 
         if get_sg_use_views(self._cluster_config):
             sg_use_views_var = '"use_views": true,'

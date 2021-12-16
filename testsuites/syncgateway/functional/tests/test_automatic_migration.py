@@ -26,6 +26,9 @@ from keywords.remoteexecutor import RemoteExecutor
 from keywords.constants import ENVIRONMENT_FILE
 from libraries.provision.ansible_runner import AnsibleRunner
 from utilities.copy_files_to_nodes import create_files_with_content
+from keywords.SyncGateway import verify_sync_gateway_version
+from utilities.cluster_config_utils import get_sg_version, load_cluster_config_json
+from keywords.utils import log_info
 
 
 @pytest.fixture(scope="function")
@@ -37,18 +40,27 @@ def sgw_version_reset(request, params_from_base_test_setup):
     mode = params_from_base_test_setup['mode']
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     sg_obj = SyncGateway()
-    sg_obj.install_sync_gateway(cluster_conf, sync_gateway_previous_version, sg_conf, skip_bucketcreation=True)
+    cbs_cluster = Cluster(config=cluster_conf)
+    sg1 = cbs_cluster.sync_gateways[0]
+    sg_obj.install_sync_gateway(cluster_conf, sync_gateway_previous_version, sg_conf)
     yield {
         "cluster_conf": cluster_conf,
         "sg_obj": sg_obj,
         "mode": mode,
         "sg_conf_name": sg_conf_name,
-        "sync_gateway_previous_version": sync_gateway_previous_version
+        "sync_gateway_previous_version": sync_gateway_previous_version,
+        "cbs_cluster": cbs_cluster
     }
+    sg_latest_version = get_sg_version(cluster_conf)
+    try:
+        verify_sync_gateway_version(sg1.ip, sg_latest_version)
+    except Exception as ex:
+        print("exception message: ", ex)
+        sg_obj.install_sync_gateway(cluster_conf, sg_latest_version, sg_conf, skip_bucketcreation=True)
 
 
 @pytest.mark.syncgateway
-def test_automatic_upgrade(params_from_base_test_setup):
+def test_automatic_upgrade(params_from_base_test_setup, sgw_version_reset):
     """
     @summary :
     Test cases link on google drive : https://docs.google.com/spreadsheets/d/19kJQ4_g6RroaoG2YYe0X11d9pU0xam-lb-n23aPLhO4/edit#gid=0
@@ -89,11 +101,13 @@ def test_automatic_upgrade(params_from_base_test_setup):
     6. verify backup file
     """
 
-    sg_conf_name = "sync_gateway_default"
-    cluster_conf = params_from_base_test_setup['cluster_config']
+    sg_conf_name = sgw_version_reset['sg_conf_name']
+    cluster_conf = sgw_version_reset['cluster_conf']
     sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
-    sync_gateway_previous_version = params_from_base_test_setup['sync_gateway_previous_version']
+    sync_gateway_previous_version = sgw_version_reset['sync_gateway_previous_version']
     mode = params_from_base_test_setup['mode']
+    cbs_cluster = sgw_version_reset['cluster_conf']
+    sg_platform = params_from_base_test_setup["sg_platform"]
 
     # 1. Have prelithium config
     # 2. Have configs required for database on prelithium config
@@ -103,45 +117,52 @@ def test_automatic_upgrade(params_from_base_test_setup):
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
-    # cluster_util = ClusterKeywords(cluster_conf)
-    # topology = cluster_util.get_cluster_topology(cluster_conf)
-    # sync_gateways = topology["sync_gateways"]
-
     # 3. Add dynamic config like log_file_path or redaction_level on sgw config
     cbs_cluster = Cluster(config=cluster_conf)
-    cbs_cluster.reset(sg_config_path=sg_conf)
+    # cbs_cluster.reset(sg_config_path=sg_conf)
 
     sg_obj = SyncGateway()
-    # temp_cluster_config = copy_to_temp_conf(cluster_conf, mode)
-    # persist_cluster_config_environment_prop(temp_cluster_config, 'x509_certs', True)
-    # persist_cluster_config_environment_prop(temp_cluster_config, 'server_tls_skip_verify', False)
-    # cluster_conf = temp_cluster_config
-    sg_obj.install_sync_gateway(cluster_conf, sync_gateway_previous_version, sg_conf, skip_bucketcreation=True)
 
     # 4. Upgrade SGW to lithium  and verify new version of SGW config
-    # sg_obj.upgrade_sync_gateway(sync_gateways, sync_gateway_previous_version, sync_gateway_version, sg_conf, cluster_conf)
     sg_obj.upgrade_sync_gateways(cluster_config=cluster_conf, sg_conf=sg_conf, sync_gateway_version=sync_gateway_version)
 
     # 5. Verify all the above configs converted to new format.
     #   Default config for dynamic config like logging should have default values on _config rest end point
     sg1 = cbs_cluster.sync_gateways[0]
-    cbs_url = cbs_cluster.servers[0]
+    cbs_url = cbs_cluster.servers[0].host
+    debug_dict = { "enabled": True, "rotation": { } }
     # cbs_url = cbs_url.replace("https", "couchbases")
     cbs_bucket = cbs_cluster.servers[0].get_bucket_names()[0]
     sg1_config = sg1.admin.get_config()
-    assert sg1_config["bootstrap"]["server"] == cbs_url, "server did not match with legacy config"
+    assert cbs_url in sg1_config["bootstrap"]["server"], "server did not match with legacy config"
     assert sg1_config["bootstrap"]["username"] == cbs_bucket, "username did not match with legacy config"
 
-    ["rotation"] is None, "logging did not get reset"
-    assert sg1_config["logging"]["console"]["rotation"] is None, "logging did not get reset"
-    assert sg1_config["logging"]["error"]["rotation"] is None, "logging did not get reset"
-    assert sg1_config["logging"]["warn"]["rotation"] is None, "logging did not get reset"
-    assert sg1_config["logging"]["info"]["rotation"] is None, "logging did not get reset"
-    assert sg1_config["logging"]["debug"]["rotation"] is None, "logging did not get reset"
-    assert sg1_config["logging"]["trace"]["rotation"] is None, "logging did not get reset"
-    assert sg1_config["logging"]["stats"]["rotation"] is None, "logging did not get reset"
+    assert not sg1_config["logging"]["console"]["rotation"], "logging did not get reset"
+    assert not sg1_config["logging"]["error"]["rotation"], "logging did not get reset"
+    assert not sg1_config["logging"]["warn"]["rotation"], "logging did not get reset"
+    assert not sg1_config["logging"]["info"]["rotation"], "logging did not get reset"
+    assert sg1_config["logging"]["debug"] == debug_dict, "logging did not get reset"
+    assert not sg1_config["logging"]["trace"]["rotation"], "logging did not get reset"
+    assert not sg1_config["logging"]["stats"]["rotation"], "logging did not get reset"
     # 6. verify backup file
-    # TODO
+    if sg_platform == "windows" or "macos" in sg_platform:
+        json_cluster = load_cluster_config_json(cluster_conf)
+        sghost_username = json_cluster["sync_gateways:vars"]["ansible_user"]
+        sghost_password = json_cluster["sync_gateways:vars"]["ansible_password"]
+        remote_executor = RemoteExecutor(sg1.ip, sg_platform, sghost_username, sghost_password)
+    else:
+        remote_executor = RemoteExecutor(sg1.ip)
+    if "macos" in sg_platform:
+        sg_home_directory = "/Users/sync_gateway"
+    elif sg_platform == "windows":
+        sg_home_directory = "C:\\\\PROGRA~1\\\\Couchbase\\\\Sync Gateway"
+    else:
+        sg_home_directory = "/home/sync_gateway"
+    command = "ls {} | grep {} | wc -l".format(sg_home_directory, "sync_gateway-backup-")
+    if sg_platform == "windows":
+        command = "ls {} | grep {} | wc -l".format(sg_home_directory, "sync_gateway-backup-")
+    _, stdout, _ = remote_executor.execute(command)
+    assert stdout[0].strip() == str(2)
 
 
 @pytest.mark.syncgateway
@@ -149,7 +170,7 @@ def test_automatic_upgrade(params_from_base_test_setup):
     (False),
     # (True)
 ])
-def test_automatic1_upgrade_with_replication_config(params_from_base_test_setup, sgw_version_reset, persistent_config):
+def test_automatic_upgrade_with_replication_config(params_from_base_test_setup, persistent_config):
     """
     @summary :
     Test cases link on google drive : https://docs.google.com/spreadsheets/d/19kJQ4_g6RroaoG2YYe0X11d9pU0xam-lb-n23aPLhO4/edit#gid=0
@@ -161,11 +182,11 @@ def test_automatic1_upgrade_with_replication_config(params_from_base_test_setup,
 
     cluster_conf = params_from_base_test_setup['cluster_config']
     sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
-    sync_gateway_previous_version = sgw_version_reset['sync_gateway_previous_version']
-    mode = sgw_version_reset['mode']
-    sg_obj = sgw_version_reset["sg_obj"]
-    cluster_conf = sgw_version_reset["cluster_conf"]
-    sg_conf_name = sgw_version_reset["sg_conf_name"]
+    sync_gateway_previous_version = params_from_base_test_setup['sync_gateway_previous_version']
+    mode = params_from_base_test_setup['mode']
+    sg_obj = SyncGateway()
+    # sg_conf_name = sgw_version_reset["sg_conf_name"]
+    sg_conf_name = 'listener_tests/listener_tests_with_replications'
 
     # sg_platform = params_from_base_test_setup['sg_platform']
     username = "autotest"
@@ -188,12 +209,13 @@ def test_automatic1_upgrade_with_replication_config(params_from_base_test_setup,
     replications_key = "replications"
     replace_string = "\"{}\": {}{}{},".format(replications_key, "{", replication_1, "}")
     temp_sg_config = replace_string_on_sgw_config(temp_sg_config, "{{ replace_with_replications }}", replace_string)
+    print("replace string of replications is ", replace_string)
     sg_obj.install_sync_gateway(cluster_conf, sync_gateway_previous_version, temp_sg_config)
     cluster_util = ClusterKeywords(cluster_conf)
     topology = cluster_util.get_cluster_topology(cluster_conf)
     sync_gateways = topology["sync_gateways"]
 
-    cbs_cluster.reset(sg_config_path=temp_sg_config)
+    # cbs_cluster.reset(sg_config_path=temp_sg_config)
     # sg1_config = sg1.admin.get_config()
 
     # 3 . Upgrade SGW to lithium and have Automatic upgrade
@@ -203,9 +225,9 @@ def test_automatic1_upgrade_with_replication_config(params_from_base_test_setup,
 
     # 4. Verify replication are migrated and stored in bucket
 
-    sg_dbs = sg1.admin.get_dbs_from_config()
+    sg_dbs = sg1.admin.get_dbs()
     active_tasks = sg1.admin.get_sgreplicate2_active_tasks(sg_dbs[0])
-    assert len(active_tasks == 1, "replication tasks did not migrated successfully")
+    assert len(active_tasks) == 1, "replication tasks did not migrated successfully"
 
 
 @pytest.mark.syncgateway
@@ -213,7 +235,7 @@ def test_automatic1_upgrade_with_replication_config(params_from_base_test_setup,
     (False),
     # (True)
 ])
-def test_automatic_migration_with_server_connection_fails(params_from_base_test_setup, persistent_config):
+def test_automatic_migration_with_server_connection_fails(params_from_base_test_setup, sgw_version_reset, persistent_config):
     """
     @summary :
     Test cases link on google drive : https://docs.google.com/spreadsheets/d/19kJQ4_g6RroaoG2YYe0X11d9pU0xam-lb-n23aPLhO4/edit#gid=0
@@ -225,16 +247,15 @@ def test_automatic_migration_with_server_connection_fails(params_from_base_test_
     6. Verify backup file is not created and sgw config is not upgraded and old config is not intacted
     """
 
-    cluster_conf = params_from_base_test_setup['cluster_config']
     sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
     sync_gateway_previous_version = params_from_base_test_setup['sync_gateway_previous_version']
-    mode = params_from_base_test_setup['mode']
-    cluster_conf = params_from_base_test_setup["cluster_config"]
-    sg_conf_name = "sync_gateway_default"
-    sg_obj = SyncGateway()
+    mode = sgw_version_reset['mode']
+    cluster_conf = sgw_version_reset["cluster_conf"]
+    sg_conf_name = sgw_version_reset["sg_conf_name"]
+    sg_obj = sgw_version_reset['sg_obj']
     # sg_conf_name = 'listener_tests/listener_tests_with_replications'
 
-    # sg_platform = params_from_base_test_setup['sg_platform']
+    sg_platform = params_from_base_test_setup['sg_platform']
     # remote_url = "http://10.100.10.100"
     # remote_db = "remote_db"
 
@@ -253,25 +274,51 @@ def test_automatic_migration_with_server_connection_fails(params_from_base_test_
     coucbase_servers = topology["couchbase_servers"]
 
     # cbs_cluster.reset(sg_config_path=sg_conf)
-    sg_obj.install_sync_gateway(cluster_conf, sync_gateway_previous_version, sg_conf, skip_bucketcreation=True)
+    # sg_obj.install_sync_gateway(cluster_conf, sync_gateway_previous_version, sg_conf, skip_bucketcreation=True)
     # sg1_config = sg1.admin.get_config()
 
     # 3. stop the server
     cbs_url = coucbase_servers[0]
     server = couchbaseserver.CouchbaseServer(cbs_url)
     server.stop()
+    try:
+        sg_obj.upgrade_sync_gateways(cluster_config=cluster_conf, sg_conf=sg_conf, sync_gateway_version=sync_gateway_version)
+    except Exception as ex:
+        if "Could not upgrade sync_gateway" in str(ex):
+            log_info("SGW failed to start after upgrade as server is down")
+        else:
+            raise Exception("Upgrade failed")
+    time.sleep(30)
+    server.start()
     # sg_obj.stop_sync_gateways(cluster_conf)
     # sg_obj.redeploy_sync_gateway_config(cluster_config=cluster_conf, sg_conf=sg_conf, sync_gateway_version=sync_gateway_version, enable_import=True, deploy_only=True)
     # 3 . Upgrade SGW to lithium and have Automatic upgrade
-    with concurrent.futures.ProcessPoolExecutor() as ex:
+    '''with concurrent.futures.ProcessPoolExecutor() as ex:
         ex.submit(sg_obj.upgrade_sync_gateways, cluster_config=cluster_conf, sg_conf=sg_conf, sync_gateway_version=sync_gateway_version)
         # ex.submit(sg_obj.upgrade_sync_gateways, sync_gateways, sync_gateway_previous_version, sync_gateway_version, sg_conf, cluster_conf)
         time.sleep(120)
-        server.start()
+        server.start() '''
     # 4. Verify replication are migrated and stored in bucket
 
     # sg_dbs = sg1.admin.get_dbs_from_config()
-
+    # 6. Verify backup file is not created and sgw config is not upgraded and old config is not intacted
+    remote_executor = RemoteExecutor(sg1.ip, sg_platform)
+    if "macos" in sg_platform:
+        sg_home_directory = "/Users/sync_gateway"
+    elif sg_platform == "windows":
+        sg_home_directory = "C:\\\\PROGRA~1\\\\Couchbase\\\\Sync Gateway"
+    else:
+        sg_home_directory = "/home/sync_gateway"
+    command = "ls {} | grep {} | wc -l".format(sg_home_directory, "sync_gateway-backup-")
+    if sg_platform == "windows":
+        command = "ls {} | grep {} | wc -l".format(sg_home_directory, "sync_gateway-backup-")
+    _, stdout, _ = remote_executor.execute(command)
+    assert stdout[0].strip() == 1, "back file did not get created"
+    command = "grep bootstrap sync_gateway.json| wc -l"
+    if sg_platform == "windows":
+        command = "grep bootstrap sync_gateway.json| wc -l".format(sg_home_directory, "sync_gateway-backup-")
+    _, stdout, _ = remote_executor.execute(command)
+    assert stdout[0].strip() == 1, "sync gateway config did not get migrated"
 
 @pytest.fixture(scope="function")
 def setup_env_variables(params_from_base_test_setup):
@@ -306,7 +353,7 @@ def test_automatic_migration_fails_with_directory_permissions(params_from_base_t
     2. Once SGW is connected successfully to the server
     3. Deploy the sgw config on the directory which sync gateway user does not have permissions
     4. upgrade to 3.0 and above
-    5. Have SGW failed to start 
+    5. Verify SGW stats successfully 
     6. Verify backup file is not created and sgw config is not upgraded and old config is not intacted
     """
 
@@ -388,3 +435,5 @@ def test_automatic_migration_fails_with_directory_permissions(params_from_base_t
     sg_dbs = sg1.admin.get_dbs_from_config()
     active_tasks = sg1.admin.get_sgreplicate2_active_tasks(sg_dbs[0])
     assert len(active_tasks == 1, "replication tasks did not migrated successfully") """
+
+    # 6. Verify backup file is not created and sgw config is not upgraded and old config is not intacted
