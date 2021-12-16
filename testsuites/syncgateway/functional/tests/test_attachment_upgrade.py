@@ -163,7 +163,7 @@ def test_upgrade_delete_attachments(params_from_base_test_setup, sgw_version_res
     if status == "stopping" or status == "running":
         sg_client.compact_attachments(sg_admin_url, remote_db, "progress")
         if doc_count == 1000:
-            time.sleep(100)
+            time.sleep(120)
         else:
             time.sleep(40)
     log_info(sg_client.compact_attachments(sg_admin_url, remote_db, "status"))
@@ -287,7 +287,7 @@ def test_upgrade_purge_expire_attachments(params_from_base_test_setup, sgw_versi
     if delete_doc_type == "purge":
         assert compaction_status["purged_attachments"] == 101, "purged attachment count is not matching"
     else:
-        assert compaction_status["purged_attachments"] == 51, "purged attachment count is not matching"
+        assert compaction_status["purged_attachments"] + compaction_status["marked_attachments"]== 101, "purged and marked attachment count is not matching"
 
 
 @pytest.mark.syncgateway
