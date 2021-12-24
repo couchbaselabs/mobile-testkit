@@ -14,7 +14,7 @@ log = logging.getLogger(settings.LOGGER)
 
 class Config:
 
-    def __init__(self, conf_path, cluster_config=None):
+    def __init__(self, conf_path, cluster_config=None, bucket_list=[]):
 
         self.conf_path = conf_path
         self.mode = None
@@ -80,12 +80,14 @@ class Config:
             self.discover_mode(conf_obj)
             # extract database config from non centralized persistent config(old configs) and copy to temp db config
             # Remove database config from the original config
-            self.discover_bucket_name_set(conf_obj)
+            # self.discover_bucket_name_set(conf_obj)
             """if cluster_config is not None and (get_sg_version(cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config)):
                 sgw_conf_file_name = conf_path.split('/')[-1].split("_cc.")[0]
-                self.discover_bucket_name_set_3_0(sgw_conf_file_name)
+                self.discover_bucket_name_set_3_0(sgw_conf_file_name)"""
+            if bucket_list:
+                self.bucket_name_set = bucket_list
             else:
-                self.discover_bucket_name_set(conf_obj)"""
+                self.discover_bucket_name_set(conf_obj)
 
     def get_mode(self):
 

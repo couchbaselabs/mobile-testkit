@@ -22,6 +22,7 @@ from libraries.testkit.syncgateway import construct_dbconfig_json
 from utilities.cluster_config_utils import is_centralized_persistent_config_disabled, copy_to_temp_conf
 # from keywords.remoteexecutor import RemoteExecutor
 from utilities.cluster_config_utils import copy_sgconf_to_temp, replace_string_on_sgw_config
+from requests.exceptions import HTTPError
 
 
 @pytest.mark.syncgateway
@@ -39,49 +40,50 @@ def test_default_config_values(params_from_base_test_setup):
     """
 
     # sg_db = 'db'
-    sg_conf_name = "sync_gateway_default_bootstrap"
-    sg_conf_name2 = "sync_gateway_default"
-    sg_obj = SyncGateway()
+    sg_conf_name = "sync_gateway_default"
 
     cluster_conf = params_from_base_test_setup['cluster_config']
     sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
-    # sync_gateway_upgraded_version = params_from_base_test_setup['sync_gateway_upgraded_version']
     mode = params_from_base_test_setup['mode']
-    """ sg_platform = params_from_base_test_setup['sg_platform']
-    username = "autotest"
-    password = "password"
-    sg_channels = ["non_cpc"] """
 
     # 1. Have prelithium config
     # 2. Have configs required fo database on prelithium config
     if sync_gateway_version < "3.0.0" and not is_centralized_persistent_config_disabled(cluster_conf):
         pytest.skip('This test can run with sgw version 3.0 and above')
     # 1. Have 3 SGW nodes: 1 node as pre-lithium and 2 nodes on lithium
-    temp_cluster_config = copy_to_temp_conf(cluster_conf, mode)
-    persist_cluster_config_environment_prop(temp_cluster_config, 'disable_persistent_config', False)
-    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode, cpc=True)
-    sg_conf2 = sync_gateway_config_path_for_mode(sg_conf_name2, mode, cpc=True)
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
-    # sg_client = MobileRestClient()
-    sg_obj = SyncGateway()
-    cluster_util = ClusterKeywords(temp_cluster_config)
-    topology = cluster_util.get_cluster_topology(temp_cluster_config)
+    cluster_util = ClusterKeywords(cluster_conf)
+    topology = cluster_util.get_cluster_topology(cluster_conf)
     # sync_gateways = topology["sync_gateways"]
     sg_one_url = topology["sync_gateways"][0]["public"]
 
     # 3. Have min bootstrap configuration without static system config with differrent config
-    cbs_cluster = Cluster(config=temp_cluster_config)
+    cbs_cluster = Cluster(config=cluster_conf)
     cbs_cluster.reset(sg_config_path=sg_conf)
+    debug_dict = { "enabled": True, "rotation": { } }
     sg1 = cbs_cluster.sync_gateways[0]
+    cbs_url = topology["couchbase_servers"][0]
     sg1_config = sg1.admin.get_config()
-    assert sg1_config["logging"] is None, "logging did not get reset"
-    # 4. Verify default values of static config
-    # 4. Add dynamic config like log_file_path or redaction_level on sgw config
-    persist_cluster_config_environment_prop(temp_cluster_config, 'redactlevel', "partial",
-                                            property_name_check=False)
-    sg_obj.start_sync_gateways(cluster_config=temp_cluster_config, url=sg_one_url, config=sg_conf2)
+    assert not sg1_config["logging"]["console"]["rotation"], "logging did not get reset"
+    assert not sg1_config["logging"]["error"]["rotation"], "logging did not get reset"
+    assert not sg1_config["logging"]["warn"]["rotation"], "logging did not get reset"
+    assert not sg1_config["logging"]["info"]["rotation"], "logging did not get reset"
+    assert sg1_config["logging"]["debug"] == debug_dict, "logging did not get reset"
+    assert not sg1_config["logging"]["trace"]["rotation"], "logging did not get reset"
+    assert not sg1_config["logging"]["stats"]["rotation"], "logging did not get reset"
 
-    # Verify default values of dynamic config
+    assert sg1_config["api"]["public_interface"] == ":4984", "public interface did not match with sgw config"
+    assert sg1_config["api"]["admin_interface"] == "0.0.0.0:4985", "admin interface did not match with sgw config"
+    assert sg1_config["api"]["metrics_interface"] == ":4986", "metrics interface did not match with sgw config"
+    assert sg1_config["api"]["admin_interface_authentication"] == False, "admin_interface_authentication did not match with sgw config"
+    assert sg1_config["api"]["metrics_interface_authentication"] == False, "metrics_interface_authentication did not match with sgw config"
+    assert sg1_config["api"]["https"] == { }, "https with default value is not set"
+    assert sg1_config["api"]["cors"] == { }, "cors with default value is not set"
+
+    assert sg1_config["bootstrap"]["server"] == cbs_url, "server url  did not match"
+    assert sg1_config["bootstrap"]["username"] == "bucket-admin", "username did not match"
+    assert sg1_config["bootstrap"]["server_tls_skip_verify"] == True, "server_tls_skip_verify did not match"
 
 
 @pytest.mark.syncgateway
@@ -117,11 +119,13 @@ def test_invalid_configs(params_from_base_test_setup, sg_conf_name):
     # 1. Have prelithium config
     # 2. Have configs required fo database on prelithium config
     temp_cluster_config = copy_to_temp_conf(cluster_conf, mode)
-    persist_cluster_config_environment_prop(temp_cluster_config, 'disable_persistent_config', False)
+    # persist_cluster_config_environment_prop(temp_cluster_config, 'disable_persistent_config', False)
     if sync_gateway_version < "3.0.0" and not is_centralized_persistent_config_disabled(cluster_conf):
         pytest.skip('This test can run with sgw version 3.0 and with persistent config off')
 
-    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode, cpc=True)
+    non_cpc_sgconf_name = "sync_gateway_default"
+    non_cpc_sg_conf = sync_gateway_config_path_for_mode(non_cpc_sgconf_name, mode)
 
     # sg_client = MobileRestClient()
     sg_obj = SyncGateway()
@@ -142,7 +146,12 @@ def test_invalid_configs(params_from_base_test_setup, sg_conf_name):
             json.dump(sgw_config, fp, indent=4)
             print("todo")
     cbs_cluster = Cluster(config=cluster_conf)
-    cbs_cluster.reset(sg_config_path=sg_conf)
+    try:
+        sg_obj.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=sg_conf, use_config=non_cpc_sg_conf)
+        assert False, "SGW did not fail to start with bootstrap config under api config"
+    except Exception as ex:
+        print("SGW failed to start with bootstrap config", str(ex))
+    # cbs_cluster.reset(sg_config_path=sg_conf, use_config=non_cpc_sg_conf)
     sg1 = cbs_cluster.sync_gateways[0]
     sg1_config = sg1.admin.get_config()
     assert sg1_config["logging"] is None, "logging did not get reset"
@@ -245,7 +254,7 @@ def test_invalid_database_credentials(params_from_base_test_setup):
     sg_db = 'sg_db'
     sg_db2 = 'sg_db2'
     # sg_db3 = 'sg_db3'
-    sg_conf_name = "sync_gateway_default_bootstrap"
+    sg_conf_name = "sync_gateway_default"
     # sg_obj = SyncGateway()
 
     cluster_conf = params_from_base_test_setup['cluster_config']
@@ -255,7 +264,7 @@ def test_invalid_database_credentials(params_from_base_test_setup):
     # 1. Have bootstrap config on sgw config which has server, username, password of the bucket
     # TODO: remove below 3 lines after persistent config is default to false
     temp_cluster_config = copy_to_temp_conf(cluster_conf, mode)
-    persist_cluster_config_environment_prop(temp_cluster_config, 'disable_persistent_config', False)
+    # persist_cluster_config_environment_prop(temp_cluster_config, 'disable_persistent_config', False)
     cluster_conf = temp_cluster_config
     sg_config = sync_gateway_config_path_for_mode(sg_conf_name, mode, cpc=True)
 
@@ -265,45 +274,31 @@ def test_invalid_database_credentials(params_from_base_test_setup):
     cbs_url = cluster_topology['couchbase_servers'][0]
     sg_one_url = cluster_topology["sync_gateways"][0]["public"]
     sg_two_url = cluster_topology["sync_gateways"][1]["public"] """
-    sg_db2_username = "autotest"
+    sg_db1_username = "autotest"
     sg_password = "password"
     sg_channels = ["cpc_testing"]
     # sg_username2 = "autotest2"
     # sg_channels2 = ["cpc_testing2"]
     cbs_cluster = Cluster(config=cluster_conf)
-    cbs_cluster.reset(sg_config_path=sg_config)
+    bucket_list = ["data-bucket"]
+    cbs_cluster.reset(sg_config_path=sg_config, bucket_list=bucket_list, use_config=True)
     time.sleep(15)
     sg1 = cbs_cluster.sync_gateways[0]
-    sg2 = cbs_cluster.sync_gateways[1]
-    sg3 = cbs_cluster.sync_gateways[2]
+    sg_db1 = "db"
 
     # 3. Add database config on node1 with sg_db1
     # revs_limit = 20
     # persist_cluster_config_environment_prop(cluster_conf, 'revs_limit', revs_limit, property_name_check=False)
     db_config_file = "sync_gateway_default_db"
     dbconfig = construct_dbconfig_json(db_config_file, cluster_conf, sg_platform, sg_conf_name)
-    print("db config", dbconfig)
-    sg1.admin.create_db_with_rest(sg_db, dbconfig)
-
-    # 6. Verify db config end point on one of the node and verify it shows all 3 db configs
-    # sg1_db1_config = sg1.admin.get_db_config(sg_db1)
-    """assert"""
-
-    # 7. Create doc, doc1 on node on sg_db2.
-    sg_client.create_user(sg1.admin.admin_url, sg_db2, sg_db2_username, sg_password, channels=sg_channels)
-    auto_user = sg_client.create_session(url=sg1.admin.admin_url, db=sg_db2, name=sg_db2_username)
-    sg_docs = document.create_docs('cpc-union', number=2, channels=sg_channels)
-    sg_client.add_bulk_docs(url=sg1.url, db=sg_db2, docs=sg_docs, auth=auto_user)
-
-    # 8. Verify all 3 nodes can access the doc1 on sg_db2
-    sg_docs = sg_client.get_all_docs(url=sg1.url, db=sg_db2, auth=auto_user)["rows"]
-    assert len(sg_docs) == 2, "sg1 node could not access sg_db2 docs"
-
-    sg_docs = sg_client.get_all_docs(url=sg2.url, db=sg_db2, auth=auto_user)["rows"]
-    assert len(sg_docs) == 2, "sg2 node could not access sg_db2 docs"
-
-    sg_docs = sg_client.get_all_docs(url=sg3.url, db=sg_db2, auth=auto_user)["rows"]
-    assert len(sg_docs) == 2, "sg3 node could not access sg_db2 docs"
+    print("db config---sridevi", dbconfig)
+    dbconfig  = dbconfig.replace(bucket_list[0], "invalid-bucket-name")
+    print("invalid db config---sridevi", dbconfig)
+    try:
+        sg1.admin.create_db(sg_db1, dbconfig)
+        assert False, "create db rest call did not fail with invalid bucket name"
+    except HTTPError as e:
+        log_info("Ignoring... caught expected Http error ")
 
 
 @pytest.mark.syncgateway

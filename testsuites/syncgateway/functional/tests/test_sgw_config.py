@@ -500,11 +500,12 @@ def test_envVariables_withoutvalues(params_from_base_test_setup):
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    disable_persistent_config = params_from_base_test_setup["disable_persistent_config"]
     orig_sg_conf = "sync_gateway_default_functional_tests"
     orig_sg_conf = sync_gateway_config_path_for_mode(orig_sg_conf, mode)
     sg_conf_name = "custom_sync/sync_gateway_externalize_js"
-    if sync_gateway_version < "3.0.0":
-        pytest.skip("this feature not available below 3.0.0")
+    if sync_gateway_version < "3.0.0" or not disable_persistent_config:
+        pytest.skip("this feature not available below 3.0.0 or persistent config enabled")
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     cluster = Cluster(config=cluster_config)
     cluster.reset(sg_config_path=orig_sg_conf)
@@ -555,10 +556,11 @@ def test_jscode_envvariables_path(params_from_base_test_setup, setup_env_variabl
     ansible_runner = setup_env_variables["ansible_runner"]
     sg_hostname = setup_env_variables["sg_hostname"]
     xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
+    disable_persistent_config = params_from_base_test_setup["disable_persistent_config"]
     sg_conf_name = "custom_sync/sync_gateway_externalize_js"
 
-    if sync_gateway_version < "3.0.0" or not xattrs_enabled:
-        pytest.skip("this feature not available below 3.0.0 or xattrs not enabled")
+    if sync_gateway_version < "3.0.0" or not xattrs_enabled or not disable_persistent_config:
+        pytest.skip("this feature not available below 3.0.0 or xattrs not enabled or persistent config enabled")
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     cluster_helper = ClusterKeywords(cluster_config)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config)

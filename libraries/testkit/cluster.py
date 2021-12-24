@@ -149,7 +149,7 @@ class Cluster:
         self.servers[0].delete_buckets()
         # Parse config and grab bucket names
         config_path_full = os.path.abspath(sg_config_path)
-        config = Config(config_path_full, self._cluster_config)
+        config = Config(config_path_full, self._cluster_config, bucket_list=bucket_list)
         self.sync_gateway_config = config
         mode = config.get_mode()
 
@@ -388,7 +388,7 @@ class Cluster:
 
         cpc_config_path_full = os.path.abspath(cpc_sgw_config_path)
         config_path_full = os.path.abspath(sg_config_path)
-        config = Config(config_path_full, self._cluster_config)
+        config = Config(config_path_full, self._cluster_config, bucket_list=bucket_list)
         if not bucket_list:
             print("Getting bucket list from sgw config")
             bucket_name_set = config.get_bucket_name_set()
