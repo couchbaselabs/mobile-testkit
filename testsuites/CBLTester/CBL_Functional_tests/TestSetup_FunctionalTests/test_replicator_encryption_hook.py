@@ -1,6 +1,5 @@
 import pytest
 import time
-import pdb
 
 from keywords.MobileRestClient import MobileRestClient
 from keywords.utils import random_string
