@@ -2049,7 +2049,7 @@ def test_default_conflict_withConflicts_and_sgOffline(params_from_base_test_setu
     while replicator.getActivitylevel(repl) == "offline" and count < 10:
         time.sleep(1)
         count += 1
-    replicator.wait_until_replicator_idle(repl)
+    replicator.wait_until_replicator_idle(repl, err_check=False)
 
     # 8. Verify docs deleted in sg
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session, include_docs=True)

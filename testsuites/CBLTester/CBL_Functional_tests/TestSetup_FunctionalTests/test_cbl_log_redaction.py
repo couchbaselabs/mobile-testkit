@@ -140,7 +140,7 @@ def verify_password_masked(liteserv_platform, log_file, password, test_cbllog):
     delimiter = "/"
     if "-msft" in liteserv_platform or liteserv_platform == "uwp":
         delimiter = "\\"
-    log_info("\n Collecting logs from the log file.. " + log_file)
+    log_info("\n Collecting logs from the log file.. {}".format(log_file))
     log_dir = log_file.split(delimiter)[-1]
     log_full_path_dir = "/tmp/cbl-logs/"
     os.mkdir(log_full_path_dir)
