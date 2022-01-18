@@ -1,4 +1,5 @@
 import pytest
+import time
 
 from time import sleep
 
@@ -683,7 +684,6 @@ def test_non_blocking_custom_conflicts_resolution(params_from_base_test_setup, r
 
     sg_docs_content = sg_client.get_bulk_docs(sg_url, sg_db, doc_ids, session)[0]
     cbl_docs = db.getDocuments(cbl_db, doc_ids)
-    import time
     if liteserv_platform == "c-ios":
         time.sleep(5)
     if replicator_type == "pull":
