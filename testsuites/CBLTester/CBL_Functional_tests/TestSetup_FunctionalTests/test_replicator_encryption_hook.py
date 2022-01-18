@@ -258,11 +258,11 @@ def test_replication_with_error(params_from_base_test_setup):
 
 @pytest.mark.listener
 @pytest.mark.callback
-@pytest.mark.parametrize("num_of_docs, replication_type", [
-    (1, "pull"),
-    (1, "push")
+@pytest.mark.parametrize("num_of_non_encryptable_docs, num_of_encryptable_docs, replication_type", [
+    (2, 3, "pull"),
+    (2, 3, "push")
 ])
-def test_delta_sync_with_encryption(params_from_base_test_setup, num_of_docs, replication_type):
+def test_delta_sync_with_encryption(params_from_base_test_setup, num_of_non_encryptable_docs, num_of_encryptable_docs, replication_type):
 
     """
     @summary:
@@ -314,22 +314,28 @@ def test_delta_sync_with_encryption(params_from_base_test_setup, num_of_docs, re
     cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
     session = cookie, session_id
 
-    # 2. Create docs in CBL
-    db.create_bulk_docs(num_of_docs, "cbl_sync", db=cbl_db, channels=channels)
-    encryptable = ReplicatorCallback(base_url)
-    doc_id = "doc_3"
-    documentObj = Document(base_url)
-    doc_body = document.create_doc(doc_id=doc_id, content="doc3", channels=channels, cbl=True)
-    dictionary = Dictionary(base_url)
-    mutable = dictionary.toMutableDictionary(doc_body)
-    encrypted_value = encryptable.create("UInt", 4294967295)
-    dictionary.setEncryptable(mutable, "encrypted_field_UInt", encrypted_value)
-    doc_body_new = dictionary.toMap(mutable)
-    doc_body2 = doc_body_new["dictionary"]
-    doc_body2['encrypted_field_UInt'] = doc_body_new['encrypted_field_UInt']
-    doc1 = documentObj.create(doc_id, doc_body2)
-    db.saveDocument(cbl_db, doc1)
+    expvars = sg_client.get_expvars(url=sg_admin_url)
+    delta_push_doc_count = expvars['syncgateway']['per_db']['db']['delta_sync']['delta_push_doc_count']
 
+    # 2. Create docs in CBL
+    # 2.1 - create num_of_non_encryptable_docs regular docs without encryptable property
+    db.create_bulk_docs(num_of_non_encryptable_docs, "doc_no_encrypt", db=cbl_db, channels=channels)
+
+    # 2.2 - create additional 3 docs with encryptable property
+    encryptable = ReplicatorCallback(base_url)
+    documentObj = Document(base_url)
+    dictionary = Dictionary(base_url)
+    for i in range(num_of_encryptable_docs):
+        doc_id = "doc_encrypt_{}".format(i)
+        init_doc_body = document.create_doc(doc_id=doc_id, content="doc {} with encryptable property".format(i), channels=channels, cbl=True)
+        mutable_dict = dictionary.toMutableDictionary(init_doc_body)
+        encrypted_value = encryptable.create("UInt", 4294967295 + i)
+        dictionary.setEncryptable(mutable_dict, "encrypted_field_UInt", encrypted_value)
+        doc_body_new = dictionary.toMap(mutable_dict)
+        doc_body = doc_body_new["dictionary"]
+        doc_body['encrypted_field_UInt'] = doc_body_new['encrypted_field_UInt']
+        doc_to_save = documentObj.create(doc_id, doc_body)
+        db.saveDocument(cbl_db, doc_to_save)
     encryptor = encryptable.createEncryptor("xor", "testkit")
 
     # 3. Do push replication to SGW
@@ -342,14 +348,11 @@ def test_delta_sync_with_encryption(params_from_base_test_setup, num_of_docs, re
                                                                                              continuous=True,
                                                                                              encryptor=encryptor)
 
-    expvars = sg_client.get_expvars(url=sg_admin_url)
-    doc_writes_bytes1 = expvars['syncgateway']['per_db']['db']['database']['doc_writes_bytes_blip']
-    full_doc_size = doc_writes_bytes1
-
     # 4. update docs in SGW/CBL
     if replication_type == "push":
         doc_ids = db.getDocIds(cbl_db)
         cbl_db_docs = db.getDocuments(cbl_db, doc_ids)
+
         for doc_id, doc_body in list(cbl_db_docs.items()):
             doc_body["new-1"] = random_string(length=70)
             doc_body["new-2"] = random_string(length=30)
@@ -359,8 +362,10 @@ def test_delta_sync_with_encryption(params_from_base_test_setup, num_of_docs, re
             doc_body["sg_new_update"] = random_string(length=70)
             return doc_body
 
-        sg_client.update_doc(url=sg_url, db=sg_db, doc_id="doc_3", number_updates=1, auth=session, channels=channels,
-                             property_updater=property_updater)
+        for i in range(num_of_encryptable_docs):
+            doc_id = "doc_encrypt_{}".format(i)
+            sg_client.update_doc(url=sg_url, db=sg_db, doc_id=doc_id, number_updates=1, auth=session, channels=channels,
+                                 property_updater=property_updater)
 
     repl = replicator.configure_and_replicate(source_db=cbl_db,
                                               target_url=sg_blip_url,
@@ -369,18 +374,13 @@ def test_delta_sync_with_encryption(params_from_base_test_setup, num_of_docs, re
                                               replication_type=replication_type, encryptor=encryptor)
     replicator.stop(repl)
     expvars = sg_client.get_expvars(url=sg_admin_url)
-    doc_reads_bytes2 = expvars['syncgateway']['per_db']['db']['database']['doc_reads_bytes_blip']
-    doc_writes_bytes2 = expvars['syncgateway']['per_db']['db']['database']['doc_writes_bytes_blip']
+    if replication_type == "pull":
+        delta_pull_replication_count = expvars['syncgateway']['per_db']['db']['delta_sync']['delta_pull_replication_count']
 
-    # 7. verify Bandwith savings are not applied
-    if replication_type == "pull":
-        delta_size = doc_reads_bytes2
+        assert delta_pull_replication_count == num_of_non_encryptable_docs, "only non-encryptable docs should enable delta replication"
     else:
-        delta_size = doc_writes_bytes2 - doc_writes_bytes1
-    if replication_type == "pull":
-        assert delta_size < full_doc_size, "delta size is not less than full doc size when delta is replicated"
-    else:
-        assert delta_size > full_doc_size, "Full doc has to be replicated "
+        delta_push_doc_count = expvars['syncgateway']['per_db']['db']['delta_sync']['delta_push_doc_count']
+        assert delta_push_doc_count == num_of_non_encryptable_docs, "only non-encryptable docs should enable delta replication"
 
 
 @pytest.mark.listener

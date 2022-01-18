@@ -203,6 +203,10 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="Disable Admin auth")
 
+    parser.addoption("--liteserv-android-serial-number",
+                     action="store",
+                     help="liteserv-android-serial-number: the serial number of the android device to be used")
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -255,6 +259,7 @@ def params_from_base_suite_setup(request):
     disable_tls_server = request.config.getoption("--disable-tls-server")
 
     disable_admin_auth = request.config.getoption("--disable-admin-auth")
+    liteserv_android_serial_number = request.config.getoption("--liteserv-android-serial-number")
 
     test_name = request.node.name
 
@@ -272,6 +277,8 @@ def params_from_base_suite_setup(request):
 
         # Install TestServer app
         if device_enabled:
+            if "android" in liteserv_platform and liteserv_android_serial_number:
+                testserver.serial_number = liteserv_android_serial_number
             testserver.install_device()
         else:
             testserver.install()
