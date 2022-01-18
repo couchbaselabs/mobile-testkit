@@ -1,4 +1,5 @@
 import pytest
+import time
 
 from time import sleep
 
@@ -596,6 +597,7 @@ def test_non_blocking_custom_conflicts_resolution(params_from_base_test_setup, r
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_blip_url = params_from_base_test_setup["target_url"]
     liteserv_version = params_from_base_test_setup["liteserv_version"]
+    liteserv_platform = params_from_base_test_setup["liteserv_platform"]
     base_url = params_from_base_test_setup["base_url"]
     num_of_docs = 10
     channels = ["ABC"]
@@ -682,7 +684,8 @@ def test_non_blocking_custom_conflicts_resolution(params_from_base_test_setup, r
 
     sg_docs_content = sg_client.get_bulk_docs(sg_url, sg_db, doc_ids, session)[0]
     cbl_docs = db.getDocuments(cbl_db, doc_ids)
-
+    if liteserv_platform == "c-ios":
+        time.sleep(5)
     if replicator_type == "pull":
         for sg_doc in sg_docs_content:
             doc_id = sg_doc["_id"]
