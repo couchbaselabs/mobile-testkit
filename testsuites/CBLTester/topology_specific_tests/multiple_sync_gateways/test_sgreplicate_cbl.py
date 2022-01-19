@@ -1590,7 +1590,7 @@ def test_sg_replicate_distributions_replications(params_from_base_test_setup, se
     for x in range(number_of_replications):
         channel_name = "Replication-test2-{}".format(x)
         db.create_bulk_docs(num_of_docs, channel_name, db=cbl_db1, channels=[channels_6[x]])
-    replicator.wait_until_replicator_idle(repl1)
+    replicator.wait_until_replicator_idle(repl1, err_check=False)
     sgw_repl_id = []
     for x in range(number_of_replications):
         replication_channel = []
