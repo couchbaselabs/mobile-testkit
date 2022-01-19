@@ -347,7 +347,8 @@ def params_from_base_suite_setup(request):
         "encryption_password": encryption_password,
         "cbs_ce": cbs_ce,
         "sg_ce": sg_ce,
-        "ssl_enabled": cbs_ssl
+        "ssl_enabled": cbs_ssl,
+        "disable_persistent_config": disable_persistent_config
     }
     if create_db_per_suite:
         # Delete CBL database
@@ -407,6 +408,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     cbs_ssl = params_from_base_suite_setup["ssl_enabled"]
     prometheus_enable = request.config.getoption("--prometheus-enable")
     use_local_testserver = request.config.getoption("--use-local-testserver")
+    disable_persistent_config = params_from_base_suite_setup["disable_persistent_config"]
 
     source_db = None
     cbl_db = None
@@ -492,7 +494,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "cbs_ce": cbs_ce,
         "sg_ce": sg_ce,
         "ssl_enabled": cbs_ssl,
-        "prometheus_enable": prometheus_enable
+        "prometheus_enable": prometheus_enable,
+        "disable_persistent_config": disable_persistent_config
     }
 
     log_info("Tearing down test")
