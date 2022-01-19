@@ -1182,7 +1182,12 @@ def send_dbconfig_as_restCall(db_config_json, sync_gateways, sgw_config_data):
                         if roles_exist:
                             sgw.admin.register_user(sgw.ip, sg_db, user, users_cfg[user]['password'], channels=users_cfg[user]['admin_channels'], roles=users_cfg[user]['admin_roles'])
                         else:
-                            sgw.admin.register_user(sgw.ip, sg_db, user, users_cfg[user]['password'], channels=users_cfg[user]['admin_channels'])
+                            try:
+                                users_cfg[user]['password']
+                                sgw.admin.register_user(sgw.ip, sg_db, user, users_cfg[user]['password'], channels=users_cfg[user]['admin_channels'])
+                            except KeyError as ex:
+                                log_info("Creating guest user without password- {}".format(str(ex)))
+                                sgw.admin.register_user(sgw.ip, sg_db, user, channels=users_cfg[user]['admin_channels'])
                 """ if import_filter_exist:
                     sgw.admin.create_imp_fltr_func(sg_db, imp_fltr_func) """
 

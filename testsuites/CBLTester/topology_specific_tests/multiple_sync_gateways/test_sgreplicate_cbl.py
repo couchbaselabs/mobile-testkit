@@ -1273,6 +1273,7 @@ def test_sg_replicate_replications_with_drop_out_one_node(params_from_base_test_
     cluster_config = params_from_base_test_setup["cluster_config"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     cbl_db3 = setup_customized_teardown_test["cbl_db3"]
+    disable_persistent_config = params_from_base_test_setup["disable_persistent_config"]
     sgw_cluster1_conf_name = 'listener_tests/sg_replicate_sgw_cluster1'
     sgw_cluster2_conf_name = 'listener_tests/sg_replicate_sgw_cluster2'
     sg_conf_name = 'listener_tests/three_sync_gateways'
@@ -1356,6 +1357,8 @@ def test_sg_replicate_replications_with_drop_out_one_node(params_from_base_test_
     else:
         expected_count = 1
         repl_count = sg1.admin.get_replications_count(sg_db1, expected_count=expected_count)
+        if not disable_persistent_config:
+            time.sleep(10)
         assert repl_count == expected_count, "replications count did not get the right number on sg1"
         repl_count = sg3.admin.get_replications_count(sg_db1, expected_count=expected_count)
         assert repl_count == expected_count, "replications count did not get the right number on sg3"

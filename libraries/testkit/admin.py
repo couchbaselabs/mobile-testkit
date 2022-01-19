@@ -99,11 +99,16 @@ class Admin:
         return resp.json()
 
     # PUT /{db}/_user/{name}
-    def register_user(self, target, db, name, password, channels=list(), roles=list()):
+    def register_user(self, target, db, name, password=None, channels=list(), roles=list()):
 
-        data = {"name": name, "password": password, "admin_channels": channels, "admin_roles": roles}
+        if password is None:
+            data = {"name": name, "admin_channels": channels, "admin_roles": roles, "disabled": False}
+        else:
+            data = {"name": name, "password": password, "admin_channels": channels, "admin_roles": roles}
 
+        print("json dumpt of Guest user ", json.dumps(data))
         resp = requests.put("{0}/{1}/_user/{2}".format(self.admin_url, db, name), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, data=json.dumps(data), verify=False)
+        print("resp of register user after put is ", resp)
         log.info("PUT {}".format(resp.url))
         resp.raise_for_status()
 

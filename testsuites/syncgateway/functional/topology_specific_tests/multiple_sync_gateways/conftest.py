@@ -309,7 +309,7 @@ def params_from_base_suite_setup(request):
     clear_resources_pngs()
     if prometheus_enabled:
         log_info("if promotheus enable")
-        # prometheus.stop_prometheus(sg_ip, sg_ssl)
+        prometheus.stop_prometheus(sg_ip, sg_ssl)
 
 
 # This is called before each test and will yield the dictionary to each test that references the method

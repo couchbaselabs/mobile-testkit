@@ -44,9 +44,10 @@ def test_local_jsfunc_path(params_from_base_test_setup, sg_conf_name, js_type):
     sg_platform = params_from_base_test_setup["sg_platform"]
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
     xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
+    disable_persistent_config = params_from_base_test_setup["disable_persistent_config"]
 
-    if sync_gateway_version < "3.0.0":
-        pytest.skip("this feature not available below 3.0.0")
+    if sync_gateway_version < "3.0.0" or not disable_persistent_config:
+        pytest.skip("this feature not available below 3.0.0 or persistent config enabled")
     if not xattrs_enabled and js_type == "import_filter":
         pytest.skip("Test require --xattrs flag")
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
@@ -168,8 +169,8 @@ def test_invalid_jsfunc(params_from_base_test_setup, invalid_js_code, invalid_js
     sg_conf_reset_name = "sync_gateway_default"
     disable_persistent_config = params_from_base_test_setup["disable_persistent_config"]
 
-    if sync_gateway_version < "3.0.0":
-        pytest.skip("this feature not available below 3.0.0")
+    if sync_gateway_version < "3.0.0" or not disable_persistent_config:
+        pytest.skip("this feature not available below 3.0.0 or persistent config enabled")
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     sg_conf_reset = sync_gateway_config_path_for_mode(sg_conf_reset_name, mode)
     cluster = Cluster(config=cluster_config)

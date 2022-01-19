@@ -22,7 +22,7 @@ from utilities.cluster_config_utils import copy_sgconf_to_temp, replace_string_o
     ("default"),
     # ("move")
 ])
-def test_named_and_default_group(params_from_base_test_setup, group_type):
+def test_1named_and_default_group(params_from_base_test_setup, group_type):
     """
     @summary :
     Test cases link on google drive : https://docs.google.com/spreadsheets/d/19kJQ4_g6RroaoG2YYe0X11d9pU0xam-lb-n23aPLhO4/edit#gid=0
@@ -38,7 +38,7 @@ def test_named_and_default_group(params_from_base_test_setup, group_type):
     """
 
     sg_db = 'db'
-    sg_conf_name = "sync_gateway_default_bootstrap"
+    sg_conf_name = "sync_gateway_default"
     sg_obj = SyncGateway()
     # sg_conf_name2 = "xattrs/no_import"
 

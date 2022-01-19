@@ -116,7 +116,7 @@ class Cluster:
         self.servers = [CouchbaseServer(url=cb_url) for cb_url in cbs_urls]
         self.sync_gateway_config = None  # will be set to Config object when reset() called
 
-    def reset(self, sg_config_path, bucket_list=[], use_config=False):
+    def reset(self, sg_config_path, bucket_list=[], use_config=False, sgdb_creation=True):
 
         ansible_runner = AnsibleRunner(self._cluster_config)
 
@@ -160,7 +160,6 @@ class Cluster:
             # db_config_name = "sync_gateway_default_functional_tests"
             playbook_vars, db_config_json, sgw_config_data = self.setup_server_and_sgw(sg_config_path=sg_config_path, bucket_list=bucket_list, use_config=use_config)
         else:
-
             bucket_name_set = config.get_bucket_name_set()
             sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
             cbs_cert_path = os.path.join(os.getcwd(), "certs")
@@ -358,7 +357,7 @@ class Cluster:
         else:
             log_info(">>> Running in channel cache")
 
-        if status == 0:
+        if status == 0 and sgdb_creation:
             if get_sg_version(self._cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(self._cluster_config):
                 # Now create rest API for all database configs
                 print("db_config_json is ", db_config_json)
@@ -381,6 +380,9 @@ class Cluster:
         if use_config:
             if use_config is True:
                 cpc_sgw_config_path = get_cpc_config_from_config_path(sg_config_path, mode)
+                sg_config_path = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+                print("cpc sgw config path if use config true : ", cpc_sgw_config_path)
+                print("sg_config path is ", sg_config_path)
             else:
                 print("using the sgconfig path as use_config.......")
                 cpc_sgw_config_path = sg_config_path
@@ -410,7 +412,7 @@ class Cluster:
             log_info(">>> Waiting for Server: {} to be in a healthy state".format(self.servers[0].url))
             self.servers[0].wait_for_ready_state()
 
-        log_info(">>> Starting sync_gateway with configuration: {}".format(cpc_config_path_full))
+        log_info(">>> Starting sync_gateway with configuration using setup_server_and_sgw: {}".format(cpc_config_path_full))
 
         # Extracing sgw config from sgw config file
         with open(config_path_full, "r") as config:
