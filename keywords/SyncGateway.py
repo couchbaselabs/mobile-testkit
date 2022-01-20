@@ -1025,23 +1025,6 @@ class SyncGateway(object):
 
         if is_admin_auth_disabled(cluster_config) and version >= "3.0.0":
             playbook_vars["disable_admin_auth"] = '"admin_interface_authentication": false,    \n"metrics_interface_authentication": false,'
-        if url is not None:
-            target = hostname_for_url(cluster_config, url)
-            log_info("Upgrading sync_gateway/sg_accel on {} ...".format(target))
-            status = ansible_runner.run_ansible_playbook(
-                "upgrade-sg-sgaccel-package.yml",
-                subset=target,
-                extra_vars=playbook_vars
-            )
-            log_info("Completed upgrading {}".format(url))
-        else:
-            log_info("Upgrading all sync_gateways/sg_accels")
-            status = ansible_runner.run_ansible_playbook(
-                "upgrade-sg-sgaccel-package.yml",
-                extra_vars=playbook_vars
-            )
-            log_info("Completed upgrading all sync_gateways/sg_accels")
-        log_info("upgrade status is {}".format(status))
 
         if is_centralized_persistent_config_disabled(cluster_config) and version >= "3.0.0":
             playbook_vars["disable_persistent_config"] = '"disable_persistent_config": true,'
