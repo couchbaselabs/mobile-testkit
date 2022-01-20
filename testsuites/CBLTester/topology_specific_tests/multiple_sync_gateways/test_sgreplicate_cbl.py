@@ -1358,7 +1358,7 @@ def test_sg_replicate_replications_with_drop_out_one_node(params_from_base_test_
         expected_count = 1
         repl_count = sg1.admin.get_replications_count(sg_db1, expected_count=expected_count)
         if not disable_persistent_config:
-            time.sleep(10)
+            time.sleep(60)
         assert repl_count == expected_count, "replications count did not get the right number on sg1"
         repl_count = sg3.admin.get_replications_count(sg_db1, expected_count=expected_count)
         assert repl_count == expected_count, "replications count did not get the right number on sg3"
