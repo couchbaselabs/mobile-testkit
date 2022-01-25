@@ -9,9 +9,9 @@
     {{ server_tls_skip_verify }}
     {{ disable_tls_server }}
     {{ disable_admin_auth }}
+    {{ replace_with_replications }}
     "databases":{
         "db":{
-            {{ replace_with_replications }}
             {{ autoimport }}
             {{ xattrs }}
             {{ no_conflicts }}

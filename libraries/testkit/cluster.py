@@ -10,6 +10,7 @@ import keywords.exceptions
 from keywords.couchbaseserver import CouchbaseServer
 from keywords.exceptions import ProvisioningError
 from keywords.utils import log_info, add_cbs_to_sg_config_server_field
+from keywords.utils import version_and_build
 from libraries.provision.ansible_runner import AnsibleRunner
 from libraries.testkit.admin import Admin
 from libraries.testkit.config import Config, seperate_sgw_and_db_config
@@ -367,7 +368,7 @@ class Cluster:
 
         return mode
 
-    def setup_server_and_sgw(self, sg_config_path, bucket_creation=True, bucket_list=[], use_config=False):
+    def setup_server_and_sgw(self, sg_config_path, bucket_creation=True, bucket_list=[], use_config=False, sync_gateway_version=None):
         # Parse config and grab bucket names
         ansible_runner = AnsibleRunner(self._cluster_config)
         # TODO top-todo1: For now using one commong bootstrop config , once everything is done , check back and see if common bootstrap config is enough
@@ -376,6 +377,10 @@ class Cluster:
         # cpc_sgw_config_path = "resources/sync_gateway_configs_cpc/sync_gateway_default"
         sg_conf_name = "sync_gateway_default"
         mode = "cc"
+        if sync_gateway_version:
+            version, _ = version_and_build(sync_gateway_version)
+        else:
+            version = get_sg_version(self._cluster_config)
         cpc_sgw_config_path = sync_gateway_config_path_for_mode(sg_conf_name, mode, cpc=True)
         if use_config:
             if use_config is True:
@@ -408,10 +413,10 @@ class Cluster:
             log_info(">>> Creating buckets on: {}".format(self.servers[0].url))
             log_info(">>> Creating buckets {}".format(bucket_name_set))
             self.servers[0].create_buckets(bucket_names=bucket_name_set, cluster_config=self._cluster_config, ipv6=self.ipv6)
-            self.servers[0]._create_internal_rbac_user_by_roles('*', self._cluster_config, common_bucket_user, "mobile_sync_gateway")
+            # self.servers[0]._create_internal_rbac_user_by_roles('*', self._cluster_config, common_bucket_user, "mobile_sync_gateway")
             log_info(">>> Waiting for Server: {} to be in a healthy state".format(self.servers[0].url))
             self.servers[0].wait_for_ready_state()
-
+        self.servers[0]._create_internal_rbac_user_by_roles('*', self._cluster_config, common_bucket_user, "mobile_sync_gateway")
         log_info(">>> Starting sync_gateway with configuration using setup_server_and_sgw: {}".format(cpc_config_path_full))
 
         # Extracing sgw config from sgw config file
@@ -559,19 +564,19 @@ class Cluster:
             hide_product_version_var = '"hide_product_version": true,'
         bucket_list_var = '"buckets": {},'.format(bucket_names)
 
-        if is_centralized_persistent_config_disabled(self._cluster_config) and get_sg_version(self._cluster_config) >= "3.0.0":
+        if is_centralized_persistent_config_disabled(self._cluster_config) and version >= "3.0.0":
             disable_persistent_config_var = '"disable_persistent_config": true,'
 
-        if is_server_tls_skip_verify_enabled(self._cluster_config) and get_sg_version(self._cluster_config) >= "3.0.0":
+        if is_server_tls_skip_verify_enabled(self._cluster_config) and version >= "3.0.0":
             server_tls_skip_verify_var = '"server_tls_skip_verify": true,'
 
-        if is_tls_server_disabled(self._cluster_config) and get_sg_version(self._cluster_config) >= "3.0.0":
+        if is_tls_server_disabled(self._cluster_config) and version >= "3.0.0":
             disable_tls_server_var = '"use_tls_server": false,'
 
-        if is_admin_auth_disabled(self._cluster_config) and get_sg_version(self._cluster_config) >= "3.0.0":
+        if is_admin_auth_disabled(self._cluster_config) and version >= "3.0.0":
             disable_admin_auth_var = '"admin_interface_authentication": false,    \n"metrics_interface_authentication": false,'
 
-        if get_sg_version(self._cluster_config) >= "2.8.0":
+        if version >= "2.8.0":
             prometheus_var = '"metrics_interface": ":4986",'
 
         if get_sg_use_views(self._cluster_config):
@@ -582,7 +587,7 @@ class Cluster:
 
         # Add configuration to run with xattrs
         if self.xattrs:
-            if get_sg_version(self._cluster_config) >= "2.1.0":
+            if version >= "2.1.0":
                 autoimport_var = '"import_docs": true,'
             else:
                 autoimport_var = '"import_docs": "continuous",'
@@ -598,7 +603,7 @@ class Cluster:
         except KeyError:
             log_info("revs_limit not found in {}, Ignoring".format(self._cluster_config))
 
-        if is_delta_sync_enabled(self._cluster_config) and get_sg_version(self._cluster_config) >= "2.5.0":
+        if is_delta_sync_enabled(self._cluster_config) and version >= "2.5.0":
             delta_sync_var = '"delta_sync": { "enabled": true},'
 
         # db_username_var = '"username": "{}",'.format(username_var)
