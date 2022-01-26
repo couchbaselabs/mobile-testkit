@@ -950,7 +950,7 @@ class SyncGateway(object):
         if version >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config):
             playbook_vars, db_config_json, sgw_config_data = c_cluster.setup_server_and_sgw(sg_conf, bucket_creation=False, sync_gateway_version=sync_gateway_version)
         else:
-            server_port = 8091
+            server_port = ""
             server_scheme = "couchbase"
             sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
             cbs_cert_path = os.path.join(os.getcwd(), "certs")
