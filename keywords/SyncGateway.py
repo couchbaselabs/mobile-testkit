@@ -276,6 +276,7 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config, sg_db_cfg=None
         disable_tls_server_prop = ""
         disable_admin_auth_prop = ""
         metrics_auth_prop = ""
+        group_id_prop = ""
 
         sg_platform = get_sg_platform(cluster_config)
         if get_sg_version(cluster_config) >= "2.1.0":
@@ -337,6 +338,7 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config, sg_db_cfg=None
         except KeyError:
             log_info("revs_limit not found in {}, Ignoring".format(cluster_config))
 
+        group_id_prop = '"group_id": "{}",'.format(bucket_names[0])
         if is_delta_sync_enabled(cluster_config) and get_sg_version(cluster_config) >= "2.5.0":
             delta_sync_prop = '"delta_sync": { "enabled": true},'
 
@@ -384,7 +386,8 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config, sg_db_cfg=None
             disable_persistent_config=disable_persistent_config_prop,
             server_tls_skip_verify=server_tls_skip_verify_prop,
             disable_tls_server=disable_tls_server_prop,
-            disable_admin_auth=disable_admin_auth_prop
+            disable_admin_auth=disable_admin_auth_prop,
+            groupid=group_id_prop
         )
         data = json.loads(temp)
 
@@ -495,7 +498,8 @@ class SyncGateway(object):
                 "disable_persistent_config": "",
                 "server_tls_skip_verify": "",
                 "disable_tls_server": "",
-                "disable_admin_auth": ""
+                "disable_admin_auth": "",
+                "groupid": ""
             }
             sg_platform = get_sg_platform(cluster_config)
             if get_sg_version(cluster_config) >= "2.1.0":
@@ -584,6 +588,7 @@ class SyncGateway(object):
                     if status != 0:
                         raise ProvisioningError("Failed to block port on SGW")
 
+            playbook_vars["groupid"] = '"group_id": "{}",'.format(bucket_names[0])
             if is_delta_sync_enabled(cluster_config) and get_sg_version(cluster_config) >= "2.5.0":
                 playbook_vars["delta_sync"] = '"delta_sync": { "enabled": true},'
 
@@ -988,7 +993,8 @@ class SyncGateway(object):
                 "disable_persistent_config": "",
                 "server_tls_skip_verify": "",
                 "disable_tls_server": "",
-                "disable_admin_auth": ""
+                "disable_admin_auth": "",
+                "groupid": ""
             }
 
             playbook_vars["username"] = '"username": "{}",'.format(bucket_names[0])
@@ -1063,6 +1069,7 @@ class SyncGateway(object):
             except KeyError:
                 log_info("revs_limit not found in {}, Ignoring".format(cluster_config))
 
+            playbook_vars["groupid"] = '"group_id": "{}",'.format(bucket_names[0])
             if is_delta_sync_enabled(cluster_config) and version >= "2.5.0":
                 playbook_vars["delta_sync"] = '"delta_sync": { "enabled": true},'
 

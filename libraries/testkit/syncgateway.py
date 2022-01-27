@@ -776,6 +776,7 @@ def setup_sgwconfig_db_config(cluster_config, sg_config_path):
     server_tls_skip_verify_var = ""
     disable_tls_server_var = ""
     disable_admin_auth_var = ""
+    group_id_var = ""
 
     sg_platform = get_sg_platform(cluster_config)
 
@@ -838,8 +839,7 @@ def setup_sgwconfig_db_config(cluster_config, sg_config_path):
                             "tls_cert_path": "sg_cert.pem",
                             "tls_key_path": "sg_privkey.pem"
                         }, """
-
-        
+    group_id_var = '"group_id": "{}",'.format(bucket_names[0])
     if is_hide_prod_version_enabled(cluster_config):
         hide_product_version_var = '"hide_product_version": true,'
     bucket_list_var = '"buckets": {},'.format(bucket_names)
@@ -918,7 +918,8 @@ def setup_sgwconfig_db_config(cluster_config, sg_config_path):
         delta_sync=delta_sync_var,
         server_tls_skip_verify=server_tls_skip_verify_var,
         disable_tls_server=disable_tls_server_var,
-        disable_admin_auth=disable_admin_auth_var
+        disable_admin_auth=disable_admin_auth_var,
+        groupid=group_id_var
     )
 
     print("config_path _full is ", config_path_full)
@@ -955,7 +956,8 @@ def setup_sgwconfig_db_config(cluster_config, sg_config_path):
         "delta_sync": delta_sync_var,
         "revs_limit": revs_limit_var,
         "server_tls_skip_verify": server_tls_skip_verify_var,
-        "disable_admin_auth": disable_admin_auth_var
+        "disable_admin_auth": disable_admin_auth_var,
+        "groupid": group_id_var
     }
 
     # config_path_full = os.path.abspath(sg_config_path)
@@ -1120,6 +1122,12 @@ def send_dbconfig_as_restCall(db_config_json, sync_gateways, sgw_config_data):
         users_exist = False
         db_list = sgw.admin.get_dbs()
         print("db_list is ", db_list)
+        for single_db in db_list:
+            if single_db not in sgw_db_config.keys():
+                print("deleting the sg db now... ", single_db)
+                sgw.admin.delete_db(single_db)
+        db_list = sgw.admin.get_dbs()
+        print("db_list is after deleting unnecessary dbs ", db_list)
         """ import_filter_exist = False
         if "\"sync\":" in sgw_config_data:
             sync_func = sgw_config_data.split("\"sync\": `")[1]
@@ -1171,6 +1179,7 @@ def send_dbconfig_as_restCall(db_config_json, sync_gateways, sgw_config_data):
                 print("ignorning if db already exists in sync gateway", str(e))
                 sgw.admin.put_db_config(sg_db, sgw_db_config[sg_db])
             db_info = sgw.admin.get_db_info(sg_db)
+            print("db_info after creating db is ", db_info)
             if db_info["state"] == "Online":
                 """ if sync_func_exist:
                     sgw.admin.create_sync_func(sg_db, sync_func) """
@@ -1194,6 +1203,8 @@ def send_dbconfig_as_restCall(db_config_json, sync_gateways, sgw_config_data):
             # TODO : Put back one CPC config works
             # sgw.admin.create_db_with_rest(sg_db, sgw_db_config[sg_db])
             # sgw.admin.put_db_config(sg_db, sgw_db_config[sg_db])
+        db_list = sgw.admin.get_dbs()
+        print("db_list is after creating dbs ", db_list)
 
 
 def create_logging_config(logging_config_json, sync_gateways):

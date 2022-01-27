@@ -462,6 +462,7 @@ class Cluster:
         server_tls_skip_verify_var = ""
         disable_tls_server_var = ""
         disable_admin_auth_var = ""
+        group_id_var = ""
         webhook_ip_var = cluster["webhook_ip"][0]["ip"]
 
         """# Start sync-gateway
@@ -562,6 +563,7 @@ class Cluster:
             hide_product_version_var = '"hide_product_version": true,'
         bucket_list_var = '"buckets": {},'.format(bucket_names)
 
+        group_id_var = '"group_id": "{}",'.format(bucket_names[0])
         if is_centralized_persistent_config_disabled(self._cluster_config) and version >= "3.0.0":
             disable_persistent_config_var = '"disable_persistent_config": true,'
 
@@ -641,7 +643,8 @@ class Cluster:
             server_tls_skip_verify=server_tls_skip_verify_var,
             disable_tls_server=disable_tls_server_var,
             disable_admin_auth=disable_admin_auth_var,
-            webhook_ip=webhook_ip_var
+            webhook_ip=webhook_ip_var,
+            groupid=group_id_var
         )
         print("sgw config data after the template is ", sgw_config_data)
         """sgw_db_config = seperate_sgw_and_db_config(sgw_config_data)
@@ -686,7 +689,8 @@ class Cluster:
             "revs_limit": revs_limit_var,
             "server_tls_skip_verify": server_tls_skip_verify_var,
             "disable_admin_auth": disable_admin_auth_var,
-            "webhook_ip": webhook_ip_var
+            "webhook_ip": webhook_ip_var,
+            "groupid": group_id_var
         }
         """ if database_config == "":
             db_config_json = {}

@@ -42,7 +42,7 @@ def setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_te
     if name1 is None:
         name1 = "autotest1"
     if name2 is None:
-        name2 = "auto_test@"
+        name2 = "auto_test2"
     if password1 is None:
         password1 = "password"
     if password2 is None:
@@ -1311,13 +1311,16 @@ def test_sg_replicate_replications_with_drop_out_one_node(params_from_base_test_
 
     db.create_bulk_docs(num_of_docs, Replication1, db=cbl_db1, channels=channels1)
     db.create_bulk_docs(num_of_docs, Replication2, db=cbl_db2, channels=channels1)
+    err_check = True
+    if disable_persistent_config:
+        err_check = False
     repl2 = replicator.configure_and_replicate(
         source_db=cbl_db2, replicator_authenticator=replicator_authenticator2, target_url=sg2_blip_url,
-        replication_type="push_pull", continuous=True)
+        replication_type="push_pull", continuous=True, err_check=err_check)
 
     repl3 = replicator.configure_and_replicate(
         source_db=cbl_db3, replicator_authenticator=replicator_authenticator3, target_url=sg3_blip_url,
-        replication_type="push_pull", continuous=True)
+        replication_type="push_pull", continuous=True, err_check=err_check)
 
     replicator.wait_until_replicator_idle(repl1)
     replicator.wait_until_replicator_idle(repl2)
@@ -1357,8 +1360,6 @@ def test_sg_replicate_replications_with_drop_out_one_node(params_from_base_test_
     else:
         expected_count = 1
         repl_count = sg1.admin.get_replications_count(sg_db1, expected_count=expected_count)
-        if not disable_persistent_config:
-            time.sleep(300)
         # assert repl_count == expected_count, "replications count did not get the right number on sg1"
         repl_count = sg3.admin.get_replications_count(sg_db1, expected_count=expected_count)
         # assert repl_count == expected_count, "replications count did not get the right number on sg3"
@@ -1409,6 +1410,7 @@ def test_sg_replicate_sgwconfig_replications_with_opt_out(params_from_base_test_
     sg_ssl = params_from_base_test_setup["sg_ssl"]
     base_url = params_from_base_test_setup["base_url"]
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+    disable_persistent_config = params_from_base_test_setup["disable_persistent_config"]
     sg_conf_name = 'listener_tests/four_sync_gateways'
     sg_conf_name2 = 'listener_tests/listener_tests_with_replications'
     sgw_cluster2_conf_name = 'listener_tests/sg_replicate_sgw_cluster2'
@@ -1423,6 +1425,9 @@ def test_sg_replicate_sgwconfig_replications_with_opt_out(params_from_base_test_
     sg_config2 = sync_gateway_config_path_for_mode(sgw_cluster2_conf_name, sg_mode)
     sg_config3 = sync_gateway_config_path_for_mode(sg_conf_name3, sg_mode)
     cbl_db3 = setup_customized_teardown_test["cbl_db3"]
+
+    if not disable_persistent_config:
+        pytest.skip('Replications adding in SGW config does not work with persistent config on')
 
     db, num_of_docs, sg_db1, sg_db2, name1, name2, _, password, channels1, channels2, replicator, _, replicator_authenticator2, _, sg2_blip_url, sg1, sg2, repl1, c_cluster, cbl_db1, cbl_db2, _ = setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_teardown_test, channels1=channels,
                                                                                                                                                                                                                                cbl_replication_type="push_pull", sg_conf_name=sg_conf_name, sgw_cluster2_sg_config_name=sgw_cluster2_conf_name)
@@ -1625,7 +1630,7 @@ def test_sg_replicate_distributions_replications(params_from_base_test_setup, se
     repl_count1 = sg1.admin.get_replications_count(sg_db1, expected_count=expected_count)
     repl_count2 = sg3.admin.get_replications_count(sg_db1, expected_count=expected_count)
     repl_count3 = sg4.admin.get_replications_count(sg_db1, expected_count=expected_count)
-    """if number_of_replications == 1:
+    if number_of_replications == 1:
         assert repl_count1 == 0 or repl_count1 == 1, "replications count did not get the right number on sg1 with number of replications 1"
         assert repl_count2 == 0 or repl_count3 == 1, "replications count did not get the right number on sg3 with number of replications 1"
         assert repl_count3 == 0 or repl_count3 == 1, "replications count did not get the right number on sg4 with number of replications 1"
@@ -1641,8 +1646,7 @@ def test_sg_replicate_distributions_replications(params_from_base_test_setup, se
         assert repl_count1 == 2, "replications count did not get the right number on sg1 with number of replications 6"
         assert repl_count2 == 2, "replications count did not get the right number on sg3 with number of replications 6"
         assert repl_count3 == 2, "replications count did not get the right number on sg4 with number of replications 6"
-    """
-    time.sleep(120)
+
     for x in range(number_of_replications):
         sg1.admin.wait_until_sgw_replication_done(sg_db1, sgw_repl_id[x], write_flag=True)
     replicator.wait_until_replicator_idle(repl2)
