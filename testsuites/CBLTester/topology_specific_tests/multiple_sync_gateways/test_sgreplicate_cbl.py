@@ -1684,6 +1684,7 @@ def test_sg_replicate_update_sgw_nodes_in_cluster(params_from_base_test_setup, s
     sg_mode = params_from_base_test_setup["mode"]
     cluster_config = params_from_base_test_setup["cluster_config"]
     cbl_db3 = setup_customized_teardown_test["cbl_db3"]
+    disable_persistent_config = params_from_base_test_setup["disable_persistent_config"]
     sgw_cluster1_conf_name = 'listener_tests/sg_replicate_sgw_cluster1'
     sgw_cluster2_conf_name = 'listener_tests/sg_replicate_sgw_cluster2'
     sg_conf_name = 'listener_tests/four_sync_gateways'
@@ -1751,7 +1752,8 @@ def test_sg_replicate_update_sgw_nodes_in_cluster(params_from_base_test_setup, s
         assert sg1_repl_count == 1 or sg1_repl_count == 2, "replications count on first node should have 1 or 2"
         assert sg4_repl_count == 1 or sg4_repl_count == 2, "replications count on sg node4 should have 1 or 2"
 
-        sg3.start(sg_config)
+        # sg3.start(sgw_cluster1_conf_name)
+        sg3.restart(config=sgw_cluster1_sg_config, cluster_config=cluster_config)
         sg_active_tasks = sg1.admin.get_sgreplicate2_active_tasks(sg_db1, expected_tasks=expected_tasks)
         assert len(sg_active_tasks) == expected_tasks, "Adding one of the sg node changed number of active replications"
         sg1_repl_count = sg1.admin.get_replications_count(sg_db1)
@@ -1772,9 +1774,12 @@ def test_sg_replicate_update_sgw_nodes_in_cluster(params_from_base_test_setup, s
     cbl_docs3 = db.getDocuments(cbl_db3, replication1_cbl_doc_ids)
     for doc2 in cbl_docs2:
         assert cbl_docs2[doc2]["updates-cbl"] == cbl_docs3[doc2]["updates-cbl"], "docs did not update successfully"
-    replicator.wait_until_replicator_idle(repl1)
-    replicator.wait_until_replicator_idle(repl2)
-    replicator.wait_until_replicator_idle(repl4)
+    err_check = True
+    if not disable_persistent_config:
+        err_check = False
+    replicator.wait_until_replicator_idle(repl1, err_check=err_check)
+    replicator.wait_until_replicator_idle(repl2, err_check=err_check)
+    replicator.wait_until_replicator_idle(repl4, err_check=err_check)
     replicator.stop(repl1)
     replicator.stop(repl2)
     replicator.stop(repl4)
@@ -1804,6 +1809,7 @@ def test_sg_replicate_restart_active_passive_nodes(params_from_base_test_setup, 
     sg_mode = params_from_base_test_setup["mode"]
     cbl_db3 = setup_customized_teardown_test["cbl_db3"]
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+    disable_persistent_config = params_from_base_test_setup["disable_persistent_config"]
     sgw_cluster1_conf_name = 'listener_tests/sg_replicate_sgw_cluster1'
     sgw_cluster2_conf_name = 'listener_tests/sg_replicate_sgw_cluster2'
     sg_conf_name = 'listener_tests/four_sync_gateways'
@@ -1828,13 +1834,16 @@ def test_sg_replicate_restart_active_passive_nodes(params_from_base_test_setup, 
     db.create_bulk_docs(num_of_docs, "Replication2", db=cbl_db2, channels=channels1)
 
     # Have replication from cbl_db2 to sg2
+    err_check = True
+    if not disable_persistent_config:
+        err_check = False
     repl2 = replicator.configure_and_replicate(
         source_db=cbl_db2, replicator_authenticator=replicator_authenticator2, target_url=sg2_blip_url,
-        replication_type="push_pull", continuous=True)
+        replication_type="push_pull", continuous=True, err_check=err_check)
 
     repl4 = replicator.configure_and_replicate(
         source_db=cbl_db3, replicator_authenticator=replicator_authenticator4, target_url=sg4_blip_url,
-        replication_type="push_pull", continuous=True)
+        replication_type="push_pull", continuous=True, err_check=err_check)
 
     # 2. start 3 replications
     repl_id_1 = sg1.start_replication2(
@@ -2155,10 +2164,10 @@ def test_sg_replicate_custom_conflict_resolve(params_from_base_test_setup, setup
     for doc in cbl_db_docs1:
         try:
             cbl_db_docs1[doc]["cbl1-update"]
-            assert cbl_db_docs2[doc]["cbl1-update"] == 1, "merge of local and remote doc did not replicated on cbl db2"
+            assert cbl_db_docs2[doc]["cbl1-update"] == 1, "merge of local and remote doc did not replicated on cbl db2- {}".format(cbl_db_docs2[doc])
         except KeyError:
-            assert cbl_db_docs1[doc]["cbl2-update"] == 1, "merge of local and remote doc did not replicated on cbl db1"
-            assert cbl_db_docs2[doc]["cbl2-update"] == 1, "merge of local and remote doc did not replicated on cbl db2"
+            assert cbl_db_docs1[doc]["cbl2-update"] == 1, "merge of local and remote doc did not replicated on cbl db1 - {}".format(cbl_db_docs1[doc])
+            assert cbl_db_docs2[doc]["cbl2-update"] == 1, "merge of local and remote doc did not replicated on cbl db2 - {}".format(cbl_db_docs2[doc])
 
 
 @pytest.mark.topospecific
