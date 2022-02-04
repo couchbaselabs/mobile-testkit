@@ -19,6 +19,7 @@ from keywords.MobileRestClient import MobileRestClient
 from keywords import document, attachment
 from libraries.provision.ansible_runner import AnsibleRunner
 from keywords.remoteexecutor import RemoteExecutor
+from keywords.constants import RBAC_FULL_ADMIN
 
 
 @pytest.mark.syncgateway
@@ -42,6 +43,7 @@ def test_log_redaction_config(params_from_base_test_setup, remove_tmp_sg_redacti
     """
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     cluster_helper = ClusterKeywords(cluster_config)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config)
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
@@ -76,9 +78,10 @@ def test_log_redaction_config(params_from_base_test_setup, remove_tmp_sg_redacti
 
     # Create user in sync_gateway
     sg_client = MobileRestClient()
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     channels = ["log-redaction"]
-    sg_client.create_user(url=sg_admin_url, db=sg_db, name='autotest', password='validkey', channels=channels)
-    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest')
+    sg_client.create_user(url=sg_admin_url, db=sg_db, name='autotest', password='validkey', channels=channels, auth=auth)
+    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest', auth=auth)
 
     # Create docs with xattrs
     sgdoc_bodies = document.create_docs(doc_id_prefix='sg_docs', number=num_of_docs,
@@ -111,6 +114,7 @@ def test_sgCollect1(params_from_base_test_setup, remove_tmp_sg_redaction_logs, s
     """
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     cluster_helper = ClusterKeywords(cluster_config)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config)
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
@@ -144,9 +148,10 @@ def test_sgCollect1(params_from_base_test_setup, remove_tmp_sg_redaction_logs, s
 
     # Create user in sync_gateway
     sg_client = MobileRestClient()
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     channels = ["log-redaction"]
-    sg_client.create_user(url=sg_admin_url, db=sg_db, name=user_name, password=password, channels=channels)
-    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=user_name)
+    sg_client.create_user(url=sg_admin_url, db=sg_db, name=user_name, password=password, channels=channels, auth=auth)
+    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=user_name, auth=auth)
 
     # Create docs with xattrs
     sgdoc_bodies = document.create_docs(doc_id_prefix='sg_docs', number=num_of_docs,
@@ -182,6 +187,7 @@ def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     cluster_helper = ClusterKeywords(cluster_config)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config)
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
@@ -232,9 +238,10 @@ def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_
 
     # 3. Create user in sync_gateway
     sg_client = MobileRestClient()
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     channels = ["log-redaction"]
-    sg_client.create_user(url=sg_admin_url, db=sg_db, name=user_name, password=password, channels=channels)
-    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=user_name)
+    sg_client.create_user(url=sg_admin_url, db=sg_db, name=user_name, password=password, channels=channels, auth=auth)
+    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=user_name, auth=auth)
 
     # 4. Create docs with xattrs
     sgdoc_bodies = document.create_docs(doc_id_prefix='sg_docs', number=num_of_docs,
@@ -311,6 +318,7 @@ def test_sgCollectRestApi_errorMessages(params_from_base_test_setup, remove_tmp_
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     cluster_helper = ClusterKeywords(cluster_config)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config)
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
@@ -346,9 +354,10 @@ def test_sgCollectRestApi_errorMessages(params_from_base_test_setup, remove_tmp_
 
     # 3. Create user in sync_gateway
     sg_client = MobileRestClient()
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     channels = ["log-redaction"]
-    sg_client.create_user(url=sg_admin_url, db=sg_db, name='autotest', password='validkey', channels=channels)
-    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest')
+    sg_client.create_user(url=sg_admin_url, db=sg_db, name='autotest', password='validkey', channels=channels, auth=auth)
+    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest', auth=auth)
 
     # 4. Create docs with xattrs
     sgdoc_bodies = document.create_docs(doc_id_prefix='sg_docs', number=num_of_docs,
@@ -400,6 +409,7 @@ def test_log_content_verification(params_from_base_test_setup, remove_tmp_sg_red
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     cluster_helper = ClusterKeywords(cluster_config)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config)
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
@@ -425,9 +435,10 @@ def test_log_content_verification(params_from_base_test_setup, remove_tmp_sg_red
 
     # Create user in sync_gateway
     sg_client = MobileRestClient()
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     channels = ["logging"]
-    sg_client.create_user(url=sg_admin_url, db=sg_db, name='autotest', password='password', channels=channels)
-    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest')
+    sg_client.create_user(url=sg_admin_url, db=sg_db, name='autotest', password='password', channels=channels, auth=auth)
+    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest', auth=auth)
 
     # Create docs with xattrs
     sgdoc_bodies = document.create_docs(doc_id_prefix='sg_docs', number=num_of_docs,

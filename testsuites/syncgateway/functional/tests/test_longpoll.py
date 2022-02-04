@@ -3,6 +3,7 @@ import pytest
 
 import concurrent.futures
 import requests.exceptions
+from requests.auth import HTTPBasicAuth
 
 import libraries.testkit.settings
 from libraries.testkit.admin import Admin
@@ -10,6 +11,7 @@ from libraries.testkit.cluster import Cluster
 from libraries.testkit.verify import verify_changes
 from libraries.testkit.verify import verify_same_docs
 
+from keywords.constants import RBAC_FULL_ADMIN
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.utils import log_info
 from keywords.MobileRestClient import MobileRestClient
@@ -33,6 +35,7 @@ def test_longpoll_changes_parametrized(params_from_base_test_setup, sg_conf_name
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     # Skip the test if ssl disabled as it cannot run without port using http protocol
@@ -57,6 +60,9 @@ def test_longpoll_changes_parametrized(params_from_base_test_setup, sg_conf_name
     cluster.reset(sg_config_path=sg_conf)
 
     admin = Admin(cluster.sync_gateways[0])
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    if auth:
+        admin.auth = HTTPBasicAuth(auth[0], auth[1])
     seth = admin.register_user(target=cluster.sync_gateways[0], db="db", name="seth", password="password", channels=["ABC", "TERMINATE"])
     abc_doc_pusher = admin.register_user(target=cluster.sync_gateways[0], db="db", name="abc_doc_pusher", password="password", channels=["ABC"])
     doc_terminator = admin.register_user(target=cluster.sync_gateways[0], db="db", name="doc_terminator", password="password", channels=["TERMINATE"])
@@ -105,6 +111,7 @@ def test_longpoll_changes_sanity(params_from_base_test_setup, sg_conf_name, num_
     mode = params_from_base_test_setup["mode"]
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
     cbs_ce_version = params_from_base_test_setup["cbs_ce"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     # Skip the test if ssl disabled as it cannot run without port using http protocol
@@ -138,6 +145,9 @@ def test_longpoll_changes_sanity(params_from_base_test_setup, sg_conf_name, num_
     cluster.reset(sg_config_path=sg_conf)
 
     admin = Admin(cluster.sync_gateways[0])
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    if auth:
+        admin.auth = HTTPBasicAuth(auth[0], auth[1])
     seth = admin.register_user(target=cluster.sync_gateways[0], db="db", name="seth", password="password", channels=["ABC", "TERMINATE"])
     abc_doc_pusher = admin.register_user(target=cluster.sync_gateways[0], db="db", name="abc_doc_pusher", password="password", channels=["ABC"])
     doc_terminator = admin.register_user(target=cluster.sync_gateways[0], db="db", name="doc_terminator", password="password", channels=["TERMINATE"])
@@ -184,6 +194,7 @@ def test_longpoll_awaken_doc_add_update(params_from_base_test_setup, sg_conf_nam
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     cluster_topology = params_from_base_test_setup["cluster_topology"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     sg_admin_url = cluster_topology["sync_gateways"][0]["admin"]
@@ -216,14 +227,15 @@ def test_longpoll_awaken_doc_add_update(params_from_base_test_setup, sg_conf_nam
 
     client = MobileRestClient()
 
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     adam_auth = client.create_user(url=sg_admin_url, db=sg_db,
-                                   name=adam_user_info.name, password=adam_user_info.password, channels=adam_user_info.channels)
+                                   name=adam_user_info.name, password=adam_user_info.password, channels=adam_user_info.channels, auth=auth)
 
     traun_auth = client.create_user(url=sg_admin_url, db=sg_db,
-                                    name=traun_user_info.name, password=traun_user_info.password, channels=traun_user_info.channels)
+                                    name=traun_user_info.name, password=traun_user_info.password, channels=traun_user_info.channels, auth=auth)
 
     andy_auth = client.create_user(url=sg_admin_url, db=sg_db,
-                                   name=andy_user_info.name, password=andy_user_info.password, channels=andy_user_info.channels)
+                                   name=andy_user_info.name, password=andy_user_info.password, channels=andy_user_info.channels, auth=auth)
 
     # Get starting sequence of docs, use the last seq to progress past any _user docs.
     adam_changes = client.get_changes(url=sg_url, db=sg_db, since=0, feed="longpoll", auth=adam_auth)
@@ -436,6 +448,7 @@ def test_longpoll_awaken_channels(params_from_base_test_setup, sg_conf_name):
     cluster_conf = params_from_base_test_setup["cluster_config"]
     cluster_topology = params_from_base_test_setup["cluster_topology"]
     mode = params_from_base_test_setup["mode"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     sg_admin_url = cluster_topology["sync_gateways"][0]["admin"]
@@ -468,15 +481,15 @@ def test_longpoll_awaken_channels(params_from_base_test_setup, sg_conf_name):
     doc_id = "adam_doc_0"
 
     client = MobileRestClient()
-
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     adam_auth = client.create_user(url=sg_admin_url, db=sg_db,
-                                   name=adam_user_info.name, password=adam_user_info.password, channels=adam_user_info.channels)
+                                   name=adam_user_info.name, password=adam_user_info.password, channels=adam_user_info.channels, auth=auth)
 
     traun_auth = client.create_user(url=sg_admin_url, db=sg_db,
-                                    name=traun_user_info.name, password=traun_user_info.password, channels=traun_user_info.channels)
+                                    name=traun_user_info.name, password=traun_user_info.password, channels=traun_user_info.channels, auth=auth)
 
     andy_auth = client.create_user(url=sg_admin_url, db=sg_db,
-                                   name=andy_user_info.name, password=andy_user_info.password, channels=andy_user_info.channels)
+                                   name=andy_user_info.name, password=andy_user_info.password, channels=andy_user_info.channels, auth=auth)
 
     ############################################################
     # changes feed wakes with Channel Access via Admin API
@@ -535,11 +548,11 @@ def test_longpoll_awaken_channels(params_from_base_test_setup, sg_conf_name):
 
         # Update the traun and andy to have one of adam's channels
         update_traun_user_task = ex.submit(client.update_user, url=sg_admin_url, db=sg_db,
-                                           name=traun_user_info.name, password=traun_user_info.password, channels=["NBC"])
+                                           name=traun_user_info.name, password=traun_user_info.password, channels=["NBC"], auth=auth)
         traun_auth = update_traun_user_task.result()
 
         update_andy_user_task = ex.submit(client.update_user, url=sg_admin_url, db=sg_db,
-                                          name=andy_user_info.name, password=andy_user_info.password, channels=["ABC"])
+                                          name=andy_user_info.name, password=andy_user_info.password, channels=["ABC"], auth=auth)
         andy_auth = update_andy_user_task.result()
 
         # Make sure changes feed wakes up and contains at least one change, 2 may be possible if the _user doc is included
@@ -618,7 +631,7 @@ def test_longpoll_awaken_channels(params_from_base_test_setup, sg_conf_name):
     traun_changes = client.get_changes(url=sg_url, db=sg_db, since=0, feed="normal", auth=traun_auth)
     andy_changes = client.get_changes(url=sg_url, db=sg_db, since=0, feed="normal", auth=andy_auth)
 
-    admin_auth = client.create_user(url=sg_admin_url, db=sg_db, name="admin", password="password", channels=["admin"])
+    admin_auth = client.create_user(url=sg_admin_url, db=sg_db, name="admin", password="password", channels=["admin"], auth=auth)
 
     channel_grant_doc_id = "channel_grant_with_doc_intially"
 
@@ -677,6 +690,7 @@ def test_longpoll_awaken_roles(params_from_base_test_setup, sg_conf_name):
     cluster_conf = params_from_base_test_setup["cluster_config"]
     cluster_topology = params_from_base_test_setup["cluster_topology"]
     mode = params_from_base_test_setup["mode"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     sg_admin_url = cluster_topology["sync_gateways"][0]["admin"]
@@ -713,21 +727,22 @@ def test_longpoll_awaken_roles(params_from_base_test_setup, sg_conf_name):
 
     client = MobileRestClient()
 
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     # Create a role on sync_gateway
-    client.create_role(url=sg_admin_url, db=sg_db, name=admin_role, channels=[admin_channel])
+    client.create_role(url=sg_admin_url, db=sg_db, name=admin_role, channels=[admin_channel], auth=auth)
 
     # Create users with no channels or roles
     admin_auth = client.create_user(url=sg_admin_url, db=sg_db,
-                                    name=admin_user_info.name, password=admin_user_info.password, roles=[admin_role])
+                                    name=admin_user_info.name, password=admin_user_info.password, roles=[admin_role], auth=auth)
 
     adam_auth = client.create_user(url=sg_admin_url, db=sg_db,
-                                   name=adam_user_info.name, password=adam_user_info.password)
+                                   name=adam_user_info.name, password=adam_user_info.password, auth=auth)
 
     traun_auth = client.create_user(url=sg_admin_url, db=sg_db,
-                                    name=traun_user_info.name, password=traun_user_info.password)
+                                    name=traun_user_info.name, password=traun_user_info.password, auth=auth)
 
     andy_auth = client.create_user(url=sg_admin_url, db=sg_db,
-                                   name=andy_user_info.name, password=andy_user_info.password)
+                                   name=andy_user_info.name, password=andy_user_info.password, auth=auth)
 
     ################################
     # change feed wakes for role add
@@ -769,13 +784,13 @@ def test_longpoll_awaken_roles(params_from_base_test_setup, sg_conf_name):
         assert not andy_changes_task.done()
 
         adam_auth = client.update_user(url=sg_admin_url, db=sg_db,
-                                       name=adam_user_info.name, password=adam_user_info.password, roles=[admin_role])
+                                       name=adam_user_info.name, password=adam_user_info.password, roles=[admin_role], auth=auth)
 
         traun_auth = client.update_user(url=sg_admin_url, db=sg_db,
-                                        name=traun_user_info.name, password=traun_user_info.password, roles=[admin_role])
+                                        name=traun_user_info.name, password=traun_user_info.password, roles=[admin_role], auth=auth)
 
         andy_auth = client.update_user(url=sg_admin_url, db=sg_db,
-                                       name=andy_user_info.name, password=andy_user_info.password, roles=[admin_role])
+                                       name=andy_user_info.name, password=andy_user_info.password, roles=[admin_role], auth=auth)
 
         adam_changes = adam_changes_task.result()
         assert 1 <= len(adam_changes["results"]) <= 2
@@ -809,7 +824,7 @@ def test_longpoll_awaken_roles(params_from_base_test_setup, sg_conf_name):
     abc_pusher_info = userinfo.UserInfo(name="abc_pusher", password="pass", channels=[abc_channel], roles=[])
 
     abc_pusher_auth = client.create_user(url=sg_admin_url, db=sg_db, name=abc_pusher_info.name,
-                                         password=abc_pusher_info.password, channels=abc_pusher_info.channels)
+                                         password=abc_pusher_info.password, channels=abc_pusher_info.channels, auth=auth)
 
     # Add doc with ABC channel
     client.add_docs(url=sg_url, db=sg_db, number=1, id_prefix="abc_doc", auth=abc_pusher_auth, channels=[abc_channel])
@@ -836,7 +851,7 @@ def test_longpoll_awaken_roles(params_from_base_test_setup, sg_conf_name):
 
         # Update admin role to include ABC channel
         # Since adam, traun, and andy are assigned to that role, they should wake up and get the 'abc_pusher_0' doc
-        client.update_role(url=sg_admin_url, db=sg_db, name=admin_role, channels=[admin_channel, abc_channel])
+        client.update_role(url=sg_admin_url, db=sg_db, name=admin_role, channels=[admin_channel, abc_channel], auth=auth)
 
         adam_changes = adam_changes_task.result()
         assert len(adam_changes["results"]) == 1
@@ -876,6 +891,7 @@ def test_longpoll_awaken_via_sync_access(params_from_base_test_setup, sg_conf_na
     cluster_conf = params_from_base_test_setup["cluster_config"]
     cluster_topology = params_from_base_test_setup["cluster_topology"]
     mode = params_from_base_test_setup["mode"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     sg_admin_url = cluster_topology["sync_gateways"][0]["admin"]
@@ -892,6 +908,7 @@ def test_longpoll_awaken_via_sync_access(params_from_base_test_setup, sg_conf_na
 
     client = MobileRestClient()
 
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     channel_pusher_info = userinfo.UserInfo(name="channel_pusher", password="pass", channels=["NATGEO"], roles=[])
 
     adam_user_info = userinfo.UserInfo(name="adam", password="Adampass1", channels=[], roles=[])
@@ -902,11 +919,12 @@ def test_longpoll_awaken_via_sync_access(params_from_base_test_setup, sg_conf_na
                                              db=sg_db,
                                              name=channel_pusher_info.name,
                                              password=channel_pusher_info.password,
-                                             channels=channel_pusher_info.channels)
+                                             channels=channel_pusher_info.channels, 
+                                             auth=auth)
 
-    adam_auth = client.create_user(url=sg_admin_url, db=sg_db, name=adam_user_info.name, password=adam_user_info.password)
-    traun_auth = client.create_user(url=sg_admin_url, db=sg_db, name=traun_user_info.name, password=traun_user_info.password)
-    andy_auth = client.create_user(url=sg_admin_url, db=sg_db, name=andy_user_info.name, password=andy_user_info.password)
+    adam_auth = client.create_user(url=sg_admin_url, db=sg_db, name=adam_user_info.name, password=adam_user_info.password, auth=auth)
+    traun_auth = client.create_user(url=sg_admin_url, db=sg_db, name=traun_user_info.name, password=traun_user_info.password, auth=auth)
+    andy_auth = client.create_user(url=sg_admin_url, db=sg_db, name=andy_user_info.name, password=andy_user_info.password, auth=auth)
 
     client.add_docs(url=sg_url, db=sg_db, number=1, id_prefix="natgeo", channels=["NATGEO"], auth=channel_pusher_auth)
 
@@ -995,6 +1013,7 @@ def test_longpoll_awaken_via_sync_role(params_from_base_test_setup, sg_conf_name
     cluster_conf = params_from_base_test_setup["cluster_config"]
     cluster_topology = params_from_base_test_setup["cluster_topology"]
     mode = params_from_base_test_setup["mode"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     sg_admin_url = cluster_topology["sync_gateways"][0]["admin"]
@@ -1012,7 +1031,8 @@ def test_longpoll_awaken_via_sync_role(params_from_base_test_setup, sg_conf_name
 
     client = MobileRestClient()
 
-    client.create_role(url=sg_admin_url, db=sg_db, name=techno_role, channels=[techno_channel])
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    client.create_role(url=sg_admin_url, db=sg_db, name=techno_role, channels=[techno_channel], auth=auth)
     admin_user_info = userinfo.UserInfo(name="admin", password="pass", channels=[], roles=[techno_role])
 
     adam_user_info = userinfo.UserInfo(name="adam", password="Adampass1", channels=[], roles=[])
@@ -1020,16 +1040,16 @@ def test_longpoll_awaken_via_sync_role(params_from_base_test_setup, sg_conf_name
     andy_user_info = userinfo.UserInfo(name="andy", password="Andypass1", channels=[], roles=[])
 
     admin_auth = client.create_user(url=sg_admin_url, db=sg_db,
-                                    name=admin_user_info.name, password=admin_user_info.password, roles=adam_user_info.roles)
+                                    name=admin_user_info.name, password=admin_user_info.password, roles=adam_user_info.roles, auth=auth)
 
     adam_auth = client.create_user(url=sg_admin_url, db=sg_db,
-                                   name=adam_user_info.name, password=adam_user_info.password)
+                                   name=adam_user_info.name, password=adam_user_info.password, auth=auth)
 
     traun_auth = client.create_user(url=sg_admin_url, db=sg_db,
-                                    name=traun_user_info.name, password=traun_user_info.password)
+                                    name=traun_user_info.name, password=traun_user_info.password, auth=auth)
 
     andy_auth = client.create_user(url=sg_admin_url, db=sg_db,
-                                   name=andy_user_info.name, password=andy_user_info.password)
+                                   name=andy_user_info.name, password=andy_user_info.password, auth=auth)
 
     client.add_docs(url=sg_url, db=sg_db, number=1, id_prefix="techno_doc", channels=[techno_channel], auth=admin_auth)
 

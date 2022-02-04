@@ -281,26 +281,33 @@ class MobileRestClient:
             log_r(resp)
             resp.raise_for_status()
 
-    def db_resync(self, url, db):
+    def db_resync(self, url, db, auth=None):
         """Get SG db to resync"""
         headers = {"Accept": "application/json"}
-        resp = self._session.post("{}/{}/_resync".format(url, db), headers=headers)
+        if auth:
+            resp = self._session.post("{}/{}/_resync".format(url, db), headers=headers, auth=HTTPBasicAuth(auth[0], auth[1]))
+        else:
+            resp = self._session.post("{}/{}/_resync".format(url, db), headers=headers)
         log_r(resp)
         return resp.status_code
 
-    def get_role(self, url, db, name):
+    def get_role(self, url, db, name, auth=None):
         """ Gets a roles for a db """
-
-        resp = self._session.get("{}/{}/_role/{}".format(url, db, name))
+        if auth:
+            resp = self._session.get("{}/{}/_role/{}".format(url, db, name), auth=HTTPBasicAuth(auth[0], auth[1]))
+        else:
+            resp = self._session.get("{}/{}/_role/{}".format(url, db, name))
         log_r(resp)
         resp.raise_for_status()
 
         return resp.json()
 
-    def get_roles(self, url, db):
+    def get_roles(self, url, db, auth=None):
         """ Gets a list of roles for a db """
-
-        resp = self._session.get("{}/{}/_role/".format(url, db))
+        if auth:
+            resp = self._session.get("{}/{}/_role/".format(url, db), auth=HTTPBasicAuth(auth[0], auth[1]))
+        else:
+            resp = self._session.get("{}/{}/_role/".format(url, db))
         log_r(resp)
         resp.raise_for_status()
 
@@ -346,19 +353,23 @@ class MobileRestClient:
         log_r(resp)
         resp.raise_for_status()
 
-    def get_user(self, url, db, name):
+    def get_user(self, url, db, name, auth=None):
         """ Gets a user for a db """
-
-        resp = self._session.get("{}/{}/_user/{}".format(url, db, name))
+        if auth:
+            resp = self._session.get("{}/{}/_user/{}".format(url, db, name), auth=HTTPBasicAuth(auth[0], auth[1]))
+        else:
+            resp = self._session.get("{}/{}/_user/{}".format(url, db, name))
         log_r(resp)
         resp.raise_for_status()
 
         return resp.json()
 
-    def get_users(self, url, db):
+    def get_users(self, url, db, auth=None):
         """ Gets a list of users for a db """
-
-        resp = self._session.get("{}/{}/_user/".format(url, db))
+        if auth:
+            resp = self._session.get("{}/{}/_user/".format(url, db), auth=HTTPBasicAuth(auth[0], auth[1]))
+        else:
+            resp = self._session.get("{}/{}/_user/".format(url, db))
         log_r(resp)
         resp.raise_for_status()
 
@@ -533,14 +544,17 @@ class MobileRestClient:
 
         return resp.json()
 
-    def compact_database(self, url, db):
+    def compact_database(self, url, db, auth=None):
         """
         POST /{db}/_compact and will verify compaction by
         iterating though each document and inspecting the revs_info to make sure all revs are 'missing'
         except for the leaf revision
         """
 
-        resp = self._session.post("{}/{}/_compact".format(url, db))
+        if auth:
+            resp = self._session.post("{}/{}/_compact".format(url, db), auth=HTTPBasicAuth(auth[0], auth[1]))
+        else:
+            resp = self._session.post("{}/{}/_compact".format(url, db))
         log_r(resp)
         resp.raise_for_status()
 
@@ -550,7 +564,10 @@ class MobileRestClient:
             if time.time() - start > CLIENT_REQUEST_TIMEOUT:
                 raise TimeoutException("Verify Docs Present: TIMEOUT")
 
-            resp = self._session.get("{}/{}/_all_docs".format(url, db))
+            if auth:
+                resp = self._session.get("{}/{}/_all_docs".format(url, db), auth=HTTPBasicAuth(auth[0], auth[1]))
+            else:
+                resp = self._session.get("{}/{}/_all_docs".format(url, db))
             log_r(resp)
             resp.raise_for_status()
             resp_obj = resp.json()
@@ -2152,11 +2169,14 @@ class MobileRestClient:
 
             time.sleep(1)
 
-    def add_design_doc(self, url, db, name, doc):
+    def add_design_doc(self, url, db, name, doc, auth=None):
         """
         Keyword that adds a Design Doc to the database
         """
-        resp = self._session.put("{}/{}/_design/{}".format(url, db, name), data=doc)
+        if auth:
+            resp = self._session.put("{}/{}/_design/{}".format(url, db, name), data=doc, auth=HTTPBasicAuth(auth[0], auth[1]))
+        else:
+            resp = self._session.put("{}/{}/_design/{}".format(url, db, name), data=doc)
         log_r(resp)
         resp.raise_for_status()
 
@@ -2258,11 +2278,14 @@ class MobileRestClient:
 
         return resp.json()
 
-    def view_query_through_channels(self, url, db):
+    def view_query_through_channels(self, url, db, auth=None):
         """
         Gets query through channels and return all docs including tombstone docs
         """
-        resp = self._session.get("{}/{}/_view/channels".format(url, db))
+        if auth:
+            resp = self._session.get("{}/{}/_view/channels".format(url, db), auth=HTTPBasicAuth(auth[0], auth[1]))
+        else:
+            resp = self._session.get("{}/{}/_view/channels".format(url, db))
         log_r(resp)
         resp.raise_for_status()
 

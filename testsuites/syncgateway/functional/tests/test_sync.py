@@ -12,6 +12,8 @@ from keywords.MobileRestClient import MobileRestClient
 from libraries.data import doc_generators
 from requests.exceptions import HTTPError
 from keywords import document
+from keywords.constants import RBAC_FULL_ADMIN
+from requests.auth import HTTPBasicAuth
 
 import libraries.testkit.settings
 
@@ -36,8 +38,10 @@ def test_issue_1524(params_from_base_test_setup, sg_conf_name, num_docs):
 
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     log_info("Running 'issue_1524'")
     log_info("Using cluster_conf: {}".format(cluster_conf))
@@ -47,6 +51,8 @@ def test_issue_1524(params_from_base_test_setup, sg_conf_name, num_docs):
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
     admin = Admin(cluster.sync_gateways[0])
+    if auth:
+        admin.auth = HTTPBasicAuth(auth[0], auth[1])
 
     user_no_channels = admin.register_user(target=cluster.sync_gateways[0], db="db", name="user_no_channels", password="password")
     a_doc_pusher = admin.register_user(target=cluster.sync_gateways[0], db="db", name="a_doc_pusher", password="password", channels=["A"])
@@ -115,7 +121,9 @@ def test_sync_access_sanity(params_from_base_test_setup, sg_conf_name, x509_cert
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     cbs_ce_version = params_from_base_test_setup["cbs_ce"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     log_info("Running 'sync_access_sanity'")
     log_info("Using cluster_conf: {}".format(cluster_conf))
@@ -131,6 +139,8 @@ def test_sync_access_sanity(params_from_base_test_setup, sg_conf_name, x509_cert
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
     admin = Admin(cluster.sync_gateways[0])
+    if auth:
+        admin.auth = HTTPBasicAuth(auth[0], auth[1])
 
     mobile_user = admin.register_user(target=cluster.sync_gateways[0], db="db", name="mobile", password="password")
 
@@ -174,8 +184,10 @@ def test_sync_channel_sanity(params_from_base_test_setup, sg_conf_name):
 
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     log_info("Running 'sync_channel_sanity'")
     log_info("Using cluster_conf: {}".format(cluster_conf))
@@ -184,6 +196,8 @@ def test_sync_channel_sanity(params_from_base_test_setup, sg_conf_name):
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
     admin = Admin(cluster.sync_gateways[0])
+    if auth:
+        admin.auth = HTTPBasicAuth(auth[0], auth[1])
 
     doc_pushers = []
     doc_pusher_caches = []
@@ -243,8 +257,10 @@ def test_sync_role_sanity(params_from_base_test_setup, sg_conf_name):
 
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     log_info("Running 'sync_role_sanity'")
     log_info("Using cluster_conf: {}".format(cluster_conf))
@@ -254,6 +270,8 @@ def test_sync_role_sanity(params_from_base_test_setup, sg_conf_name):
     cluster.reset(sg_config_path=sg_conf)
 
     admin = Admin(cluster.sync_gateways[0])
+    if auth:
+        admin.auth = HTTPBasicAuth(auth[0], auth[1])
     admin.create_role(db="db", name="tv_stations", channels=tv_channels)
 
     seth = admin.register_user(target=cluster.sync_gateways[0], db="db", name="seth", password="password")
@@ -315,8 +333,10 @@ def test_sync_sanity(params_from_base_test_setup, sg_conf_name):
 
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     log_info("Running 'sync_sanity'")
     log_info("Using cluster_conf: {}".format(cluster_conf))
@@ -329,6 +349,8 @@ def test_sync_sanity(params_from_base_test_setup, sg_conf_name):
     number_of_docs_per_pusher = 5000
 
     admin = Admin(cluster.sync_gateways[0])
+    if auth:
+        admin.auth = HTTPBasicAuth(auth[0], auth[1])
 
     dj_0 = admin.register_user(target=cluster.sync_gateways[0], db="db", name="dj_0", password="password")
     access_doc_pusher = admin.register_user(target=cluster.sync_gateways[0], db="db", name="access_doc_pusher", password="password")
@@ -366,8 +388,10 @@ def test_sync_sanity_backfill(params_from_base_test_setup, sg_conf_name):
 
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     log_info("Running 'sync_sanity_backfill'")
     log_info("Using cluster_conf: {}".format(cluster_conf))
@@ -380,6 +404,8 @@ def test_sync_sanity_backfill(params_from_base_test_setup, sg_conf_name):
     number_of_docs_per_pusher = 5000
 
     admin = Admin(cluster.sync_gateways[0])
+    if auth:
+        admin.auth = HTTPBasicAuth(auth[0], auth[1])
 
     dj_0 = admin.register_user(target=cluster.sync_gateways[0], db="db", name="dj_0", password="password")
 
@@ -417,8 +443,10 @@ def test_sync_require_roles(params_from_base_test_setup, sg_conf_name):
 
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     log_info("Running 'sync_require_roles'")
     log_info("Using cluster_conf: {}".format(cluster_conf))
@@ -436,6 +464,8 @@ def test_sync_require_roles(params_from_base_test_setup, sg_conf_name):
     number_of_docs_per_pusher = 100
 
     admin = Admin(cluster.sync_gateways[0])
+    if auth:
+        admin.auth = HTTPBasicAuth(auth[0], auth[1])
 
     admin.create_role("db", name="radio_stations", channels=radio_stations)
     admin.create_role("db", name="tv_stations", channels=tv_stations)
@@ -525,12 +555,14 @@ def test_sync_20mb(params_from_base_test_setup, sg_conf_name):
     cluster_conf = params_from_base_test_setup['cluster_config']
     cluster_topology = params_from_base_test_setup['cluster_topology']
     mode = params_from_base_test_setup['mode']
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
     sg_url = cluster_topology['sync_gateways'][0]['public']
     sg_db = "db"
     channels = ['shared']
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     log_info('sg_conf: {}'.format(sg_conf))
     log_info('sg_admin_url: {}'.format(sg_admin_url))
@@ -541,8 +573,8 @@ def test_sync_20mb(params_from_base_test_setup, sg_conf_name):
 
     # Create sg user
     sg_client = MobileRestClient()
-    sg_client.create_user(url=sg_admin_url, db=sg_db, name='autotest', password='pass', channels=channels)
-    session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest')
+    sg_client.create_user(url=sg_admin_url, db=sg_db, name='autotest', password='pass', channels=channels, auth=auth)
+    session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest', auth=auth)
 
     sg_doc_body = doc_generators.doc_size_byBytes(22000000)
     doc_id = "20mb_doc"
@@ -576,6 +608,7 @@ def test_verify_deleted_prop_tombstoned_olddoc(params_from_base_test_setup, sg_c
     cluster_topology = params_from_base_test_setup['cluster_topology']
     mode = params_from_base_test_setup['mode']
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
@@ -594,18 +627,19 @@ def test_verify_deleted_prop_tombstoned_olddoc(params_from_base_test_setup, sg_c
     sg_user_name2 = 'autotest2'
     sg_password2 = 'pass2'
     channels2 = ['olddoc_deleted_channel']
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     # Create user / session
     sg_client.create_user(url=sg_admin_url, db=sg_db, name=sg_user_name, password=sg_password,
-                          channels=channels)
+                          channels=channels, auth=auth)
 
-    test_auth_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=sg_user_name)
+    test_auth_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=sg_user_name, auth=auth)
 
     # Create user2 / session2
     sg_client.create_user(url=sg_admin_url, db=sg_db, name=sg_user_name2, password=sg_password2,
-                          channels=channels2)
+                          channels=channels2, auth=auth)
 
-    test_auth_session2 = sg_client.create_session(url=sg_admin_url, db=sg_db, name=sg_user_name2)
+    test_auth_session2 = sg_client.create_session(url=sg_admin_url, db=sg_db, name=sg_user_name2, auth=auth)
 
     # 1. Create a doc
     doc_body = document.create_doc(doc_id=doc_id, channels=channels)

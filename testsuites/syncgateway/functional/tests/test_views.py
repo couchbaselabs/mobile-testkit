@@ -11,6 +11,7 @@ from keywords.userinfo import UserInfo
 from keywords.utils import log_info
 from libraries.testkit.cluster import Cluster
 from utilities.cluster_config_utils import get_sg_version, persist_cluster_config_environment_prop, copy_to_temp_conf
+from keywords.constants import RBAC_FULL_ADMIN
 
 
 @pytest.mark.syncgateway
@@ -40,6 +41,7 @@ def test_view_backfill_for_deletes(params_from_base_test_setup, sg_conf_name,
     cluster_topology = params_from_base_test_setup['cluster_topology']
     mode = params_from_base_test_setup['mode']
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if ("sync_gateway_default_functional_tests_no_port" in sg_conf_name) and get_sg_version(cluster_conf) < "1.5.0":
         pytest.skip('couchbase/couchbases ports do not support for versions below 1.5')
@@ -50,6 +52,7 @@ def test_view_backfill_for_deletes(params_from_base_test_setup, sg_conf_name,
     sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
     sg_url = cluster_topology['sync_gateways'][0]['public']
     cbs_url = cluster_topology['couchbase_servers'][0]
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     log_info('sg_conf: {}'.format(sg_conf))
     log_info('sg_admin_url: {}'.format(sg_admin_url))
@@ -77,13 +80,15 @@ def test_view_backfill_for_deletes(params_from_base_test_setup, sg_conf_name,
         db=sg_db,
         name=seth_user_info.name,
         password=seth_user_info.password,
-        channels=seth_user_info.channels
+        channels=seth_user_info.channels,
+        auth=auth
     )
 
     seth_auth = sg_client.create_session(
         url=sg_admin_url,
         db=sg_db,
-        name=seth_user_info.name
+        name=seth_user_info.name,
+        auth=auth
     )
 
     # Add 'num_docs' to Sync Gateway

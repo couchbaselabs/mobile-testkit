@@ -11,6 +11,7 @@ from keywords.utils import log_info
 from libraries.testkit.cluster import Cluster
 from keywords.MobileRestClient import MobileRestClient
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
+from keywords.constants import RBAC_FULL_ADMIN
 
 
 @pytest.mark.sanity
@@ -28,6 +29,7 @@ def test_user_views_sanity(params_from_base_test_setup, sg_conf_name, x509_cert_
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
@@ -53,6 +55,7 @@ def test_user_views_sanity(params_from_base_test_setup, sg_conf_name, x509_cert_
     bucket = "data-bucket"
     sg_admin_url = topology["sync_gateways"][0]["admin"]
     sg_public_url = topology["sync_gateways"][0]["public"]
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     client = MobileRestClient()
 
@@ -65,20 +68,20 @@ def test_user_views_sanity(params_from_base_test_setup, sg_conf_name, x509_cert_
     # "raghu" has "Researcher" role and ["Edit"] channel
 
     # Issue GET /_user to exercise principal views
-    users = client.get_users(url=sg_admin_url, db=sg_db)
+    users = client.get_users(url=sg_admin_url, db=sg_db, auth=auth)
 
     # These are defined in the config
     assert len(users) == 2 and "seth" in users and "raghu" in users
 
     # Issue GET /_role to exercise principal views
-    roles = client.get_roles(url=sg_admin_url, db=sg_db)
+    roles = client.get_roles(url=sg_admin_url, db=sg_db, auth=auth)
 
     # These are defined in the config
     assert len(roles) == 2 and "Scientist" in roles and "Researcher" in roles
 
     # Verify channels on each role
-    scientist_role = client.get_role(url=sg_admin_url, db=sg_db, name="Scientist")
-    researcher_role = client.get_role(url=sg_admin_url, db=sg_db, name="Researcher")
+    scientist_role = client.get_role(url=sg_admin_url, db=sg_db, name="Scientist", auth=auth)
+    researcher_role = client.get_role(url=sg_admin_url, db=sg_db, name="Researcher", auth=auth)
 
     assert len(scientist_role["all_channels"]) == 2
     assert "Download" in scientist_role["all_channels"]
@@ -196,7 +199,7 @@ def test_user_views_sanity(params_from_base_test_setup, sg_conf_name, x509_cert_
         }
     }
 
-    client.add_design_doc(url=sg_admin_url, db=sg_db, name="test_views", doc=json.dumps(design_doc))
+    client.add_design_doc(url=sg_admin_url, db=sg_db, name="test_views", doc=json.dumps(design_doc), auth=auth)
 
     # "seth" should see docs for channels ["Create", "Download"]
     seth_filtered = client.get_view(

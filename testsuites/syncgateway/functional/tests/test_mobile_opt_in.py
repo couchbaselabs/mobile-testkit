@@ -14,6 +14,7 @@ from libraries.testkit.cluster import Cluster
 from utilities.cluster_config_utils import get_cluster
 from keywords.remoteexecutor import RemoteExecutor
 from utilities.cluster_config_utils import load_cluster_config_json
+from keywords.constants import RBAC_FULL_ADMIN
 
 
 @pytest.mark.syncgateway
@@ -55,6 +56,7 @@ def test_mobile_opt_in(params_from_base_test_setup, sg_conf_name):
     cluster_topology = params_from_base_test_setup['cluster_topology']
     mode = params_from_base_test_setup['mode']
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     # This test should only run when using xattr meta storage
     if not xattrs_enabled:
@@ -75,6 +77,7 @@ def test_mobile_opt_in(params_from_base_test_setup, sg_conf_name):
 
     # Create clients
     sg_client = MobileRestClient()
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     cbs_ip = host_for_url(cbs_url)
     if cluster.ipv6:
         connection_url = 'couchbase://{}?ipv6=allow'.format(cbs_ip)
@@ -88,13 +91,15 @@ def test_mobile_opt_in(params_from_base_test_setup, sg_conf_name):
         db=sg_db,
         name=auto_user_info.name,
         password=auto_user_info.password,
-        channels=auto_user_info.channels
+        channels=auto_user_info.channels,
+        auth=auth
     )
 
     test_auth_session = sg_client.create_session(
         url=sg_admin_url,
         db=sg_db,
-        name=auto_user_info.name
+        name=auto_user_info.name,
+        auth=auth
     )
 
     def update_mobile_prop():
@@ -263,6 +268,7 @@ def test_non_mobile_ignore_count(params_from_base_test_setup, sg_conf_name):
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
     sg_platform = params_from_base_test_setup['sg_platform']
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     # This test should only run when using xattr meta storage
     if xattrs_enabled or sync_gateway_version < "3.0":
@@ -283,6 +289,7 @@ def test_non_mobile_ignore_count(params_from_base_test_setup, sg_conf_name):
 
     # Create clients
     sg_client = MobileRestClient()
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     cbs_ip = host_for_url(cbs_url)
     if cluster.ipv6:
         connection_url = 'couchbase://{}?ipv6=allow'.format(cbs_ip)
@@ -297,13 +304,15 @@ def test_non_mobile_ignore_count(params_from_base_test_setup, sg_conf_name):
         db=sg_db,
         name=auto_user_info.name,
         password=auto_user_info.password,
-        channels=auto_user_info.channels
+        channels=auto_user_info.channels,
+        auth=auth
     )
 
     test_auth_session = sg_client.create_session(
         url=sg_admin_url,
         db=sg_db,
-        name=auto_user_info.name
+        name=auto_user_info.name,
+        auth=auth
     )
 
     if sg_platform == "windows":
@@ -325,7 +334,7 @@ def test_non_mobile_ignore_count(params_from_base_test_setup, sg_conf_name):
         log_info("Got the Http error".format(e))
 
     # 2. Verify “non_mobile_ignored_count” is 0 on _expvar end point
-    sg_expvars = sg_client.get_expvars(url=sg_admin_url)
+    sg_expvars = sg_client.get_expvars(url=sg_admin_url, auth=auth)
     non_mobile_ignore_count = sg_expvars["syncgateway"]["per_db"][sg_db]["cache"]["non_mobile_ignored_count"]
     warn_count = sg_expvars["syncgateway"]["global"]["resource_utilization"]["warn_count"]
     assert non_mobile_ignore_count == 1, "non_mobile_ignore_count did not get expected count"
@@ -367,7 +376,7 @@ def test_non_mobile_ignore_count(params_from_base_test_setup, sg_conf_name):
     count = 0
     retry_count = 5
     while count < retry_count:
-        sg_expvars = sg_client.get_expvars(url=sg_admin_url)
+        sg_expvars = sg_client.get_expvars(url=sg_admin_url, auth=auth)
         non_mobile_ignore_count = sg_expvars["syncgateway"]["per_db"][sg_db]["cache"]["non_mobile_ignored_count"]
         if non_mobile_ignore_count == 2:
             break
@@ -408,7 +417,7 @@ def test_non_mobile_ignore_count(params_from_base_test_setup, sg_conf_name):
         _, stdout, _ = remote_executor.execute(command1)
         assert int(stdout[0]) == 1 + log2_num, "did not find the expected match on sg info log"
 
-    sg_expvars = sg_client.get_expvars(url=sg_admin_url)
+    sg_expvars = sg_client.get_expvars(url=sg_admin_url, auth=auth)
     non_mobile_ignore_count = sg_expvars["syncgateway"]["per_db"][sg_db]["cache"]["non_mobile_ignored_count"]
     assert non_mobile_ignore_count == 1, "non_mobile_ignore_count did not get expected count"
 

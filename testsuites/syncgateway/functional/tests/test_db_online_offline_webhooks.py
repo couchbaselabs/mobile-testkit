@@ -9,7 +9,8 @@ from libraries.testkit.parallelize import in_parallel
 from keywords.utils import log_info
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.MobileRestClient import MobileRestClient
-
+from requests.auth import HTTPBasicAuth
+from keywords.constants import RBAC_FULL_ADMIN
 
 # implements scenarios: 18 and 19
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
@@ -27,6 +28,7 @@ def test_db_online_offline_webhooks_offline(params_from_base_test_setup, sg_conf
 
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if mode == "di":
         pytest.skip("Offline tests not supported in Di mode -- see https://github.com/couchbase/sync_gateway/issues/2423#issuecomment-300841425")
@@ -63,7 +65,9 @@ def test_db_online_offline_webhooks_offline(params_from_base_test_setup, sg_conf
     sgs = cluster.sync_gateways
 
     admin = Admin(sgs[0])
-
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    if auth:
+        admin.auth = HTTPBasicAuth(auth[0], auth[1])
     # Register User
     log_info("Register User")
     user_objects = admin.register_bulk_users(target=sgs[0], db="db", name_prefix="User",
@@ -131,6 +135,7 @@ def test_db_online_offline_webhooks_offline_two(params_from_base_test_setup, sg_
 
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if mode == "di":
         pytest.skip("Offline tests not supported in Di mode -- see https://github.com/couchbase/sync_gateway/issues/2423#issuecomment-300841425")
@@ -158,7 +163,9 @@ def test_db_online_offline_webhooks_offline_two(params_from_base_test_setup, sg_
     sgs = cluster.sync_gateways
 
     admin = Admin(sgs[0])
-
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    if auth:
+        admin.auth = HTTPBasicAuth(auth[0], auth[1])
     # Register User
     log_info("Register User")
     user_objects = admin.register_bulk_users(target=sgs[0], db="db", name_prefix="User",

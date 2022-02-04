@@ -7,6 +7,7 @@ from keywords.ClusterKeywords import ClusterKeywords
 from keywords.MobileRestClient import MobileRestClient
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from libraries.testkit.cluster import Cluster
+from keywords.constants import RBAC_FULL_ADMIN
 
 from keywords import couchbaseserver
 from keywords import document
@@ -35,6 +36,7 @@ def test_attachments_on_docs_rejected_by_sync_function(params_from_base_test_set
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
@@ -49,6 +51,7 @@ def test_attachments_on_docs_rejected_by_sync_function(params_from_base_test_set
     sg_url_admin = topology["sync_gateways"][0]["admin"]
     sg_db = "db"
     bucket = "data-bucket"
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     log_info("Running 'test_attachments_on_docs_rejected_by_sync_function'")
     log_info("Using cbs_url: {}".format(cbs_url))
@@ -64,8 +67,8 @@ def test_attachments_on_docs_rejected_by_sync_function(params_from_base_test_set
 
     client = MobileRestClient()
 
-    client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels)
-    sg_user_session = client.create_session(url=sg_url_admin, db=sg_db, name=sg_user_name)
+    client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels, auth=auth)
+    sg_user_session = client.create_session(url=sg_url_admin, db=sg_db, name=sg_user_name, auth=auth)
 
     # Verify docs are getting rejected
     with pytest.raises(HTTPError) as he:
@@ -90,5 +93,5 @@ def test_attachments_on_docs_rejected_by_sync_function(params_from_base_test_set
     assert num_att_docs == 0
 
     if sync_gateway_version >= "2.5.0":
-        expvars = client.get_expvars(sg_url_admin)
+        expvars = client.get_expvars(sg_url_admin, auth=auth)
         assert expvars["syncgateway"]["per_db"][sg_db]["security"]["num_docs_rejected"] == 2, "num_docs_rejected is not incremented"

@@ -10,6 +10,7 @@ from couchbase.exceptions import CouchbaseException
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf, get_cluster
 from keywords.utils import log_info, host_for_url
 from concurrent.futures import ThreadPoolExecutor
+from keywords.constants import RBAC_FULL_ADMIN
 
 
 @pytest.mark.syncgateway
@@ -41,6 +42,7 @@ def test_no_conflicts_enabled(params_from_base_test_setup, sg_conf_name, num_of_
     sg_url = topology["sync_gateways"][0]["public"]
     sg_admin_url = topology["sync_gateways"][0]["admin"]
     no_conflicts_enabled = params_from_base_test_setup["no_conflicts_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     sg_db = "db"
 
     if not no_conflicts_enabled:
@@ -51,9 +53,10 @@ def test_no_conflicts_enabled(params_from_base_test_setup, sg_conf_name, num_of_
     c.reset(sg_conf)
 
     sg_client = MobileRestClient()
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     channels = ["no-conflicts"]
-    sg_client.create_user(url=sg_admin_url, db=sg_db, name='autotest', password='pass', channels=channels)
-    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest')
+    sg_client.create_user(url=sg_admin_url, db=sg_db, name='autotest', password='pass', channels=channels, auth=auth)
+    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest', auth=auth)
     # end of Set up
 
     # 2. Add docs to SG.
@@ -105,6 +108,7 @@ def test_no_conflicts_with_revs_limit(params_from_base_test_setup, sg_conf_name,
     mode = params_from_base_test_setup["mode"]
     sg_url = topology["sync_gateways"][0]["public"]
     sg_admin_url = topology["sync_gateways"][0]["admin"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     sg_db = "db"
 
     if not no_conflicts_enabled:
@@ -114,9 +118,10 @@ def test_no_conflicts_with_revs_limit(params_from_base_test_setup, sg_conf_name,
     c.reset(sg_conf)
 
     sg_client = MobileRestClient()
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     channels = ["no-conflicts"]
-    sg_client.create_user(url=sg_admin_url, db=sg_db, name='autotest', password='pass', channels=channels)
-    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest')
+    sg_client.create_user(url=sg_admin_url, db=sg_db, name='autotest', password='pass', channels=channels, auth=auth)
+    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest', auth=auth)
     # end of Set up
 
     # 1. Enable allow_conflicts = false in SG config with revs_limit
@@ -194,6 +199,7 @@ def test_no_conflicts_update_revs_limit(params_from_base_test_setup, sg_conf_nam
     mode = params_from_base_test_setup["mode"]
     sg_url = topology["sync_gateways"][0]["public"]
     sg_admin_url = topology["sync_gateways"][0]["admin"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     sg_db = "db"
     reduced_revs_limit = revs_limit - 3
     total_updates = revs_limit + 5
@@ -205,9 +211,10 @@ def test_no_conflicts_update_revs_limit(params_from_base_test_setup, sg_conf_nam
     c.reset(sg_conf)
 
     sg_client = MobileRestClient()
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     channels = ["no-conflicts"]
-    sg_client.create_user(url=sg_admin_url, db=sg_db, name='autotest', password='pass', channels=channels)
-    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest')
+    sg_client.create_user(url=sg_admin_url, db=sg_db, name='autotest', password='pass', channels=channels, auth=auth)
+    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest', auth=auth)
     # end of Set up
 
     # 1. Enable allow_conflicts = false in SG config with revs_limit=5
@@ -281,6 +288,7 @@ def test_conflicts_sg_accel_added(params_from_base_test_setup, sg_conf_name, num
     sg_url = topology["sync_gateways"][0]["public"]
     sg_admin_url = topology["sync_gateways"][0]["admin"]
     no_conflicts_enabled = params_from_base_test_setup["no_conflicts_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     sg_db = "db"
     total_updates = revs_limit + additional_updates
     new_updates = 2
@@ -293,9 +301,10 @@ def test_conflicts_sg_accel_added(params_from_base_test_setup, sg_conf_name, num
     c.sg_accels[0].stop()
 
     sg_client = MobileRestClient()
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     channels = ["no-conflicts"]
-    sg_client.create_user(url=sg_admin_url, db=sg_db, name='autotest', password='pass', channels=channels)
-    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest')
+    sg_client.create_user(url=sg_admin_url, db=sg_db, name='autotest', password='pass', channels=channels, auth=auth)
+    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest', auth=auth)
     # end of Set up
 
     # 1. Enable allow_conflicts = false in SG config with revs_limit
@@ -372,6 +381,7 @@ def test_migrate_conflicts_to_noConflicts(params_from_base_test_setup, sg_conf_n
     sg_url = topology["sync_gateways"][0]["public"]
     sg_admin_url = topology["sync_gateways"][0]["admin"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     sg_db = "db"
 
     if revs_limit is None:
@@ -386,9 +396,10 @@ def test_migrate_conflicts_to_noConflicts(params_from_base_test_setup, sg_conf_n
     c.reset(sg_conf)
 
     sg_client = MobileRestClient()
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     channels = ["no-conflicts"]
-    sg_client.create_user(url=sg_admin_url, db=sg_db, name='autotest', password='pass', channels=channels)
-    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest')
+    sg_client.create_user(url=sg_admin_url, db=sg_db, name='autotest', password='pass', channels=channels, auth=auth)
+    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest', auth=auth)
     # end of Set up
 
     # 2. Add docs to SG.
@@ -470,6 +481,7 @@ def test_concurrent_updates_no_conflicts(params_from_base_test_setup, sg_conf_na
     mode = params_from_base_test_setup["mode"]
     sg_url = topology["sync_gateways"][0]["public"]
     sg_admin_url = topology["sync_gateways"][0]["admin"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     sg_db = "db"
     if revs_limit is None:
         revs_limit = 1000
@@ -484,9 +496,10 @@ def test_concurrent_updates_no_conflicts(params_from_base_test_setup, sg_conf_na
     c.reset(sg_conf)
 
     sg_client = MobileRestClient()
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     channels = ["no-conflicts"]
-    sg_client.create_user(url=sg_admin_url, db=sg_db, name='autotest', password='pass', channels=channels)
-    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest')
+    sg_client.create_user(url=sg_admin_url, db=sg_db, name='autotest', password='pass', channels=channels, auth=auth)
+    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest', auth=auth)
 
     temp_cluster_config = copy_to_temp_conf(cluster_config, mode)
     persist_cluster_config_environment_prop(temp_cluster_config, 'revs_limit', revs_limit, property_name_check=False)
@@ -591,6 +604,7 @@ def test_migrate_conflicts_delete_last_rev(params_from_base_test_setup, sg_conf_
     mode = params_from_base_test_setup["mode"]
     sg_url = topology["sync_gateways"][0]["public"]
     sg_admin_url = topology["sync_gateways"][0]["admin"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     sg_db = "db"
 
     if no_conflicts_enabled:
@@ -601,9 +615,10 @@ def test_migrate_conflicts_delete_last_rev(params_from_base_test_setup, sg_conf_
     c.reset(sg_conf)
 
     sg_client = MobileRestClient()
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     channels = ["no-conflicts"]
-    sg_client.create_user(url=sg_admin_url, db=sg_db, name='autotest', password='pass', channels=channels)
-    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest')
+    sg_client.create_user(url=sg_admin_url, db=sg_db, name='autotest', password='pass', channels=channels, auth=auth)
+    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest', auth=auth)
     # end of Set up
 
     # 2. Add docs to SG.
@@ -671,6 +686,7 @@ def test_revs_cache_size(params_from_base_test_setup, sg_conf_name, num_of_docs)
     mode = params_from_base_test_setup["mode"]
     sg_url = topology["sync_gateways"][0]["public"]
     sg_admin_url = topology["sync_gateways"][0]["admin"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     sg_db = "db"
     retrieved_docs = num_of_docs // 2
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
@@ -683,9 +699,10 @@ def test_revs_cache_size(params_from_base_test_setup, sg_conf_name, num_of_docs)
     c.reset(sg_conf)
 
     sg_client = MobileRestClient()
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     channels = ["no-conflicts"]
-    sg_client.create_user(url=sg_admin_url, db=sg_db, name='autotest', password='pass', channels=channels)
-    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest')
+    sg_client.create_user(url=sg_admin_url, db=sg_db, name='autotest', password='pass', channels=channels, auth=auth)
+    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest', auth=auth)
     # end of Set up
 
     # 2. Add docs to SG.
@@ -699,7 +716,7 @@ def test_revs_cache_size(params_from_base_test_setup, sg_conf_name, num_of_docs)
         sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc["id"], auth=autouser_session)
 
     # 4. Verify there are number of hits should be same as retrieved docs
-    exp_vars = sg_client.get_expvars(url=sg_admin_url)
+    exp_vars = sg_client.get_expvars(url=sg_admin_url, auth=auth)
     if sync_gateway_version < "2.5":
         revision_cache_hits = exp_vars["syncGateway_stats"]["revisionCache_hits"]
         revision_cache_misses = exp_vars["syncGateway_stats"]["revisionCache_misses"]

@@ -14,6 +14,8 @@ import couchbase.subdocument as SD
 from utilities.cluster_config_utils import copy_sgconf_to_temp, replace_string_on_sgw_config
 from libraries.testkit.admin import Admin
 from keywords.utils import log_info
+from keywords.constants import RBAC_FULL_ADMIN
+from requests.auth import HTTPBasicAuth
 
 
 @pytest.mark.channels
@@ -43,6 +45,7 @@ def test_automatic_and_ondemand_imports(params_from_base_test_setup, x509_cert_a
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if not xattrs_enabled or sync_gateway_version < "3.0.0":
         pytest.skip('This test cannot run with sg version below 3.0.0 and xattrs off')
@@ -54,6 +57,7 @@ def test_automatic_and_ondemand_imports(params_from_base_test_setup, x509_cert_a
     sg_doc_xattrs_id = 'sg_xattrs_0'
     sg_conf_name = "custom_sync/sync_gateway_custom_sync"
     sg_config = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     sg_client = MobileRestClient()
 
@@ -80,8 +84,8 @@ def test_automatic_and_ondemand_imports(params_from_base_test_setup, x509_cert_a
     cbs_ip = c_cluster.servers[0].host
     cbs_bucket = c_cluster.servers[0].get_bucket_names()[0]
     sdk_bucket = get_sdk_client_with_bucket(ssl_enabled, c_cluster, cbs_ip, cbs_bucket)
-    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=sg_channels1)
-    auto_user = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username)
+    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=sg_channels1, auth=auth)
+    auto_user = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username, auth=auth)
     # 3. PUT 2 docs  via SGW
     sg_docs = document.create_docs('sg_xattrs', number=2)
     sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=auto_user)
@@ -90,19 +94,19 @@ def test_automatic_and_ondemand_imports(params_from_base_test_setup, x509_cert_a
     sdk_bucket.mutate_in(sg_doc_xattrs_id, [SD.upsert(user_custom_channel, sg_channel1_value, xattr=True, create_parents=True)])
 
     # 5. Verify  Import Count stats is 1 for automatic imports and 0 for on demand imports
-    sg_expvars = sg_client.get_expvars(sg_admin_url)
+    sg_expvars = sg_client.get_expvars(sg_admin_url, auth=auth)
     sg_import_count = sg_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"]
     if imports_type == "automatic":
         sg_import_count == 1, "doc should get imported automatically when user xattrs added to the doc"
     else:
         sg_import_count == 0, "doc got imported automatically when import_docs is false with user xattrs"
-    raw_doc = sg_client.get_raw_doc(sg_admin_url, sg_db, sg_doc_xattrs_id)
+    raw_doc = sg_client.get_raw_doc(sg_admin_url, sg_db, sg_doc_xattrs_id, auth=auth)
 
     # 6. Perform raw GET only on one doc to ensure added xattr is imported
     assert raw_doc["_meta"]["xattrs"][user_custom_channel] == sg_channel1_value, "raw doc did not get user xattrs value"
 
     # 7. Import Count stats is  1
-    sg_expvars = sg_client.get_expvars(sg_admin_url)
+    sg_expvars = sg_client.get_expvars(sg_admin_url, auth=auth)
     sg_import_count = sg_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"]
     sg_import_count == 1, "import_count is not equal to 1 with raw get of the doc"
 
@@ -139,6 +143,7 @@ def test_using_resync_and_swapping(params_from_base_test_setup, resync):
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if not xattrs_enabled or sync_gateway_version < "3.0.0":
         pytest.skip('XATTR tests require --xattrs flag')
@@ -155,6 +160,7 @@ def test_using_resync_and_swapping(params_from_base_test_setup, resync):
     sg_doc_xattrs_id = 'sg_xattrs_0'
     sg_conf_name = "custom_sync/sync_gateway_custom_sync"
     sg_config = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     sg_client = MobileRestClient()
 
@@ -168,15 +174,17 @@ def test_using_resync_and_swapping(params_from_base_test_setup, resync):
     cbs_ip = c_cluster.servers[0].host
     sg1 = c_cluster.sync_gateways[0]
     admin = Admin(sg1)
+    if auth:
+        admin.auth = HTTPBasicAuth(auth[0], auth[1])
     cbs_bucket = c_cluster.servers[0].get_bucket_names()[0]
     sdk_bucket = get_sdk_client_with_bucket(ssl_enabled, c_cluster, cbs_ip, cbs_bucket)
-    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=sg_channels1)
-    auto_user = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username)
-    sg_client.create_user(sg_admin_url, sg_db, xyz_username, password, channels=sg_channels2)
-    auto_user2 = sg_client.create_session(url=sg_admin_url, db=sg_db, name=xyz_username)
+    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=sg_channels1, auth=auth)
+    auto_user = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username, auth=auth)
+    sg_client.create_user(sg_admin_url, sg_db, xyz_username, password, channels=sg_channels2, auth=auth)
+    auto_user2 = sg_client.create_session(url=sg_admin_url, db=sg_db, name=xyz_username, auth=auth)
     # 2. Have couple of docs with user xattrs("abc") update via sdk and get syncfn_count
     sg_docs = document.create_docs('sg_xattrs', number=2)
-    sg_client.add_bulk_docs(url=sg_admin_url, db=sg_db, docs=sg_docs)
+    sg_client.add_bulk_docs(url=sg_admin_url, db=sg_db, docs=sg_docs, auth=auth)
 
     # 3. Add user xattrs key on server
     #   sync_xattrs: {
@@ -199,7 +207,7 @@ def test_using_resync_and_swapping(params_from_base_test_setup, resync):
     #     Verify import_counts stats
     if resync:
         sg_client.take_db_offline(cluster_conf=cluster_config, db=sg_db)
-        status = sg_client.db_resync(url=sg_admin_url, db=sg_db)
+        status = sg_client.db_resync(url=sg_admin_url, db=sg_db, auth=auth)
         assert status == 200, "re-sync failed"
         sg_client.bring_db_online(cluster_conf=cluster_config, db=sg_db)
         count = 0
@@ -210,8 +218,8 @@ def test_using_resync_and_swapping(params_from_base_test_setup, resync):
                 break
             time.sleep(1)
             count += 1
-        sg_client.get_raw_doc(sg_admin_url, sg_db, sg_doc_xattrs_id)
-        sg_expvars = sg_client.get_expvars(sg_admin_url)
+        sg_client.get_raw_doc(sg_admin_url, sg_db, sg_doc_xattrs_id, auth=auth)
+        sg_expvars = sg_client.get_expvars(sg_admin_url, auth=auth)
         sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs, number_updates=1, auth=auto_user2)
 
     else:
@@ -227,7 +235,7 @@ def test_using_resync_and_swapping(params_from_base_test_setup, resync):
     assert sg_doc_xattrs_id not in sg_doc_ids, "sg docs is not updated with new channel after resync"
 
     # 6. Verify syncfn_count is number of docs updated at step4
-    sg_expvars = sg_client.get_expvars(sg_admin_url)
+    sg_expvars = sg_client.get_expvars(sg_admin_url, auth=auth)
     sg_import_count3 = sg_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"]
     sg_fn_count3 = sg_expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_push"]["sync_function_count"]
     assert sg_import_count3 == 0, "sg import count incremented after the restart though docs are already imported"
@@ -265,6 +273,7 @@ def test_remove_xattrs(params_from_base_test_setup):
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if not xattrs_enabled or sync_gateway_version < "3.0.0":
         pytest.skip('Test did not enable xattrs or sgw version is not 3.0 and above')
@@ -277,6 +286,7 @@ def test_remove_xattrs(params_from_base_test_setup):
     sg_conf_name2 = "sync_gateway_default_functional_tests"
     sg_config = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     sg_config2 = sync_gateway_config_path_for_mode(sg_conf_name2, mode)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     sg_client = MobileRestClient()
 
@@ -291,15 +301,15 @@ def test_remove_xattrs(params_from_base_test_setup):
     sg = c_cluster.sync_gateways[0]
     cbs_bucket = c_cluster.servers[0].get_bucket_names()[0]
     sdk_client = get_sdk_client_with_bucket(ssl_enabled, c_cluster, cbs_ip, cbs_bucket)
-    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=sg_channels1)
-    auto_user = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username)
+    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=sg_channels1, auth=auth)
+    auto_user = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username, auth=auth)
 
     # 4. Add doc with user xattr on SDK
     sdk_doc_bodies = document.create_docs('sdk', number=10)
     sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
     sdk_doc_ids = [doc for doc in sdk_docs]
     sdk_client.upsert_multi(sdk_docs)
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db)["rows"]
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, auth=auth)["rows"]
 
     filtered_doc_ids = random.sample(sdk_doc_ids, 6)
     non_filtered_ids = set(sdk_doc_ids) - set(filtered_doc_ids)
@@ -363,6 +373,7 @@ def test_sync_xattrs_update_concurrently(params_from_base_test_setup):
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if not xattrs_enabled or sync_gateway_version < "3.0.0":
         pytest.skip('Test did not enable xattrs or sgw version is not 3.0 and above')
@@ -378,6 +389,7 @@ def test_sync_xattrs_update_concurrently(params_from_base_test_setup):
     user_custom_channel = "channel1"
     sg_conf_name = "custom_sync/sync_gateway_custom_sync"
     sg_config = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     sg_client = MobileRestClient()
 
@@ -391,10 +403,10 @@ def test_sync_xattrs_update_concurrently(params_from_base_test_setup):
     cbs_ip = c_cluster.servers[0].host
     cbs_bucket = c_cluster.servers[0].get_bucket_names()[0]
     sdk_client = get_sdk_client_with_bucket(ssl_enabled, c_cluster, cbs_ip, cbs_bucket)
-    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=sg_channels1)
-    auto_user = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username)
-    sg_client.create_user(sg_admin_url, sg_db, username2, password, channels=sg_channels2)
-    auto_user2 = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username2)
+    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=sg_channels1, auth=auth)
+    auto_user = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username, auth=auth)
+    sg_client.create_user(sg_admin_url, sg_db, username2, password, channels=sg_channels2, auth=auth)
+    auto_user2 = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username2, auth=auth)
 
     # 4. Add doc with user xattr on SDK
     sdk_doc_bodies = document.create_docs('sdk', number=num_docs)
@@ -402,10 +414,10 @@ def test_sync_xattrs_update_concurrently(params_from_base_test_setup):
     sdk_client.upsert_multi(sdk_docs)
     count = 0
     retries = 10
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db)["rows"]
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, auth=auth)["rows"]
     while count < retries and len(sg_docs) < num_docs:
         time.sleep(1)
-        sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db)["rows"]
+        sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, auth=auth)["rows"]
         count += 1
     sg_doc_ids = [row["id"] for row in sg_docs]
 
@@ -464,6 +476,7 @@ def test_syncfunction_user_xattrs_format(params_from_base_test_setup, channel_ty
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if not xattrs_enabled or sync_gateway_version < "3.0.0":
         pytest.skip('Test did not enable xattrs or sgw version is not 3.0 and above')
@@ -481,6 +494,7 @@ def test_syncfunction_user_xattrs_format(params_from_base_test_setup, channel_ty
     sg_doc_xattrs_id = 'user_xattrs_format_0'
     sg_conf_name = "custom_sync/sync_gateway_custom_sync"
     sg_config = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     sg_client = MobileRestClient()
 
@@ -494,17 +508,17 @@ def test_syncfunction_user_xattrs_format(params_from_base_test_setup, channel_ty
     cbs_bucket = c_cluster.servers[0].get_bucket_names()[0]
     sdk_bucket = get_sdk_client_with_bucket(ssl_enabled, c_cluster, cbs_ip, cbs_bucket)
     if channel_type == "string" or channel_type == "special_characters":
-        sg_client.create_user(sg_admin_url, sg_db, username, password, channels=sg_channels1)
+        sg_client.create_user(sg_admin_url, sg_db, username, password, channels=sg_channels1, auth=auth)
     else:
-        sg_client.create_user(sg_admin_url, sg_db, username, password, channels=sg_channel1_value1)
-    auto_user = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username)
+        sg_client.create_user(sg_admin_url, sg_db, username, password, channels=sg_channel1_value1, auth=auth)
+    auto_user = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username, auth=auth)
     # 3. PUT 2 docs  via SGW
     sg_docs = document.create_docs('user_xattrs_format', number=2)
-    sg_client.add_bulk_docs(url=sg_admin_url, db=sg_db, docs=sg_docs)
+    sg_client.add_bulk_docs(url=sg_admin_url, db=sg_db, docs=sg_docs, auth=auth)
 
     # 4. Update doc with SDK to add user xattr
     sdk_bucket.mutate_in(sg_doc_xattrs_id, [SD.upsert(user_custom_channel, sg_channel1_value1, xattr=True, create_parents=True)])
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db)["rows"]
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, auth=auth)["rows"]
 
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=auto_user)["rows"]
     assert len(sg_docs) == 1, "docs still exist in old channel even after replacing the user xattrs"
@@ -537,6 +551,7 @@ def test_syncfunction_user_xattrs_dictionary_boolean_integer(params_from_base_te
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if not xattrs_enabled or sync_gateway_version < "3.0.0":
         pytest.skip('Test did not enable xattrs or sgw version is not 3.0 and above')
@@ -562,6 +577,7 @@ def test_syncfunction_user_xattrs_dictionary_boolean_integer(params_from_base_te
     sg_doc_xattrs_id1 = 'user_xattrs_format_1'
     sg_conf_name = "custom_sync/sync_gateway_custom_sync"
     sg_config = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     sg_client = MobileRestClient()
 
@@ -576,18 +592,18 @@ def test_syncfunction_user_xattrs_dictionary_boolean_integer(params_from_base_te
     cbs_ip = c_cluster.servers[0].host
     cbs_bucket = c_cluster.servers[0].get_bucket_names()[0]
     sdk_bucket = get_sdk_client_with_bucket(ssl_enabled, c_cluster, cbs_ip, cbs_bucket)
-    sg_client.create_user(sg_admin_url, sg_db, username1, password, channels=sg_channels1)
-    sg_client.create_user(sg_admin_url, sg_db, username2, password, channels=sg_channels2)
-    auto_user1 = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username1)
-    auto_user2 = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username2)
+    sg_client.create_user(sg_admin_url, sg_db, username1, password, channels=sg_channels1, auth=auth)
+    sg_client.create_user(sg_admin_url, sg_db, username2, password, channels=sg_channels2, auth=auth)
+    auto_user1 = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username1, auth=auth)
+    auto_user2 = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username2, auth=auth)
     # 5. create 2 docs  via SGW
     sg_docs = document.create_docs('user_xattrs_format', content="doc-content", number=2)
-    sg_client.add_bulk_docs(url=sg_admin_url, db=sg_db, docs=sg_docs)
+    sg_client.add_bulk_docs(url=sg_admin_url, db=sg_db, docs=sg_docs, auth=auth)
 
     # 6. Update 1 doc (doc1) with SDK to add user xattr and have user xattrs with boolean
     sdk_bucket.mutate_in(sg_doc_xattrs_id0, [SD.upsert(user_custom_channel1, channel_value1, xattr=True, create_parents=True)])
     sdk_bucket.mutate_in(sg_doc_xattrs_id1, [SD.upsert(user_custom_channel1, channel_value2, xattr=True, create_parents=True)])
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db)["rows"]
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, auth=auth)["rows"]
 
     # 7. verify doc1 is assign to channel 'abc' when channel1 is true otherwise 'xyz'
     if data_type == "integer":
@@ -633,6 +649,7 @@ def test_missing_xattrs_key(params_from_base_test_setup, missing_type):
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if sync_gateway_version < "3.0.0":
         pytest.skip('SGW version is not 3.0 and above')
@@ -649,6 +666,7 @@ def test_missing_xattrs_key(params_from_base_test_setup, missing_type):
     doc_xattrs_id = 'user_xattrs_format_0'
     sg_conf_name = "custom_sync/sync_gateway_custom_sync"
     sg_config = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     sg_client = MobileRestClient()
 
@@ -666,12 +684,12 @@ def test_missing_xattrs_key(params_from_base_test_setup, missing_type):
     cbs_ip = c_cluster.servers[0].host
     cbs_bucket = c_cluster.servers[0].get_bucket_names()[0]
     sdk_bucket = get_sdk_client_with_bucket(ssl_enabled, c_cluster, cbs_ip, cbs_bucket)
-    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=sg_channels1)
-    auto_user = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username)
+    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=sg_channels1, auth=auth)
+    auto_user = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username, auth=auth)
 
     # 4. create doc via SGW rest api
     sg_docs = document.create_docs('user_xattrs_format', number=2)
-    sg_client.add_bulk_docs(url=sg_admin_url, db=sg_db, docs=sg_docs)
+    sg_client.add_bulk_docs(url=sg_admin_url, db=sg_db, docs=sg_docs, auth=auth)
 
     # 5. Update doc with SDK to add user xattr
     if missing_type != "server_user_xattrs":
@@ -683,7 +701,7 @@ def test_missing_xattrs_key(params_from_base_test_setup, missing_type):
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=auto_user)["rows"]
     assert len(sg_docs) == 0, "docs assigned to the channel without user xattrs key"
 
-    raw_doc = sg_client.get_raw_doc(sg_admin_url, sg_db, doc_xattrs_id)
+    raw_doc = sg_client.get_raw_doc(sg_admin_url, sg_db, doc_xattrs_id, auth=auth)
 
     if missing_type == "user_xattrs_key":
         try:
@@ -775,6 +793,7 @@ def test_rev_with_docupdates_docxattrsupdate(params_from_base_test_setup, update
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if not xattrs_enabled or sync_gateway_version < "3.0.0":
         pytest.skip('Test did not enable xattrs or sgw version is not 3.0 and above')
@@ -788,6 +807,7 @@ def test_rev_with_docupdates_docxattrsupdate(params_from_base_test_setup, update
     sg_doc_xattrs_id = 'user_xattrs_format_0'
     sg_conf_name = "custom_sync/sync_gateway_custom_sync"
     sg_config = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     sg_client = MobileRestClient()
 
     # 1. have sync function with xattrs key and channel assignment of user xattrs
@@ -798,15 +818,15 @@ def test_rev_with_docupdates_docxattrsupdate(params_from_base_test_setup, update
     cbs_ip = c_cluster.servers[0].host
     cbs_bucket = c_cluster.servers[0].get_bucket_names()[0]
     sdk_bucket = get_sdk_client_with_bucket(ssl_enabled, c_cluster, cbs_ip, cbs_bucket)
-    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=sg_channels1)
-    auto_user = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username)
+    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=sg_channels1, auth=auth)
+    auto_user = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username, auth=auth)
 
     # 2. Create doc in SGW
     sg_docs = document.create_docs('user_xattrs_format', content="sgw-content", number=2)
-    sg_client.add_bulk_docs(url=sg_admin_url, db=sg_db, docs=sg_docs)
+    sg_client.add_bulk_docs(url=sg_admin_url, db=sg_db, docs=sg_docs, auth=auth)
 
     # 3. Get revision of the doc
-    raw_doc = sg_client.get_raw_doc(sg_admin_url, sg_db, sg_doc_xattrs_id)
+    raw_doc = sg_client.get_raw_doc(sg_admin_url, sg_db, sg_doc_xattrs_id, auth=auth)
     rev_gen1 = int(raw_doc["_sync"]["rev"].split("-")[0])
 
     # 4. Update user xattrs on docs via sdk
@@ -825,7 +845,7 @@ def test_rev_with_docupdates_docxattrsupdate(params_from_base_test_setup, update
     assert len(sg_docs) == 1, "docs still exist in old channel even after replacing the user xattrs"
 
     # 6. Wait until docs imported and docs processed via sync function and verify the revision generated and incremented by 1
-    raw_doc = sg_client.get_raw_doc(sg_admin_url, sg_db, sg_doc_xattrs_id)
+    raw_doc = sg_client.get_raw_doc(sg_admin_url, sg_db, sg_doc_xattrs_id, auth=auth)
     rev_gen2 = int(raw_doc["_sync"]["rev"].split("-")[0])
     assert rev_gen2 == rev_gen1 + 1, "revision did not get incremented though there is a update on doc via SDK"
 
@@ -866,6 +886,7 @@ def test_rev_generation_with_largexattrs(params_from_base_test_setup):
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if not xattrs_enabled or sync_gateway_version < "3.0.0":
         pytest.skip('Test did not enable xattrs or sgw version is not 3.0 and above')
@@ -880,6 +901,7 @@ def test_rev_generation_with_largexattrs(params_from_base_test_setup):
     sg_conf_name = "custom_sync/sync_gateway_custom_sync"
     number_of_sdk_docs = 1
     sg_config = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     sg_client = MobileRestClient()
 
@@ -892,7 +914,7 @@ def test_rev_generation_with_largexattrs(params_from_base_test_setup):
     sg1 = c_cluster.sync_gateways[0]
     cbs_bucket = c_cluster.servers[0].get_bucket_names()[0]
     sdk_bucket = get_sdk_client_with_bucket(ssl_enabled, c_cluster, cbs_ip, cbs_bucket)
-    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=sg_channels1)
+    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=sg_channels1, auth=auth)
     # auto_user = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username)
     # 2. Create doc in SDK
     sdk_doc_bodies = document.create_docs('sdk', number=number_of_sdk_docs)
@@ -904,7 +926,7 @@ def test_rev_generation_with_largexattrs(params_from_base_test_setup):
     retries = 3
     count = 0
     while count < retries:
-        sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db)["rows"]
+        sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, auth=auth)["rows"]
         if len(sg_docs) >= number_of_sdk_docs:
             break
         else:
@@ -912,7 +934,7 @@ def test_rev_generation_with_largexattrs(params_from_base_test_setup):
             time.sleep(1)
 
     # Get revision before the update
-    raw_doc = sg_client.get_raw_doc(sg_admin_url, sg_db, sg_doc_xattrs_id)
+    raw_doc = sg_client.get_raw_doc(sg_admin_url, sg_db, sg_doc_xattrs_id, auth=auth)
     rev_gen1 = int(raw_doc["_sync"]["rev"].split("-")[0])
 
     # 4. Update user xattrs with 25 channels on docs via sdk
@@ -928,7 +950,7 @@ def test_rev_generation_with_largexattrs(params_from_base_test_setup):
         sg1.restart(config=temp_sg_config, cluster_config=cluster_config)
 
     # 5. Verfy no rev changes. verify delta _sync stats
-    raw_doc = sg_client.get_raw_doc(sg_admin_url, sg_db, sg_doc_xattrs_id)
+    raw_doc = sg_client.get_raw_doc(sg_admin_url, sg_db, sg_doc_xattrs_id, auth=auth)
     rev_gen2 = int(raw_doc["_sync"]["rev"].split("-")[0])
     assert rev_gen2 == rev_gen1, "revision did not get incremented though there is a update on doc via SDK"
 

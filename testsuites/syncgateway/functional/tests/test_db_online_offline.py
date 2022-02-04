@@ -11,11 +11,14 @@ from libraries.testkit.verify import verify_changes
 
 import libraries.testkit.settings
 
+from keywords.constants import RBAC_FULL_ADMIN
 from requests.exceptions import HTTPError
 from keywords.utils import log_info
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.MobileRestClient import MobileRestClient
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
+
+from requests.auth import HTTPBasicAuth
 
 NUM_ENDPOINTS = 13
 
@@ -34,6 +37,7 @@ NUM_ENDPOINTS = 13
 def test_online_default_rest(params_from_base_test_setup, sg_conf_name, num_docs, x509_cert_auth):
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if mode == "di":
         pytest.skip("Offline tests not supported in Di mode -- see https://github.com/couchbase/sync_gateway/issues/2423#issuecomment-300841425")
@@ -57,7 +61,8 @@ def test_online_default_rest(params_from_base_test_setup, sg_conf_name, num_docs
     cluster.reset(sg_config_path=sg_conf)
 
     # all db endpoints should function as expected
-    errors = rest_scan(cluster.sync_gateways[0], db="db", online=True, num_docs=num_docs, user_name="seth", channels=["ABC"])
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    errors = rest_scan(cluster.sync_gateways[0], db="db", online=True, num_docs=num_docs, user_name="seth", channels=["ABC"], auth=auth)
     assert len(errors) == 0
 
     # Scenario 4
@@ -82,6 +87,7 @@ def test_offline_false_config_rest(params_from_base_test_setup, sg_conf_name, nu
 
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if mode == "di":
         pytest.skip("Offline tests not supported in Di mode -- see https://github.com/couchbase/sync_gateway/issues/2423#issuecomment-300841425")
@@ -96,8 +102,8 @@ def test_offline_false_config_rest(params_from_base_test_setup, sg_conf_name, nu
     cluster.reset(sg_config_path=sg_conf)
 
     # all db endpoints should function as expected
-    errors = rest_scan(cluster.sync_gateways[0], db="db", online=True, num_docs=num_docs, user_name="seth", channels=["ABC"])
-
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    errors = rest_scan(cluster.sync_gateways[0], db="db", online=True, num_docs=num_docs, user_name="seth", channels=["ABC"], auth=auth)
     assert len(errors) == 0
 
     # Scenario 4
@@ -122,6 +128,7 @@ def test_online_to_offline_check_503(params_from_base_test_setup, sg_conf_name, 
 
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if mode == "di":
         pytest.skip("Offline tests not supported in Di mode -- see https://github.com/couchbase/sync_gateway/issues/2423#issuecomment-300841425")
@@ -136,7 +143,8 @@ def test_online_to_offline_check_503(params_from_base_test_setup, sg_conf_name, 
     cluster.reset(sg_config_path=sg_conf)
 
     # all db endpoints should function as expected
-    errors = rest_scan(cluster.sync_gateways[0], db="db", online=True, num_docs=num_docs, user_name="seth", channels=["ABC"])
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    errors = rest_scan(cluster.sync_gateways[0], db="db", online=True, num_docs=num_docs, user_name="seth", channels=["ABC"], auth=auth)
     assert len(errors) == 0
 
     # Take bucket offline
@@ -145,7 +153,7 @@ def test_online_to_offline_check_503(params_from_base_test_setup, sg_conf_name, 
     assert status == 0
 
     # all db endpoints should return 503
-    errors = rest_scan(cluster.sync_gateways[0], db="db", online=False, num_docs=num_docs, user_name="seth", channels=["ABC"])
+    errors = rest_scan(cluster.sync_gateways[0], db="db", online=False, num_docs=num_docs, user_name="seth", channels=["ABC"], auth=auth)
 
     # We hit NUM_ENDPOINT unique REST endpoints + num of doc PUT failures
     assert len(errors) == NUM_ENDPOINTS + (num_docs * 2)
@@ -167,6 +175,7 @@ def test_online_to_offline_changes_feed_controlled_close_continuous(params_from_
 
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if mode == "di":
         pytest.skip("Offline tests not supported in Di mode -- see https://github.com/couchbase/sync_gateway/issues/2423#issuecomment-300841425")
@@ -181,6 +190,10 @@ def test_online_to_offline_changes_feed_controlled_close_continuous(params_from_
     cluster.reset(sg_config_path=sg_conf)
 
     admin = Admin(cluster.sync_gateways[0])
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    if auth:
+        admin.auth = HTTPBasicAuth(auth[0], auth[1])
+
     sg_client = MobileRestClient()
     seth = admin.register_user(target=cluster.sync_gateways[0], db="db", name="seth", password="password", channels=["ABC"])
     doc_pusher = admin.register_user(target=cluster.sync_gateways[0], db="db", name="doc_pusher", password="password", channels=["ABC"])
@@ -254,6 +267,7 @@ def test_online_to_offline_continous_changes_feed_controlled_close_sanity_mulitp
 
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if mode == "di":
         pytest.skip("Offline tests not supported in Di mode -- see https://github.com/couchbase/sync_gateway/issues/2423#issuecomment-300841425")
@@ -269,6 +283,10 @@ def test_online_to_offline_continous_changes_feed_controlled_close_sanity_mulitp
     cluster.reset(sg_config_path=sg_conf)
 
     admin = Admin(cluster.sync_gateways[0])
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    if auth:
+        admin.auth = HTTPBasicAuth(auth[0], auth[1])
+
     sg_client = MobileRestClient()
     users = admin.register_bulk_users(target=cluster.sync_gateways[0], db="db", name_prefix="user", password="password", number=num_users, channels=["ABC"])
     feed_close_results = list()
@@ -319,6 +337,7 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll_sanity(params_
 
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if mode == "di":
         pytest.skip("Offline tests not supported in Di mode -- see https://github.com/couchbase/sync_gateway/issues/2423#issuecomment-300841425")
@@ -333,6 +352,10 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll_sanity(params_
     cluster.reset(sg_config_path=sg_conf)
 
     admin = Admin(cluster.sync_gateways[0])
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    if auth:
+        admin.auth = HTTPBasicAuth(auth[0], auth[1])
+
     sg_client = MobileRestClient()
     seth = admin.register_user(target=cluster.sync_gateways[0], db="db", name="seth", password="password", channels=["ABC"])
     docs_in_changes = dict()
@@ -381,6 +404,7 @@ def test_online_to_offline_longpoll_changes_feed_controlled_close_sanity_mulitpl
 
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if mode == "di":
         pytest.skip("Offline tests not supported in Di mode -- see https://github.com/couchbase/sync_gateway/issues/2423#issuecomment-300841425")
@@ -396,6 +420,10 @@ def test_online_to_offline_longpoll_changes_feed_controlled_close_sanity_mulitpl
     cluster.reset(sg_config_path=sg_conf)
 
     admin = Admin(cluster.sync_gateways[0])
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    if auth:
+        admin.auth = HTTPBasicAuth(auth[0], auth[1])
+
     sg_client = MobileRestClient()
     users = admin.register_bulk_users(target=cluster.sync_gateways[0], db="db", name_prefix="user", password="password", number=num_users, channels=["ABC"])
 
@@ -452,6 +480,7 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll(params_from_ba
 
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if mode == "di":
         pytest.skip("Offline tests not supported in Di mode -- see https://github.com/couchbase/sync_gateway/issues/2423#issuecomment-300841425")
@@ -466,6 +495,10 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll(params_from_ba
     cluster.reset(sg_config_path=sg_conf)
 
     admin = Admin(cluster.sync_gateways[0])
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    if auth:
+        admin.auth = HTTPBasicAuth(auth[0], auth[1])
+
     seth = admin.register_user(target=cluster.sync_gateways[0], db="db", name="seth", password="password", channels=["ABC"])
     doc_pusher = admin.register_user(target=cluster.sync_gateways[0], db="db", name="doc_pusher", password="password", channels=["ABC"])
     sg_client = MobileRestClient()
@@ -555,6 +588,7 @@ def test_offline_true_config_bring_online(params_from_base_test_setup, sg_conf_n
 
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if mode == "di":
         pytest.skip("Offline tests not supported in Di mode -- see https://github.com/couchbase/sync_gateway/issues/2423#issuecomment-300841425")
@@ -569,7 +603,8 @@ def test_offline_true_config_bring_online(params_from_base_test_setup, sg_conf_n
     cluster.reset(sg_config_path=sg_conf)
 
     # all db endpoints should fail with 503
-    errors = rest_scan(cluster.sync_gateways[0], db="db", online=False, num_docs=num_docs, user_name="seth", channels=["ABC"])
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    errors = rest_scan(cluster.sync_gateways[0], db="db", online=False, num_docs=num_docs, user_name="seth", channels=["ABC"], auth=auth)
 
     assert len(errors) == NUM_ENDPOINTS + (num_docs * 2)
     for error_tuple in errors:
@@ -584,7 +619,7 @@ def test_offline_true_config_bring_online(params_from_base_test_setup, sg_conf_n
     assert status == 0
 
     # all db endpoints should succeed
-    errors = rest_scan(cluster.sync_gateways[0], db="db", online=True, num_docs=num_docs, user_name="seth", channels=["ABC"])
+    errors = rest_scan(cluster.sync_gateways[0], db="db", online=True, num_docs=num_docs, user_name="seth", channels=["ABC"], auth=auth)
     assert len(errors) == 0
 
 
@@ -603,6 +638,7 @@ def test_db_offline_tap_loss_sanity(params_from_base_test_setup, sg_conf_name, n
 
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if mode == "di":
         pytest.skip("Offline tests not supported in Di mode -- see https://github.com/couchbase/sync_gateway/issues/2423#issuecomment-300841425")
@@ -617,14 +653,15 @@ def test_db_offline_tap_loss_sanity(params_from_base_test_setup, sg_conf_name, n
     cluster.reset(sg_config_path=sg_conf)
 
     # all db rest enpoints should succeed
-    errors = rest_scan(cluster.sync_gateways[0], db="db", online=True, num_docs=num_docs, user_name="seth", channels=["ABC"])
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    errors = rest_scan(cluster.sync_gateways[0], db="db", online=True, num_docs=num_docs, user_name="seth", channels=["ABC"], auth=auth)
     assert len(errors) == 0
 
     # Delete bucket to sever TAP feed
     cluster.servers[0].delete_bucket("data-bucket")
 
     # Check that bucket is in offline state
-    errors = rest_scan(cluster.sync_gateways[0], db="db", online=False, num_docs=num_docs, user_name="seth", channels=["ABC"])
+    errors = rest_scan(cluster.sync_gateways[0], db="db", online=False, num_docs=num_docs, user_name="seth", channels=["ABC"], auth=auth)
     assert len(errors) == NUM_ENDPOINTS + (num_docs * 2)
     for error_tuple in errors:
         log_info("({},{})".format(error_tuple[0], error_tuple[1]))
@@ -646,6 +683,7 @@ def test_db_delayed_online(params_from_base_test_setup, sg_conf_name, num_docs):
 
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if mode == "di":
         pytest.skip("Offline tests not supported in Di mode -- see https://github.com/couchbase/sync_gateway/issues/2423#issuecomment-300841425")
@@ -660,6 +698,9 @@ def test_db_delayed_online(params_from_base_test_setup, sg_conf_name, num_docs):
     cluster.reset(sg_config_path=sg_conf)
 
     admin = Admin(cluster.sync_gateways[0])
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    if auth:
+        admin.auth = HTTPBasicAuth(auth[0], auth[1])
 
     time.sleep(2)
     sg_client = MobileRestClient()
@@ -682,7 +723,7 @@ def test_db_delayed_online(params_from_base_test_setup, sg_conf_name, num_docs):
     assert db_info["state"] == "Online"
 
     # all db rest enpoints should succeed
-    errors = rest_scan(cluster.sync_gateways[0], db="db", online=True, num_docs=num_docs, user_name="seth", channels=["ABC"])
+    errors = rest_scan(cluster.sync_gateways[0], db="db", online=True, num_docs=num_docs, user_name="seth", channels=["ABC"], auth=auth)
     assert len(errors) == 0
 
 
@@ -699,6 +740,7 @@ def test_multiple_dbs_unique_buckets_lose_tap(params_from_base_test_setup, sg_co
 
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if mode == "di":
         pytest.skip("Offline tests not supported in Di mode -- see https://github.com/couchbase/sync_gateway/issues/2423#issuecomment-300841425")
@@ -714,10 +756,12 @@ def test_multiple_dbs_unique_buckets_lose_tap(params_from_base_test_setup, sg_co
 
     dbs = ["db1", "db2", "db3", "db4"]
 
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+
     # all db rest endpoints should succeed
     for db in dbs:
         log_info("Doing rest scan on db: {}".format(db))
-        errors = rest_scan(cluster.sync_gateways[0], db=db, online=True, num_docs=num_docs, user_name="seth", channels=["ABC"])
+        errors = rest_scan(cluster.sync_gateways[0], db=db, online=True, num_docs=num_docs, user_name="seth", channels=["ABC"], auth=auth)
         assert len(errors) == 0
 
     log_info("Deleting data-bucket-1 and data-bucket-3")
@@ -727,13 +771,13 @@ def test_multiple_dbs_unique_buckets_lose_tap(params_from_base_test_setup, sg_co
     # Check that db2 and db4 are still Online
     log_info("Check that db2 and db4 are still Online")
     for db in ["db2", "db4"]:
-        errors = rest_scan(cluster.sync_gateways[0], db=db, online=True, num_docs=num_docs, user_name="adam", channels=["CBS"])
+        errors = rest_scan(cluster.sync_gateways[0], db=db, online=True, num_docs=num_docs, user_name="adam", channels=["CBS"], auth=auth)
         assert len(errors) == 0
 
     # Check that db1 and db3 go offline
     log_info("Check that db1 and db3 go offline")
     for db in ["db1", "db3"]:
-        errors = rest_scan(cluster.sync_gateways[0], db=db, online=False, num_docs=num_docs, user_name="seth", channels=["ABC"])
+        errors = rest_scan(cluster.sync_gateways[0], db=db, online=False, num_docs=num_docs, user_name="seth", channels=["ABC"], auth=auth)
         num_expected_errors = NUM_ENDPOINTS + (num_docs * 2)
         if len(errors) != num_expected_errors:
             log_info("Expected {} errors, but got {}".format(num_expected_errors, len(errors)))
@@ -745,7 +789,7 @@ def test_multiple_dbs_unique_buckets_lose_tap(params_from_base_test_setup, sg_co
             assert error_tuple[1] == 503
 
 
-def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
+def rest_scan(sync_gateway, db, online, num_docs, user_name, channels, auth=None):
 
     # Missing ADMIN
     # TODO: GET /{db}/_session/{session-id}
@@ -773,6 +817,8 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
     # TODO: POST /{db}/_facebook_token
 
     admin = Admin(sync_gateway=sync_gateway)
+    if auth:
+        admin.auth = HTTPBasicAuth(auth[0], auth[1])
 
     error_responses = list()
 

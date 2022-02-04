@@ -4,6 +4,8 @@ import pytest
 from libraries.testkit.admin import Admin
 from libraries.testkit.cluster import Cluster
 from libraries.testkit.verify import verify_changes
+from keywords.constants import RBAC_FULL_ADMIN
+from requests.auth import HTTPBasicAuth
 
 import concurrent
 import concurrent.futures
@@ -46,6 +48,7 @@ def test_overloaded_channel_cache(params_from_base_test_setup, sg_conf_name, num
     mode = params_from_base_test_setup["mode"]
     cbs_ce_version = params_from_base_test_setup["cbs_ce"]
     sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if mode == "di":
         pytest.skip("Unsupported feature in distributed index")
@@ -76,6 +79,10 @@ def test_overloaded_channel_cache(params_from_base_test_setup, sg_conf_name, num
 
     admin = Admin(target_sg)
     sg_db_name = "db"
+
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    if auth:
+        admin.auth = HTTPBasicAuth(auth[0], auth[1])
 
     users = admin.register_bulk_users(target_sg, sg_db_name, "user", 1000, "password", [user_channels], num_of_workers=10)
     assert len(users) == 1000
