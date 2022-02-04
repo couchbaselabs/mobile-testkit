@@ -1675,6 +1675,7 @@ def verify_doc_replication_rejection(liteserv_platform, log_file, test_cbllog):
        @note: Porting logs for Android, xamarin-android, net-core and net-uwp platform, as the logs reside
            outside runner's file directory
     """
+
     delimiter = "/"
     if "-msft" in liteserv_platform or liteserv_platform == "uwp":
         delimiter = "\\"
@@ -1701,6 +1702,16 @@ def verify_doc_replication_rejection(liteserv_platform, log_file, test_cbllog):
     if zipfile.is_zipfile(test_log):
         with zipfile.ZipFile(test_log, 'r') as zip_ref:
             zip_ref.extractall(log_full_path_dir)
+
+    # c platform logs are packaged without subdir structure
+    if "c-" in liteserv_platform:
+        try:
+            os.mkdir(log_dir_path)
+            for item in os.listdir(log_full_path_dir):
+                if ".cbllog" in item:
+                    os.rename(os.path.join(log_full_path_dir, item), os.path.join(log_dir_path, item))
+        except:
+            pass
 
     log_info("Checking {} for copied log files - {}".format(log_dir_path, os.listdir(log_dir_path)))
     log_file = subprocess.check_output("ls -t {} | head -1".format(log_dir_path), shell=True)

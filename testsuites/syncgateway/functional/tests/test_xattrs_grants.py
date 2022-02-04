@@ -237,7 +237,7 @@ def test_using_resync_and_swapping(params_from_base_test_setup, resync):
     # 6. Verify syncfn_count is number of docs updated at step4
     sg_expvars = sg_client.get_expvars(sg_admin_url, auth=auth)
     sg_import_count3 = sg_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"]
-    sg_fn_count3 = sg_expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_push"]["sync_function_count"]
+    sg_fn_count3 = sg_expvars["syncgateway"]["per_db"][sg_db]["database"]["sync_function_count"]
     assert sg_import_count3 == 0, "sg import count incremented after the restart though docs are already imported"
     assert sg_fn_count3 == 1, "sync function did not get increamented after the restart though it went through resync process"
 

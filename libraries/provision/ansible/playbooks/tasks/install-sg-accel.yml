@@ -2,11 +2,11 @@
 - name: SG ACCEL | Install sg_accel on CentOS
   become: yes
   shell: rpm -i /tmp/{{ couchbase_sg_accel_package }}
-  when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat"
+  when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon"
 
 - name: SG ACCEL | Install sg_accel deb
   become: yes
   shell: dpkg -i /tmp/{{ couchbase_sg_accel_package }}
-  when: ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
+  when: ansible_distribution == "Ubuntu" or ansible_distribution == "Debian" or ansible_distribution == "Amazon"
 
 - include: stop-sg-accel.yml

@@ -19,6 +19,9 @@
     couchbase_server_cluster_ram: "{{((ansible_memtotal_mb|int)*0.8)|int - 512 }}"
     couchbase_server_admin_port: 8091
     protocol: http://
+    addnode_protocol: http://
+    addnode_port: 8091
+    ssl_verify:
     couchbase_server_home_path: /opt/couchbase
 
     # Primary node
@@ -47,7 +50,7 @@
 
     - name: Install Couchbase Server on CentOS
       yum: name=/tmp/{{ couchbase_server_package_name }} state=present
-      when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat"
+      when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon"
 
     - name: Install Couchbase Server on Ubuntu
       apt: deb=/tmp/{{ couchbase_server_package_name }} state=present
@@ -81,15 +84,15 @@
 
     - name: COUCHBASE SERVER | Enabled Transparent Huge Pages
       shell: echo 'for i in /sys/kernel/mm/*transparent_hugepage/enabled; do echo never > $i; done' >> /etc/rc.local
-      when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7"
+      when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7" or ansible_distribution == "Amazon"
 
     - name: COUCHBASE SERVER | Disable Transparent Huge Pages
       shell: echo 'for i in /sys/kernel/mm/*transparent_hugepage/defrag; do echo never > $i; done' >> /etc/rc.local
-      when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7"
+      when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7" or ansible_distribution == "Amazon"
 
     - name: COUCHBASE SERVER | Enabled Transparent Huge Pages again
       shell: for i in /sys/kernel/mm/*transparent_hugepage/enabled; do echo never > $i; done
-      when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7"
+      when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7" or ansible_distribution == "Amazon"
 
     # Start via init scipt if running CBS 4.0.0 or 4.1.0 on CentOS 7.2 due to https://issues.couchbase.com/browse/MB-17193
     - name: COUCHBASE SERVER | Start Couchbase Service (Hack around 7.2 and CBS 4.1.0 issue)
@@ -164,18 +167,25 @@
 
     - set_fact:
         protocol: ""
+        addnode_protocol: ""
       when: "( {{ cb_major_version['stdout'] | search('\\b[1-4]\\b') }} ) or ( '5.0.0' in cb_full_version.stdout )"
 
+    - set_fact:
+        addnode_protocol: https://
+        addnode_port: 18091
+        ssl_verify: --no-ssl-verify
+      when: "( {{ cb_major_version['stdout'] | search('\\b[7]\\b') }} ) or ( '7.1.0' in cb_full_version.stdout )"
+
     - name: COUCHBASE SERVER | Join additional cluster nodes | configure IPv6
-      shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli server-add -c {{ protocol }}://[{{ couchbase_server_primary_node }}]:{{ couchbase_server_admin_port }} -u={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --server-add={{ protocol }}://[{{ couchbase_server_node }}]:{{ couchbase_server_admin_port }} --server-add-username={{ couchbase_server_admin }} --server-add-password={{ couchbase_server_password }}"
+      shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli server-add -c {{ addnode_protocol }}://[{{ couchbase_server_primary_node }}]:{{ addnode_port }} -u={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --server-add={{ addnode_protocol }}://[{{ couchbase_server_node }}]:{{ addnode_port }} --server-add-username={{ couchbase_server_admin }} --server-add-password={{ couchbase_server_password }} {{ ssl_verify }}"
       when: "not (couchbase_server_node == couchbase_server_primary_node ) and (not {{ cb_major_version['stdout'] | search('\\b[1-5]\\b') }}) and ipv6_enabled"
 
     - name: COUCHBASE SERVER | Join additional cluster nodes | configure IPv4
-      shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli server-add -c {{ protocol }}{{ couchbase_server_primary_node }}:{{ couchbase_server_admin_port }} -u={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --server-add={{ protocol }}{{ couchbase_server_node }}:{{ couchbase_server_admin_port }} --server-add-username={{ couchbase_server_admin }} --server-add-password={{ couchbase_server_password }}"
+      shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli server-add -c {{ addnode_protocol }}{{ couchbase_server_primary_node }}:{{ addnode_port }} -u={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --server-add={{ addnode_protocol }}{{ couchbase_server_node }}:{{ addnode_port }} --server-add-username={{ couchbase_server_admin }} --server-add-password={{ couchbase_server_password }} {{ ssl_verify }}"
       when: "not (couchbase_server_node == couchbase_server_primary_node ) and not ipv6_enabled"
 
     - name: COUCHBASE SERVER | Join additional cluster nodes | configure IPv6
-      shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli server-add -c {{ protocol }}[{{ couchbase_server_primary_node }}]:{{ couchbase_server_admin_port }} -u={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --server-add={{ protocol }}{{ couchbase_server_node }}:{{ couchbase_server_admin_port }} --server-add-username={{ couchbase_server_admin }} --server-add-password={{ couchbase_server_password }}"
+      shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli server-add -c {{ addnode_protocol }}[{{ couchbase_server_primary_node }}]:{{ addnode_port }} -u={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --server-add={{ addnode_protocol }}{{ couchbase_server_node }}:{{ addnode_port }} --server-add-username={{ couchbase_server_admin }} --server-add-password={{ couchbase_server_password }} {{ ssl_verify }}"
       when: "not (couchbase_server_node == couchbase_server_primary_node ) and ipv6_enabled"
 
     - name: COUCHBASE SERVER | Rebalance cluster (6.X and up) | configure IPv4

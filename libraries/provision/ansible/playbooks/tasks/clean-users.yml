@@ -1,6 +1,6 @@
 - name: SYNC GATEWAY | Remove sync_gateway user on Centos
   user: name=sync_gateway state=absent remove=yes force=yes
-  when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
+  when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
 
 - name: SG ACCEL | Remove sg_accel user
   user: name=sg_accel state=absent remove=yes force=yes

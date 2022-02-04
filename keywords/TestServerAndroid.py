@@ -32,6 +32,7 @@ class TestServerAndroid(TestServerBase):
             self.activity_name = self.installed_package_name + "/com.couchbase.CouchbaseLiteServ.MainActivity"
         elif self.platform == "c-android":
             # Cpp-android
+            self.download_source = "couchbase-lite-c"
             if community_enabled:
                 self.package_name = self.apk_name = "CBLTestServer-C-community.apk"
             else:
@@ -40,6 +41,7 @@ class TestServerAndroid(TestServerBase):
             self.activity_name = self.installed_package_name + "/android.app.NativeActivity"
         else:
             # Xamarin-android
+            self.download_source = "couchbase-lite-net"
             self.package_name = self.apk_name = "TestServer.Android.apk"
             self.installed_package_name = "TestServer.Android"
             self.activity_name = self.installed_package_name + "/md53466f247b9f9d18ced632d20bd2e0d5c.MainActivity"
@@ -70,9 +72,10 @@ class TestServerAndroid(TestServerBase):
             else:
                 url = "{}/{}/{}/{}/{}".format(LATEST_BUILDS, self.download_source, version, build, self.package_name)
         elif self.platform == "c-android":
-            url = "{}/couchbase-lite-c/{}/{}/{}".format(LATEST_BUILDS, version, build, self.package_name)
-        else:
-            url = "{}/couchbase-lite-net/{}/{}/{}".format(LATEST_BUILDS, version, build, self.package_name)
+            if build is None:
+                url = "{}/couchbase-lite-c/{}/{}/{}".format(LATEST_BUILDS, version, self.package_name)
+            else
+                url = "{}/couchbase-lite-c/{}/{}/{}".format(LATEST_BUILDS, version, build, self.package_name)
 
         log_info("Downloading {} -> {}/{}".format(url, BINARY_DIR, self.package_name))
         resp = requests.get(url, verify=False)

@@ -469,7 +469,6 @@ link:testsuites/syncgateway/performance/README.md[Running Performance Tests]
 $ python libraries/utilities/fetch_sg_logs.py
 ```
 
-<<<<<<< HEAD
 If you plan on doing development, it may be helpful to add the PYTHONPATH env variables to your .bashrc file so that you do not have to run this setup everytime you open a new shell.
 
 == Development Environment

@@ -286,8 +286,8 @@ def test_replication_configuration_with_push_replication(params_from_base_test_s
     if sync_gateway_version >= "2.5.0":
         expvars = sg_client.get_expvars(sg_admin_url, auth=auth)
         assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_push"]["doc_push_count"] == 5, "doc_push_count did not get incremented"
-        assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_push"]["sync_function_time"] > 0, "sync_function_time is not incremented"
-        assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_push"]["sync_function_count"] > 0, "sync_function_count is not incremented"
+        assert expvars["syncgateway"]["per_db"][sg_db]["database"]["sync_function_time"] > 0, "sync_function_time is not incremented"
+        assert expvars["syncgateway"]["per_db"][sg_db]["database"]["sync_function_count"] > 0, "sync_function_count is not incremented"
 
         if attachments_generator is not None:
             assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_push"]["attachment_push_count"] == 30, "attachment_push_count did not get incremented"
@@ -2096,7 +2096,7 @@ def test_default_conflict_withConflicts_and_sgOffline(params_from_base_test_setu
     while replicator.getActivitylevel(repl) == "offline" and count < 10:
         time.sleep(1)
         count += 1
-    replicator.wait_until_replicator_idle(repl)
+    replicator.wait_until_replicator_idle(repl, err_check=False)
 
     # 8. Verify docs deleted in sg
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session, include_docs=True)
