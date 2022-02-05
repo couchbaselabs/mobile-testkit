@@ -9,6 +9,8 @@ from keywords.utils import log_info, host_for_url
 from libraries.testkit.admin import Admin
 from libraries.testkit.cluster import Cluster
 from keywords.ClusterKeywords import ClusterKeywords
+from keywords.constants import RBAC_FULL_ADMIN
+from requests.auth import HTTPBasicAuth
 
 source_bucket_name = "source-bucket"
 data_bucket_name = "data-bucket"
@@ -28,7 +30,7 @@ ShadowCluster = namedtuple(
     ])
 
 
-def init_shadow_cluster(cluster, config_path_shadower, config_path_non_shadower):
+def init_shadow_cluster(cluster, config_path_shadower, config_path_non_shadower, auth):
 
     # initially, setup both sync gateways as shadowers -- this needs to be
     # the initial config so that both buckets (source and data) will be created
@@ -42,6 +44,8 @@ def init_shadow_cluster(cluster, config_path_shadower, config_path_non_shadower)
     shadower_sg = cluster.sync_gateways[0]
 
     admin = Admin(non_shadower_sg)
+    if auth:
+        admin.auth = HTTPBasicAuth(auth[0], auth[1])
 
     alice_shadower = admin.register_user(
         target=shadower_sg,
@@ -97,6 +101,7 @@ def test_bucket_shadow_low_revs_limit_repeated_deletes(params_from_base_test_set
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     cluster_helper = ClusterKeywords(cluster_config)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config)
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
@@ -107,6 +112,7 @@ def test_bucket_shadow_low_revs_limit_repeated_deletes(params_from_base_test_set
 
     default_config_path_shadower_low_revs = sync_gateway_config_path_for_mode("sync_gateway_bucketshadow_low_revs", mode)
     default_config_path_non_shadower_low_revs = sync_gateway_config_path_for_mode("sync_gateway_default_low_revs", mode)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     log_info("Running 'test_bucket_shadow_low_revs_limit_repeated_deletes'")
     log_info("Using cluster_config: {}".format(cluster_config))
@@ -114,7 +120,8 @@ def test_bucket_shadow_low_revs_limit_repeated_deletes(params_from_base_test_set
     cluster = Cluster(config=cluster_config)
     sc = init_shadow_cluster(cluster,
                              default_config_path_shadower_low_revs,
-                             default_config_path_non_shadower_low_revs)
+                             default_config_path_non_shadower_low_revs,
+                             auth)
 
     # Write doc into shadower SG
     doc_id = sc.alice_shadower.add_doc()
@@ -171,6 +178,7 @@ def test_bucket_shadow_low_revs_limit(params_from_base_test_setup):
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     cluster_helper = ClusterKeywords(cluster_config)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config)
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
@@ -184,9 +192,10 @@ def test_bucket_shadow_low_revs_limit(params_from_base_test_setup):
 
     default_config_path_shadower_low_revs = sync_gateway_config_path_for_mode("sync_gateway_bucketshadow_low_revs", mode)
     default_config_path_non_shadower_low_revs = sync_gateway_config_path_for_mode("sync_gateway_default_low_revs", mode)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     cluster = Cluster(config=cluster_config)
-    sc = init_shadow_cluster(cluster, default_config_path_shadower_low_revs, default_config_path_non_shadower_low_revs)
+    sc = init_shadow_cluster(cluster, default_config_path_shadower_low_revs, default_config_path_non_shadower_low_revs, auth)
 
     # Write doc into shadower SG
     doc_id = sc.alice_shadower.add_doc()
@@ -238,6 +247,7 @@ def test_bucket_shadow_multiple_sync_gateways(params_from_base_test_setup):
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     cluster_helper = ClusterKeywords(cluster_config)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config)
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
@@ -251,12 +261,14 @@ def test_bucket_shadow_multiple_sync_gateways(params_from_base_test_setup):
 
     default_config_path_shadower = sync_gateway_config_path_for_mode("sync_gateway_bucketshadow", mode)
     default_config_path_non_shadower = sync_gateway_config_path_for_mode("sync_gateway_default", mode)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     cluster = Cluster(config=cluster_config)
     sc = init_shadow_cluster(
         cluster,
         default_config_path_shadower,
         default_config_path_non_shadower,
+        auth
     )
 
     # Write several docs into shadower SG

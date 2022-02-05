@@ -11,6 +11,8 @@ from keywords.SyncGateway import sync_gateway_config_path_for_mode, SyncGateway
 from keywords.utils import add_new_fields_to_doc, host_for_url, log_info, add_additional_new_field_to_doc
 from libraries.testkit.cluster import Cluster
 from libraries.testkit import cluster
+from keywords.constants import RBAC_FULL_ADMIN
+from requests.auth import HTTPBasicAuth
 
 from requests.exceptions import HTTPError
 
@@ -66,6 +68,7 @@ def test_auto_purge_setting_impact(params_from_base_test_setup, auto_purge_setti
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     # check sync gateway version
     if sync_gateway_version < "3.0.0":
@@ -73,6 +76,7 @@ def test_auto_purge_setting_impact(params_from_base_test_setup, auto_purge_setti
 
     # prepare sync gateway environment
     sg1, sg2 = redeploy_sync_gateway(cluster_config, mode, sync_gateway_version)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     sg_client = MobileRestClient()
 
@@ -82,18 +86,18 @@ def test_auto_purge_setting_impact(params_from_base_test_setup, auto_purge_setti
     sg2_username = "sg2_user"
     password = "password"
 
-    sg_client.create_user(url=sg1.admin.admin_url, db=DB1, name=sg1_username, password=password, channels=channels)
-    sg_client.create_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, password=password, channels=channels)
+    sg_client.create_user(url=sg1.admin.admin_url, db=DB1, name=sg1_username, password=password, channels=channels, auth=auth)
+    sg_client.create_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, password=password, channels=channels, auth=auth)
 
-    cookie1, session1 = sg_client.create_session(url=sg1.admin.admin_url, db=DB1, name=sg1_username)
+    cookie1, session1 = sg_client.create_session(url=sg1.admin.admin_url, db=DB1, name=sg1_username, auth=auth)
     auth_session1 = cookie1, session1
 
-    cookie2, session2 = sg_client.create_session(url=sg2.admin.admin_url, db=DB2, name=sg2_username)
+    cookie2, session2 = sg_client.create_session(url=sg2.admin.admin_url, db=DB2, name=sg2_username, auth=auth)
     auth_session2 = cookie2, session2
 
     # 1. on passive SGW, create docs: doc_A belongs to channel A only, doc_AnB belongs to channel A and channel B
-    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_A", channels=["A"])
-    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_AnB", channels=["A", "B"])
+    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_A", channels=["A"], auth=auth)
+    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_AnB", channels=["A", "B"], auth=auth)
 
     sg2_docs = sg_client.get_all_docs(url=sg2.url, db=DB2, auth=auth_session2, include_docs=True)
     sg2_doc_ids = [doc["id"] for doc in sg2_docs["rows"]]
@@ -131,6 +135,8 @@ def test_auto_purge_setting_impact(params_from_base_test_setup, auto_purge_setti
             direction="pull",
             continuous=True
         )
+    if auth:
+        sg1.admin.auth = HTTPBasicAuth(auth[0], auth[1])
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id, read_flag=True, max_times=3000)
 
     # 3. verify active SGW have pulled the doc_A and doc_AnB
@@ -140,7 +146,7 @@ def test_auto_purge_setting_impact(params_from_base_test_setup, auto_purge_setti
         assert sg2_doc_id in sg1_doc_ids
 
     # 4. revoke user access from channel A
-    sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=["B"])
+    sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=["B"], auth=auth)
     time.sleep(3)
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id, read_flag=True, max_times=3000)
 
@@ -181,6 +187,7 @@ def test_existing_replication_enabling_auto_purge(params_from_base_test_setup, r
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     # check sync gateway version
     if sync_gateway_version < "3.0.0":
@@ -188,6 +195,7 @@ def test_existing_replication_enabling_auto_purge(params_from_base_test_setup, r
 
     # prepare sync gateway environment
     sg1, sg2 = redeploy_sync_gateway(cluster_config, mode, sync_gateway_version)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     sg_client = MobileRestClient()
 
@@ -197,19 +205,19 @@ def test_existing_replication_enabling_auto_purge(params_from_base_test_setup, r
     sg2_username = "sg2_user"
     password = "password"
 
-    sg_client.create_user(url=sg1.admin.admin_url, db=DB1, name=sg1_username, password=password, channels=channels)
-    sg_client.create_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, password=password, channels=channels)
+    sg_client.create_user(url=sg1.admin.admin_url, db=DB1, name=sg1_username, password=password, channels=channels, auth=auth)
+    sg_client.create_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, password=password, channels=channels, auth=auth)
 
-    cookie1, session1 = sg_client.create_session(url=sg1.admin.admin_url, db=DB1, name=sg1_username)
+    cookie1, session1 = sg_client.create_session(url=sg1.admin.admin_url, db=DB1, name=sg1_username, auth=auth)
     auth_session1 = cookie1, session1
 
-    cookie2, session2 = sg_client.create_session(url=sg2.admin.admin_url, db=DB2, name=sg2_username)
+    cookie2, session2 = sg_client.create_session(url=sg2.admin.admin_url, db=DB2, name=sg2_username, auth=auth)
     auth_session2 = cookie2, session2
 
     # 1. on passive SGW, create docs in channel A, B, and C
-    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=10, id_prefix="sg2_A", channels=["A"])
-    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=7, id_prefix="sg2_B", channels=["B"])
-    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=5, id_prefix="sg2_C", channels=["C"])
+    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=10, id_prefix="sg2_A", channels=["A"], auth=auth)
+    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=7, id_prefix="sg2_B", channels=["B"], auth=auth)
+    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=5, id_prefix="sg2_C", channels=["C"], auth=auth)
 
     sg2_docs = sg_client.get_all_docs(url=sg2.url, db=DB2, auth=auth_session2, include_docs=True)
     sg2_doc_ids = [doc["id"] for doc in sg2_docs["rows"]]
@@ -224,6 +232,8 @@ def test_existing_replication_enabling_auto_purge(params_from_base_test_setup, r
         direction="pull",
         continuous=True
     )
+    if auth:
+        sg1.admin.auth = HTTPBasicAuth(auth[0], auth[1])
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id_1, read_flag=True, max_times=6000)
 
     # 3. verify active SGW have all docs pulled
@@ -233,12 +243,12 @@ def test_existing_replication_enabling_auto_purge(params_from_base_test_setup, r
         assert sg2_doc_id in sg1_doc_ids
 
     # 4. remove the user from channel A, w/o additional replication activity by adding a doc in channel B
-    sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=["B", "C"])
+    sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=["B", "C"], auth=auth)
     time.sleep(3)
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id_1, read_flag=True, max_times=6000)
 
     if require_checkpoint_reset:
-        sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_BB", channels=["B"])
+        sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_BB", channels=["B"], auth=auth)
         sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id_1, read_flag=True, max_times=6000)
 
     # 5. verify docs belong to channel A not purged and remain on active SGW
@@ -278,7 +288,7 @@ def test_existing_replication_enabling_auto_purge(params_from_base_test_setup, r
         assert (doc_id.startswith("sg2_B") or doc_id.startswith("sg2_C"))
 
     # 8. remove the user from channel B
-    sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=["C"])
+    sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=["C"], auth=auth)
     time.sleep(3)
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id_1, read_flag=True, max_times=3000)
 
@@ -314,6 +324,7 @@ def test_new_replication_enabling_auto_purge(params_from_base_test_setup):
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     # check sync gateway version
     if sync_gateway_version < "3.0.0":
@@ -321,6 +332,7 @@ def test_new_replication_enabling_auto_purge(params_from_base_test_setup):
 
     # prepare sync gateway environment
     sg1, sg2 = redeploy_sync_gateway(cluster_config, mode, sync_gateway_version)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     sg_client = MobileRestClient()
 
@@ -330,18 +342,18 @@ def test_new_replication_enabling_auto_purge(params_from_base_test_setup):
     sg2_username = "sg2_user"
     password = "password"
 
-    sg_client.create_user(url=sg1.admin.admin_url, db=DB1, name=sg1_username, password=password, channels=channels)
-    sg_client.create_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, password=password, channels=channels)
+    sg_client.create_user(url=sg1.admin.admin_url, db=DB1, name=sg1_username, password=password, channels=channels, auth=auth)
+    sg_client.create_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, password=password, channels=channels, auth=auth)
 
-    cookie1, session1 = sg_client.create_session(url=sg1.admin.admin_url, db=DB1, name=sg1_username)
+    cookie1, session1 = sg_client.create_session(url=sg1.admin.admin_url, db=DB1, name=sg1_username, auth=auth)
     auth_session1 = cookie1, session1
 
-    cookie2, session2 = sg_client.create_session(url=sg2.admin.admin_url, db=DB2, name=sg2_username)
+    cookie2, session2 = sg_client.create_session(url=sg2.admin.admin_url, db=DB2, name=sg2_username, auth=auth)
     auth_session2 = cookie2, session2
 
     # 1. on passive SGW, create docs in channel A and channel B
-    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=10, id_prefix="sg2_A", channels=["A"])
-    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=7, id_prefix="sg2_B", channels=["B"])
+    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=10, id_prefix="sg2_A", channels=["A"], auth=auth)
+    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=7, id_prefix="sg2_B", channels=["B"], auth=auth)
 
     sg2_docs = sg_client.get_all_docs(url=sg2.url, db=DB2, auth=auth_session2, include_docs=True)
     sg2_doc_ids = [doc["id"] for doc in sg2_docs["rows"]]
@@ -358,6 +370,8 @@ def test_new_replication_enabling_auto_purge(params_from_base_test_setup):
     )
 
     # 3. verify active SGW have all docs pulled
+    if auth:
+        sg1.admin.auth = HTTPBasicAuth(auth[0], auth[1])
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id_1, read_flag=True, max_times=6000)
     sg1_docs = sg_client.get_all_docs(url=sg1.url, db=DB1, auth=auth_session1, include_docs=True)
     sg1_doc_ids = [doc["id"] for doc in sg1_docs["rows"]]
@@ -365,7 +379,7 @@ def test_new_replication_enabling_auto_purge(params_from_base_test_setup):
         assert sg2_doc_id in sg1_doc_ids
 
     # 4. remove the user from channel A
-    sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=["B"])
+    sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=["B"], auth=auth)
     time.sleep(3)
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id_1, read_flag=True, max_times=3000)
 
@@ -396,7 +410,7 @@ def test_new_replication_enabling_auto_purge(params_from_base_test_setup):
         assert not doc_id.startswith("sg2_A")
 
     # 8. remove the user from channel B
-    sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=["C"])
+    sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=["C"], auth=auth)
     time.sleep(3)
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id_2, read_flag=True, max_times=3000)
 
@@ -426,6 +440,7 @@ def test_disable_auto_purge_no_impact_purged_docs(params_from_base_test_setup):
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     # check sync gateway version
     if sync_gateway_version < "3.0.0":
@@ -433,6 +448,7 @@ def test_disable_auto_purge_no_impact_purged_docs(params_from_base_test_setup):
 
     # prepare sync gateway environment
     sg1, sg2 = redeploy_sync_gateway(cluster_config, mode, sync_gateway_version)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     sg_client = MobileRestClient()
 
@@ -442,18 +458,18 @@ def test_disable_auto_purge_no_impact_purged_docs(params_from_base_test_setup):
     sg2_username = "sg2_user"
     password = "password"
 
-    sg_client.create_user(url=sg1.admin.admin_url, db=DB1, name=sg1_username, password=password, channels=channels)
-    sg_client.create_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, password=password, channels=channels)
+    sg_client.create_user(url=sg1.admin.admin_url, db=DB1, name=sg1_username, password=password, channels=channels, auth=auth)
+    sg_client.create_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, password=password, channels=channels, auth=auth)
 
-    cookie1, session1 = sg_client.create_session(url=sg1.admin.admin_url, db=DB1, name=sg1_username)
+    cookie1, session1 = sg_client.create_session(url=sg1.admin.admin_url, db=DB1, name=sg1_username, auth=auth)
     auth_session1 = cookie1, session1
 
-    cookie2, session2 = sg_client.create_session(url=sg2.admin.admin_url, db=DB2, name=sg2_username)
+    cookie2, session2 = sg_client.create_session(url=sg2.admin.admin_url, db=DB2, name=sg2_username, auth=auth)
     auth_session2 = cookie2, session2
 
     # 1. on passive SGW, create doc_A_* belongs to channel A, doc_B_* belongs to channel B
-    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=10, id_prefix="sg2_A", channels=["A"])
-    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=7, id_prefix="sg2_B", channels=["B"])
+    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=10, id_prefix="sg2_A", channels=["A"], auth=auth)
+    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=7, id_prefix="sg2_B", channels=["B"], auth=auth)
 
     sg2_docs = sg_client.get_all_docs(url=sg2.url, db=DB2, auth=auth_session2, include_docs=True)
     sg2_doc_ids = [doc["id"] for doc in sg2_docs["rows"]]
@@ -471,6 +487,8 @@ def test_disable_auto_purge_no_impact_purged_docs(params_from_base_test_setup):
     )
 
     # 3. verify active SGW have pulled doc_A_* and doc_B_*
+    if auth:
+        sg1.admin.auth = HTTPBasicAuth(auth[0], auth[1])
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id, read_flag=True, max_times=3000)
     sg1_docs = sg_client.get_all_docs(url=sg1.url, db=DB1, auth=auth_session1, include_docs=True)
     sg1_doc_ids = [doc["id"] for doc in sg1_docs["rows"]]
@@ -478,7 +496,7 @@ def test_disable_auto_purge_no_impact_purged_docs(params_from_base_test_setup):
         assert sg2_doc_id in sg1_doc_ids
 
     # 4. remove the user from channel A, wait replication finishes operation and turns idle
-    sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=["B"])
+    sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=["B"], auth=auth)
     time.sleep(3)
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id, read_flag=True, max_times=3000)
 
@@ -541,6 +559,7 @@ def test_user_lost_channel_access_pull(params_from_base_test_setup):
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     # check sync gateway version
     if sync_gateway_version < "3.0.0":
@@ -548,6 +567,7 @@ def test_user_lost_channel_access_pull(params_from_base_test_setup):
 
     # prepare sync gateway environment
     sg1, sg2 = redeploy_sync_gateway(cluster_config, mode, sync_gateway_version)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     sg_client = MobileRestClient()
 
@@ -557,22 +577,22 @@ def test_user_lost_channel_access_pull(params_from_base_test_setup):
     sg2_username = "sg2_user"
     password = "password"
 
-    sg_client.create_user(url=sg1.admin.admin_url, db=DB1, name=sg1_username, password=password, channels=channels)
-    sg_client.create_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, password=password, channels=channels)
+    sg_client.create_user(url=sg1.admin.admin_url, db=DB1, name=sg1_username, password=password, channels=channels, auth=auth)
+    sg_client.create_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, password=password, channels=channels, auth=auth)
 
-    cookie1, session1 = sg_client.create_session(url=sg1.admin.admin_url, db=DB1, name=sg1_username)
+    cookie1, session1 = sg_client.create_session(url=sg1.admin.admin_url, db=DB1, name=sg1_username, auth=auth)
     auth_session1 = cookie1, session1
 
-    cookie2, session2 = sg_client.create_session(url=sg2.admin.admin_url, db=DB2, name=sg2_username)
+    cookie2, session2 = sg_client.create_session(url=sg2.admin.admin_url, db=DB2, name=sg2_username, auth=auth)
     auth_session2 = cookie2, session2
 
     # 1. on passive SGW, create docs:
     #       - doc_A belongs to channel A only
     #       - doc_AnB belongs to channel A and channel B
     #       - doc_C belongs to channel C only
-    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=10, id_prefix="sg2_A", channels=["A"])
-    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_AnB", channels=["A", "B"])
-    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_C", channels=["C"])
+    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=10, id_prefix="sg2_A", channels=["A"], auth=auth)
+    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_AnB", channels=["A", "B"], auth=auth)
+    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_C", channels=["C"], auth=auth)
 
     sg2_docs = sg_client.get_all_docs(url=sg2.url, db=DB2, auth=auth_session2, include_docs=True)
     sg2_doc_ids = [doc["id"] for doc in sg2_docs["rows"]]
@@ -588,6 +608,8 @@ def test_user_lost_channel_access_pull(params_from_base_test_setup):
         continuous=True,
         purge_on_removal=True
     )
+    if auth:
+        sg1.admin.auth = HTTPBasicAuth(auth[0], auth[1])
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id, read_flag=True, max_times=3000)
 
     # 3. verify active SGW pulled the doc_A, doc_AnB, and doc_C
@@ -597,7 +619,7 @@ def test_user_lost_channel_access_pull(params_from_base_test_setup):
         assert sg2_doc_id in sg1_doc_ids
 
     # 4. revoke the user access to channel A
-    sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=["B", "C"])
+    sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=["B", "C"], auth=auth)
     time.sleep(2)
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id, read_flag=True, max_times=3000)
 
@@ -614,7 +636,7 @@ def test_user_lost_channel_access_pull(params_from_base_test_setup):
                          property_updater=add_new_fields_to_doc)
 
     # 7. revoke the user access to channel C
-    sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=["B"])
+    sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=["B"], auth=auth)
     time.sleep(2)
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id, read_flag=True, max_times=3000)
 
@@ -651,6 +673,7 @@ def test_user_lost_channel_access_push_only(params_from_base_test_setup):
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     # check sync gateway version
     if sync_gateway_version < "3.0.0":
@@ -658,6 +681,7 @@ def test_user_lost_channel_access_push_only(params_from_base_test_setup):
 
     # prepare sync gateway environment
     sg1, sg2 = redeploy_sync_gateway(cluster_config, mode, sync_gateway_version)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     sg_client = MobileRestClient()
 
@@ -667,22 +691,22 @@ def test_user_lost_channel_access_push_only(params_from_base_test_setup):
     sg2_username = "sg2_user"
     password = "password"
 
-    sg_client.create_user(url=sg1.admin.admin_url, db=DB1, name=sg1_username, password=password, channels=channels)
-    sg_client.create_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, password=password, channels=channels)
+    sg_client.create_user(url=sg1.admin.admin_url, db=DB1, name=sg1_username, password=password, channels=channels, auth=auth)
+    sg_client.create_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, password=password, channels=channels, auth=auth)
 
-    cookie1, session1 = sg_client.create_session(url=sg1.admin.admin_url, db=DB1, name=sg1_username)
+    cookie1, session1 = sg_client.create_session(url=sg1.admin.admin_url, db=DB1, name=sg1_username, auth=auth)
     auth_session1 = cookie1, session1
 
-    cookie2, session2 = sg_client.create_session(url=sg2.admin.admin_url, db=DB2, name=sg2_username)
+    cookie2, session2 = sg_client.create_session(url=sg2.admin.admin_url, db=DB2, name=sg2_username, auth=auth)
     auth_session2 = cookie2, session2
 
     # 1. on passive SGW, create docs:
     #       - doc_A belongs to channel A only
     #       - doc_AnB belongs to channel A and channel B
     #       - doc_C belongs to channel C only
-    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_A", channels=["A"])
-    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_AnB", channels=["A", "B"])
-    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_C", channels=["C"])
+    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_A", channels=["A"], auth=auth)
+    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_AnB", channels=["A", "B"], auth=auth)
+    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_C", channels=["C"], auth=auth)
 
     sg2_docs = sg_client.get_all_docs(url=sg2.url, db=DB2, auth=auth_session2, include_docs=True)
     sg2_doc_ids = [doc["id"] for doc in sg2_docs["rows"]]
@@ -697,6 +721,8 @@ def test_user_lost_channel_access_push_only(params_from_base_test_setup):
         direction="pull",
         continuous=False
     )
+    if auth:
+        sg1.admin.auth = HTTPBasicAuth(auth[0], auth[1])
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id, read_flag=True, max_times=3000)
 
     # 3. verify active SGW pulled the doc_A, doc_AnB, and doc_C
@@ -722,7 +748,7 @@ def test_user_lost_channel_access_push_only(params_from_base_test_setup):
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id, write_flag=True, read_flag=True, max_times=3000)
 
     # 5. revoke user access from channel A
-    sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=["B", "C"])
+    sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=["B", "C"], auth=auth)
     time.sleep(3)
 
     # 6. verify docs are not impacted
@@ -734,7 +760,7 @@ def test_user_lost_channel_access_push_only(params_from_base_test_setup):
     assert "sg2_C_0" in sg1_doc_ids
 
     # 7. revoke user access from channel C
-    sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=["B"])
+    sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=["B"], auth=auth)
     time.sleep(3)
 
     # 8. update doc_C three times
@@ -780,6 +806,7 @@ def test_user_lost_channel_access_push_and_pull(params_from_base_test_setup):
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     # check sync gateway version
     if sync_gateway_version < "3.0.0":
@@ -787,6 +814,7 @@ def test_user_lost_channel_access_push_and_pull(params_from_base_test_setup):
 
     # prepare sync gateway environment
     sg1, sg2 = redeploy_sync_gateway(cluster_config, mode, sync_gateway_version)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     sg_client = MobileRestClient()
 
@@ -796,22 +824,22 @@ def test_user_lost_channel_access_push_and_pull(params_from_base_test_setup):
     sg2_username = "sg2_user"
     password = "password"
 
-    sg_client.create_user(url=sg1.admin.admin_url, db=DB1, name=sg1_username, password=password, channels=channels)
-    sg_client.create_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, password=password, channels=channels)
+    sg_client.create_user(url=sg1.admin.admin_url, db=DB1, name=sg1_username, password=password, channels=channels, auth=auth)
+    sg_client.create_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, password=password, channels=channels, auth=auth)
 
-    cookie1, session1 = sg_client.create_session(url=sg1.admin.admin_url, db=DB1, name=sg1_username)
+    cookie1, session1 = sg_client.create_session(url=sg1.admin.admin_url, db=DB1, name=sg1_username, auth=auth)
     auth_session1 = cookie1, session1
 
-    cookie2, session2 = sg_client.create_session(url=sg2.admin.admin_url, db=DB2, name=sg2_username)
+    cookie2, session2 = sg_client.create_session(url=sg2.admin.admin_url, db=DB2, name=sg2_username, auth=auth)
     auth_session2 = cookie2, session2
 
     # 1. on passive SGW, create docs:
     #       - doc_A belongs to channel A only
     #       - doc_AnB belongs to channel A and channel B
     #       - doc_C belongs to channel C only
-    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_A", channels=["A"])
-    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_AnB", channels=["A", "B"])
-    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_C", channels=["C"])
+    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_A", channels=["A"], auth=auth)
+    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_AnB", channels=["A", "B"], auth=auth)
+    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_C", channels=["C"], auth=auth)
 
     sg2_docs = sg_client.get_all_docs(url=sg2.url, db=DB2, auth=auth_session2, include_docs=True)
     sg2_doc_ids = [doc["id"] for doc in sg2_docs["rows"]]
@@ -827,6 +855,8 @@ def test_user_lost_channel_access_push_and_pull(params_from_base_test_setup):
         continuous=True,
         purge_on_removal=True
     )
+    if auth:
+        sg1.admin.auth = HTTPBasicAuth(auth[0], auth[1])
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id, write_flag=True, read_flag=True, max_times=3000)
 
     # 3. verify active SGW have all docs pulled
@@ -836,7 +866,7 @@ def test_user_lost_channel_access_push_and_pull(params_from_base_test_setup):
         assert sg2_doc_id in sg1_doc_ids
 
     # 4. revoke user access from channel A
-    sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=["B", "C"])
+    sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=["B", "C"], auth=auth)
     time.sleep(3)
 
     # 5. verify docs in channel A are purged, other docs are not impacted
@@ -855,7 +885,7 @@ def test_user_lost_channel_access_push_and_pull(params_from_base_test_setup):
                          property_updater=add_new_fields_to_doc)
 
     # 7. revoke user access from channel C, then turn the replication back online
-    sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=["B"])
+    sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=["B"], auth=auth)
     time.sleep(3)
     sg1.modify_replication2_status(replicator2_id, DB1, "start")
     time.sleep(2)
@@ -903,6 +933,7 @@ def test_user_removed_from_role_by_direction(params_from_base_test_setup, replic
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     # check sync gateway version
     if sync_gateway_version < "3.0.0":
@@ -910,6 +941,7 @@ def test_user_removed_from_role_by_direction(params_from_base_test_setup, replic
 
     # prepare sync gateway environment
     sg1, sg2 = redeploy_sync_gateway(cluster_config, mode, sync_gateway_version)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     sg_client = MobileRestClient()
 
@@ -924,27 +956,27 @@ def test_user_removed_from_role_by_direction(params_from_base_test_setup, replic
     sg2_username = "sg2_user"
     password = "password"
 
-    sg_client.create_role(url=sg1.admin.admin_url, db=DB1, name=role1, channels=role1_channels)
-    sg_client.create_role(url=sg1.admin.admin_url, db=DB1, name=role2, channels=role2_channels)
+    sg_client.create_role(url=sg1.admin.admin_url, db=DB1, name=role1, channels=role1_channels, auth=auth)
+    sg_client.create_role(url=sg1.admin.admin_url, db=DB1, name=role2, channels=role2_channels, auth=auth)
 
-    sg_client.create_role(url=sg2.admin.admin_url, db=DB2, name=role1, channels=role1_channels)
-    sg_client.create_role(url=sg2.admin.admin_url, db=DB2, name=role2, channels=role2_channels)
+    sg_client.create_role(url=sg2.admin.admin_url, db=DB2, name=role1, channels=role1_channels, auth=auth)
+    sg_client.create_role(url=sg2.admin.admin_url, db=DB2, name=role2, channels=role2_channels, auth=auth)
 
-    sg_client.create_user(url=sg1.admin.admin_url, db=DB1, name=sg1_username, password=password, channels=other_channels, roles=roles)
-    sg_client.create_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, password=password, channels=other_channels, roles=roles)
+    sg_client.create_user(url=sg1.admin.admin_url, db=DB1, name=sg1_username, password=password, channels=other_channels, roles=roles, auth=auth)
+    sg_client.create_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, password=password, channels=other_channels, roles=roles, auth=auth)
 
-    cookie1, session1 = sg_client.create_session(url=sg1.admin.admin_url, db=DB1, name=sg1_username)
+    cookie1, session1 = sg_client.create_session(url=sg1.admin.admin_url, db=DB1, name=sg1_username, auth=auth)
     auth_session1 = cookie1, session1
 
-    cookie2, session2 = sg_client.create_session(url=sg2.admin.admin_url, db=DB2, name=sg2_username)
+    cookie2, session2 = sg_client.create_session(url=sg2.admin.admin_url, db=DB2, name=sg2_username, auth=auth)
     auth_session2 = cookie2, session2
 
     # 2. create docs:
-    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_A", channels=["A"])
-    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_B", channels=["B"])
-    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_AnB", channels=["A", "B"])
-    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_AnC", channels=["A", "C"])
-    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_C", channels=["C"])
+    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_A", channels=["A"], auth=auth)
+    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_B", channels=["B"], auth=auth)
+    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_AnB", channels=["A", "B"], auth=auth)
+    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_AnC", channels=["A", "C"], auth=auth)
+    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_C", channels=["C"], auth=auth)
 
     # get docs on passive SGW
     sg2_docs = sg_client.get_all_docs(url=sg2.url, db=DB2, auth=auth_session2, include_docs=True)
@@ -961,6 +993,8 @@ def test_user_removed_from_role_by_direction(params_from_base_test_setup, replic
         continuous=True,
         purge_on_removal=True
     )
+    if auth:
+        sg1.admin.auth = HTTPBasicAuth(auth[0], auth[1])
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id, read_flag=True, max_times=3000)
 
     # 4. verify active SGW have all docs pulled
@@ -970,7 +1004,7 @@ def test_user_removed_from_role_by_direction(params_from_base_test_setup, replic
         assert sg2_doc_id in sg1_doc_ids
 
     # 5. on SGW remove the user from role1
-    sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=other_channels, roles=[role2])
+    sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=other_channels, roles=[role2], auth=auth)
     time.sleep(2)
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id, read_flag=True, max_times=3000)
 
@@ -984,7 +1018,7 @@ def test_user_removed_from_role_by_direction(params_from_base_test_setup, replic
     assert "sg2_C_0" in sg1_doc_ids
 
     # 7. on SGW remove the user from role2
-    sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=other_channels, roles=[])
+    sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=other_channels, roles=[], auth=auth)
     time.sleep(2)
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id, read_flag=True, max_times=3000)
 
@@ -1029,6 +1063,7 @@ def test_user_removed_from_role_push_only(params_from_base_test_setup):
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     # check sync gateway version
     if sync_gateway_version < "3.0.0":
@@ -1036,6 +1071,7 @@ def test_user_removed_from_role_push_only(params_from_base_test_setup):
 
     # prepare sync gateway environment
     sg1, sg2 = redeploy_sync_gateway(cluster_config, mode, sync_gateway_version)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     sg_client = MobileRestClient()
 
@@ -1050,27 +1086,27 @@ def test_user_removed_from_role_push_only(params_from_base_test_setup):
     sg2_username = "sg2_user"
     password = "password"
 
-    sg_client.create_role(url=sg1.admin.admin_url, db=DB1, name=role1, channels=role1_channels)
-    sg_client.create_role(url=sg1.admin.admin_url, db=DB1, name=role2, channels=role2_channels)
+    sg_client.create_role(url=sg1.admin.admin_url, db=DB1, name=role1, channels=role1_channels, auth=auth)
+    sg_client.create_role(url=sg1.admin.admin_url, db=DB1, name=role2, channels=role2_channels, auth=auth)
 
-    sg_client.create_role(url=sg2.admin.admin_url, db=DB2, name=role1, channels=role1_channels)
-    sg_client.create_role(url=sg2.admin.admin_url, db=DB2, name=role2, channels=role2_channels)
+    sg_client.create_role(url=sg2.admin.admin_url, db=DB2, name=role1, channels=role1_channels, auth=auth)
+    sg_client.create_role(url=sg2.admin.admin_url, db=DB2, name=role2, channels=role2_channels, auth=auth)
 
-    sg_client.create_user(url=sg1.admin.admin_url, db=DB1, name=sg1_username, password=password, channels=other_channels, roles=roles)
-    sg_client.create_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, password=password, channels=other_channels, roles=roles)
+    sg_client.create_user(url=sg1.admin.admin_url, db=DB1, name=sg1_username, password=password, channels=other_channels, roles=roles, auth=auth)
+    sg_client.create_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, password=password, channels=other_channels, roles=roles, auth=auth)
 
-    cookie1, session1 = sg_client.create_session(url=sg1.admin.admin_url, db=DB1, name=sg1_username)
+    cookie1, session1 = sg_client.create_session(url=sg1.admin.admin_url, db=DB1, name=sg1_username, auth=auth)
     auth_session1 = cookie1, session1
 
-    cookie2, session2 = sg_client.create_session(url=sg2.admin.admin_url, db=DB2, name=sg2_username)
+    cookie2, session2 = sg_client.create_session(url=sg2.admin.admin_url, db=DB2, name=sg2_username, auth=auth)
     auth_session2 = cookie2, session2
 
     # 2. create docs:
-    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_A", channels=["A"])
-    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_B", channels=["B"])
-    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_AnB", channels=["A", "B"])
-    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_AnC", channels=["A", "C"])
-    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_C", channels=["C"])
+    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_A", channels=["A"], auth=auth)
+    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_B", channels=["B"], auth=auth)
+    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_AnB", channels=["A", "B"], auth=auth)
+    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_AnC", channels=["A", "C"], auth=auth)
+    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_C", channels=["C"], auth=auth)
 
     sg2_docs = sg_client.get_all_docs(url=sg2.url, db=DB2, auth=auth_session2, include_docs=True)
     sg2_doc_ids = [doc["id"] for doc in sg2_docs["rows"]]
@@ -1085,6 +1121,8 @@ def test_user_removed_from_role_push_only(params_from_base_test_setup):
         direction="pull",
         continuous=False
     )
+    if auth:
+        sg1.admin.auth = HTTPBasicAuth(auth[0], auth[1])
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id, read_flag=True, max_times=3000)
 
     # 4. verify active SGW have all docs pulled
@@ -1110,7 +1148,7 @@ def test_user_removed_from_role_push_only(params_from_base_test_setup):
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id, read_flag=True, max_times=3000)
 
     # 6. on SGW remove the user from role1
-    sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=other_channels, roles=[role2])
+    sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=other_channels, roles=[role2], auth=auth)
     time.sleep(2)
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id, read_flag=True, max_times=3000)
 
@@ -1125,7 +1163,7 @@ def test_user_removed_from_role_push_only(params_from_base_test_setup):
     assert "sg2_C_0" in sg1_doc_ids
 
     # 8. on SGW remove the user from role2
-    sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=other_channels, roles=[])
+    sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=other_channels, roles=[], auth=auth)
     time.sleep(2)
 
     # 9. verify docs have no impact
@@ -1172,6 +1210,7 @@ def test_user_role_revoked_channel_access_by_direction(params_from_base_test_set
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     # check sync gateway version
     if sync_gateway_version < "3.0.0":
@@ -1179,6 +1218,9 @@ def test_user_role_revoked_channel_access_by_direction(params_from_base_test_set
 
     # prepare sync gateway environment
     sg1, sg2 = redeploy_sync_gateway(cluster_config, mode, sync_gateway_version)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    if auth:
+        sg1.admin.auth = HTTPBasicAuth(auth[0], auth[1])
 
     sg_client = MobileRestClient()
 
@@ -1191,24 +1233,24 @@ def test_user_role_revoked_channel_access_by_direction(params_from_base_test_set
     sg2_username = "sg2_user"
     password = "password"
 
-    sg_client.create_role(url=sg1.admin.admin_url, db=DB1, name=role, channels=role_channels)
-    sg_client.create_role(url=sg2.admin.admin_url, db=DB2, name=role, channels=role_channels)
+    sg_client.create_role(url=sg1.admin.admin_url, db=DB1, name=role, channels=role_channels, auth=auth)
+    sg_client.create_role(url=sg2.admin.admin_url, db=DB2, name=role, channels=role_channels, auth=auth)
 
-    sg_client.create_user(url=sg1.admin.admin_url, db=DB1, name=sg1_username, password=password, channels=other_channels, roles=roles)
-    sg_client.create_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, password=password, channels=other_channels, roles=roles)
+    sg_client.create_user(url=sg1.admin.admin_url, db=DB1, name=sg1_username, password=password, channels=other_channels, roles=roles, auth=auth)
+    sg_client.create_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, password=password, channels=other_channels, roles=roles, auth=auth)
 
-    cookie1, session1 = sg_client.create_session(url=sg1.admin.admin_url, db=DB1, name=sg1_username)
+    cookie1, session1 = sg_client.create_session(url=sg1.admin.admin_url, db=DB1, name=sg1_username, auth=auth)
     auth_session1 = cookie1, session1
 
-    cookie2, session2 = sg_client.create_session(url=sg2.admin.admin_url, db=DB2, name=sg2_username)
+    cookie2, session2 = sg_client.create_session(url=sg2.admin.admin_url, db=DB2, name=sg2_username, auth=auth)
     auth_session2 = cookie2, session2
 
     # 2. create docs:
-    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_A", channels=["A"])
-    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_B", channels=["B"])
-    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_AnB", channels=["A", "B"])
-    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_AnC", channels=["A", "C"])
-    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_C", channels=["C"])
+    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_A", channels=["A"], auth=auth)
+    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_B", channels=["B"], auth=auth)
+    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_AnB", channels=["A", "B"], auth=auth)
+    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_AnC", channels=["A", "C"], auth=auth)
+    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_C", channels=["C"], auth=auth)
 
     # get docs on passive SGW
     sg2_docs = sg_client.get_all_docs(url=sg2.url, db=DB2, auth=auth_session2, include_docs=True)
@@ -1234,7 +1276,7 @@ def test_user_role_revoked_channel_access_by_direction(params_from_base_test_set
         assert sg2_doc_id in sg1_doc_ids
 
     # 5. role R lost access to channel A
-    sg_client.update_role(url=sg2.admin.admin_url, db=DB2, name=role, channels=["B", "D"])
+    sg_client.update_role(url=sg2.admin.admin_url, db=DB2, name=role, channels=["B", "D"], auth=auth)
     time.sleep(2)
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id, read_flag=True, max_times=3000)
 
@@ -1248,7 +1290,7 @@ def test_user_role_revoked_channel_access_by_direction(params_from_base_test_set
     assert "sg2_C_0" in sg1_doc_ids
 
     # 7. role R lost access to channel B
-    sg_client.update_role(url=sg2.admin.admin_url, db=DB2, name=role, channels=["D"])
+    sg_client.update_role(url=sg2.admin.admin_url, db=DB2, name=role, channels=["D"], auth=auth)
     time.sleep(2)
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id, read_flag=True, max_times=3000)
 
@@ -1291,6 +1333,7 @@ def test_user_role_revoked_channel_access_push_only(params_from_base_test_setup)
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     # check sync gateway version
     if sync_gateway_version < "3.0.0":
@@ -1298,6 +1341,9 @@ def test_user_role_revoked_channel_access_push_only(params_from_base_test_setup)
 
     # prepare sync gateway environment
     sg1, sg2 = redeploy_sync_gateway(cluster_config, mode, sync_gateway_version)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    if auth:
+        sg1.admin.auth = HTTPBasicAuth(auth[0], auth[1])
 
     sg_client = MobileRestClient()
 
@@ -1310,24 +1356,24 @@ def test_user_role_revoked_channel_access_push_only(params_from_base_test_setup)
     sg2_username = "sg2_user"
     password = "password"
 
-    sg_client.create_role(url=sg1.admin.admin_url, db=DB1, name=role, channels=role_channels)
-    sg_client.create_role(url=sg2.admin.admin_url, db=DB2, name=role, channels=role_channels)
+    sg_client.create_role(url=sg1.admin.admin_url, db=DB1, name=role, channels=role_channels, auth=auth)
+    sg_client.create_role(url=sg2.admin.admin_url, db=DB2, name=role, channels=role_channels, auth=auth)
 
-    sg_client.create_user(url=sg1.admin.admin_url, db=DB1, name=sg1_username, password=password, channels=other_channels, roles=roles)
-    sg_client.create_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, password=password, channels=other_channels, roles=roles)
+    sg_client.create_user(url=sg1.admin.admin_url, db=DB1, name=sg1_username, password=password, channels=other_channels, roles=roles, auth=auth)
+    sg_client.create_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, password=password, channels=other_channels, roles=roles, auth=auth)
 
-    cookie1, session1 = sg_client.create_session(url=sg1.admin.admin_url, db=DB1, name=sg1_username)
+    cookie1, session1 = sg_client.create_session(url=sg1.admin.admin_url, db=DB1, name=sg1_username, auth=auth)
     auth_session1 = cookie1, session1
 
-    cookie2, session2 = sg_client.create_session(url=sg2.admin.admin_url, db=DB2, name=sg2_username)
+    cookie2, session2 = sg_client.create_session(url=sg2.admin.admin_url, db=DB2, name=sg2_username, auth=auth)
     auth_session2 = cookie2, session2
 
     # 2. create docs:
-    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_A", channels=["A"])
-    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_B", channels=["B"])
-    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_AnB", channels=["A", "B"])
-    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_AnC", channels=["A", "C"])
-    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_C", channels=["C"])
+    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_A", channels=["A"], auth=auth)
+    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_B", channels=["B"], auth=auth)
+    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_AnB", channels=["A", "B"], auth=auth)
+    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_AnC", channels=["A", "C"], auth=auth)
+    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_C", channels=["C"], auth=auth)
 
     # get docs on passive SGW
     sg2_docs = sg_client.get_all_docs(url=sg2.url, db=DB2, auth=auth_session2, include_docs=True)
@@ -1365,7 +1411,7 @@ def test_user_role_revoked_channel_access_push_only(params_from_base_test_setup)
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id, write_flag=True, max_times=3000)
 
     # 6. role R lost access to channel A
-    sg_client.update_role(url=sg2.admin.admin_url, db=DB2, name=role, channels=["B"])
+    sg_client.update_role(url=sg2.admin.admin_url, db=DB2, name=role, channels=["B"], auth=auth)
     time.sleep(2)
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id, write_flag=True, max_times=3000)
 
@@ -1379,7 +1425,7 @@ def test_user_role_revoked_channel_access_push_only(params_from_base_test_setup)
     assert "sg2_C_0" in sg1_doc_ids
 
     # 8. role R lost access to channel B
-    sg_client.update_role(url=sg2.admin.admin_url, db=DB2, name=role, channels=[])
+    sg_client.update_role(url=sg2.admin.admin_url, db=DB2, name=role, channels=[], auth=auth)
     time.sleep(2)
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id, write_flag=True, max_times=3000)
 
@@ -1418,6 +1464,7 @@ def test_user_reassign_to_channel_pull(params_from_base_test_setup):
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     # check sync gateway version
     if sync_gateway_version < "3.0.0":
@@ -1425,6 +1472,9 @@ def test_user_reassign_to_channel_pull(params_from_base_test_setup):
 
     # prepare sync gateway environment
     sg1, sg2 = redeploy_sync_gateway(cluster_config, mode, sync_gateway_version)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    if auth:
+        sg1.admin.auth = HTTPBasicAuth(auth[0], auth[1])
 
     sg_client = MobileRestClient()
 
@@ -1434,19 +1484,19 @@ def test_user_reassign_to_channel_pull(params_from_base_test_setup):
     sg2_username = "sg2_user"
     password = "password"
 
-    sg_client.create_user(url=sg1.admin.admin_url, db=DB1, name=sg1_username, password=password, channels=channels)
-    sg_client.create_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, password=password, channels=channels)
+    sg_client.create_user(url=sg1.admin.admin_url, db=DB1, name=sg1_username, password=password, channels=channels, auth=auth)
+    sg_client.create_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, password=password, channels=channels, auth=auth)
 
-    cookie1, session1 = sg_client.create_session(url=sg1.admin.admin_url, db=DB1, name=sg1_username)
+    cookie1, session1 = sg_client.create_session(url=sg1.admin.admin_url, db=DB1, name=sg1_username, auth=auth)
     auth_session1 = cookie1, session1
 
-    cookie2, session2 = sg_client.create_session(url=sg2.admin.admin_url, db=DB2, name=sg2_username)
+    cookie2, session2 = sg_client.create_session(url=sg2.admin.admin_url, db=DB2, name=sg2_username, auth=auth)
     auth_session2 = cookie2, session2
 
     # 1. on passive SGW, create docs:
-    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_A", channels=["A"])
-    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_AnB", channels=["A", "B"])
-    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_C", channels=["C"])
+    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_A", channels=["A"], auth=auth)
+    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_AnB", channels=["A", "B"], auth=auth)
+    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_C", channels=["C"], auth=auth)
 
     sg2_docs = sg_client.get_all_docs(url=sg2.url, db=DB2, auth=auth_session2, include_docs=True)
     sg2_doc_ids = [doc["id"] for doc in sg2_docs["rows"]]
@@ -1471,7 +1521,7 @@ def test_user_reassign_to_channel_pull(params_from_base_test_setup):
         assert sg2_doc_id in sg1_doc_ids
 
     # 4. revoke user access from channel A
-    sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=["B", "C"])
+    sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=["B", "C"], auth=auth)
     time.sleep(2)
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id, read_flag=True, max_times=3000)
 
@@ -1483,7 +1533,7 @@ def test_user_reassign_to_channel_pull(params_from_base_test_setup):
     assert "sg2_C_0" in sg1_doc_ids
 
     # 6. reassign user access to channel A, but revoke access to channel C
-    sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=["A", "B"])
+    sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=["A", "B"], auth=auth)
     time.sleep(2)
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id, read_flag=True, max_times=3000)
 
@@ -1521,6 +1571,7 @@ def test_user_reassign_to_channel_push_only(params_from_base_test_setup):
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     # check sync gateway version
     if sync_gateway_version < "3.0.0":
@@ -1528,6 +1579,9 @@ def test_user_reassign_to_channel_push_only(params_from_base_test_setup):
 
     # prepare sync gateway environment
     sg1, sg2 = redeploy_sync_gateway(cluster_config, mode, sync_gateway_version)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    if auth:
+        sg1.admin.auth = HTTPBasicAuth(auth[0], auth[1])
 
     sg_client = MobileRestClient()
 
@@ -1537,19 +1591,19 @@ def test_user_reassign_to_channel_push_only(params_from_base_test_setup):
     sg2_username = "sg2_user"
     password = "password"
 
-    sg_client.create_user(url=sg1.admin.admin_url, db=DB1, name=sg1_username, password=password, channels=channels)
-    sg_client.create_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, password=password, channels=channels)
+    sg_client.create_user(url=sg1.admin.admin_url, db=DB1, name=sg1_username, password=password, channels=channels, auth=auth)
+    sg_client.create_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, password=password, channels=channels, auth=auth)
 
-    cookie1, session1 = sg_client.create_session(url=sg1.admin.admin_url, db=DB1, name=sg1_username)
+    cookie1, session1 = sg_client.create_session(url=sg1.admin.admin_url, db=DB1, name=sg1_username, auth=auth)
     auth_session1 = cookie1, session1
 
-    cookie2, session2 = sg_client.create_session(url=sg2.admin.admin_url, db=DB2, name=sg2_username)
+    cookie2, session2 = sg_client.create_session(url=sg2.admin.admin_url, db=DB2, name=sg2_username, auth=auth)
     auth_session2 = cookie2, session2
 
     # 1. on passive SGW, create docs:
-    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_A", channels=["A"])
-    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_AnB", channels=["A", "B"])
-    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_C", channels=["C"])
+    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_A", channels=["A"], auth=auth)
+    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_AnB", channels=["A", "B"], auth=auth)
+    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_C", channels=["C"], auth=auth)
 
     sg2_docs = sg_client.get_all_docs(url=sg2.url, db=DB2, auth=auth_session2, include_docs=True)
     sg2_doc_ids = [doc["id"] for doc in sg2_docs["rows"]]
@@ -1587,7 +1641,7 @@ def test_user_reassign_to_channel_push_only(params_from_base_test_setup):
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id_2, write_flag=True, read_flag=True, max_times=3000)
 
     # 5. revoke user access from channel A
-    sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=["B", "C"])
+    sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=["B", "C"], auth=auth)
     time.sleep(3)
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id_2, write_flag=True, read_flag=True, max_times=3000)
 
@@ -1612,7 +1666,7 @@ def test_user_reassign_to_channel_push_only(params_from_base_test_setup):
     assert str(ex.value).startswith("403 Client Error: Forbidden for url:")
 
     # 8. reassign user access to channel A, and verify docs not impacted
-    sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=["A", "B", "C"])
+    sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=["A", "B", "C"], auth=auth)
     time.sleep(3)
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id_2, write_flag=True, read_flag=True, max_times=3000)
 
@@ -1664,6 +1718,7 @@ def test_user_reassign_to_channel_push_pull(params_from_base_test_setup):
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     # check sync gateway version
     if sync_gateway_version < "3.0.0":
@@ -1671,6 +1726,9 @@ def test_user_reassign_to_channel_push_pull(params_from_base_test_setup):
 
     # prepare sync gateway environment
     sg1, sg2 = redeploy_sync_gateway(cluster_config, mode, sync_gateway_version)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    if auth:
+        sg1.admin.auth = HTTPBasicAuth(auth[0], auth[1])
 
     sg_client = MobileRestClient()
 
@@ -1680,19 +1738,19 @@ def test_user_reassign_to_channel_push_pull(params_from_base_test_setup):
     sg2_username = "sg2_user"
     password = "password"
 
-    sg_client.create_user(url=sg1.admin.admin_url, db=DB1, name=sg1_username, password=password, channels=channels)
-    sg_client.create_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, password=password, channels=channels)
+    sg_client.create_user(url=sg1.admin.admin_url, db=DB1, name=sg1_username, password=password, channels=channels, auth=auth)
+    sg_client.create_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, password=password, channels=channels, auth=auth)
 
-    cookie1, session1 = sg_client.create_session(url=sg1.admin.admin_url, db=DB1, name=sg1_username)
+    cookie1, session1 = sg_client.create_session(url=sg1.admin.admin_url, db=DB1, name=sg1_username, auth=auth)
     auth_session1 = cookie1, session1
 
-    cookie2, session2 = sg_client.create_session(url=sg2.admin.admin_url, db=DB2, name=sg2_username)
+    cookie2, session2 = sg_client.create_session(url=sg2.admin.admin_url, db=DB2, name=sg2_username, auth=auth)
     auth_session2 = cookie2, session2
 
     # 1. on passive SGW, create docs:
-    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_A", channels=["A"])
-    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_AnB", channels=["A", "B"])
-    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_C", channels=["C"])
+    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_A", channels=["A"], auth=auth)
+    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_AnB", channels=["A", "B"], auth=auth)
+    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_C", channels=["C"], auth=auth)
 
     sg2_docs = sg_client.get_all_docs(url=sg2.url, db=DB2, auth=auth_session2, include_docs=True)
     sg2_doc_ids = [doc["id"] for doc in sg2_docs["rows"]]
@@ -1717,7 +1775,7 @@ def test_user_reassign_to_channel_push_pull(params_from_base_test_setup):
         assert sg2_doc_id in sg1_doc_ids
 
     # 4. revoke user access from channel A
-    sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=["B", "C"])
+    sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=["B", "C"], auth=auth)
     time.sleep(3)
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id, write_flag=True, read_flag=True, max_times=3000)
 
@@ -1729,7 +1787,7 @@ def test_user_reassign_to_channel_push_pull(params_from_base_test_setup):
     assert "sg2_C_0" in sg1_doc_ids
 
     # 6. add a new doc on active SGW and verify this doc didn't get pushed to the passive SGW
-    sg1_doc_A = sg_client.add_docs(url=sg1.admin.admin_url, db=DB1, number=1, id_prefix="sg1_A", channels=["A"])
+    sg1_doc_A = sg_client.add_docs(url=sg1.admin.admin_url, db=DB1, number=1, id_prefix="sg1_A", channels=["A"], auth=auth)
     new_doc_id = sg1_doc_A[0]["id"]
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id, write_flag=True, read_flag=True, max_times=3000)
 
@@ -1738,7 +1796,7 @@ def test_user_reassign_to_channel_push_pull(params_from_base_test_setup):
     assert str(ex.value).startswith("403 Client Error: Forbidden for url:")
 
     # 7. reassign user access to channel A and verify docs on active SGW
-    sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=["A", "B", "C"])
+    sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=["A", "B", "C"], auth=auth)
     time.sleep(3)
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id, write_flag=True, read_flag=True, max_times=3000)
 
@@ -1775,6 +1833,7 @@ def test_auto_purge_for_tombstone_docs(params_from_base_test_setup, with_local_u
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     # check sync gateway version
     if sync_gateway_version < "3.0.0":
@@ -1782,6 +1841,9 @@ def test_auto_purge_for_tombstone_docs(params_from_base_test_setup, with_local_u
 
     # prepare sync gateway environment
     sg1, sg2 = redeploy_sync_gateway(cluster_config, mode, sync_gateway_version)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    if auth:
+        sg1.admin.auth = HTTPBasicAuth(auth[0], auth[1])
 
     sg_client = MobileRestClient()
 
@@ -1791,18 +1853,18 @@ def test_auto_purge_for_tombstone_docs(params_from_base_test_setup, with_local_u
     sg2_username = "sg2_user"
     password = "password"
 
-    sg_client.create_user(url=sg1.admin.admin_url, db=DB1, name=sg1_username, password=password, channels=channels)
-    sg_client.create_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, password=password, channels=channels)
+    sg_client.create_user(url=sg1.admin.admin_url, db=DB1, name=sg1_username, password=password, channels=channels, auth=auth)
+    sg_client.create_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, password=password, channels=channels, auth=auth)
 
-    cookie1, session1 = sg_client.create_session(url=sg1.admin.admin_url, db=DB1, name=sg1_username)
+    cookie1, session1 = sg_client.create_session(url=sg1.admin.admin_url, db=DB1, name=sg1_username, auth=auth)
     auth_session1 = cookie1, session1
 
-    cookie2, session2 = sg_client.create_session(url=sg2.admin.admin_url, db=DB2, name=sg2_username)
+    cookie2, session2 = sg_client.create_session(url=sg2.admin.admin_url, db=DB2, name=sg2_username, auth=auth)
     auth_session2 = cookie2, session2
 
     # 1. on passive SGW, create docs in channel A and B
-    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=10, id_prefix="sg2_A", channels=["A"])
-    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_B", channels=["B"])
+    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=10, id_prefix="sg2_A", channels=["A"], auth=auth)
+    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=1, id_prefix="sg2_B", channels=["B"], auth=auth)
     sg2_docs = sg_client.get_all_docs(url=sg2.url, db=DB2, auth=auth_session2, include_docs=True)
     sg2_doc_ids = [doc["id"] for doc in sg2_docs["rows"]]
 
@@ -1845,7 +1907,7 @@ def test_auto_purge_for_tombstone_docs(params_from_base_test_setup, with_local_u
                              property_updater=add_new_fields_to_doc)
 
     # 5. revoke user access from channel A and resume the replication
-    sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=["B", "C"])
+    sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=["B", "C"], auth=auth)
     time.sleep(2)
     sg1.modify_replication2_status(replicator2_id, DB1, "start")
     time.sleep(2)
@@ -1885,6 +1947,7 @@ def test_resurrected_docs_by_sdk(params_from_base_test_setup, resurrect_type):
     mode = params_from_base_test_setup["mode"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     cbs_url = cluster_topology['couchbase_servers'][0]
 
     # check sync gateway version
@@ -1896,6 +1959,9 @@ def test_resurrected_docs_by_sdk(params_from_base_test_setup, resurrect_type):
 
     # prepare sync gateway environment
     sg1, sg2 = redeploy_sync_gateway(cluster_config, mode, sync_gateway_version)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    if auth:
+        sg1.admin.auth = HTTPBasicAuth(auth[0], auth[1])
 
     cbs_host = host_for_url(cbs_url)
     sg_client = MobileRestClient()
@@ -1906,17 +1972,17 @@ def test_resurrected_docs_by_sdk(params_from_base_test_setup, resurrect_type):
     sg2_username = "sg2_user"
     password = "password"
 
-    sg_client.create_user(url=sg1.admin.admin_url, db=DB1, name=sg1_username, password=password, channels=channels)
-    sg_client.create_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, password=password, channels=channels)
+    sg_client.create_user(url=sg1.admin.admin_url, db=DB1, name=sg1_username, password=password, channels=channels, auth=auth)
+    sg_client.create_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, password=password, channels=channels, auth=auth)
 
-    cookie1, session1 = sg_client.create_session(url=sg1.admin.admin_url, db=DB1, name=sg1_username)
+    cookie1, session1 = sg_client.create_session(url=sg1.admin.admin_url, db=DB1, name=sg1_username, auth=auth)
     auth_session1 = cookie1, session1
 
-    cookie2, session2 = sg_client.create_session(url=sg2.admin.admin_url, db=DB2, name=sg2_username)
+    cookie2, session2 = sg_client.create_session(url=sg2.admin.admin_url, db=DB2, name=sg2_username, auth=auth)
     auth_session2 = cookie2, session2
 
     # 1. on passive SGW, create docs in channel A
-    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=10, id_prefix="sg2_A", channels=["A"])
+    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=10, id_prefix="sg2_A", channels=["A"], auth=auth)
 
     sg2_docs = sg_client.get_all_docs(url=sg2.url, db=DB2, auth=auth_session2, include_docs=True)
 
@@ -1988,7 +2054,7 @@ def test_resurrected_docs_by_sdk(params_from_base_test_setup, resurrect_type):
     assert compare_doc_body(sdk_doc_body, resurrected_doc_body)
 
     # 7. revoke user access from channel A
-    sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=["B", "C"])
+    sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=["B", "C"], auth=auth)
     time.sleep(2)
 
     # 8. start the pull replication again and verify the resurrected doc gets auto purged
@@ -2019,6 +2085,7 @@ def test_concurrent_update_on_channel_revocation(params_from_base_test_setup):
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     # check sync gateway version
     if sync_gateway_version < "3.0.0":
@@ -2026,6 +2093,9 @@ def test_concurrent_update_on_channel_revocation(params_from_base_test_setup):
 
     # prepare sync gateway environment
     sg1, sg2 = redeploy_sync_gateway(cluster_config, mode, sync_gateway_version)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    if auth:
+        sg1.admin.auth = HTTPBasicAuth(auth[0], auth[1])
 
     sg_client = MobileRestClient()
 
@@ -2035,19 +2105,19 @@ def test_concurrent_update_on_channel_revocation(params_from_base_test_setup):
     sg2_username = "sg2_user"
     password = "password"
 
-    sg_client.create_user(url=sg1.admin.admin_url, db=DB1, name=sg1_username, password=password, channels=channels)
-    sg_client.create_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, password=password, channels=channels)
+    sg_client.create_user(url=sg1.admin.admin_url, db=DB1, name=sg1_username, password=password, channels=channels, auth=auth)
+    sg_client.create_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, password=password, channels=channels, auth=auth)
 
-    cookie1, session1 = sg_client.create_session(url=sg1.admin.admin_url, db=DB1, name=sg1_username)
+    cookie1, session1 = sg_client.create_session(url=sg1.admin.admin_url, db=DB1, name=sg1_username, auth=auth)
     auth_session1 = cookie1, session1
 
-    cookie2, session2 = sg_client.create_session(url=sg2.admin.admin_url, db=DB2, name=sg2_username)
+    cookie2, session2 = sg_client.create_session(url=sg2.admin.admin_url, db=DB2, name=sg2_username, auth=auth)
     auth_session2 = cookie2, session2
 
     # 1. on passive SGW, create docs
-    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=10, id_prefix="sg2_A", channels=["A"])
-    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=5, id_prefix="sg2_AnB", channels=["A", "B"])
-    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=3, id_prefix="sg2_B", channels=["B"])
+    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=10, id_prefix="sg2_A", channels=["A"], auth=auth)
+    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=5, id_prefix="sg2_AnB", channels=["A", "B"], auth=auth)
+    sg_client.add_docs(url=sg2.admin.admin_url, db=DB2, number=3, id_prefix="sg2_B", channels=["B"], auth=auth)
 
     sg2_docs = sg_client.get_all_docs(url=sg2.url, db=DB2, auth=auth_session2, include_docs=True)
     sg2_doc_ids = [doc["id"] for doc in sg2_docs["rows"]]
@@ -2085,7 +2155,8 @@ def test_concurrent_update_on_channel_revocation(params_from_base_test_setup):
             sg2_username,
             password,
             repeats,
-            sleep_period_in_sec)
+            sleep_period_in_sec,
+            auth)
         pulling_task = executor.submit(
             pull_docs_in_parallel,
             sg1,
@@ -2138,7 +2209,7 @@ def compare_doc_body(doc1, doc2):
     return doc1 == doc2
 
 
-def create_and_push_docs(sg_client, local_sg, remote_sg, local_db, remote_db, remote_user, password, repeats, sleep_period):
+def create_and_push_docs(sg_client, local_sg, remote_sg, local_db, remote_db, remote_user, password, repeats, sleep_period, auth):
     # this method makes repeat actions to create docs in local db and push to remote db
     sg1 = local_sg
     sg2 = remote_sg
@@ -2147,12 +2218,12 @@ def create_and_push_docs(sg_client, local_sg, remote_sg, local_db, remote_db, re
     for i in range(repeats):
         if i > repeats / 2 and not user_revoked:
             # revoke user access from channel A
-            sg_client.update_user(url=sg2.admin.admin_url, db=remote_db, name=remote_user, channels=["B"])
+            sg_client.update_user(url=sg2.admin.admin_url, db=remote_db, name=remote_user, channels=["B"], auth=auth)
             time.sleep(5)
             user_revoked = True
             revocation_mark = i
         # add 3 docs each time
-        sg_client.add_docs(url=sg1.admin.admin_url, db=local_db, number=3, id_prefix="local_A_{}".format(i), channels=["A"])
+        sg_client.add_docs(url=sg1.admin.admin_url, db=local_db, number=3, id_prefix="local_A_{}".format(i), channels=["A"], auth=auth)
         sg1.start_replication2(
             local_db=local_db,
             remote_url=sg2.url,

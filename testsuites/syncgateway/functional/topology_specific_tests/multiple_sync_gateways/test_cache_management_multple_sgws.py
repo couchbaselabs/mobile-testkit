@@ -1,6 +1,7 @@
 import pytest
 import time
 
+from keywords.constants import RBAC_FULL_ADMIN
 from keywords.utils import log_info
 from libraries.testkit.cluster import Cluster
 from keywords.SyncGateway import sync_gateway_config_path_for_mode, create_docs_via_sdk
@@ -41,9 +42,11 @@ def test_importdocs_false_shared_bucket_access_true(params_from_base_test_setup)
     cluster_conf = params_from_base_test_setup['cluster_config']
     mode = params_from_base_test_setup['mode']
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     sg_conf1 = sync_gateway_config_path_for_mode(sg_conf_name1, mode)
     sg_conf2 = sync_gateway_config_path_for_mode(sg_conf_name2, mode)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     sg_client = MobileRestClient()
     cluster_utils = ClusterKeywords(cluster_conf)
@@ -82,10 +85,10 @@ def test_importdocs_false_shared_bucket_access_true(params_from_base_test_setup)
     time.sleep(3)
     # 5. Verify  SGW node which does not have config import_docs=false has docs imported.
     # but not for the other SGW node.
-    sg_client.get_changes(url=sg1.admin.admin_url, db=sg_db, auth=None, since=0)
-    sg_client.get_changes(url=sg2.admin.admin_url, db=sg_db, auth=None, since=0)
-    sg1_expvars = sg_client.get_expvars(sg1.admin.admin_url)
-    sg2_expvars = sg_client.get_expvars(sg2.admin.admin_url)
+    sg_client.get_changes(url=sg1.admin.admin_url, db=sg_db, auth=None, since=0, auth=auth)
+    sg_client.get_changes(url=sg2.admin.admin_url, db=sg_db, auth=None, since=0, auth=auth)
+    sg1_expvars = sg_client.get_expvars(sg1.admin.admin_url, auth=auth)
+    sg2_expvars = sg_client.get_expvars(sg2.admin.admin_url, auth=auth)
 
     # 6. Verify import_count on SG1 should show 0
     is_import_count_available = 0
@@ -119,6 +122,7 @@ def test_sgw_cache_management_multiple_sgws(params_from_base_test_setup):
     mode = params_from_base_test_setup["mode"]
     sg_ce = params_from_base_test_setup["sg_ce"]
     xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if sg_ce:
         if not xattrs_enabled:
@@ -128,6 +132,7 @@ def test_sgw_cache_management_multiple_sgws(params_from_base_test_setup):
         sg_conf_name = "xattrs/no_import"
 
     sg_conf_path = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     # 1. Have 2 SGWs  with shared_bucket_access=true and have CBS set up
     cluster_utils = ClusterKeywords(cluster_config)
@@ -154,8 +159,8 @@ def test_sgw_cache_management_multiple_sgws(params_from_base_test_setup):
     #       - import_count = num of docs
     #    CE - import_cancel_cas  is not equal to 0
     #    import_count + import_cancel_cas = num_docs
-    sg1_expvars = client.get_expvars(sg1.admin.admin_url)
-    sg2_expvars = client.get_expvars(sg2.admin.admin_url)
+    sg1_expvars = client.get_expvars(sg1.admin.admin_url, auth=auth)
+    sg2_expvars = client.get_expvars(sg2.admin.admin_url, auth=auth)
     if sg_ce:
         log_info("Verify import_cancel_cas is not 0 and import_count + import_cancel_cas = num_docs")
         sg1_cancel_cas = sg1_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_cancel_cas"]
@@ -201,6 +206,7 @@ def test_sgw_high_availability(params_from_base_test_setup, setup_basic_sg_conf)
     sg_client = MobileRestClient()
     prometheus_enabled = params_from_base_test_setup["prometheus_enabled"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     if not xattrs_enabled:
         pytest.skip(' This test require --xattrs flag')
 
@@ -208,6 +214,7 @@ def test_sgw_high_availability(params_from_base_test_setup, setup_basic_sg_conf)
     cluster_utils = ClusterKeywords(cluster_config)
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
     cluster_utils.reset_cluster(cluster_config=cluster_config, sync_gateway_config=sg_conf)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     num_docs = 100
     bucket_name = 'data-bucket'
@@ -220,19 +227,19 @@ def test_sgw_high_availability(params_from_base_test_setup, setup_basic_sg_conf)
         cbs_docs_via_sdk = tpe.submit(create_doc_via_sdk_individually, cbs_url, cbs_cluster, bucket_name, num_docs)
         # 3. Bring down 1 sgw node in main thread
         sg2.stop()
-        sg_docs = sg_client.get_all_docs(url=sg1.admin.admin_url, db=sg_db)["rows"]
+        sg_docs = sg_client.get_all_docs(url=sg1.admin.admin_url, db=sg_db, auth=auth)["rows"]
         diff_docs = num_docs - len(sg_docs)
         cbs_docs_via_sdk.result()
 
     retries = 0
     while retries < 10:
-        sg_docs = sg_client.get_all_docs(url=sg1.admin.admin_url, db=sg_db)["rows"]
+        sg_docs = sg_client.get_all_docs(url=sg1.admin.admin_url, db=sg_db, auth=auth)["rows"]
         if len(sg_docs) == num_docs:
             break
         retries = retries + 1
         time.sleep(2)
     assert len(sg_docs) == num_docs, "not all docs imported from server"
-    sg1_expvars = sg_client.get_expvars(sg1.admin.admin_url)
+    sg1_expvars = sg_client.get_expvars(sg1.admin.admin_url, auth=auth)
     sg1_cancel_cas = sg1_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_cancel_cas"]
     if sg_ce:
         log_info("Verify import_cancel_cas is not 0 and import_count + import_cancel_cas = num_docs")

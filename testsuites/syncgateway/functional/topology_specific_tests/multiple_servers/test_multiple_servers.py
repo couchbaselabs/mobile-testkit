@@ -5,6 +5,7 @@ import concurrent.futures
 import requests.exceptions
 import keywords.exceptions
 
+from keywords.constants import RBAC_FULL_ADMIN
 from keywords.exceptions import TimeoutError
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.utils import log_info, compare_versions
@@ -28,6 +29,7 @@ def test_rebalance_sanity(params_from_base_test_setup):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     sg_version = get_sg_version(cluster_config)
     if compare_versions(sg_version, '1.5') < 0:
@@ -49,6 +51,7 @@ def test_rebalance_sanity(params_from_base_test_setup):
     cluster_servers = topology["couchbase_servers"]
     cbs_one_url = cluster_servers[0]
     cbs_two_url = cluster_servers[1]
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     log_info("Running: 'test_distributed_index_rebalance_sanity'")
     log_info("cluster_config: {}".format(cluster_config))
@@ -68,8 +71,8 @@ def test_rebalance_sanity(params_from_base_test_setup):
     cb_server = couchbaseserver.CouchbaseServer(cbs_one_url)
     server_to_remove = couchbaseserver.CouchbaseServer(cbs_two_url)
 
-    client.create_user(admin_sg_one, sg_db, sg_user_name, sg_user_password, channels=channels)
-    session = client.create_session(admin_sg_one, sg_db, sg_user_name)
+    client.create_user(admin_sg_one, sg_db, sg_user_name, sg_user_password, channels=channels, auth=auth)
+    session = client.create_session(admin_sg_one, sg_db, sg_user_name, auth=auth)
 
     with concurrent.futures.ThreadPoolExecutor(5) as executor:
 
@@ -119,6 +122,7 @@ def test_server_goes_down_sanity(params_from_base_test_setup):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     sg_version = get_sg_version(cluster_config)
     if compare_versions(sg_version, '1.5') < 0:
@@ -128,6 +132,7 @@ def test_server_goes_down_sanity(params_from_base_test_setup):
 
     sg_conf_name = "sync_gateway_default_functional_tests"
     sg_conf_path = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     cluster_helper.reset_cluster(cluster_config=cluster_config,
                                  sync_gateway_config=sg_conf_path)
@@ -158,8 +163,8 @@ def test_server_goes_down_sanity(params_from_base_test_setup):
     main_server = couchbaseserver.CouchbaseServer(cbs_one_url)
     flakey_server = couchbaseserver.CouchbaseServer(cbs_two_url)
 
-    client.create_user(admin_sg, sg_db, sg_user_name, sg_user_password, channels=channels)
-    session = client.create_session(admin_sg, sg_db, sg_user_name)
+    client.create_user(admin_sg, sg_db, sg_user_name, sg_user_password, channels=channels, auth=auth)
+    session = client.create_session(admin_sg, sg_db, sg_user_name, auth=auth)
 
     # Stop second server
     flakey_server.stop()
@@ -239,6 +244,7 @@ def test_server_goes_down_rebuild_channels(params_from_base_test_setup):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     sg_version = get_sg_version(cluster_config)
     if compare_versions(sg_version, '1.5') < 0:
@@ -248,6 +254,7 @@ def test_server_goes_down_rebuild_channels(params_from_base_test_setup):
 
     sg_conf_name = "sync_gateway_default_functional_tests"
     sg_conf_path = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     cluster_helper.reset_cluster(cluster_config=cluster_config,
                                  sync_gateway_config=sg_conf_path)
@@ -294,7 +301,8 @@ def test_server_goes_down_rebuild_channels(params_from_base_test_setup):
         sg_db,
         admin_user_info.name,
         admin_user_info.password,
-        channels=admin_user_info.channels
+        channels=admin_user_info.channels,
+        auth=auth
     )
 
     client.create_user(
@@ -302,9 +310,10 @@ def test_server_goes_down_rebuild_channels(params_from_base_test_setup):
         sg_db,
         seth_user_info.name,
         seth_user_info.password,
-        channels=seth_user_info.channels
+        channels=seth_user_info.channels,
+        auth=auth
     )
-    seth_session = client.create_session(admin_sg, sg_db, seth_user_info.name)
+    seth_session = client.create_session(admin_sg, sg_db, seth_user_info.name, auth=auth)
 
     # allow any user docs to make it to changes
     initial_changes = client.get_changes(url=sg_url, db=sg_db, since=0, auth=seth_session)

@@ -23,6 +23,7 @@ from keywords.ClusterKeywords import ClusterKeywords
 from keywords.couchbaseserver import get_sdk_client_with_bucket
 from libraries.testkit.prometheus import verify_stat_on_prometheus
 from keywords.constants import RBAC_FULL_ADMIN
+from requests.auth import HTTPBasicAuth
 
 
 def setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_teardown_test, cbl_replication_type, sg_conf_name='listener_tests/multiple_sync_gateways', num_of_docs=10, channels1=None, sgw_cluster1_sg_config_name=None, sgw_cluster2_sg_config_name=None, name1=None, name2=None, password1=None, password2=None):
@@ -66,6 +67,13 @@ def setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_te
     sg3 = c_cluster.sync_gateways[2]
     sg4 = c_cluster.sync_gateways[3]
 
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    if auth:
+        sg1.admin.auth = HTTPBasicAuth(auth[0], auth[1])
+        sg2.admin.auth = HTTPBasicAuth(auth[0], auth[1])
+        sg3.admin.auth = HTTPBasicAuth(auth[0], auth[1])
+        sg4.admin.auth = HTTPBasicAuth(auth[0], auth[1])
+
     sg3.stop()
     sg4.stop()
     if sgw_cluster1_sg_config_name:
@@ -93,7 +101,6 @@ def setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_te
     sg1_blip_url = "{}://{}:4984/{}".format(protocol, sg1_ip, sg_db1)
     sg2_blip_url = "{}://{}:4984/{}".format(protocol, sg2_ip, sg_db2)
 
-    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     sg_client.create_user(sg1_admin_url, sg_db1, name1, password=password1, channels=channels1, auth=auth)
     sg_client.create_user(sg2_admin_url, sg_db2, name2, password=password2, channels=channels1, auth=auth)
     # Create bulk doc json

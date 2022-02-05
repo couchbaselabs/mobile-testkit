@@ -286,6 +286,8 @@ def params_from_base_suite_setup(request):
         sg_ip = host_for_url(sg_url)
         prometheus.start_prometheus(sg_ip, sg_ssl)
 
+    need_sgw_admin_auth = (not disable_admin_auth) and sync_gateway_version >= "3.0"
+
     yield {"cluster_config": cluster_config,
            "mode": mode,
            "xattrs_enabled": xattrs_enabled,
@@ -295,7 +297,8 @@ def params_from_base_suite_setup(request):
            "sg_ce": sg_ce,
            "prometheus_enabled": prometheus_enabled,
            "sg_ssl": sg_ssl,
-           "cluster_topology": cluster_topology
+           "cluster_topology": cluster_topology,
+           "need_sgw_admin_auth": need_sgw_admin_auth
            }
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
@@ -329,6 +332,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     prometheus_enabled = params_from_base_suite_setup["prometheus_enabled"]
     sg_ssl = params_from_base_suite_setup["sg_ssl"]
     cluster_topology = params_from_base_suite_setup["cluster_topology"]
+    need_sgw_admin_auth = params_from_base_suite_setup["need_sgw_admin_auth"]
 
     test_name = request.node.name
     log_info("Setting up test '{}'".format(test_name))
@@ -343,7 +347,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
            "sg_ce": sg_ce,
            "prometheus_enabled": prometheus_enabled,
            "sg_ssl": sg_ssl,
-           "cluster_topology": cluster_topology
+           "cluster_topology": cluster_topology,
+           "need_sgw_admin_auth": need_sgw_admin_auth
            }
 
     # Code after the yeild will execute when each test finishes
