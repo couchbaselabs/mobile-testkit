@@ -919,7 +919,7 @@ def test_longpoll_awaken_via_sync_access(params_from_base_test_setup, sg_conf_na
                                              db=sg_db,
                                              name=channel_pusher_info.name,
                                              password=channel_pusher_info.password,
-                                             channels=channel_pusher_info.channels, 
+                                             channels=channel_pusher_info.channels,
                                              auth=auth)
 
     adam_auth = client.create_user(url=sg_admin_url, db=sg_db, name=adam_user_info.name, password=adam_user_info.password, auth=auth)

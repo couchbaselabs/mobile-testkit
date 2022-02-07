@@ -1585,7 +1585,6 @@ def test_sg_replicate_distributions_replications(params_from_base_test_setup, se
 
     base_url = params_from_base_test_setup["base_url"]
     sg_mode = params_from_base_test_setup["mode"]
-    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     cluster_config = params_from_base_test_setup["cluster_config"]
     sgw_cluster1_conf_name = 'listener_tests/sg_replicate_sgw_cluster1'
     sgw_cluster2_conf_name = 'listener_tests/sg_replicate_sgw_cluster2'
@@ -1599,7 +1598,6 @@ def test_sg_replicate_distributions_replications(params_from_base_test_setup, se
     channels5 = ["Replication5"]
     channels6 = ["Replication6"]
 
-    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     channels_6 = channels1 + channels2 + channels3 + channels4 + channels5 + channels6
     db, num_of_docs, sg_db1, sg_db2, name1, name2, _, password, _, _, replicator, _, replicator_authenticator2, _, sg2_blip_url, sg1, sg2, repl1, c_cluster, cbl_db1, cbl_db2, _ = setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_teardown_test,
                                                                                                                                                                                                                cbl_replication_type="push_pull", sg_conf_name=sg_conf_name,

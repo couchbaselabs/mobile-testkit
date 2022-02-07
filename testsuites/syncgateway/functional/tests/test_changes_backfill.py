@@ -593,7 +593,7 @@ def test_awaken_backfill_channels_longpoll_changes_with_limit(params_from_base_t
                 url=sg_admin_url,
                 db=sg_db,
                 name=user_b_user_info.name,
-                roles=["channel-A-role"], 
+                roles=["channel-A-role"],
                 auth=auth
             )
 

@@ -85,8 +85,8 @@ def test_importdocs_false_shared_bucket_access_true(params_from_base_test_setup)
     time.sleep(3)
     # 5. Verify  SGW node which does not have config import_docs=false has docs imported.
     # but not for the other SGW node.
-    sg_client.get_changes(url=sg1.admin.admin_url, db=sg_db, auth=None, since=0, auth=auth)
-    sg_client.get_changes(url=sg2.admin.admin_url, db=sg_db, auth=None, since=0, auth=auth)
+    sg_client.get_changes(url=sg1.admin.admin_url, db=sg_db, auth=auth, since=0)
+    sg_client.get_changes(url=sg2.admin.admin_url, db=sg_db, auth=auth, since=0)
     sg1_expvars = sg_client.get_expvars(sg1.admin.admin_url, auth=auth)
     sg2_expvars = sg_client.get_expvars(sg2.admin.admin_url, auth=auth)
 
