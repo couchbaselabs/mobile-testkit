@@ -12,6 +12,7 @@ from keywords.utils import host_for_url, log_info
 from utilities.cluster_config_utils import get_cluster
 from couchbase.exceptions import DocumentNotFoundException
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
+from keywords.constants import RBAC_FULL_ADMIN
 
 
 @pytest.mark.channels
@@ -41,7 +42,9 @@ def test_delete_docs_with_attachments(params_from_base_test_setup, source, targe
     sg_blip_url = params_from_base_test_setup["target_url"]
     base_url = params_from_base_test_setup["base_url"]
     cbl_db = params_from_base_test_setup["source_db"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     channels = ["attachment-099"]
     db = Database(base_url)
     sg_client = MobileRestClient()
@@ -57,8 +60,8 @@ def test_delete_docs_with_attachments(params_from_base_test_setup, source, targe
                         attachments_generator=attachment.generate_png_100_100)
 
     # 3. Replicate the docs
-    sg_client.create_user(sg_admin_url, sg_db, "auto-test", password="password", channels=channels)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "auto-test")
+    sg_client.create_user(sg_admin_url, sg_db, "auto-test", password="password", channels=channels, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "auto-test", auth=auth)
     session = cookie, session_id
     replicator = Replication(base_url)
     replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
@@ -75,10 +78,10 @@ def test_delete_docs_with_attachments(params_from_base_test_setup, source, targe
     attachment_ids = []
     # Get the attachment ID from the document meta data for verification
     for doc_id in sdk_doc_ids:
-        raw_doc = sg_client.get_attachment_by_document(sg_admin_url, db=sg_db, doc=doc_id)
+        raw_doc = sg_client.get_attachment_by_document(sg_admin_url, db=sg_db, doc=doc_id, auth=auth)
         att_name = list(raw_doc["_attachments"].keys())[0]
         att_name = att_name.replace('/', '%2F')
-        attachment_raw = sg_client.get_attachment_by_document(sg_admin_url, db=sg_db, doc=doc_id, attachment=att_name)
+        attachment_raw = sg_client.get_attachment_by_document(sg_admin_url, db=sg_db, doc=doc_id, attachment=att_name, auth=auth)
         attachment_ids.append(attachment_raw['key'])
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
     cluster_topology = params_from_base_test_setup['cluster_topology']
@@ -161,7 +164,9 @@ def test_doc_with_many_attachments(params_from_base_test_setup):
     sg_blip_url = params_from_base_test_setup["target_url"]
     base_url = params_from_base_test_setup["base_url"]
     cbl_db = params_from_base_test_setup["source_db"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     channels = ["attachments_compaction"]
     db = Database(base_url)
     sg_client = MobileRestClient()
@@ -172,8 +177,8 @@ def test_doc_with_many_attachments(params_from_base_test_setup):
     c.reset(sg_config_path=sg_config)
 
     # 2. Add docs to SG/CBL.
-    sg_client.create_user(sg_admin_url, sg_db, "attachment", password="password", channels=channels)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "attachment")
+    sg_client.create_user(sg_admin_url, sg_db, "attachment", password="password", channels=channels, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "attachment", auth=auth)
     session = cookie, session_id
 
     sg_client.add_docs(url=sg_url, db=sg_db, number=2, id_prefix="att_com", channels=channels, auth=session,
@@ -194,11 +199,11 @@ def test_doc_with_many_attachments(params_from_base_test_setup):
     attachment_ids = []
     # Get the attachment ID from the document meta data for verification
     for doc_id in sdk_doc_ids:
-        raw_doc = sg_client.get_attachment_by_document(sg_admin_url, db=sg_db, doc=doc_id)
+        raw_doc = sg_client.get_attachment_by_document(sg_admin_url, db=sg_db, doc=doc_id, auth=auth)
         attachments = raw_doc["_attachments"]
         att_names = list(raw_doc["_attachments"].keys())
         for name in att_names:
-            attachment_raw = sg_client.get_attachment_by_document(sg_admin_url, db=sg_db, doc=doc_id, attachment=name)
+            attachment_raw = sg_client.get_attachment_by_document(sg_admin_url, db=sg_db, doc=doc_id, attachment=name, auth=auth)
             attachment_ids.append(attachment_raw['key'])
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
     cluster_topology = params_from_base_test_setup['cluster_topology']
@@ -209,18 +214,18 @@ def test_doc_with_many_attachments(params_from_base_test_setup):
     del attachments[att_names[0]]
     del attachments[att_names[1]]
     sg_client.update_doc(url=sg_admin_url, db=sg_db, doc_id=cbl_doc_ids[0], number_updates=1,
-                         update_attachment=attachments)
+                         update_attachment=attachments, auth=auth)
 
     # Verify Deleted attachments in SG
 
     with pytest.raises(HTTPError) as he:
-        sg_client.get_attachment_by_document(sg_admin_url, db=sg_db, doc=cbl_doc_ids[0], attachment=att_name1)
+        sg_client.get_attachment_by_document(sg_admin_url, db=sg_db, doc=cbl_doc_ids[0], attachment=att_name1, auth=auth)
     log_info(he.value)
     res_message = str(he.value)
     assert res_message.startswith('404')
 
     with pytest.raises(HTTPError) as he:
-        sg_client.get_attachment_by_document(sg_admin_url, db=sg_db, doc=cbl_doc_ids[0], attachment=att_name2)
+        sg_client.get_attachment_by_document(sg_admin_url, db=sg_db, doc=cbl_doc_ids[0], attachment=att_name2, auth=auth)
     log_info(he.value)
     res_message = str(he.value)
     assert res_message.startswith('404')
@@ -251,17 +256,17 @@ def test_doc_with_many_attachments(params_from_base_test_setup):
 
     # 5. Create Same attachments in 2 different documents
     sg_client.update_doc(url=sg_admin_url, db=sg_db, doc_id=cbl_doc_ids[0], number_updates=1,
-                         update_attachment=attachments)
+                         update_attachment=attachments, auth=auth)
     sg_client.update_doc(url=sg_admin_url, db=sg_db, doc_id=cbl_doc_ids[1], number_updates=1,
-                         update_attachment=attachments)
+                         update_attachment=attachments, auth=auth)
 
     updated_attachment_ids = []
     # Get the attachment ID from the document meta data for verification
-    raw_doc = sg_client.get_attachment_by_document(sg_admin_url, db=sg_db, doc=sdk_doc_ids[1])
+    raw_doc = sg_client.get_attachment_by_document(sg_admin_url, db=sg_db, doc=sdk_doc_ids[1], auth=auth)
     attachments = raw_doc["_attachments"]
     att_names = list(raw_doc["_attachments"].keys())
     for name in att_names:
-        attachment_raw = sg_client.get_attachment_by_document(sg_admin_url, db=sg_db, doc=doc_id, attachment=name)
+        attachment_raw = sg_client.get_attachment_by_document(sg_admin_url, db=sg_db, doc=doc_id, attachment=name, auth=auth)
         updated_attachment_ids.append(attachment_raw['key'])
 
     # 6. Delete attachment from doc one
@@ -270,17 +275,17 @@ def test_doc_with_many_attachments(params_from_base_test_setup):
     for att in new_attachments:
         update_att[att.name] = {"data": att.data}
     sg_client.update_doc(url=sg_admin_url, db=sg_db, doc_id=cbl_doc_ids[0], number_updates=1,
-                         update_attachment=update_att)
+                         update_attachment=update_att, auth=auth)
 
     # 7. Verify document one's sample_text.txt is not present
     with pytest.raises(HTTPError) as he:
-        sg_client.get_attachment_by_document(sg_admin_url, db=sg_db, doc=cbl_doc_ids[0], attachment="sample_text.txt")
+        sg_client.get_attachment_by_document(sg_admin_url, db=sg_db, doc=cbl_doc_ids[0], attachment="sample_text.txt", auth=auth)
     log_info(he.value)
     res_message = str(he.value)
     assert res_message.startswith('404')
 
     # 8. Verify document two's sample_text attachment is still present in SG and Couchbase
-    assert sg_client.get_attachment_by_document(sg_admin_url, db=sg_db, doc=cbl_doc_ids[1], attachment="sample_text.txt")
+    assert sg_client.get_attachment_by_document(sg_admin_url, db=sg_db, doc=cbl_doc_ids[1], attachment="sample_text.txt", auth=auth)
 
     for att_id in updated_attachment_ids:
         assert sdk_client.get(att_id)
@@ -313,7 +318,9 @@ def test_restart_sg_creating_attachments(params_from_base_test_setup):
     sg_blip_url = params_from_base_test_setup["target_url"]
     base_url = params_from_base_test_setup["base_url"]
     cbl_db = params_from_base_test_setup["source_db"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     channels = ["attachment-10"]
     db = Database(base_url)
     sg_client = MobileRestClient()
@@ -329,8 +336,8 @@ def test_restart_sg_creating_attachments(params_from_base_test_setup):
                         attachments_generator=attachment.generate_5_png_100_100)
 
     # 3. Replicate the docs
-    sg_client.create_user(sg_admin_url, sg_db, "auto10", password="password", channels=channels)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "auto10")
+    sg_client.create_user(sg_admin_url, sg_db, "auto10", password="password", channels=channels, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "auto10", auth=auth)
     session = cookie, session_id
     replicator = Replication(base_url)
     replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
@@ -352,11 +359,11 @@ def test_restart_sg_creating_attachments(params_from_base_test_setup):
     attachment_name = []
     # Get the attachment ID from the document meta data for verification
     for doc_id in sdk_doc_ids:
-        raw_doc = sg_client.get_attachment_by_document(sg_admin_url, db=sg_db, doc=doc_id)
+        raw_doc = sg_client.get_attachment_by_document(sg_admin_url, db=sg_db, doc=doc_id, auth=auth)
         att_name = list(raw_doc["_attachments"].keys())[0]
         att_name = att_name.replace('/', '%2F')
         attachment_name.append(att_name)
-        attachment_raw = sg_client.get_attachment_by_document(sg_admin_url, db=sg_db, doc=doc_id, attachment=att_name)
+        attachment_raw = sg_client.get_attachment_by_document(sg_admin_url, db=sg_db, doc=doc_id, attachment=att_name, auth=auth)
         attachment_ids.append(attachment_raw['key'])
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
     cluster_topology = params_from_base_test_setup['cluster_topology']
@@ -454,12 +461,14 @@ def test_attachment_expire_purged_doc(params_from_base_test_setup, delete_doc_ty
     sg_config = params_from_base_test_setup["sg_config"]
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     num_of_docs = 10
     sg_conf_name = "listener_tests/listener_tests_no_conflicts"
 
     if sync_gateway_version < "3.0.0":
         pytest.skip('This test cannot run with sg version below 3.0.0')
 
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     channels = ["Replication"]
     sg_client = MobileRestClient()
 
@@ -470,8 +479,8 @@ def test_attachment_expire_purged_doc(params_from_base_test_setup, delete_doc_ty
     cl.reset(sg_config_path=sg_config)
 
     # 1. Add docs to SG.
-    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest")
+    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest", auth=auth)
     session = cookie, session_id
     sg_docs = document.create_docs(doc_id_prefix='sg_docs', number=num_of_docs,
                                    attachments_generator=attachment.generate_2_png_10_10, channels=channels)
@@ -490,11 +499,11 @@ def test_attachment_expire_purged_doc(params_from_base_test_setup, delete_doc_ty
         doc_id = "sg_docs_7"
     attachment_name = []
     attachment_ids = []
-    raw_doc = sg_client.get_attachment_by_document(sg_admin_url, db=sg_db, doc=doc_id)
+    raw_doc = sg_client.get_attachment_by_document(sg_admin_url, db=sg_db, doc=doc_id, auth=auth)
     att_name = list(raw_doc["_attachments"].keys())[0]
     att_name = att_name.replace('/', '%2F')
     attachment_name.append(att_name)
-    attachment_raw = sg_client.get_attachment_by_document(sg_admin_url, db=sg_db, doc=doc_id, attachment=att_name)
+    attachment_raw = sg_client.get_attachment_by_document(sg_admin_url, db=sg_db, doc=doc_id, attachment=att_name, auth=auth)
     attachment_ids.append(attachment_raw['key'])
 
     # 2. Pull replication to CBL
@@ -512,7 +521,7 @@ def test_attachment_expire_purged_doc(params_from_base_test_setup, delete_doc_ty
     # Purge doc in SG.
     if delete_doc_type == "purge":
         doc = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=session)
-        sg_client.purge_doc(url=sg_admin_url, db=sg_db, doc=doc)
+        sg_client.purge_doc(url=sg_admin_url, db=sg_db, doc=doc, auth=auth)
 
     # 4. wait for replication to finish
     replicator.wait_until_replicator_idle(repl)

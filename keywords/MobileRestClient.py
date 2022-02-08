@@ -2535,20 +2535,32 @@ class MobileRestClient:
         resp_obj = resp.json()
         del resp_obj["_exp"]
 
-    def compact_attachments(self, url, db, action):
+    def compact_attachments(self, url, db, action, auth=None):
         if action == "status":
-            resp = self._session.get("{}/{}/_compact?type=attachment".format(url, db))
+            if auth:
+                resp = self._session.get("{}/{}/_compact?type=attachment".format(url, db), auth=HTTPBasicAuth(auth[0], auth[1]))
+            else:
+                resp = self._session.get("{}/{}/_compact?type=attachment".format(url, db))
             resp_obj = resp.json()
             return resp_obj
         elif action == "start":
-            resp = self._session.post("{}/{}/_compact?type=attachment&action=start".format(url, db))
+            if auth:
+                resp = self._session.post("{}/{}/_compact?type=attachment&action=start".format(url, db), auth=HTTPBasicAuth(auth[0], auth[1]))
+            else:
+                resp = self._session.post("{}/{}/_compact?type=attachment&action=start".format(url, db))
             resp_obj = resp.json()
             return resp_obj
         elif action == "progress":
-            resp = self._session.post("{}/{}/_compact?type=attachment".format(url, db))
+            if auth:
+                resp = self._session.post("{}/{}/_compact?type=attachment".format(url, db), auth=HTTPBasicAuth(auth[0], auth[1]))
+            else:
+                resp = self._session.post("{}/{}/_compact?type=attachment".format(url, db))
             resp_obj = resp.json()
             return resp_obj
         elif action == "stop":
-            resp = self._session.post("{}/{}/_compact?type=attachment&action=stop".format(url, db))
+            if auth:
+                resp = self._session.post("{}/{}/_compact?type=attachment&action=stop".format(url, db), auth=HTTPBasicAuth(auth[0], auth[1]))
+            else:
+                resp = self._session.post("{}/{}/_compact?type=attachment&action=stop".format(url, db))
             resp_obj = resp.json()
             return resp_obj
