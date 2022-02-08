@@ -36,6 +36,15 @@ def generate_2_png_100_100():
     return att_one_list + att_two_list
 
 
+def generate_5_png_100_100():
+    att_one_list = generate_png(100, 100)
+    att_two_list = generate_png(100, 100)
+    att_three_list = generate_png(100, 100)
+    att_four_list = generate_png(100, 100)
+    att_five_list = generate_png(100, 100)
+    return att_one_list + att_two_list + att_three_list + att_four_list + att_five_list
+
+
 def generate_png(width, height):
     """ Generates a noise rgb images for attachment testing. """
 

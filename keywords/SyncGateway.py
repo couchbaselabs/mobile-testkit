@@ -375,7 +375,7 @@ class SyncGateway(object):
         self.server_port = ""
         self.server_scheme = "couchbase"
 
-    def install_sync_gateway(self, cluster_config, sync_gateway_version, sync_gateway_config):
+    def install_sync_gateway(self, cluster_config, sync_gateway_version, sync_gateway_config, skip_bucketcreation=False):
 
         # Dirty hack -- these have to be put here in order to avoid circular imports
         from libraries.provision.install_sync_gateway import install_sync_gateway
@@ -384,9 +384,9 @@ class SyncGateway(object):
         if version_is_binary(sync_gateway_version):
             version, build = version_and_build(sync_gateway_version)
             log_info("VERSION: {} BUILD: {}".format(version, build))
-            sg_config = SyncGatewayConfig(None, version, build, sync_gateway_config, "", False)
+            sg_config = SyncGatewayConfig(None, version, build, sync_gateway_config, "", skip_bucketcreation=skip_bucketcreation)
         else:
-            sg_config = SyncGatewayConfig(sync_gateway_version, None, None, sync_gateway_config, "", False)
+            sg_config = SyncGatewayConfig(sync_gateway_version, None, None, sync_gateway_config, "", skip_bucketcreation=skip_bucketcreation)
 
         install_sync_gateway(cluster_config=cluster_config, sync_gateway_config=sg_config)
 
