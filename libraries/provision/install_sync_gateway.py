@@ -215,7 +215,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
         "disable_admin_auth": ""
     }
 
-    if get_sg_version(cluster_config) >= "2.1.0":
+    if version >= "2.1.0":
         logging_config = '"logging": {"debug": {"enabled": true}'
         try:
             redact_level = get_redact_level(cluster_config)
@@ -263,7 +263,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
             bucket_names[0])
         playbook_vars["password"] = '"password": "password",'
 
-    if is_cbs_ssl_enabled(cluster_config) and get_sg_version(cluster_config) >= "1.5.0":
+    if is_cbs_ssl_enabled(cluster_config) and version >= "1.5.0":
         playbook_vars["server_scheme"] = "couchbases"
         playbook_vars["server_port"] = 11207
         block_http_vars = {}
@@ -278,7 +278,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
                 raise ProvisioningError("Failed to block port on SGW")
 
     if is_xattrs_enabled(cluster_config):
-        if get_sg_version(cluster_config) >= "2.1.0":
+        if version >= "2.1.0":
             playbook_vars["autoimport"] = '"import_docs": true,'
         else:
             playbook_vars["autoimport"] = '"import_docs": "continuous",'
@@ -297,13 +297,13 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
     except KeyError:
         log_info("revs_limit not found in {}, Ignoring".format(cluster_config))
 
-    if is_delta_sync_enabled(cluster_config) and get_sg_version(cluster_config) >= "2.5.0":
+    if is_delta_sync_enabled(cluster_config) and version >= "2.5.0":
         playbook_vars["delta_sync"] = '"delta_sync": { "enabled": true},'
 
-    if get_sg_version(cluster_config) >= "2.8.0":
+    if version >= "2.8.0":
         playbook_vars["prometheus"] = '"metricsInterface": ":4986",'
 
-    if is_hide_prod_version_enabled(cluster_config) and get_sg_version(cluster_config) >= "2.8.1":
+    if is_hide_prod_version_enabled(cluster_config) and version >= "2.8.1":
         playbook_vars["hide_product_version"] = '"hide_product_version": true,'
 
     if is_centralized_persistent_config_disabled(cluster_config) and version >= "3.0.0":
