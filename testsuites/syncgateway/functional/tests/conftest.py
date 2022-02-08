@@ -11,11 +11,11 @@ from keywords.utils import check_xattr_support, log_info, version_is_binary, com
 from libraries.NetworkUtils import NetworkUtils
 from libraries.testkit import cluster
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop, is_x509_auth
-from utilities.cluster_config_utils import get_load_balancer_ip
+from utilities.cluster_config_utils import get_load_balancer_ip, get_sg_version
 from libraries.provision.clean_cluster import clear_firewall_rules
 from keywords.couchbaseserver import get_server_version
 from libraries.testkit import prometheus
-
+from keywords.SyncGateway import SyncGateway, verify_sync_gateway_version
 
 UNSUPPORTED_1_5_0_CC = {
     "test_db_offline_tap_loss_sanity[bucket_online_offline/bucket_online_offline_default_dcp-100]": {
@@ -176,7 +176,8 @@ def pytest_addoption(parser):
 
     parser.addoption("--sync-gateway-previous-version",
                      action="store",
-                     help="sync-gateway-previous-version")
+                     help="sync-gateway-previous-version",
+                     default="2.8.2-1")
 
     parser.addoption("--enable-server-tls-skip-verify",
                      action="store_true",
@@ -638,3 +639,31 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     if collect_logs or request.node.rep_call.failed or len(errors) != 0:
         logging_helper = Logging()
         logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=test_name)
+
+
+@pytest.fixture(scope="function")
+def sgw_version_reset(params_from_base_test_setup):
+    # sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
+    sg_conf_name = "sync_gateway_default"
+    sync_gateway_previous_version = params_from_base_test_setup['sync_gateway_previous_version']
+    cluster_conf = params_from_base_test_setup['cluster_config']
+    mode = params_from_base_test_setup['mode']
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    sg_obj = SyncGateway()
+    cbs_cluster = cluster.Cluster(config=cluster_conf)
+    sg1 = cbs_cluster.sync_gateways[0]
+    sg_obj.install_sync_gateway(cluster_conf, sync_gateway_previous_version, sg_conf)
+    yield {
+        "cluster_conf": cluster_conf,
+        "sg_obj": sg_obj,
+        "mode": mode,
+        "sg_conf_name": sg_conf_name,
+        "sync_gateway_previous_version": sync_gateway_previous_version,
+        "cbs_cluster": cbs_cluster
+    }
+    sg_latest_version = get_sg_version(cluster_conf)
+    try:
+        verify_sync_gateway_version(sg1.ip, sg_latest_version)
+    except Exception as ex:
+        print("exception message: ", ex)
+        sg_obj.install_sync_gateway(cluster_conf, sg_latest_version, sg_conf, skip_bucketcreation=True)
