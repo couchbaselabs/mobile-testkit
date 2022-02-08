@@ -6,7 +6,6 @@ from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.ClusterKeywords import ClusterKeywords
 
 from keywords.MobileRestClient import MobileRestClient
-# from utilities.cluster_config_utils import copy_sgconf_to_temp
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop
 from keywords import attachment
 from utilities.cluster_config_utils import get_cluster
@@ -55,12 +54,6 @@ def test_upgrade_delete_attachments(params_from_base_test_setup, sgw_version_res
     sg_conf_name = "sync_gateway_default"
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
-    # cbs_cluster = Cluster(config=cluster_conf)
-    # temp_sg_config, _ = copy_sgconf_to_temp(sg_conf, mode)
-
-    # cbs_cluster.reset(sg_config_path=temp_sg_config)
-    # persist_cluster_config_environment_prop(cluster_conf, 'sync_gateway_version', sync_gateway_previous_version, True)
-    # sg_obj.install_sync_gateway(cluster_conf, sync_gateway_previous_version, temp_sg_config)
     cluster_util = ClusterKeywords(cluster_conf)
     topology = cluster_util.get_cluster_topology(cluster_conf)
     sync_gateways = topology["sync_gateways"]
@@ -219,11 +212,6 @@ def test_upgrade_purge_expire_attachments(params_from_base_test_setup, sgw_versi
         pytest.skip('This test cannot run with sg version below 3.0.0')
     sg_conf_name = "sync_gateway_default"
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
-    # cbs_cluster = Cluster(config=cluster_conf)
-    # temp_sg_config, _ = copy_sgconf_to_temp(sg_conf, mode)
-    # cbs_cluster.reset(sg_config_path=temp_sg_config)
-    # persist_cluster_config_environment_prop(cluster_conf, 'sync_gateway_version', sync_gateway_previous_version, True)
-    # sg_obj.install_sync_gateway(cluster_conf, sync_gateway_previous_version, temp_sg_config)
     cluster_util = ClusterKeywords(cluster_conf)
     topology = cluster_util.get_cluster_topology(cluster_conf)
     sync_gateways = topology["sync_gateways"]
@@ -339,14 +327,6 @@ def test_upgrade_legacy_attachments(params_from_base_test_setup, sgw_version_res
     if not xattrs_enabled:
         pytest.skip('XATTR tests require --xattrs flag')
 
-    # cbs_cluster = Cluster(config=cluster_conf)
-    # temp_cluster_config = copy_to_temp_conf(cluster_conf, mode)
-    # temp_sg_config, _ = copy_sgconf_to_temp(sg_conf, mode)
-    # cbs_cluster.reset(sg_config_path=temp_sg_config)
-    # persist_cluster_config_environment_prop(cluster_conf, 'sync_gateway_version', sync_gateway_previous_version, True)
-
-    # 1. Setup a node with SG version 2.8.0 installed.
-    # sg_obj.install_sync_gateway(cluster_conf, sync_gateway_previous_version, temp_sg_config)
     cluster_util = ClusterKeywords(cluster_conf)
     topology = cluster_util.get_cluster_topology(cluster_conf)
     sync_gateways = topology["sync_gateways"]
