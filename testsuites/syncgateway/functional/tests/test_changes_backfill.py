@@ -261,6 +261,7 @@ def test_backfill_channels_oneshot_limit_changes(params_from_base_test_setup, sg
     log_info("grant_type: {}".format(grant_type))
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     cluster = Cluster(cluster_config)
     cluster.reset(sg_conf)
@@ -270,12 +271,11 @@ def test_backfill_channels_oneshot_limit_changes(params_from_base_test_setup, sg
     admin_user_info = userinfo.UserInfo("admin", "pass", channels=["A"], roles=[])
 
     if grant_type == "CHANNEL-TO-ROLE-REST" or grant_type == "CHANNEL-TO-ROLE-SYNC":
-        client.create_role(url=sg_admin_url, db=sg_db, name="empty_role", channels=[])
+        client.create_role(url=sg_admin_url, db=sg_db, name="empty_role", channels=[], auth=auth)
         user_b_user_info = userinfo.UserInfo("USER_B", "pass", channels=["B"], roles=["empty_role"])
     else:
         user_b_user_info = userinfo.UserInfo("USER_B", "pass", channels=["B"], roles=[])
 
-    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     # Create users / sessions
     client.create_user(
         url=sg_admin_url,
@@ -494,6 +494,7 @@ def test_awaken_backfill_channels_longpoll_changes_with_limit(params_from_base_t
     log_info("grant_type: {}".format(grant_type))
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     cluster = Cluster(cluster_config)
     cluster.reset(sg_conf)
@@ -503,12 +504,11 @@ def test_awaken_backfill_channels_longpoll_changes_with_limit(params_from_base_t
     admin_user_info = userinfo.UserInfo("admin", "pass", channels=["A"], roles=[])
 
     if grant_type == "CHANNEL-TO-ROLE-REST" or grant_type == "CHANNEL-TO-ROLE-SYNC":
-        client.create_role(url=sg_admin_url, db=sg_db, name="empty_role", channels=[])
+        client.create_role(url=sg_admin_url, db=sg_db, name="empty_role", channels=[], auth=auth)
         user_b_user_info = userinfo.UserInfo("USER_B", "pass", channels=["B"], roles=["empty_role"])
     else:
         user_b_user_info = userinfo.UserInfo("USER_B", "pass", channels=["B"], roles=[])
 
-    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     # Create users / sessions
     client.create_user(
         url=sg_admin_url,
@@ -588,7 +588,7 @@ def test_awaken_backfill_channels_longpoll_changes_with_limit(params_from_base_t
         elif grant_type == "ROLE-REST":
             log_info("Granting user access to channel A via Admin REST role grant")
             # Create role with channel A
-            client.create_role(url=sg_admin_url, db=sg_db, name="channel-A-role", channels=["A"])
+            client.create_role(url=sg_admin_url, db=sg_db, name="channel-A-role", channels=["A"], auth=auth)
             client.update_user(
                 url=sg_admin_url,
                 db=sg_db,

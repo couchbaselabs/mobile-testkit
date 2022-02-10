@@ -72,18 +72,18 @@ def test_upgrade_delete_attachments(params_from_base_test_setup, sgw_version_res
     persist_cluster_config_environment_prop(cluster_conf, 'sync_gateway_version', sync_gateway_version, True)
     for i in range(4):
         doc_id = "att_com_" + str(i)
-        latest_rev = sg_client.get_latest_rev(sg_admin_url, remote_db, doc_id, auth=auth)
-        sg_client.delete_doc(url=sg_admin_url, db=remote_db, doc_id=doc_id, rev=latest_rev, auth=auth)
+        latest_rev = sg_client.get_latest_rev(sg_url, remote_db, doc_id, auth=session)
+        sg_client.delete_doc(url=sg_url, db=remote_db, doc_id=doc_id, rev=latest_rev, auth=session)
 
     attachments = {}
     duplicate_attachments = attachment.load_from_data_dir(["sample_text.txt"])
     for att in duplicate_attachments:
         attachments[att.name] = {"data": att.data}
-    sg_client.update_doc(url=sg_admin_url, db=remote_db, doc_id="att_com_" + str(5), number_updates=1,
-                         update_attachment=attachments, auth=auth)
+    sg_client.update_doc(url=sg_url, db=remote_db, doc_id="att_com_" + str(5), number_updates=1,
+                         update_attachment=attachments, auth=session)
     doc_9 = "att_com_" + str(9)
-    sg_client.update_doc(url=sg_admin_url, db=remote_db, doc_id=doc_9, number_updates=1,
-                         update_attachment=attachments, auth=auth)
+    sg_client.update_doc(url=sg_url, db=remote_db, doc_id=doc_9, number_updates=1,
+                         update_attachment=attachments, auth=session)
 
     # 3 . Upgrade SGW to lithium and have Automatic upgrade
     sg_obj.upgrade_sync_gateway(sync_gateways, sync_gateway_previous_version, sync_gateway_version, sg_conf,
@@ -92,25 +92,25 @@ def test_upgrade_delete_attachments(params_from_base_test_setup, sgw_version_res
     # 4. delete the documents.
     for i in range(6, 8):
         doc_id = "att_com_" + str(i)
-        latest_rev = sg_client.get_latest_rev(sg_admin_url, remote_db, doc_id, auth=auth)
-        sg_client.delete_doc(url=sg_admin_url, db=remote_db, doc_id=doc_id, rev=latest_rev, auth=auth)
+        latest_rev = sg_client.get_latest_rev(sg_url, remote_db, doc_id, auth=session)
+        sg_client.delete_doc(url=sg_url, db=remote_db, doc_id=doc_id, rev=latest_rev, auth=session)
 
     # 5. Edit doc by Creating Same attachments in 2 different documents
     doc_10 = "att_com_" + str(10)
-    sg_client.update_doc(url=sg_admin_url, db=remote_db, doc_id=doc_10, number_updates=1,
-                         update_attachment=attachments, auth=auth)
+    sg_client.update_doc(url=sg_url, db=remote_db, doc_id=doc_10, number_updates=1,
+                         update_attachment=attachments, auth=session)
 
     updated_attachment_ids = []
     # Get the attachment ID from the document meta data for verification
-    raw_doc = sg_client.get_attachment_by_document(sg_admin_url, db=remote_db, doc=doc_10, auth=auth)
+    raw_doc = sg_client.get_attachment_by_document(sg_url, db=remote_db, doc=doc_10, auth=session)
     attachments = raw_doc["_attachments"]
     att_names = list(raw_doc["_attachments"].keys())
     for name in att_names:
-        attachment_raw = sg_client.get_attachment_by_document(sg_admin_url, db=remote_db, doc=doc_10, attachment=name, auth=auth)
+        attachment_raw = sg_client.get_attachment_by_document(sg_url, db=remote_db, doc=doc_10, attachment=name, auth=session)
         updated_attachment_ids.append(attachment_raw['key'])
 
-    latest_rev = sg_client.get_latest_rev(sg_admin_url, remote_db, doc_10, auth=auth)
-    sg_client.delete_doc(url=sg_admin_url, db=remote_db, doc_id=doc_10, rev=latest_rev, auth=auth)
+    latest_rev = sg_client.get_latest_rev(sg_url, remote_db, doc_10, auth=session)
+    sg_client.delete_doc(url=sg_url, db=remote_db, doc_id=doc_10, rev=latest_rev, auth=session)
 
     # 6. Verify deleted attachments in the bucket
     cluster_topology = params_from_base_test_setup['cluster_topology']
@@ -175,10 +175,10 @@ def test_upgrade_delete_attachments(params_from_base_test_setup, sgw_version_res
 
     # 8. Verify existing duplicated attachments
     # Verify document 10's sample_text attachment is still present in SG
-    assert sg_client.get_attachment_by_document(sg_admin_url, db=remote_db, doc=doc_9,
-                                                attachment="sample_text.txt", auth=auth)
-    assert sg_client.get_attachment_by_document(sg_admin_url, db=remote_db, doc="att_com_" + str(5),
-                                                attachment="sample_text.txt", auth=auth)
+    assert sg_client.get_attachment_by_document(sg_url, db=remote_db, doc=doc_9,
+                                                attachment="sample_text.txt", auth=session)
+    assert sg_client.get_attachment_by_document(sg_url, db=remote_db, doc="att_com_" + str(5),
+                                                attachment="sample_text.txt", auth=session)
 
 
 @pytest.mark.syncgateway
@@ -244,11 +244,11 @@ def test_upgrade_purge_expire_attachments(params_from_base_test_setup, sgw_versi
     duplicate_attachments = attachment.load_from_data_dir(["sample_text.txt"])
     for att in duplicate_attachments:
         attachments[att.name] = {"data": att.data}
-    sg_client.update_doc(url=sg_admin_url, db=remote_db, doc_id="att_com-1_" + str(5), number_updates=1,
-                         update_attachment=attachments, auth=auth)
+    sg_client.update_doc(url=sg_url, db=remote_db, doc_id="att_com-1_" + str(5), number_updates=1,
+                         update_attachment=attachments, auth=session)
 
-    sg_client.update_doc(url=sg_admin_url, db=remote_db, doc_id="att_com-1_" + str(6), number_updates=1,
-                         update_attachment=attachments, auth=auth)
+    sg_client.update_doc(url=sg_url, db=remote_db, doc_id="att_com-1_" + str(6), number_updates=1,
+                         update_attachment=attachments, auth=session)
     # 4. Purge all the documents on the SG
     if delete_doc_type == "purge":
         sg_client.purge_docs(url=sg_admin_url, db=remote_db, docs=sg_docs["rows"], auth=auth)
@@ -357,8 +357,8 @@ def test_upgrade_legacy_attachments(params_from_base_test_setup, sgw_version_res
         attachments[att.name] = {"data": att.data}
     # sharing the same attachment
     for i in range(4):
-        sg_client.update_doc(url=sg_admin_url, db=remote_db, doc_id="att_same_" + str(i), number_updates=1,
-                             update_attachment=attachments, auth=auth)
+        sg_client.update_doc(url=sg_url, db=remote_db, doc_id="att_same_" + str(i), number_updates=1,
+                             update_attachment=attachments, auth=session)
     persist_cluster_config_environment_prop(cluster_conf, 'sync_gateway_version', sync_gateway_version, True)
 
     # 4. Stop SG, upgrade to the Lithium version 3.0.0, and start SG.
@@ -370,23 +370,23 @@ def test_upgrade_legacy_attachments(params_from_base_test_setup, sgw_version_res
     set_one_attachment_ids = []
 
     for i in range(3):
-        raw_doc = sg_client.get_attachment_by_document(sg_admin_url, db=remote_db, doc="att_com-1_" + str(i), auth=auth)
+        raw_doc = sg_client.get_attachment_by_document(sg_url, db=remote_db, doc="att_com-1_" + str(i), auth=session)
         att_name = list(raw_doc["_attachments"].keys())[0]
         att_name = att_name.replace('/', '%2F')
         set_one_attachment_name.append(att_name)
-        attachment_raw = sg_client.get_attachment_by_document(sg_admin_url, db=remote_db, doc="att_com-1_" + str(i),
-                                                              attachment=att_name, auth=auth)
+        attachment_raw = sg_client.get_attachment_by_document(sg_url, db=remote_db, doc="att_com-1_" + str(i),
+                                                              attachment=att_name, auth=session)
         set_one_attachment_ids.append(attachment_raw['key'])
 
     set_two_attachment_name = []
     set_two_attachment_ids = []
     for i in range(4):
-        raw_doc = sg_client.get_attachment_by_document(sg_admin_url, db=remote_db, doc="att_same_" + str(i), auth=auth)
+        raw_doc = sg_client.get_attachment_by_document(sg_url, db=remote_db, doc="att_same_" + str(i), auth=session)
         att_name = list(raw_doc["_attachments"].keys())[0]
         att_name = att_name.replace('/', '%2F')
         set_two_attachment_name.append(att_name)
-        attachment_raw = sg_client.get_attachment_by_document(sg_admin_url, db=remote_db, doc="att_same_" + str(i),
-                                                              attachment=att_name, auth=auth)
+        attachment_raw = sg_client.get_attachment_by_document(sg_url, db=remote_db, doc="att_same_" + str(i),
+                                                              attachment=att_name, auth=session)
         set_two_attachment_ids.append(attachment_raw['key'])
 
     cluster_topology = params_from_base_test_setup['cluster_topology']
@@ -403,21 +403,21 @@ def test_upgrade_legacy_attachments(params_from_base_test_setup, sgw_version_res
 
     sg_docs = sg_client.get_all_docs(url=sg_url, db=remote_db, auth=session, include_docs=True)
     # 5. Update doc1 by removing att1 and verify that the att1 is still persisted in the bucket.
-    sg_client.update_doc(url=sg_admin_url, db=remote_db, doc_id="att_com-1_0", number_updates=1, update_attachment={}, auth=auth)
+    sg_client.update_doc(url=sg_url, db=remote_db, doc_id="att_com-1_0", number_updates=1, update_attachment={}, auth=session)
 
     #  6. Delete doc2  and verify that the att is still persisted in the bucket.
     doc_id = "att_com-1_1"
-    latest_rev = sg_client.get_latest_rev(sg_admin_url, remote_db, doc_id, session, auth=auth)
-    sg_client.delete_doc(url=sg_admin_url, db=remote_db, doc_id=doc_id, rev=latest_rev, auth=session, auth=auth)
+    latest_rev = sg_client.get_latest_rev(sg_url, remote_db, doc_id, session)
+    sg_client.delete_doc(url=sg_url, db=remote_db, doc_id=doc_id, rev=latest_rev, auth=session)
 
     # 7. Purge doc3 and verify that the att3 is still persisted in the bucket.
     sg_client.purge_docs(url=sg_admin_url, db=remote_db, docs=[sg_docs["rows"][2]], auth=auth)
 
     # Update doc4 by removing att4 and verify that the att4 is still persisted in the bucket.
-    sg_client.update_doc(url=sg_admin_url, db=remote_db, doc_id="att_same_0", number_updates=1, update_attachment={}, auth=auth)
+    sg_client.update_doc(url=sg_url, db=remote_db, doc_id="att_same_0", number_updates=1, update_attachment={}, auth=session)
     # 9. Delete doc5  and verify that the att4 is still persisted in the bucket.
-    latest_rev = sg_client.get_latest_rev(sg_admin_url, remote_db, "att_same_1", session, auth=auth)
-    sg_client.delete_doc(url=sg_admin_url, db=remote_db, doc_id="att_same_1", rev=latest_rev, auth=session, auth=auth)
+    latest_rev = sg_client.get_latest_rev(sg_url, remote_db, "att_same_1", session)
+    sg_client.delete_doc(url=sg_url, db=remote_db, doc_id="att_same_1", rev=latest_rev, auth=session)
     # 10. Purge doc6 and verify that the att4 is still persisted in the bucket.
     sg_client.purge_docs(url=sg_admin_url, db=remote_db, docs=[sg_docs["rows"][4]], auth=auth)
 

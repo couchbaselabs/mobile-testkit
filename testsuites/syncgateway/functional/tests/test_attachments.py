@@ -242,7 +242,7 @@ def test_writing_attachment_to_couchbase_server(params_from_base_test_setup, sg_
 
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels, auth=auth)
-    sg_user_session = client.create_session(url=sg_url_admin, db=sg_db, name=sg_user_name)
+    sg_user_session = client.create_session(url=sg_url_admin, db=sg_db, name=sg_user_name, auth=auth)
 
     docs = client.add_docs(url=sg_url, db=sg_db, number=100, id_prefix=sg_db, channels=sg_user_channels, auth=sg_user_session)
     assert len(docs) == 100

@@ -71,7 +71,7 @@ def get_auth_type(auth):
     if auth is None:
         return AuthType.none
 
-    if auth[0] == "SyncGatewaySession":
+    if isinstance(auth, list) and auth[0] == "SyncGatewaySession":
         auth_type = AuthType.session
     else:
         auth_type = AuthType.http_basic
@@ -2014,7 +2014,7 @@ class MobileRestClient:
         timeout *= 1000
 
         auth_type = get_auth_type(auth)
-        server_type = self.get_server_type(url)
+        server_type = self.get_server_type(url, auth)
 
         if server_type == ServerType.listener:
 
@@ -2022,7 +2022,12 @@ class MobileRestClient:
             if limit is not None:
                 request_url += "&limit={}".format(limit)
 
-            resp = self._session.get(request_url)
+            if auth_type == AuthType.session:
+                resp = self._session.get(request_url, cookies=dict(SyncGatewaySession=auth[1]))
+            elif auth_type == AuthType.http_basic:
+                resp = self._session.get(request_url, auth=auth)
+            else:
+                resp = self._session.get(request_url)
 
         elif server_type == ServerType.syncgateway:
 
