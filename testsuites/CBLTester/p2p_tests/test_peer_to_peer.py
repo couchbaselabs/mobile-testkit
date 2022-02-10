@@ -891,7 +891,7 @@ def test_default_conflict_scenario_delete_wins(params_from_base_test_setup, serv
     replicator = Replication(base_url_client)
     repl = peerToPeer_client.configure(port=url_listener_port, host=server_host, server_db_name=db_name_server, client_database=cbl_db_client, continuous=False, replication_type="push_pull", endPointType=endPointType)  # , authenticator=replicator_authenticator)
     peerToPeer_client.client_start(repl)
-    replicator.wait_until_replicator_idle(repl)
+    replicator.wait_until_replicator_idle(repl, err_check=False)
     replicator.stop(repl)
 
     server_docs = db_obj_server.getBulkDocs(cbl_db_server)
