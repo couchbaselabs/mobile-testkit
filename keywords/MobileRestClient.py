@@ -1,7 +1,6 @@
 import logging
 import json
 import time
-from typing import Tuple
 import uuid
 import re
 
@@ -71,7 +70,7 @@ def get_auth_type(auth):
     if auth is None:
         return AuthType.none
 
-    if isinstance(auth, list) and auth[0] == "SyncGatewaySession":
+    if isinstance(auth, tuple) and auth[0] == "SyncGatewaySession":
         auth_type = AuthType.session
     else:
         auth_type = AuthType.http_basic
