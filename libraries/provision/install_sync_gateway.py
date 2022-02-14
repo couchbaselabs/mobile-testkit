@@ -316,7 +316,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
             playbook_vars["delta_sync"] = '"delta_sync": { "enabled": true},'
 
         if version >= "2.8.0":
-            playbook_vars["prometheus"] = '"mmetrics_interface": ":4986",'
+            playbook_vars["prometheus"] = '"metricsInterface": ":4986",'
 
         if is_hide_prod_version_enabled(cluster_config) and version >= "2.8.1":
             playbook_vars["hide_product_version"] = '"hide_product_version": true,'

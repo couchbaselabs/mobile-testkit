@@ -288,9 +288,14 @@ def test_upgrade(params_from_base_test_setup):
         sg_client.add_docs(url=sg_admin_url, db=sg_db, number=num_sg_docs, id_prefix="sgw_after_upgrade", channels=sg_user_channels)
         replicator.wait_until_replicator_idle(repl2)
         if upgraded_xattrs_enabled:
-            time.sleep(30)  # to let the docs import from server to sgw
-            cbl_doc_ids2 = db.getDocIds(cbl_db2, limit=num_docs + (num_sdk_docs * 4) + 3)
-            count1 = sum('sdk_after_upgrade' in s for s in cbl_doc_ids2)
+            count = 1
+            retry_count = 10
+            count1 = 0
+            while (count < retry_count) and (count1 < num_sdk_docs):
+                time.sleep(30)  # to let the docs import from server to sgw
+                cbl_doc_ids2 = db.getDocIds(cbl_db2, limit=num_docs + (num_sdk_docs * 4) + 3)
+                count1 = sum('sdk_after_upgrade' in s for s in cbl_doc_ids2)
+                count += 1
             assert count1 == num_sdk_docs, "docs via sdk after upgrade did not replicate to cbl"
         else:
             cbl_doc_ids2 = db.getDocIds(cbl_db2, limit=num_docs + (num_sdk_docs * 3) + 3)
