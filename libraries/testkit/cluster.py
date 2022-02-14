@@ -49,7 +49,6 @@ class Cluster:
         # Load resources/cluster_configs/<cluster_config>.json
         with open("{}.json".format(config)) as f:
             cluster = json.loads(f.read())
-
         # Get load balancer IP
         lb_ip = None
         if is_load_balancer_with_two_clusters_enabled(self._cluster_config):

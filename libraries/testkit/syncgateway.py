@@ -381,7 +381,7 @@ class SyncGateway:
                 # Now create rest API for all database configs
                 sgw_list = [self]
                 print("sgw_config_data before sending rest call ", sgw_config_data)
-                send_dbconfig_as_restCall(db_config_json, sgw_list, sgw_config_data)
+                # send_dbconfig_as_restCall(db_config_json, sgw_list, sgw_config_data)
                 try:
                     send_dbconfig_as_restCall(db_config_json, sgw_list, sgw_config_data)
                 except Exception as ex:

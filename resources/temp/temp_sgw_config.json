@@ -4,12 +4,14 @@
     "maxIncomingConnections": 0,
     "maxFileDescriptors": 90000,
     "compressResponses": false,
-    "metricsInterface": ":4986",
     "logging": {
         "debug": {
             "enabled": true
         }
     },
+    "server_tls_skip_verify": true,
+    "admin_interface_authentication": false,
+    "metrics_interface_authentication": false,
     "databases": {
         "db": {
             "import_docs": true,
@@ -20,9 +22,15 @@
             "delta_sync": {
                 "enabled": true
             },
-            "server": "couchbases://172.23.106.108:11207",
+            "server": "couchbases://172.23.104.166:11207",
             "bucket": "data-bucket",
-            "bucket_op_timeout_ms": 60000
+            "cache": {
+                "channel_cache": {
+                    "max_length": 15000,
+                    "min_length": 15000,
+                    "expiry_seconds": 90
+                }
+            }
         }
     }
 }

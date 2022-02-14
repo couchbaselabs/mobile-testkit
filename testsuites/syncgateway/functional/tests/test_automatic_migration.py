@@ -2,7 +2,6 @@ import pytest
 import time
 import os
 import json
-import concurrent.futures
 
 # from keywords.utils import log_info
 from libraries.testkit.cluster import Cluster
@@ -104,7 +103,6 @@ def test_automatic_upgrade(params_from_base_test_setup, sgw_version_reset):
     sg_conf_name = sgw_version_reset['sg_conf_name']
     cluster_conf = sgw_version_reset['cluster_conf']
     sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
-    sync_gateway_previous_version = sgw_version_reset['sync_gateway_previous_version']
     mode = params_from_base_test_setup['mode']
     cbs_cluster = sgw_version_reset['cluster_conf']
     sg_platform = params_from_base_test_setup["sg_platform"]
@@ -130,12 +128,11 @@ def test_automatic_upgrade(params_from_base_test_setup, sgw_version_reset):
     #   Default config for dynamic config like logging should have default values on _config rest end point
     sg1 = cbs_cluster.sync_gateways[0]
     cbs_url = cbs_cluster.servers[0].host
-    debug_dict = { "enabled": True, "rotation": { } }
+    debug_dict = {"enabled": True, "rotation": {}}
     # cbs_url = cbs_url.replace("https", "couchbases")
-    cbs_bucket = cbs_cluster.servers[0].get_bucket_names()[0]
     sg1_config = sg1.admin.get_config()
     assert cbs_url in sg1_config["bootstrap"]["server"], "server did not match with legacy config"
-    assert sg1_config["bootstrap"]["username"] == cbs_bucket, "username did not match with legacy config"
+    assert sg1_config["bootstrap"]["username"] == "bucket-admin", "username did not match with legacy config"
 
     assert not sg1_config["logging"]["console"]["rotation"], "logging did not get reset"
     assert not sg1_config["logging"]["error"]["rotation"], "logging did not get reset"
@@ -248,7 +245,6 @@ def test_automatic_migration_with_server_connection_fails(params_from_base_test_
     """
 
     sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
-    sync_gateway_previous_version = params_from_base_test_setup['sync_gateway_previous_version']
     mode = sgw_version_reset['mode']
     cluster_conf = sgw_version_reset["cluster_conf"]
     sg_conf_name = sgw_version_reset["sg_conf_name"]
@@ -320,6 +316,7 @@ def test_automatic_migration_with_server_connection_fails(params_from_base_test_
     _, stdout, _ = remote_executor.execute(command)
     assert stdout[0].strip() == 1, "sync gateway config did not get migrated"
 
+
 @pytest.fixture(scope="function")
 def setup_env_variables(params_from_base_test_setup):
     cluster_config = params_from_base_test_setup["cluster_config"]
@@ -349,11 +346,11 @@ def test_automatic_migration_fails_with_directory_permissions(params_from_base_t
     """
     @summary :
     Test cases link on google drive : https://docs.google.com/spreadsheets/d/19kJQ4_g6RroaoG2YYe0X11d9pU0xam-lb-n23aPLhO4/edit#gid=0
-    ""1.Have prelithium config 
+    ""1.Have prelithium config
     2. Once SGW is connected successfully to the server
     3. Deploy the sgw config on the directory which sync gateway user does not have permissions
     4. upgrade to 3.0 and above
-    5. Verify SGW stats successfully 
+    5. Verify SGW stats successfully
     6. Verify backup file is not created and sgw config is not upgraded and old config is not intacted
     """
 

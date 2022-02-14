@@ -5,7 +5,6 @@ import json
 from keywords.utils import log_info
 from libraries.testkit.cluster import Cluster
 from keywords.SyncGateway import sync_gateway_config_path_for_mode, SyncGateway, load_sync_gateway_config
-from keywords import document
 # from keywords.utils import host_for_url, deep_dict_compare
 # from couchbase.bucket import Bucket
 from keywords.MobileRestClient import MobileRestClient
@@ -45,6 +44,7 @@ def test_default_config_values(params_from_base_test_setup):
     cluster_conf = params_from_base_test_setup['cluster_config']
     sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
     mode = params_from_base_test_setup['mode']
+    ssl_enabled = params_from_base_test_setup['ssl_enabled']
 
     # 1. Have prelithium config
     # 2. Have configs required fo database on prelithium config
@@ -56,12 +56,11 @@ def test_default_config_values(params_from_base_test_setup):
     cluster_util = ClusterKeywords(cluster_conf)
     topology = cluster_util.get_cluster_topology(cluster_conf)
     # sync_gateways = topology["sync_gateways"]
-    sg_one_url = topology["sync_gateways"][0]["public"]
 
     # 3. Have min bootstrap configuration without static system config with differrent config
     cbs_cluster = Cluster(config=cluster_conf)
     cbs_cluster.reset(sg_config_path=sg_conf)
-    debug_dict = { "enabled": True, "rotation": { } }
+    debug_dict = {"enabled": True, "rotation": {}}
     sg1 = cbs_cluster.sync_gateways[0]
     cbs_url = topology["couchbase_servers"][0]
     sg1_config = sg1.admin.get_config()
@@ -76,12 +75,20 @@ def test_default_config_values(params_from_base_test_setup):
     assert sg1_config["api"]["public_interface"] == ":4984", "public interface did not match with sgw config"
     assert sg1_config["api"]["admin_interface"] == "0.0.0.0:4985", "admin interface did not match with sgw config"
     assert sg1_config["api"]["metrics_interface"] == ":4986", "metrics interface did not match with sgw config"
-    assert sg1_config["api"]["admin_interface_authentication"] == False, "admin_interface_authentication did not match with sgw config"
-    assert sg1_config["api"]["metrics_interface_authentication"] == False, "metrics_interface_authentication did not match with sgw config"
-    assert sg1_config["api"]["https"] == { }, "https with default value is not set"
-    assert sg1_config["api"]["cors"] == { }, "cors with default value is not set"
+    assert not sg1_config["api"]["admin_interface_authentication"], "admin_interface_authentication did not match with sgw config"
+    assert not sg1_config["api"]["metrics_interface_authentication"], "metrics_interface_authentication did not match with sgw config"
+    assert sg1_config["api"]["https"] == {}, "https with default value is not set"
+    assert sg1_config["api"]["cors"] == {}, "cors with default value is not set"
 
-    assert sg1_config["bootstrap"]["server"] == cbs_url, "server url  did not match"
+    # We want to compare IP addresses first - since url's are in the format
+    # <protocol>://<IP>:<port>, splitting the strings by colon gives us just the IP addresses
+    sg1_config_url = sg1_config["bootstrap"]["server"]
+    assert sg1_config_url.split(":")[1] == cbs_url.split(":")[1], "server IP addresses did not match"
+
+    # If SSL is enabled, we want to see if both URLs are using secure protocols (https and couchbases z)
+    # We can use the same trick as above and ensure that both protocols end in s (for secure)
+    if ssl_enabled:
+        assert sg1_config_url.split(":")[0][-1] == cbs_url.split(":")[0][-1], "server URLs were not both using secure protocol"
     assert sg1_config["bootstrap"]["username"] == "bucket-admin", "username did not match"
     assert sg1_config["bootstrap"]["server_tls_skip_verify"] == True, "server_tls_skip_verify did not match"
 
@@ -89,7 +96,7 @@ def test_default_config_values(params_from_base_test_setup):
 @pytest.mark.syncgateway
 @pytest.mark.parametrize("sg_conf_name", [
     ("sync_gateway_default_invalid_bootstrap"),
-    # (sync_gateway_default)
+    ("sync_gateway_invalid_api")
 ])
 def test_invalid_configs(params_from_base_test_setup, sg_conf_name):
     """
@@ -151,15 +158,6 @@ def test_invalid_configs(params_from_base_test_setup, sg_conf_name):
         assert False, "SGW did not fail to start with bootstrap config under api config"
     except Exception as ex:
         print("SGW failed to start with bootstrap config", str(ex))
-    # cbs_cluster.reset(sg_config_path=sg_conf, use_config=non_cpc_sg_conf)
-    sg1 = cbs_cluster.sync_gateways[0]
-    sg1_config = sg1.admin.get_config()
-    assert sg1_config["logging"] is None, "logging did not get reset"
-    # 4. Verify default values of static config
-    # 4. Add dynamic config like log_file_path or redaction_level on sgw config
-    persist_cluster_config_environment_prop(cluster_conf, 'redactlevel', "partial",
-                                            property_name_check=False)
-    sg_obj.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
 
 
 @pytest.mark.syncgateway
@@ -317,7 +315,7 @@ def test_default_named_group(params_from_base_test_setup, group_type):
     4. Test custom group id on CE and verify SGW starts to fail
     """
 
-     # sg_db = 'db'
+    # sg_db = 'db'
     sg_cpc_conf_name = "sync_gateway_cpc_custom_group"
     sg_conf_name = "sync_gateway_default"
 

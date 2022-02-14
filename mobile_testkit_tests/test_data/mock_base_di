@@ -28,4 +28,5 @@ server_version=5.0.0-3519
 ipv6_enabled=False
 sync_gateway_ssl=False
 x509_certs=False
+disable_persistent_config=False
 

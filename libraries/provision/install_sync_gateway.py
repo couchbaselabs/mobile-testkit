@@ -16,7 +16,7 @@ from utilities.cluster_config_utils import is_hide_prod_version_enabled, get_cbs
 from utilities.cluster_config_utils import get_sg_version, get_sg_replicas, get_sg_use_views, get_redact_level, is_x509_auth, generate_x509_certs, is_delta_sync_enabled
 from libraries.testkit import cluster
 from keywords.utils import hostname_for_url, version_and_build
-from utilities.cluster_config_utils import is_centralized_persistent_config_disabled, is_server_tls_skip_verify_enabled, is_admin_auth_disabled, is_tls_server_disabled
+from utilities.cluster_config_utils import is_server_tls_skip_verify_enabled, is_admin_auth_disabled, is_tls_server_disabled
 
 
 class SyncGatewayConfig:
