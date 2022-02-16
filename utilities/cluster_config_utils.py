@@ -9,6 +9,7 @@ from subprocess import Popen, PIPE
 from distutils.dir_util import copy_tree
 from couchbase.cluster import PasswordAuthenticator, ClusterTimeoutOptions, ClusterOptions, Cluster
 from keywords.constants import BUCKET_LIST
+from keywords.constants import SYNC_GATEWAY_CONFIGS_CPC
 
 
 class CustomConfigParser(configparser.RawConfigParser):
@@ -314,6 +315,11 @@ def copy_sgconf_to_temp(sg_conf, mode):
     open(temp_sg_config, "w+")
     copyfile(sg_conf, temp_sg_config)
     return temp_sg_config, temp_sg_conf_name
+
+
+def copy_to_temp_cpc_config(temp_sg_config, mode):
+    cpc_temp_sg_config = "{}/temp_sg_config_{}.json".format(SYNC_GATEWAY_CONFIGS_CPC, mode)
+    copyfile(temp_sg_config, cpc_temp_sg_config)
 
 
 def replace_string_on_sgw_config(sg_conf, replace_string, new_string):

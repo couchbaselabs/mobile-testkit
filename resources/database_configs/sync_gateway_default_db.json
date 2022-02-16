@@ -6,15 +6,19 @@
         {{ no_conflicts }}
         {{ sg_use_views }}
         {{ num_index_replicas }}
-        {{ username }}
-        {{ password }}
         {{ cacertpath }}
         {{ certpath }}
         {{ keypath }}
         {{ delta_sync }}
         {{ bucket }}
         {{ revs_limit }}
-        "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}"
+        "cache": {
+            "channel_cache": {
+            "max_length": 15000,
+            "min_length": 15000,
+            "expiry_seconds": 90
+            }
+            }
     }
 }
 }

@@ -1327,7 +1327,8 @@ def construct_dbconfig_json(db_config_file, cluster_config, sg_platform, sgw_con
         revs_limit=revs_limit_var,
         delta_sync=delta_sync_var
     )
-    return db_config_data
+    sgw_db_data = json.loads(db_config_data)
+    return sgw_db_data["databases"]["db"]
 
 
 def start_sgbinary(sg1, sg_platform, adminInterface=None, interface=None, cacertpath=None, certpath=None, configServer=None, dbname=None, defaultLogFilePath=None, disable_persistent_config=None, keypath=None, log=None, logFilePath=None, profileInterface=None, url=None):

@@ -172,7 +172,10 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
         log_warn("\n\n!!! WARNING: You are building with flags: {} !!!\n\n".format(sync_gateway_config.build_flags))
 
     if version >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config):
-        playbook_vars, _, _ = c_cluster.setup_server_and_sgw(sg_config_path=sync_gateway_config.config_path)
+        bucket_creation_flag = True
+        if sync_gateway_config.skip_bucketcreation:
+            bucket_creation_flag = False
+        playbook_vars, _, _ = c_cluster.setup_server_and_sgw(sg_config_path=sync_gateway_config.config_path, bucket_creation=bucket_creation_flag)
     else:
         bucket_names = get_buckets_from_sync_gateway_config(sync_gateway_config.config_path, cluster_config)
         cbs_cert_path = os.path.join(os.getcwd(), "certs")

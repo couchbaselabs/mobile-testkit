@@ -1,1 +1,1 @@
-{"interface": ":4984", "adminInterface": "0.0.0.0:4985", "maxIncomingConnections": 0, "maxFileDescriptors": 90000, "compressResponses": false, "log": ["*"], "databases": {"db": {"import_docs": true, "enable_shared_bucket_access": true, "use_views": true, "num_index_replicas": 0, "username": "data-bucket", "password": "password", "server": "couchbases://172.23.104.190:", "bucket": "data-bucket", "cache": {"channel_cache_max_length": 15000, "channel_cache_min_length": 15000, "channel_cache_expiry": 90}}}}
+function(doc, oldDoc){throw({forbidden: "read only!" })}

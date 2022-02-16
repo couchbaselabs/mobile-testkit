@@ -1893,7 +1893,10 @@ def test_sg_replicate_restart_active_passive_nodes(params_from_base_test_setup, 
         db.create_bulk_docs(1, "threadStop", db=cbl_db1, channels=channels1)
         update_from_cbl_task.result()
 
-    replicator.wait_until_replicator_idle(repl1)
+    err_check = True
+    if not disable_persistent_config:
+        err_check = False
+    replicator.wait_until_replicator_idle(repl1, err_check=err_check)
     sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id_1, write_flag=True)
     sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id_3, write_flag=True)
     sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id_2, read_flag=True)
@@ -2163,6 +2166,8 @@ def test_sg_replicate_custom_conflict_resolve(params_from_base_test_setup, setup
     cbl_db_docs2 = db.getDocuments(cbl_db2, cbl_doc_ids2)
     for doc in cbl_db_docs1:
         try:
+            print("cbldb doc1 is ::::::", cbl_db_docs1[doc])
+            print("cbldb doc1 is ::::::", cbl_db_docs2[doc])
             cbl_db_docs1[doc]["cbl1-update"]
             assert cbl_db_docs2[doc]["cbl1-update"] == 1, "merge of local and remote doc did not replicated on cbl db2- {}".format(cbl_db_docs2[doc])
         except KeyError:
