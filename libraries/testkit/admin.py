@@ -32,7 +32,6 @@ class Admin:
 
     def create_db(self, db, db_config={}):
         # config_data = '{\"import_docs\": true, \"enable_shared_bucket_access\": true}'
-        data = json.dumps(db_config)
         # db_config = '{"import_docs": true, "enable_shared_bucket_access": true, "num_index_replicas": 0, "delta_sync": {"enabled": true}, "bucket": "data-bucket", "bucket_op_timeout_ms": 60000}'
         data = json.dumps(db_config)
         print("jsond dumpts afeter data is ", data)
