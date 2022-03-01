@@ -28,11 +28,6 @@ class Blob(object):
             raise Exception("Provide correct parameter")
         return self._client.invokeMethod("blob_create", args)
 
-    def createUTFBytesContent(self, content):
-        args = Args()
-        args.setString("content", content)
-        return self._client.invokeMethod("blob_createUTFBytesContent", args)
-
     def createImageContent(self, image, database=None):
         args = Args()
         args.setString("image", image)
