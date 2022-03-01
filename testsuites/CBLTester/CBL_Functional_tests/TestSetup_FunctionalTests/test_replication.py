@@ -6,14 +6,12 @@ import random
 from keywords.MobileRestClient import MobileRestClient
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords import couchbaseserver
-from keywords.utils import log_info, random_string, get_embedded_asset_file_path
+from keywords.utils import log_info
 from CBLClient.Database import Database
 from CBLClient.Replication import Replication
 from CBLClient.Document import Document
 from CBLClient.Authenticator import Authenticator
 from concurrent.futures import ThreadPoolExecutor
-from CBLClient.Blob import Blob
-from CBLClient.Dictionary import Dictionary
 from libraries.testkit.prometheus import verify_stat_on_prometheus
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords import document, attachment
@@ -3820,114 +3818,6 @@ def test_replication_behavior_with_channelRole_modification(params_from_base_tes
     assert len(cbl_doc_ids) == num_docs, "new docs which created in sgw after role change got replicated to cbl"
     for id in cbl_doc_ids:
         assert "new_role_doc" not in id, "new doc got replicated to cbl"
-
-
-@pytest.mark.listener
-@pytest.mark.replication
-@pytest.mark.parametrize("blob_data_type", [
-    pytest.param('byte_array', marks=pytest.mark.ce_sanity),
-    pytest.param('stream', marks=pytest.mark.sanity),
-    'file_url'
-])
-def test_blob_contructor_replication(params_from_base_test_setup, blob_data_type):
-    '''
-    @summary:
-    1. Create docs in CBL
-    2. Do push replication
-    3. update docs in CBL with attachment in specified blob type
-    4. Do push replication after docs update
-    5. Verify blob content replicated successfully
-    '''
-    cbl_db = params_from_base_test_setup["source_db"]
-    db = params_from_base_test_setup["db"]
-    base_url = params_from_base_test_setup["base_url"]
-    sg_blip_url = params_from_base_test_setup["target_url"]
-    cluster_config = params_from_base_test_setup["cluster_config"]
-    sg_config = params_from_base_test_setup["sg_config"]
-    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
-    liteserv_platform = params_from_base_test_setup["liteserv_platform"]
-
-    # Reset cluster to ensure no data in system
-    c = cluster.Cluster(config=cluster_config)
-    c.reset(sg_config_path=sg_config)
-
-    sg_db = "db"
-    num_of_docs = 10
-    channels = ["ABC"]
-    username = "autotest"
-    password = "password"
-
-    if "c-" in liteserv_platform and blob_data_type == "file_url":
-        pytest.skip('This test cannot run for C platforms')
-
-    sg_client = MobileRestClient()
-    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channels)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
-    session = cookie, session_id
-
-    # 1. Create docs in CBL
-    db.create_bulk_docs(num_of_docs, "cbl_sync", db=cbl_db, channels=channels)
-
-    # 2. Do push replication
-    replicator = Replication(base_url)
-    authenticator = Authenticator(base_url)
-    replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
-    repl = replicator.configure_and_replicate(source_db=cbl_db,
-                                              target_url=sg_blip_url,
-                                              continuous=True,
-                                              replicator_authenticator=replicator_authenticator,
-                                              replication_type="push")
-    replicator.stop(repl)
-
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
-    # Verify database doc counts
-    cbl_doc_count = db.getCount(cbl_db)
-    assert len(sg_docs) == cbl_doc_count, "Expected number of docs does not exist in sync-gateway after replication"
-
-    # 3. update docs in CBL with attachment in specified blob type
-    blob = Blob(base_url)
-    dictionary = Dictionary(base_url)
-
-    doc_ids = db.getDocIds(cbl_db)
-    cbl_db_docs = db.getDocuments(cbl_db, doc_ids)
-    for doc_id, doc_body in list(cbl_db_docs.items()):
-        mutable_dictionary = dictionary.toMutableDictionary(doc_body)
-        dictionary.setString(mutable_dictionary, "new_field_string_1", random_string(length=30))
-        dictionary.setString(mutable_dictionary, "new_field_string_2", random_string(length=80))
-
-        image_location = get_embedded_asset_file_path(liteserv_platform, db, cbl_db, "golden_gate_large.jpg")
-
-        if blob_data_type == "byte_array":
-            image_byte_array = blob.createImageContent(image_location, cbl_db)
-            blob_value = blob.create("image/jpeg", content=image_byte_array)
-        elif blob_data_type == "stream":
-            image_stream = blob.createImageStream(image_location, cbl_db)
-            blob_value = blob.create("image/jpeg", stream=image_stream)
-        elif blob_data_type == "file_url":
-            image_file_url = blob.createImageFileUrl(image_location)
-            blob_value = blob.create("image/jpeg", file_url=image_file_url)
-
-        dictionary.setBlob(mutable_dictionary, "new_field_blob", blob_value)
-        doc_body_new = dictionary.toMap(mutable_dictionary)
-        db.updateDocument(database=cbl_db, data=doc_body_new, doc_id=doc_id)
-
-    # 4. Do push replication after docs update
-    repl = replicator.configure_and_replicate(source_db=cbl_db,
-                                              target_url=sg_blip_url,
-                                              continuous=True,
-                                              replicator_authenticator=replicator_authenticator,
-                                              replication_type="push")
-
-    replicator.stop(repl)
-
-    # 5. Verify blob content replicated successfully
-    doc_ids = db.getDocIds(cbl_db)
-    cbl_db_docs = db.getDocuments(cbl_db, doc_ids)
-    for doc_id, doc_body in list(cbl_db_docs.items()):
-        sg_data = sg_client.get_doc(url=sg_admin_url, db=sg_db, doc_id=doc_id, auth=session)
-        assert "new_field_string_1" in sg_data, "Updated docs failed to get replicated"
-        assert "new_field_string_2" in sg_data, "Updated docs failed to get replicated"
-        assert "new_field_blob" in sg_data, "Updated docs failed to get replicated"
 
 
 @pytest.mark.parametrize("attachment_generator, cbl_action_before_init_replication", [
