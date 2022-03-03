@@ -252,7 +252,13 @@ def test_upgrade_purge_expire_attachments(params_from_base_test_setup, sgw_versi
     with pytest.raises(HTTPError) as he:
         sg_client.get_doc(url=sg_url, db=remote_db, doc_id="att_com_0", auth=session)
     http_error_str = str(he.value)
-    assert http_error_str.startswith("403 Client Error: Forbidden for url:")
+
+    # Expected behaviour for expired docs is 403 because a tombstone is created,
+    # but for purged docs, a 404 is instead expected.
+    if delete_doc_type == "expire":
+        assert http_error_str.startswith("403 Client Error: Forbidden for url:")
+    else:
+        assert http_error_str.startswith("404 Client Error: Not Found for url:")
 
     # 5 . Upgrade SGW to lithium and have Automatic upgrade
     persist_cluster_config_environment_prop(cluster_conf, 'sync_gateway_version', sync_gateway_version, True)
