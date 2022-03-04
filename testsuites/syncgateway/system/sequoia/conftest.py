@@ -310,7 +310,7 @@ def set_cluster_config_json(cbs_endpoints, server_version, sgw_endpoints, sync_g
     env["no_conflicts_enabled"] = False
     env["sg_use_views"] = False
     env["sg_platform"] = "centos"
-    env["number_replicas"] = 0
+    env["number_replicas"] = 1
     data["environment"] = env
 
     json_data = json.dumps(data)
