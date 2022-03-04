@@ -151,7 +151,7 @@ def get_sg_accel_version(host):
     if sg_ssl_enabled(cluster_config):
         sg_scheme = "https"
 
-    resp = requests.get("{}://{}:4985".format(sg_scheme, host), verify=False)
+    resp = requests.get("{}://{}:4985".format(sg_scheme, host), verify=False, auth=HTTPBasicAuth('sgw_admin', 'password'))
     log_r(resp)
     resp.raise_for_status()
     resp_obj = resp.json()
@@ -178,7 +178,7 @@ def verify_sg_accel_product_info(host):
     if sg_ssl_enabled(cluster_config):
         sg_scheme = "https"
 
-    resp = requests.get("{}://{}:4985".format(sg_scheme, host), verify=False)
+    resp = requests.get("{}://{}:4985".format(sg_scheme, host), verify=False, auth=HTTPBasicAuth('sgw_admin', 'password'))
     log_r(resp)
     resp.raise_for_status()
     resp_obj = resp.json()

@@ -2473,7 +2473,7 @@ class MobileRestClient:
         logging.debug(doc)
         return doc["_revisions"]["ids"]
 
-    def sgCollect_restCall(self, sg_host, redact_level=None, redact_salt=None, output_directory=None, upload=False, upload_host=None, customer=None, ticket=None):
+    def sgCollect_restCall(self, sg_host, redact_level=None, redact_salt=None, output_directory=None, upload=False, upload_host=None, customer=None, ticket=None, auth=None):
         """
         set all parameters to the dictionary and do post
         """
@@ -2491,49 +2491,64 @@ class MobileRestClient:
             body["customer"] = customer
         if ticket is not None:
             body["ticket"] = ticket
-        resp = self._session.post("http://{}:4985/_sgcollect_info".format(sg_host), data=json.dumps(body))
+        if auth:
+            resp = self._session.post("http://{}:4985/_sgcollect_info".format(sg_host), data=json.dumps(body), auth=HTTPBasicAuth(auth[0], auth[1]))
+        else:
+            resp = self._session.post("http://{}:4985/_sgcollect_info".format(sg_host), data=json.dumps(body))
         log_r(resp)
         return resp
 
-    def sgCollect_info(self, sg_host, redact_level=None, redact_salt=None, output_directory=None, upload=False, upload_host=None, customer=None, ticket=None):
+    def sgCollect_info(self, sg_host, redact_level=None, redact_salt=None, output_directory=None, upload=False, upload_host=None, customer=None, ticket=None, auth=None):
         """
         Get sgCollect info using rest Api call by passing params
         """
-        resp = self.sgCollect_restCall(sg_host, redact_level=redact_level, redact_salt=redact_salt, output_directory=output_directory, upload=upload, upload_host=upload_host, customer=customer, ticket=ticket)
+        resp = self.sgCollect_restCall(sg_host, redact_level=redact_level, redact_salt=redact_salt, output_directory=output_directory, upload=upload, upload_host=upload_host, customer=customer, ticket=ticket, auth=auth)
         resp.raise_for_status()
         resp_obj = resp.json()
         return resp_obj
 
-    def get_sgCollect_status(self, sg_host):
+    def get_sgCollect_status(self, sg_host, auth=None):
         """
         Get sg collect status with rest API call
         """
-        resp = self._session.get("http://{}:4985/_sgcollect_info".format(sg_host))
+        if auth:
+            resp = self._session.get("http://{}:4985/_sgcollect_info".format(sg_host), auth=HTTPBasicAuth(auth[0], auth[1]))
+        else:
+            resp = self._session.get("http://{}:4985/_sgcollect_info".format(sg_host))
         log_r(resp)
         resp.raise_for_status()
         resp_obj = resp.json()
         return resp_obj["status"]
 
-    def stop_sgCollect(self, sg_host):
+    def stop_sgCollect(self, sg_host, auth=None):
         """
         Stop sg collect with rest API call
         """
-        resp = self._session.delete("http://{}:4985/_sgcollect_info".format(sg_host))
+        if auth:
+            resp = self._session.delete("http://{}:4985/_sgcollect_info".format(sg_host), auth=HTTPBasicAuth(auth[0], auth[1]))
+        else:
+            resp = self._session.delete("http://{}:4985/_sgcollect_info".format(sg_host))
         log_r(resp)
         resp.raise_for_status()
 
-    def get_expiration_value(self, url, db, doc_id):
+    def get_expiration_value(self, url, db, doc_id, auth=None):
         """
         Get the expiration value
         """
-        resp = self._session.get("{}/{}/{}?show_exp=true".format(url, db, doc_id))
+        if auth:
+            resp = self._session.get("{}/{}/{}?show_exp=true".format(url, db, doc_id), auth=HTTPBasicAuth(auth[0], auth[1]))
+        else:
+            resp = self._session.get("{}/{}/{}?show_exp=true".format(url, db, doc_id))
         log_r(resp)
         resp.raise_for_status()
         resp_obj = resp.json()
         return resp_obj["_exp"]
 
-    def delete_json_element(self, url, db, doc_id):
-        resp = self._session.get("{}/{}/{}?show_exp=true".format(url, db, doc_id))
+    def delete_json_element(self, url, db, doc_id, auth=None):
+        if auth:
+            resp = self._session.get("{}/{}/{}?show_exp=true".format(url, db, doc_id), auth=HTTPBasicAuth(auth[0], auth[1]))
+        else:
+            resp = self._session.get("{}/{}/{}?show_exp=true".format(url, db, doc_id))
         log_r(resp)
         resp.raise_for_status()
         resp_obj = resp.json()

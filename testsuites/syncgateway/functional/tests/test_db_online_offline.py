@@ -69,6 +69,8 @@ def test_online_default_rest(params_from_base_test_setup, sg_conf_name, num_docs
     # Check the db has an Online state at each running sync_gateway
     for sg in cluster.sync_gateways:
         admin = Admin(sg)
+        if auth:
+            admin.auth = HTTPBasicAuth(auth[0], auth[1])
         db_info = admin.get_db_info("db")
         assert db_info["state"] == "Online"
 
@@ -110,6 +112,8 @@ def test_offline_false_config_rest(params_from_base_test_setup, sg_conf_name, nu
     # Check the db has an Online state at each running sync_gateway
     for sg in cluster.sync_gateways:
         admin = Admin(sg)
+        if auth:
+            admin.auth = HTTPBasicAuth(auth[0], auth[1])
         db_info = admin.get_db_info("db")
         assert db_info["state"] == "Online"
 
