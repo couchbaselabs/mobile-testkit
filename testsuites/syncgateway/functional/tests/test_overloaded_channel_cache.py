@@ -136,7 +136,7 @@ def test_overloaded_channel_cache(params_from_base_test_setup, sg_conf_name, num
             verify_changes(users[i], expected_num_docs=num_docs, expected_num_revisions=0, expected_docs=doc_pusher.cache)
 
         # Get sync_gateway expvars
-        resp = requests.get(url="http://{}:4985/_expvar".format(target_sg.ip))
+        resp = requests.get(url="http://{}:4985/_expvar".format(target_sg.ip), auth=HTTPBasicAuth(auth[0], auth[1]))
         resp.raise_for_status()
         resp_obj = resp.json()
 

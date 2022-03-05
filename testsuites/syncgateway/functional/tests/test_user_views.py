@@ -98,8 +98,8 @@ def test_user_views_sanity(params_from_base_test_setup, sg_conf_name, x509_cert_
     assert len(researcher_role["admin_channels"]) == 1 and "Upload" in researcher_role["admin_channels"]
 
     # Verify roles are assigned to the user
-    seth_user = client.get_user(url=sg_admin_url, db=sg_db, name="seth")
-    raghu_user = client.get_user(url=sg_admin_url, db=sg_db, name="raghu")
+    seth_user = client.get_user(url=sg_admin_url, db=sg_db, name="seth", auth=auth)
+    raghu_user = client.get_user(url=sg_admin_url, db=sg_db, name="raghu", auth=auth)
 
     assert len(seth_user["all_channels"]) == 3
     assert "!" in seth_user["all_channels"] and "Create" in seth_user["all_channels"] and "Download" in seth_user["all_channels"]
@@ -111,8 +111,8 @@ def test_user_views_sanity(params_from_base_test_setup, sg_conf_name, x509_cert_
     assert raghu_user["admin_roles"] == ["Researcher"]
     assert raghu_user["roles"] == ["Researcher"]
 
-    seth_session = client.create_session(url=sg_admin_url, db=sg_db, name="seth")
-    raghu_session = client.create_session(url=sg_admin_url, db=sg_db, name="raghu")
+    seth_session = client.create_session(url=sg_admin_url, db=sg_db, name="seth", auth=auth)
+    raghu_session = client.create_session(url=sg_admin_url, db=sg_db, name="raghu", auth=auth)
 
     start = time.time()
 

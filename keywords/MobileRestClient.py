@@ -548,14 +548,20 @@ class MobileRestClient:
         GET /{db}/{doc}/{attachment}?meta=true
         Get the attachment meta data for tracking
         """
+        auth_type = get_auth_type(auth)
+
         if attachment:
-            if auth:
-                resp = self._session.get("{}/{}/{}/{}?meta=true".format(url, db, doc, attachment), auth=HTTPBasicAuth(auth[0], auth[1]))
+            if auth_type == AuthType.session:
+                resp = self._session.get("{}/{}/{}/{}?meta=true".format(url, db, doc, attachment), cookies=dict(SyncGatewaySession=auth[1]))
+            elif auth_type == AuthType.http_basic:
+                resp = self._session.get("{}/{}/{}/{}?meta=true".format(url, db, doc, attachment), auth=auth)
             else:
                 resp = self._session.get("{}/{}/{}/{}?meta=true".format(url, db, doc, attachment))
         else:
-            if auth:
-                resp = self._session.get("{}/{}/{}?meta=true".format(url, db, doc), auth=HTTPBasicAuth(auth[0], auth[1]))
+            if auth_type == AuthType.session:
+                resp = self._session.get("{}/{}/{}?meta=true".format(url, db, doc), cookies=dict(SyncGatewaySession=auth[1]))
+            elif auth_type == AuthType.http_basic:
+                resp = self._session.get("{}/{}/{}?meta=true".format(url, db, doc), auth=auth)
             else:
                 resp = self._session.get("{}/{}/{}?meta=true".format(url, db, doc))
         log_r(resp)
@@ -1458,7 +1464,7 @@ class MobileRestClient:
         Use the Document.create_docs() to create the docs.
         """
         auth_type = get_auth_type(auth)
-        server_type = self.get_server_type(url)
+        server_type = self.get_server_type(url, auth)
 
         # transform 'docs' into a format expected by _bulk_docs
         if server_type == ServerType.listener:
@@ -1491,7 +1497,7 @@ class MobileRestClient:
         This will create a tombstone.
         """
         auth_type = get_auth_type(auth)
-        server_type = self.get_server_type(url)
+        server_type = self.get_server_type(url, auth)
 
         for doc in docs:
             doc['_deleted'] = True
@@ -1846,7 +1852,7 @@ class MobileRestClient:
         """
 
         auth_type = get_auth_type(auth)
-        server_type = self.get_server_type(url)
+        server_type = self.get_server_type(url, auth)
 
         logging.debug(expected_docs)
 
@@ -2220,11 +2226,11 @@ class MobileRestClient:
 
         # Only return a response if adding to the listener
         # Sync Gateway does not return a response
-        if self.get_server_type(url) == ServerType.listener:
+        if self.get_server_type(url, auth=auth) == ServerType.listener:
             resp_obj = resp.json()
             return resp_obj["id"]
 
-    def delete_design_doc(self, url, db, name, rev_id):
+    def delete_design_doc(self, url, db, name, rev_id, auth=None):
         """
         Keyword that delets a Design Doc to the database
         """
@@ -2234,11 +2240,11 @@ class MobileRestClient:
 
         # Only return a response if adding to the listener
         # Sync Gateway does not return a response
-        if self.get_server_type(url) == ServerType.listener:
+        if self.get_server_type(url, auth=auth) == ServerType.listener:
             resp_obj = resp.json()
             return resp_obj["id"]
 
-    def get_design_doc_rev(self, url, db, name):
+    def get_design_doc_rev(self, url, db, name, auth=None):
         """
         Keyword that gets a Design Doc revision
         """
@@ -2248,11 +2254,11 @@ class MobileRestClient:
 
         # Only return a response if adding to the listener
         # Sync Gateway does not return a response
-        if self.get_server_type(url) == ServerType.listener:
+        if self.get_server_type(url, auth=auth) == ServerType.listener:
             resp_obj = resp.json()
             return resp_obj["_rev"]
 
-    def update_design_doc(self, url, db, name, doc, rev):
+    def update_design_doc(self, url, db, name, doc, rev, auth=None):
         """
         Keyword that updates a Design Doc to the database
         """
@@ -2262,7 +2268,7 @@ class MobileRestClient:
 
         # Only return a response if adding to the listener
         # Sync Gateway does not return a response
-        if self.get_server_type(url) == ServerType.listener:
+        if self.get_server_type(url, auth) == ServerType.listener:
             resp_obj = resp.json()
             return resp_obj["id"]
 
@@ -2272,7 +2278,7 @@ class MobileRestClient:
         """
 
         auth_type = get_auth_type(auth)
-        server_type = self.get_server_type(url)
+        server_type = self.get_server_type(url, auth)
 
         url = "{}/{}/_design/{}/_view/{}".format(url, db, design_doc_name, view_name)
         params = {}

@@ -78,10 +78,10 @@ def test_delete_docs_with_attachments(params_from_base_test_setup, source, targe
     attachment_ids = []
     # Get the attachment ID from the document meta data for verification
     for doc_id in sdk_doc_ids:
-        raw_doc = sg_client.get_attachment_by_document(sg_admin_url, db=sg_db, doc=doc_id, auth=auth)
+        raw_doc = sg_client.get_attachment_by_document(sg_admin_url, db=sg_db, doc=doc_id, auth=HTTPBasicAuth(auth[0], auth[1]))
         att_name = list(raw_doc["_attachments"].keys())[0]
         att_name = att_name.replace('/', '%2F')
-        attachment_raw = sg_client.get_attachment_by_document(sg_admin_url, db=sg_db, doc=doc_id, attachment=att_name, auth=auth)
+        attachment_raw = sg_client.get_attachment_by_document(sg_admin_url, db=sg_db, doc=doc_id, attachment=att_name, auth=HTTPBasicAuth(auth[0], auth[1]))
         attachment_ids.append(attachment_raw['key'])
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
     cluster_topology = params_from_base_test_setup['cluster_topology']
