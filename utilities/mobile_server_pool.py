@@ -8,8 +8,8 @@ from couchbase.cluster import PasswordAuthenticator, ClusterTimeoutOptions, Clus
 from keywords.utils import log_info
 from couchbase.exceptions import CouchbaseException
 
-# SERVER_IP = "172.23.104.162"
-SERVER_IP = "172.23.120.140"
+SERVER_IP = "172.23.104.162"
+# SERVER_IP = "172.23.120.140"
 USERNAME = 'Administrator'
 PASSWORD = 'esabhcuoc'
 BUCKET_NAME = "QE-mobile-pool"
