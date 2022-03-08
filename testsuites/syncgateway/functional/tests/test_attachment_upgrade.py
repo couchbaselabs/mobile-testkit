@@ -201,11 +201,14 @@ def test_upgrade_purge_expire_attachments(params_from_base_test_setup, sgw_versi
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_obj = sgw_version_reset['sg_obj']
+    xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
 
     username = "autotest"
     password = "password"
     sg_channels = ["attachments-cleanup"]
     remote_db = "db"
+
+    expiry_time=20
 
     # 1. Have prelithium config  Start the SG and CB
     if sync_gateway_version < "3.0.0":
@@ -222,10 +225,10 @@ def test_upgrade_purge_expire_attachments(params_from_base_test_setup, sgw_versi
     # 2. Create docs with attachments on SG and CB
     if delete_doc_type == "expire":
         sg_client.add_docs(url=sg_url, db=remote_db, number=10, id_prefix="att_com", channels=sg_channels,
-                           auth=session, attachments_generator=attachment.generate_5_png_100_100, expiry=6)
+                           auth=session, attachments_generator=attachment.generate_5_png_100_100, expiry=expiry_time)
         sg_client.add_docs(url=sg_url, db=remote_db, number=10, id_prefix="att_com-1",
                            channels=sg_channels, auth=session,
-                           attachments_generator=attachment.generate_5_png_100_100, expiry=6)
+                           attachments_generator=attachment.generate_5_png_100_100, expiry=expiry_time)
     else:
         sg_client.add_docs(url=sg_url, db=remote_db, number=10, id_prefix="att_com",
                            channels=sg_channels, auth=session,
@@ -248,11 +251,19 @@ def test_upgrade_purge_expire_attachments(params_from_base_test_setup, sgw_versi
     if delete_doc_type == "purge":
         sg_client.purge_docs(url=sg_admin_url, db=remote_db, docs=sg_docs["rows"])
     else:
-        time.sleep(6)
+        time.sleep(expiry_time)
     with pytest.raises(HTTPError) as he:
         sg_client.get_doc(url=sg_url, db=remote_db, doc_id="att_com_0", auth=session)
     http_error_str = str(he.value)
-    assert http_error_str.startswith("403 Client Error: Forbidden for url:")
+
+    # With xattrs enabled, expected behaviour for expired docs is 403 because a tombstone is created,
+    # but for purged docs, a 404 is instead expected.
+
+    # With xattrs disabled, expected bahviour for both is 404 because access data is deleted along with the doc
+    if delete_doc_type == "expire" and xattrs_enabled:
+        assert http_error_str.startswith("403 Client Error: Forbidden for url:")
+    else:
+        assert http_error_str.startswith("404 Client Error: Not Found for url:")
 
     # 5 . Upgrade SGW to lithium and have Automatic upgrade
     persist_cluster_config_environment_prop(cluster_conf, 'sync_gateway_version', sync_gateway_version, True)
