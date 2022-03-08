@@ -208,7 +208,7 @@ def test_upgrade_purge_expire_attachments(params_from_base_test_setup, sgw_versi
     sg_channels = ["attachments-cleanup"]
     remote_db = "db"
 
-    expiry_time=20
+    expiry_time = 20
 
     # 1. Have prelithium config  Start the SG and CB
     if sync_gateway_version < "3.0.0":
@@ -259,7 +259,7 @@ def test_upgrade_purge_expire_attachments(params_from_base_test_setup, sgw_versi
     # With xattrs enabled, expected behaviour for expired docs is 403 because a tombstone is created,
     # but for purged docs, a 404 is instead expected.
 
-    # With xattrs disabled, expected bahviour for both is 404 because access data is deleted along with the doc
+    # With xattrs disabled, expected behaviour for both is 404 because access data is deleted along with the doc
     if delete_doc_type == "expire" and xattrs_enabled:
         assert http_error_str.startswith("403 Client Error: Forbidden for url:")
     else:
