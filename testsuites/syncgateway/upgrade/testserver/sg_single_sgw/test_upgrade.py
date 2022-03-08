@@ -359,7 +359,7 @@ def verify_sg_docs_revision_history(url, db, cbl_db2, num_docs, sg_db, added_doc
                 del added_docs[key]["_id"]
             except KeyError:
                 log_info("Ignoring id verification")
-            assert rev_gen == expected_doc_map[key], "revision mismatch"
+            assert rev_gen == expected_doc_map[key], "revision mismatch on the key {}".format(key)
             assert len(doc["doc"]) == len(added_docs[key]), "doc length mismatch"
 
     log_info("finished verify_sg_docs_revision_history.")
