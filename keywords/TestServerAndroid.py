@@ -66,16 +66,11 @@ class TestServerAndroid(TestServerBase):
             return
 
         # Package not downloaded, proceed to download from latest builds
-        if self.platform == "android":
-            if build is None:
-                url = "{}/{}/{}/{}".format(RELEASED_BUILDS, self.download_source, version, self.package_name)
-            else:
-                url = "{}/{}/{}/{}/{}".format(LATEST_BUILDS, self.download_source, version, build, self.package_name)
-        elif self.platform == "c-android":
-            if build is None:
-                url = "{}/couchbase-lite-c/{}/{}/{}".format(LATEST_BUILDS, version, self.package_name)
-            else
-                url = "{}/couchbase-lite-c/{}/{}/{}".format(LATEST_BUILDS, version, build, self.package_name)
+
+        if build is None:
+            url = "{}/{}/{}/{}".format(RELEASED_BUILDS, self.download_source, version, self.package_name)
+        else:
+            url = "{}/{}/{}/{}/{}".format(LATEST_BUILDS, self.download_source, version, build, self.package_name)
 
         log_info("Downloading {} -> {}/{}".format(url, BINARY_DIR, self.package_name))
         resp = requests.get(url, verify=False)
