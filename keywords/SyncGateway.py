@@ -43,12 +43,6 @@ def sync_gateway_config_path_for_mode(config_prefix, mode, cpc=False):
     """
 
     validate_sync_gateway_mode(mode)
-    # cluster_config = os.environ["CLUSTER_CONFIG"]
-    # if get_sg_version(cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config):
-    #    cpc = True
-    # Construct expected config path
-    # if not os.path.isfile(config):
-    #    raise ValueError("Could not file config: {}".format(config))
     if cpc:
         config = "{}/{}_{}.json".format(SYNC_GATEWAY_CONFIGS_CPC, config_prefix, mode)
     else:
@@ -455,7 +449,7 @@ class SyncGateway(object):
             raise ProvisioningError("Starting a Sync Gateway requires a config")
 
         if get_sg_version(cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config):
-            playbook_vars, db_config_json, sgw_config_data = c_cluster.setup_server_and_sgw(config, bucket_creation=False, bucket_list=bucket_list, use_config=use_config)
+            playbook_vars, _, _ = c_cluster.setup_server_and_sgw(config, bucket_creation=False, bucket_list=bucket_list, use_config=use_config)
         else:
             ansible_runner = AnsibleRunner(cluster_config)
             config_path = os.path.abspath(config)
@@ -705,6 +699,7 @@ class SyncGateway(object):
             self.upgrade_sync_gateways(
                 cluster_config=cluster_config,
                 sg_conf=sg_conf,
+                sgw_previous_version=sync_gateway_version,
                 sync_gateway_version=sync_gateway_upgraded_version,
                 url=sg_ip
             )
@@ -720,7 +715,7 @@ class SyncGateway(object):
         log_info('END Sync Gateway cluster upgrade')
         log_info('------------------------------------------')
 
-    def upgrade_sync_gateways(self, cluster_config, sg_conf, sync_gateway_version, url=None, upgrade_only=False):
+    def upgrade_sync_gateways(self, cluster_config, sg_conf, sgw_previous_version, sync_gateway_version, url=None, upgrade_only=False):
         """ Upgrade sync gateways in a cluster. If url is passed, upgrade
             the sync gateway at that url
         """
@@ -741,7 +736,7 @@ class SyncGateway(object):
         playbook_vars1["couchbase_sync_gateway_package_base_url"] = sync_gateway_base_url
         playbook_vars1["couchbase_sync_gateway_package"] = sync_gateway_package_name
         playbook_vars1["couchbase_sg_accel_package"] = sg_accel_package_name
-        if get_sg_version(cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config):
+        if sgw_previous_version >= "3.0.0" and get_sg_version(cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config):
             playbook_vars, db_config_json, sgw_config_data = c_cluster.setup_server_and_sgw(sg_config.config_path, bucket_creation=False)
         else:
             sg_conf = os.path.abspath(sg_config.config_path)
@@ -926,12 +921,12 @@ class SyncGateway(object):
 
             if status != 0:
                 raise Exception("Could not upgrade sync_gateway/sg_accel")
-            if sync_gateway_version >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config):
+            """if sync_gateway_version >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config):
                 sg_obj = SyncGateway()
                 # sg_obj.stop_sync_gateways(cluster_config=cluster_config, url=url)
 
                 sg_obj.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_conf, url=url,
-                                                    sync_gateway_version=sync_gateway_version, enable_import=True)
+                                                    sync_gateway_version=sync_gateway_version, enable_import=True)"""
             """if get_sg_version(cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config):
                 if status == 0:
                     if url is not None:

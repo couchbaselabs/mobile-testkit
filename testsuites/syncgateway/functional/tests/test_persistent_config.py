@@ -151,13 +151,12 @@ def test_invalid_configs(params_from_base_test_setup, sg_conf_name):
 
         with open(temp_conf, 'w') as fp:
             json.dump(sgw_config, fp, indent=4)
-            print("todo")
-    cbs_cluster = Cluster(config=cluster_conf)
+    # cbs_cluster = Cluster(config=cluster_conf)
     try:
         sg_obj.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=sg_conf, use_config=non_cpc_sg_conf)
         assert False, "SGW did not fail to start with bootstrap config under api config"
     except Exception as ex:
-        print("SGW failed to start with bootstrap config", str(ex))
+        log_info("SGW failed to start with bootstrap config", str(ex))
 
 
 @pytest.mark.syncgateway
@@ -207,24 +206,8 @@ def test_sgw_command_line(params_from_base_test_setup):
 
     # 4.Start sgw node by passing command line params by passing server, bucket info
     sg1 = cbs_cluster.sync_gateways[0]
-    print("stopping explicetely ")
     sg_obj.stop_sync_gateways(temp_cluster_config)
     sg_obj.redeploy_sync_gateway_config(temp_cluster_config, sg_conf, url=None, sync_gateway_version=sync_gateway_version, enable_import=True, deploy_only=True)
-    """ adminInterface = "5985"
-    interface = "5984"
-    cacertpath = ""
-    certpath = ""
-    configServer = ""
-    dbname = ""
-    defaultLogFilePath = "/tmp/sg_logs"
-    disable_persistent_config = False
-    keypath = ""
-    log = ""
-    logFilePath = ""
-    profileInterface = ""
-    url = ""
-    std_output = start_sgbinary(sg1, sg_platform, adminInterface=adminInterface, interface=interface, defaultLogFilePath=defaultLogFilePath, disable_persistent_config=disable_persistent_config)
-    """
     count = 0
     retry = 5
     errors = 1
@@ -353,3 +336,62 @@ def test_default_named_group(params_from_base_test_setup, group_type):
             assert False, "Sync gateway failed to start with custom group id"
         if group_type == "default":
             assert False, "Sync gateway failed to start with default group id "
+
+@pytest.mark.syncgateway
+def test_db_config_with_guest_user(params_from_base_test_setup):
+    """
+    @summary :
+    Test cases link on google drive : https://docs.google.com/spreadsheets/d/19kJQ4_g6RroaoG2YYe0X11d9pU0xam-lb-n23aPLhO4/edit#gid=0
+    "1. Set up SGw with bootstrap config with server url
+    2. Create database on sgw via rest end point connected to server bucket 1
+    3. Enable guest user in the rest end point  and have channels access to ""channel1"" and ""channel2""
+    4. Verify db _config end point to check the data base config
+    5. Create some docs  with ""channel1"" and some docs with ""channel2""
+    6. Create some docs with ""channel3""
+    7. Verify guest user can access docs created with only ""channel1"" and ""channel2"
+    """
+
+    # sg_db = 'db'
+    sg_conf_name = "sync_gateway_guest_enabled"
+
+    cluster_conf = params_from_base_test_setup['cluster_config']
+    sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
+    mode = params_from_base_test_setup['mode']
+
+    # 1. Set up SGw with bootstrap config with server url
+    if sync_gateway_version < "3.0.0" and not is_centralized_persistent_config_disabled(cluster_conf):
+        pytest.skip('This test can run with sgw version 3.0 and above')
+    # 1. Have 3 SGW nodes: 1 node as pre-lithium and 2 nodes on lithium
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+
+    cluster_util = ClusterKeywords(cluster_conf)
+    topology = cluster_util.get_cluster_topology(cluster_conf)
+    # sync_gateways = topology["sync_gateways"]
+    sg_one_url = topology["sync_gateways"][0]["public"]
+
+    # 3. Have min bootstrap configuration without static system config with differrent config
+    cbs_cluster = Cluster(config=cluster_conf)
+    cbs_cluster.reset(sg_config_path=sg_conf)
+    debug_dict = { "enabled": True, "rotation": { } }
+    sg1 = cbs_cluster.sync_gateways[0]
+    cbs_url = topology["couchbase_servers"][0]
+    sg1_config = sg1.admin.get_config()
+    assert not sg1_config["logging"]["console"]["rotation"], "logging did not get reset"
+    assert not sg1_config["logging"]["error"]["rotation"], "logging did not get reset"
+    assert not sg1_config["logging"]["warn"]["rotation"], "logging did not get reset"
+    assert not sg1_config["logging"]["info"]["rotation"], "logging did not get reset"
+    assert sg1_config["logging"]["debug"] == debug_dict, "logging did not get reset"
+    assert not sg1_config["logging"]["trace"]["rotation"], "logging did not get reset"
+    assert not sg1_config["logging"]["stats"]["rotation"], "logging did not get reset"
+
+    assert sg1_config["api"]["public_interface"] == ":4984", "public interface did not match with sgw config"
+    assert sg1_config["api"]["admin_interface"] == "0.0.0.0:4985", "admin interface did not match with sgw config"
+    assert sg1_config["api"]["metrics_interface"] == ":4986", "metrics interface did not match with sgw config"
+    assert sg1_config["api"]["admin_interface_authentication"] == False, "admin_interface_authentication did not match with sgw config"
+    assert sg1_config["api"]["metrics_interface_authentication"] == False, "metrics_interface_authentication did not match with sgw config"
+    assert sg1_config["api"]["https"] == { }, "https with default value is not set"
+    assert sg1_config["api"]["cors"] == { }, "cors with default value is not set"
+
+    assert sg1_config["bootstrap"]["server"] == cbs_url, "server url  did not match"
+    assert sg1_config["bootstrap"]["username"] == "bucket-admin", "username did not match"
+    assert sg1_config["bootstrap"]["server_tls_skip_verify"] == True, "server_tls_skip_verify did not match"

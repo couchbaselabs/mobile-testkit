@@ -380,7 +380,6 @@ class SyncGateway:
             if get_sg_version(cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config):
                 # Now create rest API for all database configs
                 sgw_list = [self]
-                print("sgw_config_data before sending rest call ", sgw_config_data)
                 # send_dbconfig_as_restCall(db_config_json, sgw_list, sgw_config_data)
                 try:
                     send_dbconfig_as_restCall(db_config_json, sgw_list, sgw_config_data)
@@ -647,12 +646,7 @@ class SyncGateway:
         if not user_credentials_url:
             data["username"] = remote_user
             data["password"] = remote_password
-        # print("starting sg replicate2 rest end point ..")
-        # print("json dumps of replication is ", json.dumps(data))
         r = requests.put("{}/{}/_replication/{}".format(sg_url, local_db, replication_id), headers=self._headers, data=json.dumps(data))
-        # log.info("PUT {}".format(r.url))
-        # log.info("status code {}".format(r.status_code))
-        # log.info("text of response {}".format(r.text))
         log_request(r)
         log_response(r)
         r.raise_for_status()
@@ -710,29 +704,15 @@ def setup_sgwconfig_db_config(cluster_config, sg_config_path):
     ansible_runner = AnsibleRunner(cluster_config)
     config_path_full = os.path.abspath(sg_config_path)
     config = Config(config_path_full, cluster_config)
-    # bucket_name_set = config.get_bucket_name_set()
     sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
     cbs_cert_path = os.path.join(os.getcwd(), "certs")
     bucket_names = get_buckets_from_sync_gateway_config(sg_config_path, cluster_config)
     sg_conf_name = "sync_gateway_default"
     mode = "cc"
+    # cannot import at file level due to conflicts, this is needed just for this method
     from keywords.SyncGateway import sync_gateway_config_path_for_mode
     cpc_sgw_config_path = sync_gateway_config_path_for_mode(sg_conf_name, mode, cpc=True)
     cpc_config_path_full = os.path.abspath(cpc_sgw_config_path)
-    # common_bucket_user = "bucket-admin"
-    # self.sync_gateway_config = config
-
-    """ if bucket_creation:
-        log_info(">>> Creating buckets on: {}".format(cluster.servers[0].url))
-        log_info(">>> Creating buckets {}".format(bucket_name_set))
-        cluster.servers[0].create_buckets(bucket_names=bucket_name_set, cluster_config=cluster_config, ipv6=cluster.ipv6)
-
-        # Create read_bucker_user for all buckets
-        for bucket_name in bucket_names:
-            cluster.servers[0]._create_internal_rbac_user_by_roles(bucket_name, cluster_config, read_bucket_user, "data_reader")
-
-        log_info(">>> Waiting for Server: {} to be in a healthy state".format(cluster.servers[0].url))
-        cluster.servers[0].wait_for_ready_state() """
 
     log_info(">>> Starting sync_gateway with configuration: {}".format(cpc_config_path_full))
 
@@ -811,7 +791,6 @@ def setup_sgwconfig_db_config(cluster_config, sg_config_path):
         x509_auth_var = True
 
     else:
-        # username_playbook_var = '"username": "{}",'.format(read_bucket_user)
         username_playbook_var = '"username": "{}",'.format(bucket_names[0])
         username_var = bucket_names[0]
         password_var = "password"
@@ -922,9 +901,7 @@ def setup_sgwconfig_db_config(cluster_config, sg_config_path):
         groupid=group_id_var
     )
 
-    print("config_path _full is ", config_path_full)
     sg_config_path, database_config = seperate_sgw_and_db_config(sgw_config_data)
-    # sg_config_path_full = os.path.abspath(sg_config_path)
     # Create bootstrap playbook vars
     bootstrap_playbook_vars = {
         "sync_gateway_config_filepath": cpc_config_path_full,
@@ -959,11 +936,6 @@ def setup_sgwconfig_db_config(cluster_config, sg_config_path):
         "disable_admin_auth": disable_admin_auth_var,
         "groupid": group_id_var
     }
-
-    # config_path_full = os.path.abspath(sg_config_path)
-    # convert database config to json data and create database config via rest api
-    """ with open(database_config) as f:
-        db_config_json = json.loads(f.read()) """
 
     # Sleep for a few seconds for the indexes to teardown
     time.sleep(5)
@@ -1109,38 +1081,16 @@ def assert_has_doc(sg_user, doc_id):
 
 def send_dbconfig_as_restCall(db_config_json, sync_gateways, sgw_config_data):
     # convert database config for each sg db and send to rest end point
-    # sg_dbs = database_config.keys()
-    # time.sleep(30)
-
     for sgw in sync_gateways:
-        print("db config json for sgw : ", sgw)
         sgw_db_config = db_config_json
-        print("sgw_db_config.keys ", sgw_db_config.keys())
-        # sync_func = None
-        # imp_fltr_func = None
         roles_exist = False
         users_exist = False
         db_list = sgw.admin.get_dbs()
-        print("db_list is ", db_list)
         for single_db in db_list:
             if single_db not in sgw_db_config.keys():
-                print("deleting the sg db now... ", single_db)
                 sgw.admin.delete_db(single_db)
         db_list = sgw.admin.get_dbs()
-        print("db_list is after deleting unnecessary dbs ", db_list)
-        """ import_filter_exist = False
-        if "\"sync\":" in sgw_config_data:
-            sync_func = sgw_config_data.split("\"sync\": `")[1]
-            sync_func = sync_func.split("`")[0]
-        if "\"import_filter\":" in sgw_config_data:
-            imp_fltr_func = sgw_config_data.split("\"import_filter\": `")[1]
-            imp_fltr_func = imp_fltr_func.split("`")[0]
-            print("import filter with split: ", imp_fltr_func) """
         for sg_db in sgw_db_config.keys():
-            """ if sg_db in db_list:
-                print("deleting the sg db now... ", sg_db)
-                print(sgw)
-                sgw.admin.delete_db(sg_db) """
             # TODO : Should look for better place to delete 'server' key if tests usese old config
             if "server" in sgw_db_config[sg_db].keys():
                 del sgw_db_config[sg_db]["server"]
@@ -1162,27 +1112,12 @@ def send_dbconfig_as_restCall(db_config_json, sync_gateways, sgw_config_data):
                 users_cfg = sgw_db_config[sg_db]["users"]
                 users_exist = True
                 del sgw_db_config[sg_db]["users"]
-            """if "sync" in sgw_db_config[sg_db].keys():
-                sync_func = sgw_db_config[sg_db]["sync"]
-                print("sync cfg func after extracting from sgw_db_config: ", sync_func)
-                sync_func_exist = True
-            if "import_filter" in sgw_db_config[sg_db].keys():
-                imp_fltr_func = sgw_db_config[sg_db]["import_filter"]
-                print("import filter cfg func after extracting from sgw_db_config: ", imp_fltr_func)
-                import_filter_exist = True """
             try:
                 sgw.admin.create_db(sg_db, sgw_db_config[sg_db])
             except HTTPError as e:
-                """sgw.admin.delete_db(sg_db)
-                time.sleep(1)
-                sgw.admin.create_db(sg_db, sgw_db_config[sg_db])"""
-                print("ignorning if db already exists in sync gateway", str(e))
                 sgw.admin.put_db_config(sg_db, sgw_db_config[sg_db])
             db_info = sgw.admin.get_db_info(sg_db)
-            print("db_info after creating db is ", db_info)
             if db_info["state"] == "Online":
-                """ if sync_func_exist:
-                    sgw.admin.create_sync_func(sg_db, sync_func) """
                 if roles_exist:
                     for role in roles_cfg:
                         sgw.admin.create_role(sg_db, role, roles_cfg[role]['admin_channels'])
@@ -1197,14 +1132,11 @@ def send_dbconfig_as_restCall(db_config_json, sync_gateways, sgw_config_data):
                             except KeyError as ex:
                                 log_info("Creating guest user without password- {}".format(str(ex)))
                                 sgw.admin.register_user(sgw.ip, sg_db, user, channels=users_cfg[user]['admin_channels'])
-                """ if import_filter_exist:
-                    sgw.admin.create_imp_fltr_func(sg_db, imp_fltr_func) """
 
             # TODO : Put back one CPC config works
             # sgw.admin.create_db_with_rest(sg_db, sgw_db_config[sg_db])
             # sgw.admin.put_db_config(sg_db, sgw_db_config[sg_db])
         db_list = sgw.admin.get_dbs()
-        print("db_list is after creating dbs ", db_list)
 
 
 def create_logging_config(logging_config_json, sync_gateways):
@@ -1214,7 +1146,6 @@ def create_logging_config(logging_config_json, sync_gateways):
     from keywords.MobileRestClient import MobileRestClient
     client = MobileRestClient()
     for sgw in sync_gateways:
-        print("logging config json for sgw : ", logging_config_json)
         client.create_logging_with_rest(sgw.admin.admin_url, logging_config_json)
 
 
@@ -1231,7 +1162,6 @@ def construct_dbconfig_json(db_config_file, cluster_config, sg_platform, sgw_con
         raise ValueError("Could not file config: {}".format(db_config_path))
     couchbase_server_primary_node = add_cbs_to_sg_config_server_field(cluster_config)
     couchbase_server_primary_node = get_cbs_primary_nodes_str(cluster_config, couchbase_server_primary_node)
-    # bucket_names = get_buckets_from_sync_gateway_config(db_config_path, cluster_config)
     bucket_names = get_bucket_list_cpc(sgw_config)
     with open(db_config_path, "r") as config:
         db_config_data = config.read()
@@ -1249,7 +1179,6 @@ def construct_dbconfig_json(db_config_file, cluster_config, sg_platform, sgw_con
     delta_sync_var = ""
     server_scheme_var = ""
     server_port_var = ""
-    # x509_auth_var = False
     revs_limit_var = ""
     bucket_var = bucket_names[0]
 
@@ -1273,7 +1202,6 @@ def construct_dbconfig_json(db_config_file, cluster_config, sg_platform, sgw_con
         server_scheme_var = "couchbases"
         server_port_var = ""
         generate_x509_certs(cluster_config, bucket_names, sg_platform)
-        # x509_auth_var = True
 
     else:
         username_var = bucket_names[0]

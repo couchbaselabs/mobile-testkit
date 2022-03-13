@@ -2,9 +2,7 @@ import json
 import os
 import time
 from jinja2 import Template
-
 from requests.exceptions import ConnectionError
-from requests import HTTPError
 
 import keywords.exceptions
 from keywords.couchbaseserver import CouchbaseServer
@@ -15,7 +13,8 @@ from libraries.provision.ansible_runner import AnsibleRunner
 from libraries.testkit.admin import Admin
 from libraries.testkit.config import Config, seperate_sgw_and_db_config
 from libraries.testkit.sgaccel import SgAccel
-from libraries.testkit.syncgateway import SyncGateway, send_dbconfig_as_restCall, create_logging_config
+# from libraries.testkit.syncgateway import SyncGateway, send_dbconfig_as_restCall, create_logging_config
+from libraries.testkit.syncgateway import SyncGateway, send_dbconfig_as_restCall
 from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
 from utilities.cluster_config_utils import is_load_balancer_enabled, get_revs_limit, get_redact_level, is_load_balancer_with_two_clusters_enabled
 from utilities.cluster_config_utils import get_load_balancer_ip, no_conflicts_enabled, is_delta_sync_enabled, get_sg_platform
@@ -23,6 +22,7 @@ from utilities.cluster_config_utils import generate_x509_certs, is_x509_auth, ge
 from keywords.constants import SYNC_GATEWAY_CERT
 from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version
 from utilities.cluster_config_utils import is_centralized_persistent_config_disabled, is_server_tls_skip_verify_enabled, is_admin_auth_disabled, is_tls_server_disabled
+# from keywords.SyncGateway import sync_gateway_config_path_for_mode, get_cpc_config_from_config_path
 
 
 class Cluster:
@@ -154,10 +154,6 @@ class Cluster:
         mode = config.get_mode()
 
         if get_sg_version(self._cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(self._cluster_config):
-            # TODO : if it works then I should change database config to get based on sgconfig name
-            # replace database configs from databases
-            # sg_db = "db"
-            # db_config_name = "sync_gateway_default_functional_tests"
             playbook_vars, db_config_json, sgw_config_data = self.setup_server_and_sgw(sg_config_path=sg_config_path, bucket_list=bucket_list, use_config=use_config)
         else:
             bucket_name_set = config.get_bucket_name_set()
@@ -360,7 +356,6 @@ class Cluster:
         if status == 0 and sgdb_creation:
             if get_sg_version(self._cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(self._cluster_config):
                 # Now create rest API for all database configs
-                print("db_config_json is ", db_config_json)
                 send_dbconfig_as_restCall(db_config_json, self.sync_gateways, sgw_config_data)
                 # if logging_config_json:
                 #     create_logging_config(logging_config_json, self.sync_gateways)
@@ -370,25 +365,20 @@ class Cluster:
     def setup_server_and_sgw(self, sg_config_path, bucket_creation=True, bucket_list=[], use_config=False, sync_gateway_version=None):
         # Parse config and grab bucket names
         ansible_runner = AnsibleRunner(self._cluster_config)
-        # TODO top-todo1: For now using one commong bootstrop config , once everything is done , check back and see if common bootstrap config is enough
-        # for top-todo1: cpc_sgw_config_path = get_cpc_sgw_config(sg_config_path)
-        from keywords.SyncGateway import sync_gateway_config_path_for_mode, get_cpc_config_from_config_path
-        # cpc_sgw_config_path = "resources/sync_gateway_configs_cpc/sync_gateway_default"
         sg_conf_name = "sync_gateway_default"
         mode = "cc"
         if sync_gateway_version:
             version, _ = version_and_build(sync_gateway_version)
         else:
             version = get_sg_version(self._cluster_config)
+        # cannot import at file level due to conflicts, this is needed just for this method
+        from keywords.SyncGateway import sync_gateway_config_path_for_mode, get_cpc_config_from_config_path
         cpc_sgw_config_path = sync_gateway_config_path_for_mode(sg_conf_name, mode, cpc=True)
         if use_config:
             if use_config is True:
                 cpc_sgw_config_path = get_cpc_config_from_config_path(sg_config_path, mode)
                 sg_config_path = sync_gateway_config_path_for_mode(sg_conf_name, mode)
-                print("cpc sgw config path if use config true : ", cpc_sgw_config_path)
-                print("sg_config path is ", sg_config_path)
             else:
-                print("using the sgconfig path as use_config.......")
                 cpc_sgw_config_path = sg_config_path
                 sg_config_path = use_config
 
@@ -396,10 +386,8 @@ class Cluster:
         config_path_full = os.path.abspath(sg_config_path)
         config = Config(config_path_full, self._cluster_config, bucket_list=bucket_list)
         if not bucket_list:
-            print("Getting bucket list from sgw config")
             bucket_name_set = config.get_bucket_name_set()
         else:
-            print("provided bucket list")
             bucket_name_set = bucket_list
         sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
         cbs_cert_path = os.path.join(os.getcwd(), "certs")
@@ -412,7 +400,6 @@ class Cluster:
             log_info(">>> Creating buckets on: {}".format(self.servers[0].url))
             log_info(">>> Creating buckets {}".format(bucket_name_set))
             self.servers[0].create_buckets(bucket_names=bucket_name_set, cluster_config=self._cluster_config, ipv6=self.ipv6)
-            # self.servers[0]._create_internal_rbac_user_by_roles('*', self._cluster_config, common_bucket_user, "mobile_sync_gateway")
             log_info(">>> Waiting for Server: {} to be in a healthy state".format(self.servers[0].url))
             self.servers[0].wait_for_ready_state()
         self.servers[0]._create_internal_rbac_user_by_roles('*', self._cluster_config, common_bucket_user, "mobile_sync_gateway")
@@ -464,37 +451,6 @@ class Cluster:
         group_id_var = ""
         webhook_ip_var = cluster["webhook_ip"][0]["ip"]
 
-        """# Start sync-gateway
-        playbook_vars = {
-            "sync_gateway_config_filepath": config_path_full,
-            "username": "",
-            "password": "",
-            "certpath": "",
-            "keypath": "",
-            "cacertpath": "",
-            "x509_certs_dir": cbs_cert_path,
-            "x509_auth": False,
-            "sg_cert_path": sg_cert_path,
-            "server_port": server_port,
-            "server_scheme": server_scheme,
-            "autoimport": "",
-            "xattrs": "",
-            "no_conflicts": "",
-            "revs_limit": "",
-            "sslcert": "",
-            "sslkey": "",
-            "num_index_replicas": "",
-            "sg_use_views": "",
-            "couchbase_server_primary_node": couchbase_server_primary_node,
-            "delta_sync": "",
-            "prometheus": "",
-            "hide_product_version": "",
-            "disable_persistent_config": "",
-            "server_tls_skip_verify": "",
-            "disable_tls_server": "",
-            "disable_admin_auth": ""
-        } """
-
         sg_platform = get_sg_platform(self._cluster_config)
 
         logging_config = '"logging": {"debug": {"enabled": true}'
@@ -528,9 +484,7 @@ class Cluster:
             x509_auth_var = True
 
         else:
-            # TODO : revert back for CPC if read bucket user is back
             username_playbook_var = '"username": "{}",'.format(common_bucket_user)
-            # username_playbook_var = '"username": "{}",'.format(bucket_names[0])
             username_var = '"username": "{}",'.format(bucket_names[0])
             password_var = '"password": "password",'
 
@@ -549,7 +503,6 @@ class Cluster:
                     raise ProvisioningError("Failed to block port on SGW")
 
         if self.sync_gateway_ssl:
-            print("yes it is sg-ssl enabled")
             if not is_centralized_persistent_config_disabled(self._cluster_config):
                 tls_var = """ "https": {
                              "tls_cert_path": "sg_cert.pem",
@@ -605,8 +558,6 @@ class Cluster:
         if is_delta_sync_enabled(self._cluster_config) and version >= "2.5.0":
             delta_sync_var = '"delta_sync": { "enabled": true},'
 
-        # db_username_var = '"username": "{}",'.format(username_var)
-        # db_password_var = password_var
         db_bucket_var = '"bucket": "{}",'.format(bucket_names[0])
         # Replace values with string on sgw config data
 
@@ -645,15 +596,6 @@ class Cluster:
             webhook_ip=webhook_ip_var,
             groupid=group_id_var
         )
-        print("sgw config data after the template is ", sgw_config_data)
-        """sgw_db_config = seperate_sgw_and_db_config(sgw_config_data)
-        if len(sgw_db_config) == 2:
-            sg_config_path, database_config = sgw_db_config
-        else:
-            sg_config_path = sgw_db_config[0]
-            database_config = ""
-         """
-        # sg_config_path_full = os.path.abspath(sg_config_path)
         sg_config_path, database_config = seperate_sgw_and_db_config(sgw_config_data)
         db_config_json = database_config
         # Create bootstrap playbook vars
@@ -691,21 +633,8 @@ class Cluster:
             "webhook_ip": webhook_ip_var,
             "groupid": group_id_var
         }
-        """ if database_config == "":
-            db_config_json = {}
-        else:
-            with open(database_config) as f:
-                db_config_json = json.loads(f.read()) """
         # Sleep for a few seconds for the indexes to teardown
         time.sleep(5)
-
-        """status = ansible_runner.run_ansible_playbook(
-            "start-sync-gateway.yml",
-            extra_vars=bootstrap_playbook_vars
-        )
-        assert status == 0, "Failed to start to Sync Gateway"
-        self.sync_gateways[0].admin.put_db_config(self, sg_db, db_config_json)"""
-        print("ddb_config_json is ----", db_config_json)
         return bootstrap_playbook_vars, db_config_json, sgw_config_data
 
     def restart_services(self):

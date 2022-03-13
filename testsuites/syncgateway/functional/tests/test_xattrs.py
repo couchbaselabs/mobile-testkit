@@ -2815,7 +2815,6 @@ def test_non_mobile_revision(params_from_base_test_setup):
 
     # Push a new mobile tombstone revision for the document to Sync Gateway
     # could either be with CBL, or via REST API
-    print("delete started")
     with ProcessPoolExecutor() as mp:
         mp.submit(requests.delete("{}/{}/{}".format(sg_url, sg_db, random_doc_id), auth=mobile_auth, timeout=30))
 

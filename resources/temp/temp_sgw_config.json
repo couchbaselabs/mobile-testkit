@@ -25,13 +25,7 @@
             },
             "server": "couchbases://172.23.106.106:11207",
             "bucket": "data-bucket",
-            "cache": {
-                "channel_cache": {
-                    "max_length": 15000,
-                    "min_length": 15000,
-                    "expiry_seconds": 90
-                }
-            }
+            "bucket_op_timeout_ms": 60000
         }
     }
 }

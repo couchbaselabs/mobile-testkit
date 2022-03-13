@@ -31,10 +31,7 @@ class Admin:
         self._headers = {"Content-Type": "application/json"}
 
     def create_db(self, db, db_config={}):
-        # config_data = '{\"import_docs\": true, \"enable_shared_bucket_access\": true}'
-        # db_config = '{"import_docs": true, "enable_shared_bucket_access": true, "num_index_replicas": 0, "delta_sync": {"enabled": true}, "bucket": "data-bucket", "bucket_op_timeout_ms": 60000}'
-        data = json.dumps(db_config)
-        print("jsond dumpts afeter data is ", data)
+        # data = json.dumps(db_config)
         resp = requests.put("{0}/{1}/".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, data=json.dumps(db_config), verify=False)
         log.info("PUT {}".format(resp.url))
         resp.raise_for_status()
@@ -66,7 +63,6 @@ class Admin:
         log.info("GET {}".format(r.url))
         r.raise_for_status()
         json_config = r.json()
-        print("json config is ", json_config)
         return list(json_config["Databases"].keys())
 
     # GET /{db}/
@@ -105,9 +101,7 @@ class Admin:
         else:
             data = {"name": name, "password": password, "admin_channels": channels, "admin_roles": roles}
 
-        print("json dumpt of Guest user ", json.dumps(data))
         resp = requests.put("{0}/{1}/_user/{2}".format(self.admin_url, db, name), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, data=json.dumps(data), verify=False)
-        print("resp of register user after put is ", resp)
         log.info("PUT {}".format(resp.url))
         resp.raise_for_status()
 
@@ -372,7 +366,6 @@ class Admin:
 
     # PUT /_config
     def put_config(self, config):
-        print("json dumpt of log config : ", json.dumps(config))
         resp = requests.put("{0}/_config".format(self.admin_url), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, data=json.dumps(config), verify=False)
         log.info("PUT {}".format(resp.url))
         resp.raise_for_status()

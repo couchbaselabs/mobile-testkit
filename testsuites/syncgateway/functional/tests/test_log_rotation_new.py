@@ -251,7 +251,6 @@ def test_log_nondefault_logKeys_set(params_from_base_test_setup, sg_conf_name):
             }
         }
         resp = admin.put_config(log_config)
-        print("resp code after db config:", resp)
         assert 200 == resp, "did not successfully update the log config due to invalid log key"
         resp = admin.get_runtime_config()
         assert resp["logging"]["console"]["log_keys"] == ["HTTP"], "did not assign to default log key when invalid log key is provided to update the logging"
@@ -764,7 +763,6 @@ def test_log_logLevel_invalid(params_from_base_test_setup, sg_conf_name):
         try:
             admin.put_config(log_config)
         except Exception as ex:
-            print("http error msg is :", str(ex))
             assert "500 Server Error: Internal Server Error" in str(ex), "did not throw 500 error with invalid value for log keys"
     else:
         sg_one_url = cluster_hosts["sync_gateways"][0]["public"]

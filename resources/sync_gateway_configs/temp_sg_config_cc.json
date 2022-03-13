@@ -6,18 +6,16 @@
   "compressResponses": false,
   {{ logging }}
   {{ hide_product_version }}
-  "replications": [
-    {
-      "replication_id": "continuous",
-      "source": "http://{{ sync_gateway_node }}:4985/db1",
-      "target": "http://{{ sync_gateway_node }}:4985/db2",
-      "continuous": true
-    }
-  ],
+  {{ disable_persistent_config }}
+    {{ server_tls_skip_verify }}
+    {{ disable_tls_server }}
+    {{ disable_admin_auth }}
+  
   {{ sslcert }}
   {{ sslkey }}
   "databases": {
-    "db1": {
+    "sg_db1": {
+      
       {{ autoimport }}
       {{ xattrs }}
       {{ no_conflicts }}
@@ -27,18 +25,6 @@
       "server": "{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
       "bucket": "data-bucket-1",
       "username":"data-bucket-1",
-      "password": "password"
-    },
-    "db2": {
-      {{ autoimport }}
-      {{ xattrs }}
-      {{ no_conflicts }}
-      {{ sg_use_views }}
-      {{ num_index_replicas }}
-      {{ delta_sync }}
-      "server": "{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
-      "bucket": "data-bucket-2",
-      "username":"data-bucket-2",
       "password": "password"
     }
   }

@@ -634,14 +634,11 @@ class CouchbaseServer:
                 time.sleep(1)
 
         start = time.time()
-        print("Sri- waiting for rebalance complete timeout")
         while True:
-            print("Sri- inside while loop")
             if time.time() - start > keywords.constants.REBALANCE_TIMEOUT_SECS:
                 raise Exception("wait_for_rebalance_complete: TIMEOUT")
 
             tasks = self._get_tasks()
-            print("tasks are :", tasks)
             done_rebalacing = True
             for task in tasks:
                 # loop through each task and see if any rebalance tasks are running
@@ -652,11 +649,9 @@ class CouchbaseServer:
                     done_rebalacing = False
 
             if done_rebalacing:
-                print("done reblancing , so breaking")
                 break
 
             time.sleep(5)
-        print("out of loop")
 
     def add_node(self, server_to_add, services="kv"):
         """

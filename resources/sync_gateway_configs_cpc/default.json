@@ -1,5 +1,0 @@
-{
-	{{ logging }}
-	{{ hide_product_version }}
-	"databases": {}
-}
