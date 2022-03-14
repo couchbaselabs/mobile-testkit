@@ -461,6 +461,9 @@ def test_attachment_expire_purged_doc(params_from_base_test_setup, delete_doc_ty
     if sync_gateway_version < "3.0.0":
         pytest.skip('This test cannot run with sg version below 3.0.0')
 
+    if not xattrs_enabled:
+        pytest.skip('--xattrs is not enabled, so skipping the test')
+
     channels = ["Replication"]
     sg_client = MobileRestClient()
 
@@ -544,7 +547,6 @@ def test_attachment_expire_purged_doc(params_from_base_test_setup, delete_doc_ty
     with pytest.raises(DocumentNotFoundException) as nfe:
         sdk_client.get(doc_id)
     log_info(nfe)
-    if xattrs_enabled:
-        with pytest.raises(DocumentNotFoundException) as nfe:
-            sdk_client.get(attachment_ids[0])
-        log_info(nfe)
+    with pytest.raises(DocumentNotFoundException) as nfe:
+        sdk_client.get(attachment_ids[0])
+    log_info(nfe)
