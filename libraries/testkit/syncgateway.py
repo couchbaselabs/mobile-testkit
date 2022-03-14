@@ -6,6 +6,7 @@ import re
 
 import requests
 from requests import HTTPError
+from requests.auth import HTTPBasicAuth
 
 import libraries.testkit.settings
 from libraries.provision.ansible_runner import AnsibleRunner
@@ -579,7 +580,7 @@ class SyncGateway:
         r.raise_for_status()
         return r.json()
 
-    def start_replication2(self, local_db, remote_url, remote_db, remote_user, remote_password, direction="pushAndPull", purge_on_removal=None, continuous=False, channels=None, conflict_resolution_type="default", custom_conflict_resolver=None, adhoc=False, delta_sync=False, replication_id=None, max_backoff_time=None, user_credentials_url=True):
+    def start_replication2(self, local_db, remote_url, remote_db, remote_user, remote_password, direction="pushAndPull", purge_on_removal=None, continuous=False, channels=None, conflict_resolution_type="default", custom_conflict_resolver=None, adhoc=False, delta_sync=False, replication_id=None, max_backoff_time=None, user_credentials_url=True, auth=None):
         '''
            Required values : remote, direction, conflict_resolution_type
            default values : continuous=false
@@ -620,49 +621,70 @@ class SyncGateway:
         if not user_credentials_url:
             data["username"] = remote_user
             data["password"] = remote_password
-        r = requests.put("{}/{}/_replication/{}".format(sg_url, local_db, replication_id), headers=self._headers, data=json.dumps(data))
+        if auth:
+            r = requests.put("{}/{}/_replication/{}".format(sg_url, local_db, replication_id), headers=self._headers, data=json.dumps(data), auth=HTTPBasicAuth(auth[0], auth[1]))
+        else:
+            r = requests.put("{}/{}/_replication/{}".format(sg_url, local_db, replication_id), headers=self._headers, data=json.dumps(data))
         log_request(r)
         log_response(r)
         r.raise_for_status()
         return replication_id
 
-    def stop_replication2_by_id(self, replication_id, db):
+    def stop_replication2_by_id(self, replication_id, db, auth=None):
         sg_url = self.admin.admin_url
-        r = requests.delete("{}/{}/_replication/{}".format(sg_url, db, replication_id))
+        if auth:
+            r = requests.delete("{}/{}/_replication/{}".format(sg_url, db, replication_id), auth=HTTPBasicAuth(auth[0], auth[1]))
+        else:
+            r = requests.delete("{}/{}/_replication/{}".format(sg_url, db, replication_id))
         log_request(r)
         log_response(r)
         r.raise_for_status()
 
-    def modify_replication2_status(self, replication_id, db, action):
+    def modify_replication2_status(self, replication_id, db, action, auth=None):
         sg_url = self.admin.admin_url
         if action == "reset":
-            self.reset_replication2_checkpoint(sg_url, replication_id, db)
+            self.reset_replication2_checkpoint(sg_url, replication_id, db, auth)
         else:
-            r = requests.put("{}/{}/_replicationStatus/{}?action={}".format(sg_url, db, replication_id, action))
+            if auth:
+                r = requests.put("{}/{}/_replicationStatus/{}?action={}".format(sg_url, db, replication_id, action), auth=HTTPBasicAuth(auth[0], auth[1]))
+            else:
+                r = requests.put("{}/{}/_replicationStatus/{}?action={}".format(sg_url, db, replication_id, action))
             log_request(r)
             log_response(r)
             r.raise_for_status()
 
-    def reset_replication2_checkpoint(self, sg_url, replication_id, db):
-        r = requests.put("{}/{}/_replicationStatus/{}?action=stop".format(sg_url, db, replication_id))
+    def reset_replication2_checkpoint(self, sg_url, replication_id, db, auth=None):
+        if auth:
+            r = requests.put("{}/{}/_replicationStatus/{}?action=stop".format(sg_url, db, replication_id), auth=HTTPBasicAuth(auth[0], auth[1]))
+        else:
+            r = requests.put("{}/{}/_replicationStatus/{}?action=stop".format(sg_url, db, replication_id))
         log_request(r)
         log_response(r)
         r.raise_for_status()
         time.sleep(1)
-        r = requests.put("{}/{}/_replicationStatus/{}?action=reset".format(sg_url, db, replication_id))
+        if auth:
+            r = requests.put("{}/{}/_replicationStatus/{}?action=reset".format(sg_url, db, replication_id), auth=HTTPBasicAuth(auth[0], auth[1]))
+        else:
+            r = requests.put("{}/{}/_replicationStatus/{}?action=reset".format(sg_url, db, replication_id))
         log_request(r)
         log_response(r)
         r.raise_for_status()
         time.sleep(1)
-        r = requests.put("{}/{}/_replicationStatus/{}?action=start".format(sg_url, db, replication_id))
+        if auth:
+            r = requests.put("{}/{}/_replicationStatus/{}?action=start".format(sg_url, db, replication_id), auth=HTTPBasicAuth(auth[0], auth[1]))
+        else:
+            r = requests.put("{}/{}/_replicationStatus/{}?action=start".format(sg_url, db, replication_id))
         log_request(r)
         log_response(r)
         r.raise_for_status()
         time.sleep(1)
 
-    def get_replication2(self, db):
+    def get_replication2(self, db, auth=None):
         sg_url = self.admin.admin_url
-        r = requests.get("{}/{}/_replication".format(sg_url, db))
+        if auth:
+            r = requests.get("{}/{}/_replication".format(sg_url, db), auth=HTTPBasicAuth(auth[0], auth[1]))
+        else:
+            r = requests.get("{}/{}/_replication".format(sg_url, db))
         log_request(r)
         log_response(r)
         r.raise_for_status()

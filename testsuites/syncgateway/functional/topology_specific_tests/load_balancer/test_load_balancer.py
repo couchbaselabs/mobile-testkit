@@ -10,6 +10,7 @@ from keywords.ClusterKeywords import ClusterKeywords
 from keywords.SyncGateway import sync_gateway_config_path_for_mode, create_docs_via_sdk
 from libraries.testkit import cluster
 from libraries.testkit.cluster import Cluster
+from requests.auth import HTTPBasicAuth
 
 
 @pytest.mark.topospecific
@@ -101,6 +102,7 @@ def test_sgw_down_with_load_balancer(params_from_base_test_setup, sgw_down_with_
     sg1 = sgw_down_with_load_balancer_teardown["sg1"]
     sg_conf_path = sgw_down_with_load_balancer_teardown["sg_conf_path"]
     sg_ce = params_from_base_test_setup["sg_ce"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if sg_ce:
         pytest.skip('--sg-ce is enabled. This test runs only on enterprise edition of sgw')
@@ -111,6 +113,8 @@ def test_sgw_down_with_load_balancer(params_from_base_test_setup, sgw_down_with_
 
     topology = cluster_utils.get_cluster_topology(cluster_config)
     lb_url = "{}:4985".format(topology["load_balancers"][0])
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    http_auth = HTTPBasicAuth(auth[0], auth[1]) if auth else None
 
     sg_db = "db"
     num_docs = 100
@@ -138,7 +142,7 @@ def test_sgw_down_with_load_balancer(params_from_base_test_setup, sgw_down_with_
     # 7. All expected changes should appear
     retries = 0
     while retries < 30:
-        changes = client.get_changes(url=lb_url, db=sg_db, auth=None, since=0)
+        changes = client.get_changes(url=lb_url, db=sg_db, auth=http_auth, since=0)
         if len(changes["results"]) == num_docs:
             break
         retries = retries + 1
