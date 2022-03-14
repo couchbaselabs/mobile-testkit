@@ -454,11 +454,15 @@ def test_attachment_expire_purged_doc(params_from_base_test_setup, delete_doc_ty
     sg_config = params_from_base_test_setup["sg_config"]
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
+    xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
     num_of_docs = 10
     sg_conf_name = "listener_tests/listener_tests_no_conflicts"
 
     if sync_gateway_version < "3.0.0":
         pytest.skip('This test cannot run with sg version below 3.0.0')
+
+    if not xattrs_enabled:
+        pytest.skip('--xattrs is not enabled, so skipping the test')
 
     channels = ["Replication"]
     sg_client = MobileRestClient()
