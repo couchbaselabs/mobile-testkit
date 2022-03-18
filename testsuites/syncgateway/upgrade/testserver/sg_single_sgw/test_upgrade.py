@@ -360,10 +360,11 @@ def verify_sg_docs_revision_history(url, db, cbl_db2, num_docs, sg_db, added_doc
             except KeyError:
                 log_info("Ignoring id verification")
             if rev_gen != expected_doc_map[key]:
-                print("added docs is , ", added_docs[key])
                 assert rev_gen == expected_doc_map[key], "revision mismatch on the key {}".format(key)
 
-            assert len(doc["doc"]) == len(added_docs[key]), "doc length mismatch {}".format(key)
+            if len(doc["doc"]) != len(added_docs[key]):
+                print("cbl doc is ", added_docs[key])
+                assert len(doc["doc"]) == len(added_docs[key]), "doc length mismatch {}".format(key)
 
     log_info("finished verify_sg_docs_revision_history.")
 
