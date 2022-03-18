@@ -11,9 +11,13 @@ import signal
 def kill_prometheus_process():
     command = ['pgrep', 'prometheus']
     result = subprocess.run(command, stdout=PIPE, stderr=PIPE, universal_newlines=True)
-    pid = result.stdout
-    if pid:
-        os.kill(int(pid), signal.SIGKILL)
+    pids = result.stdout
+    if pids:
+        # Lazy fix for if there are multiple pids
+        pids = pids.split("\n")
+        for pid in pids:
+            if pid is not '':
+                os.kill(int(pid), signal.SIGKILL)
 
 
 def start_prometheus(sg_ip, ssl=False):
