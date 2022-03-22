@@ -2239,6 +2239,7 @@ def test_sg_replicate_doc_resurrection(params_from_base_test_setup, setup_custom
     # 6. Delete the doc on cbl1/sdk(data-bucket) and recreate the doc with same doc id
     cbl_doc_ids1 = db.getDocIds(cbl_db1)
     random_doc_id = random.choice(cbl_doc_ids1)
+    print("random_doc_id:", random_doc_id)
     if doc_delete_source == "cbl":
         doc_body = document.create_doc(doc_id=random_doc_id, content="testing-doc-resurrec", channels=channels1, cbl=True)
         if delete_sgw_cluster == "sgw1":
@@ -2267,6 +2268,7 @@ def test_sg_replicate_doc_resurrection(params_from_base_test_setup, setup_custom
     cbl_doc_ids2 = db.getDocIds(cbl_db2)
     cbl_doc_ids1 = db.getDocIds(cbl_db1)
     compare_cbl_docs(db, cbl_db1, cbl_db2)
+    print("cbl_docs_1:", cbl_doc_ids1, "\ncbl_docs_2:", cbl_doc_ids2)
     assert random_doc_id in cbl_doc_ids2, "resurrected doc does not exist on cbl db2"
     assert random_doc_id in cbl_doc_ids1, "resurrected doc does not exist on cbl db1"
     sg_doc1 = sg_client.get_doc(url=sg1.url, db=sg_db1, doc_id=random_doc_id, auth=session1)
