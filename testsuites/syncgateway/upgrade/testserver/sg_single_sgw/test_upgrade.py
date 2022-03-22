@@ -362,9 +362,6 @@ def verify_sg_docs_revision_history(url, db, cbl_db2, num_docs, sg_db, added_doc
             if rev_gen != expected_doc_map[key]:
                 assert rev_gen == expected_doc_map[key], "revision mismatch on the key {}".format(key)
 
-            """if len(doc["doc"]) != len(added_docs[key]):
-                print("cbl doc is ", added_docs[key])
-                assert len(doc["doc"]) == len(added_docs[key]), "doc length mismatch {}".format(key)"""
             if "_attachments" in doc["doc"]:
                 assert (len(doc["doc"]) - 1) == len(added_docs[key]), "doc length mismatch {}".format(key)
             else:
