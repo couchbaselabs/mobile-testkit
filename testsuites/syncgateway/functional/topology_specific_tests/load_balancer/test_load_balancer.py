@@ -10,7 +10,6 @@ from keywords.ClusterKeywords import ClusterKeywords
 from keywords.SyncGateway import sync_gateway_config_path_for_mode, create_docs_via_sdk
 from libraries.testkit import cluster
 from libraries.testkit.cluster import Cluster
-from requests.auth import HTTPBasicAuth
 
 
 @pytest.mark.topospecific
