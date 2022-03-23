@@ -217,8 +217,8 @@ def test_invalid_external_jspath(params_from_base_test_setup, setup_jsserver):
     orig_sg_conf = "sync_gateway_default_functional_tests"
     sg_conf_name = "custom_sync/sync_gateway_externalize_js"
 
-    if sync_gateway_version < "3.0.0":
-        pytest.skip("this feature not available below 3.0.0")
+    if sync_gateway_version < "3.0.0" or not disable_persistent_config:
+        pytest.skip("this feature not available below 3.0.0 or if persistent config enabled")
     orig_sg_conf = sync_gateway_config_path_for_mode(orig_sg_conf, mode)
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 

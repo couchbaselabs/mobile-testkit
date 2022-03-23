@@ -2364,7 +2364,7 @@ def test_combination_of_cpc_and_noncpc(params_from_base_test_setup, disable_pers
     sg1 = cbs_cluster.sync_gateways[0]
     sg3 = cbs_cluster.sync_gateways[2]
     sg4 = cbs_cluster.sync_gateways[3]
-    sg_dbs = sg1.admin.get_dbs_from_config()
+    sg_dbs = sg1.admin.get_dbs()
 
     sg1_db_config = sg1.admin.get_db_config(sg_dbs[0])
     revs_limit1 = 20
@@ -2496,7 +2496,7 @@ def test_sg_replicate_mixed_sgw_versions(params_from_base_test_setup, setup_cust
     active_tasks = sg1.admin.get_sgreplicate2_active_tasks(sg_db1, expected_tasks=expected_tasks)
     assert len(active_tasks) == 0, "number of active tasks is not 0"
     expvars = sg_client.get_expvars(url=sg1.admin.admin_url)
-    assert expvars["syncgateway"]["global"]["resource_utilization"]["warn_count"] == 1, "error count has not raised with replication failure"
+    assert expvars["syncgateway"]["global"]["resource_utilization"]["warn_count"] == 6, "warn count has not raised with replication failure"
 
 
 def restart_sg_nodes(sg1, sg2, sg_config, cluster_config):

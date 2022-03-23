@@ -2,10 +2,17 @@
     "bootstrap": {
         "group_id": "persistent_group1",
         "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
+        {{ disable_persistent_config }}
+		{{ server_tls_skip_verify }}
+    	{{ disable_tls_server }}
         {{ username }}
         "password": "password"
     },
     "api":{
+        {{ prometheus }}
+		{{ disable_admin_auth }}
+        {{ tls }}
+		{{ hide_product_version }}
         "public_interface":":4984",
         "admin_interface":"0.0.0.0:4985"
     }

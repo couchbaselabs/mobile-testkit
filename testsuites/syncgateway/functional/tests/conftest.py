@@ -177,7 +177,7 @@ def pytest_addoption(parser):
     parser.addoption("--sync-gateway-previous-version",
                      action="store",
                      help="sync-gateway-previous-version",  # Adding a default to try to fix the test failure
-                     default="2.8.2-1")
+                     default="2.7.4")
 
     parser.addoption("--enable-server-tls-skip-verify",
                      action="store_true",
@@ -531,7 +531,7 @@ def params_from_base_suite_setup(request):
     c = cluster.Cluster(cluster_config)
 
     # Comment this out to use skip-provisions
-    # c.stop_sg_and_accel()
+    c.stop_sg_and_accel()
 
     # Delete png files under resources/data
     clear_resources_pngs()

@@ -413,8 +413,8 @@ class Cluster:
         with open("{}.json".format(self._cluster_config)) as f:
             cluster = json.loads(f.read())
 
-        server_scheme_var = ""
         server_scheme_var = "couchbase"
+        server_port_var = ""
         couchbase_server_primary_node = add_cbs_to_sg_config_server_field(self._cluster_config)
         if self.cbs_ssl:
             server_port_var = 18091

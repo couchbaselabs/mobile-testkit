@@ -1,6 +1,7 @@
 {
   "bootstrap": {
     {{ server_tls_skip_verify }}
+    {{ disable_tls_server }}
     {{ username }}
     {{ password }}
     {{ cacertpath }}

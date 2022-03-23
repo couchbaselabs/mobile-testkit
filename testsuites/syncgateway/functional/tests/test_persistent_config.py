@@ -249,17 +249,15 @@ def test_invalid_database_credentials(params_from_base_test_setup):
     cluster_conf = temp_cluster_config
     sg_config = sync_gateway_config_path_for_mode(sg_conf_name, mode, cpc=True)
 
-    sg_client = MobileRestClient()
-    """ cluster_utils = ClusterKeywords(cluster_conf)
+    """sg_client = MobileRestClient()
+    cluster_utils = ClusterKeywords(cluster_conf)
     cluster_topology = cluster_utils.get_cluster_topology(cluster_conf)
     cbs_url = cluster_topology['couchbase_servers'][0]
     sg_one_url = cluster_topology["sync_gateways"][0]["public"]
-    sg_two_url = cluster_topology["sync_gateways"][1]["public"] """
+    sg_two_url = cluster_topology["sync_gateways"][1]["public"] 
     sg_db1_username = "autotest"
     sg_password = "password"
-    sg_channels = ["cpc_testing"]
-    # sg_username2 = "autotest2"
-    # sg_channels2 = ["cpc_testing2"]
+    sg_channels = ["cpc_testing"] """
     cbs_cluster = Cluster(config=cluster_conf)
     bucket_list = ["data-bucket"]
     cbs_cluster.reset(sg_config_path=sg_config, bucket_list=bucket_list, use_config=True)
@@ -268,13 +266,10 @@ def test_invalid_database_credentials(params_from_base_test_setup):
     sg_db1 = "db"
 
     # 3. Add database config on node1 with sg_db1
-    # revs_limit = 20
-    # persist_cluster_config_environment_prop(cluster_conf, 'revs_limit', revs_limit, property_name_check=False)
     db_config_file = "sync_gateway_default_db"
     dbconfig = construct_dbconfig_json(db_config_file, cluster_conf, sg_platform, sg_conf_name)
-    print("db config---sridevi", dbconfig)
-    dbconfig  = dbconfig.replace(bucket_list[0], "invalid-bucket-name")
-    print("invalid db config---sridevi", dbconfig)
+    # dbconfig = dbconfig.replace(bucket_list[0], "invalid-bucket-name")
+    dbconfig["bucket"] = "invalid-bucket-name"
     try:
         sg1.admin.create_db(sg_db1, dbconfig)
         assert False, "create db rest call did not fail with invalid bucket name"
@@ -336,6 +331,7 @@ def test_default_named_group(params_from_base_test_setup, group_type):
             assert False, "Sync gateway failed to start with custom group id"
         if group_type == "default":
             assert False, "Sync gateway failed to start with default group id "
+
 
 @pytest.mark.syncgateway
 def test_db_config_with_guest_user(params_from_base_test_setup):
