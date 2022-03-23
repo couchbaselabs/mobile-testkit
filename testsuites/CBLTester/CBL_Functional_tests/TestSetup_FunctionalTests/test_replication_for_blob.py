@@ -45,7 +45,7 @@ def test_doc_update_replication_with_blob_no_touch(params_from_base_test_setup):
     sg_client = MobileRestClient()
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channels, auth=auth)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
     session = cookie, session_id
 
     # 1. Create a doc in CBL
@@ -103,7 +103,7 @@ def test_doc_update_replication_with_blob_no_touch(params_from_base_test_setup):
     replicator.stop(repl)
 
     # 5. Verify the doc replicated successfully, _attachments field on SG set correctly
-    sg_doc = sg_client.get_doc(url=sg_admin_url, db=sg_db, doc_id=doc_id)
+    sg_doc = sg_client.get_doc(url=sg_admin_url, db=sg_db, doc_id=doc_id, auth=auth)
     assert "newkey1" in sg_doc
     assert sg_doc["newkey1"] == "new string value 1"
     assert sg_doc["blob1"]["content_type"] == "text/plain"
