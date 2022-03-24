@@ -162,7 +162,7 @@ def test_attachment_revpos_when_ancestor_unavailable_active_revision_doesnt_shar
 
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels, auth=auth)
-    sg_user_session = client.create_session(url=sg_url_admin, db=sg_db, name=sg_user_name)
+    sg_user_session = client.create_session(url=sg_url_admin, db=sg_db, name=sg_user_name, auth=auth)
 
     doc = document.create_doc(doc_id="doc_1", content={"sample_key": "sample_val"}, channels=sg_user_channels)
     doc_gen_1 = client.add_doc(url=sg_url, db=sg_db, doc=doc, auth=sg_user_session)

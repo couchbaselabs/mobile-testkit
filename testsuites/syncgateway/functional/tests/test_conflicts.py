@@ -397,7 +397,7 @@ def test_concurrent_attachment_updatesonDoc(params_from_base_test_setup):
 
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channel, auth=auth)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest")
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest", auth=auth)
     session = cookie, session_id
 
     # 1. Create a doc
