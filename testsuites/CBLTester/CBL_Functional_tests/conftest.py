@@ -488,9 +488,7 @@ def params_from_base_suite_setup(request):
     )
 
     need_sgw_admin_auth = (not disable_admin_auth) and sync_gateway_version >= "3.0"
-    print("==============================================")
-    print("=== need_sgw_admin_auth : {} ===".format(need_sgw_admin_auth))
-    print("==============================================")
+    log_info("need_sgw_admin_auth setting: {}".format(need_sgw_admin_auth))
 
     if enable_sample_bucket and not create_db_per_suite:
         # if enable_sample_bucket and not create_db_per_test:

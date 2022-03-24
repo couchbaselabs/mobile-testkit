@@ -237,9 +237,7 @@ def params_from_base_suite_setup(request):
     enable_server_tls_skip_verify = request.config.getoption("--enable-server-tls-skip-verify")
 
     disable_admin_auth = request.config.getoption("--disable-admin-auth")
-    print("==============================================")
-    print("=== disable_admin_auth : {} ===".format(disable_admin_auth))
-    print("==============================================")
+    log_info("disable_admin_auth flag: {}".format(disable_admin_auth))
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
@@ -484,9 +482,7 @@ def params_from_base_suite_setup(request):
     )
 
     need_sgw_admin_auth = (not disable_admin_auth) and sync_gateway_version >= "3.0"
-    print("==============================================")
-    print("=== need_sgw_admin_auth : {} ===".format(need_sgw_admin_auth))
-    print("==============================================")
+    log_info("need_sgw_admin_auth setting: {}".format(need_sgw_admin_auth))
 
     # Load topology as a dictionary
     cluster_utils = ClusterKeywords(cluster_config)

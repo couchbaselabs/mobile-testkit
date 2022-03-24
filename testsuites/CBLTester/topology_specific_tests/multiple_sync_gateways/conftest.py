@@ -69,9 +69,7 @@ def params_from_base_suite_setup(request):
     disable_tls_server = request.config.getoption("--disable-tls-server")
 
     disable_admin_auth = request.config.getoption("--disable-admin-auth")
-    print("==============================================")
-    print("=== disable_admin_auth : {} ===".format(disable_admin_auth))
-    print("==============================================")
+    log_info("disable_admin_auth flag: {}".format(disable_admin_auth))
 
     testserver = TestServerFactory.create(platform=liteserv_platform,
                                           version_build=liteserv_version,
@@ -253,9 +251,7 @@ def params_from_base_suite_setup(request):
     )
 
     need_sgw_admin_auth = (not disable_admin_auth) and sync_gateway_version >= "3.0"
-    print("==============================================")
-    print("=== need_sgw_admin_auth : {} ===".format(need_sgw_admin_auth))
-    print("==============================================")
+    log_info("need_sgw_admin_auth setting: {}".format(need_sgw_admin_auth))
 
     if enable_sample_bucket and not create_db_per_suite:
         # if enable_sample_bucket and not create_db_per_test:

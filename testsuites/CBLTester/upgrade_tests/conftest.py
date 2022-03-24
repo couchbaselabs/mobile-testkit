@@ -388,9 +388,7 @@ def params_from_base_suite_setup(request):
     if sync_gateway_version < "2.0":
         pytest.skip('Does not work with sg < 2.0 , so skipping the test')
 
-    print("==============================================")
-    print("=== disable_admin_auth : {} ===".format(disable_admin_auth))
-    print("==============================================")
+    log_info("disable_admin_auth flag: {}".format(disable_admin_auth))
 
     if not skip_provisioning:
         log_info("Installing Sync Gateway + Couchbase Server + Accels ('di' only)")
@@ -441,9 +439,7 @@ def params_from_base_suite_setup(request):
     utils_obj = Utils(base_url)
 
     need_sgw_admin_auth = (not disable_admin_auth) and sync_gateway_version >= "3.0"
-    print("==============================================")
-    print("=== need_sgw_admin_auth : {} ===".format(need_sgw_admin_auth))
-    print("==============================================")
+    log_info("need_sgw_admin_auth setting: {}".format(need_sgw_admin_auth))
 
     yield {
         "cluster_config": cluster_config,
