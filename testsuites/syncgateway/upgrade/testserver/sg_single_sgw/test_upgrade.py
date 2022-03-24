@@ -68,6 +68,7 @@ def test_upgrade(params_from_base_test_setup):
     sg_config = params_from_base_test_setup["sg_config"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_ip = params_from_base_test_setup["sg_ip"]
+    disable_admin_auth = params_from_base_test_setup["disable_admin_auth"]
     sg_conf = "{}/resources/sync_gateway_configs/sync_gateway_default_functional_tests_{}.json".format(os.getcwd(), mode)
 
     # update cluster_config with the post upgrade required params
@@ -83,14 +84,17 @@ def test_upgrade(params_from_base_test_setup):
         need_to_redeploy = True
         persist_cluster_config_environment_prop(cluster_config, 'cbs_ssl_enabled', True)
 
+    print("use_view values is ", use_views)
+    print("upgraded useviews values is ", upgraded_use_views)
     if use_views != upgraded_use_views:
         need_to_redeploy = True
+        print("use_views value is not equal to upgraded user views ")
         if upgraded_use_views:
             log_info("Running SG tests using views after upgrade")
             # Enable sg views in cluster configs
             persist_cluster_config_environment_prop(cluster_config, 'sg_use_views', True)
         else:
-            log_info("Running tests not using views after upgrade")
+            log_info("Running tests not using views pre upgrade")
             # Disable sg views in cluster configs
             persist_cluster_config_environment_prop(cluster_config, 'sg_use_views', False)
 
@@ -106,6 +110,7 @@ def test_upgrade(params_from_base_test_setup):
         else:
             log_info("Using document storage for sync meta data after upgrade")
             persist_cluster_config_environment_prop(cluster_config, 'xattrs_enabled', False)
+    print("need to redeploy value is ", need_to_redeploy)
 
     if sync_gateway_upgraded_version >= "2.5.0" and server_upgraded_version >= "5.5.0" and (delta_sync_enabled != upgraded_delta_sync_enabled):
         need_to_redeploy = True
@@ -115,6 +120,9 @@ def test_upgrade(params_from_base_test_setup):
         else:
             log_info("Running without delta sync after upgrade")
             persist_cluster_config_environment_prop(cluster_config, 'delta_sync_enabled', False)
+
+    if sync_gateway_upgraded_version >= "3.0.0" and server_upgraded_version >= "5.5.0" and disable_admin_auth:
+        need_to_redeploy = True
 
     # 1. Create user, session and docs on SG
     sg_client = MobileRestClient()

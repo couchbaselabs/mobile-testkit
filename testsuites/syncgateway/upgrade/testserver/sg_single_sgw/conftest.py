@@ -259,6 +259,7 @@ def params_from_base_suite_setup(request):
     log_info("hide_product_version: {}".format(hide_product_version))
     log_info("enable_cbs_developer_preview: {}".format(enable_cbs_developer_preview))
     log_info("disable_persistent_config: {}".format(disable_persistent_config))
+    log_info("disable_admin_auth: {}".format(disable_admin_auth))
 
     # if xattrs is specified but the post upgrade SG version doesn't support, don't continue
     if upgraded_xattrs_enabled and version_is_binary(sync_gateway_upgraded_version):
@@ -529,7 +530,8 @@ def params_from_base_suite_setup(request):
         "sg_db": sg_db,
         "sg_config": sg_config,
         "create_db_per_test": create_db_per_test,
-        "disable_persistent_config": disable_persistent_config
+        "disable_persistent_config": disable_persistent_config,
+        "disable_admin_auth": disable_admin_auth
     }
 
     # Flush all the memory contents on the server app
@@ -583,6 +585,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     enable_file_logging = params_from_base_suite_setup["enable_file_logging"]
     cluster_topology = params_from_base_suite_setup["cluster_topology"]
     base_url = params_from_base_suite_setup["base_url"]
+    disable_persistent_config = params_from_base_suite_setup["disable_persistent_config"]
+    disable_admin_auth = params_from_base_suite_setup["disable_admin_auth"]
     use_local_testserver = request.config.getoption("--use-local-testserver")
     test_name = request.node.name
 
@@ -686,7 +690,9 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "cluster_topology": cluster_topology,
         "sg_url": sg_url,
         "sg_admin_url": sg_admin_url,
-        "cbl_db": cbl_db
+        "cbl_db": cbl_db,
+        "disable_admin_auth": disable_admin_auth,
+        "disable_persistent_config": disable_persistent_config
     }
 
     log_info("Tearing down test")
