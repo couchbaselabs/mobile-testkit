@@ -736,7 +736,7 @@ class SyncGateway(object):
         playbook_vars1["couchbase_sync_gateway_package_base_url"] = sync_gateway_base_url
         playbook_vars1["couchbase_sync_gateway_package"] = sync_gateway_package_name
         playbook_vars1["couchbase_sg_accel_package"] = sg_accel_package_name
-        if sgw_previous_version >= "3.0.0" and get_sg_version(cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config):
+        if sgw_previous_version >= "3.0.0" and version >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config):
             playbook_vars, db_config_json, sgw_config_data = c_cluster.setup_server_and_sgw(sg_config.config_path, bucket_creation=False)
         else:
             sg_conf = os.path.abspath(sg_config.config_path)
@@ -869,7 +869,7 @@ class SyncGateway(object):
             if is_hide_prod_version_enabled(cluster_config) and get_sg_version(cluster_config) >= "2.8.1":
                 playbook_vars["hide_product_version"] = '"hide_product_version": true,'
 
-            if is_centralized_persistent_config_disabled(cluster_config) and version >= "3.0.0" and get_sg_version(cluster_config) >= "3.0.0":
+            if is_centralized_persistent_config_disabled(cluster_config) and version >= "3.0.0":
                 playbook_vars["disable_persistent_config"] = '"disable_persistent_config": true,'
 
             if is_server_tls_skip_verify_enabled(cluster_config) and version >= "3.0.0":
@@ -878,7 +878,7 @@ class SyncGateway(object):
             if is_tls_server_disabled(cluster_config) and version >= "3.0.0":
                 playbook_vars["disable_tls_server"] = '"use_tls_server": false,'
 
-            if is_admin_auth_disabled(cluster_config) and version >= "3.0.0" and get_sg_version(cluster_config) >= "3.0.0":
+            if is_admin_auth_disabled(cluster_config) and version >= "3.0.0":
                 playbook_vars["disable_admin_auth"] = '"admin_interface_authentication": false,    \n"metrics_interface_authentication": false,' 
 
         playbook_vars.update(playbook_vars1)
