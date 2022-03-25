@@ -5,7 +5,7 @@ from keywords.ClusterKeywords import ClusterKeywords
 from keywords.SyncGateway import (sync_gateway_config_path_for_mode,
                                   validate_sync_gateway_mode)
 from keywords.tklogging import Logging
-from keywords.utils import log_info, check_xattr_support, version_is_binary
+from keywords.utils import log_info, check_xattr_support, version_is_binary, clear_resources_pngs
 
 from keywords.exceptions import ProvisioningError, FeatureSupportedError
 from keywords.utils import host_for_url
