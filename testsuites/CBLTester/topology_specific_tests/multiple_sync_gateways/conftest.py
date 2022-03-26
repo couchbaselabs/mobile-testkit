@@ -318,7 +318,7 @@ def params_from_base_suite_setup(request):
     if prometheus_enable:
         if not prometheus.is_prometheus_installed():
             prometheus.install_prometheus()
-        prometheus.start_prometheus(sg_ip, sg_ssl)
+        prometheus.start_prometheus(sg_ip, sg_ssl, need_sgw_admin_auth)
 
     yield {
         "cluster_config": cluster_config,
@@ -374,7 +374,7 @@ def params_from_base_suite_setup(request):
     # Delete png files under resources/data
     clear_resources_pngs()
     if prometheus_enable:
-        prometheus.stop_prometheus(sg_ip, sg_ssl)
+        prometheus.stop_prometheus(sg_ip, sg_ssl, need_sgw_admin_auth)
 
 
 @pytest.fixture(scope="function")

@@ -494,7 +494,7 @@ def params_from_base_suite_setup(request):
         cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
         sg_url = cluster_topology["sync_gateways"][0]["public"]
         sg_ip = host_for_url(sg_url)
-        prometheus.start_prometheus(sg_ip, sg_ssl)
+        prometheus.start_prometheus(sg_ip, sg_ssl, need_sgw_admin_auth)
     yield {
         "sync_gateway_version": sync_gateway_version,
         "disable_tls_server": disable_tls_server,
@@ -518,7 +518,7 @@ def params_from_base_suite_setup(request):
     log_info("Tearing down 'params_from_base_suite_setup' ...")
 
     if prometheus_enabled:
-        prometheus.stop_prometheus(sg_ip, sg_ssl)
+        prometheus.stop_prometheus(sg_ip, sg_ssl, need_sgw_admin_auth)
 
     # clean up firewall rules if any ports blocked for server ssl testing
     clear_firewall_rules(cluster_config)
