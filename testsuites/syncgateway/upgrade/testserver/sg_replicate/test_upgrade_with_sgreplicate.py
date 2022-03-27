@@ -145,7 +145,8 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
     sg_db1 = "sg_db1"
     sg_db2 = "sg_db2"
     password = "password"
-    sgw_cluster1_replication1 = "SGW_Cluster1_Replication1"
+    sgw_cluster1_replication1 = "Mobile_Cluster1_Replication1"
+    sgw_cluster1_replication1_att = "Mobile_att_Cluster1_Replication1"
     sgw_cluster2_replication1 = "SGW_Cluster2_Replication1"
     sgw_cluster1_replication1_ch1 = "SGW_Cluster1_ch1_Replication1"
     sgw_cluster1_replication1_ch2 = "SGW_Cluster1_ch2_Replication1"
@@ -218,10 +219,11 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
             sg_obj.stop_sync_gateways(cluster_config=cluster_config, url=node)
         count += 1
 
-    db.create_bulk_docs(number=num_docs, id_prefix=sgw_cluster1_replication1, db=cbl_db1, channels=replication1_channel,
+    db.create_bulk_docs(number=num_docs, id_prefix=sgw_cluster1_replication1_att, db=cbl_db1, channels=replication1_channel,
                         attachments_generator=attachment.generate_2_png_10_10)
     db.create_bulk_docs(number=num_docs, id_prefix=sgw_cluster1_replication1, db=cbl_db1, channels=replication1_channel)
-    doc_ids = db.getDocIds(cbl_db1, limit=num_docs)
+    limit_1 = num_docs * 2
+    doc_ids = db.getDocIds(cbl_db1, limit=limit_1)
     sgw_cluster1_added_docs = db.getDocuments(cbl_db1, doc_ids)
 
     db.create_bulk_docs(number=num_docs, id_prefix=sgw_cluster2_replication1, db=cbl_db2, channels=replication1_channel,
@@ -408,8 +410,10 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
     for replid in repl_id:
         sg1.admin.wait_until_sgw_replication_done(sg_db1, replid, write_flag=True, max_times=3000)
     replicator.wait_until_replicator_idle(repl2, max_times=3000)
-    time.sleep(300)
-    cbl_doc_ids2 = db.getDocIds(cbl_db2, limit=num_docs * 10)  # number times 6 as it creates docs 6 times at 6 places
+    # time.sleep(300)
+    limit_2 = num_docs * 10
+    # cbl_doc_ids2 = db.getDocIds(cbl_db2, limit=limit_2)  # number times 6 as it creates docs 6 times at 6 places
+    cbl_doc_ids2 = db.getDocIds(cbl_db2)  # number times 6 as it creates docs 6 times at 6 places
     print("cbl doc ids 2 are : ", cbl_doc_ids2)
     count = sum(sgw_cluster1_replication1 in s for s in cbl_doc_ids2)
     assert count == num_docs, "all docs with replication1 channel1 did not replicate to cbl db2"
