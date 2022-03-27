@@ -323,11 +323,11 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
         # 6. Restart SGWs after the sgw upgrade
         sg_obj = SyncGateway()
         # TODO : comment below and test
-        """ for sg in sync_gateways:
+        for sg in sync_gateways:
             sg_ip = host_for_url(sg["admin"])
             log_info("Restarting sync gateway after server upgrade {}".format(sg_ip))
             sg_obj.restart_sync_gateways(cluster_config=cluster_config, url=sg_ip)
-            time.sleep(5) """
+            time.sleep(5)
 
         if need_to_redeploy:
             # Enable xattrs on all SG/SGAccel nodes
