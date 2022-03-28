@@ -701,8 +701,7 @@ class SyncGateway(object):
                 sg_conf=sg_conf,
                 sgw_previous_version=sync_gateway_version,
                 sync_gateway_version=sync_gateway_upgraded_version,
-                url=sg_ip,
-                upgrade_only=True
+                url=sg_ip
             )
 
             time.sleep(10)  # After upgrading each sync gateway, it need few seconds to get product info
