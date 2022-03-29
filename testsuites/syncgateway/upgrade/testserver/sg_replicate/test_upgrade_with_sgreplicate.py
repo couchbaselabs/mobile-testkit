@@ -323,11 +323,11 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
         # 6. Restart SGWs after the sgw upgrade
         sg_obj = SyncGateway()
         # TODO : comment below and test
-        for sg in sync_gateways:
+        """for sg in sync_gateways:
             sg_ip = host_for_url(sg["admin"])
             log_info("Restarting sync gateway after server upgrade {}".format(sg_ip))
             sg_obj.restart_sync_gateways(cluster_config=cluster_config, url=sg_ip)
-            time.sleep(5)
+            time.sleep(5)"""
 
         if need_to_redeploy:
             # Enable xattrs on all SG/SGAccel nodes
@@ -409,11 +409,11 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
     # Wait until all SGW replications are completed
     for replid in repl_id:
         sg1.admin.wait_until_sgw_replication_done(sg_db1, replid, write_flag=True, max_times=3000)
+    # time.sleep(300)
     replicator.wait_until_replicator_idle(repl2, max_times=3000)
-    time.sleep(300)
     limit_2 = num_docs * 10
-    # cbl_doc_ids2 = db.getDocIds(cbl_db2, limit=limit_2)  # number times 6 as it creates docs 6 times at 6 places
-    cbl_doc_ids2 = db.getDocIds(cbl_db2)  # number times 6 as it creates docs 6 times at 6 places
+    cbl_doc_ids2 = db.getDocIds(cbl_db2, limit=limit_2)  # number times 6 as it creates docs 6 times at 6 places
+    # cbl_doc_ids2 = db.getDocIds(cbl_db2)  # number times 6 as it creates docs 6 times at 6 places
     print("cbl doc ids 2 are : ", cbl_doc_ids2)
     count = sum(sgw_cluster1_replication1 in s for s in cbl_doc_ids2)
     assert count == num_docs, "all docs with replication1 channel1 did not replicate to cbl db2"
@@ -433,7 +433,6 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
                 assert doc["doc"]["numOfUpdates"] == sg3_doc["numOfUpdates"], "number of updates value is not same on both clusters for {}".format(doc)
             if sync_gateway_version < "2.8.0":
                 assert doc["doc"]["_rev"] == sg3_doc["_rev"], "number of updates value is not same on both clusters for {}".format(doc)
-
     replicator.stop(repl1)
     replicator.stop(repl2)
     replicator.stop(repl3)
