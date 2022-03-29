@@ -331,7 +331,7 @@ class Replication(object):
     def wait_until_replicator_idle(self, repl, err_check=True, max_times=150, sleep_time=2, max_timeout=600):
         count = 0
         idle_count = 0
-        max_idle_count = 3
+        max_idle_count = 20
 
         # Load the current replicator config to decide retry strategy
         repl_config = self.getConfig(repl)

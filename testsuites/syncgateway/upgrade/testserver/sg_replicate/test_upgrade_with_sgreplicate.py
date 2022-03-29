@@ -412,8 +412,8 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
     time.sleep(300)
     replicator.wait_until_replicator_idle(repl2, max_times=3000)
     limit_2 = num_docs * 10
-    cbl_doc_ids2 = db.getDocIds(cbl_db2, limit=limit_2)  # number times 6 as it creates docs 6 times at 6 places
-    # cbl_doc_ids2 = db.getDocIds(cbl_db2)  # number times 6 as it creates docs 6 times at 6 places
+    # cbl_doc_ids2 = db.getDocIds(cbl_db2, limit=limit_2)  # number times 6 as it creates docs 6 times at 6 places
+    cbl_doc_ids2 = db.getDocIds(cbl_db2)  # number times 6 as it creates docs 6 times at 6 places
     print("cbl doc ids 2 are : ", cbl_doc_ids2)
     count = sum(sgw_cluster1_replication1 in s for s in cbl_doc_ids2)
     assert count == num_docs, "all docs with replication1 channel1 did not replicate to cbl db2"
