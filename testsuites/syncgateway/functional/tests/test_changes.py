@@ -73,9 +73,11 @@ def test_deleted_docs_from_changes_active_only(params_from_base_test_setup, sg_c
 
     # Changes request with active_only=true
     session = Session()
+    if auth:
+        session.auth = HTTPBasicAuth(auth[0], auth[1])
     request_url = "{}/{}/_changes?active_only=true".format(sg_admin_url, sg_db)
     log_info("Issuing changes request {}".format(request_url))
-    resp = session.get(request_url, auth=HTTPBasicAuth(auth[0], auth[1]))
+    resp = session.get(request_url)
     resp.raise_for_status()
     resp_obj = resp.json()
     log_info("Checking that the deleted doc is not included in the active_only=true changes request")
@@ -85,7 +87,7 @@ def test_deleted_docs_from_changes_active_only(params_from_base_test_setup, sg_c
     # Changes request with active_only=false
     request_url = "{}/{}/_changes?active_only=false".format(sg_admin_url, sg_db)
     log_info("Issuing changes request {}".format(request_url))
-    resp = session.get(request_url, auth=HTTPBasicAuth(auth[0], auth[1]))
+    resp = session.get(request_url)
     resp.raise_for_status()
     resp_obj = resp.json()
     doc_found = False
