@@ -485,9 +485,9 @@ def test_switch_dbs_with_two_cbl_platforms(params_from_base_suite_setup):
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels, auth=auth)
     cookie, session = sg_client.create_session(sg_admin_url, sg_db, "autotest")
-    # auth_session = cookie, session
+    auth_session = cookie, session
     sg_client.add_docs(url=sg_url, db=sg_db, number=20, id_prefix="sg_id_prefix",
-                       channels=channels, auth=auth)
+                       channels=channels, auth=auth_session)
 
     # Start and stop continuous replication
     replicator = Replication(base_url)
