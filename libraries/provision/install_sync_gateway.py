@@ -336,8 +336,6 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
         if is_admin_auth_disabled(cluster_config) and version >= "3.0.0":
             playbook_vars["disable_admin_auth"] = '"admin_interface_authentication": false,    \n"metrics_interface_authentication": false,'
 
-        if is_centralized_persistent_config_disabled(cluster_config):
-            playbook_vars["disable_persistent_config"] = '"disable_persistent_config": true,'
     # Install Sync Gateway via Source or Package
     if sync_gateway_config.commit is not None:
         # Install from source
