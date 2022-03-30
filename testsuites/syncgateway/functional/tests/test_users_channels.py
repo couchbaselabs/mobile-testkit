@@ -6,6 +6,8 @@ from libraries.testkit.admin import Admin
 from libraries.testkit.cluster import Cluster
 from libraries.testkit.verify import verify_changes
 from keywords.MobileRestClient import MobileRestClient
+from keywords.constants import RBAC_FULL_ADMIN
+from requests.auth import HTTPBasicAuth
 
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.utils import log_info
@@ -26,6 +28,7 @@ def test_multiple_users_multiple_channels(params_from_base_test_setup, sg_conf_n
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     # Skip the test if ssl disabled as it cannot run without port using http protocol
     if ("sync_gateway_default_functional_tests_no_port" in sg_conf_name) and get_sg_version(cluster_conf) < "1.5.0":
@@ -40,6 +43,7 @@ def test_multiple_users_multiple_channels(params_from_base_test_setup, sg_conf_n
         pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     log_info("Running 'multiple_users_multiple_channels'")
     log_info("cluster_conf: {}".format(cluster_conf))
@@ -62,6 +66,8 @@ def test_multiple_users_multiple_channels(params_from_base_test_setup, sg_conf_n
     sgs = cluster.sync_gateways
 
     admin = Admin(sgs[0])
+    if auth:
+        admin.auth = HTTPBasicAuth(auth[0], auth[1])
 
     seth = admin.register_user(target=sgs[0], db="db", name="seth", password="password", channels=["ABC"])
     adam = admin.register_user(target=sgs[0], db="db", name="adam", password="password", channels=["NBC", "CBS"])
@@ -109,6 +115,7 @@ def test_muliple_users_single_channel(params_from_base_test_setup, sg_conf_name)
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     # Skip the test if ssl disabled as it cannot run without port using http protocol
     if ("sync_gateway_default_functional_tests_no_port" in sg_conf_name) and get_sg_version(cluster_conf) < "1.5.0":
@@ -123,6 +130,7 @@ def test_muliple_users_single_channel(params_from_base_test_setup, sg_conf_name)
         pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     log_info("Running 'muliple_users_single_channel'")
     log_info("cluster_conf: {}".format(cluster_conf))
@@ -138,6 +146,8 @@ def test_muliple_users_single_channel(params_from_base_test_setup, sg_conf_name)
     num_docs_traun = 3000
 
     admin = Admin(sgs[0])
+    if auth:
+        admin.auth = HTTPBasicAuth(auth[0], auth[1])
 
     seth = admin.register_user(target=sgs[0], db="db", name="seth", password="password", channels=["ABC"])
     adam = admin.register_user(target=sgs[0], db="db", name="adam", password="password", channels=["ABC"])
@@ -176,6 +186,7 @@ def test_single_user_multiple_channels(params_from_base_test_setup, sg_conf_name
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     # Skip the test if ssl disabled as it cannot run without port using http protocol
     if ("sync_gateway_default_functional_tests_no_port" in sg_conf_name) and get_sg_version(cluster_conf) < "1.5.0":
@@ -190,6 +201,7 @@ def test_single_user_multiple_channels(params_from_base_test_setup, sg_conf_name
         pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     log_info("Running 'single_user_multiple_channels'")
     log_info("cluster_conf: {}".format(cluster_conf))
@@ -202,6 +214,8 @@ def test_single_user_multiple_channels(params_from_base_test_setup, sg_conf_name
     sgs = cluster.sync_gateways
 
     admin = Admin(sgs[0])
+    if auth:
+        admin.auth = HTTPBasicAuth(auth[0], auth[1])
     seth = admin.register_user(target=sgs[0], db="db", name="seth", password="password", channels=["ABC", "CBS", "NBC", "FOX"])
 
     # Round robin
@@ -235,6 +249,7 @@ def test_single_user_single_channel(params_from_base_test_setup, sg_conf_name):
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     # Skip the test if ssl disabled as it cannot run without port using http protocol
     if ("sync_gateway_default_functional_tests_no_port" in sg_conf_name) and get_sg_version(cluster_conf) < "1.5.0":
@@ -249,6 +264,7 @@ def test_single_user_single_channel(params_from_base_test_setup, sg_conf_name):
         pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     log_info("Running 'single_user_single_channel'")
     log_info("cluster_conf: {}".format(cluster_conf))
@@ -263,6 +279,8 @@ def test_single_user_single_channel(params_from_base_test_setup, sg_conf_name):
     num_cbs_docs = 3000
 
     admin = Admin(sgs[0])
+    if auth:
+        admin.auth = HTTPBasicAuth(auth[0], auth[1])
     seth = admin.register_user(target=sgs[0], db="db", name="seth", password="password", channels=["ABC"])
     cbs_user = admin.register_user(target=sgs[0], db="db", name="cbs_user", password="password", channels=["CBS"])
     admin_user = admin.register_user(target=sgs[0], db="db", name="admin", password="password", channels=["ABC", "CBS"])
@@ -297,17 +315,19 @@ def test_create_invalid_email(params_from_base_test_setup):
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     cluster_topology = params_from_base_test_setup['cluster_topology']
     mode = params_from_base_test_setup['mode']
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     sg_conf_name = "sync_gateway_default_functional_tests"
     db = 'db'
     sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
 
     sg_client = MobileRestClient()
     if sync_gateway_version >= "2.5.0":
-        expvars = sg_client.get_expvars(sg_admin_url)
+        expvars = sg_client.get_expvars(sg_admin_url, auth=auth)
         warn_count = expvars["syncgateway"]["global"]["resource_utilization"]["warn_count"]
 
     data = {
@@ -320,10 +340,13 @@ def test_create_invalid_email(params_from_base_test_setup):
     session = Session()
     session.headers = headers
     session.verify = False
-    resp = session.post("{}/{}/_user/".format(sg_admin_url, db), data=json.dumps(data))
+    if auth:
+        resp = session.post("{}/{}/_user/".format(sg_admin_url, db), data=json.dumps(data), auth=HTTPBasicAuth(auth[0], auth[1]))
+    else:
+        resp = session.post("{}/{}/_user/".format(sg_admin_url, db), data=json.dumps(data))
     log_r(resp)
     resp.raise_for_status()
     if sync_gateway_version >= "2.5.0":
         sg_client = MobileRestClient()
-        expvars = sg_client.get_expvars(sg_admin_url)
+        expvars = sg_client.get_expvars(sg_admin_url, auth=auth)
         assert warn_count < expvars["syncgateway"]["global"]["resource_utilization"]["warn_count"], "warn_count did not increment"

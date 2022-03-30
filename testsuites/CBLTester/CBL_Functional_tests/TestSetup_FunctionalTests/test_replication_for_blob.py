@@ -9,6 +9,7 @@ from CBLClient.Dictionary import Dictionary
 from CBLClient.Authenticator import Authenticator
 from CBLClient.Replication import Replication
 from libraries.testkit import cluster
+from keywords.constants import RBAC_FULL_ADMIN
 
 
 @pytest.mark.listener
@@ -30,6 +31,7 @@ def test_doc_update_replication_with_blob_no_touch(params_from_base_test_setup):
     sg_config = params_from_base_test_setup["sg_config"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_url = params_from_base_test_setup["sg_url"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     # Reset cluster to ensure no data in system
     c = cluster.Cluster(config=cluster_config)
@@ -41,8 +43,9 @@ def test_doc_update_replication_with_blob_no_touch(params_from_base_test_setup):
     password = "password"
 
     sg_client = MobileRestClient()
-    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channels)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channels, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
     session = cookie, session_id
 
     # 1. Create a doc in CBL
@@ -100,7 +103,7 @@ def test_doc_update_replication_with_blob_no_touch(params_from_base_test_setup):
     replicator.stop(repl)
 
     # 5. Verify the doc replicated successfully, _attachments field on SG set correctly
-    sg_doc = sg_client.get_doc(url=sg_admin_url, db=sg_db, doc_id=doc_id)
+    sg_doc = sg_client.get_doc(url=sg_admin_url, db=sg_db, doc_id=doc_id, auth=auth)
     assert "newkey1" in sg_doc
     assert sg_doc["newkey1"] == "new string value 1"
     assert sg_doc["blob1"]["content_type"] == "text/plain"
@@ -131,6 +134,7 @@ def test_blob_contructor_replication(params_from_base_test_setup, blob_data_type
     sg_config = params_from_base_test_setup["sg_config"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     liteserv_platform = params_from_base_test_setup["liteserv_platform"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     # Reset cluster to ensure no data in system
     c = cluster.Cluster(config=cluster_config)
@@ -146,9 +150,10 @@ def test_blob_contructor_replication(params_from_base_test_setup, blob_data_type
         pytest.skip('This test cannot run for C platforms')
 
     sg_client = MobileRestClient()
-    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channels)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
-    session = cookie, session_id
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channels, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
+    # session = cookie, session_id
 
     # 1. Create docs in CBL
     db.create_bulk_docs(num_of_docs, "cbl_sync", db=cbl_db, channels=channels)
@@ -164,7 +169,7 @@ def test_blob_contructor_replication(params_from_base_test_setup, blob_data_type
                                               replication_type="push")
     replicator.stop(repl)
 
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True, auth=auth)["rows"]
     # Verify database doc counts
     cbl_doc_count = db.getCount(cbl_db)
     assert len(sg_docs) == cbl_doc_count, "Expected number of docs does not exist in sync-gateway after replication"
@@ -209,7 +214,7 @@ def test_blob_contructor_replication(params_from_base_test_setup, blob_data_type
     doc_ids = db.getDocIds(cbl_db)
     cbl_db_docs = db.getDocuments(cbl_db, doc_ids)
     for doc_id, doc_body in list(cbl_db_docs.items()):
-        sg_data = sg_client.get_doc(url=sg_admin_url, db=sg_db, doc_id=doc_id, auth=session)
+        sg_data = sg_client.get_doc(url=sg_admin_url, db=sg_db, doc_id=doc_id, auth=auth)
         assert "new_field_string_1" in sg_data, "Updated docs failed to get replicated"
         assert "new_field_string_2" in sg_data, "Updated docs failed to get replicated"
         assert "new_field_blob" in sg_data, "Updated docs failed to get replicated"

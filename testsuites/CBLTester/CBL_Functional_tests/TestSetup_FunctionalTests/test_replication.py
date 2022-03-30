@@ -19,6 +19,7 @@ from libraries.testkit import cluster
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
 from keywords.attachment import generate_2_png_100_100
 from keywords.SyncGateway import SyncGateway
+from keywords.constants import RBAC_FULL_ADMIN
 
 
 @pytest.fixture(scope="function")
@@ -64,6 +65,7 @@ def test_replication_configuration_valid_values(params_from_base_test_setup, num
     cbl_db = params_from_base_test_setup["source_db"]
     mode = params_from_base_test_setup["mode"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if sync_gateway_version < "2.0.0":
         pytest.skip('This test cannot run with sg version below 2.0')
@@ -91,9 +93,10 @@ def test_replication_configuration_valid_values(params_from_base_test_setup, num
 
     # Configure replication with push_pull
     replicator = Replication(base_url)
-    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg, auth=auth)
     session, replicator_authenticator, repl = replicator.create_session_configure_replicate(
-        base_url, sg_admin_url, sg_db, username, password, channels_sg, sg_client, cbl_db, sg_blip_url, continuous=continuous, replication_type="push_pull")
+        base_url, sg_admin_url, sg_db, username, password, channels_sg, sg_client, cbl_db, sg_blip_url, continuous=continuous, replication_type="push_pull", auth=auth)
 
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)
     sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs["rows"], number_updates=number_of_updates, auth=session)
@@ -102,7 +105,7 @@ def test_replication_configuration_valid_values(params_from_base_test_setup, num
     completed = replicator.getCompleted(repl)
     assert total == completed, "total is not equal to completed"
     time.sleep(2)  # wait until replication is done
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True, auth=auth)
     sg_docs = sg_docs["rows"]
 
     # Verify database doc counts
@@ -159,6 +162,7 @@ def test_replication_configuration_with_pull_replication(params_from_base_test_s
     cbl_db = params_from_base_test_setup["source_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     prometheus_enable = params_from_base_test_setup["prometheus_enable"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if sync_gateway_version < "2.0.0":
         pytest.skip('This test cannot run with sg version below 2.0')
@@ -172,13 +176,14 @@ def test_replication_configuration_with_pull_replication(params_from_base_test_s
     # Add 5 docs to CBL
     # Add 10 docs to SG
     # One shot replication
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     sg_added_doc_ids, cbl_added_doc_ids, session = setup_sg_cbl_docs(params_from_base_test_setup, sg_db=sg_db, base_url=base_url, db=db,
                                                                      cbl_db=cbl_db, sg_url=sg_url, sg_admin_url=sg_admin_url, sg_blip_url=sg_blip_url,
                                                                      replication_type="pull", channels=channels, replicator_authenticator_type=authenticator_type,
-                                                                     attachments_generator=attachments_generator)
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db)
+                                                                     attachments_generator=attachments_generator, auth=auth)
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, auth=auth)
     if sg_mode == "di":
-        cookie, session = sg_client.create_session(sg_admin_url, sg_db, "autotest")
+        cookie, session = sg_client.create_session(sg_admin_url, sg_db, "autotest", auth=auth)
         authenticator = Authenticator(base_url)
         replicator_authenticator = authenticator.authentication(session, cookie, authentication_type="session")
         replicator = Replication(base_url)
@@ -201,7 +206,7 @@ def test_replication_configuration_with_pull_replication(params_from_base_test_s
         assert id in cbl_doc_ids
 
     if sync_gateway_version >= "2.5.0":
-        expvars = sg_client.get_expvars(sg_admin_url)
+        expvars = sg_client.get_expvars(sg_admin_url, auth=auth)
         assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["request_changes_count"] == 1, "request_changes_count did not get incremented"
         assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["request_changes_time"] > 0, "request_changes_time did not get incremented"
         assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["num_pull_repl_since_zero"] == 1, "num_pull_repl_since_zero did not get incremented"
@@ -241,6 +246,7 @@ def test_replication_configuration_with_push_replication(params_from_base_test_s
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     mode = params_from_base_test_setup["mode"]
     prometheus_enable = params_from_base_test_setup["prometheus_enable"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if sync_gateway_version < "2.0.0":
         pytest.skip('This test cannot run with sg version below 2.0')
@@ -252,11 +258,12 @@ def test_replication_configuration_with_push_replication(params_from_base_test_s
     channels = ["ABC"]
 
     sg_client = MobileRestClient()
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     sg_added_doc_ids, cbl_added_doc_ids, session = setup_sg_cbl_docs(params_from_base_test_setup, sg_db=sg_db, base_url=base_url, db=db,
                                                                      cbl_db=cbl_db, sg_url=sg_url, sg_admin_url=sg_admin_url, sg_blip_url=sg_blip_url,
                                                                      replication_type="push", channels=channels, replicator_authenticator_type=authenticator_type,
-                                                                     attachments_generator=attachments_generator)
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db)
+                                                                     attachments_generator=attachments_generator, auth=auth)
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, auth=auth)
 
     # Verify database doc counts
     cbl_doc_count = db.getCount(cbl_db)
@@ -275,7 +282,7 @@ def test_replication_configuration_with_push_replication(params_from_base_test_s
         assert doc_id not in cbl_doc_ids
 
     if sync_gateway_version >= "2.5.0":
-        expvars = sg_client.get_expvars(sg_admin_url)
+        expvars = sg_client.get_expvars(sg_admin_url, auth=auth)
         assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_push"]["doc_push_count"] == 5, "doc_push_count did not get incremented"
         assert expvars["syncgateway"]["per_db"][sg_db]["database"]["sync_function_time"] > 0, "sync_function_time is not incremented"
         assert expvars["syncgateway"]["per_db"][sg_db]["database"]["sync_function_count"] > 0, "sync_function_count is not incremented"
@@ -311,6 +318,7 @@ def test_replication_push_replication_without_authentication(params_from_base_te
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if sync_gateway_version < "2.0.0":
         pytest.skip('This test cannot run with sg version below 2.0')
@@ -323,8 +331,9 @@ def test_replication_push_replication_without_authentication(params_from_base_te
 
     db.create_bulk_docs(5, "cbl", db=cbl_db, channels=channels)
     # Add docs in SG
-    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
-    session = sg_client.create_session(sg_admin_url, sg_db, "autotest")
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels, auth=auth)
+    session = sg_client.create_session(sg_admin_url, sg_db, "autotest", auth=auth)
 
     sg_docs = sg_client.add_docs(url=sg_url, db=sg_db, number=10, id_prefix="sg_doc", channels=channels, auth=session)
     sg_ids = [row["id"] for row in sg_docs]
@@ -380,6 +389,7 @@ def test_replication_push_replication_invalid_authentication(params_from_base_te
     cbl_db = params_from_base_test_setup["source_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     prometheus_enable = params_from_base_test_setup["prometheus_enable"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if sync_gateway_version < "2.0.0":
         pytest.skip('This test cannot run with sg version below 2.0')
@@ -393,8 +403,9 @@ def test_replication_push_replication_invalid_authentication(params_from_base_te
 
     db.create_bulk_docs(5, "cbl", db=cbl_db, channels=channels)
     # Add docs in SG
-    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
-    cookie, session = sg_client.create_session(sg_admin_url, sg_db, "autotest")
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels, auth=auth)
+    cookie, session = sg_client.create_session(sg_admin_url, sg_db, "autotest", auth=auth)
 
     replicator = Replication(base_url)
     if replicator_authenticator == "session":
@@ -412,7 +423,7 @@ def test_replication_push_replication_invalid_authentication(params_from_base_te
     assert "401" in error, "expected error did not occurred"
     replicator.stop(repl)
     if sync_gateway_version >= "2.5.0":
-        expvars = sg_client.get_expvars(sg_admin_url)
+        expvars = sg_client.get_expvars(sg_admin_url, auth=auth)
         assert expvars["syncgateway"]["per_db"][sg_db]["security"]["auth_failed_count"] > 0, "auth failed count is not incremented"
         assert expvars["syncgateway"]["per_db"][sg_db]["security"]["total_auth_time"] > 0, "total_auth_time is not incremented"
     if prometheus_enable and sync_gateway_version >= "2.8.0":
@@ -446,6 +457,7 @@ def test_replication_configuration_with_filtered_doc_ids(params_from_base_test_s
     cbl_db = params_from_base_test_setup["source_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     prometheus_enable = params_from_base_test_setup["prometheus_enable"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if mode == "di":
         pytest.skip('Filter doc ids does not work with di modes')
@@ -463,9 +475,10 @@ def test_replication_configuration_with_filtered_doc_ids(params_from_base_test_s
     list_of_filtered_ids = random.sample(cbl_added_doc_ids, num_of_filtered_ids)
 
     cbl_doc_ids = db.getDocIds(cbl_db)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     sg_added_doc_ids, cbl_added_doc_ids, session = setup_sg_cbl_docs(params_from_base_test_setup, sg_db=sg_db, base_url=base_url, db=db,
                                                                      cbl_db=cbl_db, sg_url=sg_url, sg_admin_url=sg_admin_url, sg_blip_url=sg_blip_url, document_ids=list_of_filtered_ids,
-                                                                     replicator_authenticator_type="basic", channels=channels)
+                                                                     replicator_authenticator_type="basic", channels=channels, auth=auth)
 
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)
     # Verify sg docs count
@@ -517,7 +530,7 @@ def test_replication_configuration_with_filtered_doc_ids(params_from_base_test_s
         assert doc_id not in cbl_doc_ids
 
     if sync_gateway_version >= "2.5.0":
-        expvars = sg_client.get_expvars(sg_admin_url)
+        expvars = sg_client.get_expvars(sg_admin_url, auth=auth)
         assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["num_pull_repl_total_one_shot"] == 2, "num_pull_repl_total_one_shot did not get incremented"
     if prometheus_enable and sync_gateway_version >= "2.8.0":
         assert verify_stat_on_prometheus("sgw_replication_pull_num_pull_repl_total_one_shot"), expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["num_pull_repl_total_one_shot"]
@@ -545,6 +558,7 @@ def test_replication_configuration_with_headers(params_from_base_test_setup):
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if sync_gateway_version < "2.0.0":
         pytest.skip('This test cannot run with sg version below 2.0')
@@ -558,8 +572,9 @@ def test_replication_configuration_with_headers(params_from_base_test_setup):
     db.create_bulk_docs(num_of_docs, "cbll", db=cbl_db, channels=channels)
 
     # Add docs in SG
-    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
-    cookie, session = sg_client.create_session(sg_admin_url, sg_db, "autotest")
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels, auth=auth)
+    cookie, session = sg_client.create_session(sg_admin_url, sg_db, "autotest", auth=auth)
     auth_session = cookie, session
     sync_cookie = "{}={}".format(cookie, session)
 
@@ -616,6 +631,7 @@ def test_CBL_tombstone_doc(params_from_base_test_setup, num_of_docs, x509_cert_a
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
     mode = params_from_base_test_setup["mode"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if sync_gateway_version < "2.0":
         pytest.skip('--no-conflicts is enabled and does not work with sg < 2.0 , so skipping the test')
@@ -635,15 +651,16 @@ def test_CBL_tombstone_doc(params_from_base_test_setup, num_of_docs, x509_cert_a
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
 
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     if sync_gateway_version >= "2.5.0":
         sg_client = MobileRestClient()
-        expvars = sg_client.get_expvars(sg_admin_url)
+        expvars = sg_client.get_expvars(sg_admin_url, auth=auth)
         chan_cache_tombstone_revs = expvars["syncgateway"]["per_db"][sg_db]["cache"]["chan_cache_tombstone_revs"]
         chan_cache_removal_revs = expvars["syncgateway"]["per_db"][sg_db]["cache"]["chan_cache_removal_revs"]
 
     # 1. Add docs to SG.
-    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest")
+    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest", auth=auth)
     session = cookie, session_id
     sg_docs = document.create_docs(doc_id_prefix='sg_docs', number=num_of_docs,
                                    attachments_generator=attachment.generate_2_png_10_10, channels=channels)
@@ -666,7 +683,7 @@ def test_CBL_tombstone_doc(params_from_base_test_setup, num_of_docs, x509_cert_a
         url=sg_admin_url,
         db=sg_db,
         since=0,
-        auth=None,
+        auth=auth,
         filter_type=None,
         filter_channels=None)
 
@@ -683,7 +700,7 @@ def test_CBL_tombstone_doc(params_from_base_test_setup, num_of_docs, x509_cert_a
     assert doc_id not in cbl_doc_ids, "doc is expected to be deleted in CBL ,but not deleted"
 
     if sync_gateway_version >= "2.5.0":
-        expvars = sg_client.get_expvars(sg_admin_url)
+        expvars = sg_client.get_expvars(sg_admin_url, auth=auth)
         assert chan_cache_tombstone_revs < expvars["syncgateway"]["per_db"][sg_db]["cache"]["chan_cache_tombstone_revs"], "chan cache tombstone revs did not get incremented"
         assert chan_cache_removal_revs < expvars["syncgateway"]["per_db"][sg_db]["cache"]["chan_cache_removal_revs"], "chan_cache_removal_revs did not get incremented"
 
@@ -717,6 +734,7 @@ def test_CBL_for_purged_doc(params_from_base_test_setup, sg_conf_name, delete_do
     sg_config = params_from_base_test_setup["sg_config"]
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     num_of_docs = 10
 
     if sync_gateway_version < "2.0":
@@ -732,8 +750,9 @@ def test_CBL_for_purged_doc(params_from_base_test_setup, sg_conf_name, delete_do
     cl.reset(sg_config_path=sg_config)
 
     # 1. Add docs to SG.
-    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest")
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest", auth=auth)
     session = cookie, session_id
     sg_docs = document.create_docs(doc_id_prefix='sg_docs', number=num_of_docs,
                                    attachments_generator=attachment.generate_2_png_10_10, channels=channels)
@@ -760,7 +779,7 @@ def test_CBL_for_purged_doc(params_from_base_test_setup, sg_conf_name, delete_do
     if delete_doc_type == "purge":
         doc_id = "sg_docs_7"
         doc = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=session)
-        sg_client.purge_doc(url=sg_admin_url, db=sg_db, doc=doc)
+        sg_client.purge_doc(url=sg_admin_url, db=sg_db, doc=doc, auth=auth)
 
     # expire doc
     if delete_doc_type == "expire":
@@ -803,6 +822,7 @@ def test_replication_purge_in_CBL(params_from_base_test_setup, sg_conf_name, del
     sg_config = params_from_base_test_setup["sg_config"]
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     num_of_docs = 10
     doc_obj = Document(base_url)
@@ -831,8 +851,9 @@ def test_replication_purge_in_CBL(params_from_base_test_setup, sg_conf_name, del
         db.saveDocument(cbl_db, mutable_doc)
 
     # 2. push replication to SG.
-    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest")
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest", auth=auth)
     session = cookie, session_id
     replicator = Replication(base_url)
     replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
@@ -897,6 +918,7 @@ def test_replication_delete_in_CBL(params_from_base_test_setup, sg_conf_name):
     sg_config = params_from_base_test_setup["sg_config"]
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     num_of_docs = 10
     doc_obj = Document(base_url)
@@ -918,8 +940,9 @@ def test_replication_delete_in_CBL(params_from_base_test_setup, sg_conf_name):
     db.create_bulk_docs(num_of_docs, "cbl", db=cbl_db, channels=channels)
 
     # 2. push replication to SG.
-    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest")
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest", auth=auth)
     session = cookie, session_id
     replicator = Replication(base_url)
     replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
@@ -980,6 +1003,7 @@ def test_CBL_push_pull_with_sgAccel_down(params_from_base_test_setup, sg_conf_na
     sg_config = params_from_base_test_setup["sg_config"]
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     username = "autotest"
     password = "password"
@@ -1001,11 +1025,12 @@ def test_CBL_push_pull_with_sgAccel_down(params_from_base_test_setup, sg_conf_na
     db.create_bulk_docs(num_of_docs, "cbl", db=cbl_db, channels=channels)
 
     # 3. push replication to SG
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     replication_type = "push"
     replicator = Replication(base_url)
-    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels)
+    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels, auth=auth)
     session, replicator_authenticator, repl = replicator.create_session_configure_replicate(
-        base_url, sg_admin_url, sg_db, username, password, channels, sg_client, cbl_db, sg_blip_url, replication_type)
+        base_url, sg_admin_url, sg_db, username, password, channels, sg_client, cbl_db, sg_blip_url, replication_type, auth=auth)
     replicator.stop(repl)  # todo : trying removing this
 
     # 4. update docs in SG.
@@ -1062,6 +1087,7 @@ def CBL_offline_test(params_from_base_test_setup, sg_conf_name, num_of_docs):
     no_conflicts_enabled = params_from_base_test_setup["no_conflicts_enabled"]
     sg_config = params_from_base_test_setup["sg_config"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     channels = ["Replication"]
     username = "autotest"
@@ -1081,13 +1107,14 @@ def CBL_offline_test(params_from_base_test_setup, sg_conf_name, num_of_docs):
     c.reset(sg_config_path=sg_config)
 
     # 1. Create docs in CBL.
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     cbl_db = db.create(cbl_db_name)
     db.create_bulk_docs(num_of_docs, "cbl", db=cbl_db, channels=channels)
     # 2. push replication to SG
     replication_type = "push"
-    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels)
+    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels, auth=auth)
     session, replicator_authenticator, repl = replicator.create_session_configure_replicate(
-        base_url, sg_admin_url, sg_db, username, password, channels, sg_client, cbl_db, sg_blip_url, replication_type)
+        base_url, sg_admin_url, sg_db, username, password, channels, sg_client, cbl_db, sg_blip_url, replication_type, auth=auth)
 
     # 3. CBL goes offline(Block incomming requests of CBL to Sg)
     command = "mode=\"100% Loss\" osascript run_scripts/network_link_conditioner.applescript"
@@ -1162,6 +1189,7 @@ def test_initial_pull_replication_background_apprun(params_from_base_test_setup,
     base_url = params_from_base_test_setup["base_url"]
     testserver = params_from_base_test_setup["testserver"]
     sg_config = params_from_base_test_setup["sg_config"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
@@ -1171,9 +1199,10 @@ def test_initial_pull_replication_background_apprun(params_from_base_test_setup,
         pytest.skip('This test cannot run either it is .Net or ios with device enabled ')
 
     client = MobileRestClient()
-    client.create_user(sg_admin_url, sg_db, "testuser", password="password", channels=["ABC", "NBC"])
-    cookie, session_id = client.create_session(sg_admin_url, sg_db, "testuser")
-    session = cookie, session_id
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    client.create_user(sg_admin_url, sg_db, "testuser", password="password", channels=["ABC", "NBC"], auth=auth)
+    cookie, session_id = client.create_session(sg_admin_url, sg_db, "testuser", auth=auth)
+    # session = cookie, session_id
     # Add 'number_of_sg_docs' to Sync Gateway
     bulk_docs_resp = []
     if need_attachments:
@@ -1188,7 +1217,7 @@ def test_initial_pull_replication_background_apprun(params_from_base_test_setup,
     # if adding bulk docs with huge attachment more than 5000 fails
     for x in range(0, len(sg_doc_bodies), 100000):
         chunk_docs = sg_doc_bodies[x:x + 100000]
-        ch_bulk_docs_resp = client.add_bulk_docs(url=sg_admin_url, db=sg_db, docs=chunk_docs, auth=session)
+        ch_bulk_docs_resp = client.add_bulk_docs(url=sg_admin_url, db=sg_db, docs=chunk_docs, auth=auth)
         log_info("length of bulk docs resp{}".format(len(ch_bulk_docs_resp)))
         bulk_docs_resp += ch_bulk_docs_resp
     # docs = client.add_bulk_docs(url=sg_one_public, db=sg_db, docs=sg_doc_bodies, auth=session)
@@ -1196,7 +1225,7 @@ def test_initial_pull_replication_background_apprun(params_from_base_test_setup,
 
     # Add a poll to make sure all of the docs have propagated to sync_gateway's _changes before initiating
     # the one shot pull replication to ensure that the client is aware of all of the docs to pull
-    client.verify_docs_in_changes(url=sg_admin_url, db=sg_db, expected_docs=bulk_docs_resp, auth=session,
+    client.verify_docs_in_changes(url=sg_admin_url, db=sg_db, expected_docs=bulk_docs_resp, auth=auth,
                                   polling_interval=10)
 
     db = Database(base_url)
@@ -1217,7 +1246,7 @@ def test_initial_pull_replication_background_apprun(params_from_base_test_setup,
     # Verify docs replicated to client
     cbl_doc_ids = db.getDocIds(cbl_db)
     assert len(cbl_doc_ids) == len(bulk_docs_resp)
-    sg_docs = client.get_all_docs(url=sg_admin_url, db=sg_db)
+    sg_docs = client.get_all_docs(url=sg_admin_url, db=sg_db, auth=auth)
     sg_ids = [row["id"] for row in sg_docs["rows"]]
     for doc in cbl_doc_ids:
         assert doc in sg_ids
@@ -1256,6 +1285,7 @@ def test_push_replication_with_backgroundApp(params_from_base_test_setup, num_do
     sg_config = params_from_base_test_setup["sg_config"]
     db = params_from_base_test_setup["db"]
     sg_url = params_from_base_test_setup["sg_url"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     channels = ["ABC"]
 
     c = cluster.Cluster(config=cluster_config)
@@ -1269,8 +1299,9 @@ def test_push_replication_with_backgroundApp(params_from_base_test_setup, num_do
         pytest.skip('This test cannot run as a Java application')
 
     client = MobileRestClient()
-    client.create_user(sg_admin_url, sg_db, "testuser", password="password", channels=channels)
-    cookie, session_id = client.create_session(sg_admin_url, sg_db, "testuser")
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    client.create_user(sg_admin_url, sg_db, "testuser", password="password", channels=channels, auth=auth)
+    cookie, session_id = client.create_session(sg_admin_url, sg_db, "testuser", auth=auth)
     session = cookie, session_id
 
     # liteserv cannot handle bulk docs more than 100000, if you run more than 100000, it will chunk the
@@ -1332,6 +1363,7 @@ def test_replication_wrong_blip(params_from_base_test_setup):
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
     liteserv_platform = params_from_base_test_setup["liteserv_platform"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     num_of_docs = 10
     username = "autotest"
@@ -1350,8 +1382,9 @@ def test_replication_wrong_blip(params_from_base_test_setup):
     db.create_bulk_docs(num_of_docs, "cbl", db=cbl_db, channels=channels)
 
     # 2. Push replication to SG with wrong blip
-    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
     replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
     with pytest.raises(Exception) as ex:
         replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channels, replicator_authenticator=replicator_authenticator)
@@ -1397,6 +1430,7 @@ def test_default_conflict_scenario_delete_wins(params_from_base_test_setup, dele
     base_url = params_from_base_test_setup["base_url"]
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     channels = ["replication-channel"]
     num_of_docs = 10
     username = "autotest"
@@ -1414,10 +1448,11 @@ def test_default_conflict_scenario_delete_wins(params_from_base_test_setup, dele
     sg_client = MobileRestClient()
 
     # Start and stop continuous replication
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     replicator = Replication(base_url)
-    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels)
+    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels, auth=auth)
     session, replicator_authenticator, repl = replicator.create_session_configure_replicate(baseUrl=base_url, sg_admin_url=sg_admin_url, sg_db=sg_db, username=username, password=password,
-                                                                                            channels=channels, sg_client=sg_client, cbl_db=cbl_db, sg_blip_url=sg_blip_url, replication_type="push_pull", continuous=False)
+                                                                                            channels=channels, sg_client=sg_client, cbl_db=cbl_db, sg_blip_url=sg_blip_url, replication_type="push_pull", continuous=False, auth=auth)
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)
     sg_docs = sg_docs["rows"]
 
@@ -1519,6 +1554,7 @@ def test_default_conflict_scenario_highRevGeneration_wins(params_from_base_test_
     base_url = params_from_base_test_setup["base_url"]
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     channels = ["replication-channel"]
     num_of_docs = 10
 
@@ -1535,9 +1571,10 @@ def test_default_conflict_scenario_highRevGeneration_wins(params_from_base_test_
 
     # Start and stop continuous replication
     replicator = Replication(base_url)
-    sg_client.create_user(sg_admin_url, sg_db, name="autotest", password="password", channels=channels)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, name="autotest", password="password", channels=channels, auth=auth)
     session, replicator_authenticator, repl = replicator.create_session_configure_replicate(
-        baseUrl=base_url, sg_admin_url=sg_admin_url, sg_db=sg_db, channels=channels, sg_client=sg_client, cbl_db=cbl_db, sg_blip_url=sg_blip_url, username="autotest", password="password", replication_type="push_pull", continuous=False)
+        baseUrl=base_url, sg_admin_url=sg_admin_url, sg_db=sg_db, channels=channels, sg_client=sg_client, cbl_db=cbl_db, sg_blip_url=sg_blip_url, username="autotest", password="password", replication_type="push_pull", continuous=False, auth=auth)
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)
     sg_docs = sg_docs["rows"]
 
@@ -1630,6 +1667,7 @@ def test_default_conflict_scenario_highRevID_wins(params_from_base_test_setup, h
     base_url = params_from_base_test_setup["base_url"]
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     channels = ["replication-channel"]
     num_of_docs = 10
 
@@ -1646,9 +1684,10 @@ def test_default_conflict_scenario_highRevID_wins(params_from_base_test_setup, h
 
     # Start and stop continuous replication
     replicator = Replication(base_url)
-    sg_client.create_user(sg_admin_url, sg_db, name="autotest", password="password", channels=channels)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, name="autotest", password="password", channels=channels, auth=auth)
     session, replicator_authenticator, repl = replicator.create_session_configure_replicate(
-        baseUrl=base_url, sg_admin_url=sg_admin_url, sg_db=sg_db, channels=channels, sg_client=sg_client, cbl_db=cbl_db, sg_blip_url=sg_blip_url, username="autotest", password="password", replication_type="push_pull", continuous=False)
+        baseUrl=base_url, sg_admin_url=sg_admin_url, sg_db=sg_db, channels=channels, sg_client=sg_client, cbl_db=cbl_db, sg_blip_url=sg_blip_url, username="autotest", password="password", replication_type="push_pull", continuous=False, auth=auth)
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)
     sg_docs = sg_docs["rows"]
 
@@ -1718,6 +1757,7 @@ def test_default_conflict_with_two_conflictsAndTomstone(params_from_base_test_se
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
     no_conflicts_enabled = params_from_base_test_setup["no_conflicts_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     channels = ["replication-channel"]
     num_of_docs = 10
@@ -1733,8 +1773,9 @@ def test_default_conflict_with_two_conflictsAndTomstone(params_from_base_test_se
 
     # 1. Create docs in SG.
     sg_client = MobileRestClient()
-    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
     session = cookie, session_id
     sg_docs = document.create_docs(doc_id_prefix='sg_docs', number=num_of_docs, channels=channels)
     sg_docs = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=session)
@@ -1829,6 +1870,7 @@ def test_default_conflict_with_oneTombstone_conflict(params_from_base_test_setup
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
     no_conflicts_enabled = params_from_base_test_setup["no_conflicts_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     channels = ["replication-channel"]
     num_of_docs = 10
@@ -1844,8 +1886,9 @@ def test_default_conflict_with_oneTombstone_conflict(params_from_base_test_setup
 
     # 1. Create docs in SG.
     sg_client = MobileRestClient()
-    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
     session = cookie, session_id
     sg_docs = document.create_docs(doc_id_prefix='sg_docs', number=num_of_docs, channels=channels)
     sg_docs = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=session)
@@ -1910,6 +1953,7 @@ def test_default_conflict_with_three_conflicts(params_from_base_test_setup):
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
     no_conflicts_enabled = params_from_base_test_setup["no_conflicts_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     channels = ["replication-channel"]
     num_of_docs = 10
@@ -1925,8 +1969,9 @@ def test_default_conflict_with_three_conflicts(params_from_base_test_setup):
 
     # 1. Create docs in SG.
     sg_client = MobileRestClient()
-    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
     session = cookie, session_id
     sg_docs = document.create_docs(doc_id_prefix='sg_docs', number=num_of_docs, channels=channels)
     sg_docs = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=session)
@@ -1992,6 +2037,7 @@ def test_default_conflict_withConflicts_and_sgOffline(params_from_base_test_setu
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
     no_conflicts_enabled = params_from_base_test_setup["no_conflicts_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     channels = ["replication-channel"]
     num_of_docs = 10
@@ -2007,8 +2053,9 @@ def test_default_conflict_withConflicts_and_sgOffline(params_from_base_test_setu
 
     # 1. Create docs in SG.
     sg_client = MobileRestClient()
-    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
     session = cookie, session_id
     sg_docs = document.create_docs(doc_id_prefix='sg_docs', number=num_of_docs, channels=channels)
     sg_docs = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=session)
@@ -2105,6 +2152,7 @@ def test_default_conflict_withConflicts_withChannels(params_from_base_test_setup
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
     no_conflicts_enabled = params_from_base_test_setup["no_conflicts_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     channels1 = ["replication-channel1"]
     channels2 = ["replication-channel2"]
@@ -2122,12 +2170,13 @@ def test_default_conflict_withConflicts_withChannels(params_from_base_test_setup
     c.reset(sg_config_path=sg_config)
 
     sg_client = MobileRestClient()
-    sg_client.create_user(sg_admin_url, sg_db, username1, password, channels=channels1)
-    cookie1, session_id1 = sg_client.create_session(sg_admin_url, sg_db, username1)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username1, password, channels=channels1, auth=auth)
+    cookie1, session_id1 = sg_client.create_session(sg_admin_url, sg_db, username1, auth=auth)
     session1 = cookie1, session_id1
 
-    sg_client.create_user(sg_admin_url, sg_db, username2, password, channels=channels2)
-    cookie2, session_id2 = sg_client.create_session(sg_admin_url, sg_db, username2)
+    sg_client.create_user(sg_admin_url, sg_db, username2, password, channels=channels2, auth=auth)
+    cookie2, session_id2 = sg_client.create_session(sg_admin_url, sg_db, username2, auth=auth)
     session2 = cookie2, session_id2
 
     sg_docs = document.create_docs(doc_id_prefix='sg_docs', number=num_of_docs, channels=channels)
@@ -2213,6 +2262,7 @@ def test_CBL_push_pull_with_sg_down(params_from_base_test_setup):
     sg_config = params_from_base_test_setup["sg_config"]
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     username = "autotest"
     password = "password"
@@ -2231,8 +2281,9 @@ def test_CBL_push_pull_with_sg_down(params_from_base_test_setup):
     replicator = Replication(base_url)
 
     authenticator = Authenticator(base_url)
-    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest")
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest", auth=auth)
     session = cookie, session_id
     replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
     with ThreadPoolExecutor(max_workers=4) as tpe:
@@ -2286,6 +2337,7 @@ def test_replication_with_3Channels(params_from_base_test_setup, setup_customize
     sg_config = params_from_base_test_setup["sg_config"]
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     num_of_docs = 10
 
@@ -2314,16 +2366,17 @@ def test_replication_with_3Channels(params_from_base_test_setup, setup_customize
     c.reset(sg_config_path=sg_config)
 
     # 1. Create 3 users in SG with 3 differrent channels.
-    sg_client.create_user(sg_admin_url, sg_db, username1, password=password, channels=channel1)
-    cookie1, session_id1 = sg_client.create_session(sg_admin_url, sg_db, username1)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username1, password=password, channels=channel1, auth=auth)
+    cookie1, session_id1 = sg_client.create_session(sg_admin_url, sg_db, username1, auth=auth)
     session1 = cookie1, session_id1
 
-    sg_client.create_user(sg_admin_url, sg_db, username2, password=password, channels=channel2)
-    cookie2, session_id2 = sg_client.create_session(sg_admin_url, sg_db, username2)
+    sg_client.create_user(sg_admin_url, sg_db, username2, password=password, channels=channel2, auth=auth)
+    cookie2, session_id2 = sg_client.create_session(sg_admin_url, sg_db, username2, auth=auth)
     session2 = cookie2, session_id2
 
-    sg_client.create_user(sg_admin_url, sg_db, username3, password=password, channels=channel3)
-    cookie3, session_id3 = sg_client.create_session(sg_admin_url, sg_db, username3)
+    sg_client.create_user(sg_admin_url, sg_db, username3, password=password, channels=channel3, auth=auth)
+    cookie3, session_id3 = sg_client.create_session(sg_admin_url, sg_db, username3, auth=auth)
     session3 = cookie3, session_id3
 
     # 2. Create docs in sg in all 3 channels
@@ -2387,6 +2440,7 @@ def test_replication_with_privatePublicChannels(params_from_base_test_setup, set
     base_url = params_from_base_test_setup["base_url"]
     sg_config = params_from_base_test_setup["sg_config"]
     db = params_from_base_test_setup["db"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     num_of_docs = 10
 
     privateChannel1 = ["Replication-1"]
@@ -2404,12 +2458,13 @@ def test_replication_with_privatePublicChannels(params_from_base_test_setup, set
     c.reset(sg_config_path=sg_config)
 
     # 1. Create 2 users in SG with 2 differrent channels.
-    sg_client.create_user(sg_admin_url, sg_db, username1, password=password, channels=privateChannel1)
-    cookie1, session_id1 = sg_client.create_session(sg_admin_url, sg_db, username1)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username1, password=password, channels=privateChannel1, auth=auth)
+    cookie1, session_id1 = sg_client.create_session(sg_admin_url, sg_db, username1, auth=auth)
     session1 = cookie1, session_id1
 
-    sg_client.create_user(sg_admin_url, sg_db, username2, password=password)
-    cookie2, session_id2 = sg_client.create_session(sg_admin_url, sg_db, username2)
+    sg_client.create_user(sg_admin_url, sg_db, username2, password=password, auth=auth)
+    cookie2, session_id2 = sg_client.create_session(sg_admin_url, sg_db, username2, auth=auth)
     session2 = cookie2, session_id2
 
     # 2. Create docs in sg in one private channel and public channel
@@ -2417,7 +2472,7 @@ def test_replication_with_privatePublicChannels(params_from_base_test_setup, set
     sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=session1)
 
     sg_docs2 = document.create_docs(doc_id_prefix='sg_docs-2', number=num_of_docs, channels=publicChannel)
-    sg_client.add_bulk_docs(url=sg_admin_url, db=sg_db, docs=sg_docs2)
+    sg_client.add_bulk_docs(url=sg_admin_url, db=sg_db, docs=sg_docs2, auth=auth)
 
     # 3. replication to CBL with continous False and push_pull to CBL .
     replicator = Replication(base_url)
@@ -2486,6 +2541,7 @@ def test_replication_withChannels1_withMultipleSgDBs(params_from_base_test_setup
     sg_mode = params_from_base_test_setup["mode"]
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     num_of_docs = 10
     sg_blip_url1 = sg_blip_url.replace("db", "sg_db1")
@@ -2509,12 +2565,13 @@ def test_replication_withChannels1_withMultipleSgDBs(params_from_base_test_setup
     c.reset(sg_config_path=sg_config)
 
     # 1. Create 2 users in SG with 2 differrent channels.
-    sg_client.create_user(sg_admin_url, sg_db1, username1, password=password, channels=channel1)
-    cookie1, session_id1 = sg_client.create_session(sg_admin_url, sg_db1, username1)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db1, username1, password=password, channels=channel1, auth=auth)
+    cookie1, session_id1 = sg_client.create_session(sg_admin_url, sg_db1, username1, auth=auth)
     session1 = cookie1, session_id1
 
-    sg_client.create_user(sg_admin_url, sg_db2, username2, password=password, channels=channel2)
-    cookie2, session_id2 = sg_client.create_session(sg_admin_url, sg_db2, username2)
+    sg_client.create_user(sg_admin_url, sg_db2, username2, password=password, channels=channel2, auth=auth)
+    cookie2, session_id2 = sg_client.create_session(sg_admin_url, sg_db2, username2, auth=auth)
     session2 = cookie2, session_id2
 
     # 2. Create docs in sg in 2 channels
@@ -2573,6 +2630,7 @@ def test_replication_withMultipleBuckets(params_from_base_test_setup, setup_cust
     sg_mode = params_from_base_test_setup["mode"]
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     num_of_docs = 10
     sg_blip_url1 = sg_blip_url.replace("db", "sg_db1")
@@ -2601,16 +2659,17 @@ def test_replication_withMultipleBuckets(params_from_base_test_setup, setup_cust
     c.reset(sg_config_path=sg_config)
 
     # 3. Create user and  Create docs in all 3 sg dbs.
-    sg_client.create_user(sg_admin_url, sg_db1, username1, password=password, channels=channel1)
-    cookie1, session_id1 = sg_client.create_session(sg_admin_url, sg_db1, username1)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db1, username1, password=password, channels=channel1, auth=auth)
+    cookie1, session_id1 = sg_client.create_session(sg_admin_url, sg_db1, username1, auth=auth)
     session1 = cookie1, session_id1
 
-    sg_client.create_user(sg_admin_url, sg_db2, username2, password=password, channels=channel2)
-    cookie2, session_id2 = sg_client.create_session(sg_admin_url, sg_db2, username2)
+    sg_client.create_user(sg_admin_url, sg_db2, username2, password=password, channels=channel2, auth=auth)
+    cookie2, session_id2 = sg_client.create_session(sg_admin_url, sg_db2, username2, auth=auth)
     session2 = cookie2, session_id2
 
-    sg_client.create_user(sg_admin_url, sg_db3, username3, password=password, channels=channel3)
-    cookie3, session_id3 = sg_client.create_session(sg_admin_url, sg_db3, username3)
+    sg_client.create_user(sg_admin_url, sg_db3, username3, password=password, channels=channel3, auth=auth)
+    cookie3, session_id3 = sg_client.create_session(sg_admin_url, sg_db3, username3, auth=auth)
     session3 = cookie3, session_id3
 
     sg_docs = document.create_docs(doc_id_prefix='sg_docs-1', number=num_of_docs, channels=channel1)
@@ -2694,6 +2753,7 @@ def test_replication_1withMultipleBuckets_deleteOneBucket(params_from_base_test_
     sg_config = params_from_base_test_setup["sg_config"]
     sg_mode = params_from_base_test_setup["mode"]
     db = params_from_base_test_setup["db"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     num_of_docs = 10
     sg_blip_url1 = sg_blip_url.replace("db", "sg_db1")
@@ -2728,16 +2788,17 @@ def test_replication_1withMultipleBuckets_deleteOneBucket(params_from_base_test_
     c.reset(sg_config_path=sg_config)
 
     # 3. Create user and  Create docs in all 3 sg dbs.
-    sg_client.create_user(sg_admin_url, sg_db1, username1, password=password, channels=channel1)
-    cookie1, session_id1 = sg_client.create_session(sg_admin_url, sg_db1, username1)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db1, username1, password=password, channels=channel1, auth=auth)
+    cookie1, session_id1 = sg_client.create_session(sg_admin_url, sg_db1, username1, auth=auth)
     session1 = cookie1, session_id1
 
-    sg_client.create_user(sg_admin_url, sg_db2, username2, password=password, channels=channel2)
-    cookie2, session_id2 = sg_client.create_session(sg_admin_url, sg_db2, username2)
+    sg_client.create_user(sg_admin_url, sg_db2, username2, password=password, channels=channel2, auth=auth)
+    cookie2, session_id2 = sg_client.create_session(sg_admin_url, sg_db2, username2, auth=auth)
     session2 = cookie2, session_id2
 
-    sg_client.create_user(sg_admin_url, sg_db3, username3, password=password, channels=channel3)
-    cookie3, session_id3 = sg_client.create_session(sg_admin_url, sg_db3, username3)
+    sg_client.create_user(sg_admin_url, sg_db3, username3, password=password, channels=channel3, auth=auth)
+    cookie3, session_id3 = sg_client.create_session(sg_admin_url, sg_db3, username3, auth=auth)
     session3 = cookie3, session_id3
 
     sg_docs = document.create_docs(doc_id_prefix='sg_docs-1', number=num_of_docs, channels=channel1)
@@ -2802,6 +2863,7 @@ def test_replication_multipleChannels_withFilteredDocIds(params_from_base_test_s
     sg_config = params_from_base_test_setup["sg_config"]
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
@@ -2818,11 +2880,12 @@ def test_replication_multipleChannels_withFilteredDocIds(params_from_base_test_s
     if sg_mode == "di":
         pytest.skip('Filter doc ids does not work with di modes')
 
-    sg_client.create_user(sg_admin_url, sg_db, username1, password="password", channels=channel1)
-    cookie, session = sg_client.create_session(sg_admin_url, sg_db, username1)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username1, password="password", channels=channel1, auth=auth)
+    cookie, session = sg_client.create_session(sg_admin_url, sg_db, username1, auth=auth)
     auth_session1 = cookie, session
-    sg_client.create_user(sg_admin_url, sg_db, username2, password="password", channels=channel2)
-    cookie, session = sg_client.create_session(sg_admin_url, sg_db, username2)
+    sg_client.create_user(sg_admin_url, sg_db, username2, password="password", channels=channel2, auth=auth)
+    cookie, session = sg_client.create_session(sg_admin_url, sg_db, username2, auth=auth)
     auth_session2 = cookie, session
     sg_added_docs = sg_client.add_docs(url=sg_url, db=sg_db, number=num_of_docs, id_prefix="channel1-", channels=channel1, auth=auth_session1)
     sg_added_ids1 = [row["id"] for row in sg_added_docs]
@@ -2896,6 +2959,7 @@ def test_resetCheckpointWithPurge(params_from_base_test_setup, replication_type,
     cbl_db = params_from_base_test_setup["source_db"]
     db_config = params_from_base_test_setup["db_config"]
     liteserv_version = params_from_base_test_setup["liteserv_version"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     if liteserv_version < "2.1":
         pytest.skip('database encryption feature not available with version < 2.1')
 
@@ -2913,8 +2977,9 @@ def test_resetCheckpointWithPurge(params_from_base_test_setup, replication_type,
     sg_client = MobileRestClient()
     document = Document(base_url)
 
-    sg_client.create_user(sg_admin_url, sg_db, username, password="password", channels=channel)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username, password="password", channels=channel, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
     auth_session = cookie, session_id
 
     # Create docs and start replication to sg
@@ -2990,6 +3055,7 @@ def test_resetCheckpointFailure(params_from_base_test_setup):
     cbl_db = params_from_base_test_setup["source_db"]
     liteserv_platform = params_from_base_test_setup["liteserv_platform"]
     liteserv_version = params_from_base_test_setup["liteserv_version"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     if liteserv_version < "2.1":
         pytest.skip('resetCheckpointFailure feature not available with version < 2.1')
 
@@ -3009,8 +3075,9 @@ def test_resetCheckpointFailure(params_from_base_test_setup):
     num_of_docs = 10
     sg_client = MobileRestClient()
 
-    sg_client.create_user(sg_admin_url, sg_db, username, password="password", channels=channel)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username, password="password", channels=channel, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
 
     # Create docs and start replication to sg
     db.create_bulk_docs(num_of_docs, "reset-checkpoint-docs", db=cbl_db, channels=channel)
@@ -3065,6 +3132,7 @@ def test_resetCheckpointWithUpdate(params_from_base_test_setup, replication_type
     cbl_db = params_from_base_test_setup["source_db"]
     db_config = params_from_base_test_setup["db_config"]
     liteserv_version = params_from_base_test_setup["liteserv_version"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     if liteserv_version < "2.1":
         pytest.skip('database encryption feature not available with version < 2.1')
 
@@ -3081,8 +3149,9 @@ def test_resetCheckpointWithUpdate(params_from_base_test_setup, replication_type
     num_of_docs = 10
     sg_client = MobileRestClient()
 
-    sg_client.create_user(sg_admin_url, sg_db, username, password="password", channels=channel)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username, password="password", channels=channel, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
 
     # Create docs and start replication to sg
     db.create_bulk_docs(num_of_docs, "reset-checkpoint-docs", db=cbl_db, channels=channel)
@@ -3146,6 +3215,7 @@ def test_CBL_SG_replication_with_rev_messages(params_from_base_test_setup, sg_co
     sg_config = params_from_base_test_setup["sg_config"]
     db = params_from_base_test_setup["db"]
     xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     num_of_docs = 5
     username = "autotest"
     password = "password"
@@ -3173,8 +3243,9 @@ def test_CBL_SG_replication_with_rev_messages(params_from_base_test_setup, sg_co
 
     # 3. push replication to SG with continuous
     # Start and stop continuous replication
-    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channels)
-    auth_session = sg_client.create_session(sg_admin_url, sg_db, username)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channels, auth=auth)
+    auth_session = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
 
     replicator = Replication(base_url)
     authenticator = Authenticator(base_url)
@@ -3187,7 +3258,7 @@ def test_CBL_SG_replication_with_rev_messages(params_from_base_test_setup, sg_co
 
     sg_docs, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=cbl_added_doc_ids, auth=auth_session)
     for doc in sg_docs:
-        sg_client.purge_doc(url=sg_admin_url, db=sg_db, doc=doc)
+        sg_client.purge_doc(url=sg_admin_url, db=sg_db, doc=doc, auth=auth)
 
     # 5. Create docs in CBL and push to SGW. This will flush doc-1's rev out of the SG's revision cache (size = 1000) which set up sg config.
     db.create_bulk_docs(number=num_of_docs, id_prefix="rev_messages", db=cbl_db1, channels=channels)
@@ -3242,6 +3313,7 @@ def test_replication_push_replication_guest_enabled(params_from_base_test_setup,
     cbl_db = params_from_base_test_setup["source_db"]
     mode = params_from_base_test_setup["mode"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     """
     TODO : https://github.com/couchbase/sync_gateway/issues/3830
@@ -3266,9 +3338,10 @@ def test_replication_push_replication_guest_enabled(params_from_base_test_setup,
     authenticator = Authenticator(base_url)
     replicator = Replication(base_url)
 
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     db.create_bulk_docs(num_docs, "cbl", db=cbl_db, channels=channels)
-    sg_client.create_user(sg_admin_url, sg_db, valid_username, password=valid_password, channels=channels)
-    cookie, session = sg_client.create_session(sg_admin_url, sg_db, valid_username)
+    sg_client.create_user(sg_admin_url, sg_db, valid_username, password=valid_password, channels=channels, auth=auth)
+    cookie, session = sg_client.create_session(sg_admin_url, sg_db, valid_username, auth=auth)
 
     """
     TODO : https://github.com/couchbase/sync_gateway/issues/3830
@@ -3329,6 +3402,7 @@ def test_doc_removal_from_channel(params_from_base_test_setup):
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     username = "autotest"
     password = "password"
@@ -3350,8 +3424,9 @@ def test_doc_removal_from_channel(params_from_base_test_setup):
     cbl_ids = db.create_bulk_docs(2, "cbl", db=cbl_db, channels=channels)
 
     # 2. Create users in SGW with channel ABC, DEF
-    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channels)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channels, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
     session = cookie, session_id
 
     # 3. push_pull replicate to SGW
@@ -3424,6 +3499,7 @@ def test_doc_removal_with_multipleChannels(params_from_base_test_setup, setup_cu
     cbl_db1 = setup_customized_teardown_test["cbl_db1"]
     cbl_db2 = setup_customized_teardown_test["cbl_db2"]
     cbl_db3 = setup_customized_teardown_test["cbl_db3"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
 
@@ -3450,16 +3526,17 @@ def test_doc_removal_with_multipleChannels(params_from_base_test_setup, setup_cu
     replicator = Replication(base_url)
 
     # 1. Create users in SGW with multiple channels
-    sg_client.create_user(sg_admin_url, sg_db, username_A, password=password, channels=channel_A)
-    cookie_A, session_id_A = sg_client.create_session(sg_admin_url, sg_db, username_A)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username_A, password=password, channels=channel_A, auth=auth)
+    cookie_A, session_id_A = sg_client.create_session(sg_admin_url, sg_db, username_A, auth=auth)
     session_A = cookie_A, session_id_A
 
-    sg_client.create_user(sg_admin_url, sg_db, username_B, password=password, channels=channel_B)
-    cookie_B, session_id_B = sg_client.create_session(sg_admin_url, sg_db, username_B)
+    sg_client.create_user(sg_admin_url, sg_db, username_B, password=password, channels=channel_B, auth=auth)
+    cookie_B, session_id_B = sg_client.create_session(sg_admin_url, sg_db, username_B, auth=auth)
     session_B = cookie_B, session_id_B
 
-    sg_client.create_user(sg_admin_url, sg_db, username_C, password=password, channels=channel_C)
-    cookie_C, session_id_C = sg_client.create_session(sg_admin_url, sg_db, username_C)
+    sg_client.create_user(sg_admin_url, sg_db, username_C, password=password, channels=channel_C, auth=auth)
+    cookie_C, session_id_C = sg_client.create_session(sg_admin_url, sg_db, username_C, auth=auth)
     session_C = cookie_C, session_id_C
 
     # 2. create docs in SGW
@@ -3581,6 +3658,7 @@ def test_roles_replication(params_from_base_test_setup):
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     username = "autotest"
     password = "password"
@@ -3603,17 +3681,18 @@ def test_roles_replication(params_from_base_test_setup):
     replicator = Replication(base_url)
 
     # 1. Create user.
-    sg_client.create_user(sg_admin_url, sg_db, username, password=password, roles=roles)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
-    session = cookie, session_id
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username, password=password, roles=roles, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
+    # session = cookie, session_id
 
     # 2. Add new roles.
-    sg_client.create_role(url=sg_admin_url, db=sg_db, name=role_name, channels=role1_channels)
-    sg_client.create_role(url=sg_admin_url, db=sg_db, name=new_role_name, channels=role2_channels)
+    sg_client.create_role(url=sg_admin_url, db=sg_db, name=role_name, channels=role1_channels, auth=auth)
+    sg_client.create_role(url=sg_admin_url, db=sg_db, name=new_role_name, channels=role2_channels, auth=auth)
 
     # 3. Create docs on SGW.
     sg_client.add_docs(url=sg_admin_url, db=sg_db, number=num_docs, id_prefix="role_doc",
-                       channels=role1_channels, auth=session)
+                       channels=role1_channels, auth=auth)
 
     # 4. Do pull replication from SGW.
     replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
@@ -3630,13 +3709,13 @@ def test_roles_replication(params_from_base_test_setup):
     assert len(cbl_docs) == num_docs, "Docs did not get replicated to CBL"
 
     # 6. Add 2nd role to the user .
-    sg_client.update_user(url=sg_admin_url, db=sg_db, name=username, roles=[role_name, new_role_name])
+    sg_client.update_user(url=sg_admin_url, db=sg_db, name=username, roles=[role_name, new_role_name], auth=auth)
 
     # 7. Add new docs to SGW.
     sg_client.add_docs(url=sg_admin_url, db=sg_db, number=num_docs, id_prefix="new_role1_doc",
-                       channels=role1_channels, auth=session)
+                       channels=role1_channels, auth=auth)
     sg_client.add_docs(url=sg_admin_url, db=sg_db, number=num_docs, id_prefix="new_role2_doc",
-                       channels=role2_channels, auth=session)
+                       channels=role2_channels, auth=auth)
 
     # 8. Continue to pull replication from SGW
     replicator.wait_until_replicator_idle(repl)
@@ -3672,6 +3751,7 @@ def test_channel_update_replication(params_from_base_test_setup):
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     username = "autotest"
     password = "password"
@@ -3691,13 +3771,14 @@ def test_channel_update_replication(params_from_base_test_setup):
     replicator = Replication(base_url)
 
     # 1. Create user.
-    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=abc_channels)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
-    session = cookie, session_id
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=abc_channels, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
+    # session = cookie, session_id
 
     # 2. Create docs on SGW.
     sg_client.add_docs(url=sg_admin_url, db=sg_db, number=num_docs, id_prefix="role_doc",
-                       channels=abc_channels, auth=session)
+                       channels=abc_channels, auth=auth)
 
     # 3. Do pull replication from SGW.
     replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
@@ -3714,11 +3795,11 @@ def test_channel_update_replication(params_from_base_test_setup):
     assert len(cbl_docs) == num_docs, "Docs did not get replicated to CBL"
 
     # 5. update the user to a differrent channel  to something while replication is happening .
-    sg_client.update_user(url=sg_admin_url, db=sg_db, name=username, channels=xyz_channels)
+    sg_client.update_user(url=sg_admin_url, db=sg_db, name=username, channels=xyz_channels, auth=auth)
 
     # 6. Add new docs to SGW.
     sg_client.add_docs(url=sg_admin_url, db=sg_db, number=num_docs, id_prefix="new_role_doc",
-                       channels=abc_channels, auth=session)
+                       channels=abc_channels, auth=auth)
 
     # 7. Continue to pull replication from SGW
     replicator.wait_until_replicator_idle(repl)
@@ -3759,6 +3840,7 @@ def test_replication_behavior_with_channelRole_modification(params_from_base_tes
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     username = "autotest"
     password = "password"
@@ -3776,16 +3858,17 @@ def test_replication_behavior_with_channelRole_modification(params_from_base_tes
     replicator = Replication(base_url)
 
     # 1. Create user
-    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=abc_channels)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
-    session = cookie, session_id
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=abc_channels, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
+    # session = cookie, session_id
 
     # 2. Add new role.
-    sg_client.create_role(url=sg_admin_url, db=sg_db, name="ABCDEF_role", channels=abc_channels)
+    sg_client.create_role(url=sg_admin_url, db=sg_db, name="ABCDEF_role", channels=abc_channels, auth=auth)
 
     # 3. Create docs on SGW.
     sg_client.add_docs(url=sg_admin_url, db=sg_db, number=num_docs, id_prefix="role_doc",
-                       channels=abc_channels, auth=session)
+                       channels=abc_channels, auth=auth)
 
     # 4. Do pull replication from SGW.
     replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
@@ -3803,11 +3886,11 @@ def test_replication_behavior_with_channelRole_modification(params_from_base_tes
 
     # 6 change it to new channel to the role
     abc_channels = ["XYZ"]
-    sg_client.update_role(url=sg_admin_url, db=sg_db, name="ABCDEF_role", channels=["new_channel"])
+    sg_client.update_role(url=sg_admin_url, db=sg_db, name="ABCDEF_role", channels=["new_channel"], auth=auth)
 
     # 7. Add new docs to SGW.
     sg_client.add_docs(url=sg_admin_url, db=sg_db, number=num_docs, id_prefix="new_role_doc",
-                       channels=abc_channels, auth=session)
+                       channels=abc_channels, auth=auth)
 
     # 8. Continue to pull replication from SGW
     replicator.wait_until_replicator_idle(repl)
@@ -3853,6 +3936,7 @@ def test_replication_pull_from_empty_database(params_from_base_test_setup, attac
     sg_blip_url = params_from_base_test_setup["target_url"]
     db = params_from_base_test_setup["db"]
     db_config = params_from_base_test_setup["db_config"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     # Reset cluster to ensure no data in system
     c = cluster.Cluster(config=cluster_config)
@@ -3865,8 +3949,9 @@ def test_replication_pull_from_empty_database(params_from_base_test_setup, attac
     password = "password"
 
     sg_client = MobileRestClient()
-    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channels)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channels, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
     auth_session = cookie, session_id
 
     # 1. create 50 docs on SGW
@@ -3880,7 +3965,7 @@ def test_replication_pull_from_empty_database(params_from_base_test_setup, attac
     sg_added_docs_2 = sg_client.add_docs(url=sg_url, db=sg_db, number=num_sg_docs, id_prefix="sg_doc_b", channels=channels, auth=auth_session, attachments_generator=attachment_generator)
 
     # 3b. verify the 10 deleted docs are in tombstone state
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True, auth=auth)["rows"]
     assert len(sg_docs) == 90, "Expected number of docs is incorrect after doc deletion in sync-gateway"
     for sg_doc in sg_docs:
         assert sg_doc not in docs_to_delete_1, "Deleted doc should not show on sg doc list"
@@ -3905,7 +3990,7 @@ def test_replication_pull_from_empty_database(params_from_base_test_setup, attac
                                               replication_type="pull")
 
     # 6. verify SGW stats, cbl_replication_pull.rev_send_count sent to CBL equals to 90
-    expvars = sg_client.get_expvars(sg_admin_url)
+    expvars = sg_client.get_expvars(sg_admin_url, auth=auth)
     rev_send_count = expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["rev_send_count"]
     if cbl_action_before_init_replication:
         assert rev_send_count == 100, "rev_send_count {} is incorrect".format(rev_send_count)
@@ -3923,7 +4008,7 @@ def test_replication_pull_from_empty_database(params_from_base_test_setup, attac
     # 8. delete 15 more docs on SGW
     docs_to_delete_2 = sg_added_docs_2[0:15]
     sg_client.delete_docs(url=sg_url, db=sg_db, docs=docs_to_delete_2, auth=auth_session)
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True, auth=auth)["rows"]
     assert len(sg_docs) == 75, "Expected number of docs is incorrect after doc deletion in sync-gateway"
 
     # 9. restart the replication, verify SGW stats, cbl_replication_pull.rev_send_count = 115, regardless cbl_action_before_init_replication:
@@ -3931,7 +4016,7 @@ def test_replication_pull_from_empty_database(params_from_base_test_setup, attac
     replicator.wait_until_replicator_idle(repl)
     replicator.stop(repl)
 
-    expvars = sg_client.get_expvars(sg_admin_url)
+    expvars = sg_client.get_expvars(sg_admin_url, auth=auth)
     rev_send_count2 = expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["rev_send_count"]
     if not cbl_action_before_init_replication:
         assert rev_send_count2 == 105, "rev_send_count {} is incorrect".format(rev_send_count2)
@@ -3971,6 +4056,7 @@ def test_replication_with_custom_retries(params_from_base_test_setup, num_of_doc
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if sync_gateway_version < "2.0.0":
         pytest.skip('This test cannot run with sg version below 2.0')
@@ -3988,10 +4074,11 @@ def test_replication_with_custom_retries(params_from_base_test_setup, num_of_doc
 
     # Configure replication with push_pull
     replicator = Replication(base_url)
-    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg, auth=auth)
     session, replicator_authenticator, repl = replicator.create_session_configure_replicate(
         base_url, sg_admin_url, sg_db, username, password, channels_sg, sg_client, cbl_db, sg_blip_url,
-        continuous=continuous, replication_type=type, max_retry_wait_time=wait_time, max_retries=retries)
+        continuous=continuous, replication_type=type, max_retry_wait_time=wait_time, max_retries=retries, auth=auth)
 
     if type == "pull":
         sg_docs = sg_client.add_docs(url=sg_url, db=sg_db, number=num_of_docs, id_prefix="sg_doc", channels=channels_sg,
@@ -4016,11 +4103,11 @@ def test_replication_with_custom_retries(params_from_base_test_setup, num_of_doc
     time_taken = end_time - start_time
     log_info(time_taken)
 
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True, auth=auth)
     # Give some time to replicator to retry
     # Commented as all network errors are causing test failures, but replicator retrying as expected
     replicator.wait_until_replicator_idle(repl, err_check=False)
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True, auth=auth)
     sg_docs = sg_docs["rows"]
     # Verify database doc counts
     cbl_doc_count = db.getCount(cbl_db)
@@ -4060,6 +4147,7 @@ def test_replication_with_custom_timeout(params_from_base_test_setup, num_of_doc
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if sync_gateway_version < "2.0.0":
         pytest.skip('This test cannot run with sg version below 2.0')
@@ -4077,9 +4165,10 @@ def test_replication_with_custom_timeout(params_from_base_test_setup, num_of_doc
 
     # Configure replication with push_pull
     replicator = Replication(base_url)
-    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg, auth=auth)
     authenticator = Authenticator(base_url)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
     replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
 
     repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=False, channels=channels_sg, max_retry_wait_time=wait_time,
@@ -4141,6 +4230,7 @@ def test_replication_reset_retires(params_from_base_test_setup, num_of_docs, con
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if sync_gateway_version < "2.0.0":
         pytest.skip('This test cannot run with sg version below 2.0')
@@ -4157,9 +4247,10 @@ def test_replication_reset_retires(params_from_base_test_setup, num_of_docs, con
 
     # Configure replication with push_pull
     replicator = Replication(base_url)
-    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg, auth=auth)
     authenticator = Authenticator(base_url)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
     replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
 
     repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=continuous, channels=channels_sg,
@@ -4192,7 +4283,7 @@ def test_replication_reset_retires(params_from_base_test_setup, num_of_docs, con
     sg_controller.start_sync_gateways(cluster_config, url=sg_url, config=sg_config)
     replicator.wait_until_replicator_idle(repl, err_check=False)
 
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True, auth=auth)
     sg_docs = sg_docs["rows"]
     # Verify database doc counts
     cbl_doc_count = db.getCount(cbl_db)
@@ -4282,15 +4373,15 @@ def setup_sg_cbl_docs(params_from_base_test_setup, sg_db, base_url, db, cbl_db, 
                       sg_admin_url, sg_blip_url, replication_type=None, document_ids=None,
                       channels=None, replicator_authenticator_type=None, headers=None,
                       cbl_id_prefix="cbl", sg_id_prefix="sg_doc",
-                      num_cbl_docs=5, num_sg_docs=10, attachments_generator=None):
+                      num_cbl_docs=5, num_sg_docs=10, attachments_generator=None, auth=None):
 
     sg_client = MobileRestClient()
 
     db.create_bulk_docs(number=num_cbl_docs, id_prefix=cbl_id_prefix, db=cbl_db, channels=channels, attachments_generator=attachments_generator)
     cbl_added_doc_ids = db.getDocIds(cbl_db)
     # Add docs in SG
-    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
-    cookie, session = sg_client.create_session(sg_admin_url, sg_db, "autotest")
+    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels, auth=auth)
+    cookie, session = sg_client.create_session(sg_admin_url, sg_db, "autotest", auth=auth)
     auth_session = cookie, session
     sg_added_docs = sg_client.add_docs(url=sg_url, db=sg_db, number=num_sg_docs, id_prefix=sg_id_prefix, channels=channels, auth=auth_session, attachments_generator=attachments_generator)
     sg_added_ids = [row["id"] for row in sg_added_docs]

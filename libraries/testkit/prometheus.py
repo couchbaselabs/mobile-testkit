@@ -20,10 +20,13 @@ def kill_prometheus_process():
                 os.kill(int(pid), signal.SIGKILL)
 
 
-def start_prometheus(sg_ip, ssl=False):
+def start_prometheus(sg_ip, ssl=False, need_auth=False):
     # Interrupted executions might leave the stale processes
     kill_prometheus_process()
-    prometheus_file = os.getcwd() + "/libraries/provision/ansible/playbooks/prometheus.yml"
+    if need_auth:
+        prometheus_file = os.getcwd() + "/libraries/provision/ansible/playbooks/prometheus_with_auth.yml"
+    else:
+        prometheus_file = os.getcwd() + "/libraries/provision/ansible/playbooks/prometheus.yml"
     commd = "sed -i -e 's/promotheus_sg_ip/" + sg_ip + "/g' " + prometheus_file
     subprocess.run([commd], shell=True)
     if ssl:
@@ -33,8 +36,11 @@ def start_prometheus(sg_ip, ssl=False):
     subprocess.Popen(["prometheus", config_param])
 
 
-def stop_prometheus(sg_ip, ssl=False):
-    prometheus_file = os.getcwd() + "/libraries/provision/ansible/playbooks/prometheus.yml"
+def stop_prometheus(sg_ip, ssl=False, need_auth=False):
+    if need_auth:
+        prometheus_file = os.getcwd() + "/libraries/provision/ansible/playbooks/prometheus_with_auth.yml"
+    else:
+        prometheus_file = os.getcwd() + "/libraries/provision/ansible/playbooks/prometheus.yml"
     commd = "sed -i -e 's/" + sg_ip + "/promotheus_sg_ip/g' " + prometheus_file
     subprocess.run([commd], shell=True)
     if ssl:

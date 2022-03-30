@@ -487,6 +487,9 @@ def params_from_base_suite_setup(request):
         expected_sync_gateway_version=sync_gateway_version
     )
 
+    need_sgw_admin_auth = (not disable_admin_auth) and sync_gateway_version >= "3.0"
+    log_info("need_sgw_admin_auth setting: {}".format(need_sgw_admin_auth))
+
     if enable_sample_bucket and not create_db_per_suite:
         # if enable_sample_bucket and not create_db_per_test:
         raise Exception("enable_sample_bucket has to be used with create_db_per_suite")
@@ -584,7 +587,7 @@ def params_from_base_suite_setup(request):
     if prometheus_enable:
         if not prometheus.is_prometheus_installed:
             prometheus.install_prometheus
-        prometheus.start_prometheus(sg_ip, sg_ssl)
+        prometheus.start_prometheus(sg_ip, sg_ssl, need_sgw_admin_auth)
 
     yield {
         "cluster_config": cluster_config,
@@ -623,7 +626,8 @@ def params_from_base_suite_setup(request):
         "sg_ce": sg_ce,
         "cbl_ce": cbl_ce,
         "prometheus_enable": prometheus_enable,
-        "ssl_enabled": cbs_ssl
+        "ssl_enabled": cbs_ssl,
+        "need_sgw_admin_auth": need_sgw_admin_auth
     }
 
     if request.node.testsfailed != 0 and enable_file_logging and create_db_per_suite is not None:
@@ -662,7 +666,7 @@ def params_from_base_suite_setup(request):
     # Delete png files under resources/data
     clear_resources_pngs()
     if prometheus_enable:
-        prometheus.stop_prometheus(sg_ip, sg_ssl)
+        prometheus.stop_prometheus(sg_ip, sg_ssl, need_sgw_admin_auth)
 
 
 @pytest.fixture(scope="function")
@@ -703,6 +707,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     sg_ce = params_from_base_suite_setup["sg_ce"]
     prometheus_enable = request.config.getoption("--prometheus-enable")
     cbs_ssl = params_from_base_suite_setup["ssl_enabled"]
+    need_sgw_admin_auth = params_from_base_suite_setup["need_sgw_admin_auth"]
 
     source_db = None
     test_name_cp = test_name.replace("/", "-")
@@ -802,7 +807,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "sg_ce": sg_ce,
         "cbl_ce": cbl_ce,
         "prometheus_enable": prometheus_enable,
-        "ssl_enabled": cbs_ssl
+        "ssl_enabled": cbs_ssl,
+        "need_sgw_admin_auth": need_sgw_admin_auth
     }
 
     if request.node.rep_call.failed and enable_file_logging and create_db_per_test is not None:

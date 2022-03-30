@@ -12,6 +12,7 @@ from keywords.exceptions import TimeoutException
 from utilities.cluster_config_utils import get_sg_version, persist_cluster_config_environment_prop, copy_to_temp_conf, get_cluster
 from libraries.testkit import cluster
 from couchbase.exceptions import DocumentNotFoundException
+from keywords.constants import RBAC_FULL_ADMIN
 
 
 @pytest.mark.syncgateway
@@ -74,6 +75,7 @@ def test_document_resurrection(params_from_base_test_setup, sg_conf_name, deleti
     mode = params_from_base_test_setup['mode']
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     # Skip the test if ssl disabled as it cannot run without port using http protocol
     if ("sync_gateway_default_functional_tests_no_port" in sg_conf_name) and get_sg_version(cluster_conf) < "1.5.0":
@@ -123,8 +125,9 @@ def test_document_resurrection(params_from_base_test_setup, sg_conf_name, deleti
     sdk_client = get_cluster(connection_url, bucket_name)
     # Create Sync Gateway user
     sg_user_channels = ['NASA', 'NATGEO']
-    sg_client.create_user(url=sg_admin_url, db=sg_db, name='seth', password='pass', channels=sg_user_channels)
-    sg_user_auth = sg_client.create_session(url=sg_admin_url, db=sg_db, name='seth')
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(url=sg_admin_url, db=sg_db, name='seth', password='pass', channels=sg_user_channels, auth=auth)
+    sg_user_auth = sg_client.create_session(url=sg_admin_url, db=sg_db, name='seth', auth=auth)
 
     # Create / Add docs from SG
     sg_doc_bodies = document.create_docs(
@@ -188,7 +191,7 @@ def test_document_resurrection(params_from_base_test_setup, sg_conf_name, deleti
             assert len(all_docs) == num_docs_per_client
             assert len(errors) == 0
         log_info('Purging docs via Sync Gateway')
-        sg_client.purge_docs(url=sg_admin_url, db=sg_db, docs=all_docs)
+        sg_client.purge_docs(url=sg_admin_url, db=sg_db, docs=all_docs, auth=auth)
 
     else:
         raise ValueError('Invalid test parameters')
@@ -328,6 +331,7 @@ def test_verify_changes_purge(params_from_base_test_setup, sg_conf_name):
     cluster_conf = params_from_base_test_setup['cluster_config']
     cluster_topology = params_from_base_test_setup['cluster_topology']
     mode = params_from_base_test_setup['mode']
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
@@ -348,19 +352,22 @@ def test_verify_changes_purge(params_from_base_test_setup, sg_conf_name):
     channels = ['tombstone_test']
 
     # Create user / session
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     auto_user_info = UserInfo(name='autotest', password='pass', channels=channels, roles=[])
     sg_client.create_user(
         url=sg_admin_url,
         db=sg_db,
         name=auto_user_info.name,
         password=auto_user_info.password,
-        channels=auto_user_info.channels
+        channels=auto_user_info.channels,
+        auth=auth
     )
 
     test_auth_session = sg_client.create_session(
         url=sg_admin_url,
         db=sg_db,
-        name=auto_user_info.name
+        name=auto_user_info.name,
+        auth=auth
     )
 
     def update_prop():
@@ -374,7 +381,7 @@ def test_verify_changes_purge(params_from_base_test_setup, sg_conf_name):
     sg_client.add_doc(url=sg_url, db=sg_db, doc=doc_body, auth=test_auth_session)
     doc = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=test_auth_session)
     sg_doc_get_formatted = [{"id": doc["_id"], "rev": doc["_rev"]}]
-    sg_client.purge_doc(url=sg_admin_url, db=sg_db, doc=doc)
+    sg_client.purge_doc(url=sg_admin_url, db=sg_db, doc=doc, auth=auth)
 
     try:
         sg_client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=sg_doc_get_formatted, auth=test_auth_session, polling_interval=30)

@@ -13,7 +13,7 @@ from utilities.cluster_config_utils import get_cluster
 from keywords.utils import log_info
 from libraries.testkit.cluster import Cluster
 from keywords.TestServerFactory import TestServerFactory
-from keywords.constants import RESULTS_DIR
+from keywords.constants import RESULTS_DIR, RBAC_FULL_ADMIN
 from libraries.testkit import cluster
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from testsuites.CBLTester.CBL_Functional_tests.SuiteSetup_FunctionalTests.test_query import test_get_doc_ids, \
@@ -50,6 +50,7 @@ def test_upgrade_cbl(params_from_base_suite_setup):
     cbs_ip = params_from_base_suite_setup["cbs_ip"]
     server_url = params_from_base_suite_setup["server_url"]
     cbs_ssl = params_from_base_suite_setup["cbs_ssl"]
+    need_sgw_admin_auth = params_from_base_suite_setup["need_sgw_admin_auth"]
     db = Database(base_url)
 
     cbl_db, upgrade_cbl_db_name = _upgrade_db(params_from_base_suite_setup)
@@ -67,9 +68,10 @@ def test_upgrade_cbl(params_from_base_suite_setup):
     c = Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
 
-    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=["*"])
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=["*"], auth=auth)
     authenticator = Authenticator(base_url)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
     session = cookie, session_id
     replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
     repl_config = replicator.configure(cbl_db, sg_blip_url, replication_type="push", continuous=True,
@@ -242,7 +244,7 @@ def test_upgrade_cbl(params_from_base_suite_setup):
     replicator.stop(repl)
 
     new_cbl_doc_ids = db.getDocIds(cbl_db, limit=40000)
-    cbs_docs = sg_client.get_all_docs(sg_admin_url, sg_db, session)["rows"]
+    cbs_docs = sg_client.get_all_docs(sg_admin_url, sg_db, session, auth=auth)["rows"]
     cbs_doc_ids = [doc["id"] for doc in cbs_docs]
     for new_doc_id in new_doc_ids:
         log_info("Checking if new doc - {} replicated to CBS".format(new_doc_id))
@@ -262,12 +264,12 @@ def test_upgrade_cbl(params_from_base_suite_setup):
     replicator.wait_until_replicator_idle(repl)
     replicator.stop(repl)
 
-    cbs_docs = sg_client.get_all_docs(sg_admin_url, sg_db, session)["rows"]
+    cbs_docs = sg_client.get_all_docs(sg_admin_url, sg_db, session, auth=auth)["rows"]
     cbs_doc_ids = [doc["id"] for doc in cbs_docs]
 
     for doc_id in doc_ids_to_update:
         log_info("Checking for updates in doc on CBS: {}".format(doc_id))
-        sg_data = sg_client.get_doc(url=sg_admin_url, db=sg_db, doc_id=doc_id, auth=session)
+        sg_data = sg_client.get_doc(url=sg_admin_url, db=sg_db, doc_id=doc_id, auth=auth)
         assert "new_field" in sg_data, "Updated docs failed to get replicated"
     new_cbl_doc_ids = db.getDocIds(cbl_db, limit=40000)
 
@@ -283,7 +285,7 @@ def test_upgrade_cbl(params_from_base_suite_setup):
     replicator.wait_until_replicator_idle(repl)
     replicator.stop(repl)
 
-    cbs_docs = sg_client.get_all_docs(sg_admin_url, sg_db, session)["rows"]
+    cbs_docs = sg_client.get_all_docs(sg_admin_url, sg_db, session, auth=auth)["rows"]
     cbs_doc_ids = [doc["id"] for doc in cbs_docs]
     for doc_id in doc_ids_to_delete:
         assert doc_id not in cbs_doc_ids, "Deleted docs failed to get replicated"
@@ -460,7 +462,7 @@ def test_switch_dbs_with_two_cbl_platforms(params_from_base_suite_setup):
     second_liteserv_platform = params_from_base_suite_setup["second_liteserv_platform"]
     utils_obj = params_from_base_suite_setup["utils_obj"]
     test_name_cp = params_from_base_suite_setup["test_name_cp"]
-
+    need_sgw_admin_auth = params_from_base_suite_setup["need_sgw_admin_auth"]
     base_url = params_from_base_suite_setup["base_url"]
     # Create CBL database
     db = Database(base_url)
@@ -480,7 +482,8 @@ def test_switch_dbs_with_two_cbl_platforms(params_from_base_suite_setup):
     sg_client = MobileRestClient()
 
     # 1. Add docs in SG
-    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels, auth=auth)
     cookie, session = sg_client.create_session(sg_admin_url, sg_db, "autotest")
     auth_session = cookie, session
     sg_client.add_docs(url=sg_url, db=sg_db, number=20, id_prefix="sg_id_prefix",
@@ -496,7 +499,7 @@ def test_switch_dbs_with_two_cbl_platforms(params_from_base_suite_setup):
         replication_type="pull", continuous=True, channels=channels)
 
     log_info(replicator.getCompleted(repl), "replicator getCompleted should be 20")
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db)
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, auth=auth)
 
     # Verify database doc counts
     cbl_doc_count = db.getCount(cbl_db_obj)

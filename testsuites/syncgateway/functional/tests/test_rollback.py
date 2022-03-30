@@ -10,6 +10,7 @@ from requests.exceptions import HTTPError
 from keywords import couchbaseserver
 from keywords import userinfo
 from keywords import document
+from keywords.constants import RBAC_FULL_ADMIN
 import time
 
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
@@ -46,6 +47,7 @@ def test_rollback_server_reset(params_from_base_test_setup, sg_conf_name, x509_c
     cluster_config = params_from_base_test_setup["cluster_config"]
     topology = params_from_base_test_setup["cluster_topology"]
     mode = params_from_base_test_setup["mode"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     sg_url = topology["sync_gateways"][0]["public"]
     sg_admin_url = topology["sync_gateways"][0]["admin"]
@@ -57,6 +59,7 @@ def test_rollback_server_reset(params_from_base_test_setup, sg_conf_name, x509_c
     if mode == "cc":
         pytest.skip("Rollback not supported in channel cache mode")
 
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     disable_tls_server = params_from_base_test_setup["disable_tls_server"]
     if x509_cert_auth and disable_tls_server:
@@ -77,13 +80,15 @@ def test_rollback_server_reset(params_from_base_test_setup, sg_conf_name, x509_c
         db=sg_db,
         name=seth_user_info.name,
         password=seth_user_info.password,
-        channels=seth_user_info.channels
+        channels=seth_user_info.channels,
+        auth=auth
     )
 
     seth_session = client.create_session(
         url=sg_admin_url,
         db=sg_db,
-        name=seth_user_info.name
+        name=seth_user_info.name,
+        auth=auth
     )
 
     # create a doc that will hash to each vbucket in parallel except for vbucket 66

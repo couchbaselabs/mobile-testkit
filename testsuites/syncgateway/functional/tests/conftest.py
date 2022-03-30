@@ -237,6 +237,7 @@ def params_from_base_suite_setup(request):
     enable_server_tls_skip_verify = request.config.getoption("--enable-server-tls-skip-verify")
 
     disable_admin_auth = request.config.getoption("--disable-admin-auth")
+    log_info("disable_admin_auth flag: {}".format(disable_admin_auth))
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
@@ -480,6 +481,9 @@ def params_from_base_suite_setup(request):
         expected_sync_gateway_version=sync_gateway_version
     )
 
+    need_sgw_admin_auth = (not disable_admin_auth) and sync_gateway_version >= "3.0"
+    log_info("need_sgw_admin_auth setting: {}".format(need_sgw_admin_auth))
+
     # Load topology as a dictionary
     cluster_utils = ClusterKeywords(cluster_config)
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
@@ -490,7 +494,7 @@ def params_from_base_suite_setup(request):
         cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
         sg_url = cluster_topology["sync_gateways"][0]["public"]
         sg_ip = host_for_url(sg_url)
-        prometheus.start_prometheus(sg_ip, sg_ssl)
+        prometheus.start_prometheus(sg_ip, sg_ssl, need_sgw_admin_auth)
     yield {
         "sync_gateway_version": sync_gateway_version,
         "disable_tls_server": disable_tls_server,
@@ -507,13 +511,14 @@ def params_from_base_suite_setup(request):
         "sg_config": sg_config,
         "cbs_ce": cbs_ce,
         "prometheus_enabled": prometheus_enabled,
+        "need_sgw_admin_auth": need_sgw_admin_auth,
         "sync_gateway_previous_version": sync_gateway_previous_version
     }
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
 
     if prometheus_enabled:
-        prometheus.stop_prometheus(sg_ip, sg_ssl)
+        prometheus.stop_prometheus(sg_ip, sg_ssl, need_sgw_admin_auth)
 
     # clean up firewall rules if any ports blocked for server ssl testing
     clear_firewall_rules(cluster_config)
@@ -548,6 +553,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     sg_ce = params_from_base_suite_setup["sg_ce"]
     sg_config = params_from_base_suite_setup["sg_config"]
     cbs_ce = params_from_base_suite_setup["cbs_ce"]
+    need_sgw_admin_auth = params_from_base_suite_setup["need_sgw_admin_auth"]
     prometheus_enabled = request.config.getoption("--prometheus-enable")
     sync_gateway_previous_version = params_from_base_suite_setup["sync_gateway_previous_version"]
 
@@ -611,6 +617,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "sg_url": sg_url,
         "sg_admin_url": sg_admin_url,
         "prometheus_enabled": prometheus_enabled,
+        "need_sgw_admin_auth": need_sgw_admin_auth,
         "sync_gateway_previous_version": sync_gateway_previous_version
     }
 

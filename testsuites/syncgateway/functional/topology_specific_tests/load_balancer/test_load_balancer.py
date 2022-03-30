@@ -2,6 +2,7 @@ import concurrent.futures
 import pytest
 import time
 
+from keywords.constants import RBAC_FULL_ADMIN
 from keywords.utils import log_info
 from keywords.MobileRestClient import MobileRestClient
 from keywords.ChangesTracker import ChangesTracker
@@ -24,9 +25,11 @@ def test_load_balance_sanity(params_from_base_test_setup):
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     sg_platform = params_from_base_test_setup["sg_platform"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     sg_conf_name = "sync_gateway_default_functional_tests"
     sg_conf_path = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     cluster_util = ClusterKeywords(cluster_config)
     cluster_util.reset_cluster(
@@ -45,8 +48,8 @@ def test_load_balance_sanity(params_from_base_test_setup):
     channels = ["ABC", "CBS"]
 
     client = MobileRestClient()
-    user = client.create_user(admin_sg_one, sg_db, sg_user_name, sg_user_password, channels=channels)
-    session = client.create_session(admin_sg_one, sg_db, sg_user_name)
+    user = client.create_user(admin_sg_one, sg_db, sg_user_name, sg_user_password, channels=channels, auth=auth)
+    session = client.create_session(admin_sg_one, sg_db, sg_user_name, auth=auth)
 
     log_info(user)
     log_info(session)
@@ -98,6 +101,7 @@ def test_sgw_down_with_load_balancer(params_from_base_test_setup, sgw_down_with_
     sg1 = sgw_down_with_load_balancer_teardown["sg1"]
     sg_conf_path = sgw_down_with_load_balancer_teardown["sg_conf_path"]
     sg_ce = params_from_base_test_setup["sg_ce"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if sg_ce:
         pytest.skip('--sg-ce is enabled. This test runs only on enterprise edition of sgw')
@@ -108,6 +112,7 @@ def test_sgw_down_with_load_balancer(params_from_base_test_setup, sgw_down_with_
 
     topology = cluster_utils.get_cluster_topology(cluster_config)
     lb_url = "{}:4985".format(topology["load_balancers"][0])
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     sg_db = "db"
     num_docs = 100
@@ -135,7 +140,7 @@ def test_sgw_down_with_load_balancer(params_from_base_test_setup, sgw_down_with_
     # 7. All expected changes should appear
     retries = 0
     while retries < 30:
-        changes = client.get_changes(url=lb_url, db=sg_db, auth=None, since=0)
+        changes = client.get_changes(url=lb_url, db=sg_db, auth=auth, since=0)
         if len(changes["results"]) == num_docs:
             break
         retries = retries + 1

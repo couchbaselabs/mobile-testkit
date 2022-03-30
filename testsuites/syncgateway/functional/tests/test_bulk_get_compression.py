@@ -9,6 +9,8 @@ import libraries.testkit.settings
 from libraries.testkit.cluster import Cluster
 from libraries.testkit.data import Data
 from libraries.testkit.admin import Admin
+from keywords.constants import RBAC_FULL_ADMIN
+from requests.auth import HTTPBasicAuth
 
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.utils import log_info
@@ -172,6 +174,7 @@ def test_bulk_get_compression(params_from_base_test_setup, sg_conf_name, num_doc
                               x_accept_part_encoding, user_agent, x509_cert_auth):
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
@@ -193,7 +196,11 @@ def test_bulk_get_compression(params_from_base_test_setup, sg_conf_name, num_doc
         cluster_config = temp_cluster_config
     cluster = Cluster(config=cluster_config)
     cluster.reset(sg_config_path=sg_conf)
+
     admin = Admin(cluster.sync_gateways[0])
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    if auth:
+        admin.auth = HTTPBasicAuth(auth[0], auth[1])
 
     user = admin.register_user(cluster.sync_gateways[0], "db", "seth", "password", channels=["seth"])
 

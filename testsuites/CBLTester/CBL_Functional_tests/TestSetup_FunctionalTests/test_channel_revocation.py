@@ -15,6 +15,7 @@ from keywords.utils import host_for_url, random_string, log_info, get_event_chan
 from libraries.data import doc_generators
 from libraries.testkit import cluster
 from utilities.cluster_config_utils import get_cluster
+from keywords.constants import RBAC_FULL_ADMIN
 
 
 @pytest.fixture(scope="function")
@@ -67,6 +68,7 @@ def test_user_removed_from_channel_basic(params_from_base_test_setup, replicator
     cbl_db = params_from_base_test_setup["source_db"]
     sg_blip_url = params_from_base_test_setup["target_url"]
     db = params_from_base_test_setup["db"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if sync_gateway_version < "3.0.0" or liteserv_version < "3.0.0":
         pytest.skip('This test cannot run with version below 3.0')
@@ -80,19 +82,20 @@ def test_user_removed_from_channel_basic(params_from_base_test_setup, replicator
     channels_sg = ["A", "B"]
     username = "autotest"
     password = "password"
-    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
-    session = cookie, session_id
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
+    # session = cookie, session_id
 
     # 2. on SGW create 10 docs with channel A, and 15 docs with channel B, and 9 docs with channel A and B
     sg_client.add_docs(url=sg_admin_url, db=sg_db, number=10, id_prefix="CH_A_doc",
-                       channels=["A"], auth=session)
+                       channels=["A"], auth=auth)
 
     sg_client.add_docs(url=sg_admin_url, db=sg_db, number=15, id_prefix="CH_B_doc",
-                       channels=["B"], auth=session)
+                       channels=["B"], auth=auth)
 
     sg_client.add_docs(url=sg_admin_url, db=sg_db, number=9, id_prefix="CH_ANB_doc",
-                       channels=channels_sg, auth=session)
+                       channels=channels_sg, auth=auth)
 
     # 3. on CBL start a pull replicator with default purge config
     authenticator = Authenticator(base_url)
@@ -107,7 +110,7 @@ def test_user_removed_from_channel_basic(params_from_base_test_setup, replicator
     replicator.stop(repl)
 
     # 4. assertion: doc count on CBL equals to docs on SGW, both are 34
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db)
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, auth=auth)
     sg_doc_ids = [doc["id"] for doc in sg_docs["rows"]]
 
     cbl_doc_count = db.getCount(cbl_db)
@@ -117,7 +120,7 @@ def test_user_removed_from_channel_basic(params_from_base_test_setup, replicator
         assert doc_id in cbl_doc_ids, "doc is missing during replication"
 
     # 5. on SGW remove the user from channel A
-    sg_client.update_user(url=sg_admin_url, db=sg_db, name=username, channels=["B"])
+    sg_client.update_user(url=sg_admin_url, db=sg_db, name=username, channels=["B"], auth=auth)
 
     # 6. on CBL, start replication with pull/push/push-pull replicator type
     repl = replicator.configure_and_replicate(source_db=cbl_db,
@@ -172,6 +175,7 @@ def test_user_removed_from_channel_with_doc_mutation(params_from_base_test_setup
     cbl_db = params_from_base_test_setup["source_db"]
     sg_blip_url = params_from_base_test_setup["target_url"]
     db = params_from_base_test_setup["db"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if sync_gateway_version < "3.0.0" or liteserv_version < "3.0.0":
         pytest.skip('This test cannot run with version below 3.0')
@@ -185,19 +189,20 @@ def test_user_removed_from_channel_with_doc_mutation(params_from_base_test_setup
     channels_sg = ["A", "B"]
     username = "autotest"
     password = "password"
-    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
     session = cookie, session_id
 
     # 2. on SGW create 10 docs with channel A, and 15 docs with channel B, and 9 docs with channel A and B
     sg_client.add_docs(url=sg_admin_url, db=sg_db, number=10, id_prefix="CH_A_doc",
-                       channels=["A"], auth=session)
+                       channels=["A"], auth=auth)
 
     sg_client.add_docs(url=sg_admin_url, db=sg_db, number=15, id_prefix="CH_B_doc",
-                       channels=["B"], auth=session)
+                       channels=["B"], auth=auth)
 
     sg_client.add_docs(url=sg_admin_url, db=sg_db, number=9, id_prefix="CH_ANB_doc",
-                       channels=channels_sg, auth=session)
+                       channels=channels_sg, auth=auth)
 
     # 3. on CBL start a pull replicator with the user credential
     authenticator = Authenticator(base_url)
@@ -218,7 +223,7 @@ def test_user_removed_from_channel_with_doc_mutation(params_from_base_test_setup
     assert len(sg_docs["rows"]) == cbl_doc_count, "Number of sg docs is not equal to total number of cbl docs"
 
     # 5. on SGW remove the user from channel A
-    sg_client.update_user(url=sg_admin_url, db=sg_db, name=username, channels=["B"])
+    sg_client.update_user(url=sg_admin_url, db=sg_db, name=username, channels=["B"], auth=auth)
 
     # 6. on cbl randomly pick some channel A docs and some docs belong to A and B, update a few times
     channel_A_docs = []
@@ -306,6 +311,7 @@ def test_user_removed_from_role(params_from_base_test_setup, replicator_directio
     cbl_db = params_from_base_test_setup["source_db"]
     sg_blip_url = params_from_base_test_setup["target_url"]
     db = params_from_base_test_setup["db"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if sync_gateway_version < "3.0.0" or liteserv_version < "3.0.0":
         pytest.skip('This test cannot run with version below 3.0')
@@ -325,23 +331,24 @@ def test_user_removed_from_role(params_from_base_test_setup, replicator_directio
     username = "autotest"
     password = "password"
 
-    sg_client.create_role(url=sg_admin_url, db=sg_db, name=role1, channels=role1_channels)
-    sg_client.create_role(url=sg_admin_url, db=sg_db, name=role2, channels=role2_channels)
-    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=other_channels, roles=roles)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_role(url=sg_admin_url, db=sg_db, name=role1, channels=role1_channels, auth=auth)
+    sg_client.create_role(url=sg_admin_url, db=sg_db, name=role2, channels=role2_channels, auth=auth)
+    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=other_channels, roles=roles, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
     session = cookie, session_id
 
     # 2. on SGW create docs in channels
     sg_client.add_docs(url=sg_admin_url, db=sg_db, number=10, id_prefix="CH_A_doc",
-                       channels=["A"], auth=session)
+                       channels=["A"], auth=auth)
     sg_client.add_docs(url=sg_admin_url, db=sg_db, number=15, id_prefix="CH_B_doc",
-                       channels=["B"], auth=session)
+                       channels=["B"], auth=auth)
     sg_client.add_docs(url=sg_admin_url, db=sg_db, number=9, id_prefix="CH_ANB_doc",
-                       channels=["A", "B"], auth=session)
+                       channels=["A", "B"], auth=auth)
     sg_client.add_docs(url=sg_admin_url, db=sg_db, number=7, id_prefix="CH_ANC_doc",
-                       channels=["A", "C"], auth=session)
+                       channels=["A", "C"], auth=auth)
     sg_client.add_docs(url=sg_admin_url, db=sg_db, number=5, id_prefix="CH_C_doc",
-                       channels=["C"], auth=session)
+                       channels=["C"], auth=auth)
 
     # 3. on CBL start a one-time pull replicator with the user credential and verify docs are replicated
     authenticator = Authenticator(base_url)
@@ -368,7 +375,7 @@ def test_user_removed_from_role(params_from_base_test_setup, replicator_directio
                                               replicator_authenticator=replicator_authenticator)
 
     # 5. on SGW remove the user from role1
-    sg_client.update_user(url=sg_admin_url, db=sg_db, name=username, channels=other_channels, roles=[role2])
+    sg_client.update_user(url=sg_admin_url, db=sg_db, name=username, channels=other_channels, roles=[role2], auth=auth)
     time.sleep(5)
     replicator.wait_until_replicator_idle(repl)
 
@@ -404,7 +411,7 @@ def test_user_removed_from_role(params_from_base_test_setup, replicator_directio
             assert doc_id in sg_doc_ids, "docs on accessible channel should get replicated to sync gateway"
 
     # 8. on SGW remove the user from role2
-    sg_client.update_user(url=sg_admin_url, db=sg_db, name=username, channels=other_channels, roles=[])
+    sg_client.update_user(url=sg_admin_url, db=sg_db, name=username, channels=other_channels, roles=[], auth=auth)
     time.sleep(5)
     replicator.wait_until_replicator_idle(repl)
 
@@ -466,6 +473,7 @@ def test_users_role_revoked(params_from_base_test_setup, replicator_type):
     cbl_db = params_from_base_test_setup["source_db"]
     sg_blip_url = params_from_base_test_setup["target_url"]
     db = params_from_base_test_setup["db"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if sync_gateway_version < "3.0.0" or liteserv_version < "3.0.0":
         pytest.skip('This test cannot run with version below 3.0')
@@ -483,22 +491,23 @@ def test_users_role_revoked(params_from_base_test_setup, replicator_type):
     username = "autotest"
     password = "password"
 
-    sg_client.create_role(url=sg_admin_url, db=sg_db, name=role1, channels=role1_channels)
-    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=other_channels, roles=roles)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_role(url=sg_admin_url, db=sg_db, name=role1, channels=role1_channels, auth=auth)
+    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=other_channels, roles=roles, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
     session = cookie, session_id
 
     # 2. on SGW create docs on channels
     sg_client.add_docs(url=sg_admin_url, db=sg_db, number=10, id_prefix="CH_A_doc",
-                       channels=["A"], auth=session)
+                       channels=["A"], auth=auth)
     sg_client.add_docs(url=sg_admin_url, db=sg_db, number=15, id_prefix="CH_B_doc",
-                       channels=["B"], auth=session)
+                       channels=["B"], auth=auth)
     sg_client.add_docs(url=sg_admin_url, db=sg_db, number=9, id_prefix="CH_ANB_doc",
-                       channels=["A", "B"], auth=session)
+                       channels=["A", "B"], auth=auth)
     sg_client.add_docs(url=sg_admin_url, db=sg_db, number=7, id_prefix="CH_ANC_doc",
-                       channels=["A", "C"], auth=session)
+                       channels=["A", "C"], auth=auth)
     sg_client.add_docs(url=sg_admin_url, db=sg_db, number=5, id_prefix="CH_C_doc",
-                       channels=["C"], auth=session)
+                       channels=["C"], auth=auth)
 
     # 3. on CBL start a one-time pull replicator with the user credential, and verify docs are replicated to SGW
     authenticator = Authenticator(base_url)
@@ -526,7 +535,7 @@ def test_users_role_revoked(params_from_base_test_setup, replicator_type):
     replicator.wait_until_replicator_idle(repl)
 
     # 5. role1 lost access to channel A
-    sg_client.update_role(url=sg_admin_url, db=sg_db, name=role1, channels=["B"])
+    sg_client.update_role(url=sg_admin_url, db=sg_db, name=role1, channels=["B"], auth=auth)
     time.sleep(5)
 
     replicator.wait_until_replicator_idle(repl)
@@ -563,7 +572,7 @@ def test_users_role_revoked(params_from_base_test_setup, replicator_type):
             assert doc_id in sg_doc_ids, "accessible docs were not replicated to sync gateway"
 
     # 8. on SGW role1 lost access to channel B as well
-    sg_client.update_role(url=sg_admin_url, db=sg_db, name=role1, channels=[])
+    sg_client.update_role(url=sg_admin_url, db=sg_db, name=role1, channels=[], auth=auth)
     time.sleep(5)
 
     replicator.wait_until_replicator_idle(repl)
@@ -620,6 +629,7 @@ def test_auto_purge_config_settings(params_from_base_test_setup, auto_purge_flag
     cbl_db = params_from_base_test_setup["source_db"]
     sg_blip_url = params_from_base_test_setup["target_url"]
     db = params_from_base_test_setup["db"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if sync_gateway_version < "3.0.0" or liteserv_version < "3.0.0":
         pytest.skip('This test cannot run with version below 3.0')
@@ -633,13 +643,14 @@ def test_auto_purge_config_settings(params_from_base_test_setup, auto_purge_flag
     channels_sg = ["CH_Flag"]
     username = "autotest"
     password = "password"
-    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
-    session = cookie, session_id
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
+    # session = cookie, session_id
 
     # 2. on SGW create 10 docs with channel
     sg_client.add_docs(url=sg_admin_url, db=sg_db, number=10, id_prefix="doc_for_auto_purge",
-                       channels=channels_sg, auth=session)
+                       channels=channels_sg, auth=auth)
 
     # 3. create replication with specified auto purge config setting, and verify docs are replicated
     authenticator = Authenticator(base_url)
@@ -673,14 +684,14 @@ def test_auto_purge_config_settings(params_from_base_test_setup, auto_purge_flag
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
 
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db)
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, auth=auth)
     assert len(sg_docs["rows"]) == 10, "Number of sg docs is not equal to total number expected"
 
     cbl_doc_count = db.getCount(cbl_db)
     assert cbl_doc_count == 10, "Number of cbl docs is not expected"
 
     # 4. on SGW remove the user from channel, and assert docs auto purge behavior
-    sg_client.update_user(url=sg_admin_url, db=sg_db, name=username, channels=["B"])
+    sg_client.update_user(url=sg_admin_url, db=sg_db, name=username, channels=["B"], auth=auth)
     time.sleep(3)
     replicator.wait_until_replicator_idle(repl)
 
@@ -737,6 +748,7 @@ def test_auto_purge_config_with_removal_type(params_from_base_test_setup, remova
     cbl_db = params_from_base_test_setup["source_db"]
     sg_blip_url = params_from_base_test_setup["target_url"]
     db = params_from_base_test_setup["db"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if sync_gateway_version < "3.0.0" or liteserv_version < "3.0.0":
         pytest.skip('This test cannot run with version below 3.0')
@@ -750,13 +762,14 @@ def test_auto_purge_config_with_removal_type(params_from_base_test_setup, remova
     channels_sg = ["CH_Flag"]
     username = "autotest"
     password = "password"
-    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
     session = cookie, session_id
 
     # 2. on SGW create 10 docs with channel and synced down to CBL
     sg_client.add_docs(url=sg_admin_url, db=sg_db, number=10, id_prefix="sg_doc",
-                       channels=channels_sg, auth=session)
+                       channels=channels_sg, auth=auth)
 
     # 3. create a replication, verify docs get replicated
     authenticator = Authenticator(base_url)
@@ -771,7 +784,7 @@ def test_auto_purge_config_with_removal_type(params_from_base_test_setup, remova
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
 
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db)
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, auth=auth)
     assert len(sg_docs["rows"]) == 10, "Number of sg docs is not equal to total number expected"
 
     cbl_doc_count = db.getCount(cbl_db)
@@ -782,7 +795,7 @@ def test_auto_purge_config_with_removal_type(params_from_base_test_setup, remova
     if removal_access_type == "doc_removed_from_channel":
         sg_client.update_doc(url=sg_url, db=sg_db, doc_id=picked_doc_id, auth=session, channels=["CH_Other"])
     elif removal_access_type == "user_removed_from_channel":
-        sg_client.update_user(url=sg_admin_url, db=sg_db, name=username, channels=["B"])
+        sg_client.update_user(url=sg_admin_url, db=sg_db, name=username, channels=["B"], auth=auth)
     time.sleep(5)
 
     # 5. verify doc auto purged on CBL
@@ -841,6 +854,7 @@ def test_auto_purge_notification(params_from_base_test_setup, auto_purge_flag):
     cbl_db = params_from_base_test_setup["source_db"]
     sg_blip_url = params_from_base_test_setup["target_url"]
     db = params_from_base_test_setup["db"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if sync_gateway_version < "3.0.0" or liteserv_version < "3.0.0":
         pytest.skip('This test cannot run with version below 3.0')
@@ -854,13 +868,14 @@ def test_auto_purge_notification(params_from_base_test_setup, auto_purge_flag):
     channels_sg = ["CH_Flag"]
     username = "autotest"
     password = "password"
-    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
-    session = cookie, session_id
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
+    # session = cookie, session_id
 
     # 2. on SGW create docs with channel and synced down to CBL
     sg_client.add_docs(url=sg_admin_url, db=sg_db, number=10, id_prefix="doc_auto_purged",
-                       channels=channels_sg, auth=session)
+                       channels=channels_sg, auth=auth)
 
     # 3. create a replication, disable auto purge config, verify docs replicated
     authenticator = Authenticator(base_url)
@@ -884,14 +899,14 @@ def test_auto_purge_notification(params_from_base_test_setup, auto_purge_flag):
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
 
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db)
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, auth=auth)
     assert len(sg_docs["rows"]) == 10, "Number of sg docs is not equal to total number expected"
 
     cbl_doc_count = db.getCount(cbl_db)
     assert cbl_doc_count == 10, "Number of cbl docs is not expected"
 
     # 4. user revoked access to channel A
-    sg_client.update_user(url=sg_admin_url, db=sg_db, name=username, channels=["B"])
+    sg_client.update_user(url=sg_admin_url, db=sg_db, name=username, channels=["B"], auth=auth)
     time.sleep(3)
     replicator.wait_until_replicator_idle(repl)
 
@@ -945,6 +960,7 @@ def test_auto_purge_with_pull_filtering(params_from_base_test_setup, auto_purge)
     liteserv_platform = params_from_base_test_setup["liteserv_platform"]
     log_file = params_from_base_test_setup["test_db_log_file"]
     test_cbllog = params_from_base_test_setup["test_cbllog"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if sync_gateway_version < "3.0.0" or liteserv_version < "3.0.0":
         pytest.skip('This test cannot run with version below 3.0')
@@ -960,13 +976,14 @@ def test_auto_purge_with_pull_filtering(params_from_base_test_setup, auto_purge)
     channels_sg = ["A", "B"]
     username = "autotest"
     password = "password"
-    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
-    session = cookie, session_id
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
+    # session = cookie, session_id
 
     # 2. on SGW create 10 docs with channel A
     sg_client.add_docs(url=sg_admin_url, db=sg_db, number=10, id_prefix="CH_A_doc",
-                       channels=["A"], auth=session)
+                       channels=["A"], auth=auth)
 
     # 3. on CBL start a one-time pull replicator with the user credential, and verify docs replicated
     authenticator = Authenticator(base_url)
@@ -979,7 +996,7 @@ def test_auto_purge_with_pull_filtering(params_from_base_test_setup, auto_purge)
                                               replicator_authenticator=replicator_authenticator)
     replicator.wait_until_replicator_idle(repl)
 
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db)
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, auth=auth)
     assert len(sg_docs["rows"]) == 10, "Number of sg docs is not equal to total number expected"
 
     cbl_doc_count = db.getCount(cbl_db)
@@ -1001,7 +1018,7 @@ def test_auto_purge_with_pull_filtering(params_from_base_test_setup, auto_purge)
     replicator.wait_until_replicator_idle(repl)
 
     # 4. on SGW remove doc from channel
-    sg_client.update_user(url=sg_admin_url, db=sg_db, name=username, channels=["B"])
+    sg_client.update_user(url=sg_admin_url, db=sg_db, name=username, channels=["B"], auth=auth)
     time.sleep(5)
     replicator.wait_until_replicator_idle(repl)
 
@@ -1053,6 +1070,7 @@ def test_user_reassigned_to_channel_pull(params_from_base_test_setup, replicator
     cbl_db = params_from_base_test_setup["source_db"]
     sg_blip_url = params_from_base_test_setup["target_url"]
     db = params_from_base_test_setup["db"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if sync_gateway_version < "3.0.0" or liteserv_version < "3.0.0":
         pytest.skip('This test cannot run with version below 3.0')
@@ -1066,16 +1084,17 @@ def test_user_reassigned_to_channel_pull(params_from_base_test_setup, replicator
     channels_sg = ["A", "B"]
     username = "autotest"
     password = "password"
-    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
-    session = cookie, session_id
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
+    # session = cookie, session_id
 
     # 2. on SGW create 10 docs with channel A, and 15 docs with channel B
     sg_client.add_docs(url=sg_admin_url, db=sg_db, number=10, id_prefix="CH_A_doc",
-                       channels=["A"], auth=session)
+                       channels=["A"], auth=auth)
 
     sg_client.add_docs(url=sg_admin_url, db=sg_db, number=15, id_prefix="CH_B_doc",
-                       channels=["B"], auth=session)
+                       channels=["B"], auth=auth)
 
     # 3. on CBL start a pull replicator with the user credential
     authenticator = Authenticator(base_url)
@@ -1089,7 +1108,7 @@ def test_user_reassigned_to_channel_pull(params_from_base_test_setup, replicator
     replicator.wait_until_replicator_idle(repl)
 
     # 4. assertion: doc count on CBL equals to docs on SGW, both are 25
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db)
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, auth=auth)
     assert len(sg_docs["rows"]) == 25, "Number of sg docs is not equal to total number expected"
 
     cbl_doc_count = db.getCount(cbl_db)
@@ -1102,27 +1121,27 @@ def test_user_reassigned_to_channel_pull(params_from_base_test_setup, replicator
             channel_A_doc_ids.append(doc_id)
 
     # 5. on SGW remove the user from channel A
-    sg_client.update_user(url=sg_admin_url, db=sg_db, name=username, channels=["B"])
+    sg_client.update_user(url=sg_admin_url, db=sg_db, name=username, channels=["B"], auth=auth)
     time.sleep(3)
     replicator.wait_until_replicator_idle(repl)
 
     # 6. assertion channel A docs got purged
     cbl_doc_count = db.getCount(cbl_db)
     cbl_doc_ids = db.getDocIds(cbl_db)
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db)
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, auth=auth)
     assert cbl_doc_count == 15, "Number of cbl docs is not expected"
     for doc_id in cbl_doc_ids:
         assert not doc_id.startswith("CH_A_doc"), "to be auto-purged doc is still accessible from cbl"
 
     # 7. reassign user access to channel A
-    sg_client.update_user(url=sg_admin_url, db=sg_db, name=username, channels=channels_sg)
+    sg_client.update_user(url=sg_admin_url, db=sg_db, name=username, channels=channels_sg, auth=auth)
     time.sleep(3)
     replicator.wait_until_replicator_idle(repl)
 
     # 8. assertion channel A docs got pulled back
     cbl_doc_count = db.getCount(cbl_db)
     cbl_doc_ids = db.getDocIds(cbl_db)
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db)
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, auth=auth)
     assert cbl_doc_count == 25, "Number of cbl docs is not expected"
     for doc_id in channel_A_doc_ids:
         assert doc_id in cbl_doc_ids, "docs expected to be pulled down after regain channel access are missing"
@@ -1160,6 +1179,7 @@ def test_user_reassigned_to_channel_push(params_from_base_test_setup, with_doc_u
     cbl_db = params_from_base_test_setup["source_db"]
     sg_blip_url = params_from_base_test_setup["target_url"]
     db = params_from_base_test_setup["db"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if sync_gateway_version < "3.0.0" or liteserv_version < "3.0.0":
         pytest.skip('This test cannot run with version below 3.0')
@@ -1173,16 +1193,17 @@ def test_user_reassigned_to_channel_push(params_from_base_test_setup, with_doc_u
     channels_sg = ["A", "B"]
     username = "autotest"
     password = "password"
-    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
     session = cookie, session_id
 
     # 2. on SGW create 10 docs with channel A, and 15 docs with channel B
     sg_client.add_docs(url=sg_admin_url, db=sg_db, number=10, id_prefix="CH_A_doc",
-                       channels=["A"], auth=session)
+                       channels=["A"], auth=auth)
 
     sg_client.add_docs(url=sg_admin_url, db=sg_db, number=15, id_prefix="CH_B_doc",
-                       channels=["B"], auth=session)
+                       channels=["B"], auth=auth)
 
     # 3. on CBL start a one-time pull replicator, verify docs replicated
     authenticator = Authenticator(base_url)
@@ -1196,7 +1217,7 @@ def test_user_reassigned_to_channel_push(params_from_base_test_setup, with_doc_u
     replicator.wait_until_replicator_idle(repl)
     replicator.stop(repl)
 
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db)
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, auth=auth)
     assert len(sg_docs["rows"]) == 25, "Number of sg docs is not equal to total number expected"
 
     cbl_doc_count = db.getCount(cbl_db)
@@ -1211,7 +1232,7 @@ def test_user_reassigned_to_channel_push(params_from_base_test_setup, with_doc_u
     replicator.wait_until_replicator_idle(repl)
 
     # 5. on SGW remove the user from channel A, verify docs on channel A not impacted
-    sg_client.update_user(url=sg_admin_url, db=sg_db, name=username, channels=["B"])
+    sg_client.update_user(url=sg_admin_url, db=sg_db, name=username, channels=["B"], auth=auth)
     time.sleep(5)
     replicator.wait_until_replicator_idle(repl)
 
@@ -1228,7 +1249,7 @@ def test_user_reassigned_to_channel_push(params_from_base_test_setup, with_doc_u
         db.update_bulk_docs(database=cbl_db, number_of_updates=3, doc_ids=channel_A_doc_ids)
 
     # 7. reassign user access to channel A
-    sg_client.update_user(url=sg_admin_url, db=sg_db, name=username, channels=channels_sg)
+    sg_client.update_user(url=sg_admin_url, db=sg_db, name=username, channels=channels_sg, auth=auth)
     time.sleep(5)
     replicator.wait_until_replicator_idle(repl)
 
@@ -1278,6 +1299,7 @@ def test_tombstoned_doc_auto_purge(params_from_base_test_setup):
     cbl_db = params_from_base_test_setup["source_db"]
     sg_blip_url = params_from_base_test_setup["target_url"]
     db = params_from_base_test_setup["db"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if sync_gateway_version < "3.0.0" or liteserv_version < "3.0.0":
         pytest.skip('This test cannot run with version below 3.0')
@@ -1291,19 +1313,20 @@ def test_tombstoned_doc_auto_purge(params_from_base_test_setup):
     channels_sg = ["A", "B"]
     username = "autotest"
     password = "password"
-    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
     session = cookie, session_id
 
     # 2. on SGW create docs with channel A, B and channel A and B
     sg_client.add_docs(url=sg_admin_url, db=sg_db, number=10, id_prefix="CH_A_doc",
-                       channels=["A"], auth=session)
+                       channels=["A"], auth=auth)
 
     sg_client.add_docs(url=sg_admin_url, db=sg_db, number=2, id_prefix="CH_B_doc",
-                       channels=["B"], auth=session)
+                       channels=["B"], auth=auth)
 
     sg_client.add_docs(url=sg_admin_url, db=sg_db, number=5, id_prefix="CH_ANB_doc",
-                       channels=channels_sg, auth=session)
+                       channels=channels_sg, auth=auth)
 
     # 3. on CBL start a pull replicator and verify docs replicated
     authenticator = Authenticator(base_url)
@@ -1316,7 +1339,7 @@ def test_tombstoned_doc_auto_purge(params_from_base_test_setup):
                                               replicator_authenticator=replicator_authenticator)
     replicator.wait_until_replicator_idle(repl)
 
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db)
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, auth=auth)
     assert len(sg_docs["rows"]) == 17, "Number of sg docs is not equal to total number expected"
 
     cbl_doc_count = db.getCount(cbl_db)
@@ -1338,7 +1361,7 @@ def test_tombstoned_doc_auto_purge(params_from_base_test_setup):
     sg_client.delete_doc(url=sg_url, db=sg_db, doc_id=picked_ch_ANB_doc_id, rev=doc['_rev'], auth=session)
 
     # 5. remove user access from channel A
-    sg_client.update_user(url=sg_admin_url, db=sg_db, name=username, channels=["B"])
+    sg_client.update_user(url=sg_admin_url, db=sg_db, name=username, channels=["B"], auth=auth)
     time.sleep(5)
 
     # 6. on CBL, start a new pull replication
@@ -1400,6 +1423,7 @@ def test_resurrected_doc_auto_purge(params_from_base_test_setup, resurrect_keep_
     sg_blip_url = params_from_base_test_setup["target_url"]
     db = params_from_base_test_setup["db"]
     xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if sync_gateway_version < "3.0.0" or liteserv_version < "3.0.0":
         pytest.skip('This test cannot run with version below 3.0')
@@ -1416,8 +1440,9 @@ def test_resurrected_doc_auto_purge(params_from_base_test_setup, resurrect_keep_
     channels_sg = ["A", "B"]
     username = "autotest"
     password = "password"
-    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
     session = cookie, session_id
 
     # 2. on SGW create 10 docs with channel A, and 15 docs with channel B
@@ -1445,7 +1470,7 @@ def test_resurrected_doc_auto_purge(params_from_base_test_setup, resurrect_keep_
                                               replicator_authenticator=replicator_authenticator)
     replicator.wait_until_replicator_idle(repl)
 
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db)
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, auth=auth)
     assert len(sg_docs["rows"]) == 25, "Number of sg docs is not equal to total number expected"
 
     cbl_doc_count = db.getCount(cbl_db)
@@ -1459,7 +1484,7 @@ def test_resurrected_doc_auto_purge(params_from_base_test_setup, resurrect_keep_
         log_info(deleted)
     elif deletion_type == "purge":
         log_info('Purging doc via Sync Gateway')
-        sg_client.purge_doc(url=sg_admin_url, db=sg_db, doc=doc)
+        sg_client.purge_doc(url=sg_admin_url, db=sg_db, doc=doc, auth=auth)
 
     # 6. doc resurrected
     doc_body = {}
@@ -1492,7 +1517,7 @@ def test_resurrected_doc_auto_purge(params_from_base_test_setup, resurrect_keep_
     time.sleep(5)
 
     # 7. on SGW remove the user from channel A
-    sg_client.update_user(url=sg_admin_url, db=sg_db, name=username, channels=["B"])
+    sg_client.update_user(url=sg_admin_url, db=sg_db, name=username, channels=["B"], auth=auth)
     time.sleep(5)
 
     # 8. on CBL, start replication with pull/push/push-pull replicator type
@@ -1536,6 +1561,7 @@ def test_role_ressignment_end_to_end(params_from_base_test_setup):
     cbl_db = params_from_base_test_setup["source_db"]
     sg_blip_url = params_from_base_test_setup["target_url"]
     db = params_from_base_test_setup["db"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if sync_gateway_version < "3.0.0" or liteserv_version < "3.0.0":
         pytest.skip('This test cannot run with version below 3.0')
@@ -1555,28 +1581,29 @@ def test_role_ressignment_end_to_end(params_from_base_test_setup):
     username2 = "admintest"
     password = "password"
 
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     # role1 access channel A
-    sg_client.create_role(url=sg_admin_url, db=sg_db, name=role1, channels=role1_channels)
+    sg_client.create_role(url=sg_admin_url, db=sg_db, name=role1, channels=role1_channels, auth=auth)
     # role2 access channel A and channel B
-    sg_client.create_role(url=sg_admin_url, db=sg_db, name=role2, channels=role2_channels)
+    sg_client.create_role(url=sg_admin_url, db=sg_db, name=role2, channels=role2_channels, auth=auth)
     # user1 access channel A
-    sg_client.create_user(sg_admin_url, sg_db, username1, password=password, roles=[role1])
+    sg_client.create_user(sg_admin_url, sg_db, username1, password=password, roles=[role1], auth=auth)
     # user2 access channel A and channel B
-    sg_client.create_user(sg_admin_url, sg_db, username2, password=password, roles=roles)
-    cookie1, session_id1 = sg_client.create_session(sg_admin_url, sg_db, username1)
+    sg_client.create_user(sg_admin_url, sg_db, username2, password=password, roles=roles, auth=auth)
+    cookie1, session_id1 = sg_client.create_session(sg_admin_url, sg_db, username1, auth=auth)
     session1 = cookie1, session_id1
-    cookie2, session_id2 = sg_client.create_session(sg_admin_url, sg_db, username2)
-    session2 = cookie2, session_id2
+    cookie2, session_id2 = sg_client.create_session(sg_admin_url, sg_db, username2, auth=auth)
+    # session2 = cookie2, session_id2
 
     # 2. on SGW create docs in channels
     # create docs with user1
     sg_client.add_docs(url=sg_admin_url, db=sg_db, number=10, id_prefix="CH_A_doc",
-                       channels=["A"], auth=session1)
+                       channels=["A"], auth=auth)
     # create docs with user2
     sg_client.add_docs(url=sg_admin_url, db=sg_db, number=15, id_prefix="CH_B_doc",
-                       channels=["B"], auth=session2)
+                       channels=["B"], auth=auth)
     sg_client.add_docs(url=sg_admin_url, db=sg_db, number=9, id_prefix="CH_ANB_doc",
-                       channels=["A", "B"], auth=session2)
+                       channels=["A", "B"], auth=auth)
 
     # 3. on CBL start a continous push-pull replication with user1, verify docs replicated
     authenticator = Authenticator(base_url)
@@ -1589,14 +1616,14 @@ def test_role_ressignment_end_to_end(params_from_base_test_setup):
                                               replicator_authenticator=replicator_authenticator)
     replicator.wait_until_replicator_idle(repl)
 
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db)
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, auth=auth)
     assert len(sg_docs["rows"]) == 34, "Number of sg docs is not equal to total number expected"
 
     cbl_doc_count = db.getCount(cbl_db)
     assert cbl_doc_count == 19, "Number of cbl docs is not equal to total number expected"
 
     # 4. on SGW grant role2 to user1, verify docs belong to channel B get replicated
-    sg_client.update_user(url=sg_admin_url, db=sg_db, name=username1, roles=roles)
+    sg_client.update_user(url=sg_admin_url, db=sg_db, name=username1, roles=roles, auth=auth)
     time.sleep(3)
     replicator.wait_until_replicator_idle(repl)
 
@@ -1607,14 +1634,14 @@ def test_role_ressignment_end_to_end(params_from_base_test_setup):
     db.create_bulk_docs(3, "additional_CH_B_doc", db=cbl_db, channels=["B"])
     replicator.wait_until_replicator_idle(repl)
 
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db)
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, auth=auth)
     assert len(sg_docs["rows"]) == 37, "Number of sg docs is not expected"
 
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session1)
     assert len(sg_docs["rows"]) == 37, "Number of sg docs is not expected"
 
     # 6. user1 is revoked role2, verify docs purged
-    sg_client.update_user(url=sg_admin_url, db=sg_db, name=username1, roles=[role1])
+    sg_client.update_user(url=sg_admin_url, db=sg_db, name=username1, roles=[role1], auth=auth)
     time.sleep(5)
     replicator.wait_until_replicator_idle(repl)
 

@@ -3,6 +3,7 @@ import json
 
 import requests
 from requests import Session
+from requests.auth import HTTPBasicAuth
 from jinja2 import Template
 import time
 import re
@@ -56,7 +57,7 @@ def get_sync_gateway_version(host):
     if sg_ssl_enabled(cluster_config):
         sg_scheme = "https"
 
-    resp = requests.get("{}://{}:4985".format(sg_scheme, host), verify=False)
+    resp = requests.get("{}://{}:4985".format(sg_scheme, host), verify=False, auth=HTTPBasicAuth('sgw_admin', 'password'))
     log_r(resp)
     resp.raise_for_status()
     resp_obj = resp.json()
@@ -150,7 +151,7 @@ def get_sg_accel_version(host):
     if sg_ssl_enabled(cluster_config):
         sg_scheme = "https"
 
-    resp = requests.get("{}://{}:4985".format(sg_scheme, host), verify=False)
+    resp = requests.get("{}://{}:4985".format(sg_scheme, host), verify=False, auth=HTTPBasicAuth('sgw_admin', 'password'))
     log_r(resp)
     resp.raise_for_status()
     resp_obj = resp.json()
@@ -177,7 +178,7 @@ def verify_sg_accel_product_info(host):
     if sg_ssl_enabled(cluster_config):
         sg_scheme = "https"
 
-    resp = requests.get("{}://{}:4985".format(sg_scheme, host), verify=False)
+    resp = requests.get("{}://{}:4985".format(sg_scheme, host), verify=False, auth=HTTPBasicAuth('sgw_admin', 'password'))
     log_r(resp)
     resp.raise_for_status()
     resp_obj = resp.json()
@@ -1129,12 +1130,12 @@ def update_replication_in_sgw_config(sg_conf_name, sg_mode, repl_remote, repl_re
     return temp_sg_config
 
 
-def wait_until_docs_imported_from_server(sg_admin_url, sg_client, sg_db, expected_docs, prev_import_count, timeout=5):
-    sg_expvars = sg_client.get_expvars(sg_admin_url)
+def wait_until_docs_imported_from_server(sg_admin_url, sg_client, sg_db, expected_docs, prev_import_count, auth=None, timeout=5):
+    sg_expvars = sg_client.get_expvars(sg_admin_url, auth=auth)
     sg_import_count = sg_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"]
     count = 0
     while True:
-        sg_expvars = sg_client.get_expvars(sg_admin_url)
+        sg_expvars = sg_client.get_expvars(sg_admin_url, auth=auth)
         sg_import_count = sg_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"]
         import_count = sg_import_count - prev_import_count
         if count > timeout or import_count >= expected_docs:

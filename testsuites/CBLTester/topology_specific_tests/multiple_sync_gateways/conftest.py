@@ -69,6 +69,7 @@ def params_from_base_suite_setup(request):
     disable_tls_server = request.config.getoption("--disable-tls-server")
 
     disable_admin_auth = request.config.getoption("--disable-admin-auth")
+    log_info("disable_admin_auth flag: {}".format(disable_admin_auth))
 
     testserver = TestServerFactory.create(platform=liteserv_platform,
                                           version_build=liteserv_version,
@@ -248,6 +249,10 @@ def params_from_base_suite_setup(request):
         expected_server_version=server_version,
         expected_sync_gateway_version=sync_gateway_version
     )
+
+    need_sgw_admin_auth = (not disable_admin_auth) and sync_gateway_version >= "3.0"
+    log_info("need_sgw_admin_auth setting: {}".format(need_sgw_admin_auth))
+
     if enable_sample_bucket and not create_db_per_suite:
         # if enable_sample_bucket and not create_db_per_test:
         raise Exception("enable_sample_bucket has to be used with create_db_per_suite")
@@ -313,7 +318,7 @@ def params_from_base_suite_setup(request):
     if prometheus_enable:
         if not prometheus.is_prometheus_installed():
             prometheus.install_prometheus()
-        prometheus.start_prometheus(sg_ip, sg_ssl)
+        prometheus.start_prometheus(sg_ip, sg_ssl, need_sgw_admin_auth)
 
     yield {
         "cluster_config": cluster_config,
@@ -347,7 +352,8 @@ def params_from_base_suite_setup(request):
         "encryption_password": encryption_password,
         "cbs_ce": cbs_ce,
         "sg_ce": sg_ce,
-        "ssl_enabled": cbs_ssl
+        "ssl_enabled": cbs_ssl,
+        "need_sgw_admin_auth": need_sgw_admin_auth
     }
     if create_db_per_suite:
         # Delete CBL database
@@ -368,7 +374,7 @@ def params_from_base_suite_setup(request):
     # Delete png files under resources/data
     clear_resources_pngs()
     if prometheus_enable:
-        prometheus.stop_prometheus(sg_ip, sg_ssl)
+        prometheus.stop_prometheus(sg_ip, sg_ssl, need_sgw_admin_auth)
 
 
 @pytest.fixture(scope="function")
@@ -407,6 +413,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     cbs_ssl = params_from_base_suite_setup["ssl_enabled"]
     prometheus_enable = request.config.getoption("--prometheus-enable")
     use_local_testserver = request.config.getoption("--use-local-testserver")
+    need_sgw_admin_auth = params_from_base_suite_setup["need_sgw_admin_auth"]
 
     source_db = None
     cbl_db = None
@@ -492,7 +499,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "cbs_ce": cbs_ce,
         "sg_ce": sg_ce,
         "ssl_enabled": cbs_ssl,
-        "prometheus_enable": prometheus_enable
+        "prometheus_enable": prometheus_enable,
+        "need_sgw_admin_auth": need_sgw_admin_auth
     }
 
     log_info("Tearing down test")

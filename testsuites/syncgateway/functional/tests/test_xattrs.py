@@ -22,6 +22,7 @@ from keywords.utils import host_for_url, log_info
 from libraries.testkit.cluster import Cluster
 from keywords.ChangesTracker import ChangesTracker
 from utilities.cluster_config_utils import get_sg_use_views, get_sg_version, persist_cluster_config_environment_prop, copy_to_temp_conf, get_cluster
+from keywords.constants import RBAC_FULL_ADMIN
 
 
 # Since sdk is quicker to update docs we need to have it sleep longer
@@ -71,6 +72,7 @@ def test_olddoc_nil(params_from_base_test_setup, sg_conf_name):
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
     delta_sync_enabled = params_from_base_test_setup['delta_sync_enabled']
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     # This test should only run when using xattr meta storage
     if not xattrs_enabled or delta_sync_enabled:
@@ -81,6 +83,7 @@ def test_olddoc_nil(params_from_base_test_setup, sg_conf_name):
     sg_url = cluster_topology['sync_gateways'][0]['public']
     cbs_url = cluster_topology['couchbase_servers'][0]
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     log_info('sg_conf: {}'.format(sg_conf))
     log_info('sg_admin_url: {}'.format(sg_admin_url))
@@ -92,7 +95,7 @@ def test_olddoc_nil(params_from_base_test_setup, sg_conf_name):
 
     if sync_gateway_version >= "2.5.0":
         sg_client = MobileRestClient()
-        expvars = sg_client.get_expvars(sg_admin_url)
+        expvars = sg_client.get_expvars(sg_admin_url, auth=auth)
         error_count = expvars["syncgateway"]["global"]["resource_utilization"]["error_count"]
 
     # Create clients
@@ -117,19 +120,22 @@ def test_olddoc_nil(params_from_base_test_setup, sg_conf_name):
             db=sg_db,
             name=user.name,
             password=user.password,
-            channels=user.channels
+            channels=user.channels,
+            auth=auth
         )
 
     user_one_auth = sg_client.create_session(
         url=sg_admin_url,
         db=sg_db,
-        name=user_one_info.name
+        name=user_one_info.name,
+        auth=auth
     )
 
     user_two_auth = sg_client.create_session(
         url=sg_admin_url,
         db=sg_db,
-        name=user_two_info.name
+        name=user_two_info.name,
+        auth=auth
     )
 
     abc_docs = document.create_docs(doc_id_prefix="abc_docs", number=num_docs, channels=user_one_info.channels)
@@ -167,7 +173,7 @@ def test_olddoc_nil(params_from_base_test_setup, sg_conf_name):
 
     if sync_gateway_version >= "2.5.0":
         sg_client = MobileRestClient()
-        expvars = sg_client.get_expvars(sg_admin_url)
+        expvars = sg_client.get_expvars(sg_admin_url, auth=auth)
         assert error_count < expvars["syncgateway"]["global"]["resource_utilization"]["error_count"], "error_count did not increment"
 
 
@@ -192,10 +198,12 @@ def test_on_demand_doc_processing(params_from_base_test_setup, sg_conf_name, num
     cluster_topology = params_from_base_test_setup['cluster_topology']
     mode = params_from_base_test_setup['mode']
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     cbs_url = cluster_topology['couchbase_servers'][0]
     sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
     sg_url = cluster_topology['sync_gateways'][0]['public']
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     bucket_name = 'data-bucket'
     sg_db = 'db'
@@ -239,8 +247,8 @@ def test_on_demand_doc_processing(params_from_base_test_setup, sg_conf_name, num
 
     for user_name in user_names:
         user_channels = ['{}_chan'.format(user_name)]
-        sg_client.create_user(url=sg_admin_url, db=sg_db, name=user_name, password='pass', channels=user_channels)
-        auth_dict[user_name] = sg_client.create_session(url=sg_admin_url, db=sg_db, name=user_name)
+        sg_client.create_user(url=sg_admin_url, db=sg_db, name=user_name, password='pass', channels=user_channels, auth=auth)
+        auth_dict[user_name] = sg_client.create_session(url=sg_admin_url, db=sg_db, name=user_name, auth=auth)
         docs = document.create_docs('{}_doc'.format(user_name), number=number_docs_per_user, channels=user_channels, prop_generator=update_props)
         for doc in docs:
             docs_to_add[doc['_id']] = doc
@@ -334,6 +342,7 @@ def test_on_demand_import_of_external_updates(params_from_base_test_setup, sg_co
     cluster_topology = params_from_base_test_setup['cluster_topology']
     mode = params_from_base_test_setup['mode']
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     # This test should only run when using xattr meta storage
     if not xattrs_enabled:
@@ -347,6 +356,7 @@ def test_on_demand_import_of_external_updates(params_from_base_test_setup, sg_co
     sg_url = cluster_topology['sync_gateways'][0]['public']
     cbs_url = cluster_topology['couchbase_servers'][0]
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     log_info('sg_conf: {}'.format(sg_conf))
     log_info('sg_admin_url: {}'.format(sg_admin_url))
@@ -382,13 +392,15 @@ def test_on_demand_import_of_external_updates(params_from_base_test_setup, sg_co
         db=sg_db,
         name=seth_user_info.name,
         password=seth_user_info.password,
-        channels=seth_user_info.channels
+        channels=seth_user_info.channels,
+        auth=auth
     )
 
     seth_auth = sg_client.create_session(
         url=sg_admin_url,
         db=sg_db,
-        name=seth_user_info.name
+        name=seth_user_info.name,
+        auth=auth
     )
 
     doc_id = 'test_doc'
@@ -451,6 +463,7 @@ def test_offline_processing_of_external_updates(params_from_base_test_setup, sg_
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     # Skip the test if ssl disabled as it cannot run without port using http protocol
     if ("sync_gateway_default_functional_tests_no_port" in sg_conf_name) and get_sg_version(cluster_conf) < "1.5.0":
@@ -473,6 +486,7 @@ def test_offline_processing_of_external_updates(params_from_base_test_setup, sg_
     sg_url = cluster_topology['sync_gateways'][0]['public']
     cbs_url = cluster_topology['couchbase_servers'][0]
     cbs_ce_version = params_from_base_test_setup["cbs_ce"]
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     log_info('sg_conf: {}'.format(sg_conf))
     log_info('sg_admin_url: {}'.format(sg_admin_url))
@@ -493,7 +507,7 @@ def test_offline_processing_of_external_updates(params_from_base_test_setup, sg_
     sg_client = MobileRestClient()
     if sync_gateway_version >= "2.5.0":
         sg_admin_url = cluster_topology["sync_gateways"][0]["admin"]
-        expvars = sg_client.get_expvars(sg_admin_url)
+        expvars = sg_client.get_expvars(sg_admin_url, auth=auth)
         chan_cache_misses = expvars["syncgateway"]["per_db"][sg_db]["cache"]["chan_cache_misses"]
 
     cbs_ip = host_for_url(cbs_url)
@@ -513,13 +527,15 @@ def test_offline_processing_of_external_updates(params_from_base_test_setup, sg_
         db=sg_db,
         name=seth_user_info.name,
         password=seth_user_info.password,
-        channels=seth_user_info.channels
+        channels=seth_user_info.channels,
+        auth=auth
     )
 
     seth_auth = sg_client.create_session(
         url=sg_admin_url,
         db=sg_db,
-        name=seth_user_info.name
+        name=seth_user_info.name,
+        auth=auth
     )
 
     # Add docs
@@ -584,7 +600,7 @@ def test_offline_processing_of_external_updates(params_from_base_test_setup, sg_
     docs_to_verify_in_changes = [{'id': doc['_id'], 'rev': doc['_rev']} for doc in bulk_resp]
     sg_client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=docs_to_verify_in_changes, auth=seth_auth)
     if sync_gateway_version >= "2.5.0":
-        expvars = sg_client.get_expvars(sg_admin_url)
+        expvars = sg_client.get_expvars(sg_admin_url, auth=auth)
         assert chan_cache_misses < expvars["syncgateway"]["per_db"][sg_db]["cache"]["chan_cache_misses"], "chan_cache_misses did not get incremented"
 
 
@@ -614,6 +630,7 @@ def test_large_initial_import(params_from_base_test_setup, sg_conf_name):
     mode = params_from_base_test_setup['mode']
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     # Skip the test if ssl disabled as it cannot run without port using http protocol
     if ("sync_gateway_default_functional_tests_no_port" in sg_conf_name) and get_sg_version(cluster_conf) < "1.5.0":
@@ -635,6 +652,7 @@ def test_large_initial_import(params_from_base_test_setup, sg_conf_name):
     sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
     sg_url = cluster_topology['sync_gateways'][0]['public']
     cbs_url = cluster_topology['couchbase_servers'][0]
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     log_info('sg_conf: {}'.format(sg_conf))
     log_info('sg_admin_url: {}'.format(sg_admin_url))
@@ -682,7 +700,7 @@ def test_large_initial_import(params_from_base_test_setup, sg_conf_name):
     # Any document that have not been imported with be imported on demand.
     # Verify that all the douments have been imported
     sg_client = MobileRestClient()
-    seth_auth = sg_client.create_user(url=sg_admin_url, db=sg_db, name='seth', password='pass', channels=['created_via_sdk'])
+    seth_auth = sg_client.create_user(url=sg_admin_url, db=sg_db, name='seth', password='pass', channels=['created_via_sdk'], auth=auth)
 
     sdk_doc_ids_scratch_pad = list(sdk_doc_ids)
     bulk_resp, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=sdk_doc_ids, auth=seth_auth)
@@ -728,6 +746,7 @@ def test_purge(params_from_base_test_setup, sg_conf_name, use_multiple_channels,
     mode = params_from_base_test_setup['mode']
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if ("sync_gateway_default_functional_tests_no_port" in sg_conf_name) and get_sg_version(cluster_conf) < "1.5.0":
         pytest.skip('couchbase/couchbases ports do not support for versions below 1.5')
@@ -741,6 +760,7 @@ def test_purge(params_from_base_test_setup, sg_conf_name, use_multiple_channels,
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
     sg_url = cluster_topology['sync_gateways'][0]['public']
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     bucket_name = 'data-bucket'
     cbs_url = cluster_topology['couchbase_servers'][0]
@@ -776,13 +796,15 @@ def test_purge(params_from_base_test_setup, sg_conf_name, use_multiple_channels,
         db=sg_db,
         name=seth_user_info.name,
         password=seth_user_info.password,
-        channels=seth_user_info.channels
+        channels=seth_user_info.channels,
+        auth=auth
     )
 
     seth_auth = sg_client.create_session(
         url=sg_admin_url,
         db=sg_db,
-        name=seth_user_info.name
+        name=seth_user_info.name,
+        auth=auth
     )
 
     # Create 'number_docs_per_client' docs from Sync Gateway
@@ -843,7 +865,8 @@ def test_purge(params_from_base_test_setup, sg_conf_name, use_multiple_channels,
             sg_db=sg_db,
             doc_id=doc_id,
             expected_number_of_revs=number_revs_per_doc,
-            expected_number_of_channels=len(channels)
+            expected_number_of_channels=len(channels),
+            auth=auth
         )
 
     # Check that all of the doc ids are present in the SDK response
@@ -883,14 +906,15 @@ def test_purge(params_from_base_test_setup, sg_conf_name, use_multiple_channels,
             doc_id=doc_id,
             expected_number_of_revs=number_revs_per_doc + 1,
             expected_number_of_channels=len(channels),
-            deleted_docs=True
+            deleted_docs=True,
+            auth=auth
         )
 
     assert len(doc_id_choice_pool) == number_docs_per_client
     assert len(deleted_doc_ids) == number_docs_per_client
 
     # Sync Gateway purge all docs
-    sg_client.purge_docs(url=sg_admin_url, db=sg_db, docs=sg_docs)
+    sg_client.purge_docs(url=sg_admin_url, db=sg_db, docs=sg_docs, auth=auth)
 
     # Verify SG can't see the docs. Bulk get should only return errors
     sg_docs_visible_after_purge, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=all_doc_ids, auth=seth_auth, validate=False)
@@ -950,6 +974,7 @@ def test_sdk_does_not_see_sync_meta(params_from_base_test_setup, sg_conf_name):
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     # Skip the test if ssl disabled as it cannot run without port using http protocol
     if ("sync_gateway_default_functional_tests_no_port" in sg_conf_name) and get_sg_version(cluster_conf) < "1.5.0":
@@ -970,6 +995,7 @@ def test_sdk_does_not_see_sync_meta(params_from_base_test_setup, sg_conf_name):
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
     sg_url = cluster_topology['sync_gateways'][0]['public']
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     bucket_name = 'data-bucket'
     cbs_url = cluster_topology['couchbase_servers'][0]
@@ -986,8 +1012,8 @@ def test_sdk_does_not_see_sync_meta(params_from_base_test_setup, sg_conf_name):
 
     # Create sg user
     sg_client = MobileRestClient()
-    sg_client.create_user(url=sg_admin_url, db=sg_db, name='seth', password='pass', channels=['shared'])
-    seth_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='seth')
+    sg_client.create_user(url=sg_admin_url, db=sg_db, name='seth', password='pass', channels=['shared'], auth=auth)
+    seth_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='seth', auth=auth)
 
     # Connect to server via SDK
     cbs_ip = host_for_url(cbs_url)
@@ -1087,6 +1113,7 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
     mode = params_from_base_test_setup['mode']
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     # Skip the test if ssl disabled as it cannot run without port using http protocol
     if ("sync_gateway_default_functional_tests_no_port" in sg_conf_name) and get_sg_version(cluster_conf) < "1.5.0":
@@ -1107,6 +1134,7 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
     sg_url = cluster_topology['sync_gateways'][0]['public']
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     bucket_name = 'data-bucket'
     cbs_url = cluster_topology['couchbase_servers'][0]
@@ -1145,8 +1173,8 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
     # Create sg user
     log_info('Creating user / session on Sync Gateway ...')
     sg_client = MobileRestClient()
-    sg_client.create_user(url=sg_admin_url, db=sg_db, name='seth', password='pass', channels=['sg', 'sdk'])
-    seth_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='seth')
+    sg_client.create_user(url=sg_admin_url, db=sg_db, name='seth', password='pass', channels=['sg', 'sdk'], auth=auth)
+    seth_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='seth', auth=auth)
 
     # Create / add docs to sync gateway
     log_info('Adding docs Sync Gateway ...')
@@ -1330,6 +1358,7 @@ def test_sg_sdk_interop_shared_docs(params_from_base_test_setup,
     mode = params_from_base_test_setup['mode']
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if ("sync_gateway_default_functional_tests_no_port" in sg_conf_name) and get_sg_version(cluster_conf) < "1.5.0":
         pytest.skip('couchbase/couchbases ports do not support for versions below 1.5')
@@ -1343,6 +1372,7 @@ def test_sg_sdk_interop_shared_docs(params_from_base_test_setup,
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
     sg_url = cluster_topology['sync_gateways'][0]['public']
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     bucket_name = 'data-bucket'
     cbs_url = cluster_topology['couchbase_servers'][0]
@@ -1363,8 +1393,8 @@ def test_sg_sdk_interop_shared_docs(params_from_base_test_setup,
 
     # Create sg user
     sg_client = MobileRestClient()
-    sg_client.create_user(url=sg_admin_url, db=sg_db, name='seth', password='pass', channels=['shared'])
-    seth_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='seth')
+    sg_client.create_user(url=sg_admin_url, db=sg_db, name='seth', password='pass', channels=['shared'], auth=auth)
+    seth_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='seth', auth=auth)
 
     # Connect to server via SDK
     cbs_ip = host_for_url(cbs_url)
@@ -1585,6 +1615,7 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
     mode = params_from_base_test_setup['mode']
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     # Skip the test if ssl disabled as it cannot run without port using http protocol
     if ("sync_gateway_default_functional_tests_no_port" in sg_conf_name) and get_sg_version(cluster_conf) < "1.5.0":
@@ -1605,6 +1636,7 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
     sg_url = cluster_topology['sync_gateways'][0]['public']
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     bucket_name = 'data-bucket'
     cbs_url = cluster_topology['couchbase_servers'][0]
@@ -1615,11 +1647,11 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
     cluster.reset(sg_config_path=sg_conf)
 
     sg_client = MobileRestClient()
-    sg_client.create_user(url=sg_admin_url, db=sg_db, name='autosdkuser', password='pass', channels=['shared'])
-    autosdkuser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autosdkuser')
+    sg_client.create_user(url=sg_admin_url, db=sg_db, name='autosdkuser', password='pass', channels=['shared'], auth=auth)
+    autosdkuser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autosdkuser', auth=auth)
 
-    sg_client.create_user(url=sg_admin_url, db=sg_db, name='autosguser', password='pass', channels=['sg-shared'])
-    autosguser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autosguser')
+    sg_client.create_user(url=sg_admin_url, db=sg_db, name='autosguser', password='pass', channels=['sg-shared'], auth=auth)
+    autosguser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autosguser', auth=auth)
 
     log_info('Num docs per client: {}'.format(number_docs_per_client))
     log_info('Num updates per doc per client: {}'.format(number_updates_per_doc_per_client))
@@ -2107,11 +2139,11 @@ def verify_sdk_deletes(sdk_client, docs_ids_to_verify_deleted):
     assert len(docs_to_verify_scratchpad) == 0
 
 
-def verify_sg_xattrs(mode, sg_client, sg_url, sg_db, doc_id, expected_number_of_revs, expected_number_of_channels, deleted_docs=False):
+def verify_sg_xattrs(mode, sg_client, sg_url, sg_db, doc_id, expected_number_of_revs, expected_number_of_channels, deleted_docs=False, auth=None):
     """ Verify expected values for xattr sync meta data via Sync Gateway _raw """
 
     # Get Sync Gateway sync meta
-    raw_doc = sg_client.get_raw_doc(sg_url, db=sg_db, doc_id=doc_id)
+    raw_doc = sg_client.get_raw_doc(sg_url, db=sg_db, doc_id=doc_id, auth=auth)
     sg_sync_meta = raw_doc['_sync']
 
     log_info('Verifying XATTR (expected num revs: {}, expected num channels: {})'.format(
@@ -2267,10 +2299,12 @@ def test_sg_sdk_interop_shared_updates_from_sg(params_from_base_test_setup,
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
     sg_url = cluster_topology['sync_gateways'][0]['public']
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     bucket_name = 'data-bucket'
     cbs_url = cluster_topology['couchbase_servers'][0]
     sg_db = 'db'
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     log_info('Num docs per client: {}'.format(number_docs_per_client))
     log_info('Num updates per doc per client: {}'.format(number_updates_per_doc_per_client))
@@ -2287,8 +2321,8 @@ def test_sg_sdk_interop_shared_updates_from_sg(params_from_base_test_setup,
 
     # Create sg user
     sg_client = MobileRestClient()
-    sg_client.create_user(url=sg_admin_url, db=sg_db, name='autotest', password='pass', channels=['shared'])
-    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest')
+    sg_client.create_user(url=sg_admin_url, db=sg_db, name='autotest', password='pass', channels=['shared'], auth=auth)
+    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest', auth=auth)
 
     # Connect to server via SDK
     cbs_ip = host_for_url(cbs_url)
@@ -2461,6 +2495,7 @@ def test_purge_and_view_compaction(params_from_base_test_setup, sg_conf_name):
     cluster_topology = params_from_base_test_setup['cluster_topology']
     mode = params_from_base_test_setup['mode']
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     # This test should only run when using xattr meta storage
     if not xattrs_enabled or mode == "di":
@@ -2472,6 +2507,7 @@ def test_purge_and_view_compaction(params_from_base_test_setup, sg_conf_name):
     sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
     sg_url = cluster_topology['sync_gateways'][0]['public']
     cbs_url = cluster_topology['couchbase_servers'][0]
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     log_info('sg_conf: {}'.format(sg_conf))
     log_info('sg_admin_url: {}'.format(sg_admin_url))
@@ -2491,13 +2527,15 @@ def test_purge_and_view_compaction(params_from_base_test_setup, sg_conf_name):
         db=sg_db,
         name=auto_user_info.name,
         password=auto_user_info.password,
-        channels=auto_user_info.channels
+        channels=auto_user_info.channels,
+        auth=auth
     )
 
     test_auth_session = sg_client.create_session(
         url=sg_admin_url,
         db=sg_db,
-        name=auto_user_info.name
+        name=auto_user_info.name,
+        auth=auth
     )
 
     def update_prop():
@@ -2520,7 +2558,8 @@ def test_purge_and_view_compaction(params_from_base_test_setup, sg_conf_name):
         doc_id=doc_id,
         expected_number_of_revs=number_revs_per_doc + 1,
         expected_number_of_channels=len(channels),
-        deleted_docs=True
+        deleted_docs=True,
+        auth=auth
     )
     start = time.time()
     timeout = 10  # timeout for view query in channels due to race condition after compacting the docs
@@ -2539,14 +2578,15 @@ def test_purge_and_view_compaction(params_from_base_test_setup, sg_conf_name):
         doc_id=doc_id,
         expected_number_of_revs=number_revs_per_doc + 1,
         expected_number_of_channels=len(channels),
-        deleted_docs=True
+        deleted_docs=True,
+        auth=auth
     )
-    channel_view_query_string = sg_client.view_query_through_channels(url=sg_admin_url, db=sg_db)
+    channel_view_query_string = sg_client.view_query_through_channels(url=sg_admin_url, db=sg_db, auth=auth)
     channel_view_query_string = json.dumps(channel_view_query)
     assert doc_id in channel_view_query_string, "doc id not exists in view query"
     docs = []
     docs.append(doc)
-    purged_doc = sg_client.purge_docs(url=sg_admin_url, db=sg_db, docs=docs)
+    purged_doc = sg_client.purge_docs(url=sg_admin_url, db=sg_db, docs=docs, auth=auth)
     log_info("Purged doc is {}".format(purged_doc))
     verify_no_sg_xattrs(
         sg_client=sg_client,
@@ -2554,14 +2594,14 @@ def test_purge_and_view_compaction(params_from_base_test_setup, sg_conf_name):
         sg_db=sg_db,
         doc_id=doc_id
     )
-    channel_view_query = sg_client.view_query_through_channels(url=sg_admin_url, db=sg_db)
+    channel_view_query = sg_client.view_query_through_channels(url=sg_admin_url, db=sg_db, auth=auth)
     channel_view_query_string = json.dumps(channel_view_query)
     assert doc_id in channel_view_query_string, "doc id not exists in view query"
-    sg_client.compact_database(url=sg_admin_url, db=sg_db)
+    sg_client.compact_database(url=sg_admin_url, db=sg_db, auth=auth)
     start = time.time()
     timeout = 10  # timeout for view query in channels due to race condition after compacting the docs
     while True:
-        channel_view_query = sg_client.view_query_through_channels(url=sg_admin_url, db=sg_db)
+        channel_view_query = sg_client.view_query_through_channels(url=sg_admin_url, db=sg_db, auth=auth)
         channel_view_query_string = json.dumps(channel_view_query)
         if(doc_id not in channel_view_query_string or time.time() - start > timeout):
             break
@@ -2599,6 +2639,7 @@ def test_stats_logging_import_count(params_from_base_test_setup,
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     # This test should only run when using xattr meta storage
     if not xattrs_enabled:
@@ -2607,6 +2648,7 @@ def test_stats_logging_import_count(params_from_base_test_setup,
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
     sg_url = cluster_topology['sync_gateways'][0]['public']
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     bucket_name = 'data-bucket'
     cbs_url = cluster_topology['couchbase_servers'][0]
@@ -2617,8 +2659,8 @@ def test_stats_logging_import_count(params_from_base_test_setup,
 
     sg_client = MobileRestClient()
 
-    sg_client.create_user(url=sg_admin_url, db=sg_db, name='autosdkuser', password='pass', channels=['KMOW'])
-    autosdkuser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autosdkuser')
+    sg_client.create_user(url=sg_admin_url, db=sg_db, name='autosdkuser', password='pass', channels=['KMOW'], auth=auth)
+    autosdkuser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autosdkuser', auth=auth)
 
     # TODO : will remove once dev fix the bug, need to verify whether it is required or not
     # sg_client.create_user(url=sg_admin_url, db=sg_db, name='autosguser', password='pass', channels=['sg-shared'])
@@ -2684,7 +2726,7 @@ def test_stats_logging_import_count(params_from_base_test_setup,
 
     time.sleep(1)
     if sync_gateway_version >= "2.5.0":
-        expvars = sg_client.get_expvars(sg_admin_url)
+        expvars = sg_client.get_expvars(sg_admin_url, auth=auth)
         assert expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"] == 10, "import_count is not incremented"
         assert expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_error_count"] == 10, "import_error count is not incremented"
         assert expvars["syncgateway"]["per_db"][sg_db]["security"]["num_access_errors"] == 1, "num_access_errors is not incremented"
@@ -2710,6 +2752,7 @@ def test_non_mobile_revision(params_from_base_test_setup):
     mode = params_from_base_test_setup['mode']
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     sg_conf_name = 'custom_sync/grant_access_one'
 
     if ("sync_gateway_default_functional_tests_no_port" in sg_conf_name) and get_sg_version(cluster_conf) < "1.5.0":
@@ -2724,6 +2767,7 @@ def test_non_mobile_revision(params_from_base_test_setup):
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
     sg_url = cluster_topology['sync_gateways'][0]['public']
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     # bucket_name = 'data-bucket'
     # cbs_url = cluster_topology['couchbase_servers'][0]
@@ -2747,13 +2791,15 @@ def test_non_mobile_revision(params_from_base_test_setup):
         db=sg_db,
         name=mobile_user_info.name,
         password=mobile_user_info.password,
-        channels=mobile_user_info.channels
+        channels=mobile_user_info.channels,
+        auth=auth
     )
 
     mobile_auth = sg_client.create_session(
         url=sg_admin_url,
         db=sg_db,
-        name=mobile_user_info.name
+        name=mobile_user_info.name,
+        auth=auth
     )
 
     # Create 'number_docs_per_client' docs from Sync Gateway
@@ -2786,7 +2832,7 @@ def test_non_mobile_revision(params_from_base_test_setup):
     sg_client.delete_doc(url=sg_url, db=sg_db, doc_id=random_doc_id, rev=doc_rev, auth=mobile_auth)
 
     # Sync Gateway purge the random doc
-    sg_client.purge_doc(url=sg_admin_url, db=sg_db, doc=doc)
+    sg_client.purge_doc(url=sg_admin_url, db=sg_db, doc=doc, auth=auth)
 
     # Push a new mobile tombstone revision for the document to Sync Gateway
     # could either be with CBL, or via REST API

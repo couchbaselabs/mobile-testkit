@@ -8,6 +8,7 @@ from utilities.cluster_config_utils import persist_cluster_config_environment_pr
 from utilities.cluster_config_utils import get_sg_version
 from concurrent.futures import ThreadPoolExecutor
 from keywords.ClusterKeywords import ClusterKeywords
+from keywords.constants import RBAC_FULL_ADMIN
 
 
 import keywords.exceptions
@@ -49,6 +50,7 @@ def test_non_winning_revisions(params_from_base_test_setup, sg_conf_name):
     topology = params_from_base_test_setup["cluster_topology"]
     mode = params_from_base_test_setup["mode"]
     no_conflicts_enabled = params_from_base_test_setup["no_conflicts_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if no_conflicts_enabled:
         pytest.skip('--no-conflicts is enabled, this test needs to create conflicts, so skipping the test')
@@ -82,12 +84,14 @@ def test_non_winning_revisions(params_from_base_test_setup, sg_conf_name):
         roles=[]
     )
 
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     seth_auth = client.create_user(
         url=sg_admin_url,
         db=sg_db,
         name=seth_user_info.name,
         password=seth_user_info.password,
-        channels=seth_user_info.channels
+        channels=seth_user_info.channels,
+        auth=auth
     )
 
     test_doc_body = document.create_doc(doc_id="test_doc", channels=seth_user_info.channels)
@@ -203,6 +207,7 @@ def test_winning_conflict_branch_revisions(params_from_base_test_setup, sg_conf_
     mode = params_from_base_test_setup["mode"]
     no_conflicts_enabled = params_from_base_test_setup["no_conflicts_enabled"]
     cbs_ce_version = params_from_base_test_setup["cbs_ce"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if no_conflicts_enabled:
         pytest.skip('--no-conflicts is enabled, this test needs to create conflicts, so skipping the test')
@@ -234,12 +239,14 @@ def test_winning_conflict_branch_revisions(params_from_base_test_setup, sg_conf_
         roles=[]
     )
 
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     seth_auth = client.create_user(
         url=sg_admin_url,
         db=sg_db,
         name=seth_user_info.name,
         password=seth_user_info.password,
-        channels=seth_user_info.channels
+        channels=seth_user_info.channels,
+        auth=auth
     )
 
     test_doc_body = document.create_doc(doc_id="test_doc", channels=seth_user_info.channels)
@@ -366,6 +373,7 @@ def test_concurrent_attachment_updatesonDoc(params_from_base_test_setup):
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     no_conflicts_enabled = params_from_base_test_setup["no_conflicts_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     cluster_helper = ClusterKeywords(cluster_config)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config)
@@ -387,8 +395,9 @@ def test_concurrent_attachment_updatesonDoc(params_from_base_test_setup):
     clust = cluster.Cluster(cluster_config)
     clust.reset(sg_conf)
 
-    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channel)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest")
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channel, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest", auth=auth)
     session = cookie, session_id
 
     # 1. Create a doc
@@ -412,7 +421,7 @@ def test_concurrent_attachment_updatesonDoc(params_from_base_test_setup):
     update_from_sg_task.result()
 
     # 4. Verify doc with latest attachment exists on SGW and CBS
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True, auth=auth)["rows"]
     for doc in sg_docs:
         assert doc["doc"]["updates"] == 10, "doc did not get updated 10 times"
         try:

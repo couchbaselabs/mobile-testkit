@@ -13,6 +13,7 @@ from requests.exceptions import HTTPError
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from libraries.testkit import cluster
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
+from keywords.constants import RBAC_FULL_ADMIN
 
 
 def start_sg_accel(c, sg_conf):
@@ -46,6 +47,7 @@ def test_no_conflicts_enabled(params_from_base_test_setup):
     no_conflicts_enabled = params_from_base_test_setup["no_conflicts_enabled"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     base_url = params_from_base_test_setup["base_url"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     num_of_docs = 10
     channels = ["ABC"]
     db = params_from_base_test_setup["db"]
@@ -63,8 +65,9 @@ def test_no_conflicts_enabled(params_from_base_test_setup):
     db.create_bulk_docs(num_of_docs, "no-conflicts", db=cbl_db, channels=channels)
     db.update_bulk_docs(cbl_db)
     sg_client = MobileRestClient()
-    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest")
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest", auth=auth)
     session = cookie, session_id
 
     # Start and stop continuous replication
@@ -115,6 +118,7 @@ def test_no_conflicts_enabled_with_revs_limit(params_from_base_test_setup, sg_co
     base_url = params_from_base_test_setup["base_url"]
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     channels = ["no-conflicts-cbl"]
 
@@ -137,8 +141,9 @@ def test_no_conflicts_enabled_with_revs_limit(params_from_base_test_setup, sg_co
     db.update_bulk_docs(cbl_db)
 
     sg_client = MobileRestClient()
-    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest")
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest", auth=auth)
     session = cookie, session_id
 
     # Start and stop continuous replication
@@ -223,6 +228,7 @@ def test_no_conflicts_update_with_revs_limit(params_from_base_test_setup, sg_con
     base_url = params_from_base_test_setup["base_url"]
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     channels = ["no-conflicts-cbl"]
     reduced_revs_limit = revs_limit - 3
@@ -246,8 +252,9 @@ def test_no_conflicts_update_with_revs_limit(params_from_base_test_setup, sg_con
     db.update_bulk_docs(cbl_db, number_of_updates=4)
 
     sg_client = MobileRestClient()
-    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest")
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest", auth=auth)
     session = cookie, session_id
 
     # Start and stop continuous replication
@@ -344,6 +351,7 @@ def test_migrate_conflicts_to_noConflicts_CBL(params_from_base_test_setup, sg_co
     base_url = params_from_base_test_setup["base_url"]
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     channels = ["no-conflicts-cbl"]
     if revs_limit is None:
@@ -362,8 +370,9 @@ def test_migrate_conflicts_to_noConflicts_CBL(params_from_base_test_setup, sg_co
     db.update_bulk_docs(cbl_db)
 
     sg_client = MobileRestClient()
-    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest")
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest", auth=auth)
     session = cookie, session_id
 
     # Start and stop continuous replication
@@ -453,6 +462,7 @@ def test_cbl_no_conflicts_sgAccel_added(params_from_base_test_setup, sg_conf_nam
     base_url = params_from_base_test_setup["base_url"]
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     channels = ["no-conflicts-cbl"]
 
     if not no_conflicts_enabled or sync_gateway_version < "2.0":
@@ -473,8 +483,9 @@ def test_cbl_no_conflicts_sgAccel_added(params_from_base_test_setup, sg_conf_nam
     db.update_bulk_docs(cbl_db)
 
     sg_client = MobileRestClient()
-    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest")
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest", auth=auth)
     session = cookie, session_id
 
     replicator = Replication(base_url)
@@ -562,6 +573,7 @@ def test_sg_CBL_updates_concurrently(params_from_base_test_setup, sg_conf_name, 
     base_url = params_from_base_test_setup["base_url"]
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     channels = ["no-conflicts-channel"]
 
     if sync_gateway_version < "2.0":
@@ -578,7 +590,8 @@ def test_sg_CBL_updates_concurrently(params_from_base_test_setup, sg_conf_name, 
 
     if sync_gateway_version >= "2.5.0":
         sg_client = MobileRestClient()
-        expvars = sg_client.get_expvars(sg_admin_url)
+        auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+        expvars = sg_client.get_expvars(sg_admin_url, auth=auth)
         num_replications_active = expvars["syncgateway"]["per_db"][sg_db]["database"]["num_replications_active"]
         num_replications_total = expvars["syncgateway"]["per_db"][sg_db]["database"]["num_replications_total"]
         """if continuous:
@@ -591,8 +604,8 @@ def test_sg_CBL_updates_concurrently(params_from_base_test_setup, sg_conf_name, 
     # Create bulk doc json
     db.create_bulk_docs(num_of_docs, "no-conflicts", db=cbl_db, channels=channels)
     sg_client = MobileRestClient()
-    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest")
+    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest", auth=auth)
     session = cookie, session_id
 
     # Start and stop continuous replication
@@ -631,7 +644,7 @@ def test_sg_CBL_updates_concurrently(params_from_base_test_setup, sg_conf_name, 
         update_from_sg_task.result()
         update_from_cbl_task.result()
     if sync_gateway_version >= "2.5.0":
-        expvars = sg_client.get_expvars(sg_admin_url)
+        expvars = sg_client.get_expvars(sg_admin_url, auth=auth)
         assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["num_pull_repl_active_continuous"] == 1, "num_pull_repl_active_continuous did not incremented"
         assert num_replications_active < expvars["syncgateway"]["per_db"][sg_db]["database"]["num_replications_active"], "num_replications_active did not incremented"
 
@@ -660,7 +673,7 @@ def test_sg_CBL_updates_concurrently(params_from_base_test_setup, sg_conf_name, 
         time.sleep(3)
 
     if sync_gateway_version >= "2.5.0":
-        expvars = sg_client.get_expvars(sg_admin_url)
+        expvars = sg_client.get_expvars(sg_admin_url, auth=auth)
         assert num_replications_total < expvars["syncgateway"]["per_db"][sg_db]["database"]["num_replications_total"], "num_replications_total did not incremented"
         assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_push"]["write_processing_time"] > 0, "write_processing_time  did not incremented"
         assert expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_push"]["propose_change_time"] > 0, "propose_change_time stats did not get incremented"
@@ -713,6 +726,7 @@ def test_multiple_cbls_updates_concurrently_with_push(params_from_base_test_setu
     no_conflicts_enabled = params_from_base_test_setup["no_conflicts_enabled"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     base_url = params_from_base_test_setup["base_url"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     channels = ["no-conflicts-channel"]
 
     db = Database(base_url)
@@ -740,8 +754,9 @@ def test_multiple_cbls_updates_concurrently_with_push(params_from_base_test_setu
 
     cbl_doc_ids = db.getDocIds(cbl_db1)
     sg_client = MobileRestClient()
-    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest")
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest", auth=auth)
     session = cookie, session_id
 
     # Replicate to CBL2
@@ -849,10 +864,12 @@ def test_multiple_cbls_updates_concurrently_with_pull(params_from_base_test_setu
     no_conflicts_enabled = params_from_base_test_setup["no_conflicts_enabled"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     base_url = params_from_base_test_setup["base_url"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     channels = ["no-conflicts-channel"]
 
     db = Database(base_url)
     sg_client = MobileRestClient()
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     if sync_gateway_version < "2.0.0":
         pytest.skip('This test cannnot run with sg version below 2.0')
@@ -864,8 +881,8 @@ def test_multiple_cbls_updates_concurrently_with_pull(params_from_base_test_setu
     c.reset(sg_config_path=sg_config)
 
     # 1. Add docs to SG.
-    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest")
+    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest", auth=auth)
     session = cookie, session_id
     sg_docs = document.create_docs(doc_id_prefix='sg_docs', number=num_of_docs, channels=channels)
     sg_docs = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=session)
@@ -987,10 +1004,12 @@ def test_sg_cbl_updates_concurrently_with_push_pull(params_from_base_test_setup,
     base_url = params_from_base_test_setup["base_url"]
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     channels = ["replication"]
     db = Database(base_url)
     sg_client = MobileRestClient()
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     if sync_gateway_version < "2.0.0":
         pytest.skip('This test cannnot run with sg version below 2.0')
@@ -1002,8 +1021,8 @@ def test_sg_cbl_updates_concurrently_with_push_pull(params_from_base_test_setup,
     c.reset(sg_config_path=sg_config)
 
     # 1. Add docs to SG.
-    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest")
+    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest", auth=auth)
     session = cookie, session_id
     if add_attachments:
         sg_docs = document.create_docs(doc_id_prefix='sg_docs', number=num_of_docs,
@@ -1081,6 +1100,7 @@ def test_CBL_push_without_pull(params_from_base_test_setup, sg_conf_name, num_of
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     channels = ["no-conflicts-channel"]
     sg_client = MobileRestClient()
@@ -1097,8 +1117,9 @@ def test_CBL_push_without_pull(params_from_base_test_setup, sg_conf_name, num_of
     c.reset(sg_config_path=sg_config)
 
     # 1. Add docs to SG.
-    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest")
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest", auth=auth)
     session = cookie, session_id
     sg_docs = document.create_docs(doc_id_prefix='sg_docs', number=num_of_docs,
                                    attachments_generator=attachment.generate_2_png_10_10, channels=channels)

@@ -11,6 +11,7 @@ from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from libraries.provision.ansible_runner import AnsibleRunner
 from keywords.exceptions import CollectionError
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
+from keywords.constants import RBAC_FULL_ADMIN
 
 
 @pytest.mark.sanity
@@ -33,6 +34,7 @@ def test_resync(params_from_base_test_setup, sg_conf_name, x509_cert_auth):
     topology = params_from_base_test_setup["cluster_topology"]
     sg_admin_url = topology["sync_gateways"][0]["admin"]
     xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if not xattrs_enabled:
         pytest.skip("xattrs are mandatory for this test to run")
@@ -41,6 +43,7 @@ def test_resync(params_from_base_test_setup, sg_conf_name, x509_cert_auth):
     num_docs = 100
     mode = params_from_base_test_setup["mode"]
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     disable_tls_server = params_from_base_test_setup["disable_tls_server"]
     if x509_cert_auth and disable_tls_server:
@@ -60,12 +63,13 @@ def test_resync(params_from_base_test_setup, sg_conf_name, x509_cert_auth):
         url=sg_admin_url,
         db=sg_db,
         number=num_docs,
-        id_prefix="test_changes"
+        id_prefix="test_changes",
+        auth=auth
     )
 
     # Taking DB offline
     client.take_db_offline(cluster_conf=cluster_config, db=sg_db)
-    status = client.db_resync(url=sg_admin_url, db=sg_db)
+    status = client.db_resync(url=sg_admin_url, db=sg_db, auth=auth)
     assert status == 200, "re-sync failed"
     verify_rsync_error(cluster_config=cluster_config)
     client.bring_db_online(cluster_conf=cluster_config, db=sg_db)

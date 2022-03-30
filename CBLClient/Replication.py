@@ -383,10 +383,10 @@ class Replication(object):
 
     def create_session_configure_replicate(self, baseUrl, sg_admin_url, sg_db, username, password,
                                            channels, sg_client, cbl_db, sg_blip_url, replication_type=None,
-                                           continuous=True, max_retries=None, max_retry_wait_time=None, encryptor=None):
+                                           continuous=True, max_retries=None, max_retry_wait_time=None, encryptor=None, auth=None):
 
         authenticator = Authenticator(baseUrl)
-        cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+        cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
         session = cookie, session_id
         replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
         repl_config = self.configure(cbl_db, sg_blip_url, continuous=continuous, channels=channels,

@@ -19,6 +19,7 @@ from keywords.couchbaseserver import get_sdk_client_with_bucket
 from libraries.provision.ansible_runner import AnsibleRunner
 from keywords.constants import ENVIRONMENT_FILE
 from concurrent.futures import ProcessPoolExecutor
+from keywords.constants import RBAC_FULL_ADMIN
 
 
 @pytest.mark.syncgateway
@@ -43,6 +44,7 @@ def test_local_jsfunc_path(params_from_base_test_setup, sg_conf_name, js_type):
     sg_platform = params_from_base_test_setup["sg_platform"]
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
     xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if sync_gateway_version < "3.0.0":
         pytest.skip("this feature not available below 3.0.0")
@@ -99,8 +101,10 @@ def test_local_jsfunc_path(params_from_base_test_setup, sg_conf_name, js_type):
     log_info("Using sg_db: {}".format(sg_db))
     log_info("Using bucket: {}".format(bucket))
 
-    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channel)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+
+    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channel, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
     user_session = cookie, session_id
 
     # sync_function verification
@@ -255,6 +259,7 @@ def test_envVariables_on_sgw_config(params_from_base_test_setup, setup_env_varia
     ansible_runner = setup_env_variables["ansible_runner"]
     sg_hostname = setup_env_variables["sg_hostname"]
     xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if sync_gateway_version < "3.0.0":
         pytest.skip("this feature not available below 3.0.0")
@@ -273,6 +278,7 @@ def test_envVariables_on_sgw_config(params_from_base_test_setup, setup_env_varia
     channel = ["sgw-env-var"]
     sg_client = MobileRestClient()
     bucket_names = get_buckets_from_sync_gateway_config(sg_conf)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     # set up environment variables on sync gateway
 
     if filter_type == "sync_function":
@@ -333,8 +339,8 @@ def test_envVariables_on_sgw_config(params_from_base_test_setup, setup_env_varia
     log_info("Using sg_db: {}".format(sg_db))
     log_info("Using bucket: {}".format(bucket))
 
-    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channel)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channel, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
     user_session = cookie, session_id
 
     if filter_type == "sync_function":
@@ -454,10 +460,12 @@ def test_jscode_envvariables_path(params_from_base_test_setup, setup_env_variabl
     ansible_runner = setup_env_variables["ansible_runner"]
     sg_hostname = setup_env_variables["sg_hostname"]
     xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     sg_conf_name = "custom_sync/sync_gateway_externalize_js"
 
     if sync_gateway_version < "3.0.0" or not xattrs_enabled:
         pytest.skip("this feature not available below 3.0.0 or xattrs not enabled")
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     cluster_helper = ClusterKeywords(cluster_config)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config)
@@ -532,8 +540,8 @@ def test_jscode_envvariables_path(params_from_base_test_setup, setup_env_variabl
     log_info("Using sg_db: {}".format(sg_db))
     log_info("Using bucket: {}".format(bucket))
 
-    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channel)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channel, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
     user_session = cookie, session_id
 
     # import_filter verification

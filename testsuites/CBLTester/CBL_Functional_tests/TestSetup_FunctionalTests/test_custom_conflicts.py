@@ -10,6 +10,7 @@ from libraries.testkit.cluster import Cluster
 from keywords.MobileRestClient import MobileRestClient
 
 from testsuites.CBLTester.CBL_Functional_tests.TestSetup_FunctionalTests.test_delta_sync import property_updater
+from keywords.constants import RBAC_FULL_ADMIN
 
 
 @pytest.mark.listener
@@ -36,6 +37,7 @@ def test_local_wins_custom_conflicts(params_from_base_test_setup, replicator_typ
     sg_blip_url = params_from_base_test_setup["target_url"]
     liteserv_version = params_from_base_test_setup["liteserv_version"]
     base_url = params_from_base_test_setup["base_url"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     num_of_docs = 10
     channels = ["ABC"]
     db = params_from_base_test_setup["db"]
@@ -52,8 +54,10 @@ def test_local_wins_custom_conflicts(params_from_base_test_setup, replicator_typ
     db.create_bulk_docs(num_of_docs, "local_win_conflicts", db=cbl_db, channels=channels)
     sg_client = MobileRestClient()
     log_info("Using SG url: {}".format(sg_admin_url))
-    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest")
+
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest", auth=auth)
     session = cookie, session_id
 
     # Start and stop continuous replication
@@ -160,6 +164,7 @@ def test_remote_wins_custom_conflicts(params_from_base_test_setup, replicator_ty
     sg_blip_url = params_from_base_test_setup["target_url"]
     liteserv_version = params_from_base_test_setup["liteserv_version"]
     base_url = params_from_base_test_setup["base_url"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     num_of_docs = 10
     channels = ["ABC"]
     db = params_from_base_test_setup["db"]
@@ -176,8 +181,10 @@ def test_remote_wins_custom_conflicts(params_from_base_test_setup, replicator_ty
     db.create_bulk_docs(num_of_docs, "remote_win_conflicts", db=cbl_db, channels=channels)
     sg_client = MobileRestClient()
     log_info("Using SG url: {}".format(sg_admin_url))
-    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest")
+
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest", auth=auth)
     session = cookie, session_id
 
     # Start and stop continuous replication
@@ -257,6 +264,7 @@ def test_null_wins_custom_conflicts(params_from_base_test_setup, replicator_type
     sg_blip_url = params_from_base_test_setup["target_url"]
     liteserv_version = params_from_base_test_setup["liteserv_version"]
     base_url = params_from_base_test_setup["base_url"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     num_of_docs = 10
     channels = ["ABC"]
     db = params_from_base_test_setup["db"]
@@ -273,8 +281,9 @@ def test_null_wins_custom_conflicts(params_from_base_test_setup, replicator_type
     db.create_bulk_docs(num_of_docs, "null_win_conflicts", db=cbl_db, channels=channels)
     sg_client = MobileRestClient()
     log_info("Using SG url: {}".format(sg_admin_url))
-    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest")
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest", auth=auth)
     session = cookie, session_id
 
     # Start and stop continuous replication
@@ -361,6 +370,7 @@ def test_merge_wins_custom_conflicts(params_from_base_test_setup, replicator_typ
     sg_blip_url = params_from_base_test_setup["target_url"]
     liteserv_version = params_from_base_test_setup["liteserv_version"]
     base_url = params_from_base_test_setup["base_url"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     num_of_docs = 10
     channels = ["ABC"]
     db = params_from_base_test_setup["db"]
@@ -377,8 +387,9 @@ def test_merge_wins_custom_conflicts(params_from_base_test_setup, replicator_typ
     db.create_bulk_docs(num_of_docs, "merge_win_conflicts", db=cbl_db, channels=channels)
     sg_client = MobileRestClient()
     log_info("Using SG url: {}".format(sg_admin_url))
-    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest")
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest", auth=auth)
     session = cookie, session_id
 
     # Start and stop continuous replication
@@ -483,6 +494,7 @@ def test_incorrect_doc_id_custom_conflicts_resolution(params_from_base_test_setu
     sg_blip_url = params_from_base_test_setup["target_url"]
     liteserv_version = params_from_base_test_setup["liteserv_version"]
     base_url = params_from_base_test_setup["base_url"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     num_of_docs = 10
     channels = ["ABC"]
     db = params_from_base_test_setup["db"]
@@ -499,8 +511,9 @@ def test_incorrect_doc_id_custom_conflicts_resolution(params_from_base_test_setu
     db.create_bulk_docs(num_of_docs, "incorrect_doc_id_conflicts", db=cbl_db, channels=channels)
     sg_client = MobileRestClient()
     log_info("Using SG url: {}".format(sg_admin_url))
-    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest")
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest", auth=auth)
     session = cookie, session_id
 
     # Start and stop continuous replication
@@ -599,6 +612,7 @@ def test_non_blocking_custom_conflicts_resolution(params_from_base_test_setup, r
     liteserv_version = params_from_base_test_setup["liteserv_version"]
     liteserv_platform = params_from_base_test_setup["liteserv_platform"]
     base_url = params_from_base_test_setup["base_url"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     num_of_docs = 10
     channels = ["ABC"]
     db = params_from_base_test_setup["db"]
@@ -615,8 +629,9 @@ def test_non_blocking_custom_conflicts_resolution(params_from_base_test_setup, r
     db.create_bulk_docs(num_of_docs, "delayed_local_conflicts", db=cbl_db, channels=channels)
     sg_client = MobileRestClient()
     log_info("Using SG url: {}".format(sg_admin_url))
-    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest")
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest", auth=auth)
     session = cookie, session_id
 
     # Start and stop continuous replication
@@ -743,6 +758,7 @@ def test_stop_replicator_before_ccr_completes(params_from_base_test_setup):
     sg_blip_url = params_from_base_test_setup["target_url"]
     liteserv_version = params_from_base_test_setup["liteserv_version"]
     base_url = params_from_base_test_setup["base_url"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     num_of_docs = 10
     channels = ["ABC"]
     db = params_from_base_test_setup["db"]
@@ -759,8 +775,9 @@ def test_stop_replicator_before_ccr_completes(params_from_base_test_setup):
     db.create_bulk_docs(num_of_docs, "stop_before_ccr", db=cbl_db, channels=channels)
     sg_client = MobileRestClient()
     log_info("Using SG url: {}".format(sg_admin_url))
-    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest")
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest", auth=auth)
     session = cookie, session_id
 
     # Start and stop continuous replication
@@ -848,6 +865,7 @@ def test_delete_not_wins_custom_conflicts(params_from_base_test_setup, replicato
     sg_blip_url = params_from_base_test_setup["target_url"]
     liteserv_version = params_from_base_test_setup["liteserv_version"]
     base_url = params_from_base_test_setup["base_url"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     num_of_docs = 10
     channels = ["ABC"]
     db = params_from_base_test_setup["db"]
@@ -864,8 +882,9 @@ def test_delete_not_wins_custom_conflicts(params_from_base_test_setup, replicato
     db.create_bulk_docs(num_of_docs, "local_win_conflicts", db=cbl_db, channels=channels)
     sg_client = MobileRestClient()
     log_info("Using SG url: {}".format(sg_admin_url))
-    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest")
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest", auth=auth)
     session = cookie, session_id
 
     # Start and stop continuous replication
@@ -957,6 +976,7 @@ def test_exception_thrown_custom_conflicts(params_from_base_test_setup, replicat
     sg_blip_url = params_from_base_test_setup["target_url"]
     liteserv_version = params_from_base_test_setup["liteserv_version"]
     base_url = params_from_base_test_setup["base_url"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     num_of_docs = 10
     channels = ["ABC"]
     db = params_from_base_test_setup["db"]
@@ -972,8 +992,9 @@ def test_exception_thrown_custom_conflicts(params_from_base_test_setup, replicat
     db.create_bulk_docs(num_of_docs, "exception_thrown", db=cbl_db, channels=channels)
     sg_client = MobileRestClient()
     log_info("Using SG url: {}".format(sg_admin_url))
-    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest")
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest", auth=auth)
     session = cookie, session_id
 
     # Start and stop continuous replication

@@ -6,6 +6,7 @@ from CBLClient.Replication import Replication
 from CBLClient.Authenticator import Authenticator
 from libraries.testkit import cluster
 from CBLClient.Document import Document
+from keywords.constants import RBAC_FULL_ADMIN
 
 
 @pytest.mark.listener
@@ -155,6 +156,7 @@ def test_replication_with_concurrencyControl_sgCBL_sameDocId(params_from_base_te
     sg_config = params_from_base_test_setup["sg_config"]
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     channel = ["Replication-1"]
     username = "autotest"
@@ -168,8 +170,9 @@ def test_replication_with_concurrencyControl_sgCBL_sameDocId(params_from_base_te
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
 
-    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channel)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest")
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channel, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest", auth=auth)
     session = cookie, session_id
 
     # 1. Create document id = doc1 as doc1a instance on SG
