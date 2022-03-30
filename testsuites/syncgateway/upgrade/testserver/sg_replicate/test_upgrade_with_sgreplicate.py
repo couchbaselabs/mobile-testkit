@@ -412,6 +412,8 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
     time.sleep(300)
     replicator.wait_until_replicator_idle(repl2, max_times=3000)
     limit_2 = num_docs * 10
+    sg_cluster2_docs = sg_client.get_all_docs(url=sg3.admin.admin_url, db=sg_db2, include_docs=True)["rows"]
+    print("sgw cluster2 docs are ", sg_cluster2_docs)
     # cbl_doc_ids2 = db.getDocIds(cbl_db2, limit=limit_2)  # number times 6 as it creates docs 6 times at 6 places
     cbl_doc_ids2 = db.getDocIds(cbl_db2)  # number times 6 as it creates docs 6 times at 6 places
     print("cbl doc ids 2 are : ", cbl_doc_ids2)
