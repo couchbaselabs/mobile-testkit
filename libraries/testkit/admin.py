@@ -237,8 +237,8 @@ class Admin:
 
     def wait_until_sgw_replication_done(self, db, repl_id, read_flag=False, write_flag=False, max_times=25):
 
-        read_flag = True
-        write_flag = True
+        # read_flag = True
+        # write_flag = True
         read_timeout = False
         write_timeout = False
         if read_flag is False:
