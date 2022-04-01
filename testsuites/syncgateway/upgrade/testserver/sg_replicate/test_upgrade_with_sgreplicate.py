@@ -329,7 +329,7 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
             sg_obj.restart_sync_gateways(cluster_config=cluster_config, url=sg_ip)
             time.sleep(5)"""
 
-        if need_to_redeploy:
+        """if need_to_redeploy:
             # Enable xattrs on all SG/SGAccel nodes
             # cc - Start 1 SG with import enabled, all with XATTRs enabled
             #    - Do not enable import in SG.
@@ -354,7 +354,7 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
                     url=sg_ip,
                     sync_gateway_version=sync_gateway_upgraded_version,
                     enable_import=enable_import
-                )
+                ) """
 
         repl_config4 = replicator.configure(cbl_db3, sg1_blip_url, continuous=True, channels=sg_user_channels, replication_type="push_pull", replicator_authenticator=replicator_authenticator1)
         repl4 = replicator.create(repl_config4)
