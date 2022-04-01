@@ -151,7 +151,7 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
     sgw_cluster1_replication1_ch1 = "SGW_Cluster1_ch1_Replication1"
     sgw_cluster1_replication1_ch2 = "SGW_Cluster1_ch2_Replication1"
     sgw_cluster1_replication1_ch3 = "SGW_Cluster1_ch3_Replication1"
-    channel_list = [replication2_channel1, replication2_channel2, replication2_channel3]
+    channel_list = [replication2_channel1, replication2_channel2, replication2_channel3, replication2_channel4]
     sgw_cluster1 = []
     sgw_cluster2 = []
 
@@ -293,7 +293,7 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
         sync_gateways = topology["sync_gateways"]
         sgw_cluster1_list = sync_gateways[:2]
         sgw_cluster2_list = sync_gateways[2:]
-        sg_obj.upgrade_sync_gateway(
+        """sg_obj.upgrade_sync_gateway(
             sgw_cluster1_list,
             sync_gateway_version,
             sync_gateway_upgraded_version,
@@ -307,7 +307,7 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
             sync_gateway_upgraded_version,
             sgw_cluster2_config_path,
             cluster_config
-        )
+        )"""
 
         cluster = Cluster(config=cluster_config)
 
