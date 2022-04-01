@@ -281,7 +281,15 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
             if "sgw_cluster1_replication1" in doc:
                 sg_client.add_conflict(url=sg1.url, db=sg_db1, doc_id=doc["id"], parent_revisions=doc["rev"],
                                        new_revision="2-foo", auth=session1)
-
+    print("printing all cbl and sgreplicate docs on cbl db1 and cbl db2 before the upgrade")
+    sg_cluster1_docs = sg_client.get_all_docs(url=sg1.admin.admin_url, db=sg_db1, include_docs=True)["rows"]
+    print("sgw cluster1 docs are ", sg_cluster1_docs)
+    cbl_doc_ids1 = db.getDocIds(cbl_db1)
+    print("cbl db1 docs are ", cbl_doc_ids1)
+    sg_cluster2_docs = sg_client.get_all_docs(url=sg3.admin.admin_url, db=sg_db2, include_docs=True)["rows"]
+    print("sgw cluster2 docs are ", sg_cluster2_docs)
+    cbl_doc_ids2 = db.getDocIds(cbl_db2)
+    print("cbl db2 docs are ", cbl_doc_ids2)
     with ProcessPoolExecutor() as up:
         # Start updates in background process
         updates_future = up.submit(update_docs, db, cbl_db1, doc_ids,
@@ -293,7 +301,7 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
         sync_gateways = topology["sync_gateways"]
         sgw_cluster1_list = sync_gateways[:2]
         sgw_cluster2_list = sync_gateways[2:]
-        """sg_obj.upgrade_sync_gateway(
+        sg_obj.upgrade_sync_gateway(
             sgw_cluster1_list,
             sync_gateway_version,
             sync_gateway_upgraded_version,
@@ -307,7 +315,7 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
             sync_gateway_upgraded_version,
             sgw_cluster2_config_path,
             cluster_config
-        )"""
+        )
 
         cluster = Cluster(config=cluster_config)
 
@@ -329,7 +337,7 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
             sg_obj.restart_sync_gateways(cluster_config=cluster_config, url=sg_ip)
             time.sleep(5)"""
 
-        """if need_to_redeploy:
+        if need_to_redeploy:
             # Enable xattrs on all SG/SGAccel nodes
             # cc - Start 1 SG with import enabled, all with XATTRs enabled
             #    - Do not enable import in SG.
@@ -354,7 +362,7 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
                     url=sg_ip,
                     sync_gateway_version=sync_gateway_upgraded_version,
                     enable_import=enable_import
-                ) """
+                )
 
         repl_config4 = replicator.configure(cbl_db3, sg1_blip_url, continuous=True, channels=sg_user_channels, replication_type="push_pull", replicator_authenticator=replicator_authenticator1)
         repl4 = replicator.create(repl_config4)
