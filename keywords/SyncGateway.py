@@ -3,6 +3,7 @@ import json
 
 import requests
 from requests import Session
+from requests.auth import HTTPBasicAuth
 from jinja2 import Template
 import time
 import re
@@ -18,14 +19,14 @@ from libraries.provision.ansible_runner import AnsibleRunner
 from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_redact_level, get_sg_platform
 from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version, sg_ssl_enabled, get_cbs_version, is_delta_sync_enabled
 from utilities.cluster_config_utils import is_hide_prod_version_enabled, is_centralized_persistent_config_disabled
-from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config, send_dbconfig_as_restCall, setup_sgwconfig_db_config
+from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config, send_dbconfig_as_restCall
 from libraries.testkit.cluster import Cluster
 
 from keywords.utils import host_for_url
 from keywords import document
 from keywords.utils import random_string
 from utilities.cluster_config_utils import copy_sgconf_to_temp, replace_string_on_sgw_config, get_cluster
-from utilities.cluster_config_utils import is_centralized_persistent_config_disabled, is_server_tls_skip_verify_enabled, is_admin_auth_disabled, is_tls_server_disabled
+from utilities.cluster_config_utils import is_server_tls_skip_verify_enabled, is_admin_auth_disabled, is_tls_server_disabled
 from libraries.testkit import cluster
 
 
@@ -58,7 +59,7 @@ def get_sync_gateway_version(host):
     if sg_ssl_enabled(cluster_config):
         sg_scheme = "https"
 
-    resp = requests.get("{}://{}:4985".format(sg_scheme, host), verify=False)
+    resp = requests.get("{}://{}:4985".format(sg_scheme, host), verify=False, auth=HTTPBasicAuth('sgw_admin', 'password'))
     log_r(resp)
     resp.raise_for_status()
     resp_obj = resp.json()
@@ -154,7 +155,7 @@ def get_sg_accel_version(host):
     if sg_ssl_enabled(cluster_config):
         sg_scheme = "https"
 
-    resp = requests.get("{}://{}:4985".format(sg_scheme, host), verify=False)
+    resp = requests.get("{}://{}:4985".format(sg_scheme, host), verify=False, auth=HTTPBasicAuth('sgw_admin', 'password'))
     log_r(resp)
     resp.raise_for_status()
     resp_obj = resp.json()
@@ -181,7 +182,7 @@ def verify_sg_accel_product_info(host):
     if sg_ssl_enabled(cluster_config):
         sg_scheme = "https"
 
-    resp = requests.get("{}://{}:4985".format(sg_scheme, host), verify=False)
+    resp = requests.get("{}://{}:4985".format(sg_scheme, host), verify=False, auth=HTTPBasicAuth('sgw_admin', 'password'))
     log_r(resp)
     resp.raise_for_status()
     resp_obj = resp.json()
@@ -619,6 +620,18 @@ class SyncGateway(object):
         if is_admin_auth_disabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
             playbook_vars["disable_admin_auth"] = '"admin_interface_authentication": false,    \n"metrics_interface_authentication": false,'
 
+        if is_centralized_persistent_config_disabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
+            playbook_vars["disable_persistent_config"] = '"disable_persistent_config": true,'
+
+        if is_server_tls_skip_verify_enabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
+            playbook_vars["server_tls_skip_verify"] = '"server_tls_skip_verify": true,'
+
+        if is_tls_server_disabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
+            playbook_vars["disable_tls_server"] = '"use_tls_server": false,'
+
+        if is_admin_auth_disabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
+            playbook_vars["disable_admin_auth"] = '"admin_interface_authentication": false,    \n"metrics_interface_authentication": false,'
+
         if url is not None:
             target = hostname_for_url(cluster_config, url)
             log_info("Starting {} sync_gateway.".format(target))
@@ -838,7 +851,10 @@ class SyncGateway(object):
                 playbook_vars["logging"] = '"log": ["*"],'
 
             if is_xattrs_enabled(cluster_config) and cbs_version >= "5.0.0":
-                playbook_vars["autoimport"] = '"import_docs": true,'
+                if version >= "2.1.0":
+                    playbook_vars["autoimport"] = '"import_docs": true,'
+                else:
+                    playbook_vars["autoimport"] = '"import_docs": "continuous",'
                 playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
 
             if sg_ssl_enabled(cluster_config):
@@ -863,10 +879,10 @@ class SyncGateway(object):
             if is_delta_sync_enabled(cluster_config) and version >= "2.5.0":
                 playbook_vars["delta_sync"] = '"delta_sync": { "enabled": true},'
 
-            if get_sg_version(cluster_config) >= "2.8.0":
+            if version >= "2.8.0":
                 playbook_vars["prometheus"] = '"metricsInterface": ":4986",'
 
-            if is_hide_prod_version_enabled(cluster_config) and get_sg_version(cluster_config) >= "2.8.1":
+            if is_hide_prod_version_enabled(cluster_config) and version >= "2.8.1":
                 playbook_vars["hide_product_version"] = '"hide_product_version": true,'
 
             if is_centralized_persistent_config_disabled(cluster_config) and version >= "3.0.0":
@@ -879,7 +895,7 @@ class SyncGateway(object):
                 playbook_vars["disable_tls_server"] = '"use_tls_server": false,'
 
             if is_admin_auth_disabled(cluster_config) and version >= "3.0.0":
-                playbook_vars["disable_admin_auth"] = '"admin_interface_authentication": false,    \n"metrics_interface_authentication": false,' 
+                playbook_vars["disable_admin_auth"] = '"admin_interface_authentication": false,    \n"metrics_interface_authentication": false,'
 
         playbook_vars.update(playbook_vars1)
         if upgrade_only:
@@ -1297,12 +1313,12 @@ def update_replication_in_sgw_config(sg_conf_name, sg_mode, repl_remote, repl_re
     return temp_sg_config
 
 
-def wait_until_docs_imported_from_server(sg_admin_url, sg_client, sg_db, expected_docs, prev_import_count, timeout=5):
-    sg_expvars = sg_client.get_expvars(sg_admin_url)
+def wait_until_docs_imported_from_server(sg_admin_url, sg_client, sg_db, expected_docs, prev_import_count, auth=None, timeout=5):
+    sg_expvars = sg_client.get_expvars(sg_admin_url, auth=auth)
     sg_import_count = sg_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"]
     count = 0
     while True:
-        sg_expvars = sg_client.get_expvars(sg_admin_url)
+        sg_expvars = sg_client.get_expvars(sg_admin_url, auth=auth)
         sg_import_count = sg_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"]
         import_count = sg_import_count - prev_import_count
         if count > timeout or import_count >= expected_docs:

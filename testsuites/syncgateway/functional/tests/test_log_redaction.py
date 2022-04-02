@@ -19,6 +19,7 @@ from keywords.MobileRestClient import MobileRestClient
 from keywords import document, attachment
 from libraries.provision.ansible_runner import AnsibleRunner
 from keywords.remoteexecutor import RemoteExecutor
+from keywords.constants import RBAC_FULL_ADMIN
 
 
 @pytest.mark.syncgateway
@@ -42,6 +43,7 @@ def test_log_redaction_config(params_from_base_test_setup, remove_tmp_sg_redacti
     """
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     cluster_helper = ClusterKeywords(cluster_config)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config)
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
@@ -76,9 +78,10 @@ def test_log_redaction_config(params_from_base_test_setup, remove_tmp_sg_redacti
 
     # Create user in sync_gateway
     sg_client = MobileRestClient()
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     channels = ["log-redaction"]
-    sg_client.create_user(url=sg_admin_url, db=sg_db, name='autotest', password='validkey', channels=channels)
-    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest')
+    sg_client.create_user(url=sg_admin_url, db=sg_db, name='autotest', password='validkey', channels=channels, auth=auth)
+    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest', auth=auth)
 
     # Create docs with xattrs
     sgdoc_bodies = document.create_docs(doc_id_prefix='sg_docs', number=num_of_docs,
@@ -111,6 +114,7 @@ def test_sgCollect1(params_from_base_test_setup, remove_tmp_sg_redaction_logs, s
     """
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     cluster_helper = ClusterKeywords(cluster_config)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config)
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
@@ -144,9 +148,10 @@ def test_sgCollect1(params_from_base_test_setup, remove_tmp_sg_redaction_logs, s
 
     # Create user in sync_gateway
     sg_client = MobileRestClient()
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     channels = ["log-redaction"]
-    sg_client.create_user(url=sg_admin_url, db=sg_db, name=user_name, password=password, channels=channels)
-    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=user_name)
+    sg_client.create_user(url=sg_admin_url, db=sg_db, name=user_name, password=password, channels=channels, auth=auth)
+    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=user_name, auth=auth)
 
     # Create docs with xattrs
     sgdoc_bodies = document.create_docs(doc_id_prefix='sg_docs', number=num_of_docs,
@@ -182,6 +187,7 @@ def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     cluster_helper = ClusterKeywords(cluster_config)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config)
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
@@ -232,9 +238,10 @@ def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_
 
     # 3. Create user in sync_gateway
     sg_client = MobileRestClient()
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     channels = ["log-redaction"]
-    sg_client.create_user(url=sg_admin_url, db=sg_db, name=user_name, password=password, channels=channels)
-    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=user_name)
+    sg_client.create_user(url=sg_admin_url, db=sg_db, name=user_name, password=password, channels=channels, auth=auth)
+    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=user_name, auth=auth)
 
     # 4. Create docs with xattrs
     sgdoc_bodies = document.create_docs(doc_id_prefix='sg_docs', number=num_of_docs,
@@ -259,15 +266,15 @@ def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_
         directory = None
     if redaction_salt:
         salt_value = "customized-redaction-salt-value"
-        resp = sg_client.sgCollect_info(sg_host, redact_level=redaction_level, redact_salt=salt_value, output_directory=directory)
+        resp = sg_client.sgCollect_info(sg_host, redact_level=redaction_level, redact_salt=salt_value, output_directory=directory, auth=auth)
         if mode == "di":
             for sa_host in sa_host_list:
-                sa_resp = sg_client.sgCollect_info(sa_host, redact_level=redaction_level, redact_salt=salt_value, output_directory=sa_directory)
+                sa_resp = sg_client.sgCollect_info(sa_host, redact_level=redaction_level, redact_salt=salt_value, output_directory=sa_directory, auth=auth)
     else:
-        resp = sg_client.sgCollect_info(sg_host, redact_level=redaction_level, output_directory=directory)
+        resp = sg_client.sgCollect_info(sg_host, redact_level=redaction_level, output_directory=directory, auth=auth)
         if mode == "di":
             for sa_host in sa_host_list:
-                sa_resp = sg_client.sgCollect_info(sa_host, redact_level=redaction_level, output_directory=sa_directory)
+                sa_resp = sg_client.sgCollect_info(sa_host, redact_level=redaction_level, output_directory=sa_directory, auth=auth)
     if resp["status"] != "started":
         assert False, "sg collect did not started"
     if mode == "di":
@@ -282,7 +289,7 @@ def test_sgCollect_restApi(params_from_base_test_setup, remove_tmp_sg_redaction_
         max_count = 200
     else:
         max_count = 60
-    while sg_client.get_sgCollect_status(sg_host) == "running" and count < max_count:
+    while sg_client.get_sgCollect_status(sg_host, auth=auth) == "running" and count < max_count:
         time.sleep(5)
         count += 1
     time.sleep(5)  # sleep until zip files created with sg collect rest end point
@@ -311,6 +318,7 @@ def test_sgCollectRestApi_errorMessages(params_from_base_test_setup, remove_tmp_
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     cluster_helper = ClusterKeywords(cluster_config)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config)
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
@@ -346,9 +354,10 @@ def test_sgCollectRestApi_errorMessages(params_from_base_test_setup, remove_tmp_
 
     # 3. Create user in sync_gateway
     sg_client = MobileRestClient()
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     channels = ["log-redaction"]
-    sg_client.create_user(url=sg_admin_url, db=sg_db, name='autotest', password='validkey', channels=channels)
-    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest')
+    sg_client.create_user(url=sg_admin_url, db=sg_db, name='autotest', password='validkey', channels=channels, auth=auth)
+    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest', auth=auth)
 
     # 4. Create docs with xattrs
     sgdoc_bodies = document.create_docs(doc_id_prefix='sg_docs', number=num_of_docs,
@@ -358,7 +367,7 @@ def test_sgCollectRestApi_errorMessages(params_from_base_test_setup, remove_tmp_
 
     # should throw an error when trying with upload host without upload
     upload_host = "https://s3.amazonaws.com/cb-customers"
-    resp = sg_client.sgCollect_restCall(sg_host, redact_level="partial", upload_host=upload_host)
+    resp = sg_client.sgCollect_restCall(sg_host, redact_level="partial", upload_host=upload_host, auth=auth)
     log_info("Response Content", resp.content.decode('ascii'))
     assert "Invalid options used for sgcollect_info" in resp.content.decode('ascii'), "assert message for invalid options for sgcollect_info did not match"
     assert "upload_host" in resp.content.decode('ascii'), "did not get upload_host message in error content"
@@ -366,23 +375,23 @@ def test_sgCollectRestApi_errorMessages(params_from_base_test_setup, remove_tmp_
     ticket = "123"
 
     # should throw an error when trying with customer without upload parameter
-    resp = sg_client.sgCollect_restCall(sg_host, redact_level="partial", customer=customer)
+    resp = sg_client.sgCollect_restCall(sg_host, redact_level="partial", customer=customer, auth=auth)
     assert "Invalid options used for sgcollect_info:" in resp.content.decode('ascii')
     assert "customer" in resp.content.decode('ascii')
 
     # should throw an error when trying ticket without upload
-    resp = sg_client.sgCollect_restCall(sg_host, redact_level="partial", ticket=ticket)
+    resp = sg_client.sgCollect_restCall(sg_host, redact_level="partial", ticket=ticket, auth=auth)
     assert "Invalid options used for sgcollect_info:" in resp.content.decode('ascii')
     assert "ticket" in resp.content.decode('ascii')
 
     # should throw an error when trying with upload_host, customer and ticket without upload
-    resp = sg_client.sgCollect_restCall(sg_host, redact_level="partial", upload_host=upload_host, customer=customer, ticket=ticket)
+    resp = sg_client.sgCollect_restCall(sg_host, redact_level="partial", upload_host=upload_host, customer=customer, ticket=ticket, auth=auth)
     assert "Invalid options used for sgcollect_info:" in resp.content.decode('ascii')
     assert "upload_host" in resp.content.decode('ascii')
 
     # should throw an error when trying with output dir which does not exist
     output_dir = "/abc"
-    resp = sg_client.sgCollect_restCall(sg_host, redact_level="partial", output_directory=output_dir)
+    resp = sg_client.sgCollect_restCall(sg_host, redact_level="partial", output_directory=output_dir, auth=auth)
 
     assert "Invalid options used for sgcollect_info:" in resp.content.decode('ascii')
     assert "no such file or directory:" in resp.content.decode('ascii')
@@ -400,6 +409,7 @@ def test_log_content_verification(params_from_base_test_setup, remove_tmp_sg_red
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     cluster_helper = ClusterKeywords(cluster_config)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config)
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
@@ -425,9 +435,10 @@ def test_log_content_verification(params_from_base_test_setup, remove_tmp_sg_red
 
     # Create user in sync_gateway
     sg_client = MobileRestClient()
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     channels = ["logging"]
-    sg_client.create_user(url=sg_admin_url, db=sg_db, name='autotest', password='password', channels=channels)
-    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest')
+    sg_client.create_user(url=sg_admin_url, db=sg_db, name='autotest', password='password', channels=channels, auth=auth)
+    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest', auth=auth)
 
     # Create docs with xattrs
     sgdoc_bodies = document.create_docs(doc_id_prefix='sg_docs', number=num_of_docs,
@@ -435,7 +446,7 @@ def test_log_content_verification(params_from_base_test_setup, remove_tmp_sg_red
     sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sgdoc_bodies, auth=autouser_session)
     assert len(sgdoc_bodies) == num_of_docs
 
-    resp = sg_client.sgCollect_info(sg_host)
+    resp = sg_client.sgCollect_info(sg_host, auth=auth)
     assert resp["status"] == "started", "sg collect did not started"
     count = 0
     log_info("sg collect is running ........")
@@ -445,7 +456,7 @@ def test_log_content_verification(params_from_base_test_setup, remove_tmp_sg_red
         max_count = 120
     else:
         max_count = 60
-    while sg_client.get_sgCollect_status(sg_host) == "running" and count < max_count:
+    while sg_client.get_sgCollect_status(sg_host, auth=auth) == "running" and count < max_count:
         time.sleep(5)
         count += 1
     time.sleep(5)  # sleep until zip files created with sg collect rest end point

@@ -10,6 +10,8 @@ from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.utils import log_info
 from utilities.cluster_config_utils import get_sg_version, persist_cluster_config_environment_prop, copy_to_temp_conf
 from utilities.cluster_config_utils import copy_sgconf_to_temp, replace_string_on_sgw_config
+from keywords.constants import RBAC_FULL_ADMIN
+from requests.auth import HTTPBasicAuth
 
 
 @pytest.mark.syncgateway
@@ -25,6 +27,7 @@ def test_seq(params_from_base_test_setup, sg_conf_name, num_users, num_docs, num
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     # Skip the test if ssl disabled as it cannot run without port using http protocol
     if ("sync_gateway_default_functional_tests_no_port" in sg_conf_name) and get_sg_version(cluster_conf) < "1.5.0":
@@ -39,6 +42,7 @@ def test_seq(params_from_base_test_setup, sg_conf_name, num_users, num_docs, num
         pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     log_info("Running seq")
     log_info("cluster_conf: {}".format(cluster_conf))
@@ -59,6 +63,8 @@ def test_seq(params_from_base_test_setup, sg_conf_name, num_users, num_docs, num
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
     admin = Admin(cluster.sync_gateways[0])
+    if auth:
+        admin.auth = HTTPBasicAuth(auth[0], auth[1])
 
     # all users will share docs due to having the same channel
     users = admin.register_bulk_users(target=cluster.sync_gateways[0], db="db", name_prefix="user", number=num_users, password="password", channels=["ABC"])
@@ -116,6 +122,7 @@ def test_metrics_public_ports(params_from_base_test_setup):
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     # Skip the test if sgw version is not 2.8.3 and above
     if sync_gateway_version < "2.8.3":
@@ -127,10 +134,12 @@ def test_metrics_public_ports(params_from_base_test_setup):
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    if auth:
+        session.auth = HTTPBasicAuth(auth[0], auth[1])
 
     # 1. set up metrics config on sgw config
     metrics_url = sg_admin_url.replace("4985", "4986")
-
     # 2. Access some of the public api with metrics port
     req = session.get("{}/{}".format(metrics_url, sg_db))
     # 3. Verify it is not accessible

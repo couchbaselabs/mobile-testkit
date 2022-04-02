@@ -13,6 +13,7 @@ from keywords.utils import host_for_url, log_info
 from libraries.testkit.cluster import Cluster
 from utilities.cluster_config_utils import get_sg_version, get_cluster
 from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
+from keywords.constants import RBAC_FULL_ADMIN
 
 
 """
@@ -71,6 +72,7 @@ def test_numeric_expiry_as_ttl(params_from_base_test_setup, sg_conf_name):
     mode = params_from_base_test_setup["mode"]
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     # Skip the test if ssl disabled as it cannot run without port using http protocol
     if ("sync_gateway_default_functional_tests_no_port" in sg_conf_name) and get_sg_version(cluster_config) < "1.5.0":
@@ -122,10 +124,11 @@ def test_numeric_expiry_as_ttl(params_from_base_test_setup, sg_conf_name):
     else:
         connection_url = 'couchbase://{}'.format(cbs_ip)
     sdk_client = get_cluster(connection_url, bucket_name)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     client = MobileRestClient()
 
-    client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels)
-    sg_user_session = client.create_session(url=sg_url_admin, db=sg_db, name=sg_user_name)
+    client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels, auth=auth)
+    sg_user_session = client.create_session(url=sg_url_admin, db=sg_db, name=sg_user_name, auth=auth)
 
     doc_exp_3_body = document.create_doc(doc_id="exp_3", expiry=3, channels=sg_user_channels)
     doc_exp_10_body = document.create_doc(doc_id="exp_10", expiry=10, channels=sg_user_channels)
@@ -155,7 +158,8 @@ def test_numeric_expiry_as_ttl(params_from_base_test_setup, sg_conf_name):
         sg_client=client,
         sg_admin_url=sg_url_admin,
         sg_db=sg_db,
-        xattrs_enabled=xattrs_enabled
+        xattrs_enabled=xattrs_enabled,
+        auth=auth
     )
 
     # doc_exp_10 should be available still
@@ -184,6 +188,7 @@ def test_string_expiry_as_ttl(params_from_base_test_setup, sg_conf_name):
     mode = params_from_base_test_setup["mode"]
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     # Skip the test if ssl disabled as it cannot run without port using http protocol
     if ("sync_gateway_default_functional_tests_no_port" in sg_conf_name) and get_sg_version(cluster_config) < "1.5.0":
@@ -235,10 +240,11 @@ def test_string_expiry_as_ttl(params_from_base_test_setup, sg_conf_name):
     else:
         connection_url = "couchbase://{}".format(cbs_ip)
     sdk_client = get_cluster(connection_url, bucket_name)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     client = MobileRestClient()
 
-    client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels)
-    sg_user_session = client.create_session(url=sg_url_admin, db=sg_db, name=sg_user_name)
+    client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels, auth=auth)
+    sg_user_session = client.create_session(url=sg_url_admin, db=sg_db, name=sg_user_name, auth=auth)
 
     doc_exp_3_body = document.create_doc(doc_id="exp_3", expiry="3", channels=sg_user_channels)
     doc_exp_10_body = document.create_doc(doc_id="exp_10", expiry="10", channels=sg_user_channels)
@@ -266,7 +272,8 @@ def test_string_expiry_as_ttl(params_from_base_test_setup, sg_conf_name):
         sg_client=client,
         sg_admin_url=sg_url_admin,
         sg_db=sg_db,
-        xattrs_enabled=xattrs_enabled
+        xattrs_enabled=xattrs_enabled,
+        auth=auth
     )
 
     # doc_exp_10 should be available still
@@ -296,6 +303,7 @@ def test_numeric_expiry_as_unix_date(params_from_base_test_setup, sg_conf_name):
     mode = params_from_base_test_setup["mode"]
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     # Skip the test if ssl disabled as it cannot run without port using http protocol
     if ("sync_gateway_default_functional_tests_no_port" in sg_conf_name) and get_sg_version(cluster_config) < "1.5.0":
@@ -347,10 +355,11 @@ def test_numeric_expiry_as_unix_date(params_from_base_test_setup, sg_conf_name):
     else:
         connection_url = "couchbase://{}".format(cbs_ip)
     sdk_client = get_cluster(connection_url, bucket_name)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     client = MobileRestClient()
 
-    client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels)
-    sg_user_session = client.create_session(url=sg_url_admin, db=sg_db, name=sg_user_name)
+    client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels, auth=auth)
+    sg_user_session = client.create_session(url=sg_url_admin, db=sg_db, name=sg_user_name, auth=auth)
 
     time_util = Time()
     unix_time_3s_ahead = time_util.get_unix_timestamp(delta=3)
@@ -381,7 +390,8 @@ def test_numeric_expiry_as_unix_date(params_from_base_test_setup, sg_conf_name):
         sg_client=client,
         sg_admin_url=sg_url_admin,
         sg_db=sg_db,
-        xattrs_enabled=xattrs_enabled
+        xattrs_enabled=xattrs_enabled,
+        auth=auth
     )
 
     # doc_exp_years should be available still
@@ -411,6 +421,7 @@ def test_string_expiry_as_unix_date(params_from_base_test_setup, sg_conf_name):
     mode = params_from_base_test_setup["mode"]
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     # Skip the test if ssl disabled as it cannot run without port using http protocol
     if ("sync_gateway_default_functional_tests_no_port" in sg_conf_name) and get_sg_version(cluster_config) < "1.5.0":
@@ -462,10 +473,11 @@ def test_string_expiry_as_unix_date(params_from_base_test_setup, sg_conf_name):
     else:
         connection_url = "couchbase://{}".format(cbs_ip)
     sdk_client = get_cluster(connection_url, bucket_name)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     client = MobileRestClient()
 
-    client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels)
-    sg_user_session = client.create_session(url=sg_url_admin, db=sg_db, name=sg_user_name)
+    client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels, auth=auth)
+    sg_user_session = client.create_session(url=sg_url_admin, db=sg_db, name=sg_user_name, auth=auth)
 
     time_util = Time()
     unix_time_3s_ahead = time_util.get_unix_timestamp(delta=3)
@@ -500,7 +512,8 @@ def test_string_expiry_as_unix_date(params_from_base_test_setup, sg_conf_name):
         sg_client=client,
         sg_admin_url=sg_url_admin,
         sg_db=sg_db,
-        xattrs_enabled=xattrs_enabled
+        xattrs_enabled=xattrs_enabled,
+        auth=auth
     )
 
     # doc_exp_years should be available still
@@ -530,6 +543,7 @@ def test_string_expiry_as_iso_8601_date(params_from_base_test_setup, sg_conf_nam
     mode = params_from_base_test_setup["mode"]
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     # Skip the test if ssl disabled as it cannot run without port using http protocol
     if ("sync_gateway_default_functional_tests_no_port" in sg_conf_name) and get_sg_version(cluster_config) < "1.5.0":
@@ -581,10 +595,11 @@ def test_string_expiry_as_iso_8601_date(params_from_base_test_setup, sg_conf_nam
     else:
         connection_url = 'couchbase://{}'.format(cbs_ip)
     sdk_client = get_cluster(connection_url, bucket_name)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     client = MobileRestClient()
 
-    client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels)
-    sg_user_session = client.create_session(url=sg_url_admin, db=sg_db, name=sg_user_name)
+    client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels, auth=auth)
+    sg_user_session = client.create_session(url=sg_url_admin, db=sg_db, name=sg_user_name, auth=auth)
 
     time_util = Time()
     iso_datetime = time_util.get_iso_datetime(delta=3)
@@ -615,7 +630,8 @@ def test_string_expiry_as_iso_8601_date(params_from_base_test_setup, sg_conf_nam
         sg_client=client,
         sg_admin_url=sg_url_admin,
         sg_db=sg_db,
-        xattrs_enabled=xattrs_enabled
+        xattrs_enabled=xattrs_enabled,
+        auth=auth
     )
 
     # doc_exp_years should be available still
@@ -641,6 +657,7 @@ def test_removing_expiry(params_from_base_test_setup, sg_conf_name):
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     # Skip the test if ssl disabled as it cannot run without port using http protocol
     if ("sync_gateway_default_functional_tests_no_port" in sg_conf_name) and get_sg_version(cluster_config) < "1.5.0":
@@ -677,11 +694,12 @@ def test_removing_expiry(params_from_base_test_setup, sg_conf_name):
     sg_user_name = "sg_user"
     sg_user_password = "p@ssw0rd"
     sg_user_channels = ["NBC", "ABC"]
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     client = MobileRestClient()
 
-    client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels)
-    sg_user_session = client.create_session(url=sg_url_admin, db=sg_db, name=sg_user_name)
+    client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels, auth=auth)
+    sg_user_session = client.create_session(url=sg_url_admin, db=sg_db, name=sg_user_name, auth=auth)
 
     doc_exp_3_body = document.create_doc(doc_id="exp_3", expiry=3, channels=sg_user_channels)
     doc_exp_10_body = document.create_doc(doc_id="exp_10", expiry=10, channels=sg_user_channels)
@@ -724,6 +742,7 @@ def test_rolling_ttl_expires(params_from_base_test_setup, sg_conf_name):
     mode = params_from_base_test_setup["mode"]
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     # Skip the test if ssl disabled as it cannot run without port using http protocol
     if ("sync_gateway_default_functional_tests_no_port" in sg_conf_name) and get_sg_version(cluster_config) < "1.5.0":
@@ -775,10 +794,11 @@ def test_rolling_ttl_expires(params_from_base_test_setup, sg_conf_name):
     else:
         connection_url = 'couchbase://{}'.format(cbs_ip)
     sdk_client = get_cluster(connection_url, bucket_name)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     client = MobileRestClient()
 
-    client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels)
-    sg_user_session = client.create_session(url=sg_url_admin, db=sg_db, name=sg_user_name)
+    client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels, auth=auth)
+    sg_user_session = client.create_session(url=sg_url_admin, db=sg_db, name=sg_user_name, auth=auth)
 
     doc_exp_3_body = document.create_doc(doc_id="exp_3", expiry=3, channels=sg_user_channels)
     doc_exp_10_body = document.create_doc(doc_id="exp_10", expiry=10, channels=sg_user_channels)
@@ -809,7 +829,8 @@ def test_rolling_ttl_expires(params_from_base_test_setup, sg_conf_name):
         sg_admin_url=sg_url_admin,
         sg_db=sg_db,
         xattrs_enabled=xattrs_enabled,
-        expected_rev=12
+        expected_rev=12,
+        auth=auth
     )
 
     # doc_exp_10 should be available still
@@ -837,6 +858,7 @@ def test_rolling_ttl_remove_expirary(params_from_base_test_setup, sg_conf_name):
     mode = params_from_base_test_setup["mode"]
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     # Skip the test if ssl disabled as it cannot run without port using http protocol
     if ("sync_gateway_default_functional_tests_no_port" in sg_conf_name) and get_sg_version(cluster_config) < "1.5.0":
@@ -888,10 +910,11 @@ def test_rolling_ttl_remove_expirary(params_from_base_test_setup, sg_conf_name):
     else:
         connection_url = 'couchbase://{}'.format(cbs_ip)
     sdk_client = get_cluster(connection_url, bucket_name)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     client = MobileRestClient()
 
-    client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels)
-    sg_user_session = client.create_session(url=sg_url_admin, db=sg_db, name=sg_user_name)
+    client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels, auth=auth)
+    sg_user_session = client.create_session(url=sg_url_admin, db=sg_db, name=sg_user_name, auth=auth)
 
     doc_exp_3_body = document.create_doc(doc_id="exp_3", expiry=3, channels=sg_user_channels)
     doc_exp_10_body = document.create_doc(doc_id="exp_10", expiry=10, channels=sg_user_channels)
@@ -926,7 +949,8 @@ def test_rolling_ttl_remove_expirary(params_from_base_test_setup, sg_conf_name):
         sg_client=client,
         sg_admin_url=sg_url_admin,
         sg_db=sg_db,
-        xattrs_enabled=xattrs_enabled
+        xattrs_enabled=xattrs_enabled,
+        auth=auth
     )
 
 
@@ -950,6 +974,7 @@ def test_setting_expiry_in_bulk_docs(params_from_base_test_setup, sg_conf_name):
     mode = params_from_base_test_setup["mode"]
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     # Skip the test if ssl disabled as it cannot run without port using http protocol
     if ("sync_gateway_default_functional_tests_no_port" in sg_conf_name) and get_sg_version(cluster_config) < "1.5.0":
@@ -1001,10 +1026,11 @@ def test_setting_expiry_in_bulk_docs(params_from_base_test_setup, sg_conf_name):
     else:
         connection_url = "couchbase://{}".format(cbs_ip)
     sdk_client = get_cluster(connection_url, bucket_name)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     client = MobileRestClient()
 
-    client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels)
-    sg_user_session = client.create_session(url=sg_url_admin, db=sg_db, name=sg_user_name)
+    client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels, auth=auth)
+    sg_user_session = client.create_session(url=sg_url_admin, db=sg_db, name=sg_user_name, auth=auth)
 
     doc_exp_3_bodies = document.create_docs(doc_id_prefix="exp_3", number=5, expiry=3, channels=sg_user_channels)
     doc_exp_10_bodies = document.create_docs(doc_id_prefix="exp_10", number=5, expiry=10, channels=sg_user_channels)
@@ -1041,7 +1067,8 @@ def test_setting_expiry_in_bulk_docs(params_from_base_test_setup, sg_conf_name):
             sg_client=client,
             sg_admin_url=sg_url_admin,
             sg_db=sg_db,
-            xattrs_enabled=xattrs_enabled
+            xattrs_enabled=xattrs_enabled,
+            auth=auth
         )
 
 
@@ -1063,7 +1090,7 @@ def test_setting_expiry_in_bulk_docs(params_from_base_test_setup, sg_conf_name):
 #    [Tags]  sanity  syncgateway  ttl
 #    [Documentation]
 
-def verify_doc_deletion_on_server(doc_id, sdk_client, sg_client, sg_admin_url, sg_db, xattrs_enabled=False, expected_rev=2):
+def verify_doc_deletion_on_server(doc_id, sdk_client, sg_client, sg_admin_url, sg_db, xattrs_enabled=False, expected_rev=2, auth=None):
     # If xattrs, check that the doc is a tombstone
     # by getting the rev and "_deleted" prop via _raw
     # If sync gateway is using document meta data
@@ -1073,6 +1100,7 @@ def verify_doc_deletion_on_server(doc_id, sdk_client, sg_client, sg_admin_url, s
             url=sg_admin_url,
             db=sg_db,
             doc_id=doc_id,
+            auth=auth
         )
         assert expired_raw_doc["_sync"]["rev"].startswith("{}-".format(expected_rev))
         assert expired_raw_doc["_deleted"]

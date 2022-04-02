@@ -9,6 +9,8 @@ from libraries.testkit.admin import Admin
 from multiprocessing.pool import ThreadPool
 from requests.exceptions import HTTPError
 from libraries.testkit.parallelize import in_parallel
+from requests.auth import HTTPBasicAuth
+from keywords.constants import RBAC_FULL_ADMIN
 
 from keywords.utils import log_info
 from keywords.utils import log_error
@@ -29,6 +31,7 @@ def test_bucket_online_offline_resync_sanity(params_from_base_test_setup, sg_con
     cluster_conf = params_from_base_test_setup["cluster_config"]
     test_mode = params_from_base_test_setup["mode"]
     sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if test_mode == "di":
         pytest.skip("Unsupported feature in distributed index")
@@ -65,7 +68,9 @@ def test_bucket_online_offline_resync_sanity(params_from_base_test_setup, sg_con
     sgs = cluster.sync_gateways
 
     admin = Admin(sgs[0])
-
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    if auth:
+        admin.auth = HTTPBasicAuth(auth[0], auth[1])
     # Register User
     log_info("Register User")
     user_objects = admin.register_bulk_users(target=sgs[0], db="db", name_prefix="User",
@@ -205,6 +210,7 @@ def test_bucket_online_offline_resync_with_online(params_from_base_test_setup, s
     cluster_conf = params_from_base_test_setup["cluster_config"]
     test_mode = params_from_base_test_setup["mode"]
     sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if test_mode == "di":
         pytest.skip("Unsupported feature in distributed index")
@@ -230,7 +236,9 @@ def test_bucket_online_offline_resync_with_online(params_from_base_test_setup, s
     sgs = cluster.sync_gateways
 
     admin = Admin(sgs[0])
-
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    if auth:
+        admin.auth = HTTPBasicAuth(auth[0], auth[1])
     # Register User
     log_info("Register User")
     user_objects = admin.register_bulk_users(target=sgs[0], db="db", name_prefix="User",
@@ -400,6 +408,7 @@ def test_bucket_online_offline_resync_with_offline(params_from_base_test_setup, 
     cluster_conf = params_from_base_test_setup["cluster_config"]
     test_mode = params_from_base_test_setup["mode"]
     sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if test_mode == "di":
         pytest.skip("Unsupported feature in distributed index")
@@ -425,7 +434,9 @@ def test_bucket_online_offline_resync_with_offline(params_from_base_test_setup, 
     sgs = cluster.sync_gateways
 
     admin = Admin(sgs[0])
-
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    if auth:
+        admin.auth = HTTPBasicAuth(auth[0], auth[1])
     # Register User
     log_info("Register User")
     user_objects = admin.register_bulk_users(target=sgs[0], db="db", name_prefix="User",

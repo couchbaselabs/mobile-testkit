@@ -1,26 +1,27 @@
 import pytest
-import time
+# import time
 
-from keywords.utils import log_info
+# from keywords.utils import log_info
 from libraries.testkit.cluster import Cluster
-from keywords.SyncGateway import sync_gateway_config_path_for_mode, SyncGateway, create_docs_via_sdk
-from keywords import document
-from keywords.utils import host_for_url, deep_dict_compare
-from couchbase.bucket import Bucket
-from keywords.MobileRestClient import MobileRestClient
+from keywords.SyncGateway import sync_gateway_config_path_for_mode, SyncGateway
+# from keywords import document
+# from keywords.utils import host_for_url
+# from couchbase.bucket import Bucket
+# from keywords.MobileRestClient import MobileRestClient
 from keywords.ClusterKeywords import ClusterKeywords
-from libraries.testkit import cluster
-from concurrent.futures import ThreadPoolExecutor
-from libraries.testkit.prometheus import verify_stat_on_prometheus
-from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
+# from libraries.testkit import cluster
+# from concurrent.futures import ThreadPoolExecutor
+# from libraries.testkit.prometheus import verify_stat_on_prometheus
+# from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop
-from utilities.cluster_config_utils import is_centralized_persistent_config_disabled, copy_to_temp_conf
+from utilities.cluster_config_utils import copy_to_temp_conf
 from utilities.cluster_config_utils import copy_sgconf_to_temp, replace_string_on_sgw_config
+
 
 @pytest.mark.syncgateway
 @pytest.mark.parametrize("group_type", [
     ("default"),
-    # ("move")
+    ("move")
 ])
 def test_1named_and_default_group(params_from_base_test_setup, group_type):
     """
@@ -37,15 +38,15 @@ def test_1named_and_default_group(params_from_base_test_setup, group_type):
     7. Verify _config end point on sgw2 and verify all configs of sgw1 are inherited to sgw2 including database config added at step 6"
     """
 
-    sg_db = 'db'
+    # sg_db = 'db'
     sg_conf_name = "sync_gateway_default"
     sg_obj = SyncGateway()
     # sg_conf_name2 = "xattrs/no_import"
 
     cluster_conf = params_from_base_test_setup['cluster_config']
     mode = params_from_base_test_setup['mode']
-    sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
-    xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+    # sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
+    # xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
 
     # 1. Have 2 SGW nodes with disable persistent config
     temp_cluster_config = copy_to_temp_conf(cluster_conf, mode)
@@ -53,20 +54,20 @@ def test_1named_and_default_group(params_from_base_test_setup, group_type):
     sg_conf1 = sync_gateway_config_path_for_mode(sg_conf_name, mode, cpc=True)
     # sg_conf2 = sync_gateway_config_path_for_mode(sg_conf_name2, mode)
 
-    sg_client = MobileRestClient()
+    # sg_client = MobileRestClient()
     cluster_utils = ClusterKeywords(cluster_conf)
     cluster_topology = cluster_utils.get_cluster_topology(cluster_conf)
-    cbs_url = cluster_topology['couchbase_servers'][0]
-    sg_one_url = cluster_topology["sync_gateways"][0]["public"]
+    # cbs_url = cluster_topology['couchbase_servers'][0]
+    # sg_one_url = cluster_topology["sync_gateways"][0]["public"]
     sg_two_url = cluster_topology["sync_gateways"][1]["public"]
-    cbs_host = host_for_url(cbs_url)
+    # cbs_host = host_for_url(cbs_url)
     cbs_cluster = Cluster(config=cluster_conf)
 
     # 2. have default group id on one node and named group in another node
     cbs_cluster.reset(sg_config_path=sg_conf1)
-    sg1 = cbs_cluster.sync_gateways[0]
-    sg_dbs = sg1.admin.get_dbs_from_config()
-    sg_db = sg_dbs[0]
+    # sg1 = cbs_cluster.sync_gateways[0]
+    # sg_dbs = sg1.admin.get_dbs_from_config()
+    # sg_db = sg_dbs[0]
     # sg_obj.redeploy_sync_gateway_config(cluster_config=cluster_conf, sg_conf=sg_conf1, url=sg1.ip,
     #                                            sync_gateway_version=sync_gateway_version, enable_import=True)
     if group_type == "default":
@@ -77,4 +78,4 @@ def test_1named_and_default_group(params_from_base_test_setup, group_type):
     temp_sg_config, _ = copy_sgconf_to_temp(sg_conf1, mode)
     temp_sg_config = replace_string_on_sgw_config(temp_sg_config, str, replaced_group)
     sg_obj.start_sync_gateways(cluster_config=cluster_conf, url=sg_two_url, config=temp_sg_config)
-    sg1_return_db = sg1.admin.get_db_config(sg_db)
+    # sg1_return_db = sg1.admin.get_db_config(sg_db)

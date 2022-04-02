@@ -24,6 +24,7 @@ SDK_TIMEOUT = 3600
 # Required to make sure that these are created with encryption
 # Use to build the command line flags for encryption
 REGISTERED_CLIENT_DBS = ["ls_db", "ls_db1", "ls_db2"]
+RBAC_FULL_ADMIN = {'user': 'sgw_admin', 'pwd': 'password'}
 
 
 class ServerType(Enum):

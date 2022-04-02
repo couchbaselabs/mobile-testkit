@@ -11,6 +11,7 @@ from keywords import couchbaseserver, document
 from CBLClient.Document import Document
 from concurrent.futures import ThreadPoolExecutor
 from utilities.cluster_config_utils import get_cbs_version
+from keywords.constants import RBAC_FULL_ADMIN
 import pytest
 
 
@@ -43,6 +44,7 @@ def test_transactions_insert_replace_remove_rollback(params_from_base_test_setup
     base_url = params_from_base_test_setup["base_url"]
     sg_config = params_from_base_test_setup["sg_config"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     cbl_db = params_from_base_test_setup["source_db"]
     sg_blip_url = params_from_base_test_setup["target_url"]
     db = params_from_base_test_setup["db"]
@@ -91,9 +93,10 @@ def test_transactions_insert_replace_remove_rollback(params_from_base_test_setup
     # 2. replication from server to SGW and to CBL"
     # 3. Verify all docs in transactions are pulled to CBL
     replicator = Replication(base_url)
-    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels, auth=auth)
     _, _, repl = replicator.create_session_configure_replicate(
-        base_url, sg_admin_url, sg_db, username, password, channels, sg_client, cbl_db, sg_blip_url, continuous=True, replication_type="push_pull")
+        base_url, sg_admin_url, sg_db, username, password, channels, sg_client, cbl_db, sg_blip_url, continuous=True, replication_type="push_pull", auth=auth)
     replicator.wait_until_replicator_idle(repl)
     orig_cbl_doc_ids = db.getDocIds(cbl_db)
     assert len(orig_cbl_doc_ids) == num_of_docs, "docs from committed transaction did not replicated to cbl"
@@ -173,6 +176,7 @@ def test_transactions_with_latest_updates(params_from_base_test_setup):
     base_url = params_from_base_test_setup["base_url"]
     sg_config = params_from_base_test_setup["sg_config"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     cbl_db = params_from_base_test_setup["source_db"]
     sg_blip_url = params_from_base_test_setup["target_url"]
     db = params_from_base_test_setup["db"]
@@ -222,9 +226,10 @@ def test_transactions_with_latest_updates(params_from_base_test_setup):
 
     # 4. Replicate from SGW to CBL
     replicator = Replication(base_url)
-    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels, auth=auth)
     _, _, repl = replicator.create_session_configure_replicate(
-        base_url, sg_admin_url, sg_db, username, password, channels, sg_client, cbl_db, sg_blip_url, continuous=True, replication_type="push_pull")
+        base_url, sg_admin_url, sg_db, username, password, channels, sg_client, cbl_db, sg_blip_url, continuous=True, replication_type="push_pull", auth=auth)
     replicator.wait_until_replicator_idle(repl)
 
     #  5. Verify CBL eventually should pull all updated docs only
@@ -260,6 +265,7 @@ def test_transactions_with_tombstoned_docs(params_from_base_test_setup):
     base_url = params_from_base_test_setup["base_url"]
     sg_config = params_from_base_test_setup["sg_config"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     cbl_db = params_from_base_test_setup["source_db"]
     sg_blip_url = params_from_base_test_setup["target_url"]
     db = params_from_base_test_setup["db"]
@@ -312,9 +318,10 @@ def test_transactions_with_tombstoned_docs(params_from_base_test_setup):
 
         # Replicate from SGW to CBL
         replicator = Replication(base_url)
-        sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels)
+        auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+        sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels, auth=auth)
         _, _, repl = replicator.create_session_configure_replicate(
-            base_url, sg_admin_url, sg_db, username, password, channels, sg_client, cbl_db, sg_blip_url, continuous=True, replication_type="push_pull")
+            base_url, sg_admin_url, sg_db, username, password, channels, sg_client, cbl_db, sg_blip_url, continuous=True, replication_type="push_pull", auth=auth)
         replicator.wait_until_replicator_idle(repl)
         shell_cmd_task.result()
 
@@ -352,6 +359,7 @@ def test_transactions_with_simultaneous_doc_updates_docresurrection(params_from_
     base_url = params_from_base_test_setup["base_url"]
     sg_config = params_from_base_test_setup["sg_config"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     cbl_db = params_from_base_test_setup["source_db"]
     sg_blip_url = params_from_base_test_setup["target_url"]
     db = params_from_base_test_setup["db"]
@@ -397,9 +405,10 @@ def test_transactions_with_simultaneous_doc_updates_docresurrection(params_from_
 
     # 2. Start replication from SGW to CBL.
     replicator = Replication(base_url)
-    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels, auth=auth)
     _, _, repl = replicator.create_session_configure_replicate(
-        base_url, sg_admin_url, sg_db, username, password, channels, sg_client, cbl_db, sg_blip_url, continuous=True, replication_type="push_pull")
+        base_url, sg_admin_url, sg_db, username, password, channels, sg_client, cbl_db, sg_blip_url, continuous=True, replication_type="push_pull", auth=auth)
     replicator.wait_until_replicator_idle(repl)
 
     # 3. Updates (edits ) a series of documents in this order (A->A',B-> B',C-> C') in a transaction . At the exact same time, CBL also edits the same document B -> B”

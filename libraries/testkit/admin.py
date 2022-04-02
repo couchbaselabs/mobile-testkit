@@ -29,13 +29,14 @@ class Admin:
         self.admin_url = "{}://{}:4985".format(sg_scheme, sync_gateway.ip)
         self.users = {}
         self._headers = {"Content-Type": "application/json"}
+        self.auth = None
 
-    def create_db(self, db, db_config={}):
+    """def create_db(self, db, db_config={}):
         # data = json.dumps(db_config)
         resp = requests.put("{0}/{1}/".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, data=json.dumps(db_config), verify=False)
         log.info("PUT {}".format(resp.url))
         resp.raise_for_status()
-        return resp.status_code
+        return resp.status_code"""
 
     def create_db_with_rest(self, db, db_config={}):
         db_config = json.dumps(db_config)
@@ -44,15 +45,31 @@ class Admin:
         command_output = subprocess.check_output(command, shell=True)
         return command_output
 
+    def create_db(self, name, db_config={}):
+        if self.auth:
+            r = requests.put("{}/{}".format(self.admin_url, name), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, data=json.dumps(db_config), verify=False, auth=self.auth)
+        else:
+            r = requests.put("{}/{}".format(self.admin_url, name), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, data=json.dumps(db_config), verify=False)
+        log_request(r)
+        log_response(r)
+        r.raise_for_status()
+        return r.json()
+
     def delete_db(self, name):
-        r = requests.delete("{}/{}".format(self.admin_url, name), verify=False)
+        if self.auth:
+            r = requests.delete("{}/{}".format(self.admin_url, name), verify=False, auth=self.auth)
+        else:
+            r = requests.delete("{}/{}".format(self.admin_url, name), verify=False)
         log_request(r)
         log_response(r)
         r.raise_for_status()
         return r.json()
 
     def get_dbs(self):
-        r = requests.get("{}/_all_dbs".format(self.admin_url), verify=False)
+        if self.auth:
+            r = requests.get("{}/_all_dbs".format(self.admin_url), verify=False, auth=self.auth)
+        else:
+            r = requests.get("{}/_all_dbs".format(self.admin_url), verify=False)
         log.info("GET {}".format(r.url))
         log_response(r)
         r.raise_for_status()
@@ -67,7 +84,10 @@ class Admin:
 
     # GET /{db}/
     def get_db_info(self, db):
-        resp = requests.get("{0}/{1}/".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False)
+        if self.auth:
+            resp = requests.get("{0}/{1}/".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False, auth=self.auth)
+        else:
+            resp = requests.get("{0}/{1}/".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False)
         log.info("GET {}".format(resp.url))
         resp.raise_for_status()
         return resp.json()
@@ -75,20 +95,29 @@ class Admin:
     # PUT /{db}/_role/{name}
     def create_role(self, db, name, channels):
         data = {"name": name, "admin_channels": channels}
-        resp = requests.put("{0}/{1}/_role/{2}".format(self.admin_url, db, name), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, data=json.dumps(data), verify=False)
+        if self.auth:
+            resp = requests.put("{0}/{1}/_role/{2}".format(self.admin_url, db, name), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, data=json.dumps(data), verify=False, auth=self.auth)
+        else:
+            resp = requests.put("{0}/{1}/_role/{2}".format(self.admin_url, db, name), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, data=json.dumps(data), verify=False)
         log.info("PUT {}".format(resp.url))
         resp.raise_for_status()
 
     # GET /{db}/_role
     def get_roles(self, db):
-        resp = requests.get("{0}/{1}/_role/".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False)
+        if self.auth:
+            resp = requests.get("{0}/{1}/_role/".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False, auth=self.auth)
+        else:
+            resp = requests.get("{0}/{1}/_role/".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False)
         log.info("GET {}".format(resp.url))
         resp.raise_for_status()
         return resp.json()
 
     # GET /{db}/_role/{name}
     def get_role(self, db, name):
-        resp = requests.get("{0}/{1}/_role/{2}".format(self.admin_url, db, name), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False)
+        if self.auth:
+            resp = requests.get("{0}/{1}/_role/{2}".format(self.admin_url, db, name), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False, auth=self.auth)
+        else:
+            resp = requests.get("{0}/{1}/_role/{2}".format(self.admin_url, db, name), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False)
         log.info("GET {}".format(resp.url))
         resp.raise_for_status()
         return resp.json()
@@ -101,7 +130,10 @@ class Admin:
         else:
             data = {"name": name, "password": password, "admin_channels": channels, "admin_roles": roles}
 
-        resp = requests.put("{0}/{1}/_user/{2}".format(self.admin_url, db, name), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, data=json.dumps(data), verify=False)
+        if self.auth:
+            resp = requests.put("{0}/{1}/_user/{2}".format(self.admin_url, db, name), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, data=json.dumps(data), verify=False, auth=self.auth)
+        else:
+            resp = requests.put("{0}/{1}/_user/{2}".format(self.admin_url, db, name), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, data=json.dumps(data), verify=False)
         log.info("PUT {}".format(resp.url))
         resp.raise_for_status()
 
@@ -129,14 +161,20 @@ class Admin:
 
     # GET /{db}/_user/
     def get_users_info(self, db):
-        resp = requests.get("{0}/{1}/_user/".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False)
+        if self.auth:
+            resp = requests.get("{0}/{1}/_user/".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False, auth=self.auth)
+        else:
+            resp = requests.get("{0}/{1}/_user/".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False)
         log.info("GET {}".format(resp.url))
         resp.raise_for_status()
         return resp.json()
 
     # GET /{db}/_user/{name}
     def get_user_info(self, db, name):
-        resp = requests.get("{0}/{1}/_user/{2}".format(self.admin_url, db, name), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False)
+        if self.auth:
+            resp = requests.get("{0}/{1}/_user/{2}".format(self.admin_url, db, name), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False, auth=self.auth)
+        else:
+            resp = requests.get("{0}/{1}/_user/{2}".format(self.admin_url, db, name), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False)
         log.info("GET {}".format(resp.url))
         resp.raise_for_status()
         return resp.json()
@@ -144,7 +182,10 @@ class Admin:
     # POST /{db}/_resync
     def db_resync(self, db):
         result = dict()
-        resp = requests.post("{0}/{1}/_resync".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False)
+        if self.auth:
+            resp = requests.post("{0}/{1}/_resync".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False, auth=self.auth)
+        else:
+            resp = requests.post("{0}/{1}/_resync".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False)
         log.info("POST {}".format(resp.url))
         resp.raise_for_status()
         result['status_code'] = resp.status_code
@@ -154,7 +195,10 @@ class Admin:
     # GET /{db}/_resync
     def db_get_resync_status(self, db):
         result = dict()
-        resp = requests.get("{0}/{1}/_resync".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False)
+        if self.auth:
+            resp = requests.get("{0}/{1}/_resync".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False, auth=self.auth)
+        else:
+            resp = requests.get("{0}/{1}/_resync".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False)
         log.info("GET {}".format(resp.url))
         resp.raise_for_status()
         result['status_code'] = resp.status_code
@@ -167,28 +211,40 @@ class Admin:
         if delay is not None:
             data = {"delay": delay}
 
-        resp = requests.post("{0}/{1}/_online".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, data=json.dumps(data), verify=False)
+        if self.auth:
+            resp = requests.post("{0}/{1}/_online".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, data=json.dumps(data), verify=False, auth=self.auth)
+        else:
+            resp = requests.post("{0}/{1}/_online".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, data=json.dumps(data), verify=False)
         log.info("POST {}".format(resp.url))
         resp.raise_for_status()
         return resp.status_code
 
     # POST /{db}/_offline
     def take_db_offline(self, db):
-        resp = requests.post("{0}/{1}/_offline".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False)
+        if self.auth:
+            resp = requests.post("{0}/{1}/_offline".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False, auth=self.auth)
+        else:
+            resp = requests.post("{0}/{1}/_offline".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False)
         log.info("POST {}".format(resp.url))
         resp.raise_for_status()
         return resp.status_code
 
     # GET /{db}/_config
     def get_db_config(self, db):
-        resp = requests.get("{0}/{1}/_config".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False)
+        if self.auth:
+            resp = requests.get("{0}/{1}/_config".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False, auth=self.auth)
+        else:
+            resp = requests.get("{0}/{1}/_config".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False)
         log.info("GET {}".format(resp.url))
         resp.raise_for_status()
         return resp.json()
 
     # PUT /{db}/_config
     def put_db_config(self, db, config):
-        resp = requests.put("{0}/{1}/_config".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, data=json.dumps(config), verify=False)
+        if self.auth:
+            resp = requests.put("{0}/{1}/_config".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, data=json.dumps(config), verify=False, auth=self.auth)
+        else:
+            resp = requests.put("{0}/{1}/_config".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, data=json.dumps(config), verify=False)
         log.info("PUT {}".format(resp.url))
         resp.raise_for_status()
         return resp.status_code
@@ -205,21 +261,30 @@ class Admin:
         """ Get the REST cfg response from an accel node.
         Return an CbgtConfig object that exposes common methods useful in validation"""
 
-        resp = requests.get("{0}/_cbgt/api/cfg".format(self.admin_url), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False)
+        if self.auth:
+            resp = requests.get("{0}/_cbgt/api/cfg".format(self.admin_url), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False, auth=self.auth)
+        else:
+            resp = requests.get("{0}/_cbgt/api/cfg".format(self.admin_url), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False)
         log.info("GET {}".format(resp.url))
         resp.raise_for_status()
         return cbgtconfig.CbgtConfig(resp.json())
 
     # GET /_cbgt/api/diag
     def get_cbgt_diagnostics(self):
-        resp = requests.get("{0}/_cbgt/api/diag".format(self.admin_url), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False)
+        if self.auth:
+            resp = requests.get("{0}/_cbgt/api/diag".format(self.admin_url), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False, auth=self.auth)
+        else:
+            resp = requests.get("{0}/_cbgt/api/diag".format(self.admin_url), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False)
         log.info("GET {}".format(resp.url))
         resp.raise_for_status()
         return resp.json()
 
     # GET /{db}/_changes
     def get_global_changes(self, db):
-        r = requests.get("{}/{}/_changes".format(self.admin_url, db), verify=False)
+        if self.auth:
+            r = requests.get("{}/{}/_changes".format(self.admin_url, db), verify=False, auth=self.auth)
+        else:
+            r = requests.get("{}/{}/_changes".format(self.admin_url, db), verify=False)
         log_request(r)
         log_response(r)
         r.raise_for_status()
@@ -228,7 +293,10 @@ class Admin:
 
     # GET /_active_tasks
     def get_active_tasks(self):
-        r = requests.get("{}/_active_tasks".format(self.admin_url), verify=False)
+        if self.auth:
+            r = requests.get("{}/_active_tasks".format(self.admin_url), verify=False, auth=self.auth)
+        else:
+            r = requests.get("{}/_active_tasks".format(self.admin_url), verify=False)
         log_request(r)
         log_response(r)
         r.raise_for_status()
@@ -236,7 +304,10 @@ class Admin:
         return resp_data
 
     def get_all_docs(self, db):
-        resp = requests.get("{0}/{1}/_all_docs".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False)
+        if self.auth:
+            resp = requests.get("{0}/{1}/_all_docs".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False, auth=self.auth)
+        else:
+            resp = requests.get("{0}/{1}/_all_docs".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False)
         log.info("GET {}".format(resp.url))
         resp.raise_for_status()
         return resp.json()
@@ -246,7 +317,10 @@ class Admin:
         count = 0
         max_count = 5
         while True:
-            r = requests.get("{}/{}/_replicationStatus".format(self.admin_url, db), verify=False)
+            if self.auth:
+                r = requests.get("{}/{}/_replicationStatus".format(self.admin_url, db), verify=False, auth=self.auth)
+            else:
+                r = requests.get("{}/{}/_replicationStatus".format(self.admin_url, db), verify=False)
             log_request(r)
             log_response(r)
             r.raise_for_status()
@@ -278,8 +352,10 @@ class Admin:
         read_retry_count = 0
         write_retry_count = 0
         while count < max_times:
-            r = requests.get("{}/{}/_replicationStatus/{}".format(self.admin_url, db, repl_id), verify=False)
-            log.info("GET {}".format(r.url))
+            if self.auth:
+                r = requests.get("{}/{}/_replicationStatus/{}".format(self.admin_url, db, repl_id), verify=False, auth=self.auth)
+            else:
+                r = requests.get("{}/{}/_replicationStatus/{}".format(self.admin_url, db, repl_id), verify=False)
             r.raise_for_status()
             resp_obj = r.json()
             status = resp_obj["status"]
@@ -328,7 +404,10 @@ class Admin:
         local_count = 0
         max_count = 15
         while True:
-            r = requests.get("{}/{}/_replication".format(self.admin_url, db), verify=False)
+            if self.auth:
+                r = requests.get("{}/{}/_replication".format(self.admin_url, db), verify=False, auth=self.auth)
+            else:
+                r = requests.get("{}/{}/_replication".format(self.admin_url, db), verify=False)
             log_request(r)
             log_response(r)
             r.raise_for_status()

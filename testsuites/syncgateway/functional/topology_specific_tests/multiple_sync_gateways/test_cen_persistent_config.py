@@ -21,7 +21,7 @@ def test_centralized_persistent_flag_off(params_from_base_test_setup):
     @summary :
     Test cases link on google drive : https://docs.google.com/spreadsheets/d/19kJQ4_g6RroaoG2YYe0X11d9pU0xam-lb-n23aPLhO4/edit#gid=0
     "1. Set up server and Syncgateway
-    2. Have 2 nodes in the SGW cluster 
+    2. Have 2 nodes in the SGW cluster
     3. Have disable_persistent config key to true in SGW config on 2 nodes of SGW and start sgws
     4. Set up connecting to server , add database config on one of the sGW node with config like delta_sync on on one node via rest end point
     5. Verify that only on SGW node1 delta sync on , but off on sgw node2
@@ -58,7 +58,7 @@ def test_centralized_persistent_flag_off(params_from_base_test_setup):
     sg1.admin.delete_db(sg_db)
     db_config_file = "sync_gateway_default_db"
     dbconfig = construct_dbconfig_json(db_config_file, cluster_conf, sg_platform, sg_conf_name)
-    
+
     sg1.admin.create_db(sg_db, dbconfig)
     sg1_db_config["delta_sync"] = delta_sync_true
     sg1.admin.put_db_config(sg_db, sg1_db_config)
@@ -237,8 +237,8 @@ def test_db_config_in_two_groups(params_from_base_test_setup):
     1. set up 3 sgw nodes
     2. Add a bootstrap config on first 2 nodes to Group - Group1
     3. Add a bootstrap config on 3rd node to Group - Group2
-    4. Add database level config via rest api to Group1 to connect to bucket 1 
-    5. Add database leve config via rest api to Group2 to connect to bucket 2 
+    4. Add database level config via rest api to Group1 to connect to bucket 1
+    5. Add database leve config via rest api to Group2 to connect to bucket 2
     6. Verify that first 2 nodes of SGW of Group1 connected to bucket 1 and 3rd node of SGW of Group 2 connect to bucket2.
     Verify through _config rest end point
     7. write docs on each sg_db1 , sg_db2, on one node. verify doc appears on other SGW node2, but not on SGW node 3.
@@ -255,7 +255,7 @@ def test_db_config_in_two_groups(params_from_base_test_setup):
     mode = params_from_base_test_setup['mode']
     sg_platform = params_from_base_test_setup['sg_platform']
 
-    # 1. set up 3 sgw nodes 
+    # 1. set up 3 sgw nodes
     sg_config = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     sg_client = MobileRestClient()
     cluster_utils = ClusterKeywords(cluster_conf)
@@ -308,7 +308,7 @@ def test_db_config_in_two_groups(params_from_base_test_setup):
     databucket1 = "data-bucket-1"
     dbconfig["bucket"] = databucket1
     sg1.admin.create_db(sg_db, dbconfig)
-    
+
     # 5. Add database leve config via rest api to Group2 to connect to bucket 2
     revs_limit = 25
     persist_cluster_config_environment_prop(cluster_conf, 'revs_limit', revs_limit, property_name_check=False)
@@ -367,7 +367,7 @@ def test_union_of_dbconfigs(params_from_base_test_setup):
     mode = params_from_base_test_setup['mode']
     sg_platform = params_from_base_test_setup['sg_platform']
 
-    # 1. set up 3 sgw nodes 
+    # 1. set up 3 sgw nodes
     sg_config = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     sg_client = MobileRestClient()

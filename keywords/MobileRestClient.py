@@ -27,6 +27,8 @@ from keywords.SyncGateway import validate_sync_gateway_mode
 from keywords.exceptions import RestError, TimeoutException, LiteServError, ChangesError
 from keywords import types
 
+from requests.auth import HTTPBasicAuth
+
 
 def parse_multipart_response(response):
     """
@@ -68,7 +70,7 @@ def get_auth_type(auth):
     if auth is None:
         return AuthType.none
 
-    if auth[0] == "SyncGatewaySession":
+    if isinstance(auth, tuple) and auth[0] == "SyncGatewaySession":
         auth_type = AuthType.session
     else:
         auth_type = AuthType.http_basic
@@ -111,13 +113,16 @@ class MobileRestClient:
             merged_list.extend(doc_list)
         return merged_list
 
-    def get_server_type(self, url):
+    def get_server_type(self, url, auth=None):
         """
         Issues a get to the service running at the specified url.
         It will return a server type of 'listener' or 'syncgateway'
         """
 
-        resp = self._session.get(url)
+        if auth:
+            resp = self._session.get(url, auth=HTTPBasicAuth(auth[0], auth[1]))
+        else:
+            resp = self._session.get(url)
         log_r(resp)
         resp.raise_for_status()
         resp_obj = resp.json()
@@ -205,7 +210,7 @@ class MobileRestClient:
 
         return resp_obj
 
-    def request_session(self, url, db, name, password=None, ttl=86400):
+    def request_session(self, url, db, name, password=None, ttl=86400, auth=None):
         data = {
             "name": name,
             "ttl": ttl
@@ -213,13 +218,17 @@ class MobileRestClient:
         if password:
             data["password"] = password
 
-        resp = self._session.post("{}/{}/_session".format(url, db), data=json.dumps(data))
+        if auth:
+            resp = self._session.post("{}/{}/_session".format(url, db), data=json.dumps(data), auth=HTTPBasicAuth(auth[0], auth[1]))
+        else:
+            resp = self._session.post("{}/{}/_session".format(url, db), data=json.dumps(data))
+
         log_r(resp)
         resp.raise_for_status()
         return resp
 
-    def create_session(self, url, db, name, password=None, ttl=86400):
-        resp = self.request_session(url, db, name, password, ttl)
+    def create_session(self, url, db, name, password=None, ttl=86400, auth=None):
+        resp = self.request_session(url, db, name, password, ttl, auth)
         resp_obj = resp.json()
 
         if "cookie_name" in resp_obj:
@@ -271,32 +280,39 @@ class MobileRestClient:
             log_r(resp)
             resp.raise_for_status()
 
-    def db_resync(self, url, db):
+    def db_resync(self, url, db, auth=None):
         """Get SG db to resync"""
         headers = {"Accept": "application/json"}
-        resp = self._session.post("{}/{}/_resync".format(url, db), headers=headers)
+        if auth:
+            resp = self._session.post("{}/{}/_resync".format(url, db), headers=headers, auth=HTTPBasicAuth(auth[0], auth[1]))
+        else:
+            resp = self._session.post("{}/{}/_resync".format(url, db), headers=headers)
         log_r(resp)
         return resp.status_code
 
-    def get_role(self, url, db, name):
+    def get_role(self, url, db, name, auth=None):
         """ Gets a roles for a db """
-
-        resp = self._session.get("{}/{}/_role/{}".format(url, db, name))
+        if auth:
+            resp = self._session.get("{}/{}/_role/{}".format(url, db, name), auth=HTTPBasicAuth(auth[0], auth[1]))
+        else:
+            resp = self._session.get("{}/{}/_role/{}".format(url, db, name))
         log_r(resp)
         resp.raise_for_status()
 
         return resp.json()
 
-    def get_roles(self, url, db):
+    def get_roles(self, url, db, auth=None):
         """ Gets a list of roles for a db """
-
-        resp = self._session.get("{}/{}/_role/".format(url, db))
+        if auth:
+            resp = self._session.get("{}/{}/_role/".format(url, db), auth=HTTPBasicAuth(auth[0], auth[1]))
+        else:
+            resp = self._session.get("{}/{}/_role/".format(url, db))
         log_r(resp)
         resp.raise_for_status()
 
         return resp.json()
 
-    def create_role(self, url, db, name, channels=None):
+    def create_role(self, url, db, name, channels=None, auth=None):
         """ Creates a role with name and channels for the specified 'db' """
 
         if channels is None:
@@ -309,11 +325,14 @@ class MobileRestClient:
             "admin_channels": channels
         }
 
-        resp = self._session.post("{}/{}/_role/".format(url, db), data=json.dumps(data))
+        if auth:
+            resp = self._session.post("{}/{}/_role/".format(url, db), data=json.dumps(data), auth=HTTPBasicAuth(auth[0], auth[1]))
+        else:
+            resp = self._session.post("{}/{}/_role/".format(url, db), data=json.dumps(data))
         log_r(resp)
         resp.raise_for_status()
 
-    def update_role(self, url, db, name, channels=None):
+    def update_role(self, url, db, name, channels=None, auth=None):
         """ Updates a role with name and channels for the specified 'db' """
 
         if channels is None:
@@ -326,29 +345,36 @@ class MobileRestClient:
             "admin_channels": channels
         }
 
-        resp = self._session.put("{}/{}/_role/{}".format(url, db, name), data=json.dumps(data))
+        if auth:
+            resp = self._session.put("{}/{}/_role/{}".format(url, db, name), data=json.dumps(data), auth=HTTPBasicAuth(auth[0], auth[1]))
+        else:
+            resp = self._session.put("{}/{}/_role/{}".format(url, db, name), data=json.dumps(data))
         log_r(resp)
         resp.raise_for_status()
 
-    def get_user(self, url, db, name):
+    def get_user(self, url, db, name, auth=None):
         """ Gets a user for a db """
-
-        resp = self._session.get("{}/{}/_user/{}".format(url, db, name))
+        if auth:
+            resp = self._session.get("{}/{}/_user/{}".format(url, db, name), auth=HTTPBasicAuth(auth[0], auth[1]))
+        else:
+            resp = self._session.get("{}/{}/_user/{}".format(url, db, name))
         log_r(resp)
         resp.raise_for_status()
 
         return resp.json()
 
-    def get_users(self, url, db):
+    def get_users(self, url, db, auth=None):
         """ Gets a list of users for a db """
-
-        resp = self._session.get("{}/{}/_user/".format(url, db))
+        if auth:
+            resp = self._session.get("{}/{}/_user/".format(url, db), auth=HTTPBasicAuth(auth[0], auth[1]))
+        else:
+            resp = self._session.get("{}/{}/_user/".format(url, db))
         log_r(resp)
         resp.raise_for_status()
 
         return resp.json()
 
-    def create_user(self, url, db, name, password, channels=None, roles=None):
+    def create_user(self, url, db, name, password, channels=None, roles=None, auth=None):
         """ Creates a user with channels on the sync_gateway Admin REST API.
         Returns a name password tuple that can be used for session creation or basic authentication
         """
@@ -368,12 +394,16 @@ class MobileRestClient:
             "admin_channels": channels,
             "admin_roles": roles
         }
-        resp = self._session.post("{}/{}/_user/".format(url, db), data=json.dumps(data))
+        if auth:
+            resp = self._session.post("{}/{}/_user/".format(url, db), data=json.dumps(data), auth=HTTPBasicAuth(auth[0], auth[1]))
+        else:
+            resp = self._session.post("{}/{}/_user/".format(url, db), data=json.dumps(data))
+
         log_r(resp)
         resp.raise_for_status()
         return name, password
 
-    def update_user(self, url, db, name, password=None, channels=None, roles=None, disabled=False):
+    def update_user(self, url, db, name, password=None, channels=None, roles=None, disabled=False, auth=None):
         """ Updates a user via the admin REST api
         Returns a name password tuple that can be used for session creation or basic authentication.
 
@@ -401,7 +431,11 @@ class MobileRestClient:
         if disabled:
             data["disabled"] = True
 
-        resp = self._session.put("{}/{}/_user/{}".format(url, db, name), data=json.dumps(data))
+        if auth:
+            resp = self._session.put("{}/{}/_user/{}".format(url, db, name), data=json.dumps(data), auth=HTTPBasicAuth(auth[0], auth[1]))
+        else:
+            resp = self._session.put("{}/{}/_user/{}".format(url, db, name), data=json.dumps(data))
+
         log_r(resp)
         resp.raise_for_status()
         return name, password
@@ -509,14 +543,42 @@ class MobileRestClient:
 
         return resp.json()
 
-    def compact_database(self, url, db):
+    def get_attachment_by_document(self, url, db, doc, attachment=None, auth=None):
+        """
+        GET /{db}/{doc}/{attachment}?meta=true
+        Get the attachment meta data for tracking
+        """
+        auth_type = get_auth_type(auth)
+
+        if attachment:
+            if auth_type == AuthType.session:
+                resp = self._session.get("{}/{}/{}/{}?meta=true".format(url, db, doc, attachment), cookies=dict(SyncGatewaySession=auth[1]))
+            elif auth_type == AuthType.http_basic:
+                resp = self._session.get("{}/{}/{}/{}?meta=true".format(url, db, doc, attachment), auth=auth)
+            else:
+                resp = self._session.get("{}/{}/{}/{}?meta=true".format(url, db, doc, attachment))
+        else:
+            if auth_type == AuthType.session:
+                resp = self._session.get("{}/{}/{}?meta=true".format(url, db, doc), cookies=dict(SyncGatewaySession=auth[1]))
+            elif auth_type == AuthType.http_basic:
+                resp = self._session.get("{}/{}/{}?meta=true".format(url, db, doc), auth=auth)
+            else:
+                resp = self._session.get("{}/{}/{}?meta=true".format(url, db, doc))
+        log_r(resp)
+        resp.raise_for_status()
+        return resp.json()
+
+    def compact_database(self, url, db, auth=None):
         """
         POST /{db}/_compact and will verify compaction by
         iterating though each document and inspecting the revs_info to make sure all revs are 'missing'
         except for the leaf revision
         """
 
-        resp = self._session.post("{}/{}/_compact".format(url, db))
+        if auth:
+            resp = self._session.post("{}/{}/_compact".format(url, db), auth=HTTPBasicAuth(auth[0], auth[1]))
+        else:
+            resp = self._session.post("{}/{}/_compact".format(url, db))
         log_r(resp)
         resp.raise_for_status()
 
@@ -526,7 +588,10 @@ class MobileRestClient:
             if time.time() - start > CLIENT_REQUEST_TIMEOUT:
                 raise TimeoutException("Verify Docs Present: TIMEOUT")
 
-            resp = self._session.get("{}/{}/_all_docs".format(url, db))
+            if auth:
+                resp = self._session.get("{}/{}/_all_docs".format(url, db), auth=HTTPBasicAuth(auth[0], auth[1]))
+            else:
+                resp = self._session.get("{}/{}/_all_docs".format(url, db))
             log_r(resp)
             resp.raise_for_status()
             resp_obj = resp.json()
@@ -824,13 +889,16 @@ class MobileRestClient:
 
         return resp_obj
 
-    def get_raw_doc(self, url, db, doc_id):
+    def get_raw_doc(self, url, db, doc_id, auth=None):
         """ Get a document via _raw Sync Gateway endpoint """
         params = {
             "include_doc": "true",
             "redact": "false"
         }
-        resp = self._session.get("{}/{}/_raw/{}".format(url, db, doc_id), params=params)
+        if auth:
+            resp = self._session.get("{}/{}/_raw/{}".format(url, db, doc_id), params=params, auth=HTTPBasicAuth(auth[0], auth[1]))
+        else:
+            resp = self._session.get("{}/{}/_raw/{}".format(url, db, doc_id), params=params)
         log_r(resp)
         resp.raise_for_status()
         return resp.json()
@@ -1021,6 +1089,11 @@ class MobileRestClient:
             latest_rev = doc_resp["_rev"]
             self.delete_doc(url, db, doc["id"], latest_rev, auth=auth)
 
+    def get_latest_rev(self, url, db, doc_id, auth=None):
+        doc_resp = self.get_doc(url, db, doc_id, auth=auth)
+        latest_rev = doc_resp["_rev"]
+        return latest_rev
+
     def delete_doc(self, url, db, doc_id, rev=None, auth=None, timeout=None):
         """
         Removes a document with the specfied revision
@@ -1100,7 +1173,7 @@ class MobileRestClient:
                 time.sleep(1)
                 continue
 
-    def purge_doc(self, url, db, doc):
+    def purge_doc(self, url, db, doc, auth=None):
         """
         Purges the each doc by doc id
 
@@ -1108,7 +1181,7 @@ class MobileRestClient:
         docs format (Sync Gateway): [{u'ok': True, u'_rev': u'3-56e50918afe3e9b3c29e94ad55cc6b15', u'_id': u'large_attach_0'}, ...]
         """
 
-        server_type = self.get_server_type(url=url)
+        server_type = self.get_server_type(url=url, auth=auth)
 
         if server_type == ServerType.syncgateway:
             log_info("Purging doc: {}".format(doc["_id"]))
@@ -1120,15 +1193,17 @@ class MobileRestClient:
             data = {
                 doc["id"]: [doc["rev"]]
             }
-
-        resp = self._session.post("{}/{}/_purge".format(url, db), json.dumps(data))
+        if auth:
+            resp = self._session.post("{}/{}/_purge".format(url, db), json.dumps(data), auth=HTTPBasicAuth(auth[0], auth[1]))
+        else:
+            resp = self._session.post("{}/{}/_purge".format(url, db), json.dumps(data))
         log_r(resp)
         resp.raise_for_status()
         resp_obj = resp.json()
 
         return resp_obj
 
-    def purge_docs(self, url, db, docs):
+    def purge_docs(self, url, db, docs, auth=None):
         """
         Purges the each doc in the provided 'docs' given the 'id' and 'rev'
 
@@ -1136,23 +1211,32 @@ class MobileRestClient:
         docs format (Sync Gateway): [{u'ok': True, u'_rev': u'3-56e50918afe3e9b3c29e94ad55cc6b15', u'_id': u'large_attach_0'}, ...]
         """
 
-        server_type = self.get_server_type(url=url)
+        server_type = self.get_server_type(url=url, auth=auth)
 
         purged_docs = []
         for doc in docs:
 
             if server_type == ServerType.syncgateway:
-                log_info("Purging doc: {}".format(doc["_id"]))
-                data = {
-                    doc["_id"]: ['*']
-                }
+                if "_id" in doc:
+                    log_info("Purging doc: {}".format(doc["_id"]))
+                    data = {
+                        doc["_id"]: ['*']
+                    }
+                else:
+                    log_info("Purging doc: {}".format(doc["id"]))
+                    data = {
+                        doc["id"]: ['*']
+                    }
             else:
                 log_info("Purging doc: {}".format(doc["id"]))
                 data = {
                     doc["id"]: [doc["rev"]]
                 }
 
-            resp = self._session.post("{}/{}/_purge".format(url, db), json.dumps(data))
+            if auth:
+                resp = self._session.post("{}/{}/_purge".format(url, db), json.dumps(data), auth=HTTPBasicAuth(auth[0], auth[1]))
+            else:
+                resp = self._session.post("{}/{}/_purge".format(url, db), json.dumps(data))
             log_r(resp)
             resp.raise_for_status()
             resp_obj = resp.json()
@@ -1214,7 +1298,7 @@ class MobileRestClient:
 
         return resp.json()
 
-    def update_doc(self, url, db, doc_id, number_updates=1, attachment_name=None, expiry=None, delay=None, auth=None, channels=None, property_updater=None, remove_expiry=False, rev=None, doc=None):
+    def update_doc(self, url, db, doc_id, number_updates=1, attachment_name=None, expiry=None, delay=None, auth=None, channels=None, property_updater=None, remove_expiry=False, rev=None, doc=None, update_attachment=None):
         """
         Updates a doc on a db a number of times.
             1. GETs the doc
@@ -1250,11 +1334,13 @@ class MobileRestClient:
             doc["updates"] = current_update_number
             doc["_rev"] = current_rev
 
-            if attachment_name is not None:
+            if attachment_name is not None and not update_attachment:
                 atts = attachment.load_from_data_dir([attachment_name])
                 doc["_attachments"] = {
                     atts[0].name: {"data": atts[0].data}
                 }
+            if update_attachment:
+                doc["_attachments"] = update_attachment
 
             if expiry is not None:
                 doc["_exp"] = expiry
@@ -1319,7 +1405,7 @@ class MobileRestClient:
 
         return resp_obj
 
-    def add_docs(self, url, db, number, id_prefix, auth=None, channels=None, generator=None, attachments_generator=None):
+    def add_docs(self, url, db, number, id_prefix, auth=None, channels=None, generator=None, attachments_generator=None, expiry=None):
         """
         if id_prefix == None, generate a uuid for each doc
 
@@ -1349,6 +1435,8 @@ class MobileRestClient:
                 types.verify_is_callable(attachments_generator)
                 attachments = attachments_generator()
                 doc_body["_attachments"] = {att.name: {"data": att.data} for att in attachments}
+            if expiry is not None:
+                doc_body["_exp"] = expiry
 
             if id_prefix is None:
                 doc_id = str(uuid.uuid4())
@@ -1376,7 +1464,7 @@ class MobileRestClient:
         Use the Document.create_docs() to create the docs.
         """
         auth_type = get_auth_type(auth)
-        server_type = self.get_server_type(url)
+        server_type = self.get_server_type(url, auth)
 
         # transform 'docs' into a format expected by _bulk_docs
         if server_type == ServerType.listener:
@@ -1409,7 +1497,7 @@ class MobileRestClient:
         This will create a tombstone.
         """
         auth_type = get_auth_type(auth)
-        server_type = self.get_server_type(url)
+        server_type = self.get_server_type(url, auth)
 
         for doc in docs:
             doc['_deleted'] = True
@@ -1764,7 +1852,7 @@ class MobileRestClient:
         """
 
         auth_type = get_auth_type(auth)
-        server_type = self.get_server_type(url)
+        server_type = self.get_server_type(url, auth)
 
         logging.debug(expected_docs)
 
@@ -1931,7 +2019,7 @@ class MobileRestClient:
         timeout *= 1000
 
         auth_type = get_auth_type(auth)
-        server_type = self.get_server_type(url)
+        server_type = self.get_server_type(url, auth)
 
         if server_type == ServerType.listener:
 
@@ -1939,7 +2027,12 @@ class MobileRestClient:
             if limit is not None:
                 request_url += "&limit={}".format(limit)
 
-            resp = self._session.get(request_url)
+            if auth_type == AuthType.session:
+                resp = self._session.get(request_url, cookies=dict(SyncGatewaySession=auth[1]))
+            elif auth_type == AuthType.http_basic:
+                resp = self._session.get(request_url, auth=auth)
+            else:
+                resp = self._session.get(request_url)
 
         elif server_type == ServerType.syncgateway:
 
@@ -2120,21 +2213,24 @@ class MobileRestClient:
 
             time.sleep(1)
 
-    def add_design_doc(self, url, db, name, doc):
+    def add_design_doc(self, url, db, name, doc, auth=None):
         """
         Keyword that adds a Design Doc to the database
         """
-        resp = self._session.put("{}/{}/_design/{}".format(url, db, name), data=doc)
+        if auth:
+            resp = self._session.put("{}/{}/_design/{}".format(url, db, name), data=doc, auth=HTTPBasicAuth(auth[0], auth[1]))
+        else:
+            resp = self._session.put("{}/{}/_design/{}".format(url, db, name), data=doc)
         log_r(resp)
         resp.raise_for_status()
 
         # Only return a response if adding to the listener
         # Sync Gateway does not return a response
-        if self.get_server_type(url) == ServerType.listener:
+        if self.get_server_type(url, auth=auth) == ServerType.listener:
             resp_obj = resp.json()
             return resp_obj["id"]
 
-    def delete_design_doc(self, url, db, name, rev_id):
+    def delete_design_doc(self, url, db, name, rev_id, auth=None):
         """
         Keyword that delets a Design Doc to the database
         """
@@ -2144,11 +2240,11 @@ class MobileRestClient:
 
         # Only return a response if adding to the listener
         # Sync Gateway does not return a response
-        if self.get_server_type(url) == ServerType.listener:
+        if self.get_server_type(url, auth=auth) == ServerType.listener:
             resp_obj = resp.json()
             return resp_obj["id"]
 
-    def get_design_doc_rev(self, url, db, name):
+    def get_design_doc_rev(self, url, db, name, auth=None):
         """
         Keyword that gets a Design Doc revision
         """
@@ -2158,11 +2254,11 @@ class MobileRestClient:
 
         # Only return a response if adding to the listener
         # Sync Gateway does not return a response
-        if self.get_server_type(url) == ServerType.listener:
+        if self.get_server_type(url, auth=auth) == ServerType.listener:
             resp_obj = resp.json()
             return resp_obj["_rev"]
 
-    def update_design_doc(self, url, db, name, doc, rev):
+    def update_design_doc(self, url, db, name, doc, rev, auth=None):
         """
         Keyword that updates a Design Doc to the database
         """
@@ -2172,7 +2268,7 @@ class MobileRestClient:
 
         # Only return a response if adding to the listener
         # Sync Gateway does not return a response
-        if self.get_server_type(url) == ServerType.listener:
+        if self.get_server_type(url, auth) == ServerType.listener:
             resp_obj = resp.json()
             return resp_obj["id"]
 
@@ -2182,7 +2278,7 @@ class MobileRestClient:
         """
 
         auth_type = get_auth_type(auth)
-        server_type = self.get_server_type(url)
+        server_type = self.get_server_type(url, auth)
 
         url = "{}/{}/_design/{}/_view/{}".format(url, db, design_doc_name, view_name)
         params = {}
@@ -2226,11 +2322,14 @@ class MobileRestClient:
 
         return resp.json()
 
-    def view_query_through_channels(self, url, db):
+    def view_query_through_channels(self, url, db, auth=None):
         """
         Gets query through channels and return all docs including tombstone docs
         """
-        resp = self._session.get("{}/{}/_view/channels".format(url, db))
+        if auth:
+            resp = self._session.get("{}/{}/_view/channels".format(url, db), auth=HTTPBasicAuth(auth[0], auth[1]))
+        else:
+            resp = self._session.get("{}/{}/_view/channels".format(url, db))
         log_r(resp)
         resp.raise_for_status()
 
@@ -2315,9 +2414,12 @@ class MobileRestClient:
         if missing_doc_ids != expected_missing_doc_ids:
             raise AssertionError("Found doc ids should be the same as expected doc ids")
 
-    def get_expvars(self, url):
+    def get_expvars(self, url, auth=None):
         """ Gets expvars for the url """
-        resp = self._session.get("{}/_expvar".format(url))
+        if auth:
+            resp = self._session.get("{}/_expvar".format(url), auth=HTTPBasicAuth(auth[0], auth[1]))
+        else:
+            resp = self._session.get("{}/_expvar".format(url))
         log_r(resp)
         resp.raise_for_status()
 
@@ -2377,7 +2479,7 @@ class MobileRestClient:
         logging.debug(doc)
         return doc["_revisions"]["ids"]
 
-    def sgCollect_restCall(self, sg_host, redact_level=None, redact_salt=None, output_directory=None, upload=False, upload_host=None, customer=None, ticket=None):
+    def sgCollect_restCall(self, sg_host, redact_level=None, redact_salt=None, output_directory=None, upload=False, upload_host=None, customer=None, ticket=None, auth=None):
         """
         set all parameters to the dictionary and do post
         """
@@ -2395,49 +2497,64 @@ class MobileRestClient:
             body["customer"] = customer
         if ticket is not None:
             body["ticket"] = ticket
-        resp = self._session.post("http://{}:4985/_sgcollect_info".format(sg_host), data=json.dumps(body))
+        if auth:
+            resp = self._session.post("http://{}:4985/_sgcollect_info".format(sg_host), data=json.dumps(body), auth=HTTPBasicAuth(auth[0], auth[1]))
+        else:
+            resp = self._session.post("http://{}:4985/_sgcollect_info".format(sg_host), data=json.dumps(body))
         log_r(resp)
         return resp
 
-    def sgCollect_info(self, sg_host, redact_level=None, redact_salt=None, output_directory=None, upload=False, upload_host=None, customer=None, ticket=None):
+    def sgCollect_info(self, sg_host, redact_level=None, redact_salt=None, output_directory=None, upload=False, upload_host=None, customer=None, ticket=None, auth=None):
         """
         Get sgCollect info using rest Api call by passing params
         """
-        resp = self.sgCollect_restCall(sg_host, redact_level=redact_level, redact_salt=redact_salt, output_directory=output_directory, upload=upload, upload_host=upload_host, customer=customer, ticket=ticket)
+        resp = self.sgCollect_restCall(sg_host, redact_level=redact_level, redact_salt=redact_salt, output_directory=output_directory, upload=upload, upload_host=upload_host, customer=customer, ticket=ticket, auth=auth)
         resp.raise_for_status()
         resp_obj = resp.json()
         return resp_obj
 
-    def get_sgCollect_status(self, sg_host):
+    def get_sgCollect_status(self, sg_host, auth=None):
         """
         Get sg collect status with rest API call
         """
-        resp = self._session.get("http://{}:4985/_sgcollect_info".format(sg_host))
+        if auth:
+            resp = self._session.get("http://{}:4985/_sgcollect_info".format(sg_host), auth=HTTPBasicAuth(auth[0], auth[1]))
+        else:
+            resp = self._session.get("http://{}:4985/_sgcollect_info".format(sg_host))
         log_r(resp)
         resp.raise_for_status()
         resp_obj = resp.json()
         return resp_obj["status"]
 
-    def stop_sgCollect(self, sg_host):
+    def stop_sgCollect(self, sg_host, auth=None):
         """
         Stop sg collect with rest API call
         """
-        resp = self._session.delete("http://{}:4985/_sgcollect_info".format(sg_host))
+        if auth:
+            resp = self._session.delete("http://{}:4985/_sgcollect_info".format(sg_host), auth=HTTPBasicAuth(auth[0], auth[1]))
+        else:
+            resp = self._session.delete("http://{}:4985/_sgcollect_info".format(sg_host))
         log_r(resp)
         resp.raise_for_status()
 
-    def get_expiration_value(self, url, db, doc_id):
+    def get_expiration_value(self, url, db, doc_id, auth=None):
         """
         Get the expiration value
         """
-        resp = self._session.get("{}/{}/{}?show_exp=true".format(url, db, doc_id))
+        if auth:
+            resp = self._session.get("{}/{}/{}?show_exp=true".format(url, db, doc_id), auth=HTTPBasicAuth(auth[0], auth[1]))
+        else:
+            resp = self._session.get("{}/{}/{}?show_exp=true".format(url, db, doc_id))
         log_r(resp)
         resp.raise_for_status()
         resp_obj = resp.json()
         return resp_obj["_exp"]
 
-    def delete_json_element(self, url, db, doc_id):
-        resp = self._session.get("{}/{}/{}?show_exp=true".format(url, db, doc_id))
+    def delete_json_element(self, url, db, doc_id, auth=None):
+        if auth:
+            resp = self._session.get("{}/{}/{}?show_exp=true".format(url, db, doc_id), auth=HTTPBasicAuth(auth[0], auth[1]))
+        else:
+            resp = self._session.get("{}/{}/{}?show_exp=true".format(url, db, doc_id))
         log_r(resp)
         resp.raise_for_status()
         resp_obj = resp.json()
@@ -2448,3 +2565,33 @@ class MobileRestClient:
         log_r(resp)
         resp.raise_for_status()
         return resp.status_code
+
+    def compact_attachments(self, url, db, action, auth=None):
+        if action == "status":
+            if auth:
+                resp = self._session.get("{}/{}/_compact?type=attachment".format(url, db), auth=HTTPBasicAuth(auth[0], auth[1]))
+            else:
+                resp = self._session.get("{}/{}/_compact?type=attachment".format(url, db))
+            resp_obj = resp.json()
+            return resp_obj
+        elif action == "start":
+            if auth:
+                resp = self._session.post("{}/{}/_compact?type=attachment&action=start".format(url, db), auth=HTTPBasicAuth(auth[0], auth[1]))
+            else:
+                resp = self._session.post("{}/{}/_compact?type=attachment&action=start".format(url, db))
+            resp_obj = resp.json()
+            return resp_obj
+        elif action == "progress":
+            if auth:
+                resp = self._session.post("{}/{}/_compact?type=attachment".format(url, db), auth=HTTPBasicAuth(auth[0], auth[1]))
+            else:
+                resp = self._session.post("{}/{}/_compact?type=attachment".format(url, db))
+            resp_obj = resp.json()
+            return resp_obj
+        elif action == "stop":
+            if auth:
+                resp = self._session.post("{}/{}/_compact?type=attachment&action=stop".format(url, db), auth=HTTPBasicAuth(auth[0], auth[1]))
+            else:
+                resp = self._session.post("{}/{}/_compact?type=attachment&action=stop".format(url, db))
+            resp_obj = resp.json()
+            return resp_obj

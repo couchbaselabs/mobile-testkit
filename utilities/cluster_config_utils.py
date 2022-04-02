@@ -404,6 +404,7 @@ def is_admin_auth_disabled(cluster_config):
     except KeyError:
         return False
 
+
 def is_sgw_ce_enabled(cluster_config):
     """ verify sgw ce enabled/disabled"""
 

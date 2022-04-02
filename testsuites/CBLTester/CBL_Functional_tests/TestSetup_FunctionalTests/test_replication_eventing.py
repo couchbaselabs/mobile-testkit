@@ -7,6 +7,7 @@ from keywords.attachment import load_from_data_dir, generate_2_png_100_100
 from CBLClient.Replication import Replication
 from libraries.testkit import cluster
 from libraries.data import doc_generators
+from keywords.constants import RBAC_FULL_ADMIN
 
 
 @pytest.mark.listener
@@ -40,6 +41,7 @@ def test_replication_eventing_status(params_from_base_test_setup, num_of_docs):
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if sync_gateway_version < "2.5.0":
         pytest.skip('This test cannnot run with sg version below 2.5')
@@ -58,8 +60,9 @@ def test_replication_eventing_status(params_from_base_test_setup, num_of_docs):
     cbl_doc_ids = db.create_bulk_docs(num_of_docs, "push_cbl_docs", db=cbl_db, channels=channels)
 
     # 1.2 Creating Docs in SG
-    sg_client.create_user(url=sg_admin_url, db=sg_db, name=username, password=password, channels=channels)
-    cookie, session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(url=sg_admin_url, db=sg_db, name=username, password=password, channels=channels, auth=auth)
+    cookie, session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username, auth=auth)
     auth_session = cookie, session
     sync_cookie = "{}={}".format(cookie, session)
     session_header = {"Cookie": sync_cookie}
@@ -132,6 +135,7 @@ def test_push_replication_error_event(params_from_base_test_setup, num_of_docs):
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if sync_gateway_version < "2.5.0":
         pytest.skip('This test cannnot run with sg version below 2.5')
@@ -148,9 +152,9 @@ def test_push_replication_error_event(params_from_base_test_setup, num_of_docs):
 
     # 1. Creating Docs in CBL
     cbl_docs = db.create_bulk_docs(num_of_docs, "cbl_docs", db=cbl_db, channels=channels)
-
-    sg_client.create_user(url=sg_admin_url, db=sg_db, name=username, password=password, channels=channels)
-    cookie, session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(url=sg_admin_url, db=sg_db, name=username, password=password, channels=channels, auth=auth)
+    cookie, session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username, auth=auth)
     auth_session = cookie, session
     sync_cookie = "{}={}".format(cookie, session)
     session_header = {"Cookie": sync_cookie}
@@ -308,6 +312,7 @@ def test_replication_access_revoke_event(params_from_base_test_setup, num_of_doc
     cbl_db = params_from_base_test_setup["source_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     liteserv_version = params_from_base_test_setup["liteserv_version"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if sync_gateway_version < "2.5.0":
         pytest.skip('This test cannnot run with sg version below 2.5')
@@ -324,9 +329,9 @@ def test_replication_access_revoke_event(params_from_base_test_setup, num_of_doc
 
     # 1. Creating Docs in CBL
     db.create_bulk_docs(num_of_docs, "cbl_docs", db=cbl_db, channels=channels)
-
-    sg_client.create_user(url=sg_admin_url, db=sg_db, name=username, password=password, channels=channels)
-    cookie, session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(url=sg_admin_url, db=sg_db, name=username, password=password, channels=channels, auth=auth)
+    cookie, session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username, auth=auth)
     auth_session = cookie, session
     sync_cookie = "{}={}".format(cookie, session)
     session_header = {"Cookie": sync_cookie}
@@ -418,6 +423,7 @@ def test_replication_delete_event(params_from_base_test_setup, num_of_docs):
     cbl_db = params_from_base_test_setup["source_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     liteserv_version = params_from_base_test_setup["liteserv_version"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if sync_gateway_version < "2.5.0":
         pytest.skip('This test cannnot run with sg version below 2.5')
@@ -434,9 +440,9 @@ def test_replication_delete_event(params_from_base_test_setup, num_of_docs):
 
     # 1. Creating Docs in CBL
     db.create_bulk_docs(num_of_docs, "cbl_docs", db=cbl_db, channels=channels)
-
-    sg_client.create_user(url=sg_admin_url, db=sg_db, name=username, password=password, channels=channels)
-    cookie, session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(url=sg_admin_url, db=sg_db, name=username, password=password, channels=channels, auth=auth)
+    cookie, session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username, auth=auth)
     auth_session = cookie, session
     sync_cookie = "{}={}".format(cookie, session)
     session_header = {"Cookie": sync_cookie}
@@ -528,6 +534,7 @@ def test_push_replication_for_20mb_doc(params_from_base_test_setup, attachment_g
     cbl_db = params_from_base_test_setup["source_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     liteserv_platform = params_from_base_test_setup["liteserv_platform"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if sync_gateway_version < "2.5.0" or ("load_from_data_dir" in str(attachment_generator) and (liteserv_platform == "xamarin-android" or liteserv_platform == "android")):
         pytest.skip('This test cannnot run with sg version below 2.5 and fails for Andriod as Android device/emulator cannot handle doc with more than 20MB')
@@ -541,9 +548,9 @@ def test_push_replication_for_20mb_doc(params_from_base_test_setup, attachment_g
     # Reset cluster to ensure no data in system
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
-
-    sg_client.create_user(url=sg_admin_url, db=sg_db, name=username, password=password, channels=channels)
-    cookie, session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(url=sg_admin_url, db=sg_db, name=username, password=password, channels=channels, auth=auth)
+    cookie, session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username, auth=auth)
     sync_cookie = "{}={}".format(cookie, session)
     session_header = {"Cookie": sync_cookie}
 

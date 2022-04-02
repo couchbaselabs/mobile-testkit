@@ -10,6 +10,7 @@ from keywords.utils import host_for_url
 from couchbase.bucket import Bucket
 from keywords.MobileRestClient import MobileRestClient
 from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
+from keywords.constants import RBAC_FULL_ADMIN
 
 
 @pytest.mark.syncgateway
@@ -38,6 +39,7 @@ def test_importDocs_withSharedBucketAccessFalse(params_from_base_test_setup):
     mode = params_from_base_test_setup['mode']
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
     sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
@@ -57,7 +59,9 @@ def test_importDocs_withSharedBucketAccessFalse(params_from_base_test_setup):
     if sync_gateway_version < "2.7.0":
         pytest.skip('This functionality does not work for the versions below 2.7.0')
 
-    expvars = sg_client.get_expvars(sg_admin_url)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+
+    expvars = sg_client.get_expvars(sg_admin_url, auth)
     initial_warn_count = expvars["syncgateway"]["global"]["resource_utilization"]["warn_count"]
 
     # 1. Start CBS and SGW with only enable_shared_bucket_access=false
@@ -76,12 +80,12 @@ def test_importDocs_withSharedBucketAccessFalse(params_from_base_test_setup):
     sdk_client.upsert_multi(sdk_docs)
 
     # 3. Verify docs are not imported to SGW as import_docs is set to false by default
-    all_changes_total = sg_client.get_changes(url=sg_admin_url, db=sg_db, auth=None, since=0)
+    all_changes_total = sg_client.get_changes(url=sg_admin_url, db=sg_db, auth=auth, since=0)
     assert len(all_changes_total["results"]) == 0
 
     # 4. if Xattrs=true i.e if import_docs=true, Verify warn_count incremented on stats
     if xattrs_enabled and sync_gateway_version < "3.0.0":
-        expvars = sg_client.get_expvars(sg_admin_url)
+        expvars = sg_client.get_expvars(sg_admin_url, auth=auth)
         assert initial_warn_count < expvars["syncgateway"]["global"]["resource_utilization"]["warn_count"], "warn_count did not increment"
 
 
@@ -113,6 +117,7 @@ def test_importDocs_defaultBehavior_withSharedBucketAccessTrue(params_from_base_
     mode = params_from_base_test_setup['mode']
     sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
     sg_ce = params_from_base_test_setup["sg_ce"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
@@ -148,7 +153,8 @@ def test_importDocs_defaultBehavior_withSharedBucketAccessTrue(params_from_base_
     time.sleep(2)  # give some time to replicate to SGW
 
     # 3. Verify docs are not imported to SGW as import_docs is set to false by default
-    all_changes_total = sg_client.get_changes(url=sg_admin_url, db=sg_db, auth=None, since=0)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    all_changes_total = sg_client.get_changes(url=sg_admin_url, db=sg_db, auth=auth, since=0)
     if sg_ce:
         assert len(all_changes_total["results"]) == 0
     else:
@@ -181,6 +187,7 @@ def test_importPartitions_withSharedBucketAccessTrue(params_from_base_test_setup
     mode = params_from_base_test_setup['mode']
     sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
     xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
@@ -218,9 +225,10 @@ def test_importPartitions_withSharedBucketAccessTrue(params_from_base_test_setup
     time.sleep(1)  # give some time to import docs to SGW
 
     # 3. Verify docs are imported to SGW
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     count = 0
     while count < 5:
-        all_changes_total = sg_client.get_changes(url=sg_admin_url, db=sg_db, auth=None, since=0)
+        all_changes_total = sg_client.get_changes(url=sg_admin_url, db=sg_db, auth=auth, since=0)
         assert len(all_changes_total["results"]) == num_docs
         if len(all_changes_total["results"]) == num_docs:
             break

@@ -1,19 +1,19 @@
 # Stop sync_gateway service
 - name: SYNC GATEWAY | Stop sync_gateway service
   service: name=sync_gateway state=stopped
-  when: ((ansible_distribution == "CentOS" or ansible_distribution == "RedHat") and ansible_distribution_major_version >= "7") or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian" or ansible_distribution == "MacOSX"
+  when: ((ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon") and ansible_distribution_major_version >= "7") or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian" or ansible_distribution == "MacOSX"
   ignore_errors: yes
 
 - name: SYNC GATEWAY | Stop sync_gateway
   shell: /sbin/initctl stop sync_gateway
-  when: ((ansible_distribution == "CentOS" or ansible_distribution == "RedHat") and ansible_distribution_major_version == "6") or ansible_distribution == "RedHat" or ansible_distribution == "Amazon"
+  when: ((ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon") and ansible_distribution_major_version == "6") or ansible_distribution == "RedHat" or ansible_distribution == "Amazon"
   ignore_errors: yes
 
 # Remove sync_gateway package
 - name: SYNC GATEWAY | Uninstall sync_gateway rpm  
   shell: rpm -e couchbase-sync-gateway
   ignore_errors: yes
-  when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat"
+  when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon"
 
 # Remove sync_gateway package
 - name: SYNC GATEWAY | Uninstall sync_gateway deb  

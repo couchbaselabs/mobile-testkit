@@ -11,19 +11,23 @@
       status_code: 200, 201
       timeout: 30
       method: POST
+      user: sgw_admin
+      password: password
       body: 
         mainlevel:
           delay: "{{ delay }}"
       body_format: json
       headers:
         Content-Type: "application/json"
-    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian" or ansible_distribution == "MacOSX"
+    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian" or ansible_distribution == "MacOSX"
 
   - win_uri:
       url: http://localhost:4985/{{ db }}/_online
       status_code: 200, 201
       timeout: 30
       method: POST
+      user: sgw_admin
+      password: password
       body: 
         mainlevel:
           delay: "{{ delay }}"

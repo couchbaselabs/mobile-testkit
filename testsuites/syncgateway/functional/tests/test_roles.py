@@ -3,6 +3,8 @@ import pytest
 from libraries.testkit.admin import Admin
 from libraries.testkit.cluster import Cluster
 from libraries.testkit.verify import verify_changes
+from keywords.constants import RBAC_FULL_ADMIN
+from requests.auth import HTTPBasicAuth
 
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.utils import log_info
@@ -23,6 +25,7 @@ def test_roles_sanity(params_from_base_test_setup, sg_conf_name, x509_cert_auth)
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     # Skip the test if ssl disabled as it cannot run without port using http protocol
     if ("sync_gateway_default_functional_tests_no_port" in sg_conf_name) and get_sg_version(cluster_conf) < "1.5.0":
@@ -37,6 +40,7 @@ def test_roles_sanity(params_from_base_test_setup, sg_conf_name, x509_cert_auth)
         pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     log_info("Running 'roles_sanity'")
     log_info("cluster_conf: {}".format(cluster_conf))
@@ -63,6 +67,8 @@ def test_roles_sanity(params_from_base_test_setup, sg_conf_name, x509_cert_auth)
     number_of_docs_per_pusher = 500
 
     admin = Admin(cluster.sync_gateways[0])
+    if auth:
+        admin.auth = HTTPBasicAuth(auth[0], auth[1])
 
     admin.create_role("db", name="radio_stations", channels=radio_stations)
     admin.create_role("db", name="tv_stations", channels=tv_stations)

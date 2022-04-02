@@ -1,11 +1,13 @@
 import time
 
 import pytest
+from requests.auth import HTTPBasicAuth
 
 from libraries.testkit.admin import Admin
 from libraries.testkit.cluster import Cluster
 from libraries.testkit.verify import verify_changes
 
+from keywords.constants import RBAC_FULL_ADMIN
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.utils import log_info
 from utilities.cluster_config_utils import is_x509_auth, persist_cluster_config_environment_prop, copy_to_temp_conf
@@ -23,6 +25,7 @@ def test_multiple_db_unique_data_bucket_unique_index_bucket(params_from_base_tes
 
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if is_x509_auth(cluster_conf):
         sg_conf_name += "_x509"
@@ -43,6 +46,9 @@ def test_multiple_db_unique_data_bucket_unique_index_bucket(params_from_base_tes
     num_docs_per_user = num_docs_per_user
 
     admin = Admin(cluster.sync_gateways[0])
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    if auth:
+        admin.auth = HTTPBasicAuth(auth[0], auth[1])
 
     db_one_users = admin.register_bulk_users(target=cluster.sync_gateways[0], db="db1", name_prefix="bulk_db_user", number=num_db_users, password="password", channels=["ABC"])
     db_two_users = admin.register_bulk_users(target=cluster.sync_gateways[0], db="db2", name_prefix="bulk_db2_user", number=num_db2_users, password="password", channels=["ABC"])
@@ -84,6 +90,7 @@ def test_multiple_db_single_data_bucket_single_index_bucket(params_from_base_tes
     mode = params_from_base_test_setup["mode"]
     disable_persistent_config = params_from_base_test_setup["disable_persistent_config"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
@@ -113,6 +120,9 @@ def test_multiple_db_single_data_bucket_single_index_bucket(params_from_base_tes
     num_docs_per_user = num_docs_per_user
 
     admin = Admin(cluster.sync_gateways[0])
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    if auth:
+        admin.auth = HTTPBasicAuth(auth[0], auth[1])
 
     db_one_users = admin.register_bulk_users(target=cluster.sync_gateways[0], db="db", name_prefix="bulk_db_user", number=num_db_users, password="password", channels=["ABC"])
     db_two_users = admin.register_bulk_users(target=cluster.sync_gateways[0], db="db2", name_prefix="bulk_db2_user", number=num_db2_users, password="password", channels=["ABC"])

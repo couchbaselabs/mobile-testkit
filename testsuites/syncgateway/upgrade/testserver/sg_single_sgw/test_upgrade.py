@@ -147,6 +147,7 @@ def test_upgrade(params_from_base_test_setup):
     doc_ids = db.getDocIds(cbl_db, limit=num_docs)
     added_docs = db.getDocuments(cbl_db, doc_ids)
     log_info("Added {} docs".format(len(added_docs)))
+    sg_client.add_docs(url=sg_admin_url, db=sg_db, number=2, id_prefix="sgw_docs1", channels=sg_user_channels, generator="simple_user", attachments_generator=attachment.generate_2_png_10_10)
 
     # 2. Starting continuous push_pull replication from TestServer to sync gateway
     log_info("Starting continuous push pull replication from TestServer to sync gateway")
@@ -166,7 +167,6 @@ def test_upgrade(params_from_base_test_setup):
     repl1 = replicator.create(repl_config1)
     replicator.start(repl1)
     replicator.wait_until_replicator_idle(repl1)
-    sg_client.add_docs(url=sg_admin_url, db=sg_db, number=2, id_prefix="sgw_docs1", channels=sg_user_channels, generator="simple_user", attachments_generator=attachment.generate_2_png_10_10)
 
     # Create docs in CBS cluster
     cluster = Cluster(config=cluster_config)
@@ -181,6 +181,16 @@ def test_upgrade(params_from_base_test_setup):
     secondary_server = cluster.servers[1]
     servers = cluster.servers[1:]
 
+    # update attachment indirectly deleting the attachments
+    attachments = {}
+    duplicate_attachments = attachment.load_from_data_dir(["golden_gate_large.jpg"])
+    for att in duplicate_attachments:
+        attachments[att.name] = {"data": att.data}
+    sg_client.update_doc(url=sg_admin_url, db=sg_db, doc_id="sgw_docs1_0", number_updates=1,
+                         update_attachment=attachments)
+    sg_client.update_doc(url=sg_admin_url, db=sg_db, doc_id="sgw_docs1_1", number_updates=1,
+                         update_attachment=attachments)
+    replicator.start(repl1)
     num_sdk_docs = 10
     num_sg_docs = 10
     log_info('Adding {} docs via SDK '.format(num_sdk_docs))
@@ -193,6 +203,7 @@ def test_upgrade(params_from_base_test_setup):
     replicator.wait_until_replicator_idle(repl)
     doc_ids = db.getDocIds(cbl_db, limit=num_docs + (num_sdk_docs * 2) + 2)
     added_docs = db.getDocuments(cbl_db, doc_ids)
+    log_info('updating {} docs via cbl '.format(added_docs))
     # 3. Start a thread to keep updating docs on CBL
     terminator_doc_id = 'terminator'
     with ProcessPoolExecutor() as up:
@@ -312,6 +323,18 @@ def test_upgrade(params_from_base_test_setup):
         log_info("Stopping replication between testserver and sync gateway")
         replicator.stop(repl2)
         replicator.stop(repl)
+        if sync_gateway_upgraded_version >= "3.0.0":
+            assert sg_client.compact_attachments(sg_admin_url, sg_db, "status")["status"] == "completed"
+            sg_client.compact_attachments(sg_admin_url, sg_db, "start")
+            # we need to wait until compaction process is done
+            while sg_client.compact_attachments(sg_admin_url, sg_db, "status")["status"] == "running":
+                time.sleep(60)
+            att_status = sg_client.compact_attachments(sg_admin_url, sg_db, "status")
+            log_info(att_status)
+            assert att_status["status"] == "completed"
+            assert att_status["last_error"] == "", \
+                "Error found while running the compaction process"
+            assert att_status["purged_attachments"] > 500
 
 
 def verify_sg_docs_revision_history(url, db, cbl_db2, num_docs, sg_db, added_docs, terminator):
@@ -349,8 +372,12 @@ def verify_sg_docs_revision_history(url, db, cbl_db2, num_docs, sg_db, added_doc
                 del added_docs[key]["_id"]
             except KeyError:
                 log_info("Ignoring id verification")
-            assert rev_gen == expected_doc_map[key], "revision mismatch"
-            assert len(doc["doc"]) == len(added_docs[key]), "doc length mismatch"
+            assert rev_gen == expected_doc_map[key], "revision mismatch on the key {}".format(key)
+
+            if "_attachments" in doc["doc"]:
+                assert (len(doc["doc"]) - 1) == len(added_docs[key]), "doc length mismatch {}".format(key)
+            else:
+                assert len(doc["doc"]) == len(added_docs[key]), "doc length mismatch"
 
     log_info("finished verify_sg_docs_revision_history.")
 

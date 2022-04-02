@@ -646,7 +646,10 @@ class SyncGateway:
         if not user_credentials_url:
             data["username"] = remote_user
             data["password"] = remote_password
-        r = requests.put("{}/{}/_replication/{}".format(sg_url, local_db, replication_id), headers=self._headers, data=json.dumps(data))
+        if self.admin.auth:
+            r = requests.put("{}/{}/_replication/{}".format(sg_url, local_db, replication_id), headers=self._headers, data=json.dumps(data), auth=self.admin.auth)
+        else:
+            r = requests.put("{}/{}/_replication/{}".format(sg_url, local_db, replication_id), headers=self._headers, data=json.dumps(data))
         log_request(r)
         log_response(r)
         r.raise_for_status()
@@ -655,7 +658,10 @@ class SyncGateway:
 
     def stop_replication2_by_id(self, replication_id, db):
         sg_url = self.admin.admin_url
-        r = requests.delete("{}/{}/_replication/{}".format(sg_url, db, replication_id))
+        if self.admin.auth:
+            r = requests.delete("{}/{}/_replication/{}".format(sg_url, db, replication_id), auth=self.admin.auth)
+        else:
+            r = requests.delete("{}/{}/_replication/{}".format(sg_url, db, replication_id))
         log_request(r)
         log_response(r)
         r.raise_for_status()
@@ -663,25 +669,37 @@ class SyncGateway:
     def modify_replication2_status(self, replication_id, db, action):
         sg_url = self.admin.admin_url
         if action == "reset":
-            self.reset_replication2_checkpoint(sg_url, replication_id, db)
+            self.reset_replication2_checkpoint(sg_url, replication_id, db, self.admin.auth)
         else:
-            r = requests.put("{}/{}/_replicationStatus/{}?action={}".format(sg_url, db, replication_id, action))
+            if self.admin.auth:
+                r = requests.put("{}/{}/_replicationStatus/{}?action={}".format(sg_url, db, replication_id, action), auth=self.admin.auth)
+            else:
+                r = requests.put("{}/{}/_replicationStatus/{}?action={}".format(sg_url, db, replication_id, action))
             log_request(r)
             log_response(r)
             r.raise_for_status()
 
-    def reset_replication2_checkpoint(self, sg_url, replication_id, db):
-        r = requests.put("{}/{}/_replicationStatus/{}?action=stop".format(sg_url, db, replication_id))
+    def reset_replication2_checkpoint(self, sg_url, replication_id, db, auth=None):
+        if auth:
+            r = requests.put("{}/{}/_replicationStatus/{}?action=stop".format(sg_url, db, replication_id), auth=auth)
+        else:
+            r = requests.put("{}/{}/_replicationStatus/{}?action=stop".format(sg_url, db, replication_id))
         log_request(r)
         log_response(r)
         r.raise_for_status()
         time.sleep(1)
-        r = requests.put("{}/{}/_replicationStatus/{}?action=reset".format(sg_url, db, replication_id))
+        if auth:
+            r = requests.put("{}/{}/_replicationStatus/{}?action=reset".format(sg_url, db, replication_id), auth=auth)
+        else:
+            r = requests.put("{}/{}/_replicationStatus/{}?action=reset".format(sg_url, db, replication_id))
         log_request(r)
         log_response(r)
         r.raise_for_status()
         time.sleep(1)
-        r = requests.put("{}/{}/_replicationStatus/{}?action=start".format(sg_url, db, replication_id))
+        if auth:
+            r = requests.put("{}/{}/_replicationStatus/{}?action=start".format(sg_url, db, replication_id), auth=auth)
+        else:
+            r = requests.put("{}/{}/_replicationStatus/{}?action=start".format(sg_url, db, replication_id))
         log_request(r)
         log_response(r)
         r.raise_for_status()
@@ -689,7 +707,10 @@ class SyncGateway:
 
     def get_replication2(self, db):
         sg_url = self.admin.admin_url
-        r = requests.get("{}/{}/_replication".format(sg_url, db))
+        if self.admin.auth:
+            r = requests.get("{}/{}/_replication".format(sg_url, db), auth=self.admin.auth)
+        else:
+            r = requests.get("{}/{}/_replication".format(sg_url, db))
         log_request(r)
         log_response(r)
         r.raise_for_status()

@@ -9,12 +9,12 @@ from keywords import document
 from keywords.MobileRestClient import MobileRestClient
 from keywords.ClusterKeywords import ClusterKeywords
 # from libraries.testkit import cluster
-from keywords import attachment
+# from keywords import attachment
 # from concurrent.futures import ThreadPoolExecutor
 # from libraries.testkit.prometheus import verify_stat_on_prometheus
 # from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
 # from utilities.cluster_config_utils import persist_cluster_config_environment_prop
-from libraries.testkit.syncgateway import construct_dbconfig_json
+# from libraries.testkit.syncgateway import construct_dbconfig_json
 # from CBLClient.Replication import Replication
 # from CBLClient.Authenticator import Authenticator
 

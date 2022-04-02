@@ -277,7 +277,7 @@ def test_automatic_migration_with_server_connection_fails(params_from_base_test_
     except Exception as ex:
         if "Could not upgrade sync_gateway" in str(ex):
             log_info("SGW failed to start after upgrade as server is down")
-    
+
         # 4. Verify replication are migrated and stored in bucket
         # 5. Have SGW failed to start with server reconnection failure
         # 6. Verify backup file is not created and sgw config is not upgraded and old config is not intacted
@@ -395,7 +395,7 @@ def test_automatic_migration_fails_with_directory_permissions(params_from_base_t
     remote_executor = RemoteExecutor(cbs_cluster.sync_gateways[0].ip)
     remote_executor.execute("rm -rf {}".format(sgw_config_dir))
     remote_executor.execute("mkdir -p {}".format(sgw_config_dir))
-    
+
     data = load_sync_gateway_config(sg_conf, topology["couchbase_servers"][0], cluster_conf)
     create_files_with_content(json.dumps(data), sg_platform, sg_hostname, "sync_gateway.json", cluster_conf, path=sgw_config_path)
     if nonWritable_directory_permissions:

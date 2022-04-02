@@ -11,6 +11,7 @@ from keywords.exceptions import ProvisioningError
 from utilities.cluster_config_utils import load_cluster_config_json, persist_cluster_config_environment_prop, copy_to_temp_conf
 from libraries.testkit.admin import Admin
 
+
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.logging
@@ -206,7 +207,6 @@ def test_invalid_logKeys_string(params_from_base_test_setup, sg_conf_name):
         # Remove generated conf file
         os.remove(temp_conf)
         pytest.fail("SG shouldn't be started!!!!")
-
 
 
 @pytest.mark.syncgateway

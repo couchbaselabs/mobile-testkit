@@ -7,6 +7,7 @@ from CBLClient.Database import Database
 from CBLClient.Replication import Replication
 from CBLClient.Authenticator import Authenticator
 from libraries.testkit import cluster
+from keywords.constants import RBAC_FULL_ADMIN
 
 
 @pytest.fixture(scope="function")
@@ -48,6 +49,7 @@ def test_replication_heartbeat(params_from_base_test_setup):
     sg_blip_url = params_from_base_test_setup["target_url"]
     db = params_from_base_test_setup["db"]
     db_config = params_from_base_test_setup["db_config"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     # Reset nginx with shorter keep_alive frequency config
     from libraries.provision.install_nginx import install_nginx
@@ -63,8 +65,9 @@ def test_replication_heartbeat(params_from_base_test_setup):
     password = "password"
 
     sg_client = MobileRestClient()
-    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channels)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channels, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
     auth_session = cookie, session_id
 
     heartbeat = '15'
@@ -95,7 +98,7 @@ def test_replication_heartbeat(params_from_base_test_setup):
                                                   heartbeat=heartbeat)
 
     # 4. verify docs are all replicated
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True, auth=auth)["rows"]
     log_info("count of sg_docs = {}".format(len(sg_docs)))
     cbl_doc_ids = db.getDocIds(cbl_db)
     cbl_db_docs = db.getDocuments(cbl_db, cbl_doc_ids)
@@ -108,7 +111,7 @@ def test_replication_heartbeat(params_from_base_test_setup):
 
     # 6. wait for 20 seconds, verify if docs are replicated to sync gateway
     time.sleep(10)
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True, auth=auth)["rows"]
     log_info("count of sg_docs = {}".format(len(sg_docs)))
     cbl_doc_ids = db.getDocIds(cbl_db)
     cbl_db_docs = db.getDocuments(cbl_db, cbl_doc_ids)

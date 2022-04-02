@@ -283,8 +283,9 @@ def params_from_base_suite_setup(request):
         expected_server_version=server_version,
         expected_sync_gateway_version=sync_gateway_version
     )
+    need_sgw_admin_auth = (not disable_admin_auth) and sync_gateway_version >= "3.0"
 
-    yield {"cluster_config": cluster_config, "mode": mode, "sg_platform": sg_platform, "sg_ce": sg_ce}
+    yield {"cluster_config": cluster_config, "mode": mode, "sg_platform": sg_platform, "sg_ce": sg_ce, "need_sgw_admin_auth": need_sgw_admin_auth}
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
 
@@ -311,12 +312,14 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     mode = params_from_base_suite_setup["mode"]
     sg_platform = params_from_base_suite_setup["sg_platform"]
     sg_ce = params_from_base_suite_setup["sg_ce"]
+    need_sgw_admin_auth = params_from_base_suite_setup["need_sgw_admin_auth"]
 
     yield {
         "cluster_config": cluster_config,
         "mode": mode,
         "sg_platform": sg_platform,
-        "sg_ce": sg_ce
+        "sg_ce": sg_ce,
+        "need_sgw_admin_auth": need_sgw_admin_auth
     }
 
     log_info("Tearing down test '{}'".format(test_name))

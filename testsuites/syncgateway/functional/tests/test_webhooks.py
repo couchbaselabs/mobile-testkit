@@ -17,6 +17,8 @@ from keywords.ClusterKeywords import ClusterKeywords
 from keywords.couchbaseserver import get_sdk_client_with_bucket
 from utilities.cluster_config_utils import copy_sgconf_to_temp, replace_string_on_sgw_config
 from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
+from keywords.constants import RBAC_FULL_ADMIN
+from requests.auth import HTTPBasicAuth
 
 
 @pytest.mark.syncgateway
@@ -43,7 +45,9 @@ def test_webhooks(params_from_base_test_setup, sg_conf_name, num_users, num_chan
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     cbs_ce_version = params_from_base_test_setup["cbs_ce"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     log_info("Running 'test_webhooks'")
     log_info("Using cluster_conf: {}".format(cluster_conf))
@@ -73,6 +77,8 @@ def test_webhooks(params_from_base_test_setup, sg_conf_name, num_users, num_chan
     sgs = cluster.sync_gateways
 
     admin = Admin(sgs[0])
+    if auth:
+        admin.auth = HTTPBasicAuth(auth[0], auth[1])
 
     # Register User
     log_info("Register User")
@@ -146,6 +152,7 @@ def test_webhooks_crud(params_from_base_test_setup, sg_conf_name, filtered):
 
     """
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     log_info('Webhooks filtered?: {}'.format(filtered))
 
@@ -162,6 +169,7 @@ def test_webhooks_crud(params_from_base_test_setup, sg_conf_name, filtered):
     num_docs_per_client = 100
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_conf)
@@ -190,12 +198,14 @@ def test_webhooks_crud(params_from_base_test_setup, sg_conf_name, filtered):
         db=sg_db,
         name=sg_info.name,
         password=sg_info.password,
-        channels=sg_info.channels
+        channels=sg_info.channels,
+        auth=auth
     )
     sg_auth = sg_client.create_session(
         url=sg_admin_url,
         db=sg_db,
-        name=sg_info.name
+        name=sg_info.name,
+        auth=auth
     )
 
     # Create sg docs

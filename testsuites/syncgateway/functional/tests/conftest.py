@@ -11,11 +11,11 @@ from keywords.utils import check_xattr_support, log_info, version_is_binary, com
 from libraries.NetworkUtils import NetworkUtils
 from libraries.testkit import cluster
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop, is_x509_auth
-from utilities.cluster_config_utils import get_load_balancer_ip
+from utilities.cluster_config_utils import get_load_balancer_ip, get_sg_version
 from libraries.provision.clean_cluster import clear_firewall_rules
 from keywords.couchbaseserver import get_server_version
 from libraries.testkit import prometheus
-
+from keywords.SyncGateway import SyncGateway, verify_sync_gateway_version
 
 UNSUPPORTED_1_5_0_CC = {
     "test_db_offline_tap_loss_sanity[bucket_online_offline/bucket_online_offline_default_dcp-100]": {
@@ -489,6 +489,9 @@ def params_from_base_suite_setup(request):
             should_provision = True
         count += 1
 
+    need_sgw_admin_auth = (not disable_admin_auth) and sync_gateway_version >= "3.0"
+    log_info("need_sgw_admin_auth setting: {}".format(need_sgw_admin_auth))
+
     # Load topology as a dictionary
     cluster_utils = ClusterKeywords(cluster_config)
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
@@ -499,7 +502,7 @@ def params_from_base_suite_setup(request):
         cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
         sg_url = cluster_topology["sync_gateways"][0]["public"]
         sg_ip = host_for_url(sg_url)
-        prometheus.start_prometheus(sg_ip, sg_ssl)
+        prometheus.start_prometheus(sg_ip, sg_ssl, need_sgw_admin_auth)
     yield {
         "sync_gateway_version": sync_gateway_version,
         "disable_tls_server": disable_tls_server,
@@ -517,13 +520,14 @@ def params_from_base_suite_setup(request):
         "cbs_ce": cbs_ce,
         "prometheus_enabled": prometheus_enabled,
         "disable_persistent_config": disable_persistent_config,
+        "need_sgw_admin_auth": need_sgw_admin_auth,
         "sync_gateway_previous_version": sync_gateway_previous_version
     }
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
 
     if prometheus_enabled:
-        prometheus.stop_prometheus(sg_ip, sg_ssl)
+        prometheus.stop_prometheus(sg_ip, sg_ssl, need_sgw_admin_auth)
 
     # clean up firewall rules if any ports blocked for server ssl testing
     clear_firewall_rules(cluster_config)
@@ -560,9 +564,10 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     sg_ce = params_from_base_suite_setup["sg_ce"]
     sg_config = params_from_base_suite_setup["sg_config"]
     cbs_ce = params_from_base_suite_setup["cbs_ce"]
-    sync_gateway_previous_version = params_from_base_suite_setup["sync_gateway_previous_version"]
     disable_persistent_config = params_from_base_suite_setup["disable_persistent_config"]
+    need_sgw_admin_auth = params_from_base_suite_setup["need_sgw_admin_auth"]
     prometheus_enabled = request.config.getoption("--prometheus-enable")
+    sync_gateway_previous_version = params_from_base_suite_setup["sync_gateway_previous_version"]
 
     test_name = request.node.name
     c = cluster.Cluster(cluster_config)
@@ -623,9 +628,10 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "cbs_ce": cbs_ce,
         "sg_url": sg_url,
         "sg_admin_url": sg_admin_url,
-        "sync_gateway_previous_version": sync_gateway_previous_version,
         "disable_persistent_config": disable_persistent_config,
-        "prometheus_enabled": prometheus_enabled
+        "prometheus_enabled": prometheus_enabled,
+        "need_sgw_admin_auth": need_sgw_admin_auth,
+        "sync_gateway_previous_version": sync_gateway_previous_version
     }
 
     # Code after the yield will execute when each test finishes
@@ -642,3 +648,31 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     if collect_logs or request.node.rep_call.failed or len(errors) != 0:
         logging_helper = Logging()
         logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=test_name)
+
+
+@pytest.fixture(scope="function")
+def sgw_version_reset(params_from_base_test_setup):
+    # sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
+    sg_conf_name = "sync_gateway_default"
+    sync_gateway_previous_version = params_from_base_test_setup['sync_gateway_previous_version']
+    cluster_conf = params_from_base_test_setup['cluster_config']
+    mode = params_from_base_test_setup['mode']
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    sg_obj = SyncGateway()
+    cbs_cluster = cluster.Cluster(config=cluster_conf)
+    sg1 = cbs_cluster.sync_gateways[0]
+    sg_obj.install_sync_gateway(cluster_conf, sync_gateway_previous_version, sg_conf)
+    yield {
+        "cluster_conf": cluster_conf,
+        "sg_obj": sg_obj,
+        "mode": mode,
+        "sg_conf_name": sg_conf_name,
+        "sync_gateway_previous_version": sync_gateway_previous_version,
+        "cbs_cluster": cbs_cluster
+    }
+    sg_latest_version = get_sg_version(cluster_conf)
+    try:
+        verify_sync_gateway_version(sg1.ip, sg_latest_version)
+    except Exception as ex:
+        print("exception message: ", ex)
+        sg_obj.install_sync_gateway(cluster_conf, sg_latest_version, sg_conf, skip_bucketcreation=True)

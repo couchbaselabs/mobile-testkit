@@ -7,6 +7,7 @@ from keywords.MobileRestClient import MobileRestClient
 from keywords.utils import add_new_fields_to_doc
 from CBLClient.Replication import Replication
 from libraries.testkit import cluster
+from keywords.constants import RBAC_FULL_ADMIN
 
 
 @pytest.mark.listener
@@ -34,6 +35,7 @@ def test_replication_push_filtering(params_from_base_test_setup, num_of_docs):
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if sync_gateway_version < "2.5.0":
         pytest.skip('This test cannot run with sg version below 2.5')
@@ -47,8 +49,9 @@ def test_replication_push_filtering(params_from_base_test_setup, num_of_docs):
 
     # 1. Creating docs in CBL app
     sg_client = MobileRestClient()
-    sg_client.create_user(url=sg_admin_url, db=sg_db, name=username, password=password, channels=channels)
-    cookie, session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(url=sg_admin_url, db=sg_db, name=username, password=password, channels=channels, auth=auth)
+    cookie, session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username, auth=auth)
     sync_cookie = "{}={}".format(cookie, session)
     session_header = {"Cookie": sync_cookie}
     db.create_bulk_docs(num_of_docs, "cbl", db=cbl_db, channels=channels)
@@ -68,7 +71,7 @@ def test_replication_push_filtering(params_from_base_test_setup, num_of_docs):
     assert total == completed, "total is not equal to completed"
     replicator.stop(repl)
 
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True, auth=auth)["rows"]
 
     # Verify database doc counts
     cbl_doc_count = db.getCount(cbl_db)
@@ -103,7 +106,7 @@ def test_replication_push_filtering(params_from_base_test_setup, num_of_docs):
     replicator.stop(repl)
 
     # 4. Verify SG has new fields added only when "new_field_1" is true
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True, auth=auth)["rows"]
     doc_ids = db.getDocIds(cbl_db)
     cbl_db_docs = db.getDocuments(cbl_db, doc_ids)
     filtered_doc_ids = []
@@ -150,6 +153,7 @@ def test_replication_pull_filtering(params_from_base_test_setup, num_of_docs):
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if sync_gateway_version < "2.5.0":
         pytest.skip('This test cannnot run with sg version below 2.5')
@@ -163,8 +167,9 @@ def test_replication_pull_filtering(params_from_base_test_setup, num_of_docs):
 
     # 1. Creating docs in CBL app
     sg_client = MobileRestClient()
-    sg_client.create_user(url=sg_admin_url, db=sg_db, name=username, password=password, channels=channels)
-    cookie, session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(url=sg_admin_url, db=sg_db, name=username, password=password, channels=channels, auth=auth)
+    cookie, session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username, auth=auth)
     sync_cookie = "{}={}".format(cookie, session)
     session_header = {"Cookie": sync_cookie}
     auth_session = cookie, session
@@ -185,7 +190,7 @@ def test_replication_pull_filtering(params_from_base_test_setup, num_of_docs):
     assert total == completed, "total is not equal to completed"
     replicator.stop(repl)
 
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True, auth=auth)["rows"]
 
     # Verify database doc counts
     cbl_doc_count = db.getCount(cbl_db)
@@ -211,7 +216,7 @@ def test_replication_pull_filtering(params_from_base_test_setup, num_of_docs):
     replicator.stop(repl)
 
     # 4. Verify CBL has new fields added only when "new_field_1" is true
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True, auth=auth)["rows"]
     doc_ids = db.getDocIds(cbl_db)
     cbl_db_docs = db.getDocuments(cbl_db, doc_ids)
     filtered_doc_ids = []
@@ -255,6 +260,7 @@ def test_replication_filter_deleted_document(params_from_base_test_setup, num_of
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     num_of_docs_to_delete = (num_of_docs * 2) // 10
 
     if sync_gateway_version < "2.5.0":
@@ -269,8 +275,9 @@ def test_replication_filter_deleted_document(params_from_base_test_setup, num_of
 
     # 1. Creating docs in CBL app
     sg_client = MobileRestClient()
-    sg_client.create_user(url=sg_admin_url, db=sg_db, name=username, password=password, channels=channels)
-    cookie, session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(url=sg_admin_url, db=sg_db, name=username, password=password, channels=channels, auth=auth)
+    cookie, session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username, auth=auth)
     sync_cookie = "{}={}".format(cookie, session)
     session_header = {"Cookie": sync_cookie}
     auth_session = cookie, session
@@ -291,7 +298,7 @@ def test_replication_filter_deleted_document(params_from_base_test_setup, num_of
     assert total == completed, "total is not equal to completed"
     replicator.stop(repl)
 
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True, auth=auth)["rows"]
 
     # Verify database doc counts
     cbl_doc_count = db.getCount(cbl_db)
@@ -323,7 +330,7 @@ def test_replication_filter_deleted_document(params_from_base_test_setup, num_of
     # 4. Verify that docs deleted in SG are still available in CBL and vice versa, as deleted filter would have
     # rejected those changes
     cbl_doc_ids = db.getDocIds(cbl_db)
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True, auth=auth)["rows"]
     sg_doc_ids = [sg_doc["id"] for sg_doc in sg_docs]
     for doc_id in sg_docs_to_delete_ids:
         assert doc_id in cbl_doc_ids, "SG deleted docs got replicated to CBL"
@@ -357,6 +364,7 @@ def test_replication_filter_access_revoke_document(params_from_base_test_setup, 
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     num_of_docs_to_delete = (num_of_docs * 2) // 10
 
     if sync_gateway_version < "2.5.0":
@@ -371,8 +379,9 @@ def test_replication_filter_access_revoke_document(params_from_base_test_setup, 
 
     # 1. Create few docs at CBL.
     sg_client = MobileRestClient()
-    sg_client.create_user(url=sg_admin_url, db=sg_db, name=username, password=password, channels=channels)
-    cookie, session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(url=sg_admin_url, db=sg_db, name=username, password=password, channels=channels, auth=auth)
+    cookie, session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username, auth=auth)
     sync_cookie = "{}={}".format(cookie, session)
     session_header = {"Cookie": sync_cookie}
     auth_session = cookie, session
@@ -393,7 +402,7 @@ def test_replication_filter_access_revoke_document(params_from_base_test_setup, 
     assert total == completed, "total is not equal to completed"
     replicator.stop(repl)
 
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True, auth=auth)["rows"]
 
     # Verify database doc counts
     cbl_doc_count = db.getCount(cbl_db)
@@ -462,6 +471,7 @@ def test_filter_retrieval_with_replication_restart(params_from_base_test_setup, 
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if sync_gateway_version < "2.5.0":
         pytest.skip('This test cannot run with sg version below 2.5')
@@ -475,8 +485,9 @@ def test_filter_retrieval_with_replication_restart(params_from_base_test_setup, 
 
     # 1. Create few docs at CBL and SG.
     sg_client = MobileRestClient()
-    sg_client.create_user(url=sg_admin_url, db=sg_db, name=username, password=password, channels=channels)
-    cookie, session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(url=sg_admin_url, db=sg_db, name=username, password=password, channels=channels, auth=auth)
+    cookie, session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username, auth=auth)
     sync_cookie = "{}={}".format(cookie, session)
     session_header = {"Cookie": sync_cookie}
     auth_session = cookie, session
@@ -502,7 +513,7 @@ def test_filter_retrieval_with_replication_restart(params_from_base_test_setup, 
     assert total == completed, "total is not equal to completed"
     replicator.stop(repl)
 
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True, auth=auth)["rows"]
 
     # Verify that all docs are replicated.
     # Verify database doc counts
@@ -537,7 +548,7 @@ def test_filter_retrieval_with_replication_restart(params_from_base_test_setup, 
     # 4. Verifying that the filter is still applicable and only allowing replication for "new_field_1" true values
     doc_ids = db.getDocIds(cbl_db)
     cbl_docs = db.getDocuments(cbl_db, doc_ids)
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)["rows"]
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True, auth=auth)["rows"]
 
     # checking only those SG docs got pulled which has "new_field_1" set to true
     for doc_id in cbl_docs:

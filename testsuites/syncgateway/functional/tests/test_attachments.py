@@ -4,6 +4,7 @@ from requests.exceptions import HTTPError
 
 from keywords.utils import log_info
 from keywords.ClusterKeywords import ClusterKeywords
+from keywords.constants import RBAC_FULL_ADMIN
 from keywords.MobileRestClient import MobileRestClient
 from keywords.SyncGateway import SyncGateway
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
@@ -44,6 +45,7 @@ def test_attachment_revpos_when_ancestor_unavailable(params_from_base_test_setup
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     no_conflicts_enabled = params_from_base_test_setup["no_conflicts_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if no_conflicts_enabled:
         pytest.skip('--no-conflicts is enabled, so skipping the test')
@@ -75,7 +77,9 @@ def test_attachment_revpos_when_ancestor_unavailable(params_from_base_test_setup
     sg_util = SyncGateway()
     cb_server = couchbaseserver.CouchbaseServer(cbs_url)
 
-    user1 = client.create_user(url=sg_url_admin, db=sg_db, name="user1", password="password", channels=channels_list)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+
+    user1 = client.create_user(url=sg_url_admin, db=sg_db, name="user1", password="password", channels=channels_list, auth=auth)
     atts = attachment.load_from_data_dir(["sample_text.txt"])
     doc_with_att = document.create_doc(doc_id="att_doc", content={"sample_key": "sample_val"}, attachments=atts, channels=channels_list)
 
@@ -126,6 +130,7 @@ def test_attachment_revpos_when_ancestor_unavailable_active_revision_doesnt_shar
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     no_conflicts_enabled = params_from_base_test_setup["no_conflicts_enabled"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if no_conflicts_enabled:
         pytest.skip('--no-conflicts is enabled, so skipping the test')
@@ -159,8 +164,9 @@ def test_attachment_revpos_when_ancestor_unavailable_active_revision_doesnt_shar
 
     client = MobileRestClient()
 
-    client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels)
-    sg_user_session = client.create_session(url=sg_url_admin, db=sg_db, name=sg_user_name)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels, auth=auth)
+    sg_user_session = client.create_session(url=sg_url_admin, db=sg_db, name=sg_user_name, auth=auth)
 
     doc = document.create_doc(doc_id="doc_1", content={"sample_key": "sample_val"}, channels=sg_user_channels)
     doc_gen_1 = client.add_doc(url=sg_url, db=sg_db, doc=doc, auth=sg_user_session)
@@ -208,6 +214,7 @@ def test_writing_attachment_to_couchbase_server(params_from_base_test_setup, sg_
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
@@ -239,8 +246,9 @@ def test_writing_attachment_to_couchbase_server(params_from_base_test_setup, sg_
 
     client = MobileRestClient()
 
-    client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels)
-    sg_user_session = client.create_session(url=sg_url_admin, db=sg_db, name=sg_user_name)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels, auth=auth)
+    sg_user_session = client.create_session(url=sg_url_admin, db=sg_db, name=sg_user_name, auth=auth)
 
     docs = client.add_docs(url=sg_url, db=sg_db, number=100, id_prefix=sg_db, channels=sg_user_channels, auth=sg_user_session)
     assert len(docs) == 100

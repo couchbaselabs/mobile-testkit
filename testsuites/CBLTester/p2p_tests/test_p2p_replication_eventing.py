@@ -288,11 +288,7 @@ def test_peer_to_peer_replication_delete_event(params_from_base_test_setup, serv
     else:
         deleted_flag = "[DELETED]"
     for doc_id in event_dict:
-<<<<<<< HEAD
-        assert event_dict[doc_id]["flags"] == "1" or event_dict[doc_id]["flags"] == "[DELETED]" or \
-=======
         assert event_dict[doc_id]["flags"] == "1" or event_dict[doc_id]["flags"] == deleted_flag or \
->>>>>>> 171f7f2515f115a5ab0e7e7a21dfe003b539f57b
             event_dict[doc_id]["flags"] == "Deleted", \
             'Deleted flag is not tagged for document. Flag value: {}'.format(event_dict[doc_id]["flags"])
     server_docs_count = db_obj_server.getCount(cbl_db_server)

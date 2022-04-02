@@ -22,7 +22,6 @@ from utilities.cluster_config_utils import generate_x509_certs, is_x509_auth, ge
 from keywords.constants import SYNC_GATEWAY_CERT
 from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version
 from utilities.cluster_config_utils import is_centralized_persistent_config_disabled, is_server_tls_skip_verify_enabled, is_admin_auth_disabled, is_tls_server_disabled
-# from keywords.SyncGateway import sync_gateway_config_path_for_mode, get_cpc_config_from_config_path
 
 
 class Cluster:

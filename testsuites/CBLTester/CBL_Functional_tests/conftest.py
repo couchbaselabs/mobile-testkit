@@ -203,6 +203,10 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="Disable Admin auth")
 
+    parser.addoption("--liteserv-android-serial-number",
+                     action="store",
+                     help="liteserv-android-serial-number: the serial number of the android device to be used")
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -255,6 +259,7 @@ def params_from_base_suite_setup(request):
     disable_tls_server = request.config.getoption("--disable-tls-server")
 
     disable_admin_auth = request.config.getoption("--disable-admin-auth")
+    liteserv_android_serial_number = request.config.getoption("--liteserv-android-serial-number")
 
     test_name = request.node.name
 
@@ -272,6 +277,8 @@ def params_from_base_suite_setup(request):
 
         # Install TestServer app
         if device_enabled:
+            if "android" in liteserv_platform and liteserv_android_serial_number:
+                testserver.serial_number = liteserv_android_serial_number
             testserver.install_device()
         else:
             testserver.install()
@@ -480,6 +487,9 @@ def params_from_base_suite_setup(request):
         expected_sync_gateway_version=sync_gateway_version
     )
 
+    need_sgw_admin_auth = (not disable_admin_auth) and sync_gateway_version >= "3.0"
+    log_info("need_sgw_admin_auth setting: {}".format(need_sgw_admin_auth))
+
     if enable_sample_bucket and not create_db_per_suite:
         # if enable_sample_bucket and not create_db_per_test:
         raise Exception("enable_sample_bucket has to be used with create_db_per_suite")
@@ -577,7 +587,7 @@ def params_from_base_suite_setup(request):
     if prometheus_enable:
         if not prometheus.is_prometheus_installed:
             prometheus.install_prometheus
-        prometheus.start_prometheus(sg_ip, sg_ssl)
+        prometheus.start_prometheus(sg_ip, sg_ssl, need_sgw_admin_auth)
 
     yield {
         "cluster_config": cluster_config,
@@ -616,7 +626,8 @@ def params_from_base_suite_setup(request):
         "sg_ce": sg_ce,
         "cbl_ce": cbl_ce,
         "prometheus_enable": prometheus_enable,
-        "ssl_enabled": cbs_ssl
+        "ssl_enabled": cbs_ssl,
+        "need_sgw_admin_auth": need_sgw_admin_auth
     }
 
     if request.node.testsfailed != 0 and enable_file_logging and create_db_per_suite is not None:
@@ -655,7 +666,7 @@ def params_from_base_suite_setup(request):
     # Delete png files under resources/data
     clear_resources_pngs()
     if prometheus_enable:
-        prometheus.stop_prometheus(sg_ip, sg_ssl)
+        prometheus.stop_prometheus(sg_ip, sg_ssl, need_sgw_admin_auth)
 
 
 @pytest.fixture(scope="function")
@@ -696,6 +707,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     sg_ce = params_from_base_suite_setup["sg_ce"]
     prometheus_enable = request.config.getoption("--prometheus-enable")
     cbs_ssl = params_from_base_suite_setup["ssl_enabled"]
+    need_sgw_admin_auth = params_from_base_suite_setup["need_sgw_admin_auth"]
 
     source_db = None
     test_name_cp = test_name.replace("/", "-")
@@ -795,7 +807,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "sg_ce": sg_ce,
         "cbl_ce": cbl_ce,
         "prometheus_enable": prometheus_enable,
-        "ssl_enabled": cbs_ssl
+        "ssl_enabled": cbs_ssl,
+        "need_sgw_admin_auth": need_sgw_admin_auth
     }
 
     if request.node.rep_call.failed and enable_file_logging and create_db_per_test is not None:

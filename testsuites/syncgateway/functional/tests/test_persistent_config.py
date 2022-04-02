@@ -7,7 +7,7 @@ from libraries.testkit.cluster import Cluster
 from keywords.SyncGateway import sync_gateway_config_path_for_mode, SyncGateway, load_sync_gateway_config
 # from keywords.utils import host_for_url, deep_dict_compare
 # from couchbase.bucket import Bucket
-from keywords.MobileRestClient import MobileRestClient
+# from keywords.MobileRestClient import MobileRestClient
 from keywords.ClusterKeywords import ClusterKeywords
 # from libraries.testkit import cluster
 # from concurrent.futures import ThreadPoolExecutor
@@ -90,7 +90,7 @@ def test_default_config_values(params_from_base_test_setup):
     if ssl_enabled:
         assert sg1_config_url.split(":")[0][-1] == cbs_url.split(":")[0][-1], "server URLs were not both using secure protocol"
     assert sg1_config["bootstrap"]["username"] == "bucket-admin", "username did not match"
-    assert sg1_config["bootstrap"]["server_tls_skip_verify"] == True, "server_tls_skip_verify did not match"
+    assert sg1_config["bootstrap"]["server_tls_skip_verify"] is True, "server_tls_skip_verify did not match"
 
 
 @pytest.mark.syncgateway
@@ -125,7 +125,7 @@ def test_invalid_configs(params_from_base_test_setup, sg_conf_name):
 
     # 1. Have prelithium config
     # 2. Have configs required fo database on prelithium config
-    temp_cluster_config = copy_to_temp_conf(cluster_conf, mode)
+    # temp_cluster_config = copy_to_temp_conf(cluster_conf, mode)
     # persist_cluster_config_environment_prop(temp_cluster_config, 'disable_persistent_config', False)
     if sync_gateway_version < "3.0.0" and not is_centralized_persistent_config_disabled(cluster_conf):
         pytest.skip('This test can run with sgw version 3.0 and with persistent config off')
@@ -232,8 +232,8 @@ def test_invalid_database_credentials(params_from_base_test_setup):
     3. Add database on sgw via rest end point with invalid credentials of the bucket on the response from rest apoi
     """
 
-    sg_db = 'sg_db'
-    sg_db2 = 'sg_db2'
+    # sg_db = 'sg_db'
+    # sg_db2 = 'sg_db2'
     # sg_db3 = 'sg_db3'
     sg_conf_name = "sync_gateway_default"
     # sg_obj = SyncGateway()
@@ -254,7 +254,7 @@ def test_invalid_database_credentials(params_from_base_test_setup):
     cluster_topology = cluster_utils.get_cluster_topology(cluster_conf)
     cbs_url = cluster_topology['couchbase_servers'][0]
     sg_one_url = cluster_topology["sync_gateways"][0]["public"]
-    sg_two_url = cluster_topology["sync_gateways"][1]["public"] 
+    sg_two_url = cluster_topology["sync_gateways"][1]["public"]
     sg_db1_username = "autotest"
     sg_password = "password"
     sg_channels = ["cpc_testing"] """
@@ -363,12 +363,12 @@ def test_db_config_with_guest_user(params_from_base_test_setup):
     cluster_util = ClusterKeywords(cluster_conf)
     topology = cluster_util.get_cluster_topology(cluster_conf)
     # sync_gateways = topology["sync_gateways"]
-    sg_one_url = topology["sync_gateways"][0]["public"]
+    # sg_one_url = topology["sync_gateways"][0]["public"]
 
     # 3. Have min bootstrap configuration without static system config with differrent config
     cbs_cluster = Cluster(config=cluster_conf)
     cbs_cluster.reset(sg_config_path=sg_conf)
-    debug_dict = { "enabled": True, "rotation": { } }
+    debug_dict = {"enabled": True, "rotation": {}}
     sg1 = cbs_cluster.sync_gateways[0]
     cbs_url = topology["couchbase_servers"][0]
     sg1_config = sg1.admin.get_config()
@@ -383,11 +383,11 @@ def test_db_config_with_guest_user(params_from_base_test_setup):
     assert sg1_config["api"]["public_interface"] == ":4984", "public interface did not match with sgw config"
     assert sg1_config["api"]["admin_interface"] == "0.0.0.0:4985", "admin interface did not match with sgw config"
     assert sg1_config["api"]["metrics_interface"] == ":4986", "metrics interface did not match with sgw config"
-    assert sg1_config["api"]["admin_interface_authentication"] == False, "admin_interface_authentication did not match with sgw config"
-    assert sg1_config["api"]["metrics_interface_authentication"] == False, "metrics_interface_authentication did not match with sgw config"
-    assert sg1_config["api"]["https"] == { }, "https with default value is not set"
-    assert sg1_config["api"]["cors"] == { }, "cors with default value is not set"
+    assert sg1_config["api"]["admin_interface_authentication"] is False, "admin_interface_authentication did not match with sgw config"
+    assert sg1_config["api"]["metrics_interface_authentication"] is False, "metrics_interface_authentication did not match with sgw config"
+    assert sg1_config["api"]["https"] == {}, "https with default value is not set"
+    assert sg1_config["api"]["cors"] == {}, "cors with default value is not set"
 
     assert sg1_config["bootstrap"]["server"] == cbs_url, "server url  did not match"
     assert sg1_config["bootstrap"]["username"] == "bucket-admin", "username did not match"
-    assert sg1_config["bootstrap"]["server_tls_skip_verify"] == True, "server_tls_skip_verify did not match"
+    assert sg1_config["bootstrap"]["server_tls_skip_verify"] is True, "server_tls_skip_verify did not match"
