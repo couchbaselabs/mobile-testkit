@@ -22,6 +22,8 @@ from keywords.constants import SYNC_GATEWAY_CERT, SGW_DB_CONFIGS, SYNC_GATEWAY_C
 from keywords.exceptions import ProvisioningError
 from keywords.remoteexecutor import RemoteExecutor
 from utilities.cluster_config_utils import is_server_tls_skip_verify_enabled, is_admin_auth_disabled, is_tls_server_disabled
+from keywords.constants import RBAC_FULL_ADMIN
+from requests.auth import HTTPBasicAuth
 
 log = logging.getLogger(libraries.testkit.settings.LOGGER)
 
@@ -1100,9 +1102,12 @@ def assert_has_doc(sg_user, doc_id):
     assert doc["_id"] == doc_id
 
 
-def send_dbconfig_as_restCall(db_config_json, sync_gateways, sgw_config_data):
+def send_dbconfig_as_restCall(self, db_config_json, sync_gateways, sgw_config_data):
     # convert database config for each sg db and send to rest end point
+    if not is_admin_auth_disabled(self.cluster_config):
+        auth = HTTPBasicAuth(RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd'])
     for sgw in sync_gateways:
+        sgw.admin.auth = auth
         sgw_db_config = db_config_json
         roles_exist = False
         users_exist = False
