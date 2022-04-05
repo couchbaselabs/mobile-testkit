@@ -1,5 +1,4 @@
 import pytest
-import time
 import os
 import json
 
@@ -128,7 +127,6 @@ def test_automatic_upgrade(params_from_base_test_setup, sgw_version_reset):
     sg1 = cbs_cluster.sync_gateways[0]
     cbs_url = cbs_cluster.servers[0].host
     debug_dict = {"enabled": True, "rotation": {}}
-    time.sleep(20)
     sg1_config = sg1.admin.get_config()
     assert cbs_url in sg1_config["bootstrap"]["server"], "server did not match with legacy config"
     assert sg1_config["bootstrap"]["username"] == "data-bucket", "username did not match with legacy config"

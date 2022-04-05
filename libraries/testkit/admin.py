@@ -12,6 +12,9 @@ from libraries.testkit.debug import log_response
 from keywords import cbgtconfig
 from utilities.cluster_config_utils import sg_ssl_enabled
 from keywords.utils import log_info
+from keywords.constants import RBAC_FULL_ADMIN
+from requests.auth import HTTPBasicAuth
+from utilities.cluster_config_utils import is_admin_auth_disabled
 
 import logging
 log = logging.getLogger(settings.LOGGER)
@@ -22,8 +25,8 @@ class Admin:
     def __init__(self, sync_gateway):
         sg_scheme = "http"
 
-        cluster_config = os.environ["CLUSTER_CONFIG"]
-        if sg_ssl_enabled(cluster_config):
+        self.cluster_config = os.environ["CLUSTER_CONFIG"]
+        if sg_ssl_enabled(self.cluster_config):
             sg_scheme = "https"
 
         self.admin_url = "{}://{}:4985".format(sg_scheme, sync_gateway.ip)
@@ -46,6 +49,8 @@ class Admin:
         return command_output
 
     def create_db(self, name, db_config={}):
+        if not is_admin_auth_disabled(self.cluster_config):
+            self.auth = HTTPBasicAuth(RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd'])
         if self.auth:
             resp = requests.put("{}/{}/".format(self.admin_url, name), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, data=json.dumps(db_config), verify=False, auth=self.auth)
         else:
@@ -57,6 +62,8 @@ class Admin:
         return resp.status_code
 
     def delete_db(self, name):
+        if not is_admin_auth_disabled(self.cluster_config):
+            self.auth = HTTPBasicAuth(RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd'])
         if self.auth:
             r = requests.delete("{}/{}".format(self.admin_url, name), verify=False, auth=self.auth)
         else:
@@ -67,6 +74,8 @@ class Admin:
         return r.json()
 
     def get_dbs(self):
+        if not is_admin_auth_disabled(self.cluster_config):
+            self.auth = HTTPBasicAuth(RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd'])
         if self.auth:
             r = requests.get("{}/_all_dbs".format(self.admin_url), verify=False, auth=self.auth)
         else:
@@ -77,7 +86,12 @@ class Admin:
         return r.json()
 
     def get_dbs_from_config(self):
-        r = requests.get("{}/_config".format(self.admin_url), verify=False)
+        if not is_admin_auth_disabled(self.cluster_config):
+            self.auth = HTTPBasicAuth(RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd'])
+        if self.auth:
+            r = requests.get("{}/_config".format(self.admin_url), verify=False, auth=self.auth)
+        else:
+            r = requests.get("{}/_config".format(self.admin_url), verify=False)
         log.info("GET {}".format(r.url))
         r.raise_for_status()
         json_config = r.json()
@@ -85,6 +99,8 @@ class Admin:
 
     # GET /{db}/
     def get_db_info(self, db):
+        if not is_admin_auth_disabled(self.cluster_config):
+            self.auth = HTTPBasicAuth(RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd'])
         if self.auth:
             resp = requests.get("{0}/{1}/".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False, auth=self.auth)
         else:
@@ -95,6 +111,8 @@ class Admin:
 
     # PUT /{db}/_role/{name}
     def create_role(self, db, name, channels):
+        if not is_admin_auth_disabled(self.cluster_config):
+            self.auth = HTTPBasicAuth(RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd'])
         data = {"name": name, "admin_channels": channels}
         if self.auth:
             resp = requests.put("{0}/{1}/_role/{2}".format(self.admin_url, db, name), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, data=json.dumps(data), verify=False, auth=self.auth)
@@ -105,6 +123,8 @@ class Admin:
 
     # GET /{db}/_role
     def get_roles(self, db):
+        if not is_admin_auth_disabled(self.cluster_config):
+            self.auth = HTTPBasicAuth(RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd'])
         if self.auth:
             resp = requests.get("{0}/{1}/_role/".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False, auth=self.auth)
         else:
@@ -115,6 +135,8 @@ class Admin:
 
     # GET /{db}/_role/{name}
     def get_role(self, db, name):
+        if not is_admin_auth_disabled(self.cluster_config):
+            self.auth = HTTPBasicAuth(RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd'])
         if self.auth:
             resp = requests.get("{0}/{1}/_role/{2}".format(self.admin_url, db, name), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False, auth=self.auth)
         else:
@@ -125,7 +147,8 @@ class Admin:
 
     # PUT /{db}/_user/{name}
     def register_user(self, target, db, name, password=None, channels=list(), roles=list()):
-
+        if not is_admin_auth_disabled(self.cluster_config):
+            self.auth = HTTPBasicAuth(RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd'])
         if password is None:
             data = {"name": name, "admin_channels": channels, "admin_roles": roles, "disabled": False}
         else:
@@ -162,6 +185,8 @@ class Admin:
 
     # GET /{db}/_user/
     def get_users_info(self, db):
+        if not is_admin_auth_disabled(self.cluster_config):
+            self.auth = HTTPBasicAuth(RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd'])
         if self.auth:
             resp = requests.get("{0}/{1}/_user/".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False, auth=self.auth)
         else:
@@ -172,6 +197,8 @@ class Admin:
 
     # GET /{db}/_user/{name}
     def get_user_info(self, db, name):
+        if not is_admin_auth_disabled(self.cluster_config):
+            self.auth = HTTPBasicAuth(RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd'])
         if self.auth:
             resp = requests.get("{0}/{1}/_user/{2}".format(self.admin_url, db, name), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False, auth=self.auth)
         else:
@@ -182,6 +209,8 @@ class Admin:
 
     # POST /{db}/_resync
     def db_resync(self, db):
+        if not is_admin_auth_disabled(self.cluster_config):
+            self.auth = HTTPBasicAuth(RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd'])
         result = dict()
         if self.auth:
             resp = requests.post("{0}/{1}/_resync".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False, auth=self.auth)
@@ -196,6 +225,8 @@ class Admin:
     # GET /{db}/_resync
     def db_get_resync_status(self, db):
         result = dict()
+        if not is_admin_auth_disabled(self.cluster_config):
+            self.auth = HTTPBasicAuth(RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd'])
         if self.auth:
             resp = requests.get("{0}/{1}/_resync".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False, auth=self.auth)
         else:
@@ -208,6 +239,8 @@ class Admin:
 
     # POST /{db}/_online
     def bring_db_online(self, db, delay=None):
+        if not is_admin_auth_disabled(self.cluster_config):
+            self.auth = HTTPBasicAuth(RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd'])
         data = {}
         if delay is not None:
             data = {"delay": delay}
@@ -222,6 +255,8 @@ class Admin:
 
     # POST /{db}/_offline
     def take_db_offline(self, db):
+        if not is_admin_auth_disabled(self.cluster_config):
+            self.auth = HTTPBasicAuth(RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd'])
         if self.auth:
             resp = requests.post("{0}/{1}/_offline".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False, auth=self.auth)
         else:
@@ -232,6 +267,8 @@ class Admin:
 
     # GET /{db}/_config
     def get_db_config(self, db):
+        if not is_admin_auth_disabled(self.cluster_config):
+            self.auth = HTTPBasicAuth(RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd'])
         if self.auth:
             resp = requests.get("{0}/{1}/_config".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False, auth=self.auth)
         else:
@@ -242,6 +279,8 @@ class Admin:
 
     # PUT /{db}/_config
     def put_db_config(self, db, config):
+        if not is_admin_auth_disabled(self.cluster_config):
+            self.auth = HTTPBasicAuth(RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd'])
         if self.auth:
             resp = requests.put("{0}/{1}/_config".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, data=json.dumps(config), verify=False, auth=self.auth)
         else:
@@ -252,7 +291,13 @@ class Admin:
 
     # GET /_config
     def get_config(self):
-        resp = requests.get("{0}/_config".format(self.admin_url), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False)
+        if not is_admin_auth_disabled(self.cluster_config):
+            self.auth = HTTPBasicAuth(RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd'])
+
+        if self.auth:
+            resp = requests.get("{0}/_config".format(self.admin_url), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False, auth=self.auth)
+        else:
+            resp = requests.get("{0}/_config".format(self.admin_url), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False)
         log.info("GET {}".format(resp.url))
         resp.raise_for_status()
         return resp.json()
@@ -261,7 +306,8 @@ class Admin:
     def get_cbgt_config(self):
         """ Get the REST cfg response from an accel node.
         Return an CbgtConfig object that exposes common methods useful in validation"""
-
+        if not is_admin_auth_disabled(self.cluster_config):
+            self.auth = HTTPBasicAuth(RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd'])
         if self.auth:
             resp = requests.get("{0}/_cbgt/api/cfg".format(self.admin_url), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False, auth=self.auth)
         else:
@@ -272,6 +318,8 @@ class Admin:
 
     # GET /_cbgt/api/diag
     def get_cbgt_diagnostics(self):
+        if not is_admin_auth_disabled(self.cluster_config):
+            self.auth = HTTPBasicAuth(RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd'])
         if self.auth:
             resp = requests.get("{0}/_cbgt/api/diag".format(self.admin_url), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False, auth=self.auth)
         else:
@@ -282,6 +330,8 @@ class Admin:
 
     # GET /{db}/_changes
     def get_global_changes(self, db):
+        if not is_admin_auth_disabled(self.cluster_config):
+            self.auth = HTTPBasicAuth(RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd'])
         if self.auth:
             r = requests.get("{}/{}/_changes".format(self.admin_url, db), verify=False, auth=self.auth)
         else:
@@ -294,6 +344,8 @@ class Admin:
 
     # GET /_active_tasks
     def get_active_tasks(self):
+        if not is_admin_auth_disabled(self.cluster_config):
+            self.auth = HTTPBasicAuth(RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd'])
         if self.auth:
             r = requests.get("{}/_active_tasks".format(self.admin_url), verify=False, auth=self.auth)
         else:
@@ -305,6 +357,8 @@ class Admin:
         return resp_data
 
     def get_all_docs(self, db):
+        if not is_admin_auth_disabled(self.cluster_config):
+            self.auth = HTTPBasicAuth(RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd'])
         if self.auth:
             resp = requests.get("{0}/{1}/_all_docs".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False, auth=self.auth)
         else:
@@ -315,6 +369,8 @@ class Admin:
 
     # GET /_replicationStatus for sg replicate2
     def get_sgreplicate2_active_tasks(self, db, expected_tasks=1):
+        if not is_admin_auth_disabled(self.cluster_config):
+            self.auth = HTTPBasicAuth(RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd'])
         count = 0
         max_count = 5
         while True:
@@ -337,7 +393,8 @@ class Admin:
         return active_resp_data
 
     def wait_until_sgw_replication_done(self, db, repl_id, read_flag=False, write_flag=False, max_times=30):
-
+        if not is_admin_auth_disabled(self.cluster_config):
+            self.auth = HTTPBasicAuth(RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd'])
         # read_flag = True
         # write_flag = True
         read_timeout = False
@@ -402,6 +459,8 @@ class Admin:
             raise Exception("timeout while waiting for replication to complete on sgw replication")
 
     def get_replications_count(self, db, expected_count=1):
+        if not is_admin_auth_disabled(self.cluster_config):
+            self.auth = HTTPBasicAuth(RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd'])
         local_count = 0
         max_count = 15
         while True:
@@ -425,35 +484,60 @@ class Admin:
         return count
 
     def create_sync_func(self, db, sync_func):
+        if not is_admin_auth_disabled(self.cluster_config):
+            self.auth = HTTPBasicAuth(RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd'])
         sync_headers = {"Content-Type": "application/javascript"}
-        resp = requests.put("{0}/{1}/_config/sync".format(self.admin_url, db), headers=sync_headers, timeout=settings.HTTP_REQ_TIMEOUT, data=sync_func, verify=False)
+        if self.auth:
+            resp = requests.put("{0}/{1}/_config/sync".format(self.admin_url, db), headers=sync_headers, timeout=settings.HTTP_REQ_TIMEOUT, data=sync_func, verify=False, auth=self.auth)
+        else:
+            resp = requests.put("{0}/{1}/_config/sync".format(self.admin_url, db), headers=sync_headers, timeout=settings.HTTP_REQ_TIMEOUT, data=sync_func, verify=False)
         log.info("PUT {}".format(resp.url))
         resp.raise_for_status()
         return resp.status_code
 
     def delete_sync_func(self, db):
+        if not is_admin_auth_disabled(self.cluster_config):
+            self.auth = HTTPBasicAuth(RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd'])
         sync_headers = {"Content-Type": "application/javascript"}
-        resp = requests.delete("{0}/{1}/_config/sync".format(self.admin_url, db), headers=sync_headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False)
+        if self.auth:
+            resp = requests.delete("{0}/{1}/_config/sync".format(self.admin_url, db), headers=sync_headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False, auth=self.auth)
+        else:
+            resp = requests.delete("{0}/{1}/_config/sync".format(self.admin_url, db), headers=sync_headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False)
         log.info("PUT {}".format(resp.url))
         resp.raise_for_status()
         return resp.status_code
 
     def create_imp_fltr_func(self, db, imp_fltr_func):
-        resp = requests.put("{0}/{1}/_config/import_filter".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, data=imp_fltr_func, verify=False)
+        if not is_admin_auth_disabled(self.cluster_config):
+            self.auth = HTTPBasicAuth(RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd'])
+        if self.auth:
+            resp = requests.put("{0}/{1}/_config/import_filter".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, data=imp_fltr_func, verify=False, auth=self.auth)
+        else:
+            resp = requests.put("{0}/{1}/_config/import_filter".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, data=imp_fltr_func, verify=False)
         log.info("PUT {}".format(resp.url))
         resp.raise_for_status()
         return resp.status_code
 
     # PUT /_config
     def put_config(self, config):
-        resp = requests.put("{0}/_config".format(self.admin_url), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, data=json.dumps(config), verify=False)
+        if not is_admin_auth_disabled(self.cluster_config):
+            self.auth = HTTPBasicAuth(RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd'])
+        if self.auth:
+            resp = requests.put("{0}/_config".format(self.admin_url), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, data=json.dumps(config), verify=False, auth=self.auth)
+        else:
+            resp = requests.put("{0}/_config".format(self.admin_url), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, data=json.dumps(config), verify=False)
         log.info("PUT {}".format(resp.url))
         resp.raise_for_status()
         return resp.status_code
 
     # GET /_config
     def get_runtime_config(self):
-        resp = requests.get("{0}/_config?include_runtime=true".format(self.admin_url), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False)
+        if not is_admin_auth_disabled(self.cluster_config):
+            self.auth = HTTPBasicAuth(RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd'])
+        if self.auth:
+            resp = requests.get("{0}/_config?include_runtime=true".format(self.admin_url), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False, auth=self.auth)
+        else:
+            resp = requests.get("{0}/_config?include_runtime=true".format(self.admin_url), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False)
         log.info("GET {}".format(resp.url))
         resp.raise_for_status()
         return resp.json()
