@@ -47,13 +47,14 @@ class Admin:
 
     def create_db(self, name, db_config={}):
         if self.auth:
-            r = requests.put("{}/{}".format(self.admin_url, name), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, data=json.dumps(db_config), verify=False, auth=self.auth)
+            resp = requests.put("{}/{}/".format(self.admin_url, name), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, data=json.dumps(db_config), verify=False, auth=self.auth)
         else:
-            r = requests.put("{}/{}".format(self.admin_url, name), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, data=json.dumps(db_config), verify=False)
-        log_request(r)
-        log_response(r)
-        r.raise_for_status()
-        return r.json()
+            resp = requests.put("{}/{}/".format(self.admin_url, name), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, data=json.dumps(db_config), verify=False)
+        log.info("PUT {}".format(resp.url))
+        log_request(resp)
+        log_response(resp)
+        resp.raise_for_status()
+        return resp.status_code
 
     def delete_db(self, name):
         if self.auth:

@@ -221,7 +221,7 @@ class SyncGateway:
             if get_sg_version(self.cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(self.cluster_config):
                 # Now create rest API for all database configs
                 sgw_list = [self]
-                send_dbconfig_as_restCall(db_config_json, sgw_list, sgw_config_data)
+                send_dbconfig_as_restCall(self.cluster_config, db_config_json, sgw_list, sgw_config_data)
         return status
 
     def restart(self, config, cluster_config=None):
@@ -384,7 +384,7 @@ class SyncGateway:
                 sgw_list = [self]
                 # send_dbconfig_as_restCall(db_config_json, sgw_list, sgw_config_data)
                 try:
-                    send_dbconfig_as_restCall(db_config_json, sgw_list, sgw_config_data)
+                    send_dbconfig_as_restCall(cluster_config, db_config_json, sgw_list, sgw_config_data)
                 except Exception as ex:
                     status = -1
                     # This is to work similiar to non persistent config to avoid updates on regression tests
@@ -1102,9 +1102,9 @@ def assert_has_doc(sg_user, doc_id):
     assert doc["_id"] == doc_id
 
 
-def send_dbconfig_as_restCall(self, db_config_json, sync_gateways, sgw_config_data):
+def send_dbconfig_as_restCall(cluster_config, db_config_json, sync_gateways, sgw_config_data):
     # convert database config for each sg db and send to rest end point
-    if not is_admin_auth_disabled(self.cluster_config):
+    if not is_admin_auth_disabled(cluster_config):
         auth = HTTPBasicAuth(RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd'])
     for sgw in sync_gateways:
         sgw.admin.auth = auth

@@ -355,7 +355,7 @@ class Cluster:
         if status == 0 and sgdb_creation:
             if get_sg_version(self._cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(self._cluster_config):
                 # Now create rest API for all database configs
-                send_dbconfig_as_restCall(db_config_json, self.sync_gateways, sgw_config_data)
+                send_dbconfig_as_restCall(self._cluster_config, db_config_json, self.sync_gateways, sgw_config_data)
                 # if logging_config_json:
                 #     create_logging_config(logging_config_json, self.sync_gateways)
 

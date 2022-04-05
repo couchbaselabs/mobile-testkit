@@ -652,7 +652,7 @@ class SyncGateway(object):
             if get_sg_version(cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config):
                 # Now create rest API for all database configs
                 db_config_json = ""
-                send_dbconfig_as_restCall(db_config_json, c_cluster.sync_gateways, sgw_config_data) """
+                send_dbconfig_as_restCall(cluster_config, db_config_json, c_cluster.sync_gateways, sgw_config_data) """
 
     def stop_sync_gateways(self, cluster_config, url=None):
         """ Stop sync gateways in a cluster. If url is passed, shut down
@@ -951,9 +951,9 @@ class SyncGateway(object):
                         sg_ip = ip_from_url(url)
                         sg_target = {"name": sg_name, "ip": sg_ip}
                         sg_gateways = [SyncGateway(cluster_config=self._cluster_config, target=sg_target)]
-                        send_dbconfig_as_restCall(db_config_json, sg_gateways, sgw_config_data)
+                        send_dbconfig_as_restCall(cluster_config, db_config_json, sg_gateways, sgw_config_data)
                     else:
-                        send_dbconfig_as_restCall(db_config_json, c_cluster.sync_gateways, sgw_config_data)"""
+                        send_dbconfig_as_restCall(cluster_config, db_config_json, c_cluster.sync_gateways, sgw_config_data)"""
 
     def redeploy_sync_gateway_config(self, cluster_config, sg_conf, url, sync_gateway_version, enable_import=False, deploy_only=False):
         """Deploy an SG config with xattrs enabled
@@ -1145,9 +1145,9 @@ class SyncGateway(object):
                         sg_ip = ip_from_url(url)
                         sg_target = {"name": sg_name, "ip": sg_ip}
                         sg_gateways = [SyncGateway(cluster_config=cluster_config, target=sg_target)]
-                        send_dbconfig_as_restCall(db_config_json, sg_gateways, sgw_config_data)
+                        send_dbconfig_as_restCall(cluster_config, db_config_json, sg_gateways, sgw_config_data)
                     else:
-                        send_dbconfig_as_restCall(db_config_json, c_cluster.sync_gateways, sgw_config_data)
+                        send_dbconfig_as_restCall(cluster_config, db_config_json, c_cluster.sync_gateways, sgw_config_data)
 
     def create_directory(self, cluster_config, url, dir_name):
         if dir_name is None:
