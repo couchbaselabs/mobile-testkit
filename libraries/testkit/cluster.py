@@ -91,7 +91,7 @@ class Cluster:
         self.cbs_ssl = cluster["environment"]["cbs_ssl_enabled"]
         self.xattrs = cluster["environment"]["xattrs_enabled"]
         self.sync_gateway_ssl = cluster["environment"]["sync_gateway_ssl"]
-        self.centralized_persistent_config = cluster["environment"]["disable_persistent_config"]
+        self.centralized_persistent_config = not cluster["environment"]["disable_persistent_config"]
         self.ipv6 = cluster["environment"]["ipv6_enabled"]
 
         if self.cbs_ssl:
