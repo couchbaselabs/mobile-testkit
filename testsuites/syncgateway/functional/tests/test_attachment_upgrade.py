@@ -16,7 +16,7 @@ from requests.exceptions import HTTPError
 @pytest.mark.syncgateway
 @pytest.mark.attachment_cleanup
 @pytest.mark.parametrize("doc_count, marked", [
-    (100, 452),
+    (100, 457),
     (1000, 4957)
 ])
 def test_upgrade_delete_attachments(params_from_base_test_setup, sgw_version_reset, doc_count, marked):
@@ -160,7 +160,7 @@ def test_upgrade_delete_attachments(params_from_base_test_setup, sgw_version_res
             time.sleep(40)
     log_info(sg_client.compact_attachments(sg_admin_url, remote_db, "status"))
     assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["status"] == "completed"
-    assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["marked_attachments"] >= marked, \
+    assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["marked_attachments"] == marked, \
         "compaction count not matching"
     assert sg_client.compact_attachments(sg_admin_url, remote_db, "status")["purged_attachments"] == 45, \
         "purged attachments"
