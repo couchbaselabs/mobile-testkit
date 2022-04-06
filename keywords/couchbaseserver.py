@@ -787,9 +787,10 @@ class CouchbaseServer:
             except HTTPError:
                 log_info("Got http error while trying to recover the server, so trying one more time")
             if resp.status_code == 200:
+                print("Retries: " + str(count))
                 break
             count += 1
-            time.sleep(1)
+            time.sleep(2)
         log_r(resp)
         resp.raise_for_status()
 
