@@ -258,7 +258,7 @@ def test_existing_replication_enabling_auto_purge(params_from_base_test_setup, r
         assert sg2_doc_id in sg1_doc_ids
 
     # 6. on active SGW, stop the replication, enable auto purge config, then start the replication, w/o reset checkpoint
-    sg1.modify_replication2_status(replicator2_id_1, DB1, "stop", auth=auth)
+    sg1.modify_replication2_status(replicator2_id_1, DB1, "stop")
     time.sleep(2)
 
     sg1.start_replication2(
@@ -272,12 +272,12 @@ def test_existing_replication_enabling_auto_purge(params_from_base_test_setup, r
         purge_on_removal=True,
         replication_id=replicator2_id_1
     )
-    sg1.modify_replication2_status(replicator2_id_1, DB1, "start", auth=auth)
+    sg1.modify_replication2_status(replicator2_id_1, DB1, "start")
     time.sleep(2)
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id_1, read_flag=True, max_times=6000)
 
     if require_checkpoint_reset:
-        sg1.modify_replication2_status(replicator2_id_1, DB1, "reset", auth=auth)
+        sg1.modify_replication2_status(replicator2_id_1, DB1, "reset")
         sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id_1, read_flag=True, max_times=6000)
 
     # 7. verify docs in channel A are purged, docs in other channels are not impacted
@@ -301,7 +301,7 @@ def test_existing_replication_enabling_auto_purge(params_from_base_test_setup, r
         assert not doc_id.startswith("sg2_A")
         assert not doc_id.startswith("sg2_B")
 
-    sg1.stop_replication2_by_id(replicator2_id_1, DB1, auth=auth)
+    sg1.stop_replication2_by_id(replicator2_id_1, DB1)
 
 
 @pytest.mark.listener
@@ -390,7 +390,7 @@ def test_new_replication_enabling_auto_purge(params_from_base_test_setup):
         assert sg2_doc_id in sg1_doc_ids
 
     # 6. on active SGW, delete the replication and start another new pull replication with auto purge config enabled
-    sg1.stop_replication2_by_id(replicator2_id_1, DB1, auth=auth)
+    sg1.stop_replication2_by_id(replicator2_id_1, DB1)
     replicator2_id_2 = sg1.start_replication2(
         local_db=DB1,
         remote_url=sg2.url,
@@ -419,7 +419,7 @@ def test_new_replication_enabling_auto_purge(params_from_base_test_setup):
     sg1_doc_ids = [doc["id"] for doc in sg1_docs["rows"]]
     assert len(sg1_doc_ids) == 0
 
-    sg1.stop_replication2_by_id(replicator2_id_2, DB1, auth=auth)
+    sg1.stop_replication2_by_id(replicator2_id_2, DB1)
 
 
 @pytest.mark.listener
@@ -508,7 +508,7 @@ def test_disable_auto_purge_no_impact_purged_docs(params_from_base_test_setup):
         assert doc_id.startswith("sg2_B")
 
     # 6. on active SGW, pause the replication, disable the replication auto purge config, then start the replication
-    sg1.modify_replication2_status(replicator2_id, DB1, "stop", auth=auth)
+    sg1.modify_replication2_status(replicator2_id, DB1, "stop")
     time.sleep(3)
     sg1.start_replication2(
         local_db=DB1,
@@ -522,7 +522,7 @@ def test_disable_auto_purge_no_impact_purged_docs(params_from_base_test_setup):
         replication_id=replicator2_id,
         channels=channels
     )
-    sg1.modify_replication2_status(replicator2_id, DB1, "start", auth=auth)
+    sg1.modify_replication2_status(replicator2_id, DB1, "start")
     time.sleep(2)
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id, read_flag=True, max_times=3000)
 
@@ -533,7 +533,7 @@ def test_disable_auto_purge_no_impact_purged_docs(params_from_base_test_setup):
         assert not doc_id.startswith("sg2_A")
         assert doc_id.startswith("sg2_B")
 
-    sg1.stop_replication2_by_id(replicator2_id, DB1, auth=auth)
+    sg1.stop_replication2_by_id(replicator2_id, DB1)
 
 
 @pytest.mark.listener
@@ -647,7 +647,7 @@ def test_user_lost_channel_access_pull(params_from_base_test_setup):
     assert "sg2_AnB_0" in sg1_doc_ids
     assert "sg2_C_0" not in sg1_doc_ids
 
-    sg1.stop_replication2_by_id(replicator2_id, DB1, auth=auth)
+    sg1.stop_replication2_by_id(replicator2_id, DB1)
 
 
 @pytest.mark.listener
@@ -743,7 +743,7 @@ def test_user_lost_channel_access_push_only(params_from_base_test_setup):
         continuous=True,
         purge_on_removal=True
     )
-    sg1.modify_replication2_status(replicator2_id, DB1, "start", auth=auth)
+    sg1.modify_replication2_status(replicator2_id, DB1, "start")
     time.sleep(2)
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id, write_flag=True, read_flag=True, max_times=3000)
 
@@ -781,7 +781,7 @@ def test_user_lost_channel_access_push_only(params_from_base_test_setup):
         sg_client.get_doc(url=sg2.url, db=DB2, auth=auth_session2, doc_id=doc_c_id)
     assert str(ex.value).startswith("403 Client Error: Forbidden for url:")
 
-    sg1.stop_replication2_by_id(replicator2_id, DB1, auth=auth)
+    sg1.stop_replication2_by_id(replicator2_id, DB1)
 
 
 @pytest.mark.listener
@@ -878,7 +878,7 @@ def test_user_lost_channel_access_push_and_pull(params_from_base_test_setup):
     assert "sg2_C_0" in sg1_doc_ids
 
     # 6. pause the replication, update doc_c three times
-    sg1.modify_replication2_status(replicator2_id, DB1, "stop", auth=auth)
+    sg1.modify_replication2_status(replicator2_id, DB1, "stop")
     doc3_id = "sg2_C_0"
     sg_client.update_doc(url=sg1.url, db=DB1, doc_id=doc3_id,
                          number_updates=3, auth=auth_session1,
@@ -887,7 +887,7 @@ def test_user_lost_channel_access_push_and_pull(params_from_base_test_setup):
     # 7. revoke user access from channel C, then turn the replication back online
     sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=["B"], auth=auth)
     time.sleep(3)
-    sg1.modify_replication2_status(replicator2_id, DB1, "start", auth=auth)
+    sg1.modify_replication2_status(replicator2_id, DB1, "start")
     time.sleep(2)
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id, read_flag=True, write_flag=True, max_times=3000)
 
@@ -898,7 +898,7 @@ def test_user_lost_channel_access_push_and_pull(params_from_base_test_setup):
     assert "sg2_AnB_0" in sg1_doc_ids
     assert "sg2_C_0" not in sg1_doc_ids
 
-    sg1.stop_replication2_by_id(replicator2_id, DB1, auth=auth)
+    sg1.stop_replication2_by_id(replicator2_id, DB1)
 
 
 @pytest.mark.listener
@@ -1031,7 +1031,7 @@ def test_user_removed_from_role_by_direction(params_from_base_test_setup, replic
     assert "sg2_AnC_0" in sg1_doc_ids
     assert "sg2_C_0" in sg1_doc_ids
 
-    sg1.stop_replication2_by_id(replicator2_id, DB1, auth=auth)
+    sg1.stop_replication2_by_id(replicator2_id, DB1)
 
 
 @pytest.mark.listener
@@ -1143,7 +1143,7 @@ def test_user_removed_from_role_push_only(params_from_base_test_setup):
         continuous=True,
         purge_on_removal=True
     )
-    sg1.modify_replication2_status(replicator2_id, DB1, "start", auth=auth)
+    sg1.modify_replication2_status(replicator2_id, DB1, "start")
     time.sleep(2)
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id, read_flag=True, max_times=3000)
 
@@ -1177,7 +1177,7 @@ def test_user_removed_from_role_push_only(params_from_base_test_setup):
     assert "sg2_AnC_0" in sg1_doc_ids
     assert "sg2_C_0" in sg1_doc_ids
 
-    sg1.stop_replication2_by_id(replicator2_id, DB1, auth=auth)
+    sg1.stop_replication2_by_id(replicator2_id, DB1)
 
 
 @pytest.mark.listener
@@ -1303,7 +1303,7 @@ def test_user_role_revoked_channel_access_by_direction(params_from_base_test_set
     assert "sg2_AnC_0" in sg1_doc_ids
     assert "sg2_C_0" in sg1_doc_ids
 
-    sg1.stop_replication2_by_id(replicator2_id, DB1, auth=auth)
+    sg1.stop_replication2_by_id(replicator2_id, DB1)
 
 
 @pytest.mark.listener
@@ -1438,7 +1438,7 @@ def test_user_role_revoked_channel_access_push_only(params_from_base_test_setup)
     assert "sg2_AnC_0" in sg1_doc_ids
     assert "sg2_C_0" in sg1_doc_ids
 
-    sg1.stop_replication2_by_id(replicator2_id, DB1, auth=auth)
+    sg1.stop_replication2_by_id(replicator2_id, DB1)
 
 
 @pytest.mark.listener
@@ -1544,7 +1544,7 @@ def test_user_reassign_to_channel_pull(params_from_base_test_setup):
     assert "sg2_AnB_0" in sg1_doc_ids
     assert "sg2_C_0" not in sg1_doc_ids
 
-    sg1.stop_replication2_by_id(replicator2_id, DB1, auth=auth)
+    sg1.stop_replication2_by_id(replicator2_id, DB1)
 
 
 @pytest.mark.listener
@@ -1625,7 +1625,7 @@ def test_user_reassign_to_channel_push_only(params_from_base_test_setup):
     sg1_doc_ids = [doc["id"] for doc in sg1_docs["rows"]]
     for sg2_doc_id in sg2_doc_ids:
         assert sg2_doc_id in sg1_doc_ids
-    sg1.stop_replication2_by_id(replicator2_id, DB1, auth=auth)
+    sg1.stop_replication2_by_id(replicator2_id, DB1)
 
     # 4. update the replication direction to push and enable auto purge
     replicator2_id_2 = sg1.start_replication2(
@@ -1693,7 +1693,7 @@ def test_user_reassign_to_channel_push_only(params_from_base_test_setup):
     assert "doc_before_reassign_0" in sg2_doc_ids
     assert "doc_after_reassign_0" in sg2_doc_ids
 
-    sg1.stop_replication2_by_id(replicator2_id_2, DB1, auth=auth)
+    sg1.stop_replication2_by_id(replicator2_id_2, DB1)
 
 
 @pytest.mark.listener
@@ -1888,7 +1888,7 @@ def test_auto_purge_for_tombstone_docs(params_from_base_test_setup, with_local_u
         assert sg2_doc_id in sg1_doc_ids
 
     # 4. pause the replication, tombstone a doc on remote, w/o local update for the tombstoned doc
-    sg1.modify_replication2_status(replicator2_id, DB1, "stop", auth=auth)
+    sg1.modify_replication2_status(replicator2_id, DB1, "stop")
 
     doc_id_1 = "sg2_A_2"
     doc = sg_client.get_doc(url=sg2.url, db=DB2, doc_id=doc_id_1, auth=auth_session2)
@@ -1909,7 +1909,7 @@ def test_auto_purge_for_tombstone_docs(params_from_base_test_setup, with_local_u
     # 5. revoke user access from channel A and resume the replication
     sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=["B", "C"], auth=auth)
     time.sleep(2)
-    sg1.modify_replication2_status(replicator2_id, DB1, "start", auth=auth)
+    sg1.modify_replication2_status(replicator2_id, DB1, "start")
     time.sleep(2)
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id, read_flag=True, max_times=3000)
 
@@ -1919,7 +1919,7 @@ def test_auto_purge_for_tombstone_docs(params_from_base_test_setup, with_local_u
     assert doc_id_1 not in sg1_doc_ids
     assert doc_id_2 not in sg1_doc_ids
 
-    sg1.stop_replication2_by_id(replicator2_id, DB1, auth=auth)
+    sg1.stop_replication2_by_id(replicator2_id, DB1)
 
 
 @pytest.mark.listener
@@ -2015,7 +2015,7 @@ def test_resurrected_docs_by_sdk(params_from_base_test_setup, resurrect_type):
     assert selected_doc_id in sg1_doc_ids
 
     # 5. pause the replication, delete the doc on passive SGW then add back from sdk with same id
-    sg1.modify_replication2_status(replicator2_id, DB1, "stop", auth=auth)
+    sg1.modify_replication2_status(replicator2_id, DB1, "stop")
     time.sleep(3)
 
     selected_doc_rev_latest = sg_client.get_doc(url=sg2.url, db=DB2, doc_id=selected_doc_id, auth=auth_session2)
@@ -2058,7 +2058,7 @@ def test_resurrected_docs_by_sdk(params_from_base_test_setup, resurrect_type):
     time.sleep(2)
 
     # 8. start the pull replication again and verify the resurrected doc gets auto purged
-    sg1.modify_replication2_status(replicator2_id, DB1, "start", auth=auth)
+    sg1.modify_replication2_status(replicator2_id, DB1, "start")
     time.sleep(2)
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id, read_flag=True, max_times=3000)
 
@@ -2066,7 +2066,7 @@ def test_resurrected_docs_by_sdk(params_from_base_test_setup, resurrect_type):
     sg1_doc_ids = [doc["id"] for doc in sg1_docs["rows"]]
     assert selected_doc_id not in sg1_doc_ids
 
-    sg1.stop_replication2_by_id(replicator2_id, DB1, auth=auth)
+    sg1.stop_replication2_by_id(replicator2_id, DB1)
 
 
 @pytest.mark.listener
@@ -2256,7 +2256,7 @@ def pull_docs_in_parallel(local_sg, remote_sg, local_db, remote_db, remote_user,
         auth=auth
     )
     time.sleep(wait_time_in_sec)
-    sg1.stop_replication2_by_id(repl_id, local_db, auth=auth)
+    sg1.stop_replication2_by_id(repl_id, local_db)
     end_time = datetime.now()
 
     return (end_time - start_time).total_seconds()
