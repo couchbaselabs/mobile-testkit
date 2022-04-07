@@ -35,8 +35,9 @@ def test_centralized_persistent_flag_off(params_from_base_test_setup):
     mode = params_from_base_test_setup['mode']
     sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
     sg_platform = params_from_base_test_setup['sg_platform']
+    disable_persistent_config = params_from_base_test_setup['disable_persistent_config']
 
-    if sync_gateway_version < "3.0.0":
+    if sync_gateway_version < "3.0.0" or not disable_persistent_config:
         pytest.skip('This test can run with sgw version 3.0 and above')
     # 1. Set up server and Syncgateway
     # 2. Have 2 nodes in the SGW cluster
@@ -44,7 +45,6 @@ def test_centralized_persistent_flag_off(params_from_base_test_setup):
     cbs_cluster = Cluster(config=cluster_conf)
 
     # 3. Have disable_persistent config key to true in SGW config on 2 nodes of SGW and start sgws
-    persist_cluster_config_environment_prop(cluster_conf, 'disable_persistent_config', True)
     cbs_cluster.reset(sg_config_path=sg_conf1)
 
     # 4. Update database config on one of the sGW node with config like delta_sync on on one node and off on another node via rest end point
@@ -55,7 +55,9 @@ def test_centralized_persistent_flag_off(params_from_base_test_setup):
     sg_dbs = sg1.admin.get_dbs()
     sg_db = sg_dbs[0]
     sg1_db_config = sg1.admin.get_db_config(sg_db)
+
     sg1.admin.delete_db(sg_db)
+    time.sleep(5)
     db_config_file = "sync_gateway_default_db"
     dbconfig = construct_dbconfig_json(db_config_file, cluster_conf, sg_platform, sg_conf_name)
 
@@ -92,7 +94,7 @@ def test_named_and_default_group(params_from_base_test_setup, group_type):
     """
     @summary :
     Test cases link on google drive : https://docs.google.com/spreadsheets/d/19kJQ4_g6RroaoG2YYe0X11d9pU0xam-lb-n23aPLhO4/edit#gid=0
-    1. Have 2 SGW nodes with disable persistent config
+    1. Have 2 SGW nodes with  persistent config enabled
     2. have default group id on one node and named group in another node
     3. Start sync gateway
     4. verify frist node has default groud id and 2nd node has named node
@@ -104,7 +106,11 @@ def test_named_and_default_group(params_from_base_test_setup, group_type):
     sg_obj = SyncGateway()
     cluster_conf = params_from_base_test_setup['cluster_config']
     mode = params_from_base_test_setup['mode']
+    disable_persistent_config = params_from_base_test_setup['disable_persistent_config']
+    sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
 
+    if disable_persistent_config or sync_gateway_version >= "3.0.0":
+        pytest.skip('This test cannot run with disabled persistent config')
     # 1. Have 2 SGW nodes with disable persistent config
     sg_conf1 = sync_gateway_config_path_for_mode(sg_conf_name, mode, cpc=True)
     cbs_cluster = Cluster(config=cluster_conf)
@@ -178,6 +184,11 @@ def test_roll_out_config_new_node(params_from_base_test_setup, setup_sgws):
     cluster_conf = setup_sgws['cluster_conf']
     mode = params_from_base_test_setup['mode']
     sg_platform = params_from_base_test_setup['sg_platform']
+    disable_persistent_config = params_from_base_test_setup['disable_persistent_config']
+    sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
+
+    if disable_persistent_config or sync_gateway_version >= "3.0.0":
+        pytest.skip('This test cannot run with disabled persistent config')
 
     # 1. set up server with bucket1
     # 2. Set up 1 sgw node with bootstrap config with Group1
@@ -254,6 +265,11 @@ def test_db_config_in_two_groups(params_from_base_test_setup):
     cluster_conf = params_from_base_test_setup['cluster_config']
     mode = params_from_base_test_setup['mode']
     sg_platform = params_from_base_test_setup['sg_platform']
+    disable_persistent_config = params_from_base_test_setup['disable_persistent_config']
+    sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
+
+    if disable_persistent_config or sync_gateway_version >= "3.0.0":
+        pytest.skip('This test cannot run with disabled persistent config')
 
     # 1. set up 3 sgw nodes
     sg_config = sync_gateway_config_path_for_mode(sg_conf_name, mode)
@@ -366,6 +382,11 @@ def test_union_of_dbconfigs(params_from_base_test_setup):
     cluster_conf = params_from_base_test_setup['cluster_config']
     mode = params_from_base_test_setup['mode']
     sg_platform = params_from_base_test_setup['sg_platform']
+    disable_persistent_config = params_from_base_test_setup['disable_persistent_config']
+    sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
+
+    if disable_persistent_config or sync_gateway_version >= "3.0.0":
+        pytest.skip('This test cannot run with disabled persistent config')
 
     # 1. set up 3 sgw nodes
     sg_config = sync_gateway_config_path_for_mode(sg_conf_name, mode)
@@ -443,6 +464,11 @@ def test_db_config_with_guest_user(params_from_base_test_setup):
     cluster_conf = params_from_base_test_setup['cluster_config']
     mode = params_from_base_test_setup['mode']
     sg_platform = params_from_base_test_setup['sg_platform']
+    disable_persistent_config = params_from_base_test_setup['disable_persistent_config']
+    sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
+
+    if disable_persistent_config or sync_gateway_version >= "3.0.0":
+        pytest.skip('This test cannot run with disabled persistent config')
 
     sg_config = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     sg_client = MobileRestClient()

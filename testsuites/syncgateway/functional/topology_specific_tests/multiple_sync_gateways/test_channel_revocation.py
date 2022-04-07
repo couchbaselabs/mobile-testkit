@@ -112,8 +112,7 @@ def test_auto_purge_setting_impact(params_from_base_test_setup, auto_purge_setti
             remote_password=password,
             direction="pull",
             continuous=True,
-            purge_on_removal=True,
-            auth=auth
+            purge_on_removal=True
         )
     elif auto_purge_setting == "disabled":
         replicator2_id = sg1.start_replication2(
@@ -124,8 +123,7 @@ def test_auto_purge_setting_impact(params_from_base_test_setup, auto_purge_setti
             remote_password=password,
             direction="pull",
             continuous=True,
-            purge_on_removal=False,
-            auth=auth
+            purge_on_removal=False
         )
     else:
         replicator2_id = sg1.start_replication2(
@@ -135,8 +133,7 @@ def test_auto_purge_setting_impact(params_from_base_test_setup, auto_purge_setti
             remote_user=sg2_username,
             remote_password=password,
             direction="pull",
-            continuous=True,
-            auth=auth
+            continuous=True
         )
     if auth:
         sg1.admin.auth = HTTPBasicAuth(auth[0], auth[1])
@@ -163,7 +160,7 @@ def test_auto_purge_setting_impact(params_from_base_test_setup, auto_purge_setti
         for sg2_doc_id in sg2_doc_ids:
             assert sg2_doc_id in sg1_doc_ids
 
-    sg1.stop_replication2_by_id(replicator2_id, DB1, auth=auth)
+    sg1.stop_replication2_by_id(replicator2_id, DB1)
 
 
 @pytest.mark.listener
@@ -233,8 +230,7 @@ def test_existing_replication_enabling_auto_purge(params_from_base_test_setup, r
         remote_user=sg2_username,
         remote_password=password,
         direction="pull",
-        continuous=True,
-        auth=auth
+        continuous=True
     )
     if auth:
         sg1.admin.auth = HTTPBasicAuth(auth[0], auth[1])
@@ -274,8 +270,7 @@ def test_existing_replication_enabling_auto_purge(params_from_base_test_setup, r
         direction="pull",
         continuous=True,
         purge_on_removal=True,
-        replication_id=replicator2_id_1,
-        auth=auth
+        replication_id=replicator2_id_1
     )
     sg1.modify_replication2_status(replicator2_id_1, DB1, "start", auth=auth)
     time.sleep(2)
@@ -371,8 +366,7 @@ def test_new_replication_enabling_auto_purge(params_from_base_test_setup):
         remote_user=sg2_username,
         remote_password=password,
         direction="pull",
-        continuous=True,
-        auth=auth
+        continuous=True
     )
 
     # 3. verify active SGW have all docs pulled
@@ -405,8 +399,7 @@ def test_new_replication_enabling_auto_purge(params_from_base_test_setup):
         remote_password=password,
         direction="pull",
         continuous=True,
-        purge_on_removal=True,
-        auth=auth
+        purge_on_removal=True
     )
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id_2, read_flag=True, max_times=3000)
 
@@ -490,8 +483,7 @@ def test_disable_auto_purge_no_impact_purged_docs(params_from_base_test_setup):
         remote_password=password,
         direction="pull",
         continuous=True,
-        purge_on_removal=True,
-        auth=auth
+        purge_on_removal=True
     )
 
     # 3. verify active SGW have pulled doc_A_* and doc_B_*
@@ -528,8 +520,7 @@ def test_disable_auto_purge_no_impact_purged_docs(params_from_base_test_setup):
         continuous=True,
         purge_on_removal=False,
         replication_id=replicator2_id,
-        channels=channels,
-        auth=auth
+        channels=channels
     )
     sg1.modify_replication2_status(replicator2_id, DB1, "start", auth=auth)
     time.sleep(2)
@@ -615,8 +606,7 @@ def test_user_lost_channel_access_pull(params_from_base_test_setup):
         remote_password=password,
         direction="pull",
         continuous=True,
-        purge_on_removal=True,
-        auth=auth
+        purge_on_removal=True
     )
     if auth:
         sg1.admin.auth = HTTPBasicAuth(auth[0], auth[1])
@@ -729,8 +719,7 @@ def test_user_lost_channel_access_push_only(params_from_base_test_setup):
         remote_user=sg2_username,
         remote_password=password,
         direction="pull",
-        continuous=False,
-        auth=auth
+        continuous=False
     )
     if auth:
         sg1.admin.auth = HTTPBasicAuth(auth[0], auth[1])
@@ -752,8 +741,7 @@ def test_user_lost_channel_access_push_only(params_from_base_test_setup):
         replication_id=replicator2_id,
         direction="push",
         continuous=True,
-        purge_on_removal=True,
-        auth=auth
+        purge_on_removal=True
     )
     sg1.modify_replication2_status(replicator2_id, DB1, "start", auth=auth)
     time.sleep(2)
@@ -865,8 +853,7 @@ def test_user_lost_channel_access_push_and_pull(params_from_base_test_setup):
         remote_password=password,
         direction="pushAndPull",
         continuous=True,
-        purge_on_removal=True,
-        auth=auth
+        purge_on_removal=True
     )
     if auth:
         sg1.admin.auth = HTTPBasicAuth(auth[0], auth[1])
@@ -1004,8 +991,7 @@ def test_user_removed_from_role_by_direction(params_from_base_test_setup, replic
         remote_password=password,
         direction=replication_direction,
         continuous=True,
-        purge_on_removal=True,
-        auth=auth
+        purge_on_removal=True
     )
     if auth:
         sg1.admin.auth = HTTPBasicAuth(auth[0], auth[1])
@@ -1133,8 +1119,7 @@ def test_user_removed_from_role_push_only(params_from_base_test_setup):
         remote_user=sg2_username,
         remote_password=password,
         direction="pull",
-        continuous=False,
-        auth=auth
+        continuous=False
     )
     if auth:
         sg1.admin.auth = HTTPBasicAuth(auth[0], auth[1])
@@ -1156,8 +1141,7 @@ def test_user_removed_from_role_push_only(params_from_base_test_setup):
         replication_id=replicator2_id,
         direction="push",
         continuous=True,
-        purge_on_removal=True,
-        auth=auth
+        purge_on_removal=True
     )
     sg1.modify_replication2_status(replicator2_id, DB1, "start", auth=auth)
     time.sleep(2)
@@ -1281,8 +1265,7 @@ def test_user_role_revoked_channel_access_by_direction(params_from_base_test_set
         remote_password=password,
         direction=replication_direction,
         continuous=True,
-        purge_on_removal=True,
-        auth=auth
+        purge_on_removal=True
     )
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id, read_flag=True, max_times=3000)
 
@@ -1403,8 +1386,7 @@ def test_user_role_revoked_channel_access_push_only(params_from_base_test_setup)
         remote_db=DB2,
         remote_user=sg2_username,
         remote_password=password,
-        direction="pull",
-        auth=auth
+        direction="pull"
     )
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id, read_flag=True, max_times=3000)
 
@@ -1424,8 +1406,7 @@ def test_user_role_revoked_channel_access_push_only(params_from_base_test_setup)
         replication_id=replicator2_id,
         continuous=True,
         direction="push",
-        purge_on_removal=True,
-        auth=auth
+        purge_on_removal=True
     )
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id, write_flag=True, max_times=3000)
 
@@ -1529,8 +1510,7 @@ def test_user_reassign_to_channel_pull(params_from_base_test_setup):
         remote_password=password,
         direction="pull",
         continuous=True,
-        purge_on_removal=True,
-        auth=auth
+        purge_on_removal=True
     )
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id, read_flag=True, max_times=3000)
 
@@ -1636,8 +1616,7 @@ def test_user_reassign_to_channel_push_only(params_from_base_test_setup):
         remote_user=sg2_username,
         remote_password=password,
         direction="pull",
-        continuous=False,
-        auth=auth
+        continuous=False
     )
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id, write_flag=True, read_flag=True, max_times=3000)
 
@@ -1657,8 +1636,7 @@ def test_user_reassign_to_channel_push_only(params_from_base_test_setup):
         remote_password=password,
         direction="push",
         continuous=True,
-        purge_on_removal=True,
-        auth=auth
+        purge_on_removal=True
     )
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id_2, write_flag=True, read_flag=True, max_times=3000)
 
@@ -1786,8 +1764,7 @@ def test_user_reassign_to_channel_push_pull(params_from_base_test_setup):
         remote_password=password,
         direction="pushAndPull",
         continuous=True,
-        purge_on_removal=True,
-        auth=auth
+        purge_on_removal=True
     )
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id, write_flag=True, read_flag=True, max_times=3000)
 
@@ -1900,8 +1877,7 @@ def test_auto_purge_for_tombstone_docs(params_from_base_test_setup, with_local_u
         remote_password=password,
         direction="pull",
         continuous=True,
-        purge_on_removal=True,
-        auth=auth
+        purge_on_removal=True
     )
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id, read_flag=True, max_times=3000)
 
@@ -2029,8 +2005,7 @@ def test_resurrected_docs_by_sdk(params_from_base_test_setup, resurrect_type):
         remote_password=password,
         direction="pull",
         continuous=True,
-        purge_on_removal=True,
-        auth=auth
+        purge_on_removal=True
     )
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id, read_flag=True, max_times=3000)
 
@@ -2155,8 +2130,7 @@ def test_concurrent_update_on_channel_revocation(params_from_base_test_setup):
         remote_user=sg2_username,
         remote_password=password,
         direction="pull",
-        continuous=False,
-        auth=auth
+        continuous=False
     )
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id, read_flag=True, max_times=3000)
 
