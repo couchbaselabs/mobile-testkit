@@ -247,6 +247,9 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config, sg_db_cfg=None
         if is_cbs_ssl_enabled(cluster_config):
             server_port = ""
             server_scheme = "couchbases"
+        else:
+            server_port = ""
+            server_scheme = "couchbase"
 
         if is_x509_auth(cluster_config):
             server_port = ""
