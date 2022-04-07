@@ -392,7 +392,7 @@ class Admin:
             time.sleep(1)
         return active_resp_data
 
-    def wait_until_sgw_replication_done(self, db, repl_id, read_flag=False, write_flag=False, max_times=30):
+    def wait_until_sgw_replication_done(self, db, repl_id, read_flag=False, write_flag=False, max_times=180):
         if not is_admin_auth_disabled(self.cluster_config):
             self.auth = HTTPBasicAuth(RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd'])
         # read_flag = True
