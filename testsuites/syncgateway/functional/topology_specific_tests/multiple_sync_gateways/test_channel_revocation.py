@@ -2165,8 +2165,7 @@ def test_concurrent_update_on_channel_revocation(params_from_base_test_setup):
             DB2,
             sg2_username,
             password,
-            wait_time_in_sec,
-            auth)
+            wait_time_in_sec)
 
         create_and_push_task.result()
         pulling_task.result()
@@ -2232,15 +2231,14 @@ def create_and_push_docs(sg_client, local_sg, remote_sg, local_db, remote_db, re
             remote_user=remote_user,
             remote_password=password,
             direction="push",
-            continuous=True,
-            auth=auth
+            continuous=True
         )
         time.sleep(sleep_period)
 
     return revocation_mark
 
 
-def pull_docs_in_parallel(local_sg, remote_sg, local_db, remote_db, remote_user, password, wait_time_in_sec, auth):
+def pull_docs_in_parallel(local_sg, remote_sg, local_db, remote_db, remote_user, password, wait_time_in_sec):
     sg1 = local_sg
     sg2 = remote_sg
     start_time = datetime.now()
@@ -2252,8 +2250,7 @@ def pull_docs_in_parallel(local_sg, remote_sg, local_db, remote_db, remote_user,
         remote_password=password,
         direction="pull",
         continuous=True,
-        purge_on_removal=True,
-        auth=auth
+        purge_on_removal=True
     )
     time.sleep(wait_time_in_sec)
     sg1.stop_replication2_by_id(repl_id, local_db)

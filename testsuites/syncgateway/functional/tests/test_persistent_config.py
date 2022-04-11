@@ -45,6 +45,7 @@ def test_default_config_values(params_from_base_test_setup):
     sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
     mode = params_from_base_test_setup['mode']
     ssl_enabled = params_from_base_test_setup['ssl_enabled']
+    need_sgw_admin_auth = params_from_base_test_setup['need_sgw_admin_auth']
 
     # 1. Have prelithium config
     # 2. Have configs required fo database on prelithium config
@@ -75,8 +76,9 @@ def test_default_config_values(params_from_base_test_setup):
     assert sg1_config["api"]["public_interface"] == ":4984", "public interface did not match with sgw config"
     assert sg1_config["api"]["admin_interface"] == "0.0.0.0:4985", "admin interface did not match with sgw config"
     assert sg1_config["api"]["metrics_interface"] == ":4986", "metrics interface did not match with sgw config"
-    assert not sg1_config["api"]["admin_interface_authentication"], "admin_interface_authentication did not match with sgw config"
-    assert not sg1_config["api"]["metrics_interface_authentication"], "metrics_interface_authentication did not match with sgw config"
+    if need_sgw_admin_auth:
+        assert not sg1_config["api"]["admin_interface_authentication"], "admin_interface_authentication did not match with sgw config"
+        assert not sg1_config["api"]["metrics_interface_authentication"], "metrics_interface_authentication did not match with sgw config"
     assert sg1_config["api"]["https"] == {}, "https with default value is not set"
     assert sg1_config["api"]["cors"] == {}, "cors with default value is not set"
 
@@ -353,6 +355,7 @@ def test_db_config_with_guest_user(params_from_base_test_setup):
     cluster_conf = params_from_base_test_setup['cluster_config']
     sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
     mode = params_from_base_test_setup['mode']
+    need_sgw_admin_auth = params_from_base_test_setup['need_sgw_admin_auth']
 
     # 1. Set up SGw with bootstrap config with server url
     if sync_gateway_version < "3.0.0" and not is_centralized_persistent_config_disabled(cluster_conf):
@@ -383,8 +386,9 @@ def test_db_config_with_guest_user(params_from_base_test_setup):
     assert sg1_config["api"]["public_interface"] == ":4984", "public interface did not match with sgw config"
     assert sg1_config["api"]["admin_interface"] == "0.0.0.0:4985", "admin interface did not match with sgw config"
     assert sg1_config["api"]["metrics_interface"] == ":4986", "metrics interface did not match with sgw config"
-    assert sg1_config["api"]["admin_interface_authentication"] is False, "admin_interface_authentication did not match with sgw config"
-    assert sg1_config["api"]["metrics_interface_authentication"] is False, "metrics_interface_authentication did not match with sgw config"
+    if need_sgw_admin_auth:
+        assert sg1_config["api"]["admin_interface_authentication"] is False, "admin_interface_authentication did not match with sgw config"
+        assert sg1_config["api"]["metrics_interface_authentication"] is False, "metrics_interface_authentication did not match with sgw config"
     assert sg1_config["api"]["https"] == {}, "https with default value is not set"
     assert sg1_config["api"]["cors"] == {}, "cors with default value is not set"
 

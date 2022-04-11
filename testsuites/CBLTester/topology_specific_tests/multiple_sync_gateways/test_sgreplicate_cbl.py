@@ -2334,7 +2334,7 @@ def test_sg_replicate_doc_resurrection(params_from_base_test_setup, setup_custom
     (True),
     (False)
 ])
-def test_combination_of_cpc_and_noncpc(params_from_base_test_setup, disable_persistent_config):
+def test_combination_of_cpc_and_noncpc(params_from_base_test_setup, persistent_config_disable):
     """
     @summary :
     Test cases link on google drive : https://docs.google.com/spreadsheets/d/19kJQ4_g6RroaoG2YYe0X11d9pU0xam-lb-n23aPLhO4/edit#gid=0
@@ -2357,10 +2357,14 @@ def test_combination_of_cpc_and_noncpc(params_from_base_test_setup, disable_pers
 
     cluster_conf = params_from_base_test_setup['cluster_config']
     sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
+    disable_persistent_config = params_from_base_test_setup['disable_persistent_config']
 
     mode = params_from_base_test_setup['mode']
     # sg_platform = params_from_base_test_setup['sg_platform']
     # xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+
+    if sync_gateway_version < "3.0.0" or disable_persistent_config:
+        pytest.skip('This test can run with sgw version 3.0 and above')
     username = "autotest"
     password = "password"
     sg_channels = ["non_cpc"]
@@ -2369,7 +2373,7 @@ def test_combination_of_cpc_and_noncpc(params_from_base_test_setup, disable_pers
     if sync_gateway_upgraded_version < "3.0.0":
         pytest.skip('This test can run with sgw version 3.0 and above')
     # 1. Have 3 SGW nodes: 1 node as pre-lithium and 2 nodes on lithium
-    if disable_persistent_config:
+    if persistent_config_disable:
         # persist_cluster_config_environment_prop(cluster_conf, 'disable_persistent_config', True)
         sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     else:
@@ -2402,6 +2406,7 @@ def test_combination_of_cpc_and_noncpc(params_from_base_test_setup, disable_pers
     revs_limit1 = 20
     revs_limit2 = 22
     revs_limit3 = 24
+
     sg1_db_config["revs_limit"] = revs_limit1
     sg1.admin.put_db_config(sg_db, sg1_db_config)
     sg3_db_config = sg1_db_config
@@ -2440,6 +2445,7 @@ def test_combination_of_cpc_and_noncpc(params_from_base_test_setup, disable_pers
     assert num_of_revs_history == 22, "revision history did not match with revs_limit assigned on sg3"
     num_of_revs_history = sg_client.get_revs_num_in_history(url=sg4.admin.admin_url, db=sg_db, doc_id=sg_doc_ids[0])
     assert num_of_revs_history == 24, "revision history did not match with revs_limit assigned on sg4"
+
 
 
 @pytest.fixture(scope="function")
