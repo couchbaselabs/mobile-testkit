@@ -1104,10 +1104,12 @@ def assert_has_doc(sg_user, doc_id):
 
 def send_dbconfig_as_restCall(cluster_config, db_config_json, sync_gateways, sgw_config_data):
     # convert database config for each sg db and send to rest end point
+
     if not is_admin_auth_disabled(cluster_config):
         auth = HTTPBasicAuth(RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd'])
     for sgw in sync_gateways:
-        sgw.admin.auth = auth
+        if not is_admin_auth_disabled(cluster_config):
+            sgw.admin.auth = auth
         sgw_db_config = db_config_json
         roles_exist = False
         users_exist = False

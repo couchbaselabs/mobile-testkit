@@ -2347,7 +2347,6 @@ def test_combination_of_cpc_and_noncpc(params_from_base_test_setup, persistent_c
     6. Verify _config end point that all 3 nodes of revs_limit are differrent and not shared
     7. Restart the SGW node 2(lithium node)
     8. Verify _config end point that revs_limit is assigned to default value
-
     """
 
     sg_db = 'db'
@@ -2445,7 +2444,6 @@ def test_combination_of_cpc_and_noncpc(params_from_base_test_setup, persistent_c
     assert num_of_revs_history == 22, "revision history did not match with revs_limit assigned on sg3"
     num_of_revs_history = sg_client.get_revs_num_in_history(url=sg4.admin.admin_url, db=sg_db, doc_id=sg_doc_ids[0])
     assert num_of_revs_history == 24, "revision history did not match with revs_limit assigned on sg4"
-
 
 
 @pytest.fixture(scope="function")
