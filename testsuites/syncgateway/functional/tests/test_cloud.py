@@ -4,6 +4,7 @@ import concurrent.futures
 # from requests.exceptions import HTTPError
 
 from keywords.utils import log_info
+from keywords.utils import host_for_url
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.constants import RBAC_FULL_ADMIN
 from keywords.MobileRestClient import MobileRestClient
@@ -16,11 +17,13 @@ from keywords import attachment
 from libraries.testkit.cluster import Cluster
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
 from libraries.testkit.admin import Admin
-from keywords.constants import RBAC_FULL_ADMIN
 from requests.auth import HTTPBasicAuth
 from libraries.testkit.data import Data
 from testsuites.syncgateway.functional.tests.test_attachments import issue_request, verify_response_size
-# from utilities.cluster_config_utils import is_ipv6
+# from utilities.cluster_config_utils import is_ipv6\
+from libraries.testkit.settings import MAX_REQUEST_WORKERS
+from couchbase.bucket import Bucket
+
 
 @pytest.mark.cloud
 @pytest.mark.parametrize("sg_conf_name", [
@@ -133,7 +136,7 @@ def test_bulk_get_compression(params_from_base_test_setup, sg_conf_name, num_doc
 
     doc_body = Data.load("mock_users_20k.json")
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=libraries.testkit.settings.MAX_REQUEST_WORKERS) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_REQUEST_WORKERS) as executor:
         futures = [executor.submit(user.add_doc, doc_id="test-{}".format(i), content=doc_body) for i in range(num_docs)]
         for future in concurrent.futures.as_completed(futures):
             try:
@@ -150,3 +153,73 @@ def test_bulk_get_compression(params_from_base_test_setup, sg_conf_name, num_doc
 
     # Verfiy size matches expected size
     verify_response_size(user_agent, accept_encoding, x_accept_part_encoding, response_size)
+
+
+@pytest.mark.cloud
+def test_importDocs_withSharedBucketAccessFalse(params_from_base_test_setup):
+    """
+    @summary :
+    Test cases link on google drive : https://docs.google.com/spreadsheets/d/19Ai9SsMVrxc6JWVfcXc7y14JHtcYjPd5axBYyPQR0Dc/edit#gid=0
+    Covers #1 and #3 of test cases link in excel sheet with xattrs enabled and disabled
+    1. Start CBS and SGW with only enable_shared_bucket_access=false
+    2. Create docs in CBS
+    3. Verify docs are not imported to SGW as import_docs is set to false by default
+    4. if Xattrs=true i.e if import_docs=true, Verify warn_count incremented on stats
+    """
+
+    sg_db = 'db'
+    num_docs = 10
+    bucket_name = 'data-bucket'
+    sg_conf_name = "sync_gateway_with_shared_bucket_false"
+
+    cluster_conf = params_from_base_test_setup['cluster_config']
+    cluster_topology = params_from_base_test_setup['cluster_topology']
+    mode = params_from_base_test_setup['mode']
+    xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+    sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
+    sg_url = cluster_topology['sync_gateways'][0]['public']
+    cbs_url = cluster_topology['couchbase_servers'][0]
+    sg_client = MobileRestClient()
+
+    cbs_host = host_for_url(cbs_url)
+
+    log_info('sg_conf: {}'.format(sg_conf))
+    log_info('sg_admin_url: {}'.format(sg_admin_url))
+    log_info('sg_url: {}'.format(sg_url))
+    log_info('cbs_url: {}'.format(cbs_url))
+
+    if sync_gateway_version < "2.7.0":
+        pytest.skip('This functionality does not work for the versions below 2.7.0')
+
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+
+    expvars = sg_client.get_expvars(sg_admin_url, auth)
+    initial_warn_count = expvars["syncgateway"]["global"]["resource_utilization"]["warn_count"]
+
+    # 1. Start CBS and SGW with only enable_shared_bucket_access=false
+    cluster = Cluster(config=cluster_conf)
+    # cluster.reset(sg_config_path=sg_conf)
+    if cluster.ipv6:
+        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_host, bucket_name), password='password')
+    else:
+        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_host, bucket_name), password='password')
+    sdk_client.timeout = 600
+
+    # 2. Create docs in CBS via SDK
+    sdk_doc_bodies = document.create_docs('doc_set_two', num_docs, channels=['shared'])
+    log_info('Adding {} docs via SDK ...'.format(num_docs))
+    sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
+    sdk_client.upsert_multi(sdk_docs)
+
+    # 3. Verify docs are not imported to SGW as import_docs is set to false by default
+    all_changes_total = sg_client.get_changes(url=sg_admin_url, db=sg_db, auth=auth, since=0)
+    assert len(all_changes_total["results"]) == 0
+
+    # 4. if Xattrs=true i.e if import_docs=true, Verify warn_count incremented on stats
+    if xattrs_enabled and sync_gateway_version < "3.0.0":
+        expvars = sg_client.get_expvars(sg_admin_url, auth=auth)
+        assert initial_warn_count < expvars["syncgateway"]["global"]["resource_utilization"]["warn_count"], "warn_count did not increment"
