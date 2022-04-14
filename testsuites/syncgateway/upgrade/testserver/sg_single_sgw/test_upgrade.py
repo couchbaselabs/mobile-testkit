@@ -205,9 +205,13 @@ def test_upgrade(params_from_base_test_setup):
     sdk_client.upsert_multi(sdk_docs)
     time.sleep(30)  # to let the docs import from server to sgw
     replicator.wait_until_replicator_idle(repl)
-    doc_ids = db.getDocIds(cbl_db, limit=num_docs + (num_sdk_docs * 2) + 2)
+    limit = num_docs + (num_sdk_docs * 2) + 2
+    print("limit to get docs is ", limit)
+    debug_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db)["rows"]
+    print("docs from sg after sdk docs added ", debug_docs)
+    doc_ids = db.getDocIds(cbl_db, limit=limit)
     added_docs = db.getDocuments(cbl_db, doc_ids)
-    log_info('updating {} docs via cbl '.format(added_docs))
+    log_info('updating {} docs via cbl '.format(doc_ids))
     # 3. Start a thread to keep updating docs on CBL
     terminator_doc_id = 'terminator'
     with ProcessPoolExecutor() as up:
@@ -316,7 +320,8 @@ def test_upgrade(params_from_base_test_setup):
             count1 = 0
             while (count < retry_count) and (count1 < num_sdk_docs):
                 time.sleep(30)  # to let the docs import from server to sgw
-                cbl_doc_ids2 = db.getDocIds(cbl_db2, limit=num_docs + (num_sdk_docs * 4) + 3)
+                limit = num_docs + (num_sdk_docs * 4) + 3
+                cbl_doc_ids2 = db.getDocIds(cbl_db2, limit=limit)
                 count1 = sum('sdk_after_upgrade' in s for s in cbl_doc_ids2)
                 count += 1
             assert count1 == num_sdk_docs, "docs via sdk after upgrade did not replicate to cbl"
