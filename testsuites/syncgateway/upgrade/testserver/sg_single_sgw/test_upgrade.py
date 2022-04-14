@@ -9,12 +9,14 @@ from keywords.SyncGateway import (SyncGateway)
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.MobileRestClient import MobileRestClient
 from keywords import attachment, document
-from utilities.cluster_config_utils import persist_cluster_config_environment_prop, get_cluster
+from utilities.cluster_config_utils import persist_cluster_config_environment_prop, get_cluster, is_admin_auth_disabled
 
 from libraries.testkit.cluster import Cluster
 from CBLClient.Authenticator import Authenticator
 from CBLClient.Document import Document
 from CBLClient.Replication import Replication
+from keywords.constants import RBAC_FULL_ADMIN
+from requests.auth import HTTPBasicAuth
 
 
 def test_upgrade(params_from_base_test_setup):
@@ -124,6 +126,8 @@ def test_upgrade(params_from_base_test_setup):
     if sync_gateway_upgraded_version >= "3.0.0" and server_upgraded_version >= "5.5.0" and disable_admin_auth:
         need_to_redeploy = True
 
+    if not is_admin_auth_disabled(cluster_config):
+            auth = HTTPBasicAuth(RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd'])
     # 1. Create user, session and docs on SG
     sg_client = MobileRestClient()
     cluster = Cluster(config=cluster_config)
@@ -287,7 +291,7 @@ def test_upgrade(params_from_base_test_setup):
             if doc_id in updated_doc_revs:
                 added_docs[doc_id]["numOfUpdates"] = updated_doc_revs[doc_id]
         # 8. Compare rev id, doc body and revision history of all docs on both CBL and SGW
-        verify_sg_docs_revision_history(sg_admin_url, db, cbl_db2, num_docs + num_sdk_docs + 3, sg_db=sg_db, added_docs=added_docs, terminator=terminator_doc_id)
+        verify_sg_docs_revision_history(sg_admin_url, db, cbl_db2, num_docs + num_sdk_docs + 3, sg_db=sg_db, added_docs=added_docs, terminator=terminator_doc_id, auth=auth)
 
         # 9. If xattrs enabled, validate CBS contains _sync records for each doc
         if upgraded_xattrs_enabled:
@@ -304,7 +308,7 @@ def test_upgrade(params_from_base_test_setup):
         sdk_doc_bodies = document.create_docs('sdk_after_upgrade', number=num_sdk_docs, channels=sg_user_channels)
         sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
         sdk_client.upsert_multi(sdk_docs)
-        sg_client.add_docs(url=sg_admin_url, db=sg_db, number=num_sg_docs, id_prefix="sgw_after_upgrade", channels=sg_user_channels)
+        sg_client.add_docs(url=sg_admin_url, db=sg_db, number=num_sg_docs, id_prefix="sgw_after_upgrade", channels=sg_user_channels, auth=auth)
         replicator.wait_until_replicator_idle(repl2)
         if upgraded_xattrs_enabled:
             count = 1
@@ -324,12 +328,12 @@ def test_upgrade(params_from_base_test_setup):
         replicator.stop(repl2)
         replicator.stop(repl)
         if sync_gateway_upgraded_version >= "3.0.0":
-            assert sg_client.compact_attachments(sg_admin_url, sg_db, "status")["status"] == "completed"
+            assert sg_client.compact_attachments(sg_admin_url, sg_db, "status", auth=auth)["status"] == "completed"
             sg_client.compact_attachments(sg_admin_url, sg_db, "start")
             # we need to wait until compaction process is done
-            while sg_client.compact_attachments(sg_admin_url, sg_db, "status")["status"] == "running":
+            while sg_client.compact_attachments(sg_admin_url, sg_db, "status", auth=auth)["status"] == "running":
                 time.sleep(60)
-            att_status = sg_client.compact_attachments(sg_admin_url, sg_db, "status")
+            att_status = sg_client.compact_attachments(sg_admin_url, sg_db, "status", auth=auth)
             log_info(att_status)
             assert att_status["status"] == "completed"
             assert att_status["last_error"] == "", \
@@ -337,9 +341,9 @@ def test_upgrade(params_from_base_test_setup):
             assert att_status["purged_attachments"] > 500
 
 
-def verify_sg_docs_revision_history(url, db, cbl_db2, num_docs, sg_db, added_docs, terminator):
+def verify_sg_docs_revision_history(url, db, cbl_db2, num_docs, sg_db, added_docs, terminator, auth):
     sg_client = MobileRestClient()
-    sg_docs = sg_client.get_all_docs(url=url, db=sg_db, include_docs=True)["rows"]
+    sg_docs = sg_client.get_all_docs(url=url, db=sg_db, include_docs=True, auth=auth)["rows"]
     cbl_doc_ids2 = db.getDocIds(cbl_db2, limit=num_docs)
     cbl_docs2 = db.getDocuments(cbl_db2, cbl_doc_ids2)
     num_sg_docs_in_cbldb2 = 0

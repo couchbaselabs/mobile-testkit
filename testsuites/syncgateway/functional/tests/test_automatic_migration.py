@@ -177,6 +177,7 @@ def test_automatic1_upgrade_with_replication_config(params_from_base_test_setup,
     cluster_conf = params_from_base_test_setup['cluster_config']
     sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
     sync_gateway_previous_version = params_from_base_test_setup['sync_gateway_previous_version']
+    disable_persistent_config = params_from_base_test_setup['disable_persistent_config']
     mode = params_from_base_test_setup['mode']
     sg_obj = SyncGateway()
     sg_conf_name = 'sync_gateway_sg_replicate1_in_sgwconfig'
@@ -188,8 +189,8 @@ def test_automatic1_upgrade_with_replication_config(params_from_base_test_setup,
     remote_db = "remote_db"
 
     # 1. Have prelithium config
-    if sync_gateway_version < "3.0.0":
-        pytest.skip('This test can run with sgw version 3.0 and above')
+    if sync_gateway_version < "3.0.0" or disable_persistent_config:
+        pytest.skip('This test cannot run with sgw version below 3.0 or persistent config disabled')
 
     cbs_cluster = Cluster(config=cluster_conf)
     sg1 = cbs_cluster.sync_gateways[0]
@@ -254,13 +255,14 @@ def test_automatic_migration_with_server_connection_fails(params_from_base_test_
     sg_conf_name = sgw_version_reset["sg_conf_name"]
     sg_obj = sgw_version_reset['sg_obj']
     server = server_restart['server']
+    disable_persistent_config = params_from_base_test_setup['disable_persistent_config']
 
     sg_platform = params_from_base_test_setup['sg_platform']
 
-    # 1. Have prelithium config
-    if sync_gateway_version < "3.0.0":
-        pytest.skip('This test can run with sgw version 3.0 and above')
+    if sync_gateway_version < "3.0.0" or disable_persistent_config:
+        pytest.skip('This test cannot run with sgw version below 3.0 or persistent config disabled')
 
+    # 1. Have prelithium config
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     # 2. Have SGW config with replication config on
@@ -345,11 +347,12 @@ def test_automatic_migration_fails_with_directory_permissions(params_from_base_t
     sg_conf_name = sgw_version_reset["sg_conf_name"]
     ansible_runner = setup_env_variables["ansible_runner"]
     sg_hostname = setup_env_variables["sg_hostname"]
+    disable_persistent_config = params_from_base_test_setup['disable_persistent_config']
+
+    if sync_gateway_version < "3.0.0" or disable_persistent_config:
+        pytest.skip('This test cannot run with sgw version below 3.0 or persistent config disabled')
 
     # 1. Have prelithium config
-    if sync_gateway_version < "3.0.0":
-        pytest.skip('This test can run with sgw version 3.0 and above')
-
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     # 2. Have SGW config with replication config on
