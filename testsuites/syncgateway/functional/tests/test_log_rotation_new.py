@@ -77,7 +77,9 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name, 
         del data['logging'][section]["rotation"]
 
     # Create temp config file in the same folder as sg_conf
-    temp_conf = "/".join(cpc_sg_conf.split('/')[:-2]) + '/temp_conf.json'
+    temp_conf = "/".join(sg_conf.split('/')[:-2]) + '/temp_conf.json'
+    if not disable_persistent_config and sync_gateway_version >= "3.0.0":
+        temp_conf = "/".join(cpc_sg_conf.split('/')[:-2]) + '/temp_conf.json'
 
     log_info("TEMP_CONF: {}".format(temp_conf))
 
