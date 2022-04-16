@@ -187,6 +187,8 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
     sgw_cluster2_conf_name = 'listener_tests/sg_replicate_sgw_cluster2'
     sgw_cluster2_sg_config = sync_gateway_config_path_for_mode(sgw_cluster2_conf_name, mode)
     sgw_cluster2_config_path = "{}/{}".format(os.getcwd(), sgw_cluster2_sg_config)
+    sg1.admin.auth = auth
+    sg3.admin.auth = auth
 
     # 3. Start replications on SGW cluster1 to SGW cluster2. Will have 2 replications. One push replication and one pull replication
 
