@@ -393,7 +393,7 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
                 sgw_cluster1_added_docs[doc_id]["numOfUpdates"] = updated_doc_revs[doc_id]
 
         # 8. Compare rev id, doc body and revision history of all docs on both CBL and SGW
-        verify_sg_docs_revision_history(sg1.admin.admin_url, sg_db=sg_db1, added_docs=sgw_cluster1_added_docs, terminator=terminator1_doc_id, auth)
+        verify_sg_docs_revision_history(sg1.admin.admin_url, sg_db=sg_db1, added_docs=sgw_cluster1_added_docs, terminator=terminator1_doc_id, auth=auth)
 
         # 9. If xattrs enabled, validate CBS contains _sync records for each doc
         if upgraded_xattrs_enabled:

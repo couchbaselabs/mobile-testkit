@@ -109,7 +109,7 @@ def test_automatic_upgrade(params_from_base_test_setup, sgw_version_reset):
 
     # 1. Have prelithium config
     # 2. Have configs required for database on prelithium config
-    if sync_gateway_version < "3.0.0" and is_centralized_persistent_config_disabled(cluster_conf):
+    if sync_gateway_version < "3.0.0" and not is_centralized_persistent_config_disabled(cluster_conf):
         pytest.skip('This test can run with sgw version 3.0 and with persistent config off')
     # 1. Have 3 SGW nodes: 1 node as pre-lithium and 2 nodes on lithium
 

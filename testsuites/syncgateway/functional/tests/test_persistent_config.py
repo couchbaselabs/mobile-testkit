@@ -49,7 +49,7 @@ def test_default_config_values(params_from_base_test_setup):
 
     # 1. Have prelithium config
     # 2. Have configs required fo database on prelithium config
-    if sync_gateway_version < "3.0.0" and not is_centralized_persistent_config_disabled(cluster_conf):
+    if sync_gateway_version < "3.0.0" and is_centralized_persistent_config_disabled(cluster_conf):
         pytest.skip('This test can run with sgw version 3.0 and above')
     # 1. Have 3 SGW nodes: 1 node as pre-lithium and 2 nodes on lithium
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
@@ -129,7 +129,7 @@ def test_invalid_configs(params_from_base_test_setup, sg_conf_name):
     # 2. Have configs required fo database on prelithium config
     # temp_cluster_config = copy_to_temp_conf(cluster_conf, mode)
     # persist_cluster_config_environment_prop(temp_cluster_config, 'disable_persistent_config', False)
-    if sync_gateway_version < "3.0.0" and not is_centralized_persistent_config_disabled(cluster_conf):
+    if sync_gateway_version < "3.0.0" and is_centralized_persistent_config_disabled(cluster_conf):
         pytest.skip('This test can run with sgw version 3.0 and with persistent config off')
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode, cpc=True)
@@ -191,7 +191,7 @@ def test_sgw_command_line(params_from_base_test_setup):
     persist_cluster_config_environment_prop(temp_cluster_config, 'disable_persistent_config', False)
 
     # 1. Set up sgw node in the SGW cluster
-    if sync_gateway_version < "3.0.0" or not is_centralized_persistent_config_disabled(cluster_conf):
+    if sync_gateway_version < "3.0.0" or is_centralized_persistent_config_disabled(cluster_conf):
         pytest.skip('This test can run with sgw version 3.0 and above')
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode, cpc=True)
 
@@ -305,7 +305,7 @@ def test_default_named_group(params_from_base_test_setup, group_type):
     disable_persistent_config = params_from_base_test_setup['disable_persistent_config']
     sg_ce = params_from_base_test_setup['sg_ce']
 
-    if sync_gateway_version < "3.0.0" and not disable_persistent_config:
+    if sync_gateway_version < "3.0.0" and disable_persistent_config:
         pytest.skip('This test can run with sgw version 3.0 and above')
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     cpc_sg_conf = sync_gateway_config_path_for_mode(sg_cpc_conf_name, mode, cpc=True)
@@ -358,7 +358,7 @@ def test_db_config_with_guest_user(params_from_base_test_setup):
     need_sgw_admin_auth = params_from_base_test_setup['need_sgw_admin_auth']
 
     # 1. Set up SGw with bootstrap config with server url
-    if sync_gateway_version < "3.0.0" and not is_centralized_persistent_config_disabled(cluster_conf):
+    if sync_gateway_version < "3.0.0" and is_centralized_persistent_config_disabled(cluster_conf):
         pytest.skip('This test can run with sgw version 3.0 and above')
     # 1. Have 3 SGW nodes: 1 node as pre-lithium and 2 nodes on lithium
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)

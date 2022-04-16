@@ -184,7 +184,7 @@ def test_invalid_logKeys_string(params_from_base_test_setup, sg_conf_name):
         # read sample sg_conf
         sg_one_url = cluster_hosts["sync_gateways"][0]["public"]
 
-        data = (sg_conf, cluster_hosts["couchbase_servers"][0], cluster_conf)
+        data = load_sync_gateway_config(sg_conf, cluster_hosts["couchbase_servers"][0], cluster_conf)
 
         # set logKeys as string in config file
         data['logging']["console"]["log_keys"] = "ABCD"

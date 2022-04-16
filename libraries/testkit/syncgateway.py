@@ -327,7 +327,7 @@ class SyncGateway:
                     playbook_vars["autoimport"] = '"import_docs": true,'
                 else:
                     playbook_vars["autoimport"] = '"import_docs": "continuous",'
-            playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
+                playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
 
             if no_conflicts_enabled(cluster_config):
                 playbook_vars["no_conflicts"] = '"allow_conflicts": false,'
