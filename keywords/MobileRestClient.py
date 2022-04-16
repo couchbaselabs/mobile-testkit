@@ -23,6 +23,7 @@ from keywords.utils import log_r
 from keywords.utils import log_info
 from keywords.utils import log_debug
 from keywords.SyncGateway import validate_sync_gateway_mode
+from keywords.constants import RBAC_FULL_ADMIN
 
 from keywords.exceptions import RestError, TimeoutException, LiteServError, ChangesError
 from keywords import types
@@ -74,9 +75,11 @@ def get_auth_type(auth):
         auth_type = AuthType.session
     else:
         auth_type = AuthType.http_basic
+        if isinstance(auth, tuple) and auth[0] == RBAC_FULL_ADMIN['user']:
+            auth = HTTPBasicAuth(auth[0], auth[1])
 
     logging.debug("Using auth type: {}".format(auth_type))
-    return auth_type
+    return auth_type, auth
 
 
 class MyEncoder(json.JSONEncoder):
@@ -548,7 +551,7 @@ class MobileRestClient:
         GET /{db}/{doc}/{attachment}?meta=true
         Get the attachment meta data for tracking
         """
-        auth_type = get_auth_type(auth)
+        auth_type, auth = get_auth_type(auth)
 
         if attachment:
             if auth_type == AuthType.session:
@@ -746,7 +749,7 @@ class MobileRestClient:
         # Returns multipart by default, specify json for cleaner code
         headers = {"Accept": "application/json"}
 
-        auth_type = get_auth_type(auth)
+        auth_type, auth = get_auth_type(auth)
 
         params = {"open_revs": "all"}
 
@@ -772,7 +775,7 @@ class MobileRestClient:
         # Returns multipart by default, specify json for cleaner code
         headers = {"Accept": "application/json"}
 
-        auth_type = get_auth_type(auth)
+        auth_type, auth = get_auth_type(auth)
 
         params = {"open_revs": "all"}
 
@@ -801,7 +804,7 @@ class MobileRestClient:
         # Returns multipart by default, specify json for cleaner code
         headers = {"Accept": "application/json"}
 
-        auth_type = get_auth_type(auth)
+        auth_type, auth = get_auth_type(auth)
 
         params = {"open_revs": "all"}
 
@@ -856,7 +859,7 @@ class MobileRestClient:
         },
         """
 
-        auth_type = get_auth_type(auth)
+        auth_type, auth = get_auth_type(auth)
 
         params = {
             "conflicts": "true",
@@ -912,7 +915,7 @@ class MobileRestClient:
         """
 
         logging.info(auth)
-        auth_type = get_auth_type(auth)
+        auth_type, auth = get_auth_type(auth)
 
         doc["updates"] = 0
 
@@ -951,7 +954,7 @@ class MobileRestClient:
 
         headers = {"Accept": "*/*"}
 
-        auth_type = get_auth_type(auth)
+        auth_type, auth = get_auth_type(auth)
 
         if auth_type == AuthType.session:
             resp = self._session.get("{}/{}/{}/{}".format(url, db, doc_id, attachment_name), headers=headers, cookies=dict(SyncGatewaySession=auth[1]))
@@ -996,7 +999,7 @@ class MobileRestClient:
         else:
             raise TypeError("Add Conflict expects a list or str for parent_revisions")
 
-        auth_type = get_auth_type(auth)
+        auth_type, auth = get_auth_type(auth)
 
         logging.info("PARENT: {}".format(parent_revs))
         logging.info("NEW: {}".format(new_revision))
@@ -1099,7 +1102,7 @@ class MobileRestClient:
         Removes a document with the specfied revision
         """
 
-        auth_type = get_auth_type(auth)
+        auth_type, auth = get_auth_type(auth)
 
         params = {}
         if rev is not None:
@@ -1122,7 +1125,7 @@ class MobileRestClient:
 
     def verify_docs_deleted(self, url, db, docs, auth=None, reason="deleted"):
 
-        auth_type = get_auth_type(auth)
+        auth_type, auth = get_auth_type(auth)
         server_type = self.get_server_type(url)
         server_platform = self.get_server_platform(url)
 
@@ -1280,7 +1283,7 @@ class MobileRestClient:
         Updates a doc with doc id, a given revision, and doc body
         """
 
-        auth_type = get_auth_type(auth)
+        auth_type, auth = get_auth_type(auth)
 
         params = {
             "rev": rev
@@ -1306,7 +1309,7 @@ class MobileRestClient:
             3. PUTS the doc
         """
 
-        auth_type = get_auth_type(auth)
+        auth_type, auth = get_auth_type(auth)
         if doc is None:
             doc = self.get_doc(url, db, doc_id, auth)
 
@@ -1382,7 +1385,7 @@ class MobileRestClient:
             3. PUTS the doc
         """
 
-        auth_type = get_auth_type(auth)
+        auth_type, auth = get_auth_type(auth)
         if doc is None:
             doc = self.get_doc(url, db, doc_id, auth)
 
@@ -1463,7 +1466,7 @@ class MobileRestClient:
         Keyword that issues POST _bulk docs with the specified 'docs'.
         Use the Document.create_docs() to create the docs.
         """
-        auth_type = get_auth_type(auth)
+        auth_type, auth = get_auth_type(auth)
         server_type = self.get_server_type(url, auth)
 
         # transform 'docs' into a format expected by _bulk_docs
@@ -1496,7 +1499,7 @@ class MobileRestClient:
         Issues a bulk delete by setting the _deleted flag to true.
         This will create a tombstone.
         """
-        auth_type = get_auth_type(auth)
+        auth_type, auth = get_auth_type(auth)
         server_type = self.get_server_type(url, auth)
 
         for doc in docs:
@@ -1530,8 +1533,7 @@ class MobileRestClient:
     def get_all_docs(self, url, db, auth=None, include_docs=False):
         """ Get all docs for a database via _all_docs """
 
-        auth_type = get_auth_type(auth)
-
+        auth_type, auth = get_auth_type(auth)
         params = {}
         if include_docs:
             params["include_docs"] = "true"
@@ -1566,7 +1568,7 @@ class MobileRestClient:
         # ]
         doc_ids_formatted = [{"id": doc_id} for doc_id in doc_ids]
         request_body = {"docs": doc_ids_formatted}
-        auth_type = get_auth_type(auth)
+        auth_type, auth = get_auth_type(auth)
 
         if auth_type == AuthType.session:
             resp = self._session.post("{}/{}/_bulk_get?revs={}".format(url, db, rev_history), data=json.dumps(request_body), cookies=dict(SyncGatewaySession=auth[1]))
@@ -1851,7 +1853,7 @@ class MobileRestClient:
         a list of {id: {rev: ""}}. If the expected docs are a list, they will be converted to a single map.
         """
 
-        auth_type = get_auth_type(auth)
+        auth_type, auth = get_auth_type(auth)
         server_type = self.get_server_type(url, auth)
 
         logging.debug(expected_docs)
@@ -1976,7 +1978,7 @@ class MobileRestClient:
         """
         Issues a continuous changes feed request and returns the stream
         """
-        auth_type = get_auth_type(auth)
+        auth_type, auth = get_auth_type(auth)
         body = {
             "feed": "continuous",
             "since": since
@@ -2018,7 +2020,7 @@ class MobileRestClient:
         # Convert to ms for the sync_gateway REST api
         timeout *= 1000
 
-        auth_type = get_auth_type(auth)
+        auth_type, auth = get_auth_type(auth)
         server_type = self.get_server_type(url, auth)
 
         if server_type == ServerType.listener:
@@ -2277,7 +2279,7 @@ class MobileRestClient:
         Keyword that returns a view query for a design doc with a view name
         """
 
-        auth_type = get_auth_type(auth)
+        auth_type, auth = get_auth_type(auth)
         server_type = self.get_server_type(url, auth)
 
         url = "{}/{}/_design/{}/_view/{}".format(url, db, design_doc_name, view_name)
@@ -2452,7 +2454,7 @@ class MobileRestClient:
 
     def get_changes_style_all_docs(self, url, db, auth=None, include_docs=False):
         """ Get all changes with include docs enabled and style all_docs """
-        auth_type = get_auth_type(auth)
+        auth_type, auth = get_auth_type(auth)
 
         params = {}
         if include_docs:

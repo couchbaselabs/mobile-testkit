@@ -49,8 +49,8 @@ def test_default_config_values(params_from_base_test_setup):
 
     # 1. Have prelithium config
     # 2. Have configs required fo database on prelithium config
-    if sync_gateway_version < "3.0.0" and is_centralized_persistent_config_disabled(cluster_conf):
-        pytest.skip('This test can run with sgw version 3.0 and above')
+    if sync_gateway_version < "3.0.0" or is_centralized_persistent_config_disabled(cluster_conf):
+        pytest.skip('This test cannot run with sgw version 3.0 and above')
     # 1. Have 3 SGW nodes: 1 node as pre-lithium and 2 nodes on lithium
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 

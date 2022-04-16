@@ -18,7 +18,7 @@ from keywords.SyncGateway import sync_gateway_config_path_for_mode, setup_sgrepl
 # from utilities.cluster_config_utils import load_cluster_config_json, get_cluster, is_centralized_persistent_config_disabled, get_sg_version
 from utilities.cluster_config_utils import load_cluster_config_json, get_cluster, is_admin_auth_disabled
 from keywords.constants import RBAC_FULL_ADMIN
-from requests.auth import HTTPBasicAuth
+# from requests.auth import HTTPBasicAuth
 
 
 def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
@@ -157,8 +157,9 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
     sgw_cluster1 = []
     sgw_cluster2 = []
 
+    auth = None
     if not is_admin_auth_disabled(cluster_config):
-        auth = HTTPBasicAuth(RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd'])
+        auth = (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd'])
 
     # 1. Create user, session and docs on SG
     sg_client = MobileRestClient()
