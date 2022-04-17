@@ -69,7 +69,7 @@ def parse_multipart_response(response):
 def get_auth_type(auth):
 
     if auth is None:
-        return AuthType.none
+        return AuthType.none, auth
 
     if isinstance(auth, tuple) and auth[0] == "SyncGatewaySession":
         auth_type = AuthType.session
