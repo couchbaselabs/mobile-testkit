@@ -59,7 +59,7 @@ def test_rebalance_sanity(params_from_base_test_setup):
     log_info("sg_url: {}".format(sg_one_url))
     log_info("cbs_one_url: {}".format(cbs_one_url))
     log_info("cbs_two_url: {}".format(cbs_two_url))
-    assert False, "interntional fail"
+    # assert False, "interntional fail"
 
     sg_db = "db"
     num_docs = 100
