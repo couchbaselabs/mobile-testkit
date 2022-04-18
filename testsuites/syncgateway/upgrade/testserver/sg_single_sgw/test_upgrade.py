@@ -126,6 +126,7 @@ def test_upgrade(params_from_base_test_setup):
     if sync_gateway_upgraded_version >= "3.0.0" and server_upgraded_version >= "5.5.0" and disable_admin_auth:
         need_to_redeploy = True
 
+    auth = None
     if not is_admin_auth_disabled(cluster_config):
             auth = HTTPBasicAuth(RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd'])
     # 1. Create user, session and docs on SG
