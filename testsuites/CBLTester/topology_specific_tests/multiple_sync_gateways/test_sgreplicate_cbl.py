@@ -2330,7 +2330,7 @@ def test_sg_replicate_doc_resurrection(params_from_base_test_setup, setup_custom
 
 
 @pytest.mark.syncgateway
-@pytest.mark.parametrize("disable_persistent_config", [
+@pytest.mark.parametrize("persistent_config_disable", [
     (True),
     (False)
 ])
