@@ -32,6 +32,7 @@ def test_bucket_online_offline_resync_sanity(params_from_base_test_setup, sg_con
     test_mode = params_from_base_test_setup["mode"]
     sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
     need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
+    disable_persistent_config = params_from_base_test_setup['disable_persistent_config']
 
     if test_mode == "di":
         pytest.skip("Unsupported feature in distributed index")
@@ -129,7 +130,7 @@ def test_bucket_online_offline_resync_sanity(params_from_base_test_setup, sg_con
 
     sg_restart_config = sync_gateway_config_path_for_mode("bucket_online_offline/db_online_offline_access_restricted", test_mode)
 
-    if sync_gateway_version < "3.0.0":
+    if sync_gateway_version < "3.0.0" or disable_persistent_config:
         status = sg_client.take_db_offline(cluster_conf=cluster_conf, db="db")
         assert status == 0
         restart_status = cluster.sync_gateways[0].restart(sg_restart_config,
@@ -211,6 +212,7 @@ def test_bucket_online_offline_resync_with_online(params_from_base_test_setup, s
     test_mode = params_from_base_test_setup["mode"]
     sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
     need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
+    disable_persistent_config = params_from_base_test_setup['disable_persistent_config']
 
     if test_mode == "di":
         pytest.skip("Unsupported feature in distributed index")
@@ -300,7 +302,7 @@ def test_bucket_online_offline_resync_with_online(params_from_base_test_setup, s
     # Take "db" offline
     sg_client = MobileRestClient()
     sg_restart_config = sync_gateway_config_path_for_mode("bucket_online_offline/db_online_offline_access_restricted", test_mode)
-    if sync_gateway_version < "3.0.0":
+    if sync_gateway_version < "3.0.0" or disable_persistent_config:
         status = sg_client.take_db_offline(cluster_conf=cluster_conf, db="db")
         assert status == 0
         restart_status = cluster.sync_gateways[0].restart(sg_restart_config,
@@ -409,6 +411,7 @@ def test_bucket_online_offline_resync_with_offline(params_from_base_test_setup, 
     test_mode = params_from_base_test_setup["mode"]
     sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
     need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
+    disable_persistent_config = params_from_base_test_setup['disable_persistent_config']
 
     if test_mode == "di":
         pytest.skip("Unsupported feature in distributed index")
@@ -498,7 +501,7 @@ def test_bucket_online_offline_resync_with_offline(params_from_base_test_setup, 
     sg_client = MobileRestClient()
     sg_restart_config = sync_gateway_config_path_for_mode("bucket_online_offline/db_online_offline_access_restricted", test_mode)
 
-    if sync_gateway_version < "3.0.0":
+    if sync_gateway_version < "3.0.0" or disable_persistent_config:
         status = sg_client.take_db_offline(cluster_conf=cluster_conf, db="db")
         assert status == 0
         restart_status = cluster.sync_gateways[0].restart(sg_restart_config,

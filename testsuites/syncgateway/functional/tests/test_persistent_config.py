@@ -243,6 +243,11 @@ def test_invalid_database_credentials(params_from_base_test_setup):
     cluster_conf = params_from_base_test_setup['cluster_config']
     mode = params_from_base_test_setup['mode']
     sg_platform = params_from_base_test_setup['sg_platform']
+    disable_persistent_config = params_from_base_test_setup['disable_persistent_config']
+    sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
+
+    if sync_gateway_version < "3.0.0" or disable_persistent_config:
+        pytest.skip('This test can run with sgw version 3.0 and above or disable persistent config')
 
     # 1. Have bootstrap config on sgw config which has server, username, password of the bucket
     # TODO: remove below 3 lines after persistent config is default to false
@@ -305,8 +310,8 @@ def test_default_named_group(params_from_base_test_setup, group_type):
     disable_persistent_config = params_from_base_test_setup['disable_persistent_config']
     sg_ce = params_from_base_test_setup['sg_ce']
 
-    if sync_gateway_version < "3.0.0" and disable_persistent_config:
-        pytest.skip('This test can run with sgw version 3.0 and above')
+    if sync_gateway_version < "3.0.0" or disable_persistent_config:
+        pytest.skip('This test can run with sgw version 3.0 and above or disable persistent config')
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     cpc_sg_conf = sync_gateway_config_path_for_mode(sg_cpc_conf_name, mode, cpc=True)
     sg_obj = SyncGateway()

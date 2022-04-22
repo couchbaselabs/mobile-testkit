@@ -201,8 +201,7 @@ def test_invalid_jsfunc(params_from_base_test_setup, invalid_js_code, invalid_js
         if not disable_persistent_config:
             assert "400 Client Error: Bad Request for url" in str(ex), "Sync gateway did not fail with invalid js sync function"
         else:
-            assert "400 Client Error: Bad Request for url" in str(ex), "DB creation did not fail with invalid external js path"
-        # assert "Failed to start to Sync Gateway" in str(ex), "Sync gateway did not fail with invalid js sync function"
+            assert "Failed to start to Sync Gateway" in str(ex), "Sync gateway did not fail with invalid js sync function"
 
     cluster.reset(sg_config_path=sg_conf_reset)
 
@@ -267,6 +266,7 @@ def test_envVariables_usrpassword_on_sgw_config(params_from_base_test_setup, set
     # cluster = setup_env_variables["cluster"]
     ansible_runner = setup_env_variables["ansible_runner"]
     sg_hostname = setup_env_variables["sg_hostname"]
+    disable_persistent_config = params_from_base_test_setup["disable_persistent_config"]
     # xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
 
     if sync_gateway_version < "3.0.0":
@@ -275,6 +275,8 @@ def test_envVariables_usrpassword_on_sgw_config(params_from_base_test_setup, set
     sg_conf_name = "sync_gateway_default"
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     cpc_sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode, cpc=True)
+    if disable_persistent_config:
+        cpc_sg_conf = sg_conf
     cluster_helper = ClusterKeywords(cluster_config)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config)
     # sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
