@@ -2569,30 +2569,31 @@ class MobileRestClient:
         return resp.status_code
 
     def compact_attachments(self, url, db, action, auth=None):
+        _, auth = get_auth_type(auth)
         if action == "status":
             if auth:
-                resp = self._session.get("{}/{}/_compact?type=attachment".format(url, db), auth=HTTPBasicAuth(auth[0], auth[1]))
+                resp = self._session.get("{}/{}/_compact?type=attachment".format(url, db), auth=auth)
             else:
                 resp = self._session.get("{}/{}/_compact?type=attachment".format(url, db))
             resp_obj = resp.json()
             return resp_obj
         elif action == "start":
             if auth:
-                resp = self._session.post("{}/{}/_compact?type=attachment&action=start".format(url, db), auth=HTTPBasicAuth(auth[0], auth[1]))
+                resp = self._session.post("{}/{}/_compact?type=attachment&action=start".format(url, db), auth=auth)
             else:
                 resp = self._session.post("{}/{}/_compact?type=attachment&action=start".format(url, db))
             resp_obj = resp.json()
             return resp_obj
         elif action == "progress":
             if auth:
-                resp = self._session.post("{}/{}/_compact?type=attachment".format(url, db), auth=HTTPBasicAuth(auth[0], auth[1]))
+                resp = self._session.post("{}/{}/_compact?type=attachment".format(url, db), auth=auth)
             else:
                 resp = self._session.post("{}/{}/_compact?type=attachment".format(url, db))
             resp_obj = resp.json()
             return resp_obj
         elif action == "stop":
             if auth:
-                resp = self._session.post("{}/{}/_compact?type=attachment&action=stop".format(url, db), auth=HTTPBasicAuth(auth[0], auth[1]))
+                resp = self._session.post("{}/{}/_compact?type=attachment&action=stop".format(url, db), auth=auth)
             else:
                 resp = self._session.post("{}/{}/_compact?type=attachment&action=stop".format(url, db))
             resp_obj = resp.json()

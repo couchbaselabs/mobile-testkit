@@ -318,7 +318,7 @@ def test_upgrade(params_from_base_test_setup):
         replicator.wait_until_replicator_idle(repl2)
         if upgraded_xattrs_enabled:
             count = 1
-            retry_count = 10
+            retry_count = 20
             count1 = 0
             while (count < retry_count) and (count1 < num_sdk_docs):
                 time.sleep(30)  # to let the docs import from server to sgw
