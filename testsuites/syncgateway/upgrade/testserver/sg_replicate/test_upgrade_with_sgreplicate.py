@@ -434,7 +434,7 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
         time.sleep(30)
         sg_cluster2_docs = sg_client.get_all_docs(url=sg3.admin.admin_url, db=sg_db2, include_docs=True, auth=auth)["rows"]
         sg_cluster2_ids = [doc["id"] for doc in sg_cluster2_docs]
-        cluster1_num_docs = sum(sgw_cluster1_replication1_ch1 in sg_cluster2_ids)
+        cluster1_num_docs = sum(sgw_cluster1_replication1_ch1 in sg_id for sg_id in sg_cluster2_ids)
         count += 1
         if cluster1_num_docs > num_docs:
             break
