@@ -18,7 +18,7 @@ SSH_USERNAME = 'root'
 SSH_PASSWORD = 'couchbase'
 SSH_POLL_INTERVAL = 20
 
-timeout_options = ClusterTimeoutOptions(kv_timeout=timedelta(seconds=5), query_timeout=timedelta(seconds=10))
+timeout_options = ClusterTimeoutOptions(kv_timeout=timedelta(seconds=60), query_timeout=timedelta(seconds=60),config_total_timeout(seconds=60))
 options = ClusterOptions(PasswordAuthenticator(USERNAME, PASSWORD), timeout_options=timeout_options)
 cluster = Cluster('couchbase://{}'.format(SERVER_IP), options)
 sdk_client = cluster.bucket(BUCKET_NAME)
