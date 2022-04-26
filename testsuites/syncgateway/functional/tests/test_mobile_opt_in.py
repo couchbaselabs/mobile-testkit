@@ -272,6 +272,7 @@ def test_non_mobile_ignore_count(params_from_base_test_setup, sg_conf_name):
     sg_platform = params_from_base_test_setup['sg_platform']
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
+    disable_persistent_config = params_from_base_test_setup["disable_persistent_config"]
 
     # This test should only run when using xattr meta storage
     if xattrs_enabled or sync_gateway_version < "3.0":
@@ -288,7 +289,7 @@ def test_non_mobile_ignore_count(params_from_base_test_setup, sg_conf_name):
     log_info('cbs_url: {}'.format(cbs_url))
 
     cluster = Cluster(config=cluster_config)
-    cluster.reset(sg_config_path=sg_config)
+    cluster.reset(sg_config_path=sg_config, use_config=True)
     buckets = get_buckets_from_sync_gateway_config(sg_config, cluster_config)
     bucket_name = buckets[0]
 
@@ -391,8 +392,8 @@ def test_non_mobile_ignore_count(params_from_base_test_setup, sg_conf_name):
     assert non_mobile_ignore_count == 2, "non_mobile_ignore_count did not get expected count"
 
     # 6. Restart SGW , Verify “non_mobile_ignored_count” is 0
-    status = cluster.sync_gateways[0].restart(config=sg_config, cluster_config=cluster_config)
-    assert status == 0, "Syncgateway did not start after adding revs_limit  with no conflicts mode "
+    status = cluster.sync_gateways[0].restart(config=sg_config, cluster_config=cluster_config, use_config=True)
+    assert status == 0, "Syncgateway did not restart "
 
     if "macos" in sg_platform:
         stdout = subprocess.check_output(command, shell=True)
@@ -427,4 +428,7 @@ def test_non_mobile_ignore_count(params_from_base_test_setup, sg_conf_name):
     assert non_mobile_ignore_count == 1, "non_mobile_ignore_count did not get expected count"
 
     # 8. Verify warn_count is 0
-    assert sg_expvars["syncgateway"]["global"]["resource_utilization"]["warn_count"] == warn_count, "warn_count is not 0"
+    if disable_persistent_config:
+        assert sg_expvars["syncgateway"]["global"]["resource_utilization"]["warn_count"] == warn_count, "warn_count did not increment"
+    else:
+        assert sg_expvars["syncgateway"]["global"]["resource_utilization"]["warn_count"] == warn_count + 1, "warn_count did not match"

@@ -224,13 +224,13 @@ class SyncGateway:
                 send_dbconfig_as_restCall(self.cluster_config, db_config_json, sgw_list, sgw_config_data)
         return status
 
-    def restart(self, config, cluster_config=None):
+    def restart(self, config, cluster_config=None, use_config=False):
 
         if cluster_config is None:
             cluster_config = self.cluster_config
         # c_cluster = cluster.Cluster(self.cluster_config)
         if get_sg_version(cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config):
-            playbook_vars, db_config_json, sgw_config_data = setup_sgwconfig_db_config(cluster_config, config)
+            playbook_vars, db_config_json, sgw_config_data = setup_sgwconfig_db_config(cluster_config, config, use_config=use_config)
         else:
             conf_path = os.path.abspath(config)
             log.info(">>> Restarting sync_gateway with configuration: {}".format(conf_path))
@@ -722,7 +722,7 @@ class SyncGateway:
         return "SyncGateway: {}:{}\n".format(self.hostname, self.ip)
 
 
-def setup_sgwconfig_db_config(cluster_config, sg_config_path):
+def setup_sgwconfig_db_config(cluster_config, sg_config_path, use_config=False):
     # Parse config and grab bucket names
     ansible_runner = AnsibleRunner(cluster_config)
     config_path_full = os.path.abspath(sg_config_path)
@@ -733,8 +733,15 @@ def setup_sgwconfig_db_config(cluster_config, sg_config_path):
     sg_conf_name = "sync_gateway_default"
     mode = "cc"
     # cannot import at file level due to conflicts, this is needed just for this method
-    from keywords.SyncGateway import sync_gateway_config_path_for_mode
+    from keywords.SyncGateway import sync_gateway_config_path_for_mode, get_cpc_config_from_config_path
     cpc_sgw_config_path = sync_gateway_config_path_for_mode(sg_conf_name, mode, cpc=True)
+    if use_config:
+        if use_config is True:
+            cpc_sgw_config_path = get_cpc_config_from_config_path(sg_config_path, mode)
+            sg_config_path = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+        else:
+            cpc_sgw_config_path = sg_config_path
+            sg_config_path = use_config
     cpc_config_path_full = os.path.abspath(cpc_sgw_config_path)
 
     log_info(">>> Starting sync_gateway with configuration: {}".format(cpc_config_path_full))
@@ -743,7 +750,7 @@ def setup_sgwconfig_db_config(cluster_config, sg_config_path):
         sgw_config_data = config.read()
 
     server_port_var = 8091
-    server_scheme_var = "http"
+    server_scheme_var = "couchbase"
     couchbase_server_primary_node = add_cbs_to_sg_config_server_field(cluster_config)
     if is_cbs_ssl_enabled(cluster_config):
         server_port_var = ""
@@ -765,13 +772,12 @@ def setup_sgwconfig_db_config(cluster_config, sg_config_path):
     certpath_var = ""
     keypath_var = ""
     cacertpath_var = ""
-    server_scheme_var = ""
     server_port_var = ""
     username_var = ""
     sg_use_views_var = ""
     num_index_replicas_var = ""
-    autoimport_var = ""
-    xattrs_var = ""
+    autoimport_var = '"import_docs": false,'
+    xattrs_var = '"enable_shared_bucket_access": false,'
     no_conflicts_var = ""
     revs_limit_var = ""
     delta_sync_var = ""

@@ -441,8 +441,8 @@ class Cluster:
         username_var = ""
         sg_use_views_var = ""
         num_index_replicas_var = ""
-        autoimport_var = ""
-        xattrs_var = ""
+        autoimport_var = '"import_docs": false,'
+        xattrs_var = '"enable_shared_bucket_access": false,'
         no_conflicts_var = ""
         revs_limit_var = ""
         delta_sync_var = ""
