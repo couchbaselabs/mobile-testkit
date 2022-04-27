@@ -14,7 +14,7 @@ from keywords.ClusterKeywords import ClusterKeywords
 # from libraries.testkit.prometheus import verify_stat_on_prometheus
 # from libraries.testkit.syncgateway import start_sgbinary, get_buckets_from_sync_gateway_config
 # from libraries.testkit.syncgateway import start_sgbinary
-from utilities.cluster_config_utils import persist_cluster_config_environment_prop
+# from utilities.cluster_config_utils import persist_cluster_config_environment_prop
 from libraries.testkit.syncgateway import construct_dbconfig_json
 # from CBLClient.Replication import Replication
 # from CBLClient.Authenticator import Authenticator
@@ -77,8 +77,8 @@ def test_default_config_values(params_from_base_test_setup):
     assert sg1_config["api"]["admin_interface"] == "0.0.0.0:4985", "admin interface did not match with sgw config"
     assert sg1_config["api"]["metrics_interface"] == ":4986", "metrics interface did not match with sgw config"
     if need_sgw_admin_auth:
-        assert not sg1_config["api"]["admin_interface_authentication"], "admin_interface_authentication did not match with sgw config"
-        assert not sg1_config["api"]["metrics_interface_authentication"], "metrics_interface_authentication did not match with sgw config"
+        assert sg1_config["api"]["admin_interface"] == "0.0.0.0:4985", "admin_interface did not match with sgw config"
+        assert sg1_config["api"]["metrics_interface"] == ":4986", "metrics_interface did not match with sgw config"
     assert sg1_config["api"]["https"] == {}, "https with default value is not set"
     assert sg1_config["api"]["cors"] == {}, "cors with default value is not set"
 
@@ -176,11 +176,13 @@ def test_sgw_command_line(params_from_base_test_setup):
     """
 
     # sg_db = 'db'
-    sg_conf_name = "sync_gateway_default_bootstrap"
+    sg_conf_name = "sync_gateway_default"
 
     cluster_conf = params_from_base_test_setup['cluster_config']
     sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
     mode = params_from_base_test_setup['mode']
+    # ssl_enabled = params_from_base_test_setup['ssl_enabled']
+    need_sgw_admin_auth = params_from_base_test_setup['need_sgw_admin_auth']
     # sg_platform = params_from_base_test_setup['sg_platform']
     """ username = "autotest"
     password = "password"
@@ -188,12 +190,11 @@ def test_sgw_command_line(params_from_base_test_setup):
 
     temp_cluster_config = copy_to_temp_conf(cluster_conf, mode)
     # 2. Have default_persistent_config value on SGW nodes
-    persist_cluster_config_environment_prop(temp_cluster_config, 'disable_persistent_config', False)
 
     # 1. Set up sgw node in the SGW cluster
     if sync_gateway_version < "3.0.0" or is_centralized_persistent_config_disabled(cluster_conf):
         pytest.skip('This test can run with sgw version 3.0 and above')
-    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode, cpc=True)
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     # sg_client = MobileRestClient()
     sg_obj = SyncGateway()
@@ -209,7 +210,7 @@ def test_sgw_command_line(params_from_base_test_setup):
     # 4.Start sgw node by passing command line params by passing server, bucket info
     sg1 = cbs_cluster.sync_gateways[0]
     sg_obj.stop_sync_gateways(temp_cluster_config)
-    sg_obj.redeploy_sync_gateway_config(temp_cluster_config, sg_conf, url=None, sync_gateway_version=sync_gateway_version, enable_import=True, deploy_only=True)
+    sg_obj.redeploy_sync_gateway_config(temp_cluster_config, sg_conf, url=None, sync_gateway_version=sync_gateway_version, enable_import=True)
     count = 0
     retry = 5
     errors = 1
@@ -217,11 +218,31 @@ def test_sgw_command_line(params_from_base_test_setup):
         errors = cbs_cluster.verify_alive()
         time.sleep(2)
         count += 1
-
+    debug_dict = {"enabled": True, "rotation": {}}
+    # cbs_url = cbs_cluster.servers[0]
     sg1_config = sg1.admin.get_config()
-    assert sg1_config["logging"] is None, "logging did not get reset"
-    # 4. Verify default values of static config
-    # 4. Add dynamic config like log_file_path or redaction_level on sgw config
+    assert not sg1_config["logging"]["console"]["rotation"], "logging did not get reset"
+    assert not sg1_config["logging"]["error"]["rotation"], "logging did not get reset"
+    assert not sg1_config["logging"]["warn"]["rotation"], "logging did not get reset"
+    assert not sg1_config["logging"]["info"]["rotation"], "logging did not get reset"
+    assert sg1_config["logging"]["debug"] == debug_dict, "logging did not get reset"
+    assert not sg1_config["logging"]["trace"]["rotation"], "logging did not get reset"
+    assert not sg1_config["logging"]["stats"]["rotation"], "logging did not get reset"
+
+    assert sg1_config["api"]["public_interface"] == ":4984", "public interface did not match with sgw config"
+    assert sg1_config["api"]["admin_interface"] == "0.0.0.0:4985", "admin interface did not match with sgw config"
+    assert sg1_config["api"]["metrics_interface"] == ":4986", "metrics interface did not match with sgw config"
+    if need_sgw_admin_auth:
+        assert sg1_config["api"]["admin_interface"] == "0.0.0.0:4985", "admin_interface did not match with sgw config"
+        assert sg1_config["api"]["metrics_interface"] == ":4986", "metrics_interface did not match with sgw config"
+    assert sg1_config["api"]["https"] == {}, "https with default value is not set"
+    assert sg1_config["api"]["cors"] == {}, "cors with default value is not set"
+
+    # We want to compare IP addresses first - since url's are in the format
+    # <protocol>://<IP>:<port>, splitting the strings by colon gives us just the IP addresses
+    # sg1_config_url = sg1_config["bootstrap"]["server"]
+    assert sg1_config["bootstrap"]["username"] == "bucket-admin", "username did not match"
+    assert sg1_config["bootstrap"]["server_tls_skip_verify"] is True, "server_tls_skip_verify did not match"
 
 
 @pytest.mark.syncgateway

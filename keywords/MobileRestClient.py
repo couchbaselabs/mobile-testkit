@@ -1466,8 +1466,8 @@ class MobileRestClient:
         Keyword that issues POST _bulk docs with the specified 'docs'.
         Use the Document.create_docs() to create the docs.
         """
-        auth_type, auth = get_auth_type(auth)
         server_type = self.get_server_type(url, auth)
+        auth_type, auth = get_auth_type(auth)
 
         # transform 'docs' into a format expected by _bulk_docs
         if server_type == ServerType.listener:
