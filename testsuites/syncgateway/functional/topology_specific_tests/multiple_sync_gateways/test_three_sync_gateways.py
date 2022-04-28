@@ -13,8 +13,8 @@ from keywords.ClusterKeywords import ClusterKeywords
 # from concurrent.futures import ThreadPoolExecutor
 # from libraries.testkit.prometheus import verify_stat_on_prometheus
 # from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
-from utilities.cluster_config_utils import persist_cluster_config_environment_prop
-from utilities.cluster_config_utils import copy_to_temp_conf
+# from utilities.cluster_config_utils import persist_cluster_config_environment_prop
+# from utilities.cluster_config_utils import copy_to_temp_conf
 from utilities.cluster_config_utils import copy_sgconf_to_temp, replace_string_on_sgw_config
 
 
@@ -49,11 +49,11 @@ def test_1named_and_default_group(params_from_base_test_setup, group_type):
     sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
     # xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
     if sync_gateway_version < "3.0.0" or disable_persistent_config:
-        pytest.skip('This test can run with sgw version 3.0 and above')
+        pytest.skip('This test can run with sgw version 3.0 and above and with disable persistent config')
     # 1. Have 2 SGW nodes with disable persistent config
-    temp_cluster_config = copy_to_temp_conf(cluster_conf, mode)
-    persist_cluster_config_environment_prop(temp_cluster_config, 'disable_persistent_config', False)
-    sg_conf1 = sync_gateway_config_path_for_mode(sg_conf_name, mode, cpc=True)
+    # temp_cluster_config = copy_to_temp_conf(cluster_conf, mode)
+    # persist_cluster_config_environment_prop(temp_cluster_config, 'disable_persistent_config', False)
+    sg_conf1 = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     # sg_conf2 = sync_gateway_config_path_for_mode(sg_conf_name2, mode)
 
     # sg_client = MobileRestClient()
