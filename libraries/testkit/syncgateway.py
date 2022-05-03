@@ -1119,6 +1119,7 @@ def send_dbconfig_as_restCall(cluster_config, db_config_json, sync_gateways, sgw
         sgw_db_config = db_config_json
         roles_exist = False
         users_exist = False
+        oidc_exist = False
         db_list = sgw.admin.get_dbs()
         for single_db in db_list:
             if single_db not in sgw_db_config.keys():
@@ -1146,10 +1147,17 @@ def send_dbconfig_as_restCall(cluster_config, db_config_json, sync_gateways, sgw
                 users_cfg = sgw_db_config[sg_db]["users"]
                 users_exist = True
                 del sgw_db_config[sg_db]["users"]
+            if "oidc" in sgw_db_config[sg_db].keys():
+                orig_sgw_db_config = {}
+                orig_sgw_db_config = sgw_db_config[sg_db].copy()
+                del sgw_db_config[sg_db]["oidc"]
+                oidc_exist = True
             try:
                 sgw.admin.create_db(sg_db, sgw_db_config[sg_db])
-            except HTTPError as e:
+            except HTTPError:
                 sgw.admin.put_db_config(sg_db, sgw_db_config[sg_db])
+            if oidc_exist:
+                sgw.admin.put_db_config(sg_db, orig_sgw_db_config)
             db_info = sgw.admin.get_db_info(sg_db)
             if db_info["state"] == "Online":
                 if roles_exist:

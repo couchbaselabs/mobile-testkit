@@ -429,6 +429,6 @@ def test_non_mobile_ignore_count(params_from_base_test_setup, sg_conf_name):
 
     # 8. Verify warn_count is 0
     if disable_persistent_config:
-        assert sg_expvars["syncgateway"]["global"]["resource_utilization"]["warn_count"] == warn_count, "warn_count did not increment"
+        assert sg_expvars["syncgateway"]["global"]["resource_utilization"]["warn_count"] == warn_count + 2, "warn_count did not increment"
     else:
-        assert sg_expvars["syncgateway"]["global"]["resource_utilization"]["warn_count"] == warn_count + 1, "warn_count did not match"
+        assert sg_expvars["syncgateway"]["global"]["resource_utilization"]["warn_count"] == warn_count + 1, "warn_count did not increment"

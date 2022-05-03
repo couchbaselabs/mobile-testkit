@@ -85,7 +85,7 @@ def test_default_config_values(params_from_base_test_setup):
     # We want to compare IP addresses first - since url's are in the format
     # <protocol>://<IP>:<port>, splitting the strings by colon gives us just the IP addresses
     sg1_config_url = sg1_config["bootstrap"]["server"]
-    assert sg1_config_url.split(":")[1] in cbs_url.split(":")[1], "server IP addresses did not match"
+    assert cbs_url.split(":")[1] in sg1_config_url.split(":")[1], "server IP addresses did not match"
 
     # If SSL is enabled, we want to see if both URLs are using secure protocols (https and couchbases z)
     # We can use the same trick as above and ensure that both protocols end in s (for secure)

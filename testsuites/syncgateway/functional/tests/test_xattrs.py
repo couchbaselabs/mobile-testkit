@@ -2587,7 +2587,7 @@ def test_purge_and_view_compaction(params_from_base_test_setup, sg_conf_name):
     start = time.time()
     timeout = 10  # timeout for view query in channels due to race condition after compacting the docs
     while True:
-        channel_view_query = sg_client.view_query_through_channels(url=sg_admin_url, db=sg_db)
+        channel_view_query = sg_client.view_query_through_channels(url=sg_admin_url, db=sg_db, auth=auth)
         channel_view_query_string = json.dumps(channel_view_query)
         if(doc_id in channel_view_query_string or time.time() - start > timeout):
             break

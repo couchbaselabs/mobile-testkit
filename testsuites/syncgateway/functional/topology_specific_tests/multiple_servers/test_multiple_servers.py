@@ -88,7 +88,10 @@ def test_rebalance_sanity(params_from_base_test_setup):
 
         # Run rebalance in background
         cb_server.rebalance_out(cluster_servers, server_to_remove)
-
+        cb_server.add_node(server_to_remove)
+        # Rebalance Server back in to the pool
+        cb_server.rebalance_in(cluster_servers, server_to_remove)
+        time.sleep(10)
         updated_docs = update_docs_task.result()
         log_info(updated_docs)
 
@@ -97,10 +100,6 @@ def test_rebalance_sanity(params_from_base_test_setup):
 
     # Verify docs revisions in changes feed
     client.verify_docs_in_changes(sg_one_url, sg_db, updated_docs, auth=session)
-
-    # Rebalance Server back in to the pool
-    cb_server.add_node(server_to_remove)
-    cb_server.rebalance_in(cluster_servers, server_to_remove)
 
 
 @pytest.mark.syncgateway

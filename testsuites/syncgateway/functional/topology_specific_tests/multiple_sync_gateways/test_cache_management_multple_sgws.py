@@ -110,7 +110,7 @@ def test_importdocs_false_shared_bucket_access_true(params_from_base_test_setup)
 def test_sgw_cache_management_multiple_sgws(params_from_base_test_setup):
     """
     @summary :
-    1.Have 2 SGWs( no load balancer required)  with shared_bucket_access=true and have CBS set up
+    1.Have 3 SGWs( no load balancer required)  with shared_bucket_access=true and have CBS set up
     2. Create docs in CBS
     3.Verify following stats
         EE - import_cancel_cas =0
@@ -124,6 +124,7 @@ def test_sgw_cache_management_multiple_sgws(params_from_base_test_setup):
     sg_ce = params_from_base_test_setup["sg_ce"]
     xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
     need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
+    disable_persistent_config = params_from_base_test_setup["disable_persistent_config"]
 
     if sg_ce:
         if not xattrs_enabled:
@@ -181,7 +182,10 @@ def test_sgw_cache_management_multiple_sgws(params_from_base_test_setup):
         sg1_import_count = sg1_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"]
         sg2_import_count = sg2_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"]
         sg3_import_count = sg3_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"]
-        assert sg1_import_count + sg2_import_count + sg3_import_count == num_docs, "Not all docs imported"
+        if disable_persistent_config:
+            assert sg1_import_count + sg2_import_count + sg3_import_count == num_docs, "Not all docs imported"
+        else:
+            assert sg1_import_count + sg2_import_count + sg3_import_count <= num_docs, "Not all docs imported"
         assert sg1_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_cancel_cas"] == 0, "import cancel cas is not zero on sgw node 1"
         assert sg2_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_cancel_cas"] == 0, "import cancel cas is not zero on sgw node 2"
         assert sg3_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_cancel_cas"] == 0, "import cancel cas is not zero on sgw node 3"
