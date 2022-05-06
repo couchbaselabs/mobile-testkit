@@ -2395,6 +2395,7 @@ def test_combination_of_cpc_and_noncpc(params_from_base_test_setup, persistent_c
     sgw_list1 = sync_gateways[2:]
     # sg_obj.install_sync_gateway(cluster_conf, sync_gateway_upgraded_version, sg_conf_cpc)
     sg_obj.upgrade_sync_gateway(sgw_list1, sync_gateway_version, sync_gateway_upgraded_version, sg_conf, cluster_conf, verify_version=False)
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     sg1 = cbs_cluster.sync_gateways[0]
     sg3 = cbs_cluster.sync_gateways[2]
@@ -2414,9 +2415,9 @@ def test_combination_of_cpc_and_noncpc(params_from_base_test_setup, persistent_c
     sg4_db_config = sg1_db_config
     sg4_db_config["revs_limit"] = revs_limit3
     sg4.admin.put_db_config(sg_db, sg4_db_config)
-
-    sg_client.create_user(sg1.admin.admin_url, sg_dbs[0], username, password, channels=sg_channels)
-    auto_user = sg_client.create_session(url=sg1.admin.admin_url, db=sg_dbs[0], name=username)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg1.admin.admin_url, sg_dbs[0], username, password, channels=sg_channels, auth=auth)
+    auto_user = sg_client.create_session(url=sg1.admin.admin_url, db=sg_dbs[0], name=username, auth=auth)
     sg_docs = document.create_docs('cpc', number=2, channels=sg_channels)
     sg_client.add_bulk_docs(url=sg1.url, db=sg_db, docs=sg_docs, auth=auto_user)
     sg_docs = sg_client.get_all_docs(url=sg1.url, db=sg_db, auth=auto_user)
@@ -2482,6 +2483,7 @@ def test_sg_replicate_mixed_sgw_versions(params_from_base_test_setup, setup_cust
     # 1.Have 2 sgw nodes , have cbl on each SGW
     sgw_cluster1_conf_name = 'listener_tests/sg_replicate_sgw_cluster1'
     sgw_cluster2_conf_name = sgw_version_reset["sgw_cluster2_conf_name"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     mode = sgw_version_reset["mode"]
     cluster_conf = sgw_version_reset["cluster_config"]
     sg_obj = sgw_version_reset["sg_obj"]
@@ -2531,7 +2533,8 @@ def test_sg_replicate_mixed_sgw_versions(params_from_base_test_setup, setup_cust
     sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id_1, read_flag=read_flag, write_flag=write_flag)
     active_tasks = sg1.admin.get_sgreplicate2_active_tasks(sg_db1, expected_tasks=expected_tasks)
     assert len(active_tasks) == 0, "number of active tasks is not 0"
-    expvars = sg_client.get_expvars(url=sg1.admin.admin_url)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    expvars = sg_client.get_expvars(url=sg1.admin.admin_url, auth=auth)
     assert expvars["syncgateway"]["global"]["resource_utilization"]["warn_count"] == 6, "warn count has not raised with replication failure"
 
 

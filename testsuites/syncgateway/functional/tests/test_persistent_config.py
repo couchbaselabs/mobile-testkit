@@ -91,8 +91,8 @@ def test_default_config_values(params_from_base_test_setup):
     # We can use the same trick as above and ensure that both protocols end in s (for secure)
     if ssl_enabled:
         assert sg1_config_url.split(":")[0][-1] == cbs_url.split(":")[0][-1], "server URLs were not both using secure protocol"
+        assert sg1_config["bootstrap"]["server_tls_skip_verify"] is True, "server_tls_skip_verify did not match"
     assert sg1_config["bootstrap"]["username"] == "bucket-admin", "username did not match"
-    assert sg1_config["bootstrap"]["server_tls_skip_verify"] is True, "server_tls_skip_verify did not match"
 
 
 @pytest.mark.syncgateway

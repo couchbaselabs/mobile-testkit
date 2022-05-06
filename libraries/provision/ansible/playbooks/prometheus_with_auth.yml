@@ -13,7 +13,7 @@ scrape_configs:
       insecure_skip_verify: true
     static_configs:
       - targets:
-          - 172.23.136.116:4986
+          - promotheus_sg_ip:4986
     basic_auth:
       username: Administrator
       password: password
