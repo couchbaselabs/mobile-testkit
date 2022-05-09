@@ -34,13 +34,6 @@ class Admin:
         self._headers = {"Content-Type": "application/json"}
         self.auth = None
 
-    """def create_db(self, db, db_config={}):
-        # data = json.dumps(db_config)
-        resp = requests.put("{0}/{1}/".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, data=json.dumps(db_config), verify=False)
-        log.info("PUT {}".format(resp.url))
-        resp.raise_for_status()
-        return resp.status_code"""
-
     def create_db_with_rest(self, db, db_config={}):
         db_config = json.dumps(db_config)
         db_config = db_config.replace('"', '\\"')

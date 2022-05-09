@@ -228,7 +228,6 @@ class SyncGateway:
 
         if cluster_config is None:
             cluster_config = self.cluster_config
-        # c_cluster = cluster.Cluster(self.cluster_config)
         if get_sg_version(cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config):
             playbook_vars, db_config_json, sgw_config_data = setup_sgwconfig_db_config(cluster_config, config, use_config=use_config)
         else:
@@ -969,13 +968,6 @@ def setup_sgwconfig_db_config(cluster_config, sg_config_path, use_config=False):
     # Sleep for a few seconds for the indexes to teardown
     time.sleep(5)
 
-    """ status = ansible_runner.run_ansible_playbook(
-        "start-sync-gateway.yml",
-        extra_vars=bootstrap_playbook_vars
-    )
-    assert status == 0, "Failed to start to Sync Gateway"
-    self.sync_gateways[0].admin.put_db_config(self, sg_db, db_config_json) """
-
     return bootstrap_playbook_vars, database_config, sgw_config_data
 
 
@@ -1016,16 +1008,6 @@ def get_buckets_from_sync_gateway_config(sync_gateway_config_path, cluster_confi
     if os.path.exists(temp_config_path):
         os.remove(temp_config_path)
     return bucket_name_set
-
-
-# TODO : Remove this if not required for now
-def get_sync_gateway_dbconfig_path(config_prefix):
-    """ Get SGW Database config path """
-    config = "{}/{}_{}.json".format(SGW_DB_CONFIGS, config_prefix, "db")
-    if not os.path.isfile(config):
-        raise ValueError("Could not file config: {}".format(config))
-
-    return config
 
 
 def wait_until_doc_in_changes_feed(sg, db, doc_id):
@@ -1183,8 +1165,6 @@ def send_dbconfig_as_restCall(cluster_config, db_config_json, sync_gateways, sgw
 
 def create_logging_config(logging_config_json, sync_gateways):
     # convert database config for each sg db and send to rest end point
-    # sg_dbs = database_config.keys()
-    # time.sleep(30)
     from keywords.MobileRestClient import MobileRestClient
     client = MobileRestClient()
     for sgw in sync_gateways:

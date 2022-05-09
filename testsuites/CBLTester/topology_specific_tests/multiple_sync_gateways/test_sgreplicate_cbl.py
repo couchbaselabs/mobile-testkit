@@ -2422,7 +2422,7 @@ def test_combination_of_cpc_and_noncpc(params_from_base_test_setup, persistent_c
     sg_client.add_bulk_docs(url=sg1.url, db=sg_db, docs=sg_docs, auth=auto_user)
     sg_docs = sg_client.get_all_docs(url=sg1.url, db=sg_db, auth=auto_user)
     sg_docs = sg_docs["rows"]
-    sg_doc_ids = [doc["id"] for doc in sg_docs["rows"]]
+    sg_doc_ids = [doc["id"] for doc in sg_docs]
 
     sg_client.update_docs(url=sg1.url, db=sg_db, docs=sg_docs, number_updates=50, auth=auto_user)
     sg1_return_db = sg1.admin.get_db_config(sg_dbs[0])
@@ -2430,7 +2430,7 @@ def test_combination_of_cpc_and_noncpc(params_from_base_test_setup, persistent_c
     sg4_return_db = sg4.admin.get_db_config(sg_dbs[0])
 
     assert sg1_return_db["revs_limit"] == 20, "revs limit is not assigned value to sg1"
-    assert sg3_return_db["revs_limit"] == 22, "revs limit is not assigned value to sg3"
+    assert sg3_return_db["revs_limit"] == 24, "revs limit is not assigned value to sg3"
     assert sg4_return_db["revs_limit"] == 24, "revs limit is not assigned value to sg4"
 
     # TODO: check the revision history for all docs and verify number of updates are alligned with revs limit
@@ -2439,11 +2439,11 @@ def test_combination_of_cpc_and_noncpc(params_from_base_test_setup, persistent_c
     sg4.restart(config=sg_conf, cluster_config=cluster_conf)
     sg_docs = sg_client.get_all_docs(url=sg1.url, db=sg_db, auth=auto_user)
     sg_docs = sg_docs["rows"][0]
-    num_of_revs_history = sg_client.get_revs_num_in_history(url=sg1.admin.admin_url, db=sg_db, doc_id=sg_doc_ids[0], auth=auto_user)
+    num_of_revs_history = sg_client.get_revs_num_in_history(url=sg1.admin.admin_url, db=sg_db, doc_id=sg_doc_ids[0], auth=auth)
     assert num_of_revs_history == 20, "revision history did not match with revs_limit assigned on sg1"
-    num_of_revs_history = sg_client.get_revs_num_in_history(url=sg3.admin.admin_url, db=sg_db, doc_id=sg_doc_ids[0])
+    num_of_revs_history = sg_client.get_revs_num_in_history(url=sg3.admin.admin_url, db=sg_db, doc_id=sg_doc_ids[0], auth=auth)
     assert num_of_revs_history == 22, "revision history did not match with revs_limit assigned on sg3"
-    num_of_revs_history = sg_client.get_revs_num_in_history(url=sg4.admin.admin_url, db=sg_db, doc_id=sg_doc_ids[0])
+    num_of_revs_history = sg_client.get_revs_num_in_history(url=sg4.admin.admin_url, db=sg_db, doc_id=sg_doc_ids[0], auth=auth)
     assert num_of_revs_history == 24, "revision history did not match with revs_limit assigned on sg4"
 
 
