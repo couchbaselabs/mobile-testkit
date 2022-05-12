@@ -285,7 +285,7 @@ def test_tombstone_docs_via_sdk(params_from_base_test_setup, tombstone_type):
 
     # 3. Create docs and add user xattrs to the doc and have all docs sync to cbl
     sg_docs = document.create_docs('sg_xattrs', number=10)
-    sg_doc_ids = [doc['_id'] for doc in sg_docs]
+    sg_doc_ids = [doc['sgw_uni_id'] for doc in sg_docs]
     sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=auto_user)
     for id in sg_doc_ids:
         sdk_bucket.mutate_in(id, [SD.upsert(user_custom_channel, sg_channel1_value1, xattr=True, create_parents=True)])

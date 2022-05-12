@@ -129,11 +129,11 @@ def test_local_jsfunc_path(params_from_base_test_setup, sg_conf_name, js_type):
                 'type': 'mobile opt out',
             }
         sdk_doc_bodies = document.create_docs(sdk_mobile, number=num_docs, channels=channel, prop_generator=update_mobile_prop)
-        sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
+        sdk_docs = {doc['sgw_uni_id']: doc for doc in sdk_doc_bodies}
         sdk_docs_resp = sdk_client.upsert_multi(sdk_docs)
 
         sdk_doc_bodies = document.create_docs(sdk_non_mobile, number=num_docs, channels=channel, prop_generator=update_non_mobile_prop)
-        sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
+        sdk_docs = {doc['sgw_uni_id']: doc for doc in sdk_doc_bodies}
         sdk_docs_resp = sdk_client.upsert_multi(sdk_docs)
         assert len(sdk_docs_resp) == num_docs
         retry_count = 0
@@ -371,11 +371,11 @@ def test_envVariables_on_sgw_config(params_from_base_test_setup, setup_env_varia
                 'type': 'mobile opt out',
             }
         sdk_doc_bodies = document.create_docs(sdk_mobile, number=num_docs, channels=channel, prop_generator=update_mobile_prop)
-        sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
+        sdk_docs = {doc['sgw_uni_id']: doc for doc in sdk_doc_bodies}
         sdk_docs_resp = sdk_client.upsert_multi(sdk_docs)
 
         sdk_doc_bodies = document.create_docs(sdk_non_mobile, number=num_docs, channels=channel, prop_generator=update_non_mobile_prop)
-        sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
+        sdk_docs = {doc['sgw_uni_id']: doc for doc in sdk_doc_bodies}
         sdk_docs_resp = sdk_client.upsert_multi(sdk_docs)
         assert len(sdk_docs_resp) == num_docs
 
@@ -558,11 +558,11 @@ def test_jscode_envvariables_path(params_from_base_test_setup, setup_env_variabl
             'type': 'mobile opt out',
         }
     sdk_doc_bodies = document.create_docs(sdk_mobile, number=num_docs, channels=channel, prop_generator=update_mobile_prop)
-    sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
+    sdk_docs = {doc['sgw_uni_id']: doc for doc in sdk_doc_bodies}
     sdk_docs_resp = sdk_client.upsert_multi(sdk_docs)
 
     sdk_doc_bodies = document.create_docs(sdk_non_mobile, number=num_docs, channels=channel, prop_generator=update_non_mobile_prop)
-    sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
+    sdk_docs = {doc['sgw_uni_id']: doc for doc in sdk_doc_bodies}
     sdk_docs_resp = sdk_client.upsert_multi(sdk_docs)
     assert len(sdk_docs_resp) == num_docs
     retry_count = 0

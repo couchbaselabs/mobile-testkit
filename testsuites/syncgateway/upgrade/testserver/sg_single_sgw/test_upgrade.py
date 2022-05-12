@@ -189,7 +189,7 @@ def test_upgrade(params_from_base_test_setup):
     bucket_name = 'data-bucket'
     sdk_client = get_cluster('couchbase://{}'.format(primary_server.host), bucket_name)
     sdk_doc_bodies = document.create_docs('sdk', number=num_sdk_docs, channels=sg_user_channels)
-    sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
+    sdk_docs = {doc['sgw_uni_id']: doc for doc in sdk_doc_bodies}
     sdk_client.upsert_multi(sdk_docs)
     time.sleep(30)  # to let the docs import from server to sgw
     replicator.wait_until_replicator_idle(repl)
@@ -294,7 +294,7 @@ def test_upgrade(params_from_base_test_setup):
         # 10. Verify docs from cbl_db2 whether docs created on SGW or CBS after the upgrade got replicated to cbl
         # New code to add docs on SGW and CBS to add new docs
         sdk_doc_bodies = document.create_docs('sdk_after_upgrade', number=num_sdk_docs, channels=sg_user_channels)
-        sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
+        sdk_docs = {doc['sgw_uni_id']: doc for doc in sdk_doc_bodies}
         sdk_client.upsert_multi(sdk_docs)
         sg_client.add_docs(url=sg_admin_url, db=sg_db, number=num_sg_docs, id_prefix="sgw_after_upgrade", channels=sg_user_channels)
         replicator.wait_until_replicator_idle(repl2)

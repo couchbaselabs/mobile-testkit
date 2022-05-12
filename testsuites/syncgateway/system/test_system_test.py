@@ -269,7 +269,7 @@ def send_changes_termination_doc(sg_url, sg_db, users, terminator_doc_id, termin
     random_user_id = random.choice(list(users.keys()))
     random_user = users[random_user_id]
     log_info('Sending changes termination doc for all users')
-    doc = {'_id': terminator_doc_id, 'channels': [terminator_channel]}
+    doc = {'sgw_uni_id': terminator_doc_id, 'channels': [terminator_channel]}
     sg_client.add_doc(url=sg_url, db=sg_db, doc=doc, auth=random_user['auth'])
 
 

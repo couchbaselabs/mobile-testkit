@@ -433,7 +433,7 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
 
     for doc in sg_docs1:
         if "sgw_docs3" not in doc["id"] and "terminator1_0" not in doc["id"]:
-            sg3_doc = sg_client.get_doc(url=sg3.admin.admin_url, db=sg_db2, doc_id=doc['doc']['_id'])
+            sg3_doc = sg_client.get_doc(url=sg3.admin.admin_url, db=sg_db2, doc_id=doc['doc']['sgw_uni_id'])
             if "numOfUpdates" in sg_docs1:
                 assert doc["doc"]["numOfUpdates"] == sg3_doc["numOfUpdates"], "number of updates value is not same on both clusters for {}".format(doc)
             if sync_gateway_version < "2.8.0":
