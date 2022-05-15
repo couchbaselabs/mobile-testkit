@@ -299,7 +299,7 @@ def verify_sg_docs_revision_history(url, db, added_docs):
         for doc_dict in doc:
             rev = doc_dict["_rev"]
             rev_gen = int(rev.split("-")[0])
-            doc_id = doc_dict["_id"]
+            doc_id = doc_dict["uni_key_id"]
             # Verify meta data
             log_info("Verifying that doc {} has rev {}".format(doc_id, expected_doc_map[doc_id]))
             assert rev == expected_doc_map[doc_id]
@@ -338,7 +338,7 @@ def send_changes_termination_doc(auth, terminator_doc_id, terminator_channel, ls
     ls_client = MobileRestClient()
     doc_body = {}
     doc_body["channels"] = terminator_channel
-    doc_body["_id"] = terminator_doc_id
+    doc_body["uni_key_id"] = terminator_doc_id
     doc_body["foo"] = "bar"
     ls_client.add_doc(ls_url, ls_db, doc_body, auth=auth, use_post=False)
 

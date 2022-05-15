@@ -120,11 +120,11 @@ def test_mobile_opt_in(params_from_base_test_setup, sg_conf_name):
     doc = document.create_doc(doc_id=doc_id1, channels=['mobileOptIn'], prop_generator=update_mobile_prop)
     sdk_client.upsert(doc_id1, doc)
     sg_get_doc1 = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id1, auth=test_auth_session)
-    assert sg_get_doc1['_rev'].startswith('1-') and sg_get_doc1['sgw_uni_id'] == doc_id1
+    assert sg_get_doc1['_rev'].startswith('1-') and sg_get_doc1['uni_key_id'] == doc_id1
     # Additional coverage for case #1
     sg_client.update_doc(url=sg_url, db=sg_db, doc_id=doc_id1, number_updates=1, auth=test_auth_session)
     sg_get_doc1 = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id1, auth=test_auth_session)
-    assert sg_get_doc1['_rev'].startswith('2-') and sg_get_doc1['sgw_uni_id'] == doc_id1
+    assert sg_get_doc1['_rev'].startswith('2-') and sg_get_doc1['uni_key_id'] == doc_id1
 
     # Create second doc via SDK with type non mobile. Case #2
     doc_id2 = 'mobile_opt_out_sdk_doc'
@@ -144,7 +144,7 @@ def test_mobile_opt_in(params_from_base_test_setup, sg_conf_name):
     sg_get_doc3["updated_sdk_via_sg"] = "1"
     sdk_client.upsert(doc_id3, sg_get_doc3)
     sg_get_doc3 = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id3, auth=test_auth_session)
-    assert sg_get_doc3['_rev'].startswith('2-') and sg_get_doc3['sgw_uni_id'] == doc_id3
+    assert sg_get_doc3['_rev'].startswith('2-') and sg_get_doc3['uni_key_id'] == doc_id3
     log_info("sg get doc3 is {}".format(sg_get_doc3))
 
     # Create fourth sg doc with mobile opt out and update via sdk. Case #4 and case #8
@@ -186,7 +186,7 @@ def test_mobile_opt_in(params_from_base_test_setup, sg_conf_name):
     sdk_client.upsert(doc_id5, doc)
     sg_get_doc5 = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id5, auth=test_auth_session)
     log_info("sg get doc 5 is {}".format(sg_get_doc5))
-    assert sg_get_doc5['_rev'].startswith('1-') and sg_get_doc5['sgw_uni_id'] == doc_id5
+    assert sg_get_doc5['_rev'].startswith('1-') and sg_get_doc5['uni_key_id'] == doc_id5
 
     # Create sixth sg doc with mobile opt out  and update via sdk with opt in
     doc_id6 = 'mobileoptout_sg_doc_sdkupdate_optin'
@@ -197,7 +197,7 @@ def test_mobile_opt_in(params_from_base_test_setup, sg_conf_name):
     sg_get_doc6["type"] = "mobile"
     sdk_client.upsert(doc_id6, sg_get_doc6)
     sg_get_doc6 = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id6, auth=test_auth_session)
-    assert sg_get_doc6['_rev'].startswith('2-') and sg_get_doc6['sgw_uni_id'] == doc_id6
+    assert sg_get_doc6['_rev'].startswith('2-') and sg_get_doc6['uni_key_id'] == doc_id6
 
     # Create seventh sg doc with mobile opt in  and update via sdk with opt out
     doc_id7 = 'mobileoptin_sg_doc_sdkupdate_optout'
@@ -229,7 +229,7 @@ def test_mobile_opt_in(params_from_base_test_setup, sg_conf_name):
     assert str(he.value).startswith('409 Client Error: Conflict for url:')
     sg_client.update_doc(url=sg_url, db=sg_db, doc_id=doc_id8, number_updates=1, auth=test_auth_session)
     sg_get_doc8 = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id8, auth=test_auth_session)
-    assert sg_get_doc8['_rev'].startswith('2-') and sg_get_doc8['sgw_uni_id'] == doc_id8
+    assert sg_get_doc8['_rev'].startswith('2-') and sg_get_doc8['uni_key_id'] == doc_id8
 
     # Create ninth sdk doc with import disabled and add mobile property and update via sg. Case #8
     doc_id9 = 'mobile_opt_out_sg_rewrite_with_importdisabled'
@@ -238,7 +238,7 @@ def test_mobile_opt_in(params_from_base_test_setup, sg_conf_name):
     sg_client.add_doc(url=sg_url, db=sg_db, doc=doc_body, auth=test_auth_session)
     # sg_client.update_doc(url=sg_url, db=sg_db, doc_id=doc_id8, number_updates=1, auth=test_auth_session)
     sg_get_doc9 = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id9, auth=test_auth_session)
-    assert sg_get_doc9['_rev'].startswith('1-') and sg_get_doc9['sgw_uni_id'] == doc_id9
+    assert sg_get_doc9['_rev'].startswith('1-') and sg_get_doc9['uni_key_id'] == doc_id9
 
 
 @pytest.mark.parametrize('sg_conf_name', [

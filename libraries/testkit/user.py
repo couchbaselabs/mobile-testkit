@@ -152,9 +152,9 @@ class User:
         doc_list = []
         for doc_id in doc_ids:
             if self.channels:
-                doc = {"_id": doc_id, "channels": self.channels, "updates": 0}
+                doc = {"uni_key_id": doc_id, "channels": self.channels, "updates": 0}
             else:
-                doc = {"_id": doc_id, "updates": 0}
+                doc = {"uni_key_id": doc_id, "updates": 0}
             doc_list.append(doc)
 
         docs = dict()
@@ -468,7 +468,7 @@ class User:
                     log.debug("CHANGES RESULT: {}".format(obj))
 
                     # Check for duplicates in response doc_ids
-                    doc_ids = [doc["doc"]["_id"] for doc in new_docs if not doc["id"].startswith("_user/")]
+                    doc_ids = [doc["doc"]["uni_key_id"] for doc in new_docs if not doc["id"].startswith("_user/")]
                     if len(doc_ids) != len(set(doc_ids)):
                         for item in set(doc_ids):
                             if doc_ids.count(item) > 1:
@@ -484,7 +484,7 @@ class User:
                             if doc["id"].startswith("_user/"):
                                 continue
 
-                            log.debug("{} DOC FROM LONGPOLL _changes: {}: {}".format(self.name, doc["doc"]["_id"], doc["doc"]["_rev"]))
+                            log.debug("{} DOC FROM LONGPOLL _changes: {}: {}".format(self.name, doc["doc"]["uni_key_id"], doc["doc"]["_rev"]))
 
                             # Stop polling if termination doc is recieved in _changes
                             if termination_doc_id is not None and doc["id"] == termination_doc_id:
@@ -493,7 +493,7 @@ class User:
                                 break
 
                             # Store doc
-                            docs[doc["doc"]["_id"]] = doc["doc"]["_rev"]
+                            docs[doc["doc"]["uni_key_id"]] = doc["doc"]["_rev"]
 
                     # Get latest sequence from changes request
                     current_seq_num = obj["last_seq"]
@@ -541,13 +541,13 @@ class User:
                     continue
 
                 # Close connection if termination doc is received in _changes
-                if termination_doc_id is not None and doc["doc"]["_id"] == termination_doc_id:
+                if termination_doc_id is not None and doc["doc"]["uni_key_id"] == termination_doc_id:
                     r.close()
                     return docs
 
-                log.debug("{} DOC FROM CONTINUOUS _changes: {}: {}".format(self.name, doc["doc"]["_id"], doc["doc"]["_rev"]))
+                log.debug("{} DOC FROM CONTINUOUS _changes: {}: {}".format(self.name, doc["doc"]["uni_key_id"], doc["doc"]["_rev"]))
                 # Store doc
-                docs[doc["doc"]["_id"]] = doc["doc"]["_rev"]
+                docs[doc["doc"]["uni_key_id"]] = doc["doc"]["_rev"]
 
         # if connection is closed from server
         return docs

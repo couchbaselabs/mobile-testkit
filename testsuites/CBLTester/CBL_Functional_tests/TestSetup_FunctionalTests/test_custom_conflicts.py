@@ -115,7 +115,7 @@ def test_local_wins_custom_conflicts(params_from_base_test_setup, replicator_typ
     cbl_docs = db.getDocuments(cbl_db, doc_ids)
     if replicator_type == "pull":
         for sg_doc in sg_docs_content:
-            doc_id = sg_doc["_id"]
+            doc_id = sg_doc["uni_key_id"]
             cbl_doc = cbl_docs[doc_id]
             assert sg_doc["sg_new_update1"] != cbl_doc["sg_new_update1"], "CCR failed to resolve conflict " \
                                                                           "with local win"
@@ -127,7 +127,7 @@ def test_local_wins_custom_conflicts(params_from_base_test_setup, replicator_typ
             assert "cbl_random" not in sg_doc, "CCR failed to resolve conflict with local win"
     elif replicator_type == "push_pull":
         for sg_doc in sg_docs_content:
-            doc_id = sg_doc["_id"]
+            doc_id = sg_doc["uni_key_id"]
             cbl_doc = cbl_docs[doc_id]
             assert sg_doc["sg_new_update1"] == cbl_doc["sg_new_update1"], "CCR failed to resolve conflict " \
                                                                           "with local win"
@@ -233,7 +233,7 @@ def test_remote_wins_custom_conflicts(params_from_base_test_setup, replicator_ty
     sg_docs_content = sg_client.get_bulk_docs(sg_url, sg_db, doc_ids, session)[0]
     cbl_docs = db.getDocuments(cbl_db, doc_ids)
     for sg_doc in sg_docs_content:
-        doc_id = sg_doc["_id"]
+        doc_id = sg_doc["uni_key_id"]
         cbl_doc = cbl_docs[doc_id]
         assert sg_doc["sg_new_update1"] == cbl_doc["sg_new_update1"], "CCR failed to resolve conflict with remote win"
         assert sg_doc["sg_new_update2"] == cbl_doc["sg_new_update2"], "CCR failed to resolve conflict with remote win"
@@ -445,7 +445,7 @@ def test_merge_wins_custom_conflicts(params_from_base_test_setup, replicator_typ
     cbl_docs = db.getDocuments(cbl_db, doc_ids)
     for sg_doc in sg_docs_content:
         if replicator_type == "pull":
-            doc_id = sg_doc["_id"]
+            doc_id = sg_doc["uni_key_id"]
             cbl_doc = cbl_docs[doc_id]
             assert sg_doc["sg_new_update1"] != cbl_doc["sg_new_update1"], "CCR failed to resolve conflict " \
                                                                           "with merge win"
@@ -456,7 +456,7 @@ def test_merge_wins_custom_conflicts(params_from_base_test_setup, replicator_typ
             assert "cbl_random" not in sg_doc, "CCR failed to resolve conflict with merge win. SG doc got " \
                                                "updated with CBL changes"
         elif replicator_type == "push_pull":
-            doc_id = sg_doc["_id"]
+            doc_id = sg_doc["uni_key_id"]
             cbl_doc = cbl_docs[doc_id]
             assert sg_doc["sg_new_update1"] == cbl_doc["sg_new_update1"], "CCR failed to resolve conflict " \
                                                                           "with merge win"
@@ -570,12 +570,12 @@ def test_incorrect_doc_id_custom_conflicts_resolution(params_from_base_test_setu
     if replicator_type == "pull":
         assert sorted(doc_ids) == sorted(cbl_doc_ids), "CCR failed to correct incorrect-doc-ids"
         for sg_doc in sg_docs_content:
-            doc_id = sg_doc["_id"]
+            doc_id = sg_doc["uni_key_id"]
             cbl_doc = cbl_docs[doc_id]
             assert cbl_doc["new_value"] == "couchbase", "CCR failed to resolve conflict with doc with additional key"
     if replicator_type == "push_pull":
         for sg_doc in sg_docs_content:
-            doc_id = sg_doc["_id"]
+            doc_id = sg_doc["uni_key_id"]
             cbl_doc = cbl_docs[doc_id]
             assert cbl_doc["new_value"] == "couchbase", "CCR failed to resolve conflict with doc with additional key"
             assert "new_value" in sg_doc, "CCR failed to resolve conflict with doc with additional key"
@@ -703,7 +703,7 @@ def test_non_blocking_custom_conflicts_resolution(params_from_base_test_setup, r
         time.sleep(5)
     if replicator_type == "pull":
         for sg_doc in sg_docs_content:
-            doc_id = sg_doc["_id"]
+            doc_id = sg_doc["uni_key_id"]
             cbl_doc = cbl_docs[doc_id]
             assert sg_doc["sg_new_update1"] != cbl_doc["sg_new_update1"], "CCR failed to resolve conflict " \
                                                                           "with delayed local win"
@@ -722,7 +722,7 @@ def test_non_blocking_custom_conflicts_resolution(params_from_base_test_setup, r
                                                                                                   "local win"
     elif replicator_type == "push_pull":
         for sg_doc in sg_docs_content:
-            doc_id = sg_doc["_id"]
+            doc_id = sg_doc["uni_key_id"]
             cbl_doc = cbl_docs[doc_id]
             assert sg_doc["sg_new_update1"] == cbl_doc["sg_new_update1"], "CCR failed to resolve conflict " \
                                                                           "with delayed local win"
@@ -828,7 +828,7 @@ def test_stop_replicator_before_ccr_completes(params_from_base_test_setup):
     sg_docs_content = sg_client.get_bulk_docs(sg_url, sg_db, doc_ids, session)[0]
     cbl_docs = db.getDocuments(cbl_db, doc_ids)
     for sg_doc in sg_docs_content:
-        doc_id = sg_doc["_id"]
+        doc_id = sg_doc["uni_key_id"]
         cbl_doc = cbl_docs[doc_id]
         assert sg_doc["sg_new_update1"] != cbl_doc["sg_new_update1"], "Replication stopped before resolving" \
                                                                       " the conflict"
@@ -940,7 +940,7 @@ def test_delete_not_wins_custom_conflicts(params_from_base_test_setup, replicato
         assert cbl_docs, "CCR failed to resolved conflict with delete_not_win"
     elif replicator_type == "push_pull":
         for sg_doc in sg_docs_content:
-            doc_id = sg_doc["_id"]
+            doc_id = sg_doc["uni_key_id"]
             cbl_doc = cbl_docs[doc_id]
             assert sg_doc["sg_new_update1"] == cbl_doc["sg_new_update1"], "CCR failed to resolve conflict " \
                                                                           "with delete_not_win"
@@ -1048,7 +1048,7 @@ def test_exception_thrown_custom_conflicts(params_from_base_test_setup, replicat
         sg_docs_content = []
     cbl_docs = db.getDocuments(cbl_db, doc_ids)
     for sg_doc in sg_docs_content:
-        doc_id = sg_doc["_id"]
+        doc_id = sg_doc["uni_key_id"]
         cbl_doc = cbl_docs[doc_id]
         assert sg_doc["sg_new_update1"] != cbl_doc["sg_new_update1"], "exception_thrown ccr didn't crash the app"
         assert sg_doc["sg_new_update2"] != cbl_doc["sg_new_update2"], "exception_thrown ccr didn't crash the app"

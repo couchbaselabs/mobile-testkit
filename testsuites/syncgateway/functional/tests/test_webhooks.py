@@ -97,7 +97,7 @@ def test_webhooks(params_from_base_test_setup, sg_conf_name, num_users, num_chan
     received_events = ws.get_data()
     received_doc_events = []
     for ev in received_events:
-        if "_id" in ev:
+        if "uni_key_id" in ev:
             received_doc_events.append(ev)
 
     log_info("expected_events: {} received_events {}".format(expected_events, received_events))
@@ -221,8 +221,8 @@ def test_webhooks_crud(params_from_base_test_setup, sg_conf_name, filtered):
             sg_doc['filtered'] = True
         count += 1
 
-    sg_doc_ids = [doc['sgw_uni_id'] for doc in sg_docs]
-    sg_filtered_doc_ids = [doc['sgw_uni_id'] for doc in sg_docs if 'filtered' in doc]
+    sg_doc_ids = [doc['uni_key_id'] for doc in sg_docs]
+    sg_filtered_doc_ids = [doc['uni_key_id'] for doc in sg_docs if 'filtered' in doc]
     assert len(sg_doc_ids) == num_docs_per_client
     assert len(sg_filtered_doc_ids) == num_docs_per_client / 2
 
@@ -395,12 +395,12 @@ def test_webhook_filter_external_js(params_from_base_test_setup, setup_webserver
         return {'updates': 0, 'data': 'non_webhook_filter'}
     log_info('Adding {} docs via SDK ...')
     sdk_doc_bodies = document.create_docs(sdk_webhook, number=sdk_webhook_docs, content={"data": "webhook_filter"}, channels=channel, prop_generator=update_webhook_prop)
-    sdk_doc_ids1 = [doc['sgw_uni_id'] for doc in sdk_doc_bodies]
-    sdk_docs = {doc['sgw_uni_id']: doc for doc in sdk_doc_bodies}
+    sdk_doc_ids1 = [doc['uni_key_id'] for doc in sdk_doc_bodies]
+    sdk_docs = {doc['uni_key_id']: doc for doc in sdk_doc_bodies}
     sdk_client.upsert_multi(sdk_docs)
 
     sdk_doc_bodies = document.create_docs(sdk_non_webhook, number=sdk_non_webhook_docs, content={"data": "non_webhook_filter"}, channels=channel)
-    sdk_docs = {doc['sgw_uni_id']: doc for doc in sdk_doc_bodies}
+    sdk_docs = {doc['uni_key_id']: doc for doc in sdk_doc_bodies}
     sdk_client.upsert_multi(sdk_docs)
 
     count = 0
@@ -409,10 +409,10 @@ def test_webhook_filter_external_js(params_from_base_test_setup, setup_webserver
         data = webhook_server.get_data()
         # Remove unwanted data from the response
         for item in data:
-            if "_id" not in item:
+            if "uni_key_id" not in item:
                 data.remove(item)
 
-        posted_webhook_events_ids = [item['sgw_uni_id'] for item in data]
+        posted_webhook_events_ids = [item['uni_key_id'] for item in data]
         if len(posted_webhook_events_ids) < len(sdk_doc_ids1):
             time.sleep(2)
             count += 1
@@ -492,12 +492,12 @@ def test_webhook_filter_external_https_js(params_from_base_test_setup, setup_web
         return {'updates': 0, 'data': 'non_webhook_filter'}
     log_info('Adding {} docs via SDK ...')
     sdk_doc_bodies = document.create_docs(sdk_webhook, number=sdk_webhook_docs, content={"data": "webhook_filter"}, channels=channel, prop_generator=update_webhook_prop)
-    sdk_doc_ids1 = [doc['sgw_uni_id'] for doc in sdk_doc_bodies]
-    sdk_docs = {doc['sgw_uni_id']: doc for doc in sdk_doc_bodies}
+    sdk_doc_ids1 = [doc['uni_key_id'] for doc in sdk_doc_bodies]
+    sdk_docs = {doc['uni_key_id']: doc for doc in sdk_doc_bodies}
     sdk_client.upsert_multi(sdk_docs)
 
     sdk_doc_bodies = document.create_docs(sdk_non_webhook, number=sdk_non_webhook_docs, content={"data": "non_webhook_filter"}, channels=channel)
-    sdk_docs = {doc['sgw_uni_id']: doc for doc in sdk_doc_bodies}
+    sdk_docs = {doc['uni_key_id']: doc for doc in sdk_doc_bodies}
     sdk_client.upsert_multi(sdk_docs)
 
     count = 0
@@ -506,10 +506,10 @@ def test_webhook_filter_external_https_js(params_from_base_test_setup, setup_web
         data = webhook_server.get_data()
         # Remove unwanted data from the response
         for item in data:
-            if "_id" not in item:
+            if "uni_key_id" not in item:
                 data.remove(item)
 
-        posted_webhook_events_ids = [item['sgw_uni_id'] for item in data]
+        posted_webhook_events_ids = [item['uni_key_id'] for item in data]
         if len(posted_webhook_events_ids) < len(sdk_doc_ids1):
             time.sleep(2)
             count += 1
@@ -661,11 +661,11 @@ def poll_for_webhook_data(webhook_server, expected_doc_ids, expected_num_revs, e
         data = webhook_server.get_data()
         # Remove unwanted data from the response
         for item in data:
-            if "_id" not in item:
+            if "uni_key_id" not in item:
                 data.remove(item)
 
-        posted_webhook_events = {item['sgw_uni_id']: item for item in data}
-        posted_webhook_events_ids = [item['sgw_uni_id'] for item in data]
+        posted_webhook_events = {item['uni_key_id']: item for item in data}
+        posted_webhook_events_ids = [item['uni_key_id'] for item in data]
         posted_webhook_events_len = len(posted_webhook_events)
 
         # If more webhook data is sent then we are expecting, blow up

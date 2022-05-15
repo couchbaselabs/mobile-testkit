@@ -1238,14 +1238,14 @@ def test_verify_open_revs_with_revs_limit_push_conflict(setup_client_syncgateway
 
     client.wait_for_replication_status_idle(url=ls_url, replication_id=repl_one)
 
-    client.verify_doc_rev_generation(url=ls_url, db=ls_db, doc_id=ls_current_doc["_id"], expected_generation=21)
-    client.verify_doc_rev_generation(url=sg_url, db=sg_db, doc_id=sg_current_doc["_id"], expected_generation=21, auth=sg_session)
+    client.verify_doc_rev_generation(url=ls_url, db=ls_db, doc_id=ls_current_doc["uni_key_id"], expected_generation=21)
+    client.verify_doc_rev_generation(url=sg_url, db=sg_db, doc_id=sg_current_doc["uni_key_id"], expected_generation=21, auth=sg_session)
 
     expected_ls_revs = [ls_current_doc["_rev"]]
-    client.verify_open_revs(url=ls_url, db=ls_db, doc_id=ls_current_doc["_id"], expected_open_revs=expected_ls_revs)
+    client.verify_open_revs(url=ls_url, db=ls_db, doc_id=ls_current_doc["uni_key_id"], expected_open_revs=expected_ls_revs)
 
     expected_sg_revs = [ls_current_doc["_rev"], sg_current_doc["_rev"]]
-    client.verify_open_revs(url=sg_admin_url, db=sg_db, doc_id=sg_current_doc["_id"], expected_open_revs=expected_sg_revs)
+    client.verify_open_revs(url=sg_admin_url, db=sg_db, doc_id=sg_current_doc["uni_key_id"], expected_open_revs=expected_sg_revs)
 
 
 @pytest.mark.sanity
@@ -1796,7 +1796,7 @@ def add_2MB_docs(url, db, number, id_prefix, auth=None, channels=None, attachmen
         else:
             doc_id = "{}_{}".format(id_prefix, i)
 
-        doc_body["_id"] = doc_id
+        doc_body["uni_key_id"] = doc_id
         doc_obj = client.add_doc(url, db, doc_body, auth=auth, use_post=False)
         doc_obj["attachments"] = list(doc_body["_attachments"].keys())
         added_docs.append(doc_obj)

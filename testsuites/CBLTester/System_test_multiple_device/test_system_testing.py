@@ -159,7 +159,7 @@ def test_system(params_from_base_suite_setup):
         docs_to_update = random.sample(doc_ids, num_of_docs_to_update)
         sg_docs = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=list(docs_to_update), auth=session)[0]
         for sg_doc in sg_docs:
-            sg_doc["id"] = sg_doc["_id"]
+            sg_doc["id"] = sg_doc["uni_key_id"]
         log_info("Updating {} docs on SG - {}".format(len(docs_to_update),
                                                       docs_to_update))
         sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs,
@@ -302,7 +302,7 @@ def test_system(params_from_base_suite_setup):
                 else:
                     data = simple()
                 data["channels"] = channels_sg
-                data["_id"] = doc_id
+                data["uni_key_id"] = doc_id
                 added_docs[doc_id] = data
                 new_doc_ids.append(doc_id)
             doc_ids.update(new_doc_ids)

@@ -619,7 +619,7 @@ def test_sdk_update_with_changes_request(params_from_base_test_setup):
         sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
     sdk_doc_body = document.create_docs(doc_id_prefix='sdk_doc', number=1, content={'foo': 'bar'},
                                         channels=channel)
-    sdk_doc = {doc['sgw_uni_id']: doc for doc in sdk_doc_body}
+    sdk_doc = {doc['uni_key_id']: doc for doc in sdk_doc_body}
     sdk_doc_id_list = [doc for doc in sdk_doc]
     sdk_doc_id = sdk_doc_id_list[0]
     sdk_client.upsert_multi(sdk_doc)

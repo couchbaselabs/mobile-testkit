@@ -1049,7 +1049,7 @@ def create_docs_via_sdk(cbs_url, cbs_cluster, bucket_name, num_docs, doc_name='d
     sdk_client = get_cluster(connection_url, bucket_name)
 
     sdk_doc_bodies = document.create_docs(doc_name, num_docs)
-    sdk_docs = {doc['sgw_uni_id']: doc for doc in sdk_doc_bodies}
+    sdk_docs = {doc['uni_key_id']: doc for doc in sdk_doc_bodies}
     sdk_client.upsert_multi(sdk_docs)
 
     log_info("Adding docs done on CBS")

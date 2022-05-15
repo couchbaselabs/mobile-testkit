@@ -37,9 +37,9 @@ def parse_multipart_response(response):
     --5570ab847be212079e2b05bbbfa023da25b07712bda36aec6481bca024f3
         Content-Type: application/json
 
-        {"_id":"test_ls_db2_0","_rev":"1-9a525c69cafb3d1cdf69545fa5ccfecc","date_time_added":"2016-04-29 13:34:26.346148"}
+        {"uni_key_id":"test_ls_db2_0","_rev":"1-9a525c69cafb3d1cdf69545fa5ccfecc","date_time_added":"2016-04-29 13:34:26.346148"}
 
-    Returns a a list of docs {"rows": [ {"_id":"test_ls_db2_0","_rev":"1-9a525c69cafb3d1cdf69545fa5ccfecc" ... } ] }
+    Returns a a list of docs {"rows": [ {"uni_key_id":"test_ls_db2_0","_rev":"1-9a525c69cafb3d1cdf69545fa5ccfecc" ... } ] }
     """
     rows = []
 
@@ -835,7 +835,7 @@ class MobileRestClient:
                     "revpos":1,
                     "stub":true}
                 },
-            "_id":"att_doc",
+            "uni_key_id":"att_doc",
             "_rev":"1-59bd81bc19049947b4728f8c769a44bd",
             "_revisions":{
                 "ids":[
@@ -920,18 +920,18 @@ class MobileRestClient:
             if use_post:
                 resp = self._session.post("{}/{}/".format(url, db), data=json.dumps(doc, cls=MyEncoder), cookies=dict(SyncGatewaySession=auth[1]))
             else:
-                resp = self._session.put("{}/{}/{}".format(url, db, doc["_id"]), data=json.dumps(doc, cls=MyEncoder), cookies=dict(SyncGatewaySession=auth[1]))
+                resp = self._session.put("{}/{}/{}".format(url, db, doc["uni_key_id"]), data=json.dumps(doc, cls=MyEncoder), cookies=dict(SyncGatewaySession=auth[1]))
         elif auth_type == AuthType.http_basic:
             if use_post:
                 resp = self._session.post("{}/{}/".format(url, db), data=json.dumps(doc, cls=MyEncoder), auth=auth)
             else:
-                resp = self._session.put("{}/{}/{}".format(url, db, doc["_id"]), data=json.dumps(doc, cls=MyEncoder), auth=auth)
+                resp = self._session.put("{}/{}/{}".format(url, db, doc["uni_key_id"]), data=json.dumps(doc, cls=MyEncoder), auth=auth)
         else:
             if use_post:
                 resp = self._session.post("{}/{}/".format(url, db), data=json.dumps(doc, cls=MyEncoder))
             else:
                 try:
-                    resp = self._session.put("{}/{}/{}".format(url, db, doc["_id"]), data=json.dumps(doc, cls=MyEncoder))
+                    resp = self._session.put("{}/{}/{}".format(url, db, doc["uni_key_id"]), data=json.dumps(doc, cls=MyEncoder))
                 except Exception as err:
                     print(err)
                     raise
@@ -1184,9 +1184,9 @@ class MobileRestClient:
         server_type = self.get_server_type(url=url, auth=auth)
 
         if server_type == ServerType.syncgateway:
-            log_info("Purging doc: {}".format(doc["_id"]))
+            log_info("Purging doc: {}".format(doc["uni_key_id"]))
             data = {
-                doc["_id"]: ['*']
+                doc["uni_key_id"]: ['*']
             }
         else:
             log_info("Purging doc: {}".format(doc["id"]))
@@ -1217,10 +1217,10 @@ class MobileRestClient:
         for doc in docs:
 
             if server_type == ServerType.syncgateway:
-                if "_id" in doc:
-                    log_info("Purging doc: {}".format(doc["_id"]))
+                if "uni_key_id" in doc:
+                    log_info("Purging doc: {}".format(doc["uni_key_id"]))
                     data = {
-                        doc["_id"]: ['*']
+                        doc["uni_key_id"]: ['*']
                     }
                 else:
                     log_info("Purging doc: {}".format(doc["id"]))
@@ -1443,7 +1443,7 @@ class MobileRestClient:
             else:
                 doc_id = "{}_{}".format(id_prefix, i)
 
-            doc_body["_id"] = doc_id
+            doc_body["uni_key_id"] = doc_id
 
             doc_obj = self.add_doc(url, db, doc_body, auth=auth, use_post=False)
             if attachments_generator:
@@ -1924,7 +1924,7 @@ class MobileRestClient:
                     # Found the doc but unexpected rev on LiteServ
                     missing_docs.append(resp_doc)
                     all_docs_returned = False
-                elif server_type == ServerType.syncgateway and resp_doc["_rev"] != expected_doc_map[resp_doc["_id"]]:
+                elif server_type == ServerType.syncgateway and resp_doc["_rev"] != expected_doc_map[resp_doc["uni_key_id"]]:
                     # Found the doc but unexpected rev on LiteServ
                     missing_docs.append(resp_doc)
                     all_docs_returned = False
@@ -1962,7 +1962,7 @@ class MobileRestClient:
                 if server_type == ServerType.listener:
                     resp_docs[resp_doc["id"]] = resp_doc["value"]["rev"]
                 elif server_type == ServerType.syncgateway:
-                    resp_docs[resp_doc["_id"]] = resp_doc["_rev"]
+                    resp_docs[resp_doc["uni_key_id"]] = resp_doc["_rev"]
 
             logging.debug("Expected: {}".format(expected_doc_map))
             logging.debug("Actual: {}".format(resp_docs))
@@ -2386,7 +2386,7 @@ class MobileRestClient:
         for doc in response:
             if "error" not in doc:
                 # doc was found
-                found_doc_ids.append(doc["_id"])
+                found_doc_ids.append(doc["uni_key_id"])
 
         logging.debug("Found Doc Ids: {}".format(found_doc_ids))
         logging.debug("Expected Doc Ids: {}".format(expected_doc_ids))

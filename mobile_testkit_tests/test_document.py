@@ -12,16 +12,16 @@ ATTACHMENTS = ATTACHMENT_ONE + ATTACHMENT_TWO
         "channels": []
     }),
     ("test_id", None, None, None, None, {
-        "_id": "test_id",
+        "uni_key_id": "test_id",
         "channels": []
     }),
     ("test_id", {"foo": "bar"}, None, None, None, {
-        "_id": "test_id",
+        "uni_key_id": "test_id",
         "content": {"foo": "bar"},
         "channels": []
     }),
     ("test_id", None, ATTACHMENTS, None, None, {
-        "_id": "test_id",
+        "uni_key_id": "test_id",
         "_attachments": {
             ATTACHMENTS[0].name: {"data": ATTACHMENTS[0].data},
             ATTACHMENTS[1].name: {"data": ATTACHMENTS[1].data}
@@ -29,12 +29,12 @@ ATTACHMENTS = ATTACHMENT_ONE + ATTACHMENT_TWO
         "channels": []
     }),
     ("test_id", None, None, 10, None, {
-        "_id": "test_id",
+        "uni_key_id": "test_id",
         "_exp": 10,
         "channels": []
     }),
     ("test_id", None, None, None, ["A"], {
-        "_id": "test_id",
+        "uni_key_id": "test_id",
         "channels": ["A"]
     })
 ])

@@ -77,7 +77,7 @@ def test_userdefind_collections(params_from_base_test_setup):
     sdk_client = get_cluster(connection_url, bucket)
     sdk_doc_bodies = document.create_docs('sdk_default', number=num_sdk_docs, channels=channels)
     print("sdk doc bodies are ", sdk_doc_bodies)
-    sdk_docs = {doc['sgw_uni_id']: doc for doc in sdk_doc_bodies}
+    sdk_docs = {doc['uni_key_id']: doc for doc in sdk_doc_bodies}
 
     sdk_client.upsert_multi(sdk_docs)
 
