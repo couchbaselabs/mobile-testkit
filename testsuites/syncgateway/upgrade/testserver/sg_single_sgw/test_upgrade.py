@@ -167,7 +167,7 @@ def test_upgrade(params_from_base_test_setup):
 
     # Start 2nd replicator to verify docs with attachments gets replicated after the upgrade for one shot replications
     sg_cookie, sg_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=sg_user_name)
-    sg_cookie1, sg_session1 = sg_client.create_session(url=sg_admin_url, db=sg_db, name=sg_user_name)
+    # sg_cookie1, sg_session1 = sg_client.create_session(url=sg_admin_url, db=sg_db, name=sg_user_name)
     repl_config1 = replicator.configure(cbl_db2, sg_blip_url, continuous=False, channels=sg_user_channels, replication_type="push_pull", replicator_authenticator=replicator_authenticator)
     repl1 = replicator.create(repl_config1)
     replicator.start(repl1)
@@ -263,7 +263,6 @@ def test_upgrade(params_from_base_test_setup):
             #    - Do not enable import in SG.
             if mode == "cc":
                 enable_import = True
-
             sg_obj = SyncGateway()
             for sg in sync_gateways:
                 sg_ip = host_for_url(sg["admin"])
@@ -287,6 +286,9 @@ def test_upgrade(params_from_base_test_setup):
         db.create_bulk_docs(number=1, id_prefix=terminator_doc_id, db=cbl_db, channels=sg_user_channels)
         log_info("Waiting for doc updates to complete")
         updated_doc_revs = updates_future.result()
+
+        # Wait for replication to completed from cbl db1 to sgw and sgw to cbl db2
+        replicator.wait_until_replicator_idle(repl)
         replicator.wait_until_replicator_idle(repl2, max_times=3000)
 
         # 7. Gather CBL docs new revs for verification
