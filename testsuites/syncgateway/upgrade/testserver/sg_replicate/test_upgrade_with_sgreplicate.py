@@ -252,8 +252,8 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
     repl1, replicator_authenticator1, session1 = create_sgw_sessions_and_configure_replications(sg_client, replicator, authenticator, sg_user_channels,
                                                                                                 sg1, sg1_user_name, sg_db1, cbl_db1, sg1_blip_url, auth)
 
-    repl2, _, _ = create_sgw_sessions_and_configure_replications(sg_client, replicator, authenticator, sg_user_channels,
-                                                                 sg3, sg2_user_name, sg_db2, cbl_db2, sg2_blip_url, auth)
+    repl2, _, session = create_sgw_sessions_and_configure_replications(sg_client, replicator, authenticator, sg_user_channels,
+                                                                       sg3, sg2_user_name, sg_db2, cbl_db2, sg2_blip_url, auth)
 
     #  Start 3rd replicator to verify docs with attachments gets replicated after the upgrade for one shot replications from sgw cluster1 to cbl db3
     repl_config3 = replicator.configure(cbl_db3, sg1_blip_url, continuous=False, channels=sg_user_channels, replication_type="push_pull", replicator_authenticator=replicator_authenticator1)
@@ -339,16 +339,17 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
         # 6. Restart SGWs after the sgw upgrade
         sg_obj = SyncGateway()
         # TODO : comment below and test
-        """for sg in sync_gateways:
+        for sg in sync_gateways:
             sg_ip = host_for_url(sg["admin"])
             log_info("Restarting sync gateway after server upgrade {}".format(sg_ip))
             sg_obj.restart_sync_gateways(cluster_config=cluster_config, url=sg_ip)
-            time.sleep(5)"""
+            time.sleep(5)
 
         if need_to_redeploy:
             # Enable xattrs on all SG/SGAccel nodes
             # cc - Start 1 SG with import enabled, all with XATTRs enabled
             #    - Do not enable import in SG.
+            print("redeploying the SGWs..blah blah  blah")
             if mode == "cc":
                 enable_import = True
             sg_obj = SyncGateway()
@@ -427,12 +428,12 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
     for replid in repl_id:
         sg1.admin.wait_until_sgw_replication_done(sg_db1, replid, write_flag=True, max_times=3000)
     replicator.wait_until_replicator_idle(repl2, max_times=3000)
-    # limit_2 = num_docs * 10
+    limit_2 = num_docs * 7
     count = 0
     retry_count = 60
     while count < retry_count:
         time.sleep(30)
-        sg_cluster2_docs = sg_client.get_all_docs(url=sg3.admin.admin_url, db=sg_db2, include_docs=True, auth=auth)["rows"]
+        sg_cluster2_docs = sg_client.get_all_docs(url=sg3.url, db=sg_db2, include_docs=True, auth=session)["rows"]
         sg_cluster2_ids = [doc["id"] for doc in sg_cluster2_docs]
         cluster1_num_docs = sum(sgw_cluster1_replication1_ch1 in sg_id for sg_id in sg_cluster2_ids)
         count += 1
@@ -442,7 +443,7 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
     # cbl_doc_ids2 = db.getDocIds(cbl_db2, limit=limit_2)  # number times 6 as it creates docs 6 times at 6 places
     replicator.wait_until_replicator_idle(repl2, max_times=3000)
     cbl_doc_ids2 = db.getDocIds(cbl_db2)  # number times 6 as it creates docs 6 times at 6 places
-    print("cbl doc ids 2 are : ", cbl_doc_ids2)
+    print("cbl doc ids 2 are : ", cbl_doc_ids2, limit=limit_2)
     doc_id = "sgw_attachments1_1"
     latest_rev = sg_client.get_latest_rev(sg1.admin.admin_url, sg_db1, doc_id, auth=auth)
     sg_client.delete_doc(url=sg1.admin.admin_url, db=sg_db1, doc_id=doc_id, rev=latest_rev, auth=auth)
