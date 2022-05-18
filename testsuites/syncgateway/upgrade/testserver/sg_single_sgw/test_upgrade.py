@@ -289,7 +289,7 @@ def test_upgrade(params_from_base_test_setup):
 
         # Wait for replication to completed from cbl db1 to sgw and sgw to cbl db2
         replicator.wait_until_replicator_idle(repl2, max_times=3000)
-        time.sleep(20)  # to avoid doc updates of previous logic conflict with below wait for replication logic
+        time.sleep(90)  # to avoid doc updates of previous logic conflict with below wait for replication logic
         replicator.wait_until_replicator_idle(repl, max_times=3000)
 
         # 7. Gather CBL docs new revs for verification
