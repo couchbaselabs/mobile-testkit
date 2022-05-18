@@ -261,6 +261,7 @@ def test_upgrade(params_from_base_test_setup):
             # Enable xattrs on all SG/SGAccel nodes
             # cc - Start 1 SG with import enabled, all with XATTRs enabled
             #    - Do not enable import in SG.
+            print("Redeploying is necessary so going to be redeployed.")
             if mode == "cc":
                 enable_import = True
             sg_obj = SyncGateway()
