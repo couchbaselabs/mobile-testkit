@@ -241,7 +241,7 @@ def process_per_cbl_client(sg_params, cbl_params, test_params, doc_ids):
             docs_to_update = random.sample(doc_ids, num_of_docs_to_update)
             sg_docs = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=list(docs_to_update), auth=session)[0]
             for sg_doc in sg_docs:
-                sg_doc["id"] = sg_doc["uni_key_id"]
+                sg_doc["id"] = sg_doc["_id"]
             _log_system_test(thread_name, 'docs update on SG', "Updating {} docs on SG - {}".format(len(docs_to_update), docs_to_update))
             sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs,
                                   number_updates=num_of_doc_updates, auth=session, channels=sg_channels)

@@ -116,7 +116,7 @@ def test_replication_push_filtering(params_from_base_test_setup, num_of_docs):
             filtered_doc_ids.append(doc_id)
     for item in sg_docs:
         sg_doc = item["doc"]
-        doc_id = sg_doc["uni_key_id"]
+        doc_id = sg_doc["_id"]
         if doc_id in filtered_doc_ids:
             cbl_doc = cbl_db_docs[doc_id]
             assert cbl_doc["new_field_1"] == sg_doc["new_field_1"], "new_field_1 data is not matching"
@@ -200,7 +200,7 @@ def test_replication_pull_filtering(params_from_base_test_setup, num_of_docs):
     # Docs with new_field_1 value to true will only be replicated, others will be rejected by filter method
     for item in sg_docs:
         sg_doc = item["doc"]
-        sg_client.update_doc(url=sg_url, db=sg_db, doc_id=sg_doc["uni_key_id"],
+        sg_client.update_doc(url=sg_url, db=sg_db, doc_id=sg_doc["_id"],
                              number_updates=1, auth=auth_session,
                              property_updater=add_new_fields_to_doc)
     repl_config = replicator.configure(source_db=cbl_db,
@@ -223,7 +223,7 @@ def test_replication_pull_filtering(params_from_base_test_setup, num_of_docs):
     for item in sg_docs:
         sg_doc = item["doc"]
         if sg_doc["new_field_1"] is True:
-            filtered_doc_ids.append(sg_doc["uni_key_id"])
+            filtered_doc_ids.append(sg_doc["_id"])
     for doc_id in cbl_db_docs:
         cbl_doc = cbl_db_docs[doc_id]
         if doc_id in filtered_doc_ids:
@@ -309,7 +309,7 @@ def test_replication_filter_deleted_document(params_from_base_test_setup, num_of
     # 3. Delete few docs in both SG and CBL and replicate using delete callback for both push and pull filter.
     docs_to_delete = random.sample(doc_ids, num_of_docs_to_delete)
     sg_docs_to_delete = [sg_doc["doc"] for sg_doc in sg_docs if sg_doc["id"] in docs_to_delete[:len(docs_to_delete) // 2]]
-    sg_docs_to_delete_ids = [doc["uni_key_id"] for doc in sg_docs_to_delete]
+    sg_docs_to_delete_ids = [doc["_id"] for doc in sg_docs_to_delete]
     cbl_docs_to_delete_ids = [sg_doc["id"] for sg_doc in sg_docs if sg_doc["id"] in docs_to_delete[len(docs_to_delete) // 2:]]
     sg_client.delete_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs_to_delete,
                                auth=auth_session)

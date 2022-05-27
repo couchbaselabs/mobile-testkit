@@ -139,7 +139,7 @@ def test_olddoc_nil(params_from_base_test_setup, sg_conf_name):
     )
 
     abc_docs = document.create_docs(doc_id_prefix="abc_docs", number=num_docs, channels=user_one_info.channels)
-    abc_doc_ids = [doc['uni_key_id'] for doc in abc_docs]
+    abc_doc_ids = [doc['sgw_uni_id'] for doc in abc_docs]
 
     user_one_docs = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=abc_docs, auth=user_one_auth)
     assert len(user_one_docs) == num_docs
@@ -251,7 +251,7 @@ def test_on_demand_doc_processing(params_from_base_test_setup, sg_conf_name, num
         auth_dict[user_name] = sg_client.create_session(url=sg_admin_url, db=sg_db, name=user_name, auth=auth)
         docs = document.create_docs('{}_doc'.format(user_name), number=number_docs_per_user, channels=user_channels, prop_generator=update_props)
         for doc in docs:
-            docs_to_add[doc['uni_key_id']] = doc
+            docs_to_add[doc['sgw_uni_id']] = doc
 
     assert len(docs_to_add) == number_users * number_docs_per_user
 
@@ -540,7 +540,7 @@ def test_offline_processing_of_external_updates(params_from_base_test_setup, sg_
 
     # Add docs
     sg_docs = document.create_docs('sg', number=num_docs_per_client, channels=['SG'])
-    sg_doc_ids = [doc['uni_key_id'] for doc in sg_docs]
+    sg_doc_ids = [doc['sgw_uni_id'] for doc in sg_docs]
     bulk_docs_resp = sg_client.add_bulk_docs(
         url=sg_url,
         db=sg_db,
@@ -565,8 +565,8 @@ def test_offline_processing_of_external_updates(params_from_base_test_setup, sg_
     # Add additional docs via SDK
     log_info('Adding {} docs via SDK ...'.format(num_docs_per_client))
     sdk_doc_bodies = document.create_docs('sdk', number=num_docs_per_client, channels=['SDK'])
-    sdk_doc_ids = [doc['uni_key_id'] for doc in sdk_doc_bodies]
-    sdk_docs = {doc['uni_key_id']: doc for doc in sdk_doc_bodies}
+    sdk_doc_ids = [doc['sgw_uni_id'] for doc in sdk_doc_bodies]
+    sdk_docs = {doc['sgw_uni_id']: doc for doc in sdk_doc_bodies}
     sdk_docs_resp = []
     for k, v in sdk_docs.items():
         sdk_docs_resp.append(sdk_client.upsert(k, v))
@@ -586,18 +586,18 @@ def test_offline_processing_of_external_updates(params_from_base_test_setup, sg_
     all_doc_ids_scratch_pad = list(all_doc_ids)
     for doc in bulk_resp:
         log_info(doc)
-        if doc['uni_key_id'].startswith('sg_'):
+        if doc['sgw_uni_id'].startswith('sg_'):
             # Rev prefix should be '2-' due to the write by Sync Gateway and the update by SDK
             assert doc['_rev'].startswith('2-')
             assert doc['updated_by_sdk']
         else:
             # SDK created doc. Should only have 1 rev from import
             assert doc['_rev'].startswith('1-')
-        all_doc_ids_scratch_pad.remove(doc['uni_key_id'])
+        all_doc_ids_scratch_pad.remove(doc['sgw_uni_id'])
     assert len(all_doc_ids_scratch_pad) == 0
 
     # Verify all of the docs show up in the changes feed
-    docs_to_verify_in_changes = [{'id': doc['uni_key_id'], 'rev': doc['_rev']} for doc in bulk_resp]
+    docs_to_verify_in_changes = [{'id': doc['sgw_uni_id'], 'rev': doc['_rev']} for doc in bulk_resp]
     sg_client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=docs_to_verify_in_changes, auth=seth_auth)
     if sync_gateway_version >= "2.5.0":
         expvars = sg_client.get_expvars(sg_admin_url, auth=auth)
@@ -684,9 +684,9 @@ def test_large_initial_import(params_from_base_test_setup, sg_conf_name):
 
     # Create 'num_docs' docs from SDK
     sdk_doc_bodies = document.create_docs('sdk', num_docs, channels=['created_via_sdk'], prop_generator=prop_gen)
-    sdk_doc_ids = [doc['uni_key_id'] for doc in sdk_doc_bodies]
+    sdk_doc_ids = [doc['sgw_uni_id'] for doc in sdk_doc_bodies]
     assert len(sdk_doc_ids) == num_docs
-    sdk_docs = {doc['uni_key_id']: doc for doc in sdk_doc_bodies}
+    sdk_docs = {doc['sgw_uni_id']: doc for doc in sdk_doc_bodies}
     for k, v in sdk_docs.items():
         bucket_cluster.upsert(k, v)
 
@@ -709,12 +709,12 @@ def test_large_initial_import(params_from_base_test_setup, sg_conf_name):
     for doc in bulk_resp:
         log_info('Doc: {}'.format(doc))
         assert doc['_rev'].startswith('1-')
-        sdk_doc_ids_scratch_pad.remove(doc['uni_key_id'])
+        sdk_doc_ids_scratch_pad.remove(doc['sgw_uni_id'])
 
     assert len(sdk_doc_ids_scratch_pad) == 0
 
     # Verify all of the docs show up in the changes feed
-    docs_to_verify_in_changes = [{'id': doc['uni_key_id'], 'rev': doc['_rev']} for doc in bulk_resp]
+    docs_to_verify_in_changes = [{'id': doc['sgw_uni_id'], 'rev': doc['_rev']} for doc in bulk_resp]
     sg_client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=docs_to_verify_in_changes, auth=seth_auth)
 
 
@@ -830,7 +830,7 @@ def test_purge(params_from_base_test_setup, sg_conf_name, use_multiple_channels,
     sdk_client = get_cluster(connection_url, bucket_name)
     # Create 'number_docs_per_client' docs from SDK
     sdk_doc_bodies = document.create_docs('sdk', number_docs_per_client, channels=seth_user_info.channels)
-    sdk_docs = {doc['uni_key_id']: doc for doc in sdk_doc_bodies}
+    sdk_docs = {doc['sgw_uni_id']: doc for doc in sdk_doc_bodies}
     sdk_doc_ids = [doc for doc in sdk_docs]
     for k, v in sdk_docs.items():
         sdk_client.upsert(k, v)
@@ -848,8 +848,8 @@ def test_purge(params_from_base_test_setup, sg_conf_name, use_multiple_channels,
     doc_id_scatch_pad = list(all_doc_ids)
     assert len(doc_id_scatch_pad) == number_docs_per_client * 2
     for sg_doc in sg_docs:
-        log_info('Found doc through SG: {}'.format(sg_doc['uni_key_id']))
-        doc_id_scatch_pad.remove(sg_doc['uni_key_id'])
+        log_info('Found doc through SG: {}'.format(sg_doc['sgw_uni_id']))
+        doc_id_scatch_pad.remove(sg_doc['sgw_uni_id'])
     assert len(doc_id_scatch_pad) == 0
 
     # Get all of the docs via SDK
@@ -1165,7 +1165,7 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
     # Create docs and add them via sdk
     log_info('Adding docs via sdk ...')
     sdk_doc_bodies = document.create_docs('sdk', number_docs_per_client, content={'foo': 'bar', 'updates': 1}, channels=['sdk'])
-    sdk_docs = {doc['uni_key_id']: doc for doc in sdk_doc_bodies}
+    sdk_docs = {doc['sgw_uni_id']: doc for doc in sdk_doc_bodies}
     sdk_doc_ids = [doc for doc in sdk_docs]
     for k, v in sdk_docs.items():
         sdk_client.upsert(k, v)
@@ -1181,7 +1181,7 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
     sg_docs = document.create_docs('sg', number_docs_per_client, content={'foo': 'bar', 'updates': 1}, channels=['sg'])
     log_info('Adding bulk_docs')
     sg_docs_resp = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=seth_session)
-    sg_doc_ids = [doc['uni_key_id'] for doc in sg_docs]
+    sg_doc_ids = [doc['sgw_uni_id'] for doc in sg_docs]
     assert len(sg_docs_resp) == number_docs_per_client
 
     all_doc_ids = sdk_doc_ids + sg_doc_ids
@@ -1206,7 +1206,7 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
     # SG: Verify docs (sg + sdk) are there via _changes
     # Format docs for changes verification
     log_info('Verify Sync Gateway sees all docs on _changes ...')
-    all_docs_via_sg_formatted = [{"id": doc["uni_key_id"], "rev": doc["_rev"]} for doc in all_docs_via_sg]
+    all_docs_via_sg_formatted = [{"id": doc["_id"], "rev": doc["_rev"]} for doc in all_docs_via_sg]
     assert len(all_docs_via_sg_formatted) == number_docs_per_client * 2
     sg_client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=all_docs_via_sg_formatted, auth=seth_session)
 
@@ -1244,7 +1244,7 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
     for doc in docs_from_sg_bulk_get:
         # If it is an SG doc the revision prefix should match the number of updates.
         # This may not be the case due to batched importing of SDK updates
-        if doc['uni_key_id'].startswith('sg_'):
+        if doc['sgw_uni_id'].startswith('sg_'):
             assert doc['_rev'].startswith('{}-'.format(number_updates + 1))
         assert doc['content']['updates'] == number_updates + 1
 
@@ -1259,12 +1259,12 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
             assert doc['value']['rev'].startswith('{}-'.format(number_updates + 1))
             assert doc['doc']['_rev'].startswith('{}-'.format(number_updates + 1))
 
-        assert doc['id'] == doc['doc']['uni_key_id']
+        assert doc['id'] == doc['doc']['sgw_uni_id']
         assert doc['doc']['content']['updates'] == number_updates + 1
 
     # Verify updates from SG via _changes
     log_info('Verify Sync Gateway sees updates on _changes ...')
-    all_docs_via_sg_formatted = [{"id": doc["uni_key_id"], "rev": doc["_rev"]} for doc in docs_from_sg_bulk_get]
+    all_docs_via_sg_formatted = [{"id": doc["_id"], "rev": doc["_rev"]} for doc in docs_from_sg_bulk_get]
     sg_client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=all_docs_via_sg_formatted, auth=seth_session)
 
     # Verify updates from SDK via get_multi
@@ -1429,7 +1429,7 @@ def test_sg_sdk_interop_shared_docs(params_from_base_test_setup,
         docs=sg_docs,
         auth=seth_session
     )
-    doc_set_one_ids = [doc['uni_key_id'] for doc in sg_docs]
+    doc_set_one_ids = [doc['sgw_uni_id'] for doc in sg_docs]
     assert len(sg_docs_resp) == number_docs_per_client
 
     # Create / add docs via sdk
@@ -1442,8 +1442,8 @@ def test_sg_sdk_interop_shared_docs(params_from_base_test_setup,
 
     # Add docs via SDK
     log_info('Adding {} docs via SDK ...'.format(number_docs_per_client))
-    sdk_docs = {doc['uni_key_id']: doc for doc in sdk_doc_bodies}
-    doc_set_two_ids = [sdk_doc['uni_key_id'] for sdk_doc in sdk_doc_bodies]
+    sdk_docs = {doc['sgw_uni_id']: doc for doc in sdk_doc_bodies}
+    doc_set_two_ids = [sdk_doc['sgw_uni_id'] for sdk_doc in sdk_doc_bodies]
     sdk_docs_resp = []
     for k, v in sdk_docs.items():
         sdk_docs_resp.append(sdk_client.upsert(k, v))
@@ -1465,7 +1465,7 @@ def test_sg_sdk_interop_shared_docs(params_from_base_test_setup,
     verify_doc_ids_in_sg_all_docs_response(all_docs_resp, number_docs_per_client * 2, all_docs_ids)
 
     # SG: Verify docs (sg + sdk) are there via _changes
-    all_docs_via_sg_formatted = [{"id": doc["uni_key_id"], "rev": doc["_rev"]} for doc in docs_from_sg_bulk_get]
+    all_docs_via_sg_formatted = [{"id": doc["_id"], "rev": doc["_rev"]} for doc in docs_from_sg_bulk_get]
     sg_client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=all_docs_via_sg_formatted, auth=seth_session)
 
     # SDK: Verify docs (sg + sdk) are present
@@ -1508,7 +1508,7 @@ def test_sg_sdk_interop_shared_docs(params_from_base_test_setup,
     assert len(errors) == 0
 
     # Issue _changes
-    docs_from_sg_bulk_get_formatted = [{"id": doc["uni_key_id"], "rev": doc["_rev"]} for doc in docs_from_sg_bulk_get]
+    docs_from_sg_bulk_get_formatted = [{"id": doc["_id"], "rev": doc["_rev"]} for doc in docs_from_sg_bulk_get]
     assert len(docs_from_sg_bulk_get_formatted) == number_docs_per_client * 2
     sg_client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=docs_from_sg_bulk_get_formatted, auth=seth_session)
 
@@ -1699,8 +1699,8 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
 
         # Add docs via SDK
         log_info('Started adding {} docs via SDK ...'.format(number_docs_per_client))
-        sdk_docs = {doc['uni_key_id']: doc for doc in sdk_doc_bodies}
-        doc_set_ids1 = [sdk_doc['uni_key_id'] for sdk_doc in sdk_doc_bodies]
+        sdk_docs = {doc['sgw_uni_id']: doc for doc in sdk_doc_bodies}
+        doc_set_ids1 = [sdk_doc['sgw_uni_id'] for sdk_doc in sdk_doc_bodies]
         sdk_docs_resp = []
         for k, v in sdk_docs.items():
             sdk_docs_resp.append(sdk_client.upsert(k, v))
@@ -1920,7 +1920,7 @@ def update_sg_docs(client, url, db, docs_to_update, prop_to_update, number_updat
 
         # Remove doc from the list if the doc has been updated enough times
         if doc[prop_to_update] == number_updates:
-            local_docs_to_update.remove(doc["uni_key_id"])
+            local_docs_to_update.remove(doc["_id"])
         else:
             # Update the doc
             try:
@@ -2194,7 +2194,7 @@ def verify_doc_ids_in_sg_bulk_response(response, expected_number_docs, expected_
 
     # Cross off all the doc ids seen in the response from the scratch pad
     for doc in response:
-        expected_ids_scratch_pad.remove(doc["uni_key_id"])
+        expected_ids_scratch_pad.remove(doc["_id"])
 
     # Make sure all doc ids have been found
     assert len(expected_ids_scratch_pad) == 0
@@ -2358,7 +2358,7 @@ def test_sg_sdk_interop_shared_updates_from_sg(params_from_base_test_setup,
         auth=autouser_session
     )
 
-    sg_doc_ids = [doc['uni_key_id'] for doc in sg_docs]
+    sg_doc_ids = [doc['sgw_uni_id'] for doc in sg_docs]
     assert len(sg_docs_resp) == number_docs_per_client
 
     sg_create_docs, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=sg_doc_ids,
@@ -2388,7 +2388,7 @@ def test_sg_sdk_interop_shared_updates_from_sg(params_from_base_test_setup,
         sg_client.add_conflict(
             url=sg_url,
             db=sg_db,
-            doc_id=doc["uni_key_id"],
+            doc_id=doc["_id"],
             parent_revisions=doc["_rev"],
             new_revision="2-bar",
             auth=autouser_session
@@ -2434,7 +2434,7 @@ def test_sg_sdk_interop_shared_updates_from_sg(params_from_base_test_setup,
             assert False
 
     for doc in sdk_update_docs2:
-        change_for_doc = sg_client.get_changes(url=sg_url, db=sg_db, since=0, auth=autouser_session, feed="normal", filter_type="_doc_ids", filter_doc_ids=[doc["uni_key_id"]])
+        change_for_doc = sg_client.get_changes(url=sg_url, db=sg_db, since=0, auth=autouser_session, feed="normal", filter_type="_doc_ids", filter_doc_ids=[doc["_id"]])
         assert doc["_rev"] in change_for_doc["results"][0]["changes"][0]["rev"], "current revision does not exist in changes"
 
     # Do SDK deleted and SG delete after branched revision created and check changes feed removed branched revisions
@@ -2691,8 +2691,8 @@ def test_stats_logging_import_count(params_from_base_test_setup,
 
     # Add docs via SDK
     log_info('Started adding {} docs via SDK as first set...'.format(number_docs_per_client))
-    sdk_docs = {doc['uni_key_id']: doc for doc in sdk_doc_bodies}
-    doc_set_ids1 = [sdk_doc['uni_key_id'] for sdk_doc in sdk_doc_bodies]
+    sdk_docs = {doc['sgw_uni_id']: doc for doc in sdk_doc_bodies}
+    doc_set_ids1 = [sdk_doc['sgw_uni_id'] for sdk_doc in sdk_doc_bodies]
     sdk_docs_resp = []
     for k, v in sdk_docs.items():
         sdk_docs_resp.append(sdk_client.upsert(k, v))
@@ -2708,8 +2708,8 @@ def test_stats_logging_import_count(params_from_base_test_setup,
 
     # Add docs via SDK
     log_info('Started adding {} docs via SDK as second set...'.format(number_docs_per_client))
-    sdk_docs_2 = {doc['uni_key_id']: doc for doc in sdk_doc_bodies_2}
-    doc_set_ids2 = [sdk_doc['uni_key_id'] for sdk_doc in sdk_doc_bodies_2]
+    sdk_docs_2 = {doc['sgw_uni_id']: doc for doc in sdk_doc_bodies_2}
+    doc_set_ids2 = [sdk_doc['sgw_uni_id'] for sdk_doc in sdk_doc_bodies_2]
     sdk_docs_resp = []
     for k, v in sdk_docs_2.items():
         sdk_docs_resp.append(sdk_client.upsert(k, v))

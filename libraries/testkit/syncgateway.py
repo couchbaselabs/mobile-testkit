@@ -809,4 +809,4 @@ def assert_does_not_have_doc(sg_user, doc_id):
 def assert_has_doc(sg_user, doc_id):
     doc = sg_user.get_doc(doc_id)
     assert doc is not None
-    assert doc["uni_key_id"] == doc_id
+    assert doc["_id"] == doc_id

@@ -80,7 +80,7 @@ def test_importdocs_false_shared_bucket_access_true(params_from_base_test_setup)
     # 4. Create docs in CBs
     sdk_doc_bodies = document.create_docs('doc_set_two', num_docs, channels=['shared'])
     log_info('Adding {} docs via SDK ...'.format(num_docs))
-    sdk_docs = {doc['uni_key_id']: doc for doc in sdk_doc_bodies}
+    sdk_docs = {doc['sgw_uni_id']: doc for doc in sdk_doc_bodies}
     sdk_client.upsert_multi(sdk_docs)
     time.sleep(3)
     # 5. Verify  SGW node which does not have config import_docs=false has docs imported.

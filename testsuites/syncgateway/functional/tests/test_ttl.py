@@ -161,7 +161,7 @@ def test_numeric_expiry_as_ttl(params_from_base_test_setup, sg_conf_name):
 
     # doc_exp_10 should be available still
     doc_exp_10_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_10["id"], auth=sg_user_session)
-    assert doc_exp_10_result["uni_key_id"] == "exp_10"
+    assert doc_exp_10_result["_id"] == "exp_10"
 
 
 @pytest.mark.syncgateway
@@ -273,7 +273,7 @@ def test_string_expiry_as_ttl(params_from_base_test_setup, sg_conf_name):
 
     # doc_exp_10 should be available still
     doc_exp_10_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_10["id"], auth=sg_user_session)
-    assert doc_exp_10_result["uni_key_id"] == "exp_10"
+    assert doc_exp_10_result["_id"] == "exp_10"
 
 
 @pytest.mark.syncgateway
@@ -389,7 +389,7 @@ def test_numeric_expiry_as_unix_date(params_from_base_test_setup, sg_conf_name):
 
     # doc_exp_years should be available still
     doc_exp_years_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_years["id"], auth=sg_user_session)
-    assert doc_exp_years_result["uni_key_id"] == "exp_years"
+    assert doc_exp_years_result["_id"] == "exp_years"
 
 
 @pytest.mark.syncgateway
@@ -509,7 +509,7 @@ def test_string_expiry_as_unix_date(params_from_base_test_setup, sg_conf_name):
 
     # doc_exp_years should be available still
     doc_exp_years_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_years["id"], auth=sg_user_session)
-    assert doc_exp_years_result["uni_key_id"] == "exp_years"
+    assert doc_exp_years_result["_id"] == "exp_years"
 
 
 @pytest.mark.syncgateway
@@ -625,7 +625,7 @@ def test_string_expiry_as_iso_8601_date(params_from_base_test_setup, sg_conf_nam
 
     # doc_exp_years should be available still
     doc_exp_years_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_years["id"], auth=sg_user_session)
-    assert doc_exp_years_result["uni_key_id"] == "exp_years"
+    assert doc_exp_years_result["_id"] == "exp_years"
 
 
 @pytest.mark.syncgateway
@@ -704,11 +704,11 @@ def test_removing_expiry(params_from_base_test_setup, sg_conf_name):
 
     # doc_exp_3 should no longer have an expiry and should not raise an exception
     doc_exp_3_updated_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_3_updated["id"], auth=sg_user_session)
-    assert doc_exp_3_updated_result["uni_key_id"] == "exp_3"
+    assert doc_exp_3_updated_result["_id"] == "exp_3"
 
     # doc_exp_10 should be available still and should not raise an exception
     doc_exp_10_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_10["id"], auth=sg_user_session)
-    assert doc_exp_10_result["uni_key_id"] == "exp_10"
+    assert doc_exp_10_result["_id"] == "exp_10"
 
 
 @pytest.mark.syncgateway
@@ -822,7 +822,7 @@ def test_rolling_ttl_expires(params_from_base_test_setup, sg_conf_name):
 
     # doc_exp_10 should be available still
     doc_exp_10_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_10["id"], auth=sg_user_session)
-    assert doc_exp_10_result["uni_key_id"] == "exp_10"
+    assert doc_exp_10_result["_id"] == "exp_10"
 
 
 @pytest.mark.syncgateway
@@ -915,7 +915,7 @@ def test_rolling_ttl_remove_expirary(params_from_base_test_setup, sg_conf_name):
 
     # doc_exp_3 should still be around due to removal of expiry
     doc_exp_3 = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_3["id"], auth=sg_user_session)
-    assert doc_exp_3["uni_key_id"] == "exp_3"
+    assert doc_exp_3["_id"] == "exp_3"
 
     # doc_exp_10 should be expired due to the updates (10s) + sleep (5s)
     with pytest.raises(HTTPError) as he:
@@ -1034,7 +1034,7 @@ def test_setting_expiry_in_bulk_docs(params_from_base_test_setup, sg_conf_name):
     assert len(bulk_get_docs) == len(expected_ids)
     assert len(errors) == len(expected_missing_ids)
 
-    bulk_get_doc_ids = [doc["uni_key_id"] for doc in bulk_get_docs]
+    bulk_get_doc_ids = [doc["_id"] for doc in bulk_get_docs]
     error_ids = [doc["id"] for doc in errors]
 
     assert bulk_get_doc_ids == expected_ids

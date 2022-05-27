@@ -433,7 +433,7 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
 
     for doc in sg_docs1:
         if "sgw_docs3" not in doc["id"] and "terminator1_0" not in doc["id"]:
-            sg3_doc = sg_client.get_doc(url=sg3.admin.admin_url, db=sg_db2, doc_id=doc['doc']['uni_key_id'])
+            sg3_doc = sg_client.get_doc(url=sg3.admin.admin_url, db=sg_db2, doc_id=doc['doc']['sgw_uni_id'])
             if "numOfUpdates" in sg_docs1:
                 assert doc["doc"]["numOfUpdates"] == sg3_doc["numOfUpdates"], "number of updates value is not same on both clusters for {}".format(doc)
             if sync_gateway_version < "2.8.0":
@@ -473,7 +473,7 @@ def verify_sg_docs_revision_history(url, sg_db, added_docs, terminator):
             expected_doc_map[doc] = 1
     for doc in sg_docs:
         if "sgw_docs" not in doc['id'] and "SGW_Cluster-1-Replication-1" in doc['id']:
-            key = doc["doc"]["uni_key_id"]
+            key = doc["doc"]["_id"]
             if terminator in key:
                 continue
             rev = doc["doc"]["_rev"]
@@ -484,9 +484,9 @@ def verify_sg_docs_revision_history(url, sg_db, added_docs, terminator):
             except KeyError:
                 log_info("no _rev exists in the dict")
 
-            del doc["doc"]["uni_key_id"]
+            del doc["doc"]["_id"]
             try:
-                del added_docs[key]["uni_key_id"]
+                del added_docs[key]["_id"]
             except KeyError:
                 log_info("Ignoring id verification")
             assert rev_gen == expected_doc_map[key], "revision mismatch"

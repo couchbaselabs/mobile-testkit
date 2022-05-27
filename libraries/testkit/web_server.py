@@ -23,8 +23,8 @@ class HttpHandler(BaseHTTPRequestHandler):
         post_body = self.rfile.read(content_len)
         data = json.loads(post_body)
 
-        if "uni_key_id" in data:
-            log_info("Webhook doc received: {}".format(data["uni_key_id"]))
+        if "_id" in data:
+            log_info("Webhook doc received: {}".format(data["_id"]))
         else:
             log_info("Webhook data received: {}".format(data))
         HttpHandler.server_recieved_data.append(data)

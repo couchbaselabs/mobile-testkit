@@ -59,7 +59,7 @@ def verify_docs_removed(users, expected_num_docs, expected_docs):
         for result in results:
             changes_result = dict()
             if not result["id"].startswith("_user"):
-                changes_result["id"] = result["doc"]["uni_key_id"]
+                changes_result["id"] = result["doc"]["_id"]
                 changes_result["rev"] = result["doc"]["_rev"]
                 changes_result["removed"] = result["doc"]["_removed"]
                 changes_results.append(changes_result)
@@ -158,7 +158,7 @@ def verify_changes(users, expected_num_docs, expected_num_revisions, expected_do
         for result in results:
             changes_result = dict()
             if not result["id"].startswith("_user"):
-                changes_result["id"] = result["doc"]["uni_key_id"]
+                changes_result["id"] = result["doc"]["_id"]
                 changes_result["rev"] = result["doc"]["_rev"]
                 changes_result["updates"] = result["doc"]["updates"]
                 changes_results.append(changes_result)

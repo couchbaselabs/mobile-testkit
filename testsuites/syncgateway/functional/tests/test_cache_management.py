@@ -73,7 +73,7 @@ def test_importDocs_withSharedBucketAccessFalse(params_from_base_test_setup):
     # 2. Create docs in CBS via SDK
     sdk_doc_bodies = document.create_docs('doc_set_two', num_docs, channels=['shared'])
     log_info('Adding {} docs via SDK ...'.format(num_docs))
-    sdk_docs = {doc['uni_key_id']: doc for doc in sdk_doc_bodies}
+    sdk_docs = {doc['sgw_uni_id']: doc for doc in sdk_doc_bodies}
     sdk_client.upsert_multi(sdk_docs)
 
     # 3. Verify docs are not imported to SGW as import_docs is set to false by default
@@ -143,7 +143,7 @@ def test_importDocs_defaultBehavior_withSharedBucketAccessTrue(params_from_base_
     # 2. Create docs in CBS via SDK
     sdk_doc_bodies = document.create_docs('doc_set_two', num_docs, channels=['shared'])
     log_info('Adding {} docs via SDK ...'.format(num_docs))
-    sdk_docs = {doc['uni_key_id']: doc for doc in sdk_doc_bodies}
+    sdk_docs = {doc['sgw_uni_id']: doc for doc in sdk_doc_bodies}
     sdk_client.upsert_multi(sdk_docs)
     time.sleep(2)  # give some time to replicate to SGW
 
@@ -213,7 +213,7 @@ def test_importPartitions_withSharedBucketAccessTrue(params_from_base_test_setup
     # 4. Create docs in CBS via SDK
     sdk_doc_bodies = document.create_docs('doc_set_two', num_docs, channels=['shared'])
     log_info('Adding {} docs via SDK ...'.format(num_docs))
-    sdk_docs = {doc['uni_key_id']: doc for doc in sdk_doc_bodies}
+    sdk_docs = {doc['sgw_uni_id']: doc for doc in sdk_doc_bodies}
     sdk_client.upsert_multi(sdk_docs)
     time.sleep(1)  # give some time to import docs to SGW
 

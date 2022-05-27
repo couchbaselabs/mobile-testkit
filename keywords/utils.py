@@ -305,10 +305,10 @@ def compare_docs(cbl_db, db, docs_dict):
             del doc["doc"]["_rev"]
         except KeyError:
             log_info("no _rev exists in the dict")
-        key = doc["doc"]["uni_key_id"]
-        del doc["doc"]["uni_key_id"]
+        key = doc["doc"]["_id"]
+        del doc["doc"]["_id"]
         try:
-            del cbl_db_docs[key]["uni_key_id"]
+            del cbl_db_docs[key]["_id"]
         except KeyError:
             log_info("Ignoring id verification")
         assert deep_dict_compare(doc["doc"], cbl_db_docs[key]), "mismatch in the dictionary"
@@ -321,11 +321,11 @@ def compare_cbl_docs(db, cbl_db1, cbl_db2):
     cbl_db_docs2 = db.getDocuments(cbl_db2, doc_ids2)
     for doc in cbl_db_docs1:
         try:
-            del cbl_db_docs1[doc]["uni_key_id"]
+            del cbl_db_docs1[doc]["_id"]
         except KeyError:
             log_info("Ignoring id verification on cbl db1")
         try:
-            del cbl_db_docs2[doc]["uni_key_id"]
+            del cbl_db_docs2[doc]["_id"]
         except KeyError:
             log_info("Ignoring id verification on cbl db2")
         assert deep_dict_compare(cbl_db_docs1[doc], cbl_db_docs2[doc]), "mismatch in the dictionary"

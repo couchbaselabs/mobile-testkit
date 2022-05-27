@@ -101,7 +101,7 @@ def create_doc(doc_id, content=None, attachments=None, expiry=None, channels=Non
         if cbl:
             doc["id"] = doc_id
         else:
-            doc["uni_key_id"] = doc_id
+            doc["sgw_uni_id"] = doc_id
 
     if expiry is not None:
         doc["_exp"] = expiry
