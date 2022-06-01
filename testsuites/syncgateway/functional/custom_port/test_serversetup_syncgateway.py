@@ -184,7 +184,7 @@ def test_sgw_server_alternative_address(params_from_base_test_setup, setup_alter
     sdk_client = cb_server.get_bucket_connection(couchbase_server_url, bucket_name, ssl_enabled, cluster)
     docs = document.create_docs('sdk', number=1, channels=['created_via_sdk'])
     for doc in docs:
-        docs_to_add[doc['sgw_uni_id']] = doc
+        docs_to_add[doc['_id']] = doc
     sdk_client.upsert_multi(docs_to_add)
     # Verify import_count stats get incremented
     if sync_gateway_version >= "2.5.0":

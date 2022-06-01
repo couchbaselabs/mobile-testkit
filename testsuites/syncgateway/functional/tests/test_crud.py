@@ -137,7 +137,7 @@ def test_document_resurrection(params_from_base_test_setup, sg_conf_name, deleti
         channels=sg_user_channels,
         attachments_generator=attachment.generate_2_png_10_10
     )
-    sg_doc_ids = [doc['sgw_uni_id'] for doc in sg_doc_bodies]
+    sg_doc_ids = [doc['_id'] for doc in sg_doc_bodies]
 
     sg_bulk_docs_resp = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_doc_bodies, auth=sg_user_auth)
     assert len(sg_bulk_docs_resp) == num_docs_per_client
@@ -154,8 +154,8 @@ def test_document_resurrection(params_from_base_test_setup, sg_conf_name, deleti
             content={'foo': 'bar'},
             channels=sg_user_channels,
         )
-        sdk_docs = {doc['sgw_uni_id']: doc for doc in sdk_doc_bodies}
-        sdk_doc_ids = [doc['sgw_uni_id'] for doc in sdk_doc_bodies]
+        sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
+        sdk_doc_ids = [doc['_id'] for doc in sdk_doc_bodies]
 
         log_info('Creating SDK docs')
         sdk_client.upsert_multi(sdk_docs)
@@ -294,7 +294,7 @@ def test_document_resurrection(params_from_base_test_setup, sg_conf_name, deleti
             else:
                 # SG tombstones SG docs and recreates them, expecting 3- rev
                 # SDK removes SDK docs and recreates them, expecting 1- rev
-                if doc['sgw_uni_id'].startswith('sg_'):
+                if doc['_id'].startswith('sg_'):
                     assert doc['_rev'].startswith('3-')
                 else:
                     assert doc['_rev'].startswith('1-')
@@ -306,7 +306,7 @@ def test_document_resurrection(params_from_base_test_setup, sg_conf_name, deleti
                 # SG tombstones SG docs and recreates them, expecting 3- rev
                 assert doc['_rev'].startswith('3-')
 
-        doc_ids_to_get_scratch.remove(doc['sgw_uni_id'])
+        doc_ids_to_get_scratch.remove(doc['_id'])
 
     # Make sure all docs were found
     assert len(doc_ids_to_get_scratch) == 0

@@ -1505,10 +1505,10 @@ def test_sg_replicate_sgwconfig_replications_with_opt_out(params_from_base_test_
     bucket = c_cluster.servers[0].get_bucket_names()
     cbs_ip = c_cluster.servers[0].host
     sdk_client = get_sdk_client_with_bucket(ssl_enabled, c_cluster, cbs_ip, bucket[0])
-    sdk_docs = {doc['sgw_uni_id']: doc for doc in sdk_doc_bodies}
+    sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
     sdk_client.upsert_multi(sdk_docs)
     sdk_doc_bodies4 = document.create_docs(replication1_channel4, number=num_of_docs, channels=channels3)
-    sdk_docs4 = {doc['sgw_uni_id']: doc for doc in sdk_doc_bodies4}
+    sdk_docs4 = {doc['_id']: doc for doc in sdk_doc_bodies4}
     sdk_client.upsert_multi(sdk_docs4)
 
     repl2 = replicator.configure_and_replicate(

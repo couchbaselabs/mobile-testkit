@@ -83,7 +83,7 @@ def create_doc(doc_id, content=None, attachments=None, expiry=None, channels=Non
     """
     Keyword that creates a document body as a list for use with Add Doc keyword
     return result format:
-    {'channels': [u'NBC', u'ABC'], sgw_uni_id: 'exp_3_0', '_exp': 3}
+    {'channels': [u'NBC', u'ABC'], _id: 'exp_3_0', '_exp': 3}
     """
 
     if channels is None:
@@ -101,7 +101,7 @@ def create_doc(doc_id, content=None, attachments=None, expiry=None, channels=Non
         if cbl:
             doc["id"] = doc_id
         else:
-            doc["sgw_uni_id"] = doc_id
+            doc["_id"] = doc_id
 
     if expiry is not None:
         doc["_exp"] = expiry
@@ -131,8 +131,8 @@ def create_docs(doc_id_prefix, number, content=None, attachments_generator=None,
     Keyword that creates a list of document bodies as a list for use with Add Bulk Docs keyword
     return result format:
     [
-        {'channels': [u'NBC', u'ABC'], sgw_uni_id: 'exp_3_0', '_exp': 3},
-        {'channels': [u'NBC', u'ABC'], sgw_uni_id: 'exp_3_1', '_exp': 3}, ...
+        {'channels': [u'NBC', u'ABC'], _id: 'exp_3_0', '_exp': 3},
+        {'channels': [u'NBC', u'ABC'], _id: 'exp_3_1', '_exp': 3}, ...
     ]
     """
 
