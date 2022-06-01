@@ -2293,9 +2293,18 @@ def test_sg_replicate_doc_resurrection(params_from_base_test_setup, setup_custom
         replicator.wait_until_replicator_idle(repl2)
         sdk_client.upsert(random_doc_id, doc_body)
 
-    replicator.wait_until_replicator_idle(repl1)
-    sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id_1, read_flag=read_flag, write_flag=write_flag)
-    replicator.wait_until_replicator_idle(repl2)
+    if delete_sgw_cluster == "sgw1":
+        replicator.wait_until_replicator_idle(repl1)
+        sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id_1, read_flag=read_flag, write_flag=write_flag)
+        replicator.wait_until_replicator_idle(repl2)
+        cbl_doc_ids2 = db.getDocIds(cbl_db2)
+        # sg_docs2 = sg_client.get_all_docs(url=sg2.admin.admin_url, db=sg_db2, include_docs=True)["rows"]
+    else:
+        replicator.wait_until_replicator_idle(repl2)
+        sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id_1, read_flag=read_flag, write_flag=write_flag)
+        replicator.wait_until_replicator_idle(repl1)
+        cbl_doc_ids2 = db.getDocIds(cbl_db1)
+        # sg_docs1 = sg_client.get_all_docs(url=sg1.url, db=sg_db1, auth=session1, include_docs=True)["rows"]
     cbl_doc_ids2 = db.getDocIds(cbl_db2)
     cbl_doc_ids1 = db.getDocIds(cbl_db1)
     compare_cbl_docs(db, cbl_db1, cbl_db2)
