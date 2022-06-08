@@ -1507,7 +1507,7 @@ def test_sg_replicate_sgwconfig_replications_with_opt_out(params_from_base_test_
     sdk_client = get_sdk_client_with_bucket(ssl_enabled, c_cluster, cbs_ip, bucket[0])
     sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
     sdk_client.upsert_multi(sdk_docs)
-    sdk_doc_bodies4 = document.create_docs(replication1_channel4, number=num_of_docs, channels=channels3)
+    sdk_doc_bodies4 = document.create_docs(replication1_channel4, number=num_of_docs, channels=channels3, non_sgw=True)
     sdk_docs4 = {doc['_id']: doc for doc in sdk_doc_bodies4}
     sdk_client.upsert_multi(sdk_docs4)
 
@@ -2272,7 +2272,7 @@ def test_sg_replicate_doc_resurrection(params_from_base_test_setup, setup_custom
     cbl_doc_ids1 = db.getDocIds(cbl_db1)
     random_doc_id = random.choice(cbl_doc_ids1)
     if doc_delete_source == "cbl":
-        doc_body = document.create_doc(doc_id=random_doc_id, content="testing-doc-resurrec", channels=channels1, cbl=True)
+        doc_body = document.create_doc(doc_id=random_doc_id, content="testing-doc-resurrec", channels=channels1, non_sgw=True)
         if delete_sgw_cluster == "sgw1":
             cbl_database = cbl_db1
         else:
@@ -2281,7 +2281,7 @@ def test_sg_replicate_doc_resurrection(params_from_base_test_setup, setup_custom
         mutable_doc1 = documentObj.create(random_doc_id, doc_body)
         db.saveDocument(cbl_database, mutable_doc1)
     else:
-        doc_body = document.create_doc(doc_id=random_doc_id, content="testing-doc-resurrec", channels=channels1)
+        doc_body = document.create_doc(doc_id=random_doc_id, content="testing-doc-resurrec", channels=channels1, non_sgw=True)
         if delete_sgw_cluster == "sgw1":
             cbs_bucket = bucket[0]
         else:

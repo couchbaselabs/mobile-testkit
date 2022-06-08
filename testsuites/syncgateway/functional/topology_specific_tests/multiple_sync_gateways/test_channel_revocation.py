@@ -2058,7 +2058,7 @@ def test_resurrected_docs_by_sdk(params_from_base_test_setup, resurrect_type):
         return selected_doc_body_at_rev_1
 
     if resurrect_type == "same_doc_body":
-        sdk_doc_body = document.create_doc(selected_doc_id, channels=['A'], prop_generator=update_doc_body)
+        sdk_doc_body = document.create_doc(selected_doc_id, channels=['A'], prop_generator=update_doc_body, non_sgw=True)
         log_info('Adding doc via SDK with doc body {}'.format(sdk_doc_body))
     else:
         def update_props():
@@ -2067,7 +2067,7 @@ def test_resurrected_docs_by_sdk(params_from_base_test_setup, resurrect_type):
                 "sg_tracking_prop": 0,
                 "sdk_tracking_prop": 0
             }
-        sdk_doc_body = document.create_doc(selected_doc_id, prop_generator=update_props, channels=['A'])
+        sdk_doc_body = document.create_doc(selected_doc_id, prop_generator=update_props, channels=['A'], non_sgw=True)
         log_info('Adding doc via SDK with doc body {}'.format(sdk_doc_body))
 
     sdk_client.upsert(selected_doc_id, sdk_doc_body)

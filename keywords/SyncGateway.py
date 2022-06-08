@@ -1048,8 +1048,8 @@ def create_docs_via_sdk(cbs_url, cbs_cluster, bucket_name, num_docs, doc_name='d
         connection_url = 'couchbase://{}'.format(cbs_host)
     sdk_client = get_cluster(connection_url, bucket_name)
 
-    sdk_doc_bodies = document.create_docs(doc_name, num_docs)
-    sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
+    sdk_doc_bodies = document.create_docs(doc_name, num_docs, non_sgw=True)
+    sdk_docs = {doc['id']: doc for doc in sdk_doc_bodies}
     sdk_client.upsert_multi(sdk_docs)
 
     log_info("Adding docs done on CBS")

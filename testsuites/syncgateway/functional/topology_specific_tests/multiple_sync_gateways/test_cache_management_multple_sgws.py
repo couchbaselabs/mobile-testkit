@@ -78,9 +78,9 @@ def test_importdocs_false_shared_bucket_access_true(params_from_base_test_setup)
         sdk_client = Bucket('couchbase://{}/{}'.format(cbs_host, bucket_name), password='password')
 
     # 4. Create docs in CBs
-    sdk_doc_bodies = document.create_docs('doc_set_two', num_docs, channels=['shared'])
+    sdk_doc_bodies = document.create_docs('doc_set_two', num_docs, channels=['shared'], non_sgw=True)
     log_info('Adding {} docs via SDK ...'.format(num_docs))
-    sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
+    sdk_docs = {doc['id']: doc for doc in sdk_doc_bodies}
     sdk_client.upsert_multi(sdk_docs)
     time.sleep(3)
     # 5. Verify  SGW node which does not have config import_docs=false has docs imported.

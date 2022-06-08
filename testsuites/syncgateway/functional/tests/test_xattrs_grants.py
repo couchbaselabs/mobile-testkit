@@ -305,8 +305,8 @@ def test_remove_xattrs(params_from_base_test_setup):
     auto_user = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username, auth=auth)
 
     # 4. Add doc with user xattr on SDK
-    sdk_doc_bodies = document.create_docs('sdk', number=10)
-    sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
+    sdk_doc_bodies = document.create_docs('sdk', number=10, non_sgw=True)
+    sdk_docs = {doc['id']: doc for doc in sdk_doc_bodies}
     sdk_doc_ids = [doc for doc in sdk_docs]
     sdk_client.upsert_multi(sdk_docs)
     sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, auth=auth)["rows"]
@@ -409,8 +409,8 @@ def test_sync_xattrs_update_concurrently(params_from_base_test_setup):
     auto_user2 = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username2, auth=auth)
 
     # 4. Add doc with user xattr on SDK
-    sdk_doc_bodies = document.create_docs('sdk', number=num_docs)
-    sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
+    sdk_doc_bodies = document.create_docs('sdk', number=num_docs, non_sgw=True)
+    sdk_docs = {doc['id']: doc for doc in sdk_doc_bodies}
     sdk_client.upsert_multi(sdk_docs)
     count = 0
     retries = 10
@@ -917,8 +917,8 @@ def test_rev_generation_with_largexattrs(params_from_base_test_setup):
     sg_client.create_user(sg_admin_url, sg_db, username, password, channels=sg_channels1, auth=auth)
     # auto_user = sg_client.create_session(url=sg_admin_url, db=sg_db, name=username)
     # 2. Create doc in SDK
-    sdk_doc_bodies = document.create_docs('sdk', number=number_of_sdk_docs)
-    sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
+    sdk_doc_bodies = document.create_docs('sdk', number=number_of_sdk_docs, non_sgw=True)
+    sdk_docs = {doc['id']: doc for doc in sdk_doc_bodies}
     # sdk_doc_ids = [doc for doc in sdk_docs]
     sdk_bucket.upsert_multi(sdk_docs)
 
