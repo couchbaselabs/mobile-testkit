@@ -154,9 +154,11 @@ def test_mobile_opt_in(params_from_base_test_setup, sg_conf_name):
     doc = sg_client.add_doc(url=sg_url, db=sg_db, doc=doc_body, auth=test_auth_session)
     # update vis SDK
     sg_get_doc4 = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id4, auth=test_auth_session)
+    doc4 = sdk_client.get(doc_id4)
+    doc_body4 = doc4.content
     rev = sg_get_doc4['_rev']
-    sg_get_doc4["updated_sdk_via_sg"] = "1"
-    sdk_client.upsert(doc_id4, sg_get_doc4)
+    doc_body4["updated_sdk_via_sg"] = "1"
+    sdk_client.upsert(doc_id4, doc_body4)
     with pytest.raises(HTTPError) as he:
         sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id4, auth=test_auth_session)
     log_info(he.value)
@@ -193,10 +195,10 @@ def test_mobile_opt_in(params_from_base_test_setup, sg_conf_name):
     doc_id6 = 'mobileoptout_sg_doc_sdkupdate_optin'
     doc_body = document.create_doc(doc_id=doc_id6, channels=['mobileOptIn'], prop_generator=update_non_mobile_prop)
     doc = sg_client.add_doc(url=sg_url, db=sg_db, doc=doc_body, auth=test_auth_session)
-    sg_get_doc6 = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id6, auth=test_auth_session)
-    log_info("Sg sixth doc is {}".format(sg_get_doc6))
-    sg_get_doc6["type"] = "mobile"
-    sdk_client.upsert(doc_id6, sg_get_doc6)
+    sdk_get_doc6 = sdk_client.get(doc_id4)
+    doc_body6 = sdk_get_doc6.content
+    doc_body6["type"] = "mobile"
+    sdk_client.upsert(doc_id6, doc_body6)
     sg_get_doc6 = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id6, auth=test_auth_session)
     assert sg_get_doc6['_rev'].startswith('2-') and sg_get_doc6['_id'] == doc_id6
 
@@ -204,16 +206,15 @@ def test_mobile_opt_in(params_from_base_test_setup, sg_conf_name):
     doc_id7 = 'mobileoptin_sg_doc_sdkupdate_optout'
     doc_body = document.create_doc(doc_id=doc_id7, channels=['mobileOptIn'], prop_generator=update_mobile_prop)
     doc = sg_client.add_doc(url=sg_url, db=sg_db, doc=doc_body, auth=test_auth_session)
-    sg_get_doc7 = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id7, auth=test_auth_session)
-    log_info("Sg sixth doc is {}".format(sg_get_doc7))
-    sg_get_doc7["type"] = "mobile opt out"
-    sdk_client.upsert(doc_id7, sg_get_doc7)
+    sdk_get_doc7 = sdk_client.get(doc_id4)
+    doc_body7 = sdk_get_doc7.content
+    doc_body7["type"] = "mobile opt out"
+    sdk_client.upsert(doc_id7, doc_body7)
     with pytest.raises(HTTPError) as he:
-        sg_get_doc7 = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id7, auth=test_auth_session)
+        sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id7, auth=test_auth_session)
     log_info(he.value)
     resp = str(he.value)
     assert resp.startswith('404 Client Error: Not Found for url:')
-    # TODO : verify _changes that it shows tombstone revisions -> it will happen on 2.0
 
     # Create eighth sdk doc with import disabled and add mobile property and update via sg. Case #7
     sg_conf_name = "xattrs/mobile_opt_in_no_import"
@@ -222,10 +223,11 @@ def test_mobile_opt_in(params_from_base_test_setup, sg_conf_name):
     sg_util.start_sync_gateways(cluster_config=cluster_conf, url=sg_url, config=sg_no_import_conf)
 
     doc_id8 = 'mobile_opt_in_sg_rewrite_with_importdisabled'
-    doc_body = document.create_doc(doc_id=doc_id8, channels=['mobileOptIn'], prop_generator=update_mobile_prop, non_sgw=True)
-    sdk_client.upsert(doc_id8, doc_body)
+    sdk_doc_body = document.create_doc(doc_id=doc_id8, channels=['mobileOptIn'], prop_generator=update_mobile_prop, non_sgw=True)
+    sdk_client.upsert(doc_id8, sdk_doc_body)
+    sg_doc_body = document.create_doc(doc_id=doc_id8, channels=['mobileOptIn'], prop_generator=update_mobile_prop)
     with pytest.raises(HTTPError) as he:
-        sg_client.add_doc(url=sg_url, db=sg_db, doc=doc_body, auth=test_auth_session)
+        sg_client.add_doc(url=sg_url, db=sg_db, doc=sg_doc_body, auth=test_auth_session)
     log_info(he.value)
     assert str(he.value).startswith('409 Client Error: Conflict for url:')
     sg_client.update_doc(url=sg_url, db=sg_db, doc_id=doc_id8, number_updates=1, auth=test_auth_session)
@@ -234,10 +236,10 @@ def test_mobile_opt_in(params_from_base_test_setup, sg_conf_name):
 
     # Create ninth sdk doc with import disabled and add mobile property and update via sg. Case #8
     doc_id9 = 'mobile_opt_out_sg_rewrite_with_importdisabled'
-    doc_body = document.create_doc(doc_id=doc_id9, channels=['mobileOptIn'], prop_generator=update_non_mobile_prop, non_sgw=True)
-    sdk_client.upsert(doc_id9, doc_body)
-    sg_client.add_doc(url=sg_url, db=sg_db, doc=doc_body, auth=test_auth_session)
-    # sg_client.update_doc(url=sg_url, db=sg_db, doc_id=doc_id8, number_updates=1, auth=test_auth_session)
+    sdk_doc_body9 = document.create_doc(doc_id=doc_id9, channels=['mobileOptIn'], prop_generator=update_non_mobile_prop, non_sgw=True)
+    sdk_client.upsert(doc_id9, sdk_doc_body9)
+    sg_doc_body9 = document.create_doc(doc_id=doc_id9, channels=['mobileOptIn'], prop_generator=update_non_mobile_prop)
+    sg_client.add_doc(url=sg_url, db=sg_db, doc=sg_doc_body9, auth=test_auth_session)
     sg_get_doc9 = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id9, auth=test_auth_session)
     assert sg_get_doc9['_rev'].startswith('1-') and sg_get_doc9['_id'] == doc_id9
 
