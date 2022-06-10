@@ -1960,8 +1960,8 @@ def test_resurrected_docs_by_sdk(params_from_base_test_setup, resurrect_type):
     # prepare sync gateway environment
     sg1, sg2 = redeploy_sync_gateway(cluster_config, mode, sync_gateway_version)
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
-    if auth:
-        sg1.admin.auth = HTTPBasicAuth(auth[0], auth[1])
+    # if auth:
+    #    sg1.admin.auth = HTTPBasicAuth(auth[0], auth[1])
 
     cbs_host = host_for_url(cbs_url)
     sg_client = MobileRestClient()
@@ -1991,6 +1991,8 @@ def test_resurrected_docs_by_sdk(params_from_base_test_setup, resurrect_type):
     selected_doc = sg2_docs["rows"][random_idx]
     selected_doc_id = selected_doc["id"]
     selected_doc_body_at_rev_1 = selected_doc["doc"]
+    del selected_doc_body_at_rev_1["_id"]
+    del selected_doc_body_at_rev_1["_rev"]
 
     sg_client.update_doc(url=sg2.url, db=DB2, doc_id=selected_doc_id,
                          number_updates=3, auth=auth_session2,
@@ -2032,6 +2034,7 @@ def test_resurrected_docs_by_sdk(params_from_base_test_setup, resurrect_type):
     def update_doc_body():
         return selected_doc_body_at_rev_1
 
+    print("selected doc body at rev1 is  ", selected_doc_body_at_rev_1)
     if resurrect_type == "same_doc_body":
         sdk_doc_body = document.create_doc(selected_doc_id, channels=['A'], prop_generator=update_doc_body, non_sgw=True)
         log_info('Adding doc via SDK with doc body {}'.format(sdk_doc_body))
@@ -2207,6 +2210,14 @@ def compare_doc_body(doc1, doc2):
         del doc2["_revisions"]
     except KeyError:
         log_info("no _revisions exists")
+    try:
+        del doc1["_id"]
+    except KeyError:
+        log_info("no _id exists")
+    try:
+        del doc2["_id"]
+    except KeyError:
+        log_info("no _id exists")
     return doc1 == doc2
 
 
