@@ -1031,7 +1031,7 @@ def test_user_removed_from_role_by_direction(params_from_base_test_setup, replic
     assert "sg2_AnC_0" in sg1_doc_ids
     assert "sg2_C_0" in sg1_doc_ids
 
-    sg1.stop_replication2_by_id(replicator2_id, DB1, auth=auth)
+    sg1.stop_replication2_by_id(replicator2_id, DB1)
 
 
 @pytest.mark.listener
@@ -1438,7 +1438,7 @@ def test_user_role_revoked_channel_access_push_only(params_from_base_test_setup)
     assert "sg2_AnC_0" in sg1_doc_ids
     assert "sg2_C_0" in sg1_doc_ids
 
-    sg1.stop_replication2_by_id(replicator2_id, DB1, auth=auth)
+    sg1.stop_replication2_by_id(replicator2_id, DB1)
 
 
 @pytest.mark.listener
