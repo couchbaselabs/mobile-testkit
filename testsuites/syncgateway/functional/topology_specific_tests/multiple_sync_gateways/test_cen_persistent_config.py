@@ -54,7 +54,7 @@ def test_centralized_persistent_flag_off(params_from_base_test_setup):
     delta_sync_false = {'enabled': False}
     sg_dbs = sg1.admin.get_dbs()
     sg_db = sg_dbs[0]
-    sg1_db_config = sg1.admin.get_db_config(sg_db)
+    # sg1_db_config = sg1.admin.get_db_config(sg_db)
 
     sg1.admin.delete_db(sg_db)
     time.sleep(5)
@@ -62,15 +62,16 @@ def test_centralized_persistent_flag_off(params_from_base_test_setup):
     dbconfig = construct_dbconfig_json(db_config_file, cluster_conf, sg_platform, sg_conf_name)
 
     sg1.admin.create_db(sg_db, dbconfig)
-    sg1_db_config["delta_sync"] = delta_sync_true
-    sg1.admin.put_db_config(sg_db, sg1_db_config)
+    sg_db_config1 = dbconfig
+    sg_db_config1["delta_sync"] = delta_sync_true
+    sg1.admin.put_db_config(sg_db, sg_db_config1)
 
     sg1_return_db = sg1.admin.get_db_config(sg_db)
-    sg2_db_config = sg1_db_config
-    sg2_db_config["delta_sync"] = delta_sync_false
+    sg_db_config2 = dbconfig
+    sg_db_config2["delta_sync"] = delta_sync_false
 
-    sg1.admin.put_db_config(sg_db, sg1_db_config)
-    sg2.admin.put_db_config(sg_db, sg2_db_config)
+    # sg1.admin.put_db_config(sg_db, sg_db_config1)
+    sg2.admin.put_db_config(sg_db, sg_db_config2)
 
     # 5. Verify that only on SGW node1 delta sync on , but off on sgw node2
     sg1_return_db = sg1.admin.get_db_config(sg_db)

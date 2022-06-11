@@ -428,7 +428,7 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
     for replid in repl_id:
         sg1.admin.wait_until_sgw_replication_done(sg_db1, replid, write_flag=True, max_times=3000)
     replicator.wait_until_replicator_idle(repl2, max_times=3000)
-    limit_2 = num_docs * 7
+    # limit_2 = num_docs * 7
     count = 0
     retry_count = 60
     while count < retry_count:
@@ -443,7 +443,7 @@ def test_upgrade(params_from_base_test_setup, setup_customized_teardown_test):
     # cbl_doc_ids2 = db.getDocIds(cbl_db2, limit=limit_2)  # number times 6 as it creates docs 6 times at 6 places
     replicator.wait_until_replicator_idle(repl2, max_times=3000)
     cbl_doc_ids2 = db.getDocIds(cbl_db2)  # number times 6 as it creates docs 6 times at 6 places
-    print("cbl doc ids 2 are : ", cbl_doc_ids2, limit=limit_2)
+    print("cbl doc ids 2 are : ", cbl_doc_ids2)
     doc_id = "sgw_attachments1_1"
     latest_rev = sg_client.get_latest_rev(sg1.admin.admin_url, sg_db1, doc_id, auth=auth)
     sg_client.delete_doc(url=sg1.admin.admin_url, db=sg_db1, doc_id=doc_id, rev=latest_rev, auth=auth)

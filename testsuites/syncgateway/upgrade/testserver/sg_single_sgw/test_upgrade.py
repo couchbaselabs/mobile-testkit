@@ -70,6 +70,7 @@ def test_upgrade(params_from_base_test_setup):
     sg_config = params_from_base_test_setup["sg_config"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_ip = params_from_base_test_setup["sg_ip"]
+    sg_db = params_from_base_test_setup["sg_db"]
     disable_admin_auth = params_from_base_test_setup["disable_admin_auth"]
     sg_conf = "{}/resources/sync_gateway_configs/sync_gateway_default_functional_tests_{}.json".format(os.getcwd(), mode)
 
@@ -129,6 +130,10 @@ def test_upgrade(params_from_base_test_setup):
     auth = None
     if not is_admin_auth_disabled(cluster_config):
             auth = HTTPBasicAuth(RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd'])
+    cluster_util = ClusterKeywords(cluster_config)
+    topology = cluster_util.get_cluster_topology(cluster_config)
+    lb_ip = topology["load_balancers"]
+    target_lb_url = "ws://{}:4984/{}".format(lb_ip, sg_db)
     # 1. Create user, session and docs on SG
     sg_client = MobileRestClient()
     cluster = Cluster(config=cluster_config)
@@ -160,7 +165,8 @@ def test_upgrade(params_from_base_test_setup):
     sg_cookie, sg_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=sg_user_name)
     authenticator = Authenticator(base_url)
     replicator_authenticator = authenticator.authentication(sg_session, sg_cookie, authentication_type="session")
-    repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=sg_user_channels, replication_type="push_pull", replicator_authenticator=replicator_authenticator)
+    # repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=sg_user_channels, replication_type="push_pull", replicator_authenticator=replicator_authenticator)
+    repl_config = replicator.configure(cbl_db, target_lb_url, continuous=True, channels=sg_user_channels, replication_type="push_pull", replicator_authenticator=replicator_authenticator)
     repl = replicator.create(repl_config)
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
@@ -168,7 +174,8 @@ def test_upgrade(params_from_base_test_setup):
     # Start 2nd replicator to verify docs with attachments gets replicated after the upgrade for one shot replications
     sg_cookie, sg_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=sg_user_name)
     # sg_cookie1, sg_session1 = sg_client.create_session(url=sg_admin_url, db=sg_db, name=sg_user_name)
-    repl_config1 = replicator.configure(cbl_db2, sg_blip_url, continuous=False, channels=sg_user_channels, replication_type="push_pull", replicator_authenticator=replicator_authenticator)
+    # repl_config1 = replicator.configure(cbl_db2, sg_blip_url, continuous=False, channels=sg_user_channels, replication_type="push_pull", replicator_authenticator=replicator_authenticator)
+    repl_config1 = replicator.configure(cbl_db2, target_lb_url, continuous=False, channels=sg_user_channels, replication_type="push_pull", replicator_authenticator=replicator_authenticator)
     repl1 = replicator.create(repl_config1)
     replicator.start(repl1)
     replicator.wait_until_replicator_idle(repl1)
@@ -227,7 +234,7 @@ def test_upgrade(params_from_base_test_setup):
         )
 
         # 4. Upgrade SGW one by one on cluster config list
-        cluster_util = ClusterKeywords(cluster_config)
+        # cluster_util = ClusterKeywords(cluster_config)
         topology = cluster_util.get_cluster_topology(cluster_config, lb_enable=False)
         sync_gateways = topology["sync_gateways"]
         sg_obj.upgrade_sync_gateway(
