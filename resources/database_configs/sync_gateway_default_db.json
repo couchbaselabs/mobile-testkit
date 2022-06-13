@@ -11,7 +11,10 @@
         {{ keypath }}
         {{ delta_sync }}
         {{ bucket }}
+        {{ username }}
+        {{ password }}
         {{ revs_limit }}
+        "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
         "cache": {
             "channel_cache": {
             "max_length": 15000,
