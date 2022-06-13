@@ -133,7 +133,7 @@ def test_upgrade(params_from_base_test_setup):
     cluster_util = ClusterKeywords(cluster_config)
     topology = cluster_util.get_cluster_topology(cluster_config)
     lb_url = topology["load_balancers"]
-    lb_ip = host_for_url(lb_url)
+    lb_ip = host_for_url(lb_url[0])
     target_lb_url = "ws://{}:4984/{}".format(lb_ip, sg_db)
     # 1. Create user, session and docs on SG
     sg_client = MobileRestClient()
