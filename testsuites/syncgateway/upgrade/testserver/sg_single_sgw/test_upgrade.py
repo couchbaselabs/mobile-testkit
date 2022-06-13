@@ -166,6 +166,7 @@ def test_upgrade(params_from_base_test_setup):
     authenticator = Authenticator(base_url)
     replicator_authenticator = authenticator.authentication(sg_session, sg_cookie, authentication_type="session")
     # repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=sg_user_channels, replication_type="push_pull", replicator_authenticator=replicator_authenticator)
+    print("target lb url ", target_lb_url)
     repl_config = replicator.configure(cbl_db, target_lb_url, continuous=True, channels=sg_user_channels, replication_type="push_pull", replicator_authenticator=replicator_authenticator)
     repl = replicator.create(repl_config)
     replicator.start(repl)
