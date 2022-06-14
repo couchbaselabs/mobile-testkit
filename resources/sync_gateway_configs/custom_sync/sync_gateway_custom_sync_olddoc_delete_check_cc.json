@@ -31,14 +31,10 @@
             `function(doc, oldDoc){
 
                 if (oldDoc == null) {
-                    console.log("new doc created")
                     channel(doc.channels);
                 } else if (oldDoc != null && oldDoc._deleted == true) {
-                    console.log("old doc has deleted property")
-                    console.log(oldDoc._deleted)
                     channel("olddoc_deleted_channel");
                 } else {
-                    console.log("does not contain _deleted property")
                     channel(doc.channels);
                 }
             }`

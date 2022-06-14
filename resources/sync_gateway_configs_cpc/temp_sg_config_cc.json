@@ -1,0 +1,19 @@
+{
+    "bootstrap": {
+        {{ server_tls_skip_verify }}
+        {{ username }}
+        {{ password }}
+        {{ cacertpath }}
+        {{ certpath }}
+        {{ keypath }}
+        "group_id": "SGW_Group_2",
+        "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}"
+    },
+    {{ logging }}
+    "api":{
+        {{ disable_admin_auth }}
+        {{ tls }}
+        "public_interface":":4984",
+        "admin_interface":"0.0.0.0:4985"
+    }
+}

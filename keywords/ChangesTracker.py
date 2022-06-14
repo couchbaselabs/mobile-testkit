@@ -60,7 +60,7 @@ class ChangesTracker:
         else:
             request_timeout = 1000
 
-        auth_type = get_auth_type(self.auth)
+        auth_type, self.auth = get_auth_type(self.auth)
         current_seq_num = 0
 
         start = time.time()

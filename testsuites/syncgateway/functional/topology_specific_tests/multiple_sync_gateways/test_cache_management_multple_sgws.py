@@ -13,6 +13,7 @@ from keywords.ClusterKeywords import ClusterKeywords
 from libraries.testkit import cluster
 from concurrent.futures import ThreadPoolExecutor
 from libraries.testkit.prometheus import verify_stat_on_prometheus
+from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
 
 
 @pytest.mark.syncgateway
@@ -109,7 +110,7 @@ def test_importdocs_false_shared_bucket_access_true(params_from_base_test_setup)
 def test_sgw_cache_management_multiple_sgws(params_from_base_test_setup):
     """
     @summary :
-    1.Have 2 SGWs( no load balancer required)  with shared_bucket_access=true and have CBS set up
+    1.Have 3 SGWs( no load balancer required)  with shared_bucket_access=true and have CBS set up
     2. Create docs in CBS
     3.Verify following stats
         EE - import_cancel_cas =0
@@ -123,6 +124,7 @@ def test_sgw_cache_management_multiple_sgws(params_from_base_test_setup):
     sg_ce = params_from_base_test_setup["sg_ce"]
     xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
     need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
+    disable_persistent_config = params_from_base_test_setup["disable_persistent_config"]
 
     if sg_ce:
         if not xattrs_enabled:
@@ -141,12 +143,15 @@ def test_sgw_cache_management_multiple_sgws(params_from_base_test_setup):
 
     sg_db = "db"
     num_docs = 100
-    bucket_name = 'data-bucket'
+    # bucket_name = 'data-bucket'
+    buckets = get_buckets_from_sync_gateway_config(sg_conf_path, cluster_config)
+    bucket_name = buckets[0]
 
     client = MobileRestClient()
     c = cluster.Cluster(config=cluster_config)
     sg1 = c.sync_gateways[0]
     sg2 = c.sync_gateways[1]
+    sg3 = c.sync_gateways[2]
     cbs_url = cluster_topology['couchbase_servers'][0]
     cbs_cluster = Cluster(config=cluster_config)
 
@@ -161,20 +166,29 @@ def test_sgw_cache_management_multiple_sgws(params_from_base_test_setup):
     #    import_count + import_cancel_cas = num_docs
     sg1_expvars = client.get_expvars(sg1.admin.admin_url, auth=auth)
     sg2_expvars = client.get_expvars(sg2.admin.admin_url, auth=auth)
+    sg3_expvars = client.get_expvars(sg3.admin.admin_url, auth=auth)
     if sg_ce:
         log_info("Verify import_cancel_cas is not 0 and import_count + import_cancel_cas = num_docs")
         sg1_cancel_cas = sg1_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_cancel_cas"]
         sg1_import_count = sg1_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"]
         sg2_cancel_cas = sg2_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_cancel_cas"]
         sg2_import_count = sg2_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"]
+        # sg3_cancel_cas = sg3_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_cancel_cas"]
+        sg3_import_count = sg2_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"]
         assert sg1_import_count + sg1_cancel_cas == num_docs, "import count and cancel cas did not match to num of docs on sg1 node"
         assert sg2_import_count + sg2_cancel_cas == num_docs, "import count and cancel cas did not match to num of docs on sg2 node"
+        # assert sg3_import_count + sg3_cancel_cas == num_docs, "import count and cancel cas did not match to num of docs on sg3 node"
     else:
         sg1_import_count = sg1_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"]
         sg2_import_count = sg2_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"]
-        assert sg1_import_count + sg2_import_count == num_docs, "Not all docs imported"
+        sg3_import_count = sg3_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"]
+        if disable_persistent_config:
+            assert sg1_import_count + sg2_import_count + sg3_import_count == num_docs, "Not all docs imported"
+        else:
+            assert sg1_import_count + sg2_import_count + sg3_import_count <= num_docs, "Not all docs imported"
         assert sg1_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_cancel_cas"] == 0, "import cancel cas is not zero on sgw node 1"
         assert sg2_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_cancel_cas"] == 0, "import cancel cas is not zero on sgw node 2"
+        assert sg3_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_cancel_cas"] == 0, "import cancel cas is not zero on sgw node 3"
 
 
 @pytest.mark.topospecific
@@ -217,9 +231,12 @@ def test_sgw_high_availability(params_from_base_test_setup, setup_basic_sg_conf)
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     num_docs = 100
-    bucket_name = 'data-bucket'
+    # bucket_name = 'data-bucket'
+    buckets = get_buckets_from_sync_gateway_config(sg_conf, cluster_config)
+    bucket_name = buckets[0]
 
     sg1 = cbs_cluster.sync_gateways[0]
+    sg3 = cbs_cluster.sync_gateways[2]
     cbs_url = cluster_topology['couchbase_servers'][0]
 
     # 2. Start a thread to write docs via SDK
@@ -228,7 +245,9 @@ def test_sgw_high_availability(params_from_base_test_setup, setup_basic_sg_conf)
         # 3. Bring down 1 sgw node in main thread
         sg2.stop()
         sg_docs = sg_client.get_all_docs(url=sg1.admin.admin_url, db=sg_db, auth=auth)["rows"]
-        diff_docs = num_docs - len(sg_docs)
+        sg3_docs = sg_client.get_all_docs(url=sg3.admin.admin_url, db=sg_db, auth=auth)["rows"]
+        diff_docs = num_docs - (len(sg_docs) + len(sg3_docs))
+        # diff_docs = num_docs - len(sg_docs)
         cbs_docs_via_sdk.result()
 
     retries = 0
@@ -240,6 +259,7 @@ def test_sgw_high_availability(params_from_base_test_setup, setup_basic_sg_conf)
         time.sleep(2)
     assert len(sg_docs) == num_docs, "not all docs imported from server"
     sg1_expvars = sg_client.get_expvars(sg1.admin.admin_url, auth=auth)
+    sg3_expvars = sg_client.get_expvars(sg3.admin.admin_url, auth=auth)
     sg1_cancel_cas = sg1_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_cancel_cas"]
     if sg_ce:
         log_info("Verify import_cancel_cas is not 0 and import_count + import_cancel_cas = num_docs")
@@ -249,9 +269,11 @@ def test_sgw_high_availability(params_from_base_test_setup, setup_basic_sg_conf)
     else:
         assert sg1_cancel_cas == 0, "cancel_ca value is not 0 on EE"
         sg1_import_count = sg1_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"]
-        assert sg1_import_count > diff_docs, "Not all docs imported"
+        sg3_import_count = sg3_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"]
+        sg1_sg3_import_count = sg1_import_count + sg3_import_count
+        assert sg1_sg3_import_count > diff_docs, "Not all docs imported"
         if prometheus_enabled and sync_gateway_version >= "2.8.0":
-            assert verify_stat_on_prometheus("sgw_shared_bucket_import_import_count"), sg1_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"]
+            assert verify_stat_on_prometheus("sgw_shared_bucket_import_import_count") == sg1_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"]
 
 
 def create_doc_via_sdk_individually(cbs_url, cbs_cluster, bucket_name, num_docs):

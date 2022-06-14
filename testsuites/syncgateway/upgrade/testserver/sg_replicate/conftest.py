@@ -191,6 +191,10 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="Disable Admin auth")
 
+    parser.addoption("--disable-load-balancer",
+                     action="store_true",
+                     help="Disable load balancer")
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -245,8 +249,9 @@ def params_from_base_suite_setup(request):
     disable_persistent_config = request.config.getoption("--disable-persistent-config")
     enable_server_tls_skip_verify = request.config.getoption("--enable-server-tls-skip-verify")
     disable_tls_server = request.config.getoption("--disable-tls-server")
-
     disable_admin_auth = request.config.getoption("--disable-admin-auth")
+    disable_load_balancer = request.config.getoption("--disable-load-balancer")
+
     test_name = request.node.name
 
     log_info("mode: {}".format(mode))
@@ -325,12 +330,16 @@ def params_from_base_suite_setup(request):
     log_info("Using '{}' config!".format(cluster_config))
 
     # Only works with load balancer configs
-    persist_cluster_config_environment_prop(cluster_config, 'two_sg_cluster_lb_enabled', True, property_name_check=False)
-    persist_cluster_config_environment_prop(cluster_config, 'sgw_cluster1_count', sgw_cluster1_count, property_name_check=False)
-    persist_cluster_config_environment_prop(cluster_config, 'sgw_cluster2_count', sgw_cluster2_count, property_name_check=False)
+    if not disable_load_balancer:
+        persist_cluster_config_environment_prop(cluster_config, 'two_sg_cluster_lb_enabled', True, property_name_check=False)
+        persist_cluster_config_environment_prop(cluster_config, 'sgw_cluster1_count', sgw_cluster1_count, property_name_check=False)
+        persist_cluster_config_environment_prop(cluster_config, 'sgw_cluster2_count', sgw_cluster2_count, property_name_check=False)
 
     cluster_utils = ClusterKeywords(cluster_config)
-    cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
+    if not disable_load_balancer:
+        cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
+    else:
+        cluster_topology = cluster_utils.get_cluster_topology(cluster_config, lb_enable=False)
 
     sg1_url = cluster_topology["sync_gateways"][0]["public"]
     sg3_url = cluster_topology["sync_gateways"][2]["public"]
@@ -458,7 +467,10 @@ def params_from_base_suite_setup(request):
     # Write the number of replicas to cluster config
     persist_cluster_config_environment_prop(cluster_config, 'number_replicas', number_replicas)
     cluster_utils = ClusterKeywords(cluster_config)
-    cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
+    if not disable_load_balancer:
+        cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
+    else:
+        cluster_topology = cluster_utils.get_cluster_topology(cluster_config, lb_enable=False)
 
     if not skip_provisioning:
         log_info("Installing Sync Gateway + Couchbase Server")
@@ -477,11 +489,12 @@ def params_from_base_suite_setup(request):
             raise
 
     # Hit this installed running services to verify the correct versions are installed
-    cluster_utils.verify_cluster_versions(
-        cluster_config,
-        expected_server_version=server_version,
-        expected_sync_gateway_version=sync_gateway_version
-    )
+    if False:
+        cluster_utils.verify_cluster_versions(
+            cluster_config,
+            expected_server_version=server_version,
+            expected_sync_gateway_version=sync_gateway_version
+        )
 
     # Start Test server which needed for suite level set up
     if create_db_per_suite:
@@ -561,7 +574,10 @@ def params_from_base_suite_setup(request):
         "sgw_cluster1_count": sgw_cluster1_count,
         "sgw_cluster2_count": sgw_cluster2_count,
         "no_conflicts_enabled": no_conflicts_enabled,
-        "upgraded_no_conflicts_enabled": upgraded_no_conflicts_enabled
+        "upgraded_no_conflicts_enabled": upgraded_no_conflicts_enabled,
+        "disable_persistent_config": disable_persistent_config,
+        "disable_load_balancer": disable_load_balancer,
+        "sg_platform": "centos"
     }
 
     # Flush all the memory contents on the server app
@@ -623,7 +639,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     sgw_cluster2_count = params_from_base_suite_setup["sgw_cluster2_count"]
     no_conflicts_enabled = params_from_base_suite_setup["no_conflicts_enabled"]
     upgraded_no_conflicts_enabled = params_from_base_suite_setup["upgraded_no_conflicts_enabled"]
-
+    disable_load_balancer = params_from_base_suite_setup["disable_load_balancer"]
+    sg_platform = params_from_base_suite_setup["sg_platform"]
     test_name = request.node.name
 
     source_db = None
@@ -641,7 +658,11 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
             testserver.start(log_filename)
 
     cluster_helper = ClusterKeywords(cluster_config)
-    cluster_hosts = cluster_helper.get_cluster_topology(cluster_config=cluster_config)
+    # cluster_hosts = cluster_helper.get_cluster_topology(cluster_config=cluster_config)
+    if not disable_load_balancer:
+        cluster_hosts = cluster_helper.get_cluster_topology(cluster_config)
+    else:
+        cluster_hosts = cluster_helper.get_cluster_topology(cluster_config, lb_enable=False)
     sg_url = cluster_hosts["sync_gateways"][0]["public"]
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
 
@@ -733,7 +754,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "sgw_cluster1_count": sgw_cluster1_count,
         "sgw_cluster2_count": sgw_cluster2_count,
         "no_conflicts_enabled": no_conflicts_enabled,
-        "upgraded_no_conflicts_enabled": upgraded_no_conflicts_enabled
+        "upgraded_no_conflicts_enabled": upgraded_no_conflicts_enabled,
+        "sg_platform": sg_platform
     }
 
     log_info("Tearing down test")

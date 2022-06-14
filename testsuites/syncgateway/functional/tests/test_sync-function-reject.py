@@ -12,6 +12,7 @@ from keywords.constants import RBAC_FULL_ADMIN
 from keywords import couchbaseserver
 from keywords import document
 from keywords import attachment
+from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
 
 
 @pytest.mark.syncgateway
@@ -50,7 +51,9 @@ def test_attachments_on_docs_rejected_by_sync_function(params_from_base_test_set
     sg_url = topology["sync_gateways"][0]["public"]
     sg_url_admin = topology["sync_gateways"][0]["admin"]
     sg_db = "db"
-    bucket = "data-bucket"
+    # bucket = "data-bucket"
+    buckets = get_buckets_from_sync_gateway_config(sg_conf, cluster_config)
+    bucket = buckets[0]
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     log_info("Running 'test_attachments_on_docs_rejected_by_sync_function'")

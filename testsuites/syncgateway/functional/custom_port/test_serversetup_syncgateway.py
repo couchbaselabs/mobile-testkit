@@ -112,7 +112,7 @@ def test_syncgateway_with_customPort_couchbaseServer(params_from_base_test_setup
 
     # Creating bucket with cli
     sg_conf_path = os.path.abspath(sg_conf)
-    bucket_names = get_buckets_from_sync_gateway_config(sg_conf_path)
+    bucket_names = get_buckets_from_sync_gateway_config(sg_conf_path, cluster_conf)
     server_url = cluster_topology["couchbase_servers"][0]
     cb_server = couchbaseserver.CouchbaseServer(server_url)
     remote_executor = RemoteExecutor(host_for_url(server_url))

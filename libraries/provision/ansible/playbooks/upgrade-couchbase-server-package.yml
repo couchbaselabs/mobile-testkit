@@ -14,6 +14,8 @@
     couchbase_server_home_path: /opt/couchbase
 
     couchbase_server_bucket_type: couchbase   
+    # Primary node
+    couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
 
   tasks:
     - debug: msg="Downloading Couchbase server v. {{ couchbase_server_package_url }}"

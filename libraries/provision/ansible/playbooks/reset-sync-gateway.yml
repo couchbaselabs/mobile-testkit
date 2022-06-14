@@ -38,6 +38,12 @@
     cacertpath:
     x509_auth:
     x509_certs_dir:
+    server_tls_skip_verify:
+    disable_admin_auth:
+    certpath:
+    keypath:
+    tls:
+
 
   tasks:
   - include: tasks/deploy-sync-gateway-config.yml

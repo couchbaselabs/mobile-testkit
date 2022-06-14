@@ -10,6 +10,12 @@
   ignore_errors: yes
   when: ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
 
+- name: SYNC GATEWAY | clean up before install sync_gateway deb
+  become: yes
+  shell: rm /var/lib/dpkg/info/couchbase-sync-gateway.prerm
+  ignore_errors: yes
+  when: ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
+
 - name: SYNC GATEWAY | Install sync_gateway deb
   become: yes
   shell: dpkg -i /tmp/{{ couchbase_sync_gateway_package }}

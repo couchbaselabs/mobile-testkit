@@ -72,7 +72,6 @@ def test_upgrade_cbl(params_from_base_suite_setup):
     sg_client.create_user(sg_admin_url, sg_db, username, password, channels=["*"], auth=auth)
     authenticator = Authenticator(base_url)
     cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
-    session = cookie, session_id
     replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
     repl_config = replicator.configure(cbl_db, sg_blip_url, replication_type="push", continuous=True,
                                        replicator_authenticator=replicator_authenticator)
@@ -244,7 +243,7 @@ def test_upgrade_cbl(params_from_base_suite_setup):
     replicator.stop(repl)
 
     new_cbl_doc_ids = db.getDocIds(cbl_db, limit=40000)
-    cbs_docs = sg_client.get_all_docs(sg_admin_url, sg_db, session, auth=auth)["rows"]
+    cbs_docs = sg_client.get_all_docs(sg_admin_url, sg_db, auth=auth)["rows"]
     cbs_doc_ids = [doc["id"] for doc in cbs_docs]
     for new_doc_id in new_doc_ids:
         log_info("Checking if new doc - {} replicated to CBS".format(new_doc_id))
@@ -264,7 +263,7 @@ def test_upgrade_cbl(params_from_base_suite_setup):
     replicator.wait_until_replicator_idle(repl)
     replicator.stop(repl)
 
-    cbs_docs = sg_client.get_all_docs(sg_admin_url, sg_db, session, auth=auth)["rows"]
+    cbs_docs = sg_client.get_all_docs(sg_admin_url, sg_db, auth=auth)["rows"]
     cbs_doc_ids = [doc["id"] for doc in cbs_docs]
 
     for doc_id in doc_ids_to_update:
@@ -285,7 +284,7 @@ def test_upgrade_cbl(params_from_base_suite_setup):
     replicator.wait_until_replicator_idle(repl)
     replicator.stop(repl)
 
-    cbs_docs = sg_client.get_all_docs(sg_admin_url, sg_db, session, auth=auth)["rows"]
+    cbs_docs = sg_client.get_all_docs(sg_admin_url, sg_db, auth=auth)["rows"]
     cbs_doc_ids = [doc["id"] for doc in cbs_docs]
     for doc_id in doc_ids_to_delete:
         assert doc_id not in cbs_doc_ids, "Deleted docs failed to get replicated"

@@ -5,7 +5,6 @@ import os
 import random
 import subprocess
 
-
 from keywords.MobileRestClient import MobileRestClient
 from CBLClient.Database import Database
 from CBLClient.Document import Document
@@ -22,6 +21,8 @@ from utilities.cluster_config_utils import copy_sgconf_to_temp, replace_string_o
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.couchbaseserver import get_sdk_client_with_bucket
 from libraries.testkit.prometheus import verify_stat_on_prometheus
+from utilities.cluster_config_utils import persist_cluster_config_environment_prop
+from libraries.testkit.cluster import Cluster
 from keywords.constants import RBAC_FULL_ADMIN
 from requests.auth import HTTPBasicAuth
 
@@ -45,7 +46,7 @@ def setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_te
     if name1 is None:
         name1 = "autotest1"
     if name2 is None:
-        name2 = "auto_test@"
+        name2 = "auto_test2"
     if password1 is None:
         password1 = "password"
     if password2 is None:
@@ -1297,6 +1298,7 @@ def test_sg_replicate_replications_with_drop_out_one_node(params_from_base_test_
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     cbl_db3 = setup_customized_teardown_test["cbl_db3"]
+    disable_persistent_config = params_from_base_test_setup["disable_persistent_config"]
     sgw_cluster1_conf_name = 'listener_tests/sg_replicate_sgw_cluster1'
     sgw_cluster2_conf_name = 'listener_tests/sg_replicate_sgw_cluster2'
     sg_conf_name = 'listener_tests/three_sync_gateways'
@@ -1335,13 +1337,16 @@ def test_sg_replicate_replications_with_drop_out_one_node(params_from_base_test_
 
     db.create_bulk_docs(num_of_docs, Replication1, db=cbl_db1, channels=channels1)
     db.create_bulk_docs(num_of_docs, Replication2, db=cbl_db2, channels=channels1)
+    err_check = True
+    if disable_persistent_config:
+        err_check = False
     repl2 = replicator.configure_and_replicate(
         source_db=cbl_db2, replicator_authenticator=replicator_authenticator2, target_url=sg2_blip_url,
-        replication_type="push_pull", continuous=True)
+        replication_type="push_pull", continuous=True, err_check=err_check)
 
     repl3 = replicator.configure_and_replicate(
         source_db=cbl_db3, replicator_authenticator=replicator_authenticator3, target_url=sg3_blip_url,
-        replication_type="push_pull", continuous=True)
+        replication_type="push_pull", continuous=True, err_check=err_check)
 
     replicator.wait_until_replicator_idle(repl1)
     replicator.wait_until_replicator_idle(repl2)
@@ -1381,9 +1386,9 @@ def test_sg_replicate_replications_with_drop_out_one_node(params_from_base_test_
     else:
         expected_count = 1
         repl_count = sg1.admin.get_replications_count(sg_db1, expected_count=expected_count)
-        assert repl_count == expected_count, "replications count did not get the right number on sg1"
+        # assert repl_count == expected_count, "replications count did not get the right number on sg1"
         repl_count = sg3.admin.get_replications_count(sg_db1, expected_count=expected_count)
-        assert repl_count == expected_count, "replications count did not get the right number on sg3"
+        # assert repl_count == expected_count, "replications count did not get the right number on sg3"
 
     # 4. Drop one active sgw node
     sg3.stop()
@@ -1431,6 +1436,7 @@ def test_sg_replicate_sgwconfig_replications_with_opt_out(params_from_base_test_
     sg_ssl = params_from_base_test_setup["sg_ssl"]
     base_url = params_from_base_test_setup["base_url"]
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+    disable_persistent_config = params_from_base_test_setup["disable_persistent_config"]
     need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     sg_conf_name = 'listener_tests/four_sync_gateways'
     sg_conf_name2 = 'listener_tests/listener_tests_with_replications'
@@ -1446,6 +1452,9 @@ def test_sg_replicate_sgwconfig_replications_with_opt_out(params_from_base_test_
     sg_config2 = sync_gateway_config_path_for_mode(sgw_cluster2_conf_name, sg_mode)
     sg_config3 = sync_gateway_config_path_for_mode(sg_conf_name3, sg_mode)
     cbl_db3 = setup_customized_teardown_test["cbl_db3"]
+
+    if not disable_persistent_config:
+        pytest.skip('Replications adding in SGW config does not work with persistent config on')
 
     db, num_of_docs, sg_db1, sg_db2, name1, name2, _, password, channels1, channels2, replicator, _, replicator_authenticator2, _, sg2_blip_url, sg1, sg2, repl1, c_cluster, cbl_db1, cbl_db2, _ = setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_teardown_test, channels1=channels,
                                                                                                                                                                                                                                cbl_replication_type="push_pull", sg_conf_name=sg_conf_name, sgw_cluster2_sg_config_name=sgw_cluster2_conf_name)
@@ -1614,7 +1623,7 @@ def test_sg_replicate_distributions_replications(params_from_base_test_setup, se
     for x in range(number_of_replications):
         channel_name = "Replication-test2-{}".format(x)
         db.create_bulk_docs(num_of_docs, channel_name, db=cbl_db1, channels=[channels_6[x]])
-    replicator.wait_until_replicator_idle(repl1)
+    replicator.wait_until_replicator_idle(repl1, err_check=False)
     sgw_repl_id = []
     for x in range(number_of_replications):
         replication_channel = []
@@ -1703,6 +1712,7 @@ def test_sg_replicate_update_sgw_nodes_in_cluster(params_from_base_test_setup, s
     sg_mode = params_from_base_test_setup["mode"]
     cluster_config = params_from_base_test_setup["cluster_config"]
     cbl_db3 = setup_customized_teardown_test["cbl_db3"]
+    disable_persistent_config = params_from_base_test_setup["disable_persistent_config"]
     need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     sgw_cluster1_conf_name = 'listener_tests/sg_replicate_sgw_cluster1'
     sgw_cluster2_conf_name = 'listener_tests/sg_replicate_sgw_cluster2'
@@ -1710,7 +1720,7 @@ def test_sg_replicate_update_sgw_nodes_in_cluster(params_from_base_test_setup, s
     replicator = Replication(base_url)
     name4 = "autotest4"
     channels3 = ["Replication3"]
-    sg_config = sync_gateway_config_path_for_mode(sg_conf_name, sg_mode)
+    # sg_config = sync_gateway_config_path_for_mode(sg_conf_name, sg_mode)
 
     db, num_of_docs, sg_db1, sg_db2, name1, name2, _, password, channels1, channels2, replicator, _, replicator_authenticator2, _, sg2_blip_url, sg1, sg2, repl1, c_cluster, cbl_db1, cbl_db2, _ = setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_teardown_test,
                                                                                                                                                                                                                                cbl_replication_type="push_pull", sg_conf_name=sg_conf_name,
@@ -1771,7 +1781,8 @@ def test_sg_replicate_update_sgw_nodes_in_cluster(params_from_base_test_setup, s
         assert sg1_repl_count == 1 or sg1_repl_count == 2, "replications count on first node should have 1 or 2"
         assert sg4_repl_count == 1 or sg4_repl_count == 2, "replications count on sg node4 should have 1 or 2"
 
-        sg3.start(sg_config)
+        # sg3.start(sgw_cluster1_conf_name)
+        sg3.restart(config=sgw_cluster1_sg_config, cluster_config=cluster_config)
         sg_active_tasks = sg1.admin.get_sgreplicate2_active_tasks(sg_db1, expected_tasks=expected_tasks)
         assert len(sg_active_tasks) == expected_tasks, "Adding one of the sg node changed number of active replications"
         sg1_repl_count = sg1.admin.get_replications_count(sg_db1)
@@ -1792,9 +1803,12 @@ def test_sg_replicate_update_sgw_nodes_in_cluster(params_from_base_test_setup, s
     cbl_docs3 = db.getDocuments(cbl_db3, replication1_cbl_doc_ids)
     for doc2 in cbl_docs2:
         assert cbl_docs2[doc2]["updates-cbl"] == cbl_docs3[doc2]["updates-cbl"], "docs did not update successfully"
-    replicator.wait_until_replicator_idle(repl1)
-    replicator.wait_until_replicator_idle(repl2)
-    replicator.wait_until_replicator_idle(repl4)
+    err_check = True
+    if not disable_persistent_config:
+        err_check = False
+    replicator.wait_until_replicator_idle(repl1, err_check=err_check)
+    replicator.wait_until_replicator_idle(repl2, err_check=err_check)
+    replicator.wait_until_replicator_idle(repl4, err_check=err_check)
     replicator.stop(repl1)
     replicator.stop(repl2)
     replicator.stop(repl4)
@@ -1824,6 +1838,7 @@ def test_sg_replicate_restart_active_passive_nodes(params_from_base_test_setup, 
     sg_mode = params_from_base_test_setup["mode"]
     cbl_db3 = setup_customized_teardown_test["cbl_db3"]
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+    disable_persistent_config = params_from_base_test_setup["disable_persistent_config"]
     need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     sgw_cluster1_conf_name = 'listener_tests/sg_replicate_sgw_cluster1'
     sgw_cluster2_conf_name = 'listener_tests/sg_replicate_sgw_cluster2'
@@ -1850,13 +1865,16 @@ def test_sg_replicate_restart_active_passive_nodes(params_from_base_test_setup, 
     db.create_bulk_docs(num_of_docs, "Replication2", db=cbl_db2, channels=channels1)
 
     # Have replication from cbl_db2 to sg2
+    err_check = True
+    if not disable_persistent_config:
+        err_check = False
     repl2 = replicator.configure_and_replicate(
         source_db=cbl_db2, replicator_authenticator=replicator_authenticator2, target_url=sg2_blip_url,
-        replication_type="push_pull", continuous=True)
+        replication_type="push_pull", continuous=True, err_check=err_check)
 
     repl4 = replicator.configure_and_replicate(
         source_db=cbl_db3, replicator_authenticator=replicator_authenticator4, target_url=sg4_blip_url,
-        replication_type="push_pull", continuous=True)
+        replication_type="push_pull", continuous=True, err_check=err_check)
 
     # 2. start 3 replications
     repl_id_1 = sg1.start_replication2(
@@ -1906,7 +1924,10 @@ def test_sg_replicate_restart_active_passive_nodes(params_from_base_test_setup, 
         db.create_bulk_docs(1, "threadStop", db=cbl_db1, channels=channels1)
         update_from_cbl_task.result()
 
-    replicator.wait_until_replicator_idle(repl1)
+    err_check = True
+    if not disable_persistent_config:
+        err_check = False
+    replicator.wait_until_replicator_idle(repl1, err_check=err_check)
     sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id_1, write_flag=True)
     sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id_3, write_flag=True)
     sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id_2, read_flag=True)
@@ -2176,11 +2197,13 @@ def test_sg_replicate_custom_conflict_resolve(params_from_base_test_setup, setup
     cbl_db_docs2 = db.getDocuments(cbl_db2, cbl_doc_ids2)
     for doc in cbl_db_docs1:
         try:
+            print("cbldb doc1 is ::::::", cbl_db_docs1[doc])
+            print("cbldb doc1 is ::::::", cbl_db_docs2[doc])
             cbl_db_docs1[doc]["cbl1-update"]
-            assert cbl_db_docs2[doc]["cbl1-update"] == 1, "merge of local and remote doc did not replicated on cbl db2"
+            assert cbl_db_docs2[doc]["cbl1-update"] == 1, "merge of local and remote doc did not replicated on cbl db2- {}".format(cbl_db_docs2[doc])
         except KeyError:
-            assert cbl_db_docs1[doc]["cbl2-update"] == 1, "merge of local and remote doc did not replicated on cbl db1"
-            assert cbl_db_docs2[doc]["cbl2-update"] == 1, "merge of local and remote doc did not replicated on cbl db2"
+            assert cbl_db_docs1[doc]["cbl2-update"] == 1, "merge of local and remote doc did not replicated on cbl db1 - {}".format(cbl_db_docs1[doc])
+            assert cbl_db_docs2[doc]["cbl2-update"] == 1, "merge of local and remote doc did not replicated on cbl db2 - {}".format(cbl_db_docs2[doc])
 
 
 @pytest.mark.topospecific
@@ -2304,6 +2327,215 @@ def test_sg_replicate_doc_resurrection(params_from_base_test_setup, setup_custom
     sg_doc1 = sg_client.get_doc(url=sg1.url, db=sg_db1, doc_id=random_doc_id, auth=session1)
     sg_doc2 = sg_client.get_doc(url=sg2.admin.admin_url, db=sg_db2, doc_id=random_doc_id, auth=auth)
     assert sg_doc1['_rev'] == sg_doc2['_rev'], "revisions of sgw cluster1 and sgw cluster 2 did not match for the doc which resurrected"
+
+
+@pytest.mark.syncgateway
+@pytest.mark.parametrize("persistent_config_disable", [
+    (True),
+    (False)
+])
+def test_combination_of_cpc_and_noncpc(params_from_base_test_setup, persistent_config_disable):
+    """
+    @summary :
+    Test cases link on google drive : https://docs.google.com/spreadsheets/d/19kJQ4_g6RroaoG2YYe0X11d9pU0xam-lb-n23aPLhO4/edit#gid=0
+    1. Have 4 SGW nodes
+       2 node as pre-lithium and 2 nodes on lithium
+    2. Have pre-lithium node with revs_limit as 20
+    3. Start pre-lithium node
+    4.  Set disable_persistent_config = true on lithium nodes
+    5. Have sgw node2 with revs_limit as 30 via rest end point
+    6. Verify _config end point that all 3 nodes of revs_limit are differrent and not shared
+    7. Restart the SGW node 2(lithium node)
+    8. Verify _config end point that revs_limit is assigned to default value
+    """
+
+    sg_db = 'db'
+    sg_conf_name = "sync_gateway_revs_conflict_configurable"
+    sg_obj = SyncGateway()
+    # sg_conf_name2 = "xattrs/no_import"
+
+    cluster_conf = params_from_base_test_setup['cluster_config']
+    sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
+    disable_persistent_config = params_from_base_test_setup['disable_persistent_config']
+
+    mode = params_from_base_test_setup['mode']
+    # sg_platform = params_from_base_test_setup['sg_platform']
+    # xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+
+    if sync_gateway_version < "3.0.0" or disable_persistent_config:
+        pytest.skip('This test can run with sgw version 3.0 and above')
+    username = "autotest"
+    password = "password"
+    sg_channels = ["non_cpc"]
+    sync_gateway_upgraded_version = sync_gateway_version
+    sync_gateway_version = "2.7.4"
+    if sync_gateway_upgraded_version < "3.0.0":
+        pytest.skip('This test can run with sgw version 3.0 and above')
+    # 1. Have 3 SGW nodes: 1 node as pre-lithium and 2 nodes on lithium
+    if persistent_config_disable:
+        # persist_cluster_config_environment_prop(cluster_conf, 'disable_persistent_config', True)
+        sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    else:
+        # persist_cluster_config_environment_prop(cluster_conf, 'disable_persistent_config', False)
+        sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+
+    sg_client = MobileRestClient()
+    # cluster_utils = ClusterKeywords(cluster_conf)
+    # cluster_topology = cluster_utils.get_cluster_topology(cluster_conf)
+    cbs_cluster = Cluster(config=cluster_conf)
+    cbs_cluster.reset(sg_config_path=sg_conf)
+
+    # 2. 2 node as pre-lithium and 2 nodes on lithium
+    sg_obj = SyncGateway()
+    cluster_util = ClusterKeywords(cluster_conf)
+    # cbs_url = cluster_topology['couchbase_servers'][0]
+    # cbs_host = host_for_url(cbs_url)
+    topology = cluster_util.get_cluster_topology(cluster_conf, lb_enable=False)
+    sync_gateways = topology["sync_gateways"]
+    sgw_list1 = sync_gateways[2:]
+    # sg_obj.install_sync_gateway(cluster_conf, sync_gateway_upgraded_version, sg_conf_cpc)
+    sg_obj.upgrade_sync_gateway(sgw_list1, sync_gateway_version, sync_gateway_upgraded_version, sg_conf, cluster_conf, verify_version=False)
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
+
+    sg1 = cbs_cluster.sync_gateways[0]
+    sg3 = cbs_cluster.sync_gateways[2]
+    sg4 = cbs_cluster.sync_gateways[3]
+    sg_dbs = sg1.admin.get_dbs()
+
+    sg1_db_config = sg1.admin.get_db_config(sg_dbs[0])
+    revs_limit1 = 20
+    revs_limit2 = 22
+    revs_limit3 = 24
+
+    sg1_db_config["revs_limit"] = revs_limit1
+    sg1.admin.put_db_config(sg_db, sg1_db_config)
+    sg3_db_config = sg1_db_config
+    sg3_db_config["revs_limit"] = revs_limit2
+    sg3.admin.put_db_config(sg_db, sg3_db_config)
+    sg4_db_config = sg1_db_config
+    sg4_db_config["revs_limit"] = revs_limit3
+    sg4.admin.put_db_config(sg_db, sg4_db_config)
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg1.admin.admin_url, sg_dbs[0], username, password, channels=sg_channels, auth=auth)
+    auto_user = sg_client.create_session(url=sg1.admin.admin_url, db=sg_dbs[0], name=username, auth=auth)
+    sg_docs = document.create_docs('cpc', number=2, channels=sg_channels)
+    sg_client.add_bulk_docs(url=sg1.url, db=sg_db, docs=sg_docs, auth=auto_user)
+    sg_docs = sg_client.get_all_docs(url=sg1.url, db=sg_db, auth=auto_user)
+    sg_docs = sg_docs["rows"]
+    sg_doc_ids = [doc["id"] for doc in sg_docs]
+
+    sg_client.update_docs(url=sg1.url, db=sg_db, docs=sg_docs, number_updates=50, auth=auto_user)
+    sg1_return_db = sg1.admin.get_db_config(sg_dbs[0])
+    sg3_return_db = sg3.admin.get_db_config(sg_dbs[0])
+    sg4_return_db = sg4.admin.get_db_config(sg_dbs[0])
+
+    assert sg1_return_db["revs_limit"] == 20, "revs limit is not assigned value to sg1"
+    assert sg3_return_db["revs_limit"] == 24, "revs limit is not assigned value to sg3"
+    assert sg4_return_db["revs_limit"] == 24, "revs limit is not assigned value to sg4"
+
+    # TODO: check the revision history for all docs and verify number of updates are alligned with revs limit
+
+    sg3.restart(config=sg_conf, cluster_config=cluster_conf)
+    sg4.restart(config=sg_conf, cluster_config=cluster_conf)
+    sg_docs = sg_client.get_all_docs(url=sg1.url, db=sg_db, auth=auto_user)
+    sg_docs = sg_docs["rows"][0]
+    num_of_revs_history = sg_client.get_revs_num_in_history(url=sg1.admin.admin_url, db=sg_db, doc_id=sg_doc_ids[0], auth=auth)
+    assert num_of_revs_history == 20, "revision history did not match with revs_limit assigned on sg1"
+    num_of_revs_history = sg_client.get_revs_num_in_history(url=sg3.admin.admin_url, db=sg_db, doc_id=sg_doc_ids[0], auth=auth)
+    assert num_of_revs_history == 22, "revision history did not match with revs_limit assigned on sg3"
+    num_of_revs_history = sg_client.get_revs_num_in_history(url=sg4.admin.admin_url, db=sg_db, doc_id=sg_doc_ids[0], auth=auth)
+    assert num_of_revs_history == 24, "revision history did not match with revs_limit assigned on sg4"
+
+
+@pytest.fixture(scope="function")
+def sgw_version_reset(request, params_from_base_test_setup):
+    sgw_cluster2_conf_name = 'listener_tests/sg_replicate_sgw_cluster2'
+    sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
+    cluster_config = params_from_base_test_setup['cluster_config']
+    mode = params_from_base_test_setup['mode']
+    sg_obj = SyncGateway()
+    sgw_cluster2_sg_config = sync_gateway_config_path_for_mode(sgw_cluster2_conf_name, mode)
+    cluster_helper = ClusterKeywords(cluster_config)
+    cluster_hosts = cluster_helper.get_cluster_topology(cluster_config)
+    sg_two_url = cluster_hosts["sync_gateways"][1]["public"]
+    yield {
+        "cluster_config": cluster_config,
+        "sg_obj": sg_obj,
+        "mode": mode,
+        "sg_two_url": sg_two_url,
+        "sgw_cluster2_conf_name": sgw_cluster2_conf_name
+    }
+    sg_obj.install_sync_gateway(cluster_config, sync_gateway_version, sgw_cluster2_sg_config, url=sg_two_url, skip_bucketcreation=True)
+
+
+@pytest.mark.topospecific
+@pytest.mark.syncgateway
+@pytest.mark.sgreplicate
+def test_sg_replicate_mixed_sgw_versions(params_from_base_test_setup, setup_customized_teardown_test, sgw_version_reset):
+    '''
+    @summary
+    1. Spin up 1 SGW with current version
+    2. Spin up 2.7 SGW with allow_conflicts=false
+    3. Setup replication v2 'push' from current version to pre 2.8 version
+    4. Check that replication enters error state, an error is logged and the error_count stat increments
+    '''
+
+    # 1.Have 2 sgw nodes , have cbl on each SGW
+    sgw_cluster1_conf_name = 'listener_tests/sg_replicate_sgw_cluster1'
+    sgw_cluster2_conf_name = sgw_version_reset["sgw_cluster2_conf_name"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
+    mode = sgw_version_reset["mode"]
+    cluster_conf = sgw_version_reset["cluster_config"]
+    sg_obj = sgw_version_reset["sg_obj"]
+    sg_two_url = sgw_version_reset["sg_two_url"]
+    write_flag = False
+    read_flag = False
+    sg_client = MobileRestClient()
+    direction = "push"
+    continuous = True
+    sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
+    sgw_cluster2_sg_config = sync_gateway_config_path_for_mode(sgw_cluster2_conf_name, mode)
+    sg_obj.install_sync_gateway(cluster_conf, sync_gateway_version, sgw_cluster2_sg_config, url=sg_two_url, skip_bucketcreation=True)
+    db, num_of_docs, sg_db1, sg_db2, name1, name2, _, password, channels1, _, replicator, replicator_authenticator1, replicator_authenticator2, sg1_blip_url, sg2_blip_url, sg1, sg2, repl1, _, cbl_db1, cbl_db2, _ = setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_teardown_test,
+                                                                                                                                                                                                                                                  cbl_replication_type="push", sgw_cluster1_sg_config_name=sgw_cluster1_conf_name,
+                                                                                                                                                                                                                                                  sgw_cluster2_sg_config_name=sgw_cluster2_conf_name)
+
+    # 2. Spin up 2.7 SGW with allow_conflicts=false
+    sync_gateway_2_7_version = "2.7.4"
+    persist_cluster_config_environment_prop(cluster_conf, 'no_conflicts_enabled', True)
+    sg_obj.install_sync_gateway(cluster_conf, sync_gateway_2_7_version, sgw_cluster2_sg_config, url=sg_two_url, skip_bucketcreation=True)
+    db.create_bulk_docs(num_of_docs, "sgw1_docs", db=cbl_db1, channels=channels1)
+    db.create_bulk_docs(num_of_docs, "sgw2_docs", db=cbl_db2, channels=channels1)
+    repl2 = replicator.configure_and_replicate(
+        source_db=cbl_db2, replicator_authenticator=replicator_authenticator2, target_url=sg2_blip_url)
+
+    replicator.wait_until_replicator_idle(repl1)
+    replicator.wait_until_replicator_idle(repl2)
+
+    if "push" in direction:
+        write_flag = True
+    if "pull" in direction:
+        read_flag = True
+
+    # 3. Setup replication v2 'push' from current version to pre 2.8 version
+    repl_id_1 = sg1.start_replication2(
+        local_db=sg_db1,
+        remote_url=sg2.url,
+        remote_db=sg_db2,
+        remote_user=name2,
+        remote_password=password,
+        direction=direction,
+        continuous=continuous
+    )
+
+    # 4. Check that replication enters error state, an error is logged and the error_count stat increments
+    expected_tasks = 1
+    sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id_1, read_flag=read_flag, write_flag=write_flag)
+    active_tasks = sg1.admin.get_sgreplicate2_active_tasks(sg_db1, expected_tasks=expected_tasks)
+    assert len(active_tasks) == 0, "number of active tasks is not 0"
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    expvars = sg_client.get_expvars(url=sg1.admin.admin_url, auth=auth)
+    assert expvars["syncgateway"]["global"]["resource_utilization"]["warn_count"] == 6, "warn count has not raised with replication failure"
 
 
 def restart_sg_nodes(sg1, sg2, sg_config, cluster_config):

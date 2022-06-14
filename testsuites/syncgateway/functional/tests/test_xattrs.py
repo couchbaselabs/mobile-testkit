@@ -22,6 +22,7 @@ from keywords.utils import host_for_url, log_info
 from libraries.testkit.cluster import Cluster
 from keywords.ChangesTracker import ChangesTracker
 from utilities.cluster_config_utils import get_sg_use_views, get_sg_version, persist_cluster_config_environment_prop, copy_to_temp_conf, get_cluster
+from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
 from keywords.constants import RBAC_FULL_ADMIN
 
 
@@ -62,7 +63,7 @@ def test_olddoc_nil(params_from_base_test_setup, sg_conf_name):
     7. Assert that user2 can see the doc and user1 cannot
     """
 
-    bucket_name = 'data-bucket'
+    # bucket_name = 'data-bucket'
     sg_db = 'db'
     num_docs = 1000
 
@@ -83,6 +84,8 @@ def test_olddoc_nil(params_from_base_test_setup, sg_conf_name):
     sg_url = cluster_topology['sync_gateways'][0]['public']
     cbs_url = cluster_topology['couchbase_servers'][0]
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+    buckets = get_buckets_from_sync_gateway_config(sg_conf, cluster_conf)
+    bucket_name = buckets[0]
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     log_info('sg_conf: {}'.format(sg_conf))
@@ -205,7 +208,7 @@ def test_on_demand_doc_processing(params_from_base_test_setup, sg_conf_name, num
     sg_url = cluster_topology['sync_gateways'][0]['public']
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
-    bucket_name = 'data-bucket'
+    # bucket_name = 'data-bucket'
     sg_db = 'db'
     cbs_host = host_for_url(cbs_url)
 
@@ -219,6 +222,8 @@ def test_on_demand_doc_processing(params_from_base_test_setup, sg_conf_name, num
 
     # Reset cluster
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    buckets = get_buckets_from_sync_gateway_config(sg_conf, cluster_conf)
+    bucket_name = buckets[0]
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
 
@@ -335,7 +340,7 @@ def test_on_demand_import_of_external_updates(params_from_base_test_setup, sg_co
     - Update doc via SG, using (#1), should fail with conflict
     """
 
-    bucket_name = 'data-bucket'
+    # bucket_name = 'data-bucket'
     sg_db = 'db'
 
     cluster_conf = params_from_base_test_setup['cluster_config']
@@ -356,6 +361,8 @@ def test_on_demand_import_of_external_updates(params_from_base_test_setup, sg_co
     sg_url = cluster_topology['sync_gateways'][0]['public']
     cbs_url = cluster_topology['couchbase_servers'][0]
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+    buckets = get_buckets_from_sync_gateway_config(sg_conf, cluster_conf)
+    bucket_name = buckets[0]
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     log_info('sg_conf: {}'.format(sg_conf))
@@ -454,7 +461,7 @@ def test_offline_processing_of_external_updates(params_from_base_test_setup, sg_
     """
 
     num_docs_per_client = 1000
-    bucket_name = 'data-bucket'
+    # bucket_name = 'data-bucket'
     sg_db = 'db'
 
     cluster_conf = params_from_base_test_setup['cluster_config']
@@ -486,6 +493,8 @@ def test_offline_processing_of_external_updates(params_from_base_test_setup, sg_
     sg_url = cluster_topology['sync_gateways'][0]['public']
     cbs_url = cluster_topology['couchbase_servers'][0]
     cbs_ce_version = params_from_base_test_setup["cbs_ce"]
+    buckets = get_buckets_from_sync_gateway_config(sg_conf, cluster_conf)
+    bucket_name = buckets[0]
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     log_info('sg_conf: {}'.format(sg_conf))
@@ -622,7 +631,7 @@ def test_large_initial_import(params_from_base_test_setup, sg_conf_name):
     """
 
     num_docs = 30000
-    bucket_name = 'data-bucket'
+    # bucket_name = 'data-bucket'
     sg_db = 'db'
 
     cluster_conf = params_from_base_test_setup['cluster_config']
@@ -652,6 +661,8 @@ def test_large_initial_import(params_from_base_test_setup, sg_conf_name):
     sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
     sg_url = cluster_topology['sync_gateways'][0]['public']
     cbs_url = cluster_topology['couchbase_servers'][0]
+    buckets = get_buckets_from_sync_gateway_config(sg_conf, cluster_conf)
+    bucket_name = buckets[0]
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
     log_info('sg_conf: {}'.format(sg_conf))
@@ -762,7 +773,9 @@ def test_purge(params_from_base_test_setup, sg_conf_name, use_multiple_channels,
     sg_url = cluster_topology['sync_gateways'][0]['public']
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
-    bucket_name = 'data-bucket'
+    # bucket_name = 'data-bucket'
+    buckets = get_buckets_from_sync_gateway_config(sg_conf, cluster_conf)
+    bucket_name = buckets[0]
     cbs_url = cluster_topology['couchbase_servers'][0]
     sg_db = 'db'
     number_docs_per_client = 10
@@ -997,7 +1010,9 @@ def test_sdk_does_not_see_sync_meta(params_from_base_test_setup, sg_conf_name):
     sg_url = cluster_topology['sync_gateways'][0]['public']
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
-    bucket_name = 'data-bucket'
+    # bucket_name = 'data-bucket'
+    buckets = get_buckets_from_sync_gateway_config(sg_conf, cluster_conf)
+    bucket_name = buckets[0]
     cbs_url = cluster_topology['couchbase_servers'][0]
     sg_db = 'db'
     number_of_sg_docs = 1000
@@ -1136,7 +1151,9 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
     sg_url = cluster_topology['sync_gateways'][0]['public']
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
-    bucket_name = 'data-bucket'
+    # bucket_name = 'data-bucket'
+    buckets = get_buckets_from_sync_gateway_config(sg_conf, cluster_conf)
+    bucket_name = buckets[0]
     cbs_url = cluster_topology['couchbase_servers'][0]
     sg_db = 'db'
     number_docs_per_client = 10
@@ -1374,7 +1391,9 @@ def test_sg_sdk_interop_shared_docs(params_from_base_test_setup,
     sg_url = cluster_topology['sync_gateways'][0]['public']
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
-    bucket_name = 'data-bucket'
+    # bucket_name = 'data-bucket'
+    buckets = get_buckets_from_sync_gateway_config(sg_conf, cluster_conf)
+    bucket_name = buckets[0]
     cbs_url = cluster_topology['couchbase_servers'][0]
     sg_db = 'db'
 
@@ -1638,7 +1657,9 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
     sg_url = cluster_topology['sync_gateways'][0]['public']
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
-    bucket_name = 'data-bucket'
+    # bucket_name = 'data-bucket'
+    buckets = get_buckets_from_sync_gateway_config(sg_conf, cluster_conf)
+    bucket_name = buckets[0]
     cbs_url = cluster_topology['couchbase_servers'][0]
     sg_db = 'db'
     changesTracktimeout = 60
@@ -2301,7 +2322,9 @@ def test_sg_sdk_interop_shared_updates_from_sg(params_from_base_test_setup,
     sg_url = cluster_topology['sync_gateways'][0]['public']
     need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
-    bucket_name = 'data-bucket'
+    # bucket_name = 'data-bucket'
+    buckets = get_buckets_from_sync_gateway_config(sg_conf, cluster_conf)
+    bucket_name = buckets[0]
     cbs_url = cluster_topology['couchbase_servers'][0]
     sg_db = 'db'
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
@@ -2564,7 +2587,7 @@ def test_purge_and_view_compaction(params_from_base_test_setup, sg_conf_name):
     start = time.time()
     timeout = 10  # timeout for view query in channels due to race condition after compacting the docs
     while True:
-        channel_view_query = sg_client.view_query_through_channels(url=sg_admin_url, db=sg_db)
+        channel_view_query = sg_client.view_query_through_channels(url=sg_admin_url, db=sg_db, auth=auth)
         channel_view_query_string = json.dumps(channel_view_query)
         if(doc_id in channel_view_query_string or time.time() - start > timeout):
             break
@@ -2650,7 +2673,9 @@ def test_stats_logging_import_count(params_from_base_test_setup,
     sg_url = cluster_topology['sync_gateways'][0]['public']
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
 
-    bucket_name = 'data-bucket'
+    # bucket_name = 'data-bucket'
+    buckets = get_buckets_from_sync_gateway_config(sg_conf, cluster_conf)
+    bucket_name = buckets[0]
     cbs_url = cluster_topology['couchbase_servers'][0]
     sg_db = 'db'
 
@@ -2836,7 +2861,6 @@ def test_non_mobile_revision(params_from_base_test_setup):
 
     # Push a new mobile tombstone revision for the document to Sync Gateway
     # could either be with CBL, or via REST API
-    print("delete started")
     with ProcessPoolExecutor() as mp:
         mp.submit(requests.delete("{}/{}/{}".format(sg_url, sg_db, random_doc_id), auth=mobile_auth, timeout=30))
 
