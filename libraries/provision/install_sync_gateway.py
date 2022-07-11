@@ -216,7 +216,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
     }
 
     if version >= "2.1.0":
-        logging_config = '"logging": {"debug": {"enabled": true}'
+        logging_config = '"logging": {"debug": {"enabled": true}, "trace": {"enabled": true}'
         try:
             redact_level = get_redact_level(cluster_config)
             playbook_vars["logging"] = '{}, "redaction_level": "{}" {},'.format(logging_config, redact_level, "}")
