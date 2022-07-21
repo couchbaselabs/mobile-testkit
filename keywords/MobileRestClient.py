@@ -70,10 +70,12 @@ def get_auth_type(auth):
     if auth is None:
         return AuthType.none
 
+    print("\nauth type in get auth: ", auth)
     if isinstance(auth, tuple) and auth[0] == "SyncGatewaySession":
         auth_type = AuthType.session
     else:
         auth_type = AuthType.http_basic
+    print("\nauth type return in get auth: ", auth_type)
 
     logging.debug("Using auth type: {}".format(auth_type))
     return auth_type
