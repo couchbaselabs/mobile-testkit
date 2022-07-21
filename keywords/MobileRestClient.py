@@ -1531,16 +1531,20 @@ class MobileRestClient:
         """ Get all docs for a database via _all_docs """
 
         auth_type = get_auth_type(auth)
+        print("\nauth type: ", auth_type)
 
         params = {}
         if include_docs:
             params["include_docs"] = "true"
 
         if auth_type == AuthType.session:
+            print("\nauth type session")
             resp = self._session.get("{}/{}/_all_docs".format(url, db), params=params, cookies=dict(SyncGatewaySession=auth[1]))
         elif auth_type == AuthType.http_basic:
+            print("\nauth type basic")
             resp = self._session.get("{}/{}/_all_docs".format(url, db), params=params, auth=auth)
         else:
+            print("\nno auth type")
             resp = self._session.get("{}/{}/_all_docs".format(url, db), params=params)
 
         log_r(resp)
