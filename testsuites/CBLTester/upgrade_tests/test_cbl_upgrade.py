@@ -69,6 +69,7 @@ def test_upgrade_cbl(params_from_base_suite_setup):
     c.reset(sg_config_path=sg_config)
 
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    print("\nauth top: ", auth
     sg_client.create_user(sg_admin_url, sg_db, username, password, channels=["*"], auth=auth)
     authenticator = Authenticator(base_url)
     cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
@@ -244,6 +245,7 @@ def test_upgrade_cbl(params_from_base_suite_setup):
     replicator.stop(repl)
 
     new_cbl_doc_ids = db.getDocIds(cbl_db, limit=40000)
+    print("\nauthorization: ", auth)
     cbs_docs = sg_client.get_all_docs(sg_admin_url, sg_db, session, auth=auth)["rows"]
     cbs_doc_ids = [doc["id"] for doc in cbs_docs]
     for new_doc_id in new_doc_ids:
