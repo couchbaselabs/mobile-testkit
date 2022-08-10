@@ -214,7 +214,6 @@ class TestDatabase(object):
             doc = self.doc_obj.create(doc_id="{}_{}".format(doc_id, i))
             self.db_obj.saveDocument(db, doc)
         doc_count = self.db_obj.getCount(db)
-        log_info(doc_count)
         assert num_of_docs == doc_count
         assert self.db_obj.deleteDB(db) == -1
         
