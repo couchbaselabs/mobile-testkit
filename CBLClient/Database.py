@@ -385,3 +385,8 @@ class Database(object):
             del doc_body["_attachments"]
             updated_docs[doc] = doc_body
         self.updateDocuments(database, updated_docs)
+
+    def defaultScope(self, database):
+        args = Args()
+        args.setMemoryPointer("database", database)
+        return self._client.invokeMethod("collection_defaultScope", args)

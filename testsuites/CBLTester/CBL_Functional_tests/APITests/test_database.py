@@ -1,3 +1,4 @@
+from distutils import log
 import pytest
 from keywords.utils import random_string, log_info
 
@@ -213,8 +214,25 @@ class TestDatabase(object):
             doc = self.doc_obj.create(doc_id="{}_{}".format(doc_id, i))
             self.db_obj.saveDocument(db, doc)
         doc_count = self.db_obj.getCount(db)
+        log_info(doc_count)
         assert num_of_docs == doc_count
         assert self.db_obj.deleteDB(db) == -1
+        
+    @pytest.mark.parametrize("db_name", [
+        random_string(1),
+        random_string(6),
+        random_string(128),
+        "_{}".format(random_string(6)),
+        "{}_".format(random_string(6)),
+        "_{}_".format(random_string(6)),
+        random_string(6, digit=True),
+        random_string(6).upper(),
+    ])
+    def test_getAllScope(self, db_name):
+        db = self.db_obj.create(db_name)
+        scope_names = self.db_obj.getAllScope(db)
+        print(scope_names)
+        assert True
 
     @pytest.mark.parametrize("db_name", [
         random_string(1),
@@ -416,3 +434,5 @@ class TestDatabase(object):
         for doc_id in cbl_docs:
             assert cbl_docs[doc_id]["new_field"] == updated_body[doc_id]["new_field"],\
                 "Doc body doesn't match after update"
+
+    
