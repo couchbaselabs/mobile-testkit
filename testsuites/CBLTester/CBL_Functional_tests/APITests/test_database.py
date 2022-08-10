@@ -216,22 +216,6 @@ class TestDatabase(object):
         doc_count = self.db_obj.getCount(db)
         assert num_of_docs == doc_count
         assert self.db_obj.deleteDB(db) == -1
-        
-    @pytest.mark.parametrize("db_name", [
-        random_string(1),
-        random_string(6),
-        random_string(128),
-        "_{}".format(random_string(6)),
-        "{}_".format(random_string(6)),
-        "_{}_".format(random_string(6)),
-        random_string(6, digit=True),
-        random_string(6).upper(),
-    ])
-    def test_getAllScope(self, db_name):
-        db = self.db_obj.create(db_name)
-        scope_names = self.db_obj.getAllScope(db)
-        print(scope_names)
-        assert True
 
     @pytest.mark.parametrize("db_name", [
         random_string(1),
