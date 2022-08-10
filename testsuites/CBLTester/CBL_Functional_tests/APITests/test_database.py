@@ -1,4 +1,3 @@
-from distutils import log
 import pytest
 from keywords.utils import random_string, log_info
 
