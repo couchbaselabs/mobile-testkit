@@ -286,10 +286,12 @@ class TestServerAndroid(TestServerBase):
         output = subprocess.check_output(command)
         log_info(output)
 
-        self.logfile.flush()
-        self.logfile.close()
-        self.process.kill()
-        self.process.wait()
+        if self.logfile:
+            self.logfile.flush()
+            self.logfile.close()
+        if self.process:
+            self.process.kill()
+            self.process.wait()
 
     def close_app(self):
         if self.device_enabled:
