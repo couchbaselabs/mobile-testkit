@@ -130,16 +130,6 @@ class TestServerAndroid(TestServerBase):
         apk_path = "{}/{}".format(BINARY_DIR, self.apk_name)
 
         try:
-            # check if package is installed on device already
-            cmd = self.set_device_option(["adb", "shell", "dumpsys", "package",
-                                          "com.couchbase.TestServerApp",
-                                          " | grep versionName ", "| cut -d= -f2- "])
-            output = subprocess.check_output(cmd)
-            log_info("version in device {} ".format(output.decode()))
-            if output.strip().decode() == self.version_build:
-                log_info("package {} is installed already on device. Skip install it"\
-                                                          .format(self.version_build))
-                return
             log_info("remove the app on device before install, to ensure sandbox gets cleaned.")
             self.remove()
         except Exception as e:
