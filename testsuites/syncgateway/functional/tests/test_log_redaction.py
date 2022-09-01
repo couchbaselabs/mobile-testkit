@@ -597,6 +597,8 @@ def verify_udTags_in_zippedFile(zip_file_name):
             if redact_match:
                 redact_content = redact_match.group(0)
             else:
+                if "Binary file" in str(key):
+                    continue
                 assert False, "Line: " + key + "Value: " + value + " did not match <ud>.+</ud> regex"
             if re.search("[a-f0-9]{40}", redact_content):
                 continue
