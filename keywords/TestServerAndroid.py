@@ -139,6 +139,7 @@ class TestServerAndroid(TestServerBase):
             if output.strip().decode() == self.version_build:
                 log_info("package {} is installed already on device. Skip install it"\
                                                           .format(self.version_build))
+                self.stop() // stop CBL server if it is running
                 return
             log_info("remove the app on device before install, to ensure sandbox gets cleaned.")
             self.remove()
@@ -226,7 +227,7 @@ class TestServerAndroid(TestServerBase):
 
         # return "http://{}:{}".format(self.host, self.port)
 
-    def start_device(self, logfile_name):
+    def start_device(self, logfile_name=""):
         """
         1. Starts a Test server app with adb logging to provided logfile file object.
             The adb process will be stored in the self.process property
@@ -240,10 +241,12 @@ class TestServerAndroid(TestServerBase):
         command = self.set_device_option(["adb", "logcat", "-c"])
         subprocess.check_call(command)
 
-        # Start redirecting adb output to the logfile
-        self.logfile = open(logfile_name, "w+")
-        command = self.set_device_option(["adb", "logcat"])
-        self.process = subprocess.Popen(args=command, stdout=self.logfile)
+        if logfile_name:
+            # Start redirecting adb output to the logfile
+            self.logfile = open(logfile_name, "w+")
+            command = self.set_device_option(["adb", "logcat"])
+            self.process = subprocess.Popen(args=command, stdout=self.logfile)
+            
         command = self.set_device_option([
             "adb", "shell", "am", "start", "-n", self.activity_name,
             "--es", "username", "none",
