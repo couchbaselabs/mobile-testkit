@@ -249,9 +249,9 @@ def test_on_demand_doc_processing(params_from_base_test_setup, sg_conf_name, num
         user_channels = ['{}_chan'.format(user_name)]
         sg_client.create_user(url=sg_admin_url, db=sg_db, name=user_name, password='pass', channels=user_channels, auth=auth)
         auth_dict[user_name] = sg_client.create_session(url=sg_admin_url, db=sg_db, name=user_name, auth=auth)
-        docs = document.create_docs('{}_doc'.format(user_name), number=number_docs_per_user, channels=user_channels, prop_generator=update_props)
+        docs = document.create_docs('{}_doc'.format(user_name), number=number_docs_per_user, channels=user_channels, prop_generator=update_props, non_sgw=True)
         for doc in docs:
-            docs_to_add[doc['_id']] = doc
+            docs_to_add[doc['id']] = doc
 
     assert len(docs_to_add) == number_users * number_docs_per_user
 
@@ -564,9 +564,9 @@ def test_offline_processing_of_external_updates(params_from_base_test_setup, sg_
 
     # Add additional docs via SDK
     log_info('Adding {} docs via SDK ...'.format(num_docs_per_client))
-    sdk_doc_bodies = document.create_docs('sdk', number=num_docs_per_client, channels=['SDK'])
-    sdk_doc_ids = [doc['_id'] for doc in sdk_doc_bodies]
-    sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
+    sdk_doc_bodies = document.create_docs('sdk', number=num_docs_per_client, channels=['SDK'], non_sgw=True)
+    sdk_doc_ids = [doc['id'] for doc in sdk_doc_bodies]
+    sdk_docs = {doc['id']: doc for doc in sdk_doc_bodies}
     sdk_docs_resp = []
     for k, v in sdk_docs.items():
         sdk_docs_resp.append(sdk_client.upsert(k, v))
@@ -683,10 +683,10 @@ def test_large_initial_import(params_from_base_test_setup, sg_conf_name):
         return {'sample_array': ["test_item_{}".format(i) for i in range(20)]}
 
     # Create 'num_docs' docs from SDK
-    sdk_doc_bodies = document.create_docs('sdk', num_docs, channels=['created_via_sdk'], prop_generator=prop_gen)
-    sdk_doc_ids = [doc['_id'] for doc in sdk_doc_bodies]
+    sdk_doc_bodies = document.create_docs('sdk', num_docs, channels=['created_via_sdk'], prop_generator=prop_gen, non_sgw=True)
+    sdk_doc_ids = [doc['id'] for doc in sdk_doc_bodies]
     assert len(sdk_doc_ids) == num_docs
-    sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
+    sdk_docs = {doc['id']: doc for doc in sdk_doc_bodies}
     for k, v in sdk_docs.items():
         bucket_cluster.upsert(k, v)
 
@@ -829,8 +829,8 @@ def test_purge(params_from_base_test_setup, sg_conf_name, use_multiple_channels,
         connection_url = 'couchbase://{}'.format(cbs_ip)
     sdk_client = get_cluster(connection_url, bucket_name)
     # Create 'number_docs_per_client' docs from SDK
-    sdk_doc_bodies = document.create_docs('sdk', number_docs_per_client, channels=seth_user_info.channels)
-    sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
+    sdk_doc_bodies = document.create_docs('sdk', number_docs_per_client, channels=seth_user_info.channels, non_sgw=True)
+    sdk_docs = {doc['id']: doc for doc in sdk_doc_bodies}
     sdk_doc_ids = [doc for doc in sdk_docs]
     for k, v in sdk_docs.items():
         sdk_client.upsert(k, v)
@@ -1164,8 +1164,8 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
 
     # Create docs and add them via sdk
     log_info('Adding docs via sdk ...')
-    sdk_doc_bodies = document.create_docs('sdk', number_docs_per_client, content={'foo': 'bar', 'updates': 1}, channels=['sdk'])
-    sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
+    sdk_doc_bodies = document.create_docs('sdk', number_docs_per_client, content={'foo': 'bar', 'updates': 1}, channels=['sdk'], non_sgw=True)
+    sdk_docs = {doc['id']: doc for doc in sdk_doc_bodies}
     sdk_doc_ids = [doc for doc in sdk_docs]
     for k, v in sdk_docs.items():
         sdk_client.upsert(k, v)
@@ -1437,13 +1437,14 @@ def test_sg_sdk_interop_shared_docs(params_from_base_test_setup,
         'doc_set_two',
         number_docs_per_client,
         channels=['shared'],
-        prop_generator=update_props
+        prop_generator=update_props,
+        non_sgw=True
     )
 
     # Add docs via SDK
     log_info('Adding {} docs via SDK ...'.format(number_docs_per_client))
-    sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
-    doc_set_two_ids = [sdk_doc['_id'] for sdk_doc in sdk_doc_bodies]
+    sdk_docs = {doc['id']: doc for doc in sdk_doc_bodies}
+    doc_set_two_ids = [sdk_doc['id'] for sdk_doc in sdk_doc_bodies]
     sdk_docs_resp = []
     for k, v in sdk_docs.items():
         sdk_docs_resp.append(sdk_client.upsert(k, v))
@@ -1692,15 +1693,16 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
         'doc_sdk_ids',
         number_docs_per_client,
         channels=['shared'],
-        prop_generator=update_props
+        prop_generator=update_props,
+        non_sgw=True
     )
 
     with ThreadPoolExecutor(max_workers=5) as crsdk_tpe:
 
         # Add docs via SDK
         log_info('Started adding {} docs via SDK ...'.format(number_docs_per_client))
-        sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
-        doc_set_ids1 = [sdk_doc['_id'] for sdk_doc in sdk_doc_bodies]
+        sdk_docs = {doc['id']: doc for doc in sdk_doc_bodies}
+        doc_set_ids1 = [sdk_doc['id'] for sdk_doc in sdk_doc_bodies]
         sdk_docs_resp = []
         for k, v in sdk_docs.items():
             sdk_docs_resp.append(sdk_client.upsert(k, v))
@@ -2687,12 +2689,13 @@ def test_stats_logging_import_count(params_from_base_test_setup,
     sdk_doc_bodies = document.create_docs(
         'doc_sdk_ids',
         number_docs_per_client,
-        channels=['KMOW'])
+        channels=['KMOW'],
+        non_sgw=True)
 
     # Add docs via SDK
     log_info('Started adding {} docs via SDK as first set...'.format(number_docs_per_client))
-    sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
-    doc_set_ids1 = [sdk_doc['_id'] for sdk_doc in sdk_doc_bodies]
+    sdk_docs = {doc['id']: doc for doc in sdk_doc_bodies}
+    doc_set_ids1 = [sdk_doc['id'] for sdk_doc in sdk_doc_bodies]
     sdk_docs_resp = []
     for k, v in sdk_docs.items():
         sdk_docs_resp.append(sdk_client.upsert(k, v))
@@ -2704,12 +2707,13 @@ def test_stats_logging_import_count(params_from_base_test_setup,
     sdk_doc_bodies_2 = document.create_docs(
         'doc_sdk_ids-2',
         number_docs_per_client,
-        channels=['sg-shared'])
+        channels=['sg-shared'],
+        non_sgw=True)
 
     # Add docs via SDK
     log_info('Started adding {} docs via SDK as second set...'.format(number_docs_per_client))
-    sdk_docs_2 = {doc['_id']: doc for doc in sdk_doc_bodies_2}
-    doc_set_ids2 = [sdk_doc['_id'] for sdk_doc in sdk_doc_bodies_2]
+    sdk_docs_2 = {doc['id']: doc for doc in sdk_doc_bodies_2}
+    doc_set_ids2 = [sdk_doc['id'] for sdk_doc in sdk_doc_bodies_2]
     sdk_docs_resp = []
     for k, v in sdk_docs_2.items():
         sdk_docs_resp.append(sdk_client.upsert(k, v))

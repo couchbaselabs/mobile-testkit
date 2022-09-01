@@ -153,9 +153,10 @@ def test_document_resurrection(params_from_base_test_setup, sg_conf_name, deleti
             number=num_docs_per_client,
             content={'foo': 'bar'},
             channels=sg_user_channels,
+            non_sgw=True
         )
-        sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
-        sdk_doc_ids = [doc['_id'] for doc in sdk_doc_bodies]
+        sdk_docs = {doc['id']: doc for doc in sdk_doc_bodies}
+        sdk_doc_ids = [doc['id'] for doc in sdk_doc_bodies]
 
         log_info('Creating SDK docs')
         sdk_client.upsert_multi(sdk_docs)
