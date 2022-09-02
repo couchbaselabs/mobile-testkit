@@ -1,0 +1,6 @@
+# Stop service
+
+- name: SYNC GATEWAY | Stop sync_gateway service
+  shell: kill $(ps aux | grep '/opt/couchbase-sync-gateway/bin/sync_gateway' | awk '{print $2}')
+  ignore_errors: yes
+  when: (ansible_distribution == "CentOS" and ansible_distribution_major_version >= "7") or (ansible_distribution == "Amazon") or (ansible_distribution == "Ubuntu") or (ansible_distribution == "RedHat") or (ansible_distribution == "Debian")

@@ -176,8 +176,8 @@ def pytest_addoption(parser):
 
     parser.addoption("--sync-gateway-previous-version",
                      action="store",
-                     help="sync-gateway-previous-version",
-                     default="2.8.2-1")
+                     help="sync-gateway-previous-version",  # Adding a default to try to fix the test failure
+                     default="2.7.4")
 
     parser.addoption("--enable-server-tls-skip-verify",
                      action="store_true",
@@ -235,9 +235,7 @@ def params_from_base_suite_setup(request):
     disable_persistent_config = request.config.getoption("--disable-persistent-config")
     sync_gateway_previous_version = request.config.getoption("--sync-gateway-previous-version")
     enable_server_tls_skip_verify = request.config.getoption("--enable-server-tls-skip-verify")
-
     disable_admin_auth = request.config.getoption("--disable-admin-auth")
-    log_info("disable_admin_auth flag: {}".format(disable_admin_auth))
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
@@ -395,12 +393,12 @@ def params_from_base_suite_setup(request):
         persist_cluster_config_environment_prop(cluster_config, 'magma_storage_enabled', False, False)
 
     try:
-        cbs_ce
+        sg_ce
     except NameError:
-        log_info("cbs ce flag  is not provided, so by default it runs on Enterprise edition")
+        log_info("sg ce flag  is not provided, so by default it runs on Enterprise edition")
     else:
-        log_info("Running test with CBS edition {}".format(cbs_ce))
-        persist_cluster_config_environment_prop(cluster_config, 'cbs_ce', cbs_ce, False)
+        log_info("Running test with SGW community edition {}".format(sg_ce))
+        persist_cluster_config_environment_prop(cluster_config, 'sg_ce', sg_ce, False)
 
     if hide_product_version:
         log_info("Suppress the SGW product Version")
@@ -420,7 +418,7 @@ def params_from_base_suite_setup(request):
         log_info(" disable persistent config")
         persist_cluster_config_environment_prop(cluster_config, 'disable_persistent_config', True)
     else:
-        log_info("Running without Centralized Persistent Config")
+        log_info("Running with Centralized Persistent Config")
         persist_cluster_config_environment_prop(cluster_config, 'disable_persistent_config', False)
 
     if enable_server_tls_skip_verify:
@@ -446,40 +444,53 @@ def params_from_base_suite_setup(request):
 
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
 
+    sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
     # Skip provisioning if user specifies '--skip-provisoning' or '--sequoia'
     should_provision = True
     if skip_provisioning or use_sequoia:
         should_provision = False
 
     cluster_utils = ClusterKeywords(cluster_config)
-    if should_provision:
+    provision_flag = True
+    count = 0
+    max_count = 2
+    while provision_flag and count < max_count:
+        if should_provision:
+            try:
+                cluster_utils.provision_cluster(
+                    cluster_config=cluster_config,
+                    server_version=server_version,
+                    sync_gateway_version=sync_gateway_version,
+                    sync_gateway_config=sg_config,
+                    race_enabled=race_enabled,
+                    cbs_platform=cbs_platform,
+                    sg_platform=sg_platform,
+                    sg_installer_type=sg_installer_type,
+                    sa_platform=sa_platform,
+                    sa_installer_type=sa_installer_type,
+                    sg_ce=sg_ce,
+                    cbs_ce=cbs_ce,
+                    skip_couchbase_provision=skip_couchbase_provision
+                )
+            except ProvisioningError:
+                logging_helper = Logging()
+                logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=request.node.name)
+                raise
         try:
-            cluster_utils.provision_cluster(
-                cluster_config=cluster_config,
-                server_version=server_version,
-                sync_gateway_version=sync_gateway_version,
-                sync_gateway_config=sg_config,
-                race_enabled=race_enabled,
-                cbs_platform=cbs_platform,
-                sg_platform=sg_platform,
-                sg_installer_type=sg_installer_type,
-                sa_platform=sa_platform,
-                sa_installer_type=sa_installer_type,
-                sg_ce=sg_ce,
-                cbs_ce=cbs_ce,
-                skip_couchbase_provision=skip_couchbase_provision
+            # Hit this intalled running services to verify the correct versions are installed
+            cluster_utils.verify_cluster_versions(
+                cluster_config,
+                expected_server_version=server_version,
+                expected_sync_gateway_version=sync_gateway_version
             )
-        except ProvisioningError:
-            logging_helper = Logging()
-            logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=request.node.name)
-            raise
+            provision_flag = False
+        except Exception:
+            provision_flag = True
+            should_provision = True
+        count += 1
 
-    # Hit this intalled running services to verify the correct versions are installed
-    cluster_utils.verify_cluster_versions(
-        cluster_config,
-        expected_server_version=server_version,
-        expected_sync_gateway_version=sync_gateway_version
-    )
+    need_sgw_admin_auth = (not disable_admin_auth) and sync_gateway_version >= "3.0"
+    log_info("need_sgw_admin_auth setting: {}".format(need_sgw_admin_auth))
 
     need_sgw_admin_auth = (not disable_admin_auth) and sync_gateway_version >= "3.0"
     log_info("need_sgw_admin_auth setting: {}".format(need_sgw_admin_auth))
@@ -511,6 +522,7 @@ def params_from_base_suite_setup(request):
         "sg_config": sg_config,
         "cbs_ce": cbs_ce,
         "prometheus_enabled": prometheus_enabled,
+        "disable_persistent_config": disable_persistent_config,
         "need_sgw_admin_auth": need_sgw_admin_auth,
         "sync_gateway_previous_version": sync_gateway_previous_version
     }
@@ -524,6 +536,8 @@ def params_from_base_suite_setup(request):
     clear_firewall_rules(cluster_config)
     # Stop all sync_gateway and sg_accels as test finished
     c = cluster.Cluster(cluster_config)
+
+    # Comment this out to use skip-provisions
     c.stop_sg_and_accel()
 
     # Delete png files under resources/data
@@ -553,6 +567,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     sg_ce = params_from_base_suite_setup["sg_ce"]
     sg_config = params_from_base_suite_setup["sg_config"]
     cbs_ce = params_from_base_suite_setup["cbs_ce"]
+    disable_persistent_config = params_from_base_suite_setup["disable_persistent_config"]
     need_sgw_admin_auth = params_from_base_suite_setup["need_sgw_admin_auth"]
     prometheus_enabled = request.config.getoption("--prometheus-enable")
     sync_gateway_previous_version = params_from_base_suite_setup["sync_gateway_previous_version"]
@@ -616,6 +631,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "cbs_ce": cbs_ce,
         "sg_url": sg_url,
         "sg_admin_url": sg_admin_url,
+        "disable_persistent_config": disable_persistent_config,
         "prometheus_enabled": prometheus_enabled,
         "need_sgw_admin_auth": need_sgw_admin_auth,
         "sync_gateway_previous_version": sync_gateway_previous_version

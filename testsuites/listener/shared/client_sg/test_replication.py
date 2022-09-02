@@ -1779,7 +1779,6 @@ def add_2MB_docs(url, db, number, id_prefix, auth=None, channels=None, attachmen
 
     log_info("PUT {} docs to {}/{}/ with prefix {}".format(number, url, db, id_prefix))
     for i in range(number):
-        print("i in number is ", i)
         doc_body = doc_generators.simple()
         if channels is not None:
             doc_body["channels"] = channels

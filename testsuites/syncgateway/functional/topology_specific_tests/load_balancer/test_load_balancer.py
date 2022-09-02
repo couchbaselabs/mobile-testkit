@@ -10,6 +10,7 @@ from keywords.ClusterKeywords import ClusterKeywords
 from keywords.SyncGateway import sync_gateway_config_path_for_mode, create_docs_via_sdk
 from libraries.testkit import cluster
 from libraries.testkit.cluster import Cluster
+from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
 
 
 @pytest.mark.topospecific
@@ -116,7 +117,9 @@ def test_sgw_down_with_load_balancer(params_from_base_test_setup, sgw_down_with_
 
     sg_db = "db"
     num_docs = 100
-    bucket_name = 'data-bucket'
+    # bucket_name = 'data-bucket'
+    buckets = get_buckets_from_sync_gateway_config(sg_conf_path, cluster_config)
+    bucket_name = buckets[0]
 
     client = MobileRestClient()
     cbs_url = cluster_topology['couchbase_servers'][0]

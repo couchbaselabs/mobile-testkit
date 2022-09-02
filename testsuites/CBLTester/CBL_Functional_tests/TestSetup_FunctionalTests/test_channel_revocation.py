@@ -1675,12 +1675,10 @@ def verify_doc_replication_rejection(liteserv_platform, log_file, test_cbllog):
        @note: Porting logs for Android, xamarin-android, net-core and net-uwp platform, as the logs reside
            outside runner's file directory
     """
-
     delimiter = "/"
     if "-msft" in liteserv_platform or liteserv_platform == "uwp":
         delimiter = "\\"
     log_dir = log_file.split(delimiter)[-1]
-
     log_full_path_dir = "/tmp/cbl-logs/"
     os.mkdir(log_full_path_dir)
     log_info("\n Collecting logs")
