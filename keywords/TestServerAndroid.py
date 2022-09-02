@@ -140,6 +140,7 @@ class TestServerAndroid(TestServerBase):
                 log_info("package {} is installed already on device. Skip install it"\
                                                           .format(self.version_build))
                 self.stop() # stop CBL server if it is running
+                self.start_device()
                 return
             log_info("remove the app on device before install, to ensure sandbox gets cleaned.")
             self.remove()
