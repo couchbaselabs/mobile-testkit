@@ -397,13 +397,13 @@ def test_webhook_filter_external_js(params_from_base_test_setup, setup_webserver
     def update_non_webhook_prop():
         return {'updates': 0, 'data': 'non_webhook_filter'}
     log_info('Adding {} docs via SDK ...')
-    sdk_doc_bodies = document.create_docs(sdk_webhook, number=sdk_webhook_docs, content={"data": "webhook_filter"}, channels=channel, prop_generator=update_webhook_prop)
-    sdk_doc_ids1 = [doc['_id'] for doc in sdk_doc_bodies]
-    sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
+    sdk_doc_bodies = document.create_docs(sdk_webhook, number=sdk_webhook_docs, content={"data": "webhook_filter"}, channels=channel, prop_generator=update_webhook_prop, non_sgw=True)
+    sdk_doc_ids1 = [doc['id'] for doc in sdk_doc_bodies]
+    sdk_docs = {doc['id']: doc for doc in sdk_doc_bodies}
     sdk_client.upsert_multi(sdk_docs)
 
-    sdk_doc_bodies = document.create_docs(sdk_non_webhook, number=sdk_non_webhook_docs, content={"data": "non_webhook_filter"}, channels=channel)
-    sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
+    sdk_doc_bodies = document.create_docs(sdk_non_webhook, number=sdk_non_webhook_docs, content={"data": "non_webhook_filter"}, channels=channel, non_sgw=True)
+    sdk_docs = {doc['id']: doc for doc in sdk_doc_bodies}
     sdk_client.upsert_multi(sdk_docs)
 
     count = 0
@@ -494,13 +494,13 @@ def test_webhook_filter_external_https_js(params_from_base_test_setup, setup_web
     def update_non_webhook_prop():
         return {'updates': 0, 'data': 'non_webhook_filter'}
     log_info('Adding {} docs via SDK ...')
-    sdk_doc_bodies = document.create_docs(sdk_webhook, number=sdk_webhook_docs, content={"data": "webhook_filter"}, channels=channel, prop_generator=update_webhook_prop)
-    sdk_doc_ids1 = [doc['_id'] for doc in sdk_doc_bodies]
-    sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
+    sdk_doc_bodies = document.create_docs(sdk_webhook, number=sdk_webhook_docs, content={"data": "webhook_filter"}, channels=channel, prop_generator=update_webhook_prop, non_sgw=True)
+    sdk_doc_ids1 = [doc['id'] for doc in sdk_doc_bodies]
+    sdk_docs = {doc['id']: doc for doc in sdk_doc_bodies}
     sdk_client.upsert_multi(sdk_docs)
 
-    sdk_doc_bodies = document.create_docs(sdk_non_webhook, number=sdk_non_webhook_docs, content={"data": "non_webhook_filter"}, channels=channel)
-    sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
+    sdk_doc_bodies = document.create_docs(sdk_non_webhook, number=sdk_non_webhook_docs, content={"data": "non_webhook_filter"}, channels=channel, non_sgw=True)
+    sdk_docs = {doc['id']: doc for doc in sdk_doc_bodies}
     sdk_client.upsert_multi(sdk_docs)
 
     count = 0

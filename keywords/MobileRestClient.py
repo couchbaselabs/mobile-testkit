@@ -1181,7 +1181,7 @@ class MobileRestClient:
         Purges the each doc by doc id
 
         docs format (lite): [{u'ok': True, u'rev': u'3-56e50918afe3e9b3c29e94ad55cc6b15', u'id': u'large_attach_0'}, ...]
-        docs format (Sync Gateway): [{u'ok': True, u'_rev': u'3-56e50918afe3e9b3c29e94ad55cc6b15', u'_id': u'large_attach_0'}, ...]
+        docs format (Sync Gateway): [{u'ok': True, u'_rev': u'3-56e50918afe3e9b3c29e94ad55cc6b15', u_id: u'large_attach_0'}, ...]
         """
 
         server_type = self.get_server_type(url=url, auth=auth)
@@ -1211,7 +1211,7 @@ class MobileRestClient:
         Purges the each doc in the provided 'docs' given the 'id' and 'rev'
 
         docs format (lite): [{u'ok': True, u'rev': u'3-56e50918afe3e9b3c29e94ad55cc6b15', u'id': u'large_attach_0'}, ...]
-        docs format (Sync Gateway): [{u'ok': True, u'_rev': u'3-56e50918afe3e9b3c29e94ad55cc6b15', u'_id': u'large_attach_0'}, ...]
+        docs format (Sync Gateway): [{u'ok': True, u'_rev': u'3-56e50918afe3e9b3c29e94ad55cc6b15', u_id: u'large_attach_0'}, ...]
         """
 
         server_type = self.get_server_type(url=url, auth=auth)
@@ -2378,9 +2378,9 @@ class MobileRestClient:
         """ Verifies that list of doc ids are in the response.
          'response' expected format:
         [
-            {u'channels': [u'NBC', u'ABC'], u'_rev': u'1-efda114d144b5220fa77c4e51f3e70a8', u'_id': u'exp_10_0'},
-            {u'channels': [u'NBC', u'ABC'], u'_rev': u'1-efda114d144b5220fa77c4e51f3e70a8', u'_id': u'exp_10_1'},
-            {u'channels': [u'NBC', u'ABC'], u'_rev': u'1-efda114d144b5220fa77c4e51f3e70a8', u'_id': u'exp_10_2'} ...
+            {u'channels': [u'NBC', u'ABC'], u'_rev': u'1-efda114d144b5220fa77c4e51f3e70a8', u_id: u'exp_10_0'},
+            {u'channels': [u'NBC', u'ABC'], u'_rev': u'1-efda114d144b5220fa77c4e51f3e70a8', u_id: u'exp_10_1'},
+            {u'channels': [u'NBC', u'ABC'], u'_rev': u'1-efda114d144b5220fa77c4e51f3e70a8', u_id: u'exp_10_2'} ...
         ]
         """
 
@@ -2399,9 +2399,9 @@ class MobileRestClient:
         """ Verifies that list of doc ids are not present on sync gateway.
          'response' expected format:
         [
-            {u'channels': [u'NBC', u'ABC'], u'_rev': u'1-efda114d144b5220fa77c4e51f3e70a8', u'_id': u'exp_10_0'},
-            {u'channels': [u'NBC', u'ABC'], u'_rev': u'1-efda114d144b5220fa77c4e51f3e70a8', u'_id': u'exp_10_1'},
-            {u'channels': [u'NBC', u'ABC'], u'_rev': u'1-efda114d144b5220fa77c4e51f3e70a8', u'_id': u'exp_10_2'} ...
+            {u'channels': [u'NBC', u'ABC'], u'_rev': u'1-efda114d144b5220fa77c4e51f3e70a8', u_id: u'exp_10_0'},
+            {u'channels': [u'NBC', u'ABC'], u'_rev': u'1-efda114d144b5220fa77c4e51f3e70a8', u_id: u'exp_10_1'},
+            {u'channels': [u'NBC', u'ABC'], u'_rev': u'1-efda114d144b5220fa77c4e51f3e70a8', u_id: u'exp_10_2'} ...
         ]
         """
 

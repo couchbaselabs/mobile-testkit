@@ -78,8 +78,9 @@ def test_userdefind_collections(params_from_base_test_setup):
     else:
         connection_url = "couchbase://{}".format(cbs_ip)
     sdk_client = get_cluster(connection_url, bucket)
-    sdk_doc_bodies = document.create_docs('sdk_default', number=num_sdk_docs, channels=channels)
-    sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
+    sdk_doc_bodies = document.create_docs('sdk_default', number=num_sdk_docs, channels=channels, non_sgw=True)
+    sdk_docs = {doc['id']: doc for doc in sdk_doc_bodies}
+
     sdk_client.upsert_multi(sdk_docs)
 
     # 2. Create docs via sdk using user defined collections

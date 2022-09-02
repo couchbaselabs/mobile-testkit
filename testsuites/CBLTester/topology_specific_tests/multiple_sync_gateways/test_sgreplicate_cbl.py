@@ -1510,14 +1510,14 @@ def test_sg_replicate_sgwconfig_replications_with_opt_out(params_from_base_test_
     # Now create docs on all sg nodes
     db.create_bulk_docs(num_of_docs, replication1_channel1, db=cbl_db1, channels=channels1)
     db.create_bulk_docs(num_of_docs, replication1_channel2, db=cbl_db2, channels=channels2)
-    sdk_doc_bodies = document.create_docs(replication1_channel3, number=num_of_docs, channels=channels3)
+    sdk_doc_bodies = document.create_docs(replication1_channel3, number=num_of_docs, channels=channels3, non_sgw=True)
     bucket = c_cluster.servers[0].get_bucket_names()
     cbs_ip = c_cluster.servers[0].host
     sdk_client = get_sdk_client_with_bucket(ssl_enabled, c_cluster, cbs_ip, bucket[0])
-    sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
+    sdk_docs = {doc['id']: doc for doc in sdk_doc_bodies}
     sdk_client.upsert_multi(sdk_docs)
-    sdk_doc_bodies4 = document.create_docs(replication1_channel4, number=num_of_docs, channels=channels3)
-    sdk_docs4 = {doc['_id']: doc for doc in sdk_doc_bodies4}
+    sdk_doc_bodies4 = document.create_docs(replication1_channel4, number=num_of_docs, channels=channels3, non_sgw=True)
+    sdk_docs4 = {doc['id']: doc for doc in sdk_doc_bodies4}
     sdk_client.upsert_multi(sdk_docs4)
 
     repl2 = replicator.configure_and_replicate(
@@ -2295,7 +2295,7 @@ def test_sg_replicate_doc_resurrection(params_from_base_test_setup, setup_custom
     cbl_doc_ids1 = db.getDocIds(cbl_db1)
     random_doc_id = random.choice(cbl_doc_ids1)
     if doc_delete_source == "cbl":
-        doc_body = document.create_doc(doc_id=random_doc_id, content="testing-doc-resurrec", channels=channels1, cbl=True)
+        doc_body = document.create_doc(doc_id=random_doc_id, content="testing-doc-resurrec", channels=channels1, non_sgw=True)
         if delete_sgw_cluster == "sgw1":
             cbl_database = cbl_db1
         else:
@@ -2304,7 +2304,7 @@ def test_sg_replicate_doc_resurrection(params_from_base_test_setup, setup_custom
         mutable_doc1 = documentObj.create(random_doc_id, doc_body)
         db.saveDocument(cbl_database, mutable_doc1)
     else:
-        doc_body = document.create_doc(doc_id=random_doc_id, content="testing-doc-resurrec", channels=channels1)
+        doc_body = document.create_doc(doc_id=random_doc_id, content="testing-doc-resurrec", channels=channels1, non_sgw=True)
         if delete_sgw_cluster == "sgw1":
             cbs_bucket = bucket[0]
         else:
@@ -2316,9 +2316,18 @@ def test_sg_replicate_doc_resurrection(params_from_base_test_setup, setup_custom
         replicator.wait_until_replicator_idle(repl2)
         sdk_client.upsert(random_doc_id, doc_body)
 
-    replicator.wait_until_replicator_idle(repl1)
-    sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id_1, read_flag=read_flag, write_flag=write_flag)
-    replicator.wait_until_replicator_idle(repl2)
+    if delete_sgw_cluster == "sgw1":
+        replicator.wait_until_replicator_idle(repl1)
+        sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id_1, read_flag=read_flag, write_flag=write_flag)
+        replicator.wait_until_replicator_idle(repl2)
+        cbl_doc_ids2 = db.getDocIds(cbl_db2)
+        # sg_docs2 = sg_client.get_all_docs(url=sg2.admin.admin_url, db=sg_db2, include_docs=True)["rows"]
+    else:
+        replicator.wait_until_replicator_idle(repl2)
+        sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id_1, read_flag=read_flag, write_flag=write_flag)
+        replicator.wait_until_replicator_idle(repl1)
+        cbl_doc_ids2 = db.getDocIds(cbl_db1)
+        # sg_docs1 = sg_client.get_all_docs(url=sg1.url, db=sg_db1, auth=session1, include_docs=True)["rows"]
     cbl_doc_ids2 = db.getDocIds(cbl_db2)
     cbl_doc_ids1 = db.getDocIds(cbl_db1)
     compare_cbl_docs(db, cbl_db1, cbl_db2)

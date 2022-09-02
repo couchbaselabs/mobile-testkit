@@ -1493,7 +1493,7 @@ def test_resurrected_doc_auto_purge(params_from_base_test_setup, resurrect_keep_
     else:
         doc_body = doc_generators.simple()
         doc_body = document.create_doc(doc_id=picked_doc_id, content=doc_generators.simple(), channels=["A"])
-
+        sdk_doc_body = document.create_doc(doc_id=picked_doc_id, content=doc_generators.simple(), channels=["A"], non_sgw=True)
     if resurrect_type == "api":
         sg_client.add_doc(url=sg_url, db=sg_db, doc=doc_body, auth=session)
     elif resurrect_type == "sdk":
@@ -1511,7 +1511,7 @@ def test_resurrected_doc_auto_purge(params_from_base_test_setup, resurrect_keep_
             connection_url = 'couchbase://{}'.format(cbs_host)
         sdk_client = get_cluster(connection_url, bucket_name)
 
-        sdk_docs = {picked_doc_id: doc_body}
+        sdk_docs = {picked_doc_id: sdk_doc_body}
         log_info('Creating SDK docs')
         sdk_client.upsert_multi(sdk_docs)
     time.sleep(5)

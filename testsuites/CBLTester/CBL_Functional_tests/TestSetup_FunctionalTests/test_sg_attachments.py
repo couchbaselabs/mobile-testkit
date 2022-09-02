@@ -13,7 +13,7 @@ from utilities.cluster_config_utils import get_cluster
 from couchbase.exceptions import DocumentNotFoundException
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.constants import RBAC_FULL_ADMIN
-# from requests.auth import HTTPBasicAuth
+
 
 
 @pytest.mark.channels
