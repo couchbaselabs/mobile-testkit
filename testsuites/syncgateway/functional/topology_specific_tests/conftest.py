@@ -115,6 +115,11 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="Disable Centralized Persistent Config")
 
+    parser.addoption("--cluster-config",
+                     action="store",
+                     help="Provide a custom cluster config",
+                     default="three_sync_gateways_")
+
     parser.addoption("--enable-server-tls-skip-verify",
                      action="store_true",
                      help="Enable Server tls skip verify config")

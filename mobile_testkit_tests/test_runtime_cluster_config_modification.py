@@ -78,7 +78,7 @@ def test_is_cbs_ssl_enabled():
     config.read(MOCK_CLUSTER_CONFIG)
 
     assert config.has_section("environment")
-    assert config.getboolean('environment', 'cbs_ssl_enabled')
+    assert config.getboolean('environment', 'cbs_ssl_enabled') == enabled
 
 
 def test_is_sg_ssl_enabled():
@@ -96,7 +96,7 @@ def test_is_sg_ssl_enabled():
     config.read(MOCK_CLUSTER_CONFIG)
 
     assert config.has_section("environment")
-    assert config.getboolean('environment', 'sync_gateway_ssl')
+    assert config.getboolean('environment', 'sync_gateway_ssl') == enabled
 
 
 def test_disable_cbs_ssl_in_cluster_config():

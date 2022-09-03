@@ -15,6 +15,7 @@ from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.constants import RBAC_FULL_ADMIN
 
 
+
 @pytest.mark.channels
 @pytest.mark.syncgateway
 @pytest.mark.attachment_cleanup

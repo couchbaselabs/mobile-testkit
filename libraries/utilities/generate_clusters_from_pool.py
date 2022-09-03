@@ -66,6 +66,7 @@ def write_config(config, pool_file, use_docker, sg_windows, sg_accel_windows, sg
         accels = []
         load_generators = []
         load_balancers = []
+        webhook_ip = []
 
         f.write("[pool]\n")
         count = 1
@@ -353,6 +354,10 @@ def write_config(config, pool_file, use_docker, sg_windows, sg_accel_windows, sg
 
             log_info("webhook ip: {}".format(local_ip))
             f.write("tf1 ansible_host={} {}".format(local_ip, connection_string))
+            webhook_ip.append({
+                "name": "wbhk{}".format(i + 1),
+                "ip": local_ip
+            })
         except Exception as e:
             log_error("Failed to find local_ip, webhook tests will fail.  Error: {}".format(e))
 
@@ -365,7 +370,7 @@ def write_config(config, pool_file, use_docker, sg_windows, sg_accel_windows, sg
         f.write("delta_sync_enabled=False\n")
         f.write("two_sg_cluster_lb_enabled=False\n")
 
-        if sg_platform.lower() == "macos":
+        if "macos" in sg_platform.lower():
             f.write("\n\n[sync_gateways:vars]\n")
             f.write("ansible_user=MacOSFakeUser\n")
             f.write("ansible_password=MacOSFakePassword\n")
@@ -410,6 +415,7 @@ def write_config(config, pool_file, use_docker, sg_windows, sg_accel_windows, sg
             "sg_accels": accels,
             "load_generators": load_generators,
             "load_balancers": load_balancers,
+            "webhook_ip": webhook_ip,
             "environment": {
                 "cbs_ssl_enabled": False,
                 "xattrs_enabled": False,
@@ -432,7 +438,7 @@ def write_config(config, pool_file, use_docker, sg_windows, sg_accel_windows, sg
                 }
             }
             cluster_dict.update(sg_dict)
-        if sg_platform.lower() == "macos":
+        if "macos" in sg_platform.lower():
             sg_dict = {
                 "sync_gateways:vars": {
                     "ansible_user": "MacOSFakeUser",

@@ -10,7 +10,7 @@
       status_code: 200, 201
       timeout: 30
       method: POST
-      user: sgw_admin
+      user: Administrator
       password: password
       headers:
         Content-Type: "application/json"
@@ -21,7 +21,7 @@
       status_code: 200, 201
       timeout: 30
       method: POST
-      user: sgw_admin
+      user: Administrator
       password: password
       headers:
         Content-Type: "application/json"

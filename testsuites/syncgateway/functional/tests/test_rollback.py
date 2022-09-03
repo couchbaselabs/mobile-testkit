@@ -14,6 +14,7 @@ from keywords.constants import RBAC_FULL_ADMIN
 import time
 
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
+from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
 
 
 @pytest.mark.sanity
@@ -71,6 +72,8 @@ def test_rollback_server_reset(params_from_base_test_setup, sg_conf_name, x509_c
         cluster_config = temp_cluster_config
     cluster = Cluster(cluster_config)
     cluster.reset(sg_conf)
+    buckets = get_buckets_from_sync_gateway_config(sg_conf, cluster_config)
+    bucket = buckets[0]
 
     client = MobileRestClient()
     seth_user_info = userinfo.UserInfo("seth", "pass", channels=["NASA"], roles=[])
@@ -128,7 +131,8 @@ def test_rollback_server_reset(params_from_base_test_setup, sg_conf_name, x509_c
     )
 
     # Delete vbucket and restart server
-    cb_server.delete_vbucket(66, "data-bucket")
+    # cb_server.delete_vbucket(66, "data-bucket")
+    cb_server.delete_vbucket(66, bucket)
     cb_server.restart()
     max_retries = 50
     count = 0
