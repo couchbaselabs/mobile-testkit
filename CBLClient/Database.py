@@ -422,7 +422,3 @@ class Database(object):
         args.setString("scopeName", scopeName)
         args.setMemoryPointer("database", database)
         return self._client.invokeMethod("collection_collection", args)
-
-      
-
-

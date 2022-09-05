@@ -19,6 +19,12 @@ class Collection(object):
         args.setMemoryPointer("collection", collection)
         return self._client.invokeMethod("collection_getCollectionName", args)
     
+    def allCollection(self, database, scopeName):
+        args = Args()
+        args.setMemoryPointer("database", database)
+        args.setString("scopeName", scopeName)
+        return self._client.invokeMethod("collection_collectionNames", args)
+    
     def documentCount(self, collection):
         args = Args()
         args.setMemoryPointer("collection", collection)
@@ -95,10 +101,3 @@ class Collection(object):
         args = Args()
         args.setMemoryPointer("collection", collection)
         return self._client.invokeMethod("collection_getIndexNames", args)
-        
-
-
-
-
-    
-
