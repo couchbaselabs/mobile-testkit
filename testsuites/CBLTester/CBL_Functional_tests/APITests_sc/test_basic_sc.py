@@ -4,7 +4,7 @@ from keywords.utils import random_string
 
 
 @pytest.mark.usefixtures("class_init")
-class TestDictionary(object):
+class TestBasicScopesCollections(object):
 
     @pytest.mark.parametrize("key, value", [
         (random_string(5), ""),
@@ -89,42 +89,6 @@ class TestDictionary(object):
         self.dict_obj.setDate(content_dict, key, value)
         assert self.datatype.compareDate(value, self.dict_obj.getDate(content_dict, key))
 
-    def test_get_set_dictionary(self):
-        '''
-        @summary: Testing get and set Dictionary methods of Dictionary API
-        '''
-        hashmap = {}
-        key = "Date_key"
-        value = self.datatype.setDate()
-        hashmap[key] = value
-        key = "Double_key"
-        value = self.datatype.setDouble(2.0)
-        hashmap[key] = value
-        key = "Float_key"
-        value = self.datatype.setFloat(3.0)
-        hashmap[key] = value
-        key = "Integer_key"
-        value = 4
-        hashmap[key] = value
-        key = "Long_key"
-        value = self.datatype.setLong(1234567890)
-        hashmap[key] = value
-        key = "String_key"
-        value = "Test String"
-        hashmap[key] = value
-        content = self.dict_obj.create(hashmap)
-        content_dict = self.dict_obj.create()
-        self.dict_obj.setDictionary(content_dict, "hashmap", content)
-        content_check = self.dict_obj.getDictionary(content_dict, "hashmap")
-        for key in hashmap:
-            assert self.dict_obj.contains(content_check, key)
-
-    @pytest.mark.parametrize("key, value", [
-        (random_string(6), "{}".format(random.uniform(0, 1))),
-        (random_string(6), "{}".format(random.uniform(1, 10))),
-        (random_string(6), "{}".format(random.uniform(11, 100))),
-        (random_string(6), "{}".format(random.uniform(101, 1000)))
-    ])
     def test_get_set_double(self, key, value):
         '''
         @summary: Testing get and set Double methods of Dictionary API
@@ -209,26 +173,6 @@ class TestDictionary(object):
         (random_string(5), random_string(5), 999),
         (random_string(5), random_string(5), 9999)
     ])
-    def test_getKeys(self, key, value, num_of_keys):
-        '''
-        @summary: Testing getKeys methods of Dictionary API
-        '''
-        hashmap = {}
-        keys_list = []
-        for i in range(num_of_keys):
-            keys_list.append("{}_{}".format(key, i))
-            hashmap["{}_{}".format(key, i)] = value
-        content_dict = self.dict_obj.create(hashmap)
-        keys_list.sort()
-        assert sorted(self.dict_obj.getKeys(content_dict)) == keys_list
-
-    @pytest.mark.parametrize("key, value", [
-        (random_string(5), random.uniform(1, 10)),
-        (random_string(5), random.random()),
-        (random_string(5), random.randint(1, 1000)),
-        (random_string(5), random.randint(100000, 10000000)),
-        (random_string(5), random_string(6))
-    ])
     def test_remove(self, key, value):
         '''
         @summary: Testing remove method of Dictionary API
@@ -239,16 +183,3 @@ class TestDictionary(object):
         self.dict_obj.remove(content, key)
         assert not self.dict_obj.contains(content, key)
 
-    def test_toMap(self):
-        '''
-        @summary: Testing remove method of Dictionary API
-        '''
-        hashmap = {
-            "Float_key": "{}".format(random.random()),
-            "Integer_key": random.randint(1, 1000),
-            "Long_key": random.randint(100000, 10000000),
-            "String_key": random_string(6)
-        }
-        content_dict = self.dict_obj.create(hashmap)
-        result_dict = self.dict_obj.toMap(content_dict)
-        assert hashmap == result_dict
