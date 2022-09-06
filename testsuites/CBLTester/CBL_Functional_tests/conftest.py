@@ -207,6 +207,24 @@ def pytest_addoption(parser):
                      action="store",
                      help="liteserv-android-serial-number: the serial number of the android device to be used")
 
+    parser.addoption("--scope-on-bucket",
+                     action="store",
+                     help="scope will be create on bucket",
+                     default="default")
+    parser.addoption("--scope-name",
+                     action="store",
+                     help="default scope name is _default",
+                     default="_default")
+    parser.addoption("--collection-name",
+                     action="store",
+                     help="default collection name is _default",
+                     default="_default")
+
+    parser.addoption("--collection-on-default-scope",
+                     action="store",
+                     help="collection will be create on default scope _default",
+                     default="_default")
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -260,6 +278,9 @@ def params_from_base_suite_setup(request):
 
     disable_admin_auth = request.config.getoption("--disable-admin-auth")
     liteserv_android_serial_number = request.config.getoption("--liteserv-android-serial-number")
+
+    scope_name = request.config.getoption("--scope-name")
+    collection_name = request.config.getoption("--collection-name")
 
     test_name = request.node.name
 
@@ -709,6 +730,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     prometheus_enable = request.config.getoption("--prometheus-enable")
     cbs_ssl = params_from_base_suite_setup["ssl_enabled"]
     need_sgw_admin_auth = params_from_base_suite_setup["need_sgw_admin_auth"]
+    scope_name = params_from_base_suite_setup["scope_name"]
+    collection_name = params_from_base_suite_setup["collection_name"]
 
     source_db = None
     test_name_cp = test_name.replace("/", "-")
@@ -811,7 +834,9 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "cbl_ce": cbl_ce,
         "prometheus_enable": prometheus_enable,
         "ssl_enabled": cbs_ssl,
-        "need_sgw_admin_auth": need_sgw_admin_auth
+        "need_sgw_admin_auth": need_sgw_admin_auth,
+        "scope_name": scope_name,
+        "collection_name": collection_name
     }
 
     if request.node.rep_call.failed and enable_file_logging and create_db_per_test is not None:
