@@ -139,8 +139,6 @@ class TestServerAndroid(TestServerBase):
             if output.strip().decode() == self.version_build:
                 log_info("package {} is installed already on device. Skip install it"\
                                                           .format(self.version_build))
-                self.stop() # stop CBL server if it is running
-                self.start_device()
                 return
             log_info("remove the app on device before install, to ensure sandbox gets cleaned.")
             self.remove()
@@ -241,11 +239,10 @@ class TestServerAndroid(TestServerBase):
         command = self.set_device_option(["adb", "logcat", "-c"])
         subprocess.check_call(command)
 
-        if logfile_name:
-            # Start redirecting adb output to the logfile
-            self.logfile = open(logfile_name, "w+")
-            command = self.set_device_option(["adb", "logcat"])
-            self.process = subprocess.Popen(args=command, stdout=self.logfile)
+        # Start redirecting adb output to the logfile
+        self.logfile = open(logfile_name, "w+")
+        command = self.set_device_option(["adb", "logcat"])
+        self.process = subprocess.Popen(args=command, stdout=self.logfile)
 
         command = self.set_device_option([
             "adb", "shell", "am", "start", "-n", self.activity_name,
