@@ -133,7 +133,7 @@ class TestServerAndroid(TestServerBase):
             log_info("remove the app on device before install, to ensure sandbox gets cleaned.")
             self.remove()
         except Exception as e:
-            
+
             log_info("remove the app before install didn't go success with error {}, but still continue ......".format(str(e)))
 
         log_info("Start to installing: {}".format(apk_path))
