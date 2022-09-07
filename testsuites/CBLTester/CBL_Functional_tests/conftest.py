@@ -649,7 +649,9 @@ def params_from_base_suite_setup(request):
         "cbl_ce": cbl_ce,
         "prometheus_enable": prometheus_enable,
         "ssl_enabled": cbs_ssl,
-        "need_sgw_admin_auth": need_sgw_admin_auth
+        "need_sgw_admin_auth": need_sgw_admin_auth,
+        "scope_name": scope_name,
+        "collection_name": collection_name
     }
 
     if request.node.testsfailed != 0 and enable_file_logging and create_db_per_suite is not None:
