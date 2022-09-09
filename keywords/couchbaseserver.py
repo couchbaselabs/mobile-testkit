@@ -6,7 +6,6 @@ from datetime import timedelta
 from requests.exceptions import ConnectionError, HTTPError, ChunkedEncodingError
 from requests import Session
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
-from couchbase.exceptions import CouchbaseException, DocumentNotFoundException
 from couchbase.cluster import QueryIndexManager, PasswordAuthenticator, ClusterTimeoutOptions, ClusterOptions, Cluster
 import keywords.constants
 from keywords.remoteexecutor import RemoteExecutor
@@ -15,7 +14,7 @@ from libraries.provision.ansible_runner import AnsibleRunner
 from keywords.utils import log_r, log_info, log_debug, log_error, hostname_for_url, host_for_url
 from keywords.utils import version_and_build, random_string
 from keywords import types
-from utilities.cluster_config_utils import is_x509_auth, get_cbs_version, is_magma_enabled, is_cbs_ce_enabled, get_cluster
+from utilities.cluster_config_utils import is_x509_auth, get_cbs_version, is_magma_enabled, is_cbs_ce_enabled
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 
@@ -510,24 +509,6 @@ class CouchbaseServer:
         # Create a user with username=bucketname
         if server_major_version >= 5:
             self._create_internal_rbac_bucket_user(name, cluster_config=cluster_config)
-
-        # Create client an retry until KeyNotFound error is thrown
-        try:
-            if self.cbs_ssl and ipv6:
-                connection_url = "couchbases://{}?ssl=no_verify&ipv6=allow".format(self.host)
-            elif self.cbs_ssl and not ipv6:
-                connection_url = "couchbases://{}?ssl=no_verify".format(self.host)
-            elif not self.cbs_ssl and ipv6:
-                connection_url = "couchbase://{}?ipv6=allow".format(self.host)
-            else:
-                connection_url = "couchbase://{}".format(self.host)
-            log_info("++++++++++++++++++++++++++++++++++++++++++++++" + connection_url + name)
-            cluster = get_cluster(connection_url, name)
-            log_info(connection_url, cluster)
-        except DocumentNotFoundException:
-            log_info("Key not found error: Bucket is ready!")
-        except CouchbaseException as e:
-            log_info("Error from server: {} ...".format(e))
 
         self.wait_for_ready_state()
         return name
