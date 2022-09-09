@@ -521,6 +521,7 @@ class CouchbaseServer:
                 connection_url = "couchbase://{}?ipv6=allow".format(self.host)
             else:
                 connection_url = "couchbase://{}".format(self.host)
+            log_info("++++++++++++++++++++++++++++++++++++++++++++++" + connection_url + name)
             cluster = get_cluster(connection_url, name)
             log_info(connection_url, cluster)
         except DocumentNotFoundException:
