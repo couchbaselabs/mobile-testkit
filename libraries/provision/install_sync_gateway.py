@@ -267,7 +267,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
         playbook_vars["server_scheme"] = "couchbases"
         playbook_vars["server_port"] = 11207
         block_http_vars = {}
-        port_list = ["8091-8096", "11210-11211"]
+        port_list = ["8091:8096", "11210:11211"]
         for port in port_list:
             block_http_vars["port"] = port
             status = ansible_runner.run_ansible_playbook(
