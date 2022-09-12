@@ -292,11 +292,12 @@ def params_from_base_suite_setup(request):
         persist_cluster_config_environment_prop(cluster_config, 'server_tls_skip_verify', False)
 
     if disable_tls_server:
-        log_info("Disable tls server flag")
-        persist_cluster_config_environment_prop(cluster_config, 'disable_tls_server', True)
-    else:
-        log_info("Enable tls server flag")
-        persist_cluster_config_environment_prop(cluster_config, 'disable_tls_server', False)
+        if cbs_ssl is False:
+            log_info("Disable tls server flag")
+            persist_cluster_config_environment_prop(cluster_config, 'disable_tls_server', True)
+        else:
+            log_info("Enable tls server flag")
+            persist_cluster_config_environment_prop(cluster_config, 'disable_tls_server', False)
 
     if disable_admin_auth:
         log_info("Disabled Admin Auth")

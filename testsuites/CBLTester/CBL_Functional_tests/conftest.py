@@ -434,6 +434,7 @@ def params_from_base_suite_setup(request):
     else:
         log_info("Running without server_tls_skip_verify Config")
         persist_cluster_config_environment_prop(cluster_config, 'server_tls_skip_verify', False)
+
     if disable_tls_server:
         if cbs_ssl is False:
             log_info("Disable tls server flag")
