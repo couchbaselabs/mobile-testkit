@@ -16,7 +16,7 @@ from keywords.utils import version_and_build
 from keywords.exceptions import ProvisioningError
 from libraries.testkit.cluster import validate_cluster
 from libraries.testkit.cluster import Cluster
-from utilities.cluster_config_utils import persist_cluster_config_environment_prop
+from utilities.cluster_config_utils import persist_cluster_config_environment_prop, is_cbs_ssl_enabled
 from keywords.couchbaseserver import CouchbaseServer
 from keywords.ClusterKeywords import ClusterKeywords
 from utilities.cluster_config_utils import get_load_balancer_ip
@@ -48,6 +48,11 @@ def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_conf
     else:
         log_info("Running test with sync_gateway version {}".format(sg_version))
         persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_version', sg_version)
+
+    if is_cbs_ssl_enabled(cluster_config) is True:
+        log_info("Enable server_tls_skip_verify and disable disable_tls_server because server is using ssl")
+        persist_cluster_config_environment_prop(cluster_config, 'server_tls_skip_verify', True)
+        persist_cluster_config_environment_prop(cluster_config, 'disable_tls_server', True)
 
     with open(cluster_config, "r") as ansible_hosts:
         log_info(ansible_hosts.read())
