@@ -49,9 +49,9 @@ def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_conf
         log_info("Running test with sync_gateway version {}".format(sg_version))
         persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_version', sg_version)
 
-    if is_cbs_ssl_enabled is True:
+    if is_cbs_ssl_enabled(sync_gateway_config) is True:
         log_info("Disable server_tls_skip_verify because because server is using ssl")
-        sync_gateway_config = persist_cluster_config_environment_prop(cluster_config, 'server_tls_skip_verify', True)
+        persist_cluster_config_environment_prop(cluster_config, 'server_tls_skip_verify', True)
 
     with open(cluster_config, "r") as ansible_hosts:
         log_info(ansible_hosts.read())
