@@ -18,3 +18,9 @@ class Scope(object):
         args = Args()
         args.setMemoryPointer("scope", scope)
         return self._client.invokeMethod("scope_scopeName", args)
+
+    def collection(self, scope, collectionName):
+        args = Args()
+        args.setMemoryPointer("scope", scope)
+        args.setString("collectionName", collectionName)
+        return self._client.invokeMethod("scope_collectionObject", args)

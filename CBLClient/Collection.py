@@ -90,6 +90,13 @@ class Collection(object):
         args.setString("name", name)
         args.setString("expression", expression)
         return self._client.invokeMethod("collection_createValueIndex", args)
+    
+    def iosCreateValueIndex(self, collection, name, expression):
+        args = Args()
+        args.setMemoryPointer("collection", collection)
+        args.setString("name", name)
+        args.setArray("expression", expression)
+        return self._client.invokeMethod("collection_createValueIndex", args)
 
     def deleteIndex(self, collection, name):
         args = Args()
