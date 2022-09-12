@@ -1,9 +1,9 @@
   - name: BLOCKPORTS | Verify that port is blocked in iptables
-    shell: iptables-save | grep -- "OUTPUT -p tcp -m tcp --dport {{ port }} -j DROP" | wc -l
+    shell: iptables-save | grep -- "OUTPUT -p tcp -m tcp -m multiport --dport {{ port }} -j DROP" | wc -l
     register: iptablesrules
 
   - name: BLOCKPORTS | drop tcp {{ port }}
-    shell: iptables -I OUTPUT -p tcp --dport {{ port }} -j DROP
+    shell: iptables -I OUTPUT -p tcp -m multiport --dport {{ port }} -j DROP
     when: iptablesrules|length >= 1
 
   - name: BLOCKPORTS | save iptables after dropping
