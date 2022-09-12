@@ -283,12 +283,17 @@ class TestServerAndroid(TestServerBase):
         output = subprocess.check_output(command)
         log_info(output)
 
-        if self.logfile:
-            self.logfile.flush()
-            self.logfile.close()
-        if self.process:
-            self.process.kill()
-            self.process.wait()
+        try:
+            if self.logfile:
+                self.logfile.flush()
+                self.logfile.close()
+            if self.process:
+                self.process.kill()
+                self.process.wait()
+        except Exception as e:
+            if "I/O operation" in str(e):
+                log_info("process or file may be closed already")
+                pass
 
     def close_app(self):
         if self.device_enabled:
