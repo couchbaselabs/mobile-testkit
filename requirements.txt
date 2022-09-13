@@ -55,7 +55,6 @@ rsa==3.3
 s3transfer==0.0.1
 six==1.15.0
 termcolor==1.1.0
-troposphere==1.5.0
 websocket-client==0.40.0
 wrapt==1.12.1
 xmltodict==0.10.2
