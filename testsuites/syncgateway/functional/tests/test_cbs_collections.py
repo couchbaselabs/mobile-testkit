@@ -77,7 +77,7 @@ def test_userdefind_collections(params_from_base_test_setup):
         connection_url = "couchbase://{}?ipv6=allow".format(cbs_ip)
     else:
         connection_url = "couchbase://{}".format(cbs_ip)
-    print("=======================================================================" + connection_url)
+    log_info("=======================================================================" + connection_url)
     sdk_client = get_cluster(connection_url, bucket)
     sdk_doc_bodies = document.create_docs('sdk_default', number=num_sdk_docs, channels=channels, non_sgw=True)
     sdk_docs = {doc['id']: doc for doc in sdk_doc_bodies}
