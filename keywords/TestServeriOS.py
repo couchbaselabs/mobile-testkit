@@ -151,7 +151,7 @@ class TestServeriOS(TestServerBase):
 
         # install app / launch app to connected device
         output = subprocess.check_output([
-            "ios-deploy", "--debug", "-v",  "--justlaunch", "--bundle", self.app_path
+            "ios-deploy", "--debug", "-v", "--justlaunch", "--bundle", self.app_path
         ])
         log_info(output)
 
