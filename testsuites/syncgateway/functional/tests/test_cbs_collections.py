@@ -1,97 +1,113 @@
+import uuid
 import pytest
-
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.MobileRestClient import MobileRestClient
-from keywords.SyncGateway import sync_gateway_config_path_for_mode
-
 from keywords import couchbaseserver
-from keywords import document
 from libraries.testkit.cluster import Cluster
-from keywords.utils import host_for_url, log_info
-from keywords.remoteexecutor import RemoteExecutor
-from keywords.SyncGateway import wait_until_docs_imported_from_server
-from keywords.couchbaseserver import get_server_version
-from utilities.cluster_config_utils import get_cluster
-from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
-from utilities.cluster_config_utils import load_cluster_config_json
 from keywords.constants import RBAC_FULL_ADMIN
+from libraries.testkit.admin import Admin
+
+
+# test file shared variables
+bucket = "data-bucket"
+collection = "collection1"
+data = {"bucket": bucket, "num_index_replicas": 0}
+
+
+@pytest.fixture
+def teardown_doc_fixture():
+    def _delete_doc_if_exist(sg_client, url, db, doc_id, auth):
+        if sg_client.does_doc_exist(url, db, doc_id) is True:
+            sg_client.delete_doc(url, db, doc_id, auth=auth)
+    yield _delete_doc_if_exist
+
+
+@pytest.fixture
+def scopes_collections_tests_fixture(params_from_base_test_setup):
+    try:  # To be able to teardon in case of a setup error
+        # get/set the parameters
+        random_suffix = str(uuid.uuid4())[:8]
+        scope_prefix = "scope"
+        db_prefix = "scopes_and_collections_db"
+        db = db_prefix + random_suffix
+        scope = scope_prefix + random_suffix
+        sg_username = "scopes_collections_user"
+        sg_password = "password"
+        channels = ["ABC"]
+        auth_session = sg_client = sg_url = sg_admin_url = auth_session = None
+        cluster_config = params_from_base_test_setup["cluster_config"]
+        sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+        cluster_helper = ClusterKeywords(cluster_config)
+        topology = cluster_helper.get_cluster_topology(cluster_config)
+        cbs_url = topology["couchbase_servers"][0]
+        sg_url = topology["sync_gateways"][0]["public"]
+        cluster = Cluster(config=cluster_config)
+        sg_client = MobileRestClient()
+        cb_server = couchbaseserver.CouchbaseServer(cbs_url)
+        admin_client = Admin(cluster.sync_gateways[0])
+        auth = [RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']]
+
+        # Scope creation on the Couchbase server
+        does_scope_exist = cb_server.does_scope_exist(bucket, scope)
+        if does_scope_exist is False:
+            cb_server.create_scope(bucket, scope)
+        cb_server.create_collection(bucket, scope, collection)
+
+        # SGW database creation
+        pre_test_db_exists = admin_client.does_db_exist(db)
+        if pre_test_db_exists is False:
+            admin_client.create_db(db, data)
+
+        # Create a user
+        pre_test_user_exists = admin_client.does_user_exist(db, sg_username)
+        if pre_test_user_exists is False:
+            sg_client.create_user(sg_admin_url, db, sg_username, sg_password, channels, auth)
+
+        # Create a SGW session
+        session_id = None
+        cookie, session_id = sg_client.create_session(sg_admin_url, db, sg_username, auth=auth)
+        auth_session = cookie, session_id
+
+        create_sgw_collection(admin_client, db, scope, bucket)
+
+    finally:
+        yield sg_client, sg_url, sg_admin_url, auth_session, db, scope
+        # Cleanup everything the was created
+        if sg_client.does_session_exist(sg_admin_url, db=db, session_id=session_id) is True:
+            sg_client.delete_session(sg_admin_url, db, session_id=session_id)
+        if pre_test_user_exists is False:
+            admin_client.delete_user_if_exists(db, sg_username)
+        delete_scopes_from_sgw_db(db, admin_client)
+        if pre_test_db_exists is False:
+            if admin_client.does_db_exist(db) is True:
+                admin_client.delete_db(db)
+        cb_server.delete_scope_if_exists(bucket, scope)
 
 
 @pytest.mark.syncgateway
 @pytest.mark.collections
-def test_userdefind_collections(params_from_base_test_setup):
-    """
-    @summary
-    https://docs.google.com/spreadsheets/d/1TZd0YrDh2lMJldNCst-bR53eE8vok8wWoo1wCHdGDEU/edit#gid=0
-    row #9
-    "1. Create docs via sdk with and without attachments on default collections
-     2. Create docs via sdk using user defined collections
-     3. Verify docs created in default collections are imported to SGW
-     4. Verify docs created in user defined collections will not get imported to SGW"
-    """
+def test_document_only_under_default_scope(scopes_collections_tests_fixture, teardown_doc_fixture):
 
-    cluster_config = params_from_base_test_setup["cluster_config"]
-    sg_platform = params_from_base_test_setup["sg_platform"]
-    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
-    sg_conf_name = 'sync_gateway_default_functional_tests'
-    mode = "cc"
-    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    # setup
+    doc_prefix = "default_scope_doc"
+    doc_id = doc_prefix + "_0"
+    sg_client, sg_url, sg_admin_url, auth_session, db, scope = scopes_collections_tests_fixture
+    if sg_client.does_doc_exist(sg_url, db, doc_id, auth_session) is False:
+        sg_client.add_docs(sg_url, db, 1, doc_prefix, auth_session)
+    teardown_doc_fixture(sg_client, sg_admin_url, db, doc_id, auth_session)
 
-    log_info("Running 'test_attachment_revpos_when_ancestor_unavailable'")
-    cluster_helper = ClusterKeywords(cluster_config)
-    cluster_helper.reset_cluster(cluster_config, sg_conf)
-    topology = cluster_helper.get_cluster_topology(cluster_config)
-    ssl_enabled = params_from_base_test_setup["ssl_enabled"]
-    xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
-    cbs_url = topology["couchbase_servers"][0]
-    sg_admin_url = topology["sync_gateways"][0]["admin"]
-    sg_client = MobileRestClient()
-    cb_server = couchbaseserver.CouchbaseServer(cbs_url)
-    cbs_ip = host_for_url(cbs_url)
-    sg_db = "db"
-    # bucket = "data-bucket"
-    buckets = get_buckets_from_sync_gateway_config(sg_conf, cluster_config)
-    bucket = buckets[0]
-    channels = ["ABC"]
-    num_sdk_docs = 10
+    # exercise + verification
+    with pytest.raises(Exception) as e:  # HTTPError doesn't work, for some  reason, but would be preferable
+        sg_client.get_doc(sg_admin_url, db, doc_id, auth=auth_session, scope=scope)
+    e.match("Not Found")
 
-    server_version = get_server_version(cbs_ip, cbs_ssl=ssl_enabled)
-    if not xattrs_enabled or server_version < "7.0.0":
-        pytest.skip('This test require --xattrs flag or server version 7.0 and up')
-    cluster = Cluster(config=cluster_config)
-    cluster.reset(sg_config_path=sg_conf)
-    if sg_platform == "windows" or "macos" in sg_platform:
-        json_cluster = load_cluster_config_json(cluster_config)
-        sghost_username = json_cluster["sync_gateways:vars"]["ansible_user"]
-        sghost_password = json_cluster["sync_gateways:vars"]["ansible_password"]
-        remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip, sg_platform, sghost_username, sghost_password)
-    else:
-        remote_executor = RemoteExecutor(cluster.servers[0].host)
 
-    # 1. Create docs via sdk with and without attachments on default collections
-    if ssl_enabled and cluster.ipv6:
-        connection_url = "couchbases://{}?ssl=no_verify&ipv6=allow".format(cbs_ip)
-    elif ssl_enabled and not cluster.ipv6:
-        connection_url = "couchbases://{}?ssl=no_verify".format(cbs_ip)
-    elif not ssl_enabled and cluster.ipv6:
-        connection_url = "couchbase://{}?ipv6=allow".format(cbs_ip)
-    else:
-        connection_url = "couchbase://{}".format(cbs_ip)
-    sdk_client = get_cluster(connection_url, bucket)
-    sdk_doc_bodies = document.create_docs('sdk_default', number=num_sdk_docs, channels=channels, non_sgw=True)
-    sdk_docs = {doc['id']: doc for doc in sdk_doc_bodies}
+def create_sgw_collection(admin_client, db, scope_to_add, bucket_to_add_to):
+    config = {"bucket": bucket_to_add_to, "scopes": {scope_to_add: {"collections": {collection: {}}}}}
+    admin_client.post_db_config(db, config)
 
-    sdk_client.upsert_multi(sdk_docs)
 
-    # 2. Create docs via sdk using user defined collections
-    scope = cb_server.create_scope(bucket)
-    collection = cb_server.create_collection(bucket, scope)
-    collection_id = cb_server.get_collection_id(bucket, scope, collection)
-    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
-    sg_expvars = sg_client.get_expvars(sg_admin_url, auth=auth)
-    import_count = sg_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"]
-    remote_executor.execute("/opt/couchbase/bin/cbworkloadgen -n localhost:8091 -i {} -b {} -j -c 0x{} -u Administrator -p password".format(num_sdk_docs, bucket, collection_id))
-    wait_until_docs_imported_from_server(sg_admin_url, sg_client, sg_db, num_sdk_docs, import_count, auth=auth)
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, auth=auth)["rows"]
-    assert sum("sdk_default" in s["id"] for s in sg_docs) == num_sdk_docs, "default collections docs are not imported to sync gateway"
-    assert sum("pymc" in s for s in sg_docs) == 0, "user defined docs are imported to sync gateway"
+def delete_scopes_from_sgw_db(db, admin_client):
+    db_config = admin_client.get_db_config(db)
+    db_config["scopes"] = {}
+    admin_client.post_db_config(db, db_config)

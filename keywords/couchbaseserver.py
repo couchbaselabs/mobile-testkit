@@ -1097,6 +1097,28 @@ class CouchbaseServer:
             log_info("Got an exception while creating a scope{}".format(ex))
         return scope
 
+    def delete_scope_if_exists(self, bucket, scope):
+        did_scope_exist = self.does_scope_exist(bucket, scope)
+        resp = self._session.delete("{}/pools/default/buckets/{}/scopes/{}".format(self.url, bucket, scope))
+        log_r(resp)
+        resp.raise_for_status()
+
+        return did_scope_exist
+
+    def does_scope_exist(self, bucket, scope):
+        try:
+            resp = self._session.get("{}/pools/default/buckets/{}/scopes/{}".format(self.url, bucket, scope))
+            if resp.status_code == 404:
+                return False
+            else:
+                return True
+        except requests.HTTPError as e:
+            if e.response.status_code == 404:
+                return False
+            else:
+                print(str(e.response.status_code))
+                return True
+
     def create_collection(self, bucket, scope, collection=None):
         """ Create scope on couchbase server"""
 

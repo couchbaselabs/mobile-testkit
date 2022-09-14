@@ -827,7 +827,7 @@ class MobileRestClient:
                 log_info("ignoring rev as it is not deleted one")
         return rev_ids
 
-    def get_doc(self, url, db, doc_id, auth=None, rev=None, revs_info=False):
+    def get_doc(self, url, db, doc_id, auth=None, rev=None, revs_info=False, scope=None):
         """
         returns a dictionary with the following format:
         {
@@ -874,12 +874,17 @@ class MobileRestClient:
 
         params["show_exp"] = "true"
 
-        if auth_type == AuthType.session:
-            resp = self._session.get("{}/{}/{}".format(url, db, doc_id), params=params, cookies=dict(SyncGatewaySession=auth[1]))
-        elif auth_type == AuthType.http_basic:
-            resp = self._session.get("{}/{}/{}".format(url, db, doc_id), params=params, auth=auth)
+        if scope is not None:
+            url_string = "{}/{}/{}/{}".format(url, db, scope, doc_id)
         else:
-            resp = self._session.get("{}/{}/{}".format(url, db, doc_id), params=params)
+            url_string = "{}/{}/{}".format(url, db, doc_id)
+
+        if auth_type == AuthType.session:
+            resp = self._session.get(url_string, params=params, cookies=dict(SyncGatewaySession=auth[1]))
+        elif auth_type == AuthType.http_basic:
+            resp = self._session.get(url_string, params=params, auth=auth)
+        else:
+            resp = self._session.get(url_string, params=params)
 
         log_r(resp)
         resp.raise_for_status()
@@ -2598,3 +2603,22 @@ class MobileRestClient:
                 resp = self._session.post("{}/{}/_compact?type=attachment&action=stop".format(url, db))
             resp_obj = resp.json()
             return resp_obj
+
+    def does_doc_exist(self, url, db, doc_id, auth=None):
+        try:
+            self.get_doc(url, db, doc_id, auth)
+        except HTTPError as e:
+            if e.response.status_code == 404:
+                return False
+            else:
+                return True
+
+    def does_session_exist(self, url, db, session_id):
+        try:
+            self.get_session(url, db=db, session_id=session_id)
+            return True
+        except HTTPError as e:
+            if e.response.status_code == 404:
+                return False
+            else:
+                return True
