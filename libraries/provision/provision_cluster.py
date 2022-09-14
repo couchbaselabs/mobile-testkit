@@ -27,7 +27,7 @@ def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_conf
                       cbs_platform="centos7", sg_platform="centos", sg_installer_type="msi", sa_platform="centos",
                       sa_installer_type="msi", cbs_ce=False, aws=False, skip_couchbase_provision=False):
 
-    if is_cbs_ssl_enabled(cluster_config) is True:
+    if is_cbs_ssl_enabled(cluster_config):
         log_info("WARNING: Potentially overwriting the user flag server_tls_skip_verify to True because the server is using ssl")
         persist_cluster_config_environment_prop(cluster_config, 'server_tls_skip_verify', True)
         log_info("WARNING: Potentially overwriting the user flag disable_tls_server to False because the server is using ssl")
