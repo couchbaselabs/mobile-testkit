@@ -31,7 +31,7 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
         db_prefix = "scopes_and_collections_db"
         db = db_prefix + random_suffix
         scope = scope_prefix + random_suffix
-        sg_username = "scopes_collections_user"
+        sg_username = "scopes_collections_user" + random_suffix
         sg_password = "password"
         channels = ["ABC"]
         auth_session = sg_client = sg_url = sg_admin_url = auth_session = None
