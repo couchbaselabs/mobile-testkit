@@ -497,6 +497,7 @@ def params_from_base_suite_setup(request):
     # Start Test server which needed for suite level set up like query tests
     if not use_local_testserver and create_db_per_suite:
         log_info("Starting TestServer...")
+        testserver.stop()
         test_name_cp = test_name.replace("/", "-")
         if device_enabled:
             testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
@@ -505,6 +506,7 @@ def params_from_base_suite_setup(request):
             testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
                                                            test_name_cp,
                                                            datetime.datetime.now()))
+        time.sleep(2)
 
     suite_source_db = None
     suite_db = None
@@ -717,10 +719,12 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
 
     if not use_local_testserver and create_db_per_test:
         log_info("Starting TestServer...")
+        testserver.stop()
         if device_enabled:
             testserver.start_device(log_filename)
         else:
             testserver.start(log_filename)
+        time.sleep(2)
 
     cluster_helper = ClusterKeywords(cluster_config)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config=cluster_config)
