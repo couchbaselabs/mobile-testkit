@@ -75,7 +75,7 @@ def get_auth_type(auth):
     else:
         auth_type = AuthType.http_basic
 
-    logging.debug("Using auth type: {}".format(auth_type))
+    logging.info("Using auth type: {}".format(auth_type))
     return auth_type
 
 
