@@ -271,7 +271,7 @@ def test_upgrade_cbl(params_from_base_suite_setup):
     replicator.wait_until_replicator_idle(repl)
     replicator.stop(repl)
 
-    cbs_docs = sg_client.get_all_docs(sg_admin_url, sg_db, session, auth=auth)["rows"]
+    cbs_docs = sg_client.get_all_docs(sg_admin_url, sg_db, auth=auth)["rows"]
     cbs_doc_ids = [doc["id"] for doc in cbs_docs]
 
     for doc_id in doc_ids_to_update:
@@ -292,7 +292,7 @@ def test_upgrade_cbl(params_from_base_suite_setup):
     replicator.wait_until_replicator_idle(repl)
     replicator.stop(repl)
 
-    cbs_docs = sg_client.get_all_docs(sg_admin_url, sg_db, session, auth=auth)["rows"]
+    cbs_docs = sg_client.get_all_docs(sg_admin_url, sg_db, auth=auth)["rows"]
     cbs_doc_ids = [doc["id"] for doc in cbs_docs]
     for doc_id in doc_ids_to_delete:
         assert doc_id not in cbs_doc_ids, "Deleted docs failed to get replicated"
