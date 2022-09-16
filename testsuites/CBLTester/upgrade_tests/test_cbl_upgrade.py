@@ -247,7 +247,7 @@ def test_upgrade_cbl(params_from_base_suite_setup):
     new_cbl_doc_ids = db.getDocIds(cbl_db, limit=40000)
     print("\nauth1: ", auth)
     try:
-        cbs_docs = sg_client.get_all_docs(sg_admin_url, sg_db, session, auth=auth)["rows"]
+        cbs_docs = sg_client.get_all_docs(sg_admin_url, sg_db, auth=auth)["rows"]
     except Exception as e:
         if e:
             print("\nerror: ", str(e))
