@@ -827,7 +827,7 @@ class MobileRestClient:
                 log_info("ignoring rev as it is not deleted one")
         return rev_ids
 
-    def get_doc(self, url, db, doc_id, auth=None, rev=None, revs_info=False, scope=None):
+    def get_doc(self, url, db, doc_id, auth=None, rev=None, revs_info=False, scope=None, collection=None):
         """
         returns a dictionary with the following format:
         {
@@ -873,10 +873,14 @@ class MobileRestClient:
             params["rev"] = rev
 
         params["show_exp"] = "true"
-
-        if scope is not None:
-            url_string = "{}/{}/{}/{}".format(url, db, scope, doc_id)
+        if collection is not None:
+            if scope is None:
+                url_string = "{}/{}.{}/{}".format(url, db, collection, doc_id)
+            else:
+                url_string = "{}/{}.{}.{}/{}".format(url, db, scope, collection, doc_id)
         else:
+            if scope is not None:
+                assert "When the scope is defined, the collection must be  defined  as well"
             url_string = "{}/{}/{}".format(url, db, doc_id)
 
         if auth_type == AuthType.session:
