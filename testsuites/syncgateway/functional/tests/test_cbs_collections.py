@@ -1,4 +1,3 @@
-from pydoc import doc
 import uuid
 import pytest
 from keywords.ClusterKeywords import ClusterKeywords
@@ -99,7 +98,7 @@ def test_document_only_under_named_scope(scopes_collections_tests_fixture, teard
 
     # exercise + verification
     try:
-        sg_client.get_doc(sg_admin_url, db, doc_id , auth=auth_session, scope=scope, collection=collection)
+        sg_client.get_doc(sg_admin_url, db, doc_id, auth=auth_session, scope=scope, collection=collection)
     except Exception as e:
         pytest.fail("There was a problem reading the document from a collection when specifying the scope in the endpoint. The error: " + str(e))
 
