@@ -347,7 +347,7 @@ def test_non_mobile_ignore_count(params_from_base_test_setup, sg_conf_name):
     non_mobile_ignore_count = sg_expvars["syncgateway"]["per_db"][sg_db]["cache"]["non_mobile_ignored_count"]
     warn_count = sg_expvars["syncgateway"]["global"]["resource_utilization"]["warn_count"]
     assert non_mobile_ignore_count == 1, "non_mobile_ignore_count did not get expected count"
-    command = "grep 'Cache: changeCache' /tmp/sg_logs/sg_info.log | wc -l"
+    command = "grep 'changeCache' /tmp/sg_logs/sg_info.log | wc -l"
     command1 = "grep 'does not have valid sync data' /tmp/sg_logs/sg_info.log | wc -l"
     if "macos" in sg_platform:
         stdout = subprocess.check_output(command, shell=True)
@@ -361,7 +361,7 @@ def test_non_mobile_ignore_count(params_from_base_test_setup, sg_conf_name):
         log2_num = int(stdout[0])
 
     # 3. Create another document('abc') on CBS and verify it is not imported and verify that info logs generate the log
-    #    “Cache: changeCache: Doc “abc” does not have valid sync data”
+    #    “changeCache: Doc “abc” does not have valid sync data”
     doc_id2 = 'non_mobile_ignore_2'
     doc = document.create_doc(doc_id=doc_id2, channels=['non_mobile_ignore'])
     sdk_client.upsert(doc_id2, doc)
@@ -374,7 +374,7 @@ def test_non_mobile_ignore_count(params_from_base_test_setup, sg_conf_name):
         assert int(stdout) == 1 + log2_num, "did not find the expected match on sg info logs"
     else:
         if sg_platform == "windows":
-            command = "grep 'Cache: changeCache' C:\\\\tmp\\\\sg_logs\sg_info.log | wc -l"
+            command = "grep 'changeCache' C:\\\\tmp\\\\sg_logs\sg_info.log | wc -l"
             command1 = "grep 'does not have valid sync data' C:\\\\tmp\\\\sg_logs\sg_info.log | wc -l"
         _, stdout, _ = remote_executor.execute(command)
         assert int(stdout[0]) == 1 + log1_num, "did not find the expected match on sg info logs"
