@@ -92,6 +92,7 @@ def test_upgrade_cbl(params_from_base_suite_setup):
         connection_url = "couchbases://{}?ssl=no_verify".format(cbs_ip)
     else:
         connection_url = "couchbase://{}".format(cbs_ip)
+    print("\ncluster url: ", connection_url)
     sdk_client = get_cluster(connection_url, cbs_bucket)
     log_info("Creating primary index for {}".format(cbs_bucket))
     n1ql_query = "create primary index index1 on `{}`".format(cbs_bucket)
