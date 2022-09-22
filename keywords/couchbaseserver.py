@@ -1114,8 +1114,7 @@ class CouchbaseServer:
             if e.response.status_code == 404:
                 return False
             else:
-                print("Could not determine if the scopes exists on the server or not due to the following error: " + str(e.response.status_code))
-                raise e
+                raise Exception("Could not determine if the scope exists on the server due to the following error: " + str(e)) from e
 
     def create_collection(self, bucket, scope, collection=None):
         """ Create scope on couchbase server"""

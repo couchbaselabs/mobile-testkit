@@ -563,8 +563,7 @@ class Admin:
             if e.response.status_code == 404:
                 return False
             else:
-                print("Could not determine if the database exists due to the following error: " + str(e.response.status_code))
-                raise e
+                raise Exception("Could not determine if the database exists due to the following error: " + str(e)) from e
 
     def does_user_exist(self, db, user):
         try:
@@ -574,5 +573,4 @@ class Admin:
             if e.response.status_code == 404:
                 return False
             else:
-                print("Could not determine if the user exists due to the following error: " + str(e.response.status_code))
-                raise e
+                raise Exception("Could not determine if the user exists due to the following error: " + str(e)) from e

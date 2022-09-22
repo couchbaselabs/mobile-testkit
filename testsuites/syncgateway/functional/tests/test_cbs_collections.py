@@ -24,6 +24,9 @@ def teardown_doc_fixture():
 def scopes_collections_tests_fixture(params_from_base_test_setup):
     try:  # To be able to teardon in case of a setup error
         # get/set the parameters
+        session_id = None
+        pre_test_db_exists = None
+        pre_test_user_exists = None
         random_suffix = str(uuid.uuid4())[:8]
         db_prefix = "db_"
         scope_prefix = "scope_"
@@ -66,19 +69,18 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
             sg_client.create_user(sg_admin_url, db, sg_username, sg_password, channels, auth)
 
         # Create a SGW session
-        session_id = None
         cookie, session_id = sg_client.create_session(sg_admin_url, db, sg_username, auth=auth)
         auth_session = cookie, session_id
-
-    finally:
         yield sg_client, sg_url, sg_admin_url, auth_session, db, scope, collection
+    except Exception as e:
+        raise e
+    finally:
         # Cleanup everything the was created
-        if sg_client.does_session_exist(sg_admin_url, db=db, session_id=session_id) is True:
+        if (session_id is not None) and (sg_client.does_session_exist(sg_admin_url, db=db, session_id=session_id) is True):
             sg_client.delete_session(sg_admin_url, db, session_id=session_id)
-        if pre_test_user_exists is False:
+        if (pre_test_user_exists is not None) and (pre_test_user_exists is False):
             admin_client.delete_user_if_exists(db, sg_username)
-        delete_scopes_from_sgw_db(db, admin_client)
-        if pre_test_db_exists is False:
+        if (pre_test_db_exists is not None) and (pre_test_db_exists is False):
             if admin_client.does_db_exist(db) is True:
                 admin_client.delete_db(db)
         cb_server.delete_scope_if_exists(bucket, scope)
@@ -112,9 +114,3 @@ def test_document_only_under_named_scope(scopes_collections_tests_fixture, teard
     with pytest.raises(Exception) as e:  # HTTPError doesn't work, for some  reason, but would be preferable
         sg_client.get_doc(sg_admin_url, db, doc_id, auth=auth_session, scope="_default", collection=collection)
     e.match("Not Found")
-
-
-def delete_scopes_from_sgw_db(db, admin_client):
-    db_config = admin_client.get_db_config(db)
-    db_config["scopes"] = {}
-    admin_client.post_db_config(db, db_config)
