@@ -64,7 +64,7 @@ def test_basic_replication_with_encryption(params_from_base_test_setup):
     # Create docs in CBL
     doc_id = "doc_3"
     documentObj = Document(base_url)
-    doc_body = document.create_doc(doc_id=doc_id, content="doc3", channels=channels_sg, cbl=True)
+    doc_body = document.create_doc(doc_id=doc_id, content="doc3", channels=channels_sg, non_sgw=True)
     dictionary = Dictionary(base_url)
     mutable = dictionary.toMutableDictionary(doc_body)
     encryptable = ReplicatorCallback(base_url)
@@ -205,7 +205,7 @@ def test_replication_with_error(params_from_base_test_setup):
     # Create docs in CBL
     doc_id = "doc_3"
     documentObj = Document(base_url)
-    doc_body = document.create_doc(doc_id=doc_id, content="doc3", channels=channels_sg, cbl=True)
+    doc_body = document.create_doc(doc_id=doc_id, content="doc3", channels=channels_sg, non_sgw=True)
     dictionary = Dictionary(base_url)
     mutable = dictionary.toMutableDictionary(doc_body)
     replicator_callback = ReplicatorCallback(base_url)
@@ -352,7 +352,6 @@ def test_delta_sync_with_encryption(params_from_base_test_setup, num_of_non_encr
     if replication_type == "push":
         doc_ids = db.getDocIds(cbl_db)
         cbl_db_docs = db.getDocuments(cbl_db, doc_ids)
-
         for doc_id, doc_body in list(cbl_db_docs.items()):
             doc_body["new-1"] = random_string(length=70)
             doc_body["new-2"] = random_string(length=30)
@@ -427,7 +426,7 @@ def test_encryption_with_two_dbs(params_from_base_test_setup):
     # Create docs in CBL
     doc_id = "doc_3"
     documentObj = Document(base_url)
-    doc_body = document.create_doc(doc_id=doc_id, content="doc3", channels=channels_sg, cbl=True)
+    doc_body = document.create_doc(doc_id=doc_id, content="doc3", channels=channels_sg, non_sgw=True)
     dictionary = Dictionary(base_url)
     mutable = dictionary.toMutableDictionary(doc_body)
     encryptable = ReplicatorCallback(base_url)

@@ -79,11 +79,11 @@ def update_prop_generator():
     return {"updates": 0}
 
 
-def create_doc(doc_id, content=None, attachments=None, expiry=None, channels=None, prop_generator=None, cbl=False):
+def create_doc(doc_id, content=None, attachments=None, expiry=None, channels=None, prop_generator=None, non_sgw=False):
     """
     Keyword that creates a document body as a list for use with Add Doc keyword
     return result format:
-    {'channels': [u'NBC', u'ABC'], '_id': 'exp_3_0', '_exp': 3}
+    {'channels': [u'NBC', u'ABC'], _id: 'exp_3_0', '_exp': 3}
     """
 
     if channels is None:
@@ -98,7 +98,7 @@ def create_doc(doc_id, content=None, attachments=None, expiry=None, channels=Non
     doc = {}
 
     if doc_id is not None:
-        if cbl:
+        if non_sgw:
             doc["id"] = doc_id
         else:
             doc["_id"] = doc_id
@@ -126,13 +126,13 @@ def create_doc(doc_id, content=None, attachments=None, expiry=None, channels=Non
     return doc
 
 
-def create_docs(doc_id_prefix, number, content=None, attachments_generator=None, expiry=None, channels=None, prop_generator=None):
+def create_docs(doc_id_prefix, number, content=None, attachments_generator=None, expiry=None, channels=None, prop_generator=None, non_sgw=False):
     """
     Keyword that creates a list of document bodies as a list for use with Add Bulk Docs keyword
     return result format:
     [
-        {'channels': [u'NBC', u'ABC'], '_id': 'exp_3_0', '_exp': 3},
-        {'channels': [u'NBC', u'ABC'], '_id': 'exp_3_1', '_exp': 3}, ...
+        {'channels': [u'NBC', u'ABC'], _id: 'exp_3_0', '_exp': 3},
+        {'channels': [u'NBC', u'ABC'], _id: 'exp_3_1', '_exp': 3}, ...
     ]
     """
 
@@ -158,7 +158,7 @@ def create_docs(doc_id_prefix, number, content=None, attachments_generator=None,
         if attachments_generator is not None:
             attachments = attachments_generator()
 
-        doc = create_doc(doc_id=doc_id, content=content, attachments=attachments, expiry=expiry, channels=channels, prop_generator=prop_generator)
+        doc = create_doc(doc_id=doc_id, content=content, attachments=attachments, expiry=expiry, channels=channels, prop_generator=prop_generator, non_sgw=non_sgw)
         docs.append(doc)
 
     return docs

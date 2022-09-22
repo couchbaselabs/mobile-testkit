@@ -10,6 +10,7 @@ from couchbase.exceptions import CouchbaseException
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf, get_cluster
 from keywords.utils import log_info, host_for_url
 from concurrent.futures import ThreadPoolExecutor
+from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
 from keywords.constants import RBAC_FULL_ADMIN
 
 
@@ -515,7 +516,9 @@ def test_concurrent_updates_no_conflicts(params_from_base_test_setup, sg_conf_na
 
     # Connect to server via SDK
     log_info('Connecting to bucket ...')
-    bucket_name = 'data-bucket'
+    # bucket_name = 'data-bucket'
+    buckets = get_buckets_from_sync_gateway_config(sg_conf, cluster_config)
+    bucket_name = buckets[0]
     cbs_url = topology['couchbase_servers'][0]
     cbs_ip = host_for_url(cbs_url)
     if c.ipv6:

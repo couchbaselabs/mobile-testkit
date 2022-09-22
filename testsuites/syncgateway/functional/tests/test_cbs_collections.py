@@ -12,6 +12,7 @@ from keywords.remoteexecutor import RemoteExecutor
 from keywords.SyncGateway import wait_until_docs_imported_from_server
 from keywords.couchbaseserver import get_server_version
 from utilities.cluster_config_utils import get_cluster
+from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
 from utilities.cluster_config_utils import load_cluster_config_json
 from keywords.constants import RBAC_FULL_ADMIN
 
@@ -48,7 +49,9 @@ def test_userdefind_collections(params_from_base_test_setup):
     cb_server = couchbaseserver.CouchbaseServer(cbs_url)
     cbs_ip = host_for_url(cbs_url)
     sg_db = "db"
-    bucket = "data-bucket"
+    # bucket = "data-bucket"
+    buckets = get_buckets_from_sync_gateway_config(sg_conf, cluster_config)
+    bucket = buckets[0]
     channels = ["ABC"]
     num_sdk_docs = 10
 
@@ -75,8 +78,9 @@ def test_userdefind_collections(params_from_base_test_setup):
     else:
         connection_url = "couchbase://{}".format(cbs_ip)
     sdk_client = get_cluster(connection_url, bucket)
-    sdk_doc_bodies = document.create_docs('sdk_default', number=num_sdk_docs, channels=channels)
-    sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
+    sdk_doc_bodies = document.create_docs('sdk_default', number=num_sdk_docs, channels=channels, non_sgw=True)
+    sdk_docs = {doc['id']: doc for doc in sdk_doc_bodies}
+
     sdk_client.upsert_multi(sdk_docs)
 
     # 2. Create docs via sdk using user defined collections

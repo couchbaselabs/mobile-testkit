@@ -1,10 +1,10 @@
 import pytest
 
-from keywords import constants
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.SyncGateway import (sync_gateway_config_path_for_mode,
                                   validate_sync_gateway_mode)
 from keywords.tklogging import Logging
+from keywords.constants import CLUSTER_CONFIGS_DIR
 from keywords.utils import log_info, check_xattr_support, version_is_binary, clear_resources_pngs
 
 from keywords.exceptions import ProvisioningError, FeatureSupportedError
@@ -50,9 +50,9 @@ def params_from_base_suite_setup(request):
     skip_couchbase_provision = request.config.getoption("--skip-couchbase-provision")
     enable_cbs_developer_preview = request.config.getoption("--enable-cbs-developer-preview")
     disable_persistent_config = request.config.getoption("--disable-persistent-config")
+    cluster_config = request.config.getoption("--cluster-config")
     enable_server_tls_skip_verify = request.config.getoption("--enable-server-tls-skip-verify")
     disable_tls_server = request.config.getoption("--disable-tls-server")
-
     disable_admin_auth = request.config.getoption("--disable-admin-auth")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
@@ -94,7 +94,8 @@ def params_from_base_suite_setup(request):
     validate_sync_gateway_mode(mode)
 
     # use base_cc cluster config if mode is "cc" or base_di cluster config if more is "di"
-    cluster_config = "{}/multiple_sync_gateways_{}".format(constants.CLUSTER_CONFIGS_DIR, mode)
+    cluster_config = "{}/{}{}".format(CLUSTER_CONFIGS_DIR, cluster_config, mode)
+    # cluster_config = "{}/multiple_sync_gateways_{}".format(CLUSTER_CONFIGS_DIR, mode)
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
 
     if use_views:
@@ -297,7 +298,8 @@ def params_from_base_suite_setup(request):
            "prometheus_enabled": prometheus_enabled,
            "sg_ssl": sg_ssl,
            "cluster_topology": cluster_topology,
-           "need_sgw_admin_auth": need_sgw_admin_auth
+           "need_sgw_admin_auth": need_sgw_admin_auth,
+           "disable_persistent_config": disable_persistent_config
            }
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
@@ -332,6 +334,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     sg_ssl = params_from_base_suite_setup["sg_ssl"]
     cluster_topology = params_from_base_suite_setup["cluster_topology"]
     need_sgw_admin_auth = params_from_base_suite_setup["need_sgw_admin_auth"]
+    disable_persistent_config = params_from_base_suite_setup["disable_persistent_config"]
 
     test_name = request.node.name
     log_info("Setting up test '{}'".format(test_name))
@@ -347,7 +350,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
            "prometheus_enabled": prometheus_enabled,
            "sg_ssl": sg_ssl,
            "cluster_topology": cluster_topology,
-           "need_sgw_admin_auth": need_sgw_admin_auth
+           "need_sgw_admin_auth": need_sgw_admin_auth,
+           "disable_persistent_config": disable_persistent_config
            }
 
     # Code after the yeild will execute when each test finishes

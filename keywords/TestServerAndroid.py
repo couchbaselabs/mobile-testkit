@@ -143,9 +143,9 @@ class TestServerAndroid(TestServerBase):
             log_info("remove the app on device before install, to ensure sandbox gets cleaned.")
             self.remove()
         except Exception as e:
-            log_info("remove the app before install didn't go success, but still continue ......".format(str(e)))
+            log_info("remove the app before install didn't go success with error {}, but still continue ......".format(str(e)))
 
-        log_info("Installing: {}".format(apk_path))
+        log_info("Start to installing: {}".format(apk_path))
 
         # If and apk is installed, attempt to remove it and reinstall.
         # If that fails, raise an exception

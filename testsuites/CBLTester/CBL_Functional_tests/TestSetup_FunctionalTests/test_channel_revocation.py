@@ -1493,7 +1493,7 @@ def test_resurrected_doc_auto_purge(params_from_base_test_setup, resurrect_keep_
     else:
         doc_body = doc_generators.simple()
         doc_body = document.create_doc(doc_id=picked_doc_id, content=doc_generators.simple(), channels=["A"])
-
+        sdk_doc_body = document.create_doc(doc_id=picked_doc_id, content=doc_generators.simple(), channels=["A"], non_sgw=True)
     if resurrect_type == "api":
         sg_client.add_doc(url=sg_url, db=sg_db, doc=doc_body, auth=session)
     elif resurrect_type == "sdk":
@@ -1511,7 +1511,7 @@ def test_resurrected_doc_auto_purge(params_from_base_test_setup, resurrect_keep_
             connection_url = 'couchbase://{}'.format(cbs_host)
         sdk_client = get_cluster(connection_url, bucket_name)
 
-        sdk_docs = {picked_doc_id: doc_body}
+        sdk_docs = {picked_doc_id: sdk_doc_body}
         log_info('Creating SDK docs')
         sdk_client.upsert_multi(sdk_docs)
     time.sleep(5)
@@ -1675,12 +1675,10 @@ def verify_doc_replication_rejection(liteserv_platform, log_file, test_cbllog):
        @note: Porting logs for Android, xamarin-android, net-core and net-uwp platform, as the logs reside
            outside runner's file directory
     """
-
     delimiter = "/"
     if "-msft" in liteserv_platform or liteserv_platform == "uwp":
         delimiter = "\\"
     log_dir = log_file.split(delimiter)[-1]
-
     log_full_path_dir = "/tmp/cbl-logs/"
     os.mkdir(log_full_path_dir)
     log_info("\n Collecting logs")

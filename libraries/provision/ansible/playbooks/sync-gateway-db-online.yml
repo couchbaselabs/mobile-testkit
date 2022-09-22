@@ -11,7 +11,7 @@
       status_code: 200, 201
       timeout: 30
       method: POST
-      user: sgw_admin
+      user: Administrator
       password: password
       body: 
         mainlevel:
@@ -26,7 +26,7 @@
       status_code: 200, 201
       timeout: 30
       method: POST
-      user: sgw_admin
+      user: Administrator
       password: password
       body: 
         mainlevel:

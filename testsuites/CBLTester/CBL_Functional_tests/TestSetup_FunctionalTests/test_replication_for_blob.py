@@ -10,6 +10,7 @@ from CBLClient.Authenticator import Authenticator
 from CBLClient.Replication import Replication
 from libraries.testkit import cluster
 from keywords.constants import RBAC_FULL_ADMIN
+from keywords import attachment
 
 
 @pytest.mark.listener
@@ -218,3 +219,79 @@ def test_blob_contructor_replication(params_from_base_test_setup, blob_data_type
         assert "new_field_string_1" in sg_data, "Updated docs failed to get replicated"
         assert "new_field_string_2" in sg_data, "Updated docs failed to get replicated"
         assert "new_field_blob" in sg_data, "Updated docs failed to get replicated"
+
+
+@pytest.mark.listener
+@pytest.mark.replication
+def test_blob_replication_with_update(params_from_base_test_setup):
+    '''
+    @summary:
+    1. Create a document with an attachment on it
+    2. Start a push_pull with continuous replication to the sync gateway
+    3. When that document has replicated, update the document on cbl
+    4. Wait for that to replicate to the sync gateway
+    5. Verify that attachment with rest api should exist
+    '''
+    cbl_db = params_from_base_test_setup["source_db"]
+    db = params_from_base_test_setup["db"]
+    base_url = params_from_base_test_setup["base_url"]
+    sg_blip_url = params_from_base_test_setup["target_url"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_config = params_from_base_test_setup["sg_config"]
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
+    sg_url = params_from_base_test_setup["sg_url"]
+
+    # Reset cluster to ensure no data in system
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
+
+    sg_db = "db"
+    num_of_docs = 1
+    channels = ["ABC"]
+    username = "autotest"
+    password = "password"
+
+    # if "c-" in liteserv_platform:
+    #     pytest.skip('This test cannot run for C platforms')
+
+    sg_client = MobileRestClient()
+    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
+    sg_client.create_user(sg_admin_url, sg_db, username, password=password, channels=channels, auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
+    session = cookie, session_id
+
+    # 1. Create a document with an attachment on it
+    attachments_generator = attachment.generate_2_png_10_10
+    db.create_bulk_docs(num_of_docs, "cbl_sync", db=cbl_db, channels=channels, attachments_generator=attachments_generator)
+
+    # 2. Start a push_pull with continuous replication to the sync gateway
+    replicator = Replication(base_url)
+    authenticator = Authenticator(base_url)
+    replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
+    repl = replicator.configure_and_replicate(source_db=cbl_db,
+                                              target_url=sg_blip_url,
+                                              continuous=True,
+                                              replicator_authenticator=replicator_authenticator,
+                                              replication_type="push_pull")
+
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True, auth=auth)["rows"]
+    # Verify database doc counts
+    cbl_doc_count = db.getCount(cbl_db)
+    assert len(sg_docs) == cbl_doc_count, "Expected number of docs does not exist in sync-gateway after replication"
+
+    # 3. When that document has replicated, update the document on cbl
+    db.update_bulk_docs(database=cbl_db, number_of_updates=3)
+
+    # 4. Wait for that to replicate to the sync gateway
+    replicator.wait_until_replicator_idle(repl)
+
+    # 5. Verify that attachment key exists
+    sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, include_docs=True, auth=session)["rows"]
+    for doc in sg_docs:
+        attachments = doc["doc"]["_attachments"]
+        for att in attachments:
+            att = att.replace('/', '%2F')
+            # this should ensure that attachment should not get disappeard with this rest api call
+            # if it throws 404, attachment is disappeared and it is a bug
+            sg_client.get_attachment_by_document(url=sg_url, db=sg_db, doc=doc["doc"]["id"], attachment=att, auth=session)

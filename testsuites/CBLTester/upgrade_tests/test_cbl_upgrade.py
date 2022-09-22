@@ -72,7 +72,6 @@ def test_upgrade_cbl(params_from_base_suite_setup):
     sg_client.create_user(sg_admin_url, sg_db, username, password, channels=["*"], auth=auth)
     authenticator = Authenticator(base_url)
     cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
-    session = cookie, session_id
     replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
     repl_config = replicator.configure(cbl_db, sg_blip_url, replication_type="push", continuous=True,
                                        replicator_authenticator=replicator_authenticator)

@@ -435,6 +435,7 @@ def upgrade_sync_gateway(sync_gateways, sync_gateway_version, sync_gateway_upgra
         sg_obj.upgrade_sync_gateways(
             cluster_config=cluster_config,
             sg_conf=sg_conf,
+            sgw_previous_version=sync_gateway_version,
             sync_gateway_version=sync_gateway_upgraded_version,
             url=sg_ip
         )
@@ -466,6 +467,7 @@ def upgrade_sg_accel(sg_accels, sync_gateway_version, sync_gateway_upgraded_vers
         ac_obj.upgrade_sync_gateways(
             cluster_config=cluster_config,
             sg_conf=sg_conf,
+            sgw_previous_version=sync_gateway_version,
             sync_gateway_version=sync_gateway_upgraded_version,
             url=ac_ip
         )

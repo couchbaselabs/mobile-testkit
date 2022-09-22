@@ -8,6 +8,8 @@ from shutil import copyfile, rmtree
 from subprocess import Popen, PIPE
 from distutils.dir_util import copy_tree
 from couchbase.cluster import PasswordAuthenticator, ClusterTimeoutOptions, ClusterOptions, Cluster
+from keywords.constants import BUCKET_LIST
+from keywords.constants import SYNC_GATEWAY_CONFIGS_CPC
 
 
 class CustomConfigParser(configparser.RawConfigParser):
@@ -37,7 +39,7 @@ class CustomConfigParser(configparser.RawConfigParser):
 
 
 def get_cluster(url, bucket_name):
-    timeout_options = ClusterTimeoutOptions(kv_timeout=timedelta(seconds=120), query_timeout=timedelta(seconds=300),
+    timeout_options = ClusterTimeoutOptions(kv_timeout=timedelta(seconds=180), query_timeout=timedelta(seconds=300),
                                             config_total_timeout=timedelta(seconds=600))
     options = ClusterOptions(PasswordAuthenticator("Administrator", "password"), timeout_options=timeout_options)
     cluster = Cluster(url, options)
@@ -297,12 +299,28 @@ def copy_to_temp_conf(cluster_config, mode):
     return temp_cluster_config
 
 
+def copy_sgconf_to_tempconfig_for_persistent_config_test(sg_conf, mode):
+    temp_sg_conf_name = "temp_sg_config"
+    temp_sg_config = "resources/sync_gateway_configs/temp_sg_config_persistent_{}.json".format(mode)
+    open(temp_sg_config, "w+")
+    copyfile(sg_conf, temp_sg_config)
+    bucket_list = []
+    if "sync_gateway_configs_cpc" in sg_conf:
+        bucket_list = get_bucket_list_cpc(sg_conf)
+    return temp_sg_config, temp_sg_conf_name, bucket_list
+
+
 def copy_sgconf_to_temp(sg_conf, mode):
     temp_sg_conf_name = "temp_sg_config"
     temp_sg_config = "resources/sync_gateway_configs/temp_sg_config_{}.json".format(mode)
     open(temp_sg_config, "w+")
     copyfile(sg_conf, temp_sg_config)
     return temp_sg_config, temp_sg_conf_name
+
+
+def copy_to_temp_cpc_config(temp_sg_config, mode):
+    cpc_temp_sg_config = "{}/temp_sg_config_{}.json".format(SYNC_GATEWAY_CONFIGS_CPC, mode)
+    copyfile(temp_sg_config, cpc_temp_sg_config)
 
 
 def replace_string_on_sgw_config(sg_conf, replace_string, new_string):
@@ -343,6 +361,21 @@ def is_centralized_persistent_config_disabled(cluster_config):
         return False
 
 
+def copy_json_to_temp_file(conf, temp_config="resources/temp/temp_config.json"):
+    config_path = os.path.abspath(temp_config)
+    file = open(config_path, "w+")
+    file.write(json.dumps(conf, indent=4))
+    file.close
+    return temp_config
+
+
+def get_bucket_list_cpc(sgw_config):
+    sgw_conf_file_name = sgw_config.split('/')[-1].split("_cc.")[0]
+    bucket_list_data = open(BUCKET_LIST)
+    json_data = json.load(bucket_list_data)
+    return json_data[sgw_conf_file_name]
+
+
 def is_server_tls_skip_verify_enabled(cluster_config):
     """ verify server tls skip verify config enabled/disabled"""
 
@@ -369,5 +402,15 @@ def is_admin_auth_disabled(cluster_config):
     cluster = load_cluster_config_json(cluster_config)
     try:
         return cluster["environment"]["disable_admin_auth"]
+    except KeyError:
+        return False
+
+
+def is_sgw_ce_enabled(cluster_config):
+    """ verify sgw ce enabled/disabled"""
+
+    cluster = load_cluster_config_json(cluster_config)
+    try:
+        return cluster["environment"]["sg_ce"]
     except KeyError:
         return False

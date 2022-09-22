@@ -7,6 +7,9 @@ RESULTS_DIR = "results"
 TEST_DIR = "framework_tests"
 CLUSTER_CONFIGS_DIR = "resources/cluster_configs"
 SYNC_GATEWAY_CONFIGS = "resources/sync_gateway_configs"
+SYNC_GATEWAY_CONFIGS_CPC = "resources/sync_gateway_configs_cpc"
+BUCKET_LIST = "resources/database_configs/buckets_config_list.json"
+SGW_DB_CONFIGS = "resources/database_configs"
 SYNC_GATEWAY_CERT = "resources/sync_gateway_cert"
 DATA_DIR = "resources/data"
 ENVIRONMENT_FILE = "resources/data/environment_file.txt"
@@ -21,7 +24,7 @@ SDK_TIMEOUT = 3600
 # Required to make sure that these are created with encryption
 # Use to build the command line flags for encryption
 REGISTERED_CLIENT_DBS = ["ls_db", "ls_db1", "ls_db2"]
-RBAC_FULL_ADMIN = {'user': 'sgw_admin', 'pwd': 'password'}
+RBAC_FULL_ADMIN = {'user': 'Administrator', 'pwd': 'password'}
 
 
 class ServerType(Enum):

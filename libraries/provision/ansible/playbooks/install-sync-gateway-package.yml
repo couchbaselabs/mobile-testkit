@@ -103,6 +103,7 @@
     password:
     x509_auth:
     x509_certs_dir:
+    tls:
 
   tasks:
   - include: tasks/deploy-sync-gateway-config.yml
