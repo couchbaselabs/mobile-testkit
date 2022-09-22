@@ -1108,16 +1108,14 @@ class CouchbaseServer:
     def does_scope_exist(self, bucket, scope):
         try:
             resp = self._session.get("{}/pools/default/buckets/{}/scopes/{}".format(self.url, bucket, scope))
-            if resp.status_code == 404:
-                return False
-            else:
-                return True
+            resp.raise_for_status()
+            return True
         except requests.HTTPError as e:
             if e.response.status_code == 404:
                 return False
             else:
-                print(str(e.response.status_code))
-                return True
+                print("Could not determine if the scopes exists on the server or not due to the following error: " + str(e.response.status_code))
+                raise e
 
     def create_collection(self, bucket, scope, collection=None):
         """ Create scope on couchbase server"""
