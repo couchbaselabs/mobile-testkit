@@ -1,0 +1,31 @@
+{
+    "interface": ":4984",
+    "adminInterface": "0.0.0.0:4985",
+    "maxIncomingConnections": 0,
+    "maxFileDescriptors": 90000,
+    "compressResponses": false,
+    "metrics_interface": ":4986",
+    "logging": {
+        "debug": {
+            "enabled": true
+        }
+    },
+    "server_tls_skip_verify": true,
+    "admin_interface_authentication": false,
+    "metrics_interface_authentication": false,
+    "databases": {
+        "db": {
+            "import_docs": true,
+            "enable_shared_bucket_access": true,
+            "num_index_replicas": 0,
+            "username": "data-bucket",
+            "password": "password",
+            "delta_sync": {
+                "enabled": true
+            },
+            "server": "couchbases://172.23.106.106:11207",
+            "bucket": "data-bucket",
+            "bucket_op_timeout_ms": 60000
+        }
+    }
+}

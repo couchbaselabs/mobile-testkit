@@ -9,12 +9,14 @@ from keywords.SyncGateway import (SyncGateway)
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.MobileRestClient import MobileRestClient
 from keywords import attachment, document
-from utilities.cluster_config_utils import persist_cluster_config_environment_prop, get_cluster
+from utilities.cluster_config_utils import persist_cluster_config_environment_prop, get_cluster, is_admin_auth_disabled
 
 from libraries.testkit.cluster import Cluster
 from CBLClient.Authenticator import Authenticator
 from CBLClient.Document import Document
 from CBLClient.Replication import Replication
+from keywords.constants import RBAC_FULL_ADMIN
+from requests.auth import HTTPBasicAuth
 
 
 def test_upgrade(params_from_base_test_setup):
@@ -68,6 +70,8 @@ def test_upgrade(params_from_base_test_setup):
     sg_config = params_from_base_test_setup["sg_config"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_ip = params_from_base_test_setup["sg_ip"]
+    sg_db = params_from_base_test_setup["sg_db"]
+    disable_admin_auth = params_from_base_test_setup["disable_admin_auth"]
     sg_conf = "{}/resources/sync_gateway_configs/sync_gateway_default_functional_tests_{}.json".format(os.getcwd(), mode)
 
     # update cluster_config with the post upgrade required params
@@ -83,14 +87,17 @@ def test_upgrade(params_from_base_test_setup):
         need_to_redeploy = True
         persist_cluster_config_environment_prop(cluster_config, 'cbs_ssl_enabled', True)
 
+    print("use_view values is ", use_views)
+    print("upgraded useviews values is ", upgraded_use_views)
     if use_views != upgraded_use_views:
         need_to_redeploy = True
+        print("use_views value is not equal to upgraded user views ")
         if upgraded_use_views:
             log_info("Running SG tests using views after upgrade")
             # Enable sg views in cluster configs
             persist_cluster_config_environment_prop(cluster_config, 'sg_use_views', True)
         else:
-            log_info("Running tests not using views after upgrade")
+            log_info("Running tests not using views pre upgrade")
             # Disable sg views in cluster configs
             persist_cluster_config_environment_prop(cluster_config, 'sg_use_views', False)
 
@@ -106,6 +113,7 @@ def test_upgrade(params_from_base_test_setup):
         else:
             log_info("Using document storage for sync meta data after upgrade")
             persist_cluster_config_environment_prop(cluster_config, 'xattrs_enabled', False)
+    print("need to redeploy value is ", need_to_redeploy)
 
     if sync_gateway_upgraded_version >= "2.5.0" and server_upgraded_version >= "5.5.0" and (delta_sync_enabled != upgraded_delta_sync_enabled):
         need_to_redeploy = True
@@ -116,6 +124,17 @@ def test_upgrade(params_from_base_test_setup):
             log_info("Running without delta sync after upgrade")
             persist_cluster_config_environment_prop(cluster_config, 'delta_sync_enabled', False)
 
+    if sync_gateway_upgraded_version >= "3.0.0" and server_upgraded_version >= "5.5.0" and disable_admin_auth:
+        need_to_redeploy = True
+
+    auth = None
+    if not is_admin_auth_disabled(cluster_config):
+            auth = HTTPBasicAuth(RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd'])
+    cluster_util = ClusterKeywords(cluster_config)
+    topology = cluster_util.get_cluster_topology(cluster_config)
+    lb_url = topology["load_balancers"]
+    lb_ip = host_for_url(lb_url[0])
+    target_lb_url = "ws://{}:4984/{}".format(lb_ip, sg_db)
     # 1. Create user, session and docs on SG
     sg_client = MobileRestClient()
     cluster = Cluster(config=cluster_config)
@@ -147,15 +166,18 @@ def test_upgrade(params_from_base_test_setup):
     sg_cookie, sg_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=sg_user_name)
     authenticator = Authenticator(base_url)
     replicator_authenticator = authenticator.authentication(sg_session, sg_cookie, authentication_type="session")
-    repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=sg_user_channels, replication_type="push_pull", replicator_authenticator=replicator_authenticator)
+    # repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=sg_user_channels, replication_type="push_pull", replicator_authenticator=replicator_authenticator)
+    print("target lb url ", target_lb_url)
+    repl_config = replicator.configure(cbl_db, target_lb_url, continuous=True, channels=sg_user_channels, replication_type="push_pull", replicator_authenticator=replicator_authenticator)
     repl = replicator.create(repl_config)
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
 
     # Start 2nd replicator to verify docs with attachments gets replicated after the upgrade for one shot replications
     sg_cookie, sg_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=sg_user_name)
-    sg_cookie1, sg_session1 = sg_client.create_session(url=sg_admin_url, db=sg_db, name=sg_user_name)
-    repl_config1 = replicator.configure(cbl_db2, sg_blip_url, continuous=False, channels=sg_user_channels, replication_type="push_pull", replicator_authenticator=replicator_authenticator)
+    # sg_cookie1, sg_session1 = sg_client.create_session(url=sg_admin_url, db=sg_db, name=sg_user_name)
+    # repl_config1 = replicator.configure(cbl_db2, sg_blip_url, continuous=False, channels=sg_user_channels, replication_type="push_pull", replicator_authenticator=replicator_authenticator)
+    repl_config1 = replicator.configure(cbl_db2, target_lb_url, continuous=False, channels=sg_user_channels, replication_type="push_pull", replicator_authenticator=replicator_authenticator)
     repl1 = replicator.create(repl_config1)
     replicator.start(repl1)
     replicator.wait_until_replicator_idle(repl1)
@@ -188,14 +210,18 @@ def test_upgrade(params_from_base_test_setup):
     log_info('Adding {} docs via SDK '.format(num_sdk_docs))
     bucket_name = 'data-bucket'
     sdk_client = get_cluster('couchbase://{}'.format(primary_server.host), bucket_name)
-    sdk_doc_bodies = document.create_docs('sdk', number=num_sdk_docs, channels=sg_user_channels)
-    sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
+    sdk_doc_bodies = document.create_docs('sdk', number=num_sdk_docs, channels=sg_user_channels, non_sgw=True)
+    sdk_docs = {doc['id']: doc for doc in sdk_doc_bodies}
     sdk_client.upsert_multi(sdk_docs)
     time.sleep(30)  # to let the docs import from server to sgw
     replicator.wait_until_replicator_idle(repl)
-    doc_ids = db.getDocIds(cbl_db, limit=num_docs + (num_sdk_docs * 2) + 2)
+    limit = num_docs + (num_sdk_docs * 2) + 2
+    print("limit to get docs is ", limit)
+    debug_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db)["rows"]
+    print("docs from sg after sdk docs added ", debug_docs)
+    doc_ids = db.getDocIds(cbl_db, limit=limit)
     added_docs = db.getDocuments(cbl_db, doc_ids)
-    log_info('updating {} docs via cbl '.format(added_docs))
+    log_info('updating {} docs via cbl '.format(doc_ids))
     # 3. Start a thread to keep updating docs on CBL
     terminator_doc_id = 'terminator'
     with ProcessPoolExecutor() as up:
@@ -210,7 +236,7 @@ def test_upgrade(params_from_base_test_setup):
         )
 
         # 4. Upgrade SGW one by one on cluster config list
-        cluster_util = ClusterKeywords(cluster_config)
+        # cluster_util = ClusterKeywords(cluster_config)
         topology = cluster_util.get_cluster_topology(cluster_config, lb_enable=False)
         sync_gateways = topology["sync_gateways"]
         sg_obj.upgrade_sync_gateway(
@@ -244,9 +270,9 @@ def test_upgrade(params_from_base_test_setup):
             # Enable xattrs on all SG/SGAccel nodes
             # cc - Start 1 SG with import enabled, all with XATTRs enabled
             #    - Do not enable import in SG.
+            print("Redeploying is necessary so going to be redeployed.")
             if mode == "cc":
                 enable_import = True
-
             sg_obj = SyncGateway()
             for sg in sync_gateways:
                 sg_ip = host_for_url(sg["admin"])
@@ -271,6 +297,11 @@ def test_upgrade(params_from_base_test_setup):
         log_info("Waiting for doc updates to complete")
         updated_doc_revs = updates_future.result()
 
+        # Wait for replication to completed from cbl db1 to sgw and sgw to cbl db2
+        replicator.wait_until_replicator_idle(repl2, max_times=3000)
+        time.sleep(90)  # to avoid doc updates of previous logic conflict with below wait for replication logic
+        replicator.wait_until_replicator_idle(repl, max_times=3000)
+
         # 7. Gather CBL docs new revs for verification
         log_info("Gathering the updated revs for verification")
         doc_ids = []
@@ -279,7 +310,7 @@ def test_upgrade(params_from_base_test_setup):
             if doc_id in updated_doc_revs:
                 added_docs[doc_id]["numOfUpdates"] = updated_doc_revs[doc_id]
         # 8. Compare rev id, doc body and revision history of all docs on both CBL and SGW
-        verify_sg_docs_revision_history(sg_admin_url, db, cbl_db2, num_docs + num_sdk_docs + 3, sg_db=sg_db, added_docs=added_docs, terminator=terminator_doc_id)
+        verify_sg_docs_revision_history(sg_admin_url, db, cbl_db2, num_docs + num_sdk_docs + 3, sg_db=sg_db, added_docs=added_docs, terminator=terminator_doc_id, auth=auth)
 
         # 9. If xattrs enabled, validate CBS contains _sync records for each doc
         if upgraded_xattrs_enabled:
@@ -293,15 +324,21 @@ def test_upgrade(params_from_base_test_setup):
 
         # 10. Verify docs from cbl_db2 whether docs created on SGW or CBS after the upgrade got replicated to cbl
         # New code to add docs on SGW and CBS to add new docs
-        sdk_doc_bodies = document.create_docs('sdk_after_upgrade', number=num_sdk_docs, channels=sg_user_channels)
-        sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
+        sdk_doc_bodies = document.create_docs('sdk_after_upgrade', number=num_sdk_docs, channels=sg_user_channels, non_sgw=True)
+        sdk_docs = {doc['id']: doc for doc in sdk_doc_bodies}
         sdk_client.upsert_multi(sdk_docs)
-        sg_client.add_docs(url=sg_admin_url, db=sg_db, number=num_sg_docs, id_prefix="sgw_after_upgrade", channels=sg_user_channels)
+        sg_client.add_docs(url=sg_admin_url, db=sg_db, number=num_sg_docs, id_prefix="sgw_after_upgrade", channels=sg_user_channels, auth=auth)
         replicator.wait_until_replicator_idle(repl2)
         if upgraded_xattrs_enabled:
-            time.sleep(30)  # to let the docs import from server to sgw
-            cbl_doc_ids2 = db.getDocIds(cbl_db2, limit=num_docs + (num_sdk_docs * 4) + 3)
-            count1 = sum('sdk_after_upgrade' in s for s in cbl_doc_ids2)
+            count = 1
+            retry_count = 20
+            count1 = 0
+            while (count < retry_count) and (count1 < num_sdk_docs):
+                time.sleep(30)  # to let the docs import from server to sgw
+                limit = num_docs + (num_sdk_docs * 4) + 3
+                cbl_doc_ids2 = db.getDocIds(cbl_db2, limit=limit)
+                count1 = sum('sdk_after_upgrade' in s for s in cbl_doc_ids2)
+                count += 1
             assert count1 == num_sdk_docs, "docs via sdk after upgrade did not replicate to cbl"
         else:
             cbl_doc_ids2 = db.getDocIds(cbl_db2, limit=num_docs + (num_sdk_docs * 3) + 3)
@@ -311,12 +348,12 @@ def test_upgrade(params_from_base_test_setup):
         replicator.stop(repl2)
         replicator.stop(repl)
         if sync_gateway_upgraded_version >= "3.0.0":
-            assert sg_client.compact_attachments(sg_admin_url, sg_db, "status")["status"] == "completed"
+            assert sg_client.compact_attachments(sg_admin_url, sg_db, "status", auth=auth)["status"] == "completed"
             sg_client.compact_attachments(sg_admin_url, sg_db, "start")
             # we need to wait until compaction process is done
-            while sg_client.compact_attachments(sg_admin_url, sg_db, "status")["status"] == "running":
+            while sg_client.compact_attachments(sg_admin_url, sg_db, "status", auth=auth)["status"] == "running":
                 time.sleep(60)
-            att_status = sg_client.compact_attachments(sg_admin_url, sg_db, "status")
+            att_status = sg_client.compact_attachments(sg_admin_url, sg_db, "status", auth=auth)
             log_info(att_status)
             assert att_status["status"] == "completed"
             assert att_status["last_error"] == "", \
@@ -324,9 +361,9 @@ def test_upgrade(params_from_base_test_setup):
             assert att_status["purged_attachments"] > 500
 
 
-def verify_sg_docs_revision_history(url, db, cbl_db2, num_docs, sg_db, added_docs, terminator):
+def verify_sg_docs_revision_history(url, db, cbl_db2, num_docs, sg_db, added_docs, terminator, auth):
     sg_client = MobileRestClient()
-    sg_docs = sg_client.get_all_docs(url=url, db=sg_db, include_docs=True)["rows"]
+    sg_docs = sg_client.get_all_docs(url=url, db=sg_db, include_docs=True, auth=auth)["rows"]
     cbl_doc_ids2 = db.getDocIds(cbl_db2, limit=num_docs)
     cbl_docs2 = db.getDocuments(cbl_db2, cbl_doc_ids2)
     num_sg_docs_in_cbldb2 = 0

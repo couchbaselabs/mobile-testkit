@@ -112,7 +112,7 @@ def test_syncgateway_with_customPort_couchbaseServer(params_from_base_test_setup
 
     # Creating bucket with cli
     sg_conf_path = os.path.abspath(sg_conf)
-    bucket_names = get_buckets_from_sync_gateway_config(sg_conf_path)
+    bucket_names = get_buckets_from_sync_gateway_config(sg_conf_path, cluster_conf)
     server_url = cluster_topology["couchbase_servers"][0]
     cb_server = couchbaseserver.CouchbaseServer(server_url)
     remote_executor = RemoteExecutor(host_for_url(server_url))
@@ -182,9 +182,9 @@ def test_sgw_server_alternative_address(params_from_base_test_setup, setup_alter
     # Create a document in server via SDK
     docs_to_add = {}
     sdk_client = cb_server.get_bucket_connection(couchbase_server_url, bucket_name, ssl_enabled, cluster)
-    docs = document.create_docs('sdk', number=1, channels=['created_via_sdk'])
+    docs = document.create_docs('sdk', number=1, channels=['created_via_sdk'], non_sgw=True)
     for doc in docs:
-        docs_to_add[doc['_id']] = doc
+        docs_to_add[doc['id']] = doc
     sdk_client.upsert_multi(docs_to_add)
     # Verify import_count stats get incremented
     if sync_gateway_version >= "2.5.0":

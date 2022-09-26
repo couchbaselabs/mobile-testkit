@@ -1,9 +1,12 @@
 import json
 import re
+
+from utilities.cluster_config_utils import copy_json_to_temp_file
 from jinja2 import Template
 
 from libraries.testkit import settings
 from keywords.utils import log_info
+from keywords.constants import BUCKET_LIST
 
 import logging
 log = logging.getLogger(settings.LOGGER)
@@ -11,12 +14,12 @@ log = logging.getLogger(settings.LOGGER)
 
 class Config:
 
-    def __init__(self, conf_path):
+    def __init__(self, conf_path, cluster_config=None, bucket_list=[]):
 
         self.conf_path = conf_path
         self.mode = None
         self.bucket_name_set = []
-
+        self.db_config = None
         with open(conf_path, "r") as config:
 
             data = config.read()
@@ -68,13 +71,17 @@ class Config:
             )
 
             # strip out sync functions `function ... }`
+
             data = convert_to_valid_json(data)
             # Find all bucket names in config's databases: {}
             conf_obj = json.loads(data)
-
             self.discover_mode(conf_obj)
-
-            self.discover_bucket_name_set(conf_obj)
+            # extract database config from non centralized persistent config(old configs) and copy to temp db config
+            # Remove database config from the original config
+            if bucket_list:
+                self.bucket_name_set = bucket_list
+            else:
+                self.discover_bucket_name_set(conf_obj)
 
     def get_mode(self):
 
@@ -115,9 +122,52 @@ class Config:
             shadow = val["shadow"]
             if len(shadow["bucket"]) > 0:
                 bucket_names_from_config.append(shadow["bucket"])
-
         # Buckets may be shared for different functionality
         self.bucket_name_set = list(set(bucket_names_from_config))
+        # self.bucket_name_set = list(bucket_names_from_config)
+
+    def discover_bucket_name_set_new(self, conf_obj):
+
+        bucket_names_from_config = []
+        # Add CBGT buckets
+        if "cluster_config" in list(conf_obj.keys()):
+            bucket_names_from_config.append(conf_obj["cluster_config"]["bucket"])
+
+        # dbs = conf_obj["databases"]
+        for _, val in conf_obj.items():
+
+            if "bucket" in val:
+
+                # Add data buckets
+                bucket_names_from_config.append(val["bucket"])
+                if "channel_index" in val:
+                    # index buckets
+                    bucket_names_from_config.append(val["channel_index"]["bucket"])
+
+            if "shadow" not in val:
+                continue
+
+            shadow = val["shadow"]
+            if len(shadow["bucket"]) > 0:
+                bucket_names_from_config.append(shadow["bucket"])
+
+        # Buckets may be shared for different functionality
+        # self.bucket_name_set = list(set(bucket_names_from_config))
+        self.bucket_name_set = list(bucket_names_from_config)
+
+    def discover_bucket_name_set_3_0(self, sgw_config):
+        # self.bucket_name_set = conf_obj["bootstrap"]["buckets"]
+        bucket_list_data = open(BUCKET_LIST)
+        json_data = json.load(bucket_list_data)
+        try:
+            self.bucket_name_set = json_data[sgw_config]
+        except KeyError:
+            self.bucket_name_set = []
+        # self.bucket_name_set = ["data-bucket"]
+
+    def get_db_config(self):
+
+        return self.db_config
 
 
 def convert_to_valid_json(invalid_json):
@@ -212,3 +262,33 @@ def escape_json_value(raw_value):
     # See http://stackoverflow.com/questions/983451/where-can-i-find-a-list-of-escape-characters-required-for-my-json-ajax-return-ty
 
     return escaped
+
+
+def seperate_sgw_and_db_config_new(sgw_conf_data):
+    sgw_conf_data = json.loads(sgw_conf_data)
+    temp_sgw_config = "resources/temp/temp_sgw_config.json"
+    sgw_config_file = copy_json_to_temp_file(sgw_conf_data, temp_sgw_config)
+    try:
+        sgw_conf_data["databases"]
+        db_config = sgw_conf_data["databases"]
+        del sgw_conf_data["databases"]
+        temp_db_config = "resources/temp/temp_config_db.json"
+        db_config_file = copy_json_to_temp_file(db_config, temp_db_config)
+        return sgw_config_file, db_config_file
+    except KeyError as ke:
+        log.info("ignoring if databases key not found in new configs")
+        return sgw_config_file
+
+
+def seperate_sgw_and_db_config(sgw_conf_data):
+    sgw_conf_data = convert_to_valid_json(sgw_conf_data)
+    sgw_conf_data = json.loads(sgw_conf_data)
+    temp_sgw_config = "resources/temp/temp_sgw_config.json"
+    sgw_config_file = copy_json_to_temp_file(sgw_conf_data, temp_sgw_config)
+    db_config_payload = {}
+    logging_payload = {"logging": {}}
+    if "databases" in sgw_conf_data.keys():
+        db_config_payload = sgw_conf_data["databases"]
+    if "logging" in sgw_conf_data.keys():
+        logging_payload["logging"] = sgw_conf_data["logging"]
+    return sgw_config_file, db_config_payload

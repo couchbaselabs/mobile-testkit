@@ -16,6 +16,7 @@ from utilities.cluster_config_utils import persist_cluster_config_environment_pr
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.couchbaseserver import get_sdk_client_with_bucket
 from utilities.cluster_config_utils import copy_sgconf_to_temp, replace_string_on_sgw_config
+from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
 from keywords.constants import RBAC_FULL_ADMIN
 from requests.auth import HTTPBasicAuth
 
@@ -164,7 +165,7 @@ def test_webhooks_crud(params_from_base_test_setup, sg_conf_name, filtered):
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
 
     sg_db = 'db'
-    bucket_name = 'data-bucket'
+    # bucket_name = 'data-bucket'
     num_docs_per_client = 100
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
@@ -172,6 +173,8 @@ def test_webhooks_crud(params_from_base_test_setup, sg_conf_name, filtered):
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_conf)
+    buckets = get_buckets_from_sync_gateway_config(sg_conf, cluster_conf)
+    bucket_name = buckets[0]
 
     # Start webhook server on test runner
     webhook_server = WebServer()
@@ -394,13 +397,13 @@ def test_webhook_filter_external_js(params_from_base_test_setup, setup_webserver
     def update_non_webhook_prop():
         return {'updates': 0, 'data': 'non_webhook_filter'}
     log_info('Adding {} docs via SDK ...')
-    sdk_doc_bodies = document.create_docs(sdk_webhook, number=sdk_webhook_docs, content={"data": "webhook_filter"}, channels=channel, prop_generator=update_webhook_prop)
-    sdk_doc_ids1 = [doc['_id'] for doc in sdk_doc_bodies]
-    sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
+    sdk_doc_bodies = document.create_docs(sdk_webhook, number=sdk_webhook_docs, content={"data": "webhook_filter"}, channels=channel, prop_generator=update_webhook_prop, non_sgw=True)
+    sdk_doc_ids1 = [doc['id'] for doc in sdk_doc_bodies]
+    sdk_docs = {doc['id']: doc for doc in sdk_doc_bodies}
     sdk_client.upsert_multi(sdk_docs)
 
-    sdk_doc_bodies = document.create_docs(sdk_non_webhook, number=sdk_non_webhook_docs, content={"data": "non_webhook_filter"}, channels=channel)
-    sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
+    sdk_doc_bodies = document.create_docs(sdk_non_webhook, number=sdk_non_webhook_docs, content={"data": "non_webhook_filter"}, channels=channel, non_sgw=True)
+    sdk_docs = {doc['id']: doc for doc in sdk_doc_bodies}
     sdk_client.upsert_multi(sdk_docs)
 
     count = 0
@@ -491,13 +494,13 @@ def test_webhook_filter_external_https_js(params_from_base_test_setup, setup_web
     def update_non_webhook_prop():
         return {'updates': 0, 'data': 'non_webhook_filter'}
     log_info('Adding {} docs via SDK ...')
-    sdk_doc_bodies = document.create_docs(sdk_webhook, number=sdk_webhook_docs, content={"data": "webhook_filter"}, channels=channel, prop_generator=update_webhook_prop)
-    sdk_doc_ids1 = [doc['_id'] for doc in sdk_doc_bodies]
-    sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
+    sdk_doc_bodies = document.create_docs(sdk_webhook, number=sdk_webhook_docs, content={"data": "webhook_filter"}, channels=channel, prop_generator=update_webhook_prop, non_sgw=True)
+    sdk_doc_ids1 = [doc['id'] for doc in sdk_doc_bodies]
+    sdk_docs = {doc['id']: doc for doc in sdk_doc_bodies}
     sdk_client.upsert_multi(sdk_docs)
 
-    sdk_doc_bodies = document.create_docs(sdk_non_webhook, number=sdk_non_webhook_docs, content={"data": "non_webhook_filter"}, channels=channel)
-    sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
+    sdk_doc_bodies = document.create_docs(sdk_non_webhook, number=sdk_non_webhook_docs, content={"data": "non_webhook_filter"}, channels=channel, non_sgw=True)
+    sdk_docs = {doc['id']: doc for doc in sdk_doc_bodies}
     sdk_client.upsert_multi(sdk_docs)
 
     count = 0

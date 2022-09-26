@@ -45,6 +45,7 @@ def params_from_base_suite_setup(request):
     prometheus_enabled = request.config.getoption("--prometheus-enable")
     skip_couchbase_provision = request.config.getoption("--skip-couchbase-provision")
     enable_cbs_developer_preview = request.config.getoption("--enable-cbs-developer-preview")
+    disable_persistent_config = request.config.getoption("--disable-persistent-config")
 
     log_info("server_version: {}".format(server_version))
     log_info("sync_gateway_version: {}".format(sync_gateway_version))
@@ -189,6 +190,13 @@ def params_from_base_suite_setup(request):
     else:
         log_info("Running without CBS developer preview")
         persist_cluster_config_environment_prop(cluster_config, 'cbs_developer_preview', False)
+
+    if disable_persistent_config:
+        log_info(" disable persistent config")
+        persist_cluster_config_environment_prop(cluster_config, 'disable_persistent_config', True)
+    else:
+        log_info("Running without Centralized Persistent Config")
+        persist_cluster_config_environment_prop(cluster_config, 'disable_persistent_config', False)
 
     if sync_gateway_version < "2.0.0" and no_conflicts_enabled:
         pytest.skip("Test cannot run with no-conflicts with sg version < 2.0.0")

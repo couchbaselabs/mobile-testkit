@@ -133,16 +133,16 @@ class TestServerAndroid(TestServerBase):
             log_info("remove the app on device before install, to ensure sandbox gets cleaned.")
             self.remove()
         except Exception as e:
-            log_info("remove the app before install didn't go success, but still continue ......")
 
-        log_info("Installing: {}".format(apk_path))
+            log_info("remove the app before install didn't go success with error {}, but still continue ......".format(str(e)))
+
+        log_info("Start to installing: {}".format(apk_path))
 
         # If and apk is installed, attempt to remove it and reinstall.
         # If that fails, raise an exception
         max_retries = 1
         count = 0
         while True:
-
             if count > max_retries:
                 raise LiteServError(".apk install failed!")
             try:
@@ -169,15 +169,21 @@ class TestServerAndroid(TestServerBase):
     def remove(self):
         """Removes the Test Server application from the running device
         """
+        output = ""
         command = self.set_device_option(["adb", "uninstall", self.installed_package_name])
-        output = subprocess.check_output(command)
-        if output.strip() != "Success" and output.strip() != b"Success":
+        try:
+            output = subprocess.check_output(command)
+        except Exception as e:
+            if "returned non-zero exit status 1" in str(e):
+                # Test server is removed
+                output = "Success"
+                pass
+            else:
+                raise LiteServError("Error uninstalling app!")
+        if (isinstance(output, str) and output.strip() != "Success") or \
+           (isinstance(output, bytes) and output.strip().decode() != "Success"):
             log_info(output)
             raise LiteServError("Error. Could not remove app.")
-        command = self.set_device_option(["adb", "uninstall", self.installed_package_name])
-        output = subprocess.check_output(command)
-        if self.installed_package_name in output.decode():
-            raise LiteServError("Error uninstalling app!")
 
         log_info("Testserver app removed from {}".format(self.host))
 

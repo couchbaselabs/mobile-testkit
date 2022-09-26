@@ -1,45 +1,46 @@
 {
-    "load_generators": [], 
+    "load_generators": [],
     "couchbase_servers": [
         {
-            "ip": "192.168.33.20", 
+            "ip": "192.168.33.20",
             "name": "cb1"
         }
-    ], 
+    ],
     "sync_gateways": [
         {
-            "ip": "192.168.33.21", 
+            "ip": "192.168.33.21",
             "name": "sg1"
         }
-    ], 
+    ],
     "environment": {
-        "x509_certs": false, 
-        "sg_lb_enabled": false, 
-        "sync_gateway_ssl": false, 
-        "xattrs_enabled": false, 
-        "sync_gateway_version": "1.5.0-571", 
-        "ipv6_enabled": false, 
-        "cbs_ssl_enabled": false, 
-        "server_version": "5.0.0-3519"
-    }, 
+        "x509_certs": false,
+        "sg_lb_enabled": false,
+        "sync_gateway_ssl": false,
+        "xattrs_enabled": false,
+        "sync_gateway_version": "1.5.0-571",
+        "ipv6_enabled": false,
+        "cbs_ssl_enabled": false,
+        "server_version": "5.0.0-3519",
+        "disable_persistent_config": false
+    },
     "hosts": [
         {
-            "ip": "192.168.33.20", 
+            "ip": "192.168.33.20",
             "name": "host1"
-        }, 
+        },
         {
-            "ip": "192.168.33.21", 
+            "ip": "192.168.33.21",
             "name": "host2"
-        }, 
+        },
         {
-            "ip": "192.168.33.22", 
+            "ip": "192.168.33.22",
             "name": "host3"
         }
-    ], 
-    "load_balancers": [], 
+    ],
+    "load_balancers": [],
     "sg_accels": [
         {
-            "ip": "192.168.33.22", 
+            "ip": "192.168.33.22",
             "name": "ac1"
         }
     ]
