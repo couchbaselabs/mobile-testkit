@@ -416,4 +416,3 @@ class TestDatabase(object):
         for doc_id in cbl_docs:
             assert cbl_docs[doc_id]["new_field"] == updated_body[doc_id]["new_field"],\
                 "Doc body doesn't match after update"
-                
