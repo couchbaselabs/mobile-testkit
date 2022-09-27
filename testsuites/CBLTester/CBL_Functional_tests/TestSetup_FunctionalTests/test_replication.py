@@ -2837,7 +2837,6 @@ def test_replication_1withMultipleBuckets_deleteOneBucket(params_from_base_test_
     replicator.stop(repl3)
 
     # 7. Verify 3rd bucket's docs are still exists in sg
-    verify_sgDocIds_cblDocIds(sg_client, sg_url, sg_db1, session1, cbl_db1, db)
     cbl_doc_ids = db.getDocIds(cbl_db3)
     assert len(cbl_doc_ids) == num_of_docs, "cbl docs not deleted when assosiated bucket is deleted in CBS"
 
