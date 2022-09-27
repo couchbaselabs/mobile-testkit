@@ -2842,7 +2842,7 @@ def test_replication_1withMultipleBuckets_deleteOneBucket(params_from_base_test_
     cbl_doc_ids = db.getDocIds(cbl_db3)
     assert len(cbl_doc_ids) == num_of_docs, "cbl docs not deleted when assosiated bucket is deleted in CBS"
 
- 
+
 @pytest.mark.listener
 @pytest.mark.replication
 def test_replication_multipleChannels_withFilteredDocIds(params_from_base_test_setup):
