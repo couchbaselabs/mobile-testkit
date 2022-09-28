@@ -156,6 +156,15 @@ class Admin:
 
         return User(target, db, name, password, channels)
 
+    def delete_user_if_exists(self, db, sg_username):
+        does_user_exist = self.does_user_exist(db, sg_username)
+        if does_user_exist:
+            resp = requests.delete("{}/{}/_user/{}".format(self.admin_url, db, sg_username))
+            log.info("DELETE user {} from database {}".format(db, sg_username))
+            resp.raise_for_status()
+
+        return does_user_exist
+
     def register_bulk_users(self, target, db, name_prefix, number, password, channels=list(), roles=list(), num_of_workers=settings.MAX_REQUEST_WORKERS):
 
         if type(channels) is not list:
@@ -280,6 +289,17 @@ class Admin:
             resp = requests.put("{0}/{1}/_config".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, data=json.dumps(config), verify=False)
         log.info("PUT {}".format(resp.url))
         resp.raise_for_status()
+        return resp.status_code
+
+    # POST /{db}/_config
+    def post_db_config(self, db, config):
+        if self.auth:
+            resp = requests.post("{0}/{1}/_config".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, data=json.dumps(config), verify=False, auth=self.auth)
+        else:
+            resp = requests.post("{0}/{1}/_config".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, data=json.dumps(config), verify=False)
+        log.info("POST {}".format(resp.url))
+        resp.raise_for_status()
+
         return resp.status_code
 
     # GET /_config
@@ -534,3 +554,23 @@ class Admin:
         log.info("GET {}".format(resp.url))
         resp.raise_for_status()
         return resp.json()
+
+    def does_db_exist(self, db):
+        try:
+            self.get_db_info(db)
+            return True
+        except requests.HTTPError as e:
+            if e.response.status_code == 404:
+                return False
+            else:
+                raise Exception("Could not determine if the database exists due to the following error: " + str(e)) from e
+
+    def does_user_exist(self, db, user):
+        try:
+            self.get_user_info(db, user)
+            return True
+        except requests.HTTPError as e:
+            if e.response.status_code == 404:
+                return False
+            else:
+                raise Exception("Could not determine if the user exists due to the following error: " + str(e)) from e
