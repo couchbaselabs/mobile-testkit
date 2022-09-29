@@ -10,6 +10,7 @@ from libraries.testkit.admin import Admin
 
 # test file shared variables
 bucket = "data-bucket"
+admin_client = None
 
 
 @pytest.fixture
@@ -24,6 +25,7 @@ def teardown_doc_fixture():
 def scopes_collections_tests_fixture(params_from_base_test_setup):
     try:  # To be able to teardon in case of a setup error
         # get/set the parameters
+        global admin_client
         session_id = None
         pre_test_db_exists = None
         pre_test_user_exists = None
@@ -114,3 +116,10 @@ def test_document_only_under_named_scope(scopes_collections_tests_fixture, teard
     with pytest.raises(Exception) as e:  # HTTPError doesn't work, for some  reason, but would be preferable
         sg_client.get_doc(sg_admin_url, db, doc_id, auth=auth_session, scope="_default", collection=collection)
     e.match("Not Found")
+
+@pytest.mark.syncgateway
+@pytest.mark.collections
+def test_change_collection_name(scopes_collections_tests_fixture):
+    sg_client, sg_url, sg_admin_url, auth_session, db, scope, collection = scopes_collections_tests_fixture
+    data = {"bucket": bucket, "scopes": {scope: {"collections": {"new_collection": {}}}}, "num_index_replicas": 0}
+    admin_client.post_db_config(db, data)
