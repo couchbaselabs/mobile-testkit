@@ -79,7 +79,7 @@ def get_auth_type(auth):
             auth = HTTPBasicAuth(auth[0], auth[1])
 
     logging.info("Using auth type: {}".format(auth_type))
-    return auth_type
+    return auth_type, auth
 
 
 class MyEncoder(json.JSONEncoder):
