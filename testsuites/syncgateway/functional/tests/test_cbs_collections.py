@@ -7,17 +7,17 @@ from libraries.testkit.cluster import Cluster
 from keywords.constants import RBAC_FULL_ADMIN
 from libraries.testkit.admin import Admin
 
-
 # test file shared variables
 bucket = "data-bucket"
 admin_client = None
+cb_server = None
 
 
 @pytest.fixture
 def teardown_doc_fixture():
-    def _delete_doc_if_exist(sg_client, url, db, doc_id, auth):
-        if sg_client.does_doc_exist(url, db, doc_id) is True:
-            sg_client.delete_doc(url, db, doc_id, auth=auth)
+    def _delete_doc_if_exist(sg_client, url, db, doc_id, auth, scope, collection):
+        if sg_client.does_doc_exist(url, db, doc_id, scope=scope, collection=collection) is True:
+            sg_client.delete_doc(url, db, doc_id, auth=auth, scope=scope, collection=collection)
     yield _delete_doc_if_exist
 
 
@@ -26,6 +26,7 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
     try:  # To be able to teardon in case of a setup error
         # get/set the parameters
         global admin_client
+        global cb_server
         session_id = None
         pre_test_db_exists = None
         pre_test_user_exists = None
@@ -96,9 +97,9 @@ def test_document_only_under_named_scope(scopes_collections_tests_fixture, teard
     doc_prefix = "scp_tests_doc"
     doc_id = doc_prefix + "_0"
     sg_client, sg_url, sg_admin_url, auth_session, db, scope, collection = scopes_collections_tests_fixture
-    if sg_client.does_doc_exist(sg_url, db, doc_id, auth_session) is False:
-        sg_client.add_docs(sg_url, db, 1, doc_prefix, auth_session)
-    teardown_doc_fixture(sg_client, sg_admin_url, db, doc_id, auth_session)
+    if sg_client.does_doc_exist(sg_url, db, doc_id, auth_session, scope=scope, collection=collection) is False:
+        sg_client.add_docs(sg_url, db, 1, doc_prefix, auth_session, scope=scope, collection=collection)
+    teardown_doc_fixture(sg_client, sg_admin_url, db, doc_id, auth_session, scope, collection)
 
     # exercise + verification
     try:
@@ -108,7 +109,7 @@ def test_document_only_under_named_scope(scopes_collections_tests_fixture, teard
 
     # exercise + verification
     try:
-        sg_client.get_doc(sg_admin_url, db, doc_id, auth=auth_session, collection=collection)
+        sg_client.get_doc(sg_admin_url, db, doc_id, auth=auth_session, scope=scope, collection=collection)
     except Exception as e:
         pytest.fail("There was a problem reading the document from a collection WITHOUT specifying the scope in the endoint. The error: " + str(e))
 
@@ -117,9 +118,47 @@ def test_document_only_under_named_scope(scopes_collections_tests_fixture, teard
         sg_client.get_doc(sg_admin_url, db, doc_id, auth=auth_session, scope="_default", collection=collection)
     e.match("Not Found")
 
+
 @pytest.mark.syncgateway
 @pytest.mark.collections
 def test_change_collection_name(scopes_collections_tests_fixture):
+    """
+    1. Upload a document to a collection
+    2. Rename the collection by updating the config
+    3. Check that the document is not accessiable in the new collection
+    4. Rename the collection to the original collection
+    5. Verify that the document is accessible again
+    """
+    # setup
     sg_client, sg_url, sg_admin_url, auth_session, db, scope, collection = scopes_collections_tests_fixture
-    data = {"bucket": bucket, "scopes": {scope: {"collections": {"new_collection": {}}}}, "num_index_replicas": 0}
+    doc_prefix = "scp_tests_doc"
+    doc_id = doc_prefix + "_0"
+    new_collection_name = "new_collection_test"
+
+    # 1. Upload a document to a collection
+    if sg_client.does_doc_exist(sg_url, db, doc_id, auth_session, scope=scope, collection=collection) is False:
+        sg_client.add_docs(sg_url, db, 1, doc_prefix, auth_session, scope=scope, collection=collection)
+
+    # 2. Rename the collection by updating the config
+    cb_server.create_collection(bucket, scope, new_collection_name)
+    rename_a_single_collection(db, scope, new_collection_name)
+
+    #  exercise + verification
+    with pytest.raises(Exception) as e:  # HTTPError doesn't work, for some reason, but would be preferable
+        sg_client.get_doc(sg_admin_url, db, doc_id, auth=auth_session, scope=scope, collection=new_collection_name)
+    e.match("Not Found")
+
+    # 4. Rename the collection to the original collection
+    rename_a_single_collection(db, scope, collection)
+
+    # 5. Verify that the document is accessible again
+    try:
+        sg_client.get_doc(sg_admin_url, db, doc_id, auth=auth_session, scope=scope, collection=collection)
+    except Exception as e:
+        pytest.fail("The document could not be read from the collection after it was renamed and renamed back. The error: " + str(e))
+
+
+def rename_a_single_collection(db, scope, new_name):
+    data = {"bucket": bucket, "scopes": {scope: {"collections": {new_name: {}}}}, "num_index_replicas": 0}
     admin_client.post_db_config(db, data)
+    admin_client.wait_for_db_online(db, 60)

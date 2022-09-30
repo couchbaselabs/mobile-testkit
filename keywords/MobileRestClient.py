@@ -915,7 +915,7 @@ class MobileRestClient:
         resp.raise_for_status()
         return resp.json()
 
-    def add_doc(self, url, db, doc, auth=None, use_post=True):
+    def add_doc(self, url, db, doc, auth=None, use_post=True, scope=None, collection=None):
         """
         Add a doc to a database. Either LiteServ or Sync Gateway
 
@@ -927,23 +927,25 @@ class MobileRestClient:
         auth_type, auth = get_auth_type(auth)
 
         doc["updates"] = 0
-
+        keyspace = db
+        if scope is not None:
+            keyspace = db + "." + scope + "." + collection
         if auth_type == AuthType.session:
             if use_post:
-                resp = self._session.post("{}/{}/".format(url, db), data=json.dumps(doc, cls=MyEncoder), cookies=dict(SyncGatewaySession=auth[1]))
+                resp = self._session.post("{}/{}/".format(url, keyspace), data=json.dumps(doc, cls=MyEncoder), cookies=dict(SyncGatewaySession=auth[1]))
             else:
-                resp = self._session.put("{}/{}/{}".format(url, db, doc["_id"]), data=json.dumps(doc, cls=MyEncoder), cookies=dict(SyncGatewaySession=auth[1]))
+                resp = self._session.put("{}/{}/{}".format(url, keyspace, doc["_id"]), data=json.dumps(doc, cls=MyEncoder), cookies=dict(SyncGatewaySession=auth[1]))
         elif auth_type == AuthType.http_basic:
             if use_post:
-                resp = self._session.post("{}/{}/".format(url, db), data=json.dumps(doc, cls=MyEncoder), auth=auth)
+                resp = self._session.post("{}/{}/".format(url, keyspace), data=json.dumps(doc, cls=MyEncoder), auth=auth)
             else:
-                resp = self._session.put("{}/{}/{}".format(url, db, doc["_id"]), data=json.dumps(doc, cls=MyEncoder), auth=auth)
+                resp = self._session.put("{}/{}/{}".format(url, keyspace, doc["_id"]), data=json.dumps(doc, cls=MyEncoder), auth=auth)
         else:
             if use_post:
-                resp = self._session.post("{}/{}/".format(url, db), data=json.dumps(doc, cls=MyEncoder))
+                resp = self._session.post("{}/{}/".format(url, keyspace), data=json.dumps(doc, cls=MyEncoder))
             else:
                 try:
-                    resp = self._session.put("{}/{}/{}".format(url, db, doc["_id"]), data=json.dumps(doc, cls=MyEncoder))
+                    resp = self._session.put("{}/{}/{}".format(url, keyspace, doc["_id"]), data=json.dumps(doc, cls=MyEncoder))
                 except Exception as err:
                     print(err)
                     raise
@@ -1417,7 +1419,7 @@ class MobileRestClient:
 
         return resp_obj
 
-    def add_docs(self, url, db, number, id_prefix, auth=None, channels=None, generator=None, attachments_generator=None, expiry=None):
+    def add_docs(self, url, db, number, id_prefix, auth=None, channels=None, generator=None, attachments_generator=None, expiry=None, scope=None, collection=None):
         """
         if id_prefix == None, generate a uuid for each doc
 
@@ -1457,7 +1459,7 @@ class MobileRestClient:
 
             doc_body["_id"] = doc_id
 
-            doc_obj = self.add_doc(url, db, doc_body, auth=auth, use_post=False)
+            doc_obj = self.add_doc(url, db, doc_body, auth=auth, use_post=False, scope=scope, collection=collection)
             if attachments_generator:
                 doc_obj["attachments"] = list(doc_body["_attachments"].keys())
             added_docs.append(doc_obj)
@@ -2608,9 +2610,9 @@ class MobileRestClient:
             resp_obj = resp.json()
             return resp_obj
 
-    def does_doc_exist(self, url, db, doc_id, auth=None):
+    def does_doc_exist(self, url, db, doc_id, auth=None, scope=None, collection=None):
         try:
-            self.get_doc(url, db, doc_id, auth)
+            self.get_doc(url, db, doc_id, auth, scope=scope, collection=collection)
         except HTTPError as e:
             if e.response.status_code == 404:
                 return False
