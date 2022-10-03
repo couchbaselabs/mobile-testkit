@@ -113,9 +113,9 @@ class TestServerAndroid(TestServerBase):
                 else:
                     # Install succeeded, continue
                     break
-            output = subprocess.check_output(["adb", "-e", "shell", "pm", "list", "packages"])
-
+        output = subprocess.check_output(["adb", "-e", "shell", "pm", "list", "packages"])
         if str(self.installed_package_name) not in str(output):
+            log_info("Android emulation may not install on slave.  We could run with device flag in params passed")
             raise LiteServError("Failed to install package: {}".format(output))
 
         log_info("LiteServ installed to {}".format(self.host))
