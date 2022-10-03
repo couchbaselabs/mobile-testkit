@@ -385,3 +385,40 @@ class Database(object):
             del doc_body["_attachments"]
             updated_docs[doc] = doc_body
         self.updateDocuments(database, updated_docs)
+
+    def defaultScope(self, database):
+        args = Args()
+        args.setMemoryPointer("database", database)
+        return self._client.invokeMethod("scope_defaultScope", args)
+
+    def defaultCollection(self, database):
+        args = Args()
+        args.setMemoryPointer("database", database)
+        return self._client.invokeMethod("collection_defaultCollection", args)
+
+    def createCollection(self, database, collectionName, scopeName):
+        args = Args()
+        args.setString("collectionName", collectionName)
+        args.setString("scopeName", scopeName)
+        args.setMemoryPointer("database", database)
+        return self._client.invokeMethod("collection_createCollection", args)
+
+    def deleteCollection(self, database, collectionName, scopeName):
+        args = Args()
+        args.setString("collectionName", collectionName)
+        args.setString("scopeName", scopeName)
+        args.setMemoryPointer("database", database)
+        return self._client.invokeMethod("collection_deleteCollection", args)
+
+    def collectionsInScope(self, database, scopeName):
+        args = Args()
+        args.setString("scopeName", scopeName)
+        args.setMemoryPointer("database", database)
+        return self._client.invokeMethod("collection_collectionNames", args)
+
+    def collectionObject(self, database, collectionName, scopeName):
+        args = Args()
+        args.setString("collectionName", collectionName)
+        args.setString("scopeName", scopeName)
+        args.setMemoryPointer("database", database)
+        return self._client.invokeMethod("collection_collection", args)

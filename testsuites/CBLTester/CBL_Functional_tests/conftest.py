@@ -21,6 +21,8 @@ from keywords.constants import RESULTS_DIR
 
 from CBLClient.FileLogging import FileLogging
 from CBLClient.Replication import Replication
+from CBLClient.Collection import Collection
+from CBLClient.Scope import Scope
 from CBLClient.BasicAuthenticator import BasicAuthenticator
 from CBLClient.Database import Database
 from CBLClient.Document import Document
@@ -860,7 +862,8 @@ def class_init(request, params_from_base_suite_setup):
     array_obj = Array(base_url)
     dict_obj = Dictionary(base_url)
     repl_config_obj = ReplicatorConfiguration(base_url)
-
+    scope_obj = Scope(base_url)
+    collection_obj = Collection(base_url)
     base_auth_obj = BasicAuthenticator(base_url)
     session_auth_obj = SessionAuthenticator(base_url)
     sg_client = MobileRestClient()
@@ -875,6 +878,8 @@ def class_init(request, params_from_base_suite_setup):
     request.cls.doc_obj = doc_obj
     request.cls.dict_obj = dict_obj
     request.cls.datatype = datatype
+    request.cls.collection_obj = collection_obj
+    request.cls.scope_obj = scope_obj
     request.cls.repl_obj = repl_obj
     request.cls.repl_config_obj = repl_config_obj
     request.cls.array_obj = array_obj
