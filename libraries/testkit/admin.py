@@ -422,6 +422,7 @@ class Admin:
         prev_write_count = 0
         read_retry_count = 0
         write_retry_count = 0
+        did_replication_run = False
         while count < max_times:
             if self.auth:
                 r = requests.get("{}/{}/_replicationStatus/{}".format(self.admin_url, db, repl_id), verify=False, auth=self.auth)
@@ -430,9 +431,11 @@ class Admin:
             r.raise_for_status()
             resp_obj = r.json()
             status = resp_obj["status"]
+            log_info("Current replication status: " + status)
             if status == "starting" or status == "started":
                 count += 1
             elif status == "running":
+                did_replication_run = True
                 if read_flag:
                     if read_retry_count < retry_max_count:
                         try:
@@ -461,9 +464,9 @@ class Admin:
                     else:
                         write_timeout = True
             else:
-                log_info("--------------------------------==========++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++status=" + status)
-                log_info("looks like replication is stopped")
-                break
+                if did_replication_run:
+                    log_info("The replication ran and stopped")
+                    break
             count += 1
             time.sleep(1)
             if read_timeout and write_timeout:
