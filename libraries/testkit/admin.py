@@ -461,6 +461,7 @@ class Admin:
                     else:
                         write_timeout = True
             else:
+                log_info("--------------------------------==========++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++status=" + status)
                 log_info("looks like replication is stopped")
                 break
             count += 1
