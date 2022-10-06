@@ -114,4 +114,4 @@ class Collection(object):
         args.setMemoryPointer("database", database)
         args.setMemoryPointer("collection", collection)
         args.setDictionary("documents", documents)
-        return self._client.invokeMethod("collection_saveDocument", args)
+        return self._client.invokeMethod("collection_saveDocuments", args)
