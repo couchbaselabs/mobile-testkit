@@ -80,6 +80,7 @@ class Replication(object):
         if encryptor is not None:
             args.setMemoryPointer("encryptor", encryptor)
 
+        # here collection CBLReplicatinoCollectionType
         if collection is not None:
             args.setArray("collections", collection)
 
