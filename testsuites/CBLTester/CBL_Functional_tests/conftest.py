@@ -23,6 +23,8 @@ from CBLClient.Collection import Collection
 from CBLClient.Scope import Scope
 from CBLClient.FileLogging import FileLogging
 from CBLClient.Replication import Replication
+from CBLClient.Collection import Collection
+from CBLClient.Scope import Scope
 from CBLClient.BasicAuthenticator import BasicAuthenticator
 from CBLClient.Database import Database
 from CBLClient.Document import Document

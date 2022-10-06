@@ -395,7 +395,7 @@ class Database(object):
         args = Args()
         args.setMemoryPointer("database", database)
         return self._client.invokeMethod("collection_defaultCollection", args)
-    
+
     def createCollection(self, database, collectionName, scopeName):
         args = Args()
         args.setString("collectionName", collectionName)
@@ -409,7 +409,7 @@ class Database(object):
         args.setString("scopeName", scopeName)
         args.setMemoryPointer("database", database)
         return self._client.invokeMethod("collection_deleteCollection", args)
-    
+
     def collectionsInScope(self, database, scopeName):
         args = Args()
         args.setString("scopeName", scopeName)
@@ -422,3 +422,4 @@ class Database(object):
         args.setString("scopeName", scopeName)
         args.setMemoryPointer("database", database)
         return self._client.invokeMethod("collection_collection", args)
+

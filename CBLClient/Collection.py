@@ -18,18 +18,18 @@ class Collection(object):
         args = Args()
         args.setMemoryPointer("collection", collection)
         return self._client.invokeMethod("collection_getCollectionName", args)
-    
+
     def allCollection(self, database, scopeName):
         args = Args()
         args.setMemoryPointer("database", database)
         args.setString("scopeName", scopeName)
         return self._client.invokeMethod("collection_collectionNames", args)
-    
+
     def documentCount(self, collection):
         args = Args()
         args.setMemoryPointer("collection", collection)
         return self._client.invokeMethod("collection_documentCount", args)
-    
+
     def saveDocument(self, collection, document):
         args = Args()
         args.setMemoryPointer("collection", collection)
@@ -64,20 +64,20 @@ class Collection(object):
         args.setMemoryPointer("collection", collection)
         args.setString("docId", docId)
         return self._client.invokeMethod("collection_purgeDocumentID", args)
-    
+
     def getDocumentExpiration(self, collection, docId):
         args = Args()
         args.setMemoryPointer("collection", collection)
         args.setString("docId", docId)
         return self._client.invokeMethod("collection_getDocumentExpiration", args)
-    
+
     def setDocumentExpiration(self, collection, docId, expirationTime):
         args = Args()
         args.setMemoryPointer("collection", collection)
         args.setString("docId", docId)
         args.setInt("expiration", expirationTime)
         return self._client.invokeMethod("collection_setDocumentExpiration", args)
-    
+
     def getMutableDocument(self, collection, docId):
         args = Args()
         args.setMemoryPointer("collection", collection)
@@ -90,7 +90,7 @@ class Collection(object):
         args.setString("name", name)
         args.setString("expression", expression)
         return self._client.invokeMethod("collection_createValueIndex", args)
-    
+
     def iosCreateValueIndex(self, collection, name, expression):
         args = Args()
         args.setMemoryPointer("collection", collection)
@@ -103,7 +103,7 @@ class Collection(object):
         args.setMemoryPointer("collection", collection)
         args.setString("name", name)
         return self._client.invokeMethod("collection_deleteIndex", args)
-    
+
     def getIndexNames(self, collection):
         args = Args()
         args.setMemoryPointer("collection", collection)
