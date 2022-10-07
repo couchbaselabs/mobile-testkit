@@ -68,7 +68,7 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
         # Create a user
         pre_test_user_exists = admin_client.does_user_exist(db, sg_username)
         if pre_test_user_exists is False:
-            sg_client.create_user(sg_admin_url, db, sg_username, sg_password, channels, auth)
+            sg_client.create_user(sg_admin_url, db, sg_username, sg_password, auth=auth)
 
         # Create a SGW session
         cookie, session_id = sg_client.create_session(sg_admin_url, db, sg_username, auth=auth)
@@ -163,29 +163,31 @@ def test_collection_channels(scopes_collections_tests_fixture):
     # setup
     sg_client, sg_url, sg_admin_url, auth_session, db, scope, collection = scopes_collections_tests_fixture
     random_str = str(uuid.uuid4())[:6]
-    doc_prefix = "scp_tests_doc_" + random_str
-    channels_tests_doc_prefix = "channels_doc_" + random_str
-    sg_channel_test_username = "channel_test_user" + random_str
-    channels_test_channel = ["CHANNEL_TEST"]
-    auth = [RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']]
-    sg_client.create_user(sg_admin_url, db, sg_channel_test_username, sg_password, channels=channels_test_channel, auth=auth)
-    auth_scopes_user = sg_username, sg_password
-    auth_channels_user = sg_channel_test_username, sg_password
+    test_user_1 = "cu1_" + random_str
+    test_user_2 = "cu2_" + random_str
+    user_1_doc_prefix = "user_1_doc_" + random_str
+    user_2_doc_prefix = "user_2_doc_" + random_str
+    channels_user_1 = ["USER1_CHANNEL"]
+    channels_user_2 = ["USER2_CHANNEL"]
+    admin_auth = [RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']]
+    auth_user_1 = test_user_1, sg_password
+    auth_user_2 = test_user_2, sg_password
 
-    sg_client.add_docs(sg_url, db, 3, doc_prefix, auth_scopes_user, channels=channels, scope=scope, collection=collection)
-    sg_client.add_docs(sg_url, db, 3, channels_tests_doc_prefix, auth_channels_user, channels=channels_test_channel, scope=scope, collection=collection)
+    sg_client.create_user(sg_admin_url, db, test_user_1, sg_password, channels=channels_user_1, auth=admin_auth)
+    sg_client.create_user(sg_admin_url, db, test_user_2, sg_password, channels=channels_user_2, auth=admin_auth)
+    sg_client.add_docs(sg_url, db, 3, user_1_doc_prefix, auth=auth_user_1, channels=channels_user_1, scope=scope, collection=collection)
+    sg_client.add_docs(sg_url, db, 3, user_2_doc_prefix, auth=auth_user_2, channels=channels_user_2, scope=scope, collection=collection)
+    user_1_docs = sg_client.get_all_docs(url=sg_url, db=db, auth=auth_user_1, include_docs=True)
+    user_2_docs = sg_client.get_all_docs(url=sg_url, db=db, auth=auth_user_2, include_docs=True)
 
-    scopes_tests_docs = sg_client.get_all_docs(url=sg_url, db=db, auth=auth_scopes_user, include_docs=True)
-    channels_test_docs = sg_client.get_all_docs(url=sg_url, db=db, auth=auth_channels_user, include_docs=True)
-
-    scopes_tests_docs_ids = [doc["id"] for doc in scopes_tests_docs["rows"]]
-    channels_test_docs_ids = [doc["id"] for doc in channels_test_docs["rows"]]
-    for doc in scopes_tests_docs_ids:
-        if channels_tests_doc_prefix in doc:
-            pytest.fail("A document is available in a channel that it was not assigned to. Document prefix: " + doc_prefix + ". The document: " + doc)
-    for doc in channels_test_docs_ids:
-        if doc_prefix in doc:
-            pytest.fail("A document is available in a channel that it was not assigned to. Document prefix: " + doc_prefix + ". The document: " + doc)
+    user_1_docs_ids = [doc["id"] for doc in user_1_docs["rows"]]
+    user_2_docs_ids = [doc["id"] for doc in user_2_docs["rows"]]
+    for doc in user_1_docs_ids:
+        if user_2_doc_prefix in doc:
+            pytest.fail("A document is available in a channel that it was not assigned to. Document prefix: " + user_2_doc_prefix + ". The document: " + doc)
+    for doc in user_2_docs_ids:
+        if user_1_doc_prefix in doc:
+            pytest.fail("A document is available in a channel that it was not assigned to. Document prefix: " + user_1_doc_prefix + ". The document: " + doc)
 
 
 def rename_a_single_collection(db, scope, new_name):
