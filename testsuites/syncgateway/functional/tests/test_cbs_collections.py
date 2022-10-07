@@ -6,11 +6,13 @@ from keywords import couchbaseserver
 from libraries.testkit.cluster import Cluster
 from keywords.constants import RBAC_FULL_ADMIN
 from libraries.testkit.admin import Admin
+from keywords.exceptions import RestError
 
 # test file shared variables
 bucket = "data-bucket"
 sg_password = "password"
 admin_client = cb_server = sg_username = channels = None
+admin_auth = [RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']]
 
 
 @pytest.fixture
@@ -52,7 +54,6 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
         cb_server = couchbaseserver.CouchbaseServer(cbs_url)
         admin_client = Admin(cluster.sync_gateways[0])
         sg_url = params_from_base_test_setup["sg_url"]
-        auth = [RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']]
 
         # Scope creation on the Couchbase server
         does_scope_exist = cb_server.does_scope_exist(bucket, scope)
@@ -68,10 +69,10 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
         # Create a user
         pre_test_user_exists = admin_client.does_user_exist(db, sg_username)
         if pre_test_user_exists is False:
-            sg_client.create_user(sg_admin_url, db, sg_username, sg_password, auth=auth)
+            sg_client.create_user(sg_admin_url, db, sg_username, sg_password, auth=admin_auth)
 
         # Create a SGW session
-        cookie, session_id = sg_client.create_session(sg_admin_url, db, sg_username, auth=auth)
+        cookie, session_id = sg_client.create_session(sg_admin_url, db, sg_username, auth=admin_auth)
         auth_session = cookie, session_id
         yield sg_client, sg_url, sg_admin_url, auth_session, db, scope, collection
     except Exception as e:
@@ -160,6 +161,16 @@ def test_change_collection_name(scopes_collections_tests_fixture):
 @pytest.mark.syncgateway
 @pytest.mark.collections
 def test_collection_channels(scopes_collections_tests_fixture):
+    """
+    1. Create 2 users with different channels
+    2. Upload the documents to the collection, under the user's channels and one to the public channel
+    3. Get all the documents using _all_docs
+    4. Check that the users can only see the documents in their channel
+    5. Check that the users see the shared document in the channel
+    6. Check that _bulk_get cannot get documents that are not in the user's channel
+    7. Check that _bulk_get can get documents that are in the user's channel
+    8. Check that _bulk_get cannot get a document from the "right" channel but the wrong collection
+    """
     # setup
     sg_client, sg_url, sg_admin_url, auth_session, db, scope, collection = scopes_collections_tests_fixture
     random_str = str(uuid.uuid4())[:6]
@@ -167,27 +178,56 @@ def test_collection_channels(scopes_collections_tests_fixture):
     test_user_2 = "cu2_" + random_str
     user_1_doc_prefix = "user_1_doc_" + random_str
     user_2_doc_prefix = "user_2_doc_" + random_str
+    shared_doc_prefix = "shared_" + random_str
     channels_user_1 = ["USER1_CHANNEL"]
     channels_user_2 = ["USER2_CHANNEL"]
-    admin_auth = [RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']]
     auth_user_1 = test_user_1, sg_password
     auth_user_2 = test_user_2, sg_password
 
+    # 1. Create 2 users with different channels
     sg_client.create_user(sg_admin_url, db, test_user_1, sg_password, channels=channels_user_1, auth=admin_auth)
     sg_client.create_user(sg_admin_url, db, test_user_2, sg_password, channels=channels_user_2, auth=admin_auth)
+
+    # 2. Upload the documents to the collection
     sg_client.add_docs(sg_url, db, 3, user_1_doc_prefix, auth=auth_user_1, channels=channels_user_1, scope=scope, collection=collection)
     sg_client.add_docs(sg_url, db, 3, user_2_doc_prefix, auth=auth_user_2, channels=channels_user_2, scope=scope, collection=collection)
+    sg_client.add_docs(sg_admin_url, db, 1, shared_doc_prefix, auth=auth_session, channels=["!"], scope=scope, collection=collection)
+
+    # 3. Get all the documents using _all_docs
     user_1_docs = sg_client.get_all_docs(url=sg_url, db=db, auth=auth_user_1, include_docs=True)
     user_2_docs = sg_client.get_all_docs(url=sg_url, db=db, auth=auth_user_2, include_docs=True)
 
     user_1_docs_ids = [doc["id"] for doc in user_1_docs["rows"]]
     user_2_docs_ids = [doc["id"] for doc in user_2_docs["rows"]]
+    shared_found_user_1 = False
+    shared_found_user_2 = False
+
+    # 4. Check that the users can only see the documents in their channel
     for doc in user_1_docs_ids:
         if user_2_doc_prefix in doc:
             pytest.fail("A document is available in a channel that it was not assigned to. Document prefix: " + user_2_doc_prefix + ". The document: " + doc)
+        if shared_doc_prefix in doc:
+            shared_found_user_1 = True
     for doc in user_2_docs_ids:
         if user_1_doc_prefix in doc:
             pytest.fail("A document is available in a channel that it was not assigned to. Document prefix: " + user_1_doc_prefix + ". The document: " + doc)
+        if shared_doc_prefix in doc:
+            shared_found_user_2 = True
+
+    # 5. Check that the users see the shared document in the channel
+    assert shared_found_user_1 and shared_found_user_2
+
+    # 6. Check that _bulk_get cannot get documents that are not in the user's channel
+    with pytest.raises(RestError) as e:  # HTTPError doesn't work, for some  reason, but would be preferable
+        sg_client.get_bulk_docs(url=sg_url, db=db, doc_ids=user_2_docs_ids, auth=auth_user_1, scope=scope, collection=collection)
+    assert "'status': 403" in str(e)
+    # 7. Check that _bulk_get can get documents that are in the user's channel
+    sg_client.get_bulk_docs(url=sg_url, db=db, doc_ids=user_1_docs_ids, auth=auth_user_1, scope=scope, collection=collection)
+
+    # 8. Check that _bulk_get cannot get a document from the "right" channel but the wrong collection
+    with pytest.raises(Exception) as e:
+        sg_client.get_bulk_docs(url=sg_url, db=db, doc_ids=user_1_docs_ids, auth=auth_user_1, scope=scope, collection="fake_collection")
+    e.match("Not Found")
 
 
 def rename_a_single_collection(db, scope, new_name):
