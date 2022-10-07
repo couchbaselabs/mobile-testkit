@@ -22,7 +22,7 @@ class Database(object):
             raise Exception("No base_url specified")
 
         self._client = Client(base_url)
-        self._collection = Collection()
+        self._collection = Collection(base_url)
 
     def configure(self, directory=None, conflictResolver=None, password=None):
         args = Args()
