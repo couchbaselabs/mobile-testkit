@@ -214,14 +214,14 @@ def test_collection_channels(scopes_collections_tests_fixture):
         if shared_doc_prefix in doc:
             shared_found_user_1 = True
         if doc not in wildcard_user_docs_ids:
-            pytest.fail("The document " + doc + " was not accessiable even though the user is in the wildcard channel")
+            pytest.fail("The document " + doc + " was not accessiable even though the user was given all documents access")
     for doc in user_2_docs_ids:
         if user_1_doc_prefix in doc:
             pytest.fail("A document is available in a channel that it was not assigned to. Document prefix: " + user_1_doc_prefix + ". The document: " + doc)
         if shared_doc_prefix in doc:
             shared_found_user_2 = True
         if doc not in wildcard_user_docs_ids:
-            pytest.fail("The document " + doc + " was not accessiable even though the user is in the wildcard channel")
+            pytest.fail("The document " + doc + " was not accessiable even though the user was given all documents access")
 
     # 5. Check that the users see the shared document in their channels
     assert (shared_found_user_1 and shared_found_user_2), "The shared document was not found for one of the users. user1: " + shared_found_user_1 + " user2: " + shared_found_user_2
