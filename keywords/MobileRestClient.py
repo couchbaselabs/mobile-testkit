@@ -78,7 +78,7 @@ def get_auth_type(auth):
         if isinstance(auth, tuple) and auth[0] == RBAC_FULL_ADMIN['user']:
             auth = HTTPBasicAuth(auth[0], auth[1])
 
-    logging.debug("Using auth type: {}".format(auth_type))
+    logging.info("Using auth type: {}".format(auth_type))
     return auth_type, auth
 
 
