@@ -162,7 +162,7 @@ def test_change_collection_name(scopes_collections_tests_fixture):
 @pytest.mark.collections
 def test_collection_channels(scopes_collections_tests_fixture):
     """
-    1. Create 2 users with different channels
+    1. Create 3 users with different channels, one is in the wildcard channel
     2. Upload the documents to the collection, under the user's channels and one to the public channel
     3. Get all the documents using _all_docs
     4. Check that the users can only see the documents in their channel
@@ -176,6 +176,7 @@ def test_collection_channels(scopes_collections_tests_fixture):
     random_str = str(uuid.uuid4())[:6]
     test_user_1 = "cu1_" + random_str
     test_user_2 = "cu2_" + random_str
+    test_wildcard_user = "wu_" + random_str
     user_1_doc_prefix = "user_1_doc_" + random_str
     user_2_doc_prefix = "user_2_doc_" + random_str
     shared_doc_prefix = "shared_" + random_str
@@ -183,10 +184,12 @@ def test_collection_channels(scopes_collections_tests_fixture):
     channels_user_2 = ["USER2_CHANNEL"]
     auth_user_1 = test_user_1, sg_password
     auth_user_2 = test_user_2, sg_password
+    auth_wildcard_user = test_wildcard_user, sg_password
 
-    # 1. Create 2 users with different channels
+    # 1. Create 3 users with different channels, one is in the wildcard channel
     sg_client.create_user(sg_admin_url, db, test_user_1, sg_password, channels=channels_user_1, auth=admin_auth)
     sg_client.create_user(sg_admin_url, db, test_user_2, sg_password, channels=channels_user_2, auth=admin_auth)
+    sg_client.create_user(sg_admin_url, db, test_wildcard_user, sg_password, channels=["*"], auth=admin_auth)
 
     # 2. Upload the documents to the collection
     sg_client.add_docs(sg_url, db, 3, user_1_doc_prefix, auth=auth_user_1, channels=channels_user_1, scope=scope, collection=collection)
@@ -196,26 +199,33 @@ def test_collection_channels(scopes_collections_tests_fixture):
     # 3. Get all the documents using _all_docs
     user_1_docs = sg_client.get_all_docs(url=sg_url, db=db, auth=auth_user_1, include_docs=True)
     user_2_docs = sg_client.get_all_docs(url=sg_url, db=db, auth=auth_user_2, include_docs=True)
+    wildcard_user_docs = sg_client.get_all_docs(url=sg_url, db=db, auth=auth_wildcard_user, include_docs=True)
 
     user_1_docs_ids = [doc["id"] for doc in user_1_docs["rows"]]
     user_2_docs_ids = [doc["id"] for doc in user_2_docs["rows"]]
+    wildcard_user_docs_ids = [doc["id"] for doc in wildcard_user_docs["rows"]]
     shared_found_user_1 = False
     shared_found_user_2 = False
 
-    # 4. Check that the users can only see the documents in their channel
+    # 4. Check that the users can only see the documents in their channels
     for doc in user_1_docs_ids:
         if user_2_doc_prefix in doc:
             pytest.fail("A document is available in a channel that it was not assigned to. Document prefix: " + user_2_doc_prefix + ". The document: " + doc)
         if shared_doc_prefix in doc:
             shared_found_user_1 = True
+        if doc not in wildcard_user_docs_ids:
+            pytest.fail("The document " + doc + " was not accessiable even though the user is in the wildcard channel")
     for doc in user_2_docs_ids:
         if user_1_doc_prefix in doc:
             pytest.fail("A document is available in a channel that it was not assigned to. Document prefix: " + user_1_doc_prefix + ". The document: " + doc)
         if shared_doc_prefix in doc:
             shared_found_user_2 = True
+        if doc not in wildcard_user_docs_ids:
+            pytest.fail("The document " + doc + " was not accessiable even though the user is in the wildcard channel")
 
-    # 5. Check that the users see the shared document in the channel
-    assert shared_found_user_1 and shared_found_user_2
+    # 5. Check that the users see the shared document in their channels
+    assert (shared_found_user_1 and shared_found_user_2), "The shared document was not found for one of the users. user1: " + shared_found_user_1 + " user2: " + shared_found_user_2
+    assert shared_doc_prefix and wildcard_user_docs_ids, "The shared document was not accessiable VIA the wildcard channel"
 
     # 6. Check that _bulk_get cannot get documents that are not in the user's channel
     with pytest.raises(RestError) as e:  # HTTPError doesn't work, for some  reason, but would be preferable

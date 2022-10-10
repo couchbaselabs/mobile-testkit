@@ -1560,7 +1560,7 @@ class MobileRestClient:
         resp.raise_for_status()
         return resp.json()
 
-    def get_bulk_docs(self, url, db, doc_ids, auth=None, validate=True, rev_history="false"):
+    def get_bulk_docs(self, url, db, doc_ids, auth=None, validate=True, rev_history="false", scope=None, collection=None):
         """
         Keyword that issues POST _bulk_get docs with the specified 'docs' array.
         docs need to be in the following format:
@@ -1580,13 +1580,16 @@ class MobileRestClient:
         doc_ids_formatted = [{"id": doc_id} for doc_id in doc_ids]
         request_body = {"docs": doc_ids_formatted}
         auth_type, auth = get_auth_type(auth)
+        keyspace = db
+        if scope is not None:
+            keyspace = db + "." + scope + "." + collection
 
         if auth_type == AuthType.session:
-            resp = self._session.post("{}/{}/_bulk_get?revs={}".format(url, db, rev_history), data=json.dumps(request_body), cookies=dict(SyncGatewaySession=auth[1]))
+            resp = self._session.post("{}/{}/_bulk_get?revs={}".format(url, keyspace, rev_history), data=json.dumps(request_body), cookies=dict(SyncGatewaySession=auth[1]))
         elif auth_type == AuthType.http_basic:
-            resp = self._session.post("{}/{}/_bulk_get?revs={}".format(url, db, rev_history), data=json.dumps(request_body), auth=auth)
+            resp = self._session.post("{}/{}/_bulk_get?revs={}".format(url, keyspace, rev_history), data=json.dumps(request_body), auth=auth)
         else:
-            resp = self._session.post("{}/{}/_bulk_get?revs={}".format(url, db, rev_history), data=json.dumps(request_body))
+            resp = self._session.post("{}/{}/_bulk_get?revs={}".format(url, keyspace, rev_history), data=json.dumps(request_body))
 
         log_r(resp)
         resp.raise_for_status()
