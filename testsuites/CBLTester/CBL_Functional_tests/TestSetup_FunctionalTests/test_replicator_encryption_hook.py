@@ -327,7 +327,7 @@ def test_delta_sync_with_encryption(params_from_base_test_setup, num_of_non_encr
     dictionary = Dictionary(base_url)
     for i in range(num_of_encryptable_docs):
         doc_id = "doc_encrypt_{}".format(i)
-        init_doc_body = document.create_doc(doc_id=doc_id, content="doc {} with encryptable property".format(i), channels=channels, cbl=True)
+        init_doc_body = document.create_doc(doc_id=doc_id, content="doc {} with encryptable property".format(i), channels=channels, non_sgw=True)
         mutable_dict = dictionary.toMutableDictionary(init_doc_body)
         encrypted_value = encryptable.create("UInt", 4294967295 + i)
         dictionary.setEncryptable(mutable_dict, "encrypted_field_UInt", encrypted_value)
