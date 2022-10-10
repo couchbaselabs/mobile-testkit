@@ -535,10 +535,10 @@ def params_from_base_suite_setup(request):
     # clean up firewall rules if any ports blocked for server ssl testing
     clear_firewall_rules(cluster_config)
     # Stop all sync_gateway and sg_accels as test finished
-    #c = cluster.Cluster(cluster_config)
+    c = cluster.Cluster(cluster_config)
 
     # Comment this out to use skip-provisions
-    #c.stop_sg_and_accel()
+    c.stop_sg_and_accel()
 
     # Delete png files under resources/data
     clear_resources_pngs()
