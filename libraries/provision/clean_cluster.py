@@ -3,7 +3,6 @@ import os
 from libraries.provision.ansible_runner import AnsibleRunner
 from keywords.exceptions import ProvisioningError
 from keywords.utils import log_info
-import libraries.provision.provision_cluster
 
 
 def clean_cluster(cluster_config, skip_couchbase_provision=False, server_platform="centos"):
