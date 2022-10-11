@@ -574,3 +574,13 @@ class Admin:
                 return False
             else:
                 raise Exception("Could not determine if the user exists due to the following error: " + str(e)) from e
+
+    def get_bucket_db(self, bucket):
+        dbs = self.get_dbs()
+        if not dbs:
+            return None
+        for db in dbs:
+            dbconfig = self.get_db_config(db)
+            if dbconfig["bucket"] == bucket:
+                return db
+        return None
