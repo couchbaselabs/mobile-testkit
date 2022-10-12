@@ -583,3 +583,13 @@ class Admin:
             if db_info["state"] == "Online":
                 return
         raise ValueError("The database " + db + " was not online within " + str(timeout))
+
+    def get_bucket_db(self, bucket):
+        dbs = self.get_dbs()
+        if not dbs:
+            return None
+        for db in dbs:
+            dbconfig = self.get_db_config(db)
+            if dbconfig["bucket"] == bucket:
+                return db
+        return None
