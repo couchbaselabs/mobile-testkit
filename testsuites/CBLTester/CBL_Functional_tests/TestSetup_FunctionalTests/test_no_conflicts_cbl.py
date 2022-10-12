@@ -38,7 +38,7 @@ def test_no_conflicts_enabled(params_from_base_test_setup):
         6. Create conflict on SG
         7. Verify conflict creation fails and throws error
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_mode = params_from_base_test_setup["mode"]
@@ -107,7 +107,7 @@ def test_no_conflicts_enabled_with_revs_limit(params_from_base_test_setup, sg_co
         5. Update docs in CBL again few more times which can cross the revs_limit
         6. Check the revision list for the doc
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     mode = params_from_base_test_setup["mode"]
@@ -217,7 +217,7 @@ def test_no_conflicts_update_with_revs_limit(params_from_base_test_setup, sg_con
         8. Verify revs limit is maintained with new modified revs_limit
 
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     mode = params_from_base_test_setup["mode"]
@@ -340,7 +340,7 @@ def test_migrate_conflicts_to_noConflicts_CBL(params_from_base_test_setup, sg_co
         10. Create conflict on SG
         11. Verify conflicts cannot be created in SG
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     mode = params_from_base_test_setup["mode"]
@@ -451,7 +451,7 @@ def test_cbl_no_conflicts_sgAccel_added(params_from_base_test_setup, sg_conf_nam
         7. Create conflict and verify conflicts are not allowed after sg accel is added
     """
     # source_db = None
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     mode = params_from_base_test_setup["mode"]
@@ -562,7 +562,7 @@ def test_sg_CBL_updates_concurrently(params_from_base_test_setup, sg_conf_name, 
         5. update docs in SG in one thread, update docs in CBL in another thread -> will create CBL DB out of sync
         6. Verify it throws 409 with no-conflicts mode or else it should create no-conflicts successfully.
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_mode = params_from_base_test_setup["mode"]
@@ -717,7 +717,7 @@ def test_multiple_cbls_updates_concurrently_with_push(params_from_base_test_setu
         11. Verify no conflicts allowed when trying to create conflicts
     """
 
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_mode = params_from_base_test_setup["mode"]
@@ -855,7 +855,7 @@ def test_multiple_cbls_updates_concurrently_with_pull(params_from_base_test_setu
         8. Add verification of sync-gateway
     """
 
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_mode = params_from_base_test_setup["mode"]
@@ -993,7 +993,7 @@ def test_sg_cbl_updates_concurrently_with_push_pull(params_from_base_test_setup,
         7. Verify docs got replicated to sg with CBL updates
         8. Add verification of sync-gateway
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_mode = params_from_base_test_setup["mode"]
@@ -1089,7 +1089,7 @@ def test_CBL_push_without_pull(params_from_base_test_setup, sg_conf_name, num_of
         6. Verify conflicts not created with no-conflicts mode/ creates conflicts with no-conflicts disabled
     """
 
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_mode = params_from_base_test_setup["mode"]

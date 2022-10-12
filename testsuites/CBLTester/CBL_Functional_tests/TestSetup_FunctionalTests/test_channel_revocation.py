@@ -58,7 +58,7 @@ def test_user_removed_from_channel_basic(params_from_base_test_setup, replicator
             pull/push-pull assertion: doc counts: CBL=24, 10 docs auto purged on CBL
             push: doc counts: CBL=34, auto-purge not impact for push only
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     liteserv_version = params_from_base_test_setup["liteserv_version"]
     cluster_config = params_from_base_test_setup["cluster_config"]
@@ -164,7 +164,7 @@ def test_user_removed_from_channel_with_doc_mutation(params_from_base_test_setup
         8. assertion based on replicator type
         9. create new docs on revoked channel, assertion: docs are not replicated to SGW
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     liteserv_version = params_from_base_test_setup["liteserv_version"]
     cluster_config = params_from_base_test_setup["cluster_config"]
@@ -300,7 +300,7 @@ def test_user_removed_from_role(params_from_base_test_setup, replicator_directio
         8. on SGW remove the user from role2
         9. assertion based on replicator type
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     liteserv_version = params_from_base_test_setup["liteserv_version"]
     cluster_config = params_from_base_test_setup["cluster_config"]
@@ -462,7 +462,7 @@ def test_users_role_revoked(params_from_base_test_setup, replicator_type):
         8. on SGW role1 lost access to channel B as well
         9. assertion based on replicator type
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     liteserv_version = params_from_base_test_setup["liteserv_version"]
     cluster_config = params_from_base_test_setup["cluster_config"]
@@ -619,7 +619,7 @@ def test_auto_purge_config_settings(params_from_base_test_setup, auto_purge_flag
         4. on SGW remove the user from channel, and assert docs auto purge behavior
         5. reset disable_auto_purge to true, verify auto-purged will not be pulled down to CBL with reset checkpoint to true
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     liteserv_version = params_from_base_test_setup["liteserv_version"]
     cluster_config = params_from_base_test_setup["cluster_config"]
@@ -737,7 +737,7 @@ def test_auto_purge_config_with_removal_type(params_from_base_test_setup, remova
         5. verify doc auto purged on CBL
         6. disable auto_purge setting, verify auto-purged will not be pulled down to CBL even after reset checkpoint
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     liteserv_version = params_from_base_test_setup["liteserv_version"]
     cluster_config = params_from_base_test_setup["cluster_config"]
@@ -844,7 +844,7 @@ def test_auto_purge_notification(params_from_base_test_setup, auto_purge_flag):
         4. user revoked access to channel A
         5. Verifying the delete event in event captures
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     liteserv_version = params_from_base_test_setup["liteserv_version"]
     cluster_config = params_from_base_test_setup["cluster_config"]
@@ -947,7 +947,7 @@ def test_auto_purge_with_pull_filtering(params_from_base_test_setup, auto_purge)
             push: doc counts: CBL=34, auto-purge not impact for push only
         10. on push-pull, create a new doc, assertion: doc counts: CBL=25 10 updated docs rejected by SGW
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     liteserv_version = params_from_base_test_setup["liteserv_version"]
     cluster_config = params_from_base_test_setup["cluster_config"]
@@ -1060,7 +1060,7 @@ def test_user_reassigned_to_channel_pull(params_from_base_test_setup, replicator
         7. reassign user access to channel A
         8. assertion channel A docs got pulled back
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     liteserv_version = params_from_base_test_setup["liteserv_version"]
     cluster_config = params_from_base_test_setup["cluster_config"]
@@ -1168,7 +1168,7 @@ def test_user_reassigned_to_channel_push(params_from_base_test_setup, with_doc_u
         7. reassign user access to channel A
         8. verify replication results after reassign
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     liteserv_version = params_from_base_test_setup["liteserv_version"]
     cluster_config = params_from_base_test_setup["cluster_config"]
@@ -1288,7 +1288,7 @@ def test_tombstoned_doc_auto_purge(params_from_base_test_setup):
         6. on CBL, start a new pull replication
         7. assertion based on replicator type
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     liteserv_version = params_from_base_test_setup["liteserv_version"]
     cluster_config = params_from_base_test_setup["cluster_config"]
@@ -1409,7 +1409,7 @@ def test_resurrected_doc_auto_purge(params_from_base_test_setup, resurrect_keep_
         8. on CBL, start replication with pull/push/push-pull replicator type
         9. assertion based on replicator type
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     cluster_topology = params_from_base_test_setup['cluster_topology']
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     liteserv_version = params_from_base_test_setup["liteserv_version"]
@@ -1549,7 +1549,7 @@ def test_role_ressignment_end_to_end(params_from_base_test_setup):
         5. create some docs on channel B
         6. user1 is revoked role2, verify docs purged
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     liteserv_version = params_from_base_test_setup["liteserv_version"]
     cluster_config = params_from_base_test_setup["cluster_config"]

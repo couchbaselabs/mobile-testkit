@@ -54,7 +54,7 @@ def test_transactions_insert_replace_remove_rollback(params_from_base_test_setup
     cbs_one_url = cluster_servers[0]
     cb_server = couchbaseserver.CouchbaseServer(cbs_one_url)
 
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     username = "autotest"
     password = "password"
     channels = ["TRANSACTIONS"]
@@ -189,7 +189,7 @@ def test_transactions_with_latest_updates(params_from_base_test_setup):
 
     if server_version < "6.6.1":
         pytest.skip("Cannot support server below 6.6.1 ")
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     username = "autotest"
     password = "password"
     channels = ["TRANSACTIONS"]
@@ -278,7 +278,7 @@ def test_transactions_with_tombstoned_docs(params_from_base_test_setup):
 
     if server_version < "6.6.1":
         pytest.skip("Cannot support server below 6.6.1 ")
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     username = "autotest"
     password = "password"
     channels = ["TRANSACTIONS"]
@@ -372,7 +372,7 @@ def test_transactions_with_simultaneous_doc_updates_docresurrection(params_from_
 
     if server_version < "6.6.1":
         pytest.skip("Cannot support server below 6.6.1 ")
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     username = "autotest"
     password = "password"
     channels = ["TRANSACTIONS"]

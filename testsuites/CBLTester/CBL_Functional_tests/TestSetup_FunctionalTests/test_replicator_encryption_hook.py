@@ -40,7 +40,7 @@ def test_basic_replication_with_encryption(params_from_base_test_setup):
     if "c-" not in liteserv_platform.lower():
         pytest.skip('This test cannot run other than C.')
 
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_blip_url = params_from_base_test_setup["target_url"]
@@ -182,7 +182,7 @@ def test_replication_with_error(params_from_base_test_setup):
     if "c-" not in liteserv_platform.lower():
         pytest.skip('This test cannot run in other than C CBLs.')
 
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_blip_url = params_from_base_test_setup["target_url"]
@@ -285,7 +285,7 @@ def test_delta_sync_with_encryption(params_from_base_test_setup, num_of_non_encr
 
     if sync_gateway_version < "2.5.0":
         pytest.skip('This test cannnot run with sg version below 2.5')
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     cluster_config = params_from_base_test_setup["cluster_config"]
@@ -404,7 +404,7 @@ def test_encryption_with_two_dbs(params_from_base_test_setup):
     if "c-" not in liteserv_platform.lower():
         pytest.skip('This test cannot run other than C.')
 
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_blip_url = params_from_base_test_setup["target_url"]
@@ -517,7 +517,7 @@ def test_replication_complex_doc_encryption(params_from_base_test_setup):
     if "c-" not in liteserv_platform.lower():
         pytest.skip('This test cannot run other than C.')
 
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_blip_url = params_from_base_test_setup["target_url"]

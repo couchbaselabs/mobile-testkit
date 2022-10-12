@@ -38,7 +38,7 @@ def test_doc_update_replication_with_blob_no_touch(params_from_base_test_setup):
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
 
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     channels = ["ABC"]
     username = "autotest"
     password = "password"
@@ -141,7 +141,7 @@ def test_blob_contructor_replication(params_from_base_test_setup, blob_data_type
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
 
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     num_of_docs = 10
     channels = ["ABC"]
     username = "autotest"
@@ -246,7 +246,7 @@ def test_blob_replication_with_update(params_from_base_test_setup):
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
 
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     num_of_docs = 1
     channels = ["ABC"]
     username = "autotest"

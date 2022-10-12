@@ -55,7 +55,7 @@ def test_replication_configuration_valid_values(params_from_base_test_setup, num
         3. Start replication with push and pull
         4. Verify replication is successful and verify docs exist
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     cluster_config = params_from_base_test_setup["cluster_config"]
@@ -150,7 +150,7 @@ def test_replication_configuration_with_pull_replication(params_from_base_test_s
         5. Verify all docs replicated and pulled to CBL.
 
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
 
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
@@ -234,7 +234,7 @@ def test_replication_configuration_with_push_replication(params_from_base_test_s
         5. Verify sg docs not replicated to CBL
 
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
 
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
@@ -308,7 +308,7 @@ def test_replication_push_replication_without_authentication(params_from_base_te
         4. Verify docs are not replicated without authentication
 
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
 
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
@@ -377,7 +377,7 @@ def test_replication_push_replication_invalid_authentication(params_from_base_te
         4. Verify replication configuration fails.
 
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
 
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_blip_url = params_from_base_test_setup["target_url"]
@@ -445,7 +445,7 @@ def test_replication_configuration_with_filtered_doc_ids(params_from_base_test_s
         7. Verify CBL only has the doc ids set in the replication from SG
         NOTE: Only works with one shot replication for filtered doc ids
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
 
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
@@ -547,7 +547,7 @@ def test_replication_configuration_with_headers(params_from_base_test_setup):
         4. Verify CBL docs with doc ids sent in configuration got replicated to SG
 
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     num_of_docs = 10
 
     sg_url = params_from_base_test_setup["sg_url"]
@@ -621,7 +621,7 @@ def test_CBL_tombstone_doc(params_from_base_test_setup, num_of_docs, x509_cert_a
         5. Verify that tombstone doc is deleted in CBL too
 
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     cluster_config = params_from_base_test_setup["cluster_config"]
@@ -723,7 +723,7 @@ def test_CBL_for_purged_doc(params_from_base_test_setup, sg_conf_name, delete_do
         6. Verify that purged doc or expired doc is not deleted in CBL
 
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_mode = params_from_base_test_setup["mode"]
@@ -811,7 +811,7 @@ def test_replication_purge_in_CBL(params_from_base_test_setup, sg_conf_name, del
         6. Verify docs did not get removed in SG
 
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_mode = params_from_base_test_setup["mode"]
@@ -907,7 +907,7 @@ def test_replication_delete_in_CBL(params_from_base_test_setup, sg_conf_name):
         6. Verify deleted doc in CBL got removed in SG too
 
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_mode = params_from_base_test_setup["mode"]
@@ -992,7 +992,7 @@ def test_CBL_push_pull_with_sgAccel_down(params_from_base_test_setup, sg_conf_na
         7. update docs in CBL
         8. Verify CBL can update docs successfully
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_mode = params_from_base_test_setup["mode"]
@@ -1077,7 +1077,7 @@ def CBL_offline_test(params_from_base_test_setup, sg_conf_name, num_of_docs):
         7. push replication and do pull replication
         8. Verify conflicts resolved on CBL.
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     cbl_db_name = "cbl_db"
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
@@ -1179,7 +1179,7 @@ def test_initial_pull_replication_background_apprun(params_from_base_test_setup,
     4. Verify if all of the docs got pulled and replication completed when app goes background
     """
 
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
@@ -1273,7 +1273,7 @@ def test_push_replication_with_backgroundApp(params_from_base_test_setup, num_do
     4. Verify if all of the docs get pushed and replication continous when app goes background
     """
 
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
@@ -1354,7 +1354,7 @@ def test_replication_wrong_blip(params_from_base_test_setup):
         2. Push replication to SG with wrong blip
         3. Verify it fails .
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_blip_url = params_from_base_test_setup["target_url"]
@@ -1421,7 +1421,7 @@ def test_default_conflict_scenario_delete_wins(params_from_base_test_setup, dele
         5. Start the replication with same configuration as step 2
         6. Verify delete wins
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_config = params_from_base_test_setup["sg_config"]
@@ -1545,7 +1545,7 @@ def test_default_conflict_scenario_highRevGeneration_wins(params_from_base_test_
         10. Wait until replication is done
         11. As sync-gateway revision id is higher, updates from sync-gateway wins
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_config = params_from_base_test_setup["sg_config"]
@@ -1658,7 +1658,7 @@ def test_default_conflict_scenario_highRevID_wins(params_from_base_test_setup, h
         6. Wait until replication done
         7. Verfiy doc with higher rev id is updated in CBL.
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_config = params_from_base_test_setup["sg_config"]
@@ -1748,7 +1748,7 @@ def test_default_conflict_with_two_conflictsAndTomstone(params_from_base_test_se
         11. Verify docs in cbl got replicated to sync-gateway with deleted doc removed from sg.
 
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_config = params_from_base_test_setup["sg_config"]
@@ -1861,7 +1861,7 @@ def test_default_conflict_with_oneTombstone_conflict(params_from_base_test_setup
         7. Wait until replication is idle and stop the replicator
         8. Verify updates from cbl got replicated to sg.
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_config = params_from_base_test_setup["sg_config"]
@@ -1944,7 +1944,7 @@ def test_default_conflict_with_three_conflicts(params_from_base_test_setup):
         9. Verify docs with latest update from cbl got updated to sg.
 
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_config = params_from_base_test_setup["sg_config"]
@@ -2028,7 +2028,7 @@ def test_default_conflict_withConflicts_and_sgOffline(params_from_base_test_setu
         9. Verify docs deleted in sg.
 
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_config = params_from_base_test_setup["sg_config"]
@@ -2143,7 +2143,7 @@ def test_default_conflict_withConflicts_withChannels(params_from_base_test_setup
         6. update docs in cbl.
         7. Verify docs with updates from cbl got replicated to sg
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_config = params_from_base_test_setup["sg_config"]
@@ -2253,7 +2253,7 @@ def test_CBL_push_pull_with_sg_down(params_from_base_test_setup):
         6. do replication with pull in other thread to cbl
         7. Verify all docs replicated successfully to cbl
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     base_url = params_from_base_test_setup["base_url"]
@@ -2328,7 +2328,7 @@ def test_replication_with_3Channels(params_from_base_test_setup, setup_customize
         4. verify in CBL , docs got replicated to each DB appropirately
 
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     cluster_config = params_from_base_test_setup["cluster_config"]
@@ -2432,7 +2432,7 @@ def test_replication_with_privatePublicChannels(params_from_base_test_setup, set
     6. Verify updated docs got replicated to sg
     """
 
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_mode = params_from_base_test_setup["mode"]
@@ -2854,7 +2854,7 @@ def test_replication_multipleChannels_withFilteredDocIds(params_from_base_test_s
         4. verify in CBL , filtered docs from 2 channels got replicated
         NOTE: Only works with one shot replication for filtered doc ids
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
 
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
@@ -2949,7 +2949,7 @@ def test_resetCheckpointWithPurge(params_from_base_test_setup, replication_type,
         restart the replication
         Verify all purged docs got back in CBL
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
 
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
@@ -3047,7 +3047,7 @@ def test_resetCheckpointFailure(params_from_base_test_setup):
         call reset api
         verify it throws an error that checkpoint reset is called without stopping replicator.
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_blip_url = params_from_base_test_setup["target_url"]
     base_url = params_from_base_test_setup["base_url"]
@@ -3124,7 +3124,7 @@ def test_resetCheckpointWithUpdate(params_from_base_test_setup, replication_type
         Verify all purged docs got back in CBL
     """
 
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_blip_url = params_from_base_test_setup["target_url"]
     base_url = params_from_base_test_setup["base_url"]
@@ -3206,7 +3206,7 @@ def test_CBL_SG_replication_with_rev_messages(params_from_base_test_setup, sg_co
         9. Verify all docs from SGW replicated successfully.
 
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_mode = params_from_base_test_setup["mode"]
@@ -3302,7 +3302,7 @@ def test_replication_push_replication_guest_enabled(params_from_base_test_setup,
         4. Also verify user with valid credentials should be able to login successfully
 
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_blip_url = params_from_base_test_setup["target_url"]
@@ -3394,7 +3394,7 @@ def test_doc_removal_from_channel(params_from_base_test_setup):
         7. Verify user can only access doc A, but not doc B
 
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_blip_url = params_from_base_test_setup["target_url"]
@@ -3490,7 +3490,7 @@ def test_doc_removal_with_multipleChannels(params_from_base_test_setup, setup_cu
             UserC cannot access docC
     """
 
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_blip_url = params_from_base_test_setup["target_url"]
@@ -3651,7 +3651,7 @@ def test_roles_replication(params_from_base_test_setup):
         10.Verify all new docs got replicated from both channels
 
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_blip_url = params_from_base_test_setup["target_url"]
     base_url = params_from_base_test_setup["base_url"]
@@ -3744,7 +3744,7 @@ def test_channel_update_replication(params_from_base_test_setup):
         8. CBL  should not get any new docs which created at step #6.
         Have the coverage from CBL.Verify the docs from CBL side according to the new role.
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_blip_url = params_from_base_test_setup["target_url"]
     base_url = params_from_base_test_setup["base_url"]
@@ -3833,7 +3833,7 @@ def test_replication_behavior_with_channelRole_modification(params_from_base_tes
         8. Continue to pull replication from SGW
         9. CBL should not get any new docs which created at step #6.
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_blip_url = params_from_base_test_setup["target_url"]
     base_url = params_from_base_test_setup["base_url"]
@@ -3944,7 +3944,7 @@ def test_replication_pull_from_empty_database(params_from_base_test_setup, attac
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
 
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     num_sg_docs = 50
     channels = ["ABC"]
     username = "autotest"
@@ -4048,7 +4048,7 @@ def test_replication_with_custom_retries(params_from_base_test_setup, num_of_doc
         4. Verify replicator is retrying
         5. Start the SG and verify replicator connect to SG
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     cluster_config = params_from_base_test_setup["cluster_config"]
@@ -4139,7 +4139,7 @@ def test_replication_with_custom_timeout(params_from_base_test_setup, num_of_doc
         11. Verify replicator docs on SG
 
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     cluster_config = params_from_base_test_setup["cluster_config"]
@@ -4222,7 +4222,7 @@ def test_replication_reset_retires(params_from_base_test_setup, num_of_docs, con
         11. Verify replicator docs on SG
 
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     cluster_config = params_from_base_test_setup["cluster_config"]

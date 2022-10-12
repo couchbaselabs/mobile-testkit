@@ -26,7 +26,7 @@ def test_replication_push_filtering(params_from_base_test_setup, num_of_docs):
         true.
         4. Verify SG has new fields added only when "new_field_1" is true
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_blip_url = params_from_base_test_setup["target_url"]
@@ -143,7 +143,7 @@ def test_replication_pull_filtering(params_from_base_test_setup, num_of_docs):
         true.
         4. Verify SG has new fields added only when "new_field_1" is true
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     cluster_config = params_from_base_test_setup["cluster_config"]
@@ -250,7 +250,7 @@ def test_replication_filter_deleted_document(params_from_base_test_setup, num_of
         4. Verify that docs deleted in SG are still available in CBL and vice versa, as deleted filter would have
         rejected those changes
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     cluster_config = params_from_base_test_setup["cluster_config"]
@@ -354,7 +354,7 @@ def test_replication_filter_access_revoke_document(params_from_base_test_setup, 
         4. Verify that docs with channel [] in SG are still available in CBL with their original channel value, as
         access revoke filter would have rejected those changes
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     cluster_config = params_from_base_test_setup["cluster_config"]
@@ -461,7 +461,7 @@ def test_filter_retrieval_with_replication_restart(params_from_base_test_setup, 
         still has same filter callbacks.
         4. Verify that the filter is still applicable and only allowing replication for "new_field_1" true values
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     cluster_config = params_from_base_test_setup["cluster_config"]

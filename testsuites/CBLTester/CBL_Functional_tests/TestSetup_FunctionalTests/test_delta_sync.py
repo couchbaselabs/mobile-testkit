@@ -32,7 +32,7 @@ def test_delta_sync_replication(params_from_base_test_setup, num_of_docs, replic
     4. Do push/pull replication
     5. Verify delta sync stats shows bandwidth saving, replication count, number of docs updated using delta sync
     '''
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     cluster_config = params_from_base_test_setup["cluster_config"]
@@ -178,7 +178,7 @@ def test_delta_sync_enabled_disabled(params_from_base_test_setup, num_of_docs, r
     11. Get stats pub_net_bytes_send
     12 Verify pub_net_bytes_send stats go up high when compared with step #6 as it resplicates full doc
     '''
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     cluster_config = params_from_base_test_setup["cluster_config"]
@@ -304,7 +304,7 @@ def test_delta_sync_within_expiry(params_from_base_test_setup, num_of_docs, repl
     9. replicate docs using pull replication
     10 get pub_net_stats_send from expvar api
     '''
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     cluster_config = params_from_base_test_setup["cluster_config"]
@@ -406,7 +406,7 @@ def test_delta_sync_utf8_strings(params_from_base_test_setup, num_of_docs, repli
     6. get pub_net_stats_send from expvar api
     7. Verify that docs replicated successfully and only delta is replicated
     '''
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     cluster_config = params_from_base_test_setup["cluster_config"]
@@ -492,7 +492,7 @@ def test_delta_sync_nested_doc(params_from_base_test_setup, num_of_docs, replica
     4. Do push/pull replication
     5. Verify delta sync stats shows bandwidth saving, replication count, number of docs updated using delta sync
     '''
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     cluster_config = params_from_base_test_setup["cluster_config"]
@@ -574,7 +574,7 @@ def test_delta_sync_dbWorker(params_from_base_test_setup):
     5. Verify docs after replication matching in SGW and CBL
     Coverage for GitHub 792: DBWorker crashes in Fleece Encoder (writePointer)
     '''
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     cluster_config = params_from_base_test_setup["cluster_config"]
@@ -656,7 +656,7 @@ def test_delta_sync_larger_than_doc(params_from_base_test_setup, num_of_docs, re
     7. get stats from expvar api
     8. Verify full doc is replicated. Delta size at step 7 shold be same as step 4
     '''
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     cluster_config = params_from_base_test_setup["cluster_config"]
@@ -747,7 +747,7 @@ def test_delta_sync_on_community_edition(params_from_base_test_setup, num_of_doc
     4. Do push/pull replication
     5. Verify delta sync stats are not available for community edition
     '''
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     cluster_config = params_from_base_test_setup["cluster_config"]
@@ -889,7 +889,7 @@ def test_delta_sync_with_no_deltas(params_from_base_test_setup, doc_creation_sou
     5. update same doc in SGW/cbl which still has rev-1
     6. Verify the body of the doc matches with sgw and cbl
     '''
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     cluster_config = params_from_base_test_setup["cluster_config"]

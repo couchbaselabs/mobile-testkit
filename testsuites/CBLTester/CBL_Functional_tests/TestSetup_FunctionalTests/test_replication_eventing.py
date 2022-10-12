@@ -31,7 +31,7 @@ def test_replication_eventing_status(params_from_base_test_setup, num_of_docs):
        iv. Assert there is no error in events
     """
 
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     cluster_config = params_from_base_test_setup["cluster_config"]
@@ -125,7 +125,7 @@ def test_push_replication_error_event(params_from_base_test_setup, num_of_docs):
     3. start push one-shot replication and start replication event listener
     4. Check the error is thrown in replication event changes
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     cluster_config = params_from_base_test_setup["cluster_config"]
@@ -221,7 +221,7 @@ def test_push_replication_error_event(params_from_base_test_setup, num_of_docs):
 #     3. start push/pull one-shot replication and start replication event listener
 #     4. Check the error is thrown in replication event changes
 #     """
-#     sg_db = "db"
+#     sg_db = params_from_base_test_setup["sg_db"]
 #     sg_url = params_from_base_test_setup["sg_url"]
 #     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
 #     cluster_config = params_from_base_test_setup["cluster_config"]
@@ -301,7 +301,7 @@ def test_replication_access_revoke_event(params_from_base_test_setup, num_of_doc
     4. Replicating access revoked and capturing events through listener
     5. Verifying the access revoke in event captures
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     cluster_config = params_from_base_test_setup["cluster_config"]
@@ -412,7 +412,7 @@ def test_replication_delete_event(params_from_base_test_setup, num_of_docs):
     4. Replicating with delete filter. Filter will prevent deleted document to replicate on other end
     5. Verifying the access revoke in event captures
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     cluster_config = params_from_base_test_setup["cluster_config"]
@@ -524,7 +524,7 @@ def test_push_replication_for_20mb_doc(params_from_base_test_setup, attachment_g
     2. start push one-shot replication and start replication event listener
     3. Check the error is thrown in replication event changes as CBS can't have doc greater than 20mb
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_blip_url = params_from_base_test_setup["target_url"]

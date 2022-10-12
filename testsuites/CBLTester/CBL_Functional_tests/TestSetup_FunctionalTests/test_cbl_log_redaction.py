@@ -28,7 +28,7 @@ def test_mask_password_in_logs(params_from_base_test_setup, password):
         3. Replicate docs to SG
         4. Verify password is masked in cbl logs
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
 
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_blip_url = params_from_base_test_setup["target_url"]
@@ -89,7 +89,7 @@ def test_verify_invalid_mask_password_in_logs(params_from_base_test_setup, inval
         3. Authenticate in CBL with invalid password
         4. Verify invalid password is masked in cbl logs
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
 
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_blip_url = params_from_base_test_setup["target_url"]

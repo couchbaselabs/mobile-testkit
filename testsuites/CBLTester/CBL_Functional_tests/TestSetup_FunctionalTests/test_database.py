@@ -387,7 +387,7 @@ def test_db_close_on_active_replicators(params_from_base_test_setup):
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_config = params_from_base_test_setup["sg_config"]
     base_url = params_from_base_test_setup["base_url"]
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_blip_url = params_from_base_test_setup["target_url"]
     need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
@@ -478,7 +478,7 @@ def test_db_close_on_active_replicator_and_live_query(params_from_base_test_setu
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_config = params_from_base_test_setup["sg_config"]
     base_url = params_from_base_test_setup["base_url"]
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_blip_url = params_from_base_test_setup["target_url"]
     need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
@@ -563,7 +563,7 @@ def test_db_delete_on_active_replicators(params_from_base_test_setup):
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_config = params_from_base_test_setup["sg_config"]
     base_url = params_from_base_test_setup["base_url"]
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_blip_url = params_from_base_test_setup["target_url"]
     need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
@@ -650,7 +650,7 @@ def test_db_delete_on_active_replicator_and_live_query(params_from_base_test_set
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_config = params_from_base_test_setup["sg_config"]
     base_url = params_from_base_test_setup["base_url"]
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_blip_url = params_from_base_test_setup["target_url"]
     need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]

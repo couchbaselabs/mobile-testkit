@@ -29,7 +29,7 @@ def test_local_wins_custom_conflicts(params_from_base_test_setup, replicator_typ
     4. Verifies that CBL has retains its changes. For push and pull replication SG changes should be override with
     that of CBL
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_config = params_from_base_test_setup["sg_config"]
@@ -156,7 +156,7 @@ def test_remote_wins_custom_conflicts(params_from_base_test_setup, replicator_ty
     3. Start the replication with remote_win CCR algorithm
     4. Verifies that CBL has synced SG changes. For push and pull replication SG changes would override changes of CBL
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_config = params_from_base_test_setup["sg_config"]
@@ -256,7 +256,7 @@ def test_null_wins_custom_conflicts(params_from_base_test_setup, replicator_type
     3. Start the replication with NULL CCR algorithm
     4. Verifies that docs have been deleted. For push and pull replication docs will be delted at SG too.
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_config = params_from_base_test_setup["sg_config"]
@@ -362,7 +362,7 @@ def test_merge_wins_custom_conflicts(params_from_base_test_setup, replicator_typ
     4. Verifies that CBL has retains its changes and have added all new keys to local doc from remote doc. For push and
     pull replication SG changes should be override with that of CBL
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_config = params_from_base_test_setup["sg_config"]
@@ -486,7 +486,7 @@ def test_incorrect_doc_id_custom_conflicts_resolution(params_from_base_test_setu
     4. Verifies that CBL has docs with doc id corrected and have an additional field called new_value with value as
     couchbae. For push and pull replication SG changes should be override with that of CBL
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_config = params_from_base_test_setup["sg_config"]
@@ -603,7 +603,7 @@ def test_non_blocking_custom_conflicts_resolution(params_from_base_test_setup, r
     6. verify the cbl doc is successfully resolved
     7. replicate with sgw, verify sgw successfully synced with the cbl doc
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_config = params_from_base_test_setup["sg_config"]
@@ -750,7 +750,7 @@ def test_stop_replicator_before_ccr_completes(params_from_base_test_setup):
     4. Verifies that CBL has retains its changes. For push and pull replication SG changes should be override with
     that of CBL
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_config = params_from_base_test_setup["sg_config"]
@@ -857,7 +857,7 @@ def test_delete_not_wins_custom_conflicts(params_from_base_test_setup, replicato
     4. Verifies that CBL has retains its changes. For push and pull replication SG changes should be override with
     that of CBL
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_config = params_from_base_test_setup["sg_config"]
@@ -968,7 +968,7 @@ def test_exception_thrown_custom_conflicts(params_from_base_test_setup, replicat
     3. Start the replication with exception_thrown CCR algorithm
     4. Verifies that CBL and SG have retain their changes and app is not crashed
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_config = params_from_base_test_setup["sg_config"]

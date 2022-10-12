@@ -35,7 +35,7 @@ def test_delete_docs_with_attachments(params_from_base_test_setup, source, targe
     if sync_gateway_version < "3.0.0":
         pytest.skip('attachment cleanup meta api is enabled and does not work below 3.0 , so skipping the test')
 
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     cluster_config = params_from_base_test_setup["cluster_config"]
@@ -157,7 +157,7 @@ def test_doc_with_many_attachments(params_from_base_test_setup):
     if sync_gateway_version < "3.0.0":
         pytest.skip('attachment cleanup meta api is enabled and does not work below 3.0 , so skipping the test')
 
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     cluster_config = params_from_base_test_setup["cluster_config"]
@@ -311,7 +311,7 @@ def test_restart_sg_creating_attachments(params_from_base_test_setup):
 
     # This test should only run when using xattr
 
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     cluster_config = params_from_base_test_setup["cluster_config"]
@@ -449,7 +449,7 @@ def test_attachment_expire_purged_doc(params_from_base_test_setup, delete_doc_ty
         7. Verify attachments are deleted in couchbase bucket
 
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_mode = params_from_base_test_setup["mode"]

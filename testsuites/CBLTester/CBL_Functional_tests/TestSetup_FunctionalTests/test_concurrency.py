@@ -147,7 +147,7 @@ def test_replication_with_concurrencyControl_sgCBL_sameDocId(params_from_base_te
     5. Save doc1b (success for LastWriteWins, fail for FailOnConflict)
     """
 
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     cluster_config = params_from_base_test_setup["cluster_config"]

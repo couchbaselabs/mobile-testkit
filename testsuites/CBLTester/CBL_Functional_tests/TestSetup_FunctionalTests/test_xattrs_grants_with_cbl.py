@@ -28,7 +28,7 @@ def test_xattrs_grant_automatic_imports(params_from_base_test_setup, x509_cert_a
          5. Perform raw GET to ensure added user xattrs is visbible
          6. Verify doc is accessed by the user who has acess to the channel defined in user xattrs"
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     cluster_config = params_from_base_test_setup["cluster_config"]
@@ -129,7 +129,7 @@ def test_reassigning_channels_using_user_xattrs(params_from_base_test_setup, set
         7. verify user1 cannot access the doc
         cover row #9, #38, #39
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     cluster_config = params_from_base_test_setup["cluster_config"]
@@ -238,7 +238,7 @@ def test_tombstone_docs_via_sdk(params_from_base_test_setup, tombstone_type):
         4. have it expired/ delete via SDK in few mins
         5. Verify docs are not accessed via CBL
     """
-    sg_db = "db"
+    sg_db = params_from_base_test_setup["sg_db"]
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     cluster_config = params_from_base_test_setup["cluster_config"]

@@ -4,6 +4,7 @@ import datetime
 import zipfile
 import os
 import io
+import uuid
 
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop, get_cluster
 from keywords.utils import log_info
@@ -309,7 +310,7 @@ def params_from_base_suite_setup(request):
     base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_travel_sample", mode)
 
-    sg_db = "db"
+    sg_db = "db" + str(uuid.uuid4())[:8]
     suite_cbl_db = None
 
     # use base_(lb_)cc cluster config if mode is "cc" or base_(lb_)di cluster config if mode is "di"
