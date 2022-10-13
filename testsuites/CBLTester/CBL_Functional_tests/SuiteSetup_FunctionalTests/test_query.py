@@ -1616,7 +1616,7 @@ def test_live_query_response_delay_time(params_from_base_suite_setup):
     qy = Query(base_url)
     delay_timer = qy.query_get_live_query_delay_time(cbl_db)
     log_info("delay_timer is counted as {}".format(delay_timer))
-    assert delay_timer < 200, "delay timer cannot be longer than 200 millionsec"
+    assert delay_timer < 300, "delay timer cannot be longer than 300 millionsec"
 
 
 def sdk_connection(cbs_ip, n1ql_query):

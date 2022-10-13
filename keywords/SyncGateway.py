@@ -542,7 +542,7 @@ class SyncGateway(object):
                         bucket_names[0])
                     playbook_vars["password"] = '"password": "password",'
             else:
-                playbook_vars["logging"] = '"log": ["*"],'
+                playbook_vars["logging"] = '"log": [""],'
                 playbook_vars["username"] = '"username": "{}",'.format(
                     bucket_names[0])
                 playbook_vars["password"] = '"password": "password",'
@@ -572,20 +572,6 @@ class SyncGateway(object):
             except KeyError:
                 log_info("revs_limit not found in {}, Ignoring".format(cluster_config))
 
-            if is_cbs_ssl_enabled(cluster_config) and get_sg_version(cluster_config) >= "1.5.0":
-                playbook_vars["server_scheme"] = "couchbases"
-                playbook_vars["server_port"] = 11207
-                block_http_vars = {}
-                port_list = [8091, 8092, 8093, 8094, 8095, 8096, 11210, 11211]
-                for port in port_list:
-                    block_http_vars["port"] = port
-                    status = ansible_runner.run_ansible_playbook(
-                        "block-http-ports.yml",
-                        extra_vars=block_http_vars
-                    )
-                    if status != 0:
-                        raise ProvisioningError("Failed to block port on SGW")
-
             playbook_vars["groupid"] = '"group_id": "{}",'.format(bucket_names[0])
             if is_delta_sync_enabled(cluster_config) and get_sg_version(cluster_config) >= "2.5.0":
                 playbook_vars["delta_sync"] = '"delta_sync": { "enabled": true},'
@@ -601,6 +587,20 @@ class SyncGateway(object):
 
         if is_centralized_persistent_config_disabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
             playbook_vars["disable_persistent_config"] = '"disable_persistent_config": true,'
+
+        if is_cbs_ssl_enabled(cluster_config) and get_sg_version(cluster_config) >= "1.5.0":
+            playbook_vars["server_scheme"] = "couchbases"
+            playbook_vars["server_port"] = 11207
+            block_http_vars = {}
+            port_list = ["8091:8096,11210:11211"]
+            for port in port_list:
+                block_http_vars["port"] = port
+                status = ansible_runner.run_ansible_playbook(
+                    "block-http-ports.yml",
+                    extra_vars=block_http_vars
+                )
+                if status != 0:
+                    raise ProvisioningError("Failed to block port on SGW")
 
         if is_server_tls_skip_verify_enabled(cluster_config) and get_sg_version(cluster_config) >= "3.0.0":
             playbook_vars["server_tls_skip_verify"] = '"server_tls_skip_verify": true,'
