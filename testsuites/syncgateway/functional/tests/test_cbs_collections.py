@@ -197,7 +197,7 @@ def test_collection_channels(scopes_collections_tests_fixture):
     # 2. Upload the documents to the collection
     sg_client.add_docs(sg_url, db, 3, user_1_doc_prefix, auth=auth_user_1, channels=channels_user_1, scope=scope, collection=collection)
     sg_client.add_docs(sg_url, db, 3, user_2_doc_prefix, auth=auth_user_2, channels=channels_user_2, scope=scope, collection=collection)
-    sg_client.add_docs(sg_admin_url, db, 1, shared_doc_prefix, auth=auth_session, channels=["!"], scope=scope, collection=collection)
+    shared_doc = sg_client.add_docs(sg_admin_url, db, 1, shared_doc_prefix, auth=auth_session, channels=["!"], scope=scope, collection=collection)
 
     # 3. Get all the documents using _all_docs
     user_1_docs = sg_client.get_all_docs(url=sg_url, db=db, auth=auth_user_1, include_docs=True)
@@ -217,18 +217,18 @@ def test_collection_channels(scopes_collections_tests_fixture):
         if shared_doc_prefix in doc:
             shared_found_user_1 = True
         if doc not in wildcard_user_docs_ids:
-            pytest.fail("The document " + doc + " was not accessiable even though the user was given all documents access")
+            pytest.fail("The document " + doc + " was not accessible even though the user was given all documents access")
     for doc in user_2_docs_ids:
         if user_1_doc_prefix in doc:
             pytest.fail("A document is available in a channel that it was not assigned to. Document prefix: " + user_1_doc_prefix + ". The document: " + doc)
         if shared_doc_prefix in doc:
             shared_found_user_2 = True
         if doc not in wildcard_user_docs_ids:
-            pytest.fail("The document " + doc + " was not accessiable even though the user was given all documents access")
+            pytest.fail("The document " + doc + " was not accessible even though the user was given all documents access")
 
     # 5. Check that the users see the shared document in their channels
     assert (shared_found_user_1 and shared_found_user_2), "The shared document was not found for one of the users. user1: " + shared_found_user_1 + " user2: " + shared_found_user_2
-    assert (shared_doc_prefix in doc for doc in wildcard_user_docs_ids), "The shared document was not accessiable VIA the wildcard channel"
+    assert (shared_doc[0]["id"] in wildcard_user_docs_ids), "The shared document was not accessiable VIA the wildcard channel"
 
     # 6. Check that _bulk_get cannot get documents that are not in the user's channel
     with pytest.raises(RestError) as e:  # HTTPError doesn't work, for some  reason, but would be preferable
