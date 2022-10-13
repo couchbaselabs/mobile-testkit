@@ -385,6 +385,14 @@ class Replication(object):
             if total < completed and total <= 0:
                 raise Exception("total is less than completed")
 
+    def addCollection(self, replicationConfiguration, collection, collection_configuration=None):
+        args = Args()
+        args.setMemoryPointer("replicatorConfiguration", replicationConfiguration)
+        args.setMemoryPointer("collections", collection)
+        if collection_configuration is not None:
+            args.setMemoryPointer("configuration", collection_configuration)
+        return self._client.invokeMethod("replicatorConfiguration_addCollection", args)
+
     def create_session_configure_replicate(self, baseUrl, sg_admin_url, sg_db, username, password,
                                            channels, sg_client, cbl_db, sg_blip_url, replication_type=None,
                                            continuous=True, max_retries=None, max_retry_wait_time=None, encryptor=None, auth=None, collection=None):
@@ -398,7 +406,7 @@ class Replication(object):
                                      replicator_authenticator=replicator_authenticator,
                                      max_retries=max_retries, max_retry_wait_time=max_retry_wait_time, encryptor=encryptor)
         if collection is not None:
-            self.addCollection(repl_config, collection)
+            log_info(self.addCollection(repl_config, collection))
         repl = self.create(repl_config)
         self.start(repl)
         self.wait_until_replicator_idle(repl)
@@ -422,10 +430,3 @@ class Replication(object):
             args.setArray("documentIDs", documentIDs)
         return self._client.invokeMethod("replicatorCollection_configure", args)
 
-    def addCollection(self, replicationConfiguration, collection, collection_configuration=None):
-        args = Args()
-        args.setMemoryPointer("replicatorConfiguration", replicationConfiguration)
-        args.setMemoryPointer("collections", collection)
-        if collection_configuration is not None:
-            args.setMemoryPointer("configuration", collection_configuration)
-        return self._client.invokeMethod("replicatorCollection_addCollection")

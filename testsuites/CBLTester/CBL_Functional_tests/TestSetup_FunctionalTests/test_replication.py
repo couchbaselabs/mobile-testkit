@@ -35,7 +35,7 @@ def setup_teardown_test(params_from_base_test_setup):
     yield{
         "db": db,
         "cbl_db": cbl_db,
-        "cbl_db_name": cbl_db_name
+        "cbl_db_name": cbl_db_name 
     }
 
     log_info("Deleting the db")
