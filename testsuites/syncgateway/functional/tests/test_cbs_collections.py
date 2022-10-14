@@ -60,6 +60,9 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
 
         # SGW database creation
         pre_test_db_exists = admin_client.does_db_exist(db)
+        test_bucket_db = admin_client.get_bucket_db(bucket)
+        if test_bucket_db is not None:
+            admin_client.delete_db(test_bucket_db)
         if pre_test_db_exists is False:
             admin_client.create_db(db, data)
 
