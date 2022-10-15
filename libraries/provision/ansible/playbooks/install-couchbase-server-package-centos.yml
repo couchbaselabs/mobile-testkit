@@ -69,6 +69,9 @@
       service: name=couchbase-server state=started
       when: ipv6_enabled
 
+    - name: Disable firewall
+      shell: iptables -F
+
     # Configure
     - debug: msg="Couchbase cluster RAM {{ couchbase_server_cluster_ram }}"
     - debug: msg="Couchbase bucket RAM {{ couchbase_server_bucket_ram }}"
