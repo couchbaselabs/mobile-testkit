@@ -1,0 +1,7 @@
+- name: SYNC GATEWAY | Start sync gateway service through command line 
+  become: yes
+  shell: /opt/couchbase-sync-gateway/bin/sync_gateway -disable_persistent_config=false /home/sync_gateway/sync_gateway.json &
+
+- name: SYNC GATEWAY | Wait until sync gateway to listen on port
+  become: yes
+  wait_for: port=4985 timeout=800

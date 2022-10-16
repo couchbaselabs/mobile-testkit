@@ -68,15 +68,21 @@ def install_couchbase_server(cluster_config, couchbase_server_config, cbs_platfo
     log_info(">>> Installing Couchbase Server", str(cb_server) + str(cbs_platform))
     # Install Server
     server_baseurl, server_package_name = couchbase_server_config.get_baseurl_package(cb_server, cbs_platform, cbs_ce=cbs_ce)
-    status = ansible_runner.run_ansible_playbook(
-        "install-couchbase-server-package.yml",
-        extra_vars={
-            "couchbase_server_package_base_url": server_baseurl,
-            "couchbase_server_package_name": server_package_name,
-            "ipv6_enabled": cluster["environment"]["ipv6_enabled"],
-            "cbs_dp_preview": cluster["environment"]["cbs_developer_preview"]
-        }
-    )
+    extra_vars = {
+        "couchbase_server_package_base_url": server_baseurl,
+        "couchbase_server_package_name": server_package_name,
+        "ipv6_enabled": cluster["environment"]["ipv6_enabled"],
+        "cbs_dp_preview": cluster["environment"]["cbs_developer_preview"]
+    }
+    if "centos" in cbs_platform.lower():
+        log_info("***** Install CB server on centOS *****")
+        status = ansible_runner.run_ansible_playbook(
+            "install-couchbase-server-package-centos.yml", extra_vars)
+
+    else:
+        status = ansible_runner.run_ansible_playbook(
+            "install-couchbase-server-package-centos.yml", extra_vars)
+
     if status != 0:
         raise ProvisioningError("Failed to install Couchbase Server")
 

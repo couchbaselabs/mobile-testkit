@@ -23,6 +23,8 @@ from keywords.constants import RESULTS_DIR
 
 from CBLClient.FileLogging import FileLogging
 from CBLClient.Replication import Replication
+from CBLClient.Collection import Collection
+from CBLClient.Scope import Scope
 from CBLClient.BasicAuthenticator import BasicAuthenticator
 from CBLClient.Database import Database
 from CBLClient.Document import Document
@@ -209,6 +211,24 @@ def pytest_addoption(parser):
                      action="store",
                      help="liteserv-android-serial-number: the serial number of the android device to be used")
 
+    parser.addoption("--scope-on-bucket",
+                     action="store",
+                     help="scope will be create on bucket",
+                     default="default")
+    parser.addoption("--scope-name",
+                     action="store",
+                     help="default scope name is _default",
+                     default="_default")
+    parser.addoption("--collection-name",
+                     action="store",
+                     help="default collection name is _default",
+                     default="_default")
+
+    parser.addoption("--collection-on-default-scope",
+                     action="store",
+                     help="collection will be create on default scope _default",
+                     default="_default")
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -262,6 +282,9 @@ def params_from_base_suite_setup(request):
 
     disable_admin_auth = request.config.getoption("--disable-admin-auth")
     liteserv_android_serial_number = request.config.getoption("--liteserv-android-serial-number")
+
+    scope_name = request.config.getoption("--scope-name")
+    collection_name = request.config.getoption("--collection-name")
 
     test_name = request.node.name
 
@@ -499,14 +522,15 @@ def params_from_base_suite_setup(request):
     # Start Test server which needed for suite level set up like query tests
     if not use_local_testserver and create_db_per_suite:
         log_info("Starting TestServer...")
+        testserver.stop()
         test_name_cp = test_name.replace("/", "-")
+        log_filename = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, \
+                                                                  test_name_cp, datetime.datetime.now())
         if device_enabled:
-            testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
-                                                                  test_name_cp, datetime.datetime.now()))
+            testserver.start_device(log_filename)
         else:
-            testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__,
-                                                           test_name_cp,
-                                                           datetime.datetime.now()))
+            testserver.start(log_filename)
+        time.sleep(2)
 
     suite_source_db = None
     suite_db = None
@@ -629,7 +653,9 @@ def params_from_base_suite_setup(request):
         "cbl_ce": cbl_ce,
         "prometheus_enable": prometheus_enable,
         "ssl_enabled": cbs_ssl,
-        "need_sgw_admin_auth": need_sgw_admin_auth
+        "need_sgw_admin_auth": need_sgw_admin_auth,
+        "scope_name": scope_name,
+        "collection_name": collection_name
     }
 
     if request.node.testsfailed != 0 and enable_file_logging and create_db_per_suite is not None:
@@ -710,6 +736,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     prometheus_enable = request.config.getoption("--prometheus-enable")
     cbs_ssl = params_from_base_suite_setup["ssl_enabled"]
     need_sgw_admin_auth = params_from_base_suite_setup["need_sgw_admin_auth"]
+    scope_name = params_from_base_suite_setup["scope_name"]
+    collection_name = params_from_base_suite_setup["collection_name"]
 
     source_db = None
     test_name_cp = test_name.replace("/", "-")
@@ -719,10 +747,12 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
 
     if not use_local_testserver and create_db_per_test:
         log_info("Starting TestServer...")
+        testserver.stop()
         if device_enabled:
             testserver.start_device(log_filename)
         else:
             testserver.start(log_filename)
+        time.sleep(2)
 
     cluster_helper = ClusterKeywords(cluster_config)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config=cluster_config)
@@ -810,7 +840,9 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "cbl_ce": cbl_ce,
         "prometheus_enable": prometheus_enable,
         "ssl_enabled": cbs_ssl,
-        "need_sgw_admin_auth": need_sgw_admin_auth
+        "need_sgw_admin_auth": need_sgw_admin_auth,
+        "scope_name": scope_name,
+        "collection_name": collection_name
     }
 
     if request.node.rep_call.failed and enable_file_logging and create_db_per_test is not None:
@@ -864,7 +896,8 @@ def class_init(request, params_from_base_suite_setup):
     array_obj = Array(base_url)
     dict_obj = Dictionary(base_url)
     repl_config_obj = ReplicatorConfiguration(base_url)
-
+    scope_obj = Scope(base_url)
+    collection_obj = Collection(base_url)
     base_auth_obj = BasicAuthenticator(base_url)
     session_auth_obj = SessionAuthenticator(base_url)
     sg_client = MobileRestClient()
@@ -881,6 +914,8 @@ def class_init(request, params_from_base_suite_setup):
     request.cls.scope_obj = scope_obj
     request.cls.dict_obj = dict_obj
     request.cls.datatype = datatype
+    request.cls.collection_obj = collection_obj
+    request.cls.scope_obj = scope_obj
     request.cls.repl_obj = repl_obj
     request.cls.repl_config_obj = repl_config_obj
     request.cls.array_obj = array_obj

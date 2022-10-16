@@ -17,8 +17,9 @@ from keywords.utils import log_info
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.MobileRestClient import MobileRestClient
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
-
+from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
 from requests.auth import HTTPBasicAuth
+
 
 NUM_ENDPOINTS = 13
 
@@ -592,6 +593,7 @@ def test_offline_true_config_bring_online(params_from_base_test_setup, sg_conf_n
 
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
     need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
     if mode == "di":
@@ -623,6 +625,9 @@ def test_offline_true_config_bring_online(params_from_base_test_setup, sg_conf_n
     assert status == 0
 
     # all db endpoints should succeed
+    if sync_gateway_version >= "3.0.0":
+        admin = Admin(cluster.sync_gateways[0])
+        admin.register_user(target=cluster.sync_gateways[0], db="db", name="seth", password="password", channels=["*", "ABC"])
     errors = rest_scan(cluster.sync_gateways[0], db="db", online=True, num_docs=num_docs, user_name="seth", channels=["ABC"], auth=auth)
     assert len(errors) == 0
 
@@ -655,6 +660,8 @@ def test_db_offline_tap_loss_sanity(params_from_base_test_setup, sg_conf_name, n
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
+    buckets = get_buckets_from_sync_gateway_config(sg_conf, cluster_conf)
+    bucket = buckets[0]
 
     # all db rest enpoints should succeed
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
@@ -662,7 +669,8 @@ def test_db_offline_tap_loss_sanity(params_from_base_test_setup, sg_conf_name, n
     assert len(errors) == 0
 
     # Delete bucket to sever TAP feed
-    cluster.servers[0].delete_bucket("data-bucket")
+    # cluster.servers[0].delete_bucket("data-bucket")
+    cluster.servers[0].delete_bucket(bucket)
 
     # Check that bucket is in offline state
     errors = rest_scan(cluster.sync_gateways[0], db="db", online=False, num_docs=num_docs, user_name="seth", channels=["ABC"], auth=auth)
@@ -757,7 +765,9 @@ def test_multiple_dbs_unique_buckets_lose_tap(params_from_base_test_setup, sg_co
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
-
+    buckets = get_buckets_from_sync_gateway_config(sg_conf, cluster_conf)
+    bucket1 = buckets[0]
+    bucket3 = buckets[2]
     dbs = ["db1", "db2", "db3", "db4"]
 
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
@@ -769,8 +779,10 @@ def test_multiple_dbs_unique_buckets_lose_tap(params_from_base_test_setup, sg_co
         assert len(errors) == 0
 
     log_info("Deleting data-bucket-1 and data-bucket-3")
-    cluster.servers[0].delete_bucket("data-bucket-1")
-    cluster.servers[0].delete_bucket("data-bucket-3")
+    # cluster.servers[0].delete_bucket("data-bucket-1")
+    # cluster.servers[0].delete_bucket("data-bucket-3")
+    cluster.servers[0].delete_bucket(bucket1)
+    cluster.servers[0].delete_bucket(bucket3)
 
     # Check that db2 and db4 are still Online
     log_info("Check that db2 and db4 are still Online")

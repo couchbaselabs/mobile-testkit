@@ -23,6 +23,7 @@ from keywords.utils import log_r
 from keywords.utils import log_info
 from keywords.utils import log_debug
 from keywords.SyncGateway import validate_sync_gateway_mode
+from keywords.constants import RBAC_FULL_ADMIN
 
 from keywords.exceptions import RestError, TimeoutException, LiteServError, ChangesError
 from keywords import types
@@ -68,15 +69,17 @@ def parse_multipart_response(response):
 def get_auth_type(auth):
 
     if auth is None:
-        return AuthType.none
+        return AuthType.none, auth
 
     if isinstance(auth, tuple) and auth[0] == "SyncGatewaySession":
         auth_type = AuthType.session
     else:
         auth_type = AuthType.http_basic
+        if isinstance(auth, tuple) and auth[0] == RBAC_FULL_ADMIN['user']:
+            auth = HTTPBasicAuth(auth[0], auth[1])
 
-    logging.debug("Using auth type: {}".format(auth_type))
-    return auth_type
+    logging.info("Using auth type: {}".format(auth_type))
+    return auth_type, auth
 
 
 class MyEncoder(json.JSONEncoder):
@@ -548,7 +551,7 @@ class MobileRestClient:
         GET /{db}/{doc}/{attachment}?meta=true
         Get the attachment meta data for tracking
         """
-        auth_type = get_auth_type(auth)
+        auth_type, auth = get_auth_type(auth)
 
         if attachment:
             if auth_type == AuthType.session:
@@ -746,7 +749,7 @@ class MobileRestClient:
         # Returns multipart by default, specify json for cleaner code
         headers = {"Accept": "application/json"}
 
-        auth_type = get_auth_type(auth)
+        auth_type, auth = get_auth_type(auth)
 
         params = {"open_revs": "all"}
 
@@ -772,7 +775,7 @@ class MobileRestClient:
         # Returns multipart by default, specify json for cleaner code
         headers = {"Accept": "application/json"}
 
-        auth_type = get_auth_type(auth)
+        auth_type, auth = get_auth_type(auth)
 
         params = {"open_revs": "all"}
 
@@ -801,7 +804,7 @@ class MobileRestClient:
         # Returns multipart by default, specify json for cleaner code
         headers = {"Accept": "application/json"}
 
-        auth_type = get_auth_type(auth)
+        auth_type, auth = get_auth_type(auth)
 
         params = {"open_revs": "all"}
 
@@ -824,7 +827,7 @@ class MobileRestClient:
                 log_info("ignoring rev as it is not deleted one")
         return rev_ids
 
-    def get_doc(self, url, db, doc_id, auth=None, rev=None, revs_info=False):
+    def get_doc(self, url, db, doc_id, auth=None, rev=None, revs_info=False, scope=None, collection=None):
         """
         returns a dictionary with the following format:
         {
@@ -856,7 +859,7 @@ class MobileRestClient:
         },
         """
 
-        auth_type = get_auth_type(auth)
+        auth_type, auth = get_auth_type(auth)
 
         params = {
             "conflicts": "true",
@@ -870,13 +873,22 @@ class MobileRestClient:
             params["rev"] = rev
 
         params["show_exp"] = "true"
+        if collection is not None:
+            if scope is None:
+                url_string = "{}/{}.{}/{}".format(url, db, collection, doc_id)
+            else:
+                url_string = "{}/{}.{}.{}/{}".format(url, db, scope, collection, doc_id)
+        else:
+            if scope is not None:
+                assert "When the scope is defined, the collection must be  defined  as well"
+            url_string = "{}/{}/{}".format(url, db, doc_id)
 
         if auth_type == AuthType.session:
-            resp = self._session.get("{}/{}/{}".format(url, db, doc_id), params=params, cookies=dict(SyncGatewaySession=auth[1]))
+            resp = self._session.get(url_string, params=params, cookies=dict(SyncGatewaySession=auth[1]))
         elif auth_type == AuthType.http_basic:
-            resp = self._session.get("{}/{}/{}".format(url, db, doc_id), params=params, auth=auth)
+            resp = self._session.get(url_string, params=params, auth=auth)
         else:
-            resp = self._session.get("{}/{}/{}".format(url, db, doc_id), params=params)
+            resp = self._session.get(url_string, params=params)
 
         log_r(resp)
         resp.raise_for_status()
@@ -903,7 +915,7 @@ class MobileRestClient:
         resp.raise_for_status()
         return resp.json()
 
-    def add_doc(self, url, db, doc, auth=None, use_post=True):
+    def add_doc(self, url, db, doc, auth=None, use_post=True, scope=None, collection=None):
         """
         Add a doc to a database. Either LiteServ or Sync Gateway
 
@@ -912,26 +924,28 @@ class MobileRestClient:
         """
 
         logging.info(auth)
-        auth_type = get_auth_type(auth)
+        auth_type, auth = get_auth_type(auth)
 
         doc["updates"] = 0
-
+        keyspace = db
+        if scope is not None:
+            keyspace = db + "." + scope + "." + collection
         if auth_type == AuthType.session:
             if use_post:
-                resp = self._session.post("{}/{}/".format(url, db), data=json.dumps(doc, cls=MyEncoder), cookies=dict(SyncGatewaySession=auth[1]))
+                resp = self._session.post("{}/{}/".format(url, keyspace), data=json.dumps(doc, cls=MyEncoder), cookies=dict(SyncGatewaySession=auth[1]))
             else:
-                resp = self._session.put("{}/{}/{}".format(url, db, doc["_id"]), data=json.dumps(doc, cls=MyEncoder), cookies=dict(SyncGatewaySession=auth[1]))
+                resp = self._session.put("{}/{}/{}".format(url, keyspace, doc["_id"]), data=json.dumps(doc, cls=MyEncoder), cookies=dict(SyncGatewaySession=auth[1]))
         elif auth_type == AuthType.http_basic:
             if use_post:
-                resp = self._session.post("{}/{}/".format(url, db), data=json.dumps(doc, cls=MyEncoder), auth=auth)
+                resp = self._session.post("{}/{}/".format(url, keyspace), data=json.dumps(doc, cls=MyEncoder), auth=auth)
             else:
-                resp = self._session.put("{}/{}/{}".format(url, db, doc["_id"]), data=json.dumps(doc, cls=MyEncoder), auth=auth)
+                resp = self._session.put("{}/{}/{}".format(url, keyspace, doc["_id"]), data=json.dumps(doc, cls=MyEncoder), auth=auth)
         else:
             if use_post:
-                resp = self._session.post("{}/{}/".format(url, db), data=json.dumps(doc, cls=MyEncoder))
+                resp = self._session.post("{}/{}/".format(url, keyspace), data=json.dumps(doc, cls=MyEncoder))
             else:
                 try:
-                    resp = self._session.put("{}/{}/{}".format(url, db, doc["_id"]), data=json.dumps(doc, cls=MyEncoder))
+                    resp = self._session.put("{}/{}/{}".format(url, keyspace, doc["_id"]), data=json.dumps(doc, cls=MyEncoder))
                 except Exception as err:
                     print(err)
                     raise
@@ -951,7 +965,7 @@ class MobileRestClient:
 
         headers = {"Accept": "*/*"}
 
-        auth_type = get_auth_type(auth)
+        auth_type, auth = get_auth_type(auth)
 
         if auth_type == AuthType.session:
             resp = self._session.get("{}/{}/{}/{}".format(url, db, doc_id, attachment_name), headers=headers, cookies=dict(SyncGatewaySession=auth[1]))
@@ -996,7 +1010,7 @@ class MobileRestClient:
         else:
             raise TypeError("Add Conflict expects a list or str for parent_revisions")
 
-        auth_type = get_auth_type(auth)
+        auth_type, auth = get_auth_type(auth)
 
         logging.info("PARENT: {}".format(parent_revs))
         logging.info("NEW: {}".format(new_revision))
@@ -1099,7 +1113,7 @@ class MobileRestClient:
         Removes a document with the specfied revision
         """
 
-        auth_type = get_auth_type(auth)
+        auth_type, auth = get_auth_type(auth)
 
         params = {}
         if rev is not None:
@@ -1122,7 +1136,7 @@ class MobileRestClient:
 
     def verify_docs_deleted(self, url, db, docs, auth=None, reason="deleted"):
 
-        auth_type = get_auth_type(auth)
+        auth_type, auth = get_auth_type(auth)
         server_type = self.get_server_type(url)
         server_platform = self.get_server_platform(url)
 
@@ -1178,7 +1192,7 @@ class MobileRestClient:
         Purges the each doc by doc id
 
         docs format (lite): [{u'ok': True, u'rev': u'3-56e50918afe3e9b3c29e94ad55cc6b15', u'id': u'large_attach_0'}, ...]
-        docs format (Sync Gateway): [{u'ok': True, u'_rev': u'3-56e50918afe3e9b3c29e94ad55cc6b15', u'_id': u'large_attach_0'}, ...]
+        docs format (Sync Gateway): [{u'ok': True, u'_rev': u'3-56e50918afe3e9b3c29e94ad55cc6b15', u_id: u'large_attach_0'}, ...]
         """
 
         server_type = self.get_server_type(url=url, auth=auth)
@@ -1208,7 +1222,7 @@ class MobileRestClient:
         Purges the each doc in the provided 'docs' given the 'id' and 'rev'
 
         docs format (lite): [{u'ok': True, u'rev': u'3-56e50918afe3e9b3c29e94ad55cc6b15', u'id': u'large_attach_0'}, ...]
-        docs format (Sync Gateway): [{u'ok': True, u'_rev': u'3-56e50918afe3e9b3c29e94ad55cc6b15', u'_id': u'large_attach_0'}, ...]
+        docs format (Sync Gateway): [{u'ok': True, u'_rev': u'3-56e50918afe3e9b3c29e94ad55cc6b15', u_id: u'large_attach_0'}, ...]
         """
 
         server_type = self.get_server_type(url=url, auth=auth)
@@ -1280,7 +1294,7 @@ class MobileRestClient:
         Updates a doc with doc id, a given revision, and doc body
         """
 
-        auth_type = get_auth_type(auth)
+        auth_type, auth = get_auth_type(auth)
 
         params = {
             "rev": rev
@@ -1306,7 +1320,7 @@ class MobileRestClient:
             3. PUTS the doc
         """
 
-        auth_type = get_auth_type(auth)
+        auth_type, auth = get_auth_type(auth)
         if doc is None:
             doc = self.get_doc(url, db, doc_id, auth)
 
@@ -1382,7 +1396,7 @@ class MobileRestClient:
             3. PUTS the doc
         """
 
-        auth_type = get_auth_type(auth)
+        auth_type, auth = get_auth_type(auth)
         if doc is None:
             doc = self.get_doc(url, db, doc_id, auth)
 
@@ -1405,7 +1419,7 @@ class MobileRestClient:
 
         return resp_obj
 
-    def add_docs(self, url, db, number, id_prefix, auth=None, channels=None, generator=None, attachments_generator=None, expiry=None):
+    def add_docs(self, url, db, number, id_prefix, auth=None, channels=None, generator=None, attachments_generator=None, expiry=None, scope=None, collection=None):
         """
         if id_prefix == None, generate a uuid for each doc
 
@@ -1445,7 +1459,7 @@ class MobileRestClient:
 
             doc_body["_id"] = doc_id
 
-            doc_obj = self.add_doc(url, db, doc_body, auth=auth, use_post=False)
+            doc_obj = self.add_doc(url, db, doc_body, auth=auth, use_post=False, scope=scope, collection=collection)
             if attachments_generator:
                 doc_obj["attachments"] = list(doc_body["_attachments"].keys())
             added_docs.append(doc_obj)
@@ -1463,8 +1477,8 @@ class MobileRestClient:
         Keyword that issues POST _bulk docs with the specified 'docs'.
         Use the Document.create_docs() to create the docs.
         """
-        auth_type = get_auth_type(auth)
         server_type = self.get_server_type(url, auth)
+        auth_type, auth = get_auth_type(auth)
 
         # transform 'docs' into a format expected by _bulk_docs
         if server_type == ServerType.listener:
@@ -1496,7 +1510,7 @@ class MobileRestClient:
         Issues a bulk delete by setting the _deleted flag to true.
         This will create a tombstone.
         """
-        auth_type = get_auth_type(auth)
+        auth_type, auth = get_auth_type(auth)
         server_type = self.get_server_type(url, auth)
 
         for doc in docs:
@@ -1530,8 +1544,7 @@ class MobileRestClient:
     def get_all_docs(self, url, db, auth=None, include_docs=False):
         """ Get all docs for a database via _all_docs """
 
-        auth_type = get_auth_type(auth)
-
+        auth_type, auth = get_auth_type(auth)
         params = {}
         if include_docs:
             params["include_docs"] = "true"
@@ -1547,7 +1560,7 @@ class MobileRestClient:
         resp.raise_for_status()
         return resp.json()
 
-    def get_bulk_docs(self, url, db, doc_ids, auth=None, validate=True, rev_history="false"):
+    def get_bulk_docs(self, url, db, doc_ids, auth=None, validate=True, rev_history="false", scope=None, collection=None):
         """
         Keyword that issues POST _bulk_get docs with the specified 'docs' array.
         docs need to be in the following format:
@@ -1566,14 +1579,17 @@ class MobileRestClient:
         # ]
         doc_ids_formatted = [{"id": doc_id} for doc_id in doc_ids]
         request_body = {"docs": doc_ids_formatted}
-        auth_type = get_auth_type(auth)
+        auth_type, auth = get_auth_type(auth)
+        keyspace = db
+        if scope is not None:
+            keyspace = db + "." + scope + "." + collection
 
         if auth_type == AuthType.session:
-            resp = self._session.post("{}/{}/_bulk_get?revs={}".format(url, db, rev_history), data=json.dumps(request_body), cookies=dict(SyncGatewaySession=auth[1]))
+            resp = self._session.post("{}/{}/_bulk_get?revs={}".format(url, keyspace, rev_history), data=json.dumps(request_body), cookies=dict(SyncGatewaySession=auth[1]))
         elif auth_type == AuthType.http_basic:
-            resp = self._session.post("{}/{}/_bulk_get?revs={}".format(url, db, rev_history), data=json.dumps(request_body), auth=auth)
+            resp = self._session.post("{}/{}/_bulk_get?revs={}".format(url, keyspace, rev_history), data=json.dumps(request_body), auth=auth)
         else:
-            resp = self._session.post("{}/{}/_bulk_get?revs={}".format(url, db, rev_history), data=json.dumps(request_body))
+            resp = self._session.post("{}/{}/_bulk_get?revs={}".format(url, keyspace, rev_history), data=json.dumps(request_body))
 
         log_r(resp)
         resp.raise_for_status()
@@ -1851,7 +1867,7 @@ class MobileRestClient:
         a list of {id: {rev: ""}}. If the expected docs are a list, they will be converted to a single map.
         """
 
-        auth_type = get_auth_type(auth)
+        auth_type, auth = get_auth_type(auth)
         server_type = self.get_server_type(url, auth)
 
         logging.debug(expected_docs)
@@ -1976,7 +1992,7 @@ class MobileRestClient:
         """
         Issues a continuous changes feed request and returns the stream
         """
-        auth_type = get_auth_type(auth)
+        auth_type, auth = get_auth_type(auth)
         body = {
             "feed": "continuous",
             "since": since
@@ -2018,8 +2034,8 @@ class MobileRestClient:
         # Convert to ms for the sync_gateway REST api
         timeout *= 1000
 
-        auth_type = get_auth_type(auth)
         server_type = self.get_server_type(url, auth)
+        auth_type, auth = get_auth_type(auth)
 
         if server_type == ServerType.listener:
 
@@ -2277,7 +2293,7 @@ class MobileRestClient:
         Keyword that returns a view query for a design doc with a view name
         """
 
-        auth_type = get_auth_type(auth)
+        auth_type, auth = get_auth_type(auth)
         server_type = self.get_server_type(url, auth)
 
         url = "{}/{}/_design/{}/_view/{}".format(url, db, design_doc_name, view_name)
@@ -2376,9 +2392,9 @@ class MobileRestClient:
         """ Verifies that list of doc ids are in the response.
          'response' expected format:
         [
-            {u'channels': [u'NBC', u'ABC'], u'_rev': u'1-efda114d144b5220fa77c4e51f3e70a8', u'_id': u'exp_10_0'},
-            {u'channels': [u'NBC', u'ABC'], u'_rev': u'1-efda114d144b5220fa77c4e51f3e70a8', u'_id': u'exp_10_1'},
-            {u'channels': [u'NBC', u'ABC'], u'_rev': u'1-efda114d144b5220fa77c4e51f3e70a8', u'_id': u'exp_10_2'} ...
+            {u'channels': [u'NBC', u'ABC'], u'_rev': u'1-efda114d144b5220fa77c4e51f3e70a8', u_id: u'exp_10_0'},
+            {u'channels': [u'NBC', u'ABC'], u'_rev': u'1-efda114d144b5220fa77c4e51f3e70a8', u_id: u'exp_10_1'},
+            {u'channels': [u'NBC', u'ABC'], u'_rev': u'1-efda114d144b5220fa77c4e51f3e70a8', u_id: u'exp_10_2'} ...
         ]
         """
 
@@ -2397,9 +2413,9 @@ class MobileRestClient:
         """ Verifies that list of doc ids are not present on sync gateway.
          'response' expected format:
         [
-            {u'channels': [u'NBC', u'ABC'], u'_rev': u'1-efda114d144b5220fa77c4e51f3e70a8', u'_id': u'exp_10_0'},
-            {u'channels': [u'NBC', u'ABC'], u'_rev': u'1-efda114d144b5220fa77c4e51f3e70a8', u'_id': u'exp_10_1'},
-            {u'channels': [u'NBC', u'ABC'], u'_rev': u'1-efda114d144b5220fa77c4e51f3e70a8', u'_id': u'exp_10_2'} ...
+            {u'channels': [u'NBC', u'ABC'], u'_rev': u'1-efda114d144b5220fa77c4e51f3e70a8', u_id: u'exp_10_0'},
+            {u'channels': [u'NBC', u'ABC'], u'_rev': u'1-efda114d144b5220fa77c4e51f3e70a8', u_id: u'exp_10_1'},
+            {u'channels': [u'NBC', u'ABC'], u'_rev': u'1-efda114d144b5220fa77c4e51f3e70a8', u_id: u'exp_10_2'} ...
         ]
         """
 
@@ -2452,7 +2468,7 @@ class MobileRestClient:
 
     def get_changes_style_all_docs(self, url, db, auth=None, include_docs=False):
         """ Get all changes with include docs enabled and style all_docs """
-        auth_type = get_auth_type(auth)
+        auth_type, auth = get_auth_type(auth)
 
         params = {}
         if include_docs:
@@ -2560,32 +2576,58 @@ class MobileRestClient:
         resp_obj = resp.json()
         del resp_obj["_exp"]
 
+    def create_logging_with_rest(self, url, logging_json):
+        resp = self._session.put("{0}/_config".format(url), headers=self._session.headers, data=json.dumps(logging_json), verify=False)
+        log_r(resp)
+        resp.raise_for_status()
+        return resp.status_code
+
     def compact_attachments(self, url, db, action, auth=None):
+        _, auth = get_auth_type(auth)
         if action == "status":
             if auth:
-                resp = self._session.get("{}/{}/_compact?type=attachment".format(url, db), auth=HTTPBasicAuth(auth[0], auth[1]))
+                resp = self._session.get("{}/{}/_compact?type=attachment".format(url, db), auth=auth)
             else:
                 resp = self._session.get("{}/{}/_compact?type=attachment".format(url, db))
             resp_obj = resp.json()
             return resp_obj
         elif action == "start":
             if auth:
-                resp = self._session.post("{}/{}/_compact?type=attachment&action=start".format(url, db), auth=HTTPBasicAuth(auth[0], auth[1]))
+                resp = self._session.post("{}/{}/_compact?type=attachment&action=start".format(url, db), auth=auth)
             else:
                 resp = self._session.post("{}/{}/_compact?type=attachment&action=start".format(url, db))
             resp_obj = resp.json()
             return resp_obj
         elif action == "progress":
             if auth:
-                resp = self._session.post("{}/{}/_compact?type=attachment".format(url, db), auth=HTTPBasicAuth(auth[0], auth[1]))
+                resp = self._session.post("{}/{}/_compact?type=attachment".format(url, db), auth=auth)
             else:
                 resp = self._session.post("{}/{}/_compact?type=attachment".format(url, db))
             resp_obj = resp.json()
             return resp_obj
         elif action == "stop":
             if auth:
-                resp = self._session.post("{}/{}/_compact?type=attachment&action=stop".format(url, db), auth=HTTPBasicAuth(auth[0], auth[1]))
+                resp = self._session.post("{}/{}/_compact?type=attachment&action=stop".format(url, db), auth=auth)
             else:
                 resp = self._session.post("{}/{}/_compact?type=attachment&action=stop".format(url, db))
             resp_obj = resp.json()
             return resp_obj
+
+    def does_doc_exist(self, url, db, doc_id, auth=None, scope=None, collection=None):
+        try:
+            self.get_doc(url, db, doc_id, auth, scope=scope, collection=collection)
+        except HTTPError as e:
+            if e.response.status_code == 404:
+                return False
+            else:
+                raise Exception("Could not determine if the document exists due to the following error: " + str(e)) from e
+
+    def does_session_exist(self, url, db, session_id):
+        try:
+            self.get_session(url, db=db, session_id=session_id)
+            return True
+        except HTTPError as e:
+            if e.response.status_code == 404:
+                return False
+            else:
+                raise Exception("Could not determine if the session exists due to the following error: " + str(e)) from e

@@ -14,6 +14,7 @@ from keywords.SyncGateway import sync_gateway_config_path_for_mode, SyncGateway
 from keywords.utils import log_info, host_for_url
 from libraries.testkit.cluster import Cluster
 from keywords.SyncGateway import get_sync_gateway_version
+from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
 
 # Set the default value to 404 - view not created yet
 # The view names in SG 1.5.1 and below is sync_housekeeping/sync_gateway
@@ -133,7 +134,9 @@ def test_system_test(params_from_base_test_setup):
     cbs_url = topology['couchbase_servers'][0]
     cbs_admin_url = cbs_url.replace('8091', '8092')
     cb_server = couchbaseserver.CouchbaseServer(cbs_url)
-    bucket_name = "data-bucket"
+    # bucket_name = "data-bucket"
+    buckets = get_buckets_from_sync_gateway_config(sg_conf, cluster_config)
+    bucket_name = buckets[0]
 
     cbs_ip = cb_server.host
 

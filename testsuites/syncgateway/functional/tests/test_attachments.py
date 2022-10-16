@@ -14,6 +14,7 @@ from keywords import document
 from keywords import attachment
 from libraries.testkit.cluster import Cluster
 from utilities.cluster_config_utils import is_ipv6
+from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
 
 
 @pytest.mark.syncgateway
@@ -60,7 +61,8 @@ def test_attachment_revpos_when_ancestor_unavailable(params_from_base_test_setup
     sg_url = topology["sync_gateways"][0]["public"]
     sg_url_admin = topology["sync_gateways"][0]["admin"]
     sg_db = "db"
-    bucket = "data-bucket"
+    buckets = get_buckets_from_sync_gateway_config(sg_conf, cluster_config)
+    bucket = buckets[0]
 
     log_info("Running 'test_attachment_revpos_when_ancestor_unavailable'")
     log_info("Using cbs_url: {}".format(cbs_url))
@@ -144,7 +146,9 @@ def test_attachment_revpos_when_ancestor_unavailable_active_revision_doesnt_shar
     sg_url = topology["sync_gateways"][0]["public"]
     sg_url_admin = topology["sync_gateways"][0]["admin"]
     sg_db = "db"
-    bucket = "data-bucket"
+    # bucket = "data-bucket"
+    buckets = get_buckets_from_sync_gateway_config(sg_conf, cluster_config)
+    bucket = buckets[0]
 
     log_info("Running 'test_attachment_revpos_when_ancestor_unavailable_active_revision_doesnt_share_ancestor'")
     log_info("Using cbs_url: {}".format(cbs_url))
@@ -224,7 +228,9 @@ def test_writing_attachment_to_couchbase_server(params_from_base_test_setup, sg_
     sg_url = topology["sync_gateways"][0]["public"]
     sg_url_admin = topology["sync_gateways"][0]["admin"]
     sg_db = "db"
-    bucket = "data-bucket"
+    # bucket = "data-bucket"
+    buckets = get_buckets_from_sync_gateway_config(sg_conf, cluster_config)
+    bucket = buckets[0]
 
     log_info("Running 'test_writing_attachment_to_couchbase_server'")
     log_info("Using cbs_url: {}".format(cbs_url))

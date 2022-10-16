@@ -85,7 +85,7 @@ def test_get_buckets_from_sync_gateway_config_template_vars():
     tmpConfigFile.write(configJson)
     tmpConfigFile.close()
 
-    buckets = get_buckets_from_sync_gateway_config(tmpConfigFileName)
+    buckets = get_buckets_from_sync_gateway_config(tmpConfigFileName, None)
 
     numBucketsExpected = 2
     assert len(buckets) == numBucketsExpected
@@ -124,7 +124,7 @@ def test_get_buckets_from_sync_gateway_config_no_buckets():
     tmpConfigFile.write(configJson)
     tmpConfigFile.close()
 
-    buckets = get_buckets_from_sync_gateway_config(tmpConfigFileName)
+    buckets = get_buckets_from_sync_gateway_config(tmpConfigFileName, None)
 
     numBucketsExpected = 0
     assert len(buckets) == numBucketsExpected

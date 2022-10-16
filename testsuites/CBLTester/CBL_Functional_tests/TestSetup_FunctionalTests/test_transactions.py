@@ -80,7 +80,7 @@ def test_transactions_insert_replace_remove_rollback(params_from_base_test_setup
     # 1. Insert a transaction with 3 or more docs
     opt_doc_ids = doc_ids.replace("txn_id_", "insert-txn_id_")
     transactions_app_dir = "resources/data/transaction-performer.jar"
-    doc_body = document.create_doc(doc_id=doc_id, content="doc1", channels=channels)
+    doc_body = document.create_doc(doc_id=doc_id, content="doc1", channels=channels, non_sgw=True)
     data = json.dumps(doc_body)
     # java transaction sample command usage :
     # java -cp <Relative location to this Jar> com.couchbase.transaction  clusterIp=<YourClusterIp> operationDocids=<operation-docid seperated by commas> doccontent=<json body as string with single quotes enclosed>\n"

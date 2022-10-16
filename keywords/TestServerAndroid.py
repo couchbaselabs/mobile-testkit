@@ -113,9 +113,9 @@ class TestServerAndroid(TestServerBase):
                 else:
                     # Install succeeded, continue
                     break
-            output = subprocess.check_output(["adb", "-e", "shell", "pm", "list", "packages"])
-
+        output = subprocess.check_output(["adb", "-e", "shell", "pm", "list", "packages"])
         if str(self.installed_package_name) not in str(output):
+            log_info("Android emulation may not install on slave.  We could run with device flag in params passed")
             raise LiteServError("Failed to install package: {}".format(output))
 
         log_info("LiteServ installed to {}".format(self.host))
@@ -130,19 +130,27 @@ class TestServerAndroid(TestServerBase):
         apk_path = "{}/{}".format(BINARY_DIR, self.apk_name)
 
         try:
+            # check what package is installed on device
+            cmd = self.set_device_option(["adb", "shell", "dumpsys", "package",
+                                          "com.couchbase.TestServerApp",
+                                          " | grep versionName ", "| cut -d= -f2- "])
+            output = subprocess.check_output(cmd)
+            log_info("version in device {} ".format(output.decode()))
+            if output.strip().decode() == self.version_build:
+                log_info("package {} is on device. We need to remove and fresh install ..."\
+                                                          .format(self.version_build))
             log_info("remove the app on device before install, to ensure sandbox gets cleaned.")
             self.remove()
         except Exception as e:
-            log_info("remove the app before install didn't go success, but still continue ......")
+            log_info("remove the app before install didn't go success with error {}, but still continue ......".format(str(e)))
 
-        log_info("Installing: {}".format(apk_path))
+        log_info("Start to installing: {}".format(apk_path))
 
         # If and apk is installed, attempt to remove it and reinstall.
         # If that fails, raise an exception
         max_retries = 1
         count = 0
         while True:
-
             if count > max_retries:
                 raise LiteServError(".apk install failed!")
             try:
@@ -169,15 +177,21 @@ class TestServerAndroid(TestServerBase):
     def remove(self):
         """Removes the Test Server application from the running device
         """
+        output = ""
         command = self.set_device_option(["adb", "uninstall", self.installed_package_name])
-        output = subprocess.check_output(command)
-        if output.strip() != "Success" and output.strip() != b"Success":
+        try:
+            output = subprocess.check_output(command)
+        except Exception as e:
+            if "returned non-zero exit status 1" in str(e):
+                # Test server is removed
+                output = "Success"
+                pass
+            else:
+                raise LiteServError("Error uninstalling app!")
+        if (isinstance(output, str) and output.strip() != "Success") or \
+           (isinstance(output, bytes) and output.strip().decode() != "Success"):
             log_info(output)
             raise LiteServError("Error. Could not remove app.")
-        command = self.set_device_option(["adb", "uninstall", self.installed_package_name])
-        output = subprocess.check_output(command)
-        if self.installed_package_name in output.decode():
-            raise LiteServError("Error uninstalling app!")
 
         log_info("Testserver app removed from {}".format(self.host))
 
@@ -210,7 +224,7 @@ class TestServerAndroid(TestServerBase):
 
         # return "http://{}:{}".format(self.host, self.port)
 
-    def start_device(self, logfile_name):
+    def start_device(self, logfile_name=""):
         """
         1. Starts a Test server app with adb logging to provided logfile file object.
             The adb process will be stored in the self.process property
@@ -228,6 +242,7 @@ class TestServerAndroid(TestServerBase):
         self.logfile = open(logfile_name, "w+")
         command = self.set_device_option(["adb", "logcat"])
         self.process = subprocess.Popen(args=command, stdout=self.logfile)
+
         command = self.set_device_option([
             "adb", "shell", "am", "start", "-n", self.activity_name,
             "--es", "username", "none",
@@ -267,10 +282,17 @@ class TestServerAndroid(TestServerBase):
         output = subprocess.check_output(command)
         log_info(output)
 
-        self.logfile.flush()
-        self.logfile.close()
-        self.process.kill()
-        self.process.wait()
+        try:
+            if self.logfile:
+                self.logfile.flush()
+                self.logfile.close()
+            if self.process:
+                self.process.kill()
+                self.process.wait()
+        except Exception as e:
+            if "I/O operation" in str(e):
+                log_info("process or file may be closed already")
+                pass
 
     def close_app(self):
         if self.device_enabled:
