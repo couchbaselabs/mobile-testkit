@@ -573,4 +573,23 @@ class Admin:
             if e.response.status_code == 404:
                 return False
             else:
-                raise Exception("Could not determine if the user exists due to the following error: " + str(e)) from e
+                raise Exception("Could not determine if the user exists due to the following error: " + str(e)) from e    
+
+    def wait_for_db_online(self, db, timeout=60):
+        log_info("Waiting for the db to be online")
+        start_time = time.time()
+        while (time.time() < start_time + timeout):
+            db_info = self.get_db_info(db)
+            if db_info["state"] == "Online":
+                return
+        raise ValueError("The database " + db + " was not online within " + str(timeout))
+
+    def get_bucket_db(self, bucket):
+        dbs = self.get_dbs()
+        if not dbs:
+            return None
+        for db in dbs:
+            dbconfig = self.get_db_config(db)
+            if dbconfig["bucket"] == bucket:
+                return db
+        return None

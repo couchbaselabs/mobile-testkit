@@ -1,0 +1,14 @@
+- name: Stop Couchbase Service
+  become: yes
+  service: name=couchbase-server state=stopped
+  ignore_errors: yes
+
+- name: COUCHBASE SERVER | Uninstall couchbase server on CentOS
+  become: yes
+  shell: rpm -e couchbase-server
+  ignore_errors: yes
+
+- name: COUCHBASE SERVER | Remove all couchbase server residue
+  become: yes
+  file: path=/opt/couchbase state=absent
+  ignore_errors: yes
