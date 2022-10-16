@@ -405,8 +405,6 @@ class Replication(object):
                                      replication_type=replication_type,
                                      replicator_authenticator=replicator_authenticator,
                                      max_retries=max_retries, max_retry_wait_time=max_retry_wait_time, encryptor=encryptor)
-        if collection is not None:
-            log_info(self.addCollection(repl_config, collection))
         repl = self.create(repl_config)
         self.start(repl)
         self.wait_until_replicator_idle(repl)
