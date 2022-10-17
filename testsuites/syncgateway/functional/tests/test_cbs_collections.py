@@ -7,11 +7,12 @@ from libraries.testkit.cluster import Cluster
 from keywords.constants import RBAC_FULL_ADMIN
 from libraries.testkit.admin import Admin
 from keywords.exceptions import RestError
+from requests.auth import HTTPBasicAuth
 
 # test file shared variables
 bucket = "data-bucket"
 sg_password = "password"
-admin_client = cb_server = sg_username = channels = None
+admin_client = cb_server = sg_username = channels = client_auth = sg_url = None
 admin_auth = [RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']]
 
 
@@ -31,7 +32,9 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
         global cb_server
         global sg_username
         global channels
-        session_id = pre_test_db_exists = pre_test_user_exists = None
+        global client_auth
+        global sg_url
+        pre_test_db_exists = pre_test_user_exists = sg_client = sg_url = sg_admin_url = None
         random_suffix = str(uuid.uuid4())[:8]
         db_prefix = "db_"
         scope_prefix = "scope_"
@@ -40,9 +43,9 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
         scope = scope_prefix + random_suffix
         collection = collection_prefix + random_suffix
         sg_username = "scopes_collections_user" + random_suffix
+        client_auth = HTTPBasicAuth(sg_username, sg_password)
         channels = ["ABC"]
         data = {"bucket": bucket, "scopes": {scope: {"collections": {collection: {}}}}, "num_index_replicas": 0}
-        auth_session = sg_client = sg_url = sg_admin_url = auth_session = None
         cluster_config = params_from_base_test_setup["cluster_config"]
         sg_admin_url = params_from_base_test_setup["sg_admin_url"]
         cluster_helper = ClusterKeywords(cluster_config)
@@ -74,16 +77,11 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
         if pre_test_user_exists is False:
             sg_client.create_user(sg_admin_url, db, sg_username, sg_password, auth=admin_auth)
 
-        # Create a SGW session
-        cookie, session_id = sg_client.create_session(sg_admin_url, db, sg_username, auth=admin_auth)
-        auth_session = cookie, session_id
-        yield sg_client, sg_url, sg_admin_url, auth_session, db, scope, collection
+        yield sg_client, sg_admin_url, db, scope, collection
     except Exception as e:
         raise e
     finally:
         # Cleanup everything that was created
-        if (session_id is not None) and (sg_client.does_session_exist(sg_admin_url, db=db, session_id=session_id) is True):
-            sg_client.delete_session(sg_admin_url, db, session_id=session_id)
         if (pre_test_user_exists is not None) and (pre_test_user_exists is False):
             admin_client.delete_user_if_exists(db, sg_username)
         if (pre_test_db_exists is not None) and (pre_test_db_exists is False):
@@ -99,26 +97,26 @@ def test_document_only_under_named_scope(scopes_collections_tests_fixture, teard
     # setup
     doc_prefix = "scp_tests_doc"
     doc_id = doc_prefix + "_0"
-    sg_client, sg_url, sg_admin_url, auth_session, db, scope, collection = scopes_collections_tests_fixture
-    if sg_client.does_doc_exist(sg_url, db, doc_id, auth_session, scope=scope, collection=collection) is False:
-        sg_client.add_docs(sg_url, db, 1, doc_prefix, auth_session, scope=scope, collection=collection)
-    teardown_doc_fixture(sg_client, sg_admin_url, db, doc_id, auth_session, scope, collection)
+    sg_client, sg_admin_url, db, scope, collection = scopes_collections_tests_fixture
+    if sg_client.does_doc_exist(sg_admin_url, db, doc_id, scope=scope, collection=collection) is False:
+        sg_client.add_docs(sg_url, db, 1, doc_prefix, auth=client_auth, scope=scope, collection=collection)
+    teardown_doc_fixture(sg_client, sg_admin_url, db, doc_id, auth=client_auth, scope=scope, collection=collection)
 
     # exercise + verification
     try:
-        sg_client.get_doc(sg_admin_url, db, doc_id, auth=auth_session, scope=scope, collection=collection)
+        sg_client.get_doc(sg_admin_url, db, doc_id, scope=scope, collection=collection)
     except Exception as e:
         pytest.fail("There was a problem reading the document from a collection when specifying the scope in the endpoint. The error: " + str(e))
 
     # exercise + verification
     try:
-        sg_client.get_doc(sg_admin_url, db, doc_id, auth=auth_session, scope=scope, collection=collection)
+        sg_client.get_doc(sg_admin_url, db, doc_id, scope=scope, collection=collection)
     except Exception as e:
         pytest.fail("There was a problem reading the document from a collection WITHOUT specifying the scope in the endoint. The error: " + str(e))
 
     #  exercise + verification
     with pytest.raises(Exception) as e:  # HTTPError doesn't work, for some  reason, but would be preferable
-        sg_client.get_doc(sg_admin_url, db, doc_id, auth=auth_session, scope="_default", collection=collection)
+        sg_client.get_doc(sg_admin_url, db, doc_id, scope="_default", collection=collection)
     e.match("Not Found")
 
 
@@ -133,14 +131,14 @@ def test_change_collection_name(scopes_collections_tests_fixture):
     5. Verify that the document is accessible again
     """
     # setup
-    sg_client, sg_url, sg_admin_url, auth_session, db, scope, collection = scopes_collections_tests_fixture
+    sg_client, sg_admin_url, db, scope, collection = scopes_collections_tests_fixture
     doc_prefix = "scp_tests_doc"
     doc_id = doc_prefix + "_0"
     new_collection_name = "new_collection_test"
 
     # 1. Upload a document to a collection
-    if sg_client.does_doc_exist(sg_url, db, doc_id, auth=auth_session, scope=scope, collection=collection) is False:
-        sg_client.add_docs(sg_url, db, 1, doc_prefix, auth=auth_session, scope=scope, collection=collection)
+    if sg_client.does_doc_exist(sg_admin_url, db, doc_id, scope=scope, collection=collection) is False:
+        sg_client.add_docs(sg_admin_url, db, 1, doc_prefix, scope=scope, collection=collection)
 
     # 2. Rename the collection by updating the config
     cb_server.create_collection(bucket, scope, new_collection_name)
@@ -148,7 +146,7 @@ def test_change_collection_name(scopes_collections_tests_fixture):
 
     #  exercise + verification
     with pytest.raises(Exception) as e:  # HTTPError doesn't work, for some reason, but would be preferable
-        sg_client.get_doc(sg_admin_url, db, doc_id, auth=auth_session, scope=scope, collection=new_collection_name)
+        sg_client.get_doc(sg_admin_url, db, doc_id, scope=scope, collection=new_collection_name)
     e.match("Not Found")
 
     # 4. Rename the collection to the original collection
@@ -156,7 +154,7 @@ def test_change_collection_name(scopes_collections_tests_fixture):
 
     # 5. Verify that the document is accessible again
     try:
-        sg_client.get_doc(sg_admin_url, db, doc_id, auth=auth_session, scope=scope, collection=collection)
+        sg_client.get_doc(sg_admin_url, db, doc_id, scope=scope, collection=collection)
     except Exception as e:
         pytest.fail("The document could not be read from the collection after it was renamed and renamed back. The error: " + str(e))
 
@@ -175,7 +173,7 @@ def test_collection_channels(scopes_collections_tests_fixture):
     8. Check that _bulk_get cannot get a document from the "right" channel but the wrong collection
     """
     # setup
-    sg_client, sg_url, sg_admin_url, auth_session, db, scope, collection = scopes_collections_tests_fixture
+    sg_client, sg_admin_url, db, scope, collection = scopes_collections_tests_fixture
     random_str = str(uuid.uuid4())[:6]
     test_user_1 = "cu1_" + random_str
     test_user_2 = "cu2_" + random_str
@@ -197,7 +195,7 @@ def test_collection_channels(scopes_collections_tests_fixture):
     # 2. Upload the documents to the collection
     sg_client.add_docs(sg_url, db, 3, user_1_doc_prefix, auth=auth_user_1, channels=channels_user_1, scope=scope, collection=collection)
     sg_client.add_docs(sg_url, db, 3, user_2_doc_prefix, auth=auth_user_2, channels=channels_user_2, scope=scope, collection=collection)
-    shared_doc = sg_client.add_docs(sg_admin_url, db, 1, shared_doc_prefix, auth=auth_session, channels=["!"], scope=scope, collection=collection)
+    shared_doc = sg_client.add_docs(sg_admin_url, db, 1, shared_doc_prefix, auth=client_auth, channels=["!"], scope=scope, collection=collection)
 
     # 3. Get all the documents using _all_docs
     user_1_docs = sg_client.get_all_docs(url=sg_url, db=db, auth=auth_user_1, include_docs=True)
