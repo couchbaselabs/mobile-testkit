@@ -217,7 +217,6 @@ def test_sgw_high_availability(params_from_base_test_setup, setup_basic_sg_conf)
     xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
     sg_conf = setup_basic_sg_conf["sg_conf"]
     sg_db = "db"
-    sg2.restart(config=sg_conf, cluster_config=cluster_config)
     sg_client = MobileRestClient()
     prometheus_enabled = params_from_base_test_setup["prometheus_enabled"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
