@@ -194,7 +194,7 @@ def test_sgw_cache_management_multiple_sgws(params_from_base_test_setup):
 @pytest.mark.topospecific
 @pytest.mark.syncgateway
 @pytest.mark.community
-def test_sgw_high_availability(params_from_base_test_setup):
+def test_sgw_high_availability(params_from_base_test_setup, setup_basic_sg_conf):
     """
     @summary :
     1. Start 2 sgw nodes
@@ -209,14 +209,15 @@ def test_sgw_high_availability(params_from_base_test_setup):
         CE - import_cancel_cas  is not equal to 0
         import_count + import_cancel_cas = num_docs
     """
-    sg_conf_name = "sync_gateway_default_functional_tests"
-    cluster_config = params_from_base_test_setup["cluster_config"]
-    cbs_cluster = cluster.Cluster(cluster_config)
-    sg2 = cbs_cluster.sync_gateways[1]
+
+    cluster_config = setup_basic_sg_conf["cluster_config"]
+    cbs_cluster = setup_basic_sg_conf["cbs_cluster"]
+    sg2 = setup_basic_sg_conf["sg2"]
     sg_ce = params_from_base_test_setup["sg_ce"]
     xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
-    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, "cc")
+    sg_conf = setup_basic_sg_conf["sg_conf"]
     sg_db = "db"
+    sg2.restart(config=sg_conf, cluster_config=cluster_config)
     sg_client = MobileRestClient()
     prometheus_enabled = params_from_base_test_setup["prometheus_enabled"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
@@ -299,4 +300,3 @@ def setup_basic_sg_conf(params_from_base_test_setup):
         "cluster_config": cluster_config,
         "sg_conf": sg_conf
     }
-    sg2.restart(config=sg_conf, cluster_config=cluster_config)
