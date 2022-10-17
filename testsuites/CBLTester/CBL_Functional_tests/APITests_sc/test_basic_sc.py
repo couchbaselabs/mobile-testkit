@@ -29,8 +29,8 @@ class TestBasicSC(object):
                 pass
             else:
                 raise("Server could create another scope with same name")
-        
-    def test_remove_scope(self, scope_name):
+
+    def test_remove_scope(self, scope_name, collection_name=None):
         '''
         @summary: Testing remove scope
         '''
@@ -41,4 +41,3 @@ class TestBasicSC(object):
         @summary: Testing remove collection
         '''
         self.server_obj.remove(scope_name, collection_name)
-
