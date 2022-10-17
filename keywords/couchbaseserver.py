@@ -314,6 +314,38 @@ class CouchbaseServer:
                 error_count += 1
                 time.sleep(1)
 
+    def _create_internal_rbac_user_by_roles(self, bucketname, cluster_config, rbac_user, roles):
+        # Create user with username=bucketname and assign role based on the parameter
+        roles = "{}[{}]".format(roles, bucketname)
+        password = 'password'
+        data_user_params = {
+            "name": rbac_user,
+            "roles": roles,
+            "password": password
+        }
+
+        log_info("Creating RBAC user {} with password {} and roles {}".format(rbac_user, password, roles))
+
+        rbac_url = "{}/settings/rbac/users/local/{}".format(self.url, rbac_user)
+
+        resp = None
+        error_count = 0
+        while True:
+            if error_count == self.max_retries:
+                log_info("Error! Could not create RBAC user after retries. ")
+                raise RBACUserCreationError("Error! Could not create RBAC user after retries. ")
+            try:
+                resp = self._session.put(rbac_url, data=data_user_params, auth=('Administrator', 'password'))
+                log_r(resp)
+                resp.raise_for_status()
+                # If request does not throw, exit retry loop
+                break
+            except HTTPError as h:
+                log_info("Hit a ConnectionError while trying to create RBAC user. Retrying ...")
+                log_info("resp code: {}; error: {}".format(resp, h))
+                error_count += 1
+                time.sleep(1)
+
     def _delete_internal_rbac_bucket_user(self, bucketname):
         # Delete user with username=bucketname
         data_user_params = {
@@ -603,12 +635,10 @@ class CouchbaseServer:
 
         start = time.time()
         while True:
-
             if time.time() - start > keywords.constants.REBALANCE_TIMEOUT_SECS:
                 raise Exception("wait_for_rebalance_complete: TIMEOUT")
 
             tasks = self._get_tasks()
-
             done_rebalacing = True
             for task in tasks:
                 # loop through each task and see if any rebalance tasks are running
@@ -840,7 +870,7 @@ class CouchbaseServer:
         # Delete some vBucket file to start a server rollback
         # Example vbucket files - 195.couch.1  310.couch.1  427.couch.1  543.couch.1
         log_info("Deleting vBucket file '66.couch.1'")
-        self.remote_executor.must_execute('sudo find /opt/couchbase/var/lib/couchbase/data/data-bucket -name "{}" -delete'.format(vbucket_filename))
+        self.remote_executor.must_execute('sudo find /opt/couchbase/var/lib/couchbase/data/{} -name "{}" -delete'.format(bucket_name, vbucket_filename))
         log_info("Listing vBucket files ...")
         out, err = self.remote_executor.must_execute("sudo ls /opt/couchbase/var/lib/couchbase/data/{}/".format(bucket_name))
 
@@ -1066,6 +1096,25 @@ class CouchbaseServer:
         except Exception as ex:
             log_info("Got an exception while creating a scope{}".format(ex))
         return scope
+
+    def delete_scope_if_exists(self, bucket, scope):
+        did_scope_exist = self.does_scope_exist(bucket, scope)
+        resp = self._session.delete("{}/pools/default/buckets/{}/scopes/{}".format(self.url, bucket, scope))
+        log_r(resp)
+        resp.raise_for_status()
+
+        return did_scope_exist
+
+    def does_scope_exist(self, bucket, scope):
+        try:
+            resp = self._session.get("{}/pools/default/buckets/{}/scopes/{}".format(self.url, bucket, scope))
+            resp.raise_for_status()
+            return True
+        except requests.HTTPError as e:
+            if e.response.status_code == 404:
+                return False
+            else:
+                raise Exception("Could not determine if the scope exists on the server due to the following error: " + str(e)) from e
 
     def create_collection(self, bucket, scope, collection=None):
         """ Create scope on couchbase server"""

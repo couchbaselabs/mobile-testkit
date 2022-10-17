@@ -19,6 +19,7 @@ from libraries.testkit import cluster
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
 from keywords.attachment import generate_2_png_100_100
 from keywords.SyncGateway import SyncGateway
+from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
 from keywords.constants import RBAC_FULL_ADMIN
 
 
@@ -2823,7 +2824,9 @@ def test_replication_1withMultipleBuckets_deleteOneBucket(params_from_base_test_
                                                replication_type="push_pull", continuous=True, channels=channel3)
 
     # 5. Deleted 3rd bucket on CBS.
-    cb_server.delete_bucket(name="data-bucket-3")
+    # cb_server.delete_bucket(name="data-bucket-3")
+    buckets = get_buckets_from_sync_gateway_config(sg_config, cluster_config)
+    cb_server.delete_bucket(name=buckets[2])
 
     # 6. Continue replication.
     replicator.wait_until_replicator_idle(repl1)
@@ -2832,7 +2835,6 @@ def test_replication_1withMultipleBuckets_deleteOneBucket(params_from_base_test_
 
     # 7. Verify 3rd bucket's docs are still exists in sg
     verify_sgDocIds_cblDocIds(sg_client, sg_url, sg_db1, session1, cbl_db1, db)
-    verify_sgDocIds_cblDocIds(sg_client, sg_url, sg_db2, session2, cbl_db2, db)
     cbl_doc_ids = db.getDocIds(cbl_db3)
     assert len(cbl_doc_ids) == num_of_docs, "cbl docs not deleted when assosiated bucket is deleted in CBS"
     replicator.stop(repl1)

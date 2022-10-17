@@ -147,6 +147,6 @@ class TestServerCpp(TestServerBase):
         return True
 
     def stop(self):
-        print("STOPPING THE TESTSERVER")
+        log_info("STOPPING THE TESTSERVER")
         remote_executor = RemoteExecutor(self.test_host, self.platform, os.environ["TESTSERVER_HOST_USER"], os.environ["TESTSERVER_HOST_PASSWORD"])
         remote_executor.execute("ps -ef | grep 'testserver' | awk '{print $2}' | xargs kill -9 $1")

@@ -1,0 +1,31 @@
+{
+  "interface": ":4984",
+  "adminInterface": "0.0.0.0:4985",
+  "maxIncomingConnections": 0,
+  "maxFileDescriptors": 90000,
+  "compressResponses": false,
+  {{ logging }}
+  {{ hide_product_version }}
+  {{ disable_persistent_config }}
+    {{ server_tls_skip_verify }}
+    {{ disable_tls_server }}
+    {{ disable_admin_auth }}
+  
+  {{ sslcert }}
+  {{ sslkey }}
+  "databases": {
+    "sg_db1": {
+      
+      {{ autoimport }}
+      {{ xattrs }}
+      {{ no_conflicts }}
+      {{ sg_use_views }}
+      {{ num_index_replicas }}
+      {{ delta_sync }}
+      "server": "{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
+      "bucket": "data-bucket-1",
+      "username":"data-bucket-1",
+      "password": "password"
+    }
+  }
+}

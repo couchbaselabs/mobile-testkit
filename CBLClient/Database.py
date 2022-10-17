@@ -1,6 +1,7 @@
 import uuid
 
 from CBLClient.Client import Client
+from CBLClient.Collection import Collection
 from CBLClient.Args import Args
 from keywords.utils import log_info
 from keywords import types
@@ -21,6 +22,7 @@ class Database(object):
             raise Exception("No base_url specified")
 
         self._client = Client(base_url)
+        self._collection = Collection(base_url)
 
     def configure(self, directory=None, conflictResolver=None, password=None):
         args = Args()
@@ -208,7 +210,7 @@ class Database(object):
             args.setString("concurrencyControlType", concurrencyControlType)
         return self._client.invokeMethod("database_deleteWithConcurrency", args)
 
-    def create_bulk_docs(self, number, id_prefix, db, channels=None, generator=None, attachments_generator=None, id_start_num=0, attachment_file_list=None):
+    def create_bulk_docs(self, number, id_prefix, db, channels=None, generator=None, attachments_generator=None, id_start_num=0, attachment_file_list=None, collection=None):
         """
         if id_prefix == None, generate a uuid for each doc
 
@@ -250,7 +252,10 @@ class Database(object):
 
             doc_body["id"] = doc_id
             added_docs[doc_id] = doc_body
-        self.saveDocuments(db, added_docs)
+        if collection:
+            self._collection.collectionSaveDocuments(db, added_docs, collection)
+        else:
+            self.saveDocuments(db, added_docs)
         return list(added_docs.keys())
 
     def delete_bulk_docs(self, database, doc_ids=[]):
@@ -385,3 +390,40 @@ class Database(object):
             del doc_body["_attachments"]
             updated_docs[doc] = doc_body
         self.updateDocuments(database, updated_docs)
+
+    def defaultScope(self, database):
+        args = Args()
+        args.setMemoryPointer("database", database)
+        return self._client.invokeMethod("scope_defaultScope", args)
+
+    def defaultCollection(self, database):
+        args = Args()
+        args.setMemoryPointer("database", database)
+        return self._client.invokeMethod("collection_defaultCollection", args)
+
+    def createCollection(self, database, collectionName, scopeName):
+        args = Args()
+        args.setString("collectionName", collectionName)
+        args.setString("scopeName", scopeName)
+        args.setMemoryPointer("database", database)
+        return self._client.invokeMethod("collection_createCollection", args)
+
+    def deleteCollection(self, database, collectionName, scopeName):
+        args = Args()
+        args.setString("collectionName", collectionName)
+        args.setString("scopeName", scopeName)
+        args.setMemoryPointer("database", database)
+        return self._client.invokeMethod("collection_deleteCollection", args)
+
+    def collectionsInScope(self, database, scopeName):
+        args = Args()
+        args.setString("scopeName", scopeName)
+        args.setMemoryPointer("database", database)
+        return self._client.invokeMethod("collection_collectionNames", args)
+
+    def collectionObject(self, database, collectionName, scopeName):
+        args = Args()
+        args.setString("collectionName", collectionName)
+        args.setString("scopeName", scopeName)
+        args.setMemoryPointer("database", database)
+        return self._client.invokeMethod("collection_collection", args)

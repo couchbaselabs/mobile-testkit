@@ -68,7 +68,8 @@ class SgAccel:
             "couchbase_server_primary_node": couchbase_server_primary_node,
             "delta_sync": "",
             "prometheus": "",
-            "hide_product_version": ""
+            "hide_product_version": "",
+            "tls": ""
         }
 
         if get_sg_version(self.cluster_config) >= "2.1.0":
@@ -108,7 +109,7 @@ class SgAccel:
             playbook_vars["delta_sync"] = '"delta_sync": { "enabled": true},'
 
         if get_sg_version(self.cluster_config) >= "2.8.0":
-            playbook_vars["prometheus"] = '"metricsInterface": ":4986",'
+            playbook_vars["prometheus"] = '"metrics_interface": ":4986",'
 
         if is_hide_prod_version_enabled(self.cluster_config) and get_sg_version(self.cluster_config) >= "2.8.1":
             playbook_vars["hide_product_version"] = '"hide_product_version": true,'
@@ -117,7 +118,7 @@ class SgAccel:
             playbook_vars["server_scheme"] = "couchbases"
             playbook_vars["server_port"] = 11207
             block_http_vars = {}
-            port_list = [8091, 8092, 8093, 8094, 8095, 8096, 11210, 11211]
+            port_list = ["8091:8096,11210:11211"]
             for port in port_list:
                 block_http_vars["port"] = port
                 status = self.ansible_runner.run_ansible_playbook(

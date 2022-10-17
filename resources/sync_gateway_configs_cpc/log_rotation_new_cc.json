@@ -1,0 +1,62 @@
+{
+  "bootstrap": {
+    {{ server_tls_skip_verify }}
+    {{ disable_tls_server }}
+    {{ username }}
+    {{ password }}
+    {{ cacertpath }}
+    {{ certpath }}
+    {{ keypath }}
+    "group_id": "persistent_group1",
+    "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}"
+    },
+    "api":{
+        {{ disable_admin_auth }}
+        "public_interface":":4984",
+        "admin_interface":"0.0.0.0:4985"
+    },
+  "logging": {
+    "log_file_path": "/tmp/sg_logs",
+    "console": {
+      "log_keys": ["*"],
+      "log_level": "debug",
+      "rotation": {
+        "max_size": 1,
+        "max_age": 30,
+        "localtime": true
+      }
+    },
+    "error": {
+      "enabled": true,
+      "rotation": {
+        "max_size": 1,
+        "max_age": 180,
+        "localtime": true
+      }
+    },
+    "warn": {
+      "enabled": true,
+      "rotation": {
+        "max_size": 1,
+        "max_age": 90,
+        "localtime": true
+      }
+    },
+    "info": {
+      "enabled": true,
+      "rotation": {
+        "max_size": 1,
+        "max_age": 30,
+        "localtime": true
+      }
+    },
+    "debug": {
+      "enabled": true,
+      "rotation": {
+        "max_size": 1,
+        "max_age": 30,
+        "localtime": true
+      }
+    }
+  }
+}

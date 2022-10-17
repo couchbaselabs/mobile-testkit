@@ -66,7 +66,7 @@ class TestDatabase(object):
             pytest.skip("Test only applicable for android and java platforms")
 
         db = self.db_obj.create(random_string(6))
-        err_msg = "document must not be null"
+        err_msg = "Bad Request"
         try:
             self.db_obj.saveDocument(db, None)
             assert 0
@@ -81,7 +81,7 @@ class TestDatabase(object):
 
         db = self.db_obj.create(random_string(6))
         # Exception checking when document id is null
-        err_msg = "document must not be null"
+        err_msg = "Bad Request"
         try:
             self.db_obj.delete(database=db, document=None)
             assert 0

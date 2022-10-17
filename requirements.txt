@@ -10,7 +10,7 @@ botocore==1.4.5
 cffi==1.10.0
 colorama==0.3.3
 configparser==3.5.0
-couchbase==3.2.3
+couchbase==3.2.7
 cryptography==2.8
 docker==2.2.1
 docker-pycreds==0.2.1
@@ -22,6 +22,7 @@ futures==3.1.1
 idna==2.5
 ipaddress==1.0.18
 isort==4.2.5
+itsdangerous==2.0.1
 Jinja2==2.10.1
 jmespath==0.9.0
 lazy-object-proxy==1.2.2
@@ -55,7 +56,7 @@ rsa==3.3
 s3transfer==0.0.1
 six==1.15.0
 termcolor==1.1.0
-troposphere==1.5.0
+troposphere==4.0.2
 websocket-client==0.40.0
 wrapt==1.12.1
 xmltodict==0.10.2
@@ -63,3 +64,4 @@ numpy==1.17.4
 pytest-rerunfailures==8.0
 flask==1.1.2
 typing-extensions==3.7.4.3
+werkzeug==2.0.3
