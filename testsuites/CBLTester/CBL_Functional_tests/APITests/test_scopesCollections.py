@@ -24,7 +24,12 @@ class TestScopeCollection(object):
             created_CollectionName = self.collection_obj.collectionName(created_Collection)
             assert created_CollectionName == collection, "Scope and collection created but not found"
         except:
-            print("Invalid scope and collection name")
+            if ' ' in scope and ' ' in collection:
+                print("Invalid scope name: " + scope + "and collection name: " + collection)
+            elif ' ' in scope:
+                print("Invalid scope name: " + scope)
+            else:
+                print("Invalid collection name: " + collection)
             assert True
 
     @pytest.mark.parametrize("db_name, no_of_scope, collection", [
