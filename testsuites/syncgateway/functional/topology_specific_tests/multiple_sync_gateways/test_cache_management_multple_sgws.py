@@ -209,13 +209,13 @@ def test_sgw_high_availability(params_from_base_test_setup):
         CE - import_cancel_cas  is not equal to 0
         import_count + import_cancel_cas = num_docs
     """
-
+    sg_conf_name = "sync_gateway_default_functional_tests"
     cluster_config = params_from_base_test_setup["cluster_config"]
     cbs_cluster = cluster.Cluster(cluster_config)
     sg2 = cbs_cluster.sync_gateways[1]
     sg_ce = params_from_base_test_setup["sg_ce"]
     xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
-    sg_conf = params_from_base_test_setup["sg_conf"]
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, "cc")
     sg_db = "db"
     sg_client = MobileRestClient()
     prometheus_enabled = params_from_base_test_setup["prometheus_enabled"]
