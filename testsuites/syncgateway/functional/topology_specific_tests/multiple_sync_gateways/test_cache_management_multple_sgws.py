@@ -211,7 +211,7 @@ def test_sgw_high_availability(params_from_base_test_setup):
     """
 
     cluster_config = params_from_base_test_setup["cluster_config"]
-    cbs_cluster  = cluster.Cluster(cluster_config)
+    cbs_cluster = cluster.Cluster(cluster_config)
     sg2 = params_from_base_test_setup["sg2"]
     sg_ce = params_from_base_test_setup["sg_ce"]
     xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
