@@ -245,9 +245,9 @@ def test_sgw_high_availability(params_from_base_test_setup, setup_basic_sg_conf)
         # 3. Bring down 1 sgw node in main thread
         sg2.stop()
         sg_docs = sg_client.get_all_docs(url=sg1.admin.admin_url, db=sg_db, auth=auth)["rows"]
-        sg3_docs = sg_client.get_all_docs(url=sg3.admin.admin_url, db=sg_db, auth=auth)["rows"]
-        diff_docs = num_docs - (len(sg_docs) + len(sg3_docs))
-        # diff_docs = num_docs - len(sg_docs)
+        # sg3_docs = sg_client.get_all_docs(url=sg3.admin.admin_url, db=sg_db, auth=auth)["rows"]
+        # diff_docs = num_docs - (len(sg_docs) + len(sg3_docs))
+        diff_docs = num_docs - len(sg_docs)
         cbs_docs_via_sdk.result()
 
     retries = 0
@@ -271,7 +271,7 @@ def test_sgw_high_availability(params_from_base_test_setup, setup_basic_sg_conf)
         sg1_import_count = sg1_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"]
         sg3_import_count = sg3_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"]
         sg1_sg3_import_count = sg1_import_count + sg3_import_count
-        #assert sg1_sg3_import_count > diff_docs, "Not all docs imported"
+        assert sg1_sg3_import_count > diff_docs, "Not all docs imported"
         if prometheus_enabled and sync_gateway_version >= "2.8.0":
             assert verify_stat_on_prometheus("sgw_shared_bucket_import_import_count") == sg1_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"]
 
