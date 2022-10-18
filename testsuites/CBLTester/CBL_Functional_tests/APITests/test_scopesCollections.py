@@ -51,7 +51,7 @@ class TestScopeCollection(object):
         for i in range(1, no_of_scope + 1):
             scopeName = "scope-" + str(i)
             collections.append(self.db_obj.collectionObject(db, collection, scopeName))
-        assert len(collections) == no_of_scope, "Number of collections made, mismatch"
+        assert len(collections) == no_of_scope, "Total number of collections made are not same as number of collection retrieved"
 
     @pytest.mark.parametrize("db_name, no_of_scope, no_of_collection", [
         (random_string(6), random.randrange(1000), random.randrange(1000))
