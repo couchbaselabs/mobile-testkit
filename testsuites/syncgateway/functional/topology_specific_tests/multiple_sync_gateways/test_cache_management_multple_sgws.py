@@ -249,16 +249,13 @@ def test_sgw_high_availability(params_from_base_test_setup, setup_basic_sg_conf)
         diff_docs = num_docs - (len(sg_docs) + len(sg3_docs))
         # diff_docs = num_docs - len(sg_docs)
         cbs_docs_via_sdk.result()
-    log_info("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++HERE1")
     retries = 0
-    while retries < 10:
-        log_info("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++Retry=" + str(retries))
+    while retries < 20:
         sg_docs = sg_client.get_all_docs(url=sg1.admin.admin_url, db=sg_db, auth=auth)["rows"]
         if len(sg_docs) == num_docs:
             break
         retries = retries + 1
         time.sleep(2)
-    log_info("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++HERE2")
     assert len(sg_docs) == num_docs, "not all docs imported from server"
     sg1_expvars = sg_client.get_expvars(sg1.admin.admin_url, auth=auth)
     sg3_expvars = sg_client.get_expvars(sg3.admin.admin_url, auth=auth)
