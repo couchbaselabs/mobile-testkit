@@ -34,4 +34,4 @@ def test_reserve_property(params_from_base_test_setup):
         assert "Illegal top-level key '_id' in document" in str(err), \
             "Did not throw the unsupported reserve property error"
     else:
-        assert False, "Did not throw the unsupported reserve property error"
+        raise Exception("Did not throw the unsupported reserve property error")
