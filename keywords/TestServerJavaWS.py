@@ -30,7 +30,7 @@ class TestServerJavaWS(TestServerBase):
             if community_enabled:
                 self.cbl_core_lib_name = "couchbase-lite-java-{}".format(self.version)
             else:
-                self.cbl_core_lib_name = "couchbase-lite-java-ee-{}".format(self.version)
+                self.cbl_core_lib_name = "couchbase-lite-java-enterprise-{}".format(self.version)
 
             self.download_corelib_url = "{}/couchbase-lite-java/{}/{}/{}.zip".format(RELEASED_BUILDS, self.version, self.build, self.cbl_core_lib_name)
         else:
@@ -39,7 +39,7 @@ class TestServerJavaWS(TestServerBase):
             if community_enabled:
                 self.cbl_core_lib_name = "couchbase-lite-java-{}-{}".format(self.version, self.build)
             else:
-                self.cbl_core_lib_name = "couchbase-lite-java-ee-{}-{}".format(self.version, self.build)
+                self.cbl_core_lib_name = "couchbase-lite-java-enterprise-{}-{}".format(self.version, self.build)
             self.download_corelib_url = "{}/couchbase-lite-java/{}/{}/{}.zip".format(LATEST_BUILDS, self.version, self.build, self.cbl_core_lib_name)
 
         self.build_name = "TestServer-java-WS-{}-{}".format(self.build_type, self.version_build)
