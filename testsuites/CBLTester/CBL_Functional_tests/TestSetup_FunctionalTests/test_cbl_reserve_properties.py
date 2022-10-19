@@ -32,12 +32,5 @@ def test_reserve_property(params_from_base_test_setup):
         db.saveDocument(cbl_db, doc1)
         assert False, "Did not throw the unsupported reserve property error"
     except Exception as err:
-        assert "Illegal top-level key `_id` in document" in str(err), \
+        assert "Illegal top-level key '_id' in document" in str(err), \
             "Did not throw the unsupported reserve property error"
-
-    # This is added to catch the
-    doc_body = document.create_doc(doc_id="doc_2", content="doc2", channels=channel, expiry=2,
-                                   attachments=attachment.generate_2_png_10_10())
-
-    doc2 = documentObj.create("doc_2", doc_body)
-    db.saveDocument(cbl_db, doc2)
