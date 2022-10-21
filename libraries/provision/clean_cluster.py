@@ -17,6 +17,17 @@ def clean_cluster(cluster_config, skip_couchbase_provision=False, server_platfor
     if status != 0:
         raise ProvisioningError("Failed to removed previous installs")
 
+    # Clear firewall rules
+    if not skip_couchbase_provision:
+        status = ansible_runner.run_ansible_playbook("flush-cb-firewall.yml")
+        if status != 0:
+            raise ProvisioningError("Failed to flush firewall")
+
+    # Clear firewall rules
+    status = ansible_runner.run_ansible_playbook("flush-firewall.yml")
+    if status != 0:
+        raise ProvisioningError("Failed to flush firewall")
+
     # Reset to ntp time . Required for x509 tests to clock sync for couchbase server and sync gateway
     status = ansible_runner.run_ansible_playbook("reset-hosts.yml")
     if status != 0:
