@@ -126,7 +126,7 @@ class TestServerJavaWS(TestServerBase):
             # download war file to a remote non-Windows machine
             status = self.ansible_runner.run_ansible_playbook("download-testserver-java-ws.yml", extra_vars={
                 "testserver_download_url": self.download_url,
-                "cblite_download_url": self.download_corelib_url,
+                "cblite_download_url": self.download_corelib_url.replace("-ee-","-enterprise-"),
                 "war_package_name": self.package_name,
                 "core_package_name": self.cbl_core_lib_name
             })
