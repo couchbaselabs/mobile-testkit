@@ -11,6 +11,9 @@
     
 
   tasks:
+  - name: Disable firewall
+    shell: iptables -F
+
   - include: tasks/remove-sync-gateway.yml
   - include: tasks/clean-users.yml
 
@@ -113,4 +116,7 @@
   any_errors_fatal: true
   become: yes
   tasks:
+  - name: Disable firewall
+    shell: iptables -F
+
   - include: tasks/start-sync-gateway.yml
