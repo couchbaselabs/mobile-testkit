@@ -1909,7 +1909,7 @@ def test_auto_purge_for_tombstone_docs(params_from_base_test_setup, with_local_u
     # 5. revoke user access from channel A and resume the replication
     sg_client.update_user(url=sg2.admin.admin_url, db=DB2, name=sg2_username, channels=["B", "C"], auth=auth)
     time.sleep(2)
-    sg1.modify_replication2_status(replicator2_id, DB1, "start", auth=auth)
+    sg1.modify_replication2_status(replicator2_id, DB1, "start")
     time.sleep(2)
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id, read_flag=True, max_times=3000)
 
