@@ -277,7 +277,7 @@ def test_existing_replication_enabling_auto_purge(params_from_base_test_setup, r
     sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id_1, read_flag=True, max_times=6000)
 
     if require_checkpoint_reset:
-        sg1.modify_replication2_status(replicator2_id_1, DB1, "reset", auth=auth)
+        sg1.modify_replication2_status(replicator2_id_1, DB1, "reset")
         sg1.admin.wait_until_sgw_replication_done(DB1, replicator2_id_1, read_flag=True, max_times=6000)
 
     # 7. verify docs in channel A are purged, docs in other channels are not impacted
