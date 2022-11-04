@@ -34,6 +34,16 @@ class Database(object):
             args.setString("password", password)
         return self._client.invokeMethod("databaseConfiguration_configure", args)
 
+    def configureOld(self, directory=None, conflictResolver=None, password=None):
+        args = Args()
+        if directory is not None:
+            args.setString("directory", directory)
+        if conflictResolver is not None:
+            args.setMemoryPointer("conflictResolver", conflictResolver)
+        if password is not None:
+            args.setString("password", password)
+        return self._client.invokeMethod("databaseConfiguration_configure_old", args)
+
     def create(self, name, config=None):
         args = Args()
         args.setString("name", name)
