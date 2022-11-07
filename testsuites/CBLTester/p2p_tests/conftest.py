@@ -5,7 +5,6 @@ import pytest
 from keywords.utils import log_info, clear_resources_pngs, set_device_enabled
 from keywords.TestServerFactory import TestServerFactory
 from CBLClient.Database import Database
-from CBLClient.Collection import Collection
 from CBLClient.Query import Query
 from CBLClient.Utils import Utils
 from keywords.constants import RESULTS_DIR
@@ -173,7 +172,6 @@ def params_from_base_suite_setup(request):
             log_info("db name for {} is {}".format(base_url, db_name))
             db_name_list.append(db_name)
             db = Database(base_url)
-            col_obj = Collection(base_url)
             query_obj_list.append(Query(base_url))
             db_obj_list.append(db)
 
@@ -212,8 +210,7 @@ def params_from_base_suite_setup(request):
         "testserver_list": testserver_list,
         "enable_file_logging": enable_file_logging,
         "delta_sync_enabled": delta_sync_enabled,
-        "use_local_testserver": use_local_testserver,
-        "col_obj": col_obj
+        "use_local_testserver": use_local_testserver
     }
 
     if create_db_per_suite:
