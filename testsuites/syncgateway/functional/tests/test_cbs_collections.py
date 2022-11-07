@@ -26,6 +26,9 @@ def teardown_doc_fixture():
 
 @pytest.fixture
 def scopes_collections_tests_fixture(params_from_base_test_setup):
+    if params_from_base_test_setup["use_views"]:
+        pytest.skip("""It is not necessary to run scopes and collections tests with views.
+                    When it is enabled, there is a problem that affects the rest of the tests suite.""")
     try:  # To be able to teardon in case of a setup error
         # get/set the parameters
         global admin_client
