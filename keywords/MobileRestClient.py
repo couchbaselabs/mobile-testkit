@@ -2621,13 +2621,3 @@ class MobileRestClient:
                 return False
             else:
                 raise Exception("Could not determine if the document exists due to the following error: " + str(e)) from e
-
-    def does_session_exist(self, url, db, session_id):
-        try:
-            self.get_session(url, db=db, session_id=session_id)
-            return True
-        except HTTPError as e:
-            if e.response.status_code == 404:
-                return False
-            else:
-                raise Exception("Could not determine if the session exists due to the following error: " + str(e)) from e

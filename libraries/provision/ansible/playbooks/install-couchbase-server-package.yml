@@ -48,6 +48,9 @@
     - name: COUCHBASE SERVER | Download couchbase server
       get_url: url={{ couchbase_server_package_url }} dest=/tmp/{{ couchbase_server_package_name }}
 
+    - name: Disable firewall
+      shell: iptables -F
+
     - name: Install Couchbase Server on CentOS
       yum: name=/tmp/{{ couchbase_server_package_name }} state=present
       when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon"

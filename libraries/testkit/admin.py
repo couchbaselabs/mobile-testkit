@@ -556,11 +556,14 @@ class Admin:
         return resp.json()
 
     def does_db_exist(self, db):
+        expected_code = 404
+        if not is_admin_auth_disabled(self.cluster_config):
+            expected_code = 403
         try:
             self.get_db_info(db)
             return True
         except requests.HTTPError as e:
-            if e.response.status_code == 404:
+            if e.response.status_code == expected_code:
                 return False
             else:
                 raise Exception("Could not determine if the database exists due to the following error: " + str(e)) from e
@@ -573,7 +576,7 @@ class Admin:
             if e.response.status_code == 404:
                 return False
             else:
-                raise Exception("Could not determine if the user exists due to the following error: " + str(e)) from e    
+                raise Exception("Could not determine if the user exists due to the following error: " + str(e)) from e
 
     def wait_for_db_online(self, db, timeout=60):
         log_info("Waiting for the db to be online")
