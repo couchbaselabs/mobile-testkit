@@ -97,7 +97,7 @@ class PeerToPeer(object):
                   replication_type=None, documentIDs=None, endPointType="MessageEndPoint", basic_auth=None,
                   push_filter=False, pull_filter=False, filter_callback_func='', conflict_resolver="", tls_disable=True,
                   tls_auth_type="tls", tls_authenticator=False, server_verification_mode=False, retries=None,
-                  max_timeout_interval=None):
+                  max_timeout_interval=None, collections=None, collection_configuration=None):
         args = Args()
         args.setString("host", host)
         args.setInt("port", port)
@@ -129,6 +129,10 @@ class PeerToPeer(object):
         args.setString("tls_auth_type", tls_auth_type)
         args.setBoolean("tls_authenticator", tls_authenticator)
         args.setBoolean("server_verification_mode", server_verification_mode)
+        if collections:
+            args.setArray("collections", collections)
+        if collection_configuration:
+            args.setArray("collection_configuration", collection_configuration)
         return self._client.invokeMethod("peerToPeer_configure", args)
 
     def client_start(self, replicator):
