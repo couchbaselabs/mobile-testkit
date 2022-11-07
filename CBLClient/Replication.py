@@ -427,4 +427,3 @@ class Replication(object):
         if documentIDs is not None:
             args.setArray("documentIDs", documentIDs)
         return self._client.invokeMethod("replicatorCollection_configure", args)
-

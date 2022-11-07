@@ -4,8 +4,6 @@ import datetime
 import zipfile
 import os
 import io
-from CBLClient.Collection import Collection
-from CBLClient.Scope import Scope
 
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop, get_cluster
 from keywords.utils import log_info
@@ -524,8 +522,7 @@ def params_from_base_suite_setup(request):
         log_info("Starting TestServer...")
         testserver.stop()
         test_name_cp = test_name.replace("/", "-")
-        log_filename = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, \
-                                                                  test_name_cp, datetime.datetime.now())
+        log_filename = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now())
         if device_enabled:
             testserver.start_device(log_filename)
         else:
