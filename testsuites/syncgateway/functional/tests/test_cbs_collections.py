@@ -8,6 +8,7 @@ from keywords.constants import RBAC_FULL_ADMIN
 from libraries.testkit.admin import Admin
 from keywords.exceptions import RestError
 from requests.auth import HTTPBasicAuth
+from utilities.cluster_config_utils import get_sg_use_views
 
 # test file shared variables
 bucket = "data-bucket"
@@ -26,18 +27,15 @@ def teardown_doc_fixture():
 
 @pytest.fixture
 def scopes_collections_tests_fixture(params_from_base_test_setup):
-    if "use_views" in params_from_base_test_setup:
-        if params_from_base_test_setup["use_views"]:
-            pytest.skip("""It is not necessary to run scopes and collections tests with views.
-                        When it is enabled, there is a problem that affects the rest of the tests suite.""")
+    # get/set the parameters
+    global admin_client
+    global cb_server
+    global sg_username
+    global channels
+    global client_auth
+    global sg_url
+
     try:  # To be able to teardon in case of a setup error
-        # get/set the parameters
-        global admin_client
-        global cb_server
-        global sg_username
-        global channels
-        global client_auth
-        global sg_url
         pre_test_db_exists = pre_test_user_exists = sg_client = sg_url = sg_admin_url = None
         random_suffix = str(uuid.uuid4())[:8]
         db_prefix = "db_"
@@ -97,6 +95,9 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
 @pytest.mark.syncgateway
 @pytest.mark.collections
 def test_document_only_under_named_scope(scopes_collections_tests_fixture, teardown_doc_fixture):
+    if is_use_views_enabled:
+        pytest.skip("""It is not necessary to run scopes and collections tests with views.
+                When it is enabled, there is a problem that affects the rest of the tests suite.""")
 
     # setup
     doc_prefix = "scp_tests_doc"
@@ -134,6 +135,10 @@ def test_change_collection_name(scopes_collections_tests_fixture):
     4. Rename the collection to the original collection
     5. Verify that the document is accessible again
     """
+    if is_use_views_enabled:
+        pytest.skip("""It is not necessary to run scopes and collections tests with views.
+                When it is enabled, there is a problem that affects the rest of the tests suite.""")
+
     # setup
     sg_client, sg_admin_url, db, scope, collection = scopes_collections_tests_fixture
     doc_prefix = "scp_tests_doc"
@@ -176,6 +181,10 @@ def test_collection_channels(scopes_collections_tests_fixture):
     7. Check that _bulk_get can get documents that are in the user's channel
     8. Check that _bulk_get cannot get a document from the "right" channel but the wrong collection
     """
+    if is_use_views_enabled:
+        pytest.skip("""It is not necessary to run scopes and collections tests with views.
+                When it is enabled, there is a problem that affects the rest of the tests suite.""")
+
     # setup
     sg_client, sg_admin_url, db, scope, collection = scopes_collections_tests_fixture
     random_str = str(uuid.uuid4())[:6]
@@ -249,3 +258,8 @@ def rename_a_single_collection(db, scope, new_name):
     data = {"bucket": bucket, "scopes": {scope: {"collections": {new_name: {}}}}, "num_index_replicas": 0}
     admin_client.post_db_config(db, data)
     admin_client.wait_for_db_online(db, 60)
+
+
+def is_use_views_enabled(params_from_base_test_setup):
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    return get_sg_use_views(cluster_config)
