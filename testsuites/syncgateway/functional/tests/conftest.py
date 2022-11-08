@@ -524,7 +524,8 @@ def params_from_base_suite_setup(request):
         "prometheus_enabled": prometheus_enabled,
         "disable_persistent_config": disable_persistent_config,
         "need_sgw_admin_auth": need_sgw_admin_auth,
-        "sync_gateway_previous_version": sync_gateway_previous_version
+        "sync_gateway_previous_version": sync_gateway_previous_version,
+        "use_views": use_views
     }
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
@@ -571,6 +572,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     need_sgw_admin_auth = params_from_base_suite_setup["need_sgw_admin_auth"]
     prometheus_enabled = request.config.getoption("--prometheus-enable")
     sync_gateway_previous_version = params_from_base_suite_setup["sync_gateway_previous_version"]
+    use_views = params_from_base_suite_setup["use_views"]
 
     test_name = request.node.name
     c = cluster.Cluster(cluster_config)
@@ -634,7 +636,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "disable_persistent_config": disable_persistent_config,
         "prometheus_enabled": prometheus_enabled,
         "need_sgw_admin_auth": need_sgw_admin_auth,
-        "sync_gateway_previous_version": sync_gateway_previous_version
+        "sync_gateway_previous_version": sync_gateway_previous_version,
+        "use_views": use_views
     }
 
     # Code after the yield will execute when each test finishes
