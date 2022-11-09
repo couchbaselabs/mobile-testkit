@@ -12,7 +12,7 @@ from keywords.utils import log_info
 from keywords.MobileRestClient import MobileRestClient
 from keywords.constants import RBAC_FULL_ADMIN
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
-# from test_replication import verify_sgDocIds_cblDocIds
+from test_replication import verify_sgDocIds_cblDocIds
 
 bucket = "data-bucket"
 
@@ -127,4 +127,4 @@ def test_sync_scopeA_colA_to_scopeA_colA(scope_collection_test_fixture, teardown
         docId = "cbl_" + str(i)
         docs.append(sg_client.get_doc(sg_url, sg_db, docId, auth=session, scope=scope, collection=collection))
     assert len(docs) == no_of_docs, "Number of docs mismatched"
-    # verify_sgDocIds_cblDocIds(sg_client=sg_client, url=sg_url, sg_db=sg_db, session=session, cbl_db=cbl_db, db=db)
+    verify_sgDocIds_cblDocIds(sg_client=sg_client, url=sg_url, sg_db=sg_db, session=session, cbl_db=cbl_db, db=db)
