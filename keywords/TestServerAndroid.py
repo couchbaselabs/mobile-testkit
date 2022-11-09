@@ -177,8 +177,14 @@ class TestServerAndroid(TestServerBase):
     def remove(self):
         """Removes the Test Server application from the running device
         """
+        android_app_names = ["com.couchbase.TestServerApp", "TestServer.Android"]
+        for app_name in android_app_names:
+            self.remove_android_servers(app_name)
+
+    def remove_android_servers(app_name)
         output = ""
-        command = self.set_device_option(["adb", "uninstall", self.installed_package_name])
+        print("remove package name: ", app_name)
+        command = self.set_device_option(["adb", "uninstall", app_name])
         try:
             output = subprocess.check_output(command)
         except Exception as e:
@@ -244,10 +250,8 @@ class TestServerAndroid(TestServerBase):
         self.process = subprocess.Popen(args=command, stdout=self.logfile)
 
         command = self.set_device_option([
-            "adb", "shell", "am", "start", "-n", self.activity_name,
-            "--es", "username", "none",
-            "--es", "password", "none",
-            "--ei", "listen_port", str(self.port),
+            "adb", "shell", "monkey", "-p", self.installed_package_name,
+            "-v 1", "--ei", "listen_port", str(self.port),
         ])
         output = subprocess.check_output(command)
         log_info(output)
