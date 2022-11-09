@@ -128,13 +128,3 @@ def test_sync_scopeA_colA_to_scopeA_colA(scope_collection_test_fixture, teardown
         docs.append(sg_client.get_doc(sg_url, sg_db, docId, auth=session, scope=scope, collection=collection))
     assert len(docs) == no_of_docs, "Number of docs mismatched"
     # verify_sgDocIds_cblDocIds(sg_client=sg_client, url=sg_url, sg_db=sg_db, session=session, cbl_db=cbl_db, db=db)
-
-
-# @pytest.mark.listener
-# @pytest.mark.replication
-# def test_sync_scopeA_colA_to_scopeA_nocolA(scope_collection_test_fixture, teardown_doc_fixture):
-#     base_url, sg_blip_url, sg_url, sg_client, cbl_db, sg_db, scope, collection, created_collection, col_obj, doc_obj, auth, sg_admin_url, sg_username, sg_password = scope_collection_test_fixture
-#     db = Database(base_url)
-#     db.deleteDB(cbl_db)
-#     assert True
-
