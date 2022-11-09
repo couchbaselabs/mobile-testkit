@@ -181,7 +181,7 @@ class TestServerAndroid(TestServerBase):
         for app_name in android_app_names:
             self.remove_android_servers(app_name)
 
-    def remove_android_servers(app_name)
+    def remove_android_servers(self, app_name)
         output = ""
         print("remove package name: ", app_name)
         command = self.set_device_option(["adb", "uninstall", app_name])
