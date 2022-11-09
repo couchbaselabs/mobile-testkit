@@ -411,13 +411,71 @@ class Replication(object):
 
         return session, replicator_authenticator, repl
 
+    def configureCollection(self, target_url=None, target_db=None, replication_type="push_pull", auto_purge=None, continuous=False, replicator_authenticator=None, headers=None, heartbeat=None, max_retries=None, max_retry_wait_time=None, collection=None, collectionConfiguration=None, encryptor=None):
+        args = Args()
+        args.setBoolean("continuous", continuous)
+        if max_retries is not None:
+            args.setString("max_retries", max_retries)
+
+        if max_retry_wait_time is not None:
+            args.setString("max_timeout", max_retry_wait_time)
+
+        if heartbeat is not None:
+            args.setString("heartbeat", heartbeat)
+
+        if replicator_authenticator is not None:
+            args.setMemoryPointer("authenticator", replicator_authenticator)
+
+        if replication_type is not None:
+            args.setString("replication_type", replication_type)
+
+        if headers is not None:
+            args.setDictionary("headers", headers)
+
+        if target_url is not None:
+            args.setString("target_url", target_url)
+
+        if target_db is not None:
+            args.setMemoryPointer("target_db", target_db)
+
+        if auto_purge is not None:
+            args.setString("auto_purge", auto_purge)
+
+        cluster_config = os.environ["CLUSTER_CONFIG"]
+        if sg_ssl_enabled(cluster_config):
+            args.setString("pinnedservercert", "sg_cert")
+
+        if encryptor is not None:
+            args.setMemoryPointer("encryptor", encryptor)
+
+        if collection is not None:
+            args.setArray("collections", collection)
+
+        if collectionConfiguration is not None:
+            args.setArray("configuration", collectionConfiguration)
+
+        return self._client.invokeMethod("replicatorConfiguration_configureCollection", args)
+
+    def create_session_configure_replicate_collection(self, baseUrl, sg_admin_url, sg_db, username, sg_client, sg_blip_url, continuous=None, replication_type=None, auth=None, encryptor=None, collections=None, collection_configuration=None):
+        authenticator = Authenticator(baseUrl)
+        cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
+        session = cookie, session_id
+        replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
+        repl_config = self.configureCollection(target_url=sg_blip_url, target_db=sg_db, replication_type=replication_type, collection=collections, collectionConfiguration=collection_configuration, continuous=continuous, replicator_authenticator=replicator_authenticator)
+        repl = self.create(repl_config)
+        self.start(repl)
+        self.wait_until_replicator_idle(repl)
+        return session, replicator_authenticator, repl
+
     def resetCheckPoint(self, replicator):
         args = Args()
         args.setMemoryPointer("replicator", replicator)
         return self._client.invokeMethod("replicator_resetCheckpoint", args)
 
-    def collectionConfigure(self, conflictResolver='', pull_filter=False, push_filter=False, filter_callback_func='', channels=None, documentIDs=None):
+    def collectionConfigure(self, conflictResolver='', pull_filter=False, push_filter=False, filter_callback_func='', channels=None, documentIDs=None, collection=None):
         args = Args()
+        if collection is not None:
+            args.setMemoryPointer("collection", collection)
         args.setBoolean("push_filter", push_filter)
         args.setBoolean("pull_filter", pull_filter)
         args.setString("filter_callback_func", filter_callback_func)
@@ -426,4 +484,4 @@ class Replication(object):
             args.setArray("channels", channels)
         if documentIDs is not None:
             args.setArray("documentIDs", documentIDs)
-        return self._client.invokeMethod("replicatorCollection_configure", args)
+        return self._client.invokeMethod("replicatorConfiguration_collection", args)
