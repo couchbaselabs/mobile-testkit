@@ -522,8 +522,7 @@ def params_from_base_suite_setup(request):
         log_info("Starting TestServer...")
         testserver.stop()
         test_name_cp = test_name.replace("/", "-")
-        log_filename = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, \
-                                                                  test_name_cp, datetime.datetime.now())
+        log_filename = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now())
         if device_enabled:
             testserver.start_device(log_filename)
         else:
@@ -886,6 +885,8 @@ def class_init(request, params_from_base_suite_setup):
     disable_encryption = params_from_base_suite_setup["disable_encryption"]
     encryption_password = params_from_base_suite_setup["encryption_password"]
     db_obj = Database(base_url)
+    scope_obj = Scope(base_url)
+    collection_obj = Collection(base_url)
     doc_obj = Document(base_url)
     datatype = DataTypeInitiator(base_url)
     repl_obj = Replication(base_url)
@@ -905,7 +906,9 @@ def class_init(request, params_from_base_suite_setup):
     db = db_obj.create("cbl-init-db", db_config)
 
     request.cls.db_obj = db_obj
+    request.cls.collection_obj = collection_obj
     request.cls.doc_obj = doc_obj
+    request.cls.scope_obj = scope_obj
     request.cls.dict_obj = dict_obj
     request.cls.datatype = datatype
     request.cls.collection_obj = collection_obj
