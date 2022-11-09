@@ -128,3 +128,4 @@ def test_sync_scopeA_colA_to_scopeA_colA(scope_collection_test_fixture, teardown
         docs.append(sg_client.get_doc(sg_url, sg_db, docId, auth=session, scope=scope, collection=collection))
     assert len(docs) == no_of_docs, "Number of docs mismatched"
     verify_sgDocIds_cblDocIds(sg_client=sg_client, url=sg_url, sg_db=sg_db, session=session, cbl_db=cbl_db, db=db)
+
