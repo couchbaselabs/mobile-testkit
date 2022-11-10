@@ -35,8 +35,8 @@
     couchbase_server_bucket_ram: "{{ ((couchbase_server_cluster_ram|int)*0.5)|int }}"
 
   tasks:
-    - debug: msg="Couchbase server primary node \"{{ couchbase_server_primary_node }}\""
-    - debug: msg="Couchbase server node {{ couchbase_server_node }}"
+    debug: msg="Couchbase server primary node {{ couchbase_server_primary_node }}"
+    debug: msg="Couchbase server node {{ couchbase_server_node }}"
     - debug: msg="Downloading Couchbase server v. {{ couchbase_server_package_url }}"
     - debug: msg="IPv6 Enabled - {{ ipv6_enabled }}"
 
