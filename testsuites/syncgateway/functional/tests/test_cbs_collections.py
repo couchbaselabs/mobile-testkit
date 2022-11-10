@@ -14,6 +14,7 @@ bucket = "data-bucket"
 sg_password = "password"
 admin_client = cb_server = sg_username = channels = client_auth = sg_url = None
 admin_auth = [RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']]
+is_using_views = False
 
 
 @pytest.fixture
@@ -25,15 +26,18 @@ def teardown_doc_fixture():
 
 
 @pytest.fixture
-def scopes_collections_tests_fixture(params_from_base_test_setup):
+def scopes_collections_tests_fixture(params_from_base_test_setup, params_from_base_suite_setup):
+    # get/set the parameters
+    global admin_client
+    global cb_server
+    global sg_username
+    global channels
+    global client_auth
+    global sg_url
+    global is_using_views
+    is_using_views = params_from_base_suite_setup["use_views"]
+
     try:  # To be able to teardon in case of a setup error
-        # get/set the parameters
-        global admin_client
-        global cb_server
-        global sg_username
-        global channels
-        global client_auth
-        global sg_url
         pre_test_db_exists = pre_test_user_exists = sg_client = sg_url = sg_admin_url = None
         random_suffix = str(uuid.uuid4())[:8]
         db_prefix = "db_"
@@ -93,6 +97,9 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
 @pytest.mark.syncgateway
 @pytest.mark.collections
 def test_document_only_under_named_scope(scopes_collections_tests_fixture, teardown_doc_fixture):
+    if is_using_views:
+        pytest.skip("""It is not necessary to run scopes and collections tests with views.
+                When it is enabled, there is a problem that affects the rest of the tests suite.""")
 
     # setup
     doc_prefix = "scp_tests_doc"
@@ -130,6 +137,10 @@ def test_change_collection_name(scopes_collections_tests_fixture):
     4. Rename the collection to the original collection
     5. Verify that the document is accessible again
     """
+    if is_using_views:
+        pytest.skip("""It is not necessary to run scopes and collections tests with views.
+                When it is enabled, there is a problem that affects the rest of the tests suite.""")
+
     # setup
     sg_client, sg_admin_url, db, scope, collection = scopes_collections_tests_fixture
     doc_prefix = "scp_tests_doc"
@@ -172,6 +183,10 @@ def test_collection_channels(scopes_collections_tests_fixture):
     7. Check that _bulk_get can get documents that are in the user's channel
     8. Check that _bulk_get cannot get a document from the "right" channel but the wrong collection
     """
+    if is_using_views:
+        pytest.skip("""It is not necessary to run scopes and collections tests with views.
+                When it is enabled, there is a problem that affects the rest of the tests suite.""")
+
     # setup
     sg_client, sg_admin_url, db, scope, collection = scopes_collections_tests_fixture
     random_str = str(uuid.uuid4())[:6]
