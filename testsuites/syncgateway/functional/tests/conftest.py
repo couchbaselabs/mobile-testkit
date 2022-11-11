@@ -236,6 +236,7 @@ def params_from_base_suite_setup(request):
     sync_gateway_previous_version = request.config.getoption("--sync-gateway-previous-version")
     enable_server_tls_skip_verify = request.config.getoption("--enable-server-tls-skip-verify")
     disable_admin_auth = request.config.getoption("--disable-admin-auth")
+    trace_logs = request.config.getoption("--trace_logs")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
@@ -266,6 +267,7 @@ def params_from_base_suite_setup(request):
     log_info("hide_product_version: {}".format(hide_product_version))
     log_info("enable_cbs_developer_preview: {}".format(enable_cbs_developer_preview))
     log_info("disable_persistent_config: {}".format(disable_persistent_config))
+    log_info("trace_logs: {}".format(trace_logs))
 
     # sg-ce is invalid for di mode
     if mode == "di" and sg_ce:
@@ -441,6 +443,12 @@ def params_from_base_suite_setup(request):
     else:
         log_info("Enabled Admin Auth")
         persist_cluster_config_environment_prop(cluster_config, 'disable_admin_auth', False)
+    
+    if trace_logs:
+        log_info("Enabled trace logs for Sync Gateway")
+        persist_cluster_config_environment_prop(cluster_config, 'trace_logs', True)
+    else:
+        persist_cluster_config_environment_prop(cluster_config, 'trace_logs', False)
 
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
 
@@ -525,7 +533,8 @@ def params_from_base_suite_setup(request):
         "disable_persistent_config": disable_persistent_config,
         "need_sgw_admin_auth": need_sgw_admin_auth,
         "sync_gateway_previous_version": sync_gateway_previous_version,
-        "use_views": use_views
+        "use_views": use_views,
+        "trace_logs": trace_logs
     }
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
@@ -573,6 +582,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     prometheus_enabled = request.config.getoption("--prometheus-enable")
     sync_gateway_previous_version = params_from_base_suite_setup["sync_gateway_previous_version"]
     use_views = params_from_base_suite_setup["use_views"]
+    trace_logs = params_from_base_suite_setup["trace_logs"]
 
     test_name = request.node.name
     c = cluster.Cluster(cluster_config)
@@ -637,7 +647,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "prometheus_enabled": prometheus_enabled,
         "need_sgw_admin_auth": need_sgw_admin_auth,
         "sync_gateway_previous_version": sync_gateway_previous_version,
-        "use_views": use_views
+        "use_views": use_views,
+        "trace_logs": trace_logs
     }
 
     # Code after the yield will execute when each test finishes
