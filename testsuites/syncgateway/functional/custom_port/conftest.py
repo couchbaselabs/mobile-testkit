@@ -226,6 +226,7 @@ def params_from_base_suite_setup(request):
     disable_tls_server = request.config.getoption("--disable-tls-server")
     enable_cbs_developer_preview = request.config.getoption("--enable-cbs-developer-preview")
     disable_admin_auth = request.config.getoption("--disable-admin-auth")
+    trace_logs = request.config.getoption("--trace_logs")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
@@ -255,6 +256,7 @@ def params_from_base_suite_setup(request):
     log_info("delta_sync_enabled: {}".format(delta_sync_enabled))
     log_info("hide_product_version: {}".format(hide_product_version))
     log_info("disable_persistent_config: {}".format(disable_persistent_config))
+    log_info("trace_logs: {}".format(trace_logs))
 
     # sg-ce is invalid for di mode
     if mode == "di" and sg_ce:
@@ -431,6 +433,12 @@ def params_from_base_suite_setup(request):
         log_info("Running without CBS developer preview")
         persist_cluster_config_environment_prop(cluster_config, 'cbs_developer_preview', False)
 
+    if trace_logs:
+        log_info("Enabled trace logs for Sync Gateway")
+        persist_cluster_config_environment_prop(cluster_config, 'trace_logs', True)
+    else:
+        persist_cluster_config_environment_prop(cluster_config, 'trace_logs', False)
+
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
 
     # Skip provisioning if user specifies '--skip-provisoning' or '--sequoia'
@@ -494,7 +502,8 @@ def params_from_base_suite_setup(request):
         "sg_ce": sg_ce,
         "sg_config": sg_config,
         "cbs_ce": cbs_ce,
-        "prometheus_enabled": prometheus_enabled
+        "prometheus_enabled": prometheus_enabled,
+        "trace_logs": trace_logs
     }
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
@@ -535,6 +544,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     sg_ce = params_from_base_suite_setup["sg_ce"]
     sg_config = params_from_base_suite_setup["sg_config"]
     cbs_ce = params_from_base_suite_setup["cbs_ce"]
+    trace_logs = params_from_base_suite_setup["trace_logs"]
 
     test_name = request.node.name
     c = cluster.Cluster(cluster_config)
@@ -587,7 +597,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "ssl_enabled": cbs_ssl,
         "delta_sync_enabled": delta_sync_enabled,
         "sg_ce": sg_ce,
-        "cbs_ce": cbs_ce
+        "cbs_ce": cbs_ce,
+        "trace_logs": trace_logs
     }
 
     # Code after the yield will execute when each test finishes

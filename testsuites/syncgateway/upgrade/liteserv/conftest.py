@@ -211,6 +211,7 @@ def params_from_base_suite_setup(request):
     enable_server_tls_skip_verify = request.config.getoption("--enable-server-tls-skip-verify")
     disable_tls_server = request.config.getoption("--disable-tls-server")
     disable_admin_auth = request.config.getoption("--disable-admin-auth")
+    trace_logs = request.config.getoption("--trace_logs")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_upgraded_version, sync_gateway_upgraded_version)
@@ -238,6 +239,7 @@ def params_from_base_suite_setup(request):
     log_info("hide_product_version: {}".format(hide_product_version))
     log_info("enable_cbs_developer_preview: {}".format(enable_cbs_developer_preview))
     log_info("disable_persistent_config: {}".format(disable_persistent_config))
+    log_info("trace_logs: {}".format(trace_logs))
 
     # Make sure mode for sync_gateway is supported ('cc' or 'di')
     validate_sync_gateway_mode(mode)
@@ -351,6 +353,12 @@ def params_from_base_suite_setup(request):
     else:
         log_info("Enabled Admin Auth")
         persist_cluster_config_environment_prop(cluster_config, 'disable_admin_auth', False)
+
+    if trace_logs:
+        log_info("Enabled trace logs for Sync Gateway")
+        persist_cluster_config_environment_prop(cluster_config, 'trace_logs', True)
+    else:
+        persist_cluster_config_environment_prop(cluster_config, 'trace_logs', False)
 
     # SGW upgrade job run with on Centos platform, adding by default centos to environment config
     persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "centos", False)
