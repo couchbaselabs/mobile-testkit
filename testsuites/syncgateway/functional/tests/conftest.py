@@ -443,7 +443,7 @@ def params_from_base_suite_setup(request):
     else:
         log_info("Enabled Admin Auth")
         persist_cluster_config_environment_prop(cluster_config, 'disable_admin_auth', False)
-    
+
     if trace_logs:
         log_info("Enabled trace logs for Sync Gateway")
         persist_cluster_config_environment_prop(cluster_config, 'trace_logs', True)

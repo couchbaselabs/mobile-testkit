@@ -415,18 +415,19 @@ def is_sgw_ce_enabled(cluster_config):
     except KeyError:
         return False
 
+
 def choose_logging_level(cluster_config):
     """enables trace level logging if trace_logs is True"""
-    
+
     cluster = load_cluster_config_json(cluster_config)
     try:
         trace_logs = cluster["environment"]["trace_logs"]
     except KeyError:
         trace_logs = False
-    
+
     if trace_logs:
         logging_config = '"logging": {"log_file_path": "/tmp/sg_logs", "console": {"log_level": "trace"}, "debug": {"enabled": true}, "trace": {"enabled": true}'
     else:
         logging_config = '"logging": {"debug": {"enabled": true}'
-    
+
     return logging_config
