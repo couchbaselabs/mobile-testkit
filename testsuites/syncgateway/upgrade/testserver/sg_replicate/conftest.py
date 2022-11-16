@@ -252,6 +252,8 @@ def params_from_base_suite_setup(request):
     disable_admin_auth = request.config.getoption("--disable-admin-auth")
     disable_load_balancer = request.config.getoption("--disable-load-balancer")
 
+    trace_logs = request.config.getoption("--trace_logs")
+
     test_name = request.node.name
 
     log_info("mode: {}".format(mode))
@@ -289,6 +291,7 @@ def params_from_base_suite_setup(request):
     log_info("hide_product_version: {}".format(hide_product_version))
     log_info("enable_cbs_developer_preview: {}".format(enable_cbs_developer_preview))
     log_info("disable_persistent_config: {}".format(disable_persistent_config))
+    log_info("trace_logs: {}".format(trace_logs))
 
     # if xattrs is specified but the post upgrade SG version doesn't support, don't continue
     if upgraded_xattrs_enabled and version_is_binary(sync_gateway_upgraded_version):
@@ -462,6 +465,12 @@ def params_from_base_suite_setup(request):
         log_info("Enabled Admin Auth")
         persist_cluster_config_environment_prop(cluster_config, 'disable_admin_auth', False)
 
+    if trace_logs:
+        log_info("Enabled trace logs for Sync Gateway")
+        persist_cluster_config_environment_prop(cluster_config, 'trace_logs', True)
+    else:
+        persist_cluster_config_environment_prop(cluster_config, 'trace_logs', False)
+
     persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "centos", False)
 
     # Write the number of replicas to cluster config
@@ -577,7 +586,8 @@ def params_from_base_suite_setup(request):
         "upgraded_no_conflicts_enabled": upgraded_no_conflicts_enabled,
         "disable_persistent_config": disable_persistent_config,
         "disable_load_balancer": disable_load_balancer,
-        "sg_platform": "centos"
+        "sg_platform": "centos",
+        "trace_logs": trace_logs
     }
 
     # Flush all the memory contents on the server app
@@ -641,6 +651,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     upgraded_no_conflicts_enabled = params_from_base_suite_setup["upgraded_no_conflicts_enabled"]
     disable_load_balancer = params_from_base_suite_setup["disable_load_balancer"]
     sg_platform = params_from_base_suite_setup["sg_platform"]
+    trace_logs = params_from_base_suite_setup["trace_logs"]
     test_name = request.node.name
 
     source_db = None
@@ -755,7 +766,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "sgw_cluster2_count": sgw_cluster2_count,
         "no_conflicts_enabled": no_conflicts_enabled,
         "upgraded_no_conflicts_enabled": upgraded_no_conflicts_enabled,
-        "sg_platform": sg_platform
+        "sg_platform": sg_platform,
+        "trace_logs": trace_logs
     }
 
     log_info("Tearing down test")

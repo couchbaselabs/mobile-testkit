@@ -18,7 +18,7 @@ from keywords.exceptions import ProvisioningError, Error
 from libraries.provision.ansible_runner import AnsibleRunner
 from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_redact_level, get_sg_platform
 from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version, sg_ssl_enabled, get_cbs_version, is_delta_sync_enabled
-from utilities.cluster_config_utils import is_hide_prod_version_enabled, is_centralized_persistent_config_disabled
+from utilities.cluster_config_utils import is_hide_prod_version_enabled, is_centralized_persistent_config_disabled, choose_logging_level
 from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config, send_dbconfig_as_restCall
 from libraries.testkit.cluster import Cluster
 
@@ -278,7 +278,7 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config, sg_db_cfg=None
 
         sg_platform = get_sg_platform(cluster_config)
         if get_sg_version(cluster_config) >= "2.1.0":
-            logging_config = '"logging": {"debug": {"enabled": true}'
+            logging_config = choose_logging_level(cluster_config)
             try:
                 redact_level = get_redact_level(cluster_config)
                 logging_prop = '{}, "redaction_level": "{}" {},'.format(logging_config, redact_level, "}")
@@ -501,7 +501,7 @@ class SyncGateway(object):
             }
             sg_platform = get_sg_platform(cluster_config)
             if get_sg_version(cluster_config) >= "2.1.0":
-                logging_config = '"logging": {"debug": {"enabled": true}'
+                logging_config = choose_logging_level(cluster_config)
                 try:
                     redact_level = get_redact_level(cluster_config)
                     playbook_vars["logging"] = '{}, "redaction_level": "{}" {},'.format(logging_config, redact_level, "}")
@@ -820,7 +820,7 @@ class SyncGateway(object):
             cbs_version, cbs_build = version_and_build(server_version)
 
             if version >= "2.1.0":
-                logging_config = '"logging": {"debug": {"enabled": true}'
+                logging_config = choose_logging_level(cluster_config)
                 try:
                     redact_level = get_redact_level(cluster_config)
                     playbook_vars["logging"] = '{}, "redaction_level": "{}" {},'.format(logging_config, redact_level, "}")
@@ -1027,7 +1027,7 @@ class SyncGateway(object):
             playbook_vars["password"] = '"password": "password",'
 
             if version >= "2.1.0":
-                logging_config = '"logging": {"debug": {"enabled": true}'
+                logging_config = choose_logging_level(cluster_config)
                 try:
                     redact_level = get_redact_level(cluster_config)
                     playbook_vars["logging"] = '{}, "redaction_level": "{}" {},'.format(logging_config, redact_level, "}")
