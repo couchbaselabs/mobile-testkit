@@ -129,13 +129,14 @@ def test_document_only_under_named_scope(scopes_collections_tests_fixture, teard
 
 @pytest.mark.syncgateway
 @pytest.mark.collections
-def test_change_collection_name(scopes_collections_tests_fixture):
+def test_change_scope_or_collection_name(scopes_collections_tests_fixture):
     """
     1. Upload a document to a collection
     2. Rename the collection by updating the config
     3. Check that the document is not accessiable in the new collection
     4. Rename the collection to the original collection
     5. Verify that the document is accessible again
+    6. Change the scope name and expect a "Bad Rquest" error
     """
     if is_using_views:
         pytest.skip("""It is not necessary to run scopes and collections tests with views.
@@ -153,7 +154,7 @@ def test_change_collection_name(scopes_collections_tests_fixture):
 
     # 2. Rename the collection by updating the config
     cb_server.create_collection(bucket, scope, new_collection_name)
-    rename_a_single_collection(db, scope, new_collection_name)
+    rename_a_single_scope_or_collection(db, scope, new_collection_name)
 
     #  exercise + verification
     with pytest.raises(Exception) as e:  # HTTPError doesn't work, for some reason, but would be preferable
@@ -161,13 +162,17 @@ def test_change_collection_name(scopes_collections_tests_fixture):
     e.match("Not Found")
 
     # 4. Rename the collection to the original collection
-    rename_a_single_collection(db, scope, collection)
+    rename_a_single_scope_or_collection(db, scope, collection)
 
     # 5. Verify that the document is accessible again
     try:
         sg_client.get_doc(sg_admin_url, db, doc_id, scope=scope, collection=collection)
     except Exception as e:
         pytest.fail("The document could not be read from the collection after it was renamed and renamed back. The error: " + str(e))
+    # 6. Change the scope name and expect a "Bad Rquest" error
+    with pytest.raises(Exception) as e:
+        rename_a_single_scope_or_collection(db, "new_scope", collection)
+    e.match("Bad Request")
 
 
 @pytest.mark.syncgateway
@@ -255,8 +260,7 @@ def test_collection_channels(scopes_collections_tests_fixture):
         sg_client.get_bulk_docs(url=sg_url, db=db, doc_ids=user_1_docs_ids, auth=auth_user_1, scope=scope, collection="fake_collection")
     e.match("Not Found")
 
-
-def rename_a_single_collection(db, scope, new_name):
+def rename_a_single_scope_or_collection(db, scope, new_name):
     data = {"bucket": bucket, "scopes": {scope: {"collections": {new_name: {}}}}, "num_index_replicas": 0}
     admin_client.post_db_config(db, data)
     admin_client.wait_for_db_online(db, 60)
