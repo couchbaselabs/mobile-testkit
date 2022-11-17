@@ -117,7 +117,7 @@ def test_document_only_under_named_scope(scopes_collections_tests_fixture, teard
 
     # exercise + verification
     try:
-        sg_client.get_doc(sg_admin_url, db, doc_id, scope=scope, collection=collection)
+        sg_client.get_doc(sg_admin_url, db, doc_id, collection=collection)
     except Exception as e:
         pytest.fail("There was a problem reading the document from a collection WITHOUT specifying the scope in the endoint. The error: " + str(e))
 
@@ -259,6 +259,7 @@ def test_collection_channels(scopes_collections_tests_fixture):
     with pytest.raises(Exception) as e:
         sg_client.get_bulk_docs(url=sg_url, db=db, doc_ids=user_1_docs_ids, auth=auth_user_1, scope=scope, collection="fake_collection")
     e.match("Not Found")
+
 
 def rename_a_single_scope_or_collection(db, scope, new_name):
     data = {"bucket": bucket, "scopes": {scope: {"collections": {new_name: {}}}}, "num_index_replicas": 0}
