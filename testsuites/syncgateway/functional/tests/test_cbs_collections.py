@@ -117,7 +117,7 @@ def test_document_only_under_named_scope(scopes_collections_tests_fixture, teard
 
     # exercise + verification
     try:
-        sg_client.get_doc(sg_admin_url, db, doc_id, scope=scope, collection=collection)
+        sg_client.get_doc(sg_admin_url, db, doc_id, collection=collection)
     except Exception as e:
         pytest.fail("There was a problem reading the document from a collection WITHOUT specifying the scope in the endoint. The error: " + str(e))
 
