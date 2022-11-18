@@ -8,7 +8,8 @@ def pytest_addoption(parser):
                      "jenkins_build_url>' (or) 'passed=<junit_xml_path or "
                      "jenkins_build_url>' (or) 'file=<filename>'")
     parser.addoption("--trace_logs", action="store_true",
-                     help="Enable trace level logs for Sync Gateway")
+                     help="Enable trace level logs for Sync Gateway, accessed via SSHing into machine running SGW "
+                     "and navigating to /tmp/sg_logs/")
 
 
 def pytest_collection_modifyitems(items, config):
