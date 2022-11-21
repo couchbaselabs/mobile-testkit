@@ -63,7 +63,7 @@ def scope_collection_test_fixture(params_from_base_test_setup):
 
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
 
-    if sync_gateway_version < "2.0.0":
+    if sync_gateway_version < "3.1.0":
         pytest.skip('This test cannot run with sg version below 2.0')
 
     cluster_helper = ClusterKeywords(cluster_config)
