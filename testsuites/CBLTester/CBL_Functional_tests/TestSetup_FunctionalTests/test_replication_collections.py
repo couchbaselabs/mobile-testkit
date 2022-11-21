@@ -82,14 +82,10 @@ def scope_collection_test_fixture(params_from_base_test_setup):
         admin_client.create_db(sg_db, data)
     else:
         admin_client.create_db(sg_db, data)
-    log_info("sgw db created")
-    log_info(admin_client.get_db_info(sg_db))
-    log_info(admin_client.get_config())
 
     # cbl database, scope and collection creation
     cbl_db = db.create(cbl_db_name, db_config)
     created_collection = db.createCollection(cbl_db, collection, scope)
-    log_info("cbl with collection created")
 
     # Create a user
     pre_test_user_exists = admin_client.does_user_exist(sg_db, sg_username)
@@ -113,8 +109,6 @@ def test_sync_scopeA_colA_to_scopeA_colA(scope_collection_test_fixture, teardown
     collections = []
     collections_configuration = []
     collections_configuration.append(replicator.collectionConfigure(channels=channels, collection=created_collection))
-    log_info(collections_configuration)
-
     collections.append(created_collection)
     try:
         session, replicator_authenticator, repl = replicator.create_session_configure_replicate_collection(base_url, sg_admin_url, sg_db, sg_username, sg_client, sg_blip_url, continuous=True, replication_type="push", auth=auth, collections=collections, collection_configuration=collections_configuration)
@@ -127,7 +121,7 @@ def test_sync_scopeA_colA_to_scopeA_colA(scope_collection_test_fixture, teardown
         docId = "cbl_" + str(i)
         docs.append(sg_client.get_doc(sg_url, sg_db, docId, auth=session, scope=scope, collection=collection))
     assert len(docs) == no_of_docs, "Number of docs mismatched"
-    # verify_sgDocIds_cblDocIds(sg_client=sg_client, url=sg_url, sg_db=sg_db, session=session, cbl_db=cbl_db, db=db)
+    verify_sgDocIds_cblDocIds(sg_client=sg_client, url=sg_url, sg_db=sg_db, session=session, cbl_db=cbl_db, db=db)
 
 
 @pytest.mark.listener
