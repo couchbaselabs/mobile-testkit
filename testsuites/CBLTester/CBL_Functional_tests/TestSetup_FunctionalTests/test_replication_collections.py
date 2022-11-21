@@ -1,9 +1,11 @@
 import uuid
 import pytest
+from keywords.utils import random_string
 from CBLClient.Database import Database
 from CBLClient.Collection import Collection
 from CBLClient.Document import Document
 from CBLClient.Replication import Replication
+from CBLClient.Authenticator import Authenticator
 from libraries.testkit import cluster
 from keywords.ClusterKeywords import ClusterKeywords
 from libraries.testkit.admin import Admin
@@ -36,8 +38,6 @@ def scope_collection_test_fixture(params_from_base_test_setup):
     collection = collection_prefix + random_suffix
     need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     sg_username = "scope_collection_user" + random_suffix
-    log_info("****")
-    log_info(sg_username)
     sg_password = "password"
     data = {"bucket": bucket, "scopes": {scope: {"collections": {collection: {}}}}, "num_index_replicas": 0}
     sg_db = "db"
@@ -96,7 +96,7 @@ def scope_collection_test_fixture(params_from_base_test_setup):
     if pre_test_user_exists is False:
         sg_client.create_user(sg_admin_url, sg_db, sg_username, sg_password, auth=auth, channels=["ABC"])
 
-    yield base_url, sg_blip_url, sg_url, sg_client, cbl_db, sg_db, scope, collection, created_collection, col_obj, doc_obj, auth, sg_admin_url, sg_username, sg_password
+    yield base_url, sg_blip_url, sg_url, sg_client, cbl_db, sg_db, scope, collection, created_collection, col_obj, doc_obj, auth, sg_admin_url, sg_username, sg_password, db_config
 
 
 @pytest.mark.listener
@@ -104,7 +104,7 @@ def scope_collection_test_fixture(params_from_base_test_setup):
 @pytest.mark.parametrize("no_of_docs", [2])
 def test_sync_scopeA_colA_to_scopeA_colA(scope_collection_test_fixture, teardown_doc_fixture, no_of_docs):
     # setup
-    base_url, sg_blip_url, sg_url, sg_client, cbl_db, sg_db, scope, collection, created_collection, col_obj, doc_obj, auth, sg_admin_url, sg_username, sg_password = scope_collection_test_fixture
+    base_url, sg_blip_url, sg_url, sg_client, cbl_db, sg_db, scope, collection, created_collection, col_obj, doc_obj, auth, sg_admin_url, sg_username, sg_password, db_config = scope_collection_test_fixture
     db = Database(base_url)
     db.create_bulk_docs(no_of_docs, "cbl", db=cbl_db, channels=["ABC"], collection=created_collection)
     channels = ["ABC"]
@@ -130,11 +130,58 @@ def test_sync_scopeA_colA_to_scopeA_colA(scope_collection_test_fixture, teardown
     # verify_sgDocIds_cblDocIds(sg_client=sg_client, url=sg_url, sg_db=sg_db, session=session, cbl_db=cbl_db, db=db)
 
 
-# @pytest.mark.listener
-# @pytest.mark.replication
-# def test_sync_scopeA_colA_to_scopeA_nocolA(scope_collection_test_fixture, teardown_doc_fixture):
-#     base_url, sg_blip_url, sg_url, sg_client, cbl_db, sg_db, scope, collection, created_collection, col_obj, doc_obj, auth, sg_admin_url, sg_username, sg_password = scope_collection_test_fixture
-#     db = Database(base_url)
-#     db.deleteDB(cbl_db)
-#     assert True
+@pytest.mark.listener
+@pytest.mark.replication
+@pytest.mark.parametrize("no_of_docs", [2])
+def test_sync_scopeA_colA_from_mulitple_cbl(scope_collection_test_fixture, teardown_doc_fixture, no_of_docs,):
+    base_url, sg_blip_url, sg_url, sg_client, cbl_db, sg_db, scope, collection, created_collection, col_obj, doc_obj, auth, sg_admin_url, sg_username, sg_password, db_config = scope_collection_test_fixture
+    db = Database(base_url)
+    cbl_db1 = db.create(random_string(6), db_config)
+    created_collection2 = db.createCollection(cbl_db1, collection, scope)
+    cbl_db2 = db.create(random_string(6), db_config)
+    created_collection3 = db.createCollection(cbl_db2, collection, scope)
+    db.create_bulk_docs(no_of_docs, "cbl", db=cbl_db, channels=["ABC"], id_start_num=1, collection=created_collection)
+    db.create_bulk_docs(no_of_docs, "cbl", db=cbl_db1, channels=["ABC"], id_start_num=50, collection=created_collection2)
+    db.create_bulk_docs(no_of_docs, "cbl", db=cbl_db2, channels=["ABC"], id_start_num=100, collection=created_collection3)
+    channels = ["ABC"]
+    replicator = Replication(base_url)
 
+    collections1 = []
+    collections1.append(created_collection)
+    collections_configuration1 = []
+    collections_configuration1.append(replicator.collectionConfigure(channels=channels, collection=created_collection))
+
+    collections2 = []
+    collections_configuration2 = []
+    collections2.append(created_collection2)
+    collections_configuration2.append(replicator.collectionConfigure(channels=channels, collection=created_collection2))
+
+    collections3 = []
+    collections3.append(created_collection3)
+    collections_configuration3 = []
+    collections_configuration3.append(replicator.collectionConfigure(channels=channels, collection=created_collection3))
+
+    authenticator = Authenticator(base_url)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, sg_username, auth=auth)
+    session = cookie, session_id
+    replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
+
+    repl_config1 = replicator.configureCollection(target_url=sg_blip_url, target_db=sg_db, replication_type="push", collection=collections1, collectionConfiguration=collections_configuration1, replicator_authenticator=replicator_authenticator)
+    repl_config2 = replicator.configureCollection(target_url=sg_blip_url, target_db=sg_db, replication_type="push", collection=collections2, collectionConfiguration=collections_configuration2, replicator_authenticator=replicator_authenticator)
+    repl_config3 = replicator.configureCollection(target_url=sg_blip_url, target_db=sg_db, replication_type="push", collection=collections3, collectionConfiguration=collections_configuration3, replicator_authenticator=replicator_authenticator)
+
+    repl1 = replicator.create(repl_config1)
+    repl2 = replicator.create(repl_config2)
+    repl3 = replicator.create(repl_config3)
+
+    replicator.start(repl1)
+    replicator.start(repl2)
+    replicator.start(repl3)
+
+    replicator.wait_until_replicator_idle(repl1)
+    replicator.wait_until_replicator_idle(repl2)
+    replicator.wait_until_replicator_idle(repl3)
+
+    sg_docs = sg_client.get_all_docs(sg_url, sg_db, auth=session)
+    sg_docs = sg_docs['rows']
+    assert len(sg_docs) == 6, "Not all replicated"
