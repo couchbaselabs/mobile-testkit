@@ -38,7 +38,7 @@ class CustomConfigParser(configparser.RawConfigParser):
             fp.write("\n")
 
 
-def get_cluster(url, bucket_name, get_bucket = False):
+def get_cluster(url, bucket_name, get_bucket=False):
     timeout_options = ClusterTimeoutOptions(kv_timeout=timedelta(seconds=180), query_timeout=timedelta(seconds=300),
                                             config_total_timeout=timedelta(seconds=600))
     options = ClusterOptions(PasswordAuthenticator("Administrator", "password"), timeout_options=timeout_options)

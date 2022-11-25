@@ -1182,8 +1182,8 @@ class CouchbaseServer:
 
         self._wait_for_rebalance_complete()
         return True
-    
-    def add_simple_document(self, bucket, scope, collection, doc_id, ipv6 = False):
+
+    def add_simple_document(self, bucket, scope, collection, doc_id, ipv6=False):
         """Add a simple document to a collection"""
         connection_url = choose_connection_url(self.cbs_ssl, ipv6, self.host)
         sdk_client = get_cluster(connection_url, bucket, get_bucket=True)
@@ -1197,7 +1197,7 @@ class CouchbaseServer:
             raise Exception("Tried to insert document that already exists: " + str(e)) from e
         return result
 
-    def get_document(self, bucket, scope, collection, doc_id, ipv6 = False):
+    def get_document(self, bucket, scope, collection, doc_id, ipv6=False):
         """Retrieve a document from a collection"""
         connection_url = choose_connection_url(self.cbs_ssl, ipv6, self.host)
         sdk_client = get_cluster(connection_url, bucket, get_bucket=True)

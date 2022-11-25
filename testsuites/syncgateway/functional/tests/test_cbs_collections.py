@@ -293,11 +293,11 @@ def test_restricted_collection(scopes_collections_tests_fixture):
 
     # 3. Sync one collection to SGW
     db_config = {"bucket": bucket, "scopes": {scope: {"collections": {collection: {}}}}, "num_index_replicas": 0,
-                "import_docs": True, "enable_shared_bucket_access": True}
+                 "import_docs": True, "enable_shared_bucket_access": True}
     admin_client.post_db_config(db, db_config)
     admin_client.wait_for_db_online(db, 60)
 
-    #4. Check that documents in the server restricted collection are not accesible via SGW
+    # 4. Check that documents in the server restricted collection are not accesible via SGW
     all_docs = sg_client.get_all_docs(sg_admin_url, db)
     assert(all_docs["total_rows"] == 1)
     assert(all_docs["rows"][0]["id"] == doc_1_key)
