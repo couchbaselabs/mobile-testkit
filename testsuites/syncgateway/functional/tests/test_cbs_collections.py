@@ -261,6 +261,36 @@ def test_collection_channels(scopes_collections_tests_fixture):
     e.match("Not Found")
 
 
+@pytest.mark.syncgateway
+@pytest.mark.collections
+def test_restricted_collection(scopes_collections_tests_fixture):
+    """
+    1. Create second collection on CB server
+    2. Add documents to the collections on CB server
+    3. Sync one collection to SGW
+    4. Check that documents that are in the server restricted collection are not accessible via SGW
+    """
+
+    if is_using_views:
+        pytest.skip("""It is not necessary to run scopes and collections tests with views.
+                When it is enabled, there is a problem that affects the rest of the tests suite.""")
+
+    sg_client, sg_admin_url, db, scope, collection = scopes_collections_tests_fixture
+    # 1. Create second collection on CB server
+    random_suffix = str(uuid.uuid4())[:8]
+    second_collection = "collection_" + random_suffix
+    cb_server.create_collection(bucket, scope, second_collection)
+
+    doc_1_key = "doc_1" + random_suffix
+    doc_2_key = "doc_2" + random_suffix
+
+    # 2. Add a document to each collection
+    cb_server.add_simple_document(bucket, scope, collection, doc_1_key)
+    cb_server.add_simple_document(bucket, scope, second_collection, doc_2_key)
+
+    assert(cb_server.get_document(bucket, scope, collection, doc_1_key)["id"] == doc_1_key)
+    assert(cb_server.get_document(bucket, scope, second_collection, doc_2_key)["id"] == doc_2_key)
+
 def rename_a_single_scope_or_collection(db, scope, new_name):
     data = {"bucket": bucket, "scopes": {scope: {"collections": {new_name: {}}}}, "num_index_replicas": 0}
     admin_client.post_db_config(db, data)

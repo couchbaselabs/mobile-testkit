@@ -6,7 +6,7 @@ from datetime import timedelta
 from requests.exceptions import ConnectionError, HTTPError, ChunkedEncodingError
 from requests import Session
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
-from couchbase.exceptions import CouchbaseException, DocumentNotFoundException
+from couchbase.exceptions import CouchbaseException, DocumentNotFoundException, DocumentExistsException
 from couchbase.cluster import QueryIndexManager, PasswordAuthenticator, ClusterTimeoutOptions, ClusterOptions, Cluster
 import keywords.constants
 from keywords.remoteexecutor import RemoteExecutor
@@ -16,6 +16,7 @@ from keywords.utils import log_r, log_info, log_debug, log_error, hostname_for_u
 from keywords.utils import version_and_build, random_string
 from keywords import types
 from utilities.cluster_config_utils import is_x509_auth, get_cbs_version, is_magma_enabled, is_cbs_ce_enabled, get_cluster
+from libraries.data import doc_generators
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 
@@ -1181,17 +1182,48 @@ class CouchbaseServer:
 
         self._wait_for_rebalance_complete()
         return True
+    
+    def add_simple_document(self, bucket, scope, collection, doc_id, ipv6 = False):
+        """Add a simple document to a collection"""
+        connection_url = choose_connection_url(self.cbs_ssl, ipv6, self.host)
+        sdk_client = get_cluster(connection_url, bucket, get_bucket=True)
+        collection_client = sdk_client.scope(scope).collection(collection)
+
+        doc_body = doc_generators.simple()
+        doc_body["id"] = doc_id
+        try:
+            result = collection_client.insert(doc_id, doc_body)
+        except DocumentExistsException as e:
+            raise Exception("Tried to insert document that already exists: " + str(e)) from e
+        return result
+
+    def get_document(self, bucket, scope, collection, doc_id, ipv6 = False):
+        """Retrieve a document from a collection"""
+        connection_url = choose_connection_url(self.cbs_ssl, ipv6, self.host)
+        sdk_client = get_cluster(connection_url, bucket, get_bucket=True)
+        collection_client = sdk_client.scope(scope).collection(collection)
+
+        try:
+            result = collection_client.get(doc_id)
+        except DocumentNotFoundException as e:
+            raise Exception("Tried to fetch document that does not exist: " + str(e)) from e
+        return result.content_as[dict]
+
+
+def choose_connection_url(ssl_enabled, ipv6, host):
+    if ssl_enabled and ipv6:
+        connection_url = "couchbases://{}?ssl=no_verify&ipv6=allow".format(host)
+    elif ssl_enabled and not ipv6:
+        connection_url = "couchbases://{}?ssl=no_verify".format(host)
+    elif not ssl_enabled and ipv6:
+        connection_url = "couchbase://{}?ipv6=allow".format(host)
+    else:
+        connection_url = "couchbase://{}".format(host)
+    return connection_url
 
 
 def get_sdk_client_with_bucket(ssl_enabled, cluster, cbs_ip, cbs_bucket):
-    if ssl_enabled and cluster.ipv6:
-        connection_url = "couchbases://{}?ssl=no_verify&ipv6=allow".format(cbs_ip)
-    elif ssl_enabled and not cluster.ipv6:
-        connection_url = "couchbases://{}?ssl=no_verify".format(cbs_ip)
-    elif not ssl_enabled and cluster.ipv6:
-        connection_url = "couchbase://{}?ipv6=allow".format(cbs_ip)
-    else:
-        connection_url = 'couchbase://{}'.format(cbs_ip)
+    connection_url = choose_connection_url(ssl_enabled, cluster.ipv6, cbs_ip)
     timeout_options = ClusterTimeoutOptions(kv_timeout=timedelta(seconds=30), query_timeout=timedelta(seconds=100))
     options = ClusterOptions(PasswordAuthenticator("Administrator", "password"), timeout_options=timeout_options)
     cluster = Cluster(connection_url, options)
