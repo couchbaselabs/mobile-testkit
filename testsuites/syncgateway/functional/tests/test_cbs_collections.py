@@ -285,11 +285,11 @@ def test_restricted_collection(scopes_collections_tests_fixture):
     doc_2_key = "doc_2" + random_suffix
 
     # 2. Add a document to each collection
-    cb_server.add_simple_document(bucket, scope, collection, doc_1_key)
-    cb_server.add_simple_document(bucket, scope, second_collection, doc_2_key)
+    cb_server.add_simple_document(doc_1_key, bucket, scope, collection)
+    cb_server.add_simple_document(doc_2_key, bucket, scope, second_collection)
 
-    assert(cb_server.get_document(bucket, scope, collection, doc_1_key)["id"] == doc_1_key)
-    assert(cb_server.get_document(bucket, scope, second_collection, doc_2_key)["id"] == doc_2_key)
+    assert(cb_server.get_document(doc_1_key, bucket, scope, collection)["id"] == doc_1_key), "Error in test setup: failed to add document to server under " + bucket + "." + scope + "." + collection
+    assert(cb_server.get_document(doc_2_key, bucket, scope, second_collection)["id"] == doc_2_key), "Error in test setup: failed to add document to server under " + bucket + "." + scope + "." + second_collection
 
     # 3. Sync one collection to SGW
     db_config = {"bucket": bucket, "scopes": {scope: {"collections": {collection: {}}}}, "num_index_replicas": 0,
@@ -299,8 +299,8 @@ def test_restricted_collection(scopes_collections_tests_fixture):
 
     # 4. Check that documents in the server restricted collection are not accesible via SGW
     all_docs = sg_client.get_all_docs(sg_admin_url, db)
-    assert(all_docs["total_rows"] == 1)
-    assert(all_docs["rows"][0]["id"] == doc_1_key)
+    assert(all_docs["total_rows"] == 1), "Number of expected documents in Sync Gateway database does not match expected. Expected 1; Found " + str(all_docs["total_rows"])
+    assert(all_docs["rows"][0]["id"] == doc_1_key), "Sync Gateway database document has wrong ID, possibly due to accessing document under server restricted collection"
 
 
 def rename_a_single_scope_or_collection(db, scope, new_name):

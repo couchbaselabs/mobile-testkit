@@ -1183,28 +1183,24 @@ class CouchbaseServer:
         self._wait_for_rebalance_complete()
         return True
 
-    def add_simple_document(self, bucket, scope, collection, doc_id, ipv6=False):
+    def add_simple_document(self, doc_id, bucket, scope="_default", collection="_default", ipv6=False):
         """Add a simple document to a collection"""
-        connection_url = choose_connection_url(self.cbs_ssl, ipv6, self.host)
-        sdk_client = get_cluster(connection_url, bucket, get_bucket=True)
-        collection_client = sdk_client.scope(scope).collection(collection)
+        sdk_client = get_sdk_client_with_bucket(self.cbs_ssl, None, self.host, bucket, ipv6)
 
         doc_body = doc_generators.simple()
         doc_body["id"] = doc_id
         try:
-            result = collection_client.insert(doc_id, doc_body)
+            result = sdk_client.scope(scope).collection(collection).insert(doc_id, doc_body)
         except DocumentExistsException as e:
             raise Exception("Tried to insert document that already exists: " + str(e)) from e
         return result
 
-    def get_document(self, bucket, scope, collection, doc_id, ipv6=False):
+    def get_document(self, doc_id, bucket, scope="_default", collection="_default", ipv6=False):
         """Retrieve a document from a collection"""
-        connection_url = choose_connection_url(self.cbs_ssl, ipv6, self.host)
-        sdk_client = get_cluster(connection_url, bucket, get_bucket=True)
-        collection_client = sdk_client.scope(scope).collection(collection)
+        sdk_client = get_sdk_client_with_bucket(self.cbs_ssl, None, self.host, bucket, ipv6)
 
         try:
-            result = collection_client.get(doc_id)
+            result = sdk_client.scope(scope).collection(collection).get(doc_id)
         except DocumentNotFoundException as e:
             raise Exception("Tried to fetch document that does not exist: " + str(e)) from e
         return result.content_as[dict]
@@ -1222,8 +1218,11 @@ def choose_connection_url(ssl_enabled, ipv6, host):
     return connection_url
 
 
-def get_sdk_client_with_bucket(ssl_enabled, cluster, cbs_ip, cbs_bucket):
-    connection_url = choose_connection_url(ssl_enabled, cluster.ipv6, cbs_ip)
+def get_sdk_client_with_bucket(ssl_enabled, cluster, cbs_ip, cbs_bucket, ipv6=False):
+    if cluster is not None:
+        connection_url = choose_connection_url(ssl_enabled, cluster.ipv6, cbs_ip)
+    else:
+        connection_url = choose_connection_url(ssl_enabled, ipv6, cbs_ip)
     timeout_options = ClusterTimeoutOptions(kv_timeout=timedelta(seconds=30), query_timeout=timedelta(seconds=100))
     options = ClusterOptions(PasswordAuthenticator("Administrator", "password"), timeout_options=timeout_options)
     cluster = Cluster(connection_url, options)
