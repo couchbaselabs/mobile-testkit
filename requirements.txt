@@ -62,4 +62,4 @@ xmltodict==0.10.2
 numpy==1.21.6
 pytest-rerunfailures==8.0
 flask==1.1.2
-typing-extensions==3.7.4.3
+typing-extensions==4.4.0
