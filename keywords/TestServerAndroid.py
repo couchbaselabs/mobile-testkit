@@ -87,7 +87,7 @@ class TestServerAndroid(TestServerBase):
         try:
             log_info("remove the app before install, to ensure sandbox gets cleaned.")
             self.remove()
-        except Exception as e:
+        except Exception:
             log_info("remove the app before install didn't go success, but still continue ......")
 
         log_info("Installing: {}".format(apk_path))
@@ -137,8 +137,7 @@ class TestServerAndroid(TestServerBase):
             output = subprocess.check_output(cmd)
             log_info("version in device {} ".format(output.decode()))
             if output.strip().decode() == self.version_build:
-                log_info("package {} is on device. We need to remove and fresh install ..."\
-                                                          .format(self.version_build))
+                log_info("package {} is on device. We need to remove and fresh install ...".format(self.version_build))
             log_info("remove the app on device before install, to ensure sandbox gets cleaned.")
             self.remove()
         except Exception as e:
