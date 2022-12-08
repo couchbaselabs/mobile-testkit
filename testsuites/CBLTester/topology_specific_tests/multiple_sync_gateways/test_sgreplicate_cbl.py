@@ -1950,7 +1950,7 @@ def test_sg_replicate_restart_active_passive_nodes(params_from_base_test_setup, 
                 if doc["updates-cbl"] != sg1_doc["updates-cbl"]:
                     replication_successful_flag = False
                     break
-            except KeyError as e:
+            except KeyError:
                 log_info("skipping the docs which does not have new update")
         if replication_successful_flag:
             break
