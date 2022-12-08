@@ -662,7 +662,7 @@ def verify_all_logs_in_sgcollectzip(remote_executor, zip_file_name=None):
     # unzip file
     unzip_log_files(sgcollect_zip_filename)
     sgcollect_zip_directory = sgcollect_zip_filename.split(".zip")[0]
-    grep_command = "grep -E '(?:hostname: |hostname = |Host Name:(?:\s)*)(.*)' {}/*/sync_gateway.log".format(sgcollect_zip_directory)
+    grep_command = "grep -E '(?:hostname: |hostname = |Host Name:(?:\s)*)(.*)' {}/*/sync_gateway.log".format(sgcollect_zip_directory)  # noqa: W504
     result_command = subprocess.check_output(grep_command, shell=True)
     _, stdout, _ = remote_executor.execute("hostname")
     assert_hostname = result_command.decode('utf-8').strip() == "kernel.hostname = {}".format(stdout[0].rstrip())

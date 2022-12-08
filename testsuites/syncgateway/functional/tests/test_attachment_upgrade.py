@@ -149,7 +149,7 @@ def test_upgrade_delete_attachments(params_from_base_test_setup, sgw_version_res
             resp["reason"]
             if "Process stop still in progress" not in resp["reason"]:
                 break
-        except KeyError as ke:
+        except KeyError:
             log_info("compact attachment started and no reason caught")
         time.sleep(1)
         count += 1

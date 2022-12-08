@@ -39,7 +39,7 @@ def sgw_version_reset(request, params_from_base_test_setup):
     sg_latest_version = get_sg_version(cluster_conf)
     try:
         verify_sync_gateway_version(sg1.ip, sg_latest_version)
-    except Exception as ex:
+    except Exception:
         sg_obj.install_sync_gateway(cluster_conf, sg_latest_version, sg_conf, skip_bucketcreation=True)
 
 
@@ -368,7 +368,7 @@ def test_automatic_migration_fails_with_directory_permissions(params_from_base_t
         sgw_config_path = sgw_config_dir + "\\\\sync_gateway.json"
         environment_string = """[String[]] $v = @("CONFIG=""" + sgw_config_path + """"\")
         Set-ItemProperty HKLM:SYSTEM\CurrentControlSet\Services\SyncGateway -Name Environment -Value $v
-        """
+        """  # noqa: W605
     elif "macos" in sg_platform:
         sgw_config_dir = "/tmp/sgw_directory"
         sgw_config_path = sgw_config_dir + "/sync_gateway.json"
