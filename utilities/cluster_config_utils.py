@@ -211,6 +211,7 @@ def get_cbs_primary_nodes_str(cluster_config, cbs_nodes):
         else:
             return "[{}]".format(cbs_nodes)
     else:
+        print("======+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++cbs_nodes" + cbs_nodes)
         return cbs_nodes
 
 
