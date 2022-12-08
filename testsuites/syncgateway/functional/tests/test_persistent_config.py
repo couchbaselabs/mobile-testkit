@@ -302,7 +302,7 @@ def test_invalid_database_credentials(params_from_base_test_setup):
     try:
         sg1.admin.create_db(sg_db1, dbconfig)
         assert False, "create db rest call did not fail with invalid bucket name"
-    except HTTPError as e:
+    except HTTPError:
         log_info("Ignoring... caught expected Http error ")
 
 
