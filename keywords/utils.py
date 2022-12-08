@@ -245,7 +245,7 @@ def add_cbs_to_sg_config_server_field(cluster_config):
             couchbase_server_primary_node = couchbase_server_primary_node + cbs_servers[i]
             if (i + 1) < len(cbs_servers):
                 couchbase_server_primary_node = couchbase_server_primary_node + ","
-
+    print("*************************************************************************************+couchbase_server_primary_node=" + couchbase_server_primary_node)
     return couchbase_server_primary_node
 
 
