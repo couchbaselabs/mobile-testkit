@@ -23,7 +23,7 @@ class AnsibleRunner:
             verbosity=10,  # change this to a higher number for -vvv debugging (try 10),
             subset=subset
         )
-
+        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" + str(runner.variable_manager.get_vars()))
         stats = runner.run()
         logging.info(stats)
         return len(stats.failures) + len(stats.dark)
