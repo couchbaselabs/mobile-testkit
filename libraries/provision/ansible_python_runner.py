@@ -126,7 +126,6 @@ class Runner(object):
         self.inventory.subset(self.options.subset)
         self.variable_manager = VariableManager(loader=self.loader, inventory=self.inventory)
         self.variable_manager.extra_vars = extra_vars
-        print("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++self.inventory.get_vars" + self.inventory.get_vars())
 
         # Setup playbook executor, but don't run until run() called
         log_info("Running playbook: {}".format(playbook))
