@@ -90,7 +90,8 @@ def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_conf
 
     # Reset previous installs
     clean_cluster(cluster_config, skip_couchbase_provision=skip_couchbase_provision)
-
+    log_info("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&" + str(cluster_config))
+    log_info("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&" + str(couchbase_server_config))
     if not skip_couchbase_provision:
         # Install server package
         log_info("Installing Couchbase Server")
