@@ -124,6 +124,7 @@ class Runner(object):
         # Set inventory, using most of above objects
         self.inventory = InventoryManager(loader=self.loader, sources=[inventory_filename])
         self.inventory.subset(self.options.subset)
+        print("**********************************************************************self.inventory.get_hosts()" + self.inventory.get_hosts)
         self.variable_manager = VariableManager(loader=self.loader, inventory=self.inventory)
         self.variable_manager.extra_vars = extra_vars
 
