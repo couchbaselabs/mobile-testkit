@@ -85,7 +85,6 @@ class Runner(object):
         self.options.forks = constants.DEFAULT_FORKS
         self.options.ask_vault_pass = constants.DEFAULT_ASK_VAULT_PASS
         self.options.vault_password_files = [constants.DEFAULT_VAULT_PASSWORD_FILE]
-        self.options.sudo = constants.DEFAULT_SUDO
         self.options.become = constants.DEFAULT_BECOME
         self.options.become_method = constants.DEFAULT_BECOME_METHOD
         self.options.become_user = constants.DEFAULT_BECOME_USER
