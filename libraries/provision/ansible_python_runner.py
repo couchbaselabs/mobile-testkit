@@ -126,7 +126,8 @@ class Runner(object):
         self.inventory.subset(self.options.subset)
         print("**********************************************************************self.inventory.get_hosts()")
         print(self.inventory.get_hosts())
-        print(self.inventory.list_groups())
+        groups = self.inventory.list_groups()
+        print(groups["couchbase_servers"])
         self.variable_manager = VariableManager(loader=self.loader, inventory=self.inventory)
         self.variable_manager.extra_vars = extra_vars
 
