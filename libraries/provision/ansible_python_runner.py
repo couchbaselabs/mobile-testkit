@@ -90,7 +90,6 @@ class Runner(object):
         self.options.become_user = constants.DEFAULT_BECOME_USER
         self.options.ask_sudo_pass = constants.DEFAULT_ASK_SUDO_PASS
         self.options.ask_su_pass = constants.DEFAULT_ASK_SU_PASS
-        self.options.ask_pass = constants.DEFAULT_ASK_PASS
         self.options.private_key_file = constants.DEFAULT_PRIVATE_KEY_FILE
         self.options.remote_user = constants.DEFAULT_REMOTE_USER
         self.options.timeout = constants.DEFAULT_TIMEOUT
