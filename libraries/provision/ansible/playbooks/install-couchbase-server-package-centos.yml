@@ -14,5 +14,5 @@
     couchbase_server_bucket_type: couchbase
 
   tasks:
-    - debug: msg="Couchbase server primary node {{ couchbase_server_bucket_type }}"
+    - debug: msg="Couchbase server primary node {{couchbase_server_bucket_type}}"
    
