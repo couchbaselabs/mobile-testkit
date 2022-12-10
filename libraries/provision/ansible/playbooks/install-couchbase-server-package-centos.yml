@@ -4,8 +4,9 @@
   become: yes
 
   vars:
-  gilad: "zhovna"   
+   
     # Primary node
+    gilad: "zhovna"
 
   tasks:
     - debug: msg="Couchbase server primary node {{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
