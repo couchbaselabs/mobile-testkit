@@ -4,32 +4,15 @@
   become: yes
 
   vars:
-    couchbase_server_package_base_url: "gilad"
-    couchbase_server_package_name: "gilad"
-    ipv6_enabled: "gilad"
-    cbs_dp_preview: "gilad"
-
-
-    couchbase_server_admin: Administrator
-    couchbase_server_password: password
-
-    # 512 reserved for query service
-    couchbase_server_index_ram: 512
-    couchbase_server_admin_port: 8091
-    protocol: http://
-    addnode_protocol: http://
-    addnode_port: 8091
-    ssl_verify:
-    couchbase_server_home_path: /opt/couchbase
+    
 
     # Primary node
-    couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
+    #couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
 
     # Current node
 
     couchbase_server_bucket_type: couchbase
-    couchbase_server_bucket_replica: 1
 
   tasks:
-    - debug: msg="Couchbase server primary node {{ addnode_port }}"
+    - debug: msg="Couchbase server primary node {{ couchbase_server_bucket_type }}"
    
