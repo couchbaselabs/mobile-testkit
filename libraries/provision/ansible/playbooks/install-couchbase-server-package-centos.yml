@@ -31,5 +31,5 @@
     couchbase_server_bucket_replica: 1
 
   tasks:
-    - debug: msg="Couchbase server primary node"
+    - debug: msg="Couchbase server primary node {{ addnode_port }}"
    
