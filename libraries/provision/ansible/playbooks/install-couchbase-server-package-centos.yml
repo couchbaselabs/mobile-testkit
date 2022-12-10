@@ -7,12 +7,12 @@
     
 
     # Primary node
-    #couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
+    couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
 
     # Current node
 
     couchbase_server_bucket_type: couchbase
 
   tasks:
-    - debug: msg="Couchbase server primary node {{ bla }}"
+    - debug: msg="Couchbase server primary node {{ couchbase_server_bucket_type }}"
    
