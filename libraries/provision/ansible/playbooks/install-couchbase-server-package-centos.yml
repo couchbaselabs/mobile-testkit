@@ -4,10 +4,10 @@
   become: yes
 
   vars:
-    couchbase_server_package_base_url:
-    couchbase_server_package_name:
-    ipv6_enabled:
-    cbs_dp_preview:
+    couchbase_server_package_base_url: "gilad"
+    couchbase_server_package_name: "gilad"
+    ipv6_enabled: "gilad"
+    cbs_dp_preview: "gilad"
 
 
     couchbase_server_admin: Administrator
