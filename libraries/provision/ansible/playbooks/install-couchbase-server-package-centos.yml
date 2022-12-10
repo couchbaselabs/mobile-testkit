@@ -23,6 +23,7 @@
     couchbase_server_home_path: /opt/couchbase
 
     # Primary node
+    couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
 
     # Current node
 
@@ -30,5 +31,5 @@
     couchbase_server_bucket_replica: 1
 
   tasks:
-    - debug: msg="Couchbase server primary node"
+    - debug: msg="Couchbase server primary node {{ couchbase_server_primary_node }}"
    
