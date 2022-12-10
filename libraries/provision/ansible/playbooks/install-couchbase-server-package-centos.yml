@@ -35,7 +35,9 @@
     couchbase_server_bucket_ram: "{{ ((couchbase_server_cluster_ram|int)*0.5)|int }}"
 
   tasks:
-    - debug: msg="GILAD_DEBUG {{ hostvars[inventory_hostname] }}"
+    - name: Print all available facts
+      ansible.builtin.debug:
+        var: ansible_facts
     - debug: msg="Couchbase server primary node {{ couchbase_server_primary_node }}"
     - debug: msg="Couchbase server node {{ couchbase_server_node }}"
     - debug: msg="Downloading Couchbase server v. {{ couchbase_server_package_url }}"
