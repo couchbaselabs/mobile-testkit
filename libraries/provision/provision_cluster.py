@@ -89,7 +89,7 @@ def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_conf
     log_info(">>> Using sync_gateway config: {}".format(sync_gateway_config.config_path))
 
     # Reset previous installs
-    clean_cluster(cluster_config, skip_couchbase_provision=skip_couchbase_provision, sg_platform=sg_platform)
+    clean_cluster(cluster_config, skip_couchbase_provision=skip_couchbase_provision, server_platform=sg_platform)
 
     if not skip_couchbase_provision:
         # Install server package
