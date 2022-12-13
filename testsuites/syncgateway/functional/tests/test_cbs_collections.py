@@ -245,7 +245,7 @@ def test_collection_channels(scopes_collections_tests_fixture):
             pytest.fail("The document " + doc + " was not accessible even though the user was given all documents access")
 
     # 5. Check that the users see the shared document in their channels
-    assert (shared_found_user_1 and shared_found_user_2), "The shared document was not found for one of the users. user1: " + shared_found_user_1 + " user2: " + shared_found_user_2
+    assert (shared_found_user_1 and shared_found_user_2), "The shared document was not found for one of the users. user1: " + str(shared_found_user_1) + " user2: " + str(shared_found_user_2)
     assert (shared_doc[0]["id"] in wildcard_user_docs_ids), "The shared document was not accessiable VIA the wildcard channel"
 
     # 6. Check that _bulk_get cannot get documents that are not in the user's channel
