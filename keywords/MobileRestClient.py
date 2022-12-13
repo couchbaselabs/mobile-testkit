@@ -1541,7 +1541,7 @@ class MobileRestClient:
 
         return resp_obj
 
-    def get_all_docs(self, url, db, auth=None, include_docs=False):
+    def get_all_docs(self, url, db, auth=None, include_docs=False, scope=None, collection=None):
         """ Get all docs for a database via _all_docs """
 
         auth_type, auth = get_auth_type(auth)
@@ -1549,12 +1549,18 @@ class MobileRestClient:
         if include_docs:
             params["include_docs"] = "true"
 
+        all_docs_url = "{}/{}/_all_docs".format(url, db)
+        if scope is not None:
+            if collection is None:
+                assert "If a scope is defined, there shiuld also be a collection"
+            all_docs_url = "{}/{}.{}.{}/_all_docs".format(url, db, scope, collection)
+
         if auth_type == AuthType.session:
-            resp = self._session.get("{}/{}/_all_docs".format(url, db), params=params, cookies=dict(SyncGatewaySession=auth[1]))
+            resp = self._session.get(all_docs_url, params=params, cookies=dict(SyncGatewaySession=auth[1]))
         elif auth_type == AuthType.http_basic:
-            resp = self._session.get("{}/{}/_all_docs".format(url, db), params=params, auth=auth)
+            resp = self._session.get(all_docs_url, params=params, auth=auth)
         else:
-            resp = self._session.get("{}/{}/_all_docs".format(url, db), params=params)
+            resp = self._session.get(all_docs_url, params=params)
 
         log_r(resp)
         resp.raise_for_status()
