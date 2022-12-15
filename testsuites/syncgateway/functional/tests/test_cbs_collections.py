@@ -218,9 +218,9 @@ def test_collection_channels(scopes_collections_tests_fixture):
     shared_doc = sg_client.add_docs(sg_admin_url, db, 1, shared_doc_prefix, auth=client_auth, channels=["!"], scope=scope, collection=collection)
 
     # 3. Get all the documents using _all_docs
-    user_1_docs = sg_client.get_all_docs(url=sg_url, db=db, auth=auth_user_1, include_docs=True)
-    user_2_docs = sg_client.get_all_docs(url=sg_url, db=db, auth=auth_user_2, include_docs=True)
-    wildcard_user_docs = sg_client.get_all_docs(url=sg_url, db=db, auth=auth_wildcard_user, include_docs=True)
+    user_1_docs = sg_client.get_all_docs(url=sg_url, db=db, auth=auth_user_1, include_docs=True, scope=scope, collection=collection)
+    user_2_docs = sg_client.get_all_docs(url=sg_url, db=db, auth=auth_user_2, include_docs=True, scope=scope, collection=collection)
+    wildcard_user_docs = sg_client.get_all_docs(url=sg_url, db=db, auth=auth_wildcard_user, include_docs=True, scope=scope, collection=collection)
 
     user_1_docs_ids = [doc["id"] for doc in user_1_docs["rows"]]
     user_2_docs_ids = [doc["id"] for doc in user_2_docs["rows"]]
