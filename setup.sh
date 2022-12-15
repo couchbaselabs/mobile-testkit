@@ -18,7 +18,7 @@ elif [[ $py3version == 3.7.* ]]; then
     PYTHON=python3
     PIP=pip3.7
 else
-    echo "Exiting. Make sure Python version is 3.8 or 2.7."
+    echo "Exiting. Make sure Python version is 3.8 or 3.7"
     return 1
 fi
 
