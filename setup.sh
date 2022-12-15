@@ -52,3 +52,4 @@ export ANSIBLE_CONFIG=$currentdir/ansible.cfg
 
 pip install --upgrade pip==20.1.1
 pip install couchbase==3.2.7
+pip install importlib-metadata==4.3.0
