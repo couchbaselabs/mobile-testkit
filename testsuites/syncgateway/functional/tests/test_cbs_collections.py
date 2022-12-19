@@ -8,6 +8,7 @@ from keywords.constants import RBAC_FULL_ADMIN
 from libraries.testkit.admin import Admin
 from keywords.exceptions import RestError
 from requests.auth import HTTPBasicAuth
+from keywords import document
 
 # test file shared variables
 bucket = "data-bucket"
@@ -301,6 +302,47 @@ def test_restricted_collection(scopes_collections_tests_fixture):
     all_docs = sg_client.get_all_docs(sg_admin_url, db)
     assert(all_docs["total_rows"] == 1), "Number of expected documents in Sync Gateway database does not match expected. Expected 1; Found " + str(all_docs["total_rows"])
     assert(all_docs["rows"][0]["id"] == doc_1_key), "Sync Gateway database document has wrong ID, possibly due to accessing document under server restricted collection"
+
+
+@pytest.mark.syncgateway
+@pytest.mark.collections
+def test_apis_support_collections(scopes_collections_tests_fixture):
+    """
+    Specifically test various APIs:
+    1.  Add documents using bulk_docs
+    2.  Purge one of the documents
+    3.  Get a raw document
+    """
+    if is_using_views:
+        pytest.skip("""It is not necessary to run scopes and collections tests with views.
+                When it is enabled, there is a problem that affects the rest of the tests suite.""")
+
+    sg_client, sg_admin_url, db, scope, collection = scopes_collections_tests_fixture
+    user_session = sg_client.create_session(url=sg_admin_url, db=db, name=sg_username)
+    created_docs = document.create_docs(doc_id_prefix='collections_api_docs', number=3, channels=channels)
+    created_doc_ids = []
+    for doc_info in created_docs:
+        created_doc_ids.append(doc_info["_id"])
+    # 1. Add documents using bulk_docs
+    sg_docs = sg_client.add_bulk_docs(url=sg_url, db=db, docs=created_docs, auth=user_session, scope=scope, collection=collection)
+    uplodad_docs = sg_client.get_all_docs(url=sg_admin_url, db=db, include_docs=True, scope=scope, collection=collection)
+
+    # Check that the document was added
+    for doc_key in uplodad_docs["rows"]:
+        if doc_key["id"] not in created_doc_ids:
+            assert False, "The document " + doc_key["id"] + " was not uploaded using POST add_bulk"
+
+    # 2. Purge one document
+    bulk_doc = sg_client.get_doc(sg_admin_url, db, sg_docs[0]["id"], scope=scope, collection=collection)
+    sg_client.purge_doc(sg_admin_url, db, bulk_doc, scope=scope, collection=collection)
+    # Check that the document was purged
+    with pytest.raises(Exception) as e:
+        sg_client.get_doc(sg_admin_url, db, sg_docs[0]["id"], scope=scope, collection=collection)
+    e.match("Not Found")
+
+    # 3.  Get a raw document
+    raw_doc = sg_client.get_raw_doc(sg_admin_url, db, sg_docs[1]["id"], auth=user_session, scope=scope, collection=collection)
+    assert uplodad_docs["rows"][1]["value"]["rev"] == raw_doc["_sync"]["rev"], "The wrong raw document was fetched"
 
 
 def rename_a_single_scope_or_collection(db, scope, new_name):

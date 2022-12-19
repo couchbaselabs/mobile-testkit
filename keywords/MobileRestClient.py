@@ -571,17 +571,19 @@ class MobileRestClient:
         resp.raise_for_status()
         return resp.json()
 
-    def compact_database(self, url, db, auth=None):
+    def compact_database(self, url, db, auth=None, scope=None, collection=None):
         """
         POST /{db}/_compact and will verify compaction by
         iterating though each document and inspecting the revs_info to make sure all revs are 'missing'
         except for the leaf revision
         """
-
+        keyspace = db
+        if scope is not None:
+            keyspace = db + "." + scope + "." + collection
         if auth:
-            resp = self._session.post("{}/{}/_compact".format(url, db), auth=HTTPBasicAuth(auth[0], auth[1]))
+            resp = self._session.post("{}/{}/_compact".format(url, keyspace), auth=HTTPBasicAuth(auth[0], auth[1]))
         else:
-            resp = self._session.post("{}/{}/_compact".format(url, db))
+            resp = self._session.post("{}/{}/_compact".format(url, keyspace))
         log_r(resp)
         resp.raise_for_status()
 
@@ -901,16 +903,19 @@ class MobileRestClient:
 
         return resp_obj
 
-    def get_raw_doc(self, url, db, doc_id, auth=None):
+    def get_raw_doc(self, url, db, doc_id, auth=None, scope=None, collection=None):
         """ Get a document via _raw Sync Gateway endpoint """
         params = {
             "include_doc": "true",
             "redact": "false"
         }
+        keyspace = db
+        if scope is not None:
+            keyspace = db + "." + scope + "." + collection
         if auth:
-            resp = self._session.get("{}/{}/_raw/{}".format(url, db, doc_id), params=params, auth=HTTPBasicAuth(auth[0], auth[1]))
+            resp = self._session.get("{}/{}/_raw/{}".format(url, keyspace, doc_id), params=params, auth=HTTPBasicAuth(auth[0], auth[1]))
         else:
-            resp = self._session.get("{}/{}/_raw/{}".format(url, db, doc_id), params=params)
+            resp = self._session.get("{}/{}/_raw/{}".format(url, keyspace, doc_id), params=params)
         log_r(resp)
         resp.raise_for_status()
         return resp.json()
@@ -1187,7 +1192,7 @@ class MobileRestClient:
                 time.sleep(1)
                 continue
 
-    def purge_doc(self, url, db, doc, auth=None):
+    def purge_doc(self, url, db, doc, auth=None, scope=None, collection=None):
         """
         Purges the each doc by doc id
 
@@ -1207,10 +1212,13 @@ class MobileRestClient:
             data = {
                 doc["id"]: [doc["rev"]]
             }
+        keyspace = db
+        if scope is not None:
+            keyspace = db + "." + scope + "." + collection
         if auth:
-            resp = self._session.post("{}/{}/_purge".format(url, db), json.dumps(data), auth=HTTPBasicAuth(auth[0], auth[1]))
+            resp = self._session.post("{}/{}/_purge".format(url, keyspace), json.dumps(data), auth=HTTPBasicAuth(auth[0], auth[1]))
         else:
-            resp = self._session.post("{}/{}/_purge".format(url, db), json.dumps(data))
+            resp = self._session.post("{}/{}/_purge".format(url, keyspace), json.dumps(data))
         log_r(resp)
         resp.raise_for_status()
         resp_obj = resp.json()
@@ -1472,7 +1480,7 @@ class MobileRestClient:
 
         return added_docs
 
-    def add_bulk_docs(self, url, db, docs, auth=None):
+    def add_bulk_docs(self, url, db, docs, auth=None, scope=None, collection=None):
         """
         Keyword that issues POST _bulk docs with the specified 'docs'.
         Use the Document.create_docs() to create the docs.
@@ -1486,14 +1494,17 @@ class MobileRestClient:
         else:
             request_body = {"docs": docs}
 
+        keyspace = db
+        if scope is not None:
+            keyspace = db + "." + scope + "." + collection
         if auth_type == AuthType.session:
-            resp = self._session.post("{}/{}/_bulk_docs".format(url, db),
+            resp = self._session.post("{}/{}/_bulk_docs".format(url, keyspace),
                                       data=json.dumps(request_body, cls=MyEncoder),
                                       cookies=dict(SyncGatewaySession=auth[1]))
         elif auth_type == AuthType.http_basic:
-            resp = self._session.post("{}/{}/_bulk_docs".format(url, db), data=json.dumps(request_body), auth=auth)
+            resp = self._session.post("{}/{}/_bulk_docs".format(url, keyspace), data=json.dumps(request_body), auth=auth)
         else:
-            resp = self._session.post("{}/{}/_bulk_docs".format(url, db), data=json.dumps(request_body))
+            resp = self._session.post("{}/{}/_bulk_docs".format(url, keyspace), data=json.dumps(request_body))
 
         log_r(resp)
         resp.raise_for_status()
