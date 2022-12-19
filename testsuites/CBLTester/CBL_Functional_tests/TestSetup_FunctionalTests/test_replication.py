@@ -4220,7 +4220,6 @@ def test_replication_reset_retires(params_from_base_test_setup, num_of_docs, con
         11. Verify replicator docs on SG
 
     """
-    pytest.skip("zhovna")
     sg_db = "db"
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
