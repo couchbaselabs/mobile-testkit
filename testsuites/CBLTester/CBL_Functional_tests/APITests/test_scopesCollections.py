@@ -87,9 +87,7 @@ class TestScopeCollection(object):
         db = self.db_obj.create(db_name)
         try:
             self.db_obj.deleteCollection(db, collection, scope)
-            print("No error while deleting non-existing scopes and collections")
         except:
-            print("Error found")
+            assert False
+        else:
             assert True
-            return
-        assert False

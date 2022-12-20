@@ -31,6 +31,7 @@ def test_file_logging(params_from_base_test_setup, log_level, plain_text, max_si
     base_url = params_from_base_test_setup["base_url"]
     liteserv_version = params_from_base_test_setup["liteserv_version"]
     liteserv_platform = params_from_base_test_setup["liteserv_platform"]
+    log_info(liteserv_platform)
     log_obj = FileLogging(base_url)
 
     log_directory = log_obj.configure(log_level=log_level, plain_text=plain_text,
@@ -48,7 +49,7 @@ def test_file_logging(params_from_base_test_setup, log_level, plain_text, max_si
                                                                                            cbl_plain_text))
 
     if max_size == 0 and "c-" not in liteserv_platform:
-        max_size = 512000
+        max_size = 524288
 
     if max_rotate_count == 0 and "c-" not in liteserv_platform:
         max_rotate_count = 1
