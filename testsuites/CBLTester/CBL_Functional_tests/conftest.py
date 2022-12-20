@@ -498,7 +498,9 @@ def params_from_base_suite_setup(request):
                 sg_ce=sg_ce,
                 skip_couchbase_provision=skip_couchbase_provision
             )
-        except ProvisioningError:
+        except ProvisioningError as e:
+            error = str(e)
+            log_info(error)
             logging_helper = Logging()
             logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=request.node.name)
             raise
