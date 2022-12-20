@@ -10,7 +10,6 @@ from libraries.testkit import cluster
 from keywords.ClusterKeywords import ClusterKeywords
 from libraries.testkit.admin import Admin
 from keywords import couchbaseserver
-from keywords.utils import log_info
 from keywords.MobileRestClient import MobileRestClient
 from keywords.constants import RBAC_FULL_ADMIN
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
