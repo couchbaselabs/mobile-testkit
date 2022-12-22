@@ -305,7 +305,7 @@ def test_restricted_collection(scopes_collections_tests_fixture):
 
     # 4. Check that documents in the server restricted collection are not accesible via SGW
     all_docs_ids = []
-    
+
     for row in (sg_client.get_all_docs(sg_admin_url, db, scope=scope, collection=collection)["rows"]):
         all_docs_ids.append(row["id"])
     for row in (sg_client.get_all_docs(sg_admin_url, db, scope=scope, collection=second_collection)["rows"]):
