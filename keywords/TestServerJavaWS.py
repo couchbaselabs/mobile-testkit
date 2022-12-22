@@ -30,7 +30,7 @@ class TestServerJavaWS(TestServerBase):
             if community_enabled:
                 self.cbl_core_lib_name = "couchbase-lite-java-{}".format(self.version)
             else:
-                self.cbl_core_lib_name = "couchbase-lite-java-ee-{}".format(self.version)
+                self.cbl_core_lib_name = "couchbase-lite-java-enterprise-{}".format(self.version)
 
             self.download_corelib_url = "{}/couchbase-lite-java/{}/{}/{}.zip".format(RELEASED_BUILDS, self.version, self.build, self.cbl_core_lib_name)
         else:
@@ -39,7 +39,7 @@ class TestServerJavaWS(TestServerBase):
             if community_enabled:
                 self.cbl_core_lib_name = "couchbase-lite-java-{}-{}".format(self.version, self.build)
             else:
-                self.cbl_core_lib_name = "couchbase-lite-java-ee-{}-{}".format(self.version, self.build)
+                self.cbl_core_lib_name = "couchbase-lite-java-enterprise-{}-{}".format(self.version, self.build)
             self.download_corelib_url = "{}/couchbase-lite-java/{}/{}/{}.zip".format(LATEST_BUILDS, self.version, self.build, self.cbl_core_lib_name)
 
         self.build_name = "TestServer-java-WS-{}-{}".format(self.build_type, self.version_build)
@@ -107,7 +107,7 @@ class TestServerJavaWS(TestServerBase):
         """
         1. Downloads CBLTestServer-Java-WS-2.7.0-94-enterprise.war package
         from latestbuild to the remote Linux or Windows machine
-        2. Downloads CouchbaseLite Java Core library couchbase-lite-java-ee-2.7.0-94.zip,
+        2. Downloads CouchbaseLite Java Core library couchbase-lite-java-enterprise-2.7.0-94.zip,
         extracts the package and removes the zip
         :params: testserver_download_url, cblite_download_url, war_package_name, core_package_name, build_name
         :return: nothing
@@ -117,7 +117,7 @@ class TestServerJavaWS(TestServerBase):
             # download war file to a remote Windows server machine
             status = self.ansible_runner.run_ansible_playbook("download-testserver-java-ws-msft.yml", extra_vars={
                 "testserver_download_url": self.download_url,
-                "cblite_download_url": self.download_corelib_url.replace("-ee-","-enterprise-"),
+                "cblite_download_url": self.download_corelib_url.replace("-ee-", "-enterprise-"),
                 "war_package_name": self.package_name,
                 "core_package_name": self.cbl_core_lib_name,
                 "build_name": self.build_name
@@ -126,7 +126,7 @@ class TestServerJavaWS(TestServerBase):
             # download war file to a remote non-Windows machine
             status = self.ansible_runner.run_ansible_playbook("download-testserver-java-ws.yml", extra_vars={
                 "testserver_download_url": self.download_url,
-                "cblite_download_url": self.download_corelib_url.replace("-ee-","-enterprise-"),
+                "cblite_download_url": self.download_corelib_url.replace("-ee-", "-enterprise-"),
                 "war_package_name": self.package_name,
                 "core_package_name": self.cbl_core_lib_name
             })
