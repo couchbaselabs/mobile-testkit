@@ -266,9 +266,9 @@ def test_collection_channels(scopes_collections_tests_fixture):
 @pytest.mark.collections
 def test_restricted_collection(scopes_collections_tests_fixture):
     """
-    1. Create second collection on CB server
+    1. Create two more collections on CB server
     2. Add documents to the collections on CB server
-    3. Sync one collection to SGW
+    3. Sync two out of three collections to SGW
     4. Check that documents that are in the server restricted collection are not accessible via SGW
     """
 
@@ -277,31 +277,42 @@ def test_restricted_collection(scopes_collections_tests_fixture):
                 When it is enabled, there is a problem that affects the rest of the tests suite.""")
 
     sg_client, sg_admin_url, db, scope, collection = scopes_collections_tests_fixture
-    # 1. Create second collection on CB server
+    # 1. Create two more collections on CB server
     random_suffix = str(uuid.uuid4())[:8]
-    second_collection = "collection_" + random_suffix
+    second_collection = "collection_2" + random_suffix
+    third_collection = "collection_3" + random_suffix
     cb_server.create_collection(bucket, scope, second_collection)
+    cb_server.create_collection(bucket, scope, third_collection)
 
     doc_1_key = "doc_1" + random_suffix
     doc_2_key = "doc_2" + random_suffix
+    doc_3_key = "doc_3" + random_suffix
 
     # 2. Add a document to each collection
     cb_server.add_simple_document(doc_1_key, bucket, scope, collection)
     cb_server.add_simple_document(doc_2_key, bucket, scope, second_collection)
+    cb_server.add_simple_document(doc_3_key, bucket, scope, third_collection)
 
     assert(cb_server.get_document(doc_1_key, bucket, scope, collection)["id"] == doc_1_key), "Error in test setup: failed to add document to server under " + bucket + "." + scope + "." + collection
     assert(cb_server.get_document(doc_2_key, bucket, scope, second_collection)["id"] == doc_2_key), "Error in test setup: failed to add document to server under " + bucket + "." + scope + "." + second_collection
+    assert(cb_server.get_document(doc_3_key, bucket, scope, third_collection)["id"] == doc_3_key), "Error in test setup: failed to add document to server under " + bucket + "." + scope + "." + third_collection
 
-    # 3. Sync one collection to SGW
-    db_config = {"bucket": bucket, "scopes": {scope: {"collections": {collection: {}}}}, "num_index_replicas": 0,
+    # 3. Sync two collections to SGW
+    db_config = {"bucket": bucket, "scopes": {scope: {"collections": {collection: {}, second_collection: {}}}}, "num_index_replicas": 0,
                  "import_docs": True, "enable_shared_bucket_access": True}
     admin_client.post_db_config(db, db_config)
     admin_client.wait_for_db_online(db, 60)
 
     # 4. Check that documents in the server restricted collection are not accesible via SGW
-    all_docs = sg_client.get_all_docs(sg_admin_url, db)
-    assert(all_docs["total_rows"] == 1), "Number of expected documents in Sync Gateway database does not match expected. Expected 1; Found " + str(all_docs["total_rows"])
-    assert(all_docs["rows"][0]["id"] == doc_1_key), "Sync Gateway database document has wrong ID, possibly due to accessing document under server restricted collection"
+    all_docs_ids = []
+    
+    for row in (sg_client.get_all_docs(sg_admin_url, db, scope=scope, collection=collection)["rows"]):
+        all_docs_ids.append(row["id"])
+    for row in (sg_client.get_all_docs(sg_admin_url, db, scope=scope, collection=second_collection)["rows"]):
+        all_docs_ids.append(row["id"])
+
+    assert(len(all_docs_ids) == 2), "Number of expected documents in Sync Gateway database does not match expected. Expected 2; Found " + str(len(all_docs_ids))
+    assert(doc_3_key not in all_docs_ids), "Sync Gateway contains document from server restricted collection. Document ID " + doc_3_key + "under " + bucket + "." + scope + "." + third_collection
 
 
 @pytest.mark.syncgateway
