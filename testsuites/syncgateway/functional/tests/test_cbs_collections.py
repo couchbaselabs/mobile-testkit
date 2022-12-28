@@ -317,6 +317,21 @@ def test_restricted_collection(scopes_collections_tests_fixture):
 
 @pytest.mark.syncgateway
 @pytest.mark.collections
+def test_user_collections_access(scopes_collections_tests_fixture):
+
+    if is_using_views:
+        pytest.skip("""It is not necessary to run scopes and collections tests with views.
+                When it is enabled, there is a problem that affects the rest of the tests suite.""")
+
+    sg_client, sg_admin_url, db, scope, collection = scopes_collections_tests_fixture
+
+    users = sg_client.get_users(sg_admin_url, db)
+    for user in users:
+        print(user)
+
+
+@pytest.mark.syncgateway
+@pytest.mark.collections
 def test_apis_support_collections(scopes_collections_tests_fixture):
     """
     Specifically test various APIs:
