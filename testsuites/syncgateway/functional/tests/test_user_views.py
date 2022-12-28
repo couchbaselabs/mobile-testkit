@@ -10,7 +10,7 @@ from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.utils import log_info
 from libraries.testkit.cluster import Cluster
 from keywords.MobileRestClient import MobileRestClient
-from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
+from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf, is_magma_enabled
 from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
 from keywords.constants import RBAC_FULL_ADMIN
 
@@ -31,7 +31,8 @@ def test_user_views_sanity(params_from_base_test_setup, sg_conf_name, x509_cert_
     mode = params_from_base_test_setup["mode"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
-
+    if is_magma_enabled(cluster_conf):
+        pytest.skip("views and MAGMA are not supported together")
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     log_info("Running 'single_user_multiple_channels'")

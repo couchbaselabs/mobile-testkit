@@ -423,7 +423,7 @@ def test_log_rotation_invalid_path(params_from_base_test_setup, sg_conf_name):
     cluster.reset(sg_config_path=sg_conf, use_config=True)
     # set non existing logFilePath
     if sg_platform == "windows":
-        invalid_log_filepath = "C:\Program Files\test"
+        invalid_log_filepath = "C:\Program Files\test"  # noqa: W605
     else:
         invalid_log_filepath = "/12345/1231/131231.log"
 

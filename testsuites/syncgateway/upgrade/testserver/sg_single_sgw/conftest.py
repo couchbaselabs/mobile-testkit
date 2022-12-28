@@ -226,6 +226,7 @@ def params_from_base_suite_setup(request):
     enable_server_tls_skip_verify = request.config.getoption("--enable-server-tls-skip-verify")
     disable_tls_server = request.config.getoption("--disable-tls-server")
     disable_admin_auth = request.config.getoption("--disable-admin-auth")
+    trace_logs = request.config.getoption("--trace_logs")
 
     test_name = request.node.name
 
@@ -260,6 +261,7 @@ def params_from_base_suite_setup(request):
     log_info("enable_cbs_developer_preview: {}".format(enable_cbs_developer_preview))
     log_info("disable_persistent_config: {}".format(disable_persistent_config))
     log_info("disable_admin_auth: {}".format(disable_admin_auth))
+    log_info("trace_logs: {}".format(trace_logs))
 
     # if xattrs is specified but the post upgrade SG version doesn't support, don't continue
     if upgraded_xattrs_enabled and version_is_binary(sync_gateway_upgraded_version):
@@ -427,6 +429,12 @@ def params_from_base_suite_setup(request):
         log_info("Enabled Admin Auth")
         persist_cluster_config_environment_prop(cluster_config, 'disable_admin_auth', False)
 
+    if trace_logs:
+        log_info("Enabled trace logs for Sync Gateway")
+        persist_cluster_config_environment_prop(cluster_config, 'trace_logs', True)
+    else:
+        persist_cluster_config_environment_prop(cluster_config, 'trace_logs', False)
+
     persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "centos", False)
 
     # Write the number of replicas to cluster config
@@ -531,7 +539,8 @@ def params_from_base_suite_setup(request):
         "sg_config": sg_config,
         "create_db_per_test": create_db_per_test,
         "disable_persistent_config": disable_persistent_config,
-        "disable_admin_auth": disable_admin_auth
+        "disable_admin_auth": disable_admin_auth,
+        "trace_logs": trace_logs
     }
 
     # Flush all the memory contents on the server app
@@ -588,6 +597,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     disable_persistent_config = params_from_base_suite_setup["disable_persistent_config"]
     disable_admin_auth = params_from_base_suite_setup["disable_admin_auth"]
     use_local_testserver = request.config.getoption("--use-local-testserver")
+    trace_logs = params_from_base_suite_setup["trace_logs"]
     test_name = request.node.name
 
     source_db = None
@@ -692,7 +702,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "sg_admin_url": sg_admin_url,
         "cbl_db": cbl_db,
         "disable_admin_auth": disable_admin_auth,
-        "disable_persistent_config": disable_persistent_config
+        "disable_persistent_config": disable_persistent_config,
+        "trace_logs": trace_logs
     }
 
     log_info("Tearing down test")

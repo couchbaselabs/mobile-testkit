@@ -8,12 +8,14 @@ from keywords.constants import RBAC_FULL_ADMIN
 from libraries.testkit.admin import Admin
 from keywords.exceptions import RestError
 from requests.auth import HTTPBasicAuth
+from keywords import document
 
 # test file shared variables
 bucket = "data-bucket"
 sg_password = "password"
 admin_client = cb_server = sg_username = channels = client_auth = sg_url = None
 admin_auth = [RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']]
+is_using_views = False
 
 
 @pytest.fixture
@@ -25,15 +27,18 @@ def teardown_doc_fixture():
 
 
 @pytest.fixture
-def scopes_collections_tests_fixture(params_from_base_test_setup):
+def scopes_collections_tests_fixture(params_from_base_test_setup, params_from_base_suite_setup):
+    # get/set the parameters
+    global admin_client
+    global cb_server
+    global sg_username
+    global channels
+    global client_auth
+    global sg_url
+    global is_using_views
+    is_using_views = params_from_base_suite_setup["use_views"]
+
     try:  # To be able to teardon in case of a setup error
-        # get/set the parameters
-        global admin_client
-        global cb_server
-        global sg_username
-        global channels
-        global client_auth
-        global sg_url
         pre_test_db_exists = pre_test_user_exists = sg_client = sg_url = sg_admin_url = None
         random_suffix = str(uuid.uuid4())[:8]
         db_prefix = "db_"
@@ -93,6 +98,9 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
 @pytest.mark.syncgateway
 @pytest.mark.collections
 def test_document_only_under_named_scope(scopes_collections_tests_fixture, teardown_doc_fixture):
+    if is_using_views:
+        pytest.skip("""It is not necessary to run scopes and collections tests with views.
+                When it is enabled, there is a problem that affects the rest of the tests suite.""")
 
     # setup
     doc_prefix = "scp_tests_doc"
@@ -110,7 +118,7 @@ def test_document_only_under_named_scope(scopes_collections_tests_fixture, teard
 
     # exercise + verification
     try:
-        sg_client.get_doc(sg_admin_url, db, doc_id, scope=scope, collection=collection)
+        sg_client.get_doc(sg_admin_url, db, doc_id, collection=collection)
     except Exception as e:
         pytest.fail("There was a problem reading the document from a collection WITHOUT specifying the scope in the endoint. The error: " + str(e))
 
@@ -122,14 +130,19 @@ def test_document_only_under_named_scope(scopes_collections_tests_fixture, teard
 
 @pytest.mark.syncgateway
 @pytest.mark.collections
-def test_change_collection_name(scopes_collections_tests_fixture):
+def test_change_scope_or_collection_name(scopes_collections_tests_fixture):
     """
     1. Upload a document to a collection
     2. Rename the collection by updating the config
     3. Check that the document is not accessiable in the new collection
     4. Rename the collection to the original collection
     5. Verify that the document is accessible again
+    6. Change the scope name and expect a "Bad Rquest" error
     """
+    if is_using_views:
+        pytest.skip("""It is not necessary to run scopes and collections tests with views.
+                When it is enabled, there is a problem that affects the rest of the tests suite.""")
+
     # setup
     sg_client, sg_admin_url, db, scope, collection = scopes_collections_tests_fixture
     doc_prefix = "scp_tests_doc"
@@ -142,7 +155,7 @@ def test_change_collection_name(scopes_collections_tests_fixture):
 
     # 2. Rename the collection by updating the config
     cb_server.create_collection(bucket, scope, new_collection_name)
-    rename_a_single_collection(db, scope, new_collection_name)
+    rename_a_single_scope_or_collection(db, scope, new_collection_name)
 
     #  exercise + verification
     with pytest.raises(Exception) as e:  # HTTPError doesn't work, for some reason, but would be preferable
@@ -150,13 +163,17 @@ def test_change_collection_name(scopes_collections_tests_fixture):
     e.match("Not Found")
 
     # 4. Rename the collection to the original collection
-    rename_a_single_collection(db, scope, collection)
+    rename_a_single_scope_or_collection(db, scope, collection)
 
     # 5. Verify that the document is accessible again
     try:
         sg_client.get_doc(sg_admin_url, db, doc_id, scope=scope, collection=collection)
     except Exception as e:
         pytest.fail("The document could not be read from the collection after it was renamed and renamed back. The error: " + str(e))
+    # 6. Change the scope name and expect a "Bad Rquest" error
+    with pytest.raises(Exception) as e:
+        rename_a_single_scope_or_collection(db, "new_scope", collection)
+    e.match("Bad Request")
 
 
 @pytest.mark.syncgateway
@@ -172,6 +189,10 @@ def test_collection_channels(scopes_collections_tests_fixture):
     7. Check that _bulk_get can get documents that are in the user's channel
     8. Check that _bulk_get cannot get a document from the "right" channel but the wrong collection
     """
+    if is_using_views:
+        pytest.skip("""It is not necessary to run scopes and collections tests with views.
+                When it is enabled, there is a problem that affects the rest of the tests suite.""")
+
     # setup
     sg_client, sg_admin_url, db, scope, collection = scopes_collections_tests_fixture
     random_str = str(uuid.uuid4())[:6]
@@ -198,9 +219,9 @@ def test_collection_channels(scopes_collections_tests_fixture):
     shared_doc = sg_client.add_docs(sg_admin_url, db, 1, shared_doc_prefix, auth=client_auth, channels=["!"], scope=scope, collection=collection)
 
     # 3. Get all the documents using _all_docs
-    user_1_docs = sg_client.get_all_docs(url=sg_url, db=db, auth=auth_user_1, include_docs=True)
-    user_2_docs = sg_client.get_all_docs(url=sg_url, db=db, auth=auth_user_2, include_docs=True)
-    wildcard_user_docs = sg_client.get_all_docs(url=sg_url, db=db, auth=auth_wildcard_user, include_docs=True)
+    user_1_docs = sg_client.get_all_docs(url=sg_url, db=db, auth=auth_user_1, include_docs=True, scope=scope, collection=collection)
+    user_2_docs = sg_client.get_all_docs(url=sg_url, db=db, auth=auth_user_2, include_docs=True, scope=scope, collection=collection)
+    wildcard_user_docs = sg_client.get_all_docs(url=sg_url, db=db, auth=auth_wildcard_user, include_docs=True, scope=scope, collection=collection)
 
     user_1_docs_ids = [doc["id"] for doc in user_1_docs["rows"]]
     user_2_docs_ids = [doc["id"] for doc in user_2_docs["rows"]]
@@ -225,7 +246,7 @@ def test_collection_channels(scopes_collections_tests_fixture):
             pytest.fail("The document " + doc + " was not accessible even though the user was given all documents access")
 
     # 5. Check that the users see the shared document in their channels
-    assert (shared_found_user_1 and shared_found_user_2), "The shared document was not found for one of the users. user1: " + shared_found_user_1 + " user2: " + shared_found_user_2
+    assert (shared_found_user_1 and shared_found_user_2), "The shared document was not found for one of the users. user1: " + str(shared_found_user_1) + " user2: " + str(shared_found_user_2)
     assert (shared_doc[0]["id"] in wildcard_user_docs_ids), "The shared document was not accessiable VIA the wildcard channel"
 
     # 6. Check that _bulk_get cannot get documents that are not in the user's channel
@@ -241,7 +262,90 @@ def test_collection_channels(scopes_collections_tests_fixture):
     e.match("Not Found")
 
 
-def rename_a_single_collection(db, scope, new_name):
+@pytest.mark.syncgateway
+@pytest.mark.collections
+def test_restricted_collection(scopes_collections_tests_fixture):
+    """
+    1. Create second collection on CB server
+    2. Add documents to the collections on CB server
+    3. Sync one collection to SGW
+    4. Check that documents that are in the server restricted collection are not accessible via SGW
+    """
+
+    if is_using_views:
+        pytest.skip("""It is not necessary to run scopes and collections tests with views.
+                When it is enabled, there is a problem that affects the rest of the tests suite.""")
+
+    sg_client, sg_admin_url, db, scope, collection = scopes_collections_tests_fixture
+    # 1. Create second collection on CB server
+    random_suffix = str(uuid.uuid4())[:8]
+    second_collection = "collection_" + random_suffix
+    cb_server.create_collection(bucket, scope, second_collection)
+
+    doc_1_key = "doc_1" + random_suffix
+    doc_2_key = "doc_2" + random_suffix
+
+    # 2. Add a document to each collection
+    cb_server.add_simple_document(doc_1_key, bucket, scope, collection)
+    cb_server.add_simple_document(doc_2_key, bucket, scope, second_collection)
+
+    assert(cb_server.get_document(doc_1_key, bucket, scope, collection)["id"] == doc_1_key), "Error in test setup: failed to add document to server under " + bucket + "." + scope + "." + collection
+    assert(cb_server.get_document(doc_2_key, bucket, scope, second_collection)["id"] == doc_2_key), "Error in test setup: failed to add document to server under " + bucket + "." + scope + "." + second_collection
+
+    # 3. Sync one collection to SGW
+    db_config = {"bucket": bucket, "scopes": {scope: {"collections": {collection: {}}}}, "num_index_replicas": 0,
+                 "import_docs": True, "enable_shared_bucket_access": True}
+    admin_client.post_db_config(db, db_config)
+    admin_client.wait_for_db_online(db, 60)
+
+    # 4. Check that documents in the server restricted collection are not accesible via SGW
+    all_docs = sg_client.get_all_docs(sg_admin_url, db)
+    assert(all_docs["total_rows"] == 1), "Number of expected documents in Sync Gateway database does not match expected. Expected 1; Found " + str(all_docs["total_rows"])
+    assert(all_docs["rows"][0]["id"] == doc_1_key), "Sync Gateway database document has wrong ID, possibly due to accessing document under server restricted collection"
+
+
+@pytest.mark.syncgateway
+@pytest.mark.collections
+def test_apis_support_collections(scopes_collections_tests_fixture):
+    """
+    Specifically test various APIs:
+    1.  Add documents using bulk_docs
+    2.  Purge one of the documents
+    3.  Get a raw document
+    """
+    if is_using_views:
+        pytest.skip("""It is not necessary to run scopes and collections tests with views.
+                When it is enabled, there is a problem that affects the rest of the tests suite.""")
+
+    sg_client, sg_admin_url, db, scope, collection = scopes_collections_tests_fixture
+    user_session = sg_client.create_session(url=sg_admin_url, db=db, name=sg_username)
+    created_docs = document.create_docs(doc_id_prefix='collections_api_docs', number=3, channels=channels)
+    created_doc_ids = []
+    for doc_info in created_docs:
+        created_doc_ids.append(doc_info["_id"])
+    # 1. Add documents using bulk_docs
+    sg_docs = sg_client.add_bulk_docs(url=sg_url, db=db, docs=created_docs, auth=user_session, scope=scope, collection=collection)
+    uplodad_docs = sg_client.get_all_docs(url=sg_admin_url, db=db, include_docs=True, scope=scope, collection=collection)
+
+    # Check that the document was added
+    for doc_key in uplodad_docs["rows"]:
+        if doc_key["id"] not in created_doc_ids:
+            assert False, "The document " + doc_key["id"] + " was not uploaded using POST add_bulk"
+
+    # 2. Purge one document
+    bulk_doc = sg_client.get_doc(sg_admin_url, db, sg_docs[0]["id"], scope=scope, collection=collection)
+    sg_client.purge_doc(sg_admin_url, db, bulk_doc, scope=scope, collection=collection)
+    # Check that the document was purged
+    with pytest.raises(Exception) as e:
+        sg_client.get_doc(sg_admin_url, db, sg_docs[0]["id"], scope=scope, collection=collection)
+    e.match("Not Found")
+
+    # 3.  Get a raw document
+    raw_doc = sg_client.get_raw_doc(sg_admin_url, db, sg_docs[1]["id"], auth=user_session, scope=scope, collection=collection)
+    assert uplodad_docs["rows"][1]["value"]["rev"] == raw_doc["_sync"]["rev"], "The wrong raw document was fetched"
+
+
+def rename_a_single_scope_or_collection(db, scope, new_name):
     data = {"bucket": bucket, "scopes": {scope: {"collections": {new_name: {}}}}, "num_index_replicas": 0}
     admin_client.post_db_config(db, data)
     admin_client.wait_for_db_online(db, 60)

@@ -216,6 +216,7 @@ def params_from_base_suite_setup(request):
     skip_couchbase_provision = request.config.getoption("--skip-couchbase-provision")
     enable_cbs_developer_preview = request.config.getoption("--enable-cbs-developer-preview")
     disable_persistent_config = request.config.getoption("--disable-persistent-config")
+    trace_logs = request.config.getoption("--trace_logs")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
@@ -246,6 +247,7 @@ def params_from_base_suite_setup(request):
     log_info("hide_product_version: {}".format(hide_product_version))
     log_info("enable_cbs_developer_preview: {}".format(enable_cbs_developer_preview))
     log_info("disable_persistent_config: {}".format(disable_persistent_config))
+    log_info("trace_logs: {}".format(trace_logs))
 
     # sg-ce is invalid for di mode
     if mode == "di" and sg_ce:
@@ -402,6 +404,12 @@ def params_from_base_suite_setup(request):
     else:
         log_info("Running without Centralized Persistent Config")
         persist_cluster_config_environment_prop(cluster_config, 'disable_persistent_config', False)
+
+    if trace_logs:
+        log_info("Enabled trace logs for Sync Gateway")
+        persist_cluster_config_environment_prop(cluster_config, 'trace_logs', True)
+    else:
+        persist_cluster_config_environment_prop(cluster_config, 'trace_logs', False)
 
     """if disable_persistent_config:
         sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)

@@ -17,7 +17,7 @@ from libraries.testkit.sgaccel import SgAccel
 from libraries.testkit.syncgateway import SyncGateway, send_dbconfig_as_restCall
 from libraries.testkit.syncgateway import get_buckets_from_sync_gateway_config
 from utilities.cluster_config_utils import is_load_balancer_enabled, get_revs_limit, get_redact_level, is_load_balancer_with_two_clusters_enabled
-from utilities.cluster_config_utils import get_load_balancer_ip, no_conflicts_enabled, is_delta_sync_enabled, get_sg_platform
+from utilities.cluster_config_utils import get_load_balancer_ip, no_conflicts_enabled, is_delta_sync_enabled, get_sg_platform, choose_logging_level
 from utilities.cluster_config_utils import generate_x509_certs, is_x509_auth, get_cbs_primary_nodes_str, is_hide_prod_version_enabled
 from keywords.constants import SYNC_GATEWAY_CERT
 from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version
@@ -220,7 +220,7 @@ class Cluster:
 
             sg_platform = get_sg_platform(self._cluster_config)
             if get_sg_version(self._cluster_config) >= "2.1.0":
-                logging_config = '"logging": {"debug": {"enabled": true}'
+                logging_config = choose_logging_level(self._cluster_config)
                 try:
                     redact_level = get_redact_level(self._cluster_config)
                     playbook_vars["logging"] = '{}, "redaction_level": "{}" {},'.format(logging_config, redact_level, "}")
@@ -454,7 +454,7 @@ class Cluster:
 
         sg_platform = get_sg_platform(self._cluster_config)
 
-        logging_config = '"logging": {"debug": {"enabled": true}'
+        logging_config = choose_logging_level(self._cluster_config)
         try:
             redact_level = get_redact_level(self._cluster_config)
             logging_var = '{}, "redaction_level": "{}" {},'.format(logging_config, redact_level, "}")

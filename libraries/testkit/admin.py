@@ -531,6 +531,18 @@ class Admin:
         resp.raise_for_status()
         return resp.status_code
 
+    # GET /{db}/_config/import_filter
+    def get_db_import_filter(self, db):
+        if not is_admin_auth_disabled(self.cluster_config):
+            self.auth = HTTPBasicAuth(RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd'])
+        if self.auth:
+            resp = requests.get("{0}/{1}/_config/import_filter".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False, auth=self.auth)
+        else:
+            resp = requests.get("{0}/{1}/_config/import_filter".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, verify=False)
+        log.info("GET {}".format(resp.url))
+        resp.raise_for_status()
+        return resp.json()
+
     # PUT /_config
     def put_config(self, config):
         if not is_admin_auth_disabled(self.cluster_config):

@@ -11,7 +11,7 @@ from libraries.provision.ansible_runner import AnsibleRunner
 from libraries.testkit.config import Config
 from libraries.testkit.cluster import Cluster
 from keywords.constants import SYNC_GATEWAY_CERT
-from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_revs_limit, sg_ssl_enabled
+from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_revs_limit, sg_ssl_enabled, choose_logging_level
 from utilities.cluster_config_utils import is_hide_prod_version_enabled, get_cbs_primary_nodes_str, is_centralized_persistent_config_disabled
 from utilities.cluster_config_utils import get_sg_version, get_sg_replicas, get_sg_use_views, get_redact_level, is_x509_auth, generate_x509_certs, is_delta_sync_enabled
 from libraries.testkit import cluster
@@ -228,7 +228,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
         }
 
         if version >= "2.1.0":
-            logging_config = '"logging": {"debug": {"enabled": true}'
+            logging_config = choose_logging_level(cluster_config)
             try:
                 redact_level = get_redact_level(cluster_config)
                 playbook_vars["logging"] = '{}, "redaction_level": "{}" {},'.format(logging_config, redact_level, "}")

@@ -2030,8 +2030,8 @@ def delete_sg_docs(client, url, db, docs_to_delete, auth):
             docs_to_remove.remove(deleted_doc['id'])
             deleted_count += 1
         except HTTPError as he:
-            if ((he.response.status_code == 403 and str(he).startswith('403 Client Error: Forbidden for url:')) or
-                (he.response.status_code == 409 and str(he).startswith('409 Client Error: Conflict for url:')) or
+            if ((he.response.status_code == 403 and str(he).startswith('403 Client Error: Forbidden for url:')) or  # noqa: W504
+                (he.response.status_code == 409 and str(he).startswith('409 Client Error: Conflict for url:')) or  # noqa: W504
                     (he.response.status_code == 404 and str(he).startswith('404 Client Error: Not Found for url:'))):
                 # Doc may have been deleted by the SDK and GET fails for SG
                 # Conflict for url can happen in the following scenario:

@@ -15,7 +15,7 @@ from libraries.testkit.config import Config, seperate_sgw_and_db_config
 from libraries.testkit.debug import log_request, log_response
 from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, sg_ssl_enabled, get_cbs_primary_nodes_str
 from utilities.cluster_config_utils import get_revs_limit, get_redact_level, is_delta_sync_enabled, get_sg_platform, get_bucket_list_cpc
-from utilities.cluster_config_utils import is_hide_prod_version_enabled, is_centralized_persistent_config_disabled
+from utilities.cluster_config_utils import is_hide_prod_version_enabled, is_centralized_persistent_config_disabled, choose_logging_level
 from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version, is_x509_auth, generate_x509_certs
 from keywords.utils import add_cbs_to_sg_config_server_field, log_info, random_string
 from keywords.constants import SYNC_GATEWAY_CERT, SGW_DB_CONFIGS, SYNC_GATEWAY_CONFIGS, SYNC_GATEWAY_CONFIGS_CPC
@@ -116,7 +116,7 @@ class SyncGateway:
                 playbook_vars["sslkey"] = '"SSLKey": "sg_privkey.pem",'
 
             if get_sg_version(self.cluster_config) >= "2.1.0":
-                logging_config = '"logging": {"debug": {"enabled": true}'
+                logging_config = choose_logging_level(self.cluster_config)
                 try:
                     redact_level = get_redact_level(self.cluster_config)
                     playbook_vars["logging"] = '{}, "redaction_level": "{}" {},'.format(logging_config, redact_level, "}")
@@ -273,7 +273,7 @@ class SyncGateway:
                 playbook_vars["sslkey"] = '"SSLKey": "sg_privkey.pem",'
 
             if get_sg_version(cluster_config) >= "2.1.0":
-                logging_config = '"logging": {"debug": {"enabled": true}'
+                logging_config = choose_logging_level(cluster_config)
                 try:
                     redact_level = get_redact_level(cluster_config)
                     playbook_vars["logging"] = '{}, "redaction_level": "{}" {},'.format(logging_config, redact_level, "}")
@@ -789,7 +789,7 @@ def setup_sgwconfig_db_config(cluster_config, sg_config_path, use_config=False):
 
     sg_platform = get_sg_platform(cluster_config)
 
-    logging_config = '"logging": {"debug": {"enabled": true}'
+    logging_config = choose_logging_level(cluster_config)
     try:
         redact_level = get_redact_level(cluster_config)
         logging_var = '{}, "redaction_level": "{}" {},'.format(logging_config, redact_level, "}")
