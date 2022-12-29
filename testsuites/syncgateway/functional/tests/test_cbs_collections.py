@@ -318,16 +318,43 @@ def test_restricted_collection(scopes_collections_tests_fixture):
 @pytest.mark.syncgateway
 @pytest.mark.collections
 def test_user_collections_access(scopes_collections_tests_fixture):
+    """
+    1. Add second collection on SGW database
+    2. Add documents to collections
+    3. Create two users, one with scope level access, one with collection level access
+    4. Check users are able to perform correct API calls for corresponding level of access
+    """
 
     if is_using_views:
         pytest.skip("""It is not necessary to run scopes and collections tests with views.
                 When it is enabled, there is a problem that affects the rest of the tests suite.""")
 
     sg_client, sg_admin_url, db, scope, collection = scopes_collections_tests_fixture
+    random_suffix = str(uuid.uuid4())[:8]
 
-    users = sg_client.get_users(sg_admin_url, db)
-    for user in users:
-        print(user)
+    second_collection = "collection_2" + random_suffix
+    db_config = {"bucket": bucket, "scopes": {scope: {"collections": {collection: {}, second_collection: {}}}}, "num_index_replicas": 0}
+    admin_client.post_db_config(db, db_config)
+    admin_client.wait_for_db_online(db, 60)
+
+    scope_user = "scope_user" + random_suffix
+    collection_user = "collection_user" + random_suffix
+    # need to define collection_access for each user and create users with access to particular channels
+    scope_user_access = {scope: {collection: {"admin_channels": [collection]}, second_collection: {"admin_channels": [second_collection]}}}
+    collection_user_access = {scope: {collection: {"admin_channels": [collection]}}}
+
+    scope_user_auth = scope_user, sg_password
+    collection_user_auth = collection_user, sg_password
+
+    sg_client.create_user(sg_admin_url, db, scope_user, sg_password, collection_access=scope_user_access, auth=admin_auth)
+    sg_client.create_user(sg_admin_url, db, collection_user, sg_password, collection_access=collection_user_access, auth=admin_auth)
+
+    scope_user_doc_prefix = "scope_user_doc" + random_suffix
+    collection_user_doc_prefix = "collection_user_doc" + random_suffix
+
+    # scope user should have access to both collections
+    sg_client.add_docs(sg_url, db, 3, scope_user_doc_prefix, auth=scope_user_auth, channels=[second_collection], scope=scope, collection=second_collection)
+    sg_client.add_docs(sg_url, db, 3, collection_user_doc_prefix, auth=collection_user_auth, channels=[collection], scope=scope, collection=collection)
 
 
 @pytest.mark.syncgateway
