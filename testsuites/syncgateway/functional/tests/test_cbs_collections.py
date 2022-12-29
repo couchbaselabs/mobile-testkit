@@ -333,6 +333,7 @@ def test_user_collections_access(scopes_collections_tests_fixture):
     random_suffix = str(uuid.uuid4())[:8]
 
     second_collection = "collection_2" + random_suffix
+    cb_server.create_collection(bucket, scope, second_collection)
     db_config = {"bucket": bucket, "scopes": {scope: {"collections": {collection: {}, second_collection: {}}}}, "num_index_replicas": 0}
     admin_client.post_db_config(db, db_config)
     admin_client.wait_for_db_online(db, 60)
