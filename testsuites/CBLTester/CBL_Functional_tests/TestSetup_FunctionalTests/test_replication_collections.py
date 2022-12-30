@@ -51,7 +51,7 @@ def scope_collection_test_fixture(params_from_base_test_setup):
     sg_blip_url = params_from_base_test_setup["target_url"]
 
     c = cluster.Cluster(config=cluster_config)
-    c.reset(sg_config_path=sg_config)
+    # c.reset(sg_config_path=sg_config)
     auth = need_sgw_admin_auth and [RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']] or None
     admin_client = Admin(c.sync_gateways[0])
     db = Database(base_url)
@@ -112,7 +112,7 @@ def test_sync_scopeA_colA_to_scopeA_colA(scope_collection_test_fixture, teardown
         pytest.fail("Replication failed due to " + str(e))
 
     # checking existence of doc after replication complete
-    sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)
+    sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session, scope=scope, collection=collection)
     sg_docs = sg_docs["rows"]
     assert len(sg_docs) == no_of_docs, "Number of docs mismatched"
     # verify_sgDocIds_cblDocIds(sg_client=sg_client, url=sg_url, sg_db=sg_db, session=session, cbl_db=cbl_db, db=db)
@@ -282,6 +282,6 @@ def test_sync_2_collection_src_to_dest_having_2_collections(scope_collection_tes
     except Exception as e:
         pytest.fail("Replication failed due to " + str(e))
 
-    sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session, collection2_name, scope)
+    sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session, scope=scope, collection=collection2_name)
     sg_docs = sg_docs["rows"]
     assert len(sg_docs) == 4
