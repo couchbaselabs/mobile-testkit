@@ -51,7 +51,7 @@ def scope_collection_test_fixture(params_from_base_test_setup):
     sg_blip_url = params_from_base_test_setup["target_url"]
 
     c = cluster.Cluster(config=cluster_config)
-    # c.reset(sg_config_path=sg_config)
+    c.reset(sg_config_path=sg_config)
     auth = need_sgw_admin_auth and [RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']] or None
     admin_client = Admin(c.sync_gateways[0])
     db = Database(base_url)
