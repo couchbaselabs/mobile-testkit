@@ -11,14 +11,15 @@ from keywords.utils import random_string
 @pytest.mark.parametrize("num_of_docs, continuous, replicator_type, attachments, endPointType, scope, collection", [
     (100, False, "push_pull", False, "URLEndPoint", random_string(6), random_string(6))
 ])
-def test_peer_to_peer(params_from_base_test_setup, server_setup, num_of_docs, continuous, replicator_type, attachments, endPointType, scope, collection):
+def test_p2p_sync_all_data(params_from_base_test_setup, server_setup, num_of_docs, continuous, replicator_type, attachments, endPointType, scope, collection):
     """
-        @summary: peer1 -> Peer2
-        1. Create docs on peer1.
-        2. Start the peer2
-        3. Start replication from peer1.
-        4. Verify replication is completed.
-        5. Verify all docs got replicated on peer2 in all the collections and scopes
+        @summary: peer_server -> Peer_client
+        1. Create a named collection in peer_server and peer_client
+        2. Create docs on peer_client in default collection a named collection.
+        3. Start the peer_server
+        4. Start replication from peer_client.
+        5. Verify replication is completed.
+        6. Verify all docs got replicated on peer_server in all the collections and scopes
     """
     base_url_list = server_setup["base_url_list"]
     host_list = params_from_base_test_setup["host_list"]
@@ -40,12 +41,13 @@ def test_peer_to_peer(params_from_base_test_setup, server_setup, num_of_docs, co
     db_name_server = db_name_list[0]
     server_host = host_list[0]
 
-    # create collections in cbl1 and cbl2
+    # 1. Create collections in peer_server and peer_client.
     collection_server = db_obj_server.createCollection(cbl_db_server, collection, scope)
     defaultCollection_server = db_obj_server.defaultCollection(cbl_db_server)
     collection_client = db_obj_client.createCollection(cbl_db_client, collection, scope)
     defaultCollection_client = db_obj_client.defaultCollection(cbl_db_client)
 
+    # 2. Create docs on peer_client in default collection a named collection.
     if attachments:
         db_obj_client.create_bulk_docs(num_of_docs, "cbl-peerToPeer", db=cbl_db_client, channels=channel, attachments_generator=attachment.generate_2_png_10_10, collection=collection_client)
         db_obj_client.create_bulk_docs(num_of_docs, "cbl-peerToPeer", db=cbl_db_client, channels=channel, attachments_generator=attachment.generate_2_png_10_10)
@@ -62,19 +64,25 @@ def test_peer_to_peer(params_from_base_test_setup, server_setup, num_of_docs, co
     cols_rep_client.append(collection_client)
     cols_rep_client.append(defaultCollection_client)
 
+    # 3. Start the peer2
     if endPointType == "URLEndPoint":
         replicator_tcp_listener = peerToPeer_server.server_start(cbl_db_server, collections=cols_rep_server)
         url_listener_port = peerToPeer_server.get_url_listener_port(replicator_tcp_listener)
     else:
         url_listener_port = 5000
 
+    # 4. Start replication from peer_client.
     repl = peerToPeer_client.configureCollection(port=url_listener_port, host=server_host, server_db_name=db_name_server, continuous=continuous, replication_type=replicator_type, endPointType=endPointType, collections=cols_rep_client)
 
     peerToPeer_client.client_start(repl)
     replicator.wait_until_replicator_idle(repl)
+
+    # 5. Verify replication is completed.
     total = replicator.getTotal(repl)
     completed = replicator.getCompleted(repl)
-    assert total == completed, "replication from client to server did not completed " + str(total) + " not equal to " + str(completed)
+    assert total == completed, "replication from client to server did not complete " + str(total) + " not equal to " + str(completed)
+
+    # Verify all docs got replicated on peer_server in all the collections and scopes    
     server_collection_docs_count = col_obj_server.documentCount(collection_server)
     server_default_docs_count = db_obj_server.getCount(cbl_db_server)
     assert server_collection_docs_count == num_of_docs, "Number of docs mismatch in collection"
