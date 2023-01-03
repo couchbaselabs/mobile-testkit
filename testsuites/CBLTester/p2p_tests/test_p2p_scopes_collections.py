@@ -9,7 +9,6 @@ from keywords.utils import random_string
 @pytest.mark.p2p
 @pytest.mark.listener
 @pytest.mark.parametrize("num_of_docs, continuous, replicator_type, attachments, endPointType, scope, collection", [
-    # (10, True, "push_pull", False, "MessageEndPoint", random_string(6), random_string(6)),
     (100, False, "push_pull", False, "URLEndPoint", random_string(6), random_string(6))
 ])
 def test_peer_to_peer(params_from_base_test_setup, server_setup, num_of_docs, continuous, replicator_type, attachments, endPointType, scope, collection):
