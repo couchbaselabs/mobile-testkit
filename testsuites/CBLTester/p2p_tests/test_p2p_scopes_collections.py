@@ -42,18 +42,25 @@ def test_peer_to_peer(params_from_base_test_setup, server_setup, num_of_docs, co
 
     # create collections in cbl1 and cbl2
     collection_server = db_obj_server.createCollection(cbl_db_server, collection, scope)
+    defaultCollection_server = db_obj_server.defaultCollection(cbl_db_server)
     collection_client = db_obj_client.createCollection(cbl_db_client, collection, scope)
+    defaultCollection_client = db_obj_client.defaultCollection(cbl_db_client)
 
     if attachments:
         db_obj_client.create_bulk_docs(num_of_docs, "cbl-peerToPeer", db=cbl_db_client, channels=channel, attachments_generator=attachment.generate_2_png_10_10, collection=collection_client)
+        db_obj_client.create_bulk_docs(num_of_docs, "cbl-peerToPeer", db=cbl_db_client, channels=channel, attachments_generator=attachment.generate_2_png_10_10)
+
     else:
         db_obj_client.create_bulk_docs(num_of_docs, "cbl-peerToPeer", db=cbl_db_client, channels=channel, collection=collection_client)
+        db_obj_client.create_bulk_docs(num_of_docs, "cbl-peerToPeer", db=cbl_db_client, channels=channel)
 
     cols_rep_server = []
     cols_rep_client = []
 
     cols_rep_server.append(collection_server)
+    cols_rep_server.append(defaultCollection_server)
     cols_rep_client.append(collection_client)
+    cols_rep_client.append(defaultCollection_client)
 
     if endPointType == "URLEndPoint":
         replicator_tcp_listener = peerToPeer_server.server_start(cbl_db_server, collections=cols_rep_server)
@@ -68,8 +75,10 @@ def test_peer_to_peer(params_from_base_test_setup, server_setup, num_of_docs, co
     total = replicator.getTotal(repl)
     completed = replicator.getCompleted(repl)
     assert total == completed, "replication from client to server did not completed " + str(total) + " not equal to " + str(completed)
-    server_docs_count = col_obj_server.documentCount(collection_server)
-    assert server_docs_count == num_of_docs, "Number of docs mismatch"
+    server_collection_docs_count = col_obj_server.documentCount(collection_server)
+    server_default_docs_count = db_obj_server.getCount(cbl_db_server)
+    assert server_collection_docs_count == num_of_docs, "Number of docs mismatch in collection"
+    assert server_default_docs_count == num_of_docs, "Number of docs mismatch in default collection"
     replicator.stop(repl)
     if endPointType == "URLEndPoint":
         peerToPeer_server.server_stop(replicator_tcp_listener, endPointType)
