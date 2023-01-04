@@ -474,8 +474,6 @@ class Replication(object):
 
     def collectionConfigure(self, conflictResolver='', pull_filter=False, push_filter=False, filter_callback_func='', channels=None, documentIDs=None, collection=None):
         args = Args()
-        if collection is not None:
-            args.setMemoryPointer("collection", collection)
         args.setBoolean("push_filter", push_filter)
         args.setBoolean("pull_filter", pull_filter)
         args.setString("filter_callback_func", filter_callback_func)
@@ -484,4 +482,6 @@ class Replication(object):
             args.setArray("channels", channels)
         if documentIDs is not None:
             args.setArray("documentIDs", documentIDs)
+        if collection is not None:
+            args.setMemoryPointer("collection", collection)
         return self._client.invokeMethod("replicatorConfiguration_collection", args)
