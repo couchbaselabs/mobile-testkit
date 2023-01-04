@@ -137,11 +137,11 @@ def test_named_and_default_group(params_from_base_test_setup, group_type):
         try:
             sg1_config["bootstrap"]["group_id"]
             assert False, "group id showed up for default group"
-        except KeyError as ke:
+        except KeyError:
             log_info("got expected key error for missing key on sg1")
             try:
                 sg2_config["bootstrap"]["group_id"]
-            except KeyError as ke:
+            except KeyError:
                 log_info("got expected key error for missing key on sg2")
     else:
         assert sg1_config["bootstrap"]["group_id"] == sg2_config["bootstrap"]["group_id"], "group id assigned does not have same group id on sgws nodes belongs to same cluster"
