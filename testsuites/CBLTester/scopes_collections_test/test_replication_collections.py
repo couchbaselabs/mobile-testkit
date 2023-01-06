@@ -41,15 +41,12 @@ def scope_collection_test_fixture(params_from_base_test_setup):
 
     sg_client = sg_url = sg_admin_url = None
     cluster_config = params_from_base_test_setup["cluster_config"]
-    # mode = params_from_base_test_setup["mode"]
-    # sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_url = params_from_base_test_setup["sg_url"]
     base_url = params_from_base_test_setup["base_url"]
     sg_blip_url = params_from_base_test_setup["target_url"]
 
     c = cluster.Cluster(config=cluster_config)
-    # c.reset(sg_config_path=sg_config)
     auth = need_sgw_admin_auth and [RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']] or None
     admin_client = Admin(c.sync_gateways[0])
     db = Database(base_url)
@@ -115,7 +112,6 @@ def test_sync_scopeA_colA_to_scopeA_colA(scope_collection_test_fixture, teardown
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session, scope=scope, collection=collection)
     sg_docs = sg_docs["rows"]
     assert len(sg_docs) == no_of_docs, "Number of docs mismatched"
-    # verify_sgDocIds_cblDocIds(sg_client=sg_client, url=sg_url, sg_db=sg_db, session=session, cbl_db=cbl_db, db=db)
 
 
 @pytest.mark.listener
