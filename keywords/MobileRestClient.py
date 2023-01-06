@@ -385,6 +385,14 @@ class MobileRestClient:
             user_scopes_collections[scope] = collection_dict
         return user_scopes_collections
 
+    def delete_user(self, url, db, name, auth=None):
+        if auth:
+            resp = self._session.delete("{}/{}/_user/{}".format(url, db, name), auth=HTTPBasicAuth(auth[0], auth[1]))
+        else:
+            resp = self._session.delete("{}/{}/_user/{}".format(url, db, name))
+        log_r(resp)
+        resp.raise_for_status()
+
     def create_user(self, url, db, name, password, channels=None, roles=[], auth=None, scope_dict=None):
         """ Creates a user with channels on the sync_gateway Admin REST API.
         Returns a name password tuple that can be used for session creation or basic authentication
@@ -408,7 +416,6 @@ class MobileRestClient:
 
         types.verify_is_list(channels)
         types.verify_is_list(roles)
-
         if auth:
             resp = self._session.post("{}/{}/_user/".format(url, db), data=json.dumps(data), auth=HTTPBasicAuth(auth[0], auth[1]))
         else:

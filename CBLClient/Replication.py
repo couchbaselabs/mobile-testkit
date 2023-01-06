@@ -411,7 +411,7 @@ class Replication(object):
 
         return session, replicator_authenticator, repl
 
-    def configureCollection(self, target_url=None, target_db=None, replication_type="push_pull", auto_purge=None, continuous=False, replicator_authenticator=None, headers=None, heartbeat=None, max_retries=None, max_retry_wait_time=None, collection=None, collectionConfiguration=None, encryptor=None):
+    def configureCollection(self, target_url=None, replication_type="push_pull", auto_purge=None, continuous=False, replicator_authenticator=None, headers=None, heartbeat=None, max_retries=None, max_retry_wait_time=None, collection=None, collectionConfiguration=None, encryptor=None):
         args = Args()
         args.setBoolean("continuous", continuous)
         if max_retries is not None:
@@ -434,9 +434,6 @@ class Replication(object):
 
         if target_url is not None:
             args.setString("target_url", target_url)
-
-        if target_db is not None:
-            args.setMemoryPointer("target_db", target_db)
 
         if auto_purge is not None:
             args.setString("auto_purge", auto_purge)

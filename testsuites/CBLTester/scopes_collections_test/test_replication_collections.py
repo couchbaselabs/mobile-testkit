@@ -154,9 +154,9 @@ def test_sync_scopeA_colA_from_mulitple_cbl(scope_collection_test_fixture, teard
     session = cookie, session_id
     replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
 
-    repl_config1 = replicator.configureCollection(target_url=sg_blip_url, target_db=sg_db, replication_type="push", collection=collections1, collectionConfiguration=collections_configuration1, replicator_authenticator=replicator_authenticator)
-    repl_config2 = replicator.configureCollection(target_url=sg_blip_url, target_db=sg_db, replication_type="push", collection=collections2, collectionConfiguration=collections_configuration2, replicator_authenticator=replicator_authenticator)
-    repl_config3 = replicator.configureCollection(target_url=sg_blip_url, target_db=sg_db, replication_type="push", collection=collections3, collectionConfiguration=collections_configuration3, replicator_authenticator=replicator_authenticator)
+    repl_config1 = replicator.configureCollection(target_url=sg_blip_url, replication_type="push", collection=collections1, collectionConfiguration=collections_configuration1, replicator_authenticator=replicator_authenticator)
+    repl_config2 = replicator.configureCollection(target_url=sg_blip_url, replication_type="push", collection=collections2, collectionConfiguration=collections_configuration2, replicator_authenticator=replicator_authenticator)
+    repl_config3 = replicator.configureCollection(target_url=sg_blip_url, replication_type="push", collection=collections3, collectionConfiguration=collections_configuration3, replicator_authenticator=replicator_authenticator)
 
     repl1 = replicator.create(repl_config1)
     repl2 = replicator.create(repl_config2)
@@ -215,7 +215,6 @@ def test_sync_2_collection_src_to_dest_having_3_collections(scope_collection_tes
     created_collection3 = db.createCollection(cbl_db, collection3_name, scope)
     channels = ["ABC"]
     sg_client.append_usr_collection_dict(user_scopes_collections, channels, scope, collection2_name)
-    sg_client.update_user(sg_admin_url, sg_db, sg_username, sg_password, auth=auth, channels=channels, scope_dict=user_scopes_collections)
 
     db.create_bulk_docs(no_of_docs, "cbl", db=cbl_db, channels=["ABC"], id_start_num=0, collection=created_collection)
     db.create_bulk_docs(no_of_docs, "cbl", db=cbl_db, channels=["ABC"], id_start_num=2, collection=created_collection2)
@@ -232,8 +231,9 @@ def test_sync_2_collection_src_to_dest_having_3_collections(scope_collection_tes
     admin_client.create_db(sg_db, data)
 
     pre_test_user_exists = admin_client.does_user_exist(sg_db, sg_username)
-    if pre_test_user_exists is False:
-        sg_client.create_user(sg_admin_url, sg_db, sg_username, sg_password, auth=auth, channels=["ABC"])
+    if pre_test_user_exists is True:
+        sg_client.delete_user(sg_admin_url, sg_db, sg_username, auth=auth)
+    sg_client.create_user(sg_admin_url, sg_db, sg_username, sg_password, auth=auth, channels=["ABC"], scope_dict=user_scopes_collections)
 
     try:
         session, replicator_authenticator, repl = replicator.create_session_configure_replicate_collection(base_url, sg_admin_url, sg_db, sg_username, sg_client, sg_blip_url, continuous=True, replication_type="push", auth=auth, collections=collections_to_replicate, collection_configuration=collections_configuration)
@@ -258,7 +258,6 @@ def test_sync_2_collection_src_to_dest_having_2_collections(scope_collection_tes
     created_collection2 = db.createCollection(cbl_db, collection2_name, scope)
     channels = ["ABC"]
     sg_client.append_usr_collection_dict(user_scopes_collections, channels, scope, collection2_name)
-    sg_client.update_user(sg_admin_url, sg_db, sg_username, sg_password, auth=auth, channels=channels, scope_dict=user_scopes_collections)
     db.create_bulk_docs(no_of_docs, "cbl", db=cbl_db, channels=["ABC"], id_start_num=0, collection=created_collection)
     db.create_bulk_docs(no_of_docs, "cbl", db=cbl_db, channels=["ABC"], id_start_num=2, collection=created_collection2)
 
@@ -276,8 +275,9 @@ def test_sync_2_collection_src_to_dest_having_2_collections(scope_collection_tes
         pytest.fail("Creation failed due to " + str(e))
 
     pre_test_user_exists = admin_client.does_user_exist(sg_db, sg_username)
-    if pre_test_user_exists is False:
-        sg_client.create_user(sg_admin_url, sg_db, sg_username, sg_password, auth=auth, channels=["ABC"])
+    if pre_test_user_exists is True:
+        sg_client.delete_user(sg_admin_url, sg_db, sg_username, auth=auth)
+    sg_client.create_user(sg_admin_url, sg_db, sg_username, sg_password, auth=auth, channels=["ABC"], scope_dict=user_scopes_collections)
 
     try:
         session, replicator_authenticator, repl = replicator.create_session_configure_replicate_collection(base_url, sg_admin_url, sg_db, sg_username, sg_client, sg_blip_url, continuous=True, replication_type="push", auth=auth, collections=collections_to_replicate, collection_configuration=collections_configuration)

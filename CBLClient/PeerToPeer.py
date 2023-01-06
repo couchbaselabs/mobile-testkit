@@ -123,7 +123,7 @@ class PeerToPeer(object):
         if collections:
             args.setArray("collections", collections)
         if collection_configuration:
-            args.setArray("collection_configuration", collection_configuration)
+            args.setArray("configuration", collection_configuration)
         return self._client.invokeMethod("peerToPeer_configureCollection", args)
 
     def configure(self, host, server_db_name, client_database, port=5000, continuous=None, authenticator=None,
