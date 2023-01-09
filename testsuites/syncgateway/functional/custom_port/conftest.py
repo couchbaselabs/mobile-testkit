@@ -183,6 +183,10 @@ def pytest_addoption(parser):
                      help="Enabling CBS developer preview",
                      default=False)
 
+    parser.addoption("--trace-logs", action="store_true",
+                     help="Enable trace level logs for Sync Gateway, accessed via SSHing into machine running SGW "
+                     "and navigating to /tmp/sg_logs/")
+
 # This will be called once for the at the beggining of the execution in the 'tests/' directory
 # and will be torn down, (code after the yeild) when all the test session has completed.
 # IMPORTANT: Tests in 'tests/' should be executed in their own test run and should not be
@@ -226,7 +230,7 @@ def params_from_base_suite_setup(request):
     disable_tls_server = request.config.getoption("--disable-tls-server")
     enable_cbs_developer_preview = request.config.getoption("--enable-cbs-developer-preview")
     disable_admin_auth = request.config.getoption("--disable-admin-auth")
-    trace_logs = request.config.getoption("--trace_logs")
+    trace_logs = request.config.getoption("--trace-logs")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
