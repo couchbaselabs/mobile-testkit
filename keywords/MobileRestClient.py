@@ -406,7 +406,7 @@ class MobileRestClient:
         resp.raise_for_status()
         return name, password
 
-    def update_user(self, url, db, name, password=None, channels=None, roles=None, disabled=False, auth=None):
+    def update_user(self, url, db, name, password=None, channels=None, roles=None, disabled=False, auth=None, scope=None, collection=None):
         """ Updates a user via the admin REST api
         Returns a name password tuple that can be used for session creation or basic authentication.
 
@@ -427,7 +427,10 @@ class MobileRestClient:
             "admin_channels": channels,
             "admin_roles": roles
         }
-
+        if scope is not None:
+            if collection is None:
+                collection = "_default"
+            data["collection_access"] = {scope: {collection: {"admin_channels": channels}}}
         if password is not None:
             data["password"] = password
 
