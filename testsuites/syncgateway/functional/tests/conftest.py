@@ -191,10 +191,6 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="Disable Admin auth")
 
-    parser.addoption("--disable-admin-auth",
-                     action="store_true",
-                     help="Disable Admin auth")
-
 
 # This will be called once for the at the beggining of the execution in the 'tests/' directory
 # and will be torn down, (code after the yeild) when all the test session has completed.
