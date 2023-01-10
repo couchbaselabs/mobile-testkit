@@ -378,13 +378,14 @@ def test_sync_user_no_channel_access(scope_collection_test_fixture, teardown_doc
     except Exception as e:
         pytest.fail("Replication failed due to " + str(e))
 
+    new_username = random_string(6)
     user_scopes_collections1 = {scope: {collection: {"admin_channels": ["DEF"]}}}
-    pre_test_user_exists = admin_client.does_user_exist(sg_db, "abhay")
+    pre_test_user_exists = admin_client.does_user_exist(sg_db, new_username)
     if pre_test_user_exists is True:
-        sg_client.delete_user(sg_admin_url, sg_db, "abhay", auth=auth)
-    sg_client.create_user(sg_admin_url, sg_db, "abhay", sg_password, auth=auth, channels=["DEF"], scope_dict=user_scopes_collections1)
+        sg_client.delete_user(sg_admin_url, sg_db, new_username, auth=auth)
+    sg_client.create_user(sg_admin_url, sg_db, new_username, sg_password, auth=auth, channels=["DEF"], scope_dict=user_scopes_collections1)
 
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "abhay", auth=auth)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, new_username, auth=auth)
     session1 = cookie, session_id
     # checking existence of doc after replication complete
     try:
