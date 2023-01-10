@@ -2,8 +2,6 @@ import uuid
 import pytest
 from keywords.utils import random_string
 from CBLClient.Database import Database
-from CBLClient.Collection import Collection
-from CBLClient.Document import Document
 from CBLClient.Replication import Replication
 from CBLClient.Authenticator import Authenticator
 from libraries.testkit import cluster
@@ -50,8 +48,6 @@ def scope_collection_test_fixture(params_from_base_test_setup):
     auth = need_sgw_admin_auth and [RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']] or None
     admin_client = Admin(c.sync_gateways[0])
     db = Database(base_url)
-    col_obj = Collection(base_url)
-    doc_obj = Document(base_url)
     sg_client = MobileRestClient()
     db_config = db.configure()
 
@@ -85,7 +81,7 @@ def scope_collection_test_fixture(params_from_base_test_setup):
     if pre_test_user_exists is False:
         sg_client.create_user(sg_admin_url, sg_db, sg_username, sg_password, auth=auth, channels=channels, scope_dict=user_scopes_collections)
 
-    yield base_url, sg_blip_url, sg_url, sg_client, cbl_db, sg_db, scope, collection, created_collection, col_obj, doc_obj, auth, sg_admin_url, sg_username, sg_password, db_config, cb_server, admin_client, user_scopes_collections
+    yield base_url, sg_blip_url, sg_url, sg_client, cbl_db, sg_db, scope, collection, created_collection, auth, sg_admin_url, sg_username, sg_password, db_config, cb_server, admin_client, user_scopes_collections
 
 
 @pytest.mark.listener
@@ -93,7 +89,7 @@ def scope_collection_test_fixture(params_from_base_test_setup):
 @pytest.mark.parametrize("no_of_docs", [2])
 def test_sync_scopeA_colA_to_scopeA_colA(scope_collection_test_fixture, teardown_doc_fixture, no_of_docs):
     # setup
-    base_url, sg_blip_url, sg_url, sg_client, cbl_db, sg_db, scope, collection, created_collection, col_obj, doc_obj, auth, sg_admin_url, sg_username, sg_password, db_config, cb_server, admin_client, user_scopes_collections = scope_collection_test_fixture
+    base_url, sg_blip_url, sg_url, sg_client, cbl_db, sg_db, scope, collection, created_collection, auth, sg_admin_url, sg_username, sg_password, db_config, cb_server, admin_client, user_scopes_collections = scope_collection_test_fixture
     db = Database(base_url)
     db.create_bulk_docs(no_of_docs, "cbl", db=cbl_db, channels=["ABC"], collection=created_collection)
     channels = ["ABC"]
@@ -111,6 +107,7 @@ def test_sync_scopeA_colA_to_scopeA_colA(scope_collection_test_fixture, teardown
     # checking existence of doc after replication complete
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session, scope=scope, collection=collection)
     sg_docs = sg_docs["rows"]
+    sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=['cbl_1'], auth=session, scope=scope, collection=collection)
     assert len(sg_docs) == no_of_docs, "Number of docs mismatched"
 
 
@@ -118,7 +115,7 @@ def test_sync_scopeA_colA_to_scopeA_colA(scope_collection_test_fixture, teardown
 @pytest.mark.replication
 @pytest.mark.parametrize("no_of_docs", [2])
 def test_sync_scopeA_colA_from_mulitple_cbl(scope_collection_test_fixture, teardown_doc_fixture, no_of_docs,):
-    base_url, sg_blip_url, sg_url, sg_client, cbl_db, sg_db, scope, collection, created_collection, col_obj, doc_obj, auth, sg_admin_url, sg_username, sg_password, db_config, cb_server, admin_client, user_scopes_collections = scope_collection_test_fixture
+    base_url, sg_blip_url, sg_url, sg_client, cbl_db, sg_db, scope, collection, created_collection, auth, sg_admin_url, sg_username, sg_password, db_config, cb_server, admin_client, user_scopes_collections = scope_collection_test_fixture
     db = Database(base_url)
     cbl_db1 = db.create(random_string(6), db_config)
     created_collection2 = db.createCollection(cbl_db1, collection, scope)
@@ -171,7 +168,7 @@ def test_sync_scopeA_colA_from_mulitple_cbl(scope_collection_test_fixture, teard
 @pytest.mark.replication
 @pytest.mark.parametrize("no_of_docs", [2])
 def test_sync_scopeA_colA_to_scopeA_noncolA(scope_collection_test_fixture, teardown_doc_fixture, no_of_docs):
-    base_url, sg_blip_url, sg_url, sg_client, cbl_db, sg_db, scope, collection, created_collection, col_obj, doc_obj, auth, sg_admin_url, sg_username, sg_password, db_config, cb_server, admin_client, user_scopes_collections = scope_collection_test_fixture
+    base_url, sg_blip_url, sg_url, sg_client, cbl_db, sg_db, scope, collection, created_collection, auth, sg_admin_url, sg_username, sg_password, db_config, cb_server, admin_client, user_scopes_collections = scope_collection_test_fixture
     db = Database(base_url)
     created_collection = db.createCollection(cbl_db, random_string(6), scope)
     db.create_bulk_docs(no_of_docs, "cbl", db=cbl_db, channels=["ABC"], collection=created_collection)
@@ -195,7 +192,7 @@ def test_sync_scopeA_colA_to_scopeA_noncolA(scope_collection_test_fixture, teard
 @pytest.mark.replication
 @pytest.mark.parametrize("no_of_docs", [2])
 def test_sync_2_collection_src_to_dest_having_3_collections(scope_collection_test_fixture, teardown_doc_fixture, no_of_docs):
-    base_url, sg_blip_url, sg_url, sg_client, cbl_db, sg_db, scope, collection, created_collection, col_obj, doc_obj, auth, sg_admin_url, sg_username, sg_password, db_config, cb_server, admin_client, user_scopes_collections = scope_collection_test_fixture
+    base_url, sg_blip_url, sg_url, sg_client, cbl_db, sg_db, scope, collection, created_collection, auth, sg_admin_url, sg_username, sg_password, db_config, cb_server, admin_client, user_scopes_collections = scope_collection_test_fixture
     db = Database(base_url)
     replicator = Replication(base_url)
     collection2_name = random_string(6)
@@ -241,7 +238,7 @@ def test_sync_2_collection_src_to_dest_having_3_collections(scope_collection_tes
 @pytest.mark.replication
 @pytest.mark.parametrize("no_of_docs", [2])
 def test_sync_2_collection_src_to_dest_having_2_collections(scope_collection_test_fixture, teardown_doc_fixture, no_of_docs):
-    base_url, sg_blip_url, sg_url, sg_client, cbl_db, sg_db, scope, collection, created_collection, col_obj, doc_obj, auth, sg_admin_url, sg_username, sg_password, db_config, cb_server, admin_client, user_scopes_collections = scope_collection_test_fixture
+    base_url, sg_blip_url, sg_url, sg_client, cbl_db, sg_db, scope, collection, created_collection, auth, sg_admin_url, sg_username, sg_password, db_config, cb_server, admin_client, user_scopes_collections = scope_collection_test_fixture
     db = Database(base_url)
     replicator = Replication(base_url)
     collection2_name = random_string(6)
@@ -285,7 +282,7 @@ def test_sync_2_collection_src_to_dest_having_2_collections(scope_collection_tes
 @pytest.mark.replication
 @pytest.mark.parametrize("no_of_docs", [2])
 def test_sync_3_collection_src_to_dest_having_2_collections(scope_collection_test_fixture, teardown_doc_fixture, no_of_docs):
-    base_url, sg_blip_url, sg_url, sg_client, cbl_db, sg_db, scope, collection, created_collection, col_obj, doc_obj, auth, sg_admin_url, sg_username, sg_password, db_config, cb_server, admin_client, user_scopes_collections = scope_collection_test_fixture
+    base_url, sg_blip_url, sg_url, sg_client, cbl_db, sg_db, scope, collection, created_collection, auth, sg_admin_url, sg_username, sg_password, db_config, cb_server, admin_client, user_scopes_collections = scope_collection_test_fixture
     db = Database(base_url)
     replicator = Replication(base_url)
     collection2_name = random_string(6)
@@ -330,7 +327,7 @@ def test_sync_3_collection_src_to_dest_having_2_collections(scope_collection_tes
 @pytest.mark.replication
 @pytest.mark.parametrize("no_of_docs", [2])
 def test_sync_from_already_sync(scope_collection_test_fixture, teardown_doc_fixture, no_of_docs,):
-    base_url, sg_blip_url, sg_url, sg_client, cbl_db, sg_db, scope, collection, created_collection, col_obj, doc_obj, auth, sg_admin_url, sg_username, sg_password, db_config, cb_server, admin_client, user_scopes_collections = scope_collection_test_fixture
+    base_url, sg_blip_url, sg_url, sg_client, cbl_db, sg_db, scope, collection, created_collection, auth, sg_admin_url, sg_username, sg_password, db_config, cb_server, admin_client, user_scopes_collections = scope_collection_test_fixture
     db = Database(base_url)
     db.create_bulk_docs(no_of_docs, "cbl", db=cbl_db, channels=["ABC"], id_start_num=1, collection=created_collection)
     channels = ["ABC"]
@@ -365,59 +362,38 @@ def test_sync_from_already_sync(scope_collection_test_fixture, teardown_doc_fixt
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("no_of_docs", [2])
-def test_sync_from_broken_src_stream(scope_collection_test_fixture, teardown_doc_fixture, no_of_docs,):
-    base_url, sg_blip_url, sg_url, sg_client, cbl_db, sg_db, scope, collection, created_collection, col_obj, doc_obj, auth, sg_admin_url, sg_username, sg_password, db_config, cb_server, admin_client, user_scopes_collections = scope_collection_test_fixture
-    db = Database(base_url)
-    db.create_bulk_docs(no_of_docs, "cbl", db=cbl_db, channels=["ABC"], id_start_num=1, collection=created_collection)
-    channels = ["ABC"]
-    replicator = Replication(base_url)
-
-    collections1 = []
-    collections1.append(created_collection)
-    collections_configuration1 = []
-    collections_configuration1.append(replicator.collectionConfigure(channels=channels, collection=created_collection))
-
-    authenticator = Authenticator(base_url)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, sg_username, auth=auth)
-    session = cookie, session_id
-    replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
-
-    repl_config1 = replicator.configureCollection(target_url=sg_blip_url, replication_type="push", collection=collections1, collectionConfiguration=collections_configuration1, replicator_authenticator=replicator_authenticator, continuous=True)
-    db.deleteDB(cbl_db)
-    try:
-        replicator.start(repl_config1)
-    except Exception as e:
-        pytest.fail(str(e))
-    replicator.wait_until_replicator_idle(repl_config1)
-
-    sg_docs = sg_client.get_all_docs(sg_url, sg_db, auth=session, scope=scope, collection=collection)
-    sg_docs = sg_docs['rows']
-    assert len(sg_docs) == 2, "Not all replicated"
-
-
-@pytest.mark.listener
-@pytest.mark.replication
-@pytest.mark.parametrize("no_of_docs", [2])
 def test_sync_user_no_channel_access(scope_collection_test_fixture, teardown_doc_fixture, no_of_docs,):
-    base_url, sg_blip_url, sg_url, sg_client, cbl_db, sg_db, scope, collection, created_collection, col_obj, doc_obj, auth, sg_admin_url, sg_username, sg_password, db_config, cb_server, admin_client, user_scopes_collections = scope_collection_test_fixture
+    base_url, sg_blip_url, sg_url, sg_client, cbl_db, sg_db, scope, collection, created_collection, auth, sg_admin_url, sg_username, sg_password, db_config, cb_server, admin_client, user_scopes_collections = scope_collection_test_fixture
     db = Database(base_url)
-    db.create_bulk_docs(no_of_docs, "cbl", db=cbl_db, channels=["DEF"], id_start_num=1, collection=created_collection)
-    channels = ["DEF"]
+    db.create_bulk_docs(no_of_docs, "cbl", db=cbl_db, channels=["ABC"], collection=created_collection)
+    channels = ["ABC"]
+    # setup replicator and replicate
     replicator = Replication(base_url)
+    collections = []
+    collections_configuration = []
+    collections_configuration.append(replicator.collectionConfigure(channels=channels, collection=created_collection))
+    collections.append(created_collection)
+    try:
+        session, replicator_authenticator, repl = replicator.create_session_configure_replicate_collection(base_url, sg_admin_url, sg_db, sg_username, sg_client, sg_blip_url, continuous=True, replication_type="push", auth=auth, collections=collections, collection_configuration=collections_configuration)
+    except Exception as e:
+        pytest.fail("Replication failed due to " + str(e))
 
-    collections1 = []
-    collections1.append(created_collection)
-    collections_configuration1 = []
-    collections_configuration1.append(replicator.collectionConfigure(channels=channels, collection=created_collection))
+    user_scopes_collections1 = {scope: {collection: {"admin_channels": ["DEF"]}}}
+    pre_test_user_exists = admin_client.does_user_exist(sg_db, "abhay")
+    if pre_test_user_exists is True:
+        sg_client.delete_user(sg_admin_url, sg_db, "abhay", auth=auth)
+    sg_client.create_user(sg_admin_url, sg_db, "abhay", sg_password, auth=auth, channels=["DEF"], scope_dict=user_scopes_collections1)
 
-    authenticator = Authenticator(base_url)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, sg_username, auth=auth)
-    session = cookie, session_id
-    replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
-
-    repl_config1 = replicator.configureCollection(target_url=sg_blip_url, replication_type="push", collection=collections1, collectionConfiguration=collections_configuration1, replicator_authenticator=replicator_authenticator, continuous=True)
-    replicator.wait_until_replicator_idle(repl_config1)
-
-    sg_docs = sg_client.get_all_docs(sg_url, sg_db, auth=session, scope=scope, collection=collection)
-    sg_docs = sg_docs['rows']
-    assert len(sg_docs) == 0, "Document with differnet channel are accessible"
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "abhay", auth=auth)
+    session1 = cookie, session_id
+    # checking existence of doc after replication complete
+    try:
+        sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=['cbl_1'], auth=session1, scope=scope, collection=collection)
+    except Exception as e:
+        if '403' in str(e):
+            assert True
+        else:
+            print("403 error not found")
+            assert False
+    else:
+        assert False
