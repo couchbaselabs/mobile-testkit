@@ -458,8 +458,7 @@ class Replication(object):
         cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username, auth=auth)
         session = cookie, session_id
         replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
-        repl_config = self.configureCollection(target_url=sg_blip_url, replication_type=replication_type, collection=collections, collectionConfiguration=collection_configuration, continuous=continuous, replicator_authenticator=replicator_authenticator)
-        repl = self.create(repl_config)
+        repl = self.configureCollection(target_url=sg_blip_url, replication_type=replication_type, collection=collections, collectionConfiguration=collection_configuration, continuous=continuous, replicator_authenticator=replicator_authenticator)
         self.start(repl)
         self.wait_until_replicator_idle(repl)
         return session, replicator_authenticator, repl
