@@ -312,7 +312,7 @@ def test_import_filters(scopes_collections_tests_fixture):
     doc_2_key = "should_not_be_in_sgw_" + random_suffix
     admin_client.wait_for_db_online(db, 60)
 
-    data = {"bucket": bucket, "scopes": {scope: {"collections": {collection: {"import_filter": "function filter(doc) { return doc.id == \"doc_1_key0\"" + random_suffix + " }"}}}}, 
+    data = {"bucket": bucket, "scopes": {scope: {"collections": {collection: {"import_filter": "function filter(doc) { return doc.key == \"doc_1_key0" + random_suffix + "\" }"}}}}, 
     "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
     #data = {"bucket": bucket, "scopes": {scope: {"collections": {collection: {"import_filter": "function filter(doc) { return false }"}}}}, 
     #"num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
