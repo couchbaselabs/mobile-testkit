@@ -310,15 +310,20 @@ def test_import_filters(scopes_collections_tests_fixture):
     random_suffix = str(uuid.uuid4())[:8]
     doc_1_key = "should_be_in_sgw_" + random_suffix
     doc_2_key = "should_not_be_in_sgw_" + random_suffix
+    admin_client.wait_for_db_online(db, 60)
+
+    data = {"bucket": bucket, "scopes": {scope: {"collections": {collection: {"import_filter": "function filter(doc) { return doc.id == \"doc_1_key0\"" + random_suffix + " }"}}}}, 
+    "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
+    #data = {"bucket": bucket, "scopes": {scope: {"collections": {collection: {"import_filter": "function filter(doc) { return false }"}}}}, 
+    #"num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
+    admin_client.post_db_config(db, data)
+
     cb_server.add_simple_document(doc_1_key, bucket, scope, collection)
     cb_server.add_simple_document(doc_2_key, bucket, scope, collection)
-    data = {"bucket": bucket, "scopes": {scope: {"collections": {collection: {"import_filter": "function filter(doc) { return doc._id.includes(\"should_be_in_sgw_\") }"}}}}, 
-    "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
-    admin_client.post_db_config(db, data)
-    admin_client.wait_for_db_online(db, 60)
-    doc1 = sg_client.get_doc(sg_admin_url, db, doc_1_key, scope=scope, collection=collection)
-    sg_client.get_doc(sg_admin_url, db, doc_2_key, scope=scope, collection=collection)
-    print("===================================================" + str(doc1))
+   # doc1 = sg_client.get_doc(sg_admin_url, db, doc_2_key, scope=scope, collection=collection)
+    #sg_client.get_doc(sg_admin_url, db, doc_2_key, scope=scope, collection=collection)
+    docs=sg_client.get_all_docs(url=sg_admin_url, db=db, include_docs=True, scope=scope, collection=collection)
+    print("===================================================" + str(docs))
 
     
 
