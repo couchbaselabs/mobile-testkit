@@ -23,7 +23,7 @@ class TestScopeCollection(object):
             created_Collection = self.db_obj.collectionObject(db, collection, scope)
             created_CollectionName = self.collection_obj.collectionName(created_Collection)
             assert created_CollectionName == collection, "Scope and collection created but not found"
-        except:
+        except Exception:
             if ' ' in scope and ' ' in collection:
                 print("Invalid scope name: " + scope + "and collection name: " + collection)
             elif ' ' in scope:
@@ -44,7 +44,7 @@ class TestScopeCollection(object):
             scopeName = "scope-" + str(i)
             try:
                 self.db_obj.createCollection(db, collection, scopeName)
-            except:
+            except Exception:
                 print("Failed to create collection in scope " + scopeName)
                 assert False
         collections = []
@@ -68,7 +68,7 @@ class TestScopeCollection(object):
                 collectionName = "collection-" + str(k)
                 try:
                     self.db_obj.createCollection(db, collectionName, scopeName)
-                except:
+                except Exception:
                     print("Scope and collection creation failed")
                     assert False
         total_collections = []
@@ -87,7 +87,7 @@ class TestScopeCollection(object):
         db = self.db_obj.create(db_name)
         try:
             self.db_obj.deleteCollection(db, collection, scope)
-        except:
+        except Exception:
             assert False
         else:
             assert True
