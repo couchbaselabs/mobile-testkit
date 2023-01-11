@@ -1,5 +1,6 @@
 import uuid
 import pytest
+import random
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.MobileRestClient import MobileRestClient
 from keywords import couchbaseserver
@@ -8,6 +9,7 @@ from keywords.constants import RBAC_FULL_ADMIN
 from libraries.testkit.admin import Admin
 from keywords.exceptions import RestError
 from requests.auth import HTTPBasicAuth
+from requests.exceptions import HTTPError
 from keywords import document
 
 # test file shared variables
@@ -319,10 +321,10 @@ def test_restricted_collection(scopes_collections_tests_fixture):
 @pytest.mark.collections
 def test_user_collections_access(scopes_collections_tests_fixture):
     """
-    1. Add second collection on SGW database
-    2. Add documents to collections
-    3. Create two users, one with scope level access, one with collection level access
-    4. Check users are able to perform correct API calls for corresponding level of access
+    1. Add second collection to SGW db and server, using sync functions to restrict collection/scope level access
+    2. Create two users, one with scope level access, one with collection level access
+    3. Check document upload is restricted to correct access level
+    4. Check document retrieval via all_docs and document ID is restricted to correct access level
     """
 
     if is_using_views:
@@ -332,15 +334,21 @@ def test_user_collections_access(scopes_collections_tests_fixture):
     sg_client, sg_admin_url, db, scope, collection = scopes_collections_tests_fixture
     random_suffix = str(uuid.uuid4())[:8]
 
-    second_collection = "collection_2" + random_suffix
+    # 1. Add second collection to SGW db and server, using sync functions to restrict collection/scope level access
+    second_collection = "second_collection" + random_suffix
     cb_server.create_collection(bucket, scope, second_collection)
-    db_config = {"bucket": bucket, "scopes": {scope: {"collections": {collection: {}, second_collection: {}}}}, "num_index_replicas": 0}
+
+    test_sync = f"function(doc, oldDoc) {{requireAccess(\"{collection}\"); channel(\"{collection}\")}}"
+    test_sync_2 = f"function(doc, oldDoc) {{requireAccess(\"{second_collection}\"); channel(\"{second_collection}\")}}"
+
+    db_config = {"bucket": bucket, "scopes": {scope: {"collections": {collection: {"sync": test_sync}, second_collection: {"sync": test_sync_2}}}}, "num_index_replicas": 0}
     admin_client.post_db_config(db, db_config)
     admin_client.wait_for_db_online(db, 60)
 
+    # 2. Create two users, one with scope level access, one with collection level access
     scope_user = "scope_user" + random_suffix
     collection_user = "collection_user" + random_suffix
-    # need to define collection_access for each user and create users with access to particular channels
+
     scope_user_access = {scope: {collection: {"admin_channels": [collection]}, second_collection: {"admin_channels": [second_collection]}}}
     collection_user_access = {scope: {collection: {"admin_channels": [collection]}}}
 
@@ -350,12 +358,41 @@ def test_user_collections_access(scopes_collections_tests_fixture):
     sg_client.create_user(sg_admin_url, db, scope_user, sg_password, collection_access=scope_user_access, auth=admin_auth)
     sg_client.create_user(sg_admin_url, db, collection_user, sg_password, collection_access=collection_user_access, auth=admin_auth)
 
+    # 3. Check document upload is restricted to correct access level
     scope_user_doc_prefix = "scope_user_doc" + random_suffix
     collection_user_doc_prefix = "collection_user_doc" + random_suffix
 
-    # scope user should have access to both collections
-    sg_client.add_docs(sg_url, db, 3, scope_user_doc_prefix, auth=scope_user_auth, channels=[second_collection], scope=scope, collection=second_collection)
-    sg_client.add_docs(sg_url, db, 3, collection_user_doc_prefix, auth=collection_user_auth, channels=[collection], scope=scope, collection=collection)
+    # Upload docs to both collections as scope_user
+    add_docs_result = sg_client.add_docs(sg_url, db, 3, scope_user_doc_prefix, auth=scope_user_auth, channels=[second_collection], scope=scope, collection=second_collection)
+    doc_ids_second_collection = ([doc["id"] for doc in add_docs_result])
+    add_docs_result = sg_client.add_docs(sg_url, db, 3, scope_user_doc_prefix, auth=scope_user_auth, channels=[collection], scope=scope, collection=collection)
+    doc_ids_collection = [doc["id"] for doc in add_docs_result]
+
+    # Attempt to upload docs to both collections as collection_user
+    add_docs_result = sg_client.add_docs(sg_url, db, 3, collection_user_doc_prefix, auth=collection_user_auth, channels=[collection], scope=scope, collection=collection)
+    doc_ids_collection.extend([doc["id"] for doc in add_docs_result])
+    with pytest.raises(HTTPError) as e:
+        sg_client.add_docs(sg_url, db, 3, collection_user_doc_prefix, auth=collection_user_auth, channels=[second_collection], scope=scope, collection=second_collection)
+    assert ("403" in str(e)), "User without access to collection should generate 403 HTTPError when trying to upload documents to that collection. Instead got: \n" + str(e)
+
+    # 4. Check document retrieval via all_docs and document ID is restricted to correct access level
+    # Get all docs as scope_user
+    scope_user_collection_docs = [row["id"] for row in sg_client.get_all_docs(sg_url, db, auth=scope_user_auth, scope=scope, collection=collection)["rows"]]
+    scope_user_second_collection_docs = [row["id"] for row in sg_client.get_all_docs(sg_url, db, auth=scope_user_auth, scope=scope, collection=second_collection)["rows"]]
+    assert (len(scope_user_collection_docs) == len(doc_ids_collection)), f"_all_docs endpoint returned wrong number of docs for user with access to {collection}. Expected {len(doc_ids_collection)}, got {len(scope_user_collection_docs)}"
+    assert (len(scope_user_second_collection_docs) == len(doc_ids_second_collection)), f"_all_docs endpoint returned wrong number of docs for user with access to {second_collection}. Expected {len(doc_ids_second_collection)}, got {len(scope_user_second_collection_docs)}"
+
+    # Get all docs as collection_user
+    collection_user_collection_docs = [row["id"] for row in sg_client.get_all_docs(sg_url, db, auth=collection_user_auth, scope=scope, collection=collection)["rows"]]
+    collection_user_second_collection_docs = [row["id"] for row in sg_client.get_all_docs(sg_url, db, auth=collection_user_auth, scope=scope, collection=second_collection)["rows"]]
+    assert (len(collection_user_collection_docs) == len(doc_ids_collection)), f"_all_docs endpoint returned wrong number of docs for user with access to {collection}. Expected {len(doc_ids_collection)}, got {len(collection_user_collection_docs)}"
+    assert (len(collection_user_second_collection_docs) == 0), f"_all_docs endpoint returned wrong number of docs for user without access to {second_collection}. Expected 0, got {len(collection_user_second_collection_docs)}"
+
+    # Check that collection_user cannot GET document from second_collection
+    second_collection_doc = random.choice(doc_ids_second_collection)
+    with pytest.raises(HTTPError) as e:
+        sg_client.get_doc(sg_url, db, second_collection_doc, auth=collection_user_auth, scope=scope, collection=second_collection)
+    assert ("403" in str(e)), "User without access to collection should generate 403 HTTPError when trying to GET document. Instead got: \n" + str(e)
 
 
 @pytest.mark.syncgateway
