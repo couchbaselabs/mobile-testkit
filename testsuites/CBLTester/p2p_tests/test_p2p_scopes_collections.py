@@ -155,6 +155,7 @@ def test_p2p_sync_only_dataX(params_from_base_test_setup, server_setup, num_of_d
     doc_ids = col_obj_client.getDocIds(collection_client)
     cbl_client_docs = col_obj_client.getDocuments(collection_client, doc_ids)
     updates_in_doc = {}
+    count = 0
     for doc_id, doc_body in list(cbl_client_docs.items()):
         doc_body = add_new_fields_to_doc(doc_body)
         updates_in_doc[doc_id] = {
@@ -162,6 +163,8 @@ def test_p2p_sync_only_dataX(params_from_base_test_setup, server_setup, num_of_d
             "new_field_2": doc_body["new_field_2"],
             "new_field_3": doc_body["new_field_3"],
         }
+        if doc_body["new_field_1"] is True:
+            count = count + 1
         col_obj_client.updateDocument(collection_client, data=doc_body, doc_id=doc_id)
 
     # 4. Start the peer2
@@ -185,7 +188,7 @@ def test_p2p_sync_only_dataX(params_from_base_test_setup, server_setup, num_of_d
     # 7. Verify all docs got replicated on peer_server in all the collections and scopes
     doc_ids = col_obj_server.getDocIds(collection_server)
     log_info(col_obj_server.getDocuments(collection_server, doc_ids))
-    assert len(doc_ids) == num_of_docs, "Number of docs mismatch in collection"
+    assert len(doc_ids) == count, "Number of docs mismatch in collection"
     replicator.stop(repl)
     if endPointType == "URLEndPoint":
         peerToPeer_server.server_stop(replicator_tcp_listener, endPointType)
