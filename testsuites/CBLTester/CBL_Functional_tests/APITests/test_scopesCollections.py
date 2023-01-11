@@ -23,7 +23,7 @@ class TestScopeCollection(object):
             created_Collection = self.db_obj.collectionObject(db, collection, scope)
             created_CollectionName = self.collection_obj.collectionName(created_Collection)
             assert created_CollectionName == collection, "Scope and collection created but not found"
-        except Exceptionas as e:
+        except Exception as e:
             print(str(e))
             if ' ' in scope and ' ' in collection:
                 print("Invalid scope name: " + scope + "and collection name: " + collection)
