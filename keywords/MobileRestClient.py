@@ -448,7 +448,7 @@ class MobileRestClient:
             "admin_roles": roles,
             "admin_channels": channels
         }
-        
+
         if collection_access is not None:
             data["collection_access"] = collection_access
         if password is not None:
