@@ -183,11 +183,12 @@ def test_collection_channels(scopes_collections_tests_fixture):
     1. Create 3 users with different channels, one is in the wildcard channel
     2. Upload the documents to the collection, under the user's channels and one to the public channel
     3. Get all the documents using _all_docs
-    4. Check that the users can only see the documents in their channel
+    4. Check that the users cannot see the documents in their channels with collection_access defined
     5. Check that the users see the shared document in the channel
     6. Check that _bulk_get cannot get documents that are not in the user's channel
     7. Check that _bulk_get can get documents that are in the user's channel
     8. Check that _bulk_get cannot get a document from the "right" channel but the wrong collection
+    9. Check that the user have access to the docs the collection and specific channel
     """
     if is_using_views:
         pytest.skip("""It is not necessary to run scopes and collections tests with views.
@@ -215,7 +216,8 @@ def test_collection_channels(scopes_collections_tests_fixture):
 
     # 2. Upload the documents to the collection
     sg_client.add_docs(sg_url, db, 3, user_1_doc_prefix, auth=auth_user_1, channels=channels_user_1, scope=scope, collection=collection)
-    sg_client.add_docs(sg_url, db, 3, user_2_doc_prefix, auth=auth_user_2, channels=channels_user_2, scope=scope, collection=collection)
+    uploaded_user2_docs = sg_client.add_docs(sg_url, db, 3, user_2_doc_prefix, auth=auth_user_2, channels=channels_user_2, scope=scope, collection=collection)
+    uploaded_user2_docs_ids = [doc["id"] for doc in uploaded_user2_docs]
     shared_doc = sg_client.add_docs(sg_admin_url, db, 1, shared_doc_prefix, auth=client_auth, channels=["!"], scope=scope, collection=collection)
 
     # 3. Get all the documents using _all_docs
@@ -229,17 +231,17 @@ def test_collection_channels(scopes_collections_tests_fixture):
     shared_found_user_1 = False
     shared_found_user_2 = False
 
-    # 4. Check that the users can only see the documents in their channels
+    # 4. Check that the users cannot see the documents in their channels with collection_access defined
     for doc in user_1_docs_ids:
-        if user_2_doc_prefix in doc:
-            pytest.fail("A document is available in a channel that it was not assigned to. Document prefix: " + user_2_doc_prefix + ". The document: " + doc)
+        if (user_1_doc_prefix or user_2_doc_prefix) in doc:
+            pytest.fail("The document " + doc + " must not be accessiable by any of the users, because 'collection_access' was not set, but it is")
         if shared_doc_prefix in doc:
             shared_found_user_1 = True
         if doc not in wildcard_user_docs_ids:
             pytest.fail("The document " + doc + " was not accessible even though the user was given all documents access")
     for doc in user_2_docs_ids:
-        if user_1_doc_prefix in doc:
-            pytest.fail("A document is available in a channel that it was not assigned to. Document prefix: " + user_1_doc_prefix + ". The document: " + doc)
+        if (user_1_doc_prefix or user_2_doc_prefix) in doc:
+            pytest.fail("The document " + doc + " must not be accessiable by any of the users, because 'collection_access' was not set, but it is")
         if shared_doc_prefix in doc:
             shared_found_user_2 = True
         if doc not in wildcard_user_docs_ids:
@@ -251,7 +253,7 @@ def test_collection_channels(scopes_collections_tests_fixture):
 
     # 6. Check that _bulk_get cannot get documents that are not in the user's channel
     with pytest.raises(RestError) as e:  # HTTPError doesn't work, for some  reason, but would be preferable
-        sg_client.get_bulk_docs(url=sg_url, db=db, doc_ids=user_2_docs_ids, auth=auth_user_1, scope=scope, collection=collection)
+        sg_client.get_bulk_docs(url=sg_url, db=db, doc_ids=[uploaded_user2_docs[0]["id"]], auth=auth_user_1, scope=scope, collection=collection)
     assert "'status': 403" in str(e)
     # 7. Check that _bulk_get can get documents that are in the user's channel
     sg_client.get_bulk_docs(url=sg_url, db=db, doc_ids=user_1_docs_ids, auth=auth_user_1, scope=scope, collection=collection)
@@ -261,14 +263,23 @@ def test_collection_channels(scopes_collections_tests_fixture):
         sg_client.get_bulk_docs(url=sg_url, db=db, doc_ids=user_1_docs_ids, auth=auth_user_1, scope=scope, collection="fake_collection")
     e.match("Not Found")
 
+    # 9. Check that now the user has access to the docs the collection and specific channel
+    sg_client.update_user(sg_admin_url, db, test_user_2, channels=channels_user_2, scope=scope, collection=collection)
+    user_2_docs = sg_client.get_all_docs(url=sg_url, db=db, auth=auth_user_2, include_docs=True, scope=scope, collection=collection)
+    user_2_docs_ids = [doc["id"] for doc in user_2_docs["rows"]]
+
+    for doc_id in uploaded_user2_docs_ids:
+        if doc_id not in user_2_docs_ids:
+            pytest.fail("user2 does not have access to the document " + doc_id + " in channel " + channels_user_2[0] + " although such access was given. docs ids found: " + str(user_2_docs_ids))
+
 
 @pytest.mark.syncgateway
 @pytest.mark.collections
 def test_restricted_collection(scopes_collections_tests_fixture):
     """
-    1. Create second collection on CB server
+    1. Create two more collections on CB server
     2. Add documents to the collections on CB server
-    3. Sync one collection to SGW
+    3. Sync two out of three collections to SGW
     4. Check that documents that are in the server restricted collection are not accessible via SGW
     """
 
@@ -277,31 +288,42 @@ def test_restricted_collection(scopes_collections_tests_fixture):
                 When it is enabled, there is a problem that affects the rest of the tests suite.""")
 
     sg_client, sg_admin_url, db, scope, collection = scopes_collections_tests_fixture
-    # 1. Create second collection on CB server
+    # 1. Create two more collections on CB server
     random_suffix = str(uuid.uuid4())[:8]
-    second_collection = "collection_" + random_suffix
+    second_collection = "collection_2" + random_suffix
+    third_collection = "collection_3" + random_suffix
     cb_server.create_collection(bucket, scope, second_collection)
+    cb_server.create_collection(bucket, scope, third_collection)
 
     doc_1_key = "doc_1" + random_suffix
     doc_2_key = "doc_2" + random_suffix
+    doc_3_key = "doc_3" + random_suffix
 
     # 2. Add a document to each collection
     cb_server.add_simple_document(doc_1_key, bucket, scope, collection)
     cb_server.add_simple_document(doc_2_key, bucket, scope, second_collection)
+    cb_server.add_simple_document(doc_3_key, bucket, scope, third_collection)
 
     assert(cb_server.get_document(doc_1_key, bucket, scope, collection)["id"] == doc_1_key), "Error in test setup: failed to add document to server under " + bucket + "." + scope + "." + collection
     assert(cb_server.get_document(doc_2_key, bucket, scope, second_collection)["id"] == doc_2_key), "Error in test setup: failed to add document to server under " + bucket + "." + scope + "." + second_collection
+    assert(cb_server.get_document(doc_3_key, bucket, scope, third_collection)["id"] == doc_3_key), "Error in test setup: failed to add document to server under " + bucket + "." + scope + "." + third_collection
 
-    # 3. Sync one collection to SGW
-    db_config = {"bucket": bucket, "scopes": {scope: {"collections": {collection: {}}}}, "num_index_replicas": 0,
+    # 3. Sync two collections to SGW
+    db_config = {"bucket": bucket, "scopes": {scope: {"collections": {collection: {}, second_collection: {}}}}, "num_index_replicas": 0,
                  "import_docs": True, "enable_shared_bucket_access": True}
     admin_client.post_db_config(db, db_config)
     admin_client.wait_for_db_online(db, 60)
 
     # 4. Check that documents in the server restricted collection are not accesible via SGW
-    all_docs = sg_client.get_all_docs(sg_admin_url, db)
-    assert(all_docs["total_rows"] == 1), "Number of expected documents in Sync Gateway database does not match expected. Expected 1; Found " + str(all_docs["total_rows"])
-    assert(all_docs["rows"][0]["id"] == doc_1_key), "Sync Gateway database document has wrong ID, possibly due to accessing document under server restricted collection"
+    all_docs_ids = []
+
+    for row in (sg_client.get_all_docs(sg_admin_url, db, scope=scope, collection=collection)["rows"]):
+        all_docs_ids.append(row["id"])
+    for row in (sg_client.get_all_docs(sg_admin_url, db, scope=scope, collection=second_collection)["rows"]):
+        all_docs_ids.append(row["id"])
+
+    assert(len(all_docs_ids) == 2), "Number of expected documents in Sync Gateway database does not match expected. Expected 2; Found " + str(len(all_docs_ids))
+    assert(doc_3_key not in all_docs_ids), "Sync Gateway contains document from server restricted collection. Document ID " + doc_3_key + "under " + bucket + "." + scope + "." + third_collection
 
 
 @pytest.mark.syncgateway

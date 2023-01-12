@@ -2,7 +2,6 @@ import pytest
 from keywords import attachment
 from CBLClient.PeerToPeer import PeerToPeer
 from CBLClient.Collection import Collection
-from keywords.utils import log_info
 from keywords.utils import add_new_fields_to_doc
 from CBLClient.Replication import Replication
 from keywords.utils import random_string
@@ -11,7 +10,7 @@ from keywords.utils import random_string
 @pytest.mark.p2p
 @pytest.mark.listener
 @pytest.mark.parametrize("num_of_docs, continuous, replicator_type, attachments, endPointType, scope, collection", [
-    (100, False, "push", False, "URLEndPoint", random_string(6), random_string(6))
+    (100, False, "push_pull", False, "URLEndPoint", random_string(6), random_string(6))
 ])
 def test_p2p_sync_all_data(params_from_base_test_setup, server_setup, num_of_docs, continuous, replicator_type, attachments, endPointType, scope, collection):
     """
@@ -187,7 +186,6 @@ def test_p2p_sync_only_dataX(params_from_base_test_setup, server_setup, num_of_d
 
     # 7. Verify all docs got replicated on peer_server in all the collections and scopes
     doc_ids = col_obj_server.getDocIds(collection_server)
-    log_info(col_obj_server.getDocuments(collection_server, doc_ids))
     assert len(doc_ids) == count, "Number of docs mismatch in collection"
     replicator.stop(repl)
     if endPointType == "URLEndPoint":
