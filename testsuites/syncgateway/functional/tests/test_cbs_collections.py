@@ -325,6 +325,7 @@ def test_user_collections_access(scopes_collections_tests_fixture):
     2. Create two users, one with scope level access, one with collection level access
     3. Check document upload is restricted to correct access level
     4. Check document retrieval via all_docs and document ID is restricted to correct access level
+    5. Check document deletion is restricted to correct access level
     """
 
     if is_using_views:
@@ -393,6 +394,12 @@ def test_user_collections_access(scopes_collections_tests_fixture):
     with pytest.raises(HTTPError) as e:
         sg_client.get_doc(sg_url, db, second_collection_doc, auth=collection_user_auth, scope=scope, collection=second_collection)
     assert ("403" in str(e)), "User without access to collection should generate 403 HTTPError when trying to GET document. Instead got: \n" + str(e)
+
+    # 5. Check document deletion is restricted to correct access level
+    second_collection_doc_rev = sg_client.get_doc(sg_url, db, second_collection_doc, auth=scope_user_auth, scope=scope, collection=second_collection)["_rev"]
+    with pytest.raises(HTTPError) as e:
+        sg_client.delete_doc(sg_url, db, second_collection_doc, rev=second_collection_doc_rev, auth=collection_user_auth, scope=scope, collection=second_collection)
+    assert("403" in str(e))
 
 
 @pytest.mark.syncgateway
