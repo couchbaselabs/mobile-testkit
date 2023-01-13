@@ -382,7 +382,8 @@ class MobileRestClient:
         if scope in user_scopes_collections:
             user_scopes_collections[scope][collection] = collection_dict
         else:
-            user_scopes_collections[scope] = collection_dict
+            user_scopes_collections[scope] = dict()
+            user_scopes_collections[scope][collection] = collection_dict
         return user_scopes_collections
 
     def delete_user(self, url, db, name, auth=None):
@@ -393,7 +394,7 @@ class MobileRestClient:
         log_r(resp)
         resp.raise_for_status()
 
-    def create_user(self, url, db, name, password, channels=None, roles=[], auth=None, scope_dict=None):
+    def create_user(self, url, db, name, password, channels=None, roles=[], auth=None, collection_access=None):
         """ Creates a user with channels on the sync_gateway Admin REST API.
         Returns a name password tuple that can be used for session creation or basic authentication
         """
@@ -407,12 +408,11 @@ class MobileRestClient:
         data = {
             "name": name,
             "password": password,
-            "admin_roles": roles
+            "admin_roles": roles,
+            "admin_channels": channels
         }
-        if scope_dict is not None:
-            data["collection_access"] = scope_dict
-        else:
-            data["admin_channels"] = channels
+        if collection_access is not None:
+            data["collection_access"] = collection_access
 
         types.verify_is_list(channels)
         types.verify_is_list(roles)
@@ -425,7 +425,7 @@ class MobileRestClient:
         resp.raise_for_status()
         return name, password
 
-    def update_user(self, url, db, name, password=None, channels=None, roles=None, disabled=False, auth=None, scope_dict=None):
+    def update_user(self, url, db, name, password=None, channels=None, roles=None, disabled=False, auth=None, collection_access=None):
         """ Updates a user via the admin REST api
         Returns a name password tuple that can be used for session creation or basic authentication.
 
@@ -443,13 +443,14 @@ class MobileRestClient:
         data = {
             "name": name,
             "password": password,
-            "admin_roles": roles
+            "admin_roles": roles,
+            "admin_channels": channels
         }
         if scope_dict is not None:
             data["collection_access"] = scope_dict
-        else:
-            data["admin_channels"] = channels
 
+        if collection_access is not None:
+            data["collection_access"] = collection_access
         if password is not None:
             data["password"] = password
 

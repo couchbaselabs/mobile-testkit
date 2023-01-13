@@ -95,7 +95,7 @@ def test_syncgateway_with_customPort_couchbaseServer(params_from_base_test_setup
     couchbase_server_url = cluster_topology["couchbase_servers"][0]
     couchbase_server_url = couchbase_server_url.replace("8091", custom_port)
     with open("{}.json".format(cluster_conf)) as f:
-            cluster = json.loads(f.read())
+        cluster = json.loads(f.read())
     server_version = cluster["environment"]["server_version"]
     # configuring cluster
     status = ansible_runner.run_ansible_playbook(
@@ -126,9 +126,9 @@ def test_syncgateway_with_customPort_couchbaseServer(params_from_base_test_setup
     for sg in sgws:
         sgw_remote_executor = RemoteExecutor(sg["ip"])
         if ssl_enabled:
-            command = "sed -i 's/:11207//g' /home/sync_gateway/sync_gateway.json".format(memcached_ssl_port)
+            command = "sed -i 's/:11207//g' /home/sync_gateway/sync_gateway.json"
         else:
-            command = "sed -i 's/:8091//g' /home/sync_gateway/sync_gateway.json".format(custom_port)
+            command = "sed -i 's/:8091//g' /home/sync_gateway/sync_gateway.json"
         for cbs_ip in cbs_ips:
             if ssl_enabled:
                 command = "sed -i 's/{}/{}:{}/g' /home/sync_gateway/sync_gateway.json".format(cbs_ip, cbs_ip, memcached_ssl_port)
@@ -218,5 +218,5 @@ def setup_alternative_address(params_from_base_test_setup):
     for server in cluster.servers:
         i = i + 1
         command = "curl -v -X DELETE -u Administrator:password "\
-            "{}/node/controller/setupAlternateAddresses/external ".format(server.url, cb_ip_series, i)
+            "{}/node/controller/setupAlternateAddresses/external ".format(server.url)
         os.system(command)
