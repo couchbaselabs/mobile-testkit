@@ -413,8 +413,6 @@ class MobileRestClient:
         }
         if collection_access is not None:
             data["collection_access"] = collection_access
-        else:
-            data["admin_channels"] = channels
 
         types.verify_is_list(channels)
         types.verify_is_list(roles)
@@ -448,6 +446,8 @@ class MobileRestClient:
             "admin_roles": roles,
             "admin_channels": channels
         }
+        if scope_dict is not None:
+            data["collection_access"] = scope_dict
 
         if collection_access is not None:
             data["collection_access"] = collection_access
