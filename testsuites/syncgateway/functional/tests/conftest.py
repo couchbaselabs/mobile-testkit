@@ -236,7 +236,7 @@ def params_from_base_suite_setup(request):
     sync_gateway_previous_version = request.config.getoption("--sync-gateway-previous-version")
     enable_server_tls_skip_verify = request.config.getoption("--enable-server-tls-skip-verify")
     disable_admin_auth = request.config.getoption("--disable-admin-auth")
-    trace_logs = request.config.getoption("--trace_logs")
+    trace_logs = request.config.getoption("--trace-logs")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)

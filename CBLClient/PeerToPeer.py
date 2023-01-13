@@ -63,12 +63,14 @@ class PeerToPeer(object):
         args.setInt("socket", socket)
         return self._client.invokeMethod("peerToPeer_readDataFromClient", args)
 
-    def server_start(self, database, port=0, basic_auth=None, tls_disable=True, tls_auth_type="tls", tls_authenticator=False, delta_sync=True):
+    def server_start(self, database, port=0, basic_auth=None, tls_disable=True, tls_auth_type="tls", tls_authenticator=False, delta_sync=True, collections=None):
         args = Args()
         args.setMemoryPointer("database", database)
         args.setInt("port", port)
         if basic_auth is not None:
             args.setMemoryPointer("basic_auth", basic_auth)
+        if collections is not None:
+            args.setArray("collections", collections)
         args.setBoolean("tls_disable", tls_disable)
 
         args.setString("tls_auth_type", tls_auth_type)
@@ -92,6 +94,28 @@ class PeerToPeer(object):
         args.setMemoryPointer("listener", url_listener)
         args.setString("endPointType", end_point_type)
         return self._client.invokeMethod("peerToPeer_serverStop", args)
+
+    def configureCollection(self, host, server_db_name, port=5000, continuous=None, replication_type=None, endPointType="MessageEndPoint",
+                            collections=None, collection_configuration=None):
+        args = Args()
+        args.setString("host", host)
+        args.setInt("port", port)
+        args.setString("serverDBName", server_db_name)
+        args.setBoolean("tls_enable", True)
+        if replication_type is not None:
+            args.setString("replicationType", replication_type)
+        if continuous is not None:
+            args.setBoolean("continuous", continuous)
+        args.setArray("endPointType", endPointType)
+        args.setBoolean("tls_disable", True)
+        args.setString("tls_auth_type", "tls")
+        args.setBoolean("tls_authenticator", False)
+        args.setBoolean("server_verification_mode", False)
+        if collections:
+            args.setArray("collections", collections)
+        if collection_configuration:
+            args.setArray("configuration", collection_configuration)
+        return self._client.invokeMethod("peerToPeer_configureCollection", args)
 
     def configure(self, host, server_db_name, client_database, port=5000, continuous=None, authenticator=None,
                   replication_type=None, documentIDs=None, endPointType="MessageEndPoint", basic_auth=None,

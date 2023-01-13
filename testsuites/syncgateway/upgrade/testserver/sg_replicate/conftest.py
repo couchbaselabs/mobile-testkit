@@ -252,7 +252,7 @@ def params_from_base_suite_setup(request):
     disable_admin_auth = request.config.getoption("--disable-admin-auth")
     disable_load_balancer = request.config.getoption("--disable-load-balancer")
 
-    trace_logs = request.config.getoption("--trace_logs")
+    trace_logs = request.config.getoption("--trace-logs")
 
     test_name = request.node.name
 

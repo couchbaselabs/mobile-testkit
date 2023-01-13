@@ -264,7 +264,7 @@ def test_sgw_high_availability(params_from_base_test_setup, setup_basic_sg_conf)
         log_info("Verify import_cancel_cas is not 0 and import_count + import_cancel_cas = num_docs")
         sg1_import_count = sg1_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"]
         assert sg1_import_count + sg1_cancel_cas == num_docs, "import count and cancel cas did not match to num of docs on sg1 node"
-        assert sg1_cancel_cas is not 0, "cancel_ca value is 0 on CE"
+        assert sg1_cancel_cas != 0, "cancel_ca value is 0 on CE"
     else:
         assert sg1_cancel_cas == 0, "cancel_ca value is not 0 on EE"
         sg1_import_count = sg1_expvars["syncgateway"]["per_db"][sg_db]["shared_bucket_import"]["import_count"]

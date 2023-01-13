@@ -14,6 +14,13 @@ class Collection(object):
 
         self._client = Client(base_url)
 
+    def getDocIds(self, collection, limit=1000, offset=0):
+        args = Args()
+        args.setMemoryPointer("collection", collection)
+        args.setInt("limit", limit)
+        args.setInt("offset", offset)
+        return self._client.invokeMethod("collection_getDocIds", args)
+
     def collectionName(self, collection):
         args = Args()
         args.setMemoryPointer("collection", collection)
@@ -40,6 +47,20 @@ class Collection(object):
         args = Args()
         args.setMemoryPointer("collection", collection)
         return self._client.invokeMethod("collection_collectionScope", args)
+
+    def getDocuments(self, collection, ids, encrypted=False):
+        args = Args()
+        args.setMemoryPointer("collection", collection)
+        args.setArray("ids", ids)
+        args.setBoolean("encrypted", encrypted)
+        return self._client.invokeMethod("collection_getDocuments", args)
+
+    def updateDocument(self, collection, data, doc_id):
+        args = Args()
+        args.setMemoryPointer("collection", collection)
+        args.setDictionary("data", data)
+        args.setString("id", doc_id)
+        return self._client.invokeMethod("collection_updateDocument", args)
 
     def getDocument(self, collection, docId):
         args = Args()

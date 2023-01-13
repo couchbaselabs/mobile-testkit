@@ -185,11 +185,12 @@ def test_collection_channels(scopes_collections_tests_fixture):
     1. Create 3 users with different channels, one is in the wildcard channel
     2. Upload the documents to the collection, under the user's channels and one to the public channel
     3. Get all the documents using _all_docs
-    4. Check that the users can only see the documents in their channel
+    4. Check that the users cannot see the documents in their channels with collection_access defined
     5. Check that the users see the shared document in the channel
     6. Check that _bulk_get cannot get documents that are not in the user's channel
     7. Check that _bulk_get can get documents that are in the user's channel
     8. Check that _bulk_get cannot get a document from the "right" channel but the wrong collection
+    9. Check that the user have access to the docs the collection and specific channel
     """
     if is_using_views:
         pytest.skip("""It is not necessary to run scopes and collections tests with views.
@@ -217,7 +218,8 @@ def test_collection_channels(scopes_collections_tests_fixture):
 
     # 2. Upload the documents to the collection
     sg_client.add_docs(sg_url, db, 3, user_1_doc_prefix, auth=auth_user_1, channels=channels_user_1, scope=scope, collection=collection)
-    sg_client.add_docs(sg_url, db, 3, user_2_doc_prefix, auth=auth_user_2, channels=channels_user_2, scope=scope, collection=collection)
+    uploaded_user2_docs = sg_client.add_docs(sg_url, db, 3, user_2_doc_prefix, auth=auth_user_2, channels=channels_user_2, scope=scope, collection=collection)
+    uploaded_user2_docs_ids = [doc["id"] for doc in uploaded_user2_docs]
     shared_doc = sg_client.add_docs(sg_admin_url, db, 1, shared_doc_prefix, auth=client_auth, channels=["!"], scope=scope, collection=collection)
 
     # 3. Get all the documents using _all_docs
@@ -231,17 +233,17 @@ def test_collection_channels(scopes_collections_tests_fixture):
     shared_found_user_1 = False
     shared_found_user_2 = False
 
-    # 4. Check that the users can only see the documents in their channels
+    # 4. Check that the users cannot see the documents in their channels with collection_access defined
     for doc in user_1_docs_ids:
-        if user_2_doc_prefix in doc:
-            pytest.fail("A document is available in a channel that it was not assigned to. Document prefix: " + user_2_doc_prefix + ". The document: " + doc)
+        if (user_1_doc_prefix or user_2_doc_prefix) in doc:
+            pytest.fail("The document " + doc + " must not be accessiable by any of the users, because 'collection_access' was not set, but it is")
         if shared_doc_prefix in doc:
             shared_found_user_1 = True
         if doc not in wildcard_user_docs_ids:
             pytest.fail("The document " + doc + " was not accessible even though the user was given all documents access")
     for doc in user_2_docs_ids:
-        if user_1_doc_prefix in doc:
-            pytest.fail("A document is available in a channel that it was not assigned to. Document prefix: " + user_1_doc_prefix + ". The document: " + doc)
+        if (user_1_doc_prefix or user_2_doc_prefix) in doc:
+            pytest.fail("The document " + doc + " must not be accessiable by any of the users, because 'collection_access' was not set, but it is")
         if shared_doc_prefix in doc:
             shared_found_user_2 = True
         if doc not in wildcard_user_docs_ids:
@@ -253,7 +255,7 @@ def test_collection_channels(scopes_collections_tests_fixture):
 
     # 6. Check that _bulk_get cannot get documents that are not in the user's channel
     with pytest.raises(RestError) as e:  # HTTPError doesn't work, for some  reason, but would be preferable
-        sg_client.get_bulk_docs(url=sg_url, db=db, doc_ids=user_2_docs_ids, auth=auth_user_1, scope=scope, collection=collection)
+        sg_client.get_bulk_docs(url=sg_url, db=db, doc_ids=[uploaded_user2_docs[0]["id"]], auth=auth_user_1, scope=scope, collection=collection)
     assert "'status': 403" in str(e)
     # 7. Check that _bulk_get can get documents that are in the user's channel
     sg_client.get_bulk_docs(url=sg_url, db=db, doc_ids=user_1_docs_ids, auth=auth_user_1, scope=scope, collection=collection)
@@ -262,6 +264,15 @@ def test_collection_channels(scopes_collections_tests_fixture):
     with pytest.raises(Exception) as e:
         sg_client.get_bulk_docs(url=sg_url, db=db, doc_ids=user_1_docs_ids, auth=auth_user_1, scope=scope, collection="fake_collection")
     e.match("Not Found")
+
+    # 9. Check that now the user has access to the docs the collection and specific channel
+    sg_client.update_user(sg_admin_url, db, test_user_2, channels=channels_user_2, scope=scope, collection=collection)
+    user_2_docs = sg_client.get_all_docs(url=sg_url, db=db, auth=auth_user_2, include_docs=True, scope=scope, collection=collection)
+    user_2_docs_ids = [doc["id"] for doc in user_2_docs["rows"]]
+
+    for doc_id in uploaded_user2_docs_ids:
+        if doc_id not in user_2_docs_ids:
+            pytest.fail("user2 does not have access to the document " + doc_id + " in channel " + channels_user_2[0] + " although such access was given. docs ids found: " + str(user_2_docs_ids))
 
 
 @pytest.mark.syncgateway
