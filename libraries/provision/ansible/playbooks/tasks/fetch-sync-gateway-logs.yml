@@ -70,15 +70,3 @@
   # Do not validate checksum as this is just a passive grab of the logs. Since they are continuously being appended to, the checksum may fail
   fetch: src=/home/sync_gateway/logs/sg_warn.log dest=/tmp/sg_logs/{{ inventory_hostname }}/ fail_on_missing=yes flat=yes validate_checksum=no
   when: sw.stat.exists
-
-- name: SYNC GATEWAY | Check if sg_trace.log is present
-  become: yes
-  stat:
-    path: '/home/sync_gateway/logs/sg_trace.log'
-  register: st
-
-- name: SYNC GATEWAY | Fetch sg_trace.log
-  become: yes
-  # Do not validate checksum as this is just a passive grab of the logs. Since they are continuously being appended to, the checksum may fail
-  fetch: src=/home/sync_gateway/logs/sg_trace.log dest=/tmp/sg_logs/{{ inventory_hostname }}/ fail_on_missing=yes flat=yes validate_checksum=no
-  when: st.stat.exists
