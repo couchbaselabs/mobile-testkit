@@ -397,17 +397,6 @@ class MobileRestClient:
     def create_user(self, url, db, name, password, channels=None, roles=[], auth=None, collection_access=None):
         """ Creates a user with channels on the sync_gateway Admin REST API.
         Returns a name password tuple that can be used for session creation or basic authentication
-
-        WIP for working with multi scopes/collections. Multiple scopes is not yet implemented.
-        In a user payload the format for giving access to channels scoped by collection is as follows.
-        Currently there is only support for a single scope.
-        "collection_access": {
-            "scope1": {
-                "collection1": {
-                    "admin_channels":["foo", "bar1"]
-                }
-            }
-        }
         """
 
         if channels is None:
@@ -416,17 +405,19 @@ class MobileRestClient:
         if roles is None:
             roles = []
 
+        types.verify_is_list(channels)
+        types.verify_is_list(roles)
+
         data = {
             "name": name,
             "password": password,
             "admin_roles": roles,
             "admin_channels": channels
         }
+
         if collection_access is not None:
             data["collection_access"] = collection_access
 
-        types.verify_is_list(channels)
-        types.verify_is_list(roles)
         if auth:
             resp = self._session.post("{}/{}/_user/".format(url, db), data=json.dumps(data), auth=HTTPBasicAuth(auth[0], auth[1]))
         else:
@@ -457,8 +448,8 @@ class MobileRestClient:
             "admin_roles": roles,
             "admin_channels": channels
         }
-        if scope_dict is not None:
-            data["collection_access"] = scope_dict
+        if collection_access is not None:
+            data["collection_access"] = collection_access
 
         if collection_access is not None:
             data["collection_access"] = collection_access
