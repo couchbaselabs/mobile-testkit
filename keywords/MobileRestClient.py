@@ -425,7 +425,7 @@ class MobileRestClient:
         resp.raise_for_status()
         return name, password
 
-    def update_user(self, url, db, name, password=None, channels=None, roles=None, disabled=False, auth=None, collection_access=None):
+    def update_user(self, url, db, name, password=None, channels=None, roles=None, disabled=False, auth=None, scope_dict=None, collection_access=None):
         """ Updates a user via the admin REST api
         Returns a name password tuple that can be used for session creation or basic authentication.
 
