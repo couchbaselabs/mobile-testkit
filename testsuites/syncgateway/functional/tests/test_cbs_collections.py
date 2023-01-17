@@ -367,6 +367,48 @@ def test_apis_support_collections(scopes_collections_tests_fixture):
     assert uplodad_docs["rows"][1]["value"]["rev"] == raw_doc["_sync"]["rev"], "The wrong raw document was fetched"
 
 
+@pytest.mark.syncgateway
+@pytest.mark.collections
+def test_import_filters(scopes_collections_tests_fixture):
+    """
+    Specifically test various APIs:
+    1.  Update the db config's import filter.
+    2.  Upload 2 documents to the server, only one matches the filter.
+    3.  Get the docment that should not be imported - expect an error.
+    4.  Get the document that meets the import criteria - no error expected.
+    5.  Update the db's import filter using the API to accept only the second document
+    6.  Check that the second document was imported
+    """
+    sg_client, sg_admin_url, db, scope, collection = scopes_collections_tests_fixture
+    random_suffix = str(uuid.uuid4())[:8]
+    doc_1_id = "should_be_in_sgw_" + random_suffix
+    doc_2_id = "should_not_be_in_sgw_" + random_suffix
+
+    # 1. Update the db config's import filter.
+    import_function = "function filter(doc) { return doc.id == \"" + doc_1_id + "\"}"
+    data = {"bucket": bucket, "scopes": {scope: {"collections": {collection: {"import_filter": import_function}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
+    admin_client.post_db_config(db, data)
+
+    # 2. Upload 2 documents to the server, only one matches the filter
+    cb_server.add_simple_document(doc_1_id, bucket, scope, collection)
+    cb_server.add_simple_document(doc_2_id, bucket, scope, collection)
+
+    # 3. Get the docment that should not be imported - expect an error.
+    with pytest.raises(Exception) as e:
+        sg_client.get_doc(sg_admin_url, db, doc_2_id, scope=scope, collection=collection)
+    e.match("Not Found")
+
+    # 4.  Get the document that meets the import criteria - no error expected.
+    sg_client.get_doc(sg_admin_url, db, doc_1_id, scope=scope, collection=collection)
+
+    # 5.  Update the db's import filter using the API to accept only the second document
+    import_function = "function filter(doc) { return doc.id == \"" + doc_2_id + "\" }"
+    admin_client.create_imp_fltr_func(db, import_function, scope, collection)
+
+    # 6. Check that the second document was imported
+    sg_client.get_doc(sg_admin_url, db, doc_2_id, scope=scope, collection=collection)
+
+
 def rename_a_single_scope_or_collection(db, scope, new_name):
     data = {"bucket": bucket, "scopes": {scope: {"collections": {new_name: {}}}}, "num_index_replicas": 0}
     admin_client.post_db_config(db, data)
