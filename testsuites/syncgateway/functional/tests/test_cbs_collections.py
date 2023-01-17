@@ -391,12 +391,16 @@ def test_user_collections_access(scopes_collections_tests_fixture):
     # Get all docs as scope_user
     scope_user_collection_docs = [row["id"] for row in sg_client.get_all_docs(sg_url, db, auth=scope_user_auth, scope=scope, collection=collection)["rows"]]
     scope_user_second_collection_docs = [row["id"] for row in sg_client.get_all_docs(sg_url, db, auth=scope_user_auth, scope=scope, collection=second_collection)["rows"]]
+
+    # Validate scope_user all_docs endpoint functioning
     assert(len(scope_user_collection_docs) == len(doc_ids_collection)), f"_all_docs endpoint returned wrong number of docs for user with access to {collection}. Expected {len(doc_ids_collection)}, got {len(scope_user_collection_docs)}"
     assert(len(scope_user_second_collection_docs) == len(doc_ids_second_collection)), f"_all_docs endpoint returned wrong number of docs for user with access to {second_collection}. Expected {len(doc_ids_second_collection)}, got {len(scope_user_second_collection_docs)}"
 
     # Get all docs as collection_user
     collection_user_collection_docs = [row["id"] for row in sg_client.get_all_docs(sg_url, db, auth=collection_user_auth, scope=scope, collection=collection)["rows"]]
     collection_user_second_collection_docs = [row["id"] for row in sg_client.get_all_docs(sg_url, db, auth=collection_user_auth, scope=scope, collection=second_collection)["rows"]]
+
+    # Validate collection_user all_docs endpoint functioning
     assert(len(collection_user_collection_docs) == len(doc_ids_collection)), f"_all_docs endpoint returned wrong number of docs for user with access to {collection}. Expected {len(doc_ids_collection)}, got {len(collection_user_collection_docs)}"
     assert(len(collection_user_second_collection_docs) == 0), f"_all_docs endpoint returned wrong number of docs for user without access to {second_collection}. Expected 0, got {len(collection_user_second_collection_docs)}"
 
