@@ -79,7 +79,7 @@ def scope_collection_test_fixture(params_from_base_test_setup):
     user_scopes_collections = {scope: {collection: {"admin_channels": channels}}}
     pre_test_user_exists = admin_client.does_user_exist(sg_db, sg_username)
     if pre_test_user_exists is False:
-        sg_client.create_user(sg_admin_url, sg_db, sg_username, sg_password, auth=auth, channels=channels, scope_dict=user_scopes_collections)
+        sg_client.create_user(sg_admin_url, sg_db, sg_username, sg_password, auth=auth, channels=channels, collection_access=user_scopes_collections)
 
     yield base_url, sg_blip_url, sg_url, sg_client, cbl_db, sg_db, scope, collection, created_collection, auth, sg_admin_url, sg_username, sg_password, db_config, cb_server, admin_client, user_scopes_collections
 
@@ -222,7 +222,7 @@ def test_sync_2_collection_src_to_dest_having_3_collections(scope_collection_tes
     pre_test_user_exists = admin_client.does_user_exist(sg_db, sg_username)
     if pre_test_user_exists is True:
         sg_client.delete_user(sg_admin_url, sg_db, sg_username, auth=auth)
-    sg_client.create_user(sg_admin_url, sg_db, sg_username, sg_password, auth=auth, channels=["ABC"], scope_dict=user_scopes_collections)
+    sg_client.create_user(sg_admin_url, sg_db, sg_username, sg_password, auth=auth, channels=["ABC"], collection_access=user_scopes_collections)
 
     try:
         session, replicator_authenticator, repl = replicator.create_session_configure_replicate_collection(base_url, sg_admin_url, sg_db, sg_username, sg_client, sg_blip_url, continuous=True, replication_type="push", auth=auth, collections=collections_to_replicate, collection_configuration=collections_configuration)
@@ -266,7 +266,7 @@ def test_sync_2_collection_src_to_dest_having_2_collections(scope_collection_tes
     pre_test_user_exists = admin_client.does_user_exist(sg_db, sg_username)
     if pre_test_user_exists is True:
         sg_client.delete_user(sg_admin_url, sg_db, sg_username, auth=auth)
-    sg_client.create_user(sg_admin_url, sg_db, sg_username, sg_password, auth=auth, channels=["ABC"], scope_dict=user_scopes_collections)
+    sg_client.create_user(sg_admin_url, sg_db, sg_username, sg_password, auth=auth, channels=["ABC"], collection_access=user_scopes_collections)
 
     try:
         session, replicator_authenticator, repl = replicator.create_session_configure_replicate_collection(base_url, sg_admin_url, sg_db, sg_username, sg_client, sg_blip_url, continuous=True, replication_type="push", auth=auth, collections=collections_to_replicate, collection_configuration=collections_configuration)
@@ -311,7 +311,7 @@ def test_sync_3_collection_src_to_dest_having_2_collections(scope_collection_tes
     pre_test_user_exists = admin_client.does_user_exist(sg_db, sg_username)
     if pre_test_user_exists is True:
         sg_client.delete_user(sg_admin_url, sg_db, sg_username, auth=auth)
-    sg_client.create_user(sg_admin_url, sg_db, sg_username, sg_password, auth=auth, channels=["ABC"], scope_dict=user_scopes_collections)
+    sg_client.create_user(sg_admin_url, sg_db, sg_username, sg_password, auth=auth, channels=["ABC"], collection_access=user_scopes_collections)
 
     try:
         session, replicator_authenticator, repl = replicator.create_session_configure_replicate_collection(base_url, sg_admin_url, sg_db, sg_username, sg_client, sg_blip_url, continuous=True, replication_type="push", auth=auth, collections=collections_to_replicate, collection_configuration=collections_configuration)
@@ -383,7 +383,7 @@ def test_sync_user_no_channel_access(scope_collection_test_fixture, teardown_doc
     pre_test_user_exists = admin_client.does_user_exist(sg_db, new_username)
     if pre_test_user_exists is True:
         sg_client.delete_user(sg_admin_url, sg_db, new_username, auth=auth)
-    sg_client.create_user(sg_admin_url, sg_db, new_username, sg_password, auth=auth, channels=["DEF"], scope_dict=user_scopes_collections1)
+    sg_client.create_user(sg_admin_url, sg_db, new_username, sg_password, auth=auth, channels=["DEF"], collection_access=user_scopes_collections1)
 
     cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, new_username, auth=auth)
     session1 = cookie, session_id
