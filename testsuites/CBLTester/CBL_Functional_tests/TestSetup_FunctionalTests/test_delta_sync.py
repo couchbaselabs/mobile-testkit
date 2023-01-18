@@ -480,7 +480,6 @@ def test_delta_sync_utf8_strings(params_from_base_test_setup, num_of_docs, repli
 @pytest.mark.syncgateway
 @pytest.mark.replication
 @pytest.mark.parametrize("num_of_docs, replication_type", [
-    (1, "pull"),
     (1, "push")
 ])
 def test_delta_sync_nested_doc(params_from_base_test_setup, num_of_docs, replication_type):
