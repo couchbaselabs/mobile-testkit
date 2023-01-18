@@ -266,7 +266,8 @@ def test_collection_channels(scopes_collections_tests_fixture):
     e.match("Not Found")
 
     # 9. Check that now the user has access to the docs the collection and specific channel
-    sg_client.update_user(sg_admin_url, db, test_user_2, channels=channels_user_2, scope=scope, collection=collection)
+    collection_access = {scope: {collection: {"admin_channels": channels_user_2}}}
+    sg_client.update_user(sg_admin_url, db, test_user_2, channels=channels_user_2, collection_access=collection_access)
     user_2_docs = sg_client.get_all_docs(url=sg_url, db=db, auth=auth_user_2, include_docs=True, scope=scope, collection=collection)
     user_2_docs_ids = [doc["id"] for doc in user_2_docs["rows"]]
 
