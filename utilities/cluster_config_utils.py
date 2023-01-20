@@ -426,7 +426,7 @@ def choose_logging_level(cluster_config):
         trace_logs = False
 
     if trace_logs:
-        logging_config = '"logging": {"log_file_path": "/tmp/sg_logs", "console": {"log_level": "trace"}, "debug": {"enabled": true}, "trace": {"enabled": true}'
+        logging_config = '"logging": {"console": {"log_level": "trace"}, "debug": {"enabled": true}, "trace": {"enabled": true}'
     else:
         logging_config = '"logging": {"debug": {"enabled": true}'
 

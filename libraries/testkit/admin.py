@@ -520,13 +520,17 @@ class Admin:
         resp.raise_for_status()
         return resp.status_code
 
-    def create_imp_fltr_func(self, db, imp_fltr_func):
+    def create_imp_fltr_func(self, db, imp_fltr_func, scope=None, collection=None):
+        keyspace = db
+        import_headers = {"Content-Type": "application/javascript"}
+        if scope is not None:
+            keyspace = db + "." + scope + "." + collection
         if not is_admin_auth_disabled(self.cluster_config):
             self.auth = HTTPBasicAuth(RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd'])
         if self.auth:
-            resp = requests.put("{0}/{1}/_config/import_filter".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, data=imp_fltr_func, verify=False, auth=self.auth)
+            resp = requests.put("{0}/{1}/_config/import_filter".format(self.admin_url, keyspace), headers=import_headers, timeout=settings.HTTP_REQ_TIMEOUT, data=imp_fltr_func, verify=False, auth=self.auth)
         else:
-            resp = requests.put("{0}/{1}/_config/import_filter".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, data=imp_fltr_func, verify=False)
+            resp = requests.put("{0}/{1}/_config/import_filter".format(self.admin_url, keyspace), headers=import_headers, timeout=settings.HTTP_REQ_TIMEOUT, data=imp_fltr_func, verify=False)
         log.info("PUT {}".format(resp.url))
         resp.raise_for_status()
         return resp.status_code
