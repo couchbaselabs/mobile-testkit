@@ -5,11 +5,11 @@ from keywords.exceptions import ProvisioningError
 from keywords.utils import log_info
 
 
-def clean_cluster(cluster_config, skip_couchbase_provision=False, server_platform="centos"):
+def clean_cluster(cluster_config, skip_couchbase_provision=False, sg_platform="centos"):
 
     log_info("Cleaning cluster: {}".format(cluster_config))
     ansible_runner = AnsibleRunner(config=cluster_config)
-    if "centos" in server_platform:
+    if "centos" in sg_platform:
         status = ansible_runner.run_ansible_playbook("remove-sg-centos.yml")
     else:
         status = ansible_runner.run_ansible_playbook("remove-previous-installs.yml")
