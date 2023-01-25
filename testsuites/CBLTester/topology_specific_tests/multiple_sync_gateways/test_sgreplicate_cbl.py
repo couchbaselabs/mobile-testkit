@@ -1916,9 +1916,7 @@ def test_sg_replicate_restart_active_passive_nodes(params_from_base_test_setup, 
         db.create_bulk_docs(1, "threadStop", db=cbl_db1, channels=channels1)
         update_from_cbl_task.result()
 
-    err_check = True
-    if not disable_persistent_config:
-        err_check = False
+    err_check = False
     replicator.wait_until_replicator_idle(repl1, err_check=err_check)
     sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id_1, write_flag=True)
     sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id_3, write_flag=True)
