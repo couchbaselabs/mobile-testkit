@@ -1595,6 +1595,7 @@ def test_sg_replicate_distributions_replications(params_from_base_test_setup, se
     base_url = params_from_base_test_setup["base_url"]
     sg_mode = params_from_base_test_setup["mode"]
     cluster_config = params_from_base_test_setup["cluster_config"]
+    disable_persistent_config = params_from_base_test_setup["disable_persistent_config"]
     sgw_cluster1_conf_name = 'listener_tests/sg_replicate_sgw_cluster1'
     sgw_cluster2_conf_name = 'listener_tests/sg_replicate_sgw_cluster2'
     sg_conf_name = 'listener_tests/four_sync_gateways'
@@ -1619,11 +1620,12 @@ def test_sg_replicate_distributions_replications(params_from_base_test_setup, se
     sg4, sg_db4, sg4_admin_url, sg4_blip_url = get_sg4(params_from_base_test_setup, c_cluster, sg_db=sg_db1)
     sg4.restart(config=sgw_cluster1_sg_config, cluster_config=cluster_config)
 
+    err_check = disable_persistent_config
     # Create replications and docs based on parameters passed
     for x in range(number_of_replications):
         channel_name = "Replication-test2-{}".format(x)
         db.create_bulk_docs(num_of_docs, channel_name, db=cbl_db1, channels=[channels_6[x]])
-    replicator.wait_until_replicator_idle(repl1, err_check=False)
+    replicator.wait_until_replicator_idle(repl1, err_check=err_check)
     sgw_repl_id = []
     for x in range(number_of_replications):
         replication_channel = []
@@ -1642,7 +1644,7 @@ def test_sg_replicate_distributions_replications(params_from_base_test_setup, se
 
     repl2 = replicator.configure_and_replicate(
         source_db=cbl_db2, replicator_authenticator=replicator_authenticator2, target_url=sg2_blip_url)
-    replicator.wait_until_replicator_idle(repl1)
+    replicator.wait_until_replicator_idle(repl1, err_check=err_check)
 
     active_tasks = sg1.admin.get_sgreplicate2_active_tasks(sg_db1, expected_tasks=number_of_replications)
     if continuous:
@@ -1677,7 +1679,7 @@ def test_sg_replicate_distributions_replications(params_from_base_test_setup, se
 
     for x in range(number_of_replications):
         sg1.admin.wait_until_sgw_replication_done(sg_db1, sgw_repl_id[x], write_flag=True)
-    replicator.wait_until_replicator_idle(repl2)
+    replicator.wait_until_replicator_idle(repl2, err_check=err_check)
 
     cbl_doc_ids2 = db.getDocIds(cbl_db2)
     for x in range(number_of_replications):
