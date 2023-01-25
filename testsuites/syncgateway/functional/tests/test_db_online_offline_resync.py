@@ -164,6 +164,8 @@ def test_bucket_online_offline_resync_sanity(params_from_base_test_setup, sg_con
             retries = retries + 1
             time.sleep(2)
         log_info("expecting num_changes {} == num_docs {} * num_users {}".format(resync_status, num_docs, num_users))
+        if retries == 50:
+            assert resync_status['payload']["status"] == "stopped", "resync status never reported as 'stopped'"
         assert resync_status['payload']['docs_changed'] == num_docs * num_users, "docs_changed did not match with total docs of all users"
     # Take "db" online
     retries = 0
