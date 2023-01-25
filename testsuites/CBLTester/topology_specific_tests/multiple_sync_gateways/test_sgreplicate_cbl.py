@@ -1865,9 +1865,7 @@ def test_sg_replicate_restart_active_passive_nodes(params_from_base_test_setup, 
     db.create_bulk_docs(num_of_docs, "Replication2", db=cbl_db2, channels=channels1)
 
     # Have replication from cbl_db2 to sg2
-    err_check = True
-    if not disable_persistent_config:
-        err_check = False
+    err_check = False
     repl2 = replicator.configure_and_replicate(
         source_db=cbl_db2, replicator_authenticator=replicator_authenticator2, target_url=sg2_blip_url,
         replication_type="push_pull", continuous=True, err_check=err_check)
