@@ -307,7 +307,7 @@ def params_from_base_suite_setup(request):
             testserver.install()
 
     base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
-    sg_config = sync_gateway_config_path_for_mode("sync_gateway_travel_sample", mode)
+    sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
 
     sg_db = "db"
     suite_cbl_db = None

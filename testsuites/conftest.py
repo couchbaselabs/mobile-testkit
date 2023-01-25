@@ -7,7 +7,7 @@ def pytest_addoption(parser):
                      help="Value can be 'failed' (or) 'passed' (or) 'failed=<junit_xml_path (or) "
                      "jenkins_build_url>' (or) 'passed=<junit_xml_path or "
                      "jenkins_build_url>' (or) 'file=<filename>'")
-    parser.addoption("--trace_logs", action="store_true",
+    parser.addoption("--trace-logs", action="store_true",
                      help="Enable trace level logs for Sync Gateway, accessed via SSHing into machine running SGW "
                      "and navigating to /tmp/sg_logs/")
 

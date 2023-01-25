@@ -1707,7 +1707,8 @@ def verify_doc_replication_rejection(liteserv_platform, log_file, test_cbllog):
             for item in os.listdir(log_full_path_dir):
                 if ".cbllog" in item:
                     os.rename(os.path.join(log_full_path_dir, item), os.path.join(log_dir_path, item))
-        except:
+        except Exception:
+            print("Ignoring this error")
             pass
 
     log_info("Checking {} for copied log files - {}".format(log_dir_path, os.listdir(log_dir_path)))

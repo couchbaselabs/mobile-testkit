@@ -377,7 +377,24 @@ class MobileRestClient:
 
         return resp.json()
 
-    def create_user(self, url, db, name, password, channels=None, roles=None, auth=None):
+    def append_usr_collection_dict(self, user_scopes_collections, channels, scope, collection):
+        collection_dict = {"admin_channels": channels}
+        if scope in user_scopes_collections:
+            user_scopes_collections[scope][collection] = collection_dict
+        else:
+            user_scopes_collections[scope] = dict()
+            user_scopes_collections[scope][collection] = collection_dict
+        return user_scopes_collections
+
+    def delete_user(self, url, db, name, auth=None):
+        if auth:
+            resp = self._session.delete("{}/{}/_user/{}".format(url, db, name), auth=HTTPBasicAuth(auth[0], auth[1]))
+        else:
+            resp = self._session.delete("{}/{}/_user/{}".format(url, db, name))
+        log_r(resp)
+        resp.raise_for_status()
+
+    def create_user(self, url, db, name, password, channels=None, roles=[], auth=None, collection_access=None):
         """ Creates a user with channels on the sync_gateway Admin REST API.
         Returns a name password tuple that can be used for session creation or basic authentication
         """
@@ -394,9 +411,13 @@ class MobileRestClient:
         data = {
             "name": name,
             "password": password,
-            "admin_channels": channels,
-            "admin_roles": roles
+            "admin_roles": roles,
+            "admin_channels": channels
         }
+
+        if collection_access is not None:
+            data["collection_access"] = collection_access
+
         if auth:
             resp = self._session.post("{}/{}/_user/".format(url, db), data=json.dumps(data), auth=HTTPBasicAuth(auth[0], auth[1]))
         else:
@@ -406,7 +427,7 @@ class MobileRestClient:
         resp.raise_for_status()
         return name, password
 
-    def update_user(self, url, db, name, password=None, channels=None, roles=None, disabled=False, auth=None):
+    def update_user(self, url, db, name, password=None, channels=None, roles=None, disabled=False, auth=None, collection_access=None):
         """ Updates a user via the admin REST api
         Returns a name password tuple that can be used for session creation or basic authentication.
 
@@ -421,13 +442,17 @@ class MobileRestClient:
 
         types.verify_is_list(channels)
         types.verify_is_list(roles)
-
         data = {
             "name": name,
-            "admin_channels": channels,
-            "admin_roles": roles
+            "password": password,
+            "admin_roles": roles,
+            "admin_channels": channels
         }
+        if collection_access is not None:
+            data["collection_access"] = collection_access
 
+        if collection_access is not None:
+            data["collection_access"] = collection_access
         if password is not None:
             data["password"] = password
 
@@ -571,17 +596,19 @@ class MobileRestClient:
         resp.raise_for_status()
         return resp.json()
 
-    def compact_database(self, url, db, auth=None):
+    def compact_database(self, url, db, auth=None, scope=None, collection=None):
         """
         POST /{db}/_compact and will verify compaction by
         iterating though each document and inspecting the revs_info to make sure all revs are 'missing'
         except for the leaf revision
         """
-
+        keyspace = db
+        if scope is not None:
+            keyspace = db + "." + scope + "." + collection
         if auth:
-            resp = self._session.post("{}/{}/_compact".format(url, db), auth=HTTPBasicAuth(auth[0], auth[1]))
+            resp = self._session.post("{}/{}/_compact".format(url, keyspace), auth=HTTPBasicAuth(auth[0], auth[1]))
         else:
-            resp = self._session.post("{}/{}/_compact".format(url, db))
+            resp = self._session.post("{}/{}/_compact".format(url, keyspace))
         log_r(resp)
         resp.raise_for_status()
 
@@ -901,16 +928,19 @@ class MobileRestClient:
 
         return resp_obj
 
-    def get_raw_doc(self, url, db, doc_id, auth=None):
+    def get_raw_doc(self, url, db, doc_id, auth=None, scope=None, collection=None):
         """ Get a document via _raw Sync Gateway endpoint """
         params = {
             "include_doc": "true",
             "redact": "false"
         }
+        keyspace = db
+        if scope is not None:
+            keyspace = db + "." + scope + "." + collection
         if auth:
-            resp = self._session.get("{}/{}/_raw/{}".format(url, db, doc_id), params=params, auth=HTTPBasicAuth(auth[0], auth[1]))
+            resp = self._session.get("{}/{}/_raw/{}".format(url, keyspace, doc_id), params=params, auth=HTTPBasicAuth(auth[0], auth[1]))
         else:
-            resp = self._session.get("{}/{}/_raw/{}".format(url, db, doc_id), params=params)
+            resp = self._session.get("{}/{}/_raw/{}".format(url, keyspace, doc_id), params=params)
         log_r(resp)
         resp.raise_for_status()
         return resp.json()
@@ -1108,7 +1138,7 @@ class MobileRestClient:
         latest_rev = doc_resp["_rev"]
         return latest_rev
 
-    def delete_doc(self, url, db, doc_id, rev=None, auth=None, timeout=None):
+    def delete_doc(self, url, db, doc_id, rev=None, auth=None, timeout=None, scope=None, collection=None):
         """
         Removes a document with the specfied revision
         """
@@ -1116,17 +1146,27 @@ class MobileRestClient:
         auth_type, auth = get_auth_type(auth)
 
         params = {}
-        if rev is not None:
+        if rev is None:
+            assert "API endpoint must have a document revision to target"
+        else:
             params["rev"] = rev
         if timeout is not None:
             params["timeout"] = timeout
 
+        keyspace = db
+
+        if scope is not None:
+            if collection is None:
+                assert "If a scope is defined then a named collection must also be defined"
+            else:
+                keyspace = keyspace + "." + scope + "." + collection
+
         if auth_type == AuthType.session:
-            resp = self._session.delete("{}/{}/{}".format(url, db, doc_id), params=params, cookies=dict(SyncGatewaySession=auth[1]))
+            resp = self._session.delete("{}/{}/{}".format(url, keyspace, doc_id), params=params, cookies=dict(SyncGatewaySession=auth[1]))
         elif auth_type == AuthType.http_basic:
-            resp = self._session.delete("{}/{}/{}".format(url, db, doc_id), params=params, auth=auth, timeout=timeout)
+            resp = self._session.delete("{}/{}/{}".format(url, keyspace, doc_id), params=params, auth=auth, timeout=timeout)
         else:
-            resp = self._session.delete("{}/{}/{}".format(url, db, doc_id), params=params)
+            resp = self._session.delete("{}/{}/{}".format(url, keyspace, doc_id), params=params)
 
         log_r(resp)
         resp.raise_for_status()
@@ -1187,7 +1227,7 @@ class MobileRestClient:
                 time.sleep(1)
                 continue
 
-    def purge_doc(self, url, db, doc, auth=None):
+    def purge_doc(self, url, db, doc, auth=None, scope=None, collection=None):
         """
         Purges the each doc by doc id
 
@@ -1207,10 +1247,13 @@ class MobileRestClient:
             data = {
                 doc["id"]: [doc["rev"]]
             }
+        keyspace = db
+        if scope is not None:
+            keyspace = db + "." + scope + "." + collection
         if auth:
-            resp = self._session.post("{}/{}/_purge".format(url, db), json.dumps(data), auth=HTTPBasicAuth(auth[0], auth[1]))
+            resp = self._session.post("{}/{}/_purge".format(url, keyspace), json.dumps(data), auth=HTTPBasicAuth(auth[0], auth[1]))
         else:
-            resp = self._session.post("{}/{}/_purge".format(url, db), json.dumps(data))
+            resp = self._session.post("{}/{}/_purge".format(url, keyspace), json.dumps(data))
         log_r(resp)
         resp.raise_for_status()
         resp_obj = resp.json()
@@ -1472,7 +1515,7 @@ class MobileRestClient:
 
         return added_docs
 
-    def add_bulk_docs(self, url, db, docs, auth=None):
+    def add_bulk_docs(self, url, db, docs, auth=None, scope=None, collection=None):
         """
         Keyword that issues POST _bulk docs with the specified 'docs'.
         Use the Document.create_docs() to create the docs.
@@ -1486,14 +1529,17 @@ class MobileRestClient:
         else:
             request_body = {"docs": docs}
 
+        keyspace = db
+        if scope is not None:
+            keyspace = db + "." + scope + "." + collection
         if auth_type == AuthType.session:
-            resp = self._session.post("{}/{}/_bulk_docs".format(url, db),
+            resp = self._session.post("{}/{}/_bulk_docs".format(url, keyspace),
                                       data=json.dumps(request_body, cls=MyEncoder),
                                       cookies=dict(SyncGatewaySession=auth[1]))
         elif auth_type == AuthType.http_basic:
-            resp = self._session.post("{}/{}/_bulk_docs".format(url, db), data=json.dumps(request_body), auth=auth)
+            resp = self._session.post("{}/{}/_bulk_docs".format(url, keyspace), data=json.dumps(request_body), auth=auth)
         else:
-            resp = self._session.post("{}/{}/_bulk_docs".format(url, db), data=json.dumps(request_body))
+            resp = self._session.post("{}/{}/_bulk_docs".format(url, keyspace), data=json.dumps(request_body))
 
         log_r(resp)
         resp.raise_for_status()
@@ -1541,7 +1587,7 @@ class MobileRestClient:
 
         return resp_obj
 
-    def get_all_docs(self, url, db, auth=None, include_docs=False):
+    def get_all_docs(self, url, db, auth=None, include_docs=False, scope=None, collection=None):
         """ Get all docs for a database via _all_docs """
 
         auth_type, auth = get_auth_type(auth)
@@ -1549,12 +1595,18 @@ class MobileRestClient:
         if include_docs:
             params["include_docs"] = "true"
 
+        all_docs_url = "{}/{}/_all_docs".format(url, db)
+        if scope is not None:
+            if collection is None:
+                assert "If a scope is defined, there shiuld also be a collection"
+            all_docs_url = "{}/{}.{}.{}/_all_docs".format(url, db, scope, collection)
+
         if auth_type == AuthType.session:
-            resp = self._session.get("{}/{}/_all_docs".format(url, db), params=params, cookies=dict(SyncGatewaySession=auth[1]))
+            resp = self._session.get(all_docs_url, params=params, cookies=dict(SyncGatewaySession=auth[1]))
         elif auth_type == AuthType.http_basic:
-            resp = self._session.get("{}/{}/_all_docs".format(url, db), params=params, auth=auth)
+            resp = self._session.get(all_docs_url, params=params, auth=auth)
         else:
-            resp = self._session.get("{}/{}/_all_docs".format(url, db), params=params)
+            resp = self._session.get(all_docs_url, params=params)
 
         log_r(resp)
         resp.raise_for_status()

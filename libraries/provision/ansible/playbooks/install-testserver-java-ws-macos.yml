@@ -17,7 +17,7 @@
   - name: Collect CouchbaseLite jar and supporting files
     find:
       paths: "{{ ansible_env.CATALINA_BASE }}/lib"
-      patterns: "couchbase-lite-java-ee-*.jar,json-*.jar,okhttp-*.jar,okio-*.jar"
+      patterns: "couchbase-lite-java-enterprise-*.jar,json-*.jar,okhttp-*.jar,okio-*.jar"
       recurse: True
     register: cblite_jar
 
