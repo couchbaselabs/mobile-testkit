@@ -8,4 +8,4 @@
   - name: SYNC COLLECT FETCH | sg collect fetching redacted zip file from {{ sg_logs_dir }}
     become: yes
     fetch: src={{ sg_logs_dir }}/{{ item }} dest=/tmp/sg_redaction_logs/{{ inventory_hostname }}/ fail_on_missing=yes flat=yes validate_checksum=no
-    #with_items: "{{ files_to_copy.stdout_lines | flatten(1) | flatten(1) }}"
+    loop: "{{ files_to_copy.stdout_lines }}"
