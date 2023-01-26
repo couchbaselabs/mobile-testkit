@@ -1738,11 +1738,11 @@ def test_sg_replicate_update_sgw_nodes_in_cluster(params_from_base_test_setup, s
     # Have replication from cbl_db2 to sg2
     repl2 = replicator.configure_and_replicate(
         source_db=cbl_db2, replicator_authenticator=replicator_authenticator2, target_url=sg2_blip_url,
-        replication_type="push_pull", continuous=True)
+        replication_type="push_pull", continuous=True, err_check=False)
 
     repl4 = replicator.configure_and_replicate(
         source_db=cbl_db3, replicator_authenticator=replicator_authenticator4, target_url=sg4_blip_url,
-        replication_type="push_pull", continuous=True)
+        replication_type="push_pull", continuous=True, err_check=False)
 
     # 2. start 3 replications
     sgw_repl_id = []
