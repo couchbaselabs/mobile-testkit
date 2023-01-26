@@ -1738,11 +1738,11 @@ def test_sg_replicate_update_sgw_nodes_in_cluster(params_from_base_test_setup, s
     # Have replication from cbl_db2 to sg2
     repl2 = replicator.configure_and_replicate(
         source_db=cbl_db2, replicator_authenticator=replicator_authenticator2, target_url=sg2_blip_url,
-        replication_type="push_pull", continuous=True, err_check=False)
+        replication_type="push_pull", continuous=True, err_check=True)
 
     repl4 = replicator.configure_and_replicate(
         source_db=cbl_db3, replicator_authenticator=replicator_authenticator4, target_url=sg4_blip_url,
-        replication_type="push_pull", continuous=True, err_check=False)
+        replication_type="push_pull", continuous=True, err_check=True)
 
     # 2. start 3 replications
     sgw_repl_id = []
@@ -1800,7 +1800,7 @@ def test_sg_replicate_update_sgw_nodes_in_cluster(params_from_base_test_setup, s
     cbl_docs3 = db.getDocuments(cbl_db3, replication1_cbl_doc_ids)
     for doc2 in cbl_docs2:
         assert cbl_docs2[doc2]["updates-cbl"] == cbl_docs3[doc2]["updates-cbl"], "docs did not update successfully"
-    err_check = False
+    err_check = True
     replicator.wait_until_replicator_idle(repl1, err_check=err_check)
     replicator.wait_until_replicator_idle(repl2, err_check=err_check)
     replicator.wait_until_replicator_idle(repl4, err_check=err_check)
