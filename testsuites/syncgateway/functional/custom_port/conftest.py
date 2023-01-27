@@ -183,10 +183,6 @@ def pytest_addoption(parser):
                      help="Enabling CBS developer preview",
                      default=False)
 
-    parser.addoption("--trace-logs", action="store_true",
-                     help="Enable trace level logs for Sync Gateway, accessed via SSHing into machine running SGW "
-                     "and navigating to /tmp/sg_logs/")
-
 # This will be called once for the at the beggining of the execution in the 'tests/' directory
 # and will be torn down, (code after the yeild) when all the test session has completed.
 # IMPORTANT: Tests in 'tests/' should be executed in their own test run and should not be
