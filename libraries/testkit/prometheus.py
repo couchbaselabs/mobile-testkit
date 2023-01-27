@@ -16,7 +16,7 @@ def kill_prometheus_process():
         # Lazy fix for if there are multiple pids
         pids = pids.split("\n")
         for pid in pids:
-            if pid is not '':
+            if pid != '':
                 os.kill(int(pid), signal.SIGKILL)
 
 
@@ -52,7 +52,7 @@ def stop_prometheus(sg_ip, ssl=False, need_auth=False):
 def is_prometheus_installed():
     try:
         subprocess.run(['prometheus --version'], check=True, shell=True)
-    except:
+    except Exception:
         return False
     return True
 
