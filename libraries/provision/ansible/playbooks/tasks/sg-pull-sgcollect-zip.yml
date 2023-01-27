@@ -10,4 +10,4 @@
     debug:
       msg: "{{ item }}"
     #fetch: src={{ sg_logs_dir }}/{{ item }} dest=/tmp/sg_redaction_logs/{{ inventory_hostname }}/ fail_on_missing=yes flat=yes validate_checksum=no
-    with_lines: "{{ files_to_copy.stdout_lines }}"
+    with_items: "{{ files_to_copy.stdout_lines }}"
