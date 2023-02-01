@@ -506,6 +506,21 @@ def test_import_filters(scopes_collections_tests_fixture):
     sg_client.get_doc(sg_admin_url, db, doc_2_id, scope=scope, collection=collection)
 
 
+@pytest.mark.syncgateway
+@pytest.mark.collections
+def test_collection_stats(scopes_collections_tests_fixture):
+    
+    if is_using_views:
+        pytest.skip("""It is not necessary to run scopes and collections tests with views.
+                When it is enabled, there is a problem that affects the rest of the tests suite.""")
+
+    sg_client, sg_admin_url, db, scope, collection = scopes_collections_tests_fixture
+    random_suffix = str(uuid.uuid4())[:8]
+
+    stats = sg_client.get_expvars(sg_admin_url)
+    print(stats)
+
+
 def rename_a_single_scope_or_collection(db, scope, new_name):
     data = {"bucket": bucket, "scopes": {scope: {"collections": {new_name: {}}}}, "num_index_replicas": 0}
     admin_client.post_db_config(db, data)
