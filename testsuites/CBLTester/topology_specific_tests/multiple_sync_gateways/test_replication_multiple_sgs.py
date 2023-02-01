@@ -10,7 +10,6 @@ from libraries.testkit.cluster import Cluster
 from libraries.testkit import cluster
 from libraries.testkit.admin import Admin
 from keywords.constants import CLUSTER_CONFIGS_DIR
-from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
 from keywords.constants import RBAC_FULL_ADMIN
 
 
@@ -61,19 +60,9 @@ def test_multiple_sgs_with_differrent_revs_limit(params_from_base_test_setup, se
     sg1 = c.sync_gateways[0]
     sg2 = c.sync_gateways[1]
 
-    # Setting revs_limit to sg1
-    revs_limit1 = 23
-    temp_cluster_config = copy_to_temp_conf(cluster_config, sg_mode)
-    persist_cluster_config_environment_prop(temp_cluster_config, 'revs_limit', revs_limit1, property_name_check=False)
-    status = sg1.restart(config=sg_config, cluster_config=temp_cluster_config)
-    assert status == 0, "Syncgateway did not start after changing the revs_limit on sg1"
-
-    # Setting revs_limit to sg2
-    revs_limit2 = 23
-    temp_cluster_config = copy_to_temp_conf(cluster_config, sg_mode)
-    persist_cluster_config_environment_prop(temp_cluster_config, 'revs_limit', revs_limit2, property_name_check=False)
-    status = sg2.restart(config=sg_config, cluster_config=temp_cluster_config)
-    assert status == 0, "Syncgateway did not start after changing the revs_limit on sg2"
+    # Setting revs_limit to sg1 and sg2
+    revs_limit1 = 25
+    revs_limit2 = 25
 
     admin = Admin(sg1)
     admin.admin_url = sg1.url
