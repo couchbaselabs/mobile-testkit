@@ -61,8 +61,8 @@ def test_multiple_sgs_with_differrent_revs_limit(params_from_base_test_setup, se
     sg2 = c.sync_gateways[1]
 
     # Setting revs_limit to sg1 and sg2
-    revs_limit1 = 25
-    revs_limit2 = 25
+    revs_limit1 = 23
+    revs_limit2 = 23
 
     admin = Admin(sg1)
     admin.admin_url = sg1.url
