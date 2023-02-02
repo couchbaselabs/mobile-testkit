@@ -509,6 +509,11 @@ def test_import_filters(scopes_collections_tests_fixture):
 @pytest.mark.syncgateway
 @pytest.mark.collections
 def test_collection_stats(scopes_collections_tests_fixture):
+    """
+    1. Verify that global stats and scopes/collection stats can be procured
+    2. Add new scope with two collections on CB server, rename SGW scope and collection to map to it, adding new collection
+    3. Verify that stats parameters update to reflect new scope name and collections
+    """
     
     if is_using_views:
         pytest.skip("""It is not necessary to run scopes and collections tests with views.
@@ -517,8 +522,31 @@ def test_collection_stats(scopes_collections_tests_fixture):
     sg_client, sg_admin_url, db, scope, collection = scopes_collections_tests_fixture
     random_suffix = str(uuid.uuid4())[:8]
 
+    # 1. Verify that global stats and scopes/collection stats can be procured
+    collection_stats_keys = ["num_doc_writes", "num_doc_reads", "doc_writes_bytes", "doc_reads_bytes", "import_count", "sync_function_time",
+                            "sync_function_count", "sync_function_reject_access_count", "sync_function_reject_count", "sync_function_exception_count"]
+
     stats = sg_client.get_expvars(sg_admin_url)
-    print(stats)
+
+    try:
+        global_stats = stats["syncgateway"]["global"]
+    except KeyError:
+        assert False, "Could not retrieve global stats via _expvar endpoint"
+
+    try:
+        collection_stats = stats["syncgateway"]["per_db"][db]["per_collection"][scope + "." + collection]
+        print(collection_stats)
+    except KeyError:
+        assert False, "Could not retrieve collection specific stats via _expvar endpoint"
+    
+    for key in collection_stats_keys:
+        try:
+            assert collection_stats[key] == 0, f"{key} statistic should be 0, got {collection_stats[key]}"
+        except KeyError:
+            assert False, f"{key} statistic does not exist"
+    
+    # 2. Add new scope with two collections on CB server, rename SGW scope and collection to map to it, adding new collection
+
 
 
 def rename_a_single_scope_or_collection(db, scope, new_name):
