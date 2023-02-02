@@ -346,8 +346,12 @@ def test_copy_prebuilt_database(params_from_base_test_setup, encrypted):
     db.deleteDB(cbl_db, db_name)
     cbl_db_name = "copiedDB" + str(time.time())
     if encrypted:
-        db_config = db.configureOld(password="password")
-        db_prefix = "PrebuiltDB-encrypted"
+        if 'c-' in liteserv_platform:
+            db_config = db.configureOld(password="password")
+            db_prefix = "PrebuiltDB-encrypted"
+        else:
+            db_config = db.configure(password="password")
+            db_prefix = "PrebuiltDB-encrypted"
     else:
         db_config = db.configure()
         db_prefix = "PrebuiltDB"
