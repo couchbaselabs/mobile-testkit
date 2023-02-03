@@ -511,7 +511,7 @@ def test_import_filters(scopes_collections_tests_fixture):
 def test_collection_stats(scopes_collections_tests_fixture):
     """
     1. Verify that global stats and scopes/collection stats can be procured
-    2. Add new scope with two collections on CB server, rename SGW scope and collection to map to it, adding new collection
+    2. Add new scope with two collections on CB server with docs, rename SGW scope and collection to map to it, adding new collection and enable import
     3. Verify that stats parameters update to reflect new scope name and collections
     """
     
@@ -535,7 +535,6 @@ def test_collection_stats(scopes_collections_tests_fixture):
 
     try:
         collection_stats = stats["syncgateway"]["per_db"][db]["per_collection"][scope + "." + collection]
-        print(collection_stats)
     except KeyError:
         assert False, "Could not retrieve collection specific stats via _expvar endpoint"
     
@@ -545,8 +544,37 @@ def test_collection_stats(scopes_collections_tests_fixture):
         except KeyError:
             assert False, f"{key} statistic does not exist"
     
-    # 2. Add new scope with two collections on CB server, rename SGW scope and collection to map to it, adding new collection
+    # 2. Add two new collections on CB server with docs, rename SGW collection to map to it, adding new collection and enable import
+    second_collection = "second_collection" + random_suffix
+    third_collection = "third_collection" + random_suffix
 
+    second_collection_doc_key = "doc2" + random_suffix
+    third_collection_doc_key = "doc3" + random_suffix
+
+    cb_server.create_collection(bucket, scope, second_collection)
+    cb_server.create_collection(bucket, scope, third_collection)
+
+    cb_server.add_simple_document(second_collection_doc_key, bucket, scope, second_collection)
+    cb_server.add_simple_document(third_collection_doc_key, bucket, scope, third_collection)
+
+    test_sync = f"function(doc, oldDoc) {{requireAccess(\"{third_collection}\"); channel(\"{third_collection}\")}}"
+    test_sync_2 = f"function(doc, oldDoc) {{requireAccess(\"{second_collection}\"); channel(\"{second_collection}\")}}"
+
+    db_config = {"bucket": bucket, "scopes": {scope: {"collections": {third_collection: {"sync": test_sync}, second_collection: {"sync": test_sync_2}}}}, 
+                "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
+    admin_client.post_db_config(db, db_config)
+    admin_client.wait_for_db_online(db, 60)
+
+    renamed_stats = sg_client.get_expvars(sg_admin_url)
+
+    try:
+        second_collection_stats = renamed_stats["syncgateway"]["per_db"][db]["per_collection"][scope + "." + second_collection]
+    except KeyError:
+        assert False, f"syncgateway.per_db.{db}.per_collection.{scope}.{second_collection} was not found in stats after collection added to SGW database"
+    try:
+        third_collection_stats = renamed_stats["syncgateway"]["per_db"][db]["per_collection"][scope + "." + third_collection]
+    except KeyError:
+        assert False, f"syncgateway.per_db.{db}.per_collection.{scope}.{third_collection} was not found in stats after collection added to SGW database"
 
 
 def rename_a_single_scope_or_collection(db, scope, new_name):
