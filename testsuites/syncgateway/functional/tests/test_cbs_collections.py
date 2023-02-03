@@ -558,7 +558,7 @@ def test_collection_stats(scopes_collections_tests_fixture):
     test_sync_3 = f"function(doc, oldDoc) {{requireAccess(\"{third_collection}\"); channel(\"{third_collection}\")}}"
     test_sync_2 = f"function(doc, oldDoc) {{requireAccess(\"{second_collection}\"); channel(\"{second_collection}\")}}"
 
-    db_config = {"bucket": bucket, "scopes": {scope: {"collections": {third_collection: {"sync": test_sync_3}, second_collection: {"sync": test_sync_2}}}}, 
+    db_config = {"bucket": bucket, "scopes": {scope: {"collections": {third_collection: {"sync": simple_sync_function(third_collection)}, second_collection: {"sync": simple_sync_function(second_collection)}}}}, 
                 "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
     admin_client.post_db_config(db, db_config)
     admin_client.wait_for_db_online(db, 60)
@@ -596,3 +596,7 @@ def try_get_collection_stats(db, scope, collection, stats):
         return collection_stats
     except KeyError as k:
         return str(k)
+
+def simple_sync_function(collection):
+    """Constructs a simple sync function that requires access to a collection to upload a document, and routes uploaded documents to default channel"""
+    return f"function(doc, oldDoc) {{requireAccess(\"{collection}\"); channel(\"{collection}\")}}"
