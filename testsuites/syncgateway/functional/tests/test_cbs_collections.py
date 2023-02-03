@@ -512,7 +512,7 @@ def test_collection_stats(scopes_collections_tests_fixture):
     """
     1. Verify that global stats and scopes/collection stats can be procured
     2. Add new scope with two collections on CB server with docs, rename SGW scope and collection to map to it, adding new collection and enable import
-    3. Verify that stats parameters update to reflect new scope name and collections
+    3. Verify that stats parameters update to reflect new collections
     """
     
     if is_using_views:
@@ -557,14 +557,15 @@ def test_collection_stats(scopes_collections_tests_fixture):
     cb_server.add_simple_document(second_collection_doc_key, bucket, scope, second_collection)
     cb_server.add_simple_document(third_collection_doc_key, bucket, scope, third_collection)
 
-    test_sync = f"function(doc, oldDoc) {{requireAccess(\"{third_collection}\"); channel(\"{third_collection}\")}}"
+    test_sync_3 = f"function(doc, oldDoc) {{requireAccess(\"{third_collection}\"); channel(\"{third_collection}\")}}"
     test_sync_2 = f"function(doc, oldDoc) {{requireAccess(\"{second_collection}\"); channel(\"{second_collection}\")}}"
 
-    db_config = {"bucket": bucket, "scopes": {scope: {"collections": {third_collection: {"sync": test_sync}, second_collection: {"sync": test_sync_2}}}}, 
+    db_config = {"bucket": bucket, "scopes": {scope: {"collections": {third_collection: {"sync": test_sync_3}, second_collection: {"sync": test_sync_2}}}}, 
                 "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
     admin_client.post_db_config(db, db_config)
     admin_client.wait_for_db_online(db, 60)
 
+    # 3. Verify that stats parameters update to reflect new collections
     renamed_stats = sg_client.get_expvars(sg_admin_url)
 
     try:
@@ -575,6 +576,18 @@ def test_collection_stats(scopes_collections_tests_fixture):
         third_collection_stats = renamed_stats["syncgateway"]["per_db"][db]["per_collection"][scope + "." + third_collection]
     except KeyError:
         assert False, f"syncgateway.per_db.{db}.per_collection.{scope}.{third_collection} was not found in stats after collection added to SGW database"
+    
+    second_user = "second_user" + random_suffix
+    third_user = "third_user" + random_suffix
+
+    second_user_access = {scope: {second_collection: {"admin_channels": [second_collection]}}}
+    third_user_access = {scope: {third_collection: {"admin_channels": [third_collection]}}}
+
+    second_user_auth = second_user, sg_password
+    third_user_auth = third_user, sg_password
+
+    sg_client.create_user(sg_admin_url, db, second_user, sg_password, collection_access=second_user_access, auth=admin_auth)
+    sg_client.create_user(sg_admin_url, db, third_user, sg_password, collection_access=third_user_access, auth=admin_auth)
 
 
 def rename_a_single_scope_or_collection(db, scope, new_name):
