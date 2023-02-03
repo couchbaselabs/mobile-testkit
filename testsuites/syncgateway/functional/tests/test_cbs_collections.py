@@ -533,10 +533,8 @@ def test_collection_stats(scopes_collections_tests_fixture):
     except KeyError:
         assert False, "Could not retrieve global stats via _expvar endpoint"
 
-    try:
-        collection_stats = stats["syncgateway"]["per_db"][db]["per_collection"][scope + "." + collection]
-    except KeyError:
-        assert False, "Could not retrieve collection specific stats via _expvar endpoint"
+    collection_stats = try_get_collection_stats(db, scope, collection, stats)
+    assert isinstance(collection_stats, dict), f"Could not retrieve collection stats via _expvar endpoint"
     
     for key in collection_stats_keys:
         try:
@@ -568,15 +566,11 @@ def test_collection_stats(scopes_collections_tests_fixture):
     # 3. Verify that stats parameters update to reflect new collections
     renamed_stats = sg_client.get_expvars(sg_admin_url)
 
-    try:
-        second_collection_stats = renamed_stats["syncgateway"]["per_db"][db]["per_collection"][scope + "." + second_collection]
-    except KeyError:
-        assert False, f"syncgateway.per_db.{db}.per_collection.{scope}.{second_collection} was not found in stats after collection added to SGW database"
-    try:
-        third_collection_stats = renamed_stats["syncgateway"]["per_db"][db]["per_collection"][scope + "." + third_collection]
-    except KeyError:
-        assert False, f"syncgateway.per_db.{db}.per_collection.{scope}.{third_collection} was not found in stats after collection added to SGW database"
-    
+    second_collection_stats = try_get_collection_stats(db, scope, second_collection, renamed_stats)
+    third_collection_stats = try_get_collection_stats(db, scope, third_collection, renamed_stats)
+    assert isinstance(second_collection_stats, dict), f"syncgateway.per_db.{db}.per_collection.{scope}.{second_collection} was not found in stats after collection added to SGW database"
+    assert isinstance(third_collection_stats, dict), f"syncgateway.per_db.{db}.per_collection.{scope}.{third_collection} was not found in stats after collection added to SGW database"
+
     second_user = "second_user" + random_suffix
     third_user = "third_user" + random_suffix
 
@@ -594,3 +588,11 @@ def rename_a_single_scope_or_collection(db, scope, new_name):
     data = {"bucket": bucket, "scopes": {scope: {"collections": {new_name: {}}}}, "num_index_replicas": 0}
     admin_client.post_db_config(db, data)
     admin_client.wait_for_db_online(db, 60)
+
+
+def try_get_collection_stats(db, scope, collection, stats):
+    try:
+        collection_stats = stats["syncgateway"]["per_db"][db]["per_collection"][scope + "." + collection]
+        return collection_stats
+    except KeyError as k:
+        return str(k)
