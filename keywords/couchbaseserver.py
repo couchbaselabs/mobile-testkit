@@ -805,6 +805,7 @@ class CouchbaseServer:
 
         log_info("Setting recover mode to 'delta' for server {}".format(server_to_recover.host))
         data = "otpNode=ns_1@{}&recoveryType=delta".format(server_to_recover.host)
+        print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^" + str(data))
         # Override session headers for this one off request
         count = 0
         max_retries = 10
