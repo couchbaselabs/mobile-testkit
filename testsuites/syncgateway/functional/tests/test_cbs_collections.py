@@ -11,6 +11,7 @@ from keywords.exceptions import RestError
 from requests.auth import HTTPBasicAuth
 from requests.exceptions import HTTPError
 from keywords import document
+from libraries.data import doc_generators
 
 # test file shared variables
 bucket = "data-bucket"
@@ -354,10 +355,7 @@ def test_user_collections_access(scopes_collections_tests_fixture):
     second_collection = "second_collection" + random_suffix
     cb_server.create_collection(bucket, scope, second_collection)
 
-    test_sync = f"function(doc, oldDoc) {{requireAccess(\"{collection}\"); channel(\"{collection}\")}}"
-    test_sync_2 = f"function(doc, oldDoc) {{requireAccess(\"{second_collection}\"); channel(\"{second_collection}\")}}"
-
-    db_config = {"bucket": bucket, "scopes": {scope: {"collections": {collection: {"sync": test_sync}, second_collection: {"sync": test_sync_2}}}}, "num_index_replicas": 0}
+    db_config = {"bucket": bucket, "scopes": {scope: {"collections": {collection: {"sync": simple_sync_function(collection)}, second_collection: {"sync": simple_sync_function(second_collection)}}}}, "num_index_replicas": 0}
     admin_client.post_db_config(db, db_config)
     admin_client.wait_for_db_online(db, 60)
 
@@ -511,8 +509,10 @@ def test_import_filters(scopes_collections_tests_fixture):
 def test_collection_stats(scopes_collections_tests_fixture):
     """
     1. Verify that global stats and scopes/collection stats can be procured
-    2. Add new scope with two collections on CB server with docs, rename SGW scope and collection to map to it, adding new collection and enable import
+    2. Add two new collections on CB server, rename SGW collection to map to it, adding new collection and enable import + sync functions
     3. Verify that stats parameters update to reflect new collections
+    4. Make several API calls to affect stats
+    5. Verify stats reflect changes from API calls correctly
     """
     
     if is_using_views:
@@ -542,7 +542,7 @@ def test_collection_stats(scopes_collections_tests_fixture):
         except KeyError:
             assert False, f"{key} statistic does not exist"
     
-    # 2. Add two new collections on CB server with docs, rename SGW collection to map to it, adding new collection and enable import
+    # 2. Add two new collections on CB server, rename SGW collection to map to it, adding new collection and enable import + sync functions
     second_collection = "second_collection" + random_suffix
     third_collection = "third_collection" + random_suffix
 
@@ -552,13 +552,9 @@ def test_collection_stats(scopes_collections_tests_fixture):
     cb_server.create_collection(bucket, scope, second_collection)
     cb_server.create_collection(bucket, scope, third_collection)
 
-    cb_server.add_simple_document(second_collection_doc_key, bucket, scope, second_collection)
-    cb_server.add_simple_document(third_collection_doc_key, bucket, scope, third_collection)
+    custom_sync = f"function(doc, oldDoc) {{requireAccess(\"{third_collection}\"); if (doc._id == \"forbidden_doc\") {{throw({{forbidden: \"forbidden doc\"}})}} channel(\"{third_collection}\")}}"
 
-    test_sync_3 = f"function(doc, oldDoc) {{requireAccess(\"{third_collection}\"); channel(\"{third_collection}\")}}"
-    test_sync_2 = f"function(doc, oldDoc) {{requireAccess(\"{second_collection}\"); channel(\"{second_collection}\")}}"
-
-    db_config = {"bucket": bucket, "scopes": {scope: {"collections": {third_collection: {"sync": simple_sync_function(third_collection)}, second_collection: {"sync": simple_sync_function(second_collection)}}}}, 
+    db_config = {"bucket": bucket, "scopes": {scope: {"collections": {third_collection: {"sync": custom_sync}, second_collection: {"sync": simple_sync_function(second_collection)}}}}, 
                 "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
     admin_client.post_db_config(db, db_config)
     admin_client.wait_for_db_online(db, 60)
@@ -574,6 +570,9 @@ def test_collection_stats(scopes_collections_tests_fixture):
     second_user = "second_user" + random_suffix
     third_user = "third_user" + random_suffix
 
+    second_user_doc_prefix = "second_user_doc"
+    third_user_doc_prefix = "third_user_doc"
+
     second_user_access = {scope: {second_collection: {"admin_channels": [second_collection]}}}
     third_user_access = {scope: {third_collection: {"admin_channels": [third_collection]}}}
 
@@ -583,6 +582,77 @@ def test_collection_stats(scopes_collections_tests_fixture):
     sg_client.create_user(sg_admin_url, db, second_user, sg_password, collection_access=second_user_access, auth=admin_auth)
     sg_client.create_user(sg_admin_url, db, third_user, sg_password, collection_access=third_user_access, auth=admin_auth)
 
+    # 4. Make several API calls to affect stats
+    # Add docs to CB server for import, stats to reflect second_collection import_count=2 and third_collection import_count=1
+    cb_server.add_simple_document(second_collection_doc_key, bucket, scope, second_collection)
+    cb_server.add_simple_document(third_collection_doc_key, bucket, scope, third_collection)
+    cb_server.add_simple_document(second_collection_doc_key+"2", bucket, scope, second_collection)
+
+    # Upload docs as second_user to second_collection, try upload as third_user to second_collection and fail
+    # stats to reflect second collection sync_function_reject_count=1 and sync_function_reject_access_count=1
+    sg_client.add_docs(sg_url, db, 3, second_user_doc_prefix, auth=second_user_auth, scope=scope, collection=second_collection)
+    with pytest.raises(HTTPError) as e:
+        sg_client.add_docs(sg_url, db, 1, third_user_doc_prefix, auth=third_user_auth, scope=scope, collection=second_collection)
+    assert("403" in str(e)), "User without access to collection should generate 403 HTTPError when trying to add document. Instead got: \n" + str(e)
+
+    # Upload doc as third_user to third_collection, try upload as second_user to third_collection and fail
+    # stats to reflect third collection sync_function_reject_count=1 and sync_function_reject_access_count=1
+    sg_client.add_docs(sg_url, db, 3, third_user_doc_prefix, auth=third_user_auth, scope=scope, collection=third_collection)
+    with pytest.raises(HTTPError) as e:
+        sg_client.add_docs(sg_url, db, 3, second_user_doc_prefix, auth=second_user_auth, scope=scope, collection=third_collection)
+    assert("403" in str(e)), "User without access to collection should generate 403 HTTPError when trying to add document. Instead got: \n" + str(e)
+
+    # upload doc with doc._id==forbidden_doc to third_collection and be rejected by sync function
+    # stats to reflect third_collection sync_function_reject_count=2 and sync_function_reject_access_count=1 and sync_function_exception_count=1
+    doc_body = doc_generators.simple()
+    doc_body["_id"] = "forbidden_doc"
+    with pytest.raises(HTTPError) as e:
+        sg_client.add_doc(sg_url, db, doc_body, auth=third_user_auth, use_post=False, scope=scope, collection=third_collection)
+    assert("403" in str(e)), "Sync function should generate 403 HTTPError when trying to add document. Instead got: \n" + str(e)
+
+    # Read doc from second_collection as second_user, read from third_collection as third_user, fail reading from second_collection as third_user
+    # stats to reflect second_collection num_doc_reads=2 and third_collection num_doc_reads=1 
+    sg_client.get_doc(sg_url, db, second_collection_doc_key, auth=second_user_auth, scope=scope, collection=second_collection)
+    sg_client.get_doc(sg_url, db, third_collection_doc_key, auth=third_user_auth, scope=scope, collection=third_collection)
+    with pytest.raises(HTTPError) as e:
+        sg_client.get_doc(sg_url, db, second_collection_doc_key, auth=third_user_auth, scope=scope, collection=second_collection)
+    assert("403" in str(e)), "User without access to collection should generate 403 HTTPError when trying to GET document. Instead got: \n" + str(e)
+
+    # 5. Verify stats reflect changes from API calls correctly
+    new_stats = sg_client.get_expvars(sg_admin_url)
+
+    second_collection_stats = try_get_collection_stats(db, scope, second_collection, new_stats)
+    third_collection_stats = try_get_collection_stats(db, scope, third_collection, new_stats)
+
+    assert second_collection_stats["sync_function_count"] == 6, f"{second_collection} sync_function_count should be 6, got {second_collection_stats['sync_function_count']}"
+    assert third_collection_stats["sync_function_count"] == 6, f"{third_collection} sync_function_count should be 6, got {third_collection_stats['sync_function_count']}"
+
+    assert second_collection_stats["sync_function_time"] > 0, f"{second_collection} sync_function_time should be greater than 0, got {second_collection_stats['sync_function_time']}"
+    assert third_collection_stats["sync_function_time"] > 0, f"{third_collection} sync_function_time should be greater than 0, got {third_collection_stats['sync_function_time']}"
+
+    assert second_collection_stats["sync_function_reject_count"] == 1, f"{second_collection} sync_function_reject_count should be 1, got {second_collection_stats['sync_function_reject_count']}"
+    assert third_collection_stats["sync_function_reject_count"] == 2, f"{third_collection} sync_function_reject_count should be 2, got {third_collection_stats['sync_function_reject_count']}"
+
+    assert second_collection_stats["sync_function_reject_access_count"] == 1, f"{second_collection} sync_function_reject_access_count should be 1, got {second_collection_stats['sync_function_reject_access_count']}"
+    assert third_collection_stats["sync_function_reject_access_count"] == 1, f"{third_collection} sync_function_reject_access_count should be 1, got {third_collection_stats['sync_function_reject_access_count']}"
+
+    assert second_collection_stats["sync_function_exception_count"] == 0, f"{second_collection} sync_function_exception_count should be 0, got {second_collection_stats['sync_function_exception_count']}"
+    assert third_collection_stats["sync_function_exception_count"] == 0, f"{third_collection} sync_function_exception_count should be 0, got {third_collection_stats['sync_function_exception_count']}"
+
+    assert second_collection_stats["import_count"] == 2, f"{second_collection} import_count should be 2, got {second_collection_stats['import_count']}"
+    assert third_collection_stats["import_count"] == 1, f"{third_collection} import_count should be 1, got {third_collection_stats['import_count']}"
+
+    assert second_collection_stats["num_doc_reads"] == 2, f"{second_collection} num_doc_reads should be 2, got {second_collection_stats['num_doc_reads']}"
+    assert third_collection_stats["num_doc_reads"] == 1, f"{third_collection} num_doc_reads should be 1, got {third_collection_stats['num_doc_reads']}"
+
+    assert second_collection_stats["doc_reads_bytes"] > 0, f"{second_collection} doc_reads_bytes should be greater than 0, got {second_collection_stats['doc_reads_bytes']}"
+    assert third_collection_stats["doc_reads_bytes"] > 0, f"{third_collection} doc_reads_bytes should be greater than 0, got {third_collection_stats['doc_reads_bytes']}"
+
+    assert second_collection_stats["num_doc_writes"] == 5, f"{second_collection} num_doc_writes should be 5, got {second_collection_stats['num_doc_writes']}"
+    assert third_collection_stats["num_doc_writes"] == 4, f"{third_collection} num_doc_writes should be 4, got {third_collection_stats['num_doc_writes']}"
+
+    assert second_collection_stats["doc_writes_bytes"] > 0, f"{second_collection} doc_writes_bytes should be greater than 0, got {second_collection_stats['doc_writes_bytes']}"
+    assert third_collection_stats["doc_writes_bytes"] > 0, f"{third_collection} doc_writes_bytes should be greater than 0, got {third_collection_stats['doc_writes_bytes']}"
 
 def rename_a_single_scope_or_collection(db, scope, new_name):
     data = {"bucket": bucket, "scopes": {scope: {"collections": {new_name: {}}}}, "num_index_replicas": 0}
