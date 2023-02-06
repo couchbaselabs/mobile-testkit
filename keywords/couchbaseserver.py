@@ -804,7 +804,10 @@ class CouchbaseServer:
             raise TypeError("'server_to_add' must be a 'CouchbaseServer'")
 
         log_info("Setting recover mode to 'delta' for server {}".format(server_to_recover.host))
-        data = "otpNode=ns_1@{}&recoveryType=delta".format(server_to_recover.host)
+        data = {
+            "otpNode": "ns_1@{}".format(server_to_recover.host),
+            "recoveryType": "delta"
+        }
         # Override session headers for this one off request
         count = 0
         max_retries = 10
@@ -1075,7 +1078,7 @@ class CouchbaseServer:
         elif not ssl_enabled and cluster.ipv6:
             connection_url = "couchbase://{}?ipv6=allow".format(cbs_ip)
         else:
-            connection_url = 'couchbase://{}/{}'.format(cbs_ip)
+            connection_url = 'couchbase://{}'.format(cbs_ip)
         timeout_options = ClusterTimeoutOptions(kv_timeout=timedelta(seconds=30), query_timeout=timedelta(seconds=100))
         options = ClusterOptions(PasswordAuthenticator("Administrator", "password"), timeout_options=timeout_options)
         cluster = Cluster(connection_url, options)
