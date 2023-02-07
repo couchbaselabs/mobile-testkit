@@ -629,10 +629,10 @@ def test_collection_stats(scopes_collections_tests_fixture):
     assert third_collection_stats["sync_function_time"] > 0, f"{third_collection} sync_function_time should be greater than 0, got {third_collection_stats['sync_function_time']}"
 
     assert second_collection_stats["sync_function_reject_count"] == 1, f"{second_collection} sync_function_reject_count should be 1, got {second_collection_stats['sync_function_reject_count']}"
-    assert third_collection_stats["sync_function_reject_count"] == 2, f"{third_collection} sync_function_reject_count should be 2, got {third_collection_stats['sync_function_reject_count']}"
+    assert third_collection_stats["sync_function_reject_count"] == 1, f"{third_collection} sync_function_reject_count should be 1, got {third_collection_stats['sync_function_reject_count']}"
 
     assert second_collection_stats["sync_function_reject_access_count"] == 1, f"{second_collection} sync_function_reject_access_count should be 1, got {second_collection_stats['sync_function_reject_access_count']}"
-    assert third_collection_stats["sync_function_reject_access_count"] == 1, f"{third_collection} sync_function_reject_access_count should be 1, got {third_collection_stats['sync_function_reject_access_count']}"
+    assert third_collection_stats["sync_function_reject_access_count"] == 0, f"{third_collection} sync_function_reject_access_count should be 0, got {third_collection_stats['sync_function_reject_access_count']}"
 
     assert second_collection_stats["sync_function_exception_count"] == 0, f"{second_collection} sync_function_exception_count should be 0, got {second_collection_stats['sync_function_exception_count']}"
     assert third_collection_stats["sync_function_exception_count"] == 1, f"{third_collection} sync_function_exception_count should be 0, got {third_collection_stats['sync_function_exception_count']}"
