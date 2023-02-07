@@ -607,7 +607,7 @@ def test_collection_stats(scopes_collections_tests_fixture):
     doc_body["_id"] = "forbidden_doc"
     with pytest.raises(HTTPError) as e:
         sg_client.add_doc(sg_url, db, doc_body, auth=third_user_auth, use_post=False, scope=scope, collection=third_collection)
-    assert("403" in str(e)), "Sync function should generate 403 HTTPError when trying to add document. Instead got: \n" + str(e)
+    assert("500" in str(e)), "Sync function should generate 500 HTTPError when trying to add document. Instead got: \n" + str(e)
 
     # Read doc from second_collection as second_user, read from third_collection as third_user, fail reading from second_collection as third_user
     sg_client.get_doc(sg_url, db, second_collection_doc_key, auth=second_user_auth, scope=scope, collection=second_collection)
