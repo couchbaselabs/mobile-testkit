@@ -554,7 +554,7 @@ def test_collection_stats(scopes_collections_tests_fixture):
     cb_server.create_collection(bucket, scope, second_collection)
     cb_server.create_collection(bucket, scope, third_collection)
 
-    custom_sync = f"function(doc, oldDoc) {{requireAccess(\"{third_collection}\"); if (doc._id == \"forbidden_doc\") {{throw({{forbidden: \"forbidden doc\"}})}} channel(\"{third_collection}\")}}"
+    custom_sync = f"function(doc, oldDoc) {{requireAccess(\"{third_collection}\"); if (doc._id == \"forbidden_doc\") {{throw({{incrementExceptionStat: \"forbidden doc to increment exception stat in test\"}})}} channel(\"{third_collection}\")}}"
 
     db_config = {"bucket": bucket, "scopes": {scope: {"collections": {third_collection: {"sync": custom_sync}, second_collection: {"sync": simple_sync_function(second_collection)}}}},
                  "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
@@ -635,7 +635,7 @@ def test_collection_stats(scopes_collections_tests_fixture):
     assert third_collection_stats["sync_function_reject_access_count"] == 1, f"{third_collection} sync_function_reject_access_count should be 1, got {third_collection_stats['sync_function_reject_access_count']}"
 
     assert second_collection_stats["sync_function_exception_count"] == 0, f"{second_collection} sync_function_exception_count should be 0, got {second_collection_stats['sync_function_exception_count']}"
-    assert third_collection_stats["sync_function_exception_count"] == 0, f"{third_collection} sync_function_exception_count should be 0, got {third_collection_stats['sync_function_exception_count']}"
+    assert third_collection_stats["sync_function_exception_count"] == 1, f"{third_collection} sync_function_exception_count should be 0, got {third_collection_stats['sync_function_exception_count']}"
 
     assert second_collection_stats["import_count"] == 2, f"{second_collection} import_count should be 2, got {second_collection_stats['import_count']}"
     assert third_collection_stats["import_count"] == 1, f"{third_collection} import_count should be 1, got {third_collection_stats['import_count']}"
