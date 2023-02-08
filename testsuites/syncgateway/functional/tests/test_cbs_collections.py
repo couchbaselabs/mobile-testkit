@@ -621,35 +621,7 @@ def test_collection_stats(scopes_collections_tests_fixture):
     second_collection_stats = get_collection_stats(db, scope, second_collection, new_stats)
     third_collection_stats = get_collection_stats(db, scope, third_collection, new_stats)
 
-    assert second_collection_stats["sync_function_count"] == 6, f"{second_collection} sync_function_count should be 6, got {second_collection_stats['sync_function_count']}"
-    assert third_collection_stats["sync_function_count"] == 6, f"{third_collection} sync_function_count should be 6, got {third_collection_stats['sync_function_count']}"
-
-    assert second_collection_stats["sync_function_time"] > 0, f"{second_collection} sync_function_time should be greater than 0, got {second_collection_stats['sync_function_time']}"
-    assert third_collection_stats["sync_function_time"] > 0, f"{third_collection} sync_function_time should be greater than 0, got {third_collection_stats['sync_function_time']}"
-
-    assert second_collection_stats["sync_function_reject_count"] == 1, f"{second_collection} sync_function_reject_count should be 1, got {second_collection_stats['sync_function_reject_count']}"
-    assert third_collection_stats["sync_function_reject_count"] == 1, f"{third_collection} sync_function_reject_count should be 1, got {third_collection_stats['sync_function_reject_count']}"
-
-    assert second_collection_stats["sync_function_reject_access_count"] == 1, f"{second_collection} sync_function_reject_access_count should be 1, got {second_collection_stats['sync_function_reject_access_count']}"
-    assert third_collection_stats["sync_function_reject_access_count"] == 1, f"{third_collection} sync_function_reject_access_count should be 1, got {third_collection_stats['sync_function_reject_access_count']}"
-
-    assert second_collection_stats["sync_function_exception_count"] == 0, f"{second_collection} sync_function_exception_count should be 0, got {second_collection_stats['sync_function_exception_count']}"
-    assert third_collection_stats["sync_function_exception_count"] == 1, f"{third_collection} sync_function_exception_count should be 0, got {third_collection_stats['sync_function_exception_count']}"
-
-    assert second_collection_stats["import_count"] == 2, f"{second_collection} import_count should be 2, got {second_collection_stats['import_count']}"
-    assert third_collection_stats["import_count"] == 1, f"{third_collection} import_count should be 1, got {third_collection_stats['import_count']}"
-
-    assert second_collection_stats["num_doc_reads"] == 2, f"{second_collection} num_doc_reads should be 2, got {second_collection_stats['num_doc_reads']}"
-    assert third_collection_stats["num_doc_reads"] == 1, f"{third_collection} num_doc_reads should be 1, got {third_collection_stats['num_doc_reads']}"
-
-    assert second_collection_stats["doc_reads_bytes"] > 0, f"{second_collection} doc_reads_bytes should be greater than 0, got {second_collection_stats['doc_reads_bytes']}"
-    assert third_collection_stats["doc_reads_bytes"] > 0, f"{third_collection} doc_reads_bytes should be greater than 0, got {third_collection_stats['doc_reads_bytes']}"
-
-    assert second_collection_stats["num_doc_writes"] == 5, f"{second_collection} num_doc_writes should be 5, got {second_collection_stats['num_doc_writes']}"
-    assert third_collection_stats["num_doc_writes"] == 4, f"{third_collection} num_doc_writes should be 4, got {third_collection_stats['num_doc_writes']}"
-
-    assert second_collection_stats["doc_writes_bytes"] > 0, f"{second_collection} doc_writes_bytes should be greater than 0, got {second_collection_stats['doc_writes_bytes']}"
-    assert third_collection_stats["doc_writes_bytes"] > 0, f"{third_collection} doc_writes_bytes should be greater than 0, got {third_collection_stats['doc_writes_bytes']}"
+    verify_collection_stats(second_collection, third_collection, second_collection_stats, third_collection_stats)
 
 
 def rename_a_single_scope_or_collection(db, scope, new_name):
@@ -670,3 +642,31 @@ def get_collection_stats(db, scope, collection, stats):
 def simple_sync_function(collection):
     """Constructs a simple sync function that requires access to a collection to upload a document, and routes uploaded documents to default channel"""
     return f"function(doc, oldDoc) {{requireAccess(\"{collection}\"); channel(\"{collection}\")}}"
+
+
+def verify_collection_stats(second_collection, third_collection, second_collection_stats, third_collection_stats):
+    """
+    Helper function for test_collection_stats
+    Assert that stats are expected values after making various API calls in test
+    """
+
+    # stats that have expected value
+    expected_stats = {
+        "sync_function_count": (6, 6),
+        "sync_function_reject_count": (1, 1),
+        "sync_function_reject_access_count": (1, 1),
+        "sync_function_exception_count": (0, 1),
+        "import_count": (2, 1),
+        "num_doc_reads": (2, 1),
+        "num_doc_writes": (5, 4)
+    }
+
+    # stats expected to be greater than 0
+    expected_positive_stats = ["sync_function_time", "doc_reads_bytes", "doc_writes_bytes"]
+
+    for stat, expected in expected_stats.items():
+        assert second_collection_stats[stat] == expected[0], f"{second_collection} {stat} should be {expected[0]}, got {second_collection_stats[stat]}"
+        assert third_collection_stats[stat] == expected[1], f"{third_collection} {stat} should be {expected[1]}, got {third_collection_stats[stat]}"
+    for positive_stat in expected_positive_stats:
+        assert second_collection_stats[positive_stat] > 0, f"{second_collection} {positive_stat} should be greater than 0, got {second_collection_stats[positive_stat]}"
+        assert third_collection_stats[positive_stat] > 0, f"{third_collection} {positive_stat} should be greater than 0, got {third_collection_stats[positive_stat]}"
