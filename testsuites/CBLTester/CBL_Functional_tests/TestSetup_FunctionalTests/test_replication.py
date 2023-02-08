@@ -1192,15 +1192,14 @@ def test_initial_pull_replication_background_apprun(params_from_base_test_setup,
     sg_config = params_from_base_test_setup["sg_config"]
     need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
-    if 'c' in liteserv_platform and (liteserv_platform.lower() != 'c-ios' or liteserv_platform != 'c-android'):
+    if 'c' in liteserv_platform and (liteserv_platform.lower() != 'c-ios' and liteserv_platform != 'c-android'):
         pytest.skip("Only implementation for iOS platforms")
-
-    c = cluster.Cluster(config=cluster_config)
-    c.reset(sg_config_path=sg_config)
-
     # No command to push the app to background on device, so avoid test to run on ios device and no app for .net
     if ((liteserv_platform.lower() == "ios" and device_enabled) or liteserv_platform.lower() == "xamarin-ios"):
         pytest.skip('This test cannot run either it is .Net or ios with device enabled ')
+
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config),
 
     client = MobileRestClient()
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
