@@ -535,8 +535,7 @@ def test_collection_stats(scopes_collections_tests_fixture):
     else:
         assert len(global_stats) != 0, f"Global stats are not reported correctly \n + {str(global_stats)}"
 
-    collection_stats = try_get_collection_stats(db, scope, collection, stats)
-    assert isinstance(collection_stats, dict), "Could not retrieve collection stats via _expvar endpoint"
+    collection_stats = get_collection_stats(db, scope, collection, stats)
 
     for key in collection_stats_keys:
         try:
@@ -564,10 +563,8 @@ def test_collection_stats(scopes_collections_tests_fixture):
     # 3. Verify that stats parameters update to reflect new collections
     renamed_stats = sg_client.get_expvars(sg_admin_url)
 
-    second_collection_stats = try_get_collection_stats(db, scope, second_collection, renamed_stats)
-    third_collection_stats = try_get_collection_stats(db, scope, third_collection, renamed_stats)
-    assert isinstance(second_collection_stats, dict), f"syncgateway.per_db.{db}.per_collection.{scope}.{second_collection} was not found in stats after collection added to SGW database"
-    assert isinstance(third_collection_stats, dict), f"syncgateway.per_db.{db}.per_collection.{scope}.{third_collection} was not found in stats after collection added to SGW database"
+    second_collection_stats = get_collection_stats(db, scope, second_collection, renamed_stats)
+    third_collection_stats = get_collection_stats(db, scope, third_collection, renamed_stats)
 
     second_user = "second_user" + random_suffix
     third_user = "third_user" + random_suffix
@@ -619,8 +616,8 @@ def test_collection_stats(scopes_collections_tests_fixture):
     # 5. Verify stats reflect changes from API calls correctly
     new_stats = sg_client.get_expvars(sg_admin_url)
 
-    second_collection_stats = try_get_collection_stats(db, scope, second_collection, new_stats)
-    third_collection_stats = try_get_collection_stats(db, scope, third_collection, new_stats)
+    second_collection_stats = get_collection_stats(db, scope, second_collection, new_stats)
+    third_collection_stats = get_collection_stats(db, scope, third_collection, new_stats)
 
     assert second_collection_stats["sync_function_count"] == 6, f"{second_collection} sync_function_count should be 6, got {second_collection_stats['sync_function_count']}"
     assert third_collection_stats["sync_function_count"] == 6, f"{third_collection} sync_function_count should be 6, got {third_collection_stats['sync_function_count']}"
@@ -659,9 +656,10 @@ def rename_a_single_scope_or_collection(db, scope, new_name):
     admin_client.wait_for_db_online(db, 60)
 
 
-def try_get_collection_stats(db, scope, collection, stats):
+def get_collection_stats(db, scope, collection, stats):
     try:
         collection_stats = stats["syncgateway"]["per_db"][db]["per_collection"][scope + "." + collection]
+        assert isinstance(collection_stats, dict), f"syncgateway.per_db.{db}.per_collection.{scope}.{collection} was not found in stats after collection added to SGW database"
         return collection_stats
     except KeyError as k:
         return str(k)
