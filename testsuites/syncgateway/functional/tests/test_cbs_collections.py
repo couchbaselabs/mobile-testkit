@@ -511,7 +511,7 @@ def test_collection_stats(scopes_collections_tests_fixture):
     1. Verify that global stats and scopes/collection stats can be procured
     2. Add two new collections on CB server, rename SGW collection to map to it, adding new collection and enable import + sync functions
     3. Verify that stats parameters update to reflect new collections
-    4. Make several API calls to affect stats
+    4. Make several API calls to affect stats as different users
     5. Verify stats reflect changes from API calls correctly
     """
 
@@ -566,6 +566,9 @@ def test_collection_stats(scopes_collections_tests_fixture):
     second_collection_stats = get_collection_stats(db, scope, second_collection, renamed_stats)
     third_collection_stats = get_collection_stats(db, scope, third_collection, renamed_stats)
 
+    # 4. Make several API calls to affect stats as different users
+
+    # Create users for making API calls
     second_user = "second_user" + random_suffix
     third_user = "third_user" + random_suffix
 
@@ -581,7 +584,6 @@ def test_collection_stats(scopes_collections_tests_fixture):
     sg_client.create_user(sg_admin_url, db, second_user, sg_password, collection_access=second_user_access, auth=admin_auth)
     sg_client.create_user(sg_admin_url, db, third_user, sg_password, collection_access=third_user_access, auth=admin_auth)
 
-    # 4. Make several API calls to affect stats
     # Add docs to CB server for import
     cb_server.add_simple_document(second_collection_doc_key, bucket, scope, second_collection)
     cb_server.add_simple_document(third_collection_doc_key, bucket, scope, third_collection)
