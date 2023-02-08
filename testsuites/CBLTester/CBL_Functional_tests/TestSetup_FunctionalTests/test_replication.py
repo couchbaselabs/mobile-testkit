@@ -1192,12 +1192,14 @@ def test_initial_pull_replication_background_apprun(params_from_base_test_setup,
     sg_config = params_from_base_test_setup["sg_config"]
     need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
-    c = cluster.Cluster(config=cluster_config)
-    c.reset(sg_config_path=sg_config)
-
+    if 'c' in liteserv_platform and (liteserv_platform.lower() != 'c-ios' and liteserv_platform != 'c-android'):
+        pytest.skip("Only implementation for iOS platforms")
     # No command to push the app to background on device, so avoid test to run on ios device and no app for .net
     if ((liteserv_platform.lower() == "ios" and device_enabled) or liteserv_platform.lower() == "xamarin-ios"):
         pytest.skip('This test cannot run either it is .Net or ios with device enabled ')
+
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config),
 
     client = MobileRestClient()
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
@@ -4323,8 +4325,12 @@ def restart_sg(c, sg_conf, cluster_config):
     assert status == 0, "Sync_gateway did not start"
 
 
-def verify_sgDocIds_cblDocIds(sg_client, url, sg_db, session, cbl_db, db):
-    sg_docs = sg_client.get_all_docs(url=url, db=sg_db, auth=session)
+def verify_sgDocIds_cblDocIds(sg_client, url, sg_db, session, cbl_db, db, scope=None, collection=None):
+    if scope is None:
+        scope = "_default"
+    if collection is None:
+        collection = "_default"
+    sg_docs = sg_client.get_all_docs(url=url, db=sg_db, auth=session, scope=scope, collection=collection)
     sg_docs = sg_docs["rows"]
     sg_doc_ids = [row["id"] for row in sg_docs]
     cbl_doc_ids = db.getDocIds(cbl_db)
