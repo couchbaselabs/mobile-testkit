@@ -50,7 +50,7 @@ class LiteServNetMsft(LiteServBase):
 
     def download(self, version_build=None):
         """
-        1. Downloads the LiteServ.zip package from latestbuild to the remote Windows host to Desktop\LiteServ\
+        1. Downloads the LiteServ.zip package from latestbuild to the remote Windows host to Desktop\LiteServ\ # noqa: W605
         2. Extracts the package and removes the zip
         """
         if version_build is not None:
