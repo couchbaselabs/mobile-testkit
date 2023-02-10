@@ -246,7 +246,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
             if "macos" in sg_platform:
                 sg_home_directory = "/Users/sync_gateway"
             elif sg_platform == "windows":
-                    sg_home_directory = "C:\\\\PROGRA~1\\\\Couchbase\\\\Sync Gateway"
+                sg_home_directory = "C:\\\\PROGRA~1\\\\Couchbase\\\\Sync Gateway"
             else:
                 sg_home_directory = "/home/sync_gateway"
 
