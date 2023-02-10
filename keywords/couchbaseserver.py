@@ -315,7 +315,7 @@ class CouchbaseServer:
                 error_count += 1
                 time.sleep(1)
 
-    def _create_internal_rbac_user_by_roles(self, bucketname, cluster_config, rbac_user, roles):
+    def _create_internal_rbac_user_by_roles(self, bucketname, rbac_user, roles):
         # Create user with username=bucketname and assign role based on the parameter
         roles = "{}[{}]".format(roles, bucketname)
         password = 'password'
