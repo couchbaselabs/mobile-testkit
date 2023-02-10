@@ -617,11 +617,7 @@ def test_collection_stats(scopes_collections_tests_fixture):
 
     # 5. Verify stats reflect changes from API calls correctly
     new_stats = sg_client.get_expvars(sg_admin_url)
-
-    second_collection_stats = get_collection_stats(db, scope, second_collection, new_stats)
-    third_collection_stats = get_collection_stats(db, scope, third_collection, new_stats)
-
-    verify_collection_stats(second_collection, third_collection, second_collection_stats, third_collection_stats)
+    verify_collection_stats(db, scope, second_collection, third_collection, new_stats)
 
 
 def rename_a_single_scope_or_collection(db, scope, new_name):
@@ -644,11 +640,14 @@ def simple_sync_function(collection):
     return f"function(doc, oldDoc) {{requireAccess(\"{collection}\"); channel(\"{collection}\")}}"
 
 
-def verify_collection_stats(second_collection, third_collection, second_collection_stats, third_collection_stats):
+def verify_collection_stats(db, scope, second_collection, third_collection, stats_to_verify):
     """
     Helper function for test_collection_stats
     Assert that stats are expected values after making various API calls in test
     """
+
+    second_collection_stats = get_collection_stats(db, scope, second_collection, stats_to_verify)
+    third_collection_stats = get_collection_stats(db, scope, third_collection, stats_to_verify)
 
     # stats that have expected value
     expected_stats = {
