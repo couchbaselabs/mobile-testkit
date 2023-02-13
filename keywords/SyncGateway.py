@@ -124,7 +124,11 @@ def verify_sync_gateway_version(host, expected_sync_gateway_version):
         "2.8.0": "376",
         "2.8.0.1": "3",
         "2.8.1": "15",
-        "2.8.2": "1"
+        "2.8.2": "1",
+        "2.8.3": "9",
+        "2.8.3.4": "3",
+        "2.8.4": "9",
+        "3.0.5": "8"
     }
     version, build = version_and_build(expected_sync_gateway_version)
     if build is None:
@@ -216,7 +220,7 @@ def verify_sg_accel_version(host, expected_sg_accel_version):
 
 def load_sync_gateway_config(sg_conf, server_url, cluster_config, sg_db_cfg=None):
     """ Loads a syncgateway configuration for modification"""
-    match_obj = re.match("(\w+?):\/\/(.*?):(\d+?)$", server_url)
+    match_obj = re.match("(\w+?):\/\/(.*?):(\d+?)$", server_url) # noqa W605
     if match_obj:
         server_scheme = match_obj.group(1)
         server_ip = match_obj.group(2)
@@ -398,7 +402,7 @@ def get_cpc_config_from_config_path(non_cpc_config_filename, mode):
     """
 
     validate_sync_gateway_mode(mode)
-    cpc_config_prefix = non_cpc_config_filename.split("_cc".format(mode))[0]
+    cpc_config_prefix = non_cpc_config_filename.split("_cc")[0]
     cpc_config_prefix = cpc_config_prefix.split("/")[-1]
     cpc_config = "{}/{}_{}.json".format(SYNC_GATEWAY_CONFIGS_CPC, cpc_config_prefix, mode)
     return cpc_config
@@ -1051,7 +1055,7 @@ class SyncGateway(object):
 
                 if is_x509_auth(cluster_config):
                     playbook_vars[
-                        "certpath"] = '"certpath": "{}/certs "{}/certs/chain.pem",'.format(sg_home_directory)
+                        "certpath"] = '"certpath": "{}/certs "{}/certs/chain.pem",'.format(sg_home_directory, sg_home_directory)
                     playbook_vars[
                         "keypath"] = '"keypath": "{}/certs/pkey.key",'.format(sg_home_directory)
                     playbook_vars[
