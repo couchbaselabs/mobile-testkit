@@ -429,6 +429,7 @@ def update_docs(db, cbl_db, added_docs, doc_obj, terminator_doc_id_prefix):
         try:
             term_doc = db.getDocument(cbl_db, terminator_doc_id)
             if term_doc == -1:
+                print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&HERE")
                 log_info(terminator_not_found_msg)
             else:
                 doc_type = term_doc.__class__.__name__
@@ -438,7 +439,8 @@ def update_docs(db, cbl_db, added_docs, doc_obj, terminator_doc_id_prefix):
                     return doc_revs
                 else:
                     log_info("update_docs: doc object is retrieved correctly")
-        except Exception:
+        except Exception as e:
+            print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^" + e)
             log_info(terminator_not_found_msg)
 
         user_docs_subset_to_update = []
