@@ -151,7 +151,10 @@ def test_upgrade(params_from_base_test_setup):
         password=sg_user_password,
         channels=sg_user_channels
     )
-
+    if cbl_db is None:
+        assert False
+    else:
+        print("=========================================================" + str(cbl_db))
     doc_obj = Document(base_url)
     sg_obj = SyncGateway()
     db.create_bulk_docs(number=num_docs, id_prefix="cbl_filter", db=cbl_db, channels=sg_user_channels, attachments_generator=attachment.generate_2_png_10_10)
