@@ -169,9 +169,9 @@ def test_upgrade(params_from_base_test_setup):
     sg_cookie, sg_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name=sg_user_name)
     authenticator = Authenticator(base_url)
     replicator_authenticator = authenticator.authentication(sg_session, sg_cookie, authentication_type="session")
-    # repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=sg_user_channels, replication_type="push_pull", replicator_authenticator=replicator_authenticator)
+    repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=sg_user_channels, replication_type="push_pull", replicator_authenticator=replicator_authenticator)
     print("target lb url ", target_lb_url)
-    repl_config = replicator.configure(cbl_db, target_lb_url, continuous=True, channels=sg_user_channels, replication_type="push_pull", replicator_authenticator=replicator_authenticator)
+    #repl_config = replicator.configure(cbl_db, target_lb_url, continuous=True, channels=sg_user_channels, replication_type="push_pull", replicator_authenticator=replicator_authenticator)
     repl = replicator.create(repl_config)
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
@@ -427,9 +427,9 @@ def update_docs(db, cbl_db, added_docs, doc_obj, terminator_doc_id_prefix):
     while True:
         log_info("randomly update docs waiting for terminator arrive...")
         try:
+            print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&" + str(terminator_doc_id))
             term_doc = db.getDocument(cbl_db, terminator_doc_id)
             if term_doc == -1:
-                print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&HERE")
                 log_info(terminator_not_found_msg)
             else:
                 doc_type = term_doc.__class__.__name__
