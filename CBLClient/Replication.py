@@ -381,6 +381,7 @@ class Replication(object):
                 if completed < total:
                     raise Exception("replication progress is not completed")
                 else:
+                    log_info("GILAD=stopped was found,exiting.")
                     break
             if total < completed and total <= 0:
                 raise Exception("total is less than completed")
