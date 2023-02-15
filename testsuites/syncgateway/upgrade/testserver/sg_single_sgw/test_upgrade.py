@@ -289,11 +289,14 @@ def test_upgrade(params_from_base_test_setup):
                 if sync_gateway_upgraded_version < "2.7.0":
                     enable_import = False  # with 2.7 and later we can have enable import on all docs
                 # Check Import showing up on all nodes
-
+        print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^AFTER_REDPOLY")
         repl_config2 = replicator.configure(cbl_db2, sg_blip_url, continuous=True, channels=sg_user_channels, replication_type="push_pull", replicator_authenticator=replicator_authenticator)
+        print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^AFTER_CONFIGURE")
         repl2 = replicator.create(repl_config2)
+        print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^AFTER_CREATE")
         replicator.start(repl2)
-        log_info("BEFORE WAITING FOR REPLICATION - GILAD")
+        print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^AFTER_START")
+        log_info("BEFORE WAITING FOR REPLICATION")
         log_info("waiting for the replication to complete")
         replicator.wait_until_replicator_idle(repl2, max_times=3000)
         log_info("Trying to create terminator id ....")
