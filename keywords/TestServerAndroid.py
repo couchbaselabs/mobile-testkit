@@ -8,6 +8,7 @@ from keywords.constants import BINARY_DIR
 from keywords.exceptions import LiteServError
 from keywords.utils import version_and_build
 from keywords.utils import log_info
+from platform import python_version
 
 
 class TestServerAndroid(TestServerBase):
@@ -252,11 +253,13 @@ class TestServerAndroid(TestServerBase):
         self.logfile = open(logfile_name, "w+")
         command = self.set_device_option(["adb", "logcat"])
         self.process = subprocess.Popen(args=command, stdout=self.logfile)
+        log_info("** test run on python version: {}".format(python_version())
 
         command = self.set_device_option([
             "adb", "shell", "monkey", "-p", self.installed_package_name,
-            "-v 1", "--ei", "listen_port", str(self.port),
+            "-v", "1", "listen_port", str(self.port),
         ])
+        print("command to start android app: {}".format(command))
         output = subprocess.check_output(command)
         log_info(output)
         self._wait_until_reachable(port=self.port)
@@ -343,4 +346,5 @@ class TestServerAndroid(TestServerBase):
             return: ["adb", "-s", "K183010440", "logcat"]
         '''
         command[1:1] = self.device_option
+        command = [x.strip() for x in command]
         return command
