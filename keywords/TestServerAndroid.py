@@ -253,7 +253,7 @@ class TestServerAndroid(TestServerBase):
         self.logfile = open(logfile_name, "w+")
         command = self.set_device_option(["adb", "logcat"])
         self.process = subprocess.Popen(args=command, stdout=self.logfile)
-        log_info("** test run on python version: {}".format(python_version())
+        log_info("** test run on python version: {}".format(python_version()))
 
         command = self.set_device_option([
             "adb", "shell", "monkey", "-p", self.installed_package_name,
