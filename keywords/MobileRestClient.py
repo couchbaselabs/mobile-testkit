@@ -451,8 +451,6 @@ class MobileRestClient:
         if collection_access is not None:
             data["collection_access"] = collection_access
 
-        if collection_access is not None:
-            data["collection_access"] = collection_access
         if password is not None:
             data["password"] = password
 
