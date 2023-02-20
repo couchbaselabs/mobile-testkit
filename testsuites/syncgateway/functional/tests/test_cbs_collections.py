@@ -561,10 +561,10 @@ def test_collection_stats(scopes_collections_tests_fixture):
     admin_client.wait_for_db_online(db, 60)
 
     # 3. Verify that stats parameters update to reflect new collections
-    # renamed_stats = sg_client.get_expvars(sg_admin_url)
+    renamed_stats = sg_client.get_expvars(sg_admin_url)
 
-    # second_collection_stats = get_collection_stats(db, scope, second_collection, renamed_stats)
-    # third_collection_stats = get_collection_stats(db, scope, third_collection, renamed_stats)
+    get_collection_stats(db, scope, second_collection, renamed_stats)
+    get_collection_stats(db, scope, third_collection, renamed_stats)
 
     # 4. Make several API calls to affect stats as different users
 
