@@ -271,6 +271,31 @@ class CouchbaseServer:
             log_debug(resp_obj)
             # All nodes are heathy if it made it to here
             break
+    
+    def _create_internal_rbac_user_request(self, data):
+        # make api request to create internal rbac user
+
+        log_info("Creating RBAC user {} with password {} and roles {}".format(data["name"], data["password"], data["roles"]))
+
+        rbac_url = "{}/settings/rbac/users/local/{}".format(self.url, data["name"])
+
+        resp = None
+        error_count = 0
+        while True:
+            if error_count == self.max_retries:
+                log_info("Error! Could not create RBAC user after retries. ")
+                raise RBACUserCreationError("Error! Could not create RBAC user after retries. ")
+            try:
+                resp = self._session.put(rbac_url, data=data, auth=('Administrator', 'password'))
+                log_r(resp)
+                resp.raise_for_status()
+                # If request does not throw, exit retry loop
+                break
+            except HTTPError as h:
+                log_info("Hit a ConnectionError while trying to create RBAC user. Retrying ...")
+                log_info("resp code: {}; error: {}".format(resp, h))
+                error_count += 1
+                time.sleep(1)
 
     def _create_internal_rbac_bucket_user(self, bucketname, cluster_config):
         # Create user with username=bucketname and assign role
@@ -293,31 +318,14 @@ class CouchbaseServer:
             "password": password
         }
 
-        log_info("Creating RBAC user {} with password {} and roles {}".format(bucketname, password, roles))
+        self._create_internal_rbac_user_request(data_user_params)
 
-        rbac_url = "{}/settings/rbac/users/local/{}".format(self.url, bucketname)
-
-        resp = None
-        error_count = 0
-        while True:
-            if error_count == self.max_retries:
-                log_info("Error! Could not create RBAC user after retries. ")
-                raise RBACUserCreationError("Error! Could not create RBAC user after retries. ")
-            try:
-                resp = self._session.put(rbac_url, data=data_user_params, auth=('Administrator', 'password'))
-                log_r(resp)
-                resp.raise_for_status()
-                # If request does not throw, exit retry loop
-                break
-            except HTTPError as h:
-                log_info("Hit a ConnectionError while trying to create RBAC user. Retrying ...")
-                log_info("resp code: {}; error: {}".format(resp, h))
-                error_count += 1
-                time.sleep(1)
-
-    def _create_internal_rbac_user_by_roles(self, bucketname, rbac_user, roles):
-        # Create user with username=bucketname and assign role based on the parameter
-        roles = "{}[{}]".format(roles, bucketname)
+    def _create_internal_rbac_user_by_roles(self, rbac_user, roles, bucketname=None):
+        # Create user with username=rbac_user and assign role based on the parameter
+        if bucketname is not None:
+            roles = "{}[{}]".format(roles, bucketname)
+        else:
+            roles = f"{roles}"
         password = 'password'
         data_user_params = {
             "name": rbac_user,
@@ -325,27 +333,7 @@ class CouchbaseServer:
             "password": password
         }
 
-        log_info("Creating RBAC user {} with password {} and roles {}".format(rbac_user, password, roles))
-
-        rbac_url = "{}/settings/rbac/users/local/{}".format(self.url, rbac_user)
-
-        resp = None
-        error_count = 0
-        while True:
-            if error_count == self.max_retries:
-                log_info("Error! Could not create RBAC user after retries. ")
-                raise RBACUserCreationError("Error! Could not create RBAC user after retries. ")
-            try:
-                resp = self._session.put(rbac_url, data=data_user_params, auth=('Administrator', 'password'))
-                log_r(resp)
-                resp.raise_for_status()
-                # If request does not throw, exit retry loop
-                break
-            except HTTPError as h:
-                log_info("Hit a ConnectionError while trying to create RBAC user. Retrying ...")
-                log_info("resp code: {}; error: {}".format(resp, h))
-                error_count += 1
-                time.sleep(1)
+        self._create_internal_rbac_user_request(data_user_params)
 
     def _delete_internal_rbac_bucket_user(self, bucketname):
         # Delete user with username=bucketname

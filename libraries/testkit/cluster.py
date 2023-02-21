@@ -403,7 +403,7 @@ class Cluster:
             self.servers[0].create_buckets(bucket_names=bucket_name_set, cluster_config=self._cluster_config, ipv6=self.ipv6)
             log_info(">>> Waiting for Server: {} to be in a healthy state".format(self.servers[0].url))
             self.servers[0].wait_for_ready_state()
-        self.servers[0]._create_internal_rbac_user_by_roles('*', common_bucket_user, "mobile_sync_gateway")
+        self.servers[0]._create_internal_rbac_user_by_roles(common_bucket_user, "mobile_sync_gateway", bucketname="*")
         log_info(">>> Starting sync_gateway with configuration using setup_server_and_sgw: {}".format(cpc_config_path_full))
 
         # Extracing sgw config from sgw config file
