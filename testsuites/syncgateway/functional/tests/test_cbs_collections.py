@@ -508,7 +508,7 @@ def test_import_filters(scopes_collections_tests_fixture):
 @pytest.mark.collections
 def test_collection_stats(scopes_collections_tests_fixture):
     """
-    1. Verify that global stats and scopes/collection stats can be procured
+    1. Verify that global stats and scopes/collection stats can be procured via RBAC users
     2. Add two new collections on CB server, rename SGW collection to map to it, adding new collection and enable import + sync functions
     3. Verify that stats parameters update to reflect new collections
     4. Make several API calls to affect stats as different users
@@ -526,7 +526,20 @@ def test_collection_stats(scopes_collections_tests_fixture):
     collection_stats_keys = ["num_doc_writes", "num_doc_reads", "doc_writes_bytes", "doc_reads_bytes", "import_count", "sync_function_time",
                              "sync_function_count", "sync_function_reject_access_count", "sync_function_reject_count", "sync_function_exception_count"]
 
-    stats = sg_client.get_expvars(sg_admin_url)
+    # create rbac users on CB server
+    rbac_auth_sgw_dev_ops = ["devops", "password"]
+
+    # TODO verify whether mobile_sync_gateway role is correct name for role, and whether it should have access to stats
+    rbac_auth_sgw = ["sgw", "password"]
+
+    cb_server._create_internal_rbac_user_by_roles(rbac_auth_sgw[0], "mobile_sync_gateway", bucketname="*")
+    cb_server._create_internal_rbac_user_by_roles(rbac_auth_sgw_dev_ops[0], "sync_gateway_dev_ops")
+
+    # retrieve stats as admin and sync_gateway_devops users
+    # weekly testkit runs are ran with --disable-admin-auth, making the use of auth redundant
+    # run without flag  to test RBAC access
+    stats = sg_client.get_expvars(sg_admin_url, admin_auth)
+    stats = sg_client.get_expvars(sg_admin_url, rbac_auth_sgw_dev_ops)
 
     try:
         global_stats = stats["syncgateway"]["global"]
@@ -561,7 +574,7 @@ def test_collection_stats(scopes_collections_tests_fixture):
     admin_client.wait_for_db_online(db, 60)
 
     # 3. Verify that stats parameters update to reflect new collections
-    renamed_stats = sg_client.get_expvars(sg_admin_url)
+    renamed_stats = sg_client.get_expvars(sg_admin_url, admin_auth)
 
     get_collection_stats(db, scope, second_collection, renamed_stats)
     get_collection_stats(db, scope, third_collection, renamed_stats)
@@ -616,7 +629,7 @@ def test_collection_stats(scopes_collections_tests_fixture):
     assert("403" in str(e)), "User without access to collection should generate 403 HTTPError when trying to GET document. Instead got: \n" + str(e)
 
     # 5. Verify stats reflect changes from API calls correctly
-    new_stats = sg_client.get_expvars(sg_admin_url)
+    new_stats = sg_client.get_expvars(sg_admin_url, admin_auth)
     verify_collection_stats(db, scope, second_collection, third_collection, new_stats)
 
 
