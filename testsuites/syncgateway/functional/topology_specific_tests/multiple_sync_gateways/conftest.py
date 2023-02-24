@@ -96,8 +96,8 @@ def params_from_base_suite_setup(request):
     validate_sync_gateway_mode(mode)
 
     # use base_cc cluster config if mode is "cc" or base_di cluster config if more is "di"
-    # cluster_config = "{}/{}{}".format(CLUSTER_CONFIGS_DIR, cluster_config, mode)
-    cluster_config = "{}/three_sync_gateways_{}".format(CLUSTER_CONFIGS_DIR, mode)
+    cluster_config = "{}/{}{}".format(CLUSTER_CONFIGS_DIR, cluster_config, mode)
+    # cluster_config = "{}/three_sync_gateways_{}".format(CLUSTER_CONFIGS_DIR, mode)
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
 
     if use_views:
