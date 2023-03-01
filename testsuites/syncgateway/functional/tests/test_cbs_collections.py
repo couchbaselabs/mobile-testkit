@@ -523,38 +523,21 @@ def test_collection_stats(scopes_collections_tests_fixture):
     random_suffix = str(uuid.uuid4())[:8]
 
     # 1. Verify that global stats and scopes/collection stats can be procured
-    collection_stats_keys = ["num_doc_writes", "num_doc_reads", "doc_writes_bytes", "doc_reads_bytes", "import_count", "sync_function_time",
-                             "sync_function_count", "sync_function_reject_access_count", "sync_function_reject_count", "sync_function_exception_count"]
 
     # create rbac users on CB server
     rbac_auth_sgw_dev_ops = ["devops", "password"]
+    rbac_auth_stats_reader = ["reader", "password"]
 
-    # TODO verify whether mobile_sync_gateway role is correct name for role, and whether it should have access to stats
-    rbac_auth_sgw = ["sgw", "password"]
-
-    cb_server._create_internal_rbac_user_by_roles(rbac_auth_sgw[0], "mobile_sync_gateway", bucketname="*")
+    cb_server._create_internal_rbac_user_by_roles(rbac_auth_stats_reader[0], "external_stats_reader")
     cb_server._create_internal_rbac_user_by_roles(rbac_auth_sgw_dev_ops[0], "sync_gateway_dev_ops")
 
-    # retrieve stats as admin and sync_gateway_devops users
+    # retrieve stats as admin and rbac users
     # weekly testkit runs are ran with --disable-admin-auth, making the use of auth redundant
     # run without flag  to test RBAC access
-    stats = sg_client.get_expvars(sg_admin_url, admin_auth)
-    stats = sg_client.get_expvars(sg_admin_url, rbac_auth_sgw_dev_ops)
-
-    try:
-        global_stats = stats["syncgateway"]["global"]
-    except KeyError:
-        assert False, "Could not retrieve global stats via _expvar endpoint"
-    else:
-        assert len(global_stats) != 0, f"Global stats are not reported correctly \n + {str(global_stats)}"
-
-    collection_stats = get_collection_stats(db, scope, collection, stats)
-
-    for key in collection_stats_keys:
-        try:
-            assert collection_stats[key] == 0, f"{key} statistic should be 0, got {collection_stats[key]}"
-        except KeyError:
-            assert False, f"{key} statistic does not exist"
+    auths = [rbac_auth_sgw_dev_ops, rbac_auth_stats_reader, admin_auth]
+    for auth in auths:
+        stats = sg_client.get_expvars(sg_admin_url, auth)
+        verify_stats_retrieval(stats, auth)
 
     # 2. Add two new collections on CB server, rename SGW collection to map to it, adding new collection and enable import + sync functions
     second_collection = "second_collection" + random_suffix
@@ -646,6 +629,31 @@ def get_collection_stats(db, scope, collection, stats):
         return collection_stats
     except KeyError as k:
         return str(k)
+
+
+def verify_stats_retrieval(stats, auth):
+    """
+    Helper function for test_collection_stats
+    Verify stats can be procured as RBAC roles sgw_dev_ops, external_stats_reader and full admin
+    Verify correct stats are included, with correct initial values
+    """
+    collection_stats_keys = ["num_doc_writes", "num_doc_reads", "doc_writes_bytes", "doc_reads_bytes", "import_count", "sync_function_time",
+                             "sync_function_count", "sync_function_reject_access_count", "sync_function_reject_count", "sync_function_exception_count"]
+
+    try:
+        global_stats = stats["syncgateway"]["global"]
+    except KeyError:
+        assert False, f"Could not retrieve global stats via _expvar endpoint using RBAC user {auth[0]}"
+    else:
+        assert len(global_stats) != 0, f"Global stats are not reported correctly \n + {str(global_stats)}"
+
+    collection_stats = get_collection_stats(db, scope, collection, stats)
+
+    for key in collection_stats_keys:
+        try:
+            assert collection_stats[key] == 0, f"{key} statistic should be 0, got {collection_stats[key]}"
+        except KeyError:
+            assert False, f"{key} statistic does not exist"
 
 
 def simple_sync_function(collection):
