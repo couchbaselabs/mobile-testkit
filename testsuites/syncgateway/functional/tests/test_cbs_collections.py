@@ -537,7 +537,7 @@ def test_collection_stats(scopes_collections_tests_fixture):
     auths = [rbac_auth_sgw_dev_ops, rbac_auth_stats_reader, admin_auth]
     for auth in auths:
         stats = sg_client.get_expvars(sg_admin_url, auth)
-        verify_stats_retrieval(stats, auth)
+        verify_stats_retrieval(stats, auth, db, scope, collection)
 
     # 2. Add two new collections on CB server, rename SGW collection to map to it, adding new collection and enable import + sync functions
     second_collection = "second_collection" + random_suffix
@@ -631,7 +631,7 @@ def get_collection_stats(db, scope, collection, stats):
         return str(k)
 
 
-def verify_stats_retrieval(stats, auth):
+def verify_stats_retrieval(stats, auth, db, scope, collection):
     """
     Helper function for test_collection_stats
     Verify stats can be procured as RBAC roles sgw_dev_ops, external_stats_reader and full admin
