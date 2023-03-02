@@ -53,9 +53,9 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
 
         cb_server.create_bucket(cluster_config, bucket, 100)
         cb_server.create_bucket(cluster_config, bucket_2, 100)
-        sgs["sg1"] = {"sg_obj": cbs_cluster.sync_gateways[0], "bucket": bucket, "db": "db1" + random_suffix, "user": "sg1_user" + random_suffix}
-        sgs["sg2"] = {"sg_obj": cbs_cluster.sync_gateways[1], "bucket": bucket_2, "db": "db2" + random_suffix, "user": "sg2_user" + random_suffix}
-        import_function = "function filter(doc) { return doc.id == \"should_be_in_sg2_0\"}"
+        sgs["sg1"] = {"sg_obj": cbs_cluster.sync_gateways[0], "bucket": bucket, "db": "db" + random_suffix, "user": "sg1_user" + random_suffix}
+        sgs["sg2"] = {"sg_obj": cbs_cluster.sync_gateways[1], "bucket": bucket_2, "db": "db" + random_suffix, "user": "sg2_user" + random_suffix}
+        import_function = "function filter(doc) { return doc._id == \"should_be_in_sg2_0\" }"
 
         for key in sgs:
             server_bucket = sgs[key]["bucket"]
@@ -63,7 +63,7 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
             db = sgs[key]["db"]
             data = {"bucket": server_bucket, "scopes": {scope: {"collections": {collection: {"import_filter": import_function}}}}, "num_index_replicas": 0}
             # data = {"bucket": server_bucket, "scopes": {scope: {"collections": {collection: {"import_filter": "function filter(doc) { return doc.key.includes(\"should_be_in_sg2\") }"}}}}, "num_index_replicas": 0}
-            # data = {"bucket": server_bucket, "scopes": {scope: {"collections": {collection: {}}}}, "num_index_replicas": 0}
+           # data = {"bucket": server_bucket, "scopes": {scope: {"collections": {collection: {}}}}, "num_index_replicas": 0}
             # Scope creation on the Couchbase server
             does_scope_exist = cb_server.does_scope_exist(server_bucket, scope)
             if does_scope_exist is False:
@@ -157,7 +157,7 @@ def test_scopes_and_collections_import_filters(scopes_collections_tests_fixture,
         remote_user=sg1["user"],
         remote_password=password,
         direction="pull",
-        continuous=True,
+        continuous=False,
         collections_enabled=True
     )
     #if auth:
