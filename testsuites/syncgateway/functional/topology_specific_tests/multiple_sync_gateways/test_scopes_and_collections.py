@@ -68,9 +68,9 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
             server_bucket = sgs[key]["bucket"]
             user = sgs[key]["user"]
             db = sgs[key]["db"]
-            data = {"bucket": server_bucket, "scopes": {scope: {"collections": {collection: {"import_filter": import_function}}}}, "num_index_replicas": 0}
+            #data = {"bucket": server_bucket, "scopes": {scope: {"collections": {collection: {"import_filter": import_function}}}}, "num_index_replicas": 0}
             # data = {"bucket": server_bucket, "scopes": {scope: {"collections": {collection: {"import_filter": "function filter(doc) { return doc.key.includes(\"should_be_in_sg2\") }"}}}}, "num_index_replicas": 0}
-           # data = {"bucket": server_bucket, "scopes": {scope: {"collections": {collection: {}}}}, "num_index_replicas": 0}
+            data = {"bucket": server_bucket, "scopes": {scope: {"collections": {collection: {}}}}, "num_index_replicas": 0}
             # Scope creation on the Couchbase server
             does_scope_exist = cb_server.does_scope_exist(server_bucket, scope)
             if does_scope_exist is False:
@@ -88,7 +88,7 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
             # Create a user
             pre_test_user_exists = admin_client.does_user_exist(db, user)
             if pre_test_user_exists is False:
-                sg_client.create_user(admin_client.admin_url, db, user, sg_password, auth=admin_auth)
+                sg_client.create_user(admin_client.admin_url, db, user, sg_password, channels=channels, auth=admin_auth)
 
         yield sg_client, scope, collection
     except Exception as e:
