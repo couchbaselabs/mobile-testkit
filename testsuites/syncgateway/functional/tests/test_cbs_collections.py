@@ -506,6 +506,7 @@ def test_import_filters(scopes_collections_tests_fixture):
 
 @pytest.mark.syncgateway
 @pytest.mark.collections
+@pytest.mark.adminauth
 def test_collection_stats(scopes_collections_tests_fixture):
     """
     1. Verify that global stats and scopes/collection stats can be procured via RBAC users
