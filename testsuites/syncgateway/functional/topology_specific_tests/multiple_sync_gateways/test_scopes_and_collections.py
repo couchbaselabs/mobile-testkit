@@ -190,7 +190,7 @@ def test_scopes_and_collections_import_filters(scopes_collections_tests_fixture,
     #)
     #if auth:
      #   sg1.admin.auth = HTTPBasicAuth(auth[0], auth[1])
-    admin_client_2.wait_until_sgw_replication_done(sg2["db"], replicator2_id, read_flag=True, max_times=3000)
+    admin_client_2.wait_until_sgw_replication_done(sg1["db"], replicator2_id, read_flag=True, max_times=3000)
     user_2_doc = sg_client.get_doc(sg2_url, sg2["db"], uploaded_should_be_docs[0]["id"], rev=uploaded_should_be_docs[0]["rev"], auth=user2_auth, scope=scope, collection=collection)
     print("********************************************************************" + str(user_2_doc))
    
