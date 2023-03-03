@@ -85,7 +85,6 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
             if pre_test_db_exists is False:
                 admin_client.create_db(db, data)
 
-            print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^" + user + "   " + sg_password)
             # Create a user
             pre_test_user_exists = admin_client.does_user_exist(db, user)
             if pre_test_user_exists is False:
@@ -143,7 +142,6 @@ def test_scopes_and_collections_import_filters(scopes_collections_tests_fixture,
     # create users, user sessions
     password = "password"
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
-    print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$" + str(sgs["sg1"]["user"]))
     user1_auth = sgs["sg1"]["user"], password
     user2_auth = sgs["sg2"]["user"], password
     # 1. Update the db config's import filter.
@@ -155,31 +153,45 @@ def test_scopes_and_collections_import_filters(scopes_collections_tests_fixture,
     #sg_client.create_user(admin_client_2.admin_url, sg2["db"], "sg2_user", "password", collection_access=collection, auth=admin_auth)
 
     # 1. on passive SGW, create docs: doc_A belongs to channel A only, doc_AnB belongs to channel A and channel B
-    uploaded_docs = sg_client.add_docs(url=sg1_url, db=sg1["db"], number=3, id_prefix="should_be_in_sg2", channels=["A"], auth=user1_auth, scope=scope, collection=collection)
-    sg_client.add_docs(url=sg1_url, db=sg1["db"], number=3, id_prefix="should_not_be_in_sg2", channels=["A", "B"], auth=user1_auth, scope=scope, collection=collection)
+    uploaded_should_be_docs = sg_client.add_docs(url=sg1_url, db=sg1["db"], number=3, id_prefix="should_be_in_sg2", channels=["A"], auth=user1_auth, scope=scope, collection=collection)
+    uploaded_should_not_be_docs = sg_client.add_docs(url=sg1_url, db=sg1["db"], number=3, id_prefix="should_not_be_in_sg2", channels=["A", "B"], auth=user1_auth, scope=scope, collection=collection)
     # sg2_docs = sg_client.get_all_docs(url=sg2.url, db=db2, auth=auth_session2, include_docs=True)
     # sg2_doc_ids = [doc["id"] for doc in sg2_docs["rows"]]
     #user_2_docs = sg_client.get_all_docs(url=sg1_url, db=sg1["db"], scope=scope, collection=collection, auth=user1_auth, include_docs=True)
     user_2_docs = sg_client.get_all_docs(url=sg1_url, db=sg1["db"], auth=user1_auth, scope=scope, collection=collection, include_docs=True)
     print("=================================================================" + str(user_2_docs))
+
+    with pytest.raises(Exception) as e:
+        user_2_doc = sg_client.get_doc(sg2_url, sg2["db"], uploaded_should_be_docs[0]["id"], rev=uploaded_should_be_docs[0]["rev"], auth=user2_auth, scope=scope, collection=collection)
+    e.match("Not Found")
+
     #doc = sg_client.get_doc(sg2_url, sg2["db"],  uploaded_docs[0]["id"], rev=uploaded_docs[0]["rev"], auth=user2_auth, scope=scope, collection=collection)
     
     # 2. start a pull continous replication sg1 <- sg2 with auto_purge_setting parameter
-    replicator2_id = sg2["sg_obj"].start_replication2(
-        local_db=sg2["db"],
-        remote_url=sg1["sg_obj"].url,
-        remote_db=sg1["db"],
-        remote_user=sg1["user"],
+    replicator2_id = sg1["sg_obj"].start_replication2(
+        local_db=sg1["db"],
+        remote_url=sg2["sg_obj"].url,
+        remote_db=sg2["db"],
+        remote_user=sg2["user"],
         remote_password=password,
-        direction="pull",
+        direction="push",
         continuous=False,
         collections_enabled=True
     )
+    #replicator2_id = sg2["sg_obj"].start_replication2(
+     #   local_db=sg2["db"],
+      #  remote_url=sg1["sg_obj"].url,
+      #  remote_db=sg1["db"],
+      #  remote_user=sg1["user"],
+      #  remote_password=password,
+      #  direction="pull",
+      #  continuous=False,
+      #  collections_enabled=True
+    #)
     #if auth:
      #   sg1.admin.auth = HTTPBasicAuth(auth[0], auth[1])
     admin_client_2.wait_until_sgw_replication_done(sg2["db"], replicator2_id, read_flag=True, max_times=3000)
-    user_1_doc = sg_client.get_doc(sg1_url, sg1["db"],  uploaded_docs[0]["id"], rev=uploaded_docs[0]["rev"], auth=user1_auth, scope=scope, collection=collection)
-    print("=================================================================" + str(user_1_doc))
-    user_2_doc = sg_client.get_doc(sg2_url, sg2["db"],  uploaded_docs[0]["id"], rev=uploaded_docs[0]["rev"], auth=user2_auth, scope=scope, collection=collection)
+    user_2_doc = sg_client.get_doc(sg2_url, sg2["db"], uploaded_should_be_docs[0]["id"], rev=uploaded_should_be_docs[0]["rev"], auth=user2_auth, scope=scope, collection=collection)
+    print("********************************************************************" + str(user_2_doc))
    
 
