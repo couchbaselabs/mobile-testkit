@@ -144,8 +144,8 @@ def test_scopes_and_collections_import_filters(scopes_collections_tests_fixture,
     password = "password"
     auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$" + str(sgs["sg1"]["user"]))
-    user1_auth = sgs["sg1"]["user"], "password"
-    user2_auth = sgs["sg2"]["user"], "password"
+    user1_auth = sgs["sg1"]["user"], password
+    user2_auth = sgs["sg2"]["user"], password
     # 1. Update the db config's import filter.
     #import_function = "function filter(doc) { return doc.id == \"should_be_in_sg2_0\"}"
     #data = {"bucket": bucket, "scopes": {scope: {"collections": {collection: {"import_filter": import_function}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
@@ -178,6 +178,8 @@ def test_scopes_and_collections_import_filters(scopes_collections_tests_fixture,
     #if auth:
      #   sg1.admin.auth = HTTPBasicAuth(auth[0], auth[1])
     admin_client_2.wait_until_sgw_replication_done(sg2["db"], replicator2_id, read_flag=True, max_times=3000)
+    user_1_doc = sg_client.get_doc(sg1_url, sg1["db"],  uploaded_docs[0]["id"], rev=uploaded_docs[0]["rev"], auth=user1_auth, scope=scope, collection=collection)
+    print("=================================================================" + str(user_1_doc))
     user_2_doc = sg_client.get_doc(sg2_url, sg2["db"],  uploaded_docs[0]["id"], rev=uploaded_docs[0]["rev"], auth=user2_auth, scope=scope, collection=collection)
-    print("=================================================================" + str(user_2_doc))
+   
 
