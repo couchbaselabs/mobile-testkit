@@ -11,7 +11,7 @@ from keywords import couchbaseserver
 
 # test file shared variables
 bucket = "data-bucket"
-bucket_2 = "data-bucket-2"
+bucket2 = "data-bucket-2"
 sg_password = "password"
 cb_server = sg_username = channels = client_auth = None
 sgs = {}
@@ -59,23 +59,21 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
             cb_server.delete_bucket(bucket)
 
         cb_server.create_bucket(cluster_config, bucket, 100)
-        cb_server.create_bucket(cluster_config, bucket_2, 100)
+        cb_server.create_bucket(cluster_config, bucket2, 100)
         sgs["sg1"] = {"sg_obj": cbs_cluster.sync_gateways[0], "bucket": bucket, "db": "db1" + random_suffix, "user": "sg1_user" + random_suffix}
-        sgs["sg2"] = {"sg_obj": cbs_cluster.sync_gateways[1], "bucket": bucket_2, "db": "db2" + random_suffix, "user": "sg2_user" + random_suffix}
-        import_function = "function filter(doc) { return doc._id == \"should_be_in_sg2_0\" }"
+        sgs["sg2"] = {"sg_obj": cbs_cluster.sync_gateways[1], "bucket": bucket2, "db": "db2" + random_suffix, "user": "sg2_user" + random_suffix}
 
         for key in sgs:
             server_bucket = sgs[key]["bucket"]
             user = sgs[key]["user"]
             db = sgs[key]["db"]
-            #data = {"bucket": server_bucket, "scopes": {scope: {"collections": {collection: {"import_filter": import_function}}}}, "num_index_replicas": 0}
-            # data = {"bucket": server_bucket, "scopes": {scope: {"collections": {collection: {"import_filter": "function filter(doc) { return doc.key.includes(\"should_be_in_sg2\") }"}}}}, "num_index_replicas": 0}
             data = {"bucket": server_bucket, "scopes": {scope: {"collections": {collection: {}}}}, "num_index_replicas": 0}
             # Scope creation on the Couchbase server
             does_scope_exist = cb_server.does_scope_exist(server_bucket, scope)
             if does_scope_exist is False:
                 cb_server.create_scope(server_bucket, scope)
             cb_server.create_collection(server_bucket, scope, collection)
+            cb_server.create_collection(server_bucket, scope, collection2)
             # SGW database creation
             admin_client = Admin(sgs[key]["sg_obj"])
             pre_test_db_exists = admin_client.does_db_exist(db)
@@ -90,13 +88,13 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
             if pre_test_user_exists is False:
                 sg_client.create_user(admin_client.admin_url, db, user, sg_password, channels=channels, auth=admin_auth)
 
-        yield sg_client, scope, collection
+        yield sg_client, scope, collection, collection2
     except Exception as e:
         raise e
     finally:
         cb_server.delete_scope_if_exists(bucket, scope)
         cb_server.delete_bucket(bucket)
-        cb_server.delete_bucket(bucket_2)
+        cb_server.delete_bucket(bucket2)
         if pre_test_is_bucket_exist:
             cb_server.create_bucket(cluster_config, bucket)
 
@@ -112,7 +110,11 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
 
 @pytest.mark.syncgateway
 @pytest.mark.collections
-def test_scopes_and_collections_import_filters(scopes_collections_tests_fixture, params_from_base_test_setup):
+@pytest.mark.parametrize("collections_num", [
+    pytest.param(1),
+    pytest.param(2)
+])
+def test_scopes_and_collections_import_filters(scopes_collections_tests_fixture, params_from_base_test_setup, collections_num):
     """
         @summary:
         Channel Access Revocation Test Plan (ISGR) #1
@@ -126,12 +128,13 @@ def test_scopes_and_collections_import_filters(scopes_collections_tests_fixture,
     """
     sg1 = sgs["sg1"]
     sg2 = sgs["sg2"]
-    admin_client_1 = Admin(sgs["sg1"]["sg_obj"])
-    admin_client_2 = Admin(sgs["sg2"]["sg_obj"])
+    admin_client_1 = Admin(sg1["sg_obj"])
+    admin_client_2 = Admin(sg2["sg_obj"])
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
-    need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
 
-    sg_client, scope, collection = scopes_collections_tests_fixture
+    not_filtered_prefix = "should_be_in_sg2"
+    filtered_prefix = "should_not_be_in_sg2"
+    sg_client, scope, collection, collection2 = scopes_collections_tests_fixture
 
     # check sync gateway version
     if sync_gateway_version < "3.0.0":
@@ -141,33 +144,38 @@ def test_scopes_and_collections_import_filters(scopes_collections_tests_fixture,
 
     # create users, user sessions
     password = "password"
-    auth = need_sgw_admin_auth and (RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']) or None
     user1_auth = sgs["sg1"]["user"], password
     user2_auth = sgs["sg2"]["user"], password
-    # 1. Update the db config's import filter.
-    #import_function = "function filter(doc) { return doc.id == \"should_be_in_sg2_0\"}"
-    #data = {"bucket": bucket, "scopes": {scope: {"collections": {collection: {"import_filter": import_function}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
-    #admin_client_1.post_db_config(sg1["db"], data)
-    #admin_client_2.post_db_config(sg2["db"], data)
-   # sg_client.create_user(admin_client_1.admin_url, sg1["db"], "sg1_user", "password", collection_access=collection, auth=admin_auth)
-    #sg_client.create_user(admin_client_2.admin_url, sg2["db"], "sg2_user", "password", collection_access=collection, auth=admin_auth)
 
-    # 1. on passive SGW, create docs: doc_A belongs to channel A only, doc_AnB belongs to channel A and channel B
-    uploaded_should_be_docs = sg_client.add_docs(url=sg1_url, db=sg1["db"], number=3, id_prefix="should_be_in_sg2", channels=["A"], auth=user1_auth, scope=scope, collection=collection)
-    uploaded_should_not_be_docs = sg_client.add_docs(url=sg1_url, db=sg1["db"], number=3, id_prefix="should_not_be_in_sg2", channels=["A", "B"], auth=user1_auth, scope=scope, collection=collection)
-    # sg2_docs = sg_client.get_all_docs(url=sg2.url, db=db2, auth=auth_session2, include_docs=True)
-    # sg2_doc_ids = [doc["id"] for doc in sg2_docs["rows"]]
-    #user_2_docs = sg_client.get_all_docs(url=sg1_url, db=sg1["db"], scope=scope, collection=collection, auth=user1_auth, include_docs=True)
-    user_2_docs = sg_client.get_all_docs(url=sg1_url, db=sg1["db"], auth=user1_auth, scope=scope, collection=collection, include_docs=True)
-    print("=================================================================" + str(user_2_docs))
+    # 1. Update the db config's import filter.
+    import_function = "function filter(doc) { return doc._id == \"" + not_filtered_prefix + "_0\" }"
+    data2 = {"bucket": bucket2, "scopes": {scope: {"collections": {collection: {"import_filter": import_function}}}}, "num_index_replicas": 0}
+    if (collections_num == 2):
+        data2 = {"bucket": bucket2, "scopes": {scope: {"collections": {collection: {"import_filter": import_function}, collection2: {}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
+        data1 = {"bucket": bucket, "scopes": {scope: {"collections": {collection: {}, collection2: {}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
+        admin_client_1.post_db_config(sg1["db"], data1)
+
+    admin_client_2.post_db_config(sg2["db"], data2)
+
+    # 2. On pushing SGW, create docs: doc_A belongs to channel A only, doc_AnB belongs to channel A and channel B
+    uploaded_should_be_docs = sg_client.add_docs(url=sg1_url, db=sg1["db"], number=3, id_prefix=not_filtered_prefix, channels=["A"], auth=user1_auth, scope=scope, collection=collection)
+    uploaded_should_not_be_docs = sg_client.add_docs(url=sg1_url, db=sg1["db"], number=3, id_prefix=filtered_prefix, channels=["A", "B"], auth=user1_auth, scope=scope, collection=collection)
 
     with pytest.raises(Exception) as e:
-        user_2_doc = sg_client.get_doc(sg2_url, sg2["db"], uploaded_should_be_docs[0]["id"], rev=uploaded_should_be_docs[0]["rev"], auth=user2_auth, scope=scope, collection=collection)
+        sg_client.get_doc(sg2_url, sg2["db"], uploaded_should_be_docs[0]["id"], rev=uploaded_should_be_docs[0]["rev"], auth=user2_auth, scope=scope, collection=collection)
     e.match("Not Found")
 
-    #doc = sg_client.get_doc(sg2_url, sg2["db"],  uploaded_docs[0]["id"], rev=uploaded_docs[0]["rev"], auth=user2_auth, scope=scope, collection=collection)
-    
-    # 2. start a pull continous replication sg1 <- sg2 with auto_purge_setting parameter
+    #  2. start a pull continous replication sg1 <- sg2 with auto_purge_setting parameter
+    # replicator2_id = sg2["sg_obj"].start_replication2(
+    #    local_db=sg2["db"],
+    #    remote_url=sg1["sg_obj"].url,
+    #    remote_db=sg1["db"],
+    #    remote_user=sg1["user"],
+    #    remote_password=password,
+    #    direction="pull",
+    #    continuous=False,
+    #    collections_enabled=True
+    #  )
     replicator2_id = sg1["sg_obj"].start_replication2(
         local_db=sg1["db"],
         remote_url=sg2["sg_obj"].url,
@@ -178,20 +186,11 @@ def test_scopes_and_collections_import_filters(scopes_collections_tests_fixture,
         continuous=False,
         collections_enabled=True
     )
-    #replicator2_id = sg2["sg_obj"].start_replication2(
-     #   local_db=sg2["db"],
-      #  remote_url=sg1["sg_obj"].url,
-      #  remote_db=sg1["db"],
-      #  remote_user=sg1["user"],
-      #  remote_password=password,
-      #  direction="pull",
-      #  continuous=False,
-      #  collections_enabled=True
-    #)
-    #if auth:
-     #   sg1.admin.auth = HTTPBasicAuth(auth[0], auth[1])
     admin_client_2.wait_until_sgw_replication_done(sg1["db"], replicator2_id, read_flag=True, max_times=3000)
-    user_2_doc = sg_client.get_doc(sg2_url, sg2["db"], uploaded_should_be_docs[0]["id"], rev=uploaded_should_be_docs[0]["rev"], auth=user2_auth, scope=scope, collection=collection)
-    print("********************************************************************" + str(user_2_doc))
-   
 
+    # Check that the document was replicated to sgw2
+    sg_client.get_doc(sg2_url, sg2["db"], uploaded_should_be_docs[0]["id"], rev=uploaded_should_be_docs[0]["rev"], auth=user2_auth, scope=scope, collection=collection)
+
+    with pytest.raises(Exception) as e:
+        sg_client.get_doc(sg2_url, sg2["db"], uploaded_should_not_be_docs[0]["id"], rev=uploaded_should_not_be_docs[0]["rev"], auth=user2_auth, scope=scope, collection=collection)
+    e.match("Not Found")
