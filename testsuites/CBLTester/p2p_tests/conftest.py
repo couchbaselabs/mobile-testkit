@@ -10,6 +10,7 @@ from CBLClient.Utils import Utils
 from keywords.constants import RESULTS_DIR
 from CBLClient.PeerToPeer import PeerToPeer
 from CBLClient.FileLogging import FileLogging
+import random
 
 
 def pytest_addoption(parser):
@@ -286,7 +287,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
                                  max_size=1000 * 512, plain_text=True)
                 log_info("Log files available at - {}".format(cbllog.get_directory()))
 
-            db_name = "{}_{}_{}".format(create_db_per_test, str(time.time()), i + 1)
+            db_name = "{}_{}_{}".format(create_db_per_test, random.randint(1,100), i + 1)
             log_info("db name for {} is {}".format(base_url, db_name))
             db_name_list.append(db_name)
             db = Database(base_url)
