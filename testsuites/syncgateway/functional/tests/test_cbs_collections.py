@@ -199,9 +199,15 @@ def test_collection_channels(scopes_collections_tests_fixture):
     if is_using_views:
         pytest.skip("""It is not necessary to run scopes and collections tests with views.
                 When it is enabled, there is a problem that affects the rest of the tests suite.""")
-
     # setup
     sg_client, sg_admin_url, db, scope, collection = scopes_collections_tests_fixture
+
+    # Change the default sync function to be able to access the sahred channel, ["!"]
+    sync_function = "function(doc){channel(doc.channels);}"
+    data = {"bucket": bucket, "scopes": {scope: {"collections": {collection: {"sync": sync_function}}}}, "num_index_replicas": 0}
+    admin_client.post_db_config(db, data)
+    admin_client.wait_for_db_online(db, 60)
+
     random_str = str(uuid.uuid4())[:6]
     test_user_1 = "cu1_" + random_str
     test_user_2 = "cu2_" + random_str
