@@ -111,58 +111,45 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
 
 @pytest.mark.syncgateway
 @pytest.mark.collections
-@pytest.mark.parametrize("collections_num", [
-    pytest.param(1)
-])
-def test_scopes_and_collections_import_filters(scopes_collections_tests_fixture, params_from_base_test_setup, collections_num):
+def test_scopes_and_collections_replication(scopes_collections_tests_fixture, params_from_base_test_setup):
     """
         @summary:
-        Channel Access Revocation Test Plan (ISGR) #1
-        1. on passive SGW, create docs:
-                doc_A belongs to channel A only,
-                doc_AnB belongs to channel A and channel B
-        2. start a pull continous replication on active SGW with auto_purge_setting parameter
-        3. verify active SGW have pulled the doc_A and doc_AnB
-        4. revoke the user access to channel A
-        5. verify expected doc auto purge result on active SGW
+        # 1. Create users, user sessions
+        # 2. Upload documents to the pushing SGW and make sure that there are no document on the passive SGW
+        # 3. Start a pull continous replication sg1 <- sg2
+        # 4. Upload new documents to sgw1
+        # 5. Add another collection
+        # 6. Start a push replication
+         # 7. Check that the new documents were replicated to sgw2
     """
     sg1 = sgs["sg1"]
     sg2 = sgs["sg2"]
     admin_client_1 = Admin(sg1["sg_obj"])
     admin_client_2 = Admin(sg2["sg_obj"])
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    num_of_docs = 3
 
-    not_filtered_prefix = "should_be_in_sg2"
+    pull_replication_prefix = "should_be_in_sg2_after_pull"
+    push_replication_prefix = "should_be_in_sg2_after_push"
     sg_client, scope, collection, collection2 = scopes_collections_tests_fixture
 
-    # check sync gateway version
-    if sync_gateway_version < "3.0.0":
-        pytest.skip('This test cannot run with Sync Gateway version below 3.0')
+    if sync_gateway_version < "3.1.0":
+        pytest.skip('This test cannot run with Sync Gateway version below 3.1.0')
 
     sg_client = MobileRestClient()
 
-    # create users, user sessions
+    # 1. Create users, user sessions
     password = "password"
     user1_auth = sgs["sg1"]["user"], password
     user2_auth = sgs["sg2"]["user"], password
 
-    # 1. Update the db config's import filter.
-    if (collections_num == 2):
-        data1 = {"bucket": bucket, "scopes": {scope: {"collections": {collection: {"sync": sync_function}, collection2: {"sync": sync_function}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
-        data2 = {"bucket": bucket2, "scopes": {scope: {"collections": {collection: {"sync": sync_function}, collection2: {"sync": sync_function}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
-        admin_client_1.post_db_config(sg1["db"], data1)
-        admin_client_2.post_db_config(sg2["db"], data2)
-
-    # 2. On pushing SGW, create docs: doc_A belongs to channel A only, doc_AnB belongs to channel A and channel B
-    uploaded_should_be_docs = sg_client.add_docs(url=sg1_url, db=sg1["db"], number=3, id_prefix=not_filtered_prefix, channels=["A"], auth=user1_auth, scope=scope, collection=collection)
-    # user_1_docs = sg_client.get_all_docs(url=sg1_url, db=sg1["db"], auth=user1_auth, include_docs=True, scope=scope, collection=collection)
-    # doc1= sg_client.get_doc(sg1_url, sg1["db"], uploaded_should_be_docs[0]["id"], rev=uploaded_should_be_docs[0]["rev"], auth=user1_auth, scope=scope, collection=collection)
-
+    # 2. Upload documents to the pushing SGW and make sure that there are no document on the passive SGW
+    uploaded_for_pull = sg_client.add_docs(url=sg1_url, db=sg1["db"], number=num_of_docs, id_prefix=pull_replication_prefix, channels=["A"], auth=user1_auth, scope=scope, collection=collection)
     with pytest.raises(Exception) as e:
-        sg_client.get_doc(sg2_url, sg2["db"], uploaded_should_be_docs[0]["id"], rev=uploaded_should_be_docs[0]["rev"], auth=user2_auth, scope=scope, collection=collection)
+        sg_client.get_doc(sg2_url, sg2["db"], uploaded_for_pull[0]["id"], rev=uploaded_for_pull[0]["rev"], auth=user2_auth, scope=scope, collection=collection)
     e.match("Not Found")
 
-    #  2. start a pull continous replication sg1 <- sg2 with auto_purge_setting parameter
+    # 3. start a pull continous replication sg1 <- sg2
     replicator2_id = sg2["sg_obj"].start_replication2(
         local_db=sg2["db"],
         remote_url=sg1["sg_obj"].url,
@@ -173,17 +160,35 @@ def test_scopes_and_collections_import_filters(scopes_collections_tests_fixture,
         continuous=False,
         collections_enabled=True
     )
-    #replicator2_id = sg1["sg_obj"].start_replication2(
-    #    local_db=sg1["db"],
-    #    remote_url=sg2["sg_obj"].url,
-    #    remote_db=sg2["db"],
-    #    remote_user=sg2["user"],
-    #    remote_password=password,
-    #    direction="push",
-    #    continuous=False,
-    #    collections_enabled=True
-   # )
     admin_client_2.wait_until_sgw_replication_done(sg2["db"], replicator2_id, read_flag=True, max_times=3000)
 
-    # Check that the document was replicated to sgw2
-    sg_client.get_doc(sg2_url, sg2["db"], uploaded_should_be_docs[0]["id"], rev=uploaded_should_be_docs[0]["rev"], auth=user2_auth, scope=scope, collection=collection)
+    # 3. Check that the documents were replicated to sgw2
+    for i in range(0, num_of_docs - 1):
+        sg_client.get_doc(sg2_url, sg2["db"], uploaded_for_pull[i]["id"], rev=uploaded_for_pull[i]["rev"], auth=user2_auth, scope=scope, collection=collection)
+
+    # 4. Upload new documents to sgw1
+    uploaded_for_push = sg_client.add_docs(url=sg1_url, db=sg1["db"], number=num_of_docs, id_prefix=push_replication_prefix, channels=["A"], auth=user1_auth, scope=scope, collection=collection)
+
+    # 5. Add another collection
+    data1 = {"bucket": bucket, "scopes": {scope: {"collections": {collection: {"sync": sync_function}, collection2: {"sync": sync_function}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
+    data2 = {"bucket": bucket2, "scopes": {scope: {"collections": {collection: {"sync": sync_function}, collection2: {"sync": sync_function}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
+    admin_client_1.post_db_config(sg1["db"], data1)
+    admin_client_2.post_db_config(sg2["db"], data2)
+
+    # 6. Start a push replication
+    replicator2_id = sg1["sg_obj"].start_replication2(
+        local_db=sg1["db"],
+        remote_url=sg2["sg_obj"].url,
+        remote_db=sg2["db"],
+        remote_user=sg2["user"],
+        remote_password=password,
+        direction="push",
+        continuous=False,
+        collections_enabled=True
+    )
+
+    # 7. Check that the new documents were replicated to sgw2
+    for i in range(0, num_of_docs - 1):
+        with pytest.raises(Exception) as e:
+            sg_client.get_doc(sg2_url, sg2["db"], uploaded_for_push[i]["id"], rev=uploaded_for_push[i]["rev"], auth=user2_auth, scope=scope, collection=collection)
+        e.match("Not Found")
