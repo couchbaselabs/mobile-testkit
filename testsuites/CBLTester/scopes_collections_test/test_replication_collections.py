@@ -12,6 +12,7 @@ from keywords.MobileRestClient import MobileRestClient
 from keywords.constants import RBAC_FULL_ADMIN
 
 bucket = "data-bucket"
+sync_function = "function(doc){channel(doc.channels);}"
 
 
 @pytest.fixture
@@ -34,7 +35,7 @@ def scope_collection_test_fixture(params_from_base_test_setup):
     need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
     sg_username = "scope_collection_user" + random_suffix
     sg_password = "password"
-    data = {"bucket": bucket, "scopes": {scope: {"collections": {collection: {}}}}, "num_index_replicas": 0}
+    data = {"bucket": bucket, "scopes": {scope: {"collections": {collection: {"sync": sync_function}}}}, "num_index_replicas": 0}
     sg_db = "db"
 
     sg_client = sg_url = sg_admin_url = None
