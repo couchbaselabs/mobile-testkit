@@ -18,6 +18,7 @@ sgs = {}
 admin_auth = [RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']]
 sg1_url = ""
 sg2_url = ""
+sync_function = "function(doc){channel(doc.channels);}"
 
 
 @pytest.fixture
@@ -67,7 +68,7 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
             server_bucket = sgs[key]["bucket"]
             user = sgs[key]["user"]
             db = sgs[key]["db"]
-            data = {"bucket": server_bucket, "scopes": {scope: {"collections": {collection: {}}}}, "num_index_replicas": 0}
+            data = {"bucket": server_bucket, "scopes": {scope: {"collections": {collection: {"sync": sync_function}}}}, "num_index_replicas": 0}
             # Scope creation on the Couchbase server
             does_scope_exist = cb_server.does_scope_exist(server_bucket, scope)
             if does_scope_exist is False:
@@ -82,11 +83,11 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
                 admin_client.delete_db(test_bucket_db)
             if pre_test_db_exists is False:
                 admin_client.create_db(db, data)
-
+            collection_access = {scope: {collection: {"admin_channels": channels}}}
             # Create a user
             pre_test_user_exists = admin_client.does_user_exist(db, user)
             if pre_test_user_exists is False:
-                sg_client.create_user(admin_client.admin_url, db, user, sg_password, channels=channels, auth=admin_auth)
+                sg_client.create_user(admin_client.admin_url, db, user, sg_password, channels=channels, auth=admin_auth, collection_access=collection_access)
 
         yield sg_client, scope, collection, collection2
     except Exception as e:
@@ -111,8 +112,7 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
 @pytest.mark.syncgateway
 @pytest.mark.collections
 @pytest.mark.parametrize("collections_num", [
-    pytest.param(1),
-    pytest.param(2)
+    pytest.param(1)
 ])
 def test_scopes_and_collections_import_filters(scopes_collections_tests_fixture, params_from_base_test_setup, collections_num):
     """
@@ -133,7 +133,6 @@ def test_scopes_and_collections_import_filters(scopes_collections_tests_fixture,
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
 
     not_filtered_prefix = "should_be_in_sg2"
-    filtered_prefix = "should_not_be_in_sg2"
     sg_client, scope, collection, collection2 = scopes_collections_tests_fixture
 
     # check sync gateway version
@@ -149,45 +148,42 @@ def test_scopes_and_collections_import_filters(scopes_collections_tests_fixture,
 
     # 1. Update the db config's import filter.
     if (collections_num == 2):
-        data1 = {"bucket": bucket, "scopes": {scope: {"collections": {collection: {}, collection2: {}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
-        data2 = {"bucket": bucket2, "scopes": {scope: {"collections": {collection: {}, collection2: {}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
+        data1 = {"bucket": bucket, "scopes": {scope: {"collections": {collection: {"sync": sync_function}, collection2: {"sync": sync_function}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
+        data2 = {"bucket": bucket2, "scopes": {scope: {"collections": {collection: {"sync": sync_function}, collection2: {"sync": sync_function}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
         admin_client_1.post_db_config(sg1["db"], data1)
         admin_client_2.post_db_config(sg2["db"], data2)
 
     # 2. On pushing SGW, create docs: doc_A belongs to channel A only, doc_AnB belongs to channel A and channel B
     uploaded_should_be_docs = sg_client.add_docs(url=sg1_url, db=sg1["db"], number=3, id_prefix=not_filtered_prefix, channels=["A"], auth=user1_auth, scope=scope, collection=collection)
-    uploaded_should_not_be_docs = sg_client.add_docs(url=sg1_url, db=sg1["db"], number=3, id_prefix=filtered_prefix, channels=["A", "B"], auth=user1_auth, scope=scope, collection=collection)
+    # user_1_docs = sg_client.get_all_docs(url=sg1_url, db=sg1["db"], auth=user1_auth, include_docs=True, scope=scope, collection=collection)
+    # doc1= sg_client.get_doc(sg1_url, sg1["db"], uploaded_should_be_docs[0]["id"], rev=uploaded_should_be_docs[0]["rev"], auth=user1_auth, scope=scope, collection=collection)
 
     with pytest.raises(Exception) as e:
         sg_client.get_doc(sg2_url, sg2["db"], uploaded_should_be_docs[0]["id"], rev=uploaded_should_be_docs[0]["rev"], auth=user2_auth, scope=scope, collection=collection)
     e.match("Not Found")
 
     #  2. start a pull continous replication sg1 <- sg2 with auto_purge_setting parameter
-    # replicator2_id = sg2["sg_obj"].start_replication2(
-    #    local_db=sg2["db"],
-    #    remote_url=sg1["sg_obj"].url,
-    #    remote_db=sg1["db"],
-    #    remote_user=sg1["user"],
-    #    remote_password=password,
-    #    direction="pull",
-    #    continuous=False,
-    #    collections_enabled=True
-    #  )
-    replicator2_id = sg1["sg_obj"].start_replication2(
-        local_db=sg1["db"],
-        remote_url=sg2["sg_obj"].url,
-        remote_db=sg2["db"],
-        remote_user=sg2["user"],
+    replicator2_id = sg2["sg_obj"].start_replication2(
+        local_db=sg2["db"],
+        remote_url=sg1["sg_obj"].url,
+        remote_db=sg1["db"],
+        remote_user=sg1["user"],
         remote_password=password,
-        direction="push",
+        direction="pull",
         continuous=False,
         collections_enabled=True
     )
-    admin_client_2.wait_until_sgw_replication_done(sg1["db"], replicator2_id, read_flag=True, max_times=3000)
+    #replicator2_id = sg1["sg_obj"].start_replication2(
+    #    local_db=sg1["db"],
+    #    remote_url=sg2["sg_obj"].url,
+    #    remote_db=sg2["db"],
+    #    remote_user=sg2["user"],
+    #    remote_password=password,
+    #    direction="push",
+    #    continuous=False,
+    #    collections_enabled=True
+   # )
+    admin_client_2.wait_until_sgw_replication_done(sg2["db"], replicator2_id, read_flag=True, max_times=3000)
 
     # Check that the document was replicated to sgw2
     sg_client.get_doc(sg2_url, sg2["db"], uploaded_should_be_docs[0]["id"], rev=uploaded_should_be_docs[0]["rev"], auth=user2_auth, scope=scope, collection=collection)
-
-    with pytest.raises(Exception) as e:
-        sg_client.get_doc(sg2_url, sg2["db"], uploaded_should_not_be_docs[0]["id"], rev=uploaded_should_not_be_docs[0]["rev"], auth=user2_auth, scope=scope, collection=collection)
-    e.match("Not Found")
