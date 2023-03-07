@@ -214,7 +214,7 @@ def test_sync_2_collection_src_to_dest_having_3_collections(scope_collection_tes
     collections_configuration = []
     collections_configuration.append(replicator.collectionConfigure(channels=channels, collection=created_collection))
     collections_configuration.append(replicator.collectionConfigure(channels=channels, collection=created_collection2))
-    data = {"bucket": bucket, "scopes": {scope: {"collections": {collection: {"sync": sync_function}, collection2_name: {"sync": sync_function}, collection3_name: {}}}}, "num_index_replicas": 0}
+    data = {"bucket": bucket, "scopes": {scope: {"collections": {collection: {"sync": sync_function}, collection2_name: {"sync": sync_function}, collection3_name: {"sync": sync_function}}}}, "num_index_replicas": 0}
 
     if admin_client.does_db_exist(sg_db) is True:
         admin_client.delete_db(sg_db)
@@ -255,7 +255,7 @@ def test_sync_2_collection_src_to_dest_having_2_collections(scope_collection_tes
     collections_configuration = []
     collections_configuration.append(replicator.collectionConfigure(channels=channels, collection=created_collection))
     collections_configuration.append(replicator.collectionConfigure(channels=channels, collection=created_collection2))
-    data1 = {"bucket": bucket, "scopes": {scope: {"collections": {collection: {}, collection2_name: {}}}}, "num_index_replicas": 0}
+    data1 = {"bucket": bucket, "scopes": {scope: {"collections": {collection: {"sync": sync_function}, collection2_name: {"sync": sync_function}}}}, "num_index_replicas": 0}
 
     if admin_client.does_db_exist(sg_db) is True:
         admin_client.delete_db(sg_db)
@@ -303,7 +303,7 @@ def test_sync_3_collection_src_to_dest_having_2_collections(scope_collection_tes
     collections_configuration = []
     collections_configuration.append(replicator.collectionConfigure(channels=channels, collection=created_collection))
     collections_configuration.append(replicator.collectionConfigure(channels=channels, collection=created_collection2))
-    data = {"bucket": bucket, "scopes": {scope: {"collections": {collection: {}, collection2_name: {}}}}, "num_index_replicas": 0}
+    data = {"bucket": bucket, "scopes": {scope: {"collections": {collection: {"sync": sync_function}, collection2_name: {"sync": sync_function}}}}, "num_index_replicas": 0}
 
     if admin_client.does_db_exist(sg_db) is True:
         admin_client.delete_db(sg_db)
