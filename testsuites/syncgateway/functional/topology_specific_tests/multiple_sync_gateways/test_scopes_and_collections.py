@@ -148,14 +148,11 @@ def test_scopes_and_collections_import_filters(scopes_collections_tests_fixture,
     user2_auth = sgs["sg2"]["user"], password
 
     # 1. Update the db config's import filter.
-    import_function = "function filter(doc) { return doc._id == \"" + not_filtered_prefix + "_0\" }"
-    data2 = {"bucket": bucket2, "scopes": {scope: {"collections": {collection: {"import_filter": import_function}}}}, "num_index_replicas": 0}
     if (collections_num == 2):
-        data2 = {"bucket": bucket2, "scopes": {scope: {"collections": {collection: {"import_filter": import_function}, collection2: {}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
         data1 = {"bucket": bucket, "scopes": {scope: {"collections": {collection: {}, collection2: {}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
+        data2 = {"bucket": bucket2, "scopes": {scope: {"collections": {collection: {}, collection2: {}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
         admin_client_1.post_db_config(sg1["db"], data1)
-
-    admin_client_2.post_db_config(sg2["db"], data2)
+        admin_client_2.post_db_config(sg2["db"], data2)
 
     # 2. On pushing SGW, create docs: doc_A belongs to channel A only, doc_AnB belongs to channel A and channel B
     uploaded_should_be_docs = sg_client.add_docs(url=sg1_url, db=sg1["db"], number=3, id_prefix=not_filtered_prefix, channels=["A"], auth=user1_auth, scope=scope, collection=collection)
