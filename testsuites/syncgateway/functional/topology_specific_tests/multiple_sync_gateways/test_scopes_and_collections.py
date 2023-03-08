@@ -16,9 +16,12 @@ sg_password = "password"
 cb_server = sg_username = channels = client_auth = None
 sgs = {}
 admin_auth = [RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']]
+admin_auth_tuple = (admin_auth[0], admin_auth[1])
 sg1_url = ""
 sg2_url = ""
 sync_function = "function(doc){channel(doc.channels);}"
+sg1_admin_url = ""
+sg2_admin_url = ""
 
 
 @pytest.fixture
@@ -31,6 +34,8 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
     global client_auth
     global sg1_url
     global sg2_url
+    global sg1_admin_url
+    global sg2_admin_url
 
     try:  # To be able to teardon in case of a setup error
         random_suffix = str(uuid.uuid4())[:8]
@@ -51,6 +56,8 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
         cbs_url = topology["couchbase_servers"][0]
         sg1_url = topology["sync_gateways"][0]["public"]
         sg2_url = topology["sync_gateways"][1]["public"]
+        sg1_admin_url = topology["sync_gateways"][0]["admin"]
+        sg2_admin_url = topology["sync_gateways"][1]["admin"]
 
         sg_client = MobileRestClient()
         cb_server = couchbaseserver.CouchbaseServer(cbs_url)
@@ -194,3 +201,70 @@ def test_scopes_and_collections_replication(scopes_collections_tests_fixture, pa
     for i in range(0, num_of_docs - 1):
         sg_client.get_doc(sg2_url, sg2["db"], uploaded_for_push[i]["id"], rev=uploaded_for_push[i]["rev"], auth=user2_auth, scope=scope, collection=collection)
         sg_client.get_doc(sg2_url, sg2["db"], uploaded_for_push_c2[i]["id"], rev=uploaded_for_push_c2[i]["rev"], auth=user2_auth, scope=scope, collection=collection2)
+
+
+@pytest.mark.syncgateway
+@pytest.mark.collections
+def test_replication_implicit_mapping_filtered_collection(scopes_collections_tests_fixture, params_from_base_test_setup):
+    """
+    Test that ISGR implicit mapping works with a subset of collections on the active sync gateway
+    1. Update configs to have identical keyspaces on both SG1 and SG2
+    2. Upload docs to SG1 collections
+    3. Check SG2 is empty
+    4. Start one-shot pull replication SG1->SG2, filtering one collection
+    5. Assert that docs in non-filtered collection are pulled, but filtered is not
+    """
+    sg1 = sgs["sg1"]
+    sg2 = sgs["sg2"]
+    admin_client_1 = Admin(sg1["sg_obj"])
+    admin_client_2 = Admin(sg2["sg_obj"])
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+
+    sg_client, scope, collection, collection2 = scopes_collections_tests_fixture
+
+    # check sync gateway version
+    if sync_gateway_version < "3.0.0":
+        pytest.skip('This test cannot run with Sync Gateway version below 3.0')
+
+    # create users, user sessions
+    password = "password"
+    user1_auth = sgs["sg1"]["user"], password
+    user2_auth = sgs["sg2"]["user"], password
+
+    # 1. Update configs to have identical keyspaces on both SG1 and SG2
+    config_1 = {"bucket": bucket, "scopes": {scope: {"collections": {collection: {}, collection2: {}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
+    config_2 = {"bucket": bucket2, "scopes": {scope: {"collections": {collection: {}, collection2: {}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
+    admin_client_1.post_db_config(sg1["db"], config_1)
+    admin_client_2.post_db_config(sg2["db"], config_2)
+
+    # 2. Upload docs to SG1 collections
+    sg1_collection_docs = sg_client.add_docs(url=sg1_url, db=sg1["db"], number=3, id_prefix="collection_1_doc", auth=user1_auth, scope=scope, collection=collection)
+    sg1_collection_2_docs = sg_client.add_docs(url=sg1_url, db=sg1["db"], number=3, id_prefix="collection_2_doc", auth=user1_auth, scope=scope, collection=collection2)
+
+    # 3. Check SG2 is empty
+    sg2_collection_docs = sg_client.get_all_docs(url=sg2_admin_url, db=sg2["db"], auth=admin_auth_tuple, scope=scope, collection=collection)
+    sg2_collection_2_docs = sg_client.get_all_docs(url=sg2_admin_url, db=sg2["db"], auth=admin_auth_tuple, scope=scope, collection=collection2)
+    assert sg2_collection_docs["rows"] == [], f"SG2 {sg2['db']}.{scope}.{collection} should be empty but contains documents!"
+    assert sg2_collection_2_docs["rows"] == [], f"SG2 {sg2['db']}.{scope}.{collection2} should be empty but contains documents!"
+
+    # 4. Start one-shot pull replication SG1->SG2, filtering one collection
+    replicator_id = sg1["sg_obj"].start_replication2(
+        local_db=sg2["db"],
+        remote_url=sg1["sg_obj"].url,
+        remote_db=sg1["db"],
+        remote_user=sg1["user"],
+        remote_password=password,
+        direction="pull",
+        continuous=False,
+        collections_enabled=True,
+        collections_local=[collection]
+    )
+    admin_client_2.wait_until_sgw_replication_done(sg1["db"], replicator_id, read_flag=True, max_times=3000)
+
+    # check sg2 is full
+    sg2_collection_docs = sg_client.get_all_docs(url=sg2_admin_url, db=sg2["db"], auth=admin_auth_tuple, scope=scope, collection=collection)
+    sg2_collection_2_docs = sg_client.get_all_docs(url=sg2_admin_url, db=sg2["db"], auth=admin_auth_tuple, scope=scope, collection=collection2)
+    print(sg1_collection_docs)
+    print(sg1_collection_2_docs)
+    print(sg2_collection_docs)
+    print(sg2_collection_2_docs)
