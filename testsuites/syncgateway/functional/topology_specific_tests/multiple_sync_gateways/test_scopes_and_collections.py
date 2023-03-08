@@ -149,7 +149,7 @@ def test_scopes_and_collections_replication(scopes_collections_tests_fixture, pa
         sg_client.get_doc(sg2_url, sg2["db"], uploaded_for_pull[0]["id"], rev=uploaded_for_pull[0]["rev"], auth=user2_auth, scope=scope, collection=collection)
     e.match("Not Found")
 
-    # 3. start a pull continous replication sg1 <- sg2
+    # 3. start a pull continous replication sg2 <- sg1
     replicator2_id = sg2["sg_obj"].start_replication2(
         local_db=sg2["db"],
         remote_url=sg1["sg_obj"].url,
