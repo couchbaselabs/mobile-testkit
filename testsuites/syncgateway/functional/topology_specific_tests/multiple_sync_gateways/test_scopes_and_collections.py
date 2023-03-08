@@ -187,8 +187,7 @@ def test_scopes_and_collections_replication(scopes_collections_tests_fixture, pa
         collections_enabled=True
     )
 
+    admin_client_2.wait_until_sgw_replication_done(sg1["db"], replicator2_id, read_flag=True, max_times=3000)
     # 7. Check that the new documents were replicated to sgw2
     for i in range(0, num_of_docs - 1):
-        with pytest.raises(Exception) as e:
-            sg_client.get_doc(sg2_url, sg2["db"], uploaded_for_push[i]["id"], rev=uploaded_for_push[i]["rev"], auth=user2_auth, scope=scope, collection=collection)
-        e.match("Not Found")
+        sg_client.get_doc(sg2_url, sg2["db"], uploaded_for_push[i]["id"], rev=uploaded_for_push[i]["rev"], auth=user2_auth, scope=scope, collection=collection)
