@@ -209,8 +209,8 @@ def test_collection_channels(scopes_collections_tests_fixture):
     user_1_doc_prefix = "user_1_doc_" + random_str
     user_2_doc_prefix = "user_2_doc_" + random_str
     shared_doc_prefix = "shared_" + random_str
-    channels_user_1 = ["USER1_CHANNEL", "!"]
-    channels_user_2 = ["USER2_CHANNEL", "!"]
+    channels_user_1 = ["USER1_CHANNEL"]
+    channels_user_2 = ["USER2_CHANNEL"]
     auth_user_1 = test_user_1, sg_password
     auth_user_2 = test_user_2, sg_password
     auth_wildcard_user = test_wildcard_user, sg_password
