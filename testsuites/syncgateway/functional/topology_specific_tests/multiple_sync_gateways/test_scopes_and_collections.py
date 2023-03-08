@@ -117,10 +117,10 @@ def test_scopes_and_collections_replication(scopes_collections_tests_fixture, pa
         # 1. Create users, user sessions
         # 2. Upload documents to the pushing SGW and make sure that there are no document on the passive SGW
         # 3. Start a pull continous replication sg1 <- sg2
-        # 4. Upload new documents to sgw1
-        # 5. Add another collection
+        # 4. Add another collection
+        # 5. Upload new documents to sgw1, both collections
         # 6. Start a push replication
-         # 7. Check that the new documents were replicated to sgw2
+        # 7. Check that the new documents were replicated to sgw2
     """
     sg1 = sgs["sg1"]
     sg2 = sgs["sg2"]
@@ -166,14 +166,15 @@ def test_scopes_and_collections_replication(scopes_collections_tests_fixture, pa
     for i in range(0, num_of_docs - 1):
         sg_client.get_doc(sg2_url, sg2["db"], uploaded_for_pull[i]["id"], rev=uploaded_for_pull[i]["rev"], auth=user2_auth, scope=scope, collection=collection)
 
-    # 4. Upload new documents to sgw1
-    uploaded_for_push = sg_client.add_docs(url=sg1_url, db=sg1["db"], number=num_of_docs, id_prefix=push_replication_prefix, channels=["A"], auth=user1_auth, scope=scope, collection=collection)
-
-    # 5. Add another collection
+    # 4. Add another collection
     data1 = {"bucket": bucket, "scopes": {scope: {"collections": {collection: {"sync": sync_function}, collection2: {"sync": sync_function}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
     data2 = {"bucket": bucket2, "scopes": {scope: {"collections": {collection: {"sync": sync_function}, collection2: {"sync": sync_function}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
     admin_client_1.post_db_config(sg1["db"], data1)
     admin_client_2.post_db_config(sg2["db"], data2)
+
+    # 5. Upload new documents to sgw1, both collections
+    uploaded_for_push = sg_client.add_docs(url=sg1_url, db=sg1["db"], number=num_of_docs, id_prefix=push_replication_prefix, channels=["A"], auth=user1_auth, scope=scope, collection=collection)
+    uploaded_for_push_c2 = sg_client.add_docs(url=sg1_url, db=sg1["db"], number=num_of_docs, id_prefix=push_replication_prefix + "c2", channels=["A"], auth=user1_auth, scope=scope, collection=collection2)
 
     # 6. Start a push replication
     replicator2_id = sg1["sg_obj"].start_replication2(
@@ -188,6 +189,8 @@ def test_scopes_and_collections_replication(scopes_collections_tests_fixture, pa
     )
 
     admin_client_2.wait_until_sgw_replication_done(sg1["db"], replicator2_id, read_flag=True, max_times=3000)
+
     # 7. Check that the new documents were replicated to sgw2
     for i in range(0, num_of_docs - 1):
         sg_client.get_doc(sg2_url, sg2["db"], uploaded_for_push[i]["id"], rev=uploaded_for_push[i]["rev"], auth=user2_auth, scope=scope, collection=collection)
+        sg_client.get_doc(sg2_url, sg2["db"], uploaded_for_push_c2[i]["id"], rev=uploaded_for_push_c2[i]["rev"], auth=user2_auth, scope=scope, collection=collection2)
