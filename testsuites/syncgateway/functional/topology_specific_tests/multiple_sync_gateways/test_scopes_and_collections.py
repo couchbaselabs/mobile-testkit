@@ -207,6 +207,7 @@ def test_scopes_and_collections_replication(scopes_collections_tests_fixture, pa
 @pytest.mark.collections
 def test_replication_implicit_mapping_filtered_collection(scopes_collections_tests_fixture, params_from_base_test_setup):
     """
+    TODO check all_docs endpoint is working correctly at end of test
     Test that ISGR implicit mapping works with a subset of collections on the active sync gateway
     1. Update configs to have identical keyspaces on both SG1 and SG2
     2. Upload docs to SG1 collections
@@ -244,11 +245,11 @@ def test_replication_implicit_mapping_filtered_collection(scopes_collections_tes
     # 3. Check SG2 is empty
     sg2_collection_docs = sg_client.get_all_docs(url=sg2_admin_url, db=sg2["db"], auth=admin_auth_tuple, scope=scope, collection=collection)
     sg2_collection_2_docs = sg_client.get_all_docs(url=sg2_admin_url, db=sg2["db"], auth=admin_auth_tuple, scope=scope, collection=collection2)
-    assert sg2_collection_docs["rows"] == [], f"SG2 {sg2['db']}.{scope}.{collection} should be empty but contains documents!"
+    assert sg2_collection_docs["rows"] == [] , f"SG2 {sg2['db']}.{scope}.{collection} should be empty but contains documents!"
     assert sg2_collection_2_docs["rows"] == [], f"SG2 {sg2['db']}.{scope}.{collection2} should be empty but contains documents!"
 
     # 4. Start one-shot pull replication SG1->SG2, filtering one collection
-    replicator_id = sg1["sg_obj"].start_replication2(
+    replicator_id = sg2["sg_obj"].start_replication2(
         local_db=sg2["db"],
         remote_url=sg1["sg_obj"].url,
         remote_db=sg1["db"],
@@ -259,7 +260,7 @@ def test_replication_implicit_mapping_filtered_collection(scopes_collections_tes
         collections_enabled=True,
         collections_local=[collection]
     )
-    admin_client_2.wait_until_sgw_replication_done(sg1["db"], replicator_id, read_flag=True, max_times=3000)
+    admin_client_2.wait_until_sgw_replication_done(sg2["db"], replicator_id, read_flag=True, max_times=3000)
 
     # check sg2 is full
     sg2_collection_docs = sg_client.get_all_docs(url=sg2_admin_url, db=sg2["db"], auth=admin_auth_tuple, scope=scope, collection=collection)
