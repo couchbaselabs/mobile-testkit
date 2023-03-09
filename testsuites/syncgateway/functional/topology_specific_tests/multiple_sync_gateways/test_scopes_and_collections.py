@@ -110,8 +110,11 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
         raise e
     finally:
         cb_server.delete_scope_if_exists(bucket, scope)
+        cb_server.delete_scope_if_exists(bucket2, scope)
+        cb_server.delete_scope_if_exists(bucket3, scope)
         cb_server.delete_bucket(bucket)
         cb_server.delete_bucket(bucket2)
+        cb_server.delete_bucket(bucket3)
         if pre_test_is_bucket_exist:
             cb_server.create_bucket(cluster_config, bucket)
 
@@ -147,7 +150,7 @@ def test_scopes_and_collections_replication(scopes_collections_tests_fixture, pa
 
     pull_replication_prefix = "should_be_in_sg2_after_pull"
     push_replication_prefix = "should_be_in_sg2_after_push"
-    sg_client, scope, collection, collection2 = scopes_collections_tests_fixture
+    sg_client, scope, collection, collection2, random_suffix = scopes_collections_tests_fixture
 
     if sync_gateway_version < "3.1.0":
         pytest.skip('This test cannot run with Sync Gateway version below 3.1.0')
@@ -326,23 +329,33 @@ def test_multiple_replicators_multiple_scopes(scopes_collections_tests_fixture, 
     #cb_server.create_collection(bucket3, scope, collection2)
 
     # 2. Configure SGs according to above topology
-    config_1 = {"bucket": bucket, "scopes": {scope: {"collections": {collection: {}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
-    config_2 = {"bucket": bucket2, "scopes": {scope: {"collections": {collection2: {}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
-    config_3 = {"bucket": bucket3, "scopes": {scope: {"collections": {collection: {}, collection2: {}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
+    config_1 = {"bucket": bucket, "scopes": {scope: {"collections": {collection: {"sync": sync_function}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
+    config_2 = {"bucket": bucket2, "scopes": {scope: {"collections": {collection2: {"sync": sync_function}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
+    config_3 = {"bucket": bucket3, "scopes": {scope: {"collections": {collection: {"sync": sync_function}, collection2: {"sync": sync_function}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
     admin_client_1.post_db_config(sg1["db"], config_1)
     admin_client_2.post_db_config(sg2["db"], config_2)
     admin_client_3.post_db_config(sg3["db"], config_3)
+
+    # update user configs for channel access
+    user1_collection_access = {scope: {collection: {"admin_channels": channels}}}
+    user2_collection_access = {scope: {collection2: {"admin_channels": channels}}}
+    user3_collection_access = {scope: {collection: {"admin_channels": channels}, collection2: {"admin_channels": channels}}}
+
+    sg_client.update_user(sg1_admin_url, sg1["db"], sgs["sg1"]["user"], password=password, channels=channels, auth=admin_auth, collection_access=user1_collection_access)
+    sg_client.update_user(sg2_admin_url, sg2["db"], sgs["sg2"]["user"], password=password, channels=channels, auth=admin_auth, collection_access=user2_collection_access)
+    sg_client.update_user(sg3_admin_url, sg3["db"], sgs["sg3"]["user"], password=password, channels=channels, auth=admin_auth, collection_access=user3_collection_access)
+
     # maybe add code to delete collections from bucket1 and bucket2 that are not relevant
 
     # 3. Upload docs to SG1 and SG2
-    sg1_collection_docs = sg_client.add_docs(url=sg1_url, db=sg1["db"], number=3, id_prefix="collection_1_doc", auth=user1_auth, scope=scope, collection=collection)
-    sg2_collection_2_docs = sg_client.add_docs(url=sg2_url, db=sg2["db"], number=3, id_prefix="collection_2_doc", auth=user2_auth, scope=scope, collection=collection2)
+    sg1_collection_docs = sg_client.add_docs(url=sg1_url, db=sg1["db"], number=3, id_prefix="collection_1_doc", auth=user1_auth, scope=scope, collection=collection, channels=["A"])
+    sg2_collection_2_docs = sg_client.add_docs(url=sg2_url, db=sg2["db"], number=3, id_prefix="collection_2_doc", auth=user2_auth, scope=scope, collection=collection2, channels=["A"])
 
     # 4. Check SG3 is empty
-    sg3_collection_docs = sg_client.get_all_docs(url=sg3_admin_url, db=sg3["db"], auth=admin_auth_tuple, scope=scope, collection=collection)
-    sg3_collection_2_docs = sg_client.get_all_docs(url=sg3_admin_url, db=sg3["db"], auth=admin_auth_tuple, scope=scope, collection=collection2)
-    assert sg3_collection_docs["rows"] == [] , f"SG2 {sg3['db']}.{scope}.{collection} should be empty but contains documents!"
-    assert sg3_collection_2_docs["rows"] == [], f"SG2 {sg3['db']}.{scope}.{collection2} should be empty but contains documents!"
+    sg3_collection_docs = sg_client.get_all_docs(url=sg3_url, db=sg3["db"], auth=user3_auth, scope=scope, collection=collection)
+    sg3_collection_2_docs = sg_client.get_all_docs(url=sg3_url, db=sg3["db"], auth=user3_auth, scope=scope, collection=collection2)
+    assert sg3_collection_docs["rows"] == [] , f"SG3 {sg3['db']}.{scope}.{collection} should be empty but contains documents!"
+    assert sg3_collection_2_docs["rows"] == [], f"SG3 {sg3['db']}.{scope}.{collection2} should be empty but contains documents!"
 
     # 5. Start one-shot push replication SG1->SG3
     replicator_1_id = sg1["sg_obj"].start_replication2(
@@ -351,7 +364,7 @@ def test_multiple_replicators_multiple_scopes(scopes_collections_tests_fixture, 
         remote_db=sg3["db"],
         remote_user=sg3["user"],
         remote_password=password,
-        direction="pull",
+        direction="push",
         continuous=False,
         collections_enabled=True
     )
@@ -371,11 +384,16 @@ def test_multiple_replicators_multiple_scopes(scopes_collections_tests_fixture, 
 
     admin_client_1.wait_until_sgw_replication_done(sg1["db"], replicator_1_id, read_flag=True, max_times=3000)
     admin_client_3.wait_until_sgw_replication_done(sg3["db"], replicator_2_id, read_flag=True, max_times=3000)
-
+    
     # 7. Assert that SG3 contains docs
-    sg3_collection_docs = sg_client.get_all_docs(url=sg3_admin_url, db=sg3["db"], auth=admin_auth_tuple, scope=scope, collection=collection)
-    sg3_collection_2_docs = sg_client.get_all_docs(url=sg3_admin_url, db=sg3["db"], auth=admin_auth_tuple, scope=scope, collection=collection2)
-    print(sg1_collection_docs)
-    print(sg2_collection_2_docs)
+    sg3_collection_docs = sg_client.get_all_docs(url=sg3_url, db=sg3["db"], auth=user3_auth, scope=scope, collection=collection)
+    sg3_collection_2_docs = sg_client.get_all_docs(url=sg3_url, db=sg3["db"], auth=user3_auth, scope=scope, collection=collection2)
+    collection_2_ids = [doc["id"] for doc in sg2_collection_2_docs]
+
     print(sg3_collection_docs)
     print(sg3_collection_2_docs)
+    
+    #this gives 404 error, doc not found, so pull replication is not working?
+    for id in collection_2_ids:
+        print(sg_client.get_doc(sg3_url, sg3["db"], id, auth=user3_auth, scope=scope, collection=collection2))
+
