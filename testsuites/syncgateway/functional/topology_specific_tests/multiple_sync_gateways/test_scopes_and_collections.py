@@ -220,6 +220,7 @@ def test_scopes_and_collections_replication(scopes_collections_tests_fixture, pa
 def test_replication_implicit_mapping_filtered_collection(scopes_collections_tests_fixture, params_from_base_test_setup):
     """
     TODO check all_docs endpoint is working correctly at end of test and add assertions rather than prints
+        can be fixed via channel access grants and doc routing
     Test that ISGR implicit mapping works with a subset of collections on the active sync gateway
     1. Update configs to have identical keyspaces on both SG1 and SG2
     2. Upload docs to SG1 collections
@@ -322,6 +323,7 @@ def test_multiple_replicators_multiple_scopes(scopes_collections_tests_fixture, 
     user2_auth = sgs["sg2"]["user"], password
     user3_auth = sgs["sg3"]["user"], password
 
+    # this is now redundant as we add it to test setup in the scopes_collections_tests_fixture
     # 1. Add new bucket with scope and two collections on CBServer
     #cb_server.create_bucket(cluster_config, bucket3, 100)
     #cb_server.create_scope(bucket3, scope)
