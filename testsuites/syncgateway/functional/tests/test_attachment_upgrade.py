@@ -12,6 +12,7 @@ from utilities.cluster_config_utils import get_cluster
 from couchbase.exceptions import DocumentNotFoundException
 from requests.exceptions import HTTPError
 from keywords.constants import RBAC_FULL_ADMIN
+from libraries.testkit.admin import Admin
 
 
 @pytest.mark.syncgateway
@@ -91,7 +92,8 @@ def test_upgrade_delete_attachments(params_from_base_test_setup, sgw_version_res
     # 3 . Upgrade SGW to lithium and have Automatic upgrade
     sg_obj.upgrade_sync_gateway(sync_gateways, sync_gateway_previous_version, sync_gateway_version, sg_conf,
                                 cluster_conf)
-
+    admin_client = Admin(sg_obj)
+    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^" + str(admin_client.get_db_config(remote_db)))
     # 4. delete the documents.
     for i in range(6, 8):
         doc_id = "att_com_" + str(i)
