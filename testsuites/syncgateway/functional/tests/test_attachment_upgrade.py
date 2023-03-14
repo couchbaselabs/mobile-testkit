@@ -86,7 +86,7 @@ def test_upgrade_delete_attachments(params_from_base_test_setup, sgw_version_res
                          update_attachment=attachments, auth=session)
     for i in range(6, 8):
         doc_id = "att_com_" + str(i)
-        uploaded_doc = sg_client.get_latest_rev(sg_url, remote_db, doc_id=doc_id, auth=session)
+        uploaded_doc = sg_client.get_raw_doc(sg_url, remote_db, doc_id=doc_id, auth=session)
         print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^" + str(uploaded_doc))
     # 3 . Upgrade SGW to lithium and have Automatic upgrade
     sg_obj.upgrade_sync_gateway(sync_gateways, sync_gateway_previous_version, sync_gateway_version, sg_conf,
