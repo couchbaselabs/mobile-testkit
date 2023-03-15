@@ -25,6 +25,7 @@ sync_function = "function(doc){channel(doc.channels);}"
 sg1_admin_url = ""
 sg2_admin_url = ""
 sg3_admin_url = ""
+random_suffix = ""
 
 
 @pytest.fixture
@@ -41,6 +42,7 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
     global sg1_admin_url
     global sg2_admin_url
     global sg3_admin_url
+    global random_suffix
 
     try:  # To be able to teardon in case of a setup error
         random_suffix = str(uuid.uuid4())[:8]
@@ -105,7 +107,7 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
             if pre_test_user_exists is False:
                 sg_client.create_user(admin_client.admin_url, db, user, sg_password, channels=channels, auth=admin_auth, collection_access=collection_access)
 
-        yield sg_client, scope, collection, collection2, random_suffix
+        yield sg_client, scope, collection, collection2
     except Exception as e:
         raise e
     finally:
@@ -150,7 +152,7 @@ def test_scopes_and_collections_replication(scopes_collections_tests_fixture, pa
 
     pull_replication_prefix = "should_be_in_sg2_after_pull"
     push_replication_prefix = "should_be_in_sg2_after_push"
-    sg_client, scope, collection, collection2, random_suffix = scopes_collections_tests_fixture
+    sg_client, scope, collection, collection2 = scopes_collections_tests_fixture
 
     if sync_gateway_version < "3.1.0":
         pytest.skip('This test cannot run with Sync Gateway version below 3.1.0')
@@ -294,13 +296,11 @@ def test_multiple_replicators_multiple_scopes(scopes_collections_tests_fixture, 
         CBServer 3 buckets - B1,B2 with 1 scope and 1 collection; B3 1 scope with 2 collections
         SGs 3 - SG1 on B1, SG2 on B2, SG3 on B3
     ISGR from SG1 and SG2 to collections on SG3
-    1. Add new bucket with scope and two collections on CBServer
-    2. Configure SGs according to above topology
-    3. Upload docs to SG1 and SG2
-    4. Check SG3 is empty
-    5. Start one-shot push replication SG1->SG3
-    6. Start one-shot pull replication SG2->SG3
-    7. Assert that SG3 contains docs
+    1. Configure SGs according to above topology
+    2. Upload docs to SG1 and SG2
+    3. Start one-shot push replication SG1->SG3
+    4. Start one-shot pull replication SG2->SG3
+    5. Assert that SG3 contains docs
     """
     sg1 = sgs["sg1"]
     sg2 = sgs["sg2"]
@@ -309,9 +309,8 @@ def test_multiple_replicators_multiple_scopes(scopes_collections_tests_fixture, 
     admin_client_2 = Admin(sg2["sg_obj"])
     admin_client_3 = Admin(sg3["sg_obj"])
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
-    cluster_config = params_from_base_test_setup["cluster_config"]
 
-    sg_client, scope, collection, collection2, random_suffix = scopes_collections_tests_fixture
+    sg_client, scope, collection, collection2 = scopes_collections_tests_fixture
 
     # check sync gateway version
     if sync_gateway_version < "3.0.0":
@@ -323,14 +322,7 @@ def test_multiple_replicators_multiple_scopes(scopes_collections_tests_fixture, 
     user2_auth = sgs["sg2"]["user"], password
     user3_auth = sgs["sg3"]["user"], password
 
-    # this is now redundant as we add it to test setup in the scopes_collections_tests_fixture
-    # 1. Add new bucket with scope and two collections on CBServer
-    #cb_server.create_bucket(cluster_config, bucket3, 100)
-    #cb_server.create_scope(bucket3, scope)
-    #cb_server.create_collection(bucket3, scope, collection)
-    #cb_server.create_collection(bucket3, scope, collection2)
-
-    # 2. Configure SGs according to above topology
+    # 1. Configure SGs according to above topology
     config_1 = {"bucket": bucket, "scopes": {scope: {"collections": {collection: {"sync": sync_function}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
     config_2 = {"bucket": bucket2, "scopes": {scope: {"collections": {collection2: {"sync": sync_function}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
     config_3 = {"bucket": bucket3, "scopes": {scope: {"collections": {collection: {"sync": sync_function}, collection2: {"sync": sync_function}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
@@ -349,17 +341,11 @@ def test_multiple_replicators_multiple_scopes(scopes_collections_tests_fixture, 
 
     # maybe add code to delete collections from bucket1 and bucket2 that are not relevant
 
-    # 3. Upload docs to SG1 and SG2
+    # 2. Upload docs to SG1 and SG2
     sg1_collection_docs = sg_client.add_docs(url=sg1_url, db=sg1["db"], number=3, id_prefix="collection_1_doc", auth=user1_auth, scope=scope, collection=collection, channels=["A"])
     sg2_collection_2_docs = sg_client.add_docs(url=sg2_url, db=sg2["db"], number=3, id_prefix="collection_2_doc", auth=user2_auth, scope=scope, collection=collection2, channels=["A"])
 
-    # 4. Check SG3 is empty
-    sg3_collection_docs = sg_client.get_all_docs(url=sg3_url, db=sg3["db"], auth=user3_auth, scope=scope, collection=collection)
-    sg3_collection_2_docs = sg_client.get_all_docs(url=sg3_url, db=sg3["db"], auth=user3_auth, scope=scope, collection=collection2)
-    assert sg3_collection_docs["rows"] == [] , f"SG3 {sg3['db']}.{scope}.{collection} should be empty but contains documents!"
-    assert sg3_collection_2_docs["rows"] == [], f"SG3 {sg3['db']}.{scope}.{collection2} should be empty but contains documents!"
-
-    # 5. Start one-shot push replication SG1->SG3
+    # 3. Start one-shot push replication SG1->SG3
     replicator_1_id = sg1["sg_obj"].start_replication2(
         local_db=sg1["db"],
         remote_url=sg3["sg_obj"].url,
@@ -371,7 +357,7 @@ def test_multiple_replicators_multiple_scopes(scopes_collections_tests_fixture, 
         collections_enabled=True
     )
 
-    # 6. Start one-shot pull replication SG2->SG3, with filter for implicit mapping
+    # 4. Start one-shot pull replication SG2->SG3, with filter for implicit mapping
     replicator_2_id = sg3["sg_obj"].start_replication2(
         local_db=sg3["db"],
         remote_url=sg2["sg_obj"].url,
@@ -387,7 +373,7 @@ def test_multiple_replicators_multiple_scopes(scopes_collections_tests_fixture, 
     admin_client_1.wait_until_sgw_replication_done(sg1["db"], replicator_1_id, read_flag=True, max_times=3000)
     admin_client_3.wait_until_sgw_replication_done(sg3["db"], replicator_2_id, read_flag=True, max_times=3000)
     
-    # 7. Assert that SG3 contains docs
+    # 5. Assert that SG3 contains docs
     sg3_collection_docs = sg_client.get_all_docs(url=sg3_url, db=sg3["db"], auth=user3_auth, scope=scope, collection=collection)
     sg3_collection_2_docs = sg_client.get_all_docs(url=sg3_url, db=sg3["db"], auth=user3_auth, scope=scope, collection=collection2)
     collection_2_ids = [doc["id"] for doc in sg2_collection_2_docs]
@@ -399,3 +385,37 @@ def test_multiple_replicators_multiple_scopes(scopes_collections_tests_fixture, 
     for id in collection_2_ids:
         print(sg_client.get_doc(sg3_url, sg3["db"], id, auth=user3_auth, scope=scope, collection=collection2))
 
+
+@pytest.mark.syncgateway
+@pytest.mark.collections
+def test_replication_explicit_mapping(scopes_collections_tests_fixture, params_from_base_test_setup):
+    """
+    Test that users can remap collections when performing ISGR
+    Topology:
+        CBServer 3 buckets - B1 with scope1 collections 1,2,3; B2 with scope1 collections 4,5; B3 with scope2 collections 6,7,8,9
+        SGs 3 - SG(1,2,3) to B(1,2,3) respectively
+    1. Create new scopes and collections to adhere to above topology
+    2. Configure SGs to topology
+    3. Upload docs to SG1
+    4. Start one-shot push replication from SG1 to SG2, with remapping:
+        scope1.collection1:scope1.collection4
+        scope1.collection2:scope1.collection5
+    5. Start one-shot pull replication from SG1 to SG3, with remapping:
+        scope1.collection1:scope2.collection6
+        scope1.collection2:scope2.collection7
+        scope1.collection3:scope2.collection8
+    6. Assertions that docs are replicated
+
+    Does there need to be test that starting a new replication that remaps an already remapped collection cause an error? 
+    i.e. new replicator with scopeA.collectionC:scopeB.collectionZ should error if created after above replicators?
+    """
+    sg1 = sgs["sg1"]
+    sg2 = sgs["sg2"]
+    sg3 = sgs["sg3"]
+    admin_client_1 = Admin(sg1["sg_obj"])
+    admin_client_2 = Admin(sg2["sg_obj"])
+    admin_client_3 = Admin(sg3["sg_obj"])
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+
+    sg_client, scope, collection, collection2, random_suffix = scopes_collections_tests_fixture
