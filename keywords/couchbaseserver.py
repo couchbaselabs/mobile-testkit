@@ -271,7 +271,7 @@ class CouchbaseServer:
             log_debug(resp_obj)
             # All nodes are heathy if it made it to here
             break
-    
+
     def _create_internal_rbac_user_request(self, data):
         # make api request to create internal rbac user
 
@@ -281,10 +281,7 @@ class CouchbaseServer:
 
         resp = None
         error_count = 0
-        while True:
-            if error_count == self.max_retries:
-                log_info("Error! Could not create RBAC user after retries. ")
-                raise RBACUserCreationError("Error! Could not create RBAC user after retries. ")
+        while error_count < self.max_retries:
             try:
                 resp = self._session.put(rbac_url, data=data, auth=('Administrator', 'password'))
                 log_r(resp)
@@ -296,6 +293,9 @@ class CouchbaseServer:
                 log_info("resp code: {}; error: {}".format(resp, h))
                 error_count += 1
                 time.sleep(1)
+        if error_count == self.max_retries:
+            log_info(f"Error! Could not create RBAC user after {self.max_retries} retries. ")
+            raise RBACUserCreationError("Error! Could not create RBAC user after retries. ")
 
     def _create_internal_rbac_bucket_user(self, bucketname, cluster_config):
         # Create user with username=bucketname and assign role
