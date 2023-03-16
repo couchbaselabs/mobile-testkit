@@ -407,7 +407,7 @@ def test_replication_explicit_mapping(scopes_collections_tests_fixture, params_f
     6. Assertions that docs are replicated
 
     Does there need to be test that starting a new replication that remaps an already remapped collection cause an error? 
-    i.e. new replicator with scopeA.collectionC:scopeB.collectionZ should error if created after above replicators?
+    i.e. new replicator with scope1.collection3:scope2.collection9 should error if created after above replicators?
     """
     sg1 = sgs["sg1"]
     sg2 = sgs["sg2"]
@@ -416,6 +416,121 @@ def test_replication_explicit_mapping(scopes_collections_tests_fixture, params_f
     admin_client_2 = Admin(sg2["sg_obj"])
     admin_client_3 = Admin(sg3["sg_obj"])
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
-    cluster_config = params_from_base_test_setup["cluster_config"]
 
-    sg_client, scope, collection, collection2, random_suffix = scopes_collections_tests_fixture
+    sg_client, scope, collection, collection2 = scopes_collections_tests_fixture
+    scope2 = "scope_2" + random_suffix
+    bucket1Collections = [collection, collection2]
+    bucket2Collections = []
+    bucket3Collections = []
+
+    # check sync gateway version
+    if sync_gateway_version < "3.0.0":
+        pytest.skip('This test cannot run with Sync Gateway version below 3.0')
+
+    # create users, user sessions
+    password = "password"
+    user1_auth = sgs["sg1"]["user"], password
+    user2_auth = sgs["sg2"]["user"], password
+    user3_auth = sgs["sg3"]["user"], password
+
+    # 1. Create new scopes and collections
+    # add one collection to B1, two to B2, four to B3
+    for i in range(3,10):
+        newCollection = "collection_" + str(i) + "_" + random_suffix
+        if i == 3:
+            serverBucket = bucket
+            bucket1Collections.append(newCollection)
+        elif i <= 5:
+            serverBucket = bucket2
+            bucket2Collections.append(newCollection)
+        else:
+            newScope = scope2
+            serverBucket = bucket3
+            bucket3Collections.append(newCollection)
+        
+        if i == 6:
+            # first time a collection is created for B3, add the new scope first
+            cb_server.create_scope(serverBucket, newScope)
+        
+        if i >= 6:
+            # adding collections to newScope under B3
+            cb_server.create_collection(serverBucket, newScope, newCollection)
+        else:
+            cb_server.create_collection(serverBucket, scope, newCollection)
+    
+    # 2. Configure SGs
+    config_1 = {"bucket": bucket, "scopes": {scope: {"collections": {bucket1Collections[0]: {"sync": sync_function}, bucket1Collections[1]: {"sync": sync_function}, bucket1Collections[2]: {"sync": sync_function}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
+    config_2 = {"bucket": bucket2, "scopes": {scope: {"collections": {bucket2Collections[0]: {"sync": sync_function}, bucket2Collections[1]: {"sync": sync_function}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
+    config_3 = {"bucket": bucket3, "scopes": {scope2: {"collections": {bucket3Collections[0]: {"sync": sync_function}, bucket3Collections[1]: {"sync": sync_function}, bucket3Collections[2]: {"sync": sync_function}, bucket3Collections[3]: {"sync": sync_function}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
+    admin_client_1.post_db_config(sg1["db"], config_1)
+    admin_client_2.post_db_config(sg2["db"], config_2)
+
+    # for SG3 delete old db and user and create new db mapped to scope2 as multiple scopes is not yet supported
+    db = sgs["sg3"]["db"]
+    admin_client_3.delete_user_if_exists(db, sgs["sg3"]["user"])
+    admin_client_3.delete_db(sg3["db"])
+    admin_client_3.create_db(db, config_3)
+    admin_client_3.wait_for_db_online(db)
+
+    # update user configs for channel access
+    user1_collection_access = {scope: {bucket1Collections[0]: {"admin_channels": channels}, bucket1Collections[1]: {"admin_channels": channels}, bucket1Collections[2]: {"admin_channels": channels}}}
+    user2_collection_access = {scope: {bucket2Collections[0]: {"admin_channels": channels}, bucket2Collections[1]: {"admin_channels": channels}}}
+    user3_collection_access = {scope: {bucket3Collections[0]: {"admin_channels": channels}, bucket3Collections[1]: {"admin_channels": channels}, bucket3Collections[2]: {"admin_channels": channels}, bucket3Collections[3]: {"admin_channels": channels}}}
+
+    sg_client.update_user(sg1_admin_url, sg1["db"], sgs["sg1"]["user"], password=password, channels=channels, auth=admin_auth, collection_access=user1_collection_access)
+    sg_client.update_user(sg2_admin_url, sg2["db"], sgs["sg2"]["user"], password=password, channels=channels, auth=admin_auth, collection_access=user2_collection_access)
+    #sg_client.update_user(sg3_admin_url, sg3["db"], sgs["sg3"]["user"], password=password, channels=channels, auth=admin_auth, collection_access=user3_collection_access)
+
+    # for SG3 new db create new user
+    sg_client.create_user(sg3_admin_url, db, sgs["sg3"]["user"], password, channels=channels, auth=admin_auth, collection_access=user3_collection_access)
+    #user3_auth = "test_user", password
+
+    # 3. Upload docs to SG1
+    sg1_collection_docs = sg_client.add_docs(url=sg1_url, db=sg1["db"], number=3, id_prefix="collection_1_doc", auth=user1_auth, scope=scope, collection=bucket1Collections[0], channels=["A"])
+    sg1_collection2_docs = sg_client.add_docs(url=sg1_url, db=sg1["db"], number=3, id_prefix="collection_2_doc", auth=user1_auth, scope=scope, collection=bucket1Collections[1], channels=["A"])
+    sg1_collection3_docs = sg_client.add_docs(url=sg1_url, db=sg1["db"], number=3, id_prefix="collection_3_doc", auth=user1_auth, scope=scope, collection=bucket1Collections[2], channels=["A"])
+
+    # 4. Start one-shot push replication SG1->SG2
+    replicator_1_id = sg1["sg_obj"].start_replication2(
+        local_db=sg1["db"],
+        remote_url=sg2["sg_obj"].url,
+        remote_db=sg2["db"],
+        remote_user=sg2["user"],
+        remote_password=password,
+        direction="push",
+        continuous=False,
+        collections_enabled=True,
+        collections_local=[collection, collection2],
+        collections_remote=[bucket2Collections[0], bucket2Collections[1]]
+    )
+
+    # 5. Start one-shot pull replication SG1->SG3
+    replicator_2_id = sg3["sg_obj"].start_replication2(
+        local_db=sg3["db"],
+        remote_url=sg1["sg_obj"].url,
+        remote_db=sg1["db"],
+        remote_user=sg1["user"],
+        remote_password=password,
+        direction="pull",
+        continuous=False,
+        collections_enabled=True,
+        collections_local=[collection, collection2, bucket1Collections[2]],
+        collections_remote=[bucket3Collections[0], bucket3Collections[1], bucket3Collections[2]]
+    )
+
+    admin_client_1.wait_until_sgw_replication_done(sg1["db"], replicator_1_id, read_flag=True, max_times=3000)
+    admin_client_3.wait_until_sgw_replication_done(sg3["db"], replicator_2_id, read_flag=True, max_times=3000)
+
+    # 6. Assert that docs are replicated
+    sg2_docs = []
+    sg3_docs = []
+    for c in bucket2Collections:
+        collection_docs = sg_client.get_all_docs(url=sg2_url, db=sg2["db"], auth=user2_auth, scope=scope, collection=c)
+        sg2_docs.extend([row for row in collection_docs["rows"]])
+    for c in bucket3Collections:
+        collection_docs = sg_client.get_all_docs(url=sg3_url, db=sg3["db"], auth=user3_auth, scope=scope2, collection=c)
+        sg3_docs.extend([row for row in collection_docs["rows"]])
+
+    print(sg2_docs)
+    print(sg3_docs)
+

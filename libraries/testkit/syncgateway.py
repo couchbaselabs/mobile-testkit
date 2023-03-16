@@ -606,7 +606,7 @@ class SyncGateway:
         r.raise_for_status()
         return r.json()
 
-    def start_replication2(self, local_db, remote_url, remote_db, remote_user, remote_password, direction="pushAndPull", purge_on_removal=None, continuous=False, channels=None, conflict_resolution_type="default", custom_conflict_resolver=None, adhoc=False, delta_sync=False, replication_id=None, max_backoff_time=None, user_credentials_url=True, collections_enabled=False, collections_local=[]):
+    def start_replication2(self, local_db, remote_url, remote_db, remote_user, remote_password, direction="pushAndPull", purge_on_removal=None, continuous=False, channels=None, conflict_resolution_type="default", custom_conflict_resolver=None, adhoc=False, delta_sync=False, replication_id=None, max_backoff_time=None, user_credentials_url=True, collections_enabled=False, collections_local=[], collections_remote=[]):
         '''
            Required values : remote, direction, conflict_resolution_type
            default values : continuous=false
@@ -622,6 +622,8 @@ class SyncGateway:
                 remote_url = "{}/{}".format(remote_url, remote_db)
             else:
                 raise Exception("No remote node's username and password provided ")
+        if (len(collections_remote) != 0) and (len(collections_remote) != len(collections_local)):
+            raise Exception("explicit replication mapping requires collections_local to have the same length as collections_remote")
         data = {
             "remote": remote_url,
             "direction": direction,
@@ -630,6 +632,7 @@ class SyncGateway:
         data["continuous"] = continuous
         data["collections_enabled"] = collections_enabled
         data["collections_local"] = collections_local
+        data["collections_remote"] = collections_remote
         if purge_on_removal:
             data["purge_on_removal"] = purge_on_removal
         if channels is not None:
