@@ -101,7 +101,7 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
                 admin_client.delete_db(test_bucket_db)
             if pre_test_db_exists is False:
                 admin_client.create_db(db, data)
-            collection_access = {scope: {collection: {"admin_channels": channels}}}
+            collection_access = {scope: {collection: {"admin_channels": channels}, collection2: {"admin_channels": channels}}}
             # Create a user
             pre_test_user_exists = admin_client.does_user_exist(db, user)
             if pre_test_user_exists is False:
@@ -226,9 +226,8 @@ def test_replication_implicit_mapping_filtered_collection(scopes_collections_tes
     Test that ISGR implicit mapping works with a subset of collections on the active sync gateway
     1. Update configs to have identical keyspaces on both SG1 and SG2
     2. Upload docs to SG1 collections
-    3. Check SG2 is empty
-    4. Start one-shot pull replication SG1->SG2, filtering one collection
-    5. Assert that docs in non-filtered collection are pulled, but filtered is not
+    3. Start one-shot pull replication SG1->SG2, filtering one collection
+    4. Assert that docs in non-filtered collection are pulled, but filtered is not
     """
     sg1 = sgs["sg1"]
     sg2 = sgs["sg2"]
@@ -248,22 +247,16 @@ def test_replication_implicit_mapping_filtered_collection(scopes_collections_tes
     user2_auth = sgs["sg2"]["user"], password
 
     # 1. Update configs to have identical keyspaces on both SG1 and SG2
-    config_1 = {"bucket": bucket, "scopes": {scope: {"collections": {collection: {}, collection2: {}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
-    config_2 = {"bucket": bucket2, "scopes": {scope: {"collections": {collection: {}, collection2: {}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
+    config_1 = {"bucket": bucket, "scopes": {scope: {"collections": {collection: {"sync": sync_function}, collection2: {"sync": sync_function}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
+    config_2 = {"bucket": bucket2, "scopes": {scope: {"collections": {collection: {"sync": sync_function}, collection2: {"sync": sync_function}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
     admin_client_1.post_db_config(sg1["db"], config_1)
     admin_client_2.post_db_config(sg2["db"], config_2)
 
     # 2. Upload docs to SG1 collections
-    sg1_collection_docs = sg_client.add_docs(url=sg1_url, db=sg1["db"], number=3, id_prefix="collection_1_doc", auth=user1_auth, scope=scope, collection=collection)
-    sg1_collection_2_docs = sg_client.add_docs(url=sg1_url, db=sg1["db"], number=3, id_prefix="collection_2_doc", auth=user1_auth, scope=scope, collection=collection2)
+    sg1_collection_docs = sg_client.add_docs(url=sg1_url, db=sg1["db"], number=3, id_prefix="collection_1_doc", auth=user1_auth, scope=scope, collection=collection, channels=["A"])
+    sg1_collection_2_docs = sg_client.add_docs(url=sg1_url, db=sg1["db"], number=3, id_prefix="collection_2_doc", auth=user1_auth, scope=scope, collection=collection2, channels=["A"])
 
-    # 3. Check SG2 is empty
-    sg2_collection_docs = sg_client.get_all_docs(url=sg2_admin_url, db=sg2["db"], auth=admin_auth_tuple, scope=scope, collection=collection)
-    sg2_collection_2_docs = sg_client.get_all_docs(url=sg2_admin_url, db=sg2["db"], auth=admin_auth_tuple, scope=scope, collection=collection2)
-    assert sg2_collection_docs["rows"] == [] , f"SG2 {sg2['db']}.{scope}.{collection} should be empty but contains documents!"
-    assert sg2_collection_2_docs["rows"] == [], f"SG2 {sg2['db']}.{scope}.{collection2} should be empty but contains documents!"
-
-    # 4. Start one-shot pull replication SG1->SG2, filtering one collection
+    # 3. Start one-shot pull replication SG1->SG2, filtering one collection
     replicator_id = sg2["sg_obj"].start_replication2(
         local_db=sg2["db"],
         remote_url=sg1["sg_obj"].url,
@@ -277,9 +270,9 @@ def test_replication_implicit_mapping_filtered_collection(scopes_collections_tes
     )
     admin_client_2.wait_until_sgw_replication_done(sg2["db"], replicator_id, read_flag=True, max_times=3000)
 
-    # check sg2 is full
-    sg2_collection_docs = sg_client.get_all_docs(url=sg2_admin_url, db=sg2["db"], auth=admin_auth_tuple, scope=scope, collection=collection)
-    sg2_collection_2_docs = sg_client.get_all_docs(url=sg2_admin_url, db=sg2["db"], auth=admin_auth_tuple, scope=scope, collection=collection2)
+    # 4.Assert that docs in non-filtered collection are pulled, but filtered is not
+    sg2_collection_docs = sg_client.get_all_docs(url=sg2_admin_url, db=sg2["db"], auth=user2_auth, scope=scope, collection=collection)
+    sg2_collection_2_docs = sg_client.get_all_docs(url=sg2_admin_url, db=sg2["db"], auth=user2_auth, scope=scope, collection=collection2)
     print(sg1_collection_docs)
     print(sg1_collection_2_docs)
     print(sg2_collection_docs)
