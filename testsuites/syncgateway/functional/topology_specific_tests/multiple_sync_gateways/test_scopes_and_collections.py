@@ -68,7 +68,7 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
             server_bucket = sgs[key]["bucket"]
             user = sgs[key]["user"]
             db = sgs[key]["db"]
-            data = {"bucket": server_bucket, "scopes": {scope: {"collections": {collection: {"sync": sync_function}}}}, "num_index_replicas": 0}
+            data = {"bucket": server_bucket, "scopes": {scope: {"collections": {collection: {"sync": sync_function}, collection2: {"sync": sync_function}}}}, "num_index_replicas": 0}
             # Scope creation on the Couchbase server
             does_scope_exist = cb_server.does_scope_exist(server_bucket, scope)
             if does_scope_exist is False:
@@ -83,7 +83,7 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
                 admin_client.delete_db(test_bucket_db)
             if pre_test_db_exists is False:
                 admin_client.create_db(db, data)
-            collection_access = {scope: {collection: {"admin_channels": channels}}}
+            collection_access = {scope: {collection: {"admin_channels": channels}, collection2: {"admin_channels": channels}}}
             # Create a user
             pre_test_user_exists = admin_client.does_user_exist(db, user)
             if pre_test_user_exists is False:
@@ -149,18 +149,23 @@ def test_scopes_and_collections_replication(scopes_collections_tests_fixture, pa
         sg_client.get_doc(sg2_url, sg2["db"], uploaded_for_pull[0]["id"], rev=uploaded_for_pull[0]["rev"], auth=user2_auth, scope=scope, collection=collection)
     e.match("Not Found")
 
+    # changing this to a pull means that documents are note replicated for a multi-collection setup
+    # to test, change the db configs and collection access in the test fixture to remove collection2, and change this to pull swapping db1 with db2
+    # the test should pass with the above setup
+    # change the configs to have both collections again, but leave the replication as a pull and the test fails
+    # both single collection and multi-collection work when this replication is a push
     # 3. start a pull continous replication sg2 <- sg1
-    replicator2_id = sg2["sg_obj"].start_replication2(
-        local_db=sg2["db"],
-        remote_url=sg1["sg_obj"].url,
-        remote_db=sg1["db"],
-        remote_user=sg1["user"],
+    replicator2_id = sg1["sg_obj"].start_replication2(
+        local_db=sg1["db"],
+        remote_url=sg2["sg_obj"].url,
+        remote_db=sg2["db"],
+        remote_user=sg2["user"],
         remote_password=password,
-        direction="pull",
+        direction="push",
         continuous=False,
         collections_enabled=True
     )
-    admin_client_2.wait_until_sgw_replication_done(sg2["db"], replicator2_id, read_flag=True, max_times=3000)
+    admin_client_2.wait_until_sgw_replication_done(sg1["db"], replicator2_id, read_flag=True, max_times=3000)
 
     # 3. Check that the documents were replicated to sgw2
     for i in range(0, num_of_docs - 1):
