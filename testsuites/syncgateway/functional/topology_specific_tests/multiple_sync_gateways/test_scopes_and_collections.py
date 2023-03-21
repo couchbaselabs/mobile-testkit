@@ -113,13 +113,7 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
     except Exception as e:
         raise e
     finally:
-        cb_server.delete_scope_if_exists(bucket, scope)
-        cb_server.delete_scope_if_exists(bucket2, scope)
-        cb_server.delete_scope_if_exists(bucket3, scope)
-        cb_server.delete_buckets()
-        if pre_test_is_bucket_exist:
-            cb_server.create_bucket(cluster_config, bucket)
-
+        # potential error here, as we overwrite pre_test variables in the fixture for each db created
         for key in sgs:
             admin_client = Admin(sgs[key]["sg_obj"])
             # Cleanup everything that was created
@@ -128,6 +122,13 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
             if (pre_test_db_exists is not None) and (pre_test_db_exists is False):
                 if admin_client.does_db_exist(sgs[key]["db"]) is True:
                     admin_client.delete_db(sgs[key]["db"])
+
+        cb_server.delete_scope_if_exists(bucket, scope)
+        cb_server.delete_scope_if_exists(bucket2, scope)
+        cb_server.delete_scope_if_exists(bucket3, scope)
+        cb_server.delete_buckets()
+        if pre_test_is_bucket_exist:
+            cb_server.create_bucket(cluster_config, bucket)
 
 
 @pytest.mark.syncgateway
