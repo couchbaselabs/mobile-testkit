@@ -429,7 +429,7 @@ class Admin:
             else:
                 log_info(f"Replication {repl_id} reports status 'stopped'")
                 break
-        if count == max_times: 
+        if count == max_times:
             log_info(f"Replication {repl_id} did not report stopped after {max_times} checks of status endpoint in {time.perf_counter()-start} seconds")
 
     def wait_until_sgw_replication_done(self, db, repl_id, read_flag=False, write_flag=False, max_times=180):
