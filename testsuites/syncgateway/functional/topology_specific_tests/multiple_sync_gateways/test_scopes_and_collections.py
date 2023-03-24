@@ -281,8 +281,8 @@ def test_replication_implicit_mapping_filtered_collection(scopes_collections_tes
     sg2_collection_docs_ids = [row["id"] for row in sg_client.get_all_docs(url=sg2_admin_url, db=sg2["db"], auth=user2_auth, scope=scope, collection=collection)["rows"]]
     sg2_collection_2_docs = sg_client.get_all_docs(url=sg2_admin_url, db=sg2["db"], auth=user2_auth, scope=scope, collection=collection2)
     assert sg2_collection_2_docs["total_rows"] == 0, f"Filtered collection {scope + '.' + collection2} contains {sg2_collection_2_docs['total_rows']} docs when it should contain 0 after replication"
-    for doc_id in [doc["id"] for doc in sg1_collection_docs]:
-        assert doc_id in sg2_collection_docs_ids, f"{doc_id} not found in {sg2['db'] + '.' + scope + '.' + collection} after replication"
+    assert_docs_replicated(sg1_collection_docs, sg2_collection_docs_ids, "sg2", sg2['db'], replicator_id, "pull")
+
 
 @pytest.mark.syncgateway
 @pytest.mark.collections
@@ -373,13 +373,9 @@ def test_multiple_replicators_multiple_scopes(scopes_collections_tests_fixture, 
     # 5. Assert that SG3 contains docs
     sg3_collection_doc_ids = [row["id"] for row in sg_client.get_all_docs(url=sg3_url, db=sg3["db"], auth=user3_auth, scope=scope, collection=collection)["rows"]]
     sg3_collection_2_doc_ids = [row["id"] for row in sg_client.get_all_docs(url=sg3_url, db=sg3["db"], auth=user3_auth, scope=scope, collection=collection2)["rows"]]
-    collection_2_ids = [doc["id"] for doc in sg2_collection_2_docs]
-    collection_ids = [doc["id"] for doc in sg1_collection_docs]
-    # can make generic assert function refactoring this from multiple tests
-    for id in collection_ids:
-        assert id in sg3_collection_doc_ids, f"{id} not found in {sg3['db'] + '.' + scope + '.' + collection} after replication"
-    for id in collection_2_ids:
-        assert id in sg3_collection_2_doc_ids, f"{id} not found in {sg3['db'] + '.' + scope + '.' + collection2} after replication"
+    
+    assert_docs_replicated(sg1_collection_docs, sg3_collection_doc_ids, "sg3", sg3['db'], replicator_1_id, "push")
+    assert_docs_replicated(sg2_collection_2_docs, sg3_collection_2_doc_ids, "sg3", sg3['db'], replicator_2_id, "push")
 
 
 @pytest.mark.syncgateway
@@ -453,6 +449,7 @@ def test_replication_explicit_mapping(scopes_collections_tests_fixture, params_f
     config_3 = {"bucket": bucket3, "scopes": {scope2: {"collections": {bucket3Collections[0]: {"sync": sync_function}, bucket3Collections[1]: {"sync": sync_function}, bucket3Collections[2]: {"sync": sync_function}, bucket3Collections[3]: {"sync": sync_function}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
     admin_client_1.post_db_config(sg1["db"], config_1)
     admin_client_2.post_db_config(sg2["db"], config_2)
+
     # for SG3 delete old db and user and create new db mapped to scope2 as multiple scopes is not yet supported
     db = sgs["sg3"]["db"]
     admin_client_3.delete_user_if_exists(db, sgs["sg3"]["user"])
@@ -467,11 +464,9 @@ def test_replication_explicit_mapping(scopes_collections_tests_fixture, params_f
 
     sg_client.update_user(sg1_admin_url, sg1["db"], sgs["sg1"]["user"], password=password, channels=channels, auth=admin_auth, collection_access=user1_collection_access)
     sg_client.update_user(sg2_admin_url, sg2["db"], sgs["sg2"]["user"], password=password, channels=channels, auth=admin_auth, collection_access=user2_collection_access)
-    #sg_client.update_user(sg3_admin_url, sg3["db"], sgs["sg3"]["user"], password=password, channels=channels, auth=admin_auth, collection_access=user3_collection_access)
 
     # for SG3 new db create new user
     sg_client.create_user(sg3_admin_url, db, sgs["sg3"]["user"], password, channels=channels, auth=admin_auth, collection_access=user3_collection_access)
-    #user3_auth = "test_user", password
 
     # 3. Upload docs to SG1
     sg1_collection_docs = sg_client.add_docs(url=sg1_url, db=sg1["db"], number=3, id_prefix="collection_1_doc", auth=user1_auth, scope=scope, collection=bucket1Collections[0], channels=["A"])
@@ -513,20 +508,20 @@ def test_replication_explicit_mapping(scopes_collections_tests_fixture, params_f
     sg2_docs = []
     sg3_docs = []
     for c in bucket2Collections:
-        collection_docs = sg_client.get_all_docs(url=sg2_url, db=sg2["db"], auth=user2_auth, scope=scope, collection=c)
-        sg2_docs.extend([row["id"] for row in collection_docs["rows"]])
+        sg2_docs.extend([row["id"] for row in sg_client.get_all_docs(url=sg2_url, db=sg2["db"], auth=user2_auth, scope=scope, collection=c)["rows"]])
     for c in bucket3Collections:
-        collection_docs = sg_client.get_all_docs(url=sg3_url, db=sg3["db"], auth=user3_auth, scope=scope2, collection=c)
-        sg3_docs.extend([row["id"] for row in collection_docs["rows"]])
+        sg3_docs.extend([row["id"] for row in sg_client.get_all_docs(url=sg3_url, db=sg3["db"], auth=user3_auth, scope=scope2, collection=c)["rows"]])
 
-    for doc in sg1_collection_docs:
-        id = doc["id"]
-        assert id in sg2_docs, f"Doc {id} not in sg2 after push replication {replicator_1_id}"
-        assert id in sg3_docs, f"Doc {id} not in sg3 after pull replication {replicator_2_id}"
-    for doc in sg1_collection2_docs:
-        id = doc["id"]
-        assert id in sg2_docs, f"Doc {id} not in sg2 after push replication {replicator_1_id}"
-        assert id in sg3_docs, f"Doc {id} not in sg3 after pull replication {replicator_2_id}"
-    for doc in sg1_collection3_docs:
-        assert doc["id"] in sg3_docs, f"Doc {id} not in sg3 after pull replication {replicator_2_id}"
+    should_be_in_sg2 = sg1_collection_docs + sg1_collection2_docs
+    should_be_in_sg3 = sg1_collection_docs + sg1_collection2_docs + sg1_collection3_docs
 
+    assert_docs_replicated(should_be_in_sg2, sg2_docs, "sg2", sg2["db"], replicator_1_id, "push")
+    assert_docs_replicated(should_be_in_sg3, sg3_docs, "sg3", sg3["db"], replicator_2_id, "pull")
+
+
+def assert_docs_replicated(docs, sg_docs_ids, sg, db, replicator_id, replicator_type):
+    """
+    Helper function to check docs are replicated and format error message if not
+    """
+    for doc in docs:
+        assert doc["id"] in sg_docs_ids, f"Doc {doc['id']} not in {sg} database {db} after {replicator_type} replication {replicator_id} "
