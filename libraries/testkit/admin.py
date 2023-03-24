@@ -405,7 +405,7 @@ class Admin:
             count += 1
             time.sleep(1)
         return active_resp_data
-    
+
     def replication_status_poll(self, db, repl_id, max_times):
         # TODO merge and simplify replication wait functions
         if not is_admin_auth_disabled(self.cluster_config):
@@ -413,7 +413,7 @@ class Admin:
         count = 0
         start = time.perf_counter()
         while count < max_times:
-            if count%10 == 0:
+            if count % 10 == 0:
                 elapsed = time.perf_counter()
                 log_info(f"{count} calls to _replicationStatus performed in {elapsed-start} seconds")
             if self.auth:
@@ -429,7 +429,8 @@ class Admin:
             else:
                 log_info(f"Replication {repl_id} reports status 'stopped'")
                 break
-        if count == max_times: log_info(f"Replication {repl_id} did not report stopped after {max_times} checks of status endpoint in {time.perf_counter()-start} seconds")
+        if count == max_times: 
+            log_info(f"Replication {repl_id} did not report stopped after {max_times} checks of status endpoint in {time.perf_counter()-start} seconds")
 
     def wait_until_sgw_replication_done(self, db, repl_id, read_flag=False, write_flag=False, max_times=180):
         if not is_admin_auth_disabled(self.cluster_config):
