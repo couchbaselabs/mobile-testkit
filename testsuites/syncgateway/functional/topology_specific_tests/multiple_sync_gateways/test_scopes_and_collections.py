@@ -86,7 +86,7 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
             server_bucket = sgs[key]["bucket"]
             user = sgs[key]["user"]
             db = sgs[key]["db"]
-            #data = {"bucket": server_bucket, "scopes": {scope: {"collections": {collection: {"sync": sync_function}, collection2: {"sync": sync_function}}}}, "num_index_replicas": 0}
+            # data = {"bucket": server_bucket, "scopes": {scope: {"collections": {collection: {"sync": sync_function}, collection2: {"sync": sync_function}}}}, "num_index_replicas": 0}
             data = {"bucket": server_bucket, "scopes": {scope: {"collections": {collection: {"sync": sync_function}}}}, "num_index_replicas": 0}
             # Scope creation on the Couchbase server
             does_scope_exist = cb_server.does_scope_exist(server_bucket, scope)
@@ -102,7 +102,7 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
                 admin_client.delete_db(test_bucket_db)
             if pre_test_db_exists is False:
                 admin_client.create_db(db, data)
-            #collection_access = {scope: {collection: {"admin_channels": channels}, collection2: {"admin_channels": channels}}}
+            # collection_access = {scope: {collection: {"admin_channels": channels}, collection2: {"admin_channels": channels}}}
             collection_access = {scope: {collection: {"admin_channels": channels}}}
             # Create a user
             pre_test_user_exists = admin_client.does_user_exist(db, user)
@@ -261,8 +261,8 @@ def test_replication_implicit_mapping_filtered_collection(scopes_collections_tes
 
     # 2. Upload docs to SG1 collections
     sg1_collection_docs = sg_client.add_docs(url=sg1_url, db=sg1["db"], number=3, id_prefix="collection_1_doc", auth=user1_auth, scope=scope, collection=collection, channels=["A"])
-    sg1_collection_2_docs = sg_client.add_docs(url=sg1_url, db=sg1["db"], number=3, id_prefix="collection_2_doc", auth=user1_auth, scope=scope, collection=collection2, channels=["A"])
-    
+    sg_client.add_docs(url=sg1_url, db=sg1["db"], number=3, id_prefix="collection_2_doc", auth=user1_auth, scope=scope, collection=collection2, channels=["A"])
+
     # 3. Start one-shot pull replication SG1->SG2, filtering one collection
     replicator_id = sg2["sg_obj"].start_replication2(
         local_db=sg2["db"],
@@ -369,11 +369,11 @@ def test_multiple_replicators_multiple_scopes(scopes_collections_tests_fixture, 
 
     admin_client_1.replication_status_poll(sg1["db"], replicator_1_id, max_times=120)
     admin_client_3.replication_status_poll(sg3["db"], replicator_2_id, max_times=120)
-    
+
     # 5. Assert that SG3 contains docs
     sg3_collection_doc_ids = [row["id"] for row in sg_client.get_all_docs(url=sg3_url, db=sg3["db"], auth=user3_auth, scope=scope, collection=collection)["rows"]]
     sg3_collection_2_doc_ids = [row["id"] for row in sg_client.get_all_docs(url=sg3_url, db=sg3["db"], auth=user3_auth, scope=scope, collection=collection2)["rows"]]
-    
+
     assert_docs_replicated(sg1_collection_docs, sg3_collection_doc_ids, "sg3", sg3['db'], replicator_1_id, "push")
     assert_docs_replicated(sg2_collection_2_docs, sg3_collection_2_doc_ids, "sg3", sg3['db'], replicator_2_id, "push")
 
@@ -398,7 +398,7 @@ def test_replication_explicit_mapping(scopes_collections_tests_fixture, params_f
         scope1.collection3:scope2.collection8
     6. Assertions that docs are replicated
 
-    Does there need to be test that starting a new replication that remaps an already remapped collection cause an error? 
+    Does there need to be test that starting a new replication that remaps an already remapped collection cause an error?
     i.e. new replicator with scope1.collection3:scope2.collection9 should error if created after above replicators?
     """
     sg1 = sgs["sg1"]
@@ -427,7 +427,7 @@ def test_replication_explicit_mapping(scopes_collections_tests_fixture, params_f
 
     # 1. Create new scopes and collections
     # add one collection to B1, two to B2, four to B3
-    for i in range(3,10):
+    for i in range(3, 10):
         newCollection = "collection_" + str(i) + "_" + random_suffix
         if i == 3:
             cb_server.create_collection(bucket, scope, newCollection)
@@ -442,7 +442,7 @@ def test_replication_explicit_mapping(scopes_collections_tests_fixture, params_f
         else:
             cb_server.create_collection(bucket3, scope2, newCollection)
             bucket3Collections.append(newCollection)
-    
+
     # 2. Configure SGs
     config_1 = {"bucket": bucket, "scopes": {scope: {"collections": {bucket1Collections[0]: {"sync": sync_function}, bucket1Collections[1]: {"sync": sync_function}, bucket1Collections[2]: {"sync": sync_function}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
     config_2 = {"bucket": bucket2, "scopes": {scope: {"collections": {bucket2Collections[0]: {"sync": sync_function}, bucket2Collections[1]: {"sync": sync_function}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
