@@ -9,10 +9,6 @@ from libraries.testkit.cluster import Cluster
 from libraries.testkit.admin import Admin
 from keywords import couchbaseserver
 
-import requests
-from libraries.testkit.debug import log_request
-from libraries.testkit.debug import log_response
-import time
 # test file shared variables
 bucket = "data-bucket"
 bucket2 = "data-bucket-2"
