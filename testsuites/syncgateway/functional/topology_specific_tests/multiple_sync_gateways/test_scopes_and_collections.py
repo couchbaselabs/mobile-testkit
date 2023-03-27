@@ -375,7 +375,7 @@ def test_multiple_replicators_multiple_scopes(scopes_collections_tests_fixture, 
     sg3_collection_2_doc_ids = [row["id"] for row in sg_client.get_all_docs(url=sg3_url, db=sg3["db"], auth=user3_auth, scope=scope, collection=collection2)["rows"]]
 
     assert_docs_replicated(sg1_collection_docs, sg3_collection_doc_ids, "sg3", sg3['db'], replicator_1_id, "push")
-    assert_docs_replicated(sg2_collection_2_docs, sg3_collection_2_doc_ids, "sg3", sg3['db'], replicator_2_id, "push")
+    assert_docs_replicated(sg2_collection_2_docs, sg3_collection_2_doc_ids, "sg3", sg3['db'], replicator_2_id, "pull")
 
 
 @pytest.mark.syncgateway
