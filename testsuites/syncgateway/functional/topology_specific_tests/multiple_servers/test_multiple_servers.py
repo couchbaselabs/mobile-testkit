@@ -99,7 +99,7 @@ def test_rebalance_sanity(params_from_base_test_setup):
     client.verify_docs_present(sg_one_url, sg_db, updated_docs, auth=session)
 
     # Verify docs revisions in changes feed
-    client.verify_docs_in_changes(sg_one_url, sg_db, updated_docs, auth=session)
+    client.verify_docs_in_changes(admin_sg_one, sg_db, updated_docs, auth=auth)
 
 
 @pytest.mark.syncgateway
