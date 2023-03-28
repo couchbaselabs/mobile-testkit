@@ -935,7 +935,7 @@ class CouchbaseServer:
             base_url = "{}/cheshire-cat/{}".format(cbnas_base_url, build_number)
         elif version.startswith("7.1"):
             base_url = "{}/neo/{}".format(cbnas_base_url, build_number)
-        elif version.startswith("7.1"):
+        elif version.startswith("7.2"):
             base_url = "{}/neo/{}".format(cbnas_base_url, build_number)
         else:
             raise Exception(
