@@ -194,3 +194,65 @@ class AppServiceRestClient:
         log_info("Added: {} docs".format(len(added_docs)))
 
         return added_docs
+
+    def delete_docs(self, url, docs, auth):
+        """
+        Deletes a set of docs with the latest revision
+        """
+        for doc in docs:
+            doc_resp = self.get_doc(url, doc["id"], auth)
+            latest_rev = doc_resp["_rev"]
+            self.delete_doc(url, doc["id"], latest_rev, auth=auth)
+
+    def get_doc(self, url, doc_id, auth, rev=None, revs_info=False):
+
+        auth_type, auth = get_auth_type(auth)
+
+        params = {
+            "conflicts": "true",
+            "revs": "true"
+        }
+
+        if revs_info:
+            params["revs_info"] = "true"
+
+        if rev:
+            params["rev"] = rev
+
+        params["show_exp"] = "true"
+        url_string = "{}/{}".format(url, doc_id)
+
+        resp = self._session.get(url_string, params=params, auth=auth)
+
+        log_r(resp)
+        resp.raise_for_status()
+        resp_obj = resp.json()
+
+        if "_attachments" in resp_obj:
+            for k in list(resp_obj["_attachments"].keys()):
+                del resp_obj["_attachments"][k]["digest"]
+                del resp_obj["_attachments"][k]["length"]
+
+        return resp_obj
+
+    def delete_doc(self, url, doc_id, rev=None, auth=None, timeout=None):
+        """
+        Removes a document with the specfied revision
+        """
+
+        auth_type, auth = get_auth_type(auth)
+
+        params = {}
+        if rev is None:
+            assert "API endpoint must have a document revision to target"
+        else:
+            params["rev"] = rev
+        if timeout is not None:
+            params["timeout"] = timeout
+
+        resp = self._session.delete("{}/{}".format(url, doc_id), params=params, auth=auth, timeout=timeout)
+        log_r(resp)
+        resp.raise_for_status()
+        resp_obj = resp.json()
+
+        return resp_obj
