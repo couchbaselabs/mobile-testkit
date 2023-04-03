@@ -8,12 +8,13 @@ from keywords import types
 from keywords.utils import log_info
 from keywords.utils import log_r
 
-from keywords.exceptions import RestError, TimeoutException, LiteServError, ChangesError
+from keywords.exceptions import RestError
 from requests import Session
 from keywords.constants import AuthType
 
 
 from requests.auth import HTTPBasicAuth
+
 
 def parse_multipart_response(response):
 
@@ -33,11 +34,13 @@ def parse_multipart_response(response):
 
     return {"rows": rows}
 
+
 def get_auth(username, password):
 
     auth_type = AuthType.http_basic
     auth = HTTPBasicAuth(username, password)
     return auth_type, auth
+
 
 def get_auth_type(auth):
 
@@ -47,6 +50,7 @@ def get_auth_type(auth):
     logging.info("Using auth type: {}".format(auth_type))
     return auth_type, auth
 
+
 class MyEncoder(json.JSONEncoder):
 
     def default(self, obj):
@@ -54,7 +58,8 @@ class MyEncoder(json.JSONEncoder):
             return obj.decode("ASCII")
         # Let the base class default method raise the TypeError
         return json.JSONEncoder.default(self, obj)
-    
+
+
 class AppServiceRestClient:
 
     def __init__(self):
@@ -98,7 +103,7 @@ class AppServiceRestClient:
         auth_type, auth = get_auth_type(auth)
         doc_ids_formatted = [{"id": doc_id} for doc_id in doc_ids]
         request_body = {"docs": doc_ids_formatted}
-        resp = self._session.post("{}/_bulk_get?revs={}".format(url,revs_history), data=json.dumps(request_body), auth=auth)
+        resp = self._session.post("{}/_bulk_get?revs={}".format(url, revs_history), data=json.dumps(request_body), auth=auth)
         log_r(resp)
         resp.raise_for_status()
 
@@ -145,13 +150,13 @@ class AppServiceRestClient:
 
         return resp_obj
 
-    def add_docs( self, url, number, id_prefix, auth, channels=None, generator=None, attachments_generator=None, expiry=None):
+    def add_docs(self, url, number, id_prefix, auth, channels=None, generator=None, attachments_generator=None, expiry=None):
         auth_type, auth = get_auth_type(auth)
         added_docs = []
 
         if channels is not None:
             types.verify_is_list(channels)
-        
+
         log_info("PUT {} docs to {}/ with prefix {}".format(number, url, id_prefix))
         for i in range(number):
 
