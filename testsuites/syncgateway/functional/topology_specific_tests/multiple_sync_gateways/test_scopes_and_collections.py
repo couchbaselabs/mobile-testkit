@@ -273,7 +273,7 @@ def test_replication_implicit_mapping_filtered_collection(scopes_collections_tes
         direction="pull",
         continuous=False,
         collections_enabled=True,
-        collections_local=[collection]
+        collections_local=[keypath(scope, collection)]
     )
     admin_client_2.replication_status_poll(sg2["db"], replicator_id, max_times=120)
 
@@ -364,7 +364,7 @@ def test_multiple_replicators_multiple_scopes(scopes_collections_tests_fixture, 
         direction="pull",
         continuous=False,
         collections_enabled=True,
-        collections_local=[collection2]
+        collections_local=[keypath(scope, collection2)]
     )
 
     admin_client_1.replication_status_poll(sg1["db"], replicator_1_id, max_times=120)
@@ -483,8 +483,8 @@ def test_replication_explicit_mapping(scopes_collections_tests_fixture, params_f
         direction="push",
         continuous=False,
         collections_enabled=True,
-        collections_local=[collection, collection2],
-        collections_remote=[bucket2Collections[0], bucket2Collections[1]]
+        collections_local=[keypath(scope, collection), keypath(scope, collection2)],
+        collections_remote=[keypath(scope, bucket2Collections[0]), keypath(scope, bucket2Collections[1])]
     )
 
     # 5. Start one-shot pull replication SG1->SG3
@@ -497,8 +497,8 @@ def test_replication_explicit_mapping(scopes_collections_tests_fixture, params_f
         direction="pull",
         continuous=False,
         collections_enabled=True,
-        collections_local=[collection, collection2, bucket1Collections[2]],
-        collections_remote=[bucket3Collections[0], bucket3Collections[1], bucket3Collections[2]]
+        collections_local=[keypath(scope, collection), keypath(scope, collection2), keypath(scope, bucket1Collections[2])],
+        collections_remote=[keypath(scope2, bucket3Collections[0]), keypath(scope2, bucket3Collections[1]), keypath(scope2, bucket3Collections[2])]
     )
 
     admin_client_1.replication_status_poll(sg1["db"], replicator_1_id, max_times=120)
@@ -524,4 +524,9 @@ def assert_docs_replicated(docs, sg_docs_ids, sg, db, replicator_id, replicator_
     Helper function to check docs are replicated and format error message if not
     """
     for doc in docs:
-        assert doc["id"] in sg_docs_ids, f"Doc {doc['id']} not in {sg} database {db} after {replicator_type} replication {replicator_id} "
+        assert doc["id"] in sg_docs_ids, f"Doc {doc['id']} not in {sg} database {db} after {replicator_type} replication {replicator_id}"
+
+
+def keypath(scope, collection):
+    """Construct keypath for collection mapping"""
+    return (scope+'.'+collection)
