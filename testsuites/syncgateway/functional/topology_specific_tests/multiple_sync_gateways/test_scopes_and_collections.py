@@ -519,6 +519,84 @@ def test_replication_explicit_mapping(scopes_collections_tests_fixture, params_f
     assert_docs_replicated(should_be_in_sg3, sg3_docs, "sg3", sg3["db"], replicator_2_id, "pull")
 
 
+def test_multiple_dbs_same_bucket(scopes_collections_tests_fixture, params_from_base_test_setup):
+    """
+    Topology:
+        CBServer with 1 bucket, 1 scope, 4 collections
+        SG nodes 2, 1 db on each node mapped to the same scope but disjoint set of collections (1,2 on one, 3,4 on other)
+    Plan:
+        1. Add 2 more collections to bucket1 on CBServer
+        2. Update db config on SG1 to include collection 2
+        3. Create new db on SG2 mapped to bucket1, scope, with collections 3 and 4
+        4. Upload docs to SG1 collections
+        5. Initiate replication from SG1->SG2
+        6. Assert docs replicated
+    """
+
+    sg1 = sgs["sg1"]
+    sg2 = sgs["sg2"]
+    admin_client_1 = Admin(sg1["sg_obj"])
+    admin_client_2 = Admin(sg2["sg_obj"])
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+
+    sg_client, scope, collection, collection2 = scopes_collections_tests_fixture
+
+    # check sync gateway version
+    if sync_gateway_version < "3.0.0":
+        pytest.skip('This test cannot run with Sync Gateway version below 3.0')
+
+    # create users, user sessions
+    password = "password"
+    user1_auth = sgs["sg1"]["user"], password
+    user2_auth = sgs["sg2"]["user"], password
+
+    collection3 = "collection_3_" + random_suffix
+    collection4 = "collection_4_" + random_suffix
+    cb_server.create_collection(bucket, scope, collection3)
+    cb_server.create_collection(bucket, scope, collection4)
+
+    config_1 = {"bucket": bucket, "scopes": {scope: {"collections": {collection: {"sync": sync_function}, collection2: {"sync": sync_function}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
+    config_2 = {"bucket": bucket, "scopes": {scope: {"collections": {collection3: {"sync": sync_function}, collection4: {"sync": sync_function}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
+
+    collection_access_1 = {scope: {collection: {"admin_channels": channels}, collection2: {"admin_channels": channels}}}
+    collection_access_2 = {scope: {collection3: {"admin_channels": channels}, collection4: {"admin_channels": channels}}}
+
+    admin_client_1.post_db_config(sg1["db"], config_1)
+    sg_client.update_user(sg1_admin_url, sg1["db"], sgs["sg1"]["user"], password=password, channels=channels, auth=admin_auth, collection_access=collection_access_1)
+
+    # need to delete new db at end of test for teardown
+    sgs["sg2"]["bucket"] = bucket
+    sgs["sg2"]["db"] = "test_db" + random_suffix
+    db2 = sgs["sg2"]["db"]
+    admin_client_2.create_db(db2, config_2)
+    sg_client.create_user(sg2_admin_url, db2, sgs["sg2"]["user"], sg_password, channels=channels, auth=admin_auth, collection_access=collection_access_2)
+
+    sg1_collection_docs = sg_client.add_docs(url=sg1_url, db=sg1["db"], number=3, id_prefix="collection_1_doc", auth=user1_auth, scope=scope, collection=collection, channels=["A"])
+    sg1_collection2_docs = sg_client.add_docs(url=sg1_url, db=sg1["db"], number=4, id_prefix="collection_2_doc", auth=user1_auth, scope=scope, collection=collection2, channels=["A"])
+
+    # 5. Start one-shot pull replication SG1->SG3
+    replicator_id = sg2["sg_obj"].start_replication2(
+        local_db=sg2["db"],
+        remote_url=sg1["sg_obj"].url,
+        remote_db=sg1["db"],
+        remote_user=sg1["user"],
+        remote_password=password,
+        direction="pull",
+        continuous=False,
+        collections_enabled=True,
+        collections_local=[keyspace(scope, collection3), keyspace(scope, collection4)],
+        collections_remote=[keyspace(scope, collection), keyspace(scope, collection2)]
+    )
+
+    admin_client_2.replication_status_poll(sg2["db"], replicator_id, max_times=120)
+
+    should_be_in_sg2 = sg1_collection_docs + sg1_collection2_docs
+    sg2_docs = []
+    sg2_docs.extend([row["id"] for row in sg_client.get_all_docs(url=sg2_url, db=sg2["db"], auth=user2_auth, scope=scope, collection=collection3)["rows"]])
+    sg2_docs.extend([row["id"] for row in sg_client.get_all_docs(url=sg2_url, db=sg2["db"], auth=user2_auth, scope=scope, collection=collection4)["rows"]])
+    assert_docs_replicated(should_be_in_sg2, sg2_docs, "sg2", sg2["db"], replicator_id, "pull")
+    
+
 def assert_docs_replicated(docs, sg_docs_ids, sg, db, replicator_id, replicator_type):
     """
     Helper function to check docs are replicated and format error message if not
