@@ -415,7 +415,7 @@ class Admin:
         while count < max_times:
             if count % 10 == 0:
                 elapsed = time.perf_counter()
-                log_info(f"{count} calls to _replicationStatus performed in {elapsed-start} seconds")
+                log_info(f"{count} calls to _replicationStatus for {repl_id} performed in {elapsed-start} seconds")
             if self.auth:
                 r = requests.get("{}/{}/_replicationStatus/{}".format(self.admin_url, db, repl_id), verify=False, auth=self.auth)
             else:
