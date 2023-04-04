@@ -32,7 +32,7 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="Skip download and launch TestServer, use local debug build",
                      default=False)
-    
+
     parser.addoption("--appService-url",
                      action="store",
                      help="liteserv-platform: the platform to assign to the liteserv")
@@ -74,7 +74,6 @@ def pytest_addoption(parser):
     parser.addoption("--debug-mode", action="store_true",
                      help="Enable debug mode for the app ", default=False)
 
-
     parser.addoption("--enable-file-logging",
                      action="store_true",
                      help="If set, CBL file logging would enable. Supported only cbl2.5 onwards")
@@ -95,6 +94,7 @@ def pytest_addoption(parser):
     parser.addoption("--liteserv-android-serial-number",
                      action="store",
                      help="liteserv-android-serial-number: the serial number of the android device to be used")
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -119,7 +119,6 @@ def params_from_base_suite_setup(request):
     enable_file_logging = request.config.getoption("--enable-file-logging")
     cbl_log_decoder_platform = request.config.getoption("--cbl-log-decoder-platform")
     cbl_log_decoder_build = request.config.getoption("--cbl-log-decoder-build")
-    hide_product_version = request.config.getoption("--hide-product-version")
     liteserv_android_serial_number = request.config.getoption("--liteserv-android-serial-number")
 
     test_name = request.node.name
@@ -444,7 +443,7 @@ def setup_customized_teardown_test(request, params_from_base_test_setup):
     cbl_db3 = db.create(cbl_db_name3, db_config)
     log_info("setting up all 3 dbs")
 
-    yield{
+    yield { 
         "db": db,
         "cbl_db_name1": cbl_db_name1,
         "cbl_db_name2": cbl_db_name2,
