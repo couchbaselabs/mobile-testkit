@@ -574,7 +574,7 @@ def test_multiple_dbs_same_bucket(scopes_collections_tests_fixture, params_from_
     sg1_collection_docs = sg_client.add_docs(url=sg1_url, db=sg1["db"], number=3, id_prefix="collection_1_doc", auth=user1_auth, scope=scope, collection=collection, channels=["A"])
     sg1_collection2_docs = sg_client.add_docs(url=sg1_url, db=sg1["db"], number=4, id_prefix="collection_2_doc", auth=user1_auth, scope=scope, collection=collection2, channels=["A"])
 
-    # 5. Start one-shot pull replication SG1->SG3
+    # 5. Start one-shot pull replication SG1->SG2
     replicator_id = sg2["sg_obj"].start_replication2(
         local_db=sg2["db"],
         remote_url=sg1["sg_obj"].url,
@@ -596,6 +596,61 @@ def test_multiple_dbs_same_bucket(scopes_collections_tests_fixture, params_from_
     sg2_docs.extend([row["id"] for row in sg_client.get_all_docs(url=sg2_url, db=sg2["db"], auth=user2_auth, scope=scope, collection=collection4)["rows"]])
     assert_docs_replicated(should_be_in_sg2, sg2_docs, "sg2", sg2["db"], replicator_id, "pull")
     
+
+def test_missing_collection_error(scopes_collections_tests_fixture, params_from_base_test_setup):
+    """
+    Topology:
+        CBServer 2 buckets, 1 scope each, both containing two collections.
+        SGs 2, one mapped to each bucket, identical keyspaces for implicit mapping
+    Setup:
+        1. Update configs so SG1 has both collections, SG2 only has one
+        2. Add docs to SG1
+        3. Start push replication
+        4. Assert that error is encountered because collection is missing
+    """
+
+    sg1 = sgs["sg1"]
+    sg2 = sgs["sg2"]
+    admin_client_1 = Admin(sg1["sg_obj"])
+    admin_client_2 = Admin(sg2["sg_obj"])
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+
+    sg_client, scope, collection, collection2 = scopes_collections_tests_fixture
+
+    # check sync gateway version
+    if sync_gateway_version < "3.0.0":
+        pytest.skip('This test cannot run with Sync Gateway version below 3.0')
+
+    # create users, user sessions
+    password = "password"
+    user1_auth = sgs["sg1"]["user"], password
+    user2_auth = sgs["sg2"]["user"], password
+
+    config_1 = {"bucket": bucket, "scopes": {scope: {"collections": {collection: {"sync": sync_function}, collection2: {"sync": sync_function}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
+    collection_access_1 = {scope: {collection: {"admin_channels": channels}, collection2: {"admin_channels": channels}}}
+
+    admin_client_1.post_db_config(sg1["db"], config_1)
+    sg_client.update_user(sg1_admin_url, sg1["db"], sgs["sg1"]["user"], password=password, channels=channels, auth=admin_auth, collection_access=collection_access_1)
+
+    sg1_collection_docs = sg_client.add_docs(url=sg1_url, db=sg1["db"], number=3, id_prefix="collection_1_doc", auth=user1_auth, scope=scope, collection=collection, channels=["A"])
+    sg1_collection2_docs = sg_client.add_docs(url=sg1_url, db=sg1["db"], number=4, id_prefix="collection_2_doc", auth=user1_auth, scope=scope, collection=collection2, channels=["A"])
+
+
+    # 6. Start a push replication
+    # this should raise an error for missing collection on passive SG2 but does not currently?
+    replicator2_id = sg1["sg_obj"].start_replication2(
+        local_db=sg1["db"],
+        remote_url=sg2["sg_obj"].url,
+        remote_db=sg2["db"],
+        remote_user=sg2["user"],
+        remote_password=password,
+        direction="push",
+        continuous=False,
+        collections_enabled=True
+    )
+
+    admin_client_2.replication_status_poll(sg1["db"], replicator2_id, max_times=120)
+
 
 def assert_docs_replicated(docs, sg_docs_ids, sg, db, replicator_id, replicator_type):
     """
