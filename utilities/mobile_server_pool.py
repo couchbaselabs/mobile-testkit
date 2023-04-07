@@ -107,6 +107,7 @@ def reserve_node(doc_id, job_name, counter=0):
     doc["prevUser"] = doc["username"]
     doc["username"] = job_name
     doc["state"] = "booked"
+    doc["booked_time"] = time.strftime("%Y-%m-%d %H:%M:%S")
     try:
         sdk_client.replace(doc_id, doc, cas=curr_cas)
         return True
