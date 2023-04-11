@@ -70,17 +70,21 @@ def test_cbl_decoder_with_current_logs(params_from_base_test_setup):
         cbl_log_dir = log_file
     else:
         cbl_log_dir = "/tmp/test"
+    # android dir
+    log_dir_tmp = "/tmp/test"
+    if liteserv_platform == "net-msft" or liteserv_platform == "net-uwp":
+        log_dir_tmp = "/sdcard/tmp/test"
     # Clean up test directory to remove stale logs
     if os.path.exists(cbl_log_dir):
         shutil.rmtree(cbl_log_dir)
     if liteserv_platform == "android" or liteserv_platform == "xamarin-android":
         if device_enabled:
-            command = "adb -d shell mkdir /tmp/test"
+            command = "adb -d shell mkdir -p {}".format(log_dir_tmp)
         else:
             command = "adb -e shell mkdir /tmp/test"
         os.system(command)
     os.makedirs(cbl_log_dir)
-    log_obj.configure(log_level=log_level, plain_text=plain_text, directory=cbl_log_dir)
+    log_obj.configure(log_level=log_level, plain_text=plain_text, directory=log_dir_tmp)
     log_directory = log_obj.get_directory()
     log_info("logs are enabled at: {}".format(log_directory))
     if liteserv_version < "2.5.0":
@@ -100,8 +104,8 @@ def test_cbl_decoder_with_current_logs(params_from_base_test_setup):
 def get_logs(liteserv_platform, log_directory):
     # Not required for iOS as it stores logs in local path. Only Android and windows needs to pull logs from client
     if liteserv_platform == "android" or liteserv_platform == "xamarin-android":
-        shutil.rmtree(log_directory)
-        command = "adb -e pull {} {}".format(log_directory, log_directory)
+        shutil.rmtree("/tmp/test")
+        command = "adb pull {} {}".format("/sdcard/tmp/test", "/tmp/test")
         return_val = os.system(command)
         if return_val != 0:
             raise Exception("{0} failed".format(command))
