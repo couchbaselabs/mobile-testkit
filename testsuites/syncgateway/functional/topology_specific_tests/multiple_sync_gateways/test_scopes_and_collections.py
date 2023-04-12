@@ -1,4 +1,4 @@
-
+import time
 import pytest
 import uuid
 from keywords.MobileRestClient import MobileRestClient
@@ -86,8 +86,8 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
             server_bucket = sgs[key]["bucket"]
             user = sgs[key]["user"]
             db = sgs[key]["db"]
-            # data = {"bucket": server_bucket, "scopes": {scope: {"collections": {collection: {"sync": sync_function}, collection2: {"sync": sync_function}}}}, "num_index_replicas": 0}
-            data = {"bucket": server_bucket, "scopes": {scope: {"collections": {collection: {"sync": sync_function}}}}, "num_index_replicas": 0}
+            data = {"bucket": server_bucket, "scopes": {scope: {"collections": {collection: {"sync": sync_function}, collection2: {"sync": sync_function}}}}, "num_index_replicas": 0}
+            #data = {"bucket": server_bucket, "scopes": {scope: {"collections": {collection: {"sync": sync_function}}}}, "num_index_replicas": 0}
             # Scope creation on the Couchbase server
             does_scope_exist = cb_server.does_scope_exist(server_bucket, scope)
             if does_scope_exist is False:
@@ -102,8 +102,8 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
                 admin_client.delete_db(test_bucket_db)
             if pre_test_db_exists is False:
                 admin_client.create_db(db, data)
-            # collection_access = {scope: {collection: {"admin_channels": channels}, collection2: {"admin_channels": channels}}}
-            collection_access = {scope: {collection: {"admin_channels": channels}}}
+            collection_access = {scope: {collection: {"admin_channels": channels}, collection2: {"admin_channels": channels}}}
+            #collection_access = {scope: {collection: {"admin_channels": channels}}}
             # Create a user
             pre_test_user_exists = admin_client.does_user_exist(db, user)
             if pre_test_user_exists is False:
@@ -186,7 +186,8 @@ def test_scopes_and_collections_replication(scopes_collections_tests_fixture, pa
         continuous=False,
         collections_enabled=True
     )
-    admin_client_2.wait_until_sgw_replication_done(sg2["db"], replicator2_id, read_flag=True, max_times=3000)
+    admin_client_2.replication_status_poll(sg2["db"], replicator2_id, max_times=120)
+    time.sleep(1800)
 
     # 3. Check that the documents were replicated to sgw2
     for i in range(0, num_of_docs - 1):

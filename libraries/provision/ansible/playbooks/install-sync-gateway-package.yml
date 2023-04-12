@@ -111,6 +111,24 @@
   tasks:
   - include: tasks/deploy-sync-gateway-config.yml
 
+# Edit bootstrap.group_id in config using jq
+- hosts: sync_gateways
+  any_errors_fatal: true
+  become: yes
+  vars:
+    group_id_key: ".bootstrap.group_id"
+    group_id_value: "{{ inventory_hostname }}"
+    json_file: "/home/sync_gateway/sync_gateway.json"
+
+  tasks:
+  - name: "modify json"
+    command: >
+      jq "{{group_id_key}}=\"{{group_id_value}}\"" "{{json_file}}"
+    register: config
+
+  - debug:
+      var: config.stdout
+
 # Launch sync_gateway service
 - hosts: sync_gateways
   any_errors_fatal: true
