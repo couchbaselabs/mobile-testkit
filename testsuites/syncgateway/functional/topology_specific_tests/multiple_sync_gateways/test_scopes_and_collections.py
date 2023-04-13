@@ -222,6 +222,8 @@ def test_scopes_and_collections_replication(scopes_collections_tests_fixture, pa
     assert_docs_replicated(uploaded_for_push_c2, sg2_collection_2_docs_ids, "sg2", sg2["db"], replicator2_id, "push")
 
     # 8. Assert that stats are reported correctly on a per replication status
+    # WIP - stats are reported on a per replication basis sometimes instantly, but sometimes do not appear for push replication after ~4 mins
+    # could be an issue with testkit vms and setup
     # simple exponential backoff doubling wait time between api calls
     timeout = 240
     wait = 0.5
