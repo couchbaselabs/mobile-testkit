@@ -191,11 +191,11 @@ def test_scopes_and_collections_replication(scopes_collections_tests_fixture, pa
     # 4. Add another collection
     data1 = {"bucket": bucket, "scopes": {scope: {"collections": {collection: {"sync": sync_function}, collection2: {"sync": sync_function}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
     data2 = {"bucket": bucket2, "scopes": {scope: {"collections": {collection: {"sync": sync_function}, collection2: {"sync": sync_function}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
-    #collection_access = {scope: {collection: {"admin_channels": channels}, collection2: {"admin_channels": channels}}}
+    # collection_access = {scope: {collection: {"admin_channels": channels}, collection2: {"admin_channels": channels}}}
     admin_client_1.post_db_config(sg1["db"], data1)
     admin_client_2.post_db_config(sg2["db"], data2)
-    #sg_client.update_user(sg1_admin_url, sg1["db"], sgs["sg1"]["user"], password=password, channels=channels, auth=admin_auth, collection_access=collection_access)
-    #sg_client.update_user(sg2_admin_url, sg2["db"], sgs["sg2"]["user"], password=password, channels=channels, auth=admin_auth, collection_access=collection_access)
+    # sg_client.update_user(sg1_admin_url, sg1["db"], sgs["sg1"]["user"], password=password, channels=channels, auth=admin_auth, collection_access=collection_access)
+    # sg_client.update_user(sg2_admin_url, sg2["db"], sgs["sg2"]["user"], password=password, channels=channels, auth=admin_auth, collection_access=collection_access)
 
     # 5. Upload new documents to sgw1, both collections
     uploaded_for_push = sg_client.add_docs(url=sg1_url, db=sg1["db"], number=num_of_docs, id_prefix=push_replication_prefix, channels=["A"], auth=user1_auth, scope=scope, collection=collection)
@@ -240,7 +240,6 @@ def test_scopes_and_collections_replication(scopes_collections_tests_fixture, pa
         except KeyError:
             print(f"Did not find replication stats after {total} seconds")
             wait *= 2
-            
 
 
 @pytest.mark.syncgateway
@@ -541,6 +540,7 @@ def test_replication_explicit_mapping(scopes_collections_tests_fixture, params_f
     assert_docs_replicated(should_be_in_sg2, sg2_docs, "sg2", sg2["db"], replicator_1_id, "push")
     assert_docs_replicated(should_be_in_sg3, sg3_docs, "sg3", sg3["db"], replicator_2_id, "pull")
 
+
 @pytest.mark.syncgateway
 @pytest.mark.collections
 def test_multiple_dbs_same_bucket(scopes_collections_tests_fixture, params_from_base_test_setup):
@@ -619,7 +619,8 @@ def test_multiple_dbs_same_bucket(scopes_collections_tests_fixture, params_from_
     sg2_docs.extend([row["id"] for row in sg_client.get_all_docs(url=sg2_url, db=sg2["db"], auth=user2_auth, scope=scope, collection=collection3)["rows"]])
     sg2_docs.extend([row["id"] for row in sg_client.get_all_docs(url=sg2_url, db=sg2["db"], auth=user2_auth, scope=scope, collection=collection4)["rows"]])
     assert_docs_replicated(should_be_in_sg2, sg2_docs, "sg2", sg2["db"], replicator_id, "pull")
-    
+
+
 @pytest.mark.syncgateway
 @pytest.mark.collections
 # skip test currently as testkit setup is causing test to fail due to SG node bootstrap group_ids being the same
@@ -651,7 +652,6 @@ def test_missing_collection_error(scopes_collections_tests_fixture, params_from_
     # create users, user sessions
     password = "password"
     user1_auth = sgs["sg1"]["user"], password
-    user2_auth = sgs["sg2"]["user"], password
 
     config_1 = {"bucket": bucket, "scopes": {scope: {"collections": {collection: {"sync": sync_function}, collection2: {"sync": sync_function}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
     collection_access_1 = {scope: {collection: {"admin_channels": channels}, collection2: {"admin_channels": channels}}}
@@ -659,9 +659,8 @@ def test_missing_collection_error(scopes_collections_tests_fixture, params_from_
     admin_client_1.post_db_config(sg1["db"], config_1)
     sg_client.update_user(sg1_admin_url, sg1["db"], sgs["sg1"]["user"], password=password, channels=channels, auth=admin_auth, collection_access=collection_access_1)
 
-    sg1_collection_docs = sg_client.add_docs(url=sg1_url, db=sg1["db"], number=3, id_prefix="collection_1_doc", auth=user1_auth, scope=scope, collection=collection, channels=["A"])
-    sg1_collection2_docs = sg_client.add_docs(url=sg1_url, db=sg1["db"], number=4, id_prefix="collection_2_doc", auth=user1_auth, scope=scope, collection=collection2, channels=["A"])
-
+    sg_client.add_docs(url=sg1_url, db=sg1["db"], number=3, id_prefix="collection_1_doc", auth=user1_auth, scope=scope, collection=collection, channels=["A"])
+    sg_client.add_docs(url=sg1_url, db=sg1["db"], number=4, id_prefix="collection_2_doc", auth=user1_auth, scope=scope, collection=collection2, channels=["A"])
 
     # 6. Start a push replication
     # this should raise an error for missing collection on passive SG2 but does not currently?
@@ -689,4 +688,4 @@ def assert_docs_replicated(docs, sg_docs_ids, sg, db, replicator_id, replicator_
 
 def keyspace(scope, collection):
     """Construct keyspace for collection mapping"""
-    return (scope+'.'+collection)
+    return (scope + '.' + collection)
