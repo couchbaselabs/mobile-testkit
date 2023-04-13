@@ -1,4 +1,4 @@
-
+from time import sleep
 import pytest
 import uuid
 from keywords.MobileRestClient import MobileRestClient
@@ -135,10 +135,6 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
 @pytest.mark.collections
 def test_scopes_and_collections_replication(scopes_collections_tests_fixture, params_from_base_test_setup):
     """
-    TODO: If the fixture setup includes two collections on SG1 and SG2 and corresponding collections_access for users
-          then the check after the pull replication in step 3 fails
-          Currently adjust other tests to initialise multi-collection outside of fixture setup, but may potentially
-          be able to revert if this is a SGW issue that is fixed in future
         @summary:
         # 1. Create users, user sessions
         # 2. Upload documents to the pushing SGW and make sure that there are no document on the passive SGW
@@ -175,8 +171,8 @@ def test_scopes_and_collections_replication(scopes_collections_tests_fixture, pa
         sg_client.get_doc(sg2_url, sg2["db"], uploaded_for_pull[0]["id"], rev=uploaded_for_pull[0]["rev"], auth=user2_auth, scope=scope, collection=collection)
     e.match("Not Found")
 
-    # 3. start a pull continous replication sg2 <- sg1
-    replicator2_id = sg2["sg_obj"].start_replication2(
+    # 3. start a pull replication sg2 <- sg1
+    replicator1_id = sg2["sg_obj"].start_replication2(
         local_db=sg2["db"],
         remote_url=sg1["sg_obj"].url,
         remote_db=sg1["db"],
@@ -186,17 +182,20 @@ def test_scopes_and_collections_replication(scopes_collections_tests_fixture, pa
         continuous=False,
         collections_enabled=True
     )
-    admin_client_2.wait_until_sgw_replication_done(sg2["db"], replicator2_id, read_flag=True, max_times=3000)
+    admin_client_2.replication_status_poll(sg2["db"], replicator1_id, max_times=120)
 
     # 3. Check that the documents were replicated to sgw2
-    for i in range(0, num_of_docs - 1):
-        sg_client.get_doc(sg2_url, sg2["db"], uploaded_for_pull[i]["id"], auth=user2_auth, scope=scope, collection=collection)
+    sg2_collection_docs_ids = [row["id"] for row in sg_client.get_all_docs(url=sg2_admin_url, db=sg2["db"], auth=user2_auth, scope=scope, collection=collection)["rows"]]
+    assert_docs_replicated(uploaded_for_pull, sg2_collection_docs_ids, "sg2", sg2["db"], replicator1_id, "pull")
 
     # 4. Add another collection
     data1 = {"bucket": bucket, "scopes": {scope: {"collections": {collection: {"sync": sync_function}, collection2: {"sync": sync_function}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
     data2 = {"bucket": bucket2, "scopes": {scope: {"collections": {collection: {"sync": sync_function}, collection2: {"sync": sync_function}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
+    #collection_access = {scope: {collection: {"admin_channels": channels}, collection2: {"admin_channels": channels}}}
     admin_client_1.post_db_config(sg1["db"], data1)
     admin_client_2.post_db_config(sg2["db"], data2)
+    #sg_client.update_user(sg1_admin_url, sg1["db"], sgs["sg1"]["user"], password=password, channels=channels, auth=admin_auth, collection_access=collection_access)
+    #sg_client.update_user(sg2_admin_url, sg2["db"], sgs["sg2"]["user"], password=password, channels=channels, auth=admin_auth, collection_access=collection_access)
 
     # 5. Upload new documents to sgw1, both collections
     uploaded_for_push = sg_client.add_docs(url=sg1_url, db=sg1["db"], number=num_of_docs, id_prefix=push_replication_prefix, channels=["A"], auth=user1_auth, scope=scope, collection=collection)
@@ -214,12 +213,32 @@ def test_scopes_and_collections_replication(scopes_collections_tests_fixture, pa
         collections_enabled=True
     )
 
-    admin_client_2.wait_until_sgw_replication_done(sg1["db"], replicator2_id, read_flag=True, max_times=3000)
+    admin_client_2.replication_status_poll(sg1["db"], replicator2_id, max_times=120)
 
     # 7. Check that the new documents were replicated to sgw2
-    for i in range(0, num_of_docs - 1):
-        sg_client.get_doc(sg2_url, sg2["db"], uploaded_for_push[i]["id"], rev=uploaded_for_push[i]["rev"], auth=user2_auth, scope=scope, collection=collection)
-        sg_client.get_doc(sg2_url, sg2["db"], uploaded_for_push_c2[i]["id"], rev=uploaded_for_push_c2[i]["rev"], auth=user2_auth, scope=scope, collection=collection2)
+    sg2_collection_docs_ids = [row["id"] for row in sg_client.get_all_docs(url=sg2_admin_url, db=sg2["db"], auth=user2_auth, scope=scope, collection=collection)["rows"]]
+    sg2_collection_2_docs_ids = [row["id"] for row in sg_client.get_all_docs(url=sg2_admin_url, db=sg2["db"], auth=user2_auth, scope=scope, collection=collection2)["rows"]]
+    assert_docs_replicated(uploaded_for_push, sg2_collection_docs_ids, "sg2", sg2["db"], replicator2_id, "push")
+    assert_docs_replicated(uploaded_for_push_c2, sg2_collection_2_docs_ids, "sg2", sg2["db"], replicator2_id, "push")
+
+    # 8. Assert that stats are reported correctly on a per replication status
+    # simple exponential backoff doubling wait time between api calls
+    timeout = 240
+    wait = 0.5
+    total = 0
+    while total < timeout:
+        sleep(wait)
+        total += wait
+        stats_1 = sg_client.get_expvars(sg1_admin_url, admin_auth)
+        stats_2 = sg_client.get_expvars(sg2_admin_url, admin_auth)
+        try:
+            print(stats_2["syncgateway"]["per_db"][sg2["db"]]["replications"][replicator1_id])
+            print(stats_1["syncgateway"]["per_db"][sg1["db"]]["replications"][replicator2_id])
+            break
+        except KeyError:
+            print(f"Did not find replication stats after {total} seconds")
+            wait *= 2
+            
 
 
 @pytest.mark.syncgateway
