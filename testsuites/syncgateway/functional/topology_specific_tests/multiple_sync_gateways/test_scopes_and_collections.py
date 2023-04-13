@@ -401,6 +401,8 @@ def test_multiple_replicators_multiple_scopes(scopes_collections_tests_fixture, 
 
 @pytest.mark.syncgateway
 @pytest.mark.collections
+# skip test currently as testkit setup is causing test to fail due to SG node bootstrap group_ids being the same
+@pytest.skip
 def test_replication_explicit_mapping(scopes_collections_tests_fixture, params_from_base_test_setup):
     """
     Test that users can remap collections when performing ISGR
@@ -539,7 +541,8 @@ def test_replication_explicit_mapping(scopes_collections_tests_fixture, params_f
     assert_docs_replicated(should_be_in_sg2, sg2_docs, "sg2", sg2["db"], replicator_1_id, "push")
     assert_docs_replicated(should_be_in_sg3, sg3_docs, "sg3", sg3["db"], replicator_2_id, "pull")
 
-
+@pytest.mark.syncgateway
+@pytest.mark.collections
 def test_multiple_dbs_same_bucket(scopes_collections_tests_fixture, params_from_base_test_setup):
     """
     Topology:
@@ -617,7 +620,10 @@ def test_multiple_dbs_same_bucket(scopes_collections_tests_fixture, params_from_
     sg2_docs.extend([row["id"] for row in sg_client.get_all_docs(url=sg2_url, db=sg2["db"], auth=user2_auth, scope=scope, collection=collection4)["rows"]])
     assert_docs_replicated(should_be_in_sg2, sg2_docs, "sg2", sg2["db"], replicator_id, "pull")
     
-
+@pytest.mark.syncgateway
+@pytest.mark.collections
+# skip test currently as testkit setup is causing test to fail due to SG node bootstrap group_ids being the same
+@pytest.skip
 def test_missing_collection_error(scopes_collections_tests_fixture, params_from_base_test_setup):
     """
     Topology:
