@@ -191,11 +191,8 @@ def test_scopes_and_collections_replication(scopes_collections_tests_fixture, pa
     # 4. Add another collection
     data1 = {"bucket": bucket, "scopes": {scope: {"collections": {collection: {"sync": sync_function}, collection2: {"sync": sync_function}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
     data2 = {"bucket": bucket2, "scopes": {scope: {"collections": {collection: {"sync": sync_function}, collection2: {"sync": sync_function}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
-    # collection_access = {scope: {collection: {"admin_channels": channels}, collection2: {"admin_channels": channels}}}
     admin_client_1.post_db_config(sg1["db"], data1)
     admin_client_2.post_db_config(sg2["db"], data2)
-    # sg_client.update_user(sg1_admin_url, sg1["db"], sgs["sg1"]["user"], password=password, channels=channels, auth=admin_auth, collection_access=collection_access)
-    # sg_client.update_user(sg2_admin_url, sg2["db"], sgs["sg2"]["user"], password=password, channels=channels, auth=admin_auth, collection_access=collection_access)
 
     # 5. Upload new documents to sgw1, both collections
     uploaded_for_push = sg_client.add_docs(url=sg1_url, db=sg1["db"], number=num_of_docs, id_prefix=push_replication_prefix, channels=["A"], auth=user1_auth, scope=scope, collection=collection)
