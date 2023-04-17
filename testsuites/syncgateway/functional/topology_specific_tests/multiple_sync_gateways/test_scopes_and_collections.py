@@ -258,7 +258,7 @@ def test_replication_implicit_mapping_filtered_collection(scopes_collections_tes
     sg_client, scope, collection, collection2 = scopes_collections_tests_fixture
 
     # check sync gateway version
-    if sync_gateway_version < "3.0.0":
+    if sync_gateway_version < "3.1.0":
         pytest.skip('This test cannot run with Sync Gateway version below 3.0')
 
     # create users, user sessions
@@ -327,7 +327,7 @@ def test_multiple_replicators_multiple_scopes(scopes_collections_tests_fixture, 
     sg_client, scope, collection, collection2 = scopes_collections_tests_fixture
 
     # check sync gateway version
-    if sync_gateway_version < "3.0.0":
+    if sync_gateway_version < "3.1.0":
         pytest.skip('This test cannot run with Sync Gateway version below 3.0')
 
     # create users, user sessions
@@ -435,7 +435,7 @@ def test_replication_explicit_mapping(scopes_collections_tests_fixture, params_f
     bucket3Collections = []
 
     # check sync gateway version
-    if sync_gateway_version < "3.0.0":
+    if sync_gateway_version < "3.1.0":
         pytest.skip('This test cannot run with Sync Gateway version below 3.0')
 
     # create users, user sessions
@@ -563,7 +563,7 @@ def test_multiple_dbs_same_bucket(scopes_collections_tests_fixture, params_from_
     sg_client, scope, collection, collection2 = scopes_collections_tests_fixture
 
     # check sync gateway version
-    if sync_gateway_version < "3.0.0":
+    if sync_gateway_version < "3.1.0":
         pytest.skip('This test cannot run with Sync Gateway version below 3.0')
 
     # create users, user sessions
@@ -643,7 +643,7 @@ def test_missing_collection_error(scopes_collections_tests_fixture, params_from_
     sg_client, scope, collection, collection2 = scopes_collections_tests_fixture
 
     # check sync gateway version
-    if sync_gateway_version < "3.0.0":
+    if sync_gateway_version < "3.1.0":
         pytest.skip('This test cannot run with Sync Gateway version below 3.0')
 
     # create users, user sessions
