@@ -182,7 +182,7 @@ def test_scopes_and_collections_replication(scopes_collections_tests_fixture, pa
         continuous=False,
         collections_enabled=True
     )
-    admin_client_2.replication_status_poll(sg2["db"], replicator1_id, max_times=120)
+    admin_client_2.replication_status_poll(sg2["db"], replicator1_id, timeout=180)
 
     # 3. Check that the documents were replicated to sgw2
     sg2_collection_docs_ids = [row["id"] for row in sg_client.get_all_docs(url=sg2_admin_url, db=sg2["db"], auth=user2_auth, scope=scope, collection=collection)["rows"]]
@@ -213,7 +213,7 @@ def test_scopes_and_collections_replication(scopes_collections_tests_fixture, pa
         collections_enabled=True
     )
 
-    admin_client_2.replication_status_poll(sg1["db"], replicator2_id, max_times=120)
+    admin_client_2.replication_status_poll(sg1["db"], replicator2_id, timeout=180)
 
     # 7. Check that the new documents were replicated to sgw2
     sg2_collection_docs_ids = [row["id"] for row in sg_client.get_all_docs(url=sg2_admin_url, db=sg2["db"], auth=user2_auth, scope=scope, collection=collection)["rows"]]
@@ -295,7 +295,7 @@ def test_replication_implicit_mapping_filtered_collection(scopes_collections_tes
         collections_enabled=True,
         collections_local=[keyspace(scope, collection)]
     )
-    admin_client_2.replication_status_poll(sg2["db"], replicator_id, max_times=120)
+    admin_client_2.replication_status_poll(sg2["db"], replicator_id, timeout=180)
 
     # 4.Assert that docs in non-filtered collection are pulled, but filtered is not
     sg2_collection_docs_ids = [row["id"] for row in sg_client.get_all_docs(url=sg2_admin_url, db=sg2["db"], auth=user2_auth, scope=scope, collection=collection)["rows"]]
@@ -387,8 +387,8 @@ def test_multiple_replicators_multiple_scopes(scopes_collections_tests_fixture, 
         collections_local=[keyspace(scope, collection2)]
     )
 
-    admin_client_1.replication_status_poll(sg1["db"], replicator_1_id, max_times=120)
-    admin_client_3.replication_status_poll(sg3["db"], replicator_2_id, max_times=120)
+    admin_client_1.replication_status_poll(sg1["db"], replicator_1_id, timeout=180)
+    admin_client_3.replication_status_poll(sg3["db"], replicator_2_id, timeout=180)
 
     # 5. Assert that SG3 contains docs
     sg3_collection_doc_ids = [row["id"] for row in sg_client.get_all_docs(url=sg3_url, db=sg3["db"], auth=user3_auth, scope=scope, collection=collection)["rows"]]
@@ -401,7 +401,7 @@ def test_multiple_replicators_multiple_scopes(scopes_collections_tests_fixture, 
 @pytest.mark.syncgateway
 @pytest.mark.collections
 # skip test currently as testkit setup is causing test to fail due to SG node bootstrap group_ids being the same
-@pytest.skip
+@pytest.mark.skip
 def test_replication_explicit_mapping(scopes_collections_tests_fixture, params_from_base_test_setup):
     """
     Test that users can remap collections when performing ISGR
@@ -523,8 +523,8 @@ def test_replication_explicit_mapping(scopes_collections_tests_fixture, params_f
         collections_remote=[keyspace(scope2, bucket3Collections[0]), keyspace(scope2, bucket3Collections[1]), keyspace(scope2, bucket3Collections[2])]
     )
 
-    admin_client_1.replication_status_poll(sg1["db"], replicator_1_id, max_times=120)
-    admin_client_3.replication_status_poll(sg3["db"], replicator_2_id, max_times=120)
+    admin_client_1.replication_status_poll(sg1["db"], replicator_1_id, timeout=180)
+    admin_client_3.replication_status_poll(sg3["db"], replicator_2_id, timeout=180)
 
     # 6. Assert that docs are replicated
     sg2_docs = []
@@ -612,7 +612,7 @@ def test_multiple_dbs_same_bucket(scopes_collections_tests_fixture, params_from_
         collections_remote=[keyspace(scope, collection), keyspace(scope, collection2)]
     )
 
-    admin_client_2.replication_status_poll(sg2["db"], replicator_id, max_times=120)
+    admin_client_2.replication_status_poll(sg2["db"], replicator_id, timeout=180)
 
     should_be_in_sg2 = sg1_collection_docs + sg1_collection2_docs
     sg2_docs = []
@@ -624,7 +624,7 @@ def test_multiple_dbs_same_bucket(scopes_collections_tests_fixture, params_from_
 @pytest.mark.syncgateway
 @pytest.mark.collections
 # skip test currently as testkit setup is causing test to fail due to SG node bootstrap group_ids being the same
-@pytest.skip
+@pytest.mark.skip
 def test_missing_collection_error(scopes_collections_tests_fixture, params_from_base_test_setup):
     """
     Topology:
@@ -675,7 +675,7 @@ def test_missing_collection_error(scopes_collections_tests_fixture, params_from_
         collections_enabled=True
     )
 
-    admin_client_2.replication_status_poll(sg1["db"], replicator2_id, max_times=120)
+    admin_client_2.replication_status_poll(sg1["db"], replicator2_id, timeout=180)
 
 
 def assert_docs_replicated(docs, sg_docs_ids, sg, db, replicator_id, replicator_type):

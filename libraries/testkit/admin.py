@@ -406,16 +406,12 @@ class Admin:
             time.sleep(1)
         return active_resp_data
 
-    def replication_status_poll(self, db, repl_id, max_times):
+    def replication_status_poll(self, db, repl_id, timeout):
         # TODO merge and simplify replication wait functions
         if not is_admin_auth_disabled(self.cluster_config):
             self.auth = HTTPBasicAuth(RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd'])
-        count = 0
         start = time.perf_counter()
-        while count < max_times:
-            if count % 10 == 0:
-                elapsed = time.perf_counter()
-                log_info(f"{count} calls to _replicationStatus for {repl_id} performed in {elapsed-start} seconds")
+        while (time.perf_counter()-start) < timeout:
             if self.auth:
                 r = requests.get("{}/{}/_replicationStatus/{}".format(self.admin_url, db, repl_id), verify=False, auth=self.auth)
             else:
@@ -424,13 +420,13 @@ class Admin:
             resp_obj = r.json()
             status = resp_obj["status"]
             if status != "stopped":
-                count += 1
                 time.sleep(1)
             else:
                 log_info(f"Replication {repl_id} reports status 'stopped'")
                 break
-        if count == max_times:
-            log_info(f"Replication {repl_id} did not report stopped after {max_times} checks of status endpoint in {time.perf_counter()-start} seconds")
+        elapsed = (time.perf_counter()-start)
+        if elapsed >= timeout:
+            log_info(f"Replication {repl_id} did not report stopped after {elapsed} seconds")
 
     def wait_until_sgw_replication_done(self, db, repl_id, read_flag=False, write_flag=False, max_times=180):
         if not is_admin_auth_disabled(self.cluster_config):
