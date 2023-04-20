@@ -1641,7 +1641,7 @@ def test_sg_replicate_distributions_replications(params_from_base_test_setup, se
         sgw_repl_id.append(repl_id_x)
 
     repl2 = replicator.configure_and_replicate(
-        source_db=cbl_db2, replicator_authenticator=replicator_authenticator2, target_url=sg2_blip_url, err_check=False)
+        source_db=cbl_db2, replicator_authenticator=replicator_authenticator2, target_url=sg2_blip_url)
     replicator.wait_until_replicator_idle(repl1, err_check=False)
 
     active_tasks = sg1.admin.get_sgreplicate2_active_tasks(sg_db1, expected_tasks=number_of_replications)
