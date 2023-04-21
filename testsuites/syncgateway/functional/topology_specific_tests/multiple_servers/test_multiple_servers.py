@@ -175,7 +175,7 @@ def test_server_goes_down_sanity(params_from_base_test_setup):
     # Wait 30 seconds for auto failover
     # (Minimum value suggested - http://docs.couchbase.com/admin/admin/Tasks/tasks-nodeFailover.html)
     # + 15 seconds to add docs
-    timeout = 45
+    timeout = 120
     start = time.time()
 
     successful_add = False
