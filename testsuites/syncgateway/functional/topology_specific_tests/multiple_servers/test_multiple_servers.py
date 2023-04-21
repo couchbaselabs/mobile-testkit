@@ -207,9 +207,9 @@ def test_server_goes_down_sanity(params_from_base_test_setup):
     except keywords.exceptions.TimeoutException:
         # timeout verifying docs. Bring server back in to restore topology, then fail
         # Failing due to https://github.com/couchbase/sync_gateway/issues/2197
-        flakey_server.start()
-        main_server.recover(flakey_server)
-        main_server.rebalance_in(coucbase_servers, flakey_server)
+       # flakey_server.start()
+       # main_server.recover(flakey_server)
+       # main_server.rebalance_in(coucbase_servers, flakey_server)
         raise keywords.exceptions.TimeoutException("Failed to get all changes")
 
     # Test succeeded without timeout, bring server back into topology
