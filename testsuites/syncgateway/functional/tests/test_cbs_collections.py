@@ -12,7 +12,7 @@ from requests.auth import HTTPBasicAuth
 from requests.exceptions import HTTPError
 from keywords import document
 from libraries.data import doc_generators
-from time import sleep
+from time import sleep, time
 
 # test file shared variables
 bucket = "data-bucket"
@@ -329,9 +329,9 @@ def test_restricted_collection(scopes_collections_tests_fixture):
     admin_client.wait_for_db_online(db, 60)
 
     # 4. Check that documents in the server restricted collection are not accesible via SGW
-    retries = 0
-    max_retries = 15
-    while retries < max_retries:
+    timeout = 15  # 15 seconds
+    start = time.time()
+    while True:
         all_docs_ids = []
         for row in (sg_client.get_all_docs(sg_admin_url, db, scope=scope, collection=collection)["rows"]):
             all_docs_ids.append(row["id"])
@@ -342,10 +342,9 @@ def test_restricted_collection(scopes_collections_tests_fixture):
             assert(doc_3_key not in all_docs_ids), "Sync Gateway contains document from server restricted collection. Document ID " + doc_3_key + "under " + bucket + "." + scope + "." + third_collection
             break
         except Exception as e:
-            if retries == max_retries - 1:
+            if time.time() - start > timeout:
                 raise e
         sleep(1)
-        retries = retries + 1
 
 
 @pytest.mark.syncgateway
@@ -628,18 +627,17 @@ def test_collection_stats(scopes_collections_tests_fixture):
     assert("403" in str(e)), "User without access to collection should generate 403 HTTPError when trying to GET document. Instead got: \n" + str(e)
 
     # 5. Verify stats reflect changes from API calls correctly
-    retries = 0
-    max_retries = 15
-    while retries < max_retries:
+    timeout = 15  # 15 seconds
+    start = time.time()
+    while True:
         new_stats = sg_client.get_expvars(sg_admin_url, admin_auth)
         try:
             verify_collection_stats(db, scope, second_collection, third_collection, new_stats)
             break
         except Exception as e:
-            if retries == max_retries - 1:
+            if time.time() - start > timeout:
                 raise e
         sleep(1)
-        retries = retries + 1
 
 
 def rename_a_single_scope_or_collection(db, scope, new_name):
