@@ -1,6 +1,7 @@
 import uuid
 import pytest
 import random
+import time
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.MobileRestClient import MobileRestClient
 from keywords import couchbaseserver
@@ -12,7 +13,7 @@ from requests.auth import HTTPBasicAuth
 from requests.exceptions import HTTPError
 from keywords import document
 from libraries.data import doc_generators
-from time import sleep, time
+from time import sleep
 
 # test file shared variables
 bucket = "data-bucket"
