@@ -215,7 +215,7 @@ def test_server_goes_down_sanity(params_from_base_test_setup):
     server_docs = []
     for i in range(1, 100):
         main_server.add_simple_document("failover_server_doc_" + str(i), "data-bucket")
-        server_docs.append("failover_server_doc_" + i)
+        server_docs.append("failover_server_doc_" + str(i))
     client.verify_docs_present(url=sg_url, db=sg_db, expected_docs=server_docs, auth=session)
     try:
         client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=docs, auth=session, polling_interval=5)
