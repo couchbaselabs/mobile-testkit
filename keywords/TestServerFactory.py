@@ -19,7 +19,7 @@ class TestServerFactory:
         valid_platforms = ["android", "ios", "net-mono", "net-msft", "net-uwp", "xamarin-android", "xamarin-ios",
                            "java-macosx", "java-msft", "java-ubuntu", "java-centos", "c-rpi", "c-macosx",
                            "javaws-macosx", "javaws-msft", "javaws-ubuntu", "javaws-centos", "c-msft", "c-ios", "c-uwp",
-                           "c-android", "c-debian", "c-ubuntu"]
+                           "c-android", "c-debian", "c-ubuntu", "maui-android", "maui-winui"]
         if platform not in valid_platforms:
             raise ValueError("Unsupported 'platform': {}".format(platform))
 
@@ -39,7 +39,7 @@ class TestServerFactory:
         TestServerFactory.validate_host(host)
         TestServerFactory.validate_port(port)
 
-        if platform == "android" or platform == "xamarin-android" or platform == "c-android":
+        if platform == "android" or platform == "xamarin-android" or platform == "c-android" or platform == "maui-android":
             return TestServerAndroid(version_build, host, port, community_enabled=community_enabled,
                                      debug_mode=debug_mode, platform=platform)
         elif platform == "ios" or platform == "xamarin-ios" or platform == "c-ios":
@@ -47,7 +47,7 @@ class TestServerFactory:
                                  platform=platform)
         elif platform == "net-mono":
             return TestServerNetMono(version_build, host, port)
-        elif platform == "net-msft" or platform == "net-uwp" or platform == "c-msft" or platform == "c-uwp":
+        elif platform == "net-msft" or platform == "net-uwp" or platform == "c-msft" or platform == "c-uwp" or platform == "maui-winui:
             return TestServerNetMsft(version_build, host, port, platform=platform, community_enabled=community_enabled)
         elif platform in ["java-macosx", "java-msft", "java-ubuntu", "java-centos"]:
             return TestServerJava(version_build, host, port, debug_mode, platform=platform,
