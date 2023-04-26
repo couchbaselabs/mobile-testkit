@@ -1,0 +1,9 @@
+- name: Windows Maui WinUI - Stop TestServer
+  hosts: windows
+  vars:
+    binary_path:
+
+  tasks:
+    - debug: msg="Stopping the Testserver Maui WinUI"
+    - name: Stop TestServer Maui WinUI
+      win_shell: C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ binary_path }}

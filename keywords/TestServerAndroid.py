@@ -40,6 +40,12 @@ class TestServerAndroid(TestServerBase):
                 self.package_name = self.apk_name = "CBLTestServer-C-enterprise.apk"
             self.installed_package_name = "com.couchbase.testsuite"
             self.activity_name = self.installed_package_name + "/android.app.NativeActivity"
+        elif self.platform == "maui-android":
+            # .Net6 Android
+            self.download_source = "couchbase-lite-net"
+            self.package_name = self.apk_name = "TestServer.Maui.Android.apk"
+            self.installed_package_name = "com.couchbase.testserver.maui"
+            self.activity_name = self.installed_package_name + "/crc64dd2ca96419a7f258.MainActivity"
         else:
             # Xamarin-android
             self.download_source = "couchbase-lite-net"
@@ -178,7 +184,8 @@ class TestServerAndroid(TestServerBase):
     def remove(self):
         """Removes the Test Server application from the running device
         """
-        android_app_names = ["com.couchbase.TestServerApp", "TestServer.Android"]
+        android_app_names = ["com.couchbase.TestServerApp", "TestServer.Android",
+                             "com.couchbase.testserver.maui"]
         for app_name in android_app_names:
             self.remove_android_servers(app_name)
 

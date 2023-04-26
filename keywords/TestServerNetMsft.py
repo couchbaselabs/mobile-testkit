@@ -55,6 +55,17 @@ class TestServerNetMsft(TestServerWinBase):
                 self.download_url = "{}/couchbase-lite-net/{}/{}".format(RELEASED_BUILDS, self.version, self.package_name)
             else:
                 self.download_url = "{}/couchbase-lite-net/{}/{}/{}".format(LATEST_BUILDS, self.version, self.build, self.package_name)
+        elif self.platform == "maui-winui":
+            self.binary_path = "TestServer-Maui-WinUI-{}\\run.ps1".format(self.version_build)
+            if self.build is None:
+                self.download_url = "{}/couchbase-lite-net/{}/TestServer.Maui.WinUI.zip".format(
+                    RELEASED_BUILDS, self.version)
+            else:
+                self.download_url = "{}/couchbase-lite-net/{}/{}/TestServer.Maui.WinUI.zip".format(
+                    LATEST_BUILDS, self.version, self.build)
+            self.package_name = "TestServer.Maui.WinUI.zip"
+            self.stop_binary_path = "TestServer-Maui-WinUI-{}\\stop.ps1".format(self.version_build)
+            self.build_name = "TestServer-Maui-WinUI-{}".format(self.version_build)
         else:
             self.binary_path = "TestServer-UWP-{}\\run.ps1".format(self.version_build)
             if self.build is None:
@@ -118,6 +129,16 @@ class TestServerNetMsft(TestServerWinBase):
                     "binary_path": self.binary_path
                 }
             )
+        elif self.platform == "maui-winui":
+            # .Net6 WinUI
+            log_info("Starting Test server Maui WinUI {}".format(self.binary_path))
+            # Start Testserver via Ansible on remote machine
+            status = self.ansible_runner.run_ansible_playbook(
+                "start-testserver-maui-winui.yml",
+                extra_vars={
+                    "binary_path": self.binary_path
+                }
+            )
         else:
             # net-uwp
             log_info("Starting Test server UWP {}".format(self.binary_path))
@@ -158,7 +179,14 @@ class TestServerNetMsft(TestServerWinBase):
             status = self.ansible_runner.run_ansible_playbook(
                 "stop-testserver-c-windows.yml"
             )
-
+        elif self.platform == "maui-winui":
+            # This is .Net6 WinUI
+            status = self.ansible_runner.run_ansible_playbook(
+                "stop-testserver-maui-winui.yml",
+                extra_vars={
+                    "binary_path": self.stop_binary_path
+                }
+            )
         else:
             # net-uwp
             status = self.ansible_runner.run_ansible_playbook(
