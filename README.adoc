@@ -2,7 +2,27 @@
 :toc: left
 :toclevels: 3
 
-This repository contains Mobile QE Functional / Integration tests. 
+This repository contains Mobile QE Functional / Integration tests.
+
+============================================== Specific branch information ==========================================
+The branch is for releases for 3.1.x
+
+Known failures are the time of branching:
+
+External-port-and-Address - all 4 tests
+testsuites.CBLTester.topology_specific_tests.multiple_sync_gateways.test_sgreplicate_cbl.test_sg_replicate_replications_with_drop_out_one_node
+testsuites.CBLTester.topology_specific_tests.multiple_sync_gateways.test_sgreplicate_cbl.test_sg_replicate_distributions_replications
+testsuites.CBLTester.topology_specific_tests.multiple_sync_gateways.test_sgreplicate_cbl.test_sg_replicate_update_sgw_nodes_in_cluster
+testsuites.CBLTester.topology_specific_tests.multiple_sync_gateways.test_sgreplicate_cbl.test_sg_replicate_restart_active_passive_nodes
+testsuites.CBLTester.topology_specific_tests.multiple_sync_gateways.test_sgreplicate_cbl.test_sg_replicate_push_pull_replication
+testsuites.CBLTester.topology_specific_tests.multiple_sync_gateways.test_sgreplicate_cbl.test_sg_replicate_channel_filtering_with_attachments
+testsuites.CBLTester.topology_specific_tests.multiple_sync_gateways.test_sgreplicate_cbl.test_sg_replicate_non_default_conflict_resolver
+testsuites.CBLTester.topology_specific_tests.multiple_sync_gateways.test_sgreplicate_cbl.test_sg_replicate_mixed_sgw_versions
+testsuites.CBLTester.topology_specific_tests.multiple_sync_gateways.test_sgreplicate_cbl.test_combination_of_cpc_and_noncpc[
+testsuites.syncgateway.functional.topology_specific_tests.multiple_sync_gateways.test_scopes_and_collections.* (flaky setup problem)
+testsuites.syncgateway.functional.tests.test_log_redaction.test_sgCollect_restApi
+testsuites.syncgateway.functional.tests.test_log_redaction.test_log_content_verification
+====================================================================================================================
 
 ```
 $ git clone https://github.com/couchbaselabs/mobile-testkit.git
