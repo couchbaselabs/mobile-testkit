@@ -1,0 +1,10 @@
+- name: Windows Maui WinUI - Start TestServer
+  hosts: windows
+  vars:
+    binary_path:
+
+  tasks:
+    - debug: msg="Starting the Testserver Maui WinUI"
+
+    - name: Start TestServer Maui WinUI
+      win_shell: C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ binary_path }}
