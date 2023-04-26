@@ -65,7 +65,7 @@ class TestServerNetMsft(TestServerWinBase):
                      LATEST_BUILDS, self.version, self.build)
             self.package_name = "TestServer.Maui.WinUI.zip"
             self.stop_binary_path = "TestServer-Maui-WinUI-{}\\stop.ps1".format(self.version_build)
-             self.build_name = "TestServer-Maui-WinUI-{}".format(self.version_build)
+            self.build_name = "TestServer-Maui-WinUI-{}".format(self.version_build)
         else:
             self.binary_path = "TestServer-UWP-{}\\run.ps1".format(self.version_build)
             if self.build is None:
