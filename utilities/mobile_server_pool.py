@@ -1,4 +1,5 @@
 import sys
+import subprocess
 from datetime import timedelta
 import paramiko
 import time
@@ -17,6 +18,7 @@ SSH_NUM_RETRIES = 3
 SSH_USERNAME = 'root'
 SSH_PASSWORD = 'couchbase'
 SSH_POLL_INTERVAL = 20
+MOBILE_OS = ["android", "ios"]
 
 timeout_options = ClusterTimeoutOptions(kv_timeout=timedelta(seconds=5), query_timeout=timedelta(seconds=10))
 options = ClusterOptions(PasswordAuthenticator(USERNAME, PASSWORD), timeout_options=timeout_options)
@@ -24,7 +26,7 @@ cluster = Cluster('couchbase://{}'.format(SERVER_IP), options)
 sdk_client = cluster.bucket(BUCKET_NAME)
 
 
-def get_nodes_available_from_mobile_pool(nodes_os_type, node_os_version):
+def get_nodes_available_from_mobile_pool(nodes_os_type, node_os_version, slave_ip):
     """
     Get number of nodes available
     :param num_of_nodes: No. of nodes one needs
@@ -34,15 +36,27 @@ def get_nodes_available_from_mobile_pool(nodes_os_type, node_os_version):
     :return: list of nodes reserved
     """
     # Getting list of available nodes through n1ql query
-    query_str = "select count(*) from `{}` where os='{}' " \
-                "AND os_version='{}' AND state='available'".format(BUCKET_NAME, nodes_os_type, node_os_version)
+    device_slave_ip = ""
+    if nodes_os_type in MOBILE_OS:
+        device_slave_ip = " AND slave_ip = '{}'".format(slave_ip)
+    query_str = "select  meta().id from `{}` where os='{}' " \
+                "AND os_version='{}' AND state='available'"\
+                " {}".format(BUCKET_NAME, nodes_os_type, node_os_version, device_slave_ip)
     query = cluster.query(query_str)
+    count = 0
     for row in query:
-        count = row["$1"]
+        doc_id = row["id"]
+        if nodes_os_type in MOBILE_OS:
+            check_alive = check_device_alive(doc_id)
+        else:
+            check_alive = check_vm_alive(doc_id)
+        if check_alive:
+            count += 1
     print(count)
 
 
-def get_nodes_from_pool_server(num_of_nodes, nodes_os_type, node_os_version, job_name_requesting_node):
+def get_nodes_from_pool_server(num_of_nodes, nodes_os_type, node_os_version, job_name_requesting_node,
+                               slave_ip=None):
     """
     Reserve no. of nodes from QE-mobile-pool
     :param num_of_nodes: No. of nodes one needs
@@ -52,22 +66,34 @@ def get_nodes_from_pool_server(num_of_nodes, nodes_os_type, node_os_version, job
     :return: list of nodes reserved
     """
     # Getting list of available nodes through n1ql query
+    device_slave_ip = ""
+    if nodes_os_type in MOBILE_OS:
+        device_slave_ip = " AND slave_ip = '{}'".format(slave_ip)
     query_str = "select meta().id from `{}` where os='{}' " \
-                "AND os_version='{}' AND state='available'".format(BUCKET_NAME, nodes_os_type, node_os_version)
+                "AND os_version='{}' AND state='available'" \
+                " {}".format(BUCKET_NAME, nodes_os_type, node_os_version, device_slave_ip)
     query = cluster.query(query_str)
     pool_list = []
     for row in query:
         doc_id = row["id"]
         print(doc_id, "doc id")
         is_node_reserved = reserve_node(doc_id, job_name_requesting_node)
-        vm_alive = check_vm_alive(doc_id)
-        if not vm_alive:
-            query_str = "update `{}` set state=\"VM_NOT_ALLIVE\" where meta().id='{}' " \
-                "and state='available'".format(doc_id)
-            query = cluster.query(query_str)
-        if is_node_reserved and vm_alive:
-            pool_list.append(str(doc_id))
-
+        if nodes_os_type not in MOBILE_OS:
+            vm_alive = check_vm_alive(doc_id)
+            if not vm_alive:
+                query_str = "update `{}` set state=\"VM_NOT_ALLIVE\" where meta().id='{}' " \
+                    "and state='available'".format(doc_id, doc_id)
+                query = cluster.query(query_str)
+            if is_node_reserved and vm_alive:
+                pool_list.append(str(doc_id))
+        else:
+            device_alive = check_device_alive(doc_id)
+            if not device_alive:
+                query_str = "update `{}` set state=\"device_down\" where meta().id='{}' " \
+                            "and state='available'".format(doc_id, doc_id)
+                query = cluster.query(query_str)
+            if is_node_reserved and device_alive:
+                pool_list.append(str(doc_id))
         if len(pool_list) == int(num_of_nodes):
             return pool_list
 
@@ -90,6 +116,12 @@ def check_vm_alive(server):
             num_retries = num_retries + 1
             time.sleep(SSH_POLL_INTERVAL)
             continue
+
+
+def check_device_alive(device_ip):
+    command = ["ping", "-c", "1", device_ip]
+    return subprocess.run(args=command, stdout=subprocess.DEVNULL,
+                          stderr=subprocess.DEVNULL).returncode == 0
 
 
 def reserve_node(doc_id, job_name, counter=0):
@@ -139,7 +171,9 @@ def release_node(pool_list, job_name):
         print(result.value)
         doc = result.value
         print(doc, "Doc details")
-        if doc["username"] == job_name:
+        print("\njob name: ", job_name)
+        print("\ndoc username: ", doc["username"])
+        if str(doc["username"] or "") == str(job_name or ""):
             doc["prevUser"] = doc["username"]
             doc["username"] = ""
             doc["state"] = "available"
@@ -219,6 +253,16 @@ if __name__ == "__main__":
        --nodes-os-type
        usage: python mobile_server_pool.py
        --num-of-nodes=3 --nodes-os-type=centos
+       ** ** Release server back to pool
+       python mobile_server_pool.py --release-nodes --pool-list 10.100.x.x,10.100.x.x
+       ** ** Get number of server available
+       python utilities/mobile_server_pool.py  --get-available-nodes  --nodes-os-type=centos
+       ** ** Get number of device available on specific slave
+       python utilities/mobile_server_pool.py  --get-available-nodes  --nodes-os-type="android" --slave-ip=10.100.x.x
+       ** ** Reserve a device from a specifice slave
+       python utilities/mobile_server_pool.py  --reserve-nodes  --num-of-nodes=1 --nodes-os-type="android" --slave-ip=10.100.x.x
+       ** ** Reserve servers from server pool
+       python utilities/mobile_server_pool.py  --reserve-nodes  --num-of-nodes=2 --nodes-os-type=centos
        """
 
     parser = OptionParser(usage=usage)
@@ -230,6 +274,9 @@ if __name__ == "__main__":
     parser.add_option("--nodes-os-type",
                       action="store", dest="nodes_os_type", default="centos",
                       help="specify the os type of requested node")
+    parser.add_option("--slave-ip",
+                      action="store", dest="slave_ip", default="None",
+                      help="Use to find device attached to this slave")
 
     parser.add_option("--nodes-os-version",
                       action="store", dest="nodes_os_version", default="7",
@@ -273,12 +320,12 @@ if __name__ == "__main__":
         raise Exception("Use either one the flag from --cleanup_nodes or --release-nodes or --reserve-nodes or --get-available-nodes")
 
     elif opts.get_available_nodes:
-        get_nodes_available_from_mobile_pool(opts.nodes_os_type, opts.nodes_os_version)
+        get_nodes_available_from_mobile_pool(opts.nodes_os_type, opts.nodes_os_version, opts.slave_ip)
 
     elif opts.reserve_nodes:
         log_info("Reserving {} node/s from QE-mobile-pool".format(opts.num_of_nodes))
         node_list = get_nodes_from_pool_server(opts.num_of_nodes, opts.nodes_os_type, opts.nodes_os_version,
-                                               opts.job_name)
+                                               opts.job_name, opts.slave_ip)
         log_info("Nodes reserved: {}".format(node_list))
         with open("resources/pool.json", "w") as fh:
             pool_json_str = '{ "ips": ['
@@ -311,7 +358,10 @@ if __name__ == "__main__":
             fh.write(pool_json_str)
     elif opts.release_nodes:
         try:
-            node_list = opts.pool_list.strip().split(',')
+            if "," in opts.pool_list.strip():
+                node_list = opts.pool_list.strip().split(',')
+            else:
+                node_list = [opts.pool_list.strip()]
         except AttributeError:
             raise AttributeError("Do provide pool node list to release IPs")
         log_info("Releasing nodes {} back to QE-mobile-pool".format(node_list))
