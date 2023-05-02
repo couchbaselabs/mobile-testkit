@@ -41,7 +41,7 @@ class TestServerAndroid(TestServerBase):
             self.installed_package_name = "com.couchbase.testsuite"
             self.activity_name = self.installed_package_name + "/android.app.NativeActivity"
         elif self.platform == "maui-android":
-            # .Net6 Android
+            # .Net6 Maui Android
             self.download_source = "couchbase-lite-net"
             self.package_name = self.apk_name = "TestServer.Maui.Android.apk"
             self.installed_package_name = "com.couchbase.testserver.maui"
