@@ -91,7 +91,7 @@ def get_nodes_from_pool_server(num_of_nodes, nodes_os_type, node_os_version, job
             if not device_alive:
                 query_str = "update `{}` set state=\"device_down\" where meta().id='{}' " \
                             "and state='available'".format(doc_id, doc_id)
-                query = cluster.query(query_str)
+               query = cluster.query(query_str)
             if is_node_reserved and device_alive:
                 pool_list.append(str(doc_id))
         if len(pool_list) == int(num_of_nodes):
@@ -117,6 +117,10 @@ def check_vm_alive(server):
             time.sleep(SSH_POLL_INTERVAL)
             continue
 
+def check_device_alive(device_ip):
+    command = ["ping", "-c", "1", device_ip]
+    return subprocess.run(args=command, stdout=subprocess.DEVNULL,
+                          stderr=subprocess.DEVNULL).returncode == 0
 
 def check_device_alive(device_ip):
     command = ["ping", "-c", "1", device_ip]

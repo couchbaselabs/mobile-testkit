@@ -58,11 +58,11 @@ class TestServerNetMsft(TestServerWinBase):
         elif self.platform == "maui-winui":
             self.binary_path = "TestServer-Maui-WinUI-{}\\run.ps1".format(self.version_build)
             if self.build is None:
-                self.download_url = "{}/couchbase-lite-net/{}/TestServer.Maui.WinUI.zip".format(
-                    RELEASED_BUILDS, self.version)
+                 self.download_url = "{}/couchbase-lite-net/{}/TestServer.Maui.WinUI.zip".format(
+                     RELEASED_BUILDS, self.version)
             else:
                 self.download_url = "{}/couchbase-lite-net/{}/{}/TestServer.Maui.WinUI.zip".format(
-                    LATEST_BUILDS, self.version, self.build)
+                     LATEST_BUILDS, self.version, self.build)
             self.package_name = "TestServer.Maui.WinUI.zip"
             self.stop_binary_path = "TestServer-Maui-WinUI-{}\\stop.ps1".format(self.version_build)
             self.build_name = "TestServer-Maui-WinUI-{}".format(self.version_build)
@@ -134,7 +134,7 @@ class TestServerNetMsft(TestServerWinBase):
             log_info("Starting Test server Maui WinUI {}".format(self.binary_path))
             # Start Testserver via Ansible on remote machine
             status = self.ansible_runner.run_ansible_playbook(
-                "start-testserver-maui-winui.yml",
+                 "start-testserver-maui-winui.yml",
                 extra_vars={
                     "binary_path": self.binary_path
                 }
