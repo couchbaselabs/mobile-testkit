@@ -36,12 +36,9 @@ def get_nodes_available_from_mobile_pool(nodes_os_type, node_os_version, slave_i
     :return: list of nodes reserved
     """
     # Getting list of available nodes through n1ql query
-    device_slave_ip = ""
-    if nodes_os_type in MOBILE_OS:
-        device_slave_ip = " AND slave_ip = '{}'".format(slave_ip)
     query_str = "select  meta().id from `{}` where os='{}' " \
                 "AND os_version='{}' AND state='available'"\
-                " {}".format(BUCKET_NAME, nodes_os_type, node_os_version, device_slave_ip)
+                .format(BUCKET_NAME, nodes_os_type, node_os_version)
     query = cluster.query(query_str)
     count = 0
     for row in query:
@@ -66,12 +63,9 @@ def get_nodes_from_pool_server(num_of_nodes, nodes_os_type, node_os_version, job
     :return: list of nodes reserved
     """
     # Getting list of available nodes through n1ql query
-    device_slave_ip = ""
-    if nodes_os_type in MOBILE_OS:
-        device_slave_ip = " AND slave_ip = '{}'".format(slave_ip)
     query_str = "select meta().id from `{}` where os='{}' " \
                 "AND os_version='{}' AND state='available'" \
-                " {}".format(BUCKET_NAME, nodes_os_type, node_os_version, device_slave_ip)
+                .format(BUCKET_NAME, nodes_os_type, node_os_version)
     query = cluster.query(query_str)
     pool_list = []
     for row in query:
@@ -116,10 +110,6 @@ def check_vm_alive(server):
             time.sleep(SSH_POLL_INTERVAL)
             continue
 
-def check_device_alive(device_ip):
-    command = ["ping", "-c", "1", device_ip]
-    return subprocess.run(args=command, stdout=subprocess.DEVNULL,
-                          stderr=subprocess.DEVNULL).returncode == 0
 
 def check_device_alive(device_ip):
     command = ["ping", "-c", "1", device_ip]
