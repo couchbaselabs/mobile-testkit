@@ -117,6 +117,10 @@ def check_vm_alive(server):
             time.sleep(SSH_POLL_INTERVAL)
             continue
 
+def check_device_alive(device_ip):
+    command = ["ping", "-c", "1", device_ip]
+    return subprocess.run(args=command, stdout=subprocess.DEVNULL,
+                          stderr=subprocess.DEVNULL).returncode == 0
 
 def check_device_alive(device_ip):
     command = ["ping", "-c", "1", device_ip]
