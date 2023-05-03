@@ -76,7 +76,6 @@ def get_nodes_from_pool_server(num_of_nodes, nodes_os_type, node_os_version, job
     pool_list = []
     for row in query:
         doc_id = row["id"]
-        print(doc_id, "doc id")
         is_node_reserved = reserve_node(doc_id, job_name_requesting_node)
         if nodes_os_type not in MOBILE_OS:
             vm_alive = check_vm_alive(doc_id)
