@@ -1093,9 +1093,11 @@ class CouchbaseServer:
 
     def delete_scope_if_exists(self, bucket, scope):
         did_scope_exist = self.does_scope_exist(bucket, scope)
-        resp = self._session.delete("{}/pools/default/buckets/{}/scopes/{}".format(self.url, bucket, scope))
-        log_r(resp)
-        resp.raise_for_status()
+        log_info(f"{scope} exists: {did_scope_exist}")
+        if did_scope_exist:
+            resp = self._session.delete("{}/pools/default/buckets/{}/scopes/{}".format(self.url, bucket, scope))
+            log_r(resp)
+            resp.raise_for_status()
 
         return did_scope_exist
 
