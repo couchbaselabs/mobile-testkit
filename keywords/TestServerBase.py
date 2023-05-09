@@ -65,9 +65,10 @@ class TestServerBase(object):
                 self.session.get(url)
                 # If request does not throw, exit retry loop
                 break
-            except ConnectionError:
+            except ConnectionError as e:
+                print("\n Connection error: ", e)
                 log_info("Test server app may not be launched (Retrying) ...  " + url)
-                time.sleep(1)
+                time.sleep(2)
                 count += 1
 
         if count == MAX_RETRIES:
