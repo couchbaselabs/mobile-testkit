@@ -370,6 +370,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     errors = c.verify_alive(mode)
 
     # if the test failed pull logs
+    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^" + request.node)
     if collect_logs or ("rep_call" in request.node and request.node.rep_call.failed) or len(errors) != 0:
         logging_helper = Logging()
         logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=test_name)
