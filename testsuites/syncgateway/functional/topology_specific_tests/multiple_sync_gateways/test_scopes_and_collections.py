@@ -45,6 +45,9 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
     global sg3_admin_url
     global random_suffix
 
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    if is_magma_enabled(cluster_config):
+        pytest.skip("It is not necessary to test ISGR with scopes and collections and MAGMA")
     try:  # To be able to teardon in case of a setup error
         random_suffix = str(uuid.uuid4())[:8]
         scope_prefix = "scope_"
@@ -52,10 +55,6 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
         scope = scope_prefix + random_suffix
         collection = collection_prefix + random_suffix
         collection2 = collection_prefix + "2_" + random_suffix
-        cluster_config = params_from_base_test_setup["cluster_config"]
-        print("*****************************************************" + str(is_magma_enabled(cluster_config)))
-        if is_magma_enabled(cluster_config):
-            pytest.skip("It is not necessary to test ISGR with scopes and collections and MAGMA")
         cbs_cluster = Cluster(config=cluster_config)
         client_auth = HTTPBasicAuth(sg_username, sg_password)
         channels = ["A"]
