@@ -47,6 +47,7 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     if is_magma_enabled(cluster_config):
+        print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^HERE")
         pytest.skip("It is not necessary to test ISGR with scopes and collections and MAGMA")
     try:  # To be able to teardon in case of a setup error
         random_suffix = str(uuid.uuid4())[:8]
