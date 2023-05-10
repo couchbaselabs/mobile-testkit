@@ -139,6 +139,16 @@ class TestServerNetMsft(TestServerWinBase):
                     "binary_path": self.binary_path
                 }
             )
+        elif self.platform == "maui-ios":
+            # .Net6 WinUI
+            log_info("Starting Test server Maui iOS {}".format(self.binary_path))
+            # Start Testserver via Ansible on remote machine
+            status = self.ansible_runner.run_ansible_playbook(
+                "start-testserver-maui-ios.yml",
+                extra_vars={
+                    "binary_path": self.binary_path
+                }
+            )
         else:
             # net-uwp
             log_info("Starting Test server UWP {}".format(self.binary_path))
