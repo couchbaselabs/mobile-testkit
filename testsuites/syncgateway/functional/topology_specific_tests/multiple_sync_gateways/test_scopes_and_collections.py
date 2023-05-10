@@ -55,6 +55,7 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
         scope = scope_prefix + random_suffix
         collection = collection_prefix + random_suffix
         collection2 = collection_prefix + "2_" + random_suffix
+        cluster_config = params_from_base_test_setup["cluster_config"]
         cbs_cluster = Cluster(config=cluster_config)
         client_auth = HTTPBasicAuth(sg_username, sg_password)
         channels = ["A"]
