@@ -8,6 +8,7 @@ from keywords.ClusterKeywords import ClusterKeywords
 from libraries.testkit.cluster import Cluster
 from libraries.testkit.admin import Admin
 from keywords import couchbaseserver
+from utilities.cluster_config_utils import is_magma_enabled
 
 # test file shared variables
 bucket = "data-bucket"
@@ -58,6 +59,8 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
 
         pre_test_db_exists = pre_test_user_exists = sg_client = None
         cluster_config = params_from_base_test_setup["cluster_config"]
+        if is_magma_enabled(cluster_config):
+            pytest.skip("There is no need to test ISGR and scopes and collections. If that changes, the buckets quota needs to increase")
         cluster_helper = ClusterKeywords(cluster_config)
         topology = cluster_helper.get_cluster_topology(cluster_config)
         cbs_url = topology["couchbase_servers"][0]
