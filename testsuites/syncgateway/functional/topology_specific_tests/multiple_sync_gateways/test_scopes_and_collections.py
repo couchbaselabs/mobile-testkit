@@ -53,15 +53,14 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
         collection = collection_prefix + random_suffix
         collection2 = collection_prefix + "2_" + random_suffix
         cluster_config = params_from_base_test_setup["cluster_config"]
+        print("*****************************************************" + str(is_magma_enabled(cluster_config)))
+        if is_magma_enabled(cluster_config):
+            pytest.skip("It is not necessary to test ISGR with scopes and collections and MAGMA")
         cbs_cluster = Cluster(config=cluster_config)
         client_auth = HTTPBasicAuth(sg_username, sg_password)
         channels = ["A"]
 
         pre_test_db_exists = pre_test_user_exists = sg_client = None
-        cluster_config = params_from_base_test_setup["cluster_config"]
-        print("*****************************************************" + str(is_magma_enabled(cbs_cluster)))
-        if is_magma_enabled(cbs_cluster):
-            pytest.skip("It is not necessary to test ISGR with scopes and collections and MAGMA")
         cluster_helper = ClusterKeywords(cluster_config)
         topology = cluster_helper.get_cluster_topology(cluster_config)
         cbs_url = topology["couchbase_servers"][0]
