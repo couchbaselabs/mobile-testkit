@@ -242,6 +242,12 @@ def test_server_goes_down_sanity(params_from_base_test_setup):
     client.verify_docs_present(url=sg_url, db=sg_db, expected_docs=more_docs + docs, auth=session)
     client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=more_docs + docs, auth=session, polling_interval=5)
 
+    docs = client.get_bulk_docs(admin_sg, sg_db, server_docs)
+    # client.verify_docs_present(url=sg_url, db=sg_db, expected_docs=server_docs, auth=session)
+    try:
+        client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=docs, auth=session, polling_interval=5)
+    except keywords.exceptions.TimeoutException:
+        raise keywords.exceptions.TimeoutException("Failed to get all changes")
     # Make sure all docs were not added before server was
     log_info("test_server_goes_down_sanity complete!")
 
