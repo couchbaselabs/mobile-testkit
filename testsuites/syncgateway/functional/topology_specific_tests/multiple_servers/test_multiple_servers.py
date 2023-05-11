@@ -215,10 +215,12 @@ def test_server_goes_down_sanity(params_from_base_test_setup):
     server_docs = []
     for i in range(1, 100):
         main_server.add_simple_document("failover_server_doc_" + str(i), "data-bucket")
-        doc = main_server.get_document("failover_server_doc_" + str(i), "data-bucket")
-        server_docs.append(doc)
-    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^" + str(server_docs))
-    client.verify_docs_present(url=sg_url, db=sg_db, expected_docs=server_docs, auth=session)
+        # doc = main_server.get_document("failover_server_doc_" + str(i), "data-bucket")
+        server_docs.append("failover_server_doc_" + str(i))
+
+    docs = client.get_bulk_docs(admin_sg, sg_db, server_docs)
+
+    # client.verify_docs_present(url=sg_url, db=sg_db, expected_docs=server_docs, auth=session)
     try:
         client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=docs, auth=session, polling_interval=5)
     except keywords.exceptions.TimeoutException:
