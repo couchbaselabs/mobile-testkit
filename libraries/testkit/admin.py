@@ -606,6 +606,8 @@ class Admin:
                 return False
             else:
                 raise Exception("Could not determine if the database exists due to the following error: " + str(e)) from e
+        except Exception:
+            return False
 
     def does_user_exist(self, db, user):
         try:
