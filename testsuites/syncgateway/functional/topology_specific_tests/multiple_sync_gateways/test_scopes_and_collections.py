@@ -144,10 +144,11 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
                 cb_server.delete_buckets()
                 if pre_test_is_bucket_exist:
                     cb_server.create_bucket(cluster_config, bucket)
-        except (Exception):
+        except Exception as e:
             print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^LOSHA_LOGGING")
             logging_helper = Logging()
             logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name="gilad_user_exists")
+            raise e
 
 
 @pytest.mark.syncgateway
