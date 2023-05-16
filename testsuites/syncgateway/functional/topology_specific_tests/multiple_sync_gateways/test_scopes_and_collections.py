@@ -113,7 +113,11 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
             # collection_access = {scope: {collection: {"admin_channels": channels}, collection2: {"admin_channels": channels}}}
             collection_access = {scope: {collection: {"admin_channels": channels}}}
             # Create a user
-            pre_test_user_exists = admin_client.does_user_exist(db, user)
+            try:
+                pre_test_user_exists = admin_client.does_user_exist(db, user)
+            except (Exception):
+                logging_helper = Logging()
+                logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name="gilad_user_exists")
             if pre_test_user_exists is False:
                 sg_client.create_user(admin_client.admin_url, db, user, sg_password, channels=channels, auth=admin_auth, collection_access=collection_access)
 
