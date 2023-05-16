@@ -610,7 +610,6 @@ class Admin:
     def does_user_exist(self, db, user):
         try:
             self.get_user_info(db, user)
-            raise Exception("gilad threw this")
             return True
         except requests.HTTPError as e:
             if e.response.status_code == 404:
