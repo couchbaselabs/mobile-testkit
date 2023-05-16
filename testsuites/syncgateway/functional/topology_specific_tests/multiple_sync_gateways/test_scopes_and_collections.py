@@ -103,6 +103,7 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
             try:
                 pre_test_db_exists = admin_client.does_db_exist(db)
             except Exception:
+                print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^GILAD_LOGGING")
                 logging_helper = Logging()
                 logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name="gilad_db_exists")
             test_bucket_db = admin_client.get_bucket_db(server_bucket)
