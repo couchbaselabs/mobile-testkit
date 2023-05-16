@@ -128,21 +128,26 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
         raise e
     finally:
         # potential error here, as we overwrite pre_test variables in the fixture for each db created
-        for key in sgs:
-            admin_client = Admin(sgs[key]["sg_obj"])
-            # Cleanup everything that was created
-            if (pre_test_user_exists is not None) and (pre_test_user_exists is False):
-                admin_client.delete_user_if_exists(sgs[key]["db"], sgs[key]["user"])
-            if (pre_test_db_exists is not None) and (pre_test_db_exists is False):
-                if admin_client.does_db_exist(sgs[key]["db"]) is True:
-                    admin_client.delete_db(sgs[key]["db"])
+        try:
+            for key in sgs:
+                admin_client = Admin(sgs[key]["sg_obj"])
+                # Cleanup everything that was created
+                if (pre_test_user_exists is not None) and (pre_test_user_exists is False):
+                    admin_client.delete_user_if_exists(sgs[key]["db"], sgs[key]["user"])
+                if (pre_test_db_exists is not None) and (pre_test_db_exists is False):
+                    if admin_client.does_db_exist(sgs[key]["db"]) is True:
+                        admin_client.delete_db(sgs[key]["db"])
 
-        cb_server.delete_scope_if_exists(bucket, scope)
-        cb_server.delete_scope_if_exists(bucket2, scope)
-        cb_server.delete_scope_if_exists(bucket3, scope)
-        cb_server.delete_buckets()
-        if pre_test_is_bucket_exist:
-            cb_server.create_bucket(cluster_config, bucket)
+                cb_server.delete_scope_if_exists(bucket, scope)
+                cb_server.delete_scope_if_exists(bucket2, scope)
+                cb_server.delete_scope_if_exists(bucket3, scope)
+                cb_server.delete_buckets()
+                if pre_test_is_bucket_exist:
+                    cb_server.create_bucket(cluster_config, bucket)
+        except (Exception):
+            print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^LOSHA_LOGGING")
+            logging_helper = Logging()
+            logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name="gilad_user_exists")
 
 
 @pytest.mark.syncgateway
