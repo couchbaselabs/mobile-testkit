@@ -117,6 +117,7 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
             try:
                 pre_test_user_exists = admin_client.does_user_exist(db, user)
             except (Exception):
+                print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ZHOVNA_LOGGING")
                 logging_helper = Logging()
                 logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name="gilad_user_exists")
             if pre_test_user_exists is False:
