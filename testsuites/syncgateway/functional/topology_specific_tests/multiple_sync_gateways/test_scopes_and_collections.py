@@ -9,6 +9,7 @@ from libraries.testkit.cluster import Cluster
 from libraries.testkit.admin import Admin
 from keywords import couchbaseserver
 from utilities.cluster_config_utils import is_magma_enabled
+from keywords.tklogging import Logging
 
 # test file shared variables
 bucket = "data-bucket"
@@ -99,7 +100,11 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
             cb_server.create_collection(server_bucket, scope, collection2)
             # SGW database creation
             admin_client = Admin(sgs[key]["sg_obj"])
-            pre_test_db_exists = admin_client.does_db_exist(db)
+            try:
+                pre_test_db_exists = admin_client.does_db_exist(db)
+            except Exception:
+                logging_helper = Logging()
+                logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name="gilad_db_exists")
             test_bucket_db = admin_client.get_bucket_db(server_bucket)
             if test_bucket_db is not None:
                 admin_client.delete_db(test_bucket_db)
