@@ -102,10 +102,12 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
             admin_client = Admin(sgs[key]["sg_obj"])
             try:
                 pre_test_db_exists = admin_client.does_db_exist(db)
-            except Exception:
+            except Exception as e:
                 print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^GILAD_LOGGING")
                 logging_helper = Logging()
-                logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name="gilad_db_exists")
+                logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name="gilad_failure_debug")
+                raise e
+
             test_bucket_db = admin_client.get_bucket_db(server_bucket)
             if test_bucket_db is not None:
                 admin_client.delete_db(test_bucket_db)
@@ -116,10 +118,11 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
             # Create a user
             try:
                 pre_test_user_exists = admin_client.does_user_exist(db, user)
-            except (Exception):
+            except Exception as e:
                 print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ZHOVNA_LOGGING")
                 logging_helper = Logging()
-                logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name="gilad_user_exists")
+                logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name="gilad_failure_debug")
+                raise e
             if pre_test_user_exists is False:
                 sg_client.create_user(admin_client.admin_url, db, user, sg_password, channels=channels, auth=admin_auth, collection_access=collection_access)
 
@@ -147,7 +150,7 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
         except Exception as e:
             print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^LOSHA_LOGGING")
             logging_helper = Logging()
-            logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name="gilad_user_exists")
+            logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name="gilad_failure_debug")
             raise e
 
 
