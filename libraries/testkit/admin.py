@@ -618,6 +618,8 @@ class Admin:
                 return False
             else:
                 raise Exception("Could not determine if the user exists due to the following error: " + str(e)) from e
+        except Exception:
+            return False
 
     def wait_for_db_online(self, db, timeout=60):
         log_info("Waiting for the db to be online")
