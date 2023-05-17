@@ -36,9 +36,14 @@ def get_nodes_available_from_mobile_pool(nodes_os_type, node_os_version, slave_i
     :return: list of nodes reserved
     """
     # Getting list of available nodes through n1ql query
+    query_phone_in_slave = ""
+    if nodes_os_type in MOBILE_OS:
+        if slave_ip is None:
+            raise Exception("\n**** we need slave ip to get phone info on that slave ***")
+        query_phone_in_slave = "AND slave_ip='{}'".format(slave_ip)
     query_str = "select  meta().id from `{}` where os='{}' " \
-                "AND os_version='{}' AND state='available'"\
-                .format(BUCKET_NAME, nodes_os_type, node_os_version)
+                "AND os_version='{}' AND state='available' {}"\
+                .format(BUCKET_NAME, nodes_os_type, node_os_version, query_phone_in_slave)
     query = cluster.query(query_str)
     count = 0
     for row in query:
@@ -63,9 +68,14 @@ def get_nodes_from_pool_server(num_of_nodes, nodes_os_type, node_os_version, job
     :return: list of nodes reserved
     """
     # Getting list of available nodes through n1ql query
+    query_phone_in_slave = ""
+    if nodes_os_type in MOBILE_OS:
+        if slave_ip is None:
+            raise Exception("\n**** we need slave ip to get phone info on that slave ***")
+        query_phone_in_slave = "AND slave_ip='{}'".format(slave_ip)
     query_str = "select meta().id from `{}` where os='{}' " \
-                "AND os_version='{}' AND state='available'" \
-                .format(BUCKET_NAME, nodes_os_type, node_os_version)
+                "AND os_version='{}' AND state='available' {}" \
+                .format(BUCKET_NAME, nodes_os_type, node_os_version, query_phone_in_slave)
     query = cluster.query(query_str)
     pool_list = []
     for row in query:
@@ -268,7 +278,7 @@ if __name__ == "__main__":
                       action="store", dest="nodes_os_type", default="centos",
                       help="specify the os type of requested node")
     parser.add_option("--slave-ip",
-                      action="store", dest="slave_ip", default="None",
+                      action="store", dest="slave_ip", default=None,
                       help="Use to find device attached to this slave")
 
     parser.add_option("--nodes-os-version",

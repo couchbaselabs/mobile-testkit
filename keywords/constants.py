@@ -21,6 +21,11 @@ REBALANCE_TIMEOUT_SECS = 3600
 REMOTE_EXECUTOR_TIMEOUT = 180
 SDK_TIMEOUT = 3600
 
+SERVER_IP = "172.23.104.162"
+USERNAME = "Administrator"
+PASSWORD = "esabhcuoc"
+BUCKET_NAME = "QE-mobile-pool"
+
 # Required to make sure that these are created with encryption
 # Use to build the command line flags for encryption
 REGISTERED_CLIENT_DBS = ["ls_db", "ls_db1", "ls_db2"]
