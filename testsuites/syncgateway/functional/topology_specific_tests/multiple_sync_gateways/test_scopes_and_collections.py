@@ -141,12 +141,13 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
                     if admin_client.does_db_exist(sgs[key]["db"]) is True:
                         admin_client.delete_db(sgs[key]["db"])
 
-                cb_server.delete_scope_if_exists(bucket, scope)
-                cb_server.delete_scope_if_exists(bucket2, scope)
-                cb_server.delete_scope_if_exists(bucket3, scope)
-                cb_server.delete_buckets()
-                if pre_test_is_bucket_exist:
-                    cb_server.create_bucket(cluster_config, bucket)
+            cb_server.delete_scope_if_exists(bucket, scope)
+            cb_server.delete_scope_if_exists(bucket2, scope)
+            cb_server.delete_scope_if_exists(bucket3, scope)
+            cb_server.delete_buckets()
+            if pre_test_is_bucket_exist:
+                cb_server.create_bucket(cluster_config, bucket)
+
         except Exception as e:
             print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^LOSHA_LOGGING")
             logging_helper = Logging()
