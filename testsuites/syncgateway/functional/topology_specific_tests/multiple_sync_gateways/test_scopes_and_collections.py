@@ -13,8 +13,8 @@ from keywords.tklogging import Logging
 
 # test file shared variables
 bucket = "data-bucket"
-bucket2 = "data-bucket-2"
-bucket3 = "data-bucket-3"
+bucket2 = "data-bucket-sc-isgr-2"
+bucket3 = "data-bucket-sc-isgr-3"
 sg_password = "password"
 cb_server = sg_username = channels = client_auth = None
 sgs = {}
