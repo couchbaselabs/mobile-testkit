@@ -1925,15 +1925,6 @@ def test_auto_purge_for_tombstone_docs(params_from_base_test_setup, with_local_u
 @pytest.mark.listener
 @pytest.mark.channel_revocation
 @pytest.mark.syncgateway
-@pytest.mark.parametrize("resurrect_type", [
-    pytest.param("same_doc_body"),
-    pytest.param("different_doc_body")
-])
-
-
-@pytest.mark.listener
-@pytest.mark.channel_revocation
-@pytest.mark.syncgateway
 def test_concurrent_update_on_channel_revocation(params_from_base_test_setup):
     """
         @summary:
