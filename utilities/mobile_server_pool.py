@@ -6,6 +6,7 @@ import time
 from requests import Session
 from optparse import OptionParser
 from couchbase.cluster import PasswordAuthenticator, ClusterTimeoutOptions, ClusterOptions, Cluster
+sys.path = [".", "keywords"] + sys.path
 from keywords.utils import log_info
 from couchbase.exceptions import CouchbaseException
 
