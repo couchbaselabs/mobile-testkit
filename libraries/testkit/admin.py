@@ -600,10 +600,10 @@ class Admin:
             expected_code = 403
         try:
             self.get_db_info(db)
-            return True
+            return False
         except requests.HTTPError as e:
             if e.response.status_code == expected_code:
-                return False
+                return True
             else:
                 raise Exception("Could not determine if the database exists due to the following error: " + str(e)) from e
 
