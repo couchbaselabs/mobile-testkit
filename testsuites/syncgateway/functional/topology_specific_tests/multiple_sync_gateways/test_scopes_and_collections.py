@@ -75,7 +75,7 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
         cb_server = couchbaseserver.CouchbaseServer(cbs_url)
 
         pre_test_is_bucket_exist = bucket in cb_server.get_bucket_names()
-        cb_server.delete_bucket(bucket)
+        cb_server.delete_buckets()
 
         cb_server.create_bucket(cluster_config, bucket, 100)
         cb_server.create_bucket(cluster_config, bucket2, 100)
