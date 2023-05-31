@@ -8,6 +8,7 @@ from keywords.ClusterKeywords import ClusterKeywords
 from libraries.testkit.cluster import Cluster
 from libraries.testkit.admin import Admin
 from keywords import couchbaseserver
+from utilities.cluster_config_utils import is_magma_enabled
 
 # test file shared variables
 bucket = "data-bucket"
@@ -44,6 +45,9 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
     global sg3_admin_url
     global random_suffix
 
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    if is_magma_enabled(cluster_config):
+        pytest.skip("It is not necessary to test ISGR with scopes and collections and MAGMA")
     try:  # To be able to teardon in case of a setup error
         random_suffix = str(uuid.uuid4())[:8]
         scope_prefix = "scope_"
@@ -57,7 +61,6 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
         channels = ["A"]
 
         pre_test_db_exists = pre_test_user_exists = sg_client = None
-        cluster_config = params_from_base_test_setup["cluster_config"]
         cluster_helper = ClusterKeywords(cluster_config)
         topology = cluster_helper.get_cluster_topology(cluster_config)
         cbs_url = topology["couchbase_servers"][0]
