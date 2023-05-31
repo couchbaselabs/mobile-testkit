@@ -331,35 +331,36 @@ if __name__ == "__main__":
         node_list = get_nodes_from_pool_server(opts.num_of_nodes, opts.nodes_os_type, opts.nodes_os_version,
                                                opts.job_name, opts.slave_ip)
         log_info("Nodes reserved: {}".format(node_list))
-        with open("resources/pool.json", "w") as fh:
-            pool_json_str = '{ "ips": ['
-            for node in node_list:
-                pool_json_str += '"{}", '.format(node)
-            if opts.sgw_nodes:
-                sgw_node_list = opts.sgw_nodes.strip().split(',')
-                for node in sgw_node_list:
-                    pool_json_str += '"{}", '.format(node)
-            if opts.load_balancer_nodes:
-                lp_node_list = opts.load_balancer_nodes.strip().split(',')
-                for node in lp_node_list:
-                    pool_json_str += '"{}", '.format(node)
-            pool_json_str = pool_json_str.rstrip(', ')
-            pool_json_str += "],"
-            if opts.sgw_nodes:
-                pool_json_str += '"ip_to_node_type": {'
+        if opts.nodes_os_type not in MOBILE_OS:
+            with open("resources/pool.json", "w") as fh:
+                pool_json_str = '{ "ips": ['
                 for node in node_list:
-                    pool_json_str += '"{}": "couchbase_servers", '.format(node)
-
-                for sgw_node in sgw_node_list:
-                    pool_json_str += '"{}": "sync_gateways", '.format(sgw_node)
+                    pool_json_str += '"{}", '.format(node)
+                if opts.sgw_nodes:
+                    sgw_node_list = opts.sgw_nodes.strip().split(',')
+                    for node in sgw_node_list:
+                        pool_json_str += '"{}", '.format(node)
                 if opts.load_balancer_nodes:
-                    for lp_node in lp_node_list:
-                        pool_json_str += '"{}": "load_balancers", '.format(lp_node)
+                    lp_node_list = opts.load_balancer_nodes.strip().split(',')
+                    for node in lp_node_list:
+                        pool_json_str += '"{}", '.format(node)
                 pool_json_str = pool_json_str.rstrip(', ')
-                pool_json_str += "},"
-            pool_json_str = pool_json_str.rstrip(', ')
-            pool_json_str += "}"
-            fh.write(pool_json_str)
+                pool_json_str += "],"
+                if opts.sgw_nodes:
+                    pool_json_str += '"ip_to_node_type": {'
+                    for node in node_list:
+                        pool_json_str += '"{}": "couchbase_servers", '.format(node)
+
+                    for sgw_node in sgw_node_list:
+                        pool_json_str += '"{}": "sync_gateways", '.format(sgw_node)
+                    if opts.load_balancer_nodes:
+                        for lp_node in lp_node_list:
+                            pool_json_str += '"{}": "load_balancers", '.format(lp_node)
+                    pool_json_str = pool_json_str.rstrip(', ')
+                    pool_json_str += "},"
+                pool_json_str = pool_json_str.rstrip(', ')
+                pool_json_str += "}"
+                fh.write(pool_json_str)
     elif opts.release_nodes:
         try:
             if "," in opts.pool_list.strip():
