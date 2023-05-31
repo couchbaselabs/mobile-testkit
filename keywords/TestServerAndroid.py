@@ -16,6 +16,7 @@ from keywords.constants import PASSWORD
 from keywords.constants import SERVER_IP
 from keywords.constants import BUCKET_NAME
 
+
 class TestServerAndroid(TestServerBase):
 
     def __init__(self, version_build, host, port, community_enabled=None, debug_mode=False,
@@ -160,7 +161,7 @@ class TestServerAndroid(TestServerBase):
                 self.android_id = device_info.value["device_id"]
                 print("\n\n*** android id: ", self.android_id)
         except Exception as e:
-            print("\nError: Android device information may not in server pool")
+            print("\nError: Android device information may not in server pool. {}".format(str(e)))
 
         try:
             # check what package is installed on device
@@ -189,7 +190,7 @@ class TestServerAndroid(TestServerBase):
             if count > max_retries:
                 raise LiteServError(".apk install failed!")
             try:
-                command = self.set_device_option(["adb", "-s",  self.android_id, "install",
+                command = self.set_device_option(["adb", "-s", self.android_id, "install",
                                                   "-r", apk_path])
                 output = subprocess.check_output(command)
                 break
@@ -380,7 +381,7 @@ class TestServerAndroid(TestServerBase):
         self._verify_launched()
 
     def set_device_option(self, command):
-        '''
+        """
             this method is to modify the adb command
             based on the self.device_option is given
             i.e.
@@ -390,7 +391,7 @@ class TestServerAndroid(TestServerBase):
             input: command = ["adb", "logcat"]
                    option = ["-s", "K183010440"]
             return: ["adb", "-s", "K183010440", "logcat"]
-        '''
-        #command[1:1] = self.device_option
-        #command = [x.strip() for x in command]
+        """
+        # command[1:1] = self.device_option
+        # command = [x.strip() for x in command]
         return command
