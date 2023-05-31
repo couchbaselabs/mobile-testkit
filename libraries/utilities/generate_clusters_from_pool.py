@@ -3,10 +3,11 @@ import os
 import sys
 import socket
 
-from keywords.utils import log_info
-from keywords.utils import log_warn
-from keywords.utils import log_error
-from optparse import OptionParser
+sys.path = [".", "keywords"] + sys.path
+from keywords.utils import log_info  # noqa: E402
+from keywords.utils import log_warn  # noqa: E402
+from keywords.utils import log_error  # noqa: E402
+from optparse import OptionParser  # noqa: E402
 
 
 class ClusterDef:
