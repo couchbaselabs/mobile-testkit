@@ -26,7 +26,7 @@ class ClusterDef:
 
 
 def write_config(config, pool_file, use_docker, sg_windows, sg_accel_windows, sg_platform="centos7",
-                 ipv6=False, x509_certs=False, cbs_platform="centos7"):
+                 ipv6=False, x509_certs=False, cbs_platform="centos7", debug=False):
 
     connection_string = ""
     if use_docker:
@@ -38,13 +38,14 @@ def write_config(config, pool_file, use_docker, sg_windows, sg_accel_windows, sg
 
     resource_folder = os.path.dirname(pool_file)
 
-    log_info("ips: {}".format(ips))
+    # log_info("ips: {}".format(ips))
 
     if len(ips) < config.num_machines_required():
-        log_warn("WARNING: Skipping config {} since {} machines required, but only {} provided".format(
-            config.name,
-            config.num_machines_required(),
-            len(ips)))
+        if debug:
+            log_warn("WARNING: Skipping config {} since {} machines required, but only {} provided".format(
+                config.name,
+                config.num_machines_required(),
+                len(ips)))
         return
 
     if ip_to_node_type_len > 0:
@@ -104,14 +105,14 @@ def write_config(config, pool_file, use_docker, sg_windows, sg_accel_windows, sg
 
             # Check if the number of cbs in the ip_to_node_type match the config
             if ip_to_node_type_defined and not found:
-                log_warn("WARNING: Skipping config {} since {} couchbase_servers required, but only {} provided".format(
-                    config.name,
-                    config.num_cbs,
-                    len(cbs_ips_to_remove))
-                )
+                if debug:
+                    log_warn("WARNING: Skipping config {} since {} couchbase_servers required, but only {} provided".format(
+                        config.name,
+                        config.num_cbs,
+                        len(cbs_ips_to_remove)))
 
-                # Sometimes the config file is partially generated, correct sg but invalid cb etc.
-                log_warn("WARNING: Removing the partially generated config {}".format(config.name))
+                    # Sometimes the config file is partially generated, correct sg but invalid cb etc.
+                    log_warn("WARNING: Removing the partially generated config {}".format(config.name))
                 os.unlink(f.name)
 
                 return
@@ -156,13 +157,14 @@ def write_config(config, pool_file, use_docker, sg_windows, sg_accel_windows, sg
 
             # Check if the number of sgs in the ip_to_node_type match the config
             if ip_to_node_type_defined and not found:
-                log_warn("WARNING: Skipping config {} since {} sync_gateways required, but only {} provided".format(
-                    config.name,
-                    config.num_sgs,
-                    len(sg_ips_to_remove)))
+                if debug:
+                    log_warn("WARNING: Skipping config {} since {} sync_gateways required, but only {} provided".format(
+                        config.name,
+                        config.num_sgs,
+                        len(sg_ips_to_remove)))
 
-                # Sometimes the config file is partially generated, correct cbs but invalid sg etc.
-                log_warn("WARNING: Removing the partially generated config {}".format(config.name))
+                    # Sometimes the config file is partially generated, correct cbs but invalid sg etc.
+                    log_warn("WARNING: Removing the partially generated config {}".format(config.name))
                 os.unlink(f.name)
 
                 return
@@ -208,16 +210,15 @@ def write_config(config, pool_file, use_docker, sg_windows, sg_accel_windows, sg
 
             # Check if the number of acs in the ip_to_node_type match the config
             if ip_to_node_type_defined and not found:
-                log_warn("WARNING: Skipping config {} since {} sg_accels required, but only {} provided".format(
-                    config.name,
-                    config.num_acs,
-                    len(ac_ips_to_remove))
-                )
+                if debug:
+                    log_warn("WARNING: Skipping config {} since {} sg_accels required, but only {} provided".format(
+                        config.name,
+                        config.num_acs,
+                        len(ac_ips_to_remove)))
 
-                # Sometimes the config file is partially generated, correct cbs but invalid ac etc.
-                log_warn("WARNING: Removing the partially generated config {}".format(config.name))
+                    # Sometimes the config file is partially generated, correct cbs but invalid ac etc.
+                    log_warn("WARNING: Removing the partially generated config {}".format(config.name))
                 os.unlink(f.name)
-
                 return
 
             # j is the counter for ip_to_node_type which is invalid if not defined
@@ -259,16 +260,15 @@ def write_config(config, pool_file, use_docker, sg_windows, sg_accel_windows, sg
 
             # Check if the number of lgs in the ip_to_node_type match the config
             if ip_to_node_type_defined and not found:
-                log_warn("WARNING: Skipping config {} since {} load_generators required, but only {} provided".format(
-                    config.name,
-                    config.num_lgs,
-                    len(lg_ips_to_remove))
-                )
+                if debug:
+                    log_warn("WARNING: Skipping config {} since {} load_generators required, but only {} provided".format(
+                        config.name,
+                        config.num_lgs,
+                        len(lg_ips_to_remove)))
 
-                # Sometimes the config file is partially generated, correct cbs but invalid lg etc.
-                log_warn("WARNING: Removing the partially generated config {}".format(config.name))
+                    # Sometimes the config file is partially generated, correct cbs but invalid lg etc.
+                    log_warn("WARNING: Removing the partially generated config {}".format(config.name))
                 os.unlink(f.name)
-
                 return
 
             # j is the counter for ip_to_node_type which is invalid if not defined
@@ -310,16 +310,15 @@ def write_config(config, pool_file, use_docker, sg_windows, sg_accel_windows, sg
 
             # Check if the number of lbs in the ip_to_node_type match the config
             if ip_to_node_type_defined and not found:
-                log_warn("WARNING: Skipping config {} since {} load_balancers required, but only {} provided".format(
-                    config.name,
-                    config.num_lbs,
-                    len(lb_ips_to_remove))
-                )
+                if debug:
+                    log_warn("WARNING: Skipping config {} since {} load_balancers required, but only {} provided".format(
+                        config.name,
+                        config.num_lbs,
+                        len(lb_ips_to_remove)))
 
-                # Sometimes the config file is partially generated, correct cbs but invalid lb etc.
-                log_warn("WARNING: Removing the partially generated config {}".format(config.name))
+                    # Sometimes the config file is partially generated, correct cbs but invalid lb etc.
+                    log_warn("WARNING: Removing the partially generated config {}".format(config.name))
                 os.unlink(f.name)
-
                 return
 
             # j is the counter for ip_to_node_type which is invalid if not defined
