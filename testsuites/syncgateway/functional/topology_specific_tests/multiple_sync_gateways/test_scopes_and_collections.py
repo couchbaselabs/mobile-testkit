@@ -12,8 +12,8 @@ from utilities.cluster_config_utils import is_magma_enabled
 
 # test file shared variables
 bucket = "data-bucket"
-bucket2 = "data-bucket-2"
-bucket3 = "data-bucket-3"
+bucket2 = "isgr-sc-tests-1"
+bucket3 = "isgr-sc-tests-2"
 sg_password = "password"
 cb_server = sg_username = channels = client_auth = None
 sgs = {}
@@ -75,7 +75,8 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
         cb_server = couchbaseserver.CouchbaseServer(cbs_url)
 
         pre_test_is_bucket_exist = bucket in cb_server.get_bucket_names()
-        cb_server.delete_buckets()
+        if pre_test_is_bucket_exist:
+            cb_server.delete_bucket(bucket)
 
         cb_server.create_bucket(cluster_config, bucket, 100)
         cb_server.create_bucket(cluster_config, bucket2, 100)
@@ -152,7 +153,7 @@ def test_scopes_and_collections_replication(scopes_collections_tests_fixture, pa
     admin_client_2 = Admin(sg2["sg_obj"])
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     num_of_docs = 3
-
+    sdkjfhsdkjhfkljsdhfskdjfh
     pull_replication_prefix = "should_be_in_sg2_after_pull"
     push_replication_prefix = "should_be_in_sg2_after_push"
     sg_client, scope, collection, collection2 = scopes_collections_tests_fixture
