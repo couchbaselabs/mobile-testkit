@@ -52,7 +52,7 @@ class SyncGatewayConfig:
             assert False, "aws and custom_build cannot both be true/assigned"
 
         if custom_build:
-            if custom_build.endwith('/'):
+            if custom_build.endswith('/'):
                 base_url = custom_build
             else:
                 base_url = custom_build + '/'
