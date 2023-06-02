@@ -52,7 +52,7 @@ class SyncGatewayConfig:
             assert False, "aws and custom_build cannot both be true/assigned"
 
         if custom_build:
-                base_url = custom_build + '/'
+            base_url = custom_build + '/'
         else:
             if self._build_number:
                 base_url = LATEST_BUILDS + "/sync_gateway/{}/{}".format(self._version_number, self._build_number)
