@@ -79,7 +79,6 @@ class SyncGatewayConfig:
                                                                self._build_number,
                                                                architecture,
                                                                platform_extension)
-
         return base_url, package_name
 
     def sync_gateway_base_url_and_package(self, sg_ce=False,

@@ -193,7 +193,11 @@ def pytest_addoption(parser):
 
     parser.addoption("--custom-build",
                      action="store",
-                     help="A full path to a custom build (example: a toy build)",
+                     help='''A full path to a custom build. The package name MUST be specified separately
+                     and it MUST be with the same convention as the standard one.
+                     A usage example:
+                     --custom-build http://latestbuilds.service.couchbase.com/builds/latestbuilds/sync_gateway/toys/233/ AND
+                     --sync-gateway-version: 3.2.0-233''',
                      default=None)
 
 
