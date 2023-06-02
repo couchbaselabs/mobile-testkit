@@ -25,7 +25,7 @@ from utilities.cluster_config_utils import get_load_balancer_ip
 def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_config, sg_ssl=False, sg_lb=False, cbs_ssl=False, use_views=False,
                       xattrs_enabled=False, no_conflicts_enabled=False, delta_sync_enabled=False, number_replicas=0, sg_ce=False,
                       cbs_platform="centos7", sg_platform="centos", sg_installer_type="msi", sa_platform="centos",
-                      sa_installer_type="msi", cbs_ce=False, aws=False, skip_couchbase_provision=False):
+                      sa_installer_type="msi", cbs_ce=False, aws=False, skip_couchbase_provision=False, custom_build=None):
 
     if is_cbs_ssl_enabled(cluster_config):
         log_info("WARNING: Potentially overwriting the user flag server_tls_skip_verify to True because the server is using ssl")
@@ -111,7 +111,8 @@ def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_conf
         sa_installer_type=sa_installer_type,
         sg_ce=sg_ce,
         ipv6=cluster.ipv6,
-        aws=aws
+        aws=aws,
+        custom_build=custom_build
     )
 
     # Install nginx

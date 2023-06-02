@@ -191,6 +191,11 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="Disable Admin auth")
 
+    parser.addoption("--custom-build",
+                     action="store_const",
+                     help="A full path to a custom build (example: a toy build)",
+                     default=None)
+
 
 # This will be called once for the at the beggining of the execution in the 'tests/' directory
 # and will be torn down, (code after the yeild) when all the test session has completed.
@@ -237,6 +242,7 @@ def params_from_base_suite_setup(request):
     enable_server_tls_skip_verify = request.config.getoption("--enable-server-tls-skip-verify")
     disable_admin_auth = request.config.getoption("--disable-admin-auth")
     trace_logs = request.config.getoption("--trace-logs")
+    custom_build = request.config.getoption("--custom-build")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
@@ -268,6 +274,7 @@ def params_from_base_suite_setup(request):
     log_info("enable_cbs_developer_preview: {}".format(enable_cbs_developer_preview))
     log_info("disable_persistent_config: {}".format(disable_persistent_config))
     log_info("trace_logs: {}".format(trace_logs))
+    log_info("custom build: {}".format(custom_build))
 
     # sg-ce is invalid for di mode
     if mode == "di" and sg_ce:
@@ -478,7 +485,8 @@ def params_from_base_suite_setup(request):
                     sa_installer_type=sa_installer_type,
                     sg_ce=sg_ce,
                     cbs_ce=cbs_ce,
-                    skip_couchbase_provision=skip_couchbase_provision
+                    skip_couchbase_provision=skip_couchbase_provision,
+                    custom_build=custom_build
                 )
             except ProvisioningError:
                 logging_helper = Logging()

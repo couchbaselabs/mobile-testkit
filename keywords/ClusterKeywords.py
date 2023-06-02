@@ -280,7 +280,7 @@ class ClusterKeywords:
 
     def provision_cluster(self, cluster_config, server_version, sync_gateway_version, sync_gateway_config, race_enabled=False,
                           sg_ce=False, cbs_platform="centos7", sg_platform="centos", sg_installer_type="msi",
-                          sa_platform="centos", sa_installer_type="msi", cbs_ce=False, skip_couchbase_provision=False):
+                          sa_platform="centos", sa_installer_type="msi", cbs_ce=False, skip_couchbase_provision=False, custom_build=None):
         if server_version is None or sync_gateway_version is None or sync_gateway_version is None:
             raise ProvisioningError("Please make sure you have server_version, sync_gateway_version, and sync_gateway_config are set")
 
@@ -331,7 +331,8 @@ class ClusterKeywords:
             sg_installer_type=sg_installer_type,
             sa_platform=sa_platform,
             sa_installer_type=sa_installer_type,
-            skip_couchbase_provision=skip_couchbase_provision
+            skip_couchbase_provision=skip_couchbase_provision,
+            custom_build=custom_build
         )
 
         # verify running services are the expected versions
