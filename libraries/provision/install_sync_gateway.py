@@ -52,15 +52,12 @@ class SyncGatewayConfig:
             assert False, "aws and custom_build cannot both be true/assigned"
 
         if custom_build:
-            if custom_build.endswith('/'):
-                base_url = custom_build
-            else:
                 base_url = custom_build + '/'
         else:
             if self._build_number:
                 base_url = LATEST_BUILDS + "/sync_gateway/{}/{}".format(self._version_number, self._build_number)
             else:
-                base_url = RELEASED_BUILDS + "/mobile/couchbase-sync-gateway/{}".format(self._version_number)
+                base_url = RELEASED_BUILDS + "/couchbase-sync-gateway/{}".format(self._version_number)
 
         if aws:
             base_url = "https://cbmobile-packages.s3.amazonaws.com"
