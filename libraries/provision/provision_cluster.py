@@ -234,8 +234,8 @@ if __name__ == "__main__":
                       type="string",
                       dest="sync_gateway_config_file",
                       default=default_sync_gateway_config,
-                      help="path to your sync_gateway_config file, uses" +
-                           " 'resources/sync_gateway_configs/sync_gateway_default_di.json' by default")
+                      help='''path to your sync_gateway_config file, uses
+                        'resources/sync_gateway_configs/sync_gateway_default_di.json' by default''')
 
     parser.add_option("", "--sync-gateway-commit",
                       action="store", type="string", dest="source_commit", default=None,
@@ -295,7 +295,7 @@ if __name__ == "__main__":
 
     try:
         cluster_conf = os.environ["CLUSTER_CONFIG"]
-    except KeyError as ke:
+    except KeyError:
         print("Make sure CLUSTER_CONFIG is defined and pointing to the configuration you would like to provision")
         raise KeyError("CLUSTER_CONFIG not defined. Unable to provision cluster.")
 
