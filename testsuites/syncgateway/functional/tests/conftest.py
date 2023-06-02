@@ -191,12 +191,12 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="Disable Admin auth")
 
-    parser.addoption("--custom-build",
+    parser.addoption("--sgw-custom-build",
                      action="store",
-                     help='''A full path to a custom build. The package name MUST be specified separately
+                     help='''A full path to a SGW custom build. The package name MUST be specified separately
                      and it MUST be with the same convention as the standard one.
                      A usage example:
-                     --custom-build http://latestbuilds.service.couchbase.com/builds/latestbuilds/sync_gateway/toys/233/ AND
+                     --sgw-custom-build http://latestbuilds.service.couchbase.com/builds/latestbuilds/sync_gateway/toys/233/ AND
                      --sync-gateway-version: 3.2.0-233''',
                      default=None)
 
@@ -246,7 +246,7 @@ def params_from_base_suite_setup(request):
     enable_server_tls_skip_verify = request.config.getoption("--enable-server-tls-skip-verify")
     disable_admin_auth = request.config.getoption("--disable-admin-auth")
     trace_logs = request.config.getoption("--trace-logs")
-    custom_build = request.config.getoption("--custom-build")
+    custom_build = request.config.getoption("--sgw-custom-build")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
