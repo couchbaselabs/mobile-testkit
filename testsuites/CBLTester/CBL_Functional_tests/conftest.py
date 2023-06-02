@@ -209,6 +209,10 @@ def pytest_addoption(parser):
                      action="store",
                      help="liteserv-android-serial-number: the serial number of the android device to be used")
 
+    parser.addoption("--android-id",
+                     action="store",
+                     help="android-id: the serial number of the android device to be used")
+
     parser.addoption("--scope-on-bucket",
                      action="store",
                      help="scope will be create on bucket",
@@ -280,6 +284,8 @@ def params_from_base_suite_setup(request):
 
     disable_admin_auth = request.config.getoption("--disable-admin-auth")
     liteserv_android_serial_number = request.config.getoption("--liteserv-android-serial-number")
+    android_id = request.config.getoption("--android-id")
+
 
     scope_name = request.config.getoption("--scope-name")
     collection_name = request.config.getoption("--collection-name")
@@ -300,8 +306,11 @@ def params_from_base_suite_setup(request):
 
         # Install TestServer app
         if device_enabled:
-            if "android" in liteserv_platform and liteserv_android_serial_number:
-                testserver.serial_number = liteserv_android_serial_number
+            if "android" in liteserv_platform:
+                if liteserv_android_serial_number:
+                    testserver.serial_number = liteserv_android_serial_number
+                if android_id:
+                    testserver.android_id = android_id
             testserver.install_device()
         else:
             testserver.install()

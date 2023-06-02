@@ -6,8 +6,9 @@ import time
 from requests import Session
 from optparse import OptionParser
 from couchbase.cluster import PasswordAuthenticator, ClusterTimeoutOptions, ClusterOptions, Cluster
-from keywords.utils import log_info
-from couchbase.exceptions import CouchbaseException
+sys.path = [".", "keywords"] + sys.path
+from keywords.utils import log_info  # noqa: E402
+from couchbase.exceptions import CouchbaseException  # noqa: E402
 
 SERVER_IP = "172.23.104.162"
 # SERVER_IP = "172.23.120.140"
@@ -36,9 +37,14 @@ def get_nodes_available_from_mobile_pool(nodes_os_type, node_os_version, slave_i
     :return: list of nodes reserved
     """
     # Getting list of available nodes through n1ql query
+    query_phone_in_slave = ""
+    if nodes_os_type in MOBILE_OS:
+        if slave_ip is None:
+            raise Exception("\n**** we need slave ip to get phone info on that slave ***")
+        query_phone_in_slave = "AND slave_ip='{}'".format(slave_ip)
     query_str = "select  meta().id from `{}` where os='{}' " \
-                "AND os_version='{}' AND state='available'"\
-                .format(BUCKET_NAME, nodes_os_type, node_os_version)
+                "AND os_version='{}' AND state='available' {}"\
+                .format(BUCKET_NAME, nodes_os_type, node_os_version, query_phone_in_slave)
     query = cluster.query(query_str)
     count = 0
     for row in query:
@@ -63,9 +69,14 @@ def get_nodes_from_pool_server(num_of_nodes, nodes_os_type, node_os_version, job
     :return: list of nodes reserved
     """
     # Getting list of available nodes through n1ql query
+    query_phone_in_slave = ""
+    if nodes_os_type in MOBILE_OS:
+        if slave_ip is None:
+            raise Exception("\n**** we need slave ip to get phone info on that slave ***")
+        query_phone_in_slave = "AND slave_ip='{}'".format(slave_ip)
     query_str = "select meta().id from `{}` where os='{}' " \
-                "AND os_version='{}' AND state='available'" \
-                .format(BUCKET_NAME, nodes_os_type, node_os_version)
+                "AND os_version='{}' AND state='available' {}" \
+                .format(BUCKET_NAME, nodes_os_type, node_os_version, query_phone_in_slave)
     query = cluster.query(query_str)
     pool_list = []
     for row in query:
@@ -268,7 +279,7 @@ if __name__ == "__main__":
                       action="store", dest="nodes_os_type", default="centos",
                       help="specify the os type of requested node")
     parser.add_option("--slave-ip",
-                      action="store", dest="slave_ip", default="None",
+                      action="store", dest="slave_ip", default=None,
                       help="Use to find device attached to this slave")
 
     parser.add_option("--nodes-os-version",
@@ -320,35 +331,36 @@ if __name__ == "__main__":
         node_list = get_nodes_from_pool_server(opts.num_of_nodes, opts.nodes_os_type, opts.nodes_os_version,
                                                opts.job_name, opts.slave_ip)
         log_info("Nodes reserved: {}".format(node_list))
-        with open("resources/pool.json", "w") as fh:
-            pool_json_str = '{ "ips": ['
-            for node in node_list:
-                pool_json_str += '"{}", '.format(node)
-            if opts.sgw_nodes:
-                sgw_node_list = opts.sgw_nodes.strip().split(',')
-                for node in sgw_node_list:
-                    pool_json_str += '"{}", '.format(node)
-            if opts.load_balancer_nodes:
-                lp_node_list = opts.load_balancer_nodes.strip().split(',')
-                for node in lp_node_list:
-                    pool_json_str += '"{}", '.format(node)
-            pool_json_str = pool_json_str.rstrip(', ')
-            pool_json_str += "],"
-            if opts.sgw_nodes:
-                pool_json_str += '"ip_to_node_type": {'
+        if opts.nodes_os_type not in MOBILE_OS:
+            with open("resources/pool.json", "w") as fh:
+                pool_json_str = '{ "ips": ['
                 for node in node_list:
-                    pool_json_str += '"{}": "couchbase_servers", '.format(node)
-
-                for sgw_node in sgw_node_list:
-                    pool_json_str += '"{}": "sync_gateways", '.format(sgw_node)
+                    pool_json_str += '"{}", '.format(node)
+                if opts.sgw_nodes:
+                    sgw_node_list = opts.sgw_nodes.strip().split(',')
+                    for node in sgw_node_list:
+                        pool_json_str += '"{}", '.format(node)
                 if opts.load_balancer_nodes:
-                    for lp_node in lp_node_list:
-                        pool_json_str += '"{}": "load_balancers", '.format(lp_node)
+                    lp_node_list = opts.load_balancer_nodes.strip().split(',')
+                    for node in lp_node_list:
+                        pool_json_str += '"{}", '.format(node)
                 pool_json_str = pool_json_str.rstrip(', ')
-                pool_json_str += "},"
-            pool_json_str = pool_json_str.rstrip(', ')
-            pool_json_str += "}"
-            fh.write(pool_json_str)
+                pool_json_str += "],"
+                if opts.sgw_nodes:
+                    pool_json_str += '"ip_to_node_type": {'
+                    for node in node_list:
+                        pool_json_str += '"{}": "couchbase_servers", '.format(node)
+
+                    for sgw_node in sgw_node_list:
+                        pool_json_str += '"{}": "sync_gateways", '.format(sgw_node)
+                    if opts.load_balancer_nodes:
+                        for lp_node in lp_node_list:
+                            pool_json_str += '"{}": "load_balancers", '.format(lp_node)
+                    pool_json_str = pool_json_str.rstrip(', ')
+                    pool_json_str += "},"
+                pool_json_str = pool_json_str.rstrip(', ')
+                pool_json_str += "}"
+                fh.write(pool_json_str)
     elif opts.release_nodes:
         try:
             if "," in opts.pool_list.strip():

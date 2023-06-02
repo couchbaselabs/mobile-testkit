@@ -9,13 +9,23 @@ from keywords.exceptions import LiteServError
 from keywords.utils import version_and_build
 from keywords.utils import log_info
 from platform import python_version
+from datetime import timedelta
+from couchbase.cluster import PasswordAuthenticator, ClusterTimeoutOptions, ClusterOptions, Cluster
+from keywords.constants import USERNAME
+from keywords.constants import PASSWORD
+from keywords.constants import SERVER_IP
+from keywords.constants import BUCKET_NAME
 
 
 class TestServerAndroid(TestServerBase):
 
-    def __init__(self, version_build, host, port, community_enabled=None, debug_mode=False, platform="android"):
+    def __init__(self, version_build, host, port, community_enabled=None, debug_mode=False,
+                 platform="android"):
         super(TestServerAndroid, self).__init__(version_build, host, port)
         self.platform = platform
+        """ Use query to reserve an android phone
+                python utilities/mobile_server_pool.py  --reserve-nodes  --num-of-nodes=1 --nodes-os-type="android" --slave-ip=xx
+        """
 
         if self.platform == "android":
             self.download_source = "couchbase-lite-android"
@@ -95,6 +105,7 @@ class TestServerAndroid(TestServerBase):
             log_info("remove the app before install, to ensure sandbox gets cleaned.")
             self.remove()
         except Exception as e:
+            print("\nException message: ", e)
             log_info("remove the app before install didn't go success, but still continue ......")
 
         log_info("Installing: {}".format(apk_path))
@@ -135,21 +146,39 @@ class TestServerAndroid(TestServerBase):
         if self.serial_number != "":
             self.device_option = ["-s", self.serial_number]
         apk_path = "{}/{}".format(BINARY_DIR, self.apk_name)
+        timeout_options = ClusterTimeoutOptions(kv_timeout=timedelta(seconds=5),
+                                                query_timeout=timedelta(seconds=10))
+        options = ClusterOptions(PasswordAuthenticator(USERNAME, PASSWORD),
+                                 timeout_options=timeout_options)
+        cluster = Cluster('couchbase://{}'.format(SERVER_IP), options)
+        sdk_client = cluster.bucket(BUCKET_NAME)
+        """ if use local device, use param --android-id=xxxxxx """
+        try:
+            """ android device info must put in server pool
+                user query --nodes-os-type-android to search """
+            device_info = sdk_client.get(self.host)
+            if device_info.value["device_id"]:
+                self.android_id = device_info.value["device_id"]
+                print("\n\n*** android id: ", self.android_id)
+        except Exception as e:
+            print("\nError: Android device information may not in server pool. {}".format(str(e)))
 
         try:
             # check what package is installed on device
-            cmd = self.set_device_option(["adb", "shell", "dumpsys", "package",
-                                          "com.couchbase.TestServerApp",
+            cmd = self.set_device_option(["adb", "-s", self.android_id, "shell", "dumpsys",
+                                          "package", "com.couchbase.TestServerApp",
                                           " | grep versionName ", "| cut -d= -f2- "])
+            print("\n\n command: ", cmd)
             output = subprocess.check_output(cmd)
             log_info("version in device {} ".format(output.decode()))
             if output.strip().decode() == self.version_build:
-                log_info("package {} is on device. We need to remove and fresh install ..."\
-                                                          .format(self.version_build))
+                log_info("package {} is on device. We need to remove and fresh install ..."
+                         .format(self.version_build))
             log_info("remove the app on device before install, to ensure sandbox gets cleaned.")
             self.remove()
         except Exception as e:
-            log_info("remove the app before install didn't go success with error {}, but still continue ......".format(str(e)))
+            log_info("remove the app before install didn't go success with error"
+                     "{}, but still continue ......".format(str(e)))
 
         log_info("Start to installing: {}".format(apk_path))
 
@@ -161,11 +190,13 @@ class TestServerAndroid(TestServerBase):
             if count > max_retries:
                 raise LiteServError(".apk install failed!")
             try:
-                command = self.set_device_option(["adb", "install", "-r", apk_path])
+                command = self.set_device_option(["adb", "-s", self.android_id, "install",
+                                                  "-r", apk_path])
                 output = subprocess.check_output(command)
                 break
             except Exception as e:
-                if "INSTALL_FAILED_ALREADY_EXISTS" in e.args[0] or "INSTALL_FAILED_UPDATE_INCOMPATIBLE" in e.message:
+                if "INSTALL_FAILED_ALREADY_EXISTS" in e.args[0] \
+                   or "INSTALL_FAILED_UPDATE_INCOMPATIBLE" in e.message:
                     # Apk may be installed, remove and retry install
                     log_info("Trying to remove....")
                     self.remove()
@@ -174,7 +205,8 @@ class TestServerAndroid(TestServerBase):
                 else:
                     # Install succeeded, continue
                     break
-        command = self.set_device_option(["adb", "shell", "pm", "list", "packages"])
+        command = self.set_device_option(["adb", "-s", self.android_id, "shell", "pm", "list",
+                                          "packages"])
         output = subprocess.check_output(command)
         if self.installed_package_name not in output.decode():
             raise LiteServError("Failed to install package: {}".format(output))
@@ -192,7 +224,7 @@ class TestServerAndroid(TestServerBase):
     def remove_android_servers(self, app_name):
         output = ""
         print("remove package name: ", app_name)
-        command = self.set_device_option(["adb", "uninstall", app_name])
+        command = self.set_device_option(["adb", "-s", self.android_id, "uninstall", app_name])
         try:
             output = subprocess.check_output(command)
         except Exception as e:
@@ -249,21 +281,23 @@ class TestServerAndroid(TestServerBase):
         """
 
         # Clear adb buffer
-        command = self.set_device_option(["adb", "logcat", "-c"])
+        command = self.set_device_option(["adb", "-s", self.android_id, "logcat", "-c"])
         subprocess.check_call(command)
 
         # force stop android server before start
-        command = self.set_device_option(["adb", "shell", "am", "force-stop", self.installed_package_name])
+        command = self.set_device_option(["adb", "-s", self.android_id, "shell", "am",
+                                          "force-stop",
+                                          self.installed_package_name])
         subprocess.check_output(command)
-        
+
         # Start redirecting adb output to the logfile
         self.logfile = open(logfile_name, "w+")
-        command = self.set_device_option(["adb", "logcat"])
+        command = self.set_device_option(["adb", "-s", self.android_id, "logcat"])
         self.process = subprocess.Popen(args=command, stdout=self.logfile)
         log_info("** test run on python version: {}".format(python_version()))
 
         command = self.set_device_option([
-            "adb", "shell", "monkey", "-p", self.installed_package_name,
+            "adb", "-s", self.android_id, "shell", "monkey", "-p", self.installed_package_name,
             "-v", "1", "listen_port", str(self.port),
         ])
         print("command to start android app: {}".format(command))
@@ -276,10 +310,12 @@ class TestServerAndroid(TestServerBase):
         """ Verify that app is launched with adb command
         """
         if self.device_enabled:
-            command = self.set_device_option(["adb", "shell", "pidof", self.installed_package_name, "|", "wc", "-l"])
+            command = self.set_device_option(["adb", "-s", self.android_id, "shell", "pidof",
+                                              self.installed_package_name, "|", "wc", "-l"])
             output = subprocess.check_output(command)
         else:
-            output = subprocess.check_output(["adb", "-e", "shell", "pidof", self.installed_package_name, "|", "wc", "-l"])
+            output = subprocess.check_output(["adb", "-e", "shell", "pidof",
+                                              self.installed_package_name, "|", "wc", "-l"])
         log_info("output for running activity {}".format(output))
         if output is None:
             raise LiteServError("Err! App did not launched")
@@ -292,11 +328,14 @@ class TestServerAndroid(TestServerBase):
         """
 
         log_info("Stopping LiteServ: http://{}:{}".format(self.host, self.port))
-        command = self.set_device_option(["adb", "shell", "am", "force-stop", self.installed_package_name])
+        command = self.set_device_option(["adb", "-s", self.android_id, "shell", "am",
+                                          "force-stop",
+                                          self.installed_package_name])
         output = subprocess.check_output(command)
         log_info(output)
 
-        command = self.set_device_option(["adb", "shell", "pm", "clear", self.installed_package_name])
+        command = self.set_device_option(["adb", "-s", self.android_id, "shell", "pm", "clear",
+                                          self.installed_package_name])
         output = subprocess.check_output(command)
         log_info(output)
 
@@ -314,7 +353,8 @@ class TestServerAndroid(TestServerBase):
 
     def close_app(self):
         if self.device_enabled:
-            command = self.set_device_option(["adb", "shell", "input", "keyevent ", "3"])
+            command = self.set_device_option(["adb", "-s", self.android_id, "shell", "input",
+                                              "keyevent ", "3"])
             output = subprocess.check_output(command)
         else:
             output = subprocess.check_output(["adb", "-e", "shell", "input", "keyevent ", "3"])
@@ -323,7 +363,7 @@ class TestServerAndroid(TestServerBase):
     def open_app(self):
         if self.device_enabled:
             command = self.set_device_option([
-                "adb", "shell", "am", "start", "-n", self.activity_name,
+                "adb", "-s", self.android_id, "shell", "am", "start", "-n", self.activity_name,
                 "--es", "username", "none", "--es", "password", "none", "--ei",
                 "listen_port",
                 str(self.port)
@@ -341,7 +381,7 @@ class TestServerAndroid(TestServerBase):
         self._verify_launched()
 
     def set_device_option(self, command):
-        '''
+        """
             this method is to modify the adb command
             based on the self.device_option is given
             i.e.
@@ -351,7 +391,7 @@ class TestServerAndroid(TestServerBase):
             input: command = ["adb", "logcat"]
                    option = ["-s", "K183010440"]
             return: ["adb", "-s", "K183010440", "logcat"]
-        '''
-        command[1:1] = self.device_option
-        command = [x.strip() for x in command]
+        """
+        # command[1:1] = self.device_option
+        # command = [x.strip() for x in command]
         return command
