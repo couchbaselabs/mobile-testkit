@@ -25,7 +25,7 @@ from utilities.cluster_config_utils import get_load_balancer_ip
 def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_config, sg_ssl=False, sg_lb=False, cbs_ssl=False, use_views=False,
                       xattrs_enabled=False, no_conflicts_enabled=False, delta_sync_enabled=False, number_replicas=0, sg_ce=False,
                       cbs_platform="centos7", sg_platform="centos", sg_installer_type="msi", sa_platform="centos",
-                      sa_installer_type="msi", cbs_ce=False, aws=False, skip_couchbase_provision=False):
+                      sa_installer_type="msi", cbs_ce=False, aws=False, skip_couchbase_provision=False, custom_build=None):
 
     if is_cbs_ssl_enabled(cluster_config):
         log_info("WARNING: Potentially overwriting the user flag server_tls_skip_verify to True because the server is using ssl")
@@ -111,7 +111,8 @@ def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_conf
         sa_installer_type=sa_installer_type,
         sg_ce=sg_ce,
         ipv6=cluster.ipv6,
-        aws=aws
+        aws=aws,
+        custom_build=custom_build
     )
 
     # Install nginx
@@ -233,8 +234,8 @@ if __name__ == "__main__":
                       type="string",
                       dest="sync_gateway_config_file",
                       default=default_sync_gateway_config,
-                      help="path to your sync_gateway_config file, uses" +
-                           " 'resources/sync_gateway_configs/sync_gateway_default_di.json' by default")
+                      help='''path to your sync_gateway_config file, uses
+                        'resources/sync_gateway_configs/sync_gateway_default_di.json' by default''')
 
     parser.add_option("", "--sync-gateway-commit",
                       action="store", type="string", dest="source_commit", default=None,
@@ -294,7 +295,7 @@ if __name__ == "__main__":
 
     try:
         cluster_conf = os.environ["CLUSTER_CONFIG"]
-    except KeyError as ke:
+    except KeyError:
         print("Make sure CLUSTER_CONFIG is defined and pointing to the configuration you would like to provision")
         raise KeyError("CLUSTER_CONFIG not defined. Unable to provision cluster.")
 

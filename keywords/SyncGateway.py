@@ -128,7 +128,9 @@ def verify_sync_gateway_version(host, expected_sync_gateway_version):
         "2.8.3": "9",
         "2.8.3.4": "3",
         "2.8.4": "9",
-        "3.0.5": "8"
+        "3.0.5": "8",
+        "3.0.7": "3",
+        "3.1.0": "592"
     }
     version, build = version_and_build(expected_sync_gateway_version)
     if build is None:

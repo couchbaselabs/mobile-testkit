@@ -10,7 +10,7 @@ from keywords.utils import log_info, log_warn, add_cbs_to_sg_config_server_field
 from libraries.provision.ansible_runner import AnsibleRunner
 from libraries.testkit.config import Config
 from libraries.testkit.cluster import Cluster
-from keywords.constants import SYNC_GATEWAY_CERT
+from keywords.constants import SYNC_GATEWAY_CERT, LATEST_BUILDS, RELEASED_BUILDS
 from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_revs_limit, sg_ssl_enabled, choose_logging_level
 from utilities.cluster_config_utils import is_hide_prod_version_enabled, get_cbs_primary_nodes_str, is_centralized_persistent_config_disabled
 from utilities.cluster_config_utils import get_sg_version, get_sg_replicas, get_sg_use_views, get_redact_level, is_x509_auth, generate_x509_certs, is_delta_sync_enabled
@@ -47,10 +47,18 @@ class SyncGatewayConfig:
 
     def resolve_sg_sa_mobile_url(self, installer="sync-gateway",
                                  sg_type="enterprise",
-                                 platform_extension="rpm", aws=False, architecture="_x86_64"):
+                                 platform_extension="rpm", aws=False, architecture="_x86_64", custom_build=None):
+        if aws and custom_build:
+            assert False, "aws and custom_build cannot both be true/assigned"
+
+        if custom_build:
+            base_url = custom_build + '/'
+        else:
+            if self._build_number:
+                base_url = LATEST_BUILDS + "/sync_gateway/{}/{}".format(self._version_number, self._build_number)
+            else:
+                base_url = RELEASED_BUILDS + "/couchbase-sync-gateway/{}".format(self._version_number)
         if self._build_number:
-            base_url = "http://latestbuilds.service.couchbase.com/builds/latestbuilds/sync_gateway/{}/{}".format(self._version_number,
-                                                                                                                 self._build_number)
             package_name = "couchbase-{}-{}_{}-{}{}.{}".format(installer,
                                                                sg_type,
                                                                self._version_number,
@@ -58,7 +66,6 @@ class SyncGatewayConfig:
                                                                architecture,
                                                                platform_extension)
         else:
-            base_url = "http://latestbuilds.service.couchbase.com/builds/releases/mobile/couchbase-sync-gateway/{}".format(self._version_number)
             package_name = "couchbase-{}-{}_{}{}.{}".format(installer,
                                                             sg_type,
                                                             self._version_number,
@@ -78,7 +85,8 @@ class SyncGatewayConfig:
                                           sg_platform="centos",
                                           sg_installer_type="msi",
                                           sa_platform="centos",
-                                          sa_installer_type="msi", aws=False):
+                                          sa_installer_type="msi", aws=False,
+                                          custom_build=None):
         architecture = "_x86_64"
         # Setting SG platform extension
         if "windows" in sg_platform:
@@ -128,8 +136,8 @@ class SyncGatewayConfig:
                 sg_platform_extension = "exe"
                 sa_platform_extension = "exe"
 
-            base_url, sg_package_name = self.resolve_sg_sa_mobile_url("sync-gateway", sg_type, sg_platform_extension, aws, architecture)
-            base_url, accel_package_name = self.resolve_sg_sa_mobile_url("sg-accel", sg_type, sa_platform_extension, aws)
+            base_url, sg_package_name = self.resolve_sg_sa_mobile_url("sync-gateway", sg_type, sg_platform_extension, aws, architecture, custom_build=custom_build)
+            base_url, accel_package_name = self.resolve_sg_sa_mobile_url("sg-accel", sg_type, sa_platform_extension, aws, custom_build=custom_build)
         return base_url, sg_package_name, accel_package_name
 
     def is_valid(self):
@@ -159,7 +167,7 @@ class SyncGatewayConfig:
 def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
                          sg_platform="centos", sg_installer_type="msi",
                          sa_platform="centos", sa_installer_type="msi",
-                         ipv6=False, aws=False, url=None, sync_gateway_version=None):
+                         ipv6=False, aws=False, url=None, sync_gateway_version=None, custom_build=None):
 
     log_info(sync_gateway_config)
     ansible_runner = AnsibleRunner(cluster_config)
@@ -354,7 +362,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
         sync_gateway_base_url, sync_gateway_package_name, sg_accel_package_name = sync_gateway_config.sync_gateway_base_url_and_package(
             sg_ce=sg_ce, sg_platform=sg_platform,
             sg_installer_type=sg_installer_type, sa_platform=sa_platform,
-            sa_installer_type=sa_installer_type, aws=aws)
+            sa_installer_type=sa_installer_type, aws=aws, custom_build=custom_build)
 
         playbook_vars["couchbase_sync_gateway_package_base_url"] = sync_gateway_base_url
         playbook_vars["couchbase_sync_gateway_package"] = sync_gateway_package_name

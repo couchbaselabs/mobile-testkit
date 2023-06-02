@@ -191,6 +191,15 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="Disable Admin auth")
 
+    parser.addoption("--sgw-custom-build",
+                     action="store",
+                     help='''A full path to a SGW custom build. The package name MUST be specified separately
+                     and it MUST be with the same convention as the standard one.
+                     A usage example:
+                     --sgw-custom-build http://latestbuilds.service.couchbase.com/builds/latestbuilds/sync_gateway/toys/233/ AND
+                     --sync-gateway-version: 3.2.0-233''',
+                     default=None)
+
 
 # This will be called once for the at the beggining of the execution in the 'tests/' directory
 # and will be torn down, (code after the yeild) when all the test session has completed.
@@ -237,6 +246,7 @@ def params_from_base_suite_setup(request):
     enable_server_tls_skip_verify = request.config.getoption("--enable-server-tls-skip-verify")
     disable_admin_auth = request.config.getoption("--disable-admin-auth")
     trace_logs = request.config.getoption("--trace-logs")
+    custom_build = request.config.getoption("--sgw-custom-build")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
@@ -268,6 +278,7 @@ def params_from_base_suite_setup(request):
     log_info("enable_cbs_developer_preview: {}".format(enable_cbs_developer_preview))
     log_info("disable_persistent_config: {}".format(disable_persistent_config))
     log_info("trace_logs: {}".format(trace_logs))
+    log_info("custom build: {}".format(custom_build))
 
     # sg-ce is invalid for di mode
     if mode == "di" and sg_ce:
@@ -478,7 +489,8 @@ def params_from_base_suite_setup(request):
                     sa_installer_type=sa_installer_type,
                     sg_ce=sg_ce,
                     cbs_ce=cbs_ce,
-                    skip_couchbase_provision=skip_couchbase_provision
+                    skip_couchbase_provision=skip_couchbase_provision,
+                    custom_build=custom_build
                 )
             except ProvisioningError:
                 logging_helper = Logging()
