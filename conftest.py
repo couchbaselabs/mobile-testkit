@@ -30,6 +30,8 @@ def pytest_sessionfinish(session, exitstatus):
         result_option = result_option.split("=")
         if len(result_option) > 1:
             custom_rerun_xml_merge(result_option[1], result_option[0])
+        else:
+            assert False, "When running with Junit results, the argument needs to be in the format fail=[PATH_TO_RESULTS_XML]"
 
 
 def pytest_addoption(parser):

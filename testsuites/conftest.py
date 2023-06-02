@@ -20,6 +20,8 @@ def pytest_collection_modifyitems(items, config):
     if rerun_result_option:
         result_option = rerun_result_option
         result_option = result_option.split("=")
+        if len(result_option) < 2:
+            assert False, "When running with Junit results, the argument needs to be in the format pass/file/fail=[PATH_TO_RESULTS_XML]"
         result_name = result_option[0]
         if len(result_option) == 2:
             file = result_option[1]
