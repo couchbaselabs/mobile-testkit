@@ -153,7 +153,6 @@ def test_scopes_and_collections_replication(scopes_collections_tests_fixture, pa
     admin_client_2 = Admin(sg2["sg_obj"])
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     num_of_docs = 3
-    assert False
     pull_replication_prefix = "should_be_in_sg2_after_pull"
     push_replication_prefix = "should_be_in_sg2_after_push"
     sg_client, scope, collection, collection2 = scopes_collections_tests_fixture
