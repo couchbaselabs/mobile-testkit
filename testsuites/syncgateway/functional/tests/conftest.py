@@ -192,7 +192,7 @@ def pytest_addoption(parser):
                      help="Disable Admin auth")
 
     parser.addoption("--custom-build",
-                     action="store_const",
+                     action="store",
                      help="A full path to a custom build (example: a toy build)",
                      default=None)
 
