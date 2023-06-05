@@ -158,7 +158,7 @@ class Admin:
         return User(target, db, name, password, channels)
 
     def delete_user_if_exists(self, db, sg_username):
-        does_user_exist = self.does_user_exist(db, sg_username)
+        does_user_exist = True
         if does_user_exist:
             resp = requests.delete("{}/{}/_user/{}".format(self.admin_url, db, sg_username))
             log.info("DELETE user {} from database {}".format(db, sg_username))
