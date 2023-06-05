@@ -67,8 +67,6 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
         cbs_cluster = Cluster(config=cluster_config)
         client_auth = HTTPBasicAuth(sg_username, sg_password)
         channels = ["A"]
-       
-        
         pre_test_db_exists = pre_test_user_exists = sg_client = None
         cluster_helper = ClusterKeywords(cluster_config)
         topology = cluster_helper.get_cluster_topology(cluster_config)
