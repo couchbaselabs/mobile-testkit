@@ -11,8 +11,7 @@ from keywords import couchbaseserver
 from utilities.cluster_config_utils import is_magma_enabled
 
 # test file shared variables
-org_bucket = "data-bucket"
-bucket = "isgr-sc-tests"
+bucket = "data-bucket"
 bucket2 = "isgr-sc-tests-1"
 bucket3 = "isgr-sc-tests-2"
 sg_password = "password"
@@ -76,10 +75,6 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
         cb_server = couchbaseserver.CouchbaseServer(cbs_url)
 
         print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^" + str(cb_server.get_bucket_names()))
-        pre_test_is_bucket_exist = org_bucket in cb_server.get_bucket_names()
-        if pre_test_is_bucket_exist:
-            cb_server.delete_bucket(org_bucket)
-
         cb_server.create_bucket(cluster_config, bucket, 100)
         cb_server.create_bucket(cluster_config, bucket2, 100)
         cb_server.create_bucket(cluster_config, bucket3, 100)
@@ -132,8 +127,7 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
         cb_server.delete_scope_if_exists(bucket2, scope)
         cb_server.delete_scope_if_exists(bucket3, scope)
         cb_server.delete_buckets()
-        if pre_test_is_bucket_exist:
-            cb_server.create_bucket(cluster_config, org_bucket)
+
 
 
 @pytest.mark.syncgateway
