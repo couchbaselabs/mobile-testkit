@@ -75,7 +75,6 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
         cb_server = couchbaseserver.CouchbaseServer(cbs_url)
 
         print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^" + str(cb_server.get_bucket_names()))
-        cb_server.create_bucket(cluster_config, bucket, 100)
         cb_server.create_bucket(cluster_config, bucket2, 100)
         cb_server.create_bucket(cluster_config, bucket3, 100)
         sgs["sg1"] = {"sg_obj": cbs_cluster.sync_gateways[0], "bucket": bucket, "db": "db1" + random_suffix, "user": "sg1_user" + random_suffix}
