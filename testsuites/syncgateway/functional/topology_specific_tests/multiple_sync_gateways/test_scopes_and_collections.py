@@ -14,6 +14,7 @@ from utilities.cluster_config_utils import is_magma_enabled
 bucket = "data-bucket"
 bucket2 = "data-bucket-2"
 bucket3 = "data-bucket-3"
+bucket_list = [bucket, bucket2, bucket3]
 sg_password = "password"
 cb_server = sg_username = channels = client_auth = None
 sgs = {}
@@ -28,6 +29,13 @@ sg2_admin_url = ""
 sg3_admin_url = ""
 random_suffix = ""
 
+
+@pytest.fixture(scope="session", autouse=True)
+def reset_cluster(params_from_base_test_setup):
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    cbs_cluster = Cluster(config=cluster_config)
+    sg_config = params_from_base_test_setup["sg_config"]
+    cbs_cluster.reset(sg_config_path=sg_config, sgdb_creation=False, bucket_list=bucket_list)
 
 @pytest.fixture
 def scopes_collections_tests_fixture(params_from_base_test_setup):
@@ -59,7 +67,8 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
         cbs_cluster = Cluster(config=cluster_config)
         client_auth = HTTPBasicAuth(sg_username, sg_password)
         channels = ["A"]
-
+       
+        
         pre_test_db_exists = pre_test_user_exists = sg_client = None
         cluster_helper = ClusterKeywords(cluster_config)
         topology = cluster_helper.get_cluster_topology(cluster_config)
