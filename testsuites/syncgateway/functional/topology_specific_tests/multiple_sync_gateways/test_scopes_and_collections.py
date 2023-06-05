@@ -29,14 +29,6 @@ sg2_admin_url = ""
 sg3_admin_url = ""
 random_suffix = ""
 
-
-@pytest.fixture(scope="session", autouse=True)
-def reset_cluster(params_from_base_test_setup):
-    cluster_config = params_from_base_test_setup["cluster_config"]
-    cbs_cluster = Cluster(config=cluster_config)
-    sg_config = params_from_base_test_setup["sg_config"]
-    cbs_cluster.reset(sg_config_path=sg_config, sgdb_creation=False, bucket_list=bucket_list)
-
 @pytest.fixture
 def scopes_collections_tests_fixture(params_from_base_test_setup):
     # get/set the parameters
