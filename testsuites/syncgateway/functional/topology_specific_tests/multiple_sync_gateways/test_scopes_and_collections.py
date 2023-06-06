@@ -12,8 +12,8 @@ from utilities.cluster_config_utils import is_magma_enabled
 
 # test file shared variables
 bucket = "data-bucket"
-bucket2 = "isgr-sc-tests-1"
-bucket3 = "isgr-sc-tests-2"
+bucket2 = "data-bucket-1"
+bucket3 = "data-bucket-2"
 sg_password = "password"
 cb_server = sg_username = channels = client_auth = None
 sgs = {}
@@ -59,7 +59,6 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
         cbs_cluster = Cluster(config=cluster_config)
         client_auth = HTTPBasicAuth(sg_username, sg_password)
         channels = ["A"]
-
         pre_test_db_exists = pre_test_user_exists = sg_client = None
         cluster_helper = ClusterKeywords(cluster_config)
         topology = cluster_helper.get_cluster_topology(cluster_config)
@@ -121,7 +120,7 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
             admin_client = Admin(sgs[key]["sg_obj"])
             # Cleanup everything that was created
             if (pre_test_user_exists is not None) and (pre_test_user_exists is False):
-                admin_client.delete_user_if_exists(sgs[key]["db"], sgs[key]["user"])
+                admin_client.delete_user_if_exists(sgs[key]["db"], sgs[key]["user"], check_existence=False)
             if (pre_test_db_exists is not None) and (pre_test_db_exists is False):
                 if admin_client.does_db_exist(sgs[key]["db"]) is True:
                     admin_client.delete_db(sgs[key]["db"])

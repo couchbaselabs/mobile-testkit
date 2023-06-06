@@ -157,8 +157,11 @@ class Admin:
 
         return User(target, db, name, password, channels)
 
-    def delete_user_if_exists(self, db, sg_username):
-        does_user_exist = self.does_user_exist(db, sg_username)
+    def delete_user_if_exists(self, db, sg_username, check_existence=True):
+        # check_existence: a workaround for https://issues.couchbase.com/browse/CM-1117
+        does_user_exist = True
+        if check_existence:
+            does_user_exist = self.does_user_exist(db, sg_username)
         if does_user_exist:
             resp = requests.delete("{}/{}/_user/{}".format(self.admin_url, db, sg_username))
             log.info("DELETE user {} from database {}".format(db, sg_username))
@@ -411,7 +414,7 @@ class Admin:
         if not is_admin_auth_disabled(self.cluster_config):
             self.auth = HTTPBasicAuth(RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd'])
         start = time.perf_counter()
-        while (time.perf_counter()-start) < timeout:
+        while (time.perf_counter() - start) < timeout:
             if self.auth:
                 r = requests.get("{}/{}/_replicationStatus/{}".format(self.admin_url, db, repl_id), verify=False, auth=self.auth)
             else:
@@ -424,7 +427,7 @@ class Admin:
             else:
                 log_info(f"Replication {repl_id} reports status 'stopped'")
                 break
-        elapsed = (time.perf_counter()-start)
+        elapsed = (time.perf_counter() - start)
         if elapsed >= timeout:
             log_info(f"Replication {repl_id} did not report stopped after {elapsed} seconds")
 
