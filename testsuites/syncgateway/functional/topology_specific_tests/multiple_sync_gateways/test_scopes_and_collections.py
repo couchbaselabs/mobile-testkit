@@ -12,8 +12,8 @@ from utilities.cluster_config_utils import is_magma_enabled
 
 # test file shared variables
 bucket = "data-bucket"
-bucket2 = "isgr-sc-tests-1"
-bucket3 = "isgr-sc-tests-2"
+bucket2 = "data-bucket-1"
+bucket3 = "data-bucket-2"
 sg_password = "password"
 cb_server = sg_username = channels = client_auth = None
 sgs = {}
