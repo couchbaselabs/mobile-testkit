@@ -5,6 +5,8 @@ from keywords.utils import random_string
 
 
 @pytest.mark.usefixtures("class_init")
+@pytest.mark.skipif(pytest.liteserv_version[:3] < "3.1",
+                    reason="scope & collection support in version >= 3.1")
 class TestScopeCollection(object):
 
     @pytest.mark.parametrize("db_name, scope, collection", [
