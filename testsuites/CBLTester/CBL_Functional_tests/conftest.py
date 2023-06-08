@@ -232,6 +232,11 @@ def pytest_addoption(parser):
                      default="_default")
 
 
+# Pass liteserv_version to testsuite
+def pytest_configure(config):
+    pytest.liteserv_version = config.getoption("--liteserv-version")
+
+
 # This will get called once before the first test that
 # runs with this as input parameters in this file
 # This setup will be called once for all tests in the
