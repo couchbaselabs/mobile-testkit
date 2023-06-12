@@ -786,7 +786,7 @@ class CouchbaseServer:
         self._wait_for_rebalance_complete()
         return True
 
-    def recover(self, server_to_recover):
+    def recover(self, server_to_recover, max_retries=10):
 
         if not isinstance(server_to_recover, CouchbaseServer):
             raise TypeError("'server_to_add' must be a 'CouchbaseServer'")
@@ -798,7 +798,6 @@ class CouchbaseServer:
         }
         # Override session headers for this one off request
         count = 0
-        max_retries = 10
         while count < max_retries:
             try:
                 resp = self._session.post(
@@ -811,6 +810,7 @@ class CouchbaseServer:
             if resp.status_code == 200:
                 break
             count += 1
+            log_info("Retrying setting recovery type...")
             time.sleep(1)
         log_r(resp)
         resp.raise_for_status()
