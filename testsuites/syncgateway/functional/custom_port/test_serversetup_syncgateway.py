@@ -98,6 +98,7 @@ def test_syncgateway_with_customPort_couchbaseServer(params_from_base_test_setup
         cluster = json.loads(f.read())
     server_version = cluster["environment"]["server_version"]
     # configuring cluster
+    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^GILAD IS HERE")
     status = ansible_runner.run_ansible_playbook(
         "configure-couchbase-server.yml",
         extra_vars={
