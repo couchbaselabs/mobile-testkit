@@ -48,9 +48,6 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
     cluster_config = params_from_base_test_setup["cluster_config"]
     if is_magma_enabled(cluster_config):
         pytest.skip("It is not necessary to test ISGR with scopes and collections and MAGMA")
-    if params_from_base_test_setup["sync_gateway_version"] < "3.1.0":
-        pytest.skip('This test cannot run with Sync Gateway version below 3.1.0')
-
     try:  # To be able to teardon in case of a setup error
         random_suffix = str(uuid.uuid4())[:8]
         scope_prefix = "scope_"
@@ -153,10 +150,15 @@ def test_scopes_and_collections_replication(scopes_collections_tests_fixture, pa
     sg2 = sgs["sg2"]
     admin_client_1 = Admin(sg1["sg_obj"])
     admin_client_2 = Admin(sg2["sg_obj"])
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     num_of_docs = 3
     pull_replication_prefix = "should_be_in_sg2_after_pull"
     push_replication_prefix = "should_be_in_sg2_after_push"
     sg_client, scope, collection, collection2 = scopes_collections_tests_fixture
+
+    if sync_gateway_version < "3.1.0":
+        pytest.skip('This test cannot run with Sync Gateway version below 3.1.0')
+
     sg_client = MobileRestClient()
 
     # 1. Create users, user sessions
@@ -252,8 +254,13 @@ def test_replication_implicit_mapping_filtered_collection(scopes_collections_tes
     sg2 = sgs["sg2"]
     admin_client_1 = Admin(sg1["sg_obj"])
     admin_client_2 = Admin(sg2["sg_obj"])
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
 
     sg_client, scope, collection, collection2 = scopes_collections_tests_fixture
+
+    # check sync gateway version
+    if sync_gateway_version < "3.1.0":
+        pytest.skip('This test cannot run with Sync Gateway version below 3.0')
 
     # create users, user sessions
     password = "password"
@@ -316,8 +323,13 @@ def test_multiple_replicators_multiple_scopes(scopes_collections_tests_fixture, 
     admin_client_1 = Admin(sg1["sg_obj"])
     admin_client_2 = Admin(sg2["sg_obj"])
     admin_client_3 = Admin(sg3["sg_obj"])
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
 
     sg_client, scope, collection, collection2 = scopes_collections_tests_fixture
+
+    # check sync gateway version
+    if sync_gateway_version < "3.1.0":
+        pytest.skip('This test cannot run with Sync Gateway version below 3.0')
 
     # create users, user sessions
     password = "password"
@@ -627,8 +639,13 @@ def test_missing_collection_error(scopes_collections_tests_fixture, params_from_
     sg2 = sgs["sg2"]
     admin_client_1 = Admin(sg1["sg_obj"])
     admin_client_2 = Admin(sg2["sg_obj"])
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
 
     sg_client, scope, collection, collection2 = scopes_collections_tests_fixture
+
+    # check sync gateway version
+    if sync_gateway_version < "3.1.0":
+        pytest.skip('This test cannot run with Sync Gateway version below 3.0')
 
     # create users, user sessions
     password = "password"
