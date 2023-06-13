@@ -72,7 +72,7 @@ def test_syncgateway_with_customPort_couchbaseServer(params_from_base_test_setup
     cluster.reset(sg_config_path=sg_conf)
     ansible_runner = AnsibleRunner(cluster_conf)
 
-    custom_port = "9000"
+    custom_port = "8091"
     memcached_ssl_port = "9057"
 
     for server in cluster.servers:
