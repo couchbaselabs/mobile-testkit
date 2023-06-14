@@ -88,7 +88,8 @@ def test_syncgateway_with_customPort_couchbaseServer(params_from_base_test_setup
             "&& echo {memcached_port, 9050}. >> /opt/couchbase/etc/couchbase/static_config " \
             "&& echo {ssl_rest_port, 1900}. >> /opt/couchbase/etc/couchbase/static_config " \
             "&& echo {memcached_ssl_port, 9057}. >> /opt/couchbase/etc/couchbase/static_config " \
-            "&& rm -rf /opt/couchbase/var/lib/couchbase/config/config.dat"
+            "&& rm -rf /opt/couchbase/var/lib/couchbase/config/config.dat" \
+            "&& rm -rf /opt/couchbase/var/lib/couchbase/config/chronicle/*"
         remote_executor.execute(command)
         cb_server.url = "http://{}:{}".format(host_for_url(server.url), custom_port)
         print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ZHOVNA IS HERE")
