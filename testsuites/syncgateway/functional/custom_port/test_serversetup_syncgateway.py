@@ -90,7 +90,7 @@ def test_syncgateway_with_customPort_couchbaseServer(params_from_base_test_setup
             "&& rm -rf /opt/couchbase/var/lib/couchbase/config/config.dat"
         remote_executor.execute(command)
         cb_server.url = "http://{}:{}".format(host_for_url(server.url), custom_port)
-        cb_server.start(custom_port=True)
+        cb_server.start(custom_port=False)
 
     couchbase_server_url = cluster_topology["couchbase_servers"][0]
     couchbase_server_url = couchbase_server_url.replace("8091", custom_port)
