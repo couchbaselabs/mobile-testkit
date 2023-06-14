@@ -96,7 +96,7 @@
 
     - name: COUCHBASE SERVER | Wait for node to be listening on port 8091
       wait_for: port="{{ couchbase_server_admin_port }}" delay=5 timeout=60
-  
+
     - set_fact:
         protocol: ""
         addnode_protocol: ""
@@ -107,6 +107,10 @@
         addnode_port: 18091
         ssl_verify: --no-ssl-verify
       when: "( {{ cb_major_version['stdout'] | search('\\b[7]\\b') }} ) or ( '7.1.0' in cb_full_version.stdout )"
+
+    - set_face:
+        addnode_port: "{{ couchbase_server_addone_port }}"
+      when: couchbase_server_addone_port is defined
 
     - name: COUCHBASE SERVER | Join additional cluster nodes | configure IPv4
       shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli server-add -c {{ addnode_protocol }}{{ couchbase_server_primary_node }}:{{ addnode_port }} -u={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --server-add={{ addnode_protocol }}{{ couchbase_server_node }}:{{ addnode_port }} --server-add-username={{ couchbase_server_admin }} --server-add-password={{ couchbase_server_password }} {{ ssl_verify }}"

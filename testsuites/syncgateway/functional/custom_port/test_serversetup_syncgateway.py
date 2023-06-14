@@ -73,7 +73,7 @@ def test_syncgateway_with_customPort_couchbaseServer(params_from_base_test_setup
     ansible_runner = AnsibleRunner(cluster_conf)
 
     custom_port = "9000"
-    memcached_ssl_port = "18091"
+    memcached_ssl_port = "9057"
 
     for server in cluster.servers:
         cb_server = couchbaseserver.CouchbaseServer(server.url)
@@ -107,7 +107,8 @@ def test_syncgateway_with_customPort_couchbaseServer(params_from_base_test_setup
             "couchbase_server_package_base_url": couchbase_server_url,
             "couchbase_server_package_name": server_version,
             "ipv6_enabled": cluster["environment"]["ipv6_enabled"],
-            "couchbase_server_admin_port": custom_port
+            "couchbase_server_admin_port": custom_port,
+            "couchbase_server_addone_port": memcached_ssl_port
         }
     )
     if status != 0:
