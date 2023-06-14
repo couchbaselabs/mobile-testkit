@@ -110,7 +110,7 @@
 
     - set_fact:
         addnode_protocol: ""
-        addnode_port: "{{ couchbase_server_addone_port }}"
+        addnode_port: "{{ couchbase_server_admin_port }}"
       when: couchbase_server_addone_port is defined
 
     - name: COUCHBASE SERVER | Join additional cluster nodes | configure IPv4
