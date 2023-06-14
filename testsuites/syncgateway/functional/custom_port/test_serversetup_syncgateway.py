@@ -73,6 +73,7 @@ def test_syncgateway_with_customPort_couchbaseServer(params_from_base_test_setup
     ansible_runner = AnsibleRunner(cluster_conf)
 
     custom_port = "9000"
+    custom_ssl_port = "1900"
     memcached_ssl_port = "9057"
 
     for server in cluster.servers:
@@ -85,13 +86,12 @@ def test_syncgateway_with_customPort_couchbaseServer(params_from_base_test_setup
         remote_executor.execute(command)
         command = "echo {rest_port, " + custom_port + "}. >> /opt/couchbase/etc/couchbase/static_config " \
             "&& echo {memcached_port, 9050}. >> /opt/couchbase/etc/couchbase/static_config " \
-            "&& echo {ssl_rest_port, 1900}. >> /opt/couchbase/etc/couchbase/static_config " \
+            "&& echo {ssl_rest_port, " + custom_ssl_port + "}. >> /opt/couchbase/etc/couchbase/static_config " \
             "&& echo {memcached_ssl_port, " + memcached_ssl_port + "}. >> /opt/couchbase/etc/couchbase/static_config " \
             "&& rm -rf /opt/couchbase/var/lib/couchbase/config/config.dat" \
             "&& rm -rf /opt/couchbase/var/lib/couchbase/config/chronicle/*"
         remote_executor.execute(command)
         cb_server.url = "http://{}:{}".format(host_for_url(server.url), custom_port)
-        print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ZHOVNA IS HERE")
         cb_server.start(custom_port=True)
 
     couchbase_server_url = cluster_topology["couchbase_servers"][0]
@@ -100,7 +100,6 @@ def test_syncgateway_with_customPort_couchbaseServer(params_from_base_test_setup
         cluster = json.loads(f.read())
     server_version = cluster["environment"]["server_version"]
     # configuring cluster
-    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^GILAD IS HERE")
     status = ansible_runner.run_ansible_playbook(
         "configure-couchbase-server.yml",
         extra_vars={
@@ -108,7 +107,7 @@ def test_syncgateway_with_customPort_couchbaseServer(params_from_base_test_setup
             "couchbase_server_package_name": server_version,
             "ipv6_enabled": cluster["environment"]["ipv6_enabled"],
             "couchbase_server_admin_port": custom_port,
-            "couchbase_server_addone_port": "1900"
+            "couchbase_server_addone_port": custom_ssl_port
         }
     )
     if status != 0:
