@@ -77,7 +77,6 @@ def test_syncgateway_with_customPort_couchbaseServer(params_from_base_test_setup
 
     for server in cluster.servers:
         cb_server = couchbaseserver.CouchbaseServer(server.url)
-        time.sleep(1000000000)
         cb_server.stop()
         cbs_target = host_for_url(server.url)
         remote_executor = RemoteExecutor(cbs_target)
