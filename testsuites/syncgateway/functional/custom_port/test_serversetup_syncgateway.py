@@ -73,7 +73,7 @@ def test_syncgateway_with_customPort_couchbaseServer(params_from_base_test_setup
     ansible_runner = AnsibleRunner(cluster_conf)
 
     custom_port = "9000"
-    memcached_ssl_port = "9057"
+    memcached_ssl_port = "18091"
 
     for server in cluster.servers:
         cb_server = couchbaseserver.CouchbaseServer(server.url)
@@ -83,10 +83,10 @@ def test_syncgateway_with_customPort_couchbaseServer(params_from_base_test_setup
         command = "cp /opt/couchbase/etc/couchbase/static_config /opt/couchbase/etc/couchbase/static_config.bak" \
             "&& cp /opt/couchbase/var/lib/couchbase/config/config.dat /opt/couchbase/var/lib/couchbase/config/config.dat.bak"
         remote_executor.execute(command)
-        command = "echo {rest_port, 9000}. >> /opt/couchbase/etc/couchbase/static_config " \
+        command = "echo {rest_port, " + custom_port + "}. >> /opt/couchbase/etc/couchbase/static_config " \
             "&& echo {memcached_port, 9050}. >> /opt/couchbase/etc/couchbase/static_config " \
             "&& echo {ssl_rest_port, 1900}. >> /opt/couchbase/etc/couchbase/static_config " \
-            "&& echo {memcached_ssl_port, 9057}. >> /opt/couchbase/etc/couchbase/static_config " \
+            "&& echo {memcached_ssl_port, " + memcached_ssl_port + "}. >> /opt/couchbase/etc/couchbase/static_config " \
             "&& rm -rf /opt/couchbase/var/lib/couchbase/config/config.dat" \
             "&& rm -rf /opt/couchbase/var/lib/couchbase/config/chronicle/*"
         remote_executor.execute(command)
