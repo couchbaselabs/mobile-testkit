@@ -108,7 +108,7 @@ def test_syncgateway_with_customPort_couchbaseServer(params_from_base_test_setup
             "couchbase_server_package_name": server_version,
             "ipv6_enabled": cluster["environment"]["ipv6_enabled"],
             "couchbase_server_admin_port": custom_port,
-            "couchbase_server_addone_port": memcached_ssl_port
+            "couchbase_server_addone_port": "1900"
         }
     )
     if status != 0:
