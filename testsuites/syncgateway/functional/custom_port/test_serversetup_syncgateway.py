@@ -72,7 +72,7 @@ def test_syncgateway_with_customPort_couchbaseServer(params_from_base_test_setup
     cluster.reset(sg_config_path=sg_conf)
     ansible_runner = AnsibleRunner(cluster_conf)
 
-    custom_port = "9000"
+    custom_port = "3478"
     memcached_ssl_port = "9057"
 
     for server in cluster.servers:
@@ -83,7 +83,7 @@ def test_syncgateway_with_customPort_couchbaseServer(params_from_base_test_setup
         command = "cp /opt/couchbase/etc/couchbase/static_config /opt/couchbase/etc/couchbase/static_config.bak" \
             "&& cp /opt/couchbase/var/lib/couchbase/config/config.dat /opt/couchbase/var/lib/couchbase/config/config.dat.bak"
         remote_executor.execute(command)
-        command = "echo {rest_port, 9000}. >> /opt/couchbase/etc/couchbase/static_config " \
+        command = "echo {rest_port, 3478}. >> /opt/couchbase/etc/couchbase/static_config " \
             "&& echo {memcached_port, 9050}. >> /opt/couchbase/etc/couchbase/static_config " \
             "&& echo {ssl_rest_port, 1900}. >> /opt/couchbase/etc/couchbase/static_config " \
             "&& echo {memcached_ssl_port, 9057}. >> /opt/couchbase/etc/couchbase/static_config " \
@@ -91,7 +91,7 @@ def test_syncgateway_with_customPort_couchbaseServer(params_from_base_test_setup
         remote_executor.execute(command)
         cb_server.url = "http://{}:{}".format(host_for_url(server.url), custom_port)
         print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ZHOVNA IS HERE")
-        cb_server.start(custom_port=False)
+        cb_server.start(custom_port=True)
 
     couchbase_server_url = cluster_topology["couchbase_servers"][0]
     couchbase_server_url = couchbase_server_url.replace("8091", custom_port)
