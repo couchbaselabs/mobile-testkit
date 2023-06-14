@@ -38,7 +38,7 @@ def teardown_clear_custom_port(params_from_base_test_setup):
         command = "cp /opt/couchbase/etc/couchbase/static_config.bak /opt/couchbase/etc/couchbase/static_config \
                    && cp /opt/couchbase/var/lib/couchbase/config/config.dat.bak /opt/couchbase/var/lib/couchbase/config/config.dat"
         remote_executor.execute(command)
-        cb_server.start()
+        cb_server.start(custom_port=True)
     cluster.reset(sg_config_path=sg_conf)
 
 
