@@ -38,7 +38,7 @@ def teardown_clear_custom_port(params_from_base_test_setup):
         command = "cp /opt/couchbase/etc/couchbase/static_config.bak /opt/couchbase/etc/couchbase/static_config \
                    && cp /opt/couchbase/var/lib/couchbase/config/config.dat.bak /opt/couchbase/var/lib/couchbase/config/config.dat"
         remote_executor.execute(command)
-        cb_server.start()
+        cb_server.start(custom_port=True)
     cluster.reset(sg_config_path=sg_conf)
 
 
@@ -73,6 +73,7 @@ def test_syncgateway_with_customPort_couchbaseServer(params_from_base_test_setup
     ansible_runner = AnsibleRunner(cluster_conf)
 
     custom_port = "9000"
+    custom_ssl_port = "1900"
     memcached_ssl_port = "9057"
 
     for server in cluster.servers:
@@ -83,11 +84,12 @@ def test_syncgateway_with_customPort_couchbaseServer(params_from_base_test_setup
         command = "cp /opt/couchbase/etc/couchbase/static_config /opt/couchbase/etc/couchbase/static_config.bak" \
             "&& cp /opt/couchbase/var/lib/couchbase/config/config.dat /opt/couchbase/var/lib/couchbase/config/config.dat.bak"
         remote_executor.execute(command)
-        command = "echo {rest_port, 9000}. >> /opt/couchbase/etc/couchbase/static_config " \
+        command = "echo {rest_port, " + custom_port + "}. >> /opt/couchbase/etc/couchbase/static_config " \
             "&& echo {memcached_port, 9050}. >> /opt/couchbase/etc/couchbase/static_config " \
-            "&& echo {ssl_rest_port, 1900}. >> /opt/couchbase/etc/couchbase/static_config " \
-            "&& echo {memcached_ssl_port, 9057}. >> /opt/couchbase/etc/couchbase/static_config " \
-            "&& rm -rf /opt/couchbase/var/lib/couchbase/config/config.dat"
+            "&& echo {ssl_rest_port, " + custom_ssl_port + "}. >> /opt/couchbase/etc/couchbase/static_config " \
+            "&& echo {memcached_ssl_port, " + memcached_ssl_port + "}. >> /opt/couchbase/etc/couchbase/static_config " \
+            "&& rm -rf /opt/couchbase/var/lib/couchbase/config/config.dat" \
+            "&& rm -rf /opt/couchbase/var/lib/couchbase/config/chronicle/*"
         remote_executor.execute(command)
         cb_server.url = "http://{}:{}".format(host_for_url(server.url), custom_port)
         cb_server.start(custom_port=True)
@@ -104,7 +106,8 @@ def test_syncgateway_with_customPort_couchbaseServer(params_from_base_test_setup
             "couchbase_server_package_base_url": couchbase_server_url,
             "couchbase_server_package_name": server_version,
             "ipv6_enabled": cluster["environment"]["ipv6_enabled"],
-            "couchbase_server_admin_port": custom_port
+            "couchbase_server_admin_port": custom_port,
+            "couchbase_server_addone_port": custom_ssl_port
         }
     )
     if status != 0:
