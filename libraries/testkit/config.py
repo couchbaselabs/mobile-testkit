@@ -282,6 +282,7 @@ def seperate_sgw_and_db_config_new(sgw_conf_data):
 
 def seperate_sgw_and_db_config(sgw_conf_data):
     sgw_conf_data = convert_to_valid_json(sgw_conf_data)
+    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^" + str(sgw_conf_data))
     sgw_conf_data = json.loads(sgw_conf_data)
     temp_sgw_config = "resources/temp/temp_sgw_config.json"
     sgw_config_file = copy_json_to_temp_file(sgw_conf_data, temp_sgw_config)
