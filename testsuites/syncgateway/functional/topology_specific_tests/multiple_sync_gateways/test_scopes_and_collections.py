@@ -52,6 +52,7 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
         pytest.skip('This test cannot run with Sync Gateway version below 3.1.0')
 
     try:  # To be able to teardon in case of a setup error
+        print("++++++++++++++++++++++++++++++++++++++AT SETUP")
         random_suffix = str(uuid.uuid4())[:8]
         scope_prefix = "scope_"
         collection_prefix = "collection_"
@@ -78,8 +79,9 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
 
         pre_test_is_bucket_exist = bucket in cb_server.get_bucket_names()
         if pre_test_is_bucket_exist:
+            print("+++++++++++++++++++++++++++++++++++++DELETEING BUCKET")
             cb_server.delete_bucket(bucket)
-
+        print("+++++++++++++++++++++++++++++++++++++CREATING BUCKETS")
         cb_server.create_bucket(cluster_config, bucket, 100)
         cb_server.create_bucket(cluster_config, bucket2, 100)
         cb_server.create_bucket(cluster_config, bucket3, 100)
@@ -88,6 +90,7 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
         sgs["sg3"] = {"sg_obj": cbs_cluster.sync_gateways[2], "bucket": bucket3, "db": "db3" + random_suffix, "user": "sg3_user" + random_suffix}
 
         for key in sgs:
+            print("*******************************************WORKING ON" + str(key))
             server_bucket = sgs[key]["bucket"]
             user = sgs[key]["user"]
             db = sgs[key]["db"]
