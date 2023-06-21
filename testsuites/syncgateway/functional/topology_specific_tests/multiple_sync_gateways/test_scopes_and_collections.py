@@ -253,7 +253,6 @@ def test_replication_implicit_mapping_filtered_collection(scopes_collections_tes
     3. Start one-shot pull replication SG1->SG2, filtering one collection
     4. Assert that docs in non-filtered collection are pulled, but filtered is not
     """
-    pytest.skip("zhovna")
     sg1 = sgs["sg1"]
     sg2 = sgs["sg2"]
     admin_client_1 = Admin(sg1["sg_obj"])
