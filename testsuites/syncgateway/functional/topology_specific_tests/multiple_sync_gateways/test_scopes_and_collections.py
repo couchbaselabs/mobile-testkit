@@ -113,9 +113,13 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
             # collection_access = {scope: {collection: {"admin_channels": channels}, collection2: {"admin_channels": channels}}}
             collection_access = {scope: {collection: {"admin_channels": channels}}}
             # Create a user
+            print("++++++++++++++++++++++++++++++++++++++++++ BEFORE CHECKING THAT THE USER EXISTS")
             pre_test_user_exists = admin_client.does_user_exist(db, user)
+            print("++++++++++++++++++++++++++++++++++++++++++ AFTER CHECKING THAT THE USER EXISTS")
             if pre_test_user_exists is False:
+                print("++++++++++++++++++++++++++++++++++++++++++ BEFORE CREATING THE USER")
                 sg_client.create_user(admin_client.admin_url, db, user, sg_password, channels=channels, auth=admin_auth, collection_access=collection_access)
+                print("++++++++++++++++++++++++++++++++++++++++++ AFTER CREATING THE USER")
 
         yield sg_client, scope, collection, collection2
     except Exception as e:
@@ -157,6 +161,7 @@ def test_scopes_and_collections_replication(scopes_collections_tests_fixture, pa
         # 6. Start a push replication
         # 7. Check that the new documents were replicated to sgw2
     """
+    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ STARTING THE TESTS")
     sg1 = sgs["sg1"]
     sg2 = sgs["sg2"]
     admin_client_1 = Admin(sg1["sg_obj"])
