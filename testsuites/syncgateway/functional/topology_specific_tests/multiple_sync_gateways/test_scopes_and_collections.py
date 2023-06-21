@@ -265,7 +265,7 @@ def test_replication_implicit_mapping_filtered_collection(scopes_collections_tes
     sg2 = sgs["sg2"]
     admin_client_1 = Admin(sg1["sg_obj"])
     admin_client_2 = Admin(sg2["sg_obj"])
-
+    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ STARTING THEM NOW222222!!!!!")
     sg_client, scope, collection, collection2 = scopes_collections_tests_fixture
 
     # create users, user sessions
@@ -280,13 +280,14 @@ def test_replication_implicit_mapping_filtered_collection(scopes_collections_tes
     admin_client_2.post_db_config(sg2["db"], config_2)
     # update user configs
     collection_access = {scope: {collection: {"admin_channels": channels}, collection2: {"admin_channels": channels}}}
+    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ BEFORE UPDATE USER!!!!!")
     sg_client.update_user(sg1_admin_url, sg1["db"], sgs["sg1"]["user"], password=password, channels=channels, auth=admin_auth, collection_access=collection_access)
     sg_client.update_user(sg2_admin_url, sg2["db"], sgs["sg2"]["user"], password=password, channels=channels, auth=admin_auth, collection_access=collection_access)
-
+    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ AFTER UPDATE USER!!!!!")
     # 2. Upload docs to SG1 collections
     sg1_collection_docs = sg_client.add_docs(url=sg1_url, db=sg1["db"], number=3, id_prefix="collection_1_doc", auth=user1_auth, scope=scope, collection=collection, channels=["A"])
     sg_client.add_docs(url=sg1_url, db=sg1["db"], number=3, id_prefix="collection_2_doc", auth=user1_auth, scope=scope, collection=collection2, channels=["A"])
-
+    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ BEFORE REPLICATION!!!!!")
     # 3. Start one-shot pull replication SG1->SG2, filtering one collection
     replicator_id = sg2["sg_obj"].start_replication2(
         local_db=sg2["db"],
@@ -299,8 +300,9 @@ def test_replication_implicit_mapping_filtered_collection(scopes_collections_tes
         collections_enabled=True,
         collections_local=[keyspace(scope, collection)]
     )
+    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ AFTER REPLICATION!!!!!")
     admin_client_2.replication_status_poll(sg2["db"], replicator_id, timeout=180)
-
+    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ AFTER REPLICATION POLL!!!!!")
     # 4.Assert that docs in non-filtered collection are pulled, but filtered is not
     sg2_collection_docs_ids = [row["id"] for row in sg_client.get_all_docs(url=sg2_admin_url, db=sg2["db"], auth=user2_auth, scope=scope, collection=collection)["rows"]]
     sg2_collection_2_docs = sg_client.get_all_docs(url=sg2_admin_url, db=sg2["db"], auth=user2_auth, scope=scope, collection=collection2)
