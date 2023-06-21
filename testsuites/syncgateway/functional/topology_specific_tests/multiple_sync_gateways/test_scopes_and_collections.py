@@ -123,10 +123,15 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
             admin_client = Admin(sgs[key]["sg_obj"])
             # Cleanup everything that was created
             if (pre_test_user_exists is not None) and (pre_test_user_exists is False):
-                admin_client.delete_user_if_exists(sgs[key]["db"], sgs[key]["user"])
+                print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^BEFORE DELETING_USER")
+                admin_client.delete_user_if_exists(sgs[key]["db"], sgs[key]["user"], check_existence=False)
+                print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^AFTER DELETING_USER")
             if (pre_test_db_exists is not None) and (pre_test_db_exists is False):
+                print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^BEFORE_CHECKING_DB")
                 if admin_client.does_db_exist(sgs[key]["db"]) is True:
+                    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^BEFORE_DELETING_DB")
                     admin_client.delete_db(sgs[key]["db"])
+                    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^AFTER_DELETING_DB")
 
         cb_server.delete_scope_if_exists(bucket, scope)
         cb_server.delete_scope_if_exists(bucket2, scope)
