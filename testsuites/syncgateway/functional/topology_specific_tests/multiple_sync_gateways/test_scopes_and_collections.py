@@ -161,7 +161,7 @@ def test_scopes_and_collections_replication(scopes_collections_tests_fixture, pa
         # 6. Start a push replication
         # 7. Check that the new documents were replicated to sgw2
     """
-    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ STARTING THE TESTS")
+    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ STARTING THEM NOW!!!!!")
     sg1 = sgs["sg1"]
     sg2 = sgs["sg2"]
     admin_client_1 = Admin(sg1["sg_obj"])
