@@ -97,23 +97,31 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
             does_scope_exist = cb_server.does_scope_exist(server_bucket, scope)
             if does_scope_exist is False:
                 cb_server.create_scope(server_bucket, scope)
+            print("BEFORE SERVER COLLECTION CREATION")
             cb_server.create_collection(server_bucket, scope, collection)
             cb_server.create_collection(server_bucket, scope, collection2)
+            print("AFTER SERVER COLLECTION CREATION")
             # SGW database creation
             admin_client = Admin(sgs[key]["sg_obj"])
             pre_test_db_exists = admin_client.does_db_exist(db)
+            print("AFTER DB EXIST CHECK")
             test_bucket_db = admin_client.get_bucket_db(server_bucket)
             if test_bucket_db is not None:
+                print("DELETE A DATABASE")
                 admin_client.delete_db(test_bucket_db)
             if pre_test_db_exists is False:
+                print("CRATE A DATABASE")
                 admin_client.create_db(db, data)
             # collection_access = {scope: {collection: {"admin_channels": channels}, collection2: {"admin_channels": channels}}}
             collection_access = {scope: {collection: {"admin_channels": channels}}}
             # Create a user
+            print("BEFORE USER EXISTS CHECK")
             pre_test_user_exists = admin_client.does_user_exist(db, user)
             if pre_test_user_exists is False:
+                print("BEFORE USER CREATION")
                 sg_client.create_user(admin_client.admin_url, db, user, sg_password, channels=channels, auth=admin_auth, collection_access=collection_access)
-
+                print("AFTER USER CREATION")
+            print("END OF SETUP")
         yield sg_client, scope, collection, collection2
     except Exception as e:
         raise e
