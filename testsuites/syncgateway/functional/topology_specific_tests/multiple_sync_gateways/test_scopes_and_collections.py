@@ -348,8 +348,11 @@ def test_multiple_replicators_multiple_scopes(scopes_collections_tests_fixture, 
     config_1 = {"bucket": bucket, "scopes": {scope: {"collections": {collection: {"sync": sync_function}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
     config_2 = {"bucket": bucket2, "scopes": {scope: {"collections": {collection2: {"sync": sync_function}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
     config_3 = {"bucket": bucket3, "scopes": {scope: {"collections": {collection: {"sync": sync_function}, collection2: {"sync": sync_function}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
+    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ BEFORE UPDATE CONFIG 1!!!!!")
     admin_client_1.post_db_config(sg1["db"], config_1)
+    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ BEFORE UPDATE CONFIG 2!!!!!")
     admin_client_2.post_db_config(sg2["db"], config_2)
+    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ BEFORE UPDATE CONFIG 3!!!!!")
     admin_client_3.post_db_config(sg3["db"], config_3)
 
     # update user configs for channel access
@@ -357,10 +360,13 @@ def test_multiple_replicators_multiple_scopes(scopes_collections_tests_fixture, 
     user2_collection_access = {scope: {collection2: {"admin_channels": channels}}}
     user3_collection_access = {scope: {collection: {"admin_channels": channels}, collection2: {"admin_channels": channels}}}
 
+    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ BEFORE UPDATE USER!!!!!")
     sg_client.update_user(sg1_admin_url, sg1["db"], sgs["sg1"]["user"], password=password, channels=channels, auth=admin_auth, collection_access=user1_collection_access)
+    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ BEFORE UPDATE USER1!!!!!")
     sg_client.update_user(sg2_admin_url, sg2["db"], sgs["sg2"]["user"], password=password, channels=channels, auth=admin_auth, collection_access=user2_collection_access)
+    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ BEFORE UPDATE USER2!!!!!")
     sg_client.update_user(sg3_admin_url, sg3["db"], sgs["sg3"]["user"], password=password, channels=channels, auth=admin_auth, collection_access=user3_collection_access)
-
+    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ AFTER UPDATE USERS!!!!!")
     # maybe add code to delete collections from bucket1 and bucket2 that are not relevant
 
     # 2. Upload docs to SG1 and SG2
@@ -391,9 +397,11 @@ def test_multiple_replicators_multiple_scopes(scopes_collections_tests_fixture, 
         collections_enabled=True,
         collections_local=[keyspace(scope, collection2)]
     )
-
+    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ AFTER REPLICATION!!!!!")
     admin_client_1.replication_status_poll(sg1["db"], replicator_1_id, timeout=180)
+    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ AFTER REPLICATION POLL1!!!!!")
     admin_client_3.replication_status_poll(sg3["db"], replicator_2_id, timeout=180)
+    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ AFTER REPLICATION POLL3!!!!!")
 
     # 5. Assert that SG3 contains docs
     sg3_collection_doc_ids = [row["id"] for row in sg_client.get_all_docs(url=sg3_url, db=sg3["db"], auth=user3_auth, scope=scope, collection=collection)["rows"]]
