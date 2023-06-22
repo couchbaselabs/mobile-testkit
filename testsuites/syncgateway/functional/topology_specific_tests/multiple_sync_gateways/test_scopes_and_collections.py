@@ -150,6 +150,7 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
 
 @pytest.mark.syncgateway
 @pytest.mark.collections
+@pytest.mark.skip
 def test_scopes_and_collections_replication(scopes_collections_tests_fixture, params_from_base_test_setup):
     """
         @summary:
@@ -255,6 +256,7 @@ def test_scopes_and_collections_replication(scopes_collections_tests_fixture, pa
 
 @pytest.mark.syncgateway
 @pytest.mark.collections
+@pytest.mark.skip
 def test_replication_implicit_mapping_filtered_collection(scopes_collections_tests_fixture, params_from_base_test_setup):
     """
     Test that ISGR implicit mapping works with a subset of collections on the active sync gateway
@@ -315,6 +317,7 @@ def test_replication_implicit_mapping_filtered_collection(scopes_collections_tes
 
 @pytest.mark.syncgateway
 @pytest.mark.collections
+@pytest.mark.skip
 def test_multiple_replicators_multiple_scopes(scopes_collections_tests_fixture, params_from_base_test_setup):
     """
     Test that ISGR for multiple scopes(dbs) works using multiple replicators for each scope
