@@ -150,7 +150,6 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
 
 @pytest.mark.syncgateway
 @pytest.mark.collections
-@pytest.mark.skip
 def test_scopes_and_collections_replication(scopes_collections_tests_fixture, params_from_base_test_setup):
     """
         @summary:
