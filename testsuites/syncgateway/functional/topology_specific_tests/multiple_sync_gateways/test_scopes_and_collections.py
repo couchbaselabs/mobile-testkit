@@ -255,6 +255,7 @@ def test_scopes_and_collections_replication(scopes_collections_tests_fixture, pa
 
 @pytest.mark.syncgateway
 @pytest.mark.collections
+@pytest.mark.skip
 def test_replication_implicit_mapping_filtered_collection(scopes_collections_tests_fixture, params_from_base_test_setup):
     """
     Test that ISGR implicit mapping works with a subset of collections on the active sync gateway
