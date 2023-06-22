@@ -278,14 +278,11 @@ def test_replication_implicit_mapping_filtered_collection(scopes_collections_tes
     config_2 = {"bucket": bucket2, "scopes": {scope: {"collections": {collection: {"sync": sync_function}, collection2: {"sync": sync_function}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
     print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ BEFORE UPDATE CONFIG 1!!!!!")
     admin_client_1.post_db_config(sg1["db"], config_1)
-    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ BEFORE UPDATE CONFIG 2!!!!!")
     admin_client_2.post_db_config(sg2["db"], config_2)
-    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ AFTER UPDATE CONFIG !!!!!")
     # update user configs
     collection_access = {scope: {collection: {"admin_channels": channels}, collection2: {"admin_channels": channels}}}
     print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ BEFORE UPDATE USER!!!!!")
     sg_client.update_user(sg1_admin_url, sg1["db"], sgs["sg1"]["user"], password=password, channels=channels, auth=admin_auth, collection_access=collection_access)
-    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ BEFORE UPDATE USER2!!!!!")
     sg_client.update_user(sg2_admin_url, sg2["db"], sgs["sg2"]["user"], password=password, channels=channels, auth=admin_auth, collection_access=collection_access)
     print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ AFTER UPDATE USER!!!!!")
     # 2. Upload docs to SG1 collections
