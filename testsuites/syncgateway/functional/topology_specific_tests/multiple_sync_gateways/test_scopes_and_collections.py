@@ -52,7 +52,6 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
         pytest.skip('This test cannot run with Sync Gateway version below 3.1.0')
 
     try:  # To be able to teardon in case of a setup error
-        print("++++++++++++++++++++++++++++++++++++++AT SETUP")
         random_suffix = str(uuid.uuid4())[:8]
         scope_prefix = "scope_"
         collection_prefix = "collection_"
@@ -79,9 +78,8 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
 
         pre_test_is_bucket_exist = bucket in cb_server.get_bucket_names()
         if pre_test_is_bucket_exist:
-            print("+++++++++++++++++++++++++++++++++++++DELETEING BUCKET")
             cb_server.delete_bucket(bucket)
-        print("+++++++++++++++++++++++++++++++++++++CREATING BUCKETS")
+
         cb_server.create_bucket(cluster_config, bucket, 100)
         cb_server.create_bucket(cluster_config, bucket2, 100)
         cb_server.create_bucket(cluster_config, bucket3, 100)
@@ -90,7 +88,6 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
         sgs["sg3"] = {"sg_obj": cbs_cluster.sync_gateways[2], "bucket": bucket3, "db": "db3" + random_suffix, "user": "sg3_user" + random_suffix}
 
         for key in sgs:
-            print("*******************************************WORKING ON" + str(key))
             server_bucket = sgs[key]["bucket"]
             user = sgs[key]["user"]
             db = sgs[key]["db"]
@@ -113,13 +110,9 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
             # collection_access = {scope: {collection: {"admin_channels": channels}, collection2: {"admin_channels": channels}}}
             collection_access = {scope: {collection: {"admin_channels": channels}}}
             # Create a user
-            print("++++++++++++++++++++++++++++++++++++++++++ BEFORE CHECKING THAT THE USER EXISTS")
             pre_test_user_exists = admin_client.does_user_exist(db, user)
-            print("++++++++++++++++++++++++++++++++++++++++++ AFTER CHECKING THAT THE USER EXISTS")
             if pre_test_user_exists is False:
-                print("++++++++++++++++++++++++++++++++++++++++++ BEFORE CREATING THE USER")
                 sg_client.create_user(admin_client.admin_url, db, user, sg_password, channels=channels, auth=admin_auth, collection_access=collection_access)
-                print("++++++++++++++++++++++++++++++++++++++++++ AFTER CREATING THE USER")
 
         yield sg_client, scope, collection, collection2
     except Exception as e:
@@ -130,15 +123,10 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
             admin_client = Admin(sgs[key]["sg_obj"])
             # Cleanup everything that was created
             if (pre_test_user_exists is not None) and (pre_test_user_exists is False):
-                print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^BEFORE DELETING_USER")
-                admin_client.delete_user_if_exists(sgs[key]["db"], sgs[key]["user"], check_existence=False)
-                print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^AFTER DELETING_USER")
+                admin_client.delete_user_if_exists(sgs[key]["db"], sgs[key]["user"])
             if (pre_test_db_exists is not None) and (pre_test_db_exists is False):
-                print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^BEFORE_CHECKING_DB")
                 if admin_client.does_db_exist(sgs[key]["db"]) is True:
-                    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^BEFORE_DELETING_DB")
                     admin_client.delete_db(sgs[key]["db"])
-                    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^AFTER_DELETING_DB")
 
         cb_server.delete_scope_if_exists(bucket, scope)
         cb_server.delete_scope_if_exists(bucket2, scope)
@@ -161,7 +149,6 @@ def test_scopes_and_collections_replication(scopes_collections_tests_fixture, pa
         # 6. Start a push replication
         # 7. Check that the new documents were replicated to sgw2
     """
-    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ STARTING THEM NOW!!!!!")
     sg1 = sgs["sg1"]
     sg2 = sgs["sg2"]
     admin_client_1 = Admin(sg1["sg_obj"])
@@ -204,7 +191,9 @@ def test_scopes_and_collections_replication(scopes_collections_tests_fixture, pa
     data1 = {"bucket": bucket, "scopes": {scope: {"collections": {collection: {"sync": sync_function}, collection2: {"sync": sync_function}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
     data2 = {"bucket": bucket2, "scopes": {scope: {"collections": {collection: {"sync": sync_function}, collection2: {"sync": sync_function}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
     admin_client_1.post_db_config(sg1["db"], data1)
+    admin_client_1.wait_for_db_online(sg1["db"], 60)
     admin_client_2.post_db_config(sg2["db"], data2)
+    admin_client_2.wait_for_db_online(sg2["db"], 60)
 
     # 5. Upload new documents to sgw1, both collections
     uploaded_for_push = sg_client.add_docs(url=sg1_url, db=sg1["db"], number=num_of_docs, id_prefix=push_replication_prefix, channels=["A"], auth=user1_auth, scope=scope, collection=collection)
@@ -265,7 +254,7 @@ def test_replication_implicit_mapping_filtered_collection(scopes_collections_tes
     sg2 = sgs["sg2"]
     admin_client_1 = Admin(sg1["sg_obj"])
     admin_client_2 = Admin(sg2["sg_obj"])
-    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ STARTING THEM NOW222222!!!!!")
+
     sg_client, scope, collection, collection2 = scopes_collections_tests_fixture
 
     # create users, user sessions
@@ -276,22 +265,19 @@ def test_replication_implicit_mapping_filtered_collection(scopes_collections_tes
     # 1. Update configs to have identical keyspaces on both SG1 and SG2
     config_1 = {"bucket": bucket, "scopes": {scope: {"collections": {collection: {"sync": sync_function}, collection2: {"sync": sync_function}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
     config_2 = {"bucket": bucket2, "scopes": {scope: {"collections": {collection: {"sync": sync_function}, collection2: {"sync": sync_function}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
-    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ BEFORE UPDATE CONFIG 1!!!!!")
     admin_client_1.post_db_config(sg1["db"], config_1)
-    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ BEFORE UPDATE CONFIG 2!!!!!")
+    admin_client_1.wait_for_db_online(sg1["db"], 60)
     admin_client_2.post_db_config(sg2["db"], config_2)
-    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ AFTER UPDATE CONFIG !!!!!")
+    admin_client_2.wait_for_db_online(sg2["db"], 60)
     # update user configs
     collection_access = {scope: {collection: {"admin_channels": channels}, collection2: {"admin_channels": channels}}}
-    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ BEFORE UPDATE USER!!!!!")
     sg_client.update_user(sg1_admin_url, sg1["db"], sgs["sg1"]["user"], password=password, channels=channels, auth=admin_auth, collection_access=collection_access)
-    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ BEFORE UPDATE USER2!!!!!")
     sg_client.update_user(sg2_admin_url, sg2["db"], sgs["sg2"]["user"], password=password, channels=channels, auth=admin_auth, collection_access=collection_access)
-    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ AFTER UPDATE USER!!!!!")
+
     # 2. Upload docs to SG1 collections
     sg1_collection_docs = sg_client.add_docs(url=sg1_url, db=sg1["db"], number=3, id_prefix="collection_1_doc", auth=user1_auth, scope=scope, collection=collection, channels=["A"])
     sg_client.add_docs(url=sg1_url, db=sg1["db"], number=3, id_prefix="collection_2_doc", auth=user1_auth, scope=scope, collection=collection2, channels=["A"])
-    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ BEFORE REPLICATION!!!!!")
+
     # 3. Start one-shot pull replication SG1->SG2, filtering one collection
     replicator_id = sg2["sg_obj"].start_replication2(
         local_db=sg2["db"],
@@ -304,9 +290,8 @@ def test_replication_implicit_mapping_filtered_collection(scopes_collections_tes
         collections_enabled=True,
         collections_local=[keyspace(scope, collection)]
     )
-    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ AFTER REPLICATION!!!!!")
     admin_client_2.replication_status_poll(sg2["db"], replicator_id, timeout=180)
-    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ AFTER REPLICATION POLL!!!!!")
+
     # 4.Assert that docs in non-filtered collection are pulled, but filtered is not
     sg2_collection_docs_ids = [row["id"] for row in sg_client.get_all_docs(url=sg2_admin_url, db=sg2["db"], auth=user2_auth, scope=scope, collection=collection)["rows"]]
     sg2_collection_2_docs = sg_client.get_all_docs(url=sg2_admin_url, db=sg2["db"], auth=user2_auth, scope=scope, collection=collection2)
@@ -348,25 +333,22 @@ def test_multiple_replicators_multiple_scopes(scopes_collections_tests_fixture, 
     config_1 = {"bucket": bucket, "scopes": {scope: {"collections": {collection: {"sync": sync_function}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
     config_2 = {"bucket": bucket2, "scopes": {scope: {"collections": {collection2: {"sync": sync_function}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
     config_3 = {"bucket": bucket3, "scopes": {scope: {"collections": {collection: {"sync": sync_function}, collection2: {"sync": sync_function}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
-    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ BEFORE UPDATE CONFIG 1!!!!!")
     admin_client_1.post_db_config(sg1["db"], config_1)
-    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ BEFORE UPDATE CONFIG 2!!!!!")
+    admin_client_1.wait_for_db_online(sg1["db"], 60)
     admin_client_2.post_db_config(sg2["db"], config_2)
-    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ BEFORE UPDATE CONFIG 3!!!!!")
+    admin_client_2.wait_for_db_online(sg2["db"], 60)
     admin_client_3.post_db_config(sg3["db"], config_3)
+    admin_client_3.wait_for_db_online(sg3["db"], 60)
 
     # update user configs for channel access
     user1_collection_access = {scope: {collection: {"admin_channels": channels}}}
     user2_collection_access = {scope: {collection2: {"admin_channels": channels}}}
     user3_collection_access = {scope: {collection: {"admin_channels": channels}, collection2: {"admin_channels": channels}}}
 
-    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ BEFORE UPDATE USER!!!!!")
     sg_client.update_user(sg1_admin_url, sg1["db"], sgs["sg1"]["user"], password=password, channels=channels, auth=admin_auth, collection_access=user1_collection_access)
-    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ BEFORE UPDATE USER1!!!!!")
     sg_client.update_user(sg2_admin_url, sg2["db"], sgs["sg2"]["user"], password=password, channels=channels, auth=admin_auth, collection_access=user2_collection_access)
-    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ BEFORE UPDATE USER2!!!!!")
     sg_client.update_user(sg3_admin_url, sg3["db"], sgs["sg3"]["user"], password=password, channels=channels, auth=admin_auth, collection_access=user3_collection_access)
-    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ AFTER UPDATE USERS!!!!!")
+
     # maybe add code to delete collections from bucket1 and bucket2 that are not relevant
 
     # 2. Upload docs to SG1 and SG2
@@ -397,11 +379,9 @@ def test_multiple_replicators_multiple_scopes(scopes_collections_tests_fixture, 
         collections_enabled=True,
         collections_local=[keyspace(scope, collection2)]
     )
-    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ AFTER REPLICATION!!!!!")
+
     admin_client_1.replication_status_poll(sg1["db"], replicator_1_id, timeout=180)
-    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ AFTER REPLICATION POLL1!!!!!")
     admin_client_3.replication_status_poll(sg3["db"], replicator_2_id, timeout=180)
-    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ AFTER REPLICATION POLL3!!!!!")
 
     # 5. Assert that SG3 contains docs
     sg3_collection_doc_ids = [row["id"] for row in sg_client.get_all_docs(url=sg3_url, db=sg3["db"], auth=user3_auth, scope=scope, collection=collection)["rows"]]
@@ -478,7 +458,9 @@ def test_replication_explicit_mapping(scopes_collections_tests_fixture, params_f
     config_2 = {"bucket": bucket2, "scopes": {scope: {"collections": {bucket2Collections[0]: {"sync": sync_function}, bucket2Collections[1]: {"sync": sync_function}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
     config_3 = {"bucket": bucket3, "scopes": {scope2: {"collections": {bucket3Collections[0]: {"sync": sync_function}, bucket3Collections[1]: {"sync": sync_function}, bucket3Collections[2]: {"sync": sync_function}, bucket3Collections[3]: {"sync": sync_function}}}}, "num_index_replicas": 0, "import_docs": True, "enable_shared_bucket_access": True}
     admin_client_1.post_db_config(sg1["db"], config_1)
+    admin_client_1.wait_for_db_online(sg1["db"], 60)
     admin_client_2.post_db_config(sg2["db"], config_2)
+    admin_client_2.wait_for_db_online(sg2["db"], 60)
 
     # for SG3 delete old db and user and create new db mapped to scope2 as multiple scopes is not yet supported
     db = sgs["sg3"]["db"]
@@ -589,6 +571,7 @@ def test_multiple_dbs_same_bucket(scopes_collections_tests_fixture, params_from_
     collection_access_2 = {scope: {collection3: {"admin_channels": channels}, collection4: {"admin_channels": channels}}}
 
     admin_client_1.post_db_config(sg1["db"], config_1)
+    admin_client_1.wait_for_db_online(sg1["db"])
     sg_client.update_user(sg1_admin_url, sg1["db"], sgs["sg1"]["user"], password=password, channels=channels, auth=admin_auth, collection_access=collection_access_1)
 
     # need to delete new db at end of test for teardown
@@ -655,6 +638,7 @@ def test_missing_collection_error(scopes_collections_tests_fixture, params_from_
     collection_access_1 = {scope: {collection: {"admin_channels": channels}, collection2: {"admin_channels": channels}}}
 
     admin_client_1.post_db_config(sg1["db"], config_1)
+    admin_client_1.wait_for_db_online(sg1["db"])
     sg_client.update_user(sg1_admin_url, sg1["db"], sgs["sg1"]["user"], password=password, channels=channels, auth=admin_auth, collection_access=collection_access_1)
 
     sg_client.add_docs(url=sg1_url, db=sg1["db"], number=3, id_prefix="collection_1_doc", auth=user1_auth, scope=scope, collection=collection, channels=["A"])
