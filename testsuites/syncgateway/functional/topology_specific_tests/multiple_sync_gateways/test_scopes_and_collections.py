@@ -10,6 +10,8 @@ from libraries.testkit.admin import Admin
 from keywords import couchbaseserver
 from utilities.cluster_config_utils import is_magma_enabled
 from libraries.testkit import settings
+from libraries.testkit import cluster
+from keywords.SyncGateway import sync_gateway_config_path_for_mode
 
 import logging
 log = logging.getLogger(settings.LOGGER)
@@ -31,6 +33,7 @@ sg1_admin_url = ""
 sg2_admin_url = ""
 sg3_admin_url = ""
 random_suffix = ""
+was_cluster_reset = False
 
 
 @pytest.fixture
@@ -48,12 +51,19 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
     global sg2_admin_url
     global sg3_admin_url
     global random_suffix
+    global was_cluster_reset
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     if is_magma_enabled(cluster_config):
         pytest.skip("It is not necessary to test ISGR with scopes and collections and MAGMA")
     if params_from_base_test_setup["sync_gateway_version"] < "3.1.0":
         pytest.skip('This test cannot run with Sync Gateway version below 3.1.0')
+
+    if not was_cluster_reset:
+        c = cluster.Cluster(config=cluster_config)
+        sg_config = sg_config = sync_gateway_config_path_for_mode("listener_tests/three_sync_gateways", "cc")
+        c.reset(sg_config_path=sg_config)
+        was_cluster_reset = True
 
     try:  # To be able to teardon in case of a setup error
         random_suffix = str(uuid.uuid4())[:8]
