@@ -17,9 +17,9 @@ import logging
 log = logging.getLogger(settings.LOGGER)
 
 # test file shared variables
-bucket = "data-bucket"
-bucket2 = "data-bucket-1"
-bucket3 = "data-bucket-2"
+bucket = "data-bucket-1"
+bucket2 = "data-bucket-2"
+bucket3 = "data-bucket-3"
 sg_password = "password"
 cb_server = sg_username = channels = client_auth = None
 sgs = {}
@@ -89,13 +89,13 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
         sg_client = MobileRestClient()
         cb_server = couchbaseserver.CouchbaseServer(cbs_url)
 
-        pre_test_is_bucket_exist = bucket in cb_server.get_bucket_names()
-        if pre_test_is_bucket_exist:
-            cb_server.delete_bucket(bucket)
+        #  pre_test_is_bucket_exist = bucket in cb_server.get_bucket_names()
+        #  if pre_test_is_bucket_exist:
+        #    cb_server.delete_bucket(bucket)
 
-        cb_server.create_bucket(cluster_config, bucket, 100)
-        cb_server.create_bucket(cluster_config, bucket2, 100)
-        cb_server.create_bucket(cluster_config, bucket3, 100)
+        # cb_server.create_bucket(cluster_config, bucket, 100)
+        # cb_server.create_bucket(cluster_config, bucket2, 100)
+        # cb_server.create_bucket(cluster_config, bucket3, 100)
         sgs["sg1"] = {"sg_obj": cbs_cluster.sync_gateways[0], "bucket": bucket, "db": "db1" + random_suffix, "user": "sg1_user" + random_suffix}
         sgs["sg2"] = {"sg_obj": cbs_cluster.sync_gateways[1], "bucket": bucket2, "db": "db2" + random_suffix, "user": "sg2_user" + random_suffix}
         sgs["sg3"] = {"sg_obj": cbs_cluster.sync_gateways[2], "bucket": bucket3, "db": "db3" + random_suffix, "user": "sg3_user" + random_suffix}
