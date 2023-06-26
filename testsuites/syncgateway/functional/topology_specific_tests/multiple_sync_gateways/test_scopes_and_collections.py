@@ -10,8 +10,8 @@ from libraries.testkit.admin import Admin
 from keywords import couchbaseserver
 from utilities.cluster_config_utils import is_magma_enabled
 from libraries.testkit import settings
-# from libraries.testkit import cluster
-# from keywords.SyncGateway import sync_gateway_config_path_for_mode
+from libraries.testkit import cluster
+from keywords.SyncGateway import sync_gateway_config_path_for_mode
 
 import logging
 log = logging.getLogger(settings.LOGGER)
@@ -51,7 +51,7 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
     global sg2_admin_url
     global sg3_admin_url
     global random_suffix
-    # global was_cluster_reset
+    global was_cluster_reset
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     if is_magma_enabled(cluster_config):
@@ -59,11 +59,11 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
     if params_from_base_test_setup["sync_gateway_version"] < "3.1.0":
         pytest.skip('This test cannot run with Sync Gateway version below 3.1.0')
 
-    # sg_config = sync_gateway_config_path_for_mode("listener_tests/three_sync_gateways", "cc")
-    # if not was_cluster_reset:
-        #  c = cluster.Cluster(config=cluster_config)
-        #  c.reset(sg_config_path=sg_config)
-        #  was_cluster_reset = True
+    sg_config = sync_gateway_config_path_for_mode("listener_tests/three_sync_gateways", "cc")
+    if not was_cluster_reset:
+        c = cluster.Cluster(config=cluster_config)
+        c.reset(sg_config_path=sg_config)
+        was_cluster_reset = True
 
     try:  # To be able to teardon in case of a setup error
         random_suffix = str(uuid.uuid4())[:8]
@@ -93,20 +93,20 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
         if pre_test_is_bucket_exist:
             cb_server.delete_bucket(bucket)
 
-        cb_server.create_bucket(cluster_config, bucket, 100)
-        cb_server.create_bucket(cluster_config, bucket2, 100)
-        cb_server.create_bucket(cluster_config, bucket3, 100)
+        #  cb_server.create_bucket(cluster_config, bucket, 100)
+        #  cb_server.create_bucket(cluster_config, bucket2, 100)
+        #  cb_server.create_bucket(cluster_config, bucket3, 100)
         sgs["sg1"] = {"sg_obj": cbs_cluster.sync_gateways[0], "bucket": bucket, "db": "db1" + random_suffix, "user": "sg1_user" + random_suffix}
         sgs["sg2"] = {"sg_obj": cbs_cluster.sync_gateways[1], "bucket": bucket2, "db": "db2" + random_suffix, "user": "sg2_user" + random_suffix}
         sgs["sg3"] = {"sg_obj": cbs_cluster.sync_gateways[2], "bucket": bucket3, "db": "db3" + random_suffix, "user": "sg3_user" + random_suffix}
-        i = 1
+        #  i = 1
         for key in sgs:
-            rbac_user = "data-bucket-" + str(i)
+            #  rbac_user = "data-bucket-" + str(i)
             server_bucket = sgs[key]["bucket"]
             user = sgs[key]["user"]
             db = sgs[key]["db"]
             # data = {"bucket": server_bucket, "scopes": {scope: {"collections": {collection: {"sync": sync_function}, collection2: {"sync": sync_function}}}}, "num_index_replicas": 0}
-            data = {"bucket": server_bucket, "username": rbac_user, "password": "password", "scopes": {scope: {"collections": {collection: {"sync": sync_function}}}}, "num_index_replicas": 0}
+            data = {"bucket": server_bucket, "scopes": {scope: {"collections": {collection: {"sync": sync_function}}}}, "num_index_replicas": 0}
             # Scope creation on the Couchbase server
             does_scope_exist = cb_server.does_scope_exist(server_bucket, scope)
             if does_scope_exist is False:
