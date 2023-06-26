@@ -59,11 +59,10 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
     if params_from_base_test_setup["sync_gateway_version"] < "3.1.0":
         pytest.skip('This test cannot run with Sync Gateway version below 3.1.0')
 
-    cluster_config = sync_gateway_config_path_for_mode("listener_tests/three_sync_gateways", "cc")
+    sg_config = sync_gateway_config_path_for_mode("listener_tests/three_sync_gateways", "cc")
     if not was_cluster_reset:
         c = cluster.Cluster(config=cluster_config)
-
-        c.reset(sg_config_path=cluster_config)
+        c.reset(sg_config_path=sg_config)
         was_cluster_reset = True
 
     try:  # To be able to teardon in case of a setup error
