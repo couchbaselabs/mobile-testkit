@@ -17,7 +17,7 @@ import logging
 log = logging.getLogger(settings.LOGGER)
 
 # test file shared variables
-bucket = "data-bucke-1"
+bucket = "data-bucket-1"
 bucket2 = "data-bucket-2"
 bucket3 = "data-bucket-3"
 sg_password = "password"
