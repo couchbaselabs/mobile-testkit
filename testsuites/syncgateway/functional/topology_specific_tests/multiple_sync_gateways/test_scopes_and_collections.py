@@ -36,7 +36,6 @@ random_suffix = ""
 was_cluster_reset = False
 
 
-
 @pytest.fixture
 def scopes_collections_tests_fixture(params_from_base_test_setup):
     # get/set the parameters
@@ -63,7 +62,7 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
     cluster_config = sync_gateway_config_path_for_mode("listener_tests/three_sync_gateways", "cc")
     if not was_cluster_reset:
         c = cluster.Cluster(config=cluster_config)
-        
+
         c.reset(sg_config_path=cluster_config)
         was_cluster_reset = True
 
