@@ -91,7 +91,7 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
 
         #  pre_test_is_bucket_exist = bucket in cb_server.get_bucket_names()
         #  if pre_test_is_bucket_exist:
-        #    cb_server.delete_bucket(bucket)
+        #  cb_server.delete_bucket(bucket)
 
         # cb_server.create_bucket(cluster_config, bucket, 100)
         # cb_server.create_bucket(cluster_config, bucket2, 100)
@@ -153,8 +153,8 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
         cb_server.delete_scope_if_exists(bucket2, scope)
         cb_server.delete_scope_if_exists(bucket3, scope)
         cb_server.delete_buckets()
-        if pre_test_is_bucket_exist:
-            cb_server.create_bucket(cluster_config, bucket)
+        #  if pre_test_is_bucket_exist:
+        #  cb_server.create_bucket(cluster_config, bucket)
 
 
 @pytest.mark.syncgateway
