@@ -36,6 +36,7 @@ random_suffix = ""
 was_cluster_reset = False
 
 
+
 @pytest.fixture
 def scopes_collections_tests_fixture(params_from_base_test_setup):
     # get/set the parameters
@@ -59,10 +60,11 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
     if params_from_base_test_setup["sync_gateway_version"] < "3.1.0":
         pytest.skip('This test cannot run with Sync Gateway version below 3.1.0')
 
+    cluster_config = sync_gateway_config_path_for_mode("listener_tests/three_sync_gateways", "cc")
     if not was_cluster_reset:
         c = cluster.Cluster(config=cluster_config)
-        sg_config = sg_config = sync_gateway_config_path_for_mode("listener_tests/three_sync_gateways", "cc")
-        c.reset(sg_config_path=sg_config)
+        
+        c.reset(sg_config_path=cluster_config)
         was_cluster_reset = True
 
     try:  # To be able to teardon in case of a setup error
@@ -72,7 +74,6 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
         scope = scope_prefix + random_suffix
         collection = collection_prefix + random_suffix
         collection2 = collection_prefix + "2_" + random_suffix
-        cluster_config = params_from_base_test_setup["cluster_config"]
         cbs_cluster = Cluster(config=cluster_config)
         client_auth = HTTPBasicAuth(sg_username, sg_password)
         channels = ["A"]
