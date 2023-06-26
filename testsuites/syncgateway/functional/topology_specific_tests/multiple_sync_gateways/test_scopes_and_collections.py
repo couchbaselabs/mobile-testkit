@@ -101,7 +101,7 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
         sgs["sg3"] = {"sg_obj": cbs_cluster.sync_gateways[2], "bucket": bucket3, "db": "db3" + random_suffix, "user": "sg3_user" + random_suffix}
         i = 1
         for key in sgs:
-            rbac_user = "data-bucket-" + i
+            rbac_user = "data-bucket-" + str(i)
             server_bucket = sgs[key]["bucket"]
             user = sgs[key]["user"]
             db = sgs[key]["db"]
