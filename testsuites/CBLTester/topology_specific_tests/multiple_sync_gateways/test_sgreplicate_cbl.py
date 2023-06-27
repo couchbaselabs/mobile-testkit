@@ -2187,7 +2187,7 @@ def test_sg_replicate_custom_conflict_resolve(params_from_base_test_setup, setup
     sg1.restart(config=temp_sg_config, cluster_config=cluster_config)
     # 6. start push_pull replication with one shot with custom conflict resovler
     sg1.admin.wait_until_sgw_replication_done(sg_db1, repl_id, read_flag=True, write_flag=True)
-    time.sleep(60)  # To avoid inconsistent failure when replication did not complete
+    time.sleep(30)  # To avoid inconsistent failure when replication did not complete
     # 7. if  local_wins : docs updated on sg1 gets replicated to sg2
     # if  remote_wins : docs updated on sg2 gets replicated to sg1
     # Verify docs created in cbl2
@@ -2195,8 +2195,11 @@ def test_sg_replicate_custom_conflict_resolve(params_from_base_test_setup, setup
     cbl_doc_ids2 = db.getDocIds(cbl_db2)
     cbl_db_docs1 = db.getDocuments(cbl_db1, cbl_doc_ids1)
     cbl_db_docs2 = db.getDocuments(cbl_db2, cbl_doc_ids2)
+    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^" + str(cbl_db_docs1))
+    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^" + str(cbl_db_docs2))
     for doc in cbl_db_docs1:
         try:
+            print("::::::::::::doc is:" + str(doc))
             print("cbldb doc1 is ::::::", cbl_db_docs1[doc])
             print("cbldb doc1 is ::::::", cbl_db_docs2[doc])
             cbl_db_docs1[doc]["cbl1-update"]
