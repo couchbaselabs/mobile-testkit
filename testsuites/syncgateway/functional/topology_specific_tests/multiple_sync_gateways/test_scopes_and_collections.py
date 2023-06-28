@@ -10,16 +10,14 @@ from libraries.testkit.admin import Admin
 from keywords import couchbaseserver
 from utilities.cluster_config_utils import is_magma_enabled
 from libraries.testkit import settings
-from libraries.testkit import cluster
-from keywords.SyncGateway import sync_gateway_config_path_for_mode
 
 import logging
 log = logging.getLogger(settings.LOGGER)
 
 # test file shared variables
-bucket = "data-bucket-1"
-bucket2 = "data-bucket-2"
-bucket3 = "data-bucket-3"
+bucket = "data-bucket"
+bucket2 = "data-bucket-1"
+bucket3 = "data-bucket-2"
 sg_password = "password"
 cb_server = sg_username = channels = client_auth = None
 sgs = {}
@@ -33,7 +31,6 @@ sg1_admin_url = ""
 sg2_admin_url = ""
 sg3_admin_url = ""
 random_suffix = ""
-was_cluster_reset = False
 
 
 @pytest.fixture
@@ -51,19 +48,12 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
     global sg2_admin_url
     global sg3_admin_url
     global random_suffix
-    global was_cluster_reset
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     if is_magma_enabled(cluster_config):
         pytest.skip("It is not necessary to test ISGR with scopes and collections and MAGMA")
     if params_from_base_test_setup["sync_gateway_version"] < "3.1.0":
         pytest.skip('This test cannot run with Sync Gateway version below 3.1.0')
-
-    sg_config = sync_gateway_config_path_for_mode("listener_tests/three_sync_gateways", "cc")
-    if not was_cluster_reset:
-        c = cluster.Cluster(config=cluster_config)
-        c.reset(sg_config_path=sg_config)
-        was_cluster_reset = True
 
     try:  # To be able to teardon in case of a setup error
         random_suffix = str(uuid.uuid4())[:8]
@@ -72,6 +62,7 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
         scope = scope_prefix + random_suffix
         collection = collection_prefix + random_suffix
         collection2 = collection_prefix + "2_" + random_suffix
+        cluster_config = params_from_base_test_setup["cluster_config"]
         cbs_cluster = Cluster(config=cluster_config)
         client_auth = HTTPBasicAuth(sg_username, sg_password)
         channels = ["A"]
@@ -89,13 +80,13 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
         sg_client = MobileRestClient()
         cb_server = couchbaseserver.CouchbaseServer(cbs_url)
 
-        #  pre_test_is_bucket_exist = bucket in cb_server.get_bucket_names()
-        #  if pre_test_is_bucket_exist:
-        #  cb_server.delete_bucket(bucket)
+        pre_test_is_bucket_exist = bucket in cb_server.get_bucket_names()
+        if pre_test_is_bucket_exist:
+            cb_server.delete_bucket(bucket)
 
-        # cb_server.create_bucket(cluster_config, bucket, 100)
-        # cb_server.create_bucket(cluster_config, bucket2, 100)
-        # cb_server.create_bucket(cluster_config, bucket3, 100)
+        cb_server.create_bucket(cluster_config, bucket, 100)
+        cb_server.create_bucket(cluster_config, bucket2, 100)
+        cb_server.create_bucket(cluster_config, bucket3, 100)
         sgs["sg1"] = {"sg_obj": cbs_cluster.sync_gateways[0], "bucket": bucket, "db": "db1" + random_suffix, "user": "sg1_user" + random_suffix}
         sgs["sg2"] = {"sg_obj": cbs_cluster.sync_gateways[1], "bucket": bucket2, "db": "db2" + random_suffix, "user": "sg2_user" + random_suffix}
         sgs["sg3"] = {"sg_obj": cbs_cluster.sync_gateways[2], "bucket": bucket3, "db": "db3" + random_suffix, "user": "sg3_user" + random_suffix}
@@ -153,8 +144,8 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
         cb_server.delete_scope_if_exists(bucket2, scope)
         cb_server.delete_scope_if_exists(bucket3, scope)
         cb_server.delete_buckets()
-        #  if pre_test_is_bucket_exist:
-        #  cb_server.create_bucket(cluster_config, bucket)
+        if pre_test_is_bucket_exist:
+            cb_server.create_bucket(cluster_config, bucket)
 
 
 @pytest.mark.syncgateway
@@ -264,7 +255,6 @@ def test_scopes_and_collections_replication(scopes_collections_tests_fixture, pa
 
 @pytest.mark.syncgateway
 @pytest.mark.collections
-@pytest.mark.skip
 def test_replication_implicit_mapping_filtered_collection(scopes_collections_tests_fixture, params_from_base_test_setup):
     """
     Test that ISGR implicit mapping works with a subset of collections on the active sync gateway
@@ -325,7 +315,6 @@ def test_replication_implicit_mapping_filtered_collection(scopes_collections_tes
 
 @pytest.mark.syncgateway
 @pytest.mark.collections
-@pytest.mark.skip
 def test_multiple_replicators_multiple_scopes(scopes_collections_tests_fixture, params_from_base_test_setup):
     """
     Test that ISGR for multiple scopes(dbs) works using multiple replicators for each scope
@@ -561,7 +550,6 @@ def test_replication_explicit_mapping(scopes_collections_tests_fixture, params_f
 
 @pytest.mark.syncgateway
 @pytest.mark.collections
-@pytest.mark.skip
 def test_multiple_dbs_same_bucket(scopes_collections_tests_fixture, params_from_base_test_setup):
     """
     Topology:
