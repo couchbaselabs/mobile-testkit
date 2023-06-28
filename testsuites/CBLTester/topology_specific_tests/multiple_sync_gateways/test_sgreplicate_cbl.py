@@ -2085,7 +2085,7 @@ def test_sg_replicate_non_default_conflict_resolver(params_from_base_test_setup,
     db.update_bulk_docs(cbl_db1)
 
     # 6. start push_pull replication with one shot with custom conflict resovler
-    sg1.start_replication2(
+    repl_id_2 = sg1.start_replication2(
         local_db=sg_db1,
         remote_url=sg2.url,
         remote_db=sg_db2,
@@ -2093,7 +2093,7 @@ def test_sg_replicate_non_default_conflict_resolver(params_from_base_test_setup,
         remote_password=password,
         conflict_resolution_type=conflict_resolver_type
     )
-
+    sg1.admin.wait_until_sgw_replication_done(db=sg_db1, repl_id=repl_id_2, write_flag=True)
     # 7. if  local_wins : docs updated on sg1 gets replicated to sg2
     # if  remote_wins : docs updated on sg2 gets replicated to sg1
 
