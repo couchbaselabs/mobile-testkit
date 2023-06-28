@@ -2079,10 +2079,10 @@ def test_sg_replicate_non_default_conflict_resolver(params_from_base_test_setup,
         source_db=cbl_db2, replicator_authenticator=replicator_authenticator2, target_url=sg2_blip_url, err_check=False
     )
     # 4. update docs on sg2 via cbl_db2
-    db.update_bulk_docs(cbl_db2, number_of_updates=3)
+    db.update_bulk_docs(cbl_db2, number_of_updates=3, key="updates-cbl")
 
     # 5. Then update docs on sg1  via cbl_db1
-    db.update_bulk_docs(cbl_db1)
+    db.update_bulk_docs(cbl_db1, key="updates-cbl")
 
     # 6. start push_pull replication with one shot with custom conflict resovler
     repl_id_2 = sg1.start_replication2(
