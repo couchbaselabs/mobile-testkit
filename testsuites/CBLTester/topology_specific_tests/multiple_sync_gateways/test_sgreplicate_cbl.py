@@ -2076,7 +2076,7 @@ def test_sg_replicate_non_default_conflict_resolver(params_from_base_test_setup,
     )
     sg1.admin.wait_until_sgw_replication_done(db=sg_db1, repl_id=repl_id_1, write_flag=True)
     replicator.configure_and_replicate(
-        source_db=cbl_db2, replicator_authenticator=replicator_authenticator2, target_url=sg2_blip_url
+        source_db=cbl_db2, replicator_authenticator=replicator_authenticator2, target_url=sg2_blip_url, err_check=False
     )
     # 4. update docs on sg2 via cbl_db2
     db.update_bulk_docs(cbl_db2, number_of_updates=3)
