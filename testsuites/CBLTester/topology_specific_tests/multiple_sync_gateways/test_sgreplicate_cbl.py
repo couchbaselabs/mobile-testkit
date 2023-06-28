@@ -2171,7 +2171,7 @@ def test_sg_replicate_custom_conflict_resolve(params_from_base_test_setup, setup
     repl_id = "replication1"
     if external_js:
         # hosted js code statically as data center vms cannot reach mac machines , if these is not reachable, you need to restart js code
-        jscode_external_ip = "172.23.104.165"
+        jscode_external_ip = "10.100.150.53"
         custom_conflict_js_function = "http://{}:5007/conflictResolver".format(jscode_external_ip)
     else:
         custom_conflict_js_function = """function (conflict) {
