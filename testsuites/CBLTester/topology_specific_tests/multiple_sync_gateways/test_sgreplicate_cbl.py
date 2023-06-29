@@ -2094,6 +2094,7 @@ def test_sg_replicate_non_default_conflict_resolver(params_from_base_test_setup,
         conflict_resolution_type=conflict_resolver_type
     )
     sg1.admin.wait_until_sgw_replication_done(db=sg_db1, repl_id=repl_id_2, write_flag=True)
+    time.sleep(30)
     # 7. if  local_wins : docs updated on sg1 gets replicated to sg2
     # if  remote_wins : docs updated on sg2 gets replicated to sg1
 
