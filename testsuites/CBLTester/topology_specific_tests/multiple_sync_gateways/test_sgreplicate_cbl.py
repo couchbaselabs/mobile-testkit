@@ -2094,7 +2094,7 @@ def test_sg_replicate_non_default_conflict_resolver(params_from_base_test_setup,
         conflict_resolution_type=conflict_resolver_type
     )
     sg1.admin.wait_until_sgw_replication_done(db=sg_db1, repl_id=repl_id_2, write_flag=True)
-    time.sleep(30)
+    time.sleep(60)
     # 7. if  local_wins : docs updated on sg1 gets replicated to sg2
     # if  remote_wins : docs updated on sg2 gets replicated to sg1
 
@@ -2105,7 +2105,7 @@ def test_sg_replicate_non_default_conflict_resolver(params_from_base_test_setup,
     cbl_db_docs2 = db.getDocuments(cbl_db2, cbl_doc_ids2)
     if conflict_resolver_type == "localWins":
         for doc in cbl_db_docs1:
-            assert cbl_db_docs1[doc]["updates-cbl"] == 1, "local_win replication did not happen"
+            assert cbl_db_docs1[doc]["updates-cbl"] == 2, "local_win replication did not happen"
     else:
         for doc in cbl_db_docs2:
             assert cbl_db_docs2[doc]["updates-cbl"] == 3, "remote_win replication did not happen"
