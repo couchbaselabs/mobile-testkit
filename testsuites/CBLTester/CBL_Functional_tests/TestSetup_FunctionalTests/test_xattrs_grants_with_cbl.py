@@ -62,8 +62,6 @@ def test_xattrs_grant_automatic_imports(params_from_base_test_setup, x509_cert_a
     # 2. Write a sync function to assign user xattrs value as channel
     # Replace with sync function on sgw config to use user xattrs for channels
     temp_sg_config = replace_xattrs_sync_func_in_config(sg_config, user_custom_channel)
-    cluster_config = temp_cluster_config
-    c_cluster = cluster.Cluster(config=cluster_config)
     c_cluster.reset(sg_config_path=temp_sg_config)
 
     cbs_ip = c_cluster.servers[0].host
