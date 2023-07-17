@@ -200,6 +200,10 @@ def pytest_addoption(parser):
                      --sync-gateway-version: 3.2.0-233''',
                      default=None)
 
+    parser.addoption("--code-coverage",
+                     action="store_true",
+                     help='''Get the code coverage of the custom toy builds. The SGW build must have the code coverage binary.''')
+
 
 # This will be called once for the at the beggining of the execution in the 'tests/' directory
 # and will be torn down, (code after the yeild) when all the test session has completed.
@@ -247,6 +251,7 @@ def params_from_base_suite_setup(request):
     disable_admin_auth = request.config.getoption("--disable-admin-auth")
     trace_logs = request.config.getoption("--trace-logs")
     custom_build = request.config.getoption("--sgw-custom-build")
+    code_coverage = request.config.getoption("--code-coverage")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
@@ -279,6 +284,7 @@ def params_from_base_suite_setup(request):
     log_info("disable_persistent_config: {}".format(disable_persistent_config))
     log_info("trace_logs: {}".format(trace_logs))
     log_info("custom build: {}".format(custom_build))
+    log_info("code_covergae: {}".format(code_coverage))
 
     # sg-ce is invalid for di mode
     if mode == "di" and sg_ce:
@@ -490,7 +496,8 @@ def params_from_base_suite_setup(request):
                     sg_ce=sg_ce,
                     cbs_ce=cbs_ce,
                     skip_couchbase_provision=skip_couchbase_provision,
-                    custom_build=custom_build
+                    custom_build=custom_build,
+                    code_coverage=code_coverage
                 )
             except ProvisioningError:
                 logging_helper = Logging()

@@ -1,0 +1,45 @@
+# Remove and setup code-coverage environment
+- name: REMOVE PREVIOUS ALIAS
+  become: yes
+  shell: rm -rf /etc/systemd/system/sync_gateway.service.d
+  when: ansible_distribution == "CentOS"
+
+- name: MAKE NEW DIRECTORY FOR ALIAS
+  become: yes
+  shell: mkdir -p /etc/systemd/system/sync_gateway.service.d
+  when: ansible_distribution == "CentOS"
+
+- name: MAKE NEW ALIAS FILE
+  become: yes
+  shell: touch /etc/systemd/system/sync_gateway.service.d/override.conf
+  when: ansible_distribution == "CentOS"
+
+- name: SET ALIAS
+  become: yes
+  shell: touch /etc/systemd/system/sync_gateway.service.d/override.conf
+  when: ansible_distribution == "CentOS"
+
+- name: SET SERVICE
+  become: yes
+  shell: echo "[Service]" >> /etc/systemd/system/sync_gateway.service.d/override.conf
+  when: ansible_distribution == "CentOS"
+
+- name: SET SYSTEMMD ALIAS
+  become: yes
+  shell: echo "Environment=\"GOCOVERDIR=/tmp/coverage\"" >> /etc/systemd/system/sync_gateway.service.d/override.conf
+  when: ansible_distribution == "CentOS"
+
+- name: SET COVERAGE LOCATION
+  become: yes
+  shell: rm -rf /tmp/coverage
+  when: ansible_distribution == "CentOS"
+
+- name: CREATE COVERAGE DIR
+  become: yes
+  shell: mkdir /tmp/coverage
+  when: ansible_distribution == "CentOS"
+
+- name: SET PERMISSION FOR DIR
+  become: yes
+  shell: chmod 777 /tmp/coverage
+  when: ansible_distribution == "CentOS" 
