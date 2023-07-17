@@ -1,0 +1,4 @@
+- name: SYNC GATEWAY | Fetch sync_gateway code coverage files
+  become: yes
+  # Do not validate checksum as this is just a passive grab of the logs. Since they are continuously being appended to, the checksum may fail
+  fetch: src=/tmp/coverage dest=/tmp/ fail_on_missing=no

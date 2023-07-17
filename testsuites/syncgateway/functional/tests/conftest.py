@@ -1,6 +1,7 @@
 """ Setup for Sync Gateway functional tests """
 
 import pytest
+from libraries.provision.ansible_runner import AnsibleRunner
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.constants import CLUSTER_CONFIGS_DIR
 from keywords.exceptions import ProvisioningError, FeatureSupportedError
@@ -553,7 +554,8 @@ def params_from_base_suite_setup(request):
         "need_sgw_admin_auth": need_sgw_admin_auth,
         "sync_gateway_previous_version": sync_gateway_previous_version,
         "use_views": use_views,
-        "trace_logs": trace_logs
+        "trace_logs": trace_logs,
+        "code_coverage": code_coverage
     }
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
@@ -594,6 +596,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     sg_platform = params_from_base_suite_setup["sg_platform"]
     delta_sync_enabled = params_from_base_suite_setup["delta_sync_enabled"]
     sg_ce = params_from_base_suite_setup["sg_ce"]
+    code_coverage = params_from_base_suite_setup["code_coverage"]
     sg_config = params_from_base_suite_setup["sg_config"]
     cbs_ce = params_from_base_suite_setup["cbs_ce"]
     disable_persistent_config = params_from_base_suite_setup["disable_persistent_config"]
@@ -667,7 +670,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "need_sgw_admin_auth": need_sgw_admin_auth,
         "sync_gateway_previous_version": sync_gateway_previous_version,
         "use_views": use_views,
-        "trace_logs": trace_logs
+        "trace_logs": trace_logs,
+        "code_coverage": code_coverage
     }
 
     # Code after the yield will execute when each test finishes
@@ -712,3 +716,11 @@ def sgw_version_reset(params_from_base_test_setup):
     except Exception as ex:
         print("exception message: ", ex)
         sg_obj.install_sync_gateway(cluster_conf, sg_latest_version, sg_conf, skip_bucketcreation=True)
+
+@pytest.fixture(scope="session", autouse=True)
+def coverage_report(request):
+    cluster_config = params_from_base_suite_setup["cluster_config"]
+    code_coverage = params_from_base_suite_setup["code_coverage"]
+    ansible_runner = AnsibleRunner(cluster_config)
+    if code_coverage:
+        ansible_runner.run_ansible_playbook("fetch-code-coverage-files.yml")

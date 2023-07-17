@@ -1,0 +1,5 @@
+---
+- hosts: sync_gateways
+  tasks:
+  - include: tasks/fetch-code-coverage-files.yml
+    when: ansible_distribution == "CentOS"

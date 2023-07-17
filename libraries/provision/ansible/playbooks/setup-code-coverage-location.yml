@@ -1,0 +1,10 @@
+---
+- hosts: sync_gateways
+  any_errors_fatal: true
+  vars:
+    environment_file:
+
+  tasks:
+  - include: tasks/setup-code-coverage-location.yml
+    become: yes
+    when: ansible_distribution == "CentOS"

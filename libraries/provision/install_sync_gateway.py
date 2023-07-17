@@ -384,14 +384,16 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
             else:
                 if code_coverage:
                     coverage_status = ansible_runner.run_ansible_playbook(
-                        "setup-code-coverage-env",subset=target
+                        "setup-code-coverage-env.yml", subset=target
+                    )
+                    coverage_status = ansible_runner.run_ansible_playbook(
+                        "setup-code-coverage-location.yml", subset=target
                     )
                 status = ansible_runner.run_ansible_playbook(
                     "install-sync-gateway-package.yml",
                     extra_vars=playbook_vars, subset=target
                 )
         else:
-            target = hostname_for_url(cluster_config, url)
             if sg_platform == "windows":
                 status = ansible_runner.run_ansible_playbook(
                     "install-sync-gateway-package-windows.yml",
@@ -405,7 +407,10 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
             else:
                 if code_coverage:
                     coverage_status = ansible_runner.run_ansible_playbook(
-                        "setup-code-coverage-env",subset=target
+                        "setup-code-coverage-env.yml"
+                    )
+                    coverage_status = ansible_runner.run_ansible_playbook(
+                        "setup-code-coverage-location.yml"
                     )
                 status = ansible_runner.run_ansible_playbook(
                     "install-sync-gateway-package.yml",
