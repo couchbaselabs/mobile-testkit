@@ -1,4 +1,4 @@
 - name: SYNC GATEWAY | Fetch sync_gateway code coverage files
   become: yes
-  fetch: src=/tmp/coverage dest=/tmp/
+  shell: echo "Hello World"
   
