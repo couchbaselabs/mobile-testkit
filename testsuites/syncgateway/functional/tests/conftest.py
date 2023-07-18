@@ -727,5 +727,4 @@ def coverage_report(params_from_base_suite_setup):
         ansible_runner.run_ansible_playbook("fetch-code-coverage-files.yml")
 
 
-if params_from_base_suite_setup["code_coverage"]:
-    atexit.register(coverage_report)
+atexit.register(coverage_report)
