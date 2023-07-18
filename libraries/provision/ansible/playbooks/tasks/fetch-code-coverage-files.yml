@@ -1,3 +1,10 @@
 - name: SYNC GATEWAY | Fetch sync_gateway code coverage files
-  become: yes
-  fetch: src=/tmp/coverage dest=/tmp
+      ansible.builtin.fetch:
+        src: /tmp/coverage/
+        dest: /tmp/
+        flat: yes
+      register: fetch_result
+
+- name: Display fetch result
+      debug:
+        var: fetch_result
