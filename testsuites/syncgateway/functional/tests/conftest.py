@@ -1,6 +1,7 @@
 """ Setup for Sync Gateway functional tests """
 
 import pytest
+import atexit
 from libraries.provision.ansible_runner import AnsibleRunner
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.constants import CLUSTER_CONFIGS_DIR
@@ -32,6 +33,8 @@ UNSUPPORTED_1_5_0_CC = {
         "reason": "Loss of DCP not longer puts the bucket in the offline state"
     }
 }
+code_coverage_var = False
+cluster_config_var = None
 
 
 def skip_if_unsupported(sync_gateway_version, mode, test_name, no_conflicts_enabled):
@@ -480,6 +483,10 @@ def params_from_base_suite_setup(request):
     provision_flag = True
     count = 0
     max_count = 2
+    global code_coverage_var
+    global cluster_config_var
+    code_coverage_var = code_coverage
+    cluster_config_var = cluster_config
     while provision_flag and count < max_count:
         if should_provision:
             try:
@@ -718,10 +725,12 @@ def sgw_version_reset(params_from_base_test_setup):
         sg_obj.install_sync_gateway(cluster_conf, sg_latest_version, sg_conf, skip_bucketcreation=True)
 
 
-@pytest.fixture(scope="module", autouse=True)
-def coverage_report(params_from_base_suite_setup):
-    cluster_conf = params_from_base_test_setup['cluster_config']
-    code_coverage = params_from_base_test_setup['code_coverage']
+def coverage_report():
+    cluster_conf = cluster_config_var
+    code_coverage = code_coverage_var
     ansible_runner = AnsibleRunner(cluster_conf)
     if code_coverage:
         ansible_runner.run_ansible_playbook("fetch-code-coverage-files.yml")
+
+
+atexit.register(coverage_report)
