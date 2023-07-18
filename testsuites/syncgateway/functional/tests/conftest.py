@@ -717,6 +717,7 @@ def sgw_version_reset(params_from_base_test_setup):
         print("exception message: ", ex)
         sg_obj.install_sync_gateway(cluster_conf, sg_latest_version, sg_conf, skip_bucketcreation=True)
 
+
 @pytest.fixture(scope="session", autouse=True)
 def coverage_report(request):
     cluster_config = params_from_base_suite_setup["cluster_config"]
