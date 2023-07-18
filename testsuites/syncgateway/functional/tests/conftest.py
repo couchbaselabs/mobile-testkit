@@ -718,11 +718,13 @@ def sgw_version_reset(params_from_base_test_setup):
         print("exception message: ", ex)
         sg_obj.install_sync_gateway(cluster_conf, sg_latest_version, sg_conf, skip_bucketcreation=True)
 
+
 def coverage_report(params_from_base_suite_setup):
     cluster_config = params_from_base_suite_setup["cluster_config"]
     code_coverage = params_from_base_suite_setup["code_coverage"]
     ansible_runner = AnsibleRunner(cluster_config)
     if code_coverage:
         ansible_runner.run_ansible_playbook("fetch-code-coverage-files.yml")
+
 
 atexit.register(params_from_base_suite_setup)
