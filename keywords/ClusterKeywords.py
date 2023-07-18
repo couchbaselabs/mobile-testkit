@@ -335,7 +335,7 @@ class ClusterKeywords:
             sa_installer_type=sa_installer_type,
             skip_couchbase_provision=skip_couchbase_provision,
             custom_build=custom_build,
-            code_covergae=code_coverage
+            code_coverage=code_coverage
         )
 
         # verify running services are the expected versions
