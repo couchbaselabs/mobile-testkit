@@ -1,10 +1,2 @@
 - name: SYNC GATEWAY | Fetch sync_gateway code coverage files
-      fetch:
-        src: /tmp/coverage/
-        dest: /tmp/
-        flat: yes
-      register: fetch_result
-
-- name: Display fetch result
-      debug:
-        var: fetch_result
+  fetch: src=/tmp/coverage/ dest=/tmp/ flat=yes fail_on_missing=yes
