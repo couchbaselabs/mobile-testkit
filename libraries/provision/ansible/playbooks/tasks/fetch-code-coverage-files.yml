@@ -1,5 +1,5 @@
 - name: SYNC GATEWAY | Fetch sync_gateway code coverage files
-      ansible.builtin.fetch:
+      fetch:
         src: /tmp/coverage/
         dest: /tmp/
         flat: yes
