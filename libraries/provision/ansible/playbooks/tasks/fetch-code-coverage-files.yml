@@ -1,5 +1,4 @@
 - name: SYNC GATEWAY | Fetch sync_gateway code coverage files
   become: yes
-  gather_facts: no
   fetch: src=/tmp/coverage dest=/tmp/
   
