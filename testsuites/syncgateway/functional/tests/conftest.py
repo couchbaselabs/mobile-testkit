@@ -725,12 +725,9 @@ def sgw_version_reset(params_from_base_test_setup):
         sg_obj.install_sync_gateway(cluster_conf, sg_latest_version, sg_conf, skip_bucketcreation=True)
 
 
-def coverage_report():
+def pytest_unconfigure():
     cluster_conf = cluster_config_var
     code_coverage = code_coverage_var
     ansible_runner = AnsibleRunner(cluster_conf)
     if code_coverage:
         ansible_runner.run_ansible_playbook("fetch-code-coverage-files.yml")
-
-
-atexit.register(coverage_report)
