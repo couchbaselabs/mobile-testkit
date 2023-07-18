@@ -719,7 +719,7 @@ def sgw_version_reset(params_from_base_test_setup):
 
 
 @pytest.fixture(scope="session", autouse=True)
-def coverage_report(request):
+def coverage_report(params_from_base_suite_setup):
     cluster_config = params_from_base_suite_setup["cluster_config"]
     code_coverage = params_from_base_suite_setup["code_coverage"]
     ansible_runner = AnsibleRunner(cluster_config)
