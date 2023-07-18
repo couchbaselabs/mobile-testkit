@@ -33,8 +33,7 @@ UNSUPPORTED_1_5_0_CC = {
         "reason": "Loss of DCP not longer puts the bucket in the offline state"
     }
 }
-code_coverage_true = False
-custer_config_data = None
+
 
 def skip_if_unsupported(sync_gateway_version, mode, test_name, no_conflicts_enabled):
 
