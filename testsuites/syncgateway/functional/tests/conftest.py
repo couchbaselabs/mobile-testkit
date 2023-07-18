@@ -1,7 +1,6 @@
 """ Setup for Sync Gateway functional tests """
 
 import pytest
-import atexit
 from libraries.provision.ansible_runner import AnsibleRunner
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.constants import CLUSTER_CONFIGS_DIR
