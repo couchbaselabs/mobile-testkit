@@ -5,11 +5,14 @@
     recurse: no
   register: found_files
 
-- debug: "{{found_files}}"
+- name: Print all the find files
+  with_items: "{{found_files}}"
+  debug:
+    msg: "{{item}}"
 
 - name: Fetch the files
   fetch:
     src: /tmp/coverage/"{{item}}"
     dest: /tmp/coverage
     flat: yes
-  loop: "{{ found_files.files }}"
+  with_items: "{{ found_files.files }}"
