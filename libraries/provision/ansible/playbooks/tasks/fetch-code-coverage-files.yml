@@ -3,11 +3,13 @@
     paths: /tmp/coverage
     patterns: 'cov*'
     recurse: no
-    register: found_files
+  register: found_files
+
+- debug: "{{found_files}}"
 
 - name: Fetch the files
   fetch:
-    src: "{{ item.path }}"
+    src: /tmp/coverage/"{{item}}"
     dest: /tmp/coverage
     flat: yes
-  with_items: "{{ found_files.files }}"
+  loop: "{{ found_files.files }}"

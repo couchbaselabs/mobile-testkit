@@ -31,7 +31,7 @@ if [ $? -ne 0 ]; then
 fi
 
 currentdir=`pwd`
-export PATH=$PATH:/usr/local/bin
+export PATH=$PATH:/usr/local/bin:/usr/local/go/bin
 
 # Setup virtual env
 virtualenv -p $PYTHON venv
