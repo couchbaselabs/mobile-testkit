@@ -1,10 +1,13 @@
-
 - name: Find files starting with "cov"
   find:
     paths: /tmp/coverage
-    patterns: "cov*"
+    patterns: 'cov*'
     recurse: no
-  register: found_files
+    register: found_files
 
 - name: Fetch the files
-  fetch: src="{{ item.path }}" dest=/tmp/coverage flat=yes with_items="{{ found_files.files }}"
+  fetch:
+    src: "{{ item.path }}"
+    dest: /tmp/coverage
+    flat: yes
+  with_items: "{{ found_files.files }}"
