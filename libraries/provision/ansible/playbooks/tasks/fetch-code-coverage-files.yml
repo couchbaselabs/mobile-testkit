@@ -8,6 +8,6 @@
 - name: Fetch the files
   with_items: "{{found_files}}"
   fetch:
-    src: "{{item.path}}"
+    src: "{{item['path']}}"
     dest: /tmp/coverage/
     flat: yes
