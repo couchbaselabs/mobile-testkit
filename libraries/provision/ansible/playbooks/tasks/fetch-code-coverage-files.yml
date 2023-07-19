@@ -5,9 +5,14 @@
     recurse: no
   register: found_files
 
-- name: Fetch the files
+- name: Print all the find files
   with_items: "{{found_files}}"
+  debug:
+    msg: "{{item}}"
+
+- name: Fetch the files
   fetch:
     src: "{{item['path']}}"
     dest: /tmp/coverage/
     flat: yes
+  with_items: "{{found_files}}"
