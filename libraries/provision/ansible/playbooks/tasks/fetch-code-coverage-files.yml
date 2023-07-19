@@ -5,11 +5,6 @@
     recurse: no
   register: found_files
 
-# - name: Print all the found files
-#   debug:
-#     msg: "{{item}}"
-#   with_items: "{{found_files.files}}"
-
 - name: Fetch the files
   fetch: src="{{item['path']}}" dest=/tmp/coverage/ flat=yes
   with_items: "{{found_files.files}}"
