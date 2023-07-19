@@ -1,2 +1,10 @@
-- name: SYNC GATEWAY | Fetch sync_gateway code coverage files
-  fetch: src=/tmp/coverage/ dest=/tmp/ flat=yes fail_on_missing=yes
+
+- name: Find files starting with "cov"
+  find:
+    paths: /tmp/coverage
+    patterns: "cov*"
+    recurse: no
+  register: found_files
+
+- name: Fetch the files
+  fetch: src="{{ item.path }}" dest=/tmp/coverage flat=yes loop="{{ found_files.files }}"
