@@ -1,0 +1,14 @@
+- name: SET COVERAGE LOCATION
+  become: yes
+  shell: rm -rf /tmp/coverage
+  when: ansible_distribution == "CentOS"
+
+- name: CREATE COVERAGE DIR
+  become: yes
+  shell: mkdir /tmp/coverage
+  when: ansible_distribution == "CentOS"
+
+- name: SET PERMISSION FOR DIR
+  become: yes
+  shell: chmod 777 /tmp/coverage
+  when: ansible_distribution == "CentOS" 

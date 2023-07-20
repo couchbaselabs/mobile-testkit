@@ -1,6 +1,7 @@
 """ Setup for Sync Gateway functional tests """
 
 import pytest
+from libraries.provision.ansible_runner import AnsibleRunner
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.constants import CLUSTER_CONFIGS_DIR
 from keywords.exceptions import ProvisioningError, FeatureSupportedError
@@ -31,6 +32,8 @@ UNSUPPORTED_1_5_0_CC = {
         "reason": "Loss of DCP not longer puts the bucket in the offline state"
     }
 }
+code_coverage_var = False
+cluster_config_var = None
 
 
 def skip_if_unsupported(sync_gateway_version, mode, test_name, no_conflicts_enabled):
@@ -200,6 +203,10 @@ def pytest_addoption(parser):
                      --sync-gateway-version: 3.2.0-233''',
                      default=None)
 
+    parser.addoption("--code-coverage",
+                     action="store_true",
+                     help='''Get the code coverage of the custom toy builds. The SGW build must have the code coverage binary.''')
+
 
 # This will be called once for the at the beggining of the execution in the 'tests/' directory
 # and will be torn down, (code after the yeild) when all the test session has completed.
@@ -247,6 +254,7 @@ def params_from_base_suite_setup(request):
     disable_admin_auth = request.config.getoption("--disable-admin-auth")
     trace_logs = request.config.getoption("--trace-logs")
     custom_build = request.config.getoption("--sgw-custom-build")
+    code_coverage = request.config.getoption("--code-coverage")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
@@ -279,6 +287,7 @@ def params_from_base_suite_setup(request):
     log_info("disable_persistent_config: {}".format(disable_persistent_config))
     log_info("trace_logs: {}".format(trace_logs))
     log_info("custom build: {}".format(custom_build))
+    log_info("code_covergae: {}".format(code_coverage))
 
     # sg-ce is invalid for di mode
     if mode == "di" and sg_ce:
@@ -473,6 +482,10 @@ def params_from_base_suite_setup(request):
     provision_flag = True
     count = 0
     max_count = 2
+    global code_coverage_var
+    global cluster_config_var
+    code_coverage_var = code_coverage
+    cluster_config_var = cluster_config
     while provision_flag and count < max_count:
         if should_provision:
             try:
@@ -490,7 +503,8 @@ def params_from_base_suite_setup(request):
                     sg_ce=sg_ce,
                     cbs_ce=cbs_ce,
                     skip_couchbase_provision=skip_couchbase_provision,
-                    custom_build=custom_build
+                    custom_build=custom_build,
+                    code_coverage=code_coverage
                 )
             except ProvisioningError:
                 logging_helper = Logging()
@@ -546,7 +560,8 @@ def params_from_base_suite_setup(request):
         "need_sgw_admin_auth": need_sgw_admin_auth,
         "sync_gateway_previous_version": sync_gateway_previous_version,
         "use_views": use_views,
-        "trace_logs": trace_logs
+        "trace_logs": trace_logs,
+        "code_coverage": code_coverage
     }
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
@@ -587,6 +602,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     sg_platform = params_from_base_suite_setup["sg_platform"]
     delta_sync_enabled = params_from_base_suite_setup["delta_sync_enabled"]
     sg_ce = params_from_base_suite_setup["sg_ce"]
+    code_coverage = params_from_base_suite_setup["code_coverage"]
     sg_config = params_from_base_suite_setup["sg_config"]
     cbs_ce = params_from_base_suite_setup["cbs_ce"]
     disable_persistent_config = params_from_base_suite_setup["disable_persistent_config"]
@@ -660,7 +676,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "need_sgw_admin_auth": need_sgw_admin_auth,
         "sync_gateway_previous_version": sync_gateway_previous_version,
         "use_views": use_views,
-        "trace_logs": trace_logs
+        "trace_logs": trace_logs,
+        "code_coverage": code_coverage
     }
 
     # Code after the yield will execute when each test finishes
@@ -705,3 +722,11 @@ def sgw_version_reset(params_from_base_test_setup):
     except Exception as ex:
         print("exception message: ", ex)
         sg_obj.install_sync_gateway(cluster_conf, sg_latest_version, sg_conf, skip_bucketcreation=True)
+
+
+def pytest_unconfigure():
+    cluster_conf = cluster_config_var
+    code_coverage = code_coverage_var
+    ansible_runner = AnsibleRunner(cluster_conf)
+    if code_coverage:
+        ansible_runner.run_ansible_playbook("fetch-code-coverage-files.yml")
