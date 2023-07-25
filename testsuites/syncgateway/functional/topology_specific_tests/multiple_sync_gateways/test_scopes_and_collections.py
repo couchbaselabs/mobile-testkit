@@ -31,7 +31,7 @@ sg3_admin_url = ""
 random_suffix = ""
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="module", autouse=True)
 def reset_cluster_configuration(params_from_base_test_setup):
     cluster_config = params_from_base_test_setup["cluster_config"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
