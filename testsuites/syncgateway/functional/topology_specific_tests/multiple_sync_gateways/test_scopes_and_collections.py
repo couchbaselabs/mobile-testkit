@@ -680,17 +680,17 @@ def reset_cluster_configuration(params_from_base_test_setup):
     c_cluster = Cluster(config=cluster_config)
     c_cluster.reset(sg_config_path=sg_config)
 
-    sg_config_path = "{}/{}".format(os.getcwd(), sg_config_name)
+    # sg_config_path = "{}/{}".format(os.getcwd(), sg_config_name)
     sg1 = c_cluster.sync_gateways[0]
     sg2 = c_cluster.sync_gateways[1]
     sg3 = c_cluster.sync_gateways[2]
 
-    sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_config_path, url=sg1.ip,
+    sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_config, url=sg1.ip,
                                             sync_gateway_version=sync_gateway_version, enable_import=True)
 
-    sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_config_path, url=sg2.ip,
+    sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_config, url=sg2.ip,
                                             sync_gateway_version=sync_gateway_version, enable_import=True)
 
-    sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_config_path, url=sg3.ip,
+    sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_config, url=sg3.ip,
                                             sync_gateway_version=sync_gateway_version, enable_import=True)
 
