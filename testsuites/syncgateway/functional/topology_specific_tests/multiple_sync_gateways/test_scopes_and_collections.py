@@ -13,7 +13,7 @@ from utilities.cluster_config_utils import is_magma_enabled
 from keywords.SyncGateway import sync_gateway_config_path_for_mode, SyncGateway
 
 # test file shared variables
-bucket = "data-bucket"
+bucket = "data-bucket-1"
 bucket2 = "data-bucket-1"
 bucket3 = "data-bucket-2"
 sg_password = "password"
@@ -91,9 +91,9 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
         cb_server.create_bucket(cluster_config, bucket, 100)
         cb_server.create_bucket(cluster_config, bucket2, 100)
         cb_server.create_bucket(cluster_config, bucket3, 100)
-        sgs["sg1"] = {"sg_obj": cbs_cluster.sync_gateways[0], "bucket": bucket, "db": "db1" + random_suffix, "user": "sg1_user" + random_suffix}
-        sgs["sg2"] = {"sg_obj": cbs_cluster.sync_gateways[1], "bucket": bucket2, "db": "db2" + random_suffix, "user": "sg2_user" + random_suffix}
-        sgs["sg3"] = {"sg_obj": cbs_cluster.sync_gateways[2], "bucket": bucket3, "db": "db3" + random_suffix, "user": "sg3_user" + random_suffix}
+        sgs["sg1"] = {"sg_obj": cbs_cluster.sync_gateways[0], "bucket": bucket, "db": "sg_db1" + random_suffix, "user": "sg1_user" + random_suffix}
+        sgs["sg2"] = {"sg_obj": cbs_cluster.sync_gateways[1], "bucket": bucket2, "db": "sg_db2" + random_suffix, "user": "sg2_user" + random_suffix}
+        sgs["sg3"] = {"sg_obj": cbs_cluster.sync_gateways[2], "bucket": bucket3, "db": "sg_db3" + random_suffix, "user": "sg3_user" + random_suffix}
 
         for key in sgs:
             server_bucket = sgs[key]["bucket"]
