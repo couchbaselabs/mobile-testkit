@@ -9,7 +9,7 @@ from keywords.ClusterKeywords import ClusterKeywords
 from libraries.testkit.cluster import Cluster
 from libraries.testkit.admin import Admin
 from keywords import couchbaseserver
-from utilities.cluster_config_utils import is_magma_enabled, replace_string_on_sgw_config, copy_to_temp_cpc_config
+from utilities.cluster_config_utils import is_magma_enabled, replace_string_on_sgw_config, copy_sgconf_to_temp
 from keywords.SyncGateway import sync_gateway_config_path_for_mode, SyncGateway
 
 # test file shared variables
@@ -680,7 +680,7 @@ def reset_cluster_configuration(params_from_base_test_setup):
         sg_conf1 = sync_gateway_config_path_for_mode(sg_config_name, "cc", cpc=True)
         print("====================================================" + sg_conf1)
         #sg_config = sync_gateway_config_path_for_mode(sg_config_name, "cc", cpc=True)
-        temp_sg_config, _ = copy_to_temp_cpc_config(sg_conf1, "cc")
+        temp_sg_config, _ = copy_sgconf_to_temp(sg_conf1, "cc")
         temp_sg_config = replace_string_on_sgw_config(temp_sg_config, '{{ groupid }}', "group" + str(i))
         c_cluster = Cluster(config=temp_sg_config)
         c_cluster.reset(sg_config_path=temp_sg_config)
