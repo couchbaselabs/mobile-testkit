@@ -29,31 +29,7 @@ sg1_admin_url = ""
 sg2_admin_url = ""
 sg3_admin_url = ""
 random_suffix = ""
-
-
-@pytest.fixture(scope="module", autouse=True)
-def reset_cluster_configuration(params_from_base_test_setup):
-    cluster_config = params_from_base_test_setup["cluster_config"]
-    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
-    sgwgateway = SyncGateway()
-    sg_config_name = 'listener_tests/three_sync_gateways_cc'
-    sg_config_path = "{}/{}".format(os.getcwd(), sg_config_name)
-
-    c_cluster = Cluster(config=cluster_config)
-    c_cluster.reset(sg_config_path=sg_config_path)
-
-    sg1 = c_cluster.sync_gateways[0]
-    sg2 = c_cluster.sync_gateways[1]
-    sg3 = c_cluster.sync_gateways[2]
-
-    sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_config_path, url=sg1.ip,
-                                            sync_gateway_version=sync_gateway_version, enable_import=True)
-
-    sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_config_path, url=sg2.ip,
-                                            sync_gateway_version=sync_gateway_version, enable_import=True)
-
-    sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_config_path, url=sg3.ip,
-                                            sync_gateway_version=sync_gateway_version, enable_import=True)
+rest_to_3sgws_done = False
 
 
 @pytest.fixture
@@ -71,12 +47,17 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
     global sg2_admin_url
     global sg3_admin_url
     global random_suffix
+    global rest_to_3sgws_done
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     if is_magma_enabled(cluster_config):
         pytest.skip("It is not necessary to test ISGR with scopes and collections and MAGMA")
     if params_from_base_test_setup["sync_gateway_version"] < "3.1.0":
         pytest.skip('This test cannot run with Sync Gateway version below 3.1.0')
+
+    if (not rest_to_3sgws_done):
+        reset_cluster_configuration()
+        rest_to_3sgws_done = True
 
     try:  # To be able to teardon in case of a setup error
         random_suffix = str(uuid.uuid4())[:8]
@@ -687,3 +668,27 @@ def assert_docs_replicated(docs, sg_docs_ids, sg, db, replicator_id, replicator_
 def keyspace(scope, collection):
     """Construct keyspace for collection mapping"""
     return (scope + '.' + collection)
+
+def reset_cluster_configuration(params_from_base_test_setup):
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    sgwgateway = SyncGateway()
+    sg_config_name = 'listener_tests/three_sync_gateways_cc'
+    sg_config_path = "{}/{}".format(os.getcwd(), sg_config_name)
+
+    c_cluster = Cluster(config=cluster_config)
+    c_cluster.reset(sg_config_path=sg_config_path)
+
+    sg1 = c_cluster.sync_gateways[0]
+    sg2 = c_cluster.sync_gateways[1]
+    sg3 = c_cluster.sync_gateways[2]
+
+    sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_config_path, url=sg1.ip,
+                                            sync_gateway_version=sync_gateway_version, enable_import=True)
+
+    sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_config_path, url=sg2.ip,
+                                            sync_gateway_version=sync_gateway_version, enable_import=True)
+
+    sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_config_path, url=sg3.ip,
+                                            sync_gateway_version=sync_gateway_version, enable_import=True)
+
