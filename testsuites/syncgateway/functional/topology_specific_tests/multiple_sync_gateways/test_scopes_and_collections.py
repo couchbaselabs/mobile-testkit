@@ -10,6 +10,7 @@ from libraries.testkit.cluster import Cluster
 from libraries.testkit.admin import Admin
 from keywords import couchbaseserver
 from utilities.cluster_config_utils import is_magma_enabled
+from keywords.SyncGateway import SyncGateway
 
 # test file shared variables
 bucket = "data-bucket"
