@@ -83,13 +83,13 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
         sg_client = MobileRestClient()
         cb_server = couchbaseserver.CouchbaseServer(cbs_url)
 
-        pre_test_is_bucket_exist = bucket in cb_server.get_bucket_names()
-        if pre_test_is_bucket_exist:
-            cb_server.delete_bucket(bucket)
+        # pre_test_is_bucket_exist = bucket in cb_server.get_bucket_names()
+        #  if pre_test_is_bucket_exist:
+        #      cb_server.delete_bucket(bucket)
 
-        cb_server.create_bucket(cluster_config, bucket, 100)
-        cb_server.create_bucket(cluster_config, bucket2, 100)
-        cb_server.create_bucket(cluster_config, bucket3, 100)
+        #  cb_server.create_bucket(cluster_config, bucket, 100)
+        #  cb_server.create_bucket(cluster_config, bucket2, 100)
+        #  cb_server.create_bucket(cluster_config, bucket3, 100)
         sgs["sg1"] = {"sg_obj": cbs_cluster.sync_gateways[0], "bucket": bucket, "db": "sg_db1" + random_suffix, "user": "sg1_user" + random_suffix}
         sgs["sg2"] = {"sg_obj": cbs_cluster.sync_gateways[1], "bucket": bucket2, "db": "sg_db2" + random_suffix, "user": "sg2_user" + random_suffix}
         sgs["sg3"] = {"sg_obj": cbs_cluster.sync_gateways[2], "bucket": bucket3, "db": "sg_db3" + random_suffix, "user": "sg3_user" + random_suffix}
@@ -139,8 +139,8 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
         cb_server.delete_scope_if_exists(bucket2, scope)
         cb_server.delete_scope_if_exists(bucket3, scope)
         cb_server.delete_buckets()
-        if pre_test_is_bucket_exist:
-            cb_server.create_bucket(cluster_config, bucket)
+        # if pre_test_is_bucket_exist:
+        #    cb_server.create_bucket(cluster_config, bucket)
 
 
 @pytest.mark.syncgateway
