@@ -674,7 +674,7 @@ def reset_cluster_configuration(params_from_base_test_setup):
     cluster_config = params_from_base_test_setup["cluster_config"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     sgwgateway = SyncGateway()
-    sg_config_name = 'listener_tests/three_sync_gateways_cc'
+    sg_config_name = 'listener_tests/three_sync_gateways'
     sg_config = sync_gateway_config_path_for_mode(sg_config_name, "cc")
 
     c_cluster = Cluster(config=cluster_config)
