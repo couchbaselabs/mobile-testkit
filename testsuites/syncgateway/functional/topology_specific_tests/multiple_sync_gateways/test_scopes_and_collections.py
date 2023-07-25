@@ -1,9 +1,10 @@
 from time import sleep
+import shutil
 import os
 import pytest
 import uuid
 from keywords.MobileRestClient import MobileRestClient
-from keywords.constants import RBAC_FULL_ADMIN
+from keywords.constants import RBAC_FULL_ADMIN, SYNC_GATEWAY_CONFIGS_CPC
 from requests.auth import HTTPBasicAuth
 from keywords.ClusterKeywords import ClusterKeywords
 from libraries.testkit.cluster import Cluster
@@ -678,13 +679,13 @@ def reset_cluster_configuration(params_from_base_test_setup):
     for i in range(1, 3):
         sg_config_name = "sync_gateway_cpc_custom_group"
         sg_conf1 = sync_gateway_config_path_for_mode(sg_config_name, "cc", cpc=True)
-        print("====================================================" + sg_conf1)
         #sg_config = sync_gateway_config_path_for_mode(sg_config_name, "cc", cpc=True)
-        temp_sg_config, _ = copy_sgconf_to_temp(sg_conf1, "cc")
-        temp_sg_config = replace_string_on_sgw_config(temp_sg_config, '{{ groupid }}', "group" + str(i))
-        c_cluster = Cluster(config=temp_sg_config)
-        c_cluster.reset(sg_config_path=temp_sg_config)
-        os.remove(temp_sg_config)
+        cpc_temp_sg_config = "{}/temp_sg_config_{}.json".format(SYNC_GATEWAY_CONFIGS_CPC, "cc")
+        shutil.copyfile(sg_conf1, cpc_temp_sg_config)
+        cpc_temp_sg_config = replace_string_on_sgw_config(cpc_temp_sg_config, '{{ groupid }}', "group" + str(i))
+        c_cluster = Cluster(config=cpc_temp_sg_config)
+        c_cluster.reset(sg_config_path=cpc_temp_sg_config)
+        os.remove(cpc_temp_sg_config)
 
     # sg_config_path = "{}/{}".format(os.getcwd(), sg_config_name)
     #sg1 = c_cluster.sync_gateways[0]
