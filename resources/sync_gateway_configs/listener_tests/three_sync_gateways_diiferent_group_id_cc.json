@@ -1,6 +1,7 @@
 {
     "interface":":4984",
     "adminInterface": "0.0.0.0:4985",
+    "group_id": "zhovna",
     {{ logging }}
     {{ hide_product_version }}
     {{ disable_persistent_config }}
@@ -22,7 +23,6 @@
             "bucket":"data-bucket-1",
             "username":"data-bucket-1",
             "password": "password",
-            "group_id": "group1"
         },
         "sg_db2":{
             {{ autoimport }}
@@ -36,7 +36,6 @@
             "bucket":"data-bucket-2",
             "username":"data-bucket-2",
             "password": "password",
-            "group_id": "group2"
         },
         "sg_db3":{
             {{ autoimport }}
@@ -50,7 +49,6 @@
             "bucket":"data-bucket-3",
             "username":"data-bucket-3",
             "password": "password",
-            "group_id": "group3"
         }
     }
 }
