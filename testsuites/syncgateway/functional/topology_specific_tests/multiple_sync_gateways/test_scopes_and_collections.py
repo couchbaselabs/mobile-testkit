@@ -669,16 +669,17 @@ def keyspace(scope, collection):
     """Construct keyspace for collection mapping"""
     return (scope + '.' + collection)
 
+
 def reset_cluster_configuration(params_from_base_test_setup):
     cluster_config = params_from_base_test_setup["cluster_config"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     sgwgateway = SyncGateway()
     sg_config_name = 'listener_tests/three_sync_gateways_cc'
-    sg_config_path = "{}/{}".format(os.getcwd(), sg_config_name)
 
     c_cluster = Cluster(config=cluster_config)
-    c_cluster.reset(sg_config_path=sg_config_path)
+    c_cluster.reset(sg_config_path=sg_config_name)
 
+    sg_config_path = "{}/{}".format(os.getcwd(), sg_config_name)
     sg1 = c_cluster.sync_gateways[0]
     sg2 = c_cluster.sync_gateways[1]
     sg3 = c_cluster.sync_gateways[2]
