@@ -674,9 +674,11 @@ def reset_cluster_configuration(params_from_base_test_setup):
    # cluster_config = params_from_base_test_setup["cluster_config"]
    # sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
    # sgwgateway = SyncGateway()
-    sg_config_name = "sync_gateway_cpc_custom_group"
-    sg_conf1 = sync_gateway_config_path_for_mode(sg_config_name, "cc", cpc=True)
+   
     for i in range(1, 3):
+        sg_config_name = "sync_gateway_cpc_custom_group"
+        sg_conf1 = sync_gateway_config_path_for_mode(sg_config_name, "cc", cpc=True)
+        print("====================================================" + sg_conf1)
         #sg_config = sync_gateway_config_path_for_mode(sg_config_name, "cc", cpc=True)
         temp_sg_config, _ = copy_to_temp_cpc_config(sg_conf1, "cc")
         temp_sg_config = replace_string_on_sgw_config(temp_sg_config, '{{ groupid }}', "group" + str(i))
