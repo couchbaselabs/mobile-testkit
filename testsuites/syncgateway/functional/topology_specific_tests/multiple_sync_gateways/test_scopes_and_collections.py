@@ -10,7 +10,7 @@ from libraries.testkit.cluster import Cluster
 from libraries.testkit.admin import Admin
 from keywords import couchbaseserver
 from utilities.cluster_config_utils import is_magma_enabled
-from keywords.SyncGateway import SyncGateway
+from keywords.SyncGateway import sync_gateway_config_path_for_mode, SyncGateway
 
 # test file shared variables
 bucket = "data-bucket"
@@ -675,9 +675,10 @@ def reset_cluster_configuration(params_from_base_test_setup):
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     sgwgateway = SyncGateway()
     sg_config_name = 'listener_tests/three_sync_gateways_cc'
+    sg_config = sync_gateway_config_path_for_mode(sg_config_name, "cc")
 
     c_cluster = Cluster(config=cluster_config)
-    c_cluster.reset(sg_config_path=sg_config_name)
+    c_cluster.reset(sg_config_path=sg_config)
 
     sg_config_path = "{}/{}".format(os.getcwd(), sg_config_name)
     sg1 = c_cluster.sync_gateways[0]
