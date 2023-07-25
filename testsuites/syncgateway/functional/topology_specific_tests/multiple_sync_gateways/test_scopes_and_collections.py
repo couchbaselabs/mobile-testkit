@@ -1,5 +1,4 @@
 from time import sleep
-import os
 import pytest
 import uuid
 from keywords.MobileRestClient import MobileRestClient
