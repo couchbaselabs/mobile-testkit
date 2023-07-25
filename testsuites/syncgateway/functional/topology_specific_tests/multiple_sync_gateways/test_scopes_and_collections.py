@@ -128,7 +128,7 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
         # potential error here, as we overwrite pre_test variables in the fixture for each db created
         for key in sgs:
             admin_client = Admin(sgs[key]["sg_obj"])
-            # Cleanup everything that was created
+             # Cleanup everything that was created
             if (pre_test_user_exists is not None) and (pre_test_user_exists is False):
                 admin_client.delete_user_if_exists(sgs[key]["db"], sgs[key]["user"])
             if (pre_test_db_exists is not None) and (pre_test_db_exists is False):
@@ -673,7 +673,7 @@ def reset_cluster_configuration(params_from_base_test_setup):
     cluster_config = params_from_base_test_setup["cluster_config"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     sgwgateway = SyncGateway()
-    sg_config_name = 'listener_tests/three_sync_gateways'
+    sg_config_name = 'listener_tests/three_sync_gateways_diiferent_group_id'
     sg_config = sync_gateway_config_path_for_mode(sg_config_name, "cc")
 
     c_cluster = Cluster(config=cluster_config)
