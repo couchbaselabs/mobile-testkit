@@ -13,8 +13,8 @@ from keywords.SyncGateway import sync_gateway_config_path_for_mode, SyncGateway
 
 # test file shared variables
 bucket = "data-bucket-1"
-bucket2 = "data-bucket-1"
-bucket3 = "data-bucket-2"
+bucket2 = "data-bucket-2"
+bucket3 = "data-bucket-3"
 sg_password = "password"
 cb_server = sg_username = channels = client_auth = None
 sgs = {}
