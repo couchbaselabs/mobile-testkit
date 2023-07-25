@@ -56,7 +56,7 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
         pytest.skip('This test cannot run with Sync Gateway version below 3.1.0')
 
     if (not rest_to_3sgws_done):
-        reset_cluster_configuration()
+        reset_cluster_configuration(params_from_base_test_setup)
         rest_to_3sgws_done = True
 
     try:  # To be able to teardon in case of a setup error
