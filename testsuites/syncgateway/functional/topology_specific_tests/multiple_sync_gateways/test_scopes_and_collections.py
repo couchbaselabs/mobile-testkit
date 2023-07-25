@@ -1,4 +1,5 @@
 from time import sleep
+import os
 import pytest
 import uuid
 from keywords.MobileRestClient import MobileRestClient
@@ -8,7 +9,7 @@ from keywords.ClusterKeywords import ClusterKeywords
 from libraries.testkit.cluster import Cluster
 from libraries.testkit.admin import Admin
 from keywords import couchbaseserver
-from utilities.cluster_config_utils import is_magma_enabled
+from utilities.cluster_config_utils import is_magma_enabled, replace_string_on_sgw_config, copy_sgconf_to_temp
 from keywords.SyncGateway import sync_gateway_config_path_for_mode, SyncGateway
 
 # test file shared variables
@@ -670,26 +671,29 @@ def keyspace(scope, collection):
 
 
 def reset_cluster_configuration(params_from_base_test_setup):
-    cluster_config = params_from_base_test_setup["cluster_config"]
-    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
-    sgwgateway = SyncGateway()
-    sg_config_name = 'listener_tests/three_sync_gateways_diiferent_group_id'
-    sg_config = sync_gateway_config_path_for_mode(sg_config_name, "cc")
-
-    c_cluster = Cluster(config=cluster_config)
-    c_cluster.reset(sg_config_path=sg_config)
+   # cluster_config = params_from_base_test_setup["cluster_config"]
+   # sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+   # sgwgateway = SyncGateway()
+    sg_config_name = "sync_gateway_cpc_custom_group"
+    for i in range(1, 3):
+        sg_config = sync_gateway_config_path_for_mode(sg_config_name, "cc", cpc=True)
+        temp_sg_config, _ = copy_sgconf_to_temp(sg_config, "cc")
+        temp_sg_config = replace_string_on_sgw_config(sg_config, '{{ groupid }}', "group" + str(i))
+        c_cluster = Cluster(config=temp_sg_config)
+        c_cluster.reset(sg_config_path=temp_sg_config)
+        os.remove(temp_sg_config)
 
     # sg_config_path = "{}/{}".format(os.getcwd(), sg_config_name)
-    sg1 = c_cluster.sync_gateways[0]
-    sg2 = c_cluster.sync_gateways[1]
-    sg3 = c_cluster.sync_gateways[2]
+    #sg1 = c_cluster.sync_gateways[0]
+    #sg2 = c_cluster.sync_gateways[1]
+    #sg3 = c_cluster.sync_gateways[2]
 
-    sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_config, url=sg1.ip,
-                                            sync_gateway_version=sync_gateway_version, enable_import=True)
+    #sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_config, url=sg1.ip,
+     #                                       sync_gateway_version=sync_gateway_version, enable_import=True)
 
-    sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_config, url=sg2.ip,
-                                            sync_gateway_version=sync_gateway_version, enable_import=True)
+    #sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_config, url=sg2.ip,
+      #                                      sync_gateway_version=sync_gateway_version, enable_import=True)
 
-    sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_config, url=sg3.ip,
-                                            sync_gateway_version=sync_gateway_version, enable_import=True)
+    #sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_config, url=sg3.ip,
+       #                                     sync_gateway_version=sync_gateway_version, enable_import=True)
 
