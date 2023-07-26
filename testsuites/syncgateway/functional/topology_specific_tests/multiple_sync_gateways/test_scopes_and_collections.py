@@ -675,6 +675,8 @@ def reset_cluster_configuration(params_from_base_test_setup):
     cluster_config = params_from_base_test_setup["cluster_config"]
     cbs_cluster = Cluster(config=cluster_config)
     sg_obj = SyncGateway()
+    cluster_utils = ClusterKeywords(cluster_config)
+    cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
    # sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
    # sgwgateway = SyncGateway()
    
@@ -682,7 +684,7 @@ def reset_cluster_configuration(params_from_base_test_setup):
     for i in range(0, 2):
         cluster_config = params_from_base_test_setup["cluster_config"]
         sg = cbs_cluster.sync_gateways[i]
-        sg_url = sg["public"]
+        sg_url = cluster_topology["sync_gateways"][0]["public"]
         #sg_config = sync_gateway_config_path_for_mode(sg_config_name, "cc", cpc=True)
         sg_config_name = "sync_gateway_cpc_custom_group"
         sg_conf1 = sync_gateway_config_path_for_mode(sg_config_name, "cc", cpc=True)
