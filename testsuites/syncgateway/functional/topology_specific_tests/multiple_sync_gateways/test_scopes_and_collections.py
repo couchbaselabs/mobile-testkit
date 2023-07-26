@@ -14,7 +14,7 @@ from utilities.cluster_config_utils import is_magma_enabled, replace_string_on_s
 from keywords.SyncGateway import sync_gateway_config_path_for_mode, SyncGateway
 
 # test file shared variables
-bucket = "data-bucket-1"
+bucket = "data-bucket"
 bucket2 = "data-bucket-2"
 bucket3 = "data-bucket-3"
 sg_password = "password"
@@ -85,7 +85,6 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
         sg_client = MobileRestClient()
         cb_server = couchbaseserver.CouchbaseServer(cbs_url)
 
-        print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^" + str(cb_server.get_bucket_names()))
         pre_test_is_bucket_exist = bucket in cb_server.get_bucket_names()
         if pre_test_is_bucket_exist:
             cb_server.delete_bucket(bucket)
