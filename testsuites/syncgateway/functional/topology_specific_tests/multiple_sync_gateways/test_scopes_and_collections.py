@@ -679,19 +679,24 @@ def reset_cluster_configuration(params_from_base_test_setup):
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
    # sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
    # sgwgateway = SyncGateway()
-   
+    disable_tls_server = params_from_base_test_setup["disable_tls_server"]
+    disable_admin_auth = params_from_base_test_setup["disable_admin_auth"]
+    sg_config_name = "sync_gateway_cpc_custom_group"
+    sg_conf1 = sync_gateway_config_path_for_mode(sg_config_name, "cc", cpc=True)
    # replace_config_persistent_properties(cpc_temp_sg_config)
     for i in range(0, 2):
         cluster_config = params_from_base_test_setup["cluster_config"]
         sg = cbs_cluster.sync_gateways[i]
         sg_url = cluster_topology["sync_gateways"][0]["public"]
         #sg_config = sync_gateway_config_path_for_mode(sg_config_name, "cc", cpc=True)
-        sg_config_name = "sync_gateway_cpc_custom_group"
-        sg_conf1 = sync_gateway_config_path_for_mode(sg_config_name, "cc", cpc=True)
         cpc_temp_sg_config = "{}/temp_sg_config_{}".format(SYNC_GATEWAY_CONFIGS_CPC, "cc")
         groupid_str = '"group_id": "group' + str(i) + '",'
+        disable_tls_server_str = '"disable_tls_server": "' + disable_tls_server + '",'
+        disable_admin_auth_str = '"disable_admin_auth_str": "' + disable_admin_auth + '",'
         shutil.copyfile(sg_conf1, cpc_temp_sg_config)
         cpc_temp_sg_config = replace_string_on_sgw_config(cpc_temp_sg_config, '{{ groupid }}', groupid_str)
+        cpc_temp_sg_config = replace_string_on_sgw_config(cpc_temp_sg_config, '{{ disable_tls_server }}', disable_tls_server_str)
+        cpc_temp_sg_config = replace_string_on_sgw_config(cpc_temp_sg_config, '{{ disable_admin_auth }}', disable_admin_auth_str)
         #c_cluster = Cluster(config=cluster_config)
         #c_cluster.reset(sg_config_path=cpc_temp_sg_config, use_config=True, bucket_list=bucket_list)
         sg.stop()
