@@ -85,6 +85,7 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
         sg_client = MobileRestClient()
         cb_server = couchbaseserver.CouchbaseServer(cbs_url)
 
+        print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^" + cb_server.get_bucket_names())
         pre_test_is_bucket_exist = bucket in cb_server.get_bucket_names()
         if pre_test_is_bucket_exist:
             cb_server.delete_bucket(bucket)
