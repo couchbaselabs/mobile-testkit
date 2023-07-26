@@ -343,6 +343,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     cluster_topology = params_from_base_suite_setup["cluster_topology"]
     need_sgw_admin_auth = params_from_base_suite_setup["need_sgw_admin_auth"]
     disable_persistent_config = params_from_base_suite_setup["disable_persistent_config"]
+    disable_admin_auth = params_from_base_suite_setup["disable_admin_auth"]
 
     test_name = request.node.name
     log_info("Setting up test '{}'".format(test_name))
@@ -359,7 +360,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
            "sg_ssl": sg_ssl,
            "cluster_topology": cluster_topology,
            "need_sgw_admin_auth": need_sgw_admin_auth,
-           "disable_persistent_config": disable_persistent_config
+           "disable_persistent_config": disable_persistent_config,
+           "disable_admin_auth": disable_admin_auth
            }
 
     # Code after the yeild will execute when each test finishes
