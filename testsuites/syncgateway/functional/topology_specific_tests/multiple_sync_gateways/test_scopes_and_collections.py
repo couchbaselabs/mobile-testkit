@@ -680,7 +680,7 @@ def reset_cluster_configuration(params_from_base_test_setup):
         sg_config_name = "sync_gateway_cpc_custom_group"
         sg_conf1 = sync_gateway_config_path_for_mode(sg_config_name, "cc", cpc=True)
         #sg_config = sync_gateway_config_path_for_mode(sg_config_name, "cc", cpc=True)
-        cpc_temp_sg_config = "{}/temp_sg_config_{}.json".format(SYNC_GATEWAY_CONFIGS_CPC, "cc")
+        cpc_temp_sg_config = "{}/temp_sg_config_{}".format(SYNC_GATEWAY_CONFIGS_CPC, "cc")
         shutil.copyfile(sg_conf1, cpc_temp_sg_config)
         cpc_temp_sg_config = replace_string_on_sgw_config(cpc_temp_sg_config, '{{ groupid }}', "group" + str(i))
         c_cluster = Cluster(config=cpc_temp_sg_config)
