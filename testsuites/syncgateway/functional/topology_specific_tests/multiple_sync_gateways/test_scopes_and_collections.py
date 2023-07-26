@@ -673,12 +673,13 @@ def keyspace(scope, collection):
 
 def reset_cluster_configuration(params_from_base_test_setup):
     cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_obj = SyncGateway()
    # sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
    # sgwgateway = SyncGateway()
    
    # replace_config_persistent_properties(cpc_temp_sg_config)
-       
-    for i in range(1, 3):
+    for i in range(0, 2):
+        sg = cbs_cluster.sync_gateways[i]
         #sg_config = sync_gateway_config_path_for_mode(sg_config_name, "cc", cpc=True)
         sg_config_name = "sync_gateway_cpc_custom_group"
         sg_conf1 = sync_gateway_config_path_for_mode(sg_config_name, "cc", cpc=True)
@@ -686,8 +687,10 @@ def reset_cluster_configuration(params_from_base_test_setup):
         groupid_str = '"group_id": "group' + str(i) + '",'
         shutil.copyfile(sg_conf1, cpc_temp_sg_config)
         cpc_temp_sg_config = replace_string_on_sgw_config(cpc_temp_sg_config, '{{ groupid }}', groupid_str)
-        c_cluster = Cluster(config=cluster_config)
-        c_cluster.reset(sg_config_path=cpc_temp_sg_config)
+        #c_cluster = Cluster(config=cluster_config)
+        #c_cluster.reset(sg_config_path=cpc_temp_sg_config, use_config=True, bucket_list=bucket_list)
+        sg.stop()
+        sg_obj.start_sync_gateways(cluster_config=params_from_base_test_setup["cluster_config"], url=sg["public"], config=cpc_temp_sg_config, use_config=True)
         os.remove(cpc_temp_sg_config)
 
     # sg_config_path = "{}/{}".format(os.getcwd(), sg_config_name)
