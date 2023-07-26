@@ -307,7 +307,8 @@ def params_from_base_suite_setup(request):
            "sg_ssl": sg_ssl,
            "cluster_topology": cluster_topology,
            "need_sgw_admin_auth": need_sgw_admin_auth,
-           "disable_persistent_config": disable_persistent_config
+           "disable_persistent_config": disable_persistent_config,
+           "disable_admin_auth": disable_admin_auth
            }
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
