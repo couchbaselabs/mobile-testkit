@@ -689,7 +689,7 @@ def reset_cluster_configuration(params_from_base_test_setup):
         sg = cbs_cluster.sync_gateways[i]
         sg_url = cluster_topology["sync_gateways"][0]["public"]
         #sg_config = sync_gateway_config_path_for_mode(sg_config_name, "cc", cpc=True)
-        cpc_temp_sg_config = "{}/scp_isgr_tests_sg_config_{}".format(SYNC_GATEWAY_CONFIGS_CPC, "cc")
+        cpc_temp_sg_config = "{}/scp_isgr_tests_sg_config_{}.json".format(SYNC_GATEWAY_CONFIGS_CPC, "cc")
         groupid_str = '"group_id": "group' + str(i) + '",'
         #disable_tls_server_str = '"disable_tls_server": "' + str(disable_tls_server) + '",'
         disable_tls_server_str = '"disable_tls_server": "false",'
