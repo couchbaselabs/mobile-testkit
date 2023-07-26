@@ -694,7 +694,7 @@ def reset_cluster_configuration(params_from_base_test_setup):
         #disable_tls_server_str = '"disable_tls_server": "' + str(disable_tls_server) + '",'
         disable_tls_server_str = '"use_tls_server": false,'
         # disable_admin_auth_str = '"admin_interface_authentication": "' + str(disable_admin_auth) + '",'
-        disable_admin_auth_str = '"admin_interface_authentication": true,'
+        disable_admin_auth_str = '"admin_interface_authentication": false,'
         shutil.copyfile(sg_conf1, cpc_temp_sg_config)
         cpc_temp_sg_config = replace_string_on_sgw_config(cpc_temp_sg_config, '{{ groupid }}', groupid_str)
         cpc_temp_sg_config = replace_string_on_sgw_config(cpc_temp_sg_config, '{{ disable_tls_server }}', disable_tls_server_str)
