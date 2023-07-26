@@ -672,23 +672,21 @@ def keyspace(scope, collection):
 
 
 def reset_cluster_configuration(params_from_base_test_setup):
-   # cluster_config = params_from_base_test_setup["cluster_config"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
    # sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
    # sgwgateway = SyncGateway()
    
+   # replace_config_persistent_properties(cpc_temp_sg_config)
+       
     for i in range(1, 3):
+        #sg_config = sync_gateway_config_path_for_mode(sg_config_name, "cc", cpc=True)
         sg_config_name = "sync_gateway_cpc_custom_group"
         sg_conf1 = sync_gateway_config_path_for_mode(sg_config_name, "cc", cpc=True)
-        #sg_config = sync_gateway_config_path_for_mode(sg_config_name, "cc", cpc=True)
-        groupid_str = '"group_id": "group' + str(i) + '"'
-        print("££££££££££££££££££££££££££££££££££££££££££££££££" + groupid_str)
         cpc_temp_sg_config = "{}/temp_sg_config_{}".format(SYNC_GATEWAY_CONFIGS_CPC, "cc")
+        groupid_str = '"group_id": "group' + str(i) + '"'
         shutil.copyfile(sg_conf1, cpc_temp_sg_config)
         cpc_temp_sg_config = replace_string_on_sgw_config(cpc_temp_sg_config, '{{ groupid }}', groupid_str)
-        with open(cpc_temp_sg_config, 'r') as file:
-            filedata = file.read()
-            print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^" + filedata)
-        c_cluster = Cluster(config=cpc_temp_sg_config)
+        c_cluster = Cluster(config=cluster_config)
         c_cluster.reset(sg_config_path=cpc_temp_sg_config)
         os.remove(cpc_temp_sg_config)
 
@@ -706,3 +704,10 @@ def reset_cluster_configuration(params_from_base_test_setup):
     #sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_config, url=sg3.ip,
        #                                     sync_gateway_version=sync_gateway_version, enable_import=True)
 
+#def replace_config_persistent_properties(sgw_config, params_from_base_test_setup):
+     # params_from_base_test_setup["disable_tls_server"]
+ #    password_str = '"password": "password"'
+  #   cacertpath_str = ""
+   #  certpath_str = ""
+    # keypath_str = ""
+     #cpc_temp_sg_config = replace_string_on_sgw_config(sgw_config, '{{ password }}', password_str)
