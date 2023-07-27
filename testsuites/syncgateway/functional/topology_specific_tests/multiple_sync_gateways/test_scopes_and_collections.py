@@ -13,6 +13,8 @@ from keywords import couchbaseserver
 from utilities.cluster_config_utils import is_magma_enabled, replace_string_on_sgw_config
 from keywords.SyncGateway import sync_gateway_config_path_for_mode, SyncGateway
 
+NUMBER_OF_SGWS = 3
+
 # test file shared variables
 bucket = "data-bucket"
 bucket2 = "data-bucket-2"
@@ -677,18 +679,17 @@ def setup_sgws_different_group_ids(params_from_base_test_setup):
     sg_obj = SyncGateway()
     cluster_utils = ClusterKeywords(cluster_config)
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
-    disable_tls_server = params_from_base_test_setup["disable_tls_server"]
-    disable_admin_auth = params_from_base_test_setup["disable_admin_auth"]
     sg_config_name = "sync_gateway_cpc_custom_group"
     sg_conf1 = sync_gateway_config_path_for_mode(sg_config_name, "cc", cpc=True)
     cluster_config = params_from_base_test_setup["cluster_config"]
     cpc_temp_sg_config = "{}/scp_isgr_tests_sg_config_{}.json".format(SYNC_GATEWAY_CONFIGS_CPC, "cc")
-    for i in range(0, 2):
+    # No reason to run these tests with tls server or with admin authentication. They also fail otherwise.
+    disable_tls_server_str = '"use_tls_server": false,'
+    disable_admin_auth_str = '"admin_interface_authentication": false,'
+    for i in range(0, NUMBER_OF_SGWS - 1):
         sg = cbs_cluster.sync_gateways[i]
         sg_url = cluster_topology["sync_gateways"][i]["admin"]
         groupid_str = '"group_id": "group' + str(i) + '",'
-        disable_tls_server_str = '"use_tls_server": ' + str(not disable_tls_server).lower() + ','
-        disable_admin_auth_str = '"admin_interface_authentication": ' + str(not disable_admin_auth).lower() + ','
         shutil.copyfile(sg_conf1, cpc_temp_sg_config)
         cpc_temp_sg_config = replace_string_on_sgw_config(cpc_temp_sg_config, '{{ groupid }}', groupid_str)
         cpc_temp_sg_config = replace_string_on_sgw_config(cpc_temp_sg_config, '{{ disable_tls_server }}', disable_tls_server_str)
