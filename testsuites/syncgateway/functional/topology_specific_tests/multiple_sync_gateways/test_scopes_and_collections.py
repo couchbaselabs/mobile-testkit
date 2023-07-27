@@ -218,7 +218,7 @@ def test_scopes_and_collections_replication(scopes_collections_tests_fixture, pa
         collections_enabled=True
     )
 
-    admin_client_2.replication_status_poll(sg1["db"], replicator2_id, timeout=180)
+    admin_client_1.replication_status_poll(sg1["db"], replicator2_id, timeout=180)
 
     # 7. Check that the new documents were replicated to sgw2
     sg2_collection_docs_ids = [row["id"] for row in sg_client.get_all_docs(url=sg2_admin_url, db=sg2["db"], auth=user2_auth, scope=scope, collection=collection)["rows"]]
