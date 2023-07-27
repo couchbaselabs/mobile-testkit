@@ -17,8 +17,8 @@ NUMBER_OF_SGWS = 3
 
 # test file shared variables
 bucket = "data-bucket"
-bucket2 = "data-bucket-2"
-bucket3 = "data-bucket-3"
+bucket2 = "data-bucket-1"
+bucket3 = "data-bucket-2"
 sg_password = "password"
 cb_server = sg_username = channels = client_auth = None
 sgs = {}
