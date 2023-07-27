@@ -10,7 +10,7 @@ from keywords.ClusterKeywords import ClusterKeywords
 from libraries.testkit.cluster import Cluster
 from libraries.testkit.admin import Admin
 from keywords import couchbaseserver
-from utilities.cluster_config_utils import is_magma_enabled, replace_string_on_sgw_config, copy_sgconf_to_temp
+from utilities.cluster_config_utils import is_magma_enabled, replace_string_on_sgw_config
 from keywords.SyncGateway import sync_gateway_config_path_for_mode, SyncGateway
 
 # test file shared variables
@@ -57,7 +57,7 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
         pytest.skip('This test cannot run with Sync Gateway version below 3.1.0')
 
     if (not rest_to_3sgws_done):
-        reset_cluster_configuration(params_from_base_test_setup)
+        setup_sgws_different_group_ids(params_from_base_test_setup)
         rest_to_3sgws_done = True
 
     try:  # To be able to teardon in case of a setup error
@@ -130,7 +130,7 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
         # potential error here, as we overwrite pre_test variables in the fixture for each db created
         for key in sgs:
             admin_client = Admin(sgs[key]["sg_obj"])
-             # Cleanup everything that was created
+            # Cleanup everything that was created
             if (pre_test_user_exists is not None) and (pre_test_user_exists is False):
                 admin_client.delete_user_if_exists(sgs[key]["db"], sgs[key]["user"])
             if (pre_test_db_exists is not None) and (pre_test_db_exists is False):
@@ -671,7 +671,7 @@ def keyspace(scope, collection):
     return (scope + '.' + collection)
 
 
-def reset_cluster_configuration(params_from_base_test_setup):
+def setup_sgws_different_group_ids(params_from_base_test_setup):
     cluster_config = params_from_base_test_setup["cluster_config"]
     cbs_cluster = Cluster(config=cluster_config)
     sg_obj = SyncGateway()
