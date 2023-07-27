@@ -681,11 +681,11 @@ def setup_sgws_different_group_ids(params_from_base_test_setup):
     disable_admin_auth = params_from_base_test_setup["disable_admin_auth"]
     sg_config_name = "sync_gateway_cpc_custom_group"
     sg_conf1 = sync_gateway_config_path_for_mode(sg_config_name, "cc", cpc=True)
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    cpc_temp_sg_config = "{}/scp_isgr_tests_sg_config_{}.json".format(SYNC_GATEWAY_CONFIGS_CPC, "cc")
     for i in range(0, 2):
-        cluster_config = params_from_base_test_setup["cluster_config"]
         sg = cbs_cluster.sync_gateways[i]
         sg_url = cluster_topology["sync_gateways"][i]["admin"]
-        cpc_temp_sg_config = "{}/scp_isgr_tests_sg_config_{}.json".format(SYNC_GATEWAY_CONFIGS_CPC, "cc")
         groupid_str = '"group_id": "group' + str(i) + '",'
         disable_tls_server_str = '"use_tls_server": ' + str(not disable_tls_server).lower() + ','
         disable_admin_auth_str = '"admin_interface_authentication": ' + str(not disable_admin_auth).lower() + ','
