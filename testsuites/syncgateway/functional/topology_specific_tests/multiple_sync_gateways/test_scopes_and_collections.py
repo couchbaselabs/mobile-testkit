@@ -677,52 +677,22 @@ def reset_cluster_configuration(params_from_base_test_setup):
     sg_obj = SyncGateway()
     cluster_utils = ClusterKeywords(cluster_config)
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
-   # sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
-   # sgwgateway = SyncGateway()
     disable_tls_server = params_from_base_test_setup["disable_tls_server"]
     disable_admin_auth = params_from_base_test_setup["disable_admin_auth"]
     sg_config_name = "sync_gateway_cpc_custom_group"
     sg_conf1 = sync_gateway_config_path_for_mode(sg_config_name, "cc", cpc=True)
-   # replace_config_persistent_properties(cpc_temp_sg_config)
     for i in range(0, 2):
         cluster_config = params_from_base_test_setup["cluster_config"]
         sg = cbs_cluster.sync_gateways[i]
         sg_url = cluster_topology["sync_gateways"][i]["admin"]
-        #sg_config = sync_gateway_config_path_for_mode(sg_config_name, "cc", cpc=True)
         cpc_temp_sg_config = "{}/scp_isgr_tests_sg_config_{}.json".format(SYNC_GATEWAY_CONFIGS_CPC, "cc")
         groupid_str = '"group_id": "group' + str(i) + '",'
-        #disable_tls_server_str = '"disable_tls_server": "' + str(disable_tls_server) + '",'
-        disable_tls_server_str = '"use_tls_server": false,'
-        # disable_admin_auth_str = '"admin_interface_authentication": "' + str(disable_admin_auth) + '",'
-        disable_admin_auth_str = '"admin_interface_authentication": false,'
+        disable_tls_server_str = '"use_tls_server": ' + disable_tls_server + '",'
+        disable_admin_auth_str = '"admin_interface_authentication": ' + disable_admin_auth + '",'
         shutil.copyfile(sg_conf1, cpc_temp_sg_config)
         cpc_temp_sg_config = replace_string_on_sgw_config(cpc_temp_sg_config, '{{ groupid }}', groupid_str)
         cpc_temp_sg_config = replace_string_on_sgw_config(cpc_temp_sg_config, '{{ disable_tls_server }}', disable_tls_server_str)
         cpc_temp_sg_config = replace_string_on_sgw_config(cpc_temp_sg_config, '{{ disable_admin_auth }}', disable_admin_auth_str)
-        #c_cluster = Cluster(config=cluster_config)
-        #c_cluster.reset(sg_config_path=cpc_temp_sg_config, use_config=True, bucket_list=bucket_list)
         sg.stop()
         sg_obj.start_sync_gateways(cluster_config=cluster_config, url=sg_url, config=cpc_temp_sg_config, use_config=True)
         os.remove(cpc_temp_sg_config)
-
-    # sg_config_path = "{}/{}".format(os.getcwd(), sg_config_name)
-    #sg1 = c_cluster.sync_gateways[0]
-    #sg2 = c_cluster.sync_gateways[1]
-    #sg3 = c_cluster.sync_gateways[2]
-
-    #sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_config, url=sg1.ip,
-     #                                       sync_gateway_version=sync_gateway_version, enable_import=True)
-
-    #sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_config, url=sg2.ip,
-      #                                      sync_gateway_version=sync_gateway_version, enable_import=True)
-
-    #sgwgateway.redeploy_sync_gateway_config(cluster_config=cluster_config, sg_conf=sg_config, url=sg3.ip,
-       #                                     sync_gateway_version=sync_gateway_version, enable_import=True)
-
-#def replace_config_persistent_properties(sgw_config, params_from_base_test_setup):
-     # params_from_base_test_setup["disable_tls_server"]
- #    password_str = '"password": "password"'
-  #   cacertpath_str = ""
-   #  certpath_str = ""
-    # keypath_str = ""
-     #cpc_temp_sg_config = replace_string_on_sgw_config(sgw_config, '{{ password }}', password_str)
