@@ -687,8 +687,8 @@ def reset_cluster_configuration(params_from_base_test_setup):
         sg_url = cluster_topology["sync_gateways"][i]["admin"]
         cpc_temp_sg_config = "{}/scp_isgr_tests_sg_config_{}.json".format(SYNC_GATEWAY_CONFIGS_CPC, "cc")
         groupid_str = '"group_id": "group' + str(i) + '",'
-        disable_tls_server_str = '"use_tls_server": false,'
-        disable_admin_auth_str = '"admin_interface_authentication": false,'
+        disable_tls_server_str = '"use_tls_server": ' + str(not disable_tls_server).lower() + ','
+        disable_admin_auth_str = '"admin_interface_authentication": ' + str(not disable_admin_auth).lower() + ','
         shutil.copyfile(sg_conf1, cpc_temp_sg_config)
         cpc_temp_sg_config = replace_string_on_sgw_config(cpc_temp_sg_config, '{{ groupid }}', groupid_str)
         cpc_temp_sg_config = replace_string_on_sgw_config(cpc_temp_sg_config, '{{ disable_tls_server }}', disable_tls_server_str)
