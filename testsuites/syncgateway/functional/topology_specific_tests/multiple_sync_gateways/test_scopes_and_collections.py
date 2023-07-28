@@ -623,7 +623,6 @@ def test_missing_collection_error(scopes_collections_tests_fixture, params_from_
     sg1 = sgs["sg1"]
     sg2 = sgs["sg2"]
     admin_client_1 = Admin(sg1["sg_obj"])
-    admin_client_2 = Admin(sg2["sg_obj"])
 
     sg_client, scope, collection, collection2 = scopes_collections_tests_fixture
 
@@ -653,7 +652,7 @@ def test_missing_collection_error(scopes_collections_tests_fixture, params_from_
         collections_enabled=True
     )
 
-    admin_client_2.replication_status_poll(sg1["db"], replicator2_id, timeout=180)
+    admin_client_1.replication_status_poll(sg1["db"], replicator2_id, timeout=180)
 
 
 def assert_docs_replicated(docs, sg_docs_ids, sg, db, replicator_id, replicator_type):
