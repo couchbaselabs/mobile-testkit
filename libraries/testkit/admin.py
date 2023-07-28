@@ -422,6 +422,8 @@ class Admin:
             r.raise_for_status()
             resp_obj = r.json()
             status = resp_obj["status"]
+            if status == "error":
+                raise ReplicationException("There was a problem during the replication, please look at the logs for more details")
             if status != "stopped":
                 time.sleep(1)
             else:
@@ -638,3 +640,7 @@ class Admin:
             if dbconfig["bucket"] == bucket:
                 return db
         return None
+
+
+class ReplicationException(Exception):
+    pass

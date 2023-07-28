@@ -12,6 +12,7 @@ from libraries.testkit.admin import Admin
 from keywords import couchbaseserver
 from utilities.cluster_config_utils import is_magma_enabled, replace_string_on_sgw_config
 from keywords.SyncGateway import sync_gateway_config_path_for_mode, SyncGateway
+from libraries.testkit.admin import ReplicationException
 
 NUMBER_OF_SGWS = 3
 
@@ -397,8 +398,6 @@ def test_multiple_replicators_multiple_scopes(scopes_collections_tests_fixture, 
 
 @pytest.mark.syncgateway
 @pytest.mark.collections
-# skip test currently as testkit setup is causing test to fail due to SG node bootstrap group_ids being the same
-@pytest.mark.skip
 def test_replication_explicit_mapping(scopes_collections_tests_fixture, params_from_base_test_setup):
     """
     Test that users can remap collections when performing ISGR
@@ -511,8 +510,8 @@ def test_replication_explicit_mapping(scopes_collections_tests_fixture, params_f
         direction="pull",
         continuous=False,
         collections_enabled=True,
-        collections_local=[keyspace(scope, collection), keyspace(scope, collection2), keyspace(scope, bucket1Collections[2])],
-        collections_remote=[keyspace(scope2, bucket3Collections[0]), keyspace(scope2, bucket3Collections[1]), keyspace(scope2, bucket3Collections[2])]
+        collections_local=[keyspace(scope2, bucket3Collections[0]), keyspace(scope2, bucket3Collections[1]), keyspace(scope2, bucket3Collections[2])],
+        collections_remote=[keyspace(scope, collection), keyspace(scope, collection2), keyspace(scope, bucket1Collections[2])]
     )
 
     admin_client_1.replication_status_poll(sg1["db"], replicator_1_id, timeout=180)
@@ -610,8 +609,6 @@ def test_multiple_dbs_same_bucket(scopes_collections_tests_fixture, params_from_
 
 @pytest.mark.syncgateway
 @pytest.mark.collections
-# skip test currently as testkit setup is causing test to fail due to SG node bootstrap group_ids being the same
-@pytest.mark.skip
 def test_missing_collection_error(scopes_collections_tests_fixture, params_from_base_test_setup):
     """
     Topology:
@@ -627,7 +624,6 @@ def test_missing_collection_error(scopes_collections_tests_fixture, params_from_
     sg1 = sgs["sg1"]
     sg2 = sgs["sg2"]
     admin_client_1 = Admin(sg1["sg_obj"])
-    admin_client_2 = Admin(sg2["sg_obj"])
 
     sg_client, scope, collection, collection2 = scopes_collections_tests_fixture
 
@@ -656,8 +652,8 @@ def test_missing_collection_error(scopes_collections_tests_fixture, params_from_
         continuous=False,
         collections_enabled=True
     )
-
-    admin_client_2.replication_status_poll(sg1["db"], replicator2_id, timeout=180)
+    with pytest.raises(ReplicationException):
+        admin_client_1.replication_status_poll(sg1["db"], replicator2_id, timeout=180)
 
 
 def assert_docs_replicated(docs, sg_docs_ids, sg, db, replicator_id, replicator_type):
@@ -674,6 +670,7 @@ def keyspace(scope, collection):
 
 
 def setup_sgws_different_group_ids(params_from_base_test_setup):
+    # Defining the setup paramters
     cluster_config = params_from_base_test_setup["cluster_config"]
     cbs_cluster = Cluster(config=cluster_config)
     sg_obj = SyncGateway()
@@ -686,6 +683,8 @@ def setup_sgws_different_group_ids(params_from_base_test_setup):
     # No reason to run these tests with tls server or with admin authentication. They also fail otherwise.
     disable_tls_server_str = '"use_tls_server": false,'
     disable_admin_auth_str = '"admin_interface_authentication": false,'
+
+    # For each one of the SGWs, pmake a copy of the config file, adjust it to the parameters and restart SGW with it
     for i in range(0, NUMBER_OF_SGWS - 1):
         sg = cbs_cluster.sync_gateways[i]
         sg_url = cluster_topology["sync_gateways"][i]["admin"]
