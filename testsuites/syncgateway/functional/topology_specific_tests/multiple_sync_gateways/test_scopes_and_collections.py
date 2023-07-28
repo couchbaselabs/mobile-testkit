@@ -509,8 +509,8 @@ def test_replication_explicit_mapping(scopes_collections_tests_fixture, params_f
         direction="pull",
         continuous=False,
         collections_enabled=True,
-        collections_local=[keyspace(scope, collection), keyspace(scope, collection2), keyspace(scope, bucket1Collections[2])],
-        collections_remote=[keyspace(scope2, bucket3Collections[0]), keyspace(scope2, bucket3Collections[1]), keyspace(scope2, bucket3Collections[2])]
+        collections_local=[keyspace(scope2, bucket3Collections[0]), keyspace(scope2, bucket3Collections[1]), keyspace(scope2, bucket3Collections[2])],
+        collections_remote=[keyspace(scope, collection), keyspace(scope, collection2), keyspace(scope, bucket1Collections[2])]
     )
 
     admin_client_1.replication_status_poll(sg1["db"], replicator_1_id, timeout=180)
