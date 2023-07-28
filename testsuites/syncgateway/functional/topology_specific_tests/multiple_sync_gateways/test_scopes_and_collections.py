@@ -12,6 +12,7 @@ from libraries.testkit.admin import Admin
 from keywords import couchbaseserver
 from utilities.cluster_config_utils import is_magma_enabled, replace_string_on_sgw_config
 from keywords.SyncGateway import sync_gateway_config_path_for_mode, SyncGateway
+from libraries.testkit.admin import ReplicationException
 
 NUMBER_OF_SGWS = 3
 
@@ -651,8 +652,8 @@ def test_missing_collection_error(scopes_collections_tests_fixture, params_from_
         continuous=False,
         collections_enabled=True
     )
-
-    admin_client_1.replication_status_poll(sg1["db"], replicator2_id, timeout=180)
+    with pytest.raises(ReplicationException):
+        admin_client_1.replication_status_poll(sg1["db"], replicator2_id, timeout=180)
 
 
 def assert_docs_replicated(docs, sg_docs_ids, sg, db, replicator_id, replicator_type):
