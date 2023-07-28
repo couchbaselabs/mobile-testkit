@@ -422,7 +422,8 @@ class Admin:
             r.raise_for_status()
             resp_obj = r.json()
             status = resp_obj["status"]
-            print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" + str(status))
+            if status == "error":
+                raise "There was a problem during the replication, please look at the logs for more details"
             if status != "stopped":
                 time.sleep(1)
             else:
