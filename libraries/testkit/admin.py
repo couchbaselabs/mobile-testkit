@@ -422,6 +422,7 @@ class Admin:
             r.raise_for_status()
             resp_obj = r.json()
             status = resp_obj["status"]
+            print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" + str(status))
             if status != "stopped":
                 time.sleep(1)
             else:
@@ -456,7 +457,6 @@ class Admin:
             r.raise_for_status()
             resp_obj = r.json()
             status = resp_obj["status"]
-            print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" + str(status))
             if status == "starting" or status == "started":
                 count += 1
             elif status == "running":
