@@ -1,14 +1,19 @@
 from time import sleep
+import shutil
+import os
 import pytest
 import uuid
 from keywords.MobileRestClient import MobileRestClient
-from keywords.constants import RBAC_FULL_ADMIN
+from keywords.constants import RBAC_FULL_ADMIN, SYNC_GATEWAY_CONFIGS_CPC
 from requests.auth import HTTPBasicAuth
 from keywords.ClusterKeywords import ClusterKeywords
 from libraries.testkit.cluster import Cluster
 from libraries.testkit.admin import Admin
 from keywords import couchbaseserver
-from utilities.cluster_config_utils import is_magma_enabled
+from utilities.cluster_config_utils import is_magma_enabled, replace_string_on_sgw_config
+from keywords.SyncGateway import sync_gateway_config_path_for_mode, SyncGateway
+
+NUMBER_OF_SGWS = 3
 
 # test file shared variables
 bucket = "data-bucket"
@@ -27,6 +32,7 @@ sg1_admin_url = ""
 sg2_admin_url = ""
 sg3_admin_url = ""
 random_suffix = ""
+rest_to_3sgws_done = False
 
 
 @pytest.fixture
@@ -44,12 +50,17 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
     global sg2_admin_url
     global sg3_admin_url
     global random_suffix
+    global rest_to_3sgws_done
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     if is_magma_enabled(cluster_config):
         pytest.skip("It is not necessary to test ISGR with scopes and collections and MAGMA")
     if params_from_base_test_setup["sync_gateway_version"] < "3.1.0":
         pytest.skip('This test cannot run with Sync Gateway version below 3.1.0')
+
+    if (not rest_to_3sgws_done):
+        setup_sgws_different_group_ids(params_from_base_test_setup)
+        rest_to_3sgws_done = True
 
     try:  # To be able to teardon in case of a setup error
         random_suffix = str(uuid.uuid4())[:8]
@@ -209,7 +220,7 @@ def test_scopes_and_collections_replication(scopes_collections_tests_fixture, pa
         collections_enabled=True
     )
 
-    admin_client_2.replication_status_poll(sg1["db"], replicator2_id, timeout=180)
+    admin_client_1.replication_status_poll(sg1["db"], replicator2_id, timeout=180)
 
     # 7. Check that the new documents were replicated to sgw2
     sg2_collection_docs_ids = [row["id"] for row in sg_client.get_all_docs(url=sg2_admin_url, db=sg2["db"], auth=user2_auth, scope=scope, collection=collection)["rows"]]
@@ -660,3 +671,29 @@ def assert_docs_replicated(docs, sg_docs_ids, sg, db, replicator_id, replicator_
 def keyspace(scope, collection):
     """Construct keyspace for collection mapping"""
     return (scope + '.' + collection)
+
+
+def setup_sgws_different_group_ids(params_from_base_test_setup):
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    cbs_cluster = Cluster(config=cluster_config)
+    sg_obj = SyncGateway()
+    cluster_utils = ClusterKeywords(cluster_config)
+    cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
+    sg_config_name = "sync_gateway_cpc_custom_group"
+    sg_conf1 = sync_gateway_config_path_for_mode(sg_config_name, "cc", cpc=True)
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    cpc_temp_sg_config = "{}/scp_isgr_tests_sg_config_{}.json".format(SYNC_GATEWAY_CONFIGS_CPC, "cc")
+    # No reason to run these tests with tls server or with admin authentication. They also fail otherwise.
+    disable_tls_server_str = '"use_tls_server": false,'
+    disable_admin_auth_str = '"admin_interface_authentication": false,'
+    for i in range(0, NUMBER_OF_SGWS - 1):
+        sg = cbs_cluster.sync_gateways[i]
+        sg_url = cluster_topology["sync_gateways"][i]["admin"]
+        groupid_str = '"group_id": "group' + str(i) + '",'
+        shutil.copyfile(sg_conf1, cpc_temp_sg_config)
+        cpc_temp_sg_config = replace_string_on_sgw_config(cpc_temp_sg_config, '{{ groupid }}', groupid_str)
+        cpc_temp_sg_config = replace_string_on_sgw_config(cpc_temp_sg_config, '{{ disable_tls_server }}', disable_tls_server_str)
+        cpc_temp_sg_config = replace_string_on_sgw_config(cpc_temp_sg_config, '{{ disable_admin_auth }}', disable_admin_auth_str)
+        sg.stop()
+        sg_obj.start_sync_gateways(cluster_config=cluster_config, url=sg_url, config=cpc_temp_sg_config, use_config=True)
+        os.remove(cpc_temp_sg_config)
