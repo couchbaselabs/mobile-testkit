@@ -248,8 +248,8 @@ def params_from_base_suite_setup(request):
     else:
         persist_cluster_config_environment_prop(cluster_config, 'trace_logs', False)
 
-    if ('test_scopes_and_collections' in request.node.name) and (use_views or cbs_ssl):
-        pytest.skip("It is not necessary to run the ISGE scopes and collections tets with user viewes or sever ssl")
+    if ('test_scopes_and_collections' in request.node.name) and (use_views or cbs_ssl or magma_storage_enabled or sync_gateway_version < "3.1.0"):
+        pytest.skip("It is not necessary/possible to run the ISGE scopes and collections tets with user viewes, server ssl, magma or versions prior to 3.1.0")
 
     if sync_gateway_version < "2.0.0" and no_conflicts_enabled:
         pytest.skip("Test cannot run with no-conflicts with sg version < 2.0.0")
