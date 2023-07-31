@@ -644,6 +644,9 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         no_conflicts_enabled=no_conflicts_enabled
     )
 
+    if ('test_cbs_collections' in request.node.name) and (use_views or sync_gateway_version < "3.1.0"):
+        pytest.skip("It is not possible to run the scopes and collections tests with user viewss or versions prior to 3.1.0")
+
     cluster_helper = ClusterKeywords(cluster_config)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config=cluster_config)
     sg_url = cluster_hosts["sync_gateways"][0]["public"]
