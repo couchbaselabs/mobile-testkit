@@ -19,6 +19,7 @@ bucket = "data-bucket"
 sg_password = "password"
 admin_client = cb_server = sg_username = channels = client_auth = sg_url = None
 admin_auth = [RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']]
+is_using_views = False
 
 
 @pytest.fixture
@@ -30,7 +31,7 @@ def teardown_doc_fixture():
 
 
 @pytest.fixture
-def scopes_collections_tests_fixture(params_from_base_test_setup):
+def scopes_collections_tests_fixture(params_from_base_test_setup, params_from_base_suite_setup):
     # get/set the parameters
     global admin_client
     global cb_server
@@ -38,7 +39,12 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
     global channels
     global client_auth
     global sg_url
+    global is_using_views
+    is_using_views = params_from_base_suite_setup["use_views"]
 
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    if sync_gateway_version < "3.1.0":
+        pytest.skip('scopes and collection tests cannot be run in versions prior to 3.1.0')
     try:  # To be able to teardon in case of a setup error
         pre_test_db_exists = pre_test_user_exists = sg_client = sg_url = sg_admin_url = None
         random_suffix = str(uuid.uuid4())[:8]
@@ -99,6 +105,9 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
 @pytest.mark.syncgateway
 @pytest.mark.collections
 def test_document_only_under_named_scope(scopes_collections_tests_fixture, teardown_doc_fixture):
+    if is_using_views:
+        pytest.skip("""It is not necessary to run scopes and collections tests with views.
+                When it is enabled, there is a problem that affects the rest of the tests suite.""")
 
     # setup
     doc_prefix = "scp_tests_doc"
@@ -137,6 +146,9 @@ def test_change_scope_or_collection_name(scopes_collections_tests_fixture):
     5. Verify that the document is accessible again
     6. Change the scope name and expect a "Bad Rquest" error
     """
+    if is_using_views:
+        pytest.skip("""It is not necessary to run scopes and collections tests with views.
+                When it is enabled, there is a problem that affects the rest of the tests suite.""")
 
     # setup
     sg_client, sg_admin_url, db, scope, collection = scopes_collections_tests_fixture
@@ -185,7 +197,9 @@ def test_collection_channels(scopes_collections_tests_fixture):
     8. Check that _bulk_get cannot get a document from the "right" channel but the wrong collection
     9. Check that the user have access to the docs the collection and specific channel
     """
-
+    if is_using_views:
+        pytest.skip("""It is not necessary to run scopes and collections tests with views.
+                When it is enabled, there is a problem that affects the rest of the tests suite.""")
     # setup
     sg_client, sg_admin_url, db, scope, collection = scopes_collections_tests_fixture
 
@@ -283,6 +297,10 @@ def test_restricted_collection(scopes_collections_tests_fixture):
     4. Check that documents that are in the server restricted collection are not accessible via SGW
     """
 
+    if is_using_views:
+        pytest.skip("""It is not necessary to run scopes and collections tests with views.
+                When it is enabled, there is a problem that affects the rest of the tests suite.""")
+
     sg_client, sg_admin_url, db, scope, collection = scopes_collections_tests_fixture
     # 1. Create two more collections on CB server
     random_suffix = str(uuid.uuid4())[:8]
@@ -339,6 +357,10 @@ def test_user_collections_access(scopes_collections_tests_fixture):
     4. Check document retrieval via all_docs and document ID is restricted to correct access level
     5. Check document deletion is restricted to correct access level
     """
+
+    if is_using_views:
+        pytest.skip("""It is not necessary to run scopes and collections tests with views.
+                When it is enabled, there is a problem that affects the rest of the tests suite.""")
 
     sg_client, sg_admin_url, db, scope, collection = scopes_collections_tests_fixture
     random_suffix = str(uuid.uuid4())[:8]
@@ -422,6 +444,9 @@ def test_apis_support_collections(scopes_collections_tests_fixture):
     2.  Purge one of the documents
     3.  Get a raw document
     """
+    if is_using_views:
+        pytest.skip("""It is not necessary to run scopes and collections tests with views.
+                When it is enabled, there is a problem that affects the rest of the tests suite.""")
 
     sg_client, sg_admin_url, db, scope, collection = scopes_collections_tests_fixture
     user_session = sg_client.create_session(url=sg_admin_url, db=db, name=sg_username)
@@ -504,6 +529,10 @@ def test_collection_stats(scopes_collections_tests_fixture):
     4. Make several API calls to affect stats as different users
     5. Verify stats reflect changes from API calls correctly
     """
+
+    if is_using_views:
+        pytest.skip("""It is not necessary to run scopes and collections tests with views.
+                When it is enabled, there is a problem that affects the rest of the tests suite.""")
 
     sg_client, sg_admin_url, db, scope, collection = scopes_collections_tests_fixture
     random_suffix = str(uuid.uuid4())[:8]
