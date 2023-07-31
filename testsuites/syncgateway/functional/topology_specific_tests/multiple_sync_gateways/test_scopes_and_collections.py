@@ -10,7 +10,7 @@ from keywords.ClusterKeywords import ClusterKeywords
 from libraries.testkit.cluster import Cluster
 from libraries.testkit.admin import Admin
 from keywords import couchbaseserver
-from utilities.cluster_config_utils import is_magma_enabled, replace_string_on_sgw_config
+from utilities.cluster_config_utils import replace_string_on_sgw_config
 from keywords.SyncGateway import sync_gateway_config_path_for_mode, SyncGateway
 from libraries.testkit.admin import ReplicationException
 
@@ -54,11 +54,6 @@ def scopes_collections_tests_fixture(params_from_base_test_setup):
     global rest_to_3sgws_done
 
     cluster_config = params_from_base_test_setup["cluster_config"]
-    if is_magma_enabled(cluster_config):
-        pytest.skip("It is not necessary to test ISGR with scopes and collections and MAGMA")
-    if params_from_base_test_setup["sync_gateway_version"] < "3.1.0":
-        pytest.skip('This test cannot run with Sync Gateway version below 3.1.0')
-
     if (not rest_to_3sgws_done):
         setup_sgws_different_group_ids(params_from_base_test_setup)
         rest_to_3sgws_done = True
