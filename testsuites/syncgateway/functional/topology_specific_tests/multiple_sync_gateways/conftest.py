@@ -92,6 +92,9 @@ def params_from_base_suite_setup(request):
     if no_conflicts_enabled and sync_gateway_version < "2.0":
         raise FeatureSupportedError('No conflicts feature not available for sync-gateway version below 2.0, so skipping the test')
 
+    if ('test_scopes_and_collections' in request.node.name) and (use_views or cbs_ssl or magma_storage_enabled or sync_gateway_version < "3.1.0"):
+        pytest.skip("It is not necessary/possible to run the ISGR scopes and collections tests with user views, server ssl, magma or versions prior to 3.1.0")
+
     # Make sure mode for sync_gateway is supported ('cc' or 'di')
     validate_sync_gateway_mode(mode)
 
@@ -247,9 +250,6 @@ def params_from_base_suite_setup(request):
         persist_cluster_config_environment_prop(cluster_config, 'trace_logs', True)
     else:
         persist_cluster_config_environment_prop(cluster_config, 'trace_logs', False)
-
-    if ('test_scopes_and_collections' in request.node.name) and (use_views or cbs_ssl or magma_storage_enabled or sync_gateway_version < "3.1.0"):
-        pytest.skip("It is not necessary/possible to run the ISGR scopes and collections tests with user views, server ssl, magma or versions prior to 3.1.0")
 
     if sync_gateway_version < "2.0.0" and no_conflicts_enabled:
         pytest.skip("Test cannot run with no-conflicts with sg version < 2.0.0")
