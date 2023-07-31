@@ -265,7 +265,7 @@ def params_from_base_suite_setup(request):
     if delta_sync_enabled and sync_gateway_version < "2.5":
         raise FeatureSupportedError('Delta sync feature not available for sync-gateway version below 2.5, so skipping the test')
 
-    print("****************************************************************" + request.node.name)
+    print("****************************************************************" + str(request))
     print("****************************************************************" + str(use_views))
     print("****************************************************************" + str(sync_gateway_version < "3.1.0"))
     if ('test_cbs_collections' in request.node.name) and (use_views or (sync_gateway_version < "3.1.0")):
