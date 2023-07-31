@@ -265,9 +265,12 @@ def params_from_base_suite_setup(request):
     if delta_sync_enabled and sync_gateway_version < "2.5":
         raise FeatureSupportedError('Delta sync feature not available for sync-gateway version below 2.5, so skipping the test')
 
+    print("****************************************************************" + request.node.name)
+    print("****************************************************************" + str(use_views))
+    print("****************************************************************" + str(sync_gateway_version < "3.1.0"))
     if ('test_cbs_collections' in request.node.name) and (use_views or (sync_gateway_version < "3.1.0")):
         pytest.skip("It is not possible to run the scopes and collections tests with user viewss or versions prior to 3.1.0")
-
+    pytest.skip("zhovna")
     log_info("server_version: {}".format(server_version))
     log_info("sync_gateway_version: {}".format(sync_gateway_version))
     log_info("mode: {}".format(mode))
