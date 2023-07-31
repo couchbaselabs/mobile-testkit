@@ -10,7 +10,7 @@ from keywords.ClusterKeywords import ClusterKeywords
 from libraries.testkit.cluster import Cluster
 from libraries.testkit.admin import Admin
 from keywords import couchbaseserver
-from utilities.cluster_config_utils import is_magma_enabled, replace_string_on_sgw_config
+from utilities.cluster_config_utils import replace_string_on_sgw_config
 from keywords.SyncGateway import sync_gateway_config_path_for_mode, SyncGateway
 from libraries.testkit.admin import ReplicationException
 
