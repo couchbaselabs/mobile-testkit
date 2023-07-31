@@ -30,7 +30,7 @@ def teardown_doc_fixture():
 
 
 @pytest.fixture
-def scopes_collections_tests_fixture(params_from_base_test_setup, params_from_base_suite_setup):
+def scopes_collections_tests_fixture(params_from_base_test_setup):
     # get/set the parameters
     global admin_client
     global cb_server
@@ -39,9 +39,6 @@ def scopes_collections_tests_fixture(params_from_base_test_setup, params_from_ba
     global client_auth
     global sg_url
 
-    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
-    if sync_gateway_version < "3.1.0":
-        pytest.skip('scopes and collection tests cannot be run in versions prior to 3.1.0')
     try:  # To be able to teardon in case of a setup error
         pre_test_db_exists = pre_test_user_exists = sg_client = sg_url = sg_admin_url = None
         random_suffix = str(uuid.uuid4())[:8]
