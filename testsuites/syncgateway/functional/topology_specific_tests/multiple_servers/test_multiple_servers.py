@@ -335,7 +335,7 @@ def test_server_goes_down_rebuild_channels(params_from_base_test_setup):
     assert len(changes_before_failover["results"]) == num_docs
 
     # Stop server via 'service stop'
-    flakey_server.stop()
+    flakey_server.take_down(flakey_server)
 
     start = time.time()
     while True:
@@ -375,5 +375,5 @@ def test_server_goes_down_rebuild_channels(params_from_base_test_setup):
 
     # Test succeeded without timeout, bring server back into topology
     flakey_server.start()
-    main_server.recover(flakey_server, node=2, max_retries=120)
+    main_server.recover(flakey_server, max_retries=30)
     main_server.rebalance_in(coucbase_servers, flakey_server)

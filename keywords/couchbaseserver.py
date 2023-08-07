@@ -786,17 +786,26 @@ class CouchbaseServer:
         self._wait_for_rebalance_complete()
         return True
 
-    def recover(self, server_to_recover, node=1, max_retries=10):
+    def take_down(self, server):
+
+        data = {"otpNode": "ns_1@{}".format(server.host)}
+        resp = self._session.post(
+            "{}/controller/startGracefulFailover".format(self.url),
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+            data=data
+        )
+        resp.raise_for_status()
+
+    def recover(self, server_to_recover, max_retries=10):
 
         if not isinstance(server_to_recover, CouchbaseServer):
             raise TypeError("'server_to_add' must be a 'CouchbaseServer'")
 
         log_info("Setting recover mode to 'delta' for server {}".format(server_to_recover.host))
         data = {
-            "otpNode": "ns_" + str(node) + "@{}".format(server_to_recover.host),
+            "otpNode": "ns_1@{}".format(server_to_recover.host),
             "recoveryType": "delta"
         }
-        log_info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^" + str(data))
         # Override session headers for this one off request
         count = 0
         while count < max_retries:
