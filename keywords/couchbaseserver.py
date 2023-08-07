@@ -786,16 +786,6 @@ class CouchbaseServer:
         self._wait_for_rebalance_complete()
         return True
 
-    def take_down(self, server):
-
-        data = {"otpNode": "ns_1@{}".format(server.host)}
-        resp = self._session.post(
-            "{}/controller/startGracefulFailover".format(self.url),
-            headers={"Content-Type": "application/x-www-form-urlencoded"},
-            data=data
-        )
-        resp.raise_for_status()
-
     def recover(self, server_to_recover, max_retries=10):
 
         if not isinstance(server_to_recover, CouchbaseServer):
