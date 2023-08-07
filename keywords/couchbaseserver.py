@@ -786,14 +786,14 @@ class CouchbaseServer:
         self._wait_for_rebalance_complete()
         return True
 
-    def recover(self, server_to_recover, max_retries=10):
+    def recover(self, server_to_recover, node=1, max_retries=10):
 
         if not isinstance(server_to_recover, CouchbaseServer):
             raise TypeError("'server_to_add' must be a 'CouchbaseServer'")
 
         log_info("Setting recover mode to 'delta' for server {}".format(server_to_recover.host))
         data = {
-            "otpNode": "ns_1@{}".format(server_to_recover.host),
+            "otpNode": "ns_" + str(node) + "@{}".format(server_to_recover.host),
             "recoveryType": "delta"
         }
         log_info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^" + str(data))
