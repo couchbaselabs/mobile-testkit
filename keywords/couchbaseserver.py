@@ -796,6 +796,7 @@ class CouchbaseServer:
             "otpNode": "ns_1@{}".format(server_to_recover.host),
             "recoveryType": "delta"
         }
+        log_info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^" + str(data))
         # Override session headers for this one off request
         count = 0
         while count < max_retries:
