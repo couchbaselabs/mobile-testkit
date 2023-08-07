@@ -335,7 +335,7 @@ def test_server_goes_down_rebuild_channels(params_from_base_test_setup):
     assert len(changes_before_failover["results"]) == num_docs
 
     # Stop server via 'service stop'
-    flakey_server.stop(flakey_server)
+    flakey_server.stop()
 
     start = time.time()
     while True:
