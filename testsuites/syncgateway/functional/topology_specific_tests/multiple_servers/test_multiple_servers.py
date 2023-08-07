@@ -375,5 +375,5 @@ def test_server_goes_down_rebuild_channels(params_from_base_test_setup):
 
     # Test succeeded without timeout, bring server back into topology
     flakey_server.start()
-    # main_server.recover(flakey_server, max_retries=30)
-    # main_server.rebalance_in(coucbase_servers, flakey_server)
+    flakey_server.recover(flakey_server, max_retries=30)
+    flakey_server.rebalance_in(coucbase_servers, flakey_server)
