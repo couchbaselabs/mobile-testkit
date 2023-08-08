@@ -3,9 +3,7 @@ pipeline {
     stages {
         stage('Provision VMs') {
             steps {
-                sh '. setup.sh'
-                sh 'source venv/bin/activate'
-                sh 'python3 --version'
+                sh 'ls'
             }
         }
     }
