@@ -3,7 +3,7 @@ pipeline {
     stages {
         stage('Provision VMs') {
             steps {
-                sh 'ls'
+                sh './setup.sh'
             }
         }
     }
