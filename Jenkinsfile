@@ -15,6 +15,7 @@ pipeline {
         stage('Release VMs') {
             steps {
                 sh '''#!/bin/bash
+                source venv/bin/activate
                 python utilities/mobile_server_pool.py  --release-nodes  --pool-list=$POOL
                 unset POOL
                 '''
