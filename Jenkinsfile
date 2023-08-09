@@ -14,7 +14,7 @@ pipeline {
             steps {
                 sh '''#!/bin/bash
                 source venv/bin/activate
-                python utilities/mobile_server_pool.py  --release-nodes  --pool-list=$(jq '.ips | join(",")' resources/pool.json)
+                python utilities/mobile_server_pool.py  --release-nodes  --pool-list=$(jq -r '.ips | join(",")' resources/pool.json)
                 '''
             }
         }
