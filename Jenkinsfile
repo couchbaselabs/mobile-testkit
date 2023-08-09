@@ -7,8 +7,6 @@ pipeline {
                 source setup.sh
                 source venv/bin/activate
                 python utilities/mobile_server_pool.py  --reserve-nodes  --nodes-os-type=centos --num-of-nodes=4
-                POOL=$(jq '.ips | join(",")' resources/pool.json)
-                echo $POOL
                 '''
             }
         }
@@ -16,8 +14,7 @@ pipeline {
             steps {
                 sh '''#!/bin/bash
                 source venv/bin/activate
-                python utilities/mobile_server_pool.py  --release-nodes  --pool-list=$POOL
-                unset POOL
+                python utilities/mobile_server_pool.py  --release-nodes  --pool-list=$(jq '.ips | join(",")' resources/pool.json)
                 '''
             }
         }
