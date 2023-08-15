@@ -2,9 +2,10 @@ import json
 import logging
 import sys
 import yaml
+import getopt
 
 
-def get_hosts(pool_file="../../resources/pool.json"):
+def get_hosts(pool_file):
     with open(pool_file) as f:
         pool_dict = json.loads(f.read())
         ips = pool_dict["ips"]
@@ -17,8 +18,8 @@ def get_hosts(pool_file="../../resources/pool.json"):
     return ips
 
 
-def generate_inventory_file():
-    hosts = get_hosts()
+def generate_inventory_file(pool_file, inv_file):
+    hosts = get_hosts(pool_file)
 
     inventory = {
         "master": {
@@ -35,9 +36,15 @@ def generate_inventory_file():
         name = f"worker_{i}"
         inventory["workers"]["hosts"][name] = hosts[i + 1]
 
-    with open("inventory.yaml", "w") as inv_file:
-        yaml.dump(inventory, inv_file, default_flow_style=False, allow_unicode=True)
+    with open(inv_file, "w") as file:
+        yaml.dump(inventory, file, default_flow_style=False, allow_unicode=True)
 
 
 if __name__ == "__main__":
-    generate_inventory_file()
+    opts, args = getopt.getopt(sys.argv[1:], "i:o:")
+    for o, a in opts:
+        if o == "-i":
+            pool_file = a
+        elif o == "-o":
+            inv_file = a
+    generate_inventory_file(pool_file, inv_file)
