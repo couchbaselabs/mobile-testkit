@@ -1,10 +1,16 @@
 master:
   hosts:
-    master: 111.11.111.111
+    master:
+      ansible_host: 111.11.111.111
 workers:
   hosts:
-    worker_0: 222.22.222.222
-    worker_1: 333.33.333.333
-    worker_2: 444.44.444.444
-    worker_3: 555.55.555.555
-    worker_4: 666.66.666.666
+    worker_0:
+      ansible_host: 222.22.222.222
+    worker_1:
+      ansible_host: 333.33.333.333
+    worker_2:
+      ansible_host: 444.44.444.444
+    worker_3:
+      ansible_host: 555.55.555.555
+    worker_4:
+      ansible_host: 666.66.666.666

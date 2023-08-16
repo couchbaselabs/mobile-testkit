@@ -30,11 +30,11 @@ def generate_inventory_file(pool_file, inv_file):
         }
     }
 
-    inventory["master"]["hosts"]["master"] = hosts[0]
+    inventory["master"]["hosts"]["master"] = {"ansible_host": hosts[0]}
 
     for i in range(0, len(hosts[1:])):
         name = f"worker_{i}"
-        inventory["workers"]["hosts"][name] = hosts[i + 1]
+        inventory["workers"]["hosts"][name] = {"ansible_host": hosts[i + 1]}
 
     with open(inv_file, "w") as file:
         yaml.dump(inventory, file, default_flow_style=False, allow_unicode=True)
