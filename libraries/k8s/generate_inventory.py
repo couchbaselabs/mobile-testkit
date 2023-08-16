@@ -22,7 +22,7 @@ def generate_inventory_file(pool_file, inv_file):
     hosts = get_hosts(pool_file)
 
     inventory = {
-        "master": {
+        "masters": {
             "hosts": {"master": ""}
         },
         "workers": {
