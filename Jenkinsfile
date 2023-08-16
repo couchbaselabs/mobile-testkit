@@ -5,6 +5,7 @@ pipeline {
             steps {
                 sh '''#!/bin/bash
                 export ANSIBLE_CONFIG=libraries/k8s/ansible.cfg
+                export ANSIBLE_HOST_KEY_CHECKING=False
                 source setup.sh
                 source venv/bin/activate
                 python utilities/mobile_server_pool.py  --reserve-nodes  --nodes-os-type=centos --num-of-nodes=4
