@@ -2,6 +2,7 @@ import os
 import subprocess
 
 import requests
+import socket
 from keywords.TestServerBase import TestServerBase
 from keywords.constants import LATEST_BUILDS, RELEASED_BUILDS
 from keywords.constants import BINARY_DIR
@@ -281,15 +282,22 @@ class TestServerAndroid(TestServerBase):
         """
 
         # Clear adb buffer
+        print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^" + str(logfile_name))
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^IP=" + s.getsockname()[0])
+        s.close()
+
         command = self.set_device_option(["adb", "-s", self.android_id, "logcat", "-c"])
-        subprocess.check_call(command)
+        output = subprocess.check_call(command)
+        log_info("&&&&&&&&&&&&&&&&&&&&&CHECK_CALL=" + output)
 
         # force stop android server before start
         command = self.set_device_option(["adb", "-s", self.android_id, "shell", "am",
                                           "force-stop",
                                           self.installed_package_name])
-        subprocess.check_output(command)
-
+        output = subprocess.check_output(command)
+        log_info("&&&&&&&&&&&&&&&&&&&&&CHECK_OUTPUT=" + output)
         # Start redirecting adb output to the logfile
         self.logfile = open(logfile_name, "w+")
         command = self.set_device_option(["adb", "-s", self.android_id, "logcat"])
