@@ -290,14 +290,14 @@ class TestServerAndroid(TestServerBase):
 
         command = self.set_device_option(["adb", "-s", self.android_id, "logcat", "-c"])
         output = subprocess.check_call(command)
-        log_info("&&&&&&&&&&&&&&&&&&&&&CHECK_CALL=" + output)
+        log_info("&&&&&&&&&&&&&&&&&&&&&CHECK_CALL=" + str(output))
 
         # force stop android server before start
         command = self.set_device_option(["adb", "-s", self.android_id, "shell", "am",
                                           "force-stop",
                                           self.installed_package_name])
         output = subprocess.check_output(command)
-        log_info("&&&&&&&&&&&&&&&&&&&&&CHECK_OUTPUT=" + output)
+        log_info("&&&&&&&&&&&&&&&&&&&&&CHECK_OUTPUT=" + str(output))
         # Start redirecting adb output to the logfile
         self.logfile = open(logfile_name, "w+")
         command = self.set_device_option(["adb", "-s", self.android_id, "logcat"])
