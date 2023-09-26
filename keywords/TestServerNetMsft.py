@@ -167,14 +167,15 @@ class TestServerNetMsft(TestServerWinBase):
         log_info("Stopping TestServer on windows ...")
 
         if self.platform == "net-msft":
-            log_full_path = "{}/{}".format(os.getcwd(), self.logfile)
-            log_info("Pulling logs to {} ...".format(log_full_path))
-            status = self.ansible_runner.run_ansible_playbook(
-                "stop-testserver-windows.yml",
-                extra_vars={
-                    "log_full_path": log_full_path
-                }
-            )
+            status = 0
+            # log_full_path = "{}/{}".format(os.getcwd(), self.logfile)
+            # log_info("Pulling logs to {} ...".format(log_full_path))
+            # status = self.ansible_runner.run_ansible_playbook(
+            #    "stop-testserver-windows.yml",
+            #    extra_vars={
+            #        "log_full_path": log_full_path
+            #    }
+            # )
         elif self.platform == "c-msft":
             status = self.ansible_runner.run_ansible_playbook(
                 "stop-testserver-c-windows.yml"
