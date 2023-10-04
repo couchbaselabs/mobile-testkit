@@ -31,8 +31,10 @@ class TestServerJavaWS(TestServerBase):
 
             # The new distribution method for the support libs starts after release v3.1.1
             if re.compile('^([456789]|3\.[23456789]|3.1.[23456789])').match(self.version):
+                print("***************************************" + self.version)
                 self.cbl_core_lib_name = "couchbase-lite-java-linux-supportlibs-{}".format(self.version_build)
             else:
+                print("+++++++++++++++++++++++++++++++++++++++++++++++++++++OUTSIDE IF")
                 if community_enabled:
                     self.cbl_core_lib_name = "couchbase-lite-java-{}".format(self.version)
                 else:
