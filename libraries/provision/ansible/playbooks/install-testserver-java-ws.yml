@@ -24,6 +24,9 @@
       recurse: True
     register: cblite_jar
 
+  - debug: msg="files= {{ cblite_jar.files }}"
+  - debug: msg="length={{ cblite_jar.files | length }}" 
+
   - name: Remove collected couchbase lite files
     file:
       path: "{{ item.path }}"
