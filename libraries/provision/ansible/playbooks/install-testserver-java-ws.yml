@@ -76,9 +76,9 @@
   
   - name: remove cblite2 filed cached at tomcat root
     file:
-      path: "{{ item.path }}"
+      path: "{{ item }}"
       state: absent
-    with_items: "{{ cblite2_files.files }}"
+    with_items: "{{ cblite2_files.files.path }}"
 
   - name: Collect CouchbaseLite jar and supporting files in package to be installed
     find:
