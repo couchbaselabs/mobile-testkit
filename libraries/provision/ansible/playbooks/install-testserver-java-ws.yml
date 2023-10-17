@@ -24,6 +24,8 @@
       recurse: True
     register: cblite_jar
 
+  - debug: msg="************************** {{ cblite_jar.files | regex_search('path:*,?') }}"
+
   - name: Remove collected couchbase lite files
     file:
       path: "{{ item | regex_search('path:*,?') }}"
