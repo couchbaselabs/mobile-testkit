@@ -25,7 +25,8 @@
     register: cblite_jar
 
   - debug: msg="files= {{ cblite_jar.files }}"
-  - debug: msg="length={{ cblite_jar.files | length }}" 
+  - debug: msg="0={{ cblite_jar.files[0].path }}" 
+  - debug: msg="1={{ cblite_jar.files[1].path }}" 
 
   - name: Remove collected couchbase lite files
     file:
