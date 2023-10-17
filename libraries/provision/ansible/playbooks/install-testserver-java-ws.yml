@@ -30,7 +30,7 @@
 
   - name: Remove collected couchbase lite files
     file:
-      path: "{{ item }}"
+      path: "{{ item[path] }}"
       state: absent
     with_items: "{{ cblite_jar.files }}"
 
