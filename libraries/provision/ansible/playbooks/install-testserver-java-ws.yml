@@ -74,11 +74,13 @@
       recurse: True
     register: cblite2_files
   
+  - debug: msg="******************** {{ cblite2_files.files.path}} "
+
   - name: remove cblite2 filed cached at tomcat root
     file:
-      path: "{{ item }}"
+      path: "{{ item.path }}"
       state: absent
-    with_items: "{{ cblite2_files.files.path }}"
+    with_items: "{{ cblite2_files.files }}"
 
   - name: Collect CouchbaseLite jar and supporting files in package to be installed
     find:
