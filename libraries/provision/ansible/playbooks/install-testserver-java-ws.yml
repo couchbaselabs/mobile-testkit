@@ -32,7 +32,7 @@
     file:
       path: "{{ item }}"
       state: absent
-    with_items: "{{ cblite_jar.files[0].path }}"
+    with_items: "{{ cblite_jar.files[0] }}"
 
   - name: Remove TestServer webapp files
     file:
