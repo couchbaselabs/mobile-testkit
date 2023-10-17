@@ -28,7 +28,7 @@
     file:
       path: "{{ item | regex_search('path:*,?') }}"
       state: absent
-    loop: "{{ cblite_jar.files }}"
+    with_items: "{{ cblite_jar.files }}"
 
   - name: Remove TestServer webapp files
     file:
