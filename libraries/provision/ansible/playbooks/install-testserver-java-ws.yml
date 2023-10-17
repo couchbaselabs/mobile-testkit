@@ -24,7 +24,7 @@
       recurse: True
     register: cblite_jar
 
-  - debug: msg="files= {{ cblite_jar.files }}"
+  - debug: msg="files= {{ cblite_jar.files.path }}"
   - debug: msg="0={{ cblite_jar.files[0].path }}" 
   - debug: msg="1={{ cblite_jar.files[1].path }}" 
 
@@ -73,8 +73,6 @@
       patterns: '*.cblite2'
       recurse: True
     register: cblite2_files
-  
-  - debug: msg="******************** {{ cblite2_files.files.path}} "
 
   - name: remove cblite2 filed cached at tomcat root
     file:
