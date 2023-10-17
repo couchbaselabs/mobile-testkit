@@ -69,7 +69,7 @@
       paths: "{{ ansible_env.CATALINA_BASE }}"
       patterns: '*.cblite2'
       recurse: True
-    register: cblite2_files | length > 0
+    register: cblite2_files
   
   - name: remove cblite2 filed cached at tomcat root
     file:
