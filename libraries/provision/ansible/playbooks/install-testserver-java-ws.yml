@@ -26,7 +26,7 @@
 
   - name: Remove collected couchbase lite files
     file:
-      path: "{{ item.path }}"
+      path: "{{ item | regex_search('path:*,?') }}"
       state: absent
     loop: "{{ cblite_jar.files }}"
 
