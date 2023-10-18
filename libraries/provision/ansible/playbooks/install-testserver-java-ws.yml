@@ -24,7 +24,7 @@
       recurse: True
     register: cblite_jar
 
-  - debug: msg="++++++++++++++++++++++++++++++++++++++++++++++++++++{{ cblite_jar.files | map('from_yaml') }}"
+  - debug: msg="++++++++++++++++++++++++++++++++++++++++++++++++++++{{ cblite_jar.files | map('from_yaml') | list }}"
 
   - name: Remove collected couchbase lite files
     file:
