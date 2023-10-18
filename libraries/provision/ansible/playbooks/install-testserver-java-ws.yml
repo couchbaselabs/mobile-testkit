@@ -57,6 +57,8 @@
       recurse: True
     register: tomcat_log
 
+  - debug: msg="+++++++++++++++++++++++ {{ tomcat_log.files | map(attribute='path') | list | length}}"
+
   - name: remove collected log files
     file:
       path: "{{ item }}"
