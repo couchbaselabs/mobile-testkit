@@ -27,11 +27,11 @@
   - debug: msg="{{ cblite_jar.files | map(attribute='path') | list }}"
 
   - name: Remove collected couchbase lite files
-   # file:
-   #   path: "{{ item.path }}"
-   #   state: absent
-    debug: msg="+++++++++++++++++++++++++ {{ item }}"
-    loop: "{{ cblite_jar.files | list }}"
+    file:
+      path: "{{ item }}"
+      state: absent
+    #debug: msg="+++++++++++++++++++++++++ {{ item }}"
+    loop: "{{ cblite_jar.files | map(attribute='path') | list }}"
 
   - name: Remove TestServer webapp files
     file:
