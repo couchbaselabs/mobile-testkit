@@ -28,7 +28,7 @@
    # file:
    #   path: "{{ item.path }}"
    #   state: absent
-    debug: msg="+++++++++++++++++++++++++ {{ item | type_debug }}"
+    debug: msg="+++++++++++++++++++++++++ {{ item | split(',') }}"
     with_items: "{{ cblite_jar.files }}"
 
   - name: Remove TestServer webapp files
