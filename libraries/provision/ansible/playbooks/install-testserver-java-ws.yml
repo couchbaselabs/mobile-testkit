@@ -24,12 +24,14 @@
       recurse: True
     register: cblite_jar
 
+  - debug: msg="cblite_jar.files[0]"
+
   - name: Remove collected couchbase lite files
    # file:
    #   path: "{{ item.path }}"
    #   state: absent
-    debug: msg="+++++++++++++++++++++++++ {{ item | split(',') }}"
-    with_items: "{{ cblite_jar.files }}"
+    debug: msg="+++++++++++++++++++++++++ {{ item }}"
+    with_items: "{{ cblite_jar.files | regex_search('\'path\'') }}"
 
   - name: Remove TestServer webapp files
     file:
