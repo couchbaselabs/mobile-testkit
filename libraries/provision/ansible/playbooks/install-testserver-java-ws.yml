@@ -26,9 +26,9 @@
 
   - name: Remove collected couchbase lite files
     file:
-      path: "{{ item.path }}"
+      path: "{{ item }}"
       state: absent
-    with_items: "{{ cblite_jar.files }}"
+    with_items: "{{ cblite_jar.files | map(attribute='path') | list }}"
 
   - name: Remove TestServer webapp files
     file:
@@ -59,9 +59,9 @@
 
   - name: remove collected log files
     file:
-      path: "{{ item.path }}"
+      path: "{{ item }}"
       state: absent
-    with_items: "{{ tomcat_log.files }}"
+    with_items: "{{ tomcat_log.files | map(attribute='path') | list }}"
 
   - name: Remove cblite2 files
     find:
@@ -69,12 +69,12 @@
       patterns: '*.cblite2'
       recurse: True
     register: cblite2_files
-  
+
   - name: remove cblite2 filed cached at tomcat root
     file:
-      path: "{{ item.path }}"
+      path: "{{ item }}"
       state: absent
-    with_items: "{{ cblite2_files.files }}"
+    with_items: "{{ cblite2_files.files | map(attribute='path') | list }}"
 
   - name: Collect CouchbaseLite jar and supporting files in package to be installed
     find:
