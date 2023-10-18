@@ -620,7 +620,7 @@ def params_from_base_suite_setup(request):
         repl = repl_obj.create(repl_config)
         repl_obj.start(repl)
         # max_times is 3000 to give more time to replicate travel sample as it is huge
-        repl_obj.wait_until_replicator_idle(repl, max_times=3000, err_check=False)
+        repl_obj.wait_until_replicator_idle(repl, max_times=3000)
         log_info("Stopping replication")
         repl_obj.stop(repl)
     if prometheus_enable:
