@@ -28,9 +28,9 @@
 
   - name: Remove collected couchbase lite files
     file:
-      path: "{{ item | regex_search('path:*,?') }}"
+      path: "{{ item.path }}"
       state: absent
-    with_items: "{{ cblite_jar.files }}"
+    with_items: "{{ cblite_jar.files | map('from_yaml') | list }}"
 
   - name: Remove TestServer webapp files
     file:
