@@ -1,5 +1,4 @@
 import os
-import re
 import time
 
 from keywords.TestServerBase import TestServerBase
@@ -28,29 +27,19 @@ class TestServerJavaWS(TestServerBase):
         if self.build is None:
             self.package_name = "CBLTestServer-Java-WS-{}-{}".format(self.build_type, self.version)
             self.download_url = "{}/couchbase-lite-java/{}/{}.war".format(RELEASED_BUILDS, self.version, self.package_name)
-
-            # The new distribution method for the support libs starts after release v3.1.1
-            if re.compile('^([456789]|3\.[23456789]|3.1.[23456789])').match(self.version):  # noqa: W605
-                self.cbl_core_lib_name = "couchbase-lite-java-linux-supportlibs-{}".format(self.version_build)
+            if community_enabled:
+                self.cbl_core_lib_name = "couchbase-lite-java-{}".format(self.version)
             else:
-                if community_enabled:
-                    self.cbl_core_lib_name = "couchbase-lite-java-{}".format(self.version)
-                else:
-                    self.cbl_core_lib_name = "couchbase-lite-java-enterprise-{}".format(self.version)
+                self.cbl_core_lib_name = "couchbase-lite-java-ee-{}".format(self.version)
 
             self.download_corelib_url = "{}/couchbase-lite-java/{}/{}/{}.zip".format(RELEASED_BUILDS, self.version, self.build, self.cbl_core_lib_name)
         else:
             self.package_name = "CBLTestServer-Java-WS-{}-{}".format(self.version_build, self.build_type)
             self.download_url = "{}/couchbase-lite-java/{}/{}/{}.war".format(LATEST_BUILDS, self.version, self.build, self.package_name)
-
-            # The new distribution method for the support libs starts after release v3.1.1
-            if re.compile('^([456789]|3\.[23456789]|3.1.[23456789])').match(self.version):  # noqa: W605
-                self.cbl_core_lib_name = "couchbase-lite-java-linux-supportlibs-{}-{}".format(self.version, self.build)
+            if community_enabled:
+                self.cbl_core_lib_name = "couchbase-lite-java-{}-{}".format(self.version, self.build)
             else:
-                if community_enabled:
-                    self.cbl_core_lib_name = "couchbase-lite-java-{}-{}".format(self.version, self.build)
-                else:
-                    self.cbl_core_lib_name = "couchbase-lite-java-enterprise-{}-{}".format(self.version, self.build)
+                self.cbl_core_lib_name = "couchbase-lite-java-ee-{}-{}".format(self.version, self.build)
             self.download_corelib_url = "{}/couchbase-lite-java/{}/{}/{}.zip".format(LATEST_BUILDS, self.version, self.build, self.cbl_core_lib_name)
 
         self.build_name = "TestServer-java-WS-{}-{}".format(self.build_type, self.version_build)
@@ -118,7 +107,7 @@ class TestServerJavaWS(TestServerBase):
         """
         1. Downloads CBLTestServer-Java-WS-2.7.0-94-enterprise.war package
         from latestbuild to the remote Linux or Windows machine
-        2. Downloads CouchbaseLite Java Core library couchbase-lite-java-enterprise-2.7.0-94.zip,
+        2. Downloads CouchbaseLite Java Core library couchbase-lite-java-ee-2.7.0-94.zip,
         extracts the package and removes the zip
         :params: testserver_download_url, cblite_download_url, war_package_name, core_package_name, build_name
         :return: nothing
