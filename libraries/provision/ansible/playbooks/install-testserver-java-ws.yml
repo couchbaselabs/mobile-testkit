@@ -85,10 +85,9 @@
 
   - name: Copy CouchbaseLite jar files to Tomcat
     copy: 
-      src: "{{ item }}"
+      src: "/root/javatestserver/{{ core_package_name }}/lib/*.jar"
       dest: "/opt/tomcat/lib"
       remote_src: yes
-    with_items: "{{ new_cblite_jar.files | map(attribute='path') | list }}"
 
   - name: Copy TestServer war files to Tomcat
     copy:
