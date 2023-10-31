@@ -85,7 +85,7 @@
 
   - name: Copy CouchbaseLite jar files to Tomcat
     copy: 
-      src: "/root/javatestserver/{{ core_package_name }}/lib/*.jar"
+      src: "/root/javatestserver/{{ core_package_name }}/lib"
       dest: "/opt/tomcat/lib"
       remote_src: yes
 
