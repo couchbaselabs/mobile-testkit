@@ -76,16 +76,21 @@
       state: absent
     with_items: "{{ cblite2_files.files | map(attribute='path') | list }}"
 
-  - name: Collect CouchbaseLite jar and supporting files in package to be installed
-    find:
-      paths: "/root/javatestserver/{{ core_package_name }}/lib"
-      patterns: "*.jar"
-      recurse: True
-    register: new_cblite_jar
+  - name: Copy CouchbaseLite jar files to Tomcat
+    copy: 
+      src: "/root/javatestserver/{{ core_package_name }}/lib/couchbase-lite-java-ee-3.0.15-2.jar"
+      dest: "/opt/tomcat/lib"
+      remote_src: yes
 
   - name: Copy CouchbaseLite jar files to Tomcat
     copy: 
-      src: "/root/javatestserver/{{ core_package_name }}/lib"
+      src: "/root/javatestserver/{{ core_package_name }}/lib/okhttp-3.14.7.jar"
+      dest: "/opt/tomcat/lib"
+      remote_src: yes
+
+  - name: Copy CouchbaseLite jar files to Tomcat
+    copy: 
+      src: "/root/javatestserver/{{ core_package_name }}/lib/okio-1.17.2.jar"
       dest: "/opt/tomcat/lib"
       remote_src: yes
 
