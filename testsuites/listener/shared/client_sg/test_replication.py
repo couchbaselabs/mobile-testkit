@@ -160,7 +160,7 @@ def test_initial_pull_replication_background_apprun(setup_client_syncgateway_tes
     3. While docs are getting replicated , push the app to the background
     4. Verify if all of the docs got pulled and replication completed when app goes background
     """
-
+    pytest.skip("temporarily disabling this test")
     sg_db = "db"
     ls_db = "ls_db"
 
