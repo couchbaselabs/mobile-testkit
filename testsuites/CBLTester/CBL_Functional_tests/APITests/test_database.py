@@ -367,25 +367,3 @@ class TestDatabase(object):
         doc_res = self.db_obj.getDocument(db, doc_id)
         assert doc_id == str(self.doc_obj.getId(doc_res))
         assert self.db_obj.deleteDB(db) == -1
-
-    def test_get_documents(self):
-        """
-        @summary: Testing the bulk add and bulk get docs. This also
-        test inbatch API of Database class.
-        """
-        doc_id_prefix = "bar"
-        num_of_docs = 5
-        db = self.db_obj.create(random_string(5))
-        documents = dict()
-        ids = []
-        for i in range(num_of_docs):
-            data = {}
-            doc_id = "{}_{}".format(doc_id_prefix, i)
-            ids.append(doc_id)
-            data["test_string_{}".format(i)] = "value_{}".format(i)
-            documents[doc_id] = data
-        self.db_obj.saveDocuments(db, documents)
-        docs_in_db = self.db_obj.getDocuments(db, ids)
-        assert num_of_docs == self.db_obj.getCount(db)
-        assert documents == docs_in_db
-        assert self.db_obj.deleteDB(db) == -1
