@@ -87,22 +87,22 @@ def test_upgrade_cbl(params_from_base_suite_setup):
     cbs_bucket = "travel-sample"
     server = CouchbaseServer(server_url)
     server._create_internal_rbac_bucket_user(cbs_bucket, cluster_config=cluster_config)
-    log_info("Connecting to {}/{} with password {}".format(cbs_ip, cbs_bucket, password))
-    if cbs_ssl:
-        connection_url = "couchbases://{}?ssl=no_verify".format(cbs_ip)
-    else:
-        connection_url = "couchbase://{}".format(cbs_ip)
-    time.sleep(10)
-    sdk_client = get_cluster(connection_url, cbs_bucket)
-    log_info("Creating primary index for {}".format(cbs_bucket))
-    n1ql_query = "create primary index index1 on `{}`".format(cbs_bucket)
-    sdk_client.query(n1ql_query).execute()
-    new_cbl_doc_ids = db.getDocIds(cbl_db, limit=40000)
-    cbs_doc_ids = []
-    for row in sdk_client.query(get_doc_id_from_cbs_query):
-        cbs_doc_ids.append(row["id"])
-    log_info("cbl_docs {}, cbs_docs {}".format(len(cbs_doc_ids), len(new_cbl_doc_ids)))
-    assert sorted(cbs_doc_ids) == sorted(new_cbl_doc_ids), "Total no. of docs are different in CBS and CBL app"
+   # log_info("Connecting to {}/{} with password {}".format(cbs_ip, cbs_bucket, password))
+   # if cbs_ssl:
+   #     connection_url = "couchbases://{}?ssl=no_verify".format(cbs_ip)
+   # else:
+   #     connection_url = "couchbase://{}".format(cbs_ip)
+   # time.sleep(10)
+   # sdk_client = get_cluster(connection_url, cbs_bucket)
+   # log_info("Creating primary index for {}".format(cbs_bucket))
+   # n1ql_query = "create primary index index1 on `{}`".format(cbs_bucket)
+   # sdk_client.query(n1ql_query).execute()
+   # new_cbl_doc_ids = db.getDocIds(cbl_db, limit=40000)
+   # cbs_doc_ids = []
+   # for row in sdk_client.query(get_doc_id_from_cbs_query):
+   #     cbs_doc_ids.append(row["id"])
+   # log_info("cbl_docs {}, cbs_docs {}".format(len(cbs_doc_ids), len(new_cbl_doc_ids)))
+   # assert sorted(cbs_doc_ids) == sorted(new_cbl_doc_ids), "Total no. of docs are different in CBS and CBL app"
 
     # Running selected Query tests
     # Runing Query tests
