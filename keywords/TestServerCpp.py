@@ -117,7 +117,7 @@ class TestServerCpp(TestServerBase):
         if self.platform == "c-macosx":
             home_location = "/Users/couchbase"
         elif self.platform == "c-rpi":
-            home_location = "/home/pi"
+            home_location = "/root"
         else:
             home_location = "/root"
         if self.platform == "c-macosx":
