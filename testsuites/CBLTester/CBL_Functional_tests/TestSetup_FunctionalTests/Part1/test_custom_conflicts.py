@@ -9,7 +9,7 @@ from keywords.utils import log_info, random_string
 from libraries.testkit.cluster import Cluster
 from keywords.MobileRestClient import MobileRestClient
 
-from testsuites.CBLTester.CBL_Functional_tests.TestSetup_FunctionalTests.test_delta_sync import property_updater
+from testsuites.CBLTester.CBL_Functional_tests.TestSetup_FunctionalTests.Part1.test_delta_sync import property_updater
 from keywords.constants import RBAC_FULL_ADMIN
 
 
