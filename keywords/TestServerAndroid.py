@@ -195,7 +195,7 @@ class TestServerAndroid(TestServerBase):
                 output = subprocess.check_output(command)
                 break
             except Exception as e:
-                log_info("================================" + str(e.message))
+                log_info("================================" + str(e.stderr))
                 if "INSTALL_FAILED_ALREADY_EXISTS" in e.args[0] \
                    or "INSTALL_FAILED_UPDATE_INCOMPATIBLE" in e.message:
                     # Apk may be installed, remove and retry install
