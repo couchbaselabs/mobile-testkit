@@ -189,23 +189,22 @@ class TestServerAndroid(TestServerBase):
         while True:
             if count > max_retries:
                 raise LiteServError(".apk install failed!")
-            try:
-                command = self.set_device_option(["adb", "-s", self.android_id, "install",
+           # try:
+            command = self.set_device_option(["adb", "-s", self.android_id, "install",
                                                   "-r", apk_path])
-                output = subprocess.check_output(command)
-                break
-            except Exception as e:
-                log_info("================================" + str(e.stderr))
-                if "INSTALL_FAILED_ALREADY_EXISTS" in e.args[0] \
-                   or "INSTALL_FAILED_UPDATE_INCOMPATIBLE" in e.message:
-                    # Apk may be installed, remove and retry install
-                    log_info("Trying to remove....")
-                    self.remove()
-                    count += 1
-                    continue
-                else:
-                    # Install succeeded, continue
-                    break
+            output = subprocess.check_output(command)
+            #break
+           # except Exception as e:
+            #if "INSTALL_FAILED_ALREADY_EXISTS" in e.args[0] \
+            #    or "INSTALL_FAILED_UPDATE_INCOMPATIBLE" in e.message:
+                # Apk may be installed, remove and retry install
+            #    log_info("Trying to remove....")
+            #    self.remove()
+            #    count += 1
+            #    continue
+            #else:
+                # Install succeeded, continue
+            #    break
         command = self.set_device_option(["adb", "-s", self.android_id, "shell", "pm", "list",
                                           "packages"])
         output = subprocess.check_output(command)
