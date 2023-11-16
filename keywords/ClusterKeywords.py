@@ -244,7 +244,8 @@ class ClusterKeywords:
             "2.8.4": "9",
             "3.0.5": "8",
             "3.0.7": "3",
-            "3.1.0": "592"
+            "3.1.0": "592",
+            "3.1.2": "1"
         }
         if sg_build is None:
             expected_sync_gateway_version = "{}-{}".format(expected_sync_gateway_version,
