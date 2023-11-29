@@ -81,7 +81,7 @@ def install_couchbase_server(cluster_config, couchbase_server_config, cbs_platfo
 
     else:
         status = ansible_runner.run_ansible_playbook(
-            "install-couchbase-server-package-centos.yml", extra_vars)
+            "install-couchbase-server-package.yml", extra_vars)
 
     if status != 0:
         raise ProvisioningError("Failed to install Couchbase Server")
