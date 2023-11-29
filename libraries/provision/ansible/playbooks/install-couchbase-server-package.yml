@@ -50,6 +50,12 @@
 
     - name: Disable firewall
       shell: iptables -F
+      when: ansible_distribution == "CentOS"
+
+
+    - name: Disable Debian firewall
+      shell:  nft flush ruleset
+      when: ansible_distribution == "Debian"
 
     - name: Install Couchbase Server on CentOS
       yum: name=/tmp/{{ couchbase_server_package_name }} state=present
