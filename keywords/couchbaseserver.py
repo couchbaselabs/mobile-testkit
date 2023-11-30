@@ -965,7 +965,8 @@ class CouchbaseServer:
             raise Exception(
                 "Unexpected couchbase server version: {}".format(version))
         package_name = self.get_package_name(version, build_number, cbs_platform, cbs_ce=cbs_ce)
-
+        print("Server package to be downloaded: " + str(package_name))
+        
         return base_url, package_name
 
     def resolve_cb_mobile_url(self, version, cbs_platform="centos7", cbs_ce=False):
