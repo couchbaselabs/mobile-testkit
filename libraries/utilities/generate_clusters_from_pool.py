@@ -394,6 +394,7 @@ def write_config(config, pool_file, use_docker, sg_windows, sg_accel_windows, sg
 
         # Add support for python3 in ansible
         if cbs_platform == "centos8" or cbs_platform == "debian":
+            print("+++++++++++++++++++++++++++++++SETTING ansible_python_interpreter")
             f.write("\n\n[couchbase_servers:vars]\n")
             f.write("ansible_python_interpreter=/usr/bin/python3")
 
