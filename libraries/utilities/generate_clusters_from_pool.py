@@ -392,7 +392,7 @@ def write_config(config, pool_file, use_docker, sg_windows, sg_accel_windows, sg
             f.write("ansible_connection=winrm\n")
             f.write("ansible_winrm_server_cert_validation=ignore\n")
 
-        print("+++++++++++++++++++++++++++++++BEFORE ansible_python_interpreter")
+        print("+++++++++++++++++++++++++++++++BEFORE ansible_python_interpreter" + cbs_platform)
         # Add support for python3 in ansible
         if cbs_platform == "centos8" or cbs_platform == "debian":
             print("+++++++++++++++++++++++++++++++SETTING ansible_python_interpreter")
