@@ -393,17 +393,9 @@ def write_config(config, pool_file, use_docker, sg_windows, sg_accel_windows, sg
             f.write("ansible_winrm_server_cert_validation=ignore\n")
 
         # Add support for python3 in ansible
-        if cbs_platform == "centos8":
-            f.write("\n\n[couchbase_servers:vars]\n")
-            f.write("ansible_python_interpreter=/usr/bin/python3")
+        f.write("\n\n[couchbase_servers:vars]\n")
+        f.write("ansible_python_interpreter=/usr/bin/python3")
 
-        if sg_platform == "centos8":
-            f.write("\n\n[sync_gateways:vars]\n")
-            f.write("ansible_python_interpreter=/usr/bin/python3")
-
-        if cbs_platform == "centos8" and sg_platform == "centos8":
-            f.write("\n\n[pool:vars]\n")
-            f.write("ansible_python_interpreter=/usr/bin/python3")
 
         log_info("Generating {}.json".format(config.name))
 
