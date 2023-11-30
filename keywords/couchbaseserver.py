@@ -913,7 +913,7 @@ class CouchbaseServer:
         else:
             edition = "enterprise"
 
-        if "ubuntu" in cbs_platform:
+        if ("ubuntu" or "debian") in cbs_platform:
             if version.startswith("3.1.6"):
                 return "couchbase-server-{}-{}-{}.x86_64.deb".format(edition, version, cbs_platform)
             elif version.startswith("3.1"):
