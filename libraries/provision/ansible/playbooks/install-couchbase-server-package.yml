@@ -57,9 +57,9 @@
       shell:  nft flush ruleset
       when: ansible_distribution == "Debian"
 
-    - name: Install Couchbase Server on CentOS
-      yum: name=/tmp/{{ couchbase_server_package_name }} state=present
-      when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon"
+  #  - name: Install Couchbase Server on CentOS
+  #    yum: name=/tmp/{{ couchbase_server_package_name }} state=present
+  #    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon"
 
     - name: Install Couchbase Server on Ubuntu
       apt: deb=/tmp/{{ couchbase_server_package_name }} state=present
