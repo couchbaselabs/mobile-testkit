@@ -1004,6 +1004,7 @@ class CouchbaseServer:
         build_number = released_versions[version]
         base_url = "http://cbmobile-packages.s3.amazonaws.com"
         package_name = self.get_package_name(version, build_number, cbs_platform, cbs_ce=cbs_ce)
+        print("Server package to be downloaded: " + str(package_name))
         return base_url, package_name
 
     def upgrade_server(self, cluster_config, server_version_build, cbs_platform, target=None, toy_build=None):
