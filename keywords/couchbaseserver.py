@@ -918,7 +918,7 @@ class CouchbaseServer:
             elif version.startswith("3.1"):
                 return "couchbase-server-{}_{}_x86_64_{}-{}-rel.deb".format(edition, cbs_platform, version, build_number)
             else:
-                return "couchbase-server-{}_{}-{}-{}_amd64.deb".format(edition, version, build_number, cbs_platform)
+                return "couchbase-server-{}_{}-{}-{}10_amd64.deb".format(edition, version, build_number, cbs_platform)
         elif "centos" in cbs_platform:
             if version.startswith("3.1.6"):
                 return "couchbase-server-{}-{}-{}.x86_64.rpm".format(edition, version, cbs_platform)
@@ -964,7 +964,6 @@ class CouchbaseServer:
             raise Exception(
                 "Unexpected couchbase server version: {}".format(version))
         package_name = self.get_package_name(version, build_number, cbs_platform, cbs_ce=cbs_ce)
-        print("Server package to be downloaded: " + str(package_name))
         
         return base_url, package_name
 
@@ -1004,7 +1003,6 @@ class CouchbaseServer:
         build_number = released_versions[version]
         base_url = "http://cbmobile-packages.s3.amazonaws.com"
         package_name = self.get_package_name(version, build_number, cbs_platform, cbs_ce=cbs_ce)
-        print("Server package to be downloaded: " + str(package_name))
         return base_url, package_name
 
     def upgrade_server(self, cluster_config, server_version_build, cbs_platform, target=None, toy_build=None):
