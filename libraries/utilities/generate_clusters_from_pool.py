@@ -26,7 +26,7 @@ class ClusterDef:
 
 
 def write_config(config, pool_file, use_docker, sg_windows, sg_accel_windows, sg_platform="centos7",
-                 ipv6=False, x509_certs=False, cbs_platform="debian", debug=False):
+                 ipv6=False, x509_certs=False, cbs_platform="centos7", debug=False):
 
     connection_string = ""
     if use_docker:
@@ -392,10 +392,8 @@ def write_config(config, pool_file, use_docker, sg_windows, sg_accel_windows, sg
             f.write("ansible_connection=winrm\n")
             f.write("ansible_winrm_server_cert_validation=ignore\n")
 
-        f.write("ansible_python_interpreter=/usr/bin/python3")
         # Add support for python3 in ansible
-        if cbs_platform == "centos8" or cbs_platform == "debian":
-            print("+++++++++++++++++++++++++++++++SETTING ansible_python_interpreter")
+        if cbs_platform == "centos8":
             f.write("\n\n[couchbase_servers:vars]\n")
             f.write("ansible_python_interpreter=/usr/bin/python3")
 
