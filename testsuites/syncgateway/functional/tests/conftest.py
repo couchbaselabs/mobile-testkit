@@ -305,7 +305,6 @@ def params_from_base_suite_setup(request):
         cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, mode)
         if sg_lb:
             cluster_config = "{}/base_lb_{}".format(CLUSTER_CONFIGS_DIR, mode)
-    cluster_config = "{}/1cb_1sg_1lb".format(CLUSTER_CONFIGS_DIR)
     log_info("Using '{}' config!".format(cluster_config))
 
     if sg_ssl:
