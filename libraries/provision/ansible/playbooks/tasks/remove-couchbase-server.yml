@@ -46,6 +46,10 @@
   ignore_errors: yes
   when: ansible_distribution == 'Ubuntu' or ansible_distribution == 'Debian'
 
+- name: Delete residual prerm file for Debian
+  shell: rm -f /var/lib/dpkg/info/couchbase-server.prerm
+  when: ansible_distribution == "Debian"
+
 # Kill any processes that may be hanging around
 - name: COUCHBASE SERVER | Kill epmd
   become: yes
