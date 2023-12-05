@@ -108,7 +108,6 @@ def generate_x509_certs(cluster_config, bucket_name, sg_platform):
     copy_tree(src, certs_dir)
     os.chdir(certs_dir)
     cbs_nodes = [node["ip"] for node in cluster["couchbase_servers"]]
-    print("************************************************************************ I AM HERE")
     with open("openssl-san.cnf", "a+") as f:
         for item in range(len(cbs_nodes)):
             if "couchbase" not in cbs_nodes[item]:
