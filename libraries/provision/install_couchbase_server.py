@@ -81,9 +81,8 @@ def install_couchbase_server(cluster_config, couchbase_server_config, cbs_platfo
             "install-couchbase-server-package-centos.yml", extra_vars)
 
     else:
-        if "debian" in cbs_platform.lower():
-            extra_vars["ansible_python_interpreter"] = "/usr/bin/python3"
-            extra_vars["ansible_distribution"] =  cbs_platform.capitalize()
+        extra_vars["ansible_python_interpreter"] = "/usr/bin/python3"
+        extra_vars["ansible_distribution"] =  cbs_platform.capitalize()
         status = ansible_runner.run_ansible_playbook(
             "install-couchbase-server-package.yml", extra_vars)
 
