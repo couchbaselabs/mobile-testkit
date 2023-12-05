@@ -72,16 +72,18 @@ def install_couchbase_server(cluster_config, couchbase_server_config, cbs_platfo
         "couchbase_server_package_base_url": server_baseurl,
         "couchbase_server_package_name": server_package_name,
         "ipv6_enabled": cluster["environment"]["ipv6_enabled"],
-        "cbs_dp_preview": cluster["environment"]["cbs_developer_preview"],
-        "ansible_python_interpreter": "/usr/bin/python3",
-        "ansible_distribution": cbs_platform.capitalize()
+        "cbs_dp_preview": cluster["environment"]["cbs_developer_preview"]
     }
+
     if "centos" in cbs_platform.lower():
         log_info("***** Install CB server on centOS *****")
         status = ansible_runner.run_ansible_playbook(
             "install-couchbase-server-package-centos.yml", extra_vars)
 
     else:
+        if "debian" in cbs_platform.lower():
+            extra_vars["ansible_python_interpreter"] = "/usr/bin/python3"
+            extra_vars["ansible_distribution"] =  cbs_platform.capitalize()
         status = ansible_runner.run_ansible_playbook(
             "install-couchbase-server-package.yml", extra_vars)
 
