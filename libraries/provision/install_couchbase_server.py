@@ -76,7 +76,6 @@ def install_couchbase_server(cluster_config, couchbase_server_config, cbs_platfo
     }
 
     if "centos" in cbs_platform.lower():
-        log_info("***** Install CB server on centOS *****")
         status = ansible_runner.run_ansible_playbook(
             "install-couchbase-server-package-centos.yml", extra_vars)
 
