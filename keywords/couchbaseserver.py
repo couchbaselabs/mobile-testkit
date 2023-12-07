@@ -912,14 +912,13 @@ class CouchbaseServer:
             edition = "community"
         else:
             edition = "enterprise"
-
-        if "ubuntu" in cbs_platform:
+        if "ubuntu" in cbs_platform or "debian" in cbs_platform:
             if version.startswith("3.1.6"):
                 return "couchbase-server-{}-{}-{}.x86_64.deb".format(edition, version, cbs_platform)
             elif version.startswith("3.1"):
                 return "couchbase-server-{}_{}_x86_64_{}-{}-rel.deb".format(edition, cbs_platform, version, build_number)
             else:
-                return "couchbase-server-{}_{}-{}-{}_amd64.deb".format(edition, version, build_number, cbs_platform)
+                return "couchbase-server-{}_{}-{}-{}10_amd64.deb".format(edition, version, build_number, cbs_platform)
         elif "centos" in cbs_platform:
             if version.startswith("3.1.6"):
                 return "couchbase-server-{}-{}-{}.x86_64.rpm".format(edition, version, cbs_platform)
@@ -959,11 +958,12 @@ class CouchbaseServer:
             base_url = "{}/neo/{}".format(cbnas_base_url, build_number)
         elif version.startswith("7.2"):
             base_url = "{}/neo/{}".format(cbnas_base_url, build_number)
+        elif version.startswith("7.6"):
+            base_url = "{}/trinity/{}".format(cbnas_base_url, build_number)
         else:
             raise Exception(
                 "Unexpected couchbase server version: {}".format(version))
         package_name = self.get_package_name(version, build_number, cbs_platform, cbs_ce=cbs_ce)
-
         return base_url, package_name
 
     def resolve_cb_mobile_url(self, version, cbs_platform="centos7", cbs_ce=False):

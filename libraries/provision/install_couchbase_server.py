@@ -74,14 +74,17 @@ def install_couchbase_server(cluster_config, couchbase_server_config, cbs_platfo
         "ipv6_enabled": cluster["environment"]["ipv6_enabled"],
         "cbs_dp_preview": cluster["environment"]["cbs_developer_preview"]
     }
+
     if "centos" in cbs_platform.lower():
-        log_info("***** Install CB server on centOS *****")
         status = ansible_runner.run_ansible_playbook(
             "install-couchbase-server-package-centos.yml", extra_vars)
 
     else:
+        if "debian" in cbs_platform.lower():
+            extra_vars["ansible_python_interpreter"] = "/usr/bin/python3"
+            extra_vars["ansible_distribution"] = cbs_platform.capitalize()
         status = ansible_runner.run_ansible_playbook(
-            "install-couchbase-server-package-centos.yml", extra_vars)
+            "install-couchbase-server-package.yml", extra_vars)
 
     if status != 0:
         raise ProvisioningError("Failed to install Couchbase Server")
@@ -106,7 +109,7 @@ if __name__ == "__main__":
 
     try:
         cluster_conf = os.environ["CLUSTER_CONFIG"]
-    except KeyError as ke:
+    except KeyError:
         print("Make sure CLUSTER_CONFIG is defined and pointing to the configuration you would like to provision")
         raise KeyError("CLUSTER_CONFIG not defined. Unable to provision cluster.")
 
