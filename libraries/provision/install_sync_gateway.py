@@ -93,7 +93,7 @@ class SyncGatewayConfig:
             sg_platform_extension = "msi"
         elif "centos" in sg_platform:
             sg_platform_extension = "rpm"
-        elif ("ubuntu" or "debian") in sg_platform:
+        elif ("ubuntu" in sg_platform) or ("debian" in sg_platform):
             sg_platform_extension = "deb"
         elif "macosarm" in sg_platform:
             sg_platform_extension = "zip"
@@ -109,7 +109,7 @@ class SyncGatewayConfig:
             sa_platform_extension = "msi"
         elif "centos" in sa_platform:
             sa_platform_extension = "rpm"
-        elif ("ubuntu" or "debian") in sa_platform:
+        elif ("ubuntu" in sa_platform) or ("debian" in sa_platform):
             sa_platform_extension = "deb"
         elif "macosarm" in sa_platform:
             sa_platform_extension = "zip"
