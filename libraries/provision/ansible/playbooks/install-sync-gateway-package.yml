@@ -13,6 +13,10 @@
   tasks:
   - name: Disable firewall
     shell: iptables -F
+    when: ansible_distribution == "CentOS"
+  - name: Disable Debian firewall
+    shell: nft flush ruleset
+    when: ansible_distribution == "Debian"
 
   - include: tasks/remove-sync-gateway.yml
   - include: tasks/clean-users.yml
@@ -118,5 +122,9 @@
   tasks:
   - name: Disable firewall
     shell: iptables -F
+    when: ansible_distribution == "CentOS"
+  - name: Disable Debian firewall
+    shell: nft flush ruleset
+    when: ansible_distribution == "Debian"
 
   - include: tasks/start-sync-gateway.yml
