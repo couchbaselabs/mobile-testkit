@@ -93,7 +93,7 @@ class SyncGatewayConfig:
             sg_platform_extension = "msi"
         elif "centos" in sg_platform:
             sg_platform_extension = "rpm"
-        elif "ubuntu" in sg_platform:
+        elif ("ubuntu" in sg_platform) or ("debian" in sg_platform):
             sg_platform_extension = "deb"
         elif "macosarm" in sg_platform:
             sg_platform_extension = "zip"
@@ -109,7 +109,7 @@ class SyncGatewayConfig:
             sa_platform_extension = "msi"
         elif "centos" in sa_platform:
             sa_platform_extension = "rpm"
-        elif "ubuntu" in sa_platform:
+        elif ("ubuntu" in sa_platform) or ("debian" in sa_platform):
             sa_platform_extension = "deb"
         elif "macosarm" in sa_platform:
             sa_platform_extension = "zip"
@@ -389,6 +389,9 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
                     coverage_status = ansible_runner.run_ansible_playbook(
                         "setup-code-coverage-location.yml", subset=target
                     )
+                if "debian" in sg_platform.lower():
+                    playbook_vars["ansible_python_interpreter"] = "/usr/bin/python3"
+                    playbook_vars["ansible_distribution"] = sg_platform.capitalize()
                 status = ansible_runner.run_ansible_playbook(
                     "install-sync-gateway-package.yml",
                     extra_vars=playbook_vars, subset=target
