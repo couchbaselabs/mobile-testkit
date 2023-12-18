@@ -817,10 +817,12 @@ class CouchbaseServer:
 
         # TODO reset Quota
 
-    def start(self, custom_port=False):
+    def start(self, custom_port=False, cbs_platform="centos"):
         """Starts a running Couchbase Server via 'service couchbase-server start'"""
 
         command = "sudo service couchbase-server start"
+        if "debian" in cbs_platform:
+            command = "service couchbase-server start"
         self.remote_executor.must_execute(command)
         if not custom_port:
             self.wait_for_ready_state()
