@@ -540,6 +540,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     sync_gateway_version = params_from_base_suite_setup["sync_gateway_version"]
     disable_tls_server = params_from_base_suite_setup["disable_tls_server"]
     sg_platform = params_from_base_suite_setup["sg_platform"]
+    cbs_platform = params_from_base_suite_setup["params_from_base_suite_setup"]
     delta_sync_enabled = params_from_base_suite_setup["delta_sync_enabled"]
     sg_ce = params_from_base_suite_setup["sg_ce"]
     sg_config = params_from_base_suite_setup["sg_config"]
@@ -592,6 +593,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "xattrs_enabled": xattrs_enabled,
         "no_conflicts_enabled": no_conflicts_enabled,
         "sync_gateway_version": sync_gateway_version,
+        "params_from_base_suite_setup": params_from_base_suite_setup,
         "disable_tls_server": disable_tls_server,
         "sg_platform": sg_platform,
         "ssl_enabled": cbs_ssl,
