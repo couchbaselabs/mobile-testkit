@@ -817,7 +817,7 @@ class CouchbaseServer:
 
         # TODO reset Quota
 
-    def start(self, custom_port=False, cbs_platform="centos"):
+    def start(self, custom_port=False, cbs_platform="centos7"):
         """Starts a running Couchbase Server via 'service couchbase-server start'"""
 
         command = "sudo service couchbase-server start"
@@ -849,7 +849,7 @@ class CouchbaseServer:
 
             time.sleep(1)
 
-    def stop(self, cbs_platform="centos"):
+    def stop(self, cbs_platform="centos7"):
         """Stops a running Couchbase Server via 'service couchbase-server stop'"""
 
         command = "sudo service couchbase-server stop"
