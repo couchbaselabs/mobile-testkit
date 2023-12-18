@@ -847,10 +847,12 @@ class CouchbaseServer:
 
             time.sleep(1)
 
-    def stop(self):
+    def stop(self, cbs_platform="centos"):
         """Stops a running Couchbase Server via 'service couchbase-server stop'"""
 
         command = "sudo service couchbase-server stop"
+        if "debian" in cbs_platform:
+            command = "service couchbase-server stop"
         self.remote_executor.must_execute(command)
         self._verify_stopped()
 

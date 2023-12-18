@@ -34,7 +34,8 @@ def teardown_clear_custom_port(params_from_base_test_setup):
     for server in cluster.servers:
         remote_executor = RemoteExecutor(host_for_url(server.url))
         cb_server = couchbaseserver.CouchbaseServer(server.url)
-        cb_server.stop()
+        cbs_platform = params_from_base_test_setup['cbs_platform']
+        cb_server.stop(cbs_platform=cbs_platform)
         command = "cp /opt/couchbase/etc/couchbase/static_config.bak /opt/couchbase/etc/couchbase/static_config \
                    && cp /opt/couchbase/var/lib/couchbase/config/config.dat.bak /opt/couchbase/var/lib/couchbase/config/config.dat"
         remote_executor.execute(command)
@@ -78,7 +79,8 @@ def test_syncgateway_with_customPort_couchbaseServer(params_from_base_test_setup
 
     for server in cluster.servers:
         cb_server = couchbaseserver.CouchbaseServer(server.url)
-        cb_server.stop()
+        cbs_platform = params_from_base_test_setup['cbs_platform']
+        cb_server.stop(cbs_plaform=cbs_platform)
         cbs_target = host_for_url(server.url)
         remote_executor = RemoteExecutor(cbs_target)
         command = "cp /opt/couchbase/etc/couchbase/static_config /opt/couchbase/etc/couchbase/static_config.bak" \
