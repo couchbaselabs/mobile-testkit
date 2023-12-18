@@ -20,6 +20,7 @@ from utilities.cluster_config_utils import get_cbs_servers
 def teardown_clear_custom_port(params_from_base_test_setup):
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup['mode']
+    cbs_platform = params_from_base_test_setup['cbs_platform']
     sg_conf_name = 'sync_gateway_default_functional_tests'
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     cluster = Cluster(config=cluster_conf)
@@ -34,11 +35,11 @@ def teardown_clear_custom_port(params_from_base_test_setup):
     for server in cluster.servers:
         remote_executor = RemoteExecutor(host_for_url(server.url))
         cb_server = couchbaseserver.CouchbaseServer(server.url)
-        cb_server.stop()
+        cb_server.stop(cbs_platform=cbs_platform)
         command = "cp /opt/couchbase/etc/couchbase/static_config.bak /opt/couchbase/etc/couchbase/static_config \
                    && cp /opt/couchbase/var/lib/couchbase/config/config.dat.bak /opt/couchbase/var/lib/couchbase/config/config.dat"
         remote_executor.execute(command)
-        cb_server.start(custom_port=True)
+        cb_server.start(custom_port=True, cbs_platform=cbs_platform)
     cluster.reset(sg_config_path=sg_conf)
 
 
@@ -67,6 +68,7 @@ def test_syncgateway_with_customPort_couchbaseServer(params_from_base_test_setup
     cluster_conf = teardown_clear_custom_port["cluster_conf"]
     cluster_topology = params_from_base_test_setup["cluster_topology"]
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+    cbs_platform = params_from_base_test_setup["cbs_platform"]
 
     cluster = teardown_clear_custom_port["cluster"]
     cluster.reset(sg_config_path=sg_conf)
@@ -78,7 +80,7 @@ def test_syncgateway_with_customPort_couchbaseServer(params_from_base_test_setup
 
     for server in cluster.servers:
         cb_server = couchbaseserver.CouchbaseServer(server.url)
-        cb_server.stop()
+        cb_server.stop(cbs_platform=cbs_platform)
         cbs_target = host_for_url(server.url)
         remote_executor = RemoteExecutor(cbs_target)
         command = "cp /opt/couchbase/etc/couchbase/static_config /opt/couchbase/etc/couchbase/static_config.bak" \
@@ -92,7 +94,7 @@ def test_syncgateway_with_customPort_couchbaseServer(params_from_base_test_setup
             "&& rm -rf /opt/couchbase/var/lib/couchbase/config/chronicle/*"
         remote_executor.execute(command)
         cb_server.url = "http://{}:{}".format(host_for_url(server.url), custom_port)
-        cb_server.start(custom_port=True)
+        cb_server.start(custom_port=True, cbs_platform=cbs_platform)
 
     couchbase_server_url = cluster_topology["couchbase_servers"][0]
     couchbase_server_url = couchbase_server_url.replace("8091", custom_port)
