@@ -39,7 +39,7 @@ def teardown_clear_custom_port(params_from_base_test_setup):
         command = "cp /opt/couchbase/etc/couchbase/static_config.bak /opt/couchbase/etc/couchbase/static_config \
                    && cp /opt/couchbase/var/lib/couchbase/config/config.dat.bak /opt/couchbase/var/lib/couchbase/config/config.dat"
         remote_executor.execute(command)
-        cb_server.start(custom_port=True)
+        cb_server.start(custom_port=True, cbs_platform=cbs_platform)
     cluster.reset(sg_config_path=sg_conf)
 
 
@@ -94,7 +94,7 @@ def test_syncgateway_with_customPort_couchbaseServer(params_from_base_test_setup
             "&& rm -rf /opt/couchbase/var/lib/couchbase/config/chronicle/*"
         remote_executor.execute(command)
         cb_server.url = "http://{}:{}".format(host_for_url(server.url), custom_port)
-        cb_server.start(custom_port=True)
+        cb_server.start(custom_port=True, cbs_platform=cbs_platform)
 
     couchbase_server_url = cluster_topology["couchbase_servers"][0]
     couchbase_server_url = couchbase_server_url.replace("8091", custom_port)
