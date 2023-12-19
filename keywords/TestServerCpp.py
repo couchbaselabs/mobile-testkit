@@ -45,9 +45,9 @@ class TestServerCpp(TestServerBase):
         self.build_name = self.package_name + "_" + self.build_type
 
         if self.build is None:
-            self.download_url = "{}/couchbase-lite-c/{}/{}.zip".format(RELEASED_BUILDS, self.version, self.build_name)
+            self.download_url = "{}/couchbase-lite-c/{}/{}.tar.gz".format(RELEASED_BUILDS, self.version, self.build_name)
         else:
-            self.download_url = "{}/couchbase-lite-c/{}/{}/{}.zip".format(LATEST_BUILDS, self.version, self.build, self.build_name)
+            self.download_url = "{}/couchbase-lite-c/{}/{}/{}.tar.gz".format(LATEST_BUILDS, self.version, self.build, self.build_name)
         self.binary_path = "{}/{}.exe".format(BINARY_DIR, self.package_name)
 
         log_info("package_name: {}".format(self.package_name))
