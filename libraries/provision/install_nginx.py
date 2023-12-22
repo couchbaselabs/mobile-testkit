@@ -34,6 +34,13 @@ def install_nginx(cluster_config, customize_proxy=False):
     upstream_definition_admin = ""
     ansible_runner = AnsibleRunner(cluster_config)
 
+    extra_vars={
+                "upstream_sync_gatways": upstream_definition,
+                "upstream_sync_gatways_admin": upstream_definition_admin
+    }
+    sg_platform = get_sg_platform(cluster_config)
+    if "debian" in sg_platform.lower():
+        extra_vars["ansible_python_interpreter"] = "/usr/bin/python3"
     if is_load_balancer_with_two_clusters_enabled(cluster_config):
         upstream_definition2 = ""
         upstream_definition_admin2 = ""
@@ -45,13 +52,6 @@ def install_nginx(cluster_config, customize_proxy=False):
             lb_names.append(lb["name"])
 
         total_cluster_nodes = cluster_json["environment"]["sgw_cluster1_count"] + cluster_json["environment"]["sgw_cluster2_count"]
-        extra_vars={
-                "upstream_sync_gatways": upstream_definition,
-                "upstream_sync_gatways_admin": upstream_definition_admin
-        }
-        sg_platform = get_sg_platform(cluster_config)
-        if "debian" in sg_platform.lower():
-            extra_vars["ansible_python_interpreter"] = "/usr/bin/python3"
         for sg in topology["sync_gateways"]:
             # string http:// to adhere to expected format for nginx.conf
             if count < cluster_json["environment"]["sgw_cluster1_count"]:
