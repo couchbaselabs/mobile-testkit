@@ -3,7 +3,7 @@ from keywords.ClusterKeywords import ClusterKeywords
 from keywords.utils import log_info
 from libraries.provision.ansible_runner import AnsibleRunner
 from utilities.cluster_config_utils import is_load_balancer_with_two_clusters_enabled
-from utilities.cluster_config_utils import load_cluster_config_json
+from utilities.cluster_config_utils import load_cluster_config_json, get_sg_platform
 
 
 def install_nginx(cluster_config, customize_proxy=False):
@@ -45,6 +45,13 @@ def install_nginx(cluster_config, customize_proxy=False):
             lb_names.append(lb["name"])
 
         total_cluster_nodes = cluster_json["environment"]["sgw_cluster1_count"] + cluster_json["environment"]["sgw_cluster2_count"]
+        extra_vars={
+                "upstream_sync_gatways": upstream_definition,
+                "upstream_sync_gatways_admin": upstream_definition_admin
+        }
+        sg_platform = get_sg_platform(cluster_config)
+        if "debian" in sg_platform.lower():
+            extra_vars["ansible_python_interpreter"] = "/usr/bin/python3"
         for sg in topology["sync_gateways"]:
             # string http:// to adhere to expected format for nginx.conf
             if count < cluster_json["environment"]["sgw_cluster1_count"]:
@@ -64,23 +71,15 @@ def install_nginx(cluster_config, customize_proxy=False):
         log_info("Upstream definition admin: {}".format(upstream_definition_admin2))
         status = ansible_runner.run_ansible_playbook(
             "install-nginx.yml",
-            extra_vars={
-                "upstream_sync_gatways": upstream_definition,
-                "upstream_sync_gatways_admin": upstream_definition_admin
-            },
+            extra_vars=extra_vars,
             subset=lb_names[0]
         )
         assert status == 0, "Failed to install nginx! on lb1"
-
         status = ansible_runner.run_ansible_playbook(
             "install-nginx.yml",
-            extra_vars={
-                "upstream_sync_gatways": upstream_definition2,
-                "upstream_sync_gatways_admin": upstream_definition_admin2
-            },
+            extra_vars=extra_vars,
             subset=lb_names[1]
         )
-
         assert status == 0, "Failed to install nginx on lb2!"
     else:
         for sg in topology["sync_gateways"]:
@@ -94,24 +93,25 @@ def install_nginx(cluster_config, customize_proxy=False):
         log_info("Upstream definition admin: {}".format(upstream_definition_admin))
 
         if customize_proxy:
-            status = ansible_runner.run_ansible_playbook(
-                "install-nginx.yml",
-                extra_vars={
+            extra_vars={
                     "upstream_sync_gatways": upstream_definition,
                     "upstream_sync_gatways_admin": upstream_definition_admin,
                     "keepalive_timeout": "keepalive_timeout 60s 60s;",
                     "proxy_send_timeout": "proxy_send_timeout 60s;",
                     "proxy_read_timeout": "proxy_read_timeout 60s;",
                     "proxy_socket_keepalive": "proxy_socket_keepalive on;"
-                }
+            }
+            if "debian" in sg_platform.lower():
+                extra_vars["ansible_python_interpreter"] = "/usr/bin/python3"
+
+            status = ansible_runner.run_ansible_playbook(
+                "install-nginx.yml",
+                extra_vars=extra_vars
             )
         else:
             status = ansible_runner.run_ansible_playbook(
                 "install-nginx.yml",
-                extra_vars={
-                    "upstream_sync_gatways": upstream_definition,
-                    "upstream_sync_gatways_admin": upstream_definition_admin
-                }
+                extra_vars=extra_vars
             )
 
         assert status == 0, "Failed to install nginx! on lb1"
@@ -164,22 +164,23 @@ def install_nginx_for_2_sgw_clusters(cluster_config, cluster1_nodes=2, cluster2_
     ansible_runner = AnsibleRunner(cluster_config)
     for lb in topology["load_balancers"]:
         lbs.append(lb.replace("http://", ""))
+    sg_platform = get_sg_platform(cluster_config)
+    extra_vars={
+            "upstream_sync_gatways": upstream_definition1,
+            "upstream_sync_gatways_admin": upstream_definition_admin1
+    }
+    if "debian" in sg_platform.lower():
+        extra_vars["ansible_python_interpreter"] = "/usr/bin/python3"
 
     status = ansible_runner.run_ansible_playbook(
         "install-nginx.yml",
-        extra_vars={
-            "upstream_sync_gatways": upstream_definition1,
-            "upstream_sync_gatways_admin": upstream_definition_admin1,
-        },
+        extra_vars=extra_vars,
         subset=lbs[0]
     )
 
     status = ansible_runner.run_ansible_playbook(
         "install-nginx.yml",
-        extra_vars={
-            "upstream_sync_gatways": upstream_definition2,
-            "upstream_sync_gatways_admin": upstream_definition_admin2
-        },
+        extra_vars=extra_vars,
         subset=lbs[1]
     )
 
