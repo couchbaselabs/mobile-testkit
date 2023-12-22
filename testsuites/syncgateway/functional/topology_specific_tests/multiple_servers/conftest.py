@@ -286,7 +286,7 @@ def params_from_base_suite_setup(request):
     )
 
     need_sgw_admin_auth = (not disable_admin_auth) and sync_gateway_version >= "3.0"
-    yield {"cluster_config": cluster_config, "mode": mode, "need_sgw_admin_auth": need_sgw_admin_auth}
+    yield {"cluster_config": cluster_config, "mode": mode, "need_sgw_admin_auth": need_sgw_admin_auth, "cbs_platform": cbs_platform}
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
 
@@ -310,12 +310,13 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     cluster_config = params_from_base_suite_setup["cluster_config"]
     mode = params_from_base_suite_setup["mode"]
     need_sgw_admin_auth = params_from_base_suite_setup["need_sgw_admin_auth"]
+    cbs_platform = params_from_base_suite_setup["params_from_base_suite_setup"]
 
     test_name = request.node.name
     log_info("Setting up test '{}'".format(test_name))
 
     # This dictionary is passed to each test
-    yield {"cluster_config": cluster_config, "mode": mode, "need_sgw_admin_auth": need_sgw_admin_auth}
+    yield {"cluster_config": cluster_config, "mode": mode, "need_sgw_admin_auth": need_sgw_admin_auth, "cbs_platform": cbs_platform}
 
     # Code after the yeild will execute when each test finishes
     log_info("Tearing down test '{}'".format(test_name))
