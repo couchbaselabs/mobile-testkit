@@ -20,10 +20,10 @@
     ignore_errors: yes
 
   - name: epel-release | install epel-release for nginx
-    yum: pkg=epel-release state=latest
+    apt: pkg=epel-release state=latest
 
   - name: NGINX | Install nginx
-    yum: pkg=nginx state=latest
+    apt: pkg=nginx state=latest
 
   - name: NGINX | Render and deploy nginx config
     template:
