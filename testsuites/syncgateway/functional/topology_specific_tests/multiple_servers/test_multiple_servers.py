@@ -123,7 +123,7 @@ def test_server_goes_down_sanity(params_from_base_test_setup):
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
-    cbs_platform = params_from_base_test_setup["params_from_base_test_setup"]
+    cbs_platform = params_from_base_test_setup["cbs_platform"]
     sg_version = get_sg_version(cluster_config)
     if compare_versions(sg_version, '1.5') < 0:
         pytest.skip("This test needs multiple URLs in the SG config, not supported by SG < 1.5")
@@ -245,7 +245,7 @@ def test_server_goes_down_rebuild_channels(params_from_base_test_setup):
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
-    cbs_platform = params_from_base_test_setup["params_from_base_test_setup"]
+    cbs_platform = params_from_base_test_setup["cbs_platform"]
 
     sg_version = get_sg_version(cluster_config)
     if compare_versions(sg_version, '1.5') < 0:
