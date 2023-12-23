@@ -310,7 +310,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     cluster_config = params_from_base_suite_setup["cluster_config"]
     mode = params_from_base_suite_setup["mode"]
     need_sgw_admin_auth = params_from_base_suite_setup["need_sgw_admin_auth"]
-    cbs_platform = params_from_base_suite_setup["params_from_base_suite_setup"]
+    cbs_platform = params_from_base_suite_setup["cbs_platfrom"]
 
     test_name = request.node.name
     log_info("Setting up test '{}'".format(test_name))
