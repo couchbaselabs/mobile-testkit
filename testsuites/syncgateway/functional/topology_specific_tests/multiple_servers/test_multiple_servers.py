@@ -207,13 +207,13 @@ def test_server_goes_down_sanity(params_from_base_test_setup):
     except keywords.exceptions.TimeoutException:
         # timeout verifying docs. Bring server back in to restore topology, then fail
         # Failing due to https://github.com/couchbase/sync_gateway/issues/2197
-        flakey_server.start()
+        flakey_server.start(cbs_platform=cbs_platform)
         main_server.recover(flakey_server)
         main_server.rebalance_in(coucbase_servers, flakey_server)
         raise keywords.exceptions.TimeoutException("Failed to get all changes")
 
     # Test succeeded without timeout, bring server back into topology
-    flakey_server.start()
+    flakey_server.start(cbs_platform=cbs_platform)
     main_server.recover(flakey_server)
     main_server.rebalance_in(coucbase_servers, flakey_server)
 
@@ -343,7 +343,7 @@ def test_server_goes_down_rebuild_channels(params_from_base_test_setup):
         # Fail tests if all docs do not succeed before timeout
         if (time.time() - start) > 60:
             # Bring server back up before failing the test
-            flakey_server.start()
+            flakey_server.start(cbs_platform=cbs_platform)
             main_server.recover(flakey_server)
             main_server.rebalance_in(coucbase_servers, flakey_server)
             raise keywords.exceptions.TimeoutError("Failed to rebuild changes")
@@ -375,6 +375,6 @@ def test_server_goes_down_rebuild_channels(params_from_base_test_setup):
     coucbase_servers = topology["couchbase_servers"]
 
     # Test succeeded without timeout, bring server back into topology
-    flakey_server.start()
+    flakey_server.start(cbs_platform=cbs_platform)
     main_server.recover(flakey_server, max_retries=30)
     main_server.rebalance_in(coucbase_servers, flakey_server)
