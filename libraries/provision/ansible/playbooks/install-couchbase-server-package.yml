@@ -49,7 +49,7 @@
       get_url: url={{ couchbase_server_package_url }} dest=/tmp/{{ couchbase_server_package_name }}
 
     - name: install iptables
-      apt: iptables pkg=iptables state=latest
+      apt:  pkg=iptables state=latest
       when: ansible_distribution == "Debian"
 
     - name: Disable firewall
