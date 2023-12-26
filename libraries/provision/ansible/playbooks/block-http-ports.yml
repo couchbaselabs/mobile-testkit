@@ -4,7 +4,7 @@
   tasks:
   
   - name: install iptables
-    apt:  pkg=iptables state=latest
+    shell:  apt install -y iptables
     when: ansible_distribution == "Debian"
 
   - include: tasks/block-http-ports.yml
