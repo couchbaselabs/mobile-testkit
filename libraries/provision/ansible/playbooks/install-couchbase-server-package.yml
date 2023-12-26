@@ -48,10 +48,13 @@
     - name: COUCHBASE SERVER | Download couchbase server
       get_url: url={{ couchbase_server_package_url }} dest=/tmp/{{ couchbase_server_package_name }}
 
+    - name: install iptables
+      apt: iptables pkg=iptables state=latest
+      when: ansible_distribution == "Debian"
+
     - name: Disable firewall
       shell: iptables -F
       when: ansible_distribution == "CentOS"
-
 
     - name: Disable Debian firewall
       shell:  nft flush ruleset
