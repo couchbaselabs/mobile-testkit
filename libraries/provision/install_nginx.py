@@ -189,7 +189,7 @@ if __name__ == "__main__":
 
     try:
         cluster_conf = os.environ["CLUSTER_CONFIG"]
-    except KeyError as ke:
+    except KeyError:
         raise KeyError("CLUSTER_CONFIG not defined. Unable to provision cluster.")
 
     install_nginx(cluster_conf)
@@ -198,8 +198,8 @@ if __name__ == "__main__":
 def initialize_extra_vars(cluster_config):
     sg_platform = get_sg_platform(cluster_config)
     ansible_distribution = sg_platform.capitalize()
-    extra_vars={
-         "ansible_distribution": ansible_distribution
+    extra_vars = {
+        "ansible_distribution": ansible_distribution
     }
     if "debian" in sg_platform.lower():
         extra_vars["ansible_python_interpreter"] = "/usr/bin/python3"

@@ -851,8 +851,8 @@ def setup_sgwconfig_db_config(cluster_config, sg_config_path, use_config=False):
 
     if sg_ssl_enabled(cluster_config):
         if is_centralized_persistent_config_disabled(cluster_config):
-                sslcert_var = '"SSLCert": "sg_cert.pem",'
-                sslkey_var = '"SSLKey": "sg_privkey.pem",'
+            sslcert_var = '"SSLCert": "sg_cert.pem",'
+            sslkey_var = '"SSLKey": "sg_privkey.pem",'
         else:
             tls_var = """ "https": {
                             "tls_cert_path": "sg_cert.pem",
