@@ -44,17 +44,18 @@ def sgw_version_reset(request, params_from_base_test_setup):
 
 
 @pytest.fixture(scope="function")
-def server_restart(sgw_version_reset):
+def server_restart(sgw_version_reset, params_from_base_test_setup):
     cluster_conf = sgw_version_reset["cluster_conf"]
     cluster_util = ClusterKeywords(cluster_conf)
     topology = cluster_util.get_cluster_topology(cluster_conf)
     coucbase_servers = topology["couchbase_servers"]
     cbs_url = coucbase_servers[0]
+    cbs_platform = params_from_base_test_setup['cbs_platform']
     server = couchbaseserver.CouchbaseServer(cbs_url)
     yield {
         "server": server
     }
-    server.start()
+    server.start(cbs_platform=cbs_platform)
 
 
 @pytest.mark.syncgateway
