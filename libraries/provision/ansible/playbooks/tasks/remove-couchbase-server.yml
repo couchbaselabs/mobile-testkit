@@ -18,7 +18,7 @@
 
 - name: COUCHBASE SERVER | Uninstall couchbase server on Ubuntu
   become: yes
-  shell: dpkg -r couchbase-server
+  shell: dpkg --remove --force-all couchbase-server
   ignore_errors: yes
   when: ansible_distribution == 'Ubuntu' or ansible_distribution == 'Debian'
 
