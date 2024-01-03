@@ -273,7 +273,7 @@ def test_automatic_migration_with_server_connection_fails(params_from_base_test_
 
     # 3. stop the serve
     server.stop(cbs_platform=cbs_platform)
-    time.sleep(10)
+    time.sleep(20) # Wait for the server to actually stop
     # 3 . Upgrade SGW to lithium and have Automatic upgrade
     try:
         sg_obj.upgrade_sync_gateways(cluster_config=cluster_conf, sg_conf=sg_conf, sgw_previous_version=sync_gateway_version, sync_gateway_version=sync_gateway_version)
@@ -295,7 +295,7 @@ def test_automatic_migration_with_server_connection_fails(params_from_base_test_
         if sg_platform == "windows":
             command = "ls {} | grep {} | wc -l".format(sg_home_directory, "sync_gateway-backup-")
         _, stdout, _ = remote_executor.execute(command)
-        assert stdout[0].strip() == str(0), "back file did not get created"
+        assert stdout[0].strip() == str(0), "backup file did not get created"
         command = "grep bootstrap {}/sync_gateway.json| wc -l".format(sg_home_directory)
         if sg_platform == "windows":
             command = "grep bootstrap {}/sync_gateway.json| wc -l".format(sg_home_directory)
