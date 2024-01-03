@@ -458,7 +458,7 @@ class SyncGateway(object):
         c_cluster = cluster.Cluster(cluster_config)
         if config is None:
             raise ProvisioningError("Starting a Sync Gateway requires a config")
-
+        sg_platform = get_sg_platform(cluster_config)
         if get_sg_version(cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config):
             playbook_vars, _, _ = c_cluster.setup_server_and_sgw(config, bucket_creation=False, bucket_list=bucket_list, use_config=use_config)
         else:
@@ -506,7 +506,6 @@ class SyncGateway(object):
                 "disable_admin_auth": "",
                 "groupid": ""
             }
-            sg_platform = get_sg_platform(cluster_config)
             if get_sg_version(cluster_config) >= "2.1.0":
                 logging_config = choose_logging_level(cluster_config)
                 try:
