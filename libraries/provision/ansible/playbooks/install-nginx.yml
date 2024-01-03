@@ -21,9 +21,15 @@
 
   - name: epel-release | install epel-release for nginx
     yum: pkg=epel-release state=latest
+    when: ansible_distribution != "Debian"
 
   - name: NGINX | Install nginx
     yum: pkg=nginx state=latest
+    when: ansible_distribution != "Debian"
+
+  - name: NGINX | Install nginx
+    apt: pkg=nginx state=latest
+    when: ansible_distribution == "Debian"
 
   - name: NGINX | Render and deploy nginx config
     template:

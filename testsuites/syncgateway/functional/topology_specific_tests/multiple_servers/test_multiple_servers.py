@@ -123,7 +123,7 @@ def test_server_goes_down_sanity(params_from_base_test_setup):
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
-
+    cbs_platform = params_from_base_test_setup["cbs_platform"]
     sg_version = get_sg_version(cluster_config)
     if compare_versions(sg_version, '1.5') < 0:
         pytest.skip("This test needs multiple URLs in the SG config, not supported by SG < 1.5")
@@ -167,7 +167,7 @@ def test_server_goes_down_sanity(params_from_base_test_setup):
     session = client.create_session(admin_sg, sg_db, sg_user_name, auth=auth)
 
     # Stop second server
-    flakey_server.stop()
+    flakey_server.stop(cbs_platform=cbs_platform)
 
     # Try to add 100 docs in a loop until all succeed, if the never do, fail with timeout
     errors = num_docs
@@ -207,13 +207,13 @@ def test_server_goes_down_sanity(params_from_base_test_setup):
     except keywords.exceptions.TimeoutException:
         # timeout verifying docs. Bring server back in to restore topology, then fail
         # Failing due to https://github.com/couchbase/sync_gateway/issues/2197
-        flakey_server.start()
+        flakey_server.start(cbs_platform=cbs_platform)
         main_server.recover(flakey_server)
         main_server.rebalance_in(coucbase_servers, flakey_server)
         raise keywords.exceptions.TimeoutException("Failed to get all changes")
 
     # Test succeeded without timeout, bring server back into topology
-    flakey_server.start()
+    flakey_server.start(cbs_platform=cbs_platform)
     main_server.recover(flakey_server)
     main_server.rebalance_in(coucbase_servers, flakey_server)
 
@@ -245,6 +245,7 @@ def test_server_goes_down_rebuild_channels(params_from_base_test_setup):
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     need_sgw_admin_auth = params_from_base_test_setup["need_sgw_admin_auth"]
+    cbs_platform = params_from_base_test_setup["cbs_platform"]
 
     sg_version = get_sg_version(cluster_config)
     if compare_versions(sg_version, '1.5') < 0:
@@ -335,14 +336,14 @@ def test_server_goes_down_rebuild_channels(params_from_base_test_setup):
     assert len(changes_before_failover["results"]) == num_docs
 
     # Stop server via 'service stop'
-    flakey_server.stop()
+    flakey_server.stop(cbs_platform=cbs_platform)
 
     start = time.time()
     while True:
         # Fail tests if all docs do not succeed before timeout
         if (time.time() - start) > 60:
             # Bring server back up before failing the test
-            flakey_server.start()
+            flakey_server.start(cbs_platform=cbs_platform)
             main_server.recover(flakey_server)
             main_server.rebalance_in(coucbase_servers, flakey_server)
             raise keywords.exceptions.TimeoutError("Failed to rebuild changes")
@@ -374,6 +375,6 @@ def test_server_goes_down_rebuild_channels(params_from_base_test_setup):
     coucbase_servers = topology["couchbase_servers"]
 
     # Test succeeded without timeout, bring server back into topology
-    flakey_server.start()
+    flakey_server.start(cbs_platform=cbs_platform)
     main_server.recover(flakey_server, max_retries=30)
     main_server.rebalance_in(coucbase_servers, flakey_server)

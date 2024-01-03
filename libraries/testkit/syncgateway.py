@@ -202,6 +202,8 @@ class SyncGateway:
                 playbook_vars["server_scheme"] = "couchbases"
                 playbook_vars["server_port"] = 11207
                 block_http_vars = {}
+                if "debian" in sg_platform.lower():
+                    block_http_vars["ansible_distribution"] = sg_platform.capitalize()
                 port_list = ["8091:8096,11210:11211"]
                 for port in port_list:
                     block_http_vars["port"] = port
@@ -362,6 +364,8 @@ class SyncGateway:
                 playbook_vars["server_scheme"] = "couchbases"
                 playbook_vars["server_port"] = 11207
                 block_http_vars = {}
+                if "debian" in sg_platform.lower():
+                    block_http_vars["ansible_distribution"] = sg_platform.capitalize()
                 port_list = ["8091:8096,11210:11211"]
                 for port in port_list:
                     block_http_vars["port"] = port
@@ -833,6 +837,8 @@ def setup_sgwconfig_db_config(cluster_config, sg_config_path, use_config=False):
         server_scheme_var = "couchbases"
         server_port_var = "11207"
         block_http_vars = {}
+        if "debian" in sg_platform.lower():
+            block_http_vars["ansible_distribution"] = sg_platform.capitalize()
         port_list = ["8091:8096,11210:11211"]
         for port in port_list:
             block_http_vars["port"] = port
@@ -845,8 +851,8 @@ def setup_sgwconfig_db_config(cluster_config, sg_config_path, use_config=False):
 
     if sg_ssl_enabled(cluster_config):
         if is_centralized_persistent_config_disabled(cluster_config):
-                sslcert_var = '"SSLCert": "sg_cert.pem",'
-                sslkey_var = '"SSLKey": "sg_privkey.pem",'
+            sslcert_var = '"SSLCert": "sg_cert.pem",'
+            sslkey_var = '"SSLKey": "sg_privkey.pem",'
         else:
             tls_var = """ "https": {
                             "tls_cert_path": "sg_cert.pem",

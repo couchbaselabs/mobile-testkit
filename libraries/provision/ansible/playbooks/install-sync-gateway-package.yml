@@ -11,6 +11,7 @@
     
 
   tasks:
+
   - name: Disable firewall
     shell: iptables -F
     when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon" or ansible_distribution == "Ubuntu"

@@ -458,7 +458,7 @@ class SyncGateway(object):
         c_cluster = cluster.Cluster(cluster_config)
         if config is None:
             raise ProvisioningError("Starting a Sync Gateway requires a config")
-
+        sg_platform = get_sg_platform(cluster_config)
         if get_sg_version(cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config):
             playbook_vars, _, _ = c_cluster.setup_server_and_sgw(config, bucket_creation=False, bucket_list=bucket_list, use_config=use_config)
         else:
@@ -506,7 +506,6 @@ class SyncGateway(object):
                 "disable_admin_auth": "",
                 "groupid": ""
             }
-            sg_platform = get_sg_platform(cluster_config)
             if get_sg_version(cluster_config) >= "2.1.0":
                 logging_config = choose_logging_level(cluster_config)
                 try:
@@ -599,6 +598,8 @@ class SyncGateway(object):
             playbook_vars["server_scheme"] = "couchbases"
             playbook_vars["server_port"] = 11207
             block_http_vars = {}
+            if "debian" in sg_platform.lower():
+                block_http_vars["ansible_distribution"] = sg_platform.capitalize()
             port_list = ["8091:8096,11210:11211"]
             for port in port_list:
                 block_http_vars["port"] = port
