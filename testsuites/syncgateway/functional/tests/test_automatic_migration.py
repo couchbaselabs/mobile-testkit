@@ -1,6 +1,7 @@
 import pytest
 import os
 import json
+import time
 
 from libraries.testkit.cluster import Cluster
 from keywords.SyncGateway import sync_gateway_config_path_for_mode, SyncGateway, setup_replications_on_sgconfig, load_sync_gateway_config
