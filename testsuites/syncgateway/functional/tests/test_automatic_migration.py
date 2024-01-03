@@ -276,6 +276,7 @@ def test_automatic_migration_with_server_connection_fails(params_from_base_test_
     try:
         sg_obj.upgrade_sync_gateways(cluster_config=cluster_conf, sg_conf=sg_conf, sgw_previous_version=sync_gateway_version, sync_gateway_version=sync_gateway_version)
     except Exception as ex:
+        print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^" + str(ex))
         if "Could not upgrade sync_gateway" in str(ex):
             log_info("SGW failed to start after upgrade as server is down")
 
