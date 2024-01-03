@@ -7,7 +7,7 @@
     - debug: msg="Stoping the Testserver "
     - debug: msg="Copying logs at - {{ log_full_path }}"
     - name: Stop TestServer
-      shell: nssm stop TestServer
+      win_shell: nssm stop TestServer
 
       # win_nssm:
       #  name: TestServer
