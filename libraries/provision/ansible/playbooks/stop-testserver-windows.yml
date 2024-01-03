@@ -8,6 +8,7 @@
     - debug: msg="Copying logs at - {{ log_full_path }}"
     - name: Stop TestServer
       win_command: nssm stop TestServer
+      ignore_errors: true
 
       # win_nssm:
       #  name: TestServer
