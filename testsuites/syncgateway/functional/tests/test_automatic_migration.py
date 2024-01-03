@@ -255,6 +255,7 @@ def test_automatic_migration_with_server_connection_fails(params_from_base_test_
     mode = sgw_version_reset['mode']
     cluster_conf = sgw_version_reset["cluster_conf"]
     sg_conf_name = sgw_version_reset["sg_conf_name"]
+    sync_gateway_previous_version = sgw_version_reset['sync_gateway_previous_version']
     sg_obj = sgw_version_reset['sg_obj']
     server = server_restart['server']
     disable_persistent_config = params_from_base_test_setup['disable_persistent_config']
