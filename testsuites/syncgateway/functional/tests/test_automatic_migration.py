@@ -271,9 +271,9 @@ def test_automatic_migration_with_server_connection_fails(params_from_base_test_
     cbs_cluster = Cluster(config=cluster_conf)
     sg1 = cbs_cluster.sync_gateways[0]
 
-    # 3. stop the serve
+    # 3. stop the server
     server.stop(cbs_platform=cbs_platform)
-    time.sleep(20) # Wait for the server to actually stop
+    time.sleep(20)  # Wait for the server to actually stop
     # 3 . Upgrade SGW to lithium and have Automatic upgrade
     try:
         sg_obj.upgrade_sync_gateways(cluster_config=cluster_conf, sg_conf=sg_conf, sgw_previous_version=sync_gateway_version, sync_gateway_version=sync_gateway_version)
