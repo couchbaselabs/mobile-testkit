@@ -255,12 +255,12 @@ def test_automatic_migration_with_server_connection_fails(params_from_base_test_
     mode = sgw_version_reset['mode']
     cluster_conf = sgw_version_reset["cluster_conf"]
     sg_conf_name = sgw_version_reset["sg_conf_name"]
-    sync_gateway_previous_version = sgw_version_reset['sync_gateway_previous_version']
     sg_obj = sgw_version_reset['sg_obj']
     server = server_restart['server']
     disable_persistent_config = params_from_base_test_setup['disable_persistent_config']
     cbs_platform = params_from_base_test_setup['cbs_platform']
     sg_platform = params_from_base_test_setup['sg_platform']
+    sync_gateway_previous_version = params_from_base_test_setup['sync_gateway_previous_version']
 
     if sync_gateway_version < "3.0.0" or disable_persistent_config:
         pytest.skip('This test cannot run with sgw version below 3.0 or persistent config disabled')
