@@ -273,6 +273,8 @@ def test_automatic_migration_with_server_connection_fails(params_from_base_test_
     sg1 = cbs_cluster.sync_gateways[0]
 
     # 3. stop the server
+    print("---------------------------------------------------ZHOVNA")
+    time.sleep(20)
     server.stop(cbs_platform=cbs_platform)
     time.sleep(20)  # Wait for the server to actually stop
     # 3 . Upgrade SGW to lithium and have Automatic upgrade
