@@ -260,7 +260,6 @@ def test_automatic_migration_with_server_connection_fails(params_from_base_test_
     disable_persistent_config = params_from_base_test_setup['disable_persistent_config']
     cbs_platform = params_from_base_test_setup['cbs_platform']
     sg_platform = params_from_base_test_setup['sg_platform']
-    sync_gateway_previous_version = params_from_base_test_setup['sync_gateway_previous_version']
 
     if sync_gateway_version < "3.0.0" or disable_persistent_config:
         pytest.skip('This test cannot run with sgw version below 3.0 or persistent config disabled')
@@ -280,7 +279,7 @@ def test_automatic_migration_with_server_connection_fails(params_from_base_test_
     # 3 . Upgrade SGW to lithium and have Automatic upgrade
     print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&GILAD")
     try:
-        sg_obj.upgrade_sync_gateways(cluster_config=cluster_conf, sg_conf=sg_conf, sgw_previous_version=sync_gateway_previous_version, sync_gateway_version=sync_gateway_version)
+        sg_obj.upgrade_sync_gateways(cluster_config=cluster_conf, sg_conf=sg_conf, sgw_previous_version=sync_gateway_version, sync_gateway_version=sync_gateway_version)
         print("LOSHA!!!!")
     except Exception as ex:
         if "Could not upgrade sync_gateway" in str(ex):
