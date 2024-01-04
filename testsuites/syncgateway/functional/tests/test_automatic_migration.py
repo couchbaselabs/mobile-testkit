@@ -276,11 +276,11 @@ def test_automatic_migration_with_server_connection_fails(params_from_base_test_
     print("---------------------------------------------------ZHOVNA")
     time.sleep(20)
     server.stop(cbs_platform=cbs_platform)
-    time.sleep(20)  # Wait for the server to actually stop
     # 3 . Upgrade SGW to lithium and have Automatic upgrade
     print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&GILAD")
     try:
         sg_obj.upgrade_sync_gateways(cluster_config=cluster_conf, sg_conf=sg_conf, sgw_previous_version=sync_gateway_previous_version, sync_gateway_version=sync_gateway_version)
+        print("LOSHA!!!!")
     except Exception as ex:
         print("===================================================" + str(ex))
         if "Could not upgrade sync_gateway" in str(ex):
@@ -306,6 +306,7 @@ def test_automatic_migration_with_server_connection_fails(params_from_base_test_
             command = "grep bootstrap {}/sync_gateway.json| wc -l".format(sg_home_directory)
         _, stdout, _ = remote_executor.execute(command)
         assert stdout[0].strip() == str(0), "sync gateway config did not get migrated"
+        print("ASAF!!!!!!!!!!")
 
 
 @pytest.fixture(scope="function")
