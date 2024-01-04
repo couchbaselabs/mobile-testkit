@@ -773,8 +773,10 @@ class SyncGateway(object):
         playbook_vars1["couchbase_sync_gateway_package"] = sync_gateway_package_name
         playbook_vars1["couchbase_sg_accel_package"] = sg_accel_package_name
         if sgw_previous_version >= "3.0.0" and version >= "3.0.0" and not is_centralized_persistent_config_disabled(cluster_config):
+            print("*********************************************************************************HERE")
             playbook_vars, db_config_json, sgw_config_data = c_cluster.setup_server_and_sgw(sg_config.config_path, bucket_creation=False)
         else:
+            print("*********************************************************************************HERE1")
             sg_conf = os.path.abspath(sg_config.config_path)
             sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
             cbs_cert_path = os.path.join(os.getcwd(), "certs")
@@ -872,7 +874,7 @@ class SyncGateway(object):
                     playbook_vars["password"] = '"password": "password",'
             else:
                 playbook_vars["logging"] = '"log": ["*"],'
-
+            print("Starting upgrade!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
             if is_xattrs_enabled(cluster_config) and cbs_version >= "5.0.0":
                 if version >= "2.1.0":
                     playbook_vars["autoimport"] = '"import_docs": true,'
