@@ -276,7 +276,34 @@ def test_automatic_migration_with_server_connection_fails(params_from_base_test_
     server.stop(cbs_platform=cbs_platform)
     time.sleep(20)  # Wait for the server to actually stop
     # 3 . Upgrade SGW to lithium and have Automatic upgrade
-    sg_obj.upgrade_sync_gateways(cluster_config=cluster_conf, sg_conf=sg_conf, sgw_previous_version=sync_gateway_previous_version, sync_gateway_version=sync_gateway_version)
+    try:
+        sg_obj.upgrade_sync_gateways(cluster_config=cluster_conf, sg_conf=sg_conf, sgw_previous_version=sync_gateway_previous_version, sync_gateway_version=sync_gateway_version)
+    except Exception as ex:
+        print("===================================================" + str(ex))
+        if "Could not upgrade sync_gateway" in str(ex):
+            log_info("SGW failed to start after upgrade as server is down")
+
+        # 4. Verify replication are migrated and stored in bucket
+        # 5. Have SGW failed to start with server reconnection failure
+        # 6. Verify backup file is not created and sgw config is not upgraded and old config is not intacted
+        remote_executor = RemoteExecutor(sg1.ip, sg_platform)
+        if "macos" in sg_platform:
+            sg_home_directory = "/Users/sync_gateway"
+        elif sg_platform == "windows":
+            sg_home_directory = "C:\\\\PROGRA~1\\\\Couchbase\\\\Sync Gateway"
+        else:
+            sg_home_directory = "/home/sync_gateway"
+        command = "ls {} | grep {} | wc -l".format(sg_home_directory, "sync_gateway-backup-")
+        if sg_platform == "windows":
+            command = "ls {} | grep {} | wc -l".format(sg_home_directory, "sync_gateway-backup-")
+        _, stdout, _ = remote_executor.execute(command)
+        assert stdout[0].strip() == str(0), "backup file did not get created"
+        command = "grep bootstrap {}/sync_gateway.json| wc -l".format(sg_home_directory)
+        if sg_platform == "windows":
+            command = "grep bootstrap {}/sync_gateway.json| wc -l".format(sg_home_directory)
+        _, stdout, _ = remote_executor.execute(command)
+        assert stdout[0].strip() == str(0), "sync gateway config did not get migrated"
+
 
 @pytest.fixture(scope="function")
 def setup_env_variables(params_from_base_test_setup):
