@@ -23,7 +23,7 @@ class TestServeriOS(TestServerBase):
         super(TestServeriOS, self).__init__(version_build, host, port)
         self.liteserv_admin_url = "http://{}:59850".format(self.host)
         self.logfile_name = None
-        self.device_id = None
+        self.device_id = "00008101-000E0519020A001E"
         self.device = "iPhone-8-Plus"
         self.debug_mode = False
         self.app_path = ""
@@ -155,7 +155,7 @@ class TestServeriOS(TestServerBase):
         output = subprocess.check_output(subprocess_command)
         log_info(output)
         # subprocess_command = "ios-deploy", "--list_bundle_id"
-        subprocess_command = ["xcrun", "devicectl", "device",  "info", "apps"]
+        subprocess_command = ["xcrun", "devicectl", "device",  "info", "apps", "--device", self.device_id]
         output = subprocess.check_output(subprocess_command)
         log_info(output)
 
