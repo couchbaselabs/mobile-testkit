@@ -152,10 +152,7 @@ class TestServeriOS(TestServerBase):
         # subprocess_command = "ios-deploy", "--justlaunch", "--bundle", self.app_path
         # if self.xcode15:
         subprocess_command = ["xcrun", "devicectl", "device",  "install", "app", self.app_path]
-
-        output = subprocess.check_output([
-            subprocess_command
-        ])
+        output = subprocess.check_output(subprocess_command)
         log_info(output)
         # subprocess_command = "ios-deploy", "--list_bundle_id"
         subprocess_command = ["xcrun", "devicectl", "device",  "info", "apps"]
@@ -248,9 +245,7 @@ class TestServeriOS(TestServerBase):
         """
          # "ios-deploy", "--uninstall_only", "--bundle_id", self.bundle_id
         subprocess_command = ["xcrun", "devicectl", "device",  "uninstall", "app", self.bundle_id]
-        output = subprocess.check_output([
-            subprocess_command
-        ])
+        output = subprocess.check_output(subprocess_command)
         log_info(output)
 
         # Check that removal is successful
@@ -320,9 +315,7 @@ class TestServeriOS(TestServerBase):
 
          # "ios-deploy", "--justlaunch", "--bundle", self.app_path
         subprocess_command = ["xcrun", "devicectl", "device",  "install", "app", self.app_path]
-        output = subprocess.check_output([
-           subprocess_command
-        ])
+        output = subprocess.check_output(subprocess_command)
         log_info(output)
 
         self._wait_until_reachable(port=self.port)
