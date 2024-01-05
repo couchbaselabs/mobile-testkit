@@ -151,7 +151,7 @@ class TestServeriOS(TestServerBase):
         # install app / launch app to connected device
         # subprocess_command = "ios-deploy", "--justlaunch", "--bundle", self.app_path
         # if self.xcode15:
-        subprocess_command = ["xcrun", "devicectl", "device",  "install", "app", self.app_path]
+        subprocess_command = ["xcrun", "devicectl", "device",  "install", "app", "--device", self.device_id, self.app_path]
         output = subprocess.check_output(subprocess_command)
         log_info(output)
         # subprocess_command = "ios-deploy", "--list_bundle_id"
@@ -244,7 +244,7 @@ class TestServeriOS(TestServerBase):
         Remove the iOS app from the connected device
         """
          # "ios-deploy", "--uninstall_only", "--bundle_id", self.bundle_id
-        subprocess_command = ["xcrun", "devicectl", "device",  "uninstall", "app", self.bundle_id]
+        subprocess_command = ["xcrun", "devicectl", "device",  "uninstall", "app", "--device", self.device_id, self.bundle_id]
         output = subprocess.check_output(subprocess_command)
         log_info(output)
 
@@ -314,7 +314,7 @@ class TestServeriOS(TestServerBase):
         self.app_path = "{}/{}/{}".format(BINARY_DIR, self.app_dir, self.app_name)
 
          # "ios-deploy", "--justlaunch", "--bundle", self.app_path
-        subprocess_command = ["xcrun", "devicectl", "device",  "install", "app", self.app_path]
+        subprocess_command = ["xcrun", "devicectl", "device",  "install", "app", "--device", self.device_id, self.app_path]
         output = subprocess.check_output(subprocess_command)
         log_info(output)
 
@@ -379,7 +379,7 @@ class TestServeriOS(TestServerBase):
             output = subprocess.check_output(["xcrun", "simctl", "launch", "booted", self.bundle_id])
         else:
             # ["ios-deploy", "--justlaunch", "--bundle", self.app_path]
-            subprocess_command = ["xcrun", "devicectl", "device",  "install", "app", self.app_path]
+            subprocess_command = ["xcrun", "devicectl", "device",  "install", "app", "--device", self.device_id, self.app_path]
             output = subprocess.check_output(subprocess_command)
         log_info("output of open app is {}".format(output.decode()))
         time.sleep(5)
