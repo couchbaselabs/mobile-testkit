@@ -7,7 +7,11 @@
     - debug: msg="Stoping the Testserver "
     - debug: msg="Copying logs at - {{ log_full_path }}"
     - name: Stop TestServer
-      win_nssm:
-        name: TestServer
-        application: C:\PROGRA~1\dotnet\dotnet.exe
-        state: stopped
+      win_command: nssm stop TestServer
+      ignore_errors: true
+
+      # The Ansible generic way to stop the server, using win_nssm, can fail and cause all the tests to fail.
+      # win_nssm:
+      #  name: TestServer
+      #  application: C:\PROGRA~1\dotnet\dotnet.exe
+      #  state: stopped
