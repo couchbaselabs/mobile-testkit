@@ -314,7 +314,8 @@ class TestServeriOS(TestServerBase):
         self.app_path = "{}/{}/{}".format(BINARY_DIR, self.app_dir, self.app_name)
 
          # "ios-deploy", "--justlaunch", "--bundle", self.app_path
-        subprocess_command = ["xcrun", "devicectl", "device",  "install", "app", "--device", self.device_id, self.app_path]
+        # com.couchbase.CBLTestServer-iOS
+        subprocess_command = ["xcrun", "devicectl", "device",  "process", "launch", "--device", self.device_id, "com.couchbase.CBLTestServer-iOS"]
         output = subprocess.check_output(subprocess_command)
         log_info(output)
 
