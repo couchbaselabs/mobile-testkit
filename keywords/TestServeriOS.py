@@ -390,9 +390,9 @@ class TestServeriOS(TestServerBase):
         log_info("output of open app is {}".format(output.decode()))
         time.sleep(5)
 
-    def is_using_devicectl():
+    def is_using_devicectl(self):
         try:
-            output = subprocess.check_output(["xcrun", "devicectl"])
+            subprocess.check_output(["xcrun", "devicectl"])
             return True
         except Exception as e:
             return False
