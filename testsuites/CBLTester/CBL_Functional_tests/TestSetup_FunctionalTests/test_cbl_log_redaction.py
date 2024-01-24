@@ -50,7 +50,7 @@ def test_mask_password_in_logs(params_from_base_test_setup, password):
 
     channels = ["ABC"]
     c = cluster.Cluster(config=cluster_config)
-    c.reset(sg_config_path=sg_config)
+    # c.reset(sg_config_path=sg_config)
     # Clean up tmp logs before test runs
     delete_tmp_logs()
     replicator = Replication(base_url)
