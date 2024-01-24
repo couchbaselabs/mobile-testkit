@@ -42,6 +42,7 @@ class Client(object):
                     log_info("For url: {} Got response: {}".format(url, result))
                 return ValueSerializer.deserialize(result)
         except Exception as err:
+            input("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!GILAD LOOK FOR LOGS!!!!!")
             if resp.content:
                 cont = resp.content
                 if isinstance(resp.content, bytes):
