@@ -34,7 +34,7 @@ def test_mask_password_in_logs(params_from_base_test_setup, password):
     sg_blip_url = params_from_base_test_setup["target_url"]
     base_url = params_from_base_test_setup["base_url"]
     cluster_config = params_from_base_test_setup["cluster_config"]
-    sg_config = params_from_base_test_setup["sg_config"]
+    # sg_config = params_from_base_test_setup["sg_config"]
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
@@ -49,7 +49,7 @@ def test_mask_password_in_logs(params_from_base_test_setup, password):
         pytest.skip('This test cannot run with sg version below 2.0 or File logging is not enabled.')
 
     channels = ["ABC"]
-    c = cluster.Cluster(config=cluster_config)
+    # c = cluster.Cluster(config=cluster_config)
     # c.reset(sg_config_path=sg_config)
     # Clean up tmp logs before test runs
     delete_tmp_logs()
