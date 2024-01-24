@@ -5,6 +5,7 @@ from requests import Response
 from CBLClient.ValueSerializer import ValueSerializer
 from CBLClient.Args import Args
 from keywords.utils import log_info
+import time
 
 
 class Client(object):
@@ -42,7 +43,8 @@ class Client(object):
                     log_info("For url: {} Got response: {}".format(url, result))
                 return ValueSerializer.deserialize(result)
         except Exception as err:
-            input("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!GILAD LOOK FOR LOGS!!!!!")
+            print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!GILAD LOOK FOR LOGS!!!!!")
+            time.sleep(1000000)
             if resp.content:
                 cont = resp.content
                 if isinstance(resp.content, bytes):
