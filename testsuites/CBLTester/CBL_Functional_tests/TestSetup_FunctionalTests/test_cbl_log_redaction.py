@@ -7,6 +7,7 @@ import io
 from keywords.MobileRestClient import MobileRestClient
 from CBLClient.Replication import Replication
 from CBLClient.Authenticator import Authenticator
+from requests.sessions import Session
 
 from libraries.testkit import cluster
 from keywords.utils import log_info
@@ -33,8 +34,8 @@ def test_mask_password_in_logs(params_from_base_test_setup, password):
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_blip_url = params_from_base_test_setup["target_url"]
     base_url = params_from_base_test_setup["base_url"]
-    # cluster_config = params_from_base_test_setup["cluster_config"]
-    # sg_config = params_from_base_test_setup["sg_config"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_config = params_from_base_test_setup["sg_config"]
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
@@ -49,8 +50,21 @@ def test_mask_password_in_logs(params_from_base_test_setup, password):
         pytest.skip('This test cannot run with sg version below 2.0 or File logging is not enabled.')
 
     channels = ["ABC"]
-    # c = cluster.Cluster(config=cluster_config)
-    # c.reset(sg_config_path=sg_config)
+    c = cluster.Cluster(config=cluster_config)
+    try:
+        se = Session()
+        se.headers['Content-Type'] = 'application/json'
+        se.get("http://{}:{}/".format("10.100.150.115", "8080"))
+    except Exception as e:
+        raise(e)
+    c.reset(sg_config_path=sg_config)
+    try:
+        se = Session()
+        se.headers['Content-Type'] = 'application/json'
+        se.get("http://{}:{}/".format("10.100.150.115", "8080"))
+    except Exception as e:
+        raise(e)
+
     # Clean up tmp logs before test runs
     delete_tmp_logs()
     replicator = Replication(base_url)
