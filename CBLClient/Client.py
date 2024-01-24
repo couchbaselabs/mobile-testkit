@@ -28,6 +28,8 @@ class Client(object):
             # Create connection to method endpoint.
             headers = {"Content-Type": "application/json"}
             self.session.headers = headers
+            print("***************GILAD BODY=" + str(body))
+            print("****************GILAD URL=" + str(url))
             resp = self.session.post(url, data=json.dumps(body))
             resp.raise_for_status()
             responseCode = resp.status_code
@@ -42,7 +44,6 @@ class Client(object):
                     log_info("For url: {} Got response: {}".format(url, result))
                 return ValueSerializer.deserialize(result)
         except Exception as err:
-            print("*********************************************************" + str(resp.request))
             if resp.content:
                 cont = resp.content
                 if isinstance(resp.content, bytes):
