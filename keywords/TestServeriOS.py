@@ -354,12 +354,13 @@ class TestServeriOS(TestServerBase):
             home = os.environ['HOME']
             ios_log_file = "{}/Library/Logs/CoreSimulator/{}/system.log".format(home, self.device_id)
             try:
+                print("Gilad Log location: " +  self.logfile_name)
                 copyfile(ios_log_file, self.logfile_name)
                 # Empty the simulator logs so that the next test run
                 # will only have logs for that run
                 open(ios_log_file, 'w').close()
             except:
-                log_info("********************WARNING: Could not  find CBL logs")
+                print("********************WARNING: Could not  find CBL logs")
 
     def _verify_running(self):
         """
