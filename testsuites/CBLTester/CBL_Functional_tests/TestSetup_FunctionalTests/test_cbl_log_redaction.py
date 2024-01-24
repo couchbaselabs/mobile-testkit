@@ -33,7 +33,7 @@ def test_mask_password_in_logs(params_from_base_test_setup, password):
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_blip_url = params_from_base_test_setup["target_url"]
     base_url = params_from_base_test_setup["base_url"]
-    cluster_config = params_from_base_test_setup["cluster_config"]
+    # cluster_config = params_from_base_test_setup["cluster_config"]
     # sg_config = params_from_base_test_setup["sg_config"]
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
