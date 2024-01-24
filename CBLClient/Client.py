@@ -28,8 +28,6 @@ class Client(object):
             # Create connection to method endpoint.
             headers = {"Content-Type": "application/json"}
             self.session.headers = headers
-            print("***************GILAD BODY=" + str(body))
-            print("****************GILAD URL=" + str(url))
             resp = self.session.post(url, data=json.dumps(body))
             resp.raise_for_status()
             responseCode = resp.status_code
