@@ -394,13 +394,12 @@ class Cluster:
         )
         print("gilad_debug=" + str(gilad_debug))
         if gilad_debug:
-            print("*************************************** INSIDE GILAD DEBUG")
             try:
                 se = Session()
                 se.headers['Content-Type'] = 'application/json'
                 se.get("http://{}:{}/".format("10.100.150.115", "8080"))
             except Exception as e:
-                log_info("&&&&&&&&&&&&&&&&&&&&&&&&&&& GILAD BEFORE START SGW")
+                log_info("&&&&&&&&&&&&&&&&&&&&&&&&&&& GILAD AFTER START SGW")
                 raise(e)
         assert status == 0, "Failed to start to Sync Gateway"
 
