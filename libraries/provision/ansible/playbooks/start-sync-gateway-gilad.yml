@@ -1,4 +1,0 @@
-- hosts: couchbase_servers
-
-  tasks:
-  - debug: msg="dummy debug"
