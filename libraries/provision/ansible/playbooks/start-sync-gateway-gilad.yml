@@ -1,2 +1,2 @@
 - hosts: couchbase_servers
-- debug: msg="dummy debug"
+  - debug: msg="dummy debug"
