@@ -235,7 +235,15 @@ class Cluster:
                 server_scheme = "https"
 
             couchbase_server_primary_node = get_cbs_primary_nodes_str(self._cluster_config, couchbase_server_primary_node)
-
+            log_info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^GILAD DEBUG")
+            if gilad_debug:
+                try:
+                    se = Session()
+                    se.headers['Content-Type'] = 'application/json'
+                    se.get("http://{}:{}/".format("10.100.150.115", "8080"))
+                except Exception as e:
+                    log_info("&&&&&&&&&&&&&&&&&&&&&&&&&&& GILAD BEFORE START SGW")
+                    raise(e)
             # Start sync-gateway
             playbook_vars = {
                 "sync_gateway_config_filepath": config_path_full,
