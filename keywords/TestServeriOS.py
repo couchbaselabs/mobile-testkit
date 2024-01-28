@@ -304,6 +304,8 @@ class TestServeriOS(TestServerBase):
         log_info(output)
         self._wait_until_reachable(port=self.port)
         self._verify_running()
+        time.sleep(180)
+        self._verify_running()
 
     def start_device(self, logfile_name):
         """
@@ -321,11 +323,11 @@ class TestServeriOS(TestServerBase):
         if self.using_devicectl:
             subprocess_command = ["xcrun", "devicectl", "device",  "process", "launch", "--device", self.device_id, self.bundle_id]
         output = subprocess.check_output(subprocess_command)
-        log_info("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++GILAD" + str(self.using_devicectl))
         log_info(output)
 
         self._wait_until_reachable(port=self.port)
         self._verify_running()
+
 
     def _verify_launched(self):
         """ Poll on expected http://<host>:<port> until it is reachable
