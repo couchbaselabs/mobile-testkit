@@ -57,7 +57,7 @@ def test_mask_password_in_logs(params_from_base_test_setup, password):
         se.get("http://{}:{}/".format("10.100.150.115", "8080"))
     except Exception as e:
         raise(e)
-    c.reset(sg_config_path=sg_config)
+    c.reset(sg_config_path=sg_config, gilad_debug=True)
     try:
         se = Session()
         se.headers['Content-Type'] = 'application/json'
