@@ -378,7 +378,7 @@ class Cluster:
                 playbook_vars["disable_admin_auth"] = '"admin_interface_authentication": false,    \n"metrics_interface_authentication": false,'
 
             # Sleep for a few seconds for the indexes to teardown
-            time.sleep(5)
+            time.sleep(30)
             # time.sleep(30)
         if gilad_debug:
             try:
@@ -392,7 +392,8 @@ class Cluster:
             "start-sync-gateway.yml",
             extra_vars=playbook_vars
         )
-        print("gilad_debug=" + str(gilad_debug))
+        time.sleep(30)
+        print("zhovna_debug=" + str(gilad_debug))
         if gilad_debug:
             try:
                 se = Session()
