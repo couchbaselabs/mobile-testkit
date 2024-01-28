@@ -378,7 +378,7 @@ class Cluster:
                 playbook_vars["disable_admin_auth"] = '"admin_interface_authentication": false,    \n"metrics_interface_authentication": false,'
 
             # Sleep for a few seconds for the indexes to teardown
-            time.sleep(30)
+            time.sleep(120)
             # time.sleep(30)
         if gilad_debug:
             try:
@@ -386,7 +386,7 @@ class Cluster:
                 se.headers['Content-Type'] = 'application/json'
                 se.get("http://{}:{}/".format("10.100.150.115", "8080"))
             except Exception as e:
-                log_info("&&&&&&&&&&&&&&&&&&&&&&&&&&& GILAD BEFORE START SGW")
+                log_info("&&&&&&&&&&&&&&&&&&&&&&&&&&& ZHOVNA BEFORE START SGW")
                 raise(e)
         ansible_file = "start-sync-gateway.yml"
         if gilad_debug:
