@@ -380,7 +380,6 @@ class Cluster:
             # Sleep for a few seconds for the indexes to teardown
             time.sleep(5)
             # time.sleep(30)
-        log_info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^GILAD DEBUG")
         if gilad_debug:
             try:
                 se = Session()
@@ -393,7 +392,9 @@ class Cluster:
             "start-sync-gateway.yml",
             extra_vars=playbook_vars
         )
+        print("gilad_debug=" + str(gilad_debug))
         if gilad_debug:
+            print("*************************************** INSIDE GILAD DEBUG")
             try:
                 se = Session()
                 se.headers['Content-Type'] = 'application/json'

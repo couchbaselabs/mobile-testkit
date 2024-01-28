@@ -52,6 +52,7 @@ def test_mask_password_in_logs(params_from_base_test_setup, password):
     channels = ["ABC"]
     c = cluster.Cluster(config=cluster_config)
     try:
+        print("INSIDE GILADTEST")
         se = Session()
         se.headers['Content-Type'] = 'application/json'
         se.get("http://{}:{}/".format("10.100.150.115", "8080"))
