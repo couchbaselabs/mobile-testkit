@@ -304,8 +304,7 @@ class TestServeriOS(TestServerBase):
         log_info(output)
         self._wait_until_reachable(port=self.port)
         self._verify_running()
-        time.sleep(180)
-        self._verify_running()
+
 
     def start_device(self, logfile_name):
         """
@@ -326,6 +325,8 @@ class TestServeriOS(TestServerBase):
         log_info(output)
 
         self._wait_until_reachable(port=self.port)
+        self._verify_running()
+        time.sleep(240)
         self._verify_running()
 
 
