@@ -7,7 +7,6 @@ import io
 from keywords.MobileRestClient import MobileRestClient
 from CBLClient.Replication import Replication
 from CBLClient.Authenticator import Authenticator
-from requests.sessions import Session
 
 from libraries.testkit import cluster
 from keywords.utils import log_info
@@ -51,21 +50,7 @@ def test_mask_password_in_logs(params_from_base_test_setup, password):
 
     channels = ["ABC"]
     c = cluster.Cluster(config=cluster_config)
-    try:
-        print("INSIDE GILADTEST")
-        se = Session()
-        se.headers['Content-Type'] = 'application/json'
-        se.get("http://{}:{}/".format("10.100.150.115", "8080"))
-    except Exception as e:
-        raise(e)
-    c.reset(sg_config_path=sg_config, gilad_debug=True)
-    try:
-        se = Session()
-        se.headers['Content-Type'] = 'application/json'
-        se.get("http://{}:{}/".format("10.100.150.115", "8080"))
-    except Exception as e:
-        raise(e)
-
+    c.reset(sg_config_path=sg_config)
     # Clean up tmp logs before test runs
     delete_tmp_logs()
     replicator = Replication(base_url)

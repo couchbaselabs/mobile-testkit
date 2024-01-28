@@ -5,7 +5,6 @@ from jinja2 import Template
 from requests.exceptions import ConnectionError
 
 import keywords.exceptions
-from requests.sessions import Session
 from keywords.couchbaseserver import CouchbaseServer
 from keywords.exceptions import ProvisioningError
 from keywords.utils import log_info, add_cbs_to_sg_config_server_field
@@ -116,7 +115,7 @@ class Cluster:
         self.servers = [CouchbaseServer(url=cb_url) for cb_url in cbs_urls]
         self.sync_gateway_config = None  # will be set to Config object when reset() called
 
-    def reset(self, sg_config_path, bucket_list=[], use_config=False, sgdb_creation=True, gilad_debug=False):
+    def reset(self, sg_config_path, bucket_list=[], use_config=False, sgdb_creation=True):
 
         ansible_runner = AnsibleRunner(self._cluster_config)
 
@@ -128,66 +127,25 @@ class Cluster:
         log_info(">>> Stopping sync_gateway")
         status = ansible_runner.run_ansible_playbook("stop-sync-gateway.yml")
         assert status == 0, "Failed to stop sync gateway"
-        if gilad_debug:
-            try:
-                se = Session()
-                se.headers['Content-Type'] = 'application/json'
-                se.get("http://{}:{}/".format("10.100.150.115", "8080"))
-            except Exception as e:
-                log_info("&&&&&&&&&&&&&&&&&&&&&&&&&&& GILAD AFTER STOPPING SGW")
-                raise(e)
 
         # Stop sync_gateway accels
         log_info(">>> Stopping sg_accel")
         status = ansible_runner.run_ansible_playbook("stop-sg-accel.yml")
         assert status == 0, "Failed to stop sg_accel"
-        if gilad_debug:
-            try:
-                se = Session()
-                se.headers['Content-Type'] = 'application/json'
-                se.get("http://{}:{}/".format("10.100.150.115", "8080"))
-            except Exception as e:
-                log_info("&&&&&&&&&&&&&&&&&&&&&&&&&&& GILAD AFTER STOPPING ACCEL")
-                raise(e)
-
 
         # Deleting sync_gateway artifacts
         log_info(">>> Deleting sync_gateway artifacts")
         status = ansible_runner.run_ansible_playbook("delete-sync-gateway-artifacts.yml")
         assert status == 0, "Failed to delete sync_gateway artifacts"
-        if gilad_debug:
-            try:
-                se = Session()
-                se.headers['Content-Type'] = 'application/json'
-                se.get("http://{}:{}/".format("10.100.150.115", "8080"))
-            except Exception as e:
-                log_info("&&&&&&&&&&&&&&&&&&&&&&&&&&& GILAD AFTER DELETEING SGW ARTEFACTS")
-                raise(e)
-
 
         # Deleting sg_accel artifacts
         log_info(">>> Deleting sg_accel artifacts")
         status = ansible_runner.run_ansible_playbook("delete-sg-accel-artifacts.yml")
         assert status == 0, "Failed to delete sg_accel artifacts"
-        if gilad_debug:
-            try:
-                se = Session()
-                se.headers['Content-Type'] = 'application/json'
-                se.get("http://{}:{}/".format("10.100.150.115", "8080"))
-            except Exception as e:
-                log_info("&&&&&&&&&&&&&&&&&&&&&&&&&&& GILAD AFTER DELETEING SGW ACCESL ARTEFACTS")
-                raise(e)
+
         # Delete buckets
         log_info(">>> Deleting buckets on: {}".format(self.servers[0].url))
         self.servers[0].delete_buckets()
-        if gilad_debug:
-            try:
-                se = Session()
-                se.headers['Content-Type'] = 'application/json'
-                se.get("http://{}:{}/".format("10.100.150.115", "8080"))
-            except Exception as e:
-                log_info("&&&&&&&&&&&&&&&&&&&&&&&&&&& GILAD AFTER DELETE BUCKETS")
-                raise(e)
         # Parse config and grab bucket names
         config_path_full = os.path.abspath(sg_config_path)
         config = Config(config_path_full, self._cluster_config, bucket_list=bucket_list)
@@ -196,14 +154,6 @@ class Cluster:
 
         if get_sg_version(self._cluster_config) >= "3.0.0" and not is_centralized_persistent_config_disabled(self._cluster_config):
             playbook_vars, db_config_json, sgw_config_data = self.setup_server_and_sgw(sg_config_path=sg_config_path, bucket_list=bucket_list, use_config=use_config)
-            if gilad_debug:
-                try:
-                    se = Session()
-                    se.headers['Content-Type'] = 'application/json'
-                    se.get("http://{}:{}/".format("10.100.150.115", "8080"))
-                except Exception as e:
-                    log_info("&&&&&&&&&&&&&&&&&&&&&&&&&&& GILAD AFTER SETUP SGW AND BUCKETS")
-                    raise(e)
         else:
             bucket_name_set = config.get_bucket_name_set()
             sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
@@ -235,6 +185,7 @@ class Cluster:
                 server_scheme = "https"
 
             couchbase_server_primary_node = get_cbs_primary_nodes_str(self._cluster_config, couchbase_server_primary_node)
+
             # Start sync-gateway
             playbook_vars = {
                 "sync_gateway_config_filepath": config_path_full,
@@ -378,34 +329,13 @@ class Cluster:
                 playbook_vars["disable_admin_auth"] = '"admin_interface_authentication": false,    \n"metrics_interface_authentication": false,'
 
             # Sleep for a few seconds for the indexes to teardown
-        time.sleep(120)
+            time.sleep(5)
             # time.sleep(30)
-        if gilad_debug:
-            try:
-                log_info("***********************************GILAD HERE")
-                se = Session()
-                se.headers['Content-Type'] = 'application/json'
-                se.get("http://{}:{}/".format("10.100.150.115", "8080"))
-            except Exception as e:
-                log_info("&&&&&&&&&&&&&&&&&&&&&&&&&&& ZHOVNA BEFORE START SGW")
-                raise(e)
-        ansible_file = "start-sync-gateway.yml"
-        if not gilad_debug:
-            ansible_file = "start-sync-gateway-gilad.yml"
+
         status = ansible_runner.run_ansible_playbook(
-            ansible_file,
+            "start-sync-gateway.yml",
             extra_vars=playbook_vars
         )
-        time.sleep(30)
-        print("zhovna_debug=" + str(gilad_debug))
-        if gilad_debug:
-            try:
-                se = Session()
-                se.headers['Content-Type'] = 'application/json'
-                se.get("http://{}:{}/".format("10.100.150.115", "8080"))
-            except Exception as e:
-                log_info("&&&&&&&&&&&&&&&&&&&&&&&&&&& GILAD AFTER START SGW")
-                raise(e)
         assert status == 0, "Failed to start to Sync Gateway"
 
         # HACK - only enable sg_accel for distributed index tests

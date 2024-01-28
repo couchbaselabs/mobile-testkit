@@ -5,7 +5,6 @@ from requests import Response
 from CBLClient.ValueSerializer import ValueSerializer
 from CBLClient.Args import Args
 from keywords.utils import log_info
-import time
 
 
 class Client(object):

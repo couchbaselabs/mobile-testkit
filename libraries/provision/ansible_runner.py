@@ -20,7 +20,7 @@ class AnsibleRunner:
             inventory_filename=inventory_filename,
             playbook=playbook_filename,
             extra_vars=extra_vars,
-            verbosity=10,  # change this to a higher number for -vvv debugging (try 10),
+            verbosity=0,  # change this to a higher number for -vvv debugging (try 10),
             subset=subset
         )
 
