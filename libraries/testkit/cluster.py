@@ -393,6 +393,14 @@ class Cluster:
             "start-sync-gateway.yml",
             extra_vars=playbook_vars
         )
+        if gilad_debug:
+            try:
+                se = Session()
+                se.headers['Content-Type'] = 'application/json'
+                se.get("http://{}:{}/".format("10.100.150.115", "8080"))
+            except Exception as e:
+                log_info("&&&&&&&&&&&&&&&&&&&&&&&&&&& GILAD BEFORE START SGW")
+                raise(e)
         assert status == 0, "Failed to start to Sync Gateway"
 
         # HACK - only enable sg_accel for distributed index tests
