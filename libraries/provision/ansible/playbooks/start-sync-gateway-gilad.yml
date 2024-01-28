@@ -1,0 +1,34 @@
+---
+# Deploy sync gateway configs
+- hosts: sync_gateways
+
+  vars:
+    sync_gateway_config_filepath:
+    # hack until mobile-testkit/issues/406 allows any sync gateway to be referenced
+    sync_gateway_node: "{{ hostvars[groups.sync_gateways[0]].ansible_host }}"
+    webhook_ip: "{{ hostvars[groups.webhook_ip[0]].ansible_host }}"
+    is_index_writer: "false"
+    autoimport:
+    xattrs:
+    server_scheme:
+    couchbase_server_primary_node:
+    server_port:
+    sslcert:
+    sslkey:
+    logging:
+    x509_auth:
+    x509_certs_dir:
+    cacertpath:
+    tls:
+
+  tasks:
+  - include: tasks/deploy-sync-gateway-config.yml
+    sudo: yes
+    sudo: root
+    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon" or ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
+
+  - include: tasks/deploy-sync-gateway-config-macos.yml
+    when: ansible_os_family == "Darwin"
+
+  - include: tasks/deploy-sync-gateway-config-windows.yml
+    when: ansible_os_family == "Windows"
