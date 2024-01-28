@@ -388,8 +388,11 @@ class Cluster:
             except Exception as e:
                 log_info("&&&&&&&&&&&&&&&&&&&&&&&&&&& GILAD BEFORE START SGW")
                 raise(e)
+        ansible_file = "start-sync-gateway.yml"
+        if gilad_debug:
+            ansible_file = "start-sync-gateway-gilad.yml"
         status = ansible_runner.run_ansible_playbook(
-            "start-sync-gateway.yml",
+            ansible_file,
             extra_vars=playbook_vars
         )
         time.sleep(30)
