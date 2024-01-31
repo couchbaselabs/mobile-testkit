@@ -23,7 +23,7 @@ class TestServeriOS(TestServerBase):
         super(TestServeriOS, self).__init__(version_build, host, port)
         self.liteserv_admin_url = "http://{}:59850".format(self.host)
         self.logfile_name = None
-        self.device_id = "00008101-000E0519020A001E"
+        self.device_id = ""
         self.device = "iPhone-8-Plus"
         self.debug_mode = False
         self.app_path = ""
@@ -45,7 +45,8 @@ class TestServeriOS(TestServerBase):
             raise Exception("No iOS app available to download for 2.1.0 at latestbuild. Use xcode to create app.")
         if debug_mode:
             self.debug_mode = True
-
+        if self.using_devicectl:
+            self.device_id = "iPhone.coredevice.local"
         if self.platform == "ios":
             if community_enabled:
                 self.app_dir = "CBLTestServer-iOS-community-{}".format(version_build)
