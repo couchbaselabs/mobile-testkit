@@ -326,9 +326,6 @@ class TestServeriOS(TestServerBase):
 
         self._wait_until_reachable(port=self.port)
         self._verify_running()
-        time.sleep(240)
-        self._verify_running()
-
 
     def _verify_launched(self):
         """ Poll on expected http://<host>:<port> until it is reachable
