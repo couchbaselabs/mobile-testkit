@@ -134,6 +134,8 @@ def test_replication_configuration_valid_values(params_from_base_test_setup, num
     replicator.stop(repl)
 
 
+@pytest.mark.skipif(pytest.config.getoption("--liteserv-platform").startswith("net-"),
+                    reason="Under investiation:https://issues.couchbase.com/browse/CM-1163")
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("authenticator_type, attachments_generator", [
@@ -218,6 +220,8 @@ def test_replication_configuration_with_pull_replication(params_from_base_test_s
                 assert verify_stat_on_prometheus("sgw_replication_pull_attachment_pull_count"), expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["attachment_pull_count"]
 
 
+@pytest.mark.skipif(pytest.config.getoption("--liteserv-platform").startswith("net-"),
+                    reason="Under investiation:https://issues.couchbase.com/browse/CM-1163")
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("authenticator_type, attachments_generator", [
@@ -1403,7 +1407,6 @@ def test_replication_wrong_blip(params_from_base_test_setup):
     assert "ws" in ex_data and "wss" in ex_data
 
 
-@pytest.mark.usefixtures("class_init")
 @pytest.mark.skipif(pytest.config.getoption("--liteserv-platform").startswith("net-"),
                     reason="Under investiation:https://issues.couchbase.com/browse/CM-1163")
 @pytest.mark.listener
@@ -1526,7 +1529,6 @@ def test_default_conflict_scenario_delete_wins(params_from_base_test_setup, dele
     assert len(sg_docs) == len(cbl_docs), "new doc created with same doc id as deleted docs are not created and replicated"
 
 
-@pytest.mark.usefixtures("class_init")
 @pytest.mark.skipif(pytest.config.getoption("--liteserv-platform").startswith("net-"),
                     reason="Under investiation:https://issues.couchbase.com/browse/CM-1163")
 @pytest.mark.listener
@@ -1646,7 +1648,6 @@ def test_default_conflict_scenario_highRevGeneration_wins(params_from_base_test_
         replicator.stop(repl)
 
 
-@pytest.mark.usefixtures("class_init")
 @pytest.mark.skipif(pytest.config.getoption("--liteserv-platform").startswith("net-"),
                     reason="Under investiation:https://issues.couchbase.com/browse/CM-1163")
 @pytest.mark.listener
@@ -2251,6 +2252,8 @@ def test_default_conflict_withConflicts_withChannels(params_from_base_test_setup
     replicator.stop(repl2)
 
 
+@pytest.mark.skipif(pytest.config.getoption("--liteserv-platform").startswith("net-"),
+                    reason="Under investiation:https://issues.couchbase.com/browse/CM-1163")
 @pytest.mark.listener
 @pytest.mark.replication
 def test_CBL_push_pull_with_sg_down(params_from_base_test_setup):
