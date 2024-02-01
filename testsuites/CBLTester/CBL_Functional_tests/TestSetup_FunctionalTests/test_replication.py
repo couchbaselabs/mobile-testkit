@@ -1404,7 +1404,7 @@ def test_replication_wrong_blip(params_from_base_test_setup):
 
 
 @pytest.mark.usefixtures("class_init")
-@pytest.mark.skipif(pytest.liteserv_platform.startswith("net-"),
+@pytest.mark.skipif(params_from_base_test_setup.liteserv_platform.startswith("net-"),
                     reason="Under investiation:https://issues.couchbase.com/browse/CM-1163")
 @pytest.mark.listener
 @pytest.mark.replication
@@ -1527,7 +1527,7 @@ def test_default_conflict_scenario_delete_wins(params_from_base_test_setup, dele
 
 
 @pytest.mark.usefixtures("class_init")
-@pytest.mark.skipif(pytest.liteserv_platform.startswith("net-"),
+@pytest.mark.skipif(params_from_base_test_setup.liteserv_platform.startswith("net-"),
                     reason="Under investiation:https://issues.couchbase.com/browse/CM-1163")
 @pytest.mark.listener
 @pytest.mark.replication
@@ -1647,7 +1647,7 @@ def test_default_conflict_scenario_highRevGeneration_wins(params_from_base_test_
 
 
 @pytest.mark.usefixtures("class_init")
-@pytest.mark.skipif(pytest.liteserv_platform.startswith("net-"),
+@pytest.mark.skipif(params_from_base_test_setup.liteserv_platform.startswith("net-"),
                     reason="Under investiation:https://issues.couchbase.com/browse/CM-1163")
 @pytest.mark.listener
 @pytest.mark.replication
