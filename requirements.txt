@@ -64,4 +64,4 @@ numpy==1.21.6
 pytest-rerunfailures==8.0
 flask==1.1.2
 typing-extensions==3.7.4.3
-werkzeug==2.0.3
+werkzeug==2.2.3
