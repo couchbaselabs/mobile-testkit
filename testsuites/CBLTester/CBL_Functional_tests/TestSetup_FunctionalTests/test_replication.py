@@ -1402,6 +1402,7 @@ def test_replication_wrong_blip(params_from_base_test_setup):
         assert "unsupported" in ex_data or "Invalid" in ex_data
     assert "ws" in ex_data and "wss" in ex_data
 
+
 @pytest.mark.usefixtures("params_from_base_test_setup")
 @pytest.mark.skipif(pytest.liteserv_platform.startswith("net-"),
                     reason="Under investiation:https://issues.couchbase.com/browse/CM-1163")
@@ -1524,6 +1525,7 @@ def test_default_conflict_scenario_delete_wins(params_from_base_test_setup, dele
     assert len(cbl_docs) == num_of_docs
     assert len(sg_docs) == len(cbl_docs), "new doc created with same doc id as deleted docs are not created and replicated"
 
+
 @pytest.mark.usefixtures("params_from_base_test_setup")
 @pytest.mark.skipif(pytest.liteserv_platform.startswith("net-"),
                     reason="Under investiation:https://issues.couchbase.com/browse/CM-1163")
@@ -1642,6 +1644,7 @@ def test_default_conflict_scenario_highRevGeneration_wins(params_from_base_test_
         assert sg_docs_values[i]["updates"] == verify_updates, "sg with high rev id is not updated"
     if sg_mode == "di":
         replicator.stop(repl)
+
 
 @pytest.mark.usefixtures("params_from_base_test_setup")
 @pytest.mark.skipif(pytest.liteserv_platform.startswith("net-"),
