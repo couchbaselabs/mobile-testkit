@@ -1403,6 +1403,8 @@ def test_replication_wrong_blip(params_from_base_test_setup):
     assert "ws" in ex_data and "wss" in ex_data
 
 
+@pytest.mark.skipif(pytest.liteserv_platform.startswith("net-"),
+                    reason="Under investiation:https://issues.couchbase.com/browse/CM-1163")
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("delete_source, attachments, number_of_updates", [
@@ -1523,6 +1525,8 @@ def test_default_conflict_scenario_delete_wins(params_from_base_test_setup, dele
     assert len(sg_docs) == len(cbl_docs), "new doc created with same doc id as deleted docs are not created and replicated"
 
 
+@pytest.mark.skipif(pytest.liteserv_platform.startswith("net-"),
+                    reason="Under investiation:https://issues.couchbase.com/browse/CM-1163")
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("highrev_source, attachments", [
@@ -1640,6 +1644,8 @@ def test_default_conflict_scenario_highRevGeneration_wins(params_from_base_test_
         replicator.stop(repl)
 
 
+@pytest.mark.skipif(pytest.liteserv_platform.startswith("net-"),
+                    reason="Under investiation:https://issues.couchbase.com/browse/CM-1163")
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("highrevId_source, attachments", [
