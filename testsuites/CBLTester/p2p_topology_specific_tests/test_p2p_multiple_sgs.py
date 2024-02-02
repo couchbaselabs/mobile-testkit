@@ -13,6 +13,8 @@ from utilities.cluster_config_utils import persist_cluster_config_environment_pr
 from CBLClient.PeerToPeer import PeerToPeer
 
 
+@pytest.mark.skipif(pytest.config.getoption("--liteserv-platform").startswith("net-"),
+                    reason="Under investigation:https://issues.couchbase.com/browse/CM-1164")
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("sg_conf_name, num_of_docs", [
