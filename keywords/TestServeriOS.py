@@ -153,13 +153,13 @@ class TestServeriOS(TestServerBase):
         # install app / launch app to connected device
         subprocess_command = "ios-deploy", "--justlaunch", "--bundle", self.app_path
         if self.using_devicectl:
-            subprocess_command = ["xcrun", "devicectl", "device",  "install", "app", "--device", self.device_id, self.app_path]
+            subprocess_command = ["xcrun", "devicectl", "device", "install", "app", "--device", self.device_id, self.app_path]
         output = subprocess.check_output(subprocess_command)
         log_info(output)
 
         subprocess_command = "ios-deploy", "--list_bundle_id"
         if self.using_devicectl:
-            subprocess_command = ["xcrun", "devicectl", "device",  "info", "apps", "--device", self.device_id]
+            subprocess_command = ["xcrun", "devicectl", "device", "info", "apps", "--device", self.device_id]
         output = subprocess.check_output(subprocess_command)
         log_info(output)
 
@@ -249,12 +249,15 @@ class TestServeriOS(TestServerBase):
         """
         subprocess_command = ["ios-deploy", "--uninstall_only", "--bundle_id", self.bundle_id]
         if self.using_devicectl:
-            subprocess_command = ["xcrun", "devicectl", "device",  "uninstall", "app", "--device", self.device_id, self.bundle_id]
+            subprocess_command = ["xcrun", "devicectl", "device", "uninstall", "app", "--device", self.device_id, self.bundle_id]
         output = subprocess.check_output(subprocess_command)
         log_info(output)
 
         # Check that removal is successful
-        output = subprocess.check_output(["xcrun devicectl device info apps"])
+        if self.using_devicectl:
+            output = subprocess.check_output(["xcrun devicectl device info apps"])
+        else:
+            output = subprocess.check_output(["ios-deploy", "--list_bundle_id"])
         log_info(output)
 
         if self.bundle_id in output.decode():
@@ -306,7 +309,6 @@ class TestServeriOS(TestServerBase):
         self._wait_until_reachable(port=self.port)
         self._verify_running()
 
-
     def start_device(self, logfile_name):
         """
         1. Starts a LiteServ with logging to provided logfile file object.
@@ -321,7 +323,7 @@ class TestServeriOS(TestServerBase):
 
         subprocess_command = ["ios-deploy", "--justlaunch", "--bundle", self.app_path]
         if self.using_devicectl:
-            subprocess_command = ["xcrun", "devicectl", "device",  "process", "launch", "--device", self.device_id, self.bundle_id]
+            subprocess_command = ["xcrun", "devicectl", "device", "process", "launch", "--device", self.device_id, self.bundle_id]
         output = subprocess.check_output(subprocess_command)
         log_info(output)
 
@@ -360,8 +362,9 @@ class TestServeriOS(TestServerBase):
                 # Empty the simulator logs so that the next test run
                 # will only have logs for that run
                 open(ios_log_file, 'w').close()
-            except:
-                print("********************WARNING: Could not  find CBL logs in:" + str(self.logfile_name))
+            except Exception as e:
+                print("********************WARNING: Could not  find CBL logs in: " + str(self.logfile_name))
+                print("The exception was: " + str(e))
 
     def _verify_running(self):
         """
@@ -390,7 +393,7 @@ class TestServeriOS(TestServerBase):
         else:
             subprocess_command = ["ios-deploy", "--justlaunch", "--bundle", self.app_path]
             if self.using_devicectl:
-                subprocess_command = ["xcrun", "devicectl", "device",  "install", "app", "--device", self.device_id, self.app_path]
+                subprocess_command = ["xcrun", "devicectl", "device", "install", "app", "--device", self.device_id, self.app_path]
             output = subprocess.check_output(subprocess_command)
         log_info("output of open app is {}".format(output.decode()))
         time.sleep(5)
@@ -399,5 +402,5 @@ class TestServeriOS(TestServerBase):
         try:
             subprocess.check_output(["xcrun", "devicectl"])
             return True
-        except Exception as e:
+        except Exception:
             return False
