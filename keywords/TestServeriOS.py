@@ -23,7 +23,7 @@ class TestServeriOS(TestServerBase):
         super(TestServeriOS, self).__init__(version_build, host, port)
         self.liteserv_admin_url = "http://{}:59850".format(self.host)
         self.logfile_name = None
-        self.device_id = ""
+        self.device_id = None
         self.device = "iPhone-8-Plus"
         self.debug_mode = False
         self.app_path = ""
@@ -356,13 +356,12 @@ class TestServeriOS(TestServerBase):
             home = os.environ['HOME']
             ios_log_file = "{}/Library/Logs/CoreSimulator/{}/system.log".format(home, self.device_id)
             try:
-                print("Gilad Log location: " +  self.logfile_name)
                 copyfile(ios_log_file, self.logfile_name)
                 # Empty the simulator logs so that the next test run
                 # will only have logs for that run
                 open(ios_log_file, 'w').close()
             except:
-                print("********************WARNING: Could not  find CBL logs")
+                print("********************WARNING: Could not  find CBL logs in:" + str(self.logfile_name))
 
     def _verify_running(self):
         """
