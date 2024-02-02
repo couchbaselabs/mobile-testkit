@@ -1383,7 +1383,7 @@ def test_tombstoned_doc_auto_purge(params_from_base_test_setup):
         assert doc_id != picked_ch_ANB_doc_id, "tombstoned doc is not purged on CBL"
 
 
-@pytest.mark.skip(reason="Under investiation: https://issues.couchbase.com/browse/CM-1162")
+@pytest.mark.skip(reason="Under investigation:https://issues.couchbase.com/browse/CM-1162")
 @pytest.mark.listener
 @pytest.mark.channel_revocation
 @pytest.mark.parametrize('resurrect_keep_body, deletion_type, resurrect_type', [

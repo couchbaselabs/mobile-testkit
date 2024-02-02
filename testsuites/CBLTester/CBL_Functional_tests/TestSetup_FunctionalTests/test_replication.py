@@ -135,7 +135,7 @@ def test_replication_configuration_valid_values(params_from_base_test_setup, num
 
 
 @pytest.mark.skipif(pytest.config.getoption("--liteserv-platform").startswith("net-"),
-                    reason="Under investiation:https://issues.couchbase.com/browse/CM-1163")
+                    reason="Under investigation:https://issues.couchbase.com/browse/CM-1163")
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("authenticator_type, attachments_generator", [
@@ -221,7 +221,7 @@ def test_replication_configuration_with_pull_replication(params_from_base_test_s
 
 
 @pytest.mark.skipif(pytest.config.getoption("--liteserv-platform").startswith("net-"),
-                    reason="Under investiation:https://issues.couchbase.com/browse/CM-1163")
+                    reason="Under investigation:https://issues.couchbase.com/browse/CM-1163")
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("authenticator_type, attachments_generator", [
@@ -1408,7 +1408,7 @@ def test_replication_wrong_blip(params_from_base_test_setup):
 
 
 @pytest.mark.skipif(pytest.config.getoption("--liteserv-platform").startswith("net-"),
-                    reason="Under investiation:https://issues.couchbase.com/browse/CM-1163")
+                    reason="Under investigation:https://issues.couchbase.com/browse/CM-1163")
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("delete_source, attachments, number_of_updates", [
@@ -1530,7 +1530,7 @@ def test_default_conflict_scenario_delete_wins(params_from_base_test_setup, dele
 
 
 @pytest.mark.skipif(pytest.config.getoption("--liteserv-platform").startswith("net-"),
-                    reason="Under investiation:https://issues.couchbase.com/browse/CM-1163")
+                    reason="Under investigation:https://issues.couchbase.com/browse/CM-1163")
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("highrev_source, attachments", [
@@ -1649,7 +1649,7 @@ def test_default_conflict_scenario_highRevGeneration_wins(params_from_base_test_
 
 
 @pytest.mark.skipif(pytest.config.getoption("--liteserv-platform").startswith("net-"),
-                    reason="Under investiation:https://issues.couchbase.com/browse/CM-1163")
+                    reason="Under investigation:https://issues.couchbase.com/browse/CM-1163")
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("highrevId_source, attachments", [
@@ -2253,7 +2253,7 @@ def test_default_conflict_withConflicts_withChannels(params_from_base_test_setup
 
 
 @pytest.mark.skipif(pytest.config.getoption("--liteserv-platform").startswith("net-"),
-                    reason="Under investiation:https://issues.couchbase.com/browse/CM-1163")
+                    reason="Under investigation:https://issues.couchbase.com/browse/CM-1163")
 @pytest.mark.listener
 @pytest.mark.replication
 def test_CBL_push_pull_with_sg_down(params_from_base_test_setup):
