@@ -511,7 +511,7 @@ def test_replication_delete_event(params_from_base_test_setup, num_of_docs):
 
 
 @pytest.mark.skipif(pytest.config.getoption("--liteserv-platform").startswith("net-"),
-                    reason="Under investiation:https://issues.couchbase.com/browse/CM-1163")
+                    reason="Under investigation:https://issues.couchbase.com/browse/CM-1163")
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("attachment_generator, attachment_file_list", [
