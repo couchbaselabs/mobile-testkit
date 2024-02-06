@@ -30,6 +30,7 @@ class TestServeriOS(TestServerBase):
         self.app_name = ""
         self.platform = platform
         self.bundle_id = ""
+        self.using_devicectl = self.is_using_devicectl()
         self.released_version = {
             "2.0.0": 806,
             "2.1.0": 263,
@@ -44,7 +45,8 @@ class TestServeriOS(TestServerBase):
             raise Exception("No iOS app available to download for 2.1.0 at latestbuild. Use xcode to create app.")
         if debug_mode:
             self.debug_mode = True
-
+        if self.using_devicectl:
+            self.device_id = "iPhone.coredevice.local"
         if self.platform == "ios":
             if community_enabled:
                 self.app_dir = "CBLTestServer-iOS-community-{}".format(version_build)
@@ -149,12 +151,16 @@ class TestServeriOS(TestServerBase):
         log_info("Installing: {}".format(self.app_path))
 
         # install app / launch app to connected device
-        output = subprocess.check_output([
-            "ios-deploy", "--justlaunch", "--bundle", self.app_path
-        ])
+        subprocess_command = "ios-deploy", "--justlaunch", "--bundle", self.app_path
+        if self.using_devicectl:
+            subprocess_command = ["xcrun", "devicectl", "device", "install", "app", "--device", self.device_id, self.app_path]
+        output = subprocess.check_output(subprocess_command)
         log_info(output)
 
-        output = subprocess.check_output(["ios-deploy", "--list_bundle_id"])
+        subprocess_command = "ios-deploy", "--list_bundle_id"
+        if self.using_devicectl:
+            subprocess_command = ["xcrun", "devicectl", "device", "info", "apps", "--device", self.device_id]
+        output = subprocess.check_output(subprocess_command)
         log_info(output)
 
         if self.bundle_id not in output.decode():
@@ -241,13 +247,17 @@ class TestServeriOS(TestServerBase):
         """
         Remove the iOS app from the connected device
         """
-        output = subprocess.check_output([
-            "ios-deploy", "--uninstall_only", "--bundle_id", self.bundle_id
-        ])
+        subprocess_command = ["ios-deploy", "--uninstall_only", "--bundle_id", self.bundle_id]
+        if self.using_devicectl:
+            subprocess_command = ["xcrun", "devicectl", "device", "uninstall", "app", "--device", self.device_id, self.bundle_id]
+        output = subprocess.check_output(subprocess_command)
         log_info(output)
 
         # Check that removal is successful
-        output = subprocess.check_output(["ios-deploy", "--list_bundle_id"])
+        if self.using_devicectl:
+            output = subprocess.check_output(["xcrun devicectl device info apps"])
+        else:
+            output = subprocess.check_output(["ios-deploy", "--list_bundle_id"])
         log_info(output)
 
         if self.bundle_id in output.decode():
@@ -311,9 +321,10 @@ class TestServeriOS(TestServerBase):
         self.logfile_name = logfile_name
         self.app_path = "{}/{}/{}".format(BINARY_DIR, self.app_dir, self.app_name)
 
-        output = subprocess.check_output([
-            "ios-deploy", "--justlaunch", "--bundle", self.app_path
-        ])
+        subprocess_command = ["ios-deploy", "--justlaunch", "--bundle", self.app_path]
+        if self.using_devicectl:
+            subprocess_command = ["xcrun", "devicectl", "device", "process", "launch", "--device", self.device_id, self.bundle_id]
+        output = subprocess.check_output(subprocess_command)
         log_info(output)
 
         self._wait_until_reachable(port=self.port)
@@ -346,10 +357,14 @@ class TestServeriOS(TestServerBase):
         if self.logfile_name and self.device_id:
             home = os.environ['HOME']
             ios_log_file = "{}/Library/Logs/CoreSimulator/{}/system.log".format(home, self.device_id)
-            copyfile(ios_log_file, self.logfile_name)
-            # Empty the simulator logs so that the next test run
-            # will only have logs for that run
-            open(ios_log_file, 'w').close()
+            try:
+                copyfile(ios_log_file, self.logfile_name)
+                # Empty the simulator logs so that the next test run
+                # will only have logs for that run
+                open(ios_log_file, 'w').close()
+            except Exception as e:
+                print("********************WARNING: Could not  find CBL logs in: " + str(self.logfile_name))
+                print("The exception was: " + str(e))
 
     def _verify_running(self):
         """
@@ -376,6 +391,16 @@ class TestServeriOS(TestServerBase):
             # xcrun simctl launch booted com.couchbase.CBLTestServer-iOS
             output = subprocess.check_output(["xcrun", "simctl", "launch", "booted", self.bundle_id])
         else:
-            output = subprocess.check_output(["ios-deploy", "--justlaunch", "--bundle", self.app_path])
+            subprocess_command = ["ios-deploy", "--justlaunch", "--bundle", self.app_path]
+            if self.using_devicectl:
+                subprocess_command = ["xcrun", "devicectl", "device", "install", "app", "--device", self.device_id, self.app_path]
+            output = subprocess.check_output(subprocess_command)
         log_info("output of open app is {}".format(output.decode()))
         time.sleep(5)
+
+    def is_using_devicectl(self):
+        try:
+            subprocess.check_output(["xcrun", "devicectl"])
+            return True
+        except Exception:
+            return False
