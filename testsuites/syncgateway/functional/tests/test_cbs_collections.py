@@ -41,6 +41,7 @@ def scopes_collections_tests_fixture(params_from_base_test_setup, params_from_ba
     global client_auth
     global sg_url
     global is_using_views
+    global create_custom_scope
     is_using_views = params_from_base_suite_setup["use_views"]
 
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
