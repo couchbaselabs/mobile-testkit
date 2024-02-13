@@ -20,6 +20,7 @@ sg_password = "password"
 admin_client = cb_server = sg_username = channels = client_auth = sg_url = None
 admin_auth = [RBAC_FULL_ADMIN['user'], RBAC_FULL_ADMIN['pwd']]
 is_using_views = False
+create_custom_scope = True
 
 
 @pytest.fixture
@@ -53,7 +54,7 @@ def scopes_collections_tests_fixture(params_from_base_test_setup, params_from_ba
         collection_prefix = "collection_"
         db = db_prefix + random_suffix
         scope = scope_prefix + random_suffix
-        if use_default_scope:
+        if not create_custom_scope:
             scope = "_default"
         collection = collection_prefix + random_suffix
         sg_username = "scopes_collections_user" + random_suffix
@@ -106,16 +107,19 @@ def scopes_collections_tests_fixture(params_from_base_test_setup, params_from_ba
 
 @pytest.mark.syncgateway
 @pytest.mark.collections
-@pytest.mark.parametrize('use_default_scope', [(True), (False)])
+@pytest.mark.parametrize('use_default_scope', [(True, False)])
 def test_document_only_under_named_scope(scopes_collections_tests_fixture, teardown_doc_fixture, use_default_scope):
+    global create_custom_scope
     if is_using_views:
         pytest.skip("""It is not necessary to run scopes and collections tests with views.
                 When it is enabled, there is a problem that affects the rest of the tests suite.""")
 
     # setup
+    if use_default_scope:
+        create_custom_scope = False
     doc_prefix = "scp_tests_doc"
     doc_id = doc_prefix + "_0"
-    sg_client, sg_admin_url, db, scope, collection = scopes_collections_tests_fixture(use_default_scope=use_default_scope)
+    sg_client, sg_admin_url, db, scope, collection = scopes_collections_tests_fixture
     if sg_client.does_doc_exist(sg_admin_url, db, doc_id, scope=scope, collection=collection) is False:
         sg_client.add_docs(sg_url, db, 1, doc_prefix, auth=client_auth, scope=scope, collection=collection)
     teardown_doc_fixture(sg_client, sg_admin_url, db, doc_id, auth=client_auth, scope=scope, collection=collection)
