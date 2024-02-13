@@ -109,7 +109,7 @@ def scopes_collections_tests_fixture(params_from_base_test_setup, params_from_ba
 
 @pytest.mark.syncgateway
 @pytest.mark.collections
-@pytest.mark.parametrize('use_default_scope', [(True, False)])
+@pytest.mark.parametrize('use_default_scope', [(True), (False)])
 def test_document_only_under_named_scope(scopes_collections_tests_fixture, teardown_doc_fixture, use_default_scope):
     global create_custom_scope
     if is_using_views:
