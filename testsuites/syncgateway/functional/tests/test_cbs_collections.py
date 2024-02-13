@@ -31,7 +31,7 @@ def teardown_doc_fixture():
 
 
 @pytest.fixture
-def scopes_collections_tests_fixture(params_from_base_test_setup, params_from_base_suite_setup):
+def scopes_collections_tests_fixture(params_from_base_test_setup, params_from_base_suite_setup, use_default_scope=False):
     # get/set the parameters
     global admin_client
     global cb_server
@@ -53,6 +53,8 @@ def scopes_collections_tests_fixture(params_from_base_test_setup, params_from_ba
         collection_prefix = "collection_"
         db = db_prefix + random_suffix
         scope = scope_prefix + random_suffix
+        if use_default_scope:
+            scope = "_default"
         collection = collection_prefix + random_suffix
         sg_username = "scopes_collections_user" + random_suffix
         client_auth = HTTPBasicAuth(sg_username, sg_password)
@@ -104,6 +106,7 @@ def scopes_collections_tests_fixture(params_from_base_test_setup, params_from_ba
 
 @pytest.mark.syncgateway
 @pytest.mark.collections
+@pytest.mark.parametrize('scopes_collections_tests_fixture', (["use_default_scope", True], ["use_default_scope", False]))
 def test_document_only_under_named_scope(scopes_collections_tests_fixture, teardown_doc_fixture):
     if is_using_views:
         pytest.skip("""It is not necessary to run scopes and collections tests with views.
