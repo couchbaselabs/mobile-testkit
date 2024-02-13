@@ -612,7 +612,7 @@ def test_replication_configuration_with_headers(params_from_base_test_setup):
 @pytest.mark.noconflicts
 @pytest.mark.parametrize("num_of_docs, x509_cert_auth", [
     (10, False),
-    (100, True),
+    # (100, True), tracked in https://issues.couchbase.com/browse/CM-1172
     (1000, False)
 ])
 def test_CBL_tombstone_doc(params_from_base_test_setup, num_of_docs, x509_cert_auth):
@@ -2746,6 +2746,8 @@ def test_replication_withMultipleBuckets(params_from_base_test_setup, setup_cust
 
 @pytest.mark.listener
 @pytest.mark.replication
+@pytest.mark.skipif(pytest.config.getoption("--liteserv-platform").startswith("java"),
+                    reason="Under investiation:https://issues.couchbase.com/browse/CM-1171")
 def test_replication_1withMultipleBuckets_deleteOneBucket(params_from_base_test_setup, setup_customized_teardown_test):
     """
         @summary:
