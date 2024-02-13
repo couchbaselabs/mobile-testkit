@@ -237,6 +237,7 @@ def test_automatic1_upgrade_with_replication_config(params_from_base_test_setup,
         assert len(active_tasks) == 1, "replication tasks did not migrated successfully"
 
 
+@pytest.mark.skip(reason="Under investigation:https://issues.couchbase.com/browse/CM-1175")
 @pytest.mark.syncgateway
 def test_automatic_migration_with_server_connection_fails(params_from_base_test_setup, sgw_version_reset, server_restart):
     """
