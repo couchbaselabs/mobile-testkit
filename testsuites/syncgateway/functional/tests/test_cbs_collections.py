@@ -97,6 +97,7 @@ def scopes_collections_tests_fixture(params_from_base_test_setup, params_from_ba
         raise e
     finally:
         # Cleanup everything that was created
+        create_custom_scope = True
         if (pre_test_user_exists is not None) and (pre_test_user_exists is False):
             admin_client.delete_user_if_exists(db, sg_username)
         if (pre_test_db_exists is not None) and (pre_test_db_exists is False):
