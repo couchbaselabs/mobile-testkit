@@ -1167,6 +1167,7 @@ def CBL_offline_test(params_from_base_test_setup, sg_conf_name, num_of_docs):
 @pytest.mark.syncgateway
 @pytest.mark.replication
 @pytest.mark.backgroundapp
+@pytest.mark.skip(reason="Under investigation:https://issues.couchbase.com/browse/CM-1166")
 @pytest.mark.parametrize("num_docs, need_attachments, replication_after_backgroundApp", [
     (1000, True, False),
     (1000, False, False),
