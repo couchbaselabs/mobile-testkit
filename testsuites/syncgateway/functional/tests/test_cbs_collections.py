@@ -106,8 +106,8 @@ def scopes_collections_tests_fixture(params_from_base_test_setup, params_from_ba
 
 @pytest.mark.syncgateway
 @pytest.mark.collections
-@pytest.mark.parametrize('scopes_collections_tests_fixture', (["use_default_scope", True], ["use_default_scope", False]))
-def test_document_only_under_named_scope(scopes_collections_tests_fixture, teardown_doc_fixture):
+@pytest.mark.parametrize('use_default_scope', [(True), (False)])
+def test_document_only_under_named_scope(scopes_collections_tests_fixture, teardown_doc_fixture, use_default_scope):
     if is_using_views:
         pytest.skip("""It is not necessary to run scopes and collections tests with views.
                 When it is enabled, there is a problem that affects the rest of the tests suite.""")
@@ -115,7 +115,7 @@ def test_document_only_under_named_scope(scopes_collections_tests_fixture, teard
     # setup
     doc_prefix = "scp_tests_doc"
     doc_id = doc_prefix + "_0"
-    sg_client, sg_admin_url, db, scope, collection = scopes_collections_tests_fixture
+    sg_client, sg_admin_url, db, scope, collection = scopes_collections_tests_fixture(use_default_scope=use_default_scope)
     if sg_client.does_doc_exist(sg_admin_url, db, doc_id, scope=scope, collection=collection) is False:
         sg_client.add_docs(sg_url, db, 1, doc_prefix, auth=client_auth, scope=scope, collection=collection)
     teardown_doc_fixture(sg_client, sg_admin_url, db, doc_id, auth=client_auth, scope=scope, collection=collection)
