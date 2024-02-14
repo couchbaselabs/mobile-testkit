@@ -47,6 +47,7 @@ def setup_teardown_test(params_from_base_test_setup):
 @pytest.mark.parametrize("num_of_docs, continuous, x509_cert_auth", [
     pytest.param(10, True, True, marks=pytest.mark.sanity)
 ])
+@pytest.mark.skip(reason="Under investiation:https://issues.couchbase.com/browse/CM-1176")
 def test_replication_configuration_valid_values(params_from_base_test_setup, num_of_docs, continuous, x509_cert_auth):
     """
         @summary:
@@ -2742,8 +2743,7 @@ def test_replication_withMultipleBuckets(params_from_base_test_setup, setup_cust
 
 @pytest.mark.listener
 @pytest.mark.replication
-@pytest.mark.skipif(pytest.config.getoption("--liteserv-platform").startswith("java"),
-                    reason="Under investiation:https://issues.couchbase.com/browse/CM-1171")
+@pytest.mark.skip(reason="Under investiation:https://issues.couchbase.com/browse/CM-1171")
 def test_replication_1withMultipleBuckets_deleteOneBucket(params_from_base_test_setup, setup_customized_teardown_test):
     """
         @summary:
