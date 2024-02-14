@@ -1,22 +1,54 @@
-import time
 import json
-import requests
 import re
+import time
 from datetime import timedelta
-from requests.exceptions import ConnectionError, HTTPError, ChunkedEncodingError
+
+import requests
+from couchbase.cluster import (
+    Cluster,
+    ClusterOptions,
+    ClusterTimeoutOptions,
+    PasswordAuthenticator,
+    QueryIndexManager,
+)
+from couchbase.exceptions import (
+    CouchbaseException,
+    DocumentExistsException,
+    DocumentNotFoundException,
+)
 from requests import Session
+from requests.exceptions import ChunkedEncodingError, ConnectionError, HTTPError
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
-from couchbase.exceptions import CouchbaseException, DocumentNotFoundException, DocumentExistsException
-from couchbase.cluster import QueryIndexManager, PasswordAuthenticator, ClusterTimeoutOptions, ClusterOptions, Cluster
+
 import keywords.constants
-from keywords.remoteexecutor import RemoteExecutor
-from keywords.exceptions import CBServerError, ProvisioningError, TimeoutError, RBACUserCreationError
-from libraries.provision.ansible_runner import AnsibleRunner
-from keywords.utils import log_r, log_info, log_debug, log_error, hostname_for_url, host_for_url
-from keywords.utils import version_and_build, random_string
 from keywords import types
-from utilities.cluster_config_utils import is_x509_auth, get_cbs_version, is_magma_enabled, is_cbs_ce_enabled, get_cluster
+from keywords.exceptions import (
+    CBServerError,
+    ProvisioningError,
+    RBACUserCreationError,
+    TimeoutError,
+)
+from keywords.remoteexecutor import RemoteExecutor
+from keywords.utils import (
+    host_for_url,
+    hostname_for_url,
+    log_debug,
+    log_error,
+    log_info,
+    log_r,
+    random_string,
+    version_and_build,
+)
 from libraries.data import doc_generators
+from libraries.provision.ansible_runner import AnsibleRunner
+from utilities.cluster_config_utils import (
+    get_cbs_version,
+    get_cluster,
+    is_cbs_ce_enabled,
+    is_magma_enabled,
+    is_x509_auth,
+)
+
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 
@@ -1203,6 +1235,15 @@ class CouchbaseServer:
         except DocumentNotFoundException as e:
             raise Exception("Tried to fetch document that does not exist: " + str(e)) from e
         return result.content_as[dict]
+    
+
+    def set_cross_clustering_versioning(self, bucket, xdcr_versioning):
+        data = {
+            "enableCrossClusterVersioning": str(xdcr_versioning)
+        }
+        resp = self._session.post("{}/pools/default/buckets/{}".format(self.url, bucket), data=data)
+        log_r(resp)
+        # resp.raise_for_status()
 
 
 def choose_connection_url(ssl_enabled, ipv6, host):
