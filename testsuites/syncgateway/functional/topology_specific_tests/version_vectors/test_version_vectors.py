@@ -1,12 +1,13 @@
 
 
 from keywords import ClusterKeywords, couchbaseserver
-from keywords.SyncGateway import create_sync_gateways, sync_gateway_config_path_for_mode
+from keywords.SyncGateway import (create_sync_gateways,
+                                  sync_gateway_config_path_for_mode)
 from keywords.utils import log_info
-from testsuites.syncgateway.functional.topology_specific_tests.multiple_sync_gateways.test_sg_replicate import (
-    create_sg_users_channels,
-)
+from testsuites.syncgateway.functional.topology_specific_tests.multiple_sync_gateways.test_sg_replicate import \
+    create_sg_users_channels
 
+bucket = "bucket-1"
 
 def test_xdcr_2_cb_clusters_2_syncgateways(params_from_base_test_setup):
     cluster_config = params_from_base_test_setup["cluster_config"]
@@ -31,5 +32,8 @@ def test_xdcr_2_cb_clusters_2_syncgateways(params_from_base_test_setup):
     cb_server1 = couchbaseserver.CouchbaseServer(cluster_servers[0])
     cb_server2 = couchbaseserver.CouchbaseServer(cluster_servers[1])
 
-    cb_server1.set_cross_clustering_versioning("bucket-1", True)
-    cb_server2.set_cross_clustering_versioning("bucket-1", True)
+    cb_server1.create_bucket(cluster_config, bucket)
+    cb_server2.create_bucket(cluster_config, bucket)
+
+    cb_server1.set_cross_cluster_versioning(bucket, True)
+    cb_server2.set_cross_cluster_versioning("bucket-1", True)

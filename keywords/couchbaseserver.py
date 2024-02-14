@@ -1237,7 +1237,7 @@ class CouchbaseServer:
         return result.content_as[dict]
     
 
-    def set_cross_clustering_versioning(self, bucket, xdcr_versioning):
+    def set_cross_cluster_versioning(self, bucket, xdcr_versioning):
         data = {
             "enableCrossClusterVersioning": str(xdcr_versioning)
         }
