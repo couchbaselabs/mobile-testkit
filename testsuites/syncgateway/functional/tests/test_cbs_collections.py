@@ -32,7 +32,7 @@ def teardown_doc_fixture():
 
 
 @pytest.fixture
-def scopes_collections_tests_fixture(params_from_base_test_setup, params_from_base_suite_setup, use_default_scope=False):
+def scopes_collections_tests_fixture(params_from_base_test_setup, params_from_base_suite_setup):
     # get/set the parameters
     global admin_client
     global cb_server
