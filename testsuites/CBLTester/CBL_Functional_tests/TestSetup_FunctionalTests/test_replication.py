@@ -134,12 +134,10 @@ def test_replication_configuration_valid_values(params_from_base_test_setup, num
     replicator.stop(repl)
 
 
-@pytest.mark.skipif(pytest.config.getoption("--liteserv-platform").startswith("net-"),
-                    reason="Under investigation:https://issues.couchbase.com/browse/CM-1163")
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("authenticator_type, attachments_generator", [
-    ('session', attachment.generate_2_png_10_10),
+    # ('session', attachment.generate_2_png_10_10), https://issues.couchbase.com/browse/CM-1163
     ('basic', None)
 ])
 def test_replication_configuration_with_pull_replication(params_from_base_test_setup, authenticator_type, attachments_generator):
@@ -220,12 +218,10 @@ def test_replication_configuration_with_pull_replication(params_from_base_test_s
                 assert verify_stat_on_prometheus("sgw_replication_pull_attachment_pull_count"), expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["attachment_pull_count"]
 
 
-@pytest.mark.skipif(pytest.config.getoption("--liteserv-platform").startswith("net-"),
-                    reason="Under investigation:https://issues.couchbase.com/browse/CM-1163")
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("authenticator_type, attachments_generator", [
-    ('session', attachment.generate_2_png_10_10),
+    # ('session', attachment.generate_2_png_10_10), https://issues.couchbase.com/browse/CM-1163
     ('basic', None)
 ])
 def test_replication_configuration_with_push_replication(params_from_base_test_setup, authenticator_type, attachments_generator):
