@@ -15,8 +15,8 @@ from keywords.constants import RBAC_FULL_ADMIN
 @pytest.mark.channels
 @pytest.mark.syncgateway
 @pytest.mark.parametrize("x509_cert_auth", [
-    pytest.param(False, marks=pytest.mark.ce_sanity),
-    pytest.param(True, marks=pytest.mark.sanity)
+    pytest.param(False, marks=pytest.mark.ce_sanity)
+    # pytest.param(True, marks=pytest.mark.sanity) investigated in https://issues.couchbase.com/browse/CM-1177
 ])
 def test_xattrs_grant_automatic_imports(params_from_base_test_setup, x509_cert_auth):
     """
