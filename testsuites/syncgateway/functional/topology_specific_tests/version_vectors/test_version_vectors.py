@@ -9,6 +9,7 @@ from testsuites.syncgateway.functional.topology_specific_tests.multiple_sync_gat
 
 bucket = "bucket-1"
 
+
 def test_xdcr_2_cb_clusters_2_syncgateways(params_from_base_test_setup):
     cluster_config = params_from_base_test_setup["cluster_config"]
     config = sync_gateway_config_path_for_mode("sync_gateway_default",
