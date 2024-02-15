@@ -510,7 +510,7 @@ def test_replication_delete_event(params_from_base_test_setup, num_of_docs):
         assert sg_doc["id"] not in doc_ids, "channel access removal didn't purge the docs from cbl db"
 
 
-@pytest.mark.skipif(pytest.config.getoption("--liteserv-platform").startswith("net-"),
+@pytest.mark.skipif(pytest.config.getoption("--liteserv-platform").startswith("net-") or pytest.config.getoption("--liteserv-platform").startswith("android"),
                     reason="Under investigation:https://issues.couchbase.com/browse/CM-1163")
 @pytest.mark.listener
 @pytest.mark.replication

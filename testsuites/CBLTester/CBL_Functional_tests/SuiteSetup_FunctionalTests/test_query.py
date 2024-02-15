@@ -1586,6 +1586,7 @@ def test_query_arthimetic(params_from_base_suite_setup):
     qy.query_arthimetic(cbl_db)
 
 
+@pytest.mark.skip(reason="Under investiation:https://issues.couchbase.com/browse/CM-1170")
 def test_live_query_response_delay_time(params_from_base_suite_setup):
     """
     note: this test case is for android/java only

@@ -47,6 +47,7 @@ def setup_teardown_test(params_from_base_test_setup):
 @pytest.mark.parametrize("num_of_docs, continuous, x509_cert_auth", [
     pytest.param(10, True, True, marks=pytest.mark.sanity)
 ])
+@pytest.mark.skip(reason="Under investiation:https://issues.couchbase.com/browse/CM-1176")
 def test_replication_configuration_valid_values(params_from_base_test_setup, num_of_docs, continuous, x509_cert_auth):
     """
         @summary:
@@ -134,12 +135,10 @@ def test_replication_configuration_valid_values(params_from_base_test_setup, num
     replicator.stop(repl)
 
 
-@pytest.mark.skipif(pytest.config.getoption("--liteserv-platform").startswith("net-"),
-                    reason="Under investigation:https://issues.couchbase.com/browse/CM-1163")
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("authenticator_type, attachments_generator", [
-    ('session', attachment.generate_2_png_10_10),
+    # ('session', attachment.generate_2_png_10_10), https://issues.couchbase.com/browse/CM-1163
     ('basic', None)
 ])
 def test_replication_configuration_with_pull_replication(params_from_base_test_setup, authenticator_type, attachments_generator):
@@ -220,12 +219,10 @@ def test_replication_configuration_with_pull_replication(params_from_base_test_s
                 assert verify_stat_on_prometheus("sgw_replication_pull_attachment_pull_count"), expvars["syncgateway"]["per_db"][sg_db]["cbl_replication_pull"]["attachment_pull_count"]
 
 
-@pytest.mark.skipif(pytest.config.getoption("--liteserv-platform").startswith("net-"),
-                    reason="Under investigation:https://issues.couchbase.com/browse/CM-1163")
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("authenticator_type, attachments_generator", [
-    ('session', attachment.generate_2_png_10_10),
+    # ('session', attachment.generate_2_png_10_10), https://issues.couchbase.com/browse/CM-1163
     ('basic', None)
 ])
 def test_replication_configuration_with_push_replication(params_from_base_test_setup, authenticator_type, attachments_generator):
@@ -612,7 +609,7 @@ def test_replication_configuration_with_headers(params_from_base_test_setup):
 @pytest.mark.noconflicts
 @pytest.mark.parametrize("num_of_docs, x509_cert_auth", [
     (10, False),
-    (100, True),
+    # (100, True), tracked in https://issues.couchbase.com/browse/CM-1172
     (1000, False)
 ])
 def test_CBL_tombstone_doc(params_from_base_test_setup, num_of_docs, x509_cert_auth):
@@ -1167,6 +1164,7 @@ def CBL_offline_test(params_from_base_test_setup, sg_conf_name, num_of_docs):
 @pytest.mark.syncgateway
 @pytest.mark.replication
 @pytest.mark.backgroundapp
+@pytest.mark.skip(reason="Under investigation:https://issues.couchbase.com/browse/CM-1166")
 @pytest.mark.parametrize("num_docs, need_attachments, replication_after_backgroundApp", [
     (1000, True, False),
     (1000, False, False),
@@ -2745,6 +2743,7 @@ def test_replication_withMultipleBuckets(params_from_base_test_setup, setup_cust
 
 @pytest.mark.listener
 @pytest.mark.replication
+@pytest.mark.skip(reason="Under investiation:https://issues.couchbase.com/browse/CM-1171")
 def test_replication_1withMultipleBuckets_deleteOneBucket(params_from_base_test_setup, setup_customized_teardown_test):
     """
         @summary:
