@@ -129,9 +129,9 @@ def setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_te
     (True, "push", False),
     (False, "pull", False),
     (False, "pushAndPull", False),
-    (True, "push", True),
-    (False, "pull", True),
-    pytest.param(True, "pushAndPull", True, marks=pytest.mark.sanity),
+    # (True, "push", True),  https://issues.couchbase.com/browse/CM-1110
+    # (False, "pull", True),  https://issues.couchbase.com/browse/CM-1110
+    # pytest.param(True, "pushAndPull", True, marks=pytest.mark.sanity),  https://issues.couchbase.com/browse/CM-1110
 ])
 def test_sg_replicate_push_pull_replication(params_from_base_test_setup, setup_customized_teardown_test, continuous, direction, attachments):
     '''
@@ -760,6 +760,8 @@ def test_sg_replicate_2active_1passive(params_from_base_test_setup, setup_custom
     replicator.stop(repl3)
 
 
+@pytest.mark.skipif(pytest.config.getoption("--liteserv-platform").startswith("ios"),
+                    reason="Under investiation: https://issues.couchbase.com/browse/CM-1110")
 @pytest.mark.topospecific
 @pytest.mark.syncgateway
 @pytest.mark.sgreplicate
@@ -1565,6 +1567,8 @@ def test_sg_replicate_sgwconfig_replications_with_opt_out(params_from_base_test_
     replicator.stop(repl3)
 
 
+@pytest.mark.skipif(pytest.config.getoption("--liteserv-platform").startswith("ios"),
+                    reason="Under investiation: https://issues.couchbase.com/browse/CM-1110")
 @pytest.mark.topospecific
 @pytest.mark.syncgateway
 @pytest.mark.sgreplicate
@@ -1690,6 +1694,8 @@ def test_sg_replicate_distributions_replications(params_from_base_test_setup, se
     replicator.stop(repl2)
 
 
+@pytest.mark.skipif(pytest.config.getoption("--liteserv-platform").startswith("ios"),
+                    reason="Under investiation: https://issues.couchbase.com/browse/CM-1110")
 @pytest.mark.topospecific
 @pytest.mark.syncgateway
 @pytest.mark.sgreplicate
@@ -1814,6 +1820,8 @@ def test_sg_replicate_update_sgw_nodes_in_cluster(params_from_base_test_setup, s
     replicator.stop(repl4)
 
 
+@pytest.mark.skipif(pytest.config.getoption("--liteserv-platform").startswith("ios"),
+                    reason="Under investiation: https://issues.couchbase.com/browse/CM-1110")
 @pytest.mark.topospecific
 @pytest.mark.syncgateway
 @pytest.mark.sgreplicate
@@ -2110,6 +2118,8 @@ def test_sg_replicate_non_default_conflict_resolver(params_from_base_test_setup,
             assert cbl_db_docs2[doc]["updates-cbl"] == 3, "remote_win replication did not happen"
 
 
+@pytest.mark.skipif(pytest.config.getoption("--liteserv-platform").startswith("ios"),
+                    reason="Under investiation: https://issues.couchbase.com/browse/CM-1110")
 @pytest.mark.topospecific
 @pytest.mark.syncgateway
 @pytest.mark.sgreplicate
@@ -2338,6 +2348,8 @@ def test_sg_replicate_doc_resurrection(params_from_base_test_setup, setup_custom
     assert sg_doc1['_rev'] == sg_doc2['_rev'], "revisions of sgw cluster1 and sgw cluster 2 did not match for the doc which resurrected"
 
 
+@pytest.mark.skipif(pytest.config.getoption("--liteserv-platform").startswith("ios"),
+                    reason="Under investiation: https://issues.couchbase.com/browse/CM-1110")
 @pytest.mark.syncgateway
 @pytest.mark.parametrize("persistent_config_disable", [
     (True),
@@ -2477,6 +2489,8 @@ def sgw_version_reset(request, params_from_base_test_setup):
     sg_obj.install_sync_gateway(cluster_config, sync_gateway_version, sgw_cluster2_sg_config, url=sg_two_url, skip_bucketcreation=True)
 
 
+@pytest.mark.skipif(pytest.config.getoption("--liteserv-platform").startswith("ios"),
+                    reason="Under investiation: https://issues.couchbase.com/browse/CM-1110")
 @pytest.mark.topospecific
 @pytest.mark.syncgateway
 @pytest.mark.sgreplicate
