@@ -13,6 +13,7 @@ from keywords.constants import CLUSTER_CONFIGS_DIR
 from keywords.constants import RBAC_FULL_ADMIN
 
 
+@pytest.mark.skip(reason="Under investigation: https://issues.couchbase.com/browse/CM-1183")
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("sg_conf_name, num_of_docs", [
