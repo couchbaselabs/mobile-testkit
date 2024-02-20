@@ -631,7 +631,7 @@ class Admin:
                 return
         raise ValueError("The database " + db + " was not online within " + str(timeout))
 
-    def wait_for_resynce_to_complete(self, db, timeout=60):
+    def wait_for_resync_to_complete(self, db, timeout=60):
         log_info("Waiting for resync to complete")
         start_time = time.time()
         while time.time() < start_time + timeout:
