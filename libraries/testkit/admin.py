@@ -627,6 +627,7 @@ class Admin:
         start_time = time.time()
         while (time.time() < start_time + timeout):
             db_info = self.get_db_info(db)
+            log_info("---------------------------------------------------" + str(db_info))
             if db_info["state"] == "Online":
                 return
         raise ValueError("The database " + db + " was not online within " + str(timeout))
