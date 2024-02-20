@@ -209,6 +209,7 @@ def test_using_resync_and_swapping(params_from_base_test_setup, resync):
         sg_client.take_db_offline(cluster_conf=cluster_config, db=sg_db)
         status = sg_client.db_resync(url=sg_admin_url, db=sg_db, auth=auth)
         assert status == 200, "re-sync failed"
+        admin.wait_for_resynce_to_complete(deb=sg_db)
         sg_client.bring_db_online(cluster_conf=cluster_config, db=sg_db)
         admin.wait_for_db_online(sg_db, 60)
         sg_client.get_raw_doc(sg_admin_url, sg_db, sg_doc_xattrs_id, auth=auth)
