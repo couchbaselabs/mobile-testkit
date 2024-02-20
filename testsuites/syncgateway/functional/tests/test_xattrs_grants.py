@@ -209,15 +209,9 @@ def test_using_resync_and_swapping(params_from_base_test_setup, resync):
         sg_client.take_db_offline(cluster_conf=cluster_config, db=sg_db)
         status = sg_client.db_resync(url=sg_admin_url, db=sg_db, auth=auth)
         assert status == 200, "re-sync failed"
+        admin.wait_for_resync_to_complete(db=sg_db)
         sg_client.bring_db_online(cluster_conf=cluster_config, db=sg_db)
-        count = 0
-        retries = 5
-        while True and count < retries:
-            db_info = admin.get_db_info("db")
-            if db_info["state"] == "Online":
-                break
-            time.sleep(1)
-            count += 1
+        admin.wait_for_db_online(sg_db, 60)
         sg_client.get_raw_doc(sg_admin_url, sg_db, sg_doc_xattrs_id, auth=auth)
         sg_expvars = sg_client.get_expvars(sg_admin_url, auth=auth)
         sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs, number_updates=1, auth=auto_user2)
