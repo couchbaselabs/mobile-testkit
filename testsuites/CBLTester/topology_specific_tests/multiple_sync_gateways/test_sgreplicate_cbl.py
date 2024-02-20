@@ -122,6 +122,7 @@ def setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_te
     return db, num_of_docs, sg_db1, sg_db2, name1, name2, password1, password2, channels1, channels2, replicator, replicator_authenticator1, replicator_authenticator2, sg1_blip_url, sg2_blip_url, sg1, sg2, repl1, c_cluster, cbl_db1, cbl_db2, session1
 
 
+@pytest.mark.skip(reason="investigated in:  https://issues.couchbase.com/browse/CM-1110")
 @pytest.mark.topospecific
 @pytest.mark.syncgateway
 @pytest.mark.sgreplicate
@@ -129,9 +130,9 @@ def setup_syncGateways_with_cbl(params_from_base_test_setup, setup_customized_te
     (True, "push", False),
     (False, "pull", False),
     (False, "pushAndPull", False),
-    # (True, "push", True),  https://issues.couchbase.com/browse/CM-1110
-    # (False, "pull", True),  https://issues.couchbase.com/browse/CM-1110
-    # pytest.param(True, "pushAndPull", True, marks=pytest.mark.sanity),  https://issues.couchbase.com/browse/CM-1110
+    (True, "push", True),
+    (False, "pull", True),
+    pytest.param(True, "pushAndPull", True, marks=pytest.mark.sanity),
 ])
 def test_sg_replicate_push_pull_replication(params_from_base_test_setup, setup_customized_teardown_test, continuous, direction, attachments):
     '''
