@@ -1,4 +1,5 @@
 
+import pytest
 
 from keywords import ClusterKeywords, couchbaseserver
 from keywords.SyncGateway import (create_sync_gateways,
@@ -10,6 +11,7 @@ from testsuites.syncgateway.functional.topology_specific_tests.multiple_sync_gat
 bucket = "bucket-1"
 
 
+@pytest.mark.syncgateway
 def test_xdcr_2_cb_clusters_2_syncgateways(params_from_base_test_setup):
     cluster_config = params_from_base_test_setup["cluster_config"]
     config = sync_gateway_config_path_for_mode("sync_gateway_default",
@@ -28,7 +30,8 @@ def test_xdcr_2_cb_clusters_2_syncgateways(params_from_base_test_setup):
 
     cluster_helper = ClusterKeywords(cluster_config)
     topology = cluster_helper.get_cluster_topology(cluster_config)
-    log_info("Topolofy {}".format(topology))
+    log_info("Topology {}".format(topology))
+
     cluster_servers = topology["couchbase_servers"]
     cb_server1 = couchbaseserver.CouchbaseServer(cluster_servers[0])
     cb_server2 = couchbaseserver.CouchbaseServer(cluster_servers[1])
@@ -36,5 +39,9 @@ def test_xdcr_2_cb_clusters_2_syncgateways(params_from_base_test_setup):
     cb_server1.create_bucket(cluster_config, bucket)
     cb_server2.create_bucket(cluster_config, bucket)
 
+    # Enable version vectors
     cb_server1.set_cross_cluster_versioning(bucket, True)
-    cb_server2.set_cross_cluster_versioning("bucket-1", True)
+    cb_server2.set_cross_cluster_versioning(bucket, True)
+
+    # Start replication
+    cb_server1.start_xdcr_replication(bucket)

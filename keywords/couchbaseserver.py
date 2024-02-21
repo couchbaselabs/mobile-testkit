@@ -4,50 +4,28 @@ import time
 from datetime import timedelta
 
 import requests
-from couchbase.cluster import (
-    Cluster,
-    ClusterOptions,
-    ClusterTimeoutOptions,
-    PasswordAuthenticator,
-    QueryIndexManager,
-)
-from couchbase.exceptions import (
-    CouchbaseException,
-    DocumentExistsException,
-    DocumentNotFoundException,
-)
+from couchbase.cluster import (Cluster, ClusterOptions, ClusterTimeoutOptions,
+                               PasswordAuthenticator, QueryIndexManager)
+from couchbase.exceptions import (CouchbaseException, DocumentExistsException,
+                                  DocumentNotFoundException)
 from requests import Session
-from requests.exceptions import ChunkedEncodingError, ConnectionError, HTTPError
+from requests.exceptions import (ChunkedEncodingError, ConnectionError,
+                                 HTTPError)
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
 import keywords.constants
 from keywords import types
-from keywords.exceptions import (
-    CBServerError,
-    ProvisioningError,
-    RBACUserCreationError,
-    TimeoutError,
-)
+from keywords.exceptions import (CBServerError, ProvisioningError,
+                                 RBACUserCreationError, TimeoutError)
 from keywords.remoteexecutor import RemoteExecutor
-from keywords.utils import (
-    host_for_url,
-    hostname_for_url,
-    log_debug,
-    log_error,
-    log_info,
-    log_r,
-    random_string,
-    version_and_build,
-)
+from keywords.utils import (host_for_url, hostname_for_url, log_debug,
+                            log_error, log_info, log_r, random_string,
+                            version_and_build)
 from libraries.data import doc_generators
 from libraries.provision.ansible_runner import AnsibleRunner
-from utilities.cluster_config_utils import (
-    get_cbs_version,
-    get_cluster,
-    is_cbs_ce_enabled,
-    is_magma_enabled,
-    is_x509_auth,
-)
+from utilities.cluster_config_utils import (get_cbs_version, get_cluster,
+                                            is_cbs_ce_enabled,
+                                            is_magma_enabled, is_x509_auth)
 
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
@@ -1237,11 +1215,28 @@ class CouchbaseServer:
         return result.content_as[dict]
     
 
-    def set_cross_cluster_versioning(self, bucket, xdcr_versioning):
+    def set_cross_cluster_versioning(self, bucket: str, xdcr_versioning: bool):
         data = {
             "enableCrossClusterVersioning": str(xdcr_versioning)
         }
         resp = self._session.post("{}/pools/default/buckets/{}".format(self.url, bucket), data=data)
+        log_r(resp)
+        # resp.raise_for_status()
+
+    def start_xdcr_replication(self, bucket: str, filter_expression: str = None) -> str:
+        data = {
+            "mobile": "active",
+            "replicationType": "continuous",
+            "fromBucket": bucket,
+            "toBucket": bucket,
+            "toCluster": ''
+        }
+
+        if filter_expression:
+            data.update({
+                "filterExpression": filter_expression
+            })
+        resp = self._session.post("{}/controller/createReplication".format(self.url), data=data)
         log_r(resp)
         # resp.raise_for_status()
 
