@@ -2,11 +2,11 @@
 import pytest
 
 from keywords import ClusterKeywords, couchbaseserver
-from keywords.SyncGateway import (create_sync_gateways,
-                                  sync_gateway_config_path_for_mode)
+from keywords.SyncGateway import create_sync_gateways, sync_gateway_config_path_for_mode
 from keywords.utils import log_info
-from testsuites.syncgateway.functional.topology_specific_tests.multiple_sync_gateways.test_sg_replicate import \
-    create_sg_users_channels
+from testsuites.syncgateway.functional.topology_specific_tests.multiple_sync_gateways.test_sg_replicate import (
+    create_sg_users_channels,
+)
 
 bucket = "bucket-1"
 
@@ -17,6 +17,7 @@ def test_xdcr_2_cb_clusters_2_syncgateways(params_from_base_test_setup):
     config = sync_gateway_config_path_for_mode("sync_gateway_default",
                                                params_from_base_test_setup["mode"])
 
+    # TODO separate server and sgw into 2 clusters
     sg1, sg2 = create_sync_gateways(
         cluster_config=cluster_config,
         sg_config_path=config
