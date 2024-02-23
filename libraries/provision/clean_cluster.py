@@ -13,9 +13,11 @@ def clean_cluster(cluster_config, skip_couchbase_provision=False, sg_platform="c
         status = ansible_runner.run_ansible_playbook("remove-sg-centos.yml")
     else:
         extra_vars = {
-            "ansible_python_interpreter": "/usr/bin/python3",
-            "ansible_os_family": "Linux"
+            "ansible_python_interpreter": "/usr/bin/python3"
         }
+        if "debian" in sg_platform.lower():
+            extra_vars["ansible_distribution"] = sg_platform.capitalize()
+            extra_vars["ansible_os_family"] = "Linux"
         status = ansible_runner.run_ansible_playbook("remove-previous-installs.yml", extra_vars)
 
     if status != 0:
