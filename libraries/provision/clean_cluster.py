@@ -29,7 +29,7 @@ def clean_cluster(cluster_config, skip_couchbase_provision=False, sg_platform="c
         raise ProvisioningError("Failed to reset hosts")
 
     if not skip_couchbase_provision:
-        status = ansible_runner.run_ansible_playbook("reset-cb-hosts.yml")
+        status = ansible_runner.run_ansible_playbook("reset-cb-hosts.yml", extra_vars)
         if status != 0:
             raise ProvisioningError("Failed to reset hosts")
 
