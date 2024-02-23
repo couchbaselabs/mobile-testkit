@@ -230,6 +230,14 @@ def pytest_addoption(parser):
                      action="store",
                      help="collection will be create on default scope _default",
                      default="_default")
+    parser.addoption("--cbs-platform",
+                     action="store",
+                     help="Couchbase Server Platform binary to install (ex. centos or windows)",
+                     default="debian")
+    parser.addoption("--sg-platform",
+                     action="store",
+                     help="Sync Gateway Platform binary to install (ex. centos or windows)",
+                     default="debian")
 
 
 # Pass liteserv_version to testsuite
@@ -290,6 +298,8 @@ def params_from_base_suite_setup(request):
     disable_admin_auth = request.config.getoption("--disable-admin-auth")
     liteserv_android_serial_number = request.config.getoption("--liteserv-android-serial-number")
     android_id = request.config.getoption("--android-id")
+    cbs_platform = request.config.getoption("--cbs-platform")
+    sg_platform = request.config.getoption("--sg-platform")
 
 
     scope_name = request.config.getoption("--scope-name")
@@ -486,8 +496,27 @@ def params_from_base_suite_setup(request):
         log_info("Enabled Admin Auth")
         persist_cluster_config_environment_prop(cluster_config, 'disable_admin_auth', False)
 
+    try:
+        cbs_platform
+    except NameError:
+        log_info("cbs platform  is not provided, so by default it runs on Debian")
+        persist_cluster_config_environment_prop(cluster_config, 'cbs_platform', "debian", False)
+    else:
+        log_info("Running test with cbs platform {}".format(cbs_platform))
+        persist_cluster_config_environment_prop(cluster_config, 'cbs_platform', cbs_platform, False)
+
+    try:
+        sg_platform
+    except NameError:
+        log_info("sg platform  is not provided, so by default it runs on Debian")
+        persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "debian", False)
+    else:
+        log_info("Running test with sg platform {}".format(sg_platform))
+        persist_cluster_config_environment_prop(cluster_config, 'sg_platform', sg_platform, False)
+
+
     # As cblite jobs run with on Centos platform, adding by default centos to environment config
-    persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "centos", False)
+    persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "debian", False)
 
     # Write the number of replicas to cluster config
     persist_cluster_config_environment_prop(cluster_config, 'number_replicas', number_replicas)
@@ -508,6 +537,8 @@ def params_from_base_suite_setup(request):
                 server_version=server_version,
                 sync_gateway_version=sync_gateway_version,
                 sync_gateway_config=sg_config,
+                cbs_platform=cbs_platform,
+                sg_platform=sg_platform,
                 cbs_ce=cbs_ce,
                 sg_ce=sg_ce,
                 skip_couchbase_provision=skip_couchbase_provision
@@ -668,7 +699,9 @@ def params_from_base_suite_setup(request):
         "ssl_enabled": cbs_ssl,
         "need_sgw_admin_auth": need_sgw_admin_auth,
         "scope_name": scope_name,
-        "collection_name": collection_name
+        "collection_name": collection_name,
+        "sg_platform": sg_platform,
+        "cbs_platform": cbs_platform
     }
 
     if request.node.testsfailed != 0 and enable_file_logging and create_db_per_suite is not None:
@@ -721,6 +754,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     target_admin_url = params_from_base_suite_setup["target_admin_url"]
     suite_source_db = params_from_base_suite_setup["suite_source_db"]
     suite_cbl_db = params_from_base_suite_setup["suite_cbl_db"]
+    sg_platform = params_from_base_suite_setup["sg_platform"]
+    cbs_platform = params_from_base_suite_setup["cbs_platform"]
     test_name = request.node.name
     cluster_topology = params_from_base_suite_setup["cluster_topology"]
     mode = params_from_base_suite_setup["mode"]
@@ -827,6 +862,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "no_conflicts_enabled": no_conflicts_enabled,
         "sync_gateway_version": sync_gateway_version,
         "disable_tls_server": disable_tls_server,
+        "sg_platform": sg_platform,
+        "cbs_platform": cbs_platform,
         "source_db": source_db,
         "cbl_db": cbl_db,
         "suite_source_db": suite_source_db,
