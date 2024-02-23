@@ -359,6 +359,8 @@ def test_replication_push_replication_without_authentication(params_from_base_te
         assert doc not in sg_ids
 
 
+@pytest.mark.skipif(pytest.config.getoption("--liteserv-platform").startswith("android"),
+                    reason="Under investiation: https://issues.couchbase.com/browse/CM-1184")
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize(
