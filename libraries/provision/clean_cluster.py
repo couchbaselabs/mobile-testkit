@@ -12,7 +12,10 @@ def clean_cluster(cluster_config, skip_couchbase_provision=False, sg_platform="c
     if "centos" in sg_platform:
         status = ansible_runner.run_ansible_playbook("remove-sg-centos.yml")
     else:
-        status = ansible_runner.run_ansible_playbook("remove-previous-installs.yml")
+        extra_vars = {
+            "ansible_python_interpreter": "/usr/bin/python3"
+        }
+        status = ansible_runner.run_ansible_playbook("remove-previous-installs.yml", extra_vars)
 
     if status != 0:
         raise ProvisioningError("Failed to removed previous installs")
@@ -42,7 +45,7 @@ if __name__ == "__main__":
 
     try:
         cluster_conf = os.environ["CLUSTER_CONFIG"]
-    except KeyError as ke:
+    except KeyError:
         log_info("Make sure CLUSTER_CONFIG is defined and pointing to the configuration you would like to provision")
         raise KeyError("CLUSTER_CONFIG not defined. Unable to provision cluster.")
 
