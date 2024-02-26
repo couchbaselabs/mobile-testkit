@@ -12,7 +12,7 @@ class AnsibleRunner:
         self.provisiong_config = config
 
     def run_ansible_playbook(self, script_name, extra_vars={}, subset=constants.DEFAULT_SUBSET):
-        sg_platform = get_sg_platform(self._cluster_config)
+        sg_platform = get_sg_platform(self.provisiong_config)
         extra_vars = {}
         if "debian" in sg_platform.lower():
             extra_vars["ansible_distribution"] = sg_platform.capitalize()
