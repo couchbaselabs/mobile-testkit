@@ -122,7 +122,10 @@ class Cluster:
         log_info(">>> Reseting cluster ...")
         log_info(">>> CBS SSL enabled: {}".format(self.cbs_ssl))
         log_info(">>> Using xattrs: {}".format(self.xattrs))
-
+        sg_platform = get_sg_platform(self.cluster_config)
+        extra_vars = {}
+        if "debian" in sg_platform.lower():
+            extra_vars["ansible_distribution"] = self.sg_platform.capitalize()
         # Stop sync_gateways
         log_info(">>> Stopping sync_gateway")
         status = ansible_runner.run_ansible_playbook("stop-sync-gateway.yml")
