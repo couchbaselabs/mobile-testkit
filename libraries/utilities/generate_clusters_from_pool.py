@@ -1,13 +1,16 @@
 import json
 import os
-import sys
 import socket
+import sys
 
 sys.path = [".", "keywords"] + sys.path
-from keywords.utils import log_info  # noqa: E402
-from keywords.utils import log_warn  # noqa: E402
-from keywords.utils import log_error  # noqa: E402
 from optparse import OptionParser  # noqa: E402
+
+from keywords.utils import (
+    log_error,  # noqa: E402
+    log_info,  # noqa: E402
+    log_warn,  # noqa: E402
+)
 
 
 class ClusterDef:
@@ -505,6 +508,7 @@ def generate_clusters_from_pool(pool_file, use_docker=False, sg_windows=False,
         ClusterDef("1sg_3cbs_1lgs", num_sgs=1, num_acs=0, num_cbs=3, num_lgs=1, num_lbs=0),
         # 2 sync_gateways
         ClusterDef("2sg_1cbs_1lgs", num_sgs=2, num_acs=0, num_cbs=1, num_lgs=1, num_lbs=0),
+        ClusterDef("2sg_2cbs", num_sgs=2, num_acs=0, num_cbs=2, num_lgs=0, num_lbs=0),
         ClusterDef("2sg_3cbs_2lgs", num_sgs=2, num_acs=0, num_cbs=3, num_lgs=2, num_lbs=0),
         ClusterDef("2sg_6cbs_2lgs", num_sgs=2, num_acs=0, num_cbs=6, num_lgs=2, num_lbs=0),
         ClusterDef("2sg_2ac_3cbs_1lgs", num_sgs=2, num_acs=2, num_cbs=3, num_lgs=1, num_lbs=0),
