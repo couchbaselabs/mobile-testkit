@@ -1,5 +1,5 @@
 - name: SYNC GATEWAY | Change folder permissions as a workaround
-  shell: chmod o+x /home/sync_gateway
+  shell: chmod 777 /home/sync_gateway
   when:  ansible_distribution == "Debian"
   ignore_errors: yes
 
