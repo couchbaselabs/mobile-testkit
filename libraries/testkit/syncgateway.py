@@ -64,13 +64,8 @@ class SyncGateway:
         return r.text
 
     def stop(self):
-        sg_platform = get_sg_platform(self.cluster_config)
-        extra_vars = {}
-        if "debian" in sg_platform.lower():
-            extra_vars["ansible_distribution"] = self.sg_platform.capitalize()
         status = self.ansible_runner.run_ansible_playbook(
             "stop-sync-gateway.yml",
-            extra_vars=extra_vars,
             subset=self.hostname
         )
         return status
