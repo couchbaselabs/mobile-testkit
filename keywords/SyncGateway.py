@@ -601,6 +601,7 @@ class SyncGateway(object):
             block_http_vars = {}
             if "debian" in sg_platform.lower():
                 block_http_vars["ansible_distribution"] = sg_platform.capitalize()
+                block_http_vars["ansible_os_family"] = "Linux"
             port_list = ["8091:8096,11210:11211"]
             for port in port_list:
                 block_http_vars["port"] = port

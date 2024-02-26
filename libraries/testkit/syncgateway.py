@@ -204,6 +204,7 @@ class SyncGateway:
                 block_http_vars = {}
                 if "debian" in sg_platform.lower():
                     block_http_vars["ansible_distribution"] = sg_platform.capitalize()
+                    block_http_vars["ansible_os_family"] = "Linux"
                 port_list = ["8091:8096,11210:11211"]
                 for port in port_list:
                     block_http_vars["port"] = port
@@ -366,6 +367,7 @@ class SyncGateway:
                 block_http_vars = {}
                 if "debian" in sg_platform.lower():
                     block_http_vars["ansible_distribution"] = sg_platform.capitalize()
+                    block_http_vars["ansible_os_family"] = "Linux"
                 port_list = ["8091:8096,11210:11211"]
                 for port in port_list:
                     block_http_vars["port"] = port
@@ -839,6 +841,7 @@ def setup_sgwconfig_db_config(cluster_config, sg_config_path, use_config=False):
         block_http_vars = {}
         if "debian" in sg_platform.lower():
             block_http_vars["ansible_distribution"] = sg_platform.capitalize()
+            block_http_vars["ansible_os_family"] = "Linux"
         port_list = ["8091:8096,11210:11211"]
         for port in port_list:
             block_http_vars["port"] = port
