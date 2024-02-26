@@ -287,9 +287,6 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
             playbook_vars["server_scheme"] = "couchbases"
             playbook_vars["server_port"] = 11207
             block_http_vars = {}
-            if "debian" in sg_platform.lower():
-                block_http_vars["ansible_distribution"] = sg_platform.capitalize()
-                block_http_vars["ansible_os_family"] = "Linux"
             port_list = ["8091:8096,11210:11211"]
             for port in port_list:
                 block_http_vars["port"] = port
@@ -392,9 +389,6 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
                     coverage_status = ansible_runner.run_ansible_playbook(
                         "setup-code-coverage-location.yml", subset=target
                     )
-                if "debian" in sg_platform.lower():
-                    playbook_vars["ansible_python_interpreter"] = "/usr/bin/python3"
-                    playbook_vars["ansible_distribution"] = sg_platform.capitalize()
                 status = ansible_runner.run_ansible_playbook(
                     "install-sync-gateway-package.yml",
                     extra_vars=playbook_vars, subset=target
@@ -418,8 +412,6 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
                     coverage_status = ansible_runner.run_ansible_playbook(
                         "setup-code-coverage-location.yml"
                     )
-                if "debian" in sg_platform.lower():
-                    playbook_vars["ansible_distribution"] = sg_platform.capitalize()
                 status = ansible_runner.run_ansible_playbook(
                     "install-sync-gateway-package.yml",
                     extra_vars=playbook_vars

@@ -16,7 +16,7 @@ class AnsibleRunner:
         if "debian" in sg_platform.lower():
             extra_vars["ansible_distribution"] = sg_platform.capitalize()
             extra_vars["ansible_os_family"] = "Linux"
-        extra_vars["ansible_python_interpreter"] = "/usr/bin/python3"
+            extra_vars["ansible_python_interpreter"] = "/usr/bin/python3"
         inventory_filename = self.provisiong_config
 
         playbook_filename = "{}/{}".format(PLAYBOOKS_HOME, script_name)
