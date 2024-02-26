@@ -418,6 +418,8 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
                     coverage_status = ansible_runner.run_ansible_playbook(
                         "setup-code-coverage-location.yml"
                     )
+                if "debian" in sg_platform.lower():
+                    playbook_vars["ansible_distribution"] = sg_platform.capitalize()
                 status = ansible_runner.run_ansible_playbook(
                     "install-sync-gateway-package.yml",
                     extra_vars=playbook_vars
