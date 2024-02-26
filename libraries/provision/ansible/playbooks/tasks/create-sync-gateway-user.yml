@@ -1,7 +1,7 @@
-#- name: SYNC GATEWAY | Remove the sync_gateway user prior to creating a new one, Debian
-#  shell: userdel sync_gateway
-#  when:  ansible_distribution == "Debian"
-#  ignore_errors: yes
+- name: SYNC GATEWAY | Change folder permissions as a workaround
+  shell: chmod o+x /home/sync_gateway
+  when:  ansible_distribution == "Debian"
+  ignore_errors: yes
 
 # Add sync_gateway user on Centos/linux/ubuntu/debian
 # - name: SYNC GATEWAY | Create sync gateway user on Centos/linux/ubuntu/debian
