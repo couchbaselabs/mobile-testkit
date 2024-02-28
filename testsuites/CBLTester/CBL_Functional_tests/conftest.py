@@ -300,8 +300,6 @@ def params_from_base_suite_setup(request):
     android_id = request.config.getoption("--android-id")
     cbs_platform = request.config.getoption("--cbs-platform")
     sg_platform = request.config.getoption("--sg-platform")
-
-
     scope_name = request.config.getoption("--scope-name")
     collection_name = request.config.getoption("--collection-name")
 
@@ -513,7 +511,6 @@ def params_from_base_suite_setup(request):
     else:
         log_info("Running test with sg platform {}".format(sg_platform))
         persist_cluster_config_environment_prop(cluster_config, 'sg_platform', sg_platform, False)
-
 
     # As cblite jobs run with on Centos platform, adding by default centos to environment config
     persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "debian", False)

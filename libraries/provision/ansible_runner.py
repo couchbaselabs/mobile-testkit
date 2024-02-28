@@ -1,4 +1,4 @@
-from utilities.cluster_config_utils import  get_sg_platform
+from utilities.cluster_config_utils import get_sg_platform
 from libraries.provision.ansible_python_runner import Runner
 from ansible import constants
 import logging

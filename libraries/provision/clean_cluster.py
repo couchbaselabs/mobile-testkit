@@ -23,9 +23,9 @@ def clean_cluster(cluster_config, skip_couchbase_provision=False, sg_platform="c
         raise ProvisioningError("Failed to reset hosts")
     extra_vars = {}
     if "debian" in cbs_platform.lower():
-        extra_vars["ansible_python_interpreter"]= "/usr/bin/python3"
-        extra_vars["ansible_distribution"] =  "Debian"
-        extra_vars["ansible_os_family"] =  "Linux"
+        extra_vars["ansible_python_interpreter"] = "/usr/bin/python3"
+        extra_vars["ansible_distribution"] = "Debian"
+        extra_vars["ansible_os_family"] = "Linux"
     if not skip_couchbase_provision:
         status = ansible_runner.run_ansible_playbook("reset-cb-hosts.yml", extra_vars)
         if status != 0:
