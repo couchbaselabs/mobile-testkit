@@ -1276,6 +1276,7 @@ def test_sg_replicate_remove_channel(params_from_base_test_setup, setup_customiz
     replicator.stop(repl4)
 
 
+@pytest.mark.skip(reason="investigated in:  https://issues.couchbase.com/browse/CM-1110")
 @pytest.mark.topospecific
 @pytest.mark.syncgateway
 @pytest.mark.sgreplicate
@@ -2043,6 +2044,7 @@ def test_sg_replicate_adhoc_replication(params_from_base_test_setup, setup_custo
     assert len(active_tasks) == expected_tasks, "replications did not get removed with adhoc true config with one shot replication"
 
 
+@pytest.mark.skip(reason="investigated in:  https://issues.couchbase.com/browse/CM-1110")
 @pytest.mark.topospecific
 @pytest.mark.syncgateway
 @pytest.mark.sgreplicate

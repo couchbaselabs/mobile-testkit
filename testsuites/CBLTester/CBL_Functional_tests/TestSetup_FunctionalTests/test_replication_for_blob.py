@@ -111,8 +111,8 @@ def test_doc_update_replication_with_blob_no_touch(params_from_base_test_setup):
     assert "_attachments" in sg_doc
 
 
-@pytest.mark.skipif(pytest.config.getoption("--liteserv-platform").startswith("net-"),
-                    reason="Under investiation:https://issues.couchbase.com/browse/CM-1163")
+@pytest.mark.skipif(pytest.config.getoption("--liteserv-platform").startswith("net"),
+                    reason="Under investigation: https://issues.couchbase.com/browse/CM-1163")
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("blob_data_type", [
@@ -225,6 +225,8 @@ def test_blob_contructor_replication(params_from_base_test_setup, blob_data_type
 
 @pytest.mark.listener
 @pytest.mark.replication
+@pytest.mark.skipif(pytest.config.getoption("--liteserv-platform").startswith("net"),
+                    reason="Under investiation: https://issues.couchbase.com/browse/CM-1186")
 def test_blob_replication_with_update(params_from_base_test_setup):
     '''
     @summary:

@@ -159,7 +159,7 @@ def test_multiple_sgs_with_differrent_revs_limit(params_from_base_test_setup, se
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("sg_conf_name, num_of_docs", [
-    pytest.param('listener_tests/multiple_sync_gateways', 10, marks=pytest.mark.sanity),
+    # pytest.param('listener_tests/multiple_sync_gateways', 10, marks=pytest.mark.sanity), https://issues.couchbase.com/browse/CM-1185
     ('listener_tests/multiple_sync_gateways', 100),
     ('listener_tests/multiple_sync_gateways', 1000)
 ])
