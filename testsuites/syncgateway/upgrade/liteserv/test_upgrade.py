@@ -358,8 +358,9 @@ def update_docs(client, ls_url, ls_db, added_docs, auth, terminator_doc_id):
             log_info("update_docs: Found termination doc")
             log_info("update_docs: Updated {} docs".format(len(list(doc_revs.keys()))))
             return doc_revs
-        except HTTPError:
+        except HTTPError as e:
             log_info("Termination doc not found")
+            print("error==========================================================" + str(e))
 
         user_docs_subset_to_update = []
         for _ in range(docs_per_update):
