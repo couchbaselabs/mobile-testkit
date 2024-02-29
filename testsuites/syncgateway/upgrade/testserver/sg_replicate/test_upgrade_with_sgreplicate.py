@@ -548,8 +548,9 @@ def update_docs(db, cbl_db1, cbl_db1_doc_ids, cbl_db2, cbl_db2_doc_ids, doc_obj,
                     return doc_revs
                 else:
                     log_info("update_docs: doc object is retrieved correctly")
-        except Exception:
+        except Exception as e:
             log_info(terminator_not_found_msg)
+            log_info("Error-----------------------------------------------------" + str(e))
 
         cbl_db_docs_to_update = update_random_docs(docs_per_update, cbl_db1_doc_ids, db, cbl_db1, doc_obj)
         update_random_docs(docs_per_update, cbl_db2_doc_ids, db, cbl_db2, doc_obj)
