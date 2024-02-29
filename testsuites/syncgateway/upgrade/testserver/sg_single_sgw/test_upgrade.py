@@ -435,8 +435,9 @@ def update_docs(db, cbl_db, added_docs, doc_obj, terminator_doc_id_prefix):
                     return doc_revs
                 else:
                     log_info("update_docs: doc object is retrieved correctly")
-        except Exception:
+        except Exception as e:
             log_info(terminator_not_found_msg)
+            log_info("error**********************************************************" + str(e))
 
         user_docs_subset_to_update = []
         for _ in range(docs_per_update):
