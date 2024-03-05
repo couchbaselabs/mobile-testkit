@@ -74,9 +74,9 @@ def get_nodes_from_pool_server(num_of_nodes, nodes_os_type, node_os_version, job
         if slave_ip is None:
             raise Exception("\n**** we need slave ip to get phone info on that slave ***")
         query_phone_in_slave = "AND slave_ip='{}'".format(slave_ip)
-    query_str = "select meta().id from `{}` where os='centos7' " \
+    query_str = "select meta().id from `{}` where os='{}' " \
                 "AND os_version='7' AND state='available' {}" \
-                .format(BUCKET_NAME, query_phone_in_slave)
+                .format(BUCKET_NAME, nodes_os_type, query_phone_in_slave)
     query = cluster.query(query_str)
     pool_list = []
     for row in query:
