@@ -582,9 +582,9 @@ if __name__ == "__main__":
 
     parser.add_option("--sg-accel-windows", action="store_true", dest="sg_accel_windows", default=False, help="Use Windows Sync Gateway Accelerator")
 
-    parser.add_option("--sg-platform", action="store", dest="sg_platform", default="centos7", help="Provide Sync gateway platform")
+    parser.add_option("--sg-platform", action="store", dest="sg_platform", default="debian", help="Provide Sync gateway platform")
 
-    parser.add_option("--cbs-platform", action="store", dest="cbs_platform", default="centos7", help="Provide couchbase server platform")
+    parser.add_option("--cbs-platform", action="store", dest="cbs_platform", default="debian", help="Provide couchbase server platform")
 
     parser.add_option("--ipv6", action="store_true", default=False, help="IPv6 addresses")
 
