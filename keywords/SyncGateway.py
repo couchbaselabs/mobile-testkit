@@ -599,8 +599,6 @@ class SyncGateway(object):
             playbook_vars["server_scheme"] = "couchbases"
             playbook_vars["server_port"] = 11207
             block_http_vars = {}
-            if "debian" in sg_platform.lower():
-                block_http_vars["ansible_distribution"] = sg_platform.capitalize()
             port_list = ["8091:8096,11210:11211"]
             for port in port_list:
                 block_http_vars["port"] = port
@@ -683,7 +681,6 @@ class SyncGateway(object):
         shut down the sync gateway at that url
         """
         ansible_runner = AnsibleRunner(cluster_config)
-
         if url is not None:
             target = hostname_for_url(cluster_config, url)
             log_info("Shutting down sync_gateway on {} ...".format(target))

@@ -1,5 +1,10 @@
 - debug: msg="Starting sync_gateway"
 
+- name: SYNC GATEWAY | Change folder permissions as a workaround
+  shell: chmod 777 /home/sync_gateway
+  when:  ansible_distribution == "Debian"
+  ignore_errors: yes
+
 - name: SYNC GATEWAY | Start sync gateway service
   become: yes
   service: name=sync_gateway state=started

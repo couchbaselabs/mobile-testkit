@@ -5,7 +5,7 @@ from keywords.exceptions import ProvisioningError
 from keywords.utils import log_info
 
 
-def clean_cluster(cluster_config, skip_couchbase_provision=False, sg_platform="centos"):
+def clean_cluster(cluster_config, skip_couchbase_provision=False, sg_platform="centos", cbs_platform="centos"):
 
     log_info("Cleaning cluster: {}".format(cluster_config))
     ansible_runner = AnsibleRunner(config=cluster_config)
@@ -21,9 +21,13 @@ def clean_cluster(cluster_config, skip_couchbase_provision=False, sg_platform="c
     status = ansible_runner.run_ansible_playbook("reset-hosts.yml")
     if status != 0:
         raise ProvisioningError("Failed to reset hosts")
-
+    extra_vars = {}
+    if "debian" in cbs_platform.lower():
+        extra_vars["ansible_python_interpreter"] = "/usr/bin/python3"
+        extra_vars["ansible_distribution"] = "Debian"
+        extra_vars["ansible_os_family"] = "Linux"
     if not skip_couchbase_provision:
-        status = ansible_runner.run_ansible_playbook("reset-cb-hosts.yml")
+        status = ansible_runner.run_ansible_playbook("reset-cb-hosts.yml", extra_vars)
         if status != 0:
             raise ProvisioningError("Failed to reset hosts")
 
@@ -42,7 +46,7 @@ if __name__ == "__main__":
 
     try:
         cluster_conf = os.environ["CLUSTER_CONFIG"]
-    except KeyError as ke:
+    except KeyError:
         log_info("Make sure CLUSTER_CONFIG is defined and pointing to the configuration you would like to provision")
         raise KeyError("CLUSTER_CONFIG not defined. Unable to provision cluster.")
 

@@ -61,3 +61,8 @@
 - name: SYNC GATEWAY | Remove tmp logging dir (log rotation tests)
   shell: rm -rf /tmp/sg_logs
   ignore_errors: yes
+
+- name: SYNC GATEWAY | Remove sync gateway home folder for debian
+  shell: rm -rf /home/sync_gateway
+  ignore_errors: yes
+  when: ansible_distribution == "Debian"
