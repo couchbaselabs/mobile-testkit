@@ -681,20 +681,17 @@ class SyncGateway(object):
         shut down the sync gateway at that url
         """
         ansible_runner = AnsibleRunner(cluster_config)
-        extra_vars = {}
         if url is not None:
             target = hostname_for_url(cluster_config, url)
             log_info("Shutting down sync_gateway on {} ...".format(target))
             status = ansible_runner.run_ansible_playbook(
                 "stop-sync-gateway.yml",
-                extra_vars=extra_vars,
                 subset=target
             )
         else:
             log_info("Shutting down all sync_gateways")
             status = ansible_runner.run_ansible_playbook(
                 "stop-sync-gateway.yml",
-                extra_vars=extra_vars
             )
         if status != 0:
             raise ProvisioningError("Could not stop sync_gateway")
