@@ -276,14 +276,14 @@ if __name__ == "__main__":
                       help="Specify the no. of node one need from server pool. Default value is 2")
 
     parser.add_option("--nodes-os-type",
-                      action="store", dest="nodes_os_type", default="centos",
+                      action="store", dest="nodes_os_type", default="debian",
                       help="specify the os type of requested node")
     parser.add_option("--slave-ip",
                       action="store", dest="slave_ip", default=None,
                       help="Use to find device attached to this slave")
 
     parser.add_option("--nodes-os-version",
-                      action="store", dest="nodes_os_version", default="7",
+                      action="store", dest="nodes_os_version", default="12",
                       help="specify the os version of requested node")
 
     parser.add_option("--job-name",
