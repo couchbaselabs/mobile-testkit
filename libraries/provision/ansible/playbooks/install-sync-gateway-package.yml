@@ -15,7 +15,7 @@
   - name: Install curl
     shell: "apt install -y curl"
     when: ansible_distribution == "Debian"
-    ignore_erros: yes
+    ignore_errors: yes
   - name: Disable firewall
     shell: iptables -F
     when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon" or ansible_distribution == "Ubuntu"
