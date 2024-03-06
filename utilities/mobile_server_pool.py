@@ -42,6 +42,7 @@ def get_nodes_available_from_mobile_pool(nodes_os_type, node_os_version, slave_i
         if slave_ip is None:
             raise Exception("\n**** we need slave ip to get phone info on that slave ***")
         query_phone_in_slave = "AND slave_ip='{}'".format(slave_ip)
+        node_os_version = "7"
     query_str = "select  meta().id from `{}` where os='{}' " \
                 "AND os_version='{}' AND state='available' {}"\
                 .format(BUCKET_NAME, nodes_os_type, node_os_version, query_phone_in_slave)
@@ -73,10 +74,11 @@ def get_nodes_from_pool_server(num_of_nodes, nodes_os_type, node_os_version, job
     if nodes_os_type in MOBILE_OS:
         if slave_ip is None:
             raise Exception("\n**** we need slave ip to get phone info on that slave ***")
+        node_os_version = "7"
         query_phone_in_slave = "AND slave_ip='{}'".format(slave_ip)
     query_str = "select meta().id from `{}` where os='{}' " \
-                "AND os_version='7' AND state='available' {}" \
-                .format(BUCKET_NAME, nodes_os_type, query_phone_in_slave)
+                "AND os_version='{}' AND state='available' {}" \
+                .format(BUCKET_NAME, nodes_os_type, node_os_version, query_phone_in_slave)
     query = cluster.query(query_str)
     pool_list = []
     for row in query:
