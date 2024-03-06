@@ -440,6 +440,7 @@ def test_user_removed_from_role(params_from_base_test_setup, replicator_directio
 
     replicator.stop(repl)
 
+
 @pytest.mark.skipif(pytest.config.getoption("--liteserv-platform").startswith("java"),
                     reason="Under investiation: https://issues.couchbase.com/browse/CM-1181")
 @pytest.mark.listener
