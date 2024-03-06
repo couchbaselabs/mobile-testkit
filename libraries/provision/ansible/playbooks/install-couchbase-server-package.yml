@@ -40,6 +40,11 @@
     - debug: msg="Downloading Couchbase server v. {{ couchbase_server_package_url }}"
     - debug: msg="IPv6 Enabled - {{ ipv6_enabled }}"
 
+    - name: Install curl
+      shell: "apt install -y curl"
+      when: ansible_distribution == "Debian"
+      ignore_erros: yes
+
     # Remove Couchbase Server
     - include: tasks/remove-couchbase-server.yml
     - include: tasks/clean-users.yml
