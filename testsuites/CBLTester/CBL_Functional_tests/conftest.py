@@ -512,7 +512,7 @@ def params_from_base_suite_setup(request):
         log_info("Running test with sg platform {}".format(sg_platform))
         persist_cluster_config_environment_prop(cluster_config, 'sg_platform', sg_platform, False)
 
-    # As cblite jobs run with on Centos platform, adding by default centos to environment config
+    # As cblite jobs run with on debian platform, adding by default debian to environment config
     persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "debian", False)
 
     # Write the number of replicas to cluster config

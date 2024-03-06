@@ -146,3 +146,7 @@ def pytest_addoption(parser):
     parser.addoption("--disable-admin-auth",
                      action="store_true",
                      help="Disable Admin auth")
+
+    parser.addoption("--collect-sgw-logs",
+                     action="store_true",
+                     help="collect SGW logs")

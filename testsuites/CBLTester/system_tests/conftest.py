@@ -380,8 +380,8 @@ def params_from_base_suite_setup(request):
     else:
         log_info("Running without suppress SGW product Version")
         persist_cluster_config_environment_prop(cluster_config, 'hide_product_version', False)
-    # As cblite jobs run with on Centos platform, adding by default centos to environment config
-    persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "centos", False)
+    # As cblite jobs run with on debian platform, adding by default debian to environment config
+    persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "debian", False)
 
     if enable_cbs_developer_preview:
         log_info("Enable CBS developer preview")
