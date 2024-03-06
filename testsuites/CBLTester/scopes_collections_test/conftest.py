@@ -472,8 +472,8 @@ def params_from_base_suite_setup(request):
         log_info("Enabled Admin Auth")
         persist_cluster_config_environment_prop(cluster_config, 'disable_admin_auth', False)
 
-    # As cblite jobs run with on Centos platform, adding by default centos to environment config
-    persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "centos", False)
+    # As cblite jobs run with on debian platform, adding by default debian to environment config
+    persist_cluster_config_environment_prop(cluster_config, 'sg_platform', "debian", False)
 
     # Write the number of replicas to cluster config
     persist_cluster_config_environment_prop(cluster_config, 'number_replicas', number_replicas)
