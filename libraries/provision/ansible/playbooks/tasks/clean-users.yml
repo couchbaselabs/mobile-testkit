@@ -1,4 +1,5 @@
 
+- debug: msg="Leaving this file as a placeholder in case of a future need to clean users"
 # Gilad: Commenting out these actions for now. There are compatibility issues with ansible 2.5 and Python 3.9 on Debian for these actions.
 # It might be possible to run them wiht Python 3.7, but it requires some effort, and the Debian11 VMs are coming with python3.9, so will require more setup.
 # At the moment it is not clear that these are requuired at all, but if they are, there might be a workaround, without using the ansible built-in "user" keyword.
