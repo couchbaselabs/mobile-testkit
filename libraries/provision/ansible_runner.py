@@ -2,6 +2,7 @@ from utilities.cluster_config_utils import get_sg_platform
 from libraries.provision.ansible_python_runner import Runner
 from ansible import constants
 import logging
+import os
 
 PLAYBOOKS_HOME = "libraries/provision/ansible/playbooks"
 
@@ -12,7 +13,9 @@ class AnsibleRunner:
         self.provisiong_config = config
 
     def run_ansible_playbook(self, script_name, extra_vars={}, subset=constants.DEFAULT_SUBSET):
-        sg_platform = get_sg_platform(self.provisiong_config)
+        sg_platform = "debian"
+        if os.path.isfile(self.provisiong_config):
+            sg_platform = get_sg_platform(self.provisiong_config)
         if "debian" in sg_platform.lower():
             extra_vars["ansible_distribution"] = sg_platform.capitalize()
             extra_vars["ansible_os_family"] = "Linux"
