@@ -73,14 +73,13 @@ class VectorSearch(object):
 
         return self._client.invokeMethod("vectorSearch_query", args)
     
-    # def loadWords(self, ):
-    #     args=Args()
+    def loadWords(self, ):
+        return self._client.invokeMethods("vectorSearch_loadWords")
 
+    def regenerateWordEmbeddings(self):
+        return self._client.invokeMethod("vectorSearch_regenerateWordEmbeddings")
 
-    #     return self._client.invokeMethods("vectorSearch_loadWords", args)
-
-
-
+ 
 
     def register_model(self):
         args = Args()
