@@ -6,7 +6,7 @@ from keywords.utils import random_string, log_info
 class TestDatabase(object):
 
     @pytest.mark.parametrize("db_name, err_msg", [
-        ("", "id cannot be null")
+        ("", "id cannot be null"),
         (random_string(1028), "File name too long")
     ])
     def test_database_create_exception(self, db_name, err_msg):
