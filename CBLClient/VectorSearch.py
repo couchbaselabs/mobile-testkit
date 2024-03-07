@@ -81,7 +81,8 @@ class VectorSearch(object):
 
  
 
-    def register_model(self):
+    def register_model(self, key, name):
         args = Args()
-
+        args.setString("key", key)
+        args.setString("name", name)
         return self._client.invokeMethod("vectorSearch_registerModel", args)
