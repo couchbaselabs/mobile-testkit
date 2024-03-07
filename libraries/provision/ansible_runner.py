@@ -14,6 +14,8 @@ class AnsibleRunner:
 
     def run_ansible_playbook(self, script_name, extra_vars={}, subset=constants.DEFAULT_SUBSET):
         sg_platform = "debian"
+        print("***********************************self.provisiong_config=" + self.provisiong_config)
+        print("***********************************exists=" + str(os.path.isfile(self.provisiong_config)))
         if os.path.isfile(self.provisiong_config):
             sg_platform = get_sg_platform(self.provisiong_config)
         if "debian" in sg_platform.lower():
