@@ -1062,8 +1062,8 @@ class CouchbaseServer:
         """ Loads a given sample bucket """
 
         resp = self._session.post("curl -X POST -u Administrator:password \
-        http://{}:8091/sampleBuckets/install \
-        -d '[\"{}\"]".format( self.url, sample_bucket))
+        {}/sampleBuckets/install \
+        -d '[\"{}\"]".format(self.url, sample_bucket))
         log_r(resp)
         resp.raise_for_status()
         # log_info("Enabling sample bucket {}".format(sample_bucket))
